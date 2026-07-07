@@ -644,3 +644,64 @@ Gotchas for next sessions:
 Carry-overs: BUILDING.md front-door mention once 0009/0010 settle the
 vendor UX; `run` stays host-only until develop-mode iterations; standing
 0003/0004/0007 carry-overs unchanged.
+
+=== 2026-07-07 — Issue 0009: develop-mode core (overlay + develop/undevelop/vendors) — DONE (pass: true) ===
+
+Picked up: docs/superpowers/issues/0009-develop-mode-core-overlay.md
+(PRD: docs/superpowers/prds/2026-07-06-one-command-and-develop-mode-prd.md;
+mechanism: ADR 0004 nimble.paths overlay)
+
+What was built:
+- status.nims: vendor table (statusgo + sds rows; flavor/developBranch/FORCE
+  fields ready for 0011 cmake + 0012 seaqt smo-6.4/nimqml), develop/
+  undevelop/vendors tasks, applyOverlay internal task, develop-mode gating in
+  app/run. Pins parsed live from the owning manifest (0010's URL flip needs
+  no driver change). Overlay file = nimble.overlay (gitignored).
+- Makefile: overlay joins the setup-stamp key ($(wildcard)); stamp recipe
+  runs `nim applyOverlay status.nims` after every nimble setup (delegation
+  only — bare-make regeneration covered). Derived copies inherit via the
+  existing cmp rules, untouched.
+- Divergence guard = checkout manifest vs `git show <pinRev>:<manifest>`
+  (store-wipe-immune; skipped for interim file:// pins); runs per-build in
+  the driver AND in applyOverlay; message carries the full file:// escape
+  hatch + walls. Driver also self-heals a manual-`nimble setup`-clobbered
+  nimble.paths (detect un-applied overlay -> re-invalidate stamp).
+- Gating (ADR-0003 arm): sds => touch derived nimble.paths (FORCEs the sds
+  engine; in-place branch fires for the overlaid path) + NEW cmp-mirror of
+  in-place artifacts into .sds-build (statusgo.nims, submodule commit
+  95166a5ab) so every Makefile keeps reading ONE layout; statusgo => rm
+  libstatus.* (re-delegates the incremental sub-make) + REBUILD_NIM=true.
+  Default mode pays nothing (no-op still ~8 s).
+
+Verification (all 5 criteria; full record in the issue file): sds cycle
+in-place build observed + undevelop refusals (dirty, then unpushed; --force)
++ post-cycle libsds BYTE-IDENTICAL to baseline; statusgo Go+wrapper probes
+both picked up (rm-FORCE + REBUILD_NIM observed); divergence loud on both
+driver and bare-make paths, revert unblocks; overlay survives lock-touch
+regeneration incl. derived copy (cmp identical); git status identical
+before/after modulo this issue's own edits.
+
+Walls hit (documented in vendor/status-go/AGENTS.md):
+1. NEW: warm re-setups emit dangling srcDir entries for srcDir-HOISTED store
+   copies (isaac): materializing setup stores hoisted + emits root entry;
+   every warm re-setup emits <root>/src which doesn't exist -> first client
+   recompile after a warm setup dies ("cannot open file: isaac").
+   Pre-existing, exposed by 0009's REBUILD_NIM arm. Fixed in config.nims'
+   isaac hack (points at whichever of entry / entry-/src exists).
+2. Known nested-worktree parent config.nims rpath leak (parent on
+   release/2.38.x uses pre-rename STATUSKEYCARDGO_LIBDIR; empty -> bare
+   -rpath -> ld mmap error on bin/StatusQ). Fixed with the proven Makefile
+   alias export (same fix as the seaqt worktree).
+
+Gotchas for next sessions (0010+):
+- Desktop statusgo-shared-library output is NOT byte-reproducible (no
+  -ldflags=-buildid= there, unlike the 0004-fixed mobile recipes) — relevant
+  to 0010's stamp-skip arm.
+- Develop-mode FORCE costs: statusgo ~2:30 warm/build (sub-make + client
+  recompile); sds no-op ~6 s. Bare make covers regeneration + apply-time
+  guard; per-build FORCE/guard arms are driver-only (nim app is the door).
+- undevelop unpushed check = log --branches --not --remotes over ALL local
+  branches; no-remote checkouts always refuse (use --force).
+
+Carry-overs: standing 0003/0004/0007/0008 items unchanged; BUILDING.md
+front-door + develop-mode docs once 0010 settles the statusgo pin.
