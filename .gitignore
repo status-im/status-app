@@ -131,5 +131,6 @@ nimble.develop
 
 /nimbledeps/
 /nimble.paths
+/nimble.overlay
 .phase2-vendor-backup/
 /.claude/
