@@ -337,7 +337,8 @@ config walk would poison in-tree builds with the repo's own `config.nims`.
 This runs automatically for the desktop build: the `nimble.paths` Make target
 (an order-only prerequisite of `nim_status_client`) re-runs `nimble setup`
 whenever `nimble.lock` or one of the graph's manifests
-(`nim_status_client.nimble`, `vendor/status-go/statusgo.nimble`) changes, so
+(`nim_status_client.nimble`; plus `vendor/status-go/statusgo.nimble` when a
+statusgo develop checkout exists) changes, so
 a plain `make run` /
 `make nim_status_client` keeps the resolution in sync without a manual step.
 Ad-hoc nimble commands (e.g. `nimble lock` after editing a manifest) must
@@ -349,21 +350,32 @@ editing `nimble.lock` by hand.
 
 **status-go in the same graph:** status-go is itself a nimble package (it
 ships the `status_go` Nim wrapper next to the Go sources, and its manifest
-owns the nim-sds / nim-ffi pins), and `nim_status_client.nimble` requires it,
-so the app's one `nimble setup` resolves status-go's Nim dependencies together
-with the app's own — one resolution, one store, one lock file.
-There is no separate per-status-go dependency solve or cache. status-go's
-`statusgo.nims` build tasks (libsds) read the resolution from
-`vendor/status-go/nimble.paths`, which the Makefiles derive by copying the
-app's `nimble.paths` (all entries are absolute). The app compiles the wrapper
-with `-d:statusGoNoAutoLink` (set in `config.nims`): it links the shared
+owns the nim-sds pin), pinned by `nim_status_client.nimble` as a
+`requires "<git-url>#<sha>"` like every other dependency — the app's one
+`nimble setup` resolves status-go's Nim dependencies together with the app's
+own: one resolution, one store, one lock file. There is no separate
+per-status-go dependency solve or cache, and no `vendor/status-go` checkout
+in the default flow. Because the store copy is read-only, the build maintains
+a writable scratch copy of it at `.statusgo-build/` (refreshed only when the
+pin or the build-flag set changes — `nim prepareStatusgo status.nims`, run by
+make): libstatus and libsds build there, and while the pin is unchanged and
+the artifacts exist, no-op builds skip the status-go sub-make entirely.
+status-go's `statusgo.nims` build tasks (libsds) read the resolution from the
+`nimble.paths` beside them, which the Makefiles derive by copying the app's
+`nimble.paths` (all entries are absolute). The app compiles the wrapper with
+`-d:statusGoNoAutoLink` (set in `config.nims`): it links the shared
 libstatus/libsds flavors it builds itself instead of the wrapper's static
-auto-link layout.
+auto-link layout. To hack on status-go, run `nim develop status.nims
+statusgo`: it materializes a real git clone at `vendor/status-go` (origin =
+the pin URL, a branch at the pinned revision) and switches the build to it —
+every Go/Nim/C edit is picked up by the next build (ADR 0003 FORCE +
+compare-before-copy). `nim undevelop status.nims statusgo` returns to the
+pin (refusing while the checkout has uncommitted or unpushed work).
 
 **What's still a git submodule:** only Nim packages under active local
 development, plus everything that isn't pure Nim (C/C++/Go). Kept under
-`vendor/`: the seaqt Qt bindings (`nim-seaqt`, `nimqml-seaqt`), status-go
-itself, and the C/C++ libraries (`DOtherSide`, `SortFilterProxyModel`,
+`vendor/`: the seaqt Qt bindings (`nim-seaqt`, `nimqml-seaqt`)
+and the C/C++ libraries (`DOtherSide`, `SortFilterProxyModel`,
 `QR-Code-generator`, `status-keycard-qt`, `fcitx5-qt`, `prl-to-pc`,
 `mobile/vendors/openssl`, `nimbus-build-system`). `config.nims` adds explicit
 `switch("path", ...)` entries for `nim-seaqt`/`nimqml-seaqt` since they're not
@@ -380,14 +392,15 @@ NOT work here: on nimble 0.22.3 develop links cannot satisfy `<url>#<sha>`
 requires — they are silently ignored and the store copy wins. See
 `vendor/status-go/AGENTS.md`, "nimble 0.22.3 resolution walls".)
 
-- The nim-sds version pin lives in `vendor/status-go/statusgo.nimble`
+- The nim-sds version pin lives in status-go's `statusgo.nimble`
   (a `requires "<git-url>#<sha>"` entry — interim the alexjba fork pin
   carrying the nim-sds patch queue until logos-messaging/nim-sds#85 merges
   and the pin moves to the upstream merge SHA). status-go's sds build tasks
   compile whatever copy the nimble resolution names: the pinned store copy
-  is built in a scratch dir at `vendor/status-go/.sds-build` (the store
-  stays pristine; no `vendor/nim-sds` checkout exists in the default flow),
-  a develop-linked local checkout is built in place.
+  is built in a scratch dir at `<statusgo root>/.sds-build` (i.e.
+  `.statusgo-build/.sds-build` in the default flow — the store stays
+  pristine; no `vendor/nim-sds` checkout exists), a develop-linked local
+  checkout is built in place.
 
 These run automatically as part of `make nim_status_client` / mobile builds.
 No sibling `../nim-sds` clone is needed or used.

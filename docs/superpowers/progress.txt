@@ -705,3 +705,76 @@ Gotchas for next sessions (0010+):
 
 Carry-overs: standing 0003/0004/0007/0008 items unchanged; BUILDING.md
 front-door + develop-mode docs once 0010 settles the statusgo pin.
+
+=== 2026-07-07 — Issue 0010: status-go full-pin (submodule removed, URL#hash pin, stamp-skip) — DONE (pass: true) ===
+
+Picked up: docs/superpowers/issues/0010-statusgo-full-pin.md
+(PRD: docs/superpowers/prds/2026-07-06-one-command-and-develop-mode-prd.md)
+
+What was built:
+- nim_status_client.nimble: statusgo file:// requires → URL#hash pin
+  (status-im/status-go.git#d9281bce9, branch nimble-phase1-pin). Pin bump =
+  one-line #hash edit.
+- NEW WALL (grilled; user approved the fix): nimble 0.22.3 builds dependency
+  binaries unconditionally at store materialization (vnext gates on
+  bin.len>0 alone; hook-cancel aborts the setup; hybrids/installExt only
+  whitelist files — and ANY whitelist strips go.mod/Makefile/*.go from the
+  store copy). Fix: statusgo.nimble went SOURCE-ONLY on nimble-phase1-pin
+  (d9281bce9: bin/installDirs/installFiles/hook dropped). status_backend
+  still builds from checkouts via statusgo.nims. Both walls in status-go
+  AGENTS.md. Upstream ask to file: skip dep bin builds.
+- Scratch engine: read-only store copy → writable .statusgo-build/ at repo
+  root, owned by `nim prepareStatusgo status.nims` (in status.nims): wipe+
+  copy keyed on (store path, --key flag set); triple flips stay with the
+  platform sentinel. Stamp-skip default arm: pin unchanged + artifacts
+  present ⇒ status-go sub-make and sds task NOT invoked at all. Developed
+  statusgo keeps the 0009 FORCE arms in the checkout.
+- Both Makefiles + mobile Common.mk derive STATUSGO_ROOT (scratch vs
+  checkout) from nimble.overlay; every artifact path (STATUSGO_LIBDIR,
+  NIMSDS_*, stub-bindings gens, version) rides it — no direct
+  vendor/status-go references remain in the build system.
+- Version stamping (gitless store copy): STATUSGO_VERSION = store entry's
+  nimblemeta.json vcsRevision (pinned) / git describe (developed). go.mod
+  local replaces: none exist on this branch — non-issue.
+- Mode flips (develop/undevelop) drop bin/nim_status_client (desktop rpath
+  moves between scratch and checkout); 24h force-rebuild pre-clean is
+  develop-only now.
+- Submodule vendor/status-go removed (staged; backup ref
+  backup/nimble-0010-statusgo, dir preserved at .phase2-vendor-backup/
+  status-go with a working git dir). Develop mode materializes a fresh
+  clone from the pin URL — exercised for real.
+
+Verification highlights (full record in the issue file):
+- Wiped store → make nimble-deps 6:31 → nim app → launch (lsof: libstatus +
+  libsds loaded from .statusgo-build) → clean exit.
+- No-op stamp-skip: desktop 5.9 s, iOS 15.1 s, Android 15.2 s (0008
+  baselines: 7 s / ~70 s / ~70 s), bare make 5.9 s; zero sub-make banners.
+- Pin bump (content-changed hash): new store entry, scratch auto-refresh,
+  rebuild with no manual cleaning, both directions; empty-commit bump
+  correctly no-ops (content-addressed store).
+- develop cycle from NO checkout: clone at pin (branch develop), overlay
+  build, Go probe picked up (cbindings-generated symbol), undevelop dirty
+  refusal, post-undevelop byte-identical pinned artifact + zero sub-makes.
+- iOS device (signed) 2:47 / Android APK (all 5 native libs) 3:30 from the
+  pinned store copy; sentinel fired on every platform flip under the new
+  paths.
+
+Gotchas for next agents (0011/0012):
+- statusgo vendor row is the template: pinManifest/forceTouch support the
+  "@statusgo/" active-root marker; sds's pin manifest resolves from the
+  store copy when no checkout exists.
+- Any warm re-`nimble setup` rewrites nimble.paths with the isaac srcDir
+  variant (0009 wall) → one cosmetic libsds re-run (~10 s) per re-setup.
+- vendor/status-go/AGENTS.md lives in the (removed) submodule: read it from
+  .phase2-vendor-backup/status-go, the store copy, or a develop checkout.
+- Dependency manifests must NEVER declare bin (or any install whitelist) —
+  the 0010 wall; check before pinning new vendors.
+
+Lock finding: `nimble lock` regen is a net negative — URL#hash packages
+(statusgo + transitives) never enter the lock at all on 0.22.3, and the
+regen writes isaac vcsRevision="" (INI wall artifact) + drifts snappy.
+Committed lock kept (it never constrains solves per the documented wall).
+
+Carry-overs: file the upstream nimble issue (dep bin builds); delete
+scripts/bump-status-go.sh with CI migration; standing 0003/0004/0007/0008/
+0009 items unchanged.
