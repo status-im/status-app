@@ -187,6 +187,15 @@ unclosed fence here (no closing triple-tick)
         }
     }
 
+    // Pops the click bubble at the last pointer position over the static render.
+    function showClickBubble(message) {
+        clickBubble.message = message
+        clickBubble.x = hoverHandler.point.position.x
+        clickBubble.y = hoverHandler.point.position.y
+        clickBubble.open()
+        bubbleTimer.restart()
+    }
+
     QtObject {
         id: d
 
@@ -423,6 +432,38 @@ unclosed fence here (no closing triple-tick)
                                                               chatTextView.font,
                                                               textArea.formatUnclosedCodeFence,
                                                               textArea.enlargeEmojis)
+                            }
+
+                            // Tracks the pointer so the click bubble can appear where you clicked.
+                            HoverHandler { id: hoverHandler }
+
+                            // Example click handling: pop a bubble showing the clicked target.
+                            onMentionClicked: (pubKey) => root.showClickBubble(
+                                "Mention: @" + (root.mentionsMap[pubKey] || pubKey))
+                            onLinkClicked: (url) => root.showClickBubble("Link: " + url)
+
+                            Popup {
+                                id: clickBubble
+
+                                property string message
+
+                                padding: 8
+                                closePolicy: Popup.NoAutoClose
+
+                                contentItem: Text {
+                                    text: clickBubble.message
+                                    color: "white"
+                                }
+                                background: Rectangle {
+                                    color: "#333333"
+                                    radius: 6
+                                }
+
+                                Timer {
+                                    id: bubbleTimer
+                                    interval: 1500
+                                    onTriggered: clickBubble.close()
+                                }
                             }
                         }
                     }

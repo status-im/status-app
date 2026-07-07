@@ -28,6 +28,10 @@ Control {
     // Combined selected text across all blocks ("" when nothing is selected).
     readonly property alias selectedText: d.selectedText
 
+    // Emitted when the user clicks a mention pill (its pub key) or a link (its url) in the text.
+    signal mentionClicked(string pubKey)
+    signal linkClicked(string url)
+
     // Decoration colors
     property color codeBackgroundColor: "#e8e8e8"
     property color codeBorderColor: "#cccccc"
@@ -69,6 +73,8 @@ Control {
                 font.pixelSize: root.font.pixelSize
                 // pre-wrap so extra/leading spaces are preserved
                 text: "<span style=\"white-space:pre-wrap\">" + piece.content + "</span>"
+                // Connecting this enables Text's built-in link click handling (non-selectable mode).
+                onLinkActivated: (link) => d.activateLink(link)
             }
         }
         Component {
@@ -224,6 +230,32 @@ Control {
             return -1
         }
 
+        // Routes an activated <a href> to the right intent: links carry a URL scheme, while
+        // mention hrefs are pub keys.
+        function activateLink(href) {
+            if (!href)
+                return
+            if (href.indexOf("://") >= 0)
+                root.linkClicked(href)
+            else
+                root.mentionClicked(href)
+        }
+
+        // Selectable mode: the overlay swallows clicks, so resolve the link ourselves by finding
+        // the editor under (x, y) (in contentItem coords) and asking it for the link there.
+        function activateLinkAt(x, y) {
+            for (let i = 0; i < editors.length; ++i) {
+                const editor = editors[i]
+                const point = editor.mapFromItem(root.contentItem, x, y)
+                if (editor.contains(point)) {
+                    const link = editor.linkAt(point.x, point.y)
+                    if (link)
+                        activateLink(link)
+                    return
+                }
+            }
+        }
+
         function applySelection(a, b) {
             if (!a || !b)
                 return
@@ -351,14 +383,28 @@ Control {
         cursorShape: Qt.IBeamCursor
         preventStealing: true
 
+        property real pressX: 0
+        property real pressY: 0
+        property bool moved: false
+
         onPressed: (mouse) => {
+            pressX = mouse.x
+            pressY = mouse.y
+            moved = false
             d.collectEditors()
             d.anchor = d.hitTest(mouse.x, mouse.y)
             d.applySelection(d.anchor, d.anchor)
         }
         onPositionChanged: (mouse) => {
+            if (Math.abs(mouse.x - pressX) > 3 || Math.abs(mouse.y - pressY) > 3)
+                moved = true
             if (d.anchor)
                 d.applySelection(d.anchor, d.hitTest(mouse.x, mouse.y))
+        }
+        // A click (no drag) on a link activates it; a drag selects text instead.
+        onReleased: (mouse) => {
+            if (!moved)
+                d.activateLinkAt(mouse.x, mouse.y)
         }
     }
 

@@ -19,6 +19,17 @@ Item {
         }
     }
 
+    SignalSpy {
+        id: mentionSpy
+        target: testCase.control
+        signalName: "mentionClicked"
+    }
+    SignalSpy {
+        id: linkSpy
+        target: testCase.control
+        signalName: "linkClicked"
+    }
+
     TestCase {
         id: testCase
         name: "ChatTextView"
@@ -137,6 +148,58 @@ Item {
 
             control.copySelection()
             compare(ClipboardUtils.text, control.selectedText)
+        }
+
+        // ── link / mention click signals ─────────────────────────────────────────
+
+        // Non-selectable (Label): clicking a mention <a> emits mentionClicked(pubKey).
+        function test_mentionClicked_nonSelectable() {
+            control.selectable = false
+            control.blocks = [{ type: "text", html: '<a href="0xabc">@alice</a>' }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            mentionSpy.clear()
+            mouseClick(control, 10, 5)
+            compare(mentionSpy.count, 1)
+            compare(mentionSpy.signalArguments[0][0], "0xabc")
+        }
+
+        // Non-selectable: clicking a URL <a> emits linkClicked(url).
+        function test_linkClicked_nonSelectable() {
+            control.selectable = false
+            control.blocks = [{ type: "text", html: '<a href="https://status.im">https://status.im</a>' }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            linkSpy.clear()
+            mouseClick(control, 10, 5)
+            compare(linkSpy.count, 1)
+            compare(linkSpy.signalArguments[0][0], "https://status.im")
+        }
+
+        // Selectable (TextEdit under the overlay): a click — not a drag — still routes the link.
+        function test_mentionClicked_selectable() {
+            control.selectable = true
+            control.blocks = [{ type: "text", html: '<a href="0xabc">@alice</a>' }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            mentionSpy.clear()
+            mousePress(control, 10, 5)
+            mouseRelease(control, 10, 5)
+            compare(mentionSpy.count, 1)
+            compare(mentionSpy.signalArguments[0][0], "0xabc")
+        }
+
+        // A drag (selection) must NOT be treated as a link click.
+        function test_dragDoesNotClickLink() {
+            control.selectable = true
+            control.blocks = [{ type: "text", html: '<a href="0xabc">@alice</a>' }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            mentionSpy.clear()
+            mousePress(control, 2, 5)
+            mouseMove(control, control.width - 4, 5)
+            mouseRelease(control, control.width - 4, 5)
+            compare(mentionSpy.count, 0)
         }
     }
 }
