@@ -334,8 +334,8 @@ QtObject:
   proc windowDeactivated*(self: View) {.slot.} =
     self.delegate.windowDeactivated()
 
-  proc connectionChange*(self: View, connectionType: string, isExpensive: bool) {.slot.} =
-    self.delegate.connectionChange(connectionType, isExpensive)
+  proc connectionChange*(self: View, connectionType: string, isExpensive: bool, isOnline: bool) {.slot.} =
+    self.delegate.connectionChange(connectionType, isExpensive, isOnline)
 
   proc setCommunityIdToSpectate*(self: View, communityId: string) {.slot.} =
     self.delegate.setCommunityIdToSpectate(communityId)

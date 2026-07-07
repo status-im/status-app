@@ -237,6 +237,7 @@ proc newModule*[T](
   result.walletAccountService = walletAccountService
   result.savedAddressService = savedAddressService
   result.followingAddressService = followingAddressService
+  result.networkConnectionService = networkConnectionService
   result.stickersService = stickersService
   result.communityTokensService = communityTokensService
   result.transactionService = transactionService
@@ -1270,12 +1271,6 @@ method onNotificationsUpdated[T](self: Module[T], sectionId: string, sectionHasU
 method onPlayNotificationSound[T](self: Module[T]) =
   self.view.playNotificationSound()
 
-method onNetworkConnected[T](self: Module[T]) =
-  self.view.setConnected(true)
-
-method onNetworkDisconnected[T](self: Module[T]) =
-  self.view.setConnected(false)
-
 method isConnected[T](self: Module[T]): bool =
   self.controller.isConnected()
 
@@ -2097,7 +2092,9 @@ method windowActivated*[T](self: Module[T]) =
 method windowDeactivated*[T](self: Module[T]) =
   self.controller.speedupArchivesImport()
 
-method connectionChange*[T](self: Module[T], connectionType: string, isExpensive: bool) =
+method connectionChange*[T](self: Module[T], connectionType: string, isExpensive: bool, isOnline: bool) =
+  self.view.setConnected(isOnline)
+  self.networkConnectionService.networkConnected(isOnline)
   self.controller.connectionChange(connectionType, isExpensive)
 
 method communityMembersRevealedAccountsLoaded*[T](self: Module[T], communityId: string, membersRevealedAccounts: MembersRevealedAccounts) =

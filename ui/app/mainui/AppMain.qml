@@ -869,7 +869,11 @@ Item {
         }
 
         function connectionChange() {
-            appMain.rootStore.connectionChange(d.networkChecker.connectionType, d.networkChecker.isExpensive)
+            appMain.rootStore.connectionChange(
+                d.networkChecker.connectionType,
+                d.networkChecker.isExpensive,
+                d.networkChecker.isOnline
+            )
         }
 
         function openLinkInBrowser(link: string) {

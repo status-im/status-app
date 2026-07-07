@@ -94,10 +94,10 @@ QtObject {
         internal.mainModuleInst.windowDeactivated()
     }
 
-    function connectionChange(connectionType, isExpensive) {
+    function connectionChange(connectionType, isExpensive, isOnline) {
         if(!internal.mainModuleInst)
             return
-        internal.mainModuleInst.connectionChange(connectionType, isExpensive)
+        internal.mainModuleInst.connectionChange(connectionType, isExpensive, isOnline)
     }
 
     function setActiveSectionBySectionType(sectionType) {

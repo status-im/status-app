@@ -315,12 +315,6 @@ proc init*(self: Controller) =
     var args = CommunityRequestArgs(e)
     self.delegate.communityMemberRevealedAccountsAdded(args.communityRequest)
 
-  self.events.on(SIGNAL_NETWORK_CONNECTED) do(e: Args):
-    self.delegate.onNetworkConnected()
-
-  self.events.on(SIGNAL_NETWORK_DISCONNECTED) do(e: Args):
-    self.delegate.onNetworkDisconnected()
-
   self.events.on(SIGNAL_CURRENT_USER_STATUS_UPDATED) do (e: Args):
     var args = CurrentUserStatusArgs(e)
     singletonInstance.userProfile.setCurrentUserStatus(args.statusType.int)
