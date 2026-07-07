@@ -11,6 +11,7 @@ TokensStore {
 
     property var tokenGroupsModel
     property var tokenGroupsForChainModel
+    property var tokenGroupsForChainToModel
     property var searchResultModel
     property bool showCommunityAssetsInSend
     property bool displayAssetsBelowBalance
@@ -22,17 +23,28 @@ TokensStore {
     }
 
     function buildGroupsForChain(chainId) {
+        root._buildGroupsInto(root.tokenGroupsForChainModel, chainId)
+        // keep the destination model in sync so receive-panel tests have data
+        if (root.tokenGroupsForChainToModel)
+            root._buildGroupsInto(root.tokenGroupsForChainToModel, chainId)
+    }
+
+    function buildGroupsForChainTo(chainId) {
+        root._buildGroupsInto(root.tokenGroupsForChainToModel, chainId)
+    }
+
+    function _buildGroupsInto(targetModel, chainId) {
         if (!root.tokenGroupsModel || chainId <= 0) {
             console.warn("buildGroupsForChain: invalid parameters", chainId)
             return
         }
 
-        if (!root.tokenGroupsForChainModel) {
-            console.warn("buildGroupsForChain: tokenGroupsForChainModel is not set")
+        if (!targetModel) {
+            console.warn("buildGroupsForChain: target model is not set")
             return
         }
 
-        root.tokenGroupsForChainModel.clear()
+        targetModel.clear()
 
         for (let i = 0; i < root.tokenGroupsModel.ModelCount.count; i++) {
             const group = ModelUtils.get(root.tokenGroupsModel, i)
@@ -62,7 +74,7 @@ TokensStore {
             }
 
             if (tokensListModel.count > 0) {
-                root.tokenGroupsForChainModel.append({
+                targetModel.append({
                     key: group.key,
                     symbol: group.symbol,
                     name: group.name,

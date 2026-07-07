@@ -58,6 +58,9 @@ Item {
                 tokenGroupsForChainModel: TokenGroupsModel {
                     skipInitialLoad: true
                 }
+                tokenGroupsForChainToModel: TokenGroupsModel {
+                    skipInitialLoad: true
+                }
                 searchResultModel: TokenGroupsModel {
                     skipInitialLoad: true
                     tokenGroupsForChainModel: thisWalletAssetStore.walletTokensStore.tokenGroupsForChainModel
@@ -1773,7 +1776,7 @@ Item {
             verify(!!payPanel)
             const maxTagButton = findChild(payPanel, "maxTagButton")
             verify(!!maxTagButton)
-            const networkComboBox = findChild(controlUnderTest, "networkFilter")
+            const networkComboBox = findChild(payPanel, "networkFilter")
             verify(!!networkComboBox)
             const errorTag = findChild(controlUnderTest, "errorTag")
             verify(!!errorTag)
@@ -1859,7 +1862,7 @@ Item {
 
             const receivePanel = findChild(controlUnderTest, "receivePanel")
             verify(!!receivePanel)
-            const networkComboBox = findChild(controlUnderTest, "networkFilter")
+            const networkComboBox = findChild(receivePanel, "networkFilter")
             verify(!!networkComboBox)
 
             for (let i=0; i<networkComboBox.control.popup.contentItem.count; i++) {

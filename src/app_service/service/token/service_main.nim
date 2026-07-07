@@ -270,6 +270,40 @@ proc onAsyncBuildGroupsForChainDone(self: Service, response: string) {.slot.} =
 proc getGroupsForChainLoading*(self: Service): bool =
   return self.groupsForChainLoading
 
+proc buildGroupsForChainTo*(self: Service, chainId: int) =
+  if chainId <= 0:
+    warn "invalid chainId", chainId = chainId
+    return
+  self.groupsForChainToLoading = true
+  let arg = AsyncBuildGroupsForChainTaskArg(
+    tptr: asyncBuildGroupsForChainTask,
+    vptr: cast[uint](self.vptr),
+    slot: "onAsyncBuildGroupsForChainToDone",
+    chainId: chainId,
+  )
+  self.threadpool.start(arg)
+
+proc onAsyncBuildGroupsForChainToDone(self: Service, response: string) {.slot.} =
+  self.groupsForChainToLoading = false
+  try:
+    let env = Json.decode(response, BuildGroupsForChainResponse, allowUnknownFields = true)
+    if env.error.len > 0:
+      error "async build groups for chain (to) failed", errDescription = env.error
+      self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED, Args())
+      return
+    let tokens = env.tokens.map(t => createTokenItem(t))
+    var groupsByKey = initTable[string, TokenGroupItem](tokens.len)
+    createTokenGroupsFromTokens(tokens, groupsByKey)
+    self.groupsForChainTo = toSeq(groupsByKey.values)
+    sortTokenGroupsByName(self.groupsForChainTo)
+    self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED, Args())
+  except Exception as e:
+    error "error processing async build groups for chain (to)", msg = e.msg
+    self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED, Args())
+
+proc getGroupsForChainToLoading*(self: Service): bool =
+  return self.groupsForChainToLoading
+
 proc asyncFetchAllTokenGroups*(self: Service) =
   self.allTokenGroupsLoading = true
   let arg = AsyncFetchAllTokenGroupsTaskArg(
@@ -305,6 +339,9 @@ proc getAllTokenGroupsLoading*(self: Service): bool =
 
 proc getGroupsForChain*(self: Service): var seq[TokenGroupItem] =
   return self.groupsForChain
+
+proc getGroupsForChainTo*(self: Service): var seq[TokenGroupItem] =
+  return self.groupsForChainTo
 
 proc getAllTokenLists*(self: Service): var seq[TokenListItem] =
   return self.allTokenLists

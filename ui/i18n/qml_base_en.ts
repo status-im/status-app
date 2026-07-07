@@ -8237,6 +8237,14 @@ Are you sure you want to do this?</source>
 <context>
     <name>HandlersManager</name>
     <message>
+        <source>Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Swap is not available in the testnet mode.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Push notifications enabled</source>
         <translation type="unfinished"></translation>
     </message>
@@ -16474,10 +16482,6 @@ to load</source>
     <name>SwapModal</name>
     <message>
         <source>Swap</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>On:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

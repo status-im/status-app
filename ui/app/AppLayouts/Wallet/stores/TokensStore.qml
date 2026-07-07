@@ -99,6 +99,8 @@ QtObject {
     */
     readonly property var tokenGroupsModel: !!root._allTokensModule ? root._allTokensModule.tokenGroupsModel : null
     readonly property var tokenGroupsForChainModel: !!root._allTokensModule ? root._allTokensModule.tokenGroupsForChainModel : null
+    // destination-chain catalog for the swap+bridge receive panel
+    readonly property var tokenGroupsForChainToModel: !!root._allTokensModule ? root._allTokensModule.tokenGroupsForChainToModel : null
     readonly property var searchResultModel: !!root._allTokensModule ? root._allTokensModule.searchResultModel : null
 
     // Property and methods below are used to apply advanced token management settings to the SendModal
@@ -109,6 +111,7 @@ QtObject {
     readonly property bool autoRefreshTokensLists: root._allTokensModule.autoRefreshTokensLists
     readonly property bool tokenListsLoading: !!root._allTokensModule ? root._allTokensModule.tokenListsLoading : false
     readonly property bool groupsForChainLoading: !!root._allTokensModule ? root._allTokensModule.groupsForChainLoading : false
+    readonly property bool groupsForChainToLoading: !!root._allTokensModule ? root._allTokensModule.groupsForChainToLoading : false
 
     signal displayAssetsBelowBalanceThresholdChanged()
 
@@ -119,6 +122,10 @@ QtObject {
 
     function buildGroupsForChain(chainId, mandatoryKeys) {
         root._allTokensModule.buildGroupsForChain(chainId, mandatoryKeys)
+    }
+
+    function buildGroupsForChainTo(chainId, mandatoryKeys) {
+        root._allTokensModule.buildGroupsForChainTo(chainId, mandatoryKeys)
     }
 
     // Due to performance reasons, use this function as the last option, when you're sure the token is not present in the models.

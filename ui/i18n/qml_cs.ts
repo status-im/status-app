@@ -8278,6 +8278,14 @@ Opravdu to chcete udělat?</translation>
 <context>
     <name>HandlersManager</name>
     <message>
+        <source>Info</source>
+        <translation type="unfinished">Info</translation>
+    </message>
+    <message>
+        <source>Swap is not available in the testnet mode.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Push notifications enabled</source>
         <translation type="unfinished"></translation>
     </message>
@@ -16567,10 +16575,6 @@ selhalo</translation>
     <message>
         <source>Swap</source>
         <translation>Směnit</translation>
-    </message>
-    <message>
-        <source>On:</source>
-        <translation>Na:</translation>
     </message>
     <message>
         <source>Add assets</source>

@@ -73,11 +73,17 @@ proc getAllTokenLists*(self: Controller): var seq[TokenListItem] =
 proc buildGroupsForChain*(self: Controller, chainId: int) =
   self.tokenService.buildGroupsForChain(chainId)
 
+proc buildGroupsForChainTo*(self: Controller, chainId: int) =
+  self.tokenService.buildGroupsForChainTo(chainId)
+
 proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Controller, key: string): TokenItem =
   return self.tokenService.getTokenByKeyOrGroupKeyFromAllTokens(key)
 
 proc getGroupsForChain*(self: Controller): var seq[TokenGroupItem] =
   return self.tokenService.getGroupsForChain()
+
+proc getGroupsForChainTo*(self: Controller): var seq[TokenGroupItem] =
+  return self.tokenService.getGroupsForChainTo()
 
 proc getGroupsOfInterest*(self: Controller): var seq[TokenGroupItem] =
   return self.tokenService.getGroupsOfInterest()
@@ -164,3 +170,6 @@ proc getTokenListsLoading*(self: Controller): bool =
 
 proc getGroupsForChainLoading*(self: Controller): bool =
   return self.tokenService.getGroupsForChainLoading()
+
+proc getGroupsForChainToLoading*(self: Controller): bool =
+  return self.tokenService.getGroupsForChainToLoading()

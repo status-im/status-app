@@ -37,6 +37,14 @@ QObject {
     required property var assetsModel
 
     property var allTokenGroupsForChainModel // all token groups, loaded on demand
+    // re-sync lazy-loading state when the model reference is swapped (the Connections below
+    // only fire on content change, not on a model swap), else the view strands on "loading more"
+    onAllTokenGroupsForChainModelChanged: {
+        if (!!allTokenGroupsForChainModel) {
+            root.fullOutputAssetsModel.hasMoreItems = allTokenGroupsForChainModel.hasMoreItems
+            root.fullOutputAssetsModel.isLoadingMore = allTokenGroupsForChainModel.isLoadingMore
+        }
+    }
     property var searchResultModel // token groups that match the search keyword
 
     // expected roles: chainId, chainName, iconUrl

@@ -74,6 +74,8 @@ method load*(self: Module) =
     self.view.tokenListsUpdated()
   self.events.on(SIGNAL_GROUPS_FOR_CHAIN_LOADED) do(e: Args):
     self.view.onGroupsForChainLoaded()
+  self.events.on(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED) do(e: Args):
+    self.view.onGroupsForChainToLoaded()
 
   self.controller.init()
   self.view.load()
@@ -125,6 +127,16 @@ method getTokenGroupsForChainModelDataSource*(self: Module): TokenGroupsModelDat
     getTokensMarketValuesLoading: proc(): bool = self.controller.getTokensMarketValuesLoading(),
   )
 
+method getTokenGroupsForChainToModelDataSource*(self: Module): TokenGroupsModelDataSource =
+  return (
+    getAllTokenGroups: proc(): var seq[TokenGroupItem] = self.controller.getGroupsForChainTo(),
+    getTokenDetails: proc(tokenKey: string): TokenDetailsItem = self.controller.getTokenDetails(tokenKey),
+    getTokenPreferences: proc(groupKey: string): TokenPreferencesItem = self.controller.getTokenPreferences(groupKey),
+    getCommunityTokenDescription: proc(chainId: int, address: string): string = self.controller.getCommunityTokenDescription(chainId, address),
+    getTokensDetailsLoading: proc(): bool = self.controller.getTokensDetailsLoading(),
+    getTokensMarketValuesLoading: proc(): bool = self.controller.getTokensMarketValuesLoading(),
+  )
+
 method getTokenMarketValuesDataSource*(self: Module): TokenMarketValuesDataSource =
   return (
     getMarketValuesForToken: proc(tokenKey: string): TokenMarketValuesItem = self.controller.getMarketValuesForToken(tokenKey),
@@ -135,6 +147,9 @@ method getTokenMarketValuesDataSource*(self: Module): TokenMarketValuesDataSourc
 
 method buildGroupsForChain*(self: Module, chainId: int) =
   self.controller.buildGroupsForChain(chainId)
+
+method buildGroupsForChainTo*(self: Module, chainId: int) =
+  self.controller.buildGroupsForChainTo(chainId)
 
 method getTokenByKeyOrGroupKeyFromAllTokens*(self: Module, key: string): TokenItem =
   return self.controller.getTokenByKeyOrGroupKeyFromAllTokens(key)
