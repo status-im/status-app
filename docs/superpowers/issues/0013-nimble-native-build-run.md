@@ -4,7 +4,7 @@ title: nimble-native build/run OOTB — env-independent config, artifact hook, o
 date: 2026-07-07
 tracker: local (GH publication deferred by user)
 triage-label: ready-for-agent
-status: open
+status: done (2026-07-08)
 ---
 
 ## Parent
@@ -83,21 +83,21 @@ store content cannot leak.
 
 ## Acceptance criteria
 
-- [ ] Fresh clone + kit env, empty `~/.nimble`: `nimble run` → app builds
+- [x] Fresh clone + kit env, empty `~/.nimble`: `nimble run` → app builds
   (native artifacts included) and launches. `nimble build` → runnable build.
-- [ ] `nim app status.nims` / `make nim_status_client` produce byte-identical
+- [x] `nim app status.nims` / `make nim_status_client` produce byte-identical
   behavior against the same (default) store; no second dependency graph
   anywhere.
-- [ ] No-op `nimble build` re-run: hook overhead seconds-level past nimble's
+- [x] No-op `nimble build` re-run: hook overhead seconds-level past nimble's
   own dispatch tax (record both numbers).
-- [ ] Develop mode composes: `nim develop status.nims sds` + `nimble build`
+- [x] Develop mode composes: `nim develop status.nims sds` + `nimble build`
   picks up vendor edits (overlay honored via nimble.paths + hook).
-- [ ] Missing kit env: `nimble build` fails fast (<5 s past dispatch) with
+- [x] Missing kit env: `nimble build` fails fast (<5 s past dispatch) with
   the exact-variable message (hook runs the same validation as `app`).
-- [ ] config.nims env-vs-derived parity: with make env present, derived
+- [x] config.nims env-vs-derived parity: with make env present, derived
   values match exported ones (bring-up assertion documented, then relaxed
   to prefer-env).
-- [ ] Stale-store immunity: a deliberately planted stale package in
+- [x] Stale-store immunity: a deliberately planted stale package in
   `~/.nimble/pkgs2` (not in nimble.paths) does not enter the compile.
 
 ## Blockers — grill before implementing
@@ -115,6 +115,93 @@ store content cannot leak.
 ## Blocked by
 
 Nothing (iteration-2 issues all closed). Holds the in-tree build lock.
+
+## Verification record (2026-07-08)
+
+Store: `~/.nimble` (default, post-phase-D). Host kit: `QMAKE=~/Qt/6.11.0/
+macos/bin/qmake`. Nested-worktree caveat: `nimble build`/`run` inside THIS
+dev tree additionally export QT_LIBDIR/STATUSGO_LIBDIR/STATUSKEYCARD_QT_
+LIBDIR/STATUSKEYCARDGO_LIBDIR/STATUSQ_INSTALL_PATH — the ENCLOSING checkout's
+old config.nims emits bare `-rpath` link args when they're absent (parent-
+config wall, out of scope per Decisions; normal clones need none of it —
+proven by the clean-room leg below).
+
+1. **`nimble build` → runnable build** — rc=0 in 89 s warm (dispatch +
+   hook + client compile+link); `before build` hook drove `nim
+   buildArtifacts status.nims` → `make client-deps` (StatusQ, statusgo
+   scratch + libsds, keycard, qrcodegen, DOtherSide, rcc, translations,
+   qt-pkgconfig), `after build` hook applied the install_name fixups;
+   binary at `bin/nim_status_client` (binDir). `nimble run` rebuilt and
+   LAUNCHED the app (QML Onboarding up, killed clean).
+2. **Byte-identical behavior make vs nimble against one store** — after two
+   parity fixes this pass found (release-define ordering had silently
+   stripped make's debug map: 133k vs 415k symbols; missing
+   MACOSX_DEPLOYMENT_TARGET at link flipped ObjC section placement):
+   `__text`/`__const`/`__cstring` section hashes IDENTICAL, `__data` equal,
+   symbol SETS and addresses identical (nm md5 equal), load commands
+   identical. Residual delta = 14,783 bytes: LC_UUID (16 B, the only
+   pre-__LINKEDIT difference), 839 OSO stab mtimes (0 path diffs; stabs
+   track nimcache .o mtimes — 0009/0012 documented), and the code signature
+   over those pages. make-vs-make relink with unchanged .o files is fully
+   byte-identical (0 differing bytes) — the residue is relink-time
+   nondeterminism, not a flag asymmetry. One graph: compile json shows 21
+   store entries, ALL from nimble.paths; zero old-store references.
+3. **No-op `nimble build` re-run: hook overhead vs dispatch tax** — hook
+   no-op (`nim buildArtifacts status.nims`) = **6.55 s** (make client-deps
+   5.8 s + ~0.7 s driver eval; 0008/0010 baselines: no-op app 5.9–7 s).
+   nimble dispatch tax ≈ **78 s** on this manifest (fail-fast run minus
+   ~1.5 s hook = pure revalidation; documented upstream ask #4 class).
+   Client compile+link re-runs unconditionally under nimble
+   (needsRebuild=true for build/run) ≈ 35–45 s warm on top.
+4. **Develop mode composes** — `nim develop status.nims sds` +
+   `nimble build`: the hook's stamp re-ran setup + applyOverlay
+   ("sds → vendor/nim-sds (2 path entries)"), probe string added to
+   `vendor/nim-sds/library/libsds.nim` appeared in BOTH the in-place
+   artifact and `.statusgo-build/.sds-build/build/libsds.dylib` (cmp-mirror
+   engine); `nim undevelop status.nims sds` + `nimble build` returned to the
+   pin (probe gone, nimble.paths back to 2 store sds entries).
+5. **Missing kit env fails fast** — `env -i HOME=$HOME
+   PATH=$HOME/.nimble/bin:/usr/bin:/bin nimble build` → rc=1 with the
+   driver's exact message ("QMAKE is not set and no qmake is on PATH" +
+   kit-hint block) ≈ 1–2 s past dispatch (total 79.9 s, dispatch ≈ 78 s;
+   budget: <5 s past dispatch).
+6. **config.nims env-vs-derived parity** — every phase-D/A build ran with
+   `STATUS_BUILD_ENV_ASSERT=1` (hard-fails on env≠derived): full make chain
+   incl. two forced client relinks, all green. Relaxed default = prefer-env
+   (assert stays available).
+7. **Stale-store immunity** — `~/.nimble/pkgs2` deliberately contains a
+   whole divergent graph (libp2p-1.15.3, websock-0.3.0, lsquic-0.0.1 + more,
+   installed by the phase-D bad solve and left in place) NOT in
+   nimble.paths: the client compile json references 21 store entries, all
+   ∈ nimble.paths, zero references to any planted entry
+   (--noNimblePath + explicit paths only).
+
+8. **Fresh clone + kit env + EMPTY store (clean-room)** — `git clone` of
+   this branch into the scratch area, `NIMBLE_DIR=~/.nb0013` (fresh, empty;
+   short path per the NAME_MAX wall; pkgcache shared per nimble's own
+   env-NIMBLE_DIR semantics), env = kit only (`QMAKE`, macos kit), NO
+   parent-leak exports (the clone is a normal, non-nested tree):
+   `nimble build` → rc=0 in **9:54** — submodule bootstrap (make .DEFAULT),
+   store solve+install (graph matches the verified one: libp2p-2.0.0,
+   websock-0.4.0), every artifact, client at `bin/nim_status_client`.
+   `nimble run` launched the app (QML up, killed clean). OOTB criterion
+   met with zero repo-specific env.
+   *One-time hiccup, self-healing, follow-up:* the SECOND nimble invocation
+   in the clean room failed its link once — `prepareStatusgo` decided to
+   refresh the scratch mid-run (`.statusgo-origin` drift left by the
+   bootstrap pass) and make's already-cached stat of `$(STATUSGO)` skipped
+   the status-go rebuild, so `-lstatus` vanished for that one build; the
+   third invocation rebuilt status-go and the tree is stable/idempotent
+   since (origin verified unchanged across subsequent builds). Default
+   `nim app` flow unaffected. Noted for a bootstrap-ordering follow-up.
+9. **Mobile regression leg** — `nim app status.nims --os:ios --cpu:arm64`
+   (ios kit + team env) against the new default store: rc=0 in **139 s**,
+   signed `Status.app`, `codesign --verify --deep --strict` OK.
+
+Timing summary (record beside 0008's baselines): driver no-op 5.9–7 s;
+hook no-op 6.55 s; nimble build warm total ≈ 89 s (≈78 s dispatch tax +
+6.5 s hook + compile); clean-room full bootstrap 9:54; iOS leg 139 s;
+make no-op unchanged.
 
 ## Implementation notes
 
