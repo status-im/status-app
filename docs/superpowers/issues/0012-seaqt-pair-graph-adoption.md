@@ -61,6 +61,18 @@ iteration work.
 - The spike outcome itself IS the grill input: whichever branch it selects,
   run a /grill-with-docs session on the findings before the conversion (pass
   path changes config.nims contracts; fail path changes iteration scope).
+- GRILLED 2026-07-07 (spike findings session, user-approved): take the PASS
+  path with the CURRENT submodule SHAs — nim-seaqt `2d95808` (branch
+  `smo-6.4`, the Status-specific generation; the repo's only tag
+  `qt-6.4-seaqt-gen-5bc1bc58…` points exactly at it — durable ref) and
+  nimqml `c5e5831`. Record branch `smo-6.4` in the vendor-table entry so
+  `develop seaqt` checks out the right line. Any pin bump is a SEPARATE
+  later decision: upstream `qt-6.4` is force-pushed and untagged (SHA pins
+  there are fragile; its head drops the QVariantConstPointer include, i.e.
+  the seaqt_compat shim), and a `qt-6.11` branch now exists matching the
+  actual Qt kit — both are follow-up candidates with app-wide API-churn
+  risk, needing their own compile/QA pass and ideally an upstream tag.
+  Conversion remains blocked by 0009.
 
 ## Blocked by
 
