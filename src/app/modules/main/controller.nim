@@ -157,6 +157,11 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_MAILSERVER_NOT_WORKING) do(e: Args):
     self.delegate.emitMailserverNotWorking()
+  self.events.on(node_service.SIGNAL_MESSAGING_NETWORK_CONNECTED) do(e: Args):
+    self.delegate.emitMessagingNetworkConnected()
+
+  self.events.on(node_service.SIGNAL_MESSAGING_NETWORK_DISCONNECTED) do(e: Args):
+    self.delegate.emitMessagingNetworkDisconnected()
 
   self.events.on(SIGNAL_COMMUNITY_JOINED) do(e:Args):
     let args = CommunityArgs(e)
@@ -458,9 +463,6 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_LOGGEDIN_USER_NAME_CHANGED) do(e: Args):
     self.delegate.contactUpdated(singletonInstance.userProfile.getPubKey())
 
-proc isConnected*(self: Controller): bool =
-  return self.nodeService.isConnected()
-
 proc getActiveSectionId*(self: Controller): string =
   result = self.activeSectionId
 
@@ -567,6 +569,9 @@ proc stopTokenHoldersManagement*(self: Controller) =
 
 proc connectionChange*(self: Controller, connectionType: string, isExpensive: bool) =
   self.generalService.connectionChange(connectionType, isExpensive)
+
+proc isMessagingNetworkConnected*(self: Controller): bool =
+  self.nodeService.isConnected()
 
 proc logout*(self: Controller) =
   self.generalService.logout()

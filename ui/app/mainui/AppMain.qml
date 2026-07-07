@@ -224,13 +224,31 @@ Item {
         }
 
         function onMailserverNotWorking() {
-            if (d.activeSectionType === Constants.appSection.chat || d.activeSectionType === Constants.appSection.community)
+            if (d.isMessagingRelatedSectionType)
                 mailserverConnectionBanner.show()
+        }
+
+        function onMessagingNetworkConnected() {
+            d.messagingNetworkDisconnected = false
+            d.doShowMessagingBanner = false
+            d.messagingNetworkBannerDismissed = false
+        }
+
+        function onMessagingNetworkDisconnected() {
+            d.messagingNetworkDisconnected = true
+            d.doShowMessagingBanner = false
+            d.messagingNetworkBannerDismissed = false
         }
 
         function onActiveSectionChanged() {
             createChatView.opened = false
             profileLoader.settingsSubSubsection = -1
+
+            if (!d.isMessagingRelatedSectionType) {
+                d.doShowMessagingBanner = false
+            } else if (d.messagingNetworkDisconnected && !messagingNetworkDisconnectDebounce.running) {
+                d.doShowMessagingBanner = true
+            }
         }
 
         function onShowToastAccountAdded(name: string) {
@@ -815,6 +833,14 @@ Item {
     QtObject {
         id: d
 
+        property bool messagingNetworkDisconnected: !appMain.rootStore.isMessagingNetworkConnected
+        property bool doShowMessagingBanner: false
+        property bool messagingNetworkBannerDismissed: false
+        readonly property bool canShowMessagingBanner: d.messagingNetworkDisconnected
+                                                        && d.isMessagingRelatedSectionType
+                                                        && !d.messagingNetworkBannerDismissed
+                                                        && d.networkChecker.isOnline
+
         // strict online/offline checker, doesn't care about the wallet services
         readonly property var networkChecker: NetworkChecker {
             active: {
@@ -829,6 +855,8 @@ Item {
         }
 
         readonly property int activeSectionType: appMain.rootStore.activeSectionType
+        readonly property bool isMessagingRelatedSectionType: activeSectionType === Constants.appSection.chat ||
+                                                              activeSectionType === Constants.appSection.community
         readonly property bool isWalletRelatedSectionType: activeSectionType === Constants.appSection.wallet ||
                                                            activeSectionType === Constants.appSection.swap || activeSectionType === Constants.appSection.market ||
                                                            activeSectionType === Constants.appSection.dApp
@@ -1454,6 +1482,30 @@ Item {
                 Layout.fillWidth: true
             }
 
+            Timer {
+                id: messagingNetworkDisconnectDebounce
+                // Debounce the messaging network disconnect banner to avoid showing it for brief disconnects
+                interval: 3000
+                repeat: false
+                
+                running: d.canShowMessagingBanner
+                         && !d.doShowMessagingBanner
+                onTriggered: d.doShowMessagingBanner = true
+            }
+
+            ModuleWarning {
+                id: messagingNetworkConnectionBanner
+                active: d.doShowMessagingBanner && d.canShowMessagingBanner
+                delay: false
+                type: ModuleWarning.Warning
+                text: qsTr("Cannot connect to the Logos Messaging network. Messaging may not work. Retrying automatically.")
+                onCloseClicked: {
+                    d.doShowMessagingBanner = false
+                    d.messagingNetworkBannerDismissed = true
+                }
+                Layout.fillWidth: true
+            }
+
             ConnectionWarnings {
                 objectName: "walletBlockchainConnectionBanner"
                 Layout.fillWidth: true
@@ -1919,6 +1971,7 @@ Item {
                         }
                     }
                     onCurrentIndexChanged: {
+                        // We cannot use isMessagingRelatedSectionType here because it is not updated yet
                         if (d.activeSectionType === Constants.appSection.chat || d.activeSectionType === Constants.appSection.community) {
                             if (d.maybeDisplayIntroduceYourselfPopup()) {
                                 // we displayed the popup, so we should not display the enable message backup popup
@@ -2738,7 +2791,7 @@ Item {
             }
 
             accounts: {
-                if (showQR.showSingleAccount || showQR.showForSavedAddress) {
+                 if (showQR.showSingleAccount || showQR.showForSavedAddress) {
                     return null
                 }
                 return appMain.walletRootStore.accounts

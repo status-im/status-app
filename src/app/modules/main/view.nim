@@ -14,6 +14,7 @@ QtObject:
       delegate: io_interface.AccessInterface
       model: section_model.SectionModel
       modelVariant: QVariant
+      online: bool
       sectionsLoaded: bool
       notificationAvailable: bool
       activeSection: SectionDetails
@@ -35,6 +36,7 @@ QtObject:
     result.QObject.setup
     result.delegate = delegate
     result.model = section_model.newModel()
+    result.online = false
     result.sectionsLoaded = false
     result.notificationAvailable = false
     result.modelVariant = newQVariant(result.model)
@@ -139,6 +141,10 @@ QtObject:
 
   proc mailserverNotWorking*(self:View) {.signal.}
 
+  proc messagingNetworkConnected*(self: View) {.signal.}
+
+  proc messagingNetworkDisconnected*(self: View) {.signal.}
+
   proc displayWindowsOsNotification*(self:View, title: string, message: string) {.signal.}
 
   proc emitMailserverWorking*(self: View) =
@@ -146,6 +152,18 @@ QtObject:
 
   proc emitMailserverNotWorking*(self: View) =
     self.mailserverNotWorking()
+
+  proc emitMessagingNetworkConnected*(self: View) =
+    self.messagingNetworkConnected()
+
+  proc emitMessagingNetworkDisconnected*(self: View) =
+    self.messagingNetworkDisconnected()
+
+  proc isMessagingNetworkConnected*(self: View): bool {.slot.} =
+    return self.delegate.isMessagingNetworkConnected()
+
+  QtProperty[bool] isMessagingNetworkConnected:
+    read = isMessagingNetworkConnected
 
   proc activeSection*(self: View): SectionDetails =
     return self.activeSection
@@ -239,9 +257,12 @@ QtObject:
   proc onlineStatusChanged(self: View, connected: bool) {.signal.}
 
   proc isConnected*(self: View): bool {.slot.} =
-    result = self.delegate.isConnected()
+    result = self.online
 
   proc setConnected*(self: View, connected: bool) = # Not a slot
+    if self.online == connected:
+      return
+    self.online = connected
     self.onlineStatusChanged(connected)
 
   QtProperty[bool] isOnline:

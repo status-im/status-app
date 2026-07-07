@@ -21,6 +21,7 @@ QtObject {
     // rest and specific stores
     readonly property bool isProduction: production
     readonly property bool isOnline: internal.mainModuleInst.isOnline
+    readonly property bool isMessagingNetworkConnected: !!internal.mainModuleInst && internal.mainModuleInst.isMessagingNetworkConnected
     readonly property var sectionsModel: internal.mainModuleInst.sectionsModel
     readonly property bool sectionsLoaded: internal.mainModuleInst && internal.mainModuleInst.sectionsLoaded
     readonly property string activeSectionId: internal.mainModuleInst.activeSection.id
@@ -150,6 +151,8 @@ QtObject {
     signal playNotificationSound()
     signal mailserverWorking()
     signal mailserverNotWorking()
+    signal messagingNetworkConnected()
+    signal messagingNetworkDisconnected()
 
     function displayEphemeralNotification(title: string, subTitle: string,
                                           image: string, icon: string,
@@ -188,6 +191,14 @@ QtObject {
 
         function onMailserverNotWorking() {
             root.mailserverNotWorking()
+        }
+
+        function onMessagingNetworkConnected() {
+            root.messagingNetworkConnected()
+        }
+
+        function onMessagingNetworkDisconnected() {
+            root.messagingNetworkDisconnected()
         }
     }
     // End of Notifications related stuff

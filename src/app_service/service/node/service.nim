@@ -10,9 +10,8 @@ import ../../../backend/node as status_node
 logScope:
   topics = "node-service"
 
-# Signals which may be emitted by this service:
-const SIGNAL_NETWORK_DISCONNECTED* = "networkDisconnected"
-const SIGNAL_NETWORK_CONNECTED* = "networkConnected"
+const SIGNAL_MESSAGING_NETWORK_DISCONNECTED* = "messagingNetworkDisconnected"
+const SIGNAL_MESSAGING_NETWORK_CONNECTED* = "messagingNetworkConnected"
 
 QtObject:
   type Service* = ref object of QObject
@@ -37,9 +36,9 @@ QtObject:
     info "waku connection status changed", connected
     self.connected = connected
     if self.connected:
-      self.events.emit(SIGNAL_NETWORK_CONNECTED, Args())
+      self.events.emit(SIGNAL_MESSAGING_NETWORK_CONNECTED, Args())
     else:
-      self.events.emit(SIGNAL_NETWORK_DISCONNECTED, Args())
+      self.events.emit(SIGNAL_MESSAGING_NETWORK_DISCONNECTED, Args())
 
   proc init*(self: Service) =
     self.events.on(SignalType.ConnectionStatusChange.event) do(e: Args):

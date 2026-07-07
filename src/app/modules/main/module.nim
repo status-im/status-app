@@ -1167,6 +1167,15 @@ method emitMailserverWorking*[T](self: Module[T]) =
 method emitMailserverNotWorking*[T](self: Module[T]) =
   self.view.emitMailserverNotWorking()
 
+method emitMessagingNetworkConnected*[T](self: Module[T]) =
+  self.view.emitMessagingNetworkConnected()
+
+method emitMessagingNetworkDisconnected*[T](self: Module[T]) =
+  self.view.emitMessagingNetworkDisconnected()
+
+method isMessagingNetworkConnected*[T](self: Module[T]): bool =
+  self.controller.isMessagingNetworkConnected()
+
 method setCommunityIdToSpectate*[T](self: Module[T], communityId: string) =
   self.pendingSpectateRequest.communityId = communityId
   self.pendingSpectateRequest.channelUuid = ""
@@ -1270,9 +1279,6 @@ method onNotificationsUpdated[T](self: Module[T], sectionId: string, sectionHasU
 
 method onPlayNotificationSound[T](self: Module[T]) =
   self.view.playNotificationSound()
-
-method isConnected[T](self: Module[T]): bool =
-  self.controller.isConnected()
 
 method getAppSearchModule*[T](self: Module[T]): QVariant =
   self.appSearchModule.getModuleAsVariant()
