@@ -55,8 +55,12 @@
         <translation>Ayuda de Status</translation>
     </message>
     <message>
-        <source>Status desktop’s GitHub Repositories</source>
-        <translation>Repositorios de GitHub de Status desktop</translation>
+        <source>Status desktop&apos;s GitHub Repositories</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>logos-delivery-go</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>status-desktop</source>
@@ -69,10 +73,6 @@
     <message>
         <source>StatusQ</source>
         <translation>StatusQ</translation>
-    </message>
-    <message>
-        <source>go-waku</source>
-        <translation>go-waku</translation>
     </message>
     <message>
         <source>Legal &amp; Privacy Documents</source>
@@ -1067,10 +1067,6 @@
         <translation>Permisos de comunidad ENS habilitados</translation>
     </message>
     <message>
-        <source>WakuV2 options</source>
-        <translation>Opciones de WakuV2</translation>
-    </message>
-    <message>
         <source>The account will be logged out. When you login again, the selected mode will be enabled</source>
         <translation>La cuenta se cerrará sesión. Cuando vuelvas a iniciar sesión, el modo seleccionado estará habilitado</translation>
     </message>
@@ -1101,6 +1097,10 @@
     <message>
         <source>Debug</source>
         <translation>Depuración</translation>
+    </message>
+    <message>
+        <source>Logos Messaging options</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>The value is overridden with runtime options</source>

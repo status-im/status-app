@@ -55,8 +55,12 @@
         <translation>Nápověda Status</translation>
     </message>
     <message>
-        <source>Status desktop’s GitHub Repositories</source>
-        <translation>GitHub repozitáře Status desktop</translation>
+        <source>Status desktop&apos;s GitHub Repositories</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>logos-delivery-go</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>status-desktop</source>
@@ -69,10 +73,6 @@
     <message>
         <source>StatusQ</source>
         <translation>StatusQ</translation>
-    </message>
-    <message>
-        <source>go-waku</source>
-        <translation>go-waku</translation>
     </message>
     <message>
         <source>Legal &amp; Privacy Documents</source>
@@ -1070,10 +1070,6 @@
         <translation>Oprávnění ENS komunity povolena</translation>
     </message>
     <message>
-        <source>WakuV2 options</source>
-        <translation>Možnosti WakuV2</translation>
-    </message>
-    <message>
         <source>The account will be logged out. When you login again, the selected mode will be enabled</source>
         <translation>Účet bude odhlášen. Po opětovném přihlášení bude vybraný režim povolen</translation>
     </message>
@@ -1104,6 +1100,10 @@
     <message>
         <source>Debug</source>
         <translation>Ladění</translation>
+    </message>
+    <message>
+        <source>Logos Messaging options</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>The value is overridden with runtime options</source>

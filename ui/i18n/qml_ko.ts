@@ -55,8 +55,12 @@
         <translation>Status 도움말</translation>
     </message>
     <message>
-        <source>Status desktop’s GitHub Repositories</source>
-        <translation>Status 데스크톱의 GitHub 저장소</translation>
+        <source>Status desktop&apos;s GitHub Repositories</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>logos-delivery-go</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>status-desktop</source>
@@ -69,10 +73,6 @@
     <message>
         <source>StatusQ</source>
         <translation>StatusQ</translation>
-    </message>
-    <message>
-        <source>go-waku</source>
-        <translation>go-waku</translation>
     </message>
     <message>
         <source>Legal &amp; Privacy Documents</source>
@@ -1064,10 +1064,6 @@
         <translation>ENS 커뮤니티 권한 활성화됨</translation>
     </message>
     <message>
-        <source>WakuV2 options</source>
-        <translation>WakuV2 옵션</translation>
-    </message>
-    <message>
         <source>The account will be logged out. When you login again, the selected mode will be enabled</source>
         <translation>계정이 로그아웃됩니다. 다시 로그인하면 선택한 모드가 활성화됩니다</translation>
     </message>
@@ -1098,6 +1094,10 @@
     <message>
         <source>Debug</source>
         <translation>디버그</translation>
+    </message>
+    <message>
+        <source>Logos Messaging options</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>The value is overridden with runtime options</source>

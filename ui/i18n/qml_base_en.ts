@@ -55,7 +55,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Status desktop’s GitHub Repositories</source>
+        <source>Status desktop&apos;s GitHub Repositories</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>logos-delivery-go</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -68,10 +72,6 @@
     </message>
     <message>
         <source>StatusQ</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>go-waku</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1067,10 +1067,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>WakuV2 options</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>The account will be logged out. When you login again, the selected mode will be enabled</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1100,6 +1096,10 @@
     </message>
     <message>
         <source>Debug</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Logos Messaging options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
