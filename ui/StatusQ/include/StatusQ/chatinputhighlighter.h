@@ -54,6 +54,12 @@ class ChatInputHighlighter : public QSyntaxHighlighter
     Q_PROPERTY(QColor codeBackground
                READ codeBackground WRITE setCodeBackground
                NOTIFY codeBackgroundChanged)
+    Q_PROPERTY(QColor delimiterColor
+               READ delimiterColor WRITE setDelimiterColor
+               NOTIFY delimiterColorChanged)
+    Q_PROPERTY(QColor linkColor
+               READ linkColor WRITE setLinkColor
+               NOTIFY linkColorChanged)
     Q_PROPERTY(bool formatUnclosedCodeFence
                READ formatUnclosedCodeFence WRITE setFormatUnclosedCodeFence
                NOTIFY formatUnclosedCodeFenceChanged)
@@ -71,6 +77,12 @@ public:
 
     QColor codeBackground() const;
     void setCodeBackground(QColor color);
+
+    QColor delimiterColor() const;
+    void setDelimiterColor(QColor color);
+
+    QColor linkColor() const;
+    void setLinkColor(QColor color);
 
     bool formatUnclosedCodeFence() const;
     void setFormatUnclosedCodeFence(bool enabled);
@@ -146,6 +158,8 @@ public:
 signals:
     void quickTextDocumentChanged();
     void codeBackgroundChanged();
+    void delimiterColorChanged();
+    void linkColorChanged();
     void formatUnclosedCodeFenceChanged();
     void enlargeEmojisChanged();
 
@@ -178,6 +192,8 @@ private:
     mutable QString m_astText;          // document text the cached AST was parsed from
     mutable bool m_astValid{false};     // whether m_ast/m_astText are current
     QColor m_codeBackground{Qt::transparent};
+    QColor m_delimiterColor{Qt::darkGray};
+    QColor m_linkColor{Qt::blue};
     bool m_formatUnclosedCodeFence{false};
     bool m_enlargeEmojis{true};
     ChatInputLinksModel* m_linksModel{nullptr};

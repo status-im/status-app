@@ -30,7 +30,7 @@ constexpr unsigned int kDelimiter     = 1u << 3; // emphasis/fence markers: dark
 constexpr unsigned int kCode          = 1u << 4; // single-backtick: monospace + background
 constexpr unsigned int kCodeFence     = 1u << 5; // triple-backtick content: monospace
 constexpr unsigned int kLink          = 1u << 6; // URL: blue foreground
-constexpr unsigned int kQuote         = 1u << 7; // block-quote line: dark blue
+constexpr unsigned int kQuote         = 1u << 7; // block-quote line: default text color
 
 // Emphasis bits that an outer span propagates into nested code/quote content.
 constexpr unsigned int kEmphasisMask  = kBold | kItalic | kStrikeThrough;
@@ -680,6 +680,34 @@ void ChatInputHighlighter::setCodeBackground(QColor color)
     emit codeBackgroundChanged();
 }
 
+QColor ChatInputHighlighter::delimiterColor() const
+{
+    return m_delimiterColor;
+}
+void ChatInputHighlighter::setDelimiterColor(QColor color)
+{
+    if (m_delimiterColor == color)
+        return;
+    m_delimiterColor = color;
+    m_cachedText.clear();
+    rehighlight();
+    emit delimiterColorChanged();
+}
+
+QColor ChatInputHighlighter::linkColor() const
+{
+    return m_linkColor;
+}
+void ChatInputHighlighter::setLinkColor(QColor color)
+{
+    if (m_linkColor == color)
+        return;
+    m_linkColor = color;
+    m_cachedText.clear();
+    rehighlight();
+    emit linkColorChanged();
+}
+
 bool ChatInputHighlighter::formatUnclosedCodeFence() const
 {
     return m_formatUnclosedCodeFence;
@@ -720,7 +748,7 @@ QTextCharFormat ChatInputHighlighter::buildFormat(unsigned int bits) const
 {
     QTextCharFormat fmt;
     if (bits & kDelimiter) {
-        fmt.setForeground(QColor(Qt::darkGray));
+        fmt.setForeground(m_delimiterColor);
         return fmt;
     }
     if (bits & kCodeFence) {
@@ -734,8 +762,7 @@ QTextCharFormat ChatInputHighlighter::buildFormat(unsigned int bits) const
     if (bits & kBold)          fmt.setFontWeight(QFont::Bold);
     if (bits & kItalic)        fmt.setFontItalic(true);
     if (bits & kStrikeThrough) fmt.setFontStrikeOut(true);
-    if (bits & kLink)          fmt.setForeground(QColor(Qt::blue));
-    else if (bits & kQuote)    fmt.setForeground(QColor(Qt::darkBlue));
+    if (bits & kLink)          fmt.setForeground(m_linkColor);
     return fmt;
 }
 

@@ -87,8 +87,7 @@ QString renderChildren(const Node& node,
 // Inline code markup; `content` is already escaped.
 QString codeSpanHtml(const QString& content)
 {
-    return QStringLiteral("<code style=\"background-color:#e8e8e8;\">%1</code>")
-            .arg(content);
+    return QStringLiteral("<code>%1</code>").arg(content);
 }
 
 QString renderNode(const Node& node,
@@ -126,7 +125,8 @@ QString renderNode(const Node& node,
         const auto it = mentions.constFind(static_cast<int>(node.start));
         const QString name = it != mentions.cend() ? it->first  : QStringLiteral("@mention");
         const QString href = it != mentions.cend() ? it->second : QString();
-        return QStringLiteral("<a href=\"%1\" style=\"background-color:#e3f2fd;\">%2</a>")
+        // Background is applied by the consumer via an `a.mention { … }` CSS rule.
+        return QStringLiteral("<a href=\"%1\" class=\"mention\">%2</a>")
                 .arg(escape(href), escape(name));
     }
 

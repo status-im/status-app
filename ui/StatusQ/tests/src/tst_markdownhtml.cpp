@@ -34,7 +34,7 @@ private slots:
 
     void codeSpan()
     {
-        QCOMPARE(h("`hi`"), "<code style=\"background-color:#e8e8e8;\">hi</code>");
+        QCOMPARE(h("`hi`"), "<code>hi</code>");
     }
 
     // A fenced code block is its own block element (separate paragraph).
@@ -52,14 +52,14 @@ private slots:
         const QString text = "hi " + QString(QChar(0xFFFC));
         const QHash<int, QPair<QString, QString>> m{ {3, {"@alice", "0xabc"}} };
         QCOMPARE(h(text, m),
-                 "hi <a href=\"0xabc\" style=\"background-color:#e3f2fd;\">@alice</a>");
+                 "hi <a href=\"0xabc\" class=\"mention\">@alice</a>");
     }
 
     void mentionWithoutMetadataFallsBack()
     {
         const QString text = QString(QChar(0xFFFC));
         QCOMPARE(h(text),
-                 "<a href=\"\" style=\"background-color:#e3f2fd;\">@mention</a>");
+                 "<a href=\"\" class=\"mention\">@mention</a>");
     }
 
     void quoteBlock()
@@ -225,7 +225,7 @@ private slots:
         QCOMPARE(b.size(), 1);
         QCOMPARE(b[0].toMap()["type"].toString(), "text");
         QCOMPARE(b[0].toMap()["html"].toString(),
-                 "<br/><code style=\"background-color:#e8e8e8;\">A</code><br/><br/>B");
+                 "<br/><code>A</code><br/><br/>B");
     }
 
     // A multi-line code span wrapped in emphasis is still split per line (the emphasis is
@@ -236,7 +236,7 @@ private slots:
         QCOMPARE(b.size(), 1);
         QCOMPARE(b[0].toMap()["type"].toString(), "text");
         QCOMPARE(b[0].toMap()["html"].toString(),
-                 "<br/><i><code style=\"background-color:#e8e8e8;\">A</code></i><br/><br/>B");
+                 "<br/><i><code>A</code></i><br/><br/>B");
     }
 
     // A single-line inline code span still emits exactly one <code> (regression guard).
@@ -246,7 +246,7 @@ private slots:
         QCOMPARE(b.size(), 1);
         QCOMPARE(b[0].toMap()["type"].toString(), "text");
         QCOMPARE(b[0].toMap()["html"].toString(),
-                 "x <code style=\"background-color:#e8e8e8;\">c</code> y");
+                 "x <code>c</code> y");
     }
 
     // Code starting mid-text goes onto its own line as a separate block.

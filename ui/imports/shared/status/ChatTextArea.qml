@@ -3,6 +3,7 @@ import QtQuick.Controls
 
 import StatusQ
 import StatusQ.Controls
+import StatusQ.Core.Theme
 import StatusQ.Internal
 
 // Self-contained chat text input: a text area driving live, simplified-markdown
@@ -18,6 +19,11 @@ StatusTextArea {
     property alias formatUnclosedCodeFence: highlighter.formatUnclosedCodeFence
     property alias enlargeEmojis: highlighter.enlargeEmojis
     property alias codeBackground: highlighter.codeBackground
+    property alias delimiterColor: highlighter.delimiterColor
+    property alias linkColor: highlighter.linkColor
+
+    // Background color needed for proper rendering of quote block's vertical line.
+    property color backgroundColor: Theme.palette.background
 
     readonly property alias linksModel: highlighter.linksModel
     readonly property alias mentionsModel: highlighter.mentionsModel
@@ -71,8 +77,10 @@ StatusTextArea {
 
     ChatInputHighlighter {
         id: highlighter
+
         quickTextDocument: root.textDocument
-        codeBackground: "#e8e8e8"
+        delimiterColor: Theme.palette.baseColor1
+        linkColor: Theme.palette.primaryColor1
     }
 
     QtObject {
@@ -152,13 +160,17 @@ StatusTextArea {
             y: _startRect.y
             width: gtMetrics.advanceWidth
             height: _lastRect.y + _lastRect.height - _startRect.y
-            color: "white"
+            color: root.backgroundColor
 
             Rectangle {
-                anchors.fill: parent
-                anchors.leftMargin: 3
-                anchors.rightMargin: 3
-                color: "#4A90D9"
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: 3
+                color: Theme.palette.baseColor1
+
+                bottomLeftRadius: 3
+                topLeftRadius: 3
             }
         }
     }
@@ -184,15 +196,15 @@ StatusTextArea {
             // Math.min so a mention occupying the whole line doesn't overflow
             width: Math.min(mentionWidth, parent.width - x)
             height: _r.height - 2
-            radius: 3//height / 4
-            color: "#DD5B8DEF"
+            radius: 3
+            color: Theme.palette.mentionColor2
 
             Text {
                 anchors.fill: parent
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 text: parent.name
-                color: "white"
+                color: Theme.palette.mentionColor1
                 elide: Text.ElideRight
                 font.pixelSize: root.font.pixelSize - 2
             }

@@ -341,10 +341,13 @@ unclosed fence here (no closing triple-tick)
                         ChatTextArea {
                             id: textArea
 
-                            background: null
+                            background: Rectangle {
+                                color: Theme.palette.background
+                                radius: 4
+                            }
 
                             font.pixelSize: 15
-                            codeBackground: "#e8e8e8"
+                            codeBackground: Theme.palette.baseColor4
                             quoteBarVisible: quoteBarSwitch.checked
 
                             // Mention-suggestions navigation is handled here (in the page),
@@ -408,13 +411,17 @@ unclosed fence here (no closing triple-tick)
 
                         contentWidth: availableWidth
 
-                        padding: 10
-
                         // One item per block, so quote/code blocks can be decorated.
                         ChatTextView {
                             id: chatTextView
 
                             width: htmlScroll.availableWidth
+                            padding: 10
+
+                            background: Rectangle {
+                                color: Theme.palette.background
+                                radius: 4
+                            }
 
                             font.family: Fonts.baseFont.family
                             font.pixelSize: textArea.font.pixelSize

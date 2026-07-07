@@ -33,9 +33,11 @@ Control {
     signal linkClicked(string url)
 
     // Decoration colors
-    property color codeBackgroundColor: "#e8e8e8"
-    property color codeBorderColor: "#cccccc"
-    property color quoteBarColor: "#4A90D9"
+    property color codeBackgroundColor: Theme.palette.baseColor4
+    property color codeBorderColor: Theme.palette.baseColor2
+    property color quoteBarColor: Theme.palette.baseColor1
+    property color linkColor: Theme.palette.primaryColor1
+    property color mentionBackgroundColor: Theme.palette.mentionColor4
 
     // Copies the current cross-block selection to the clipboard.
     function copySelection() {
@@ -59,6 +61,14 @@ Control {
         property bool strikethrough: false
         property bool selectable: false
 
+        // Rich-text HTML for the non-code renderers: a code-background CSS rule (so inline
+        // `code` spans match the code frames / editor) plus the pre-wrapped content.
+        readonly property string richText:
+            "<style>code { background-color: " + root.codeBackgroundColor + " }"
+            + " a { color: " + root.linkColor + " }"
+            + " a.mention { background-color: " + root.mentionBackgroundColor + " }</style>"
+            + "<span style=\"white-space:pre-wrap\">" + content + "</span>"
+
         sourceComponent: isCode ? (selectable ? codeEditComp : codeLabelComp)
                                 : (selectable ? richEditComp : richLabelComp)
 
@@ -69,10 +79,11 @@ Control {
                 width: piece.width
                 wrapMode: Text.Wrap
                 textFormat: Text.RichText
+                color: Theme.palette.directColor1
                 font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
                 // pre-wrap so extra/leading spaces are preserved
-                text: "<span style=\"white-space:pre-wrap\">" + piece.content + "</span>"
+                text: piece.richText
                 // Connecting this enables Text's built-in link click handling (non-selectable mode).
                 onLinkActivated: (link) => d.activateLink(link)
             }
@@ -88,9 +99,10 @@ Control {
                 wrapMode: Text.Wrap
                 textFormat: Text.RichText
                 selectionColor: root.palette.highlight
+                color: Theme.palette.directColor1
                 font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
-                text: "<span style=\"white-space:pre-wrap\">" + piece.content + "</span>"
+                text: piece.richText
             }
         }
 
@@ -148,6 +160,7 @@ Control {
                         wrapMode: Text.Wrap
                         textFormat: Text.PlainText
                         selectionColor: root.palette.highlight
+                        color: Theme.palette.directColor1
                         font.family: Fonts.codeFont.family
                         font.pixelSize: root.font.pixelSize
                         font.bold: piece.bold
