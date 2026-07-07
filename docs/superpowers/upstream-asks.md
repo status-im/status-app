@@ -41,6 +41,11 @@ records 0007–0012.
    invisible until hand-deleted.
 9. (Earlier findings, still open) stale-lock drift vs `--legacy`; `nimble
    lock` records the consumer repo's HEAD as vcsRevision for URL deps.
+10. **`nimble deps` cannot display graphs with bare-URL requires** — it
+    resolves requirements by name through the package registry, so an
+    unregistered URL dependency (libp2p's `vacp2p/nim-jwt.git#hash`) yields
+    "Cannot build the dependency graph … Missing package <url>" even though
+    setup resolves, installs, and pathifies it fine (2026-07-07).
 
 ## nim-sds (logos-messaging/nim-sds)
 
