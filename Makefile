@@ -347,16 +347,21 @@ ifneq ($(PLATFORM_TARGET),)
 	scripts/platform_pre_build_cleanup.sh "$(PLATFORM_TARGET)"
 endif
 
-# Nimble-managed Nim dependencies (nimble.lock -> $(APP_NIMBLE_DIR)).
-# The dependency store lives OUTSIDE the repo tree: `nimble setup` builds
-# dependency package binaries (e.g. dnsclient via libp2p), and Nim's
-# parent-dir config walk would poison those builds with this repo's (or, for
-# nested git worktrees, an enclosing checkout's) config.nims. nimble.paths at
-# the repo root is the setup product make tracks; it is regenerated from the
-# lock plus every manifest in the single graph — status-go participates as a
-# dependency (and carries the nim-sds pin), so editing those manifests must
-# re-run the app's one resolution. There is no separate status-go solve.
-APP_NIMBLE_DIR ?= $(HOME)/.cache/status-desktop-nimbledeps
+# Nimble-managed Nim dependencies (nimble.lock -> nimble's DEFAULT store,
+# ~/.nimble). One store for every front door (issue 0013): `nimble build` /
+# `nimble run` always resolve against the default store and nimble has no
+# per-project store mechanism, so a dedicated dir would force every nimble
+# command through developer-exported env — the opposite of out-of-the-box.
+# The default store still satisfies the out-of-tree constraint (`nimble
+# setup` builds dependency binaries, and Nim's parent-dir config walk would
+# poison in-tree builds with this repo's config.nims). Override with the
+# NIMBLE_DIR env var (nimble reads it natively) for CI/clean-room runs; the
+# former dedicated store (~/.cache/status-desktop-nimbledeps) is retired and
+# can be deleted. nimble.paths at the repo root is the setup product make
+# tracks; it is regenerated from the lock plus every manifest in the single
+# graph — status-go participates as a dependency (and carries the nim-sds
+# pin), so editing those manifests must re-run the app's one resolution.
+# There is no separate status-go solve.
 NIMBLE_SETUP_STAMP := nimble.paths
 # The develop-mode overlay (issue 0009, ADR 0004) joins the stamp key: a
 # develop/undevelop flip rewrites the gitignored nimble.overlay, which
@@ -367,7 +372,7 @@ NIMBLE_SETUP_STAMP := nimble.paths
 NIMBLE_OVERLAY := nimble.overlay
 $(NIMBLE_SETUP_STAMP): nimble.lock nim_status_client.nimble $(wildcard vendor/status-go/statusgo.nimble) $(wildcard $(NIMBLE_OVERLAY))
 	@command -v nimble >/dev/null 2>&1 || { echo "ERROR: nimble not found on PATH (see BUILDING.md)" >&2; exit 1; }
-	nimble setup --nimbleDir:"$(APP_NIMBLE_DIR)" || { echo "ERROR: nimble setup failed. If a .nimble manifest changed, regenerate the lock with 'NIMBLE_DIR=$(APP_NIMBLE_DIR) nimble lock' (full solve, takes minutes) and retry." >&2; exit 1; }
+	nimble setup || { echo "ERROR: nimble setup failed. If a .nimble manifest changed, regenerate the lock with 'nimble lock' (full solve, takes minutes) and retry." >&2; exit 1; }
 	nim applyOverlay status.nims
 	touch $@
 

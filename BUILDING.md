@@ -322,18 +322,21 @@ pinned in `nim_status_client.nimble` (`requires "nim == X"`), e.g. via
 to `1`, so nimbus-build-system (still the top-level Make orchestrator) never
 builds or uses its own vendored compiler.
 
-**App dependencies (`nimble.lock` → `~/.cache/status-desktop-nimbledeps/`):**
+**App dependencies (`nimble.lock` → `~/.nimble`, nimble's default store):**
 `nim_status_client.nimble` lists every Nim library the app needs as a
 `requires "<git-url>#<sha>"` entry; `nimble.lock` is the committed, resolved
 lock file (exact revision per package). The former `vendor/nim-*` submodules
-for these libraries are gone — `nimble setup` materializes them under the
-dependency store at `$APP_NIMBLE_DIR` (default
-`~/.cache/status-desktop-nimbledeps`, shared safely between checkouts — the
+for these libraries are gone — `nimble setup` materializes them under
+nimble's default store (`~/.nimble`, shared safely between checkouts — the
 store is content-addressed) and writes `nimble.paths` at the repo root, which
 `config.nims` includes (behind `--noNimblePath`) to wire them into the
-compile. The store deliberately lives *outside* the repo: `nimble setup`
-builds dependency package binaries (e.g. dnsclient), and Nim's parent-dir
-config walk would poison in-tree builds with the repo's own `config.nims`.
+compile. One store for every front door: `nimble build` / `nimble run`
+resolve against the default store, so make uses it too (a dedicated store
+would force every nimble command through developer-exported env). Override
+with the `NIMBLE_DIR` env var (nimble reads it natively) for CI or clean-room
+runs. *Migration note:* the former dedicated store at
+`~/.cache/status-desktop-nimbledeps` is retired — delete it whenever you
+like (`rm -rf ~/.cache/status-desktop-nimbledeps`).
 This runs automatically for the desktop build: the `nimble.paths` Make target
 (an order-only prerequisite of `nim_status_client`) re-runs `nimble setup`
 whenever `nimble.lock` or one of the graph's manifests
@@ -341,9 +344,9 @@ whenever `nimble.lock` or one of the graph's manifests
 statusgo develop checkout exists) changes, so
 a plain `make run` /
 `make nim_status_client` keeps the resolution in sync without a manual step.
-Ad-hoc nimble commands (e.g. `nimble lock` after editing a manifest) must
-target the same store: `NIMBLE_DIR=~/.cache/status-desktop-nimbledeps nimble
-lock`. Mobile builds pick up the same `config.nims`/`nimble.paths` resolution
+Ad-hoc nimble commands (e.g. `nimble lock` after editing a manifest) need no
+store flags anymore. Mobile builds pick up the same
+`config.nims`/`nimble.paths` resolution
 but don't independently trigger the setup, so build desktop (or run
 `make nimble-deps`) at least once first if you're going mobile-only or after
 editing `nimble.lock` by hand.
