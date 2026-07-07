@@ -6,6 +6,7 @@ description   = "Desktop client for the Status Network built with Nim and Qt"
 license       = "MPL2"
 srcDir        = "src"
 bin           = @["nim_status_client"]
+binDir        = "bin"  # nimble's bin compile lands exactly where make's does
 skipExt       = @["nim"]
 
 # Nim version pin + app dependencies, resolved by `nimble setup` into the
@@ -75,3 +76,35 @@ requires "https://github.com/seaqt/nim-seaqt.git#2d95808bdd9f6dd2c212b69a57af461
 requires "https://github.com/seaqt/nimqml-seaqt.git#c5e5831ae7d71e09f7061bc7735a8f3e1adc8fb3"  # nimqml
 
 include "status.nims"
+
+# nimble-native front door (issue 0013). nimble's bin compile only compiles
+# src/nim_status_client.nim (config.nims provides the full flag set); every
+# artifact the client links or loads — StatusQ, libstatus + libsds, the
+# keycard pair, qrcodegen, DOtherSide, resources.rcc, translations, the Qt
+# pkg-config wrapper — is built by this hook through the same stamp-gated
+# engine `nim app status.nims` drives. A no-op re-run costs seconds; the
+# hook fires for both `nimble build` and `nimble run` (run builds the root
+# binary through the same path). Kit-env problems fail here, fast, with the
+# driver's exact-variable messages.
+#
+# STATUS_SKIP_BUILD_ARTIFACTS=1 skips the artifact build as a SUCCESSFUL
+# no-op (source-only workflows): `return false` is nimble's hook-cancel,
+# which hard-fails the whole action (0.22.3 wall — unusable as a skip).
+before build:
+  if getEnv("STATUS_SKIP_BUILD_ARTIFACTS") == "1":
+    echo "status: skipping the artifact build (STATUS_SKIP_BUILD_ARTIFACTS=1)"
+  else:
+    try:
+      exec "nim buildArtifacts status.nims"
+    except OSError:
+      echo "status: artifact build failed — fix the error above, then re-run."
+      return false
+
+after build:
+  # make's client recipe runs the same fixups post-link: the Go-built
+  # libstatus carries a bare install name, so the reference must be
+  # rewritten to @rpath for the baked rpaths to resolve it. Idempotent —
+  # a rewritten binary has no bare reference left to change.
+  when defined(macosx):
+    exec "install_name_tool -change libstatus.dylib @rpath/libstatus.dylib bin/nim_status_client"
+    exec "install_name_tool -change libstatus-keycard-qt.dylib @rpath/libstatus-keycard-qt.dylib bin/nim_status_client"

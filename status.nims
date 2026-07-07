@@ -30,6 +30,11 @@
 
 import std/[os, strutils]
 
+# Shared kit/overlay discovery (issue 0013): qmake lookup + develop-overlay
+# parsing live in status_env.nims so config.nims derives the exact same
+# values the driver validates.
+include "status_env.nims"
+
 # --- invocation parsing ------------------------------------------------------
 
 proc fail(msg: string) =
@@ -106,29 +111,8 @@ proc rejectExtras(t: Target, taskName: string) =
       t.extra.join(" ") & "\nOnly --os:<ios|android> and --cpu:<cpu> are accepted."
 
 # --- kit-environment validation (fail fast, name the exact variables) --------
-
-const kitHint = """
-Kit examples (adjust the Qt version/paths to your installs):
-  host     QMAKE=~/Qt/6.11.0/macos/bin/qmake
-  iOS      QMAKE=~/Qt/6.11.0/ios/bin/qmake IPHONE_SDK=iphoneos \
-           QMAKE_DEVELOPMENT_TEAM=<your Apple team id>
-  Android  QMAKE=~/Qt/6.11.0/android_arm64_v8a/bin/qmake \
-           ANDROID_SDK_ROOT=<sdk> ANDROID_NDK_ROOT=<ndk>"""
-
-proc qmakeExe(): string =
-  result = getEnv("QMAKE")
-  if result.len == 0:
-    result = findExe("qmake")
-    if result.len == 0:
-      fail "QMAKE is not set and no qmake is on PATH.\n" & kitHint
-  elif not fileExists(result):
-    fail "QMAKE points at '" & result & "', which does not exist.\n" & kitHint
-
-proc qmakeQuery(exe, what: string): string =
-  let (output, rc) = gorgeEx(quoteShell(exe) & " -query " & what)
-  if rc != 0:
-    fail "'" & exe & " -query " & what & "' failed:\n" & output
-  output.strip
+# kitHint / qmakeExe / qmakeQuery come from status_env.nims (shared with
+# config.nims).
 
 proc requireXspec(t: Target, expected, kitName: string): string =
   ## Returns the validated qmake path. The make build derives its target OS
@@ -249,6 +233,15 @@ task app, "Build the Status dev build: host by default, --os:ios / --os:android 
     validateHost(t)
     runMake "nim_status_client", devArgs
 
+task buildArtifacts, "Build every artifact the client links/loads except the client compile itself (internal: nimble's before-build hook — issue 0013)":
+  let t = parseTarget()
+  rejectExtras(t, "buildArtifacts")
+  if t.os != "host":
+    fail "buildArtifacts is host-only (nimble build/run is the host front" &
+      " door; mobile builds go through `nim app status.nims --os:...`)."
+  validateHost(t)
+  runMake "client-deps", developModeMakeArgs()
+
 task run, "Build if needed and launch the host dev build (StatusDev.app on macOS)":
   let t = parseTarget()
   rejectExtras(t, "run")
@@ -270,7 +263,7 @@ task run, "Build if needed and launch the host dev build (StatusDev.app on macOS
 # the PINNED manifest (ADR 0004's known limit): a diverging checkout manifest
 # fails the build loudly (see guardDivergence) instead of drifting silently.
 
-const overlayFile = "nimble.overlay"  # gitignored; joins the make setup-stamp key
+# overlayFile / readOverlay come from status_env.nims (shared with config.nims).
 
 type VendorFlavor = enum
   vfNimbleGraph  # pinned URL#hash requires in the nimble graph; overlay rewrites nimble.paths
@@ -370,14 +363,6 @@ proc vendorByName(name: string): Vendor =
     known.add v.name
   fail "unknown vendor '" & name & "' (known vendors: " & known.join(", ") & ")."
 
-proc readOverlay(): seq[string] =
-  if not fileExists(thisDir() / overlayFile):
-    return
-  for line in readFile(thisDir() / overlayFile).splitLines:
-    let l = line.strip
-    if l.len > 0 and not l.startsWith("#"):
-      result.add l
-
 proc vendorRootIn(v: Vendor, entry: string): string =
   ## The vendor's package root inside a resolved nimble.paths entry
   ## ("" = the entry is not this vendor's). Matches both store copies
@@ -406,7 +391,8 @@ proc vendorRootIn(v: Vendor, entry: string): string =
 #   - the BUILD root (nimble.paths beside statusgo.nims, artifacts under
 #     build/bin): scratch copy or checkout.
 
-const statusgoScratchDir = ".statusgo-build"  # gitignored scratch at the repo root
+# statusgoScratchDir / statusgoDeveloped / statusgoBuildRoot come from
+# status_env.nims (shared with config.nims).
 
 proc statusgoStoreRoot(): string =
   ## The statusgo store entry in the generated nimble.paths ("" when the
@@ -421,15 +407,6 @@ proc statusgoStoreRoot(): string =
       let root = vendorRootIn(sg, line[pre.len .. ^2])
       if root.len > 0 and (DirSep & "pkgs2" & DirSep) in root:
         return root
-
-proc statusgoDeveloped(): bool =
-  "statusgo" in readOverlay()
-
-proc statusgoBuildRoot(): string =
-  ## Where statusgo builds run and artifacts live (Makefiles derive the same
-  ## path themselves; keep both in sync).
-  if statusgoDeveloped(): thisDir() / "vendor/status-go"
-  else: thisDir() / statusgoScratchDir
 
 proc statusgoManifestRoot(): string =
   ## Where statusgo.nimble (the sds pin owner) is read from.
