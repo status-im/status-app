@@ -25,7 +25,7 @@ COMMUNITY_BENCHMARK_PARAMS = pytest.mark.parametrize(
 
 
 def _record_monitored_community_open(aut: AUT, main_screen, samples: CommunityOpenSamples) -> None:
-    load_time, stats = monitored_call(
+    (_, load_time), stats = monitored_call(
         aut.pid,
         lambda: main_screen.left_panel.open_community_and_record_load_time(COMMUNITY_NAME),
     )
