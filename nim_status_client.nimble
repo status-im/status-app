@@ -57,3 +57,17 @@ requires "https://github.com/alexjba/uuids.git#5d79d279cb4f2f6980fbb2b77eeb3b618
 # 0.22.3 develop links cannot satisfy URL#hash requires).
 requires "https://github.com/status-im/status-go.git#d9281bce98803c84c8c414a3b4a64103b629206a"
 requires "https://github.com/status-im/nim-keycard-go.git#c8a39e8d4a8abd1bba2fb3d8fe32f8a11cbbd75a"  # keycard_go
+# The seaqt pair (issue 0012): generated Qt bindings (package `seaqt`, repo
+# nim-seaqt) + the NimQml layer on top (package `nimqml`, repo nimqml-seaqt).
+# Pure-source packages: the generated C++ shims compile via {.compile.} into
+# the client's own nimcache, so the read-only store copies are consumed
+# directly (no sub-build, no scratch engine). The seaqt pin is the tip of
+# upstream branch `smo-6.4` (the Status-specific generation; the repo's tag
+# qt-6.4-seaqt-gen-5bc1bc58… points exactly at it) — NOT branch `qt-6.4`,
+# which is force-pushed and its head drops the QVariantConstPointer compat
+# shim that seaqt_compat/ relies on. The nimqml pin is an ancestor of its
+# upstream master. Any pin bump is a deliberate separate decision (API-churn
+# risk; see the 0012 grill record). `nim develop status.nims seaqt|nimqml`
+# materializes editable checkouts (ADR 0004 overlay).
+requires "https://github.com/seaqt/nim-seaqt.git#2d95808bdd9f6dd2c212b69a57af4618da241d37"  # seaqt (branch smo-6.4)
+requires "https://github.com/seaqt/nimqml-seaqt.git#c5e5831ae7d71e09f7061bc7735a8f3e1adc8fb3"  # nimqml

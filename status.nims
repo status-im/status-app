@@ -285,14 +285,17 @@ type Vendor = object
   manifestName: string  # the vendor's own manifest: the divergence-compare target
   checkoutDir: string   # repo-relative develop checkout location
   developBranch: string # local branch created at the pin on a fresh clone
+  srcDir: string        # manifest srcDir that store materialization HOISTS to the
+                        # entry root ("" = none): the checkout keeps modules under
+                        # this subdir, so the overlay rewrite must remap store
+                        # roots onto <checkout>/<srcDir> (nimqml)
   clientRebuild: bool   # vendor Nim sources compile INTO nim_status_client → force a client rebuild while developed
   forceTouch: seq[string]  # files touched before every build while developed (make FORCE arm)
   forceRemove: seq[string] # artifact globs removed before every build while developed (make FORCE arm)
 
 # Rebuild gating while developed = ADR-0003's FORCE + compare-before-copy arm:
 # the vendor sub-build runs every build (it owns incremental) and cmp-gated
-# copies keep dependents from relinking on identical bytes. Issue 0012 adds
-# seaqt (developBranch "smo-6.4" per its grilled decision) and nimqml.
+# copies keep dependents from relinking on identical bytes.
 const vendorTable = [
   Vendor(name: "statusgo", flavor: vfNimbleGraph,
     pinManifest: "nim_status_client.nimble", repoName: "status-go",
@@ -315,6 +318,27 @@ const vendorTable = [
     # (checkout while developed, scratch/store copy otherwise — issue 0010).
     clientRebuild: false, forceTouch: @["@statusgo/nimble.paths"],
     forceRemove: @[]),
+  Vendor(name: "seaqt", flavor: vfNimbleGraph,
+    pinManifest: "nim_status_client.nimble", repoName: "nim-seaqt",
+    pkgName: "seaqt", manifestName: "seaqt.nimble",
+    # developBranch per the 0012 grill: the pin is the tip of upstream branch
+    # smo-6.4 (the Status-specific generation, also tagged
+    # qt-6.4-seaqt-gen-5bc1bc58…) — NOT the force-pushed qt-6.4 line.
+    checkoutDir: "vendor/nim-seaqt", developBranch: "smo-6.4",
+    # The generated bindings (and their C++ shims, via {.compile.}) build
+    # INTO the client: REBUILD_NIM is the whole FORCE arm — no vendor
+    # artifacts exist.
+    clientRebuild: true, forceTouch: @[], forceRemove: @[]),
+  Vendor(name: "nimqml", flavor: vfNimbleGraph,
+    pinManifest: "nim_status_client.nimble", repoName: "nimqml-seaqt",
+    pkgName: "nimqml", manifestName: "nimqml.nimble",
+    # The pin is an ancestor of upstream master (no other line exists).
+    checkoutDir: "vendor/nimqml-seaqt", developBranch: "master",
+    # Pure Nim compiled into the client, same FORCE arm as seaqt. srcDir:
+    # store copies are hoisted (modules at the entry root), the checkout
+    # keeps them under src/ — the overlay remaps accordingly.
+    srcDir: "src",
+    clientRebuild: true, forceTouch: @[], forceRemove: @[]),
   Vendor(name: "status-keycard-qt", flavor: vfCmake,
     pinManifest: "cmake/status-keycard-qt/CMakeLists.txt",
     repoName: "status-keycard-qt",
@@ -535,7 +559,14 @@ proc rewriteEntries(content: string, v: Vendor): tuple[content: string, matched:
       let root = vendorRootIn(v, p)
       if root.len > 0:
         inc result.matched
-        lines.add pre & checkoutAbs & p[root.len .. ^1] & "\""
+        var rest = p[root.len .. ^1]
+        # srcDir-hoisted store copies (nimqml): the store entry root IS the
+        # module root, but the checkout keeps modules under <srcDir> — remap
+        # the bare root onto it. (The warm-setup "<root>/src" variant already
+        # carries the right suffix and passes through; idempotent either way.)
+        if v.srcDir.len > 0 and rest.len == 0:
+          rest = $DirSep & v.srcDir
+        lines.add pre & checkoutAbs & rest & "\""
         continue
     lines.add line
   result.content = lines.join("\n")

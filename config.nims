@@ -17,26 +17,24 @@ import std/strutils
 # ours, not a dependency's. (The Makefile keeps the store out of tree at
 # ~/.cache/status-desktop-nimbledeps, so this guard is normally inert.)
 if not projectPath().startsWith(thisDir() / "nimbledeps"):
-  # nimble 0.22.3 emits an unusable isaac entry in nimble.paths (srcDir:"src",
-  # resolved only transitively via uuids), breaking `import isaac`. The shape
-  # varies by run: the setup that MATERIALIZES the store copy srcDir-hoists it
-  # (isaac.nim at the entry root) and emits the root, while a warm re-setup
-  # re-derives the entry from the manifest's srcDir and emits root/src — which
-  # no longer exists in the hoisted copy (wall: vendor/status-go/AGENTS.md).
-  # Point at whichever directory actually holds the module (the store lives
-  # outside the repo; the dir's hash suffix changes with the lock, hence scan).
+  # nimble 0.22.3 emits unusable nimble.paths entries for srcDir-HOISTED store
+  # copies, breaking their imports. The shape varies by run: the setup that
+  # MATERIALIZES the store copy srcDir-hoists it (module files at the entry
+  # root) and emits the root, while a warm re-setup re-derives the entry from
+  # the manifest's srcDir and emits root/src — which no longer exists in the
+  # hoisted copy (wall: vendor/status-go AGENTS.md). Hits isaac (srcDir "src",
+  # resolved transitively via uuids) and nimqml (srcDir "src", direct pin).
+  # Point at whichever directory actually holds the modules (the store lives
+  # outside the repo; the dir's hash suffix changes with the pins, hence scan).
   when withDir(thisDir(), system.fileExists("nimble.paths")):
     for line in readFile(thisDir() & "/nimble.paths").splitLines:
       let entry = line.strip.replace("--path:", "").strip(chars = {'"'})
-      if (DirSep & "isaac-") in entry:
-        if dirExists(entry & "/src"):
-          switch("path", entry & "/src")
-        elif entry.endsWith(DirSep & "src") and not dirExists(entry):
-          switch("path", entry[0 ..< entry.len - 4])
-
-  # Nim packages kept as git submodules (seaqt migration in progress):
-  switch("path", thisDir() & "/vendor/nimqml-seaqt/src")
-  switch("path", thisDir() & "/vendor/nim-seaqt")
+      for pkg in ["isaac", "nimqml"]:
+        if (DirSep & pkg & "-") in entry:
+          if dirExists(entry & "/src"):
+            switch("path", entry & "/src")
+          elif entry.endsWith(DirSep & "src") and not dirExists(entry):
+            switch("path", entry[0 ..< entry.len - 4])
 
   # The status_go wrapper (shipped inside vendor/status-go, resolved via the
   # app's nimble graph) auto-links the static libstatus/libsds it builds for
@@ -129,10 +127,12 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
   switch("define", "chronicles_default_output_device=dynamic")
   switch("define", "chronicles_log_level=trace")
 
-  # Compatibility include path for the vendored (Qt 6.4-generated) nim-seaqt
+  # Compatibility include path for the pinned (Qt 6.4-generated) nim-seaqt
   # bindings: gen_qvariant.cpp does `#include <QVariantConstPointer>`, a convenience
-  # header Qt removed after 6.4 (absent in 6.11+). seaqt_compat/ provides a shim of
-  # that name so the *generated code stays pristine* and still compiles on newer Qt.
+  # header Qt removed after 6.4 (absent in 6.11+). seaqt_compat/ is APP-owned and
+  # provides a shim of that name so the *generated code stays pristine* and still
+  # compiles on newer Qt. Global passC flags reach {.compile.}'d store sources, so
+  # this works unchanged for the nimble-store copy (0012 spike Q3).
   switch("passC", "-I" & thisDir() & "/seaqt_compat")
 
   when defined(ios) or defined(macosx):

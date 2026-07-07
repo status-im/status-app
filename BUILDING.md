@@ -372,14 +372,19 @@ every Go/Nim/C edit is picked up by the next build (ADR 0003 FORCE +
 compare-before-copy). `nim undevelop status.nims statusgo` returns to the
 pin (refusing while the checkout has uncommitted or unpushed work).
 
-**What's still a git submodule:** only Nim packages under active local
-development, plus everything that isn't pure Nim (C/C++/Go). Kept under
-`vendor/`: the seaqt Qt bindings (`nim-seaqt`, `nimqml-seaqt`)
-and the C/C++ libraries (`DOtherSide`, `SortFilterProxyModel`,
-`QR-Code-generator`, `fcitx5-qt`, `prl-to-pc`,
-`mobile/vendors/openssl`, `nimbus-build-system`). `config.nims` adds explicit
-`switch("path", ...)` entries for `nim-seaqt`/`nimqml-seaqt` since they're not
-in the nimble store.
+**The seaqt pair in the same graph:** the Qt bindings (package `seaqt`, repo
+nim-seaqt) and the NimQml layer (package `nimqml`, repo nimqml-seaqt) are
+pinned `requires "<git-url>#<sha>"` dependencies too. They are pure-source
+packages: the generated C++ shims compile via Nim `{.compile.}` pragmas into
+the client's own nimcache, so the read-only store copies are consumed
+directly — no sub-build, no scratch copy. The app-owned `seaqt_compat/`
+include shim (`config.nims`) and the pkg-config-based Qt flag discovery
+(`vendor/prl-to-pc`) work unchanged from store paths. To hack on them:
+`nim develop status.nims seaqt` / `nim develop status.nims nimqml`.
+
+**What's still a git submodule:** only things that aren't pure Nim (C/C++):
+`DOtherSide`, `SortFilterProxyModel`, `QR-Code-generator`, `fcitx5-qt`,
+`prl-to-pc`, `mobile/vendors/openssl`, `nimbus-build-system`.
 
 **Hacking on a dependency locally:** to edit one of the pinned libraries in
 place instead of at its pinned SHA, edit `nim_status_client.nimble` and point
