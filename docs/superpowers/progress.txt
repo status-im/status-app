@@ -778,3 +778,62 @@ Committed lock kept (it never constrains solves per the documented wall).
 Carry-overs: file the upstream nimble issue (dep bin builds); delete
 scripts/bump-status-go.sh with CI migration; standing 0003/0004/0007/0008/
 0009 items unchanged.
+
+=== 2026-07-07 — Issue 0011: keycard pair (FetchContent pins + develop redirect) — DONE (pass: true) ===
+
+Picked up: docs/superpowers/issues/0011-keycard-pair-fetchcontent.md
+(PRD: docs/superpowers/prds/2026-07-06-one-command-and-develop-mode-prd.md;
+phase A survey committed 1417cd5dd6 before the 0010 gate, phase B after)
+
+What was built:
+- cmake/status-keycard-qt/CMakeLists.txt: app-owned FetchContent wrapper owns
+  the status-keycard-qt pin (GIT_TAG a6cbdd05 = the removed submodule SHA);
+  keycard-qt pin stays owned by status-keycard-qt's CMakeLists (audit passed:
+  df00b931, already a fixed SHA). Wrapper forces CMAKE_*_OUTPUT_DIRECTORY to
+  the build root — as a subproject the lib otherwise lands in
+  _deps/status-keycard-qt-build/ and breaks every path contract (found in
+  verification: make does not check a recipe produced its target).
+- Makefile: -S → wrapper, build dir → build/status-keycard-qt/<platform>
+  (out of the checkout, mode-independent), develop state derived from
+  nimble.overlay (0010 STATUSGO_ROOT pattern), FETCHCONTENT_SOURCE_DIR_
+  {STATUS-KEYCARD-QT,KEYCARD-QT} ALWAYS passed (empirically: empty cache
+  value == unset, omitted -D == sticky → always-pass kills stale redirects).
+- mobile: wrapper -S + own cmake subtree BUILD_PATH/status-keycard-qt (old
+  root cache would refuse the source flip) + overlay-derived redirects +
+  developed-checkout file tracking. Converted but NOT build-verified
+  (desktop-only acceptance) — flag for the next mobile matrix run.
+- status.nims: vfCmake rows (status-keycard-qt, keycard-qt), cmake pin parser
+  (@keycard-parent sentinel: checkout → _deps → graceful degradation in
+  vendors), develop/undevelop legs, invalidateOnModeFlip (rm cmake artifacts
+  on BOTH flips — undevelop especially, nothing else re-runs the recipe),
+  per-build FORCE arm = rm lib; divergence guard n/a for cmake (redirect
+  makes cmake read the checkout's own CMakeLists — no silent-drift mode);
+  applyOverlay/overlayApplied skip cmake rows.
+- Submodule removed (Phase 2 staged playbook): backup ref backup/nimble-0011-
+  pin, functional git dir at .phase2-vendor-backup/status-keycard-qt
+  (core.worktree repointed). BUILDING.md knob docs updated.
+
+Verification (all 5 criteria; record in the issue file): default build with
+no checkout — _deps at exact pins, no-op 6.4 s with recipe not invoked,
+OFFLINE reconfigure+rebuild rc=0 under dead proxy (SHA GIT_TAG = no per-build
+fetch, no FETCHCONTENT_UPDATES_DISCONNECTED needed); parent develop cycle —
+redirect in CMakeCache, checkout compiled, symbol probe in dylib in a 6.9 s
+incremental build, undevelop refusals (dirty → unpushed → --force), return
+build BYTE-IDENTICAL to baseline (8b40474c); nested keycard-qt develop ALONE —
+parent stayed pinned (redirect empty) while nested string probe surfaced in
+the parent dylib, exit byte-identical again; smoke — StatusKeycardQt C API
+callback + StatusKeycardContextImpl + PC/SC channel init in the launched app;
+vendors lists all four with pin+state incl. clean-clone degradation. Client
+relinked once post-conversion (rpath → build/status-keycard-qt/macos).
+
+Gotchas for 0012:
+- Subproject output-dir trap above (wrapper must pin CMAKE_*_OUTPUT_DIRECTORY).
+- FETCHCONTENT_SOURCE_DIR_<NAME> casing = TOUPPER with hyphens KEPT
+  (…_STATUS-KEYCARD-QT); it is a CACHE var — always-pass (empty = pinned) is
+  the stale-proof discipline.
+- cmake develop/undevelop rewrites nimble.overlay → one ~50 s nimble setup on
+  the next build although cmake vendors aren't in the nimble graph (uniform
+  stamp machinery; accepted).
+
+Carry-overs: mobile keycard legs unverified (above); Windows path derivations
+unchanged but unvalidated (out of scope). Remaining: 0012 seaqt conversion.
