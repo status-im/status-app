@@ -7,7 +7,7 @@ set -euo pipefail
 copy_native_libs() {
   local dest="$1"
   echo "Bundling native libraries..."
-  cp -P vendor/status-go/build/bin/libstatus.so* "$dest/"
+  cp -P "${STATUSGO_LIBDIR:?STATUSGO_LIBDIR must be set}"/libstatus.so* "$dest/"
   cp -P "${STATUSKEYCARD_QT_LIBDIR:?STATUSKEYCARD_QT_LIBDIR must be set}"/libstatus-keycard-qt.so* "$dest/"
   cp -P "${NIMSDS_LIBDIR:?NIMSDS_LIBDIR must be set}/libsds.so" "$dest/"
   if [[ "${USE_NWAKU:-}" == "true" ]]; then

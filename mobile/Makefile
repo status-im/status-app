@@ -25,16 +25,18 @@ $(info Configuring build system for $(OS) $(ARCH) with QT $(QT_MAJOR))
 # default rule
 default: makedir all
 
-# libsds is built by status-go's own nimble tasks (see vendor/status-go/statusgo.nimble).
-# status-go is a dependency in the app's single nimble graph; its requires
-# pins nim-sds by URL#hash, so nimble resolves sds into the shared store and
-# status-go's sds tasks build a scratch copy at vendor/status-go/.sds-build —
-# artifacts in .sds-build/build, headers in .sds-build/library. No
-# vendor/nim-sds checkout is needed (a develop-linked one builds in place).
-NIMSDS_BUILD_ROOT := $(abspath ../vendor/status-go/.sds-build)
+# libsds is built by status-go's own nimble tasks (statusgo.nimble in
+# $(STATUS_GO), the active statusgo root from Common.mk: the .statusgo-build
+# scratch copy of the pinned store entry in default mode, the vendor/status-go
+# checkout while developed — issue 0010). Its requires pins nim-sds by
+# URL#hash, so nimble resolves sds into the shared store and status-go's sds
+# tasks build a scratch copy at $(STATUS_GO)/.sds-build — artifacts in
+# .sds-build/build, headers in .sds-build/library. No vendor/nim-sds checkout
+# is needed (a develop-linked one builds in place).
+NIMSDS_BUILD_ROOT := $(STATUS_GO)/.sds-build
 NIMSDS_LIBDIR := $(NIMSDS_BUILD_ROOT)/build
 NIMSDS_INCDIR := $(NIMSDS_BUILD_ROOT)/library
-STATUSGO_NIMBLE_PATHS := ../vendor/status-go/nimble.paths
+STATUSGO_NIMBLE_PATHS := $(STATUS_GO)/nimble.paths
 
 # statusgo.nims locates nim-sds via the nimble.paths beside it; under the
 # single graph that file is a copy of the app's resolution (absolute paths,
@@ -43,7 +45,16 @@ STATUSGO_NIMBLE_PATHS := ../vendor/status-go/nimble.paths
 ../nimble.paths:
 	$(error ../nimble.paths missing — run 'make nimble-deps' at the repo root first)
 
-$(STATUSGO_NIMBLE_PATHS): ../nimble.paths
+# Pinned mode: sync the .statusgo-build scratch with the resolved store entry
+# (refreshed only on a pin/flag change — the stamp that makes the no-op below
+# skip the status-go sub-make entirely). Developed mode: no-op.
+statusgo-scratch: ../nimble.paths | platform-cleanup
+ifneq ($(STATUSGO_DEVELOPED),1)
+	@cd $(STATUS_DESKTOP) && nim prepareStatusgo status.nims --key:"$(OS)-$(ARCH)-api$(ANDROID_API)-sdk$(IPHONE_SDK)$(IOS_TARGET)" $(HANDLE_OUTPUT)
+endif
+.PHONY: statusgo-scratch
+
+$(STATUSGO_NIMBLE_PATHS): ../nimble.paths | statusgo-scratch
 	cmp -s ../nimble.paths $@ || cp ../nimble.paths $@
 
 iosdevice: IPHONE_SDK=iphoneos
@@ -57,14 +68,22 @@ status-keycard-qt: clean-status-keycard-qt $(STATUS_KEYCARD_QT_LIB)
 nim-status-client: clean-nim-status-client $(NIM_STATUS_CLIENT_LIB)
 status-desktop-rcc: clean-status-desktop-rcc $(STATUS_DESKTOP_RCC)
 
-# Always delegate to status-go's PHONY sub-make (it owns incremental rebuild, see issue #18377), then copy only on change.
-# libsds is built by status-go's nimble tasks and passed back prebuilt.
-$(STATUS_GO_LIB): FORCE $(STATUSGO_NIMBLE_PATHS) | platform-cleanup
+# Rebuild gating is mode-selected (issue 0010): a developed statusgo delegates
+# to its PHONY sub-make every build via FORCE (it owns incremental rebuild,
+# see issue #18377) with cmp-gated copies; a pinned statusgo cannot change
+# under an unchanged pin, so the rule is stamp-driven — statusgo-scratch
+# refreshes the scratch only on a pin/flag change, which regenerates
+# $(STATUSGO_NIMBLE_PATHS) and re-fires this rule. No-op builds skip the
+# status-go sub-make (and the sds task) entirely.
+ifeq ($(STATUSGO_DEVELOPED),1)
+STATUS_GO_FORCE := FORCE
+endif
+$(STATUS_GO_LIB): $(STATUS_GO_FORCE) $(STATUSGO_NIMBLE_PATHS) | statusgo-scratch platform-cleanup
 	@echo "Building nim-sds mobile library"
 ifeq ($(OS),android)
-	cd ../vendor/status-go && ARCH=$(ARCH) ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" nim libsdsAndroid statusgo.nims
+	cd $(STATUS_GO) && ARCH=$(ARCH) ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" nim libsdsAndroid statusgo.nims
 else ifeq ($(OS),ios)
-	cd ../vendor/status-go && nim libsdsIos statusgo.nims
+	cd $(STATUS_GO) && nim libsdsIos statusgo.nims
 endif
 	@echo "Building status-go mobile library"
 	@mkdir -p $(LIB_PATH)
@@ -76,7 +95,7 @@ ifeq ($(OS),android)
 	  CGO_CFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
 	  CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
 	  CGO_LDFLAGS="-Wl,--build-id=none" \
-	  CC="$(CC)" $(MAKE) -C ../vendor/status-go statusgo-android-library \
+	  CC="$(CC)" $(MAKE) -C $(STATUS_GO) statusgo-android-library \
 		ARCH=$(ARCH) \
 		ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" \
 		ANDROID_API="$(ANDROID_API)" \
@@ -88,13 +107,13 @@ ifeq ($(OS),android)
 	@$(ANDROID_NDK_ROOT)/toolchains/llvm/prebuilt/$(HOST_OS)-x86_64/bin/llvm-objcopy \
 		--remove-section=.note.gnu.build-id \
 		--remove-section=.note.go.buildid \
-		../vendor/status-go/build/bin/libstatus$(LIB_EXT)
+		$(STATUS_GO)/build/bin/libstatus$(LIB_EXT)
 else ifeq ($(OS),ios)
 	GOFLAGS="-trimpath -buildvcs=false" \
 	GOMODCACHE="$(BUILD_PATH)/.gomodcache" \
 	CGO_CFLAGS="-ffile-prefix-map=$(HOME)=." \
 	CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=." \
-	$(MAKE) -C ../vendor/status-go statusgo-ios-library \
+	$(MAKE) -C $(STATUS_GO) statusgo-ios-library \
 		ARCH=$(ARCH) \
 		IPHONE_SDK="$(IPHONE_SDK)" \
 		IOS_TARGET="$(IOS_TARGET)" \
@@ -104,7 +123,14 @@ else ifeq ($(OS),ios)
 endif
 	@echo "Copying library to mobile lib directory"
 	@cmp -s $(NIMSDS_LIBDIR)/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT) || cp $(NIMSDS_LIBDIR)/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT)
-	@cmp -s ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT) || cp ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT)
+	@cmp -s $(STATUS_GO)/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT) || cp $(STATUS_GO)/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT)
+ifneq ($(STATUSGO_DEVELOPED),1)
+	@# Pinned arm: mark the (possibly cmp-skipped) copy newer than the scratch
+	@# nimble.paths so the next no-op build skips this rule entirely. The
+	@# developed arm must NOT touch: FORCE re-runs it every build and the old
+	@# mtime is what keeps byte-identical rebuilds from cascading (ADR 0003).
+	@touch $@
+endif
 
 $(STATUS_GO_STUB_LIB): $(STATUS_GO_LIB) $(STATUS_GO_STUB_GEN) $(STATUS_DESKTOP)/mobile/statusgo_stub/statusgo_stub.cpp
 	@echo "Building status-go stub library (UI process)"
@@ -126,7 +152,7 @@ $(STATUS_GO_SERVICE_LIB): $(STATUS_GO_LIB) $(STATUS_GO_SERVICE_GEN) $(STATUS_DES
 
 # Regenerate stubs when libstatus changes.
 $(STATUS_GO_STUB_GEN): $(STATUS_GO_LIB)
-	@$(MAKE) -C $(STATUS_DESKTOP)/vendor/status-go statusgo-stub-bindings
+	@$(MAKE) -C $(STATUS_GO) statusgo-stub-bindings
 
 # statusgo-stub-bindings emits BOTH generated files in a single run; depending on the stub
 # output both orders this after that run and rebuilds it whenever the stub bindings rebuild.

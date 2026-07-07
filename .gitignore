@@ -145,5 +145,9 @@ nimble.develop
 /nimbledeps/
 /nimble.paths
 /nimble.overlay
+# pinned-statusgo build scratch (issue 0010): writable copy of the store entry
+/.statusgo-build/
+# develop-mode statusgo checkout (issue 0009; materialized by `nim develop status.nims statusgo`)
+/vendor/status-go/
 .phase2-vendor-backup/
 /.claude/

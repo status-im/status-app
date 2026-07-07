@@ -48,16 +48,12 @@ requires "https://github.com/cheatfate/nimcrypto.git#423ea4fed8de6f4544b7e3b30d8
 requires "https://github.com/alexjba/uuids.git#5d79d279cb4f2f6980fbb2b77eeb3b6183d80cea"  # uuids
 # status-go is a nimble package (the status_go wrapper ships inside it, so the
 # former separate nim-status-go wrapper requirement is gone); its manifest
-# carries the nim-sds/nim-ffi pins, which land in this graph transitively.
-# INTERIM (until the nim-sds patch queue merges upstream): the vendor/status-go
-# submodule is consumed via an ABSOLUTE file:// requires. nimble 0.22.3 allows
-# a file:// requires only at top level or inside another file://-required
-# package — statusgo.nimble's interim file:// nim-sds pin therefore rules out
-# develop-linking statusgo (the develop file refuses to load such a package).
-# When the sds pin flips back to a URL, replace this with the final form:
-#   requires "statusgo"   # + `nimble develop --add:vendor/status-go`
-# (name-form on purpose: on nimble 0.22.3 only version-agnostic name-form
-# requires accept develop links; see vendor/status-go/AGENTS.md,
-# "nimble 0.22.3 resolution walls").
-requires "file:///Users/alexjbanca/Repos/status-desktop/.claude/worktrees/nimble-migration/vendor/status-go"
+# carries the nim-sds pin, which lands in this graph transitively. INTERIM
+# branch pin (nimble-phase1-pin on status-im/status-go) until the nimble
+# packaging work merges upstream — bump by amending the #hash. Default mode
+# has no vendor/status-go checkout: the store copy is built via the
+# .statusgo-build scratch (issue 0010), and `nim develop status.nims statusgo`
+# materializes an editable checkout (issue 0009, ADR 0004 overlay — nimble
+# 0.22.3 develop links cannot satisfy URL#hash requires).
+requires "https://github.com/status-im/status-go.git#d9281bce98803c84c8c414a3b4a64103b629206a"
 requires "https://github.com/status-im/nim-keycard-go.git#c8a39e8d4a8abd1bba2fb3d8fe32f8a11cbbd75a"  # keycard_go

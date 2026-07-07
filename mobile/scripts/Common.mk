@@ -29,7 +29,16 @@ export LIB_DIR=$(LIB_PATH)
 WRAPPER_APP?=$(ROOT_DIR)/wrapperApp
 STATUS_DESKTOP?=$(ROOT_DIR)/vendors/status-desktop
 STATUSQ?=$(STATUS_DESKTOP)/ui/StatusQ
+# statusgo is a pinned URL#hash nimble dependency (issue 0010): default mode
+# builds the scratch copy of its store entry at .statusgo-build (maintained by
+# `nim prepareStatusgo status.nims`); `develop statusgo` (issue 0009) switches
+# to the vendor/status-go checkout.
+STATUSGO_DEVELOPED := $(shell grep -sqx statusgo $(STATUS_DESKTOP)/nimble.overlay 2>/dev/null && echo 1)
+ifeq ($(STATUSGO_DEVELOPED),1)
 STATUS_GO?=$(STATUS_DESKTOP)/vendor/status-go
+else
+STATUS_GO?=$(STATUS_DESKTOP)/.statusgo-build
+endif
 OPENSSL?=$(ROOT_DIR)/vendors/openssl
 QRCODEGEN?=$(STATUS_DESKTOP)/vendor/QR-Code-generator/c
 STATUS_KEYCARD_QT?=$(STATUS_DESKTOP)/vendor/status-keycard-qt
@@ -67,8 +76,8 @@ OPENSSL_FILES := $(shell find $(OPENSSL) -type f \( -iname '*.c' -o -iname '*.h'
 QRCODEGEN_FILES := $(shell find $(QRCODEGEN) -type f \( -iname '*.c' -o -iname '*.h' \))
 STATUS_KEYCARD_QT_FILES := $(shell find $(STATUS_KEYCARD_QT) -type f \( -iname '*.cpp' -o -iname '*.h' \) 2>/dev/null || echo "")
 WRAPPER_APP_FILES := $(shell find $(WRAPPER_APP) -type f)
-STATUS_GO_STUB_GEN := $(STATUS_DESKTOP)/vendor/status-go/build/bin/statusgo_stub_exports.cpp
-STATUS_GO_SERVICE_GEN := $(STATUS_DESKTOP)/vendor/status-go/build/bin/statusgo_service_dispatch.cpp
+STATUS_GO_STUB_GEN := $(STATUS_GO)/build/bin/statusgo_stub_exports.cpp
+STATUS_GO_SERVICE_GEN := $(STATUS_GO)/build/bin/statusgo_service_dispatch.cpp
 
 # script files
 STATUS_Q_SCRIPT := $(SCRIPTS_PATH)/buildStatusQ.sh
