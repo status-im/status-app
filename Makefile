@@ -683,7 +683,9 @@ ifeq ($(mkspecs),win32)
 STATUSKEYCARD_QT_LIB_PREFIX :=
 STATUSKEYCARD_QT_LIB_SUBDIR := /$(COMMON_CMAKE_BUILD_TYPE)
 endif
-export STATUSKEYCARD_QT_LIBDIR := $(abspath $(STATUS_KEYCARD_QT_BUILD_DIR)$(STATUSKEYCARD_QT_LIB_SUBDIR))
+# Absolute (issue 0013): config.nims derives the same value, and the client
+# bakes it as an rpath — a relative rpath only resolves from the repo root.
+export STATUSKEYCARD_QT_LIBDIR := $(CURDIR)/$(STATUS_KEYCARD_QT_BUILD_DIR)$(STATUSKEYCARD_QT_LIB_SUBDIR)
 # Alias under the variable's pre-rename spelling: in a nested git worktree
 # Nim's parent-dir config walk also evaluates the ENCLOSING checkout's
 # config.nims, and on branches still using STATUSKEYCARDGO_LIBDIR an empty
@@ -886,30 +888,58 @@ EXTRA_LIBS_PATH := $(STATUSQ_BUILD_PATH)/lib
 ifeq ($(mkspecs),win32)
  STATUSQ_LIB_PATH := $(STATUSQ_BUILD_PATH)/lib/$(COMMON_CMAKE_BUILD_TYPE)
 endif
+# The desktop client's flag set lives in config.nims (issue 0013 phase A):
+# make exports its knobs/derived env (config.nims prefers env when present,
+# and derives identical values without it) and invokes a bare compile — the
+# same compile nimble's bin build and a bare `nim c src/nim_status_client.nim`
+# run, so every front door shares one flag set by construction. Windows still
+# passes the legacy flag soup (config.nims owns only the macx/linux client
+# block; Windows validation is out of the PRD's scope).
+export RESOURCES_LAYOUT
+export INCLUDE_DEBUG_SYMBOLS
+export KDF_ITERATIONS
+export OUTPUT_CSV
+export QT_ARCH
+ifeq ($(mkspecs),win32)
 $(NIM_STATUS_CLIENT): NIM_PARAMS += $(RESOURCES_LAYOUT)
-# Target-specific so QT_SEAQT_EXTRA_LIBS' $(shell) runs at recipe time (after the
-# order-only qt-pkgconfig prereq builds the pkg-config wrapper), not at parse time.
-ifneq ($(mkspecs),win32)
-$(NIM_STATUS_CLIENT): NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
+ NIM_CLIENT_COMPILE = nim c $(NIM_PARAMS) \
+	--mm:orc \
+	-d:useMalloc \
+	--passL:"-L$(STATUSGO_LIBDIR)" \
+	--passL:"-lstatus" \
+	--passL:"-L$(STATUSQ_LIB_PATH)" \
+	--passL:"-L$(EXTRA_LIBS_PATH)" \
+	--passL:"-lStatusQ" \
+	--passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" \
+	--passL:"-l$(STATUSKEYCARD_QT_LINKNAME)" \
+	--passL:"$(QRCODEGEN)" \
+	$(NIM_MATH_LIB) \
+	--parallelBuild:0 \
+	$(NIM_EXTRA_PARAMS) src/nim_status_client.nim
+else
+ NIM_CLIENT_COMPILE = nim c src/nim_status_client.nim
 endif
+# The 24h staleness rebuild only makes sense for a mutable checkout: a pinned
+# statusgo cannot go stale (stamp-skip arm, issue 0010), so the pre-clean is
+# develop-mode-only. (Defined before its first prerequisite use below — make
+# expands prerequisite lists immediately.)
+ifeq ($(STATUSGO_DEVELOPED),1)
+NIM_CLIENT_PRECLEAN := force-rebuild-status-go
+endif
+
+# Everything bin/nim_status_client links or loads, except the client compile
+# itself. `nim buildArtifacts status.nims` — nimble's before-build hook
+# (issue 0013 phase B) — drives this, so `nimble build`/`nimble run` produce
+# the exact artifact set `make nim_status_client` would, stamp-gated the
+# same way (a no-op pass is seconds).
+client-deps: $(NIM_CLIENT_PRECLEAN) | statusq dotherside qt-pkgconfig check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps $(NIMBLE_SETUP_STAMP)
+.PHONY: client-deps
+
 # Depends on libsds directly: platform cleanup can delete it while libstatus
 # survives, and the client would otherwise link against a missing dylib.
 $(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps $(NIMBLE_SETUP_STAMP)
 	echo -e $(BUILD_MSG) "$@"
-	$(ENV_SCRIPT) nim c $(NIM_PARAMS) \
-		--mm:orc \
-		-d:useMalloc \
-		--passL:"-L$(STATUSGO_LIBDIR)" \
-		--passL:"-lstatus" \
-		--passL:"-L$(STATUSQ_LIB_PATH)" \
-		--passL:"-L$(EXTRA_LIBS_PATH)" \
-		--passL:"-lStatusQ" \
-		--passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" \
-		--passL:"-l$(STATUSKEYCARD_QT_LINKNAME)" \
-		--passL:"$(QRCODEGEN)" \
-		$(NIM_MATH_LIB) \
-		--parallelBuild:0 \
-		$(NIM_EXTRA_PARAMS) src/nim_status_client.nim
+	$(ENV_SCRIPT) $(NIM_CLIENT_COMPILE)
 ifeq ($(mkspecs),macx)
 	install_name_tool -change \
 		libstatus.dylib \
@@ -921,12 +951,6 @@ ifeq ($(mkspecs),macx)
 		bin/nim_status_client
 endif
 
-# The 24h staleness rebuild only makes sense for a mutable checkout: a pinned
-# statusgo cannot go stale (stamp-skip arm, issue 0010), so the pre-clean is
-# develop-mode-only.
-ifeq ($(STATUSGO_DEVELOPED),1)
-NIM_CLIENT_PRECLEAN := force-rebuild-status-go
-endif
 nim_status_client: $(NIM_CLIENT_PRECLEAN) statusq $(NIM_STATUS_CLIENT)
 
 ifdef IN_NIX_SHELL

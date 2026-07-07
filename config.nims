@@ -7,6 +7,11 @@ when withDir(thisDir(), system.fileExists("nimble.paths")):
 import std/os
 import std/strutils
 
+# Shared kit/overlay discovery (issue 0013 phase A): the exact procs the
+# driver (status.nims) uses, so derived values can never drift from what the
+# driver validates.
+include "status_env.nims"
+
 # `nimble setup` builds dependency package binaries; if the dependency store
 # ever sits inside the repo (a manual `--localdeps` run creates nimbledeps/),
 # Nim's parent-dir config walk hands those compiles this file. Everything
@@ -14,8 +19,8 @@ import std/strutils
 # bottles), rpath flags from app env vars, chronicles defines, cache layout —
 # and poisons a dependency's own build (e.g. `bottles/openssl@3/...` on a
 # dnsclient link line), so it only applies when the project being compiled is
-# ours, not a dependency's. (The Makefile keeps the store out of tree at
-# ~/.cache/status-desktop-nimbledeps, so this guard is normally inert.)
+# ours, not a dependency's. (The dependency store lives out of tree, so this
+# guard is normally inert.)
 if not projectPath().startsWith(thisDir() / "nimbledeps"):
   # nimble 0.22.3 emits unusable nimble.paths entries for srcDir-HOISTED store
   # copies, breaking their imports. The shape varies by run: the setup that
@@ -36,17 +41,35 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
           elif entry.endsWith(DirSep & "src") and not dirExists(entry):
             switch("path", entry[0 ..< entry.len - 4])
 
-  # The status_go wrapper (shipped inside vendor/status-go, resolved via the
-  # app's nimble graph) auto-links the static libstatus/libsds it builds for
-  # standalone consumers. This app links the shared flavors with its own
-  # explicit flags (Makefile / buildNimStatusClient.sh), so opt out.
+  # The status_go wrapper (shipped inside the statusgo package, resolved via
+  # the app's nimble graph) auto-links the static libstatus/libsds it builds
+  # for standalone consumers. This app links the shared flavors with its own
+  # explicit flags, so opt out.
   switch("define", "statusGoNoAutoLink")
+
+  # --- desktop-client detection (issue 0013 phase A) --------------------------
+  # The client compile gets its FULL flag set here — make's recipe and
+  # nimble's bin compile both invoke a bare `nim c src/nim_status_client.nim`
+  # against this file, so the three front doors (make / nimble / bare nim)
+  # produce the same build by construction. Everything the flags need is
+  # env-or-derived: make keeps exporting its values (they win when present,
+  # and STATUS_BUILD_ENV_ASSERT=1 verifies derived == exported); without the
+  # env — nimble build/run, bare nim c — the same values are derived from the
+  # repo layout, nimble.paths/nimble.overlay and `qmake -query`.
+  # Mobile client compiles (--os:ios/--os:android) keep their make-owned flag
+  # sets: this issue targets the HOST build. Windows stays make-owned too
+  # (PRD: Windows validation out of scope).
+  let isDesktopClient = projectPath().splitFile.name == "nim_status_client" and
+      not (defined(ios) or defined(android)) and hostOS != "windows"
+  # Release is the canonical dev-build flavor on every path: nimble's bin
+  # compile passes -d:release itself, make exports INCLUDE_DEBUG_SYMBOLS.
+  let clientRelease = isDesktopClient and getEnv("INCLUDE_DEBUG_SYMBOLS") != "true"
 
   # Keep a separate nimcache per USE_SIMULATED_KEYCARD mode. That flag toggles -d:useSimulatedKeycard,
   # which adds/removes the KeycardTest* imports from libstatus-keycard-qt; sharing one cache let stale
   # (simulated) codegen leak into a non-simulated build -> dyld "Symbol not found: _KeycardTestCreateCard".
   let kcSuffix = when defined(useSimulatedKeycard): "-simkeycard" else: ""
-  if defined(release):
+  if defined(release) or clientRelease:
     switch("nimcache", "nimcache/release" & kcSuffix & "/$projectName")
   else:
     switch("nimcache", "nimcache/debug" & kcSuffix & "/$projectName")
@@ -65,20 +88,23 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
     switch("passL", "-lstdc++")
     # DYLD_LIBRARY_PATH doesn't always work when running/packaging so set rpath
     # note: macdeployqt rewrites rpath appropriately when building the .app bundle
-    # Guard against empty env vars (also empty outside the app build, e.g. nimble
-    # setup compiling dep tools): an empty value would emit a bare "-rpath " (no
-    # path), which the linker mis-parses — it consumes the next -rpath flag as its
-    # argument and leaves a real path dangling as an input file
-    # ("ld: file cannot be mmap()ed"). Only emit the flag when the dir is non-empty.
-    for rpathDir in [getEnv("QT_LIBDIR"), getEnv("STATUSGO_LIBDIR"), getEnv("STATUSKEYCARD_QT_LIBDIR")]:
-      if rpathDir.len > 0:
-        switch("passL", "-rpath " & rpathDir)
-    let statusqInstallPath = getEnv("STATUSQ_INSTALL_PATH")
-    if statusqInstallPath.len > 0:
-      switch("passL", "-rpath " & statusqInstallPath & "/StatusQ")
-    # statically link these libs
-    switch("passL", "bottles/openssl@3/lib/libcrypto.a")
-    switch("passL", "bottles/openssl@3/lib/libssl.a")
+    # guards: empty outside the app build (e.g. nimble setup compiling dep tools).
+    # An empty value would emit a bare "-rpath " (no path), which the linker
+    # mis-parses — it consumes the next -rpath flag as its argument and leaves a
+    # real path dangling as an input file ("ld: file cannot be mmap()ed").
+    # The desktop client gets env-or-derived rpaths in its own block below —
+    # these env-only arms cover every other compile make drives (nim tests).
+    if not isDesktopClient:
+      for rpathDir in [getEnv("QT_LIBDIR"), getEnv("STATUSGO_LIBDIR"), getEnv("STATUSKEYCARD_QT_LIBDIR")]:
+        if rpathDir.len > 0:
+          switch("passL", "-rpath " & rpathDir)
+      let statusqInstallPath = getEnv("STATUSQ_INSTALL_PATH")
+      if statusqInstallPath.len > 0:
+        switch("passL", "-rpath " & statusqInstallPath & "/StatusQ")
+    # statically link these libs (absolute: the link must not depend on the
+    # invoker's cwd — nimble and bare nim compiles run outside make)
+    switch("passL", thisDir() & "/bottles/openssl@3/lib/libcrypto.a")
+    switch("passL", thisDir() & "/bottles/openssl@3/lib/libssl.a")
     # https://code.videolan.org/videolan/VLCKit/-/issues/232
     switch("passL", "-Wl,-no_compact_unwind")
     # set the minimum supported macOS version to 14.0
@@ -175,3 +201,167 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
     switch("passL", "-fuse-ld=mold")
 
   switch("define", "reRepRangeLimit=256")
+
+  # --- the desktop client's full flag set (issue 0013 phase A) ---------------
+  if isDesktopClient:
+    let repo = thisDir()
+
+    # Every make-exported value is env-or-derived: env wins when present
+    # (the make path), otherwise the same value is derived here (nimble/bare
+    # paths). STATUS_BUILD_ENV_ASSERT=1 turns silent preference into a hard
+    # comparison — the bring-up parity check.
+    proc envOr(name, derived: string): string =
+      let env = getEnv(name)
+      if env.len == 0:
+        return derived
+      if getEnv("STATUS_BUILD_ENV_ASSERT") == "1" and env != derived:
+        statusEnvFail "env/derived parity broken for " & name &
+          ":\n  exported: " & env & "\n  derived:  " & derived
+      env
+
+    if clientRelease:
+      if not defined(release):
+        switch("define", "release")
+    else:
+      switch("define", "debug")
+
+    switch("mm", "orc")
+    switch("define", "useMalloc")
+    switch("outdir", repo / "bin")
+
+    # Cross-arch desktop (an x86_64 Qt kit on an arm64 mac) keeps the make
+    # rule's contract: exporting QT_ARCH=x86_64 selects the cross build.
+    if hostOS == "macosx" and hostCPU == "arm64" and
+        getEnv("QT_ARCH").len > 0 and getEnv("QT_ARCH") != "arm64":
+      switch("cpu", "amd64")
+      switch("os", "MacOSX")
+      switch("passL", "-arch x86_64")
+      switch("passC", "-arch x86_64")
+
+    # One qmake subprocess per client compile (full -query dump); everything
+    # Qt-shaped derives from it.
+    let qmake = qmakeExe()
+    let qdump = qmakeQueryAll(qmake)
+    let qtLibDir = envOr("QT_LIBDIR", qdump.qmakeProp("QT_INSTALL_LIBS"))
+    let qtVersion = qdump.qmakeProp("QT_VERSION")
+    let qtPrefix = qdump.qmakeProp("QT_INSTALL_PREFIX")
+
+    # Artifact locations follow the develop-mode overlay exactly like the
+    # Makefiles do (nimble.overlay → scratch copy vs vendor checkout).
+    let sgRoot = statusgoBuildRoot()
+    let statusgoLibDir = envOr("STATUSGO_LIBDIR", sgRoot / "build/bin")
+    let nimsdsLibDir = envOr("NIMSDS_LIBDIR", sgRoot / ".sds-build/build")
+    let statusqInstall = envOr("STATUSQ_INSTALL_PATH", repo / "bin")
+    let statusqLibPath = statusqInstall / "StatusQ"
+    let statusqExtraLibs = repo / "ui/StatusQ/build/Qt" & qtVersion & "/lib"
+    let keycardLibDir = envOr("STATUSKEYCARD_QT_LIBDIR",
+      repo / "build/status-keycard-qt" / (if hostOS == "macosx": "macos" else: "linux"))
+    let dosLibDir = envOr("DOTHERSIDE_LIBDIR",
+      repo / "vendor/DOtherSide/build/Qt" & qtVersion & "/lib")
+    let qrcodegen = repo / "vendor/QR-Code-generator/c/libqrcodegen.a"
+
+    # seaqt resolves Qt at compile time via gorge("pkg-config Qt6..."): the
+    # make path exports the wrapper env (vendor/prl-to-pc/qt-pkgconfig.mk);
+    # off-make paths get the identical environment injected here — putEnv in
+    # config.nims propagates to every compile-time gorge of this nim process.
+    let pcWrapperDir = repo / "vendor/prl-to-pc/.pcwrap"
+    let pcKit = qtPrefix.lastPathPart
+    let pcVer = qtPrefix.parentDir.lastPathPart
+    let pcFileDir = repo / "vendor/prl-to-pc" / pcVer / pcKit / "lib/pkgconfig"
+    if getEnv("PKG_CONFIG_PATH").len == 0:
+      if not fileExists(pcWrapperDir / "pkg-config"):
+        statusEnvFail "the Qt pkg-config wrapper is missing (" &
+          pcWrapperDir / "pkg-config" & ").\nRun `make qt-pkgconfig` once — " &
+          "`nim app status.nims` and `nimble build` do this for you."
+      if not dirExists(pcFileDir):
+        statusEnvFail "no committed Qt .pc tree for this kit (" & pcFileDir &
+          ").\nGenerate + commit it with `make qt-pkgconfig-generate` " &
+          "(see vendor/prl-to-pc/qt-pkgconfig.mk)."
+      putEnv("PKG_CONFIG_PATH", pcFileDir)
+      putEnv("PKG_CONFIG_PREFIX_OVERRIDE", "Qt*=" & qtPrefix)
+      putEnv("PATH", pcWrapperDir & ":" & getEnv("PATH"))
+
+    # App version defines (previously injected by make's recipe): derived so
+    # every path agrees. DESKTOP_VERSION intentionally skips version.sh's
+    # `git fetch --tags` (a per-compile network call); make still fetches on
+    # its own schedule for packaging.
+    proc gitOut(args: string): string =
+      let (output, rc) = gorgeEx("git -C " & quoteShell(repo) & " " & args)
+      if rc == 0: output.strip else: ""
+    switch("define", "DESKTOP_VERSION=" & gitOut("describe --tags"))
+    switch("define", "GIT_COMMIT=" & gitOut("log --pretty=format:%h -n 1"))
+    var statusgoVersion = ""
+    if statusgoDeveloped():
+      let (v, rc) = gorgeEx("make -C " & quoteShell(repo / "vendor/status-go") &
+        " version -s")
+      if rc == 0: statusgoVersion = v.strip
+    elif fileExists(repo / "nimble.paths"):
+      # Pinned store copies have no .git: the version is the pin revision,
+      # recorded in the store entry's nimblemeta.json (same derivation as the
+      # Makefile's STATUSGO_VERSION).
+      for line in readFile(repo / "nimble.paths").splitLines:
+        const pre = "--path:\""
+        if line.startsWith(pre) and (DirSep & "pkgs2" & DirSep & "statusgo-") in line:
+          let root = line[pre.len .. ^2]
+          let meta = root / "nimblemeta.json"
+          if fileExists(meta):
+            for mline in readFile(meta).splitLines:
+              if "\"vcsRevision\"" in mline:
+                let rev = mline.split('"')[3]
+                statusgoVersion = rev[0 ..< min(10, rev.len)]
+                break
+          break
+    switch("define", "STATUSGO_VERSION=" & statusgoVersion)
+
+    # Resource-layout / optional make knobs (exported by make; defaults match
+    # the dev build).
+    for tok in getEnv("RESOURCES_LAYOUT", "-d:development").splitWhitespace:
+      if tok.startsWith("-d:"):
+        switch("define", tok[3 .. ^1])
+      else:
+        statusEnvFail "unsupported RESOURCES_LAYOUT token: " & tok
+    let kdfIterations = getEnv("KDF_ITERATIONS")
+    if kdfIterations.len > 0 and kdfIterations != "0":
+      switch("define", "KDF_ITERATIONS=" & kdfIterations)
+    if getEnv("OUTPUT_CSV") == "true":
+      switch("define", "output_csv")
+
+    # Link inputs, in the order the make recipe used to pass them.
+    if hostOS == "macosx":
+      switch("passL", "-framework Foundation -framework AppKit -framework Security -framework IOKit -framework CoreServices -framework LocalAuthentication")
+      # Fix for failures due to 'can't allocate code signature data for'
+      switch("passL", "-headerpad_max_install_names")
+      switch("passL", "-F" & qtLibDir)
+    else:
+      switch("passL", "-L" & qtLibDir)
+    switch("passL", dosLibDir / "libDOtherSideStatic.a")
+    # The Qt modules the app links beyond what the seaqt bindings pull in
+    # themselves (the former QT_SEAQT_EXTRA_LIBS make var).
+    let (seaqtQtLibs, seaqtRc) = gorgeEx(
+      "pkg-config --libs Qt6Core Qt6Qml Qt6Gui Qt6Quick Qt6QuickControls2 " &
+      "Qt6Widgets Qt6Svg Qt6Multimedia Qt6WebView Qt6WebChannel")
+    if seaqtRc != 0:
+      statusEnvFail "pkg-config failed to resolve the Qt link libraries:\n" &
+        seaqtQtLibs & "\nIs the committed .pc tree present for this kit (" &
+        pcFileDir & ")?"
+    switch("passL", seaqtQtLibs)
+    switch("passL", "-L" & statusgoLibDir)
+    switch("passL", "-lstatus")
+    switch("passL", "-L" & statusqLibPath)
+    switch("passL", "-L" & statusqExtraLibs)
+    switch("passL", "-lStatusQ")
+    switch("passL", "-L" & keycardLibDir)
+    switch("passL", "-lstatus-keycard-qt")
+    switch("passL", qrcodegen)
+    switch("passL", "-lm")
+    switch("passL", "-L" & nimsdsLibDir)
+    switch("passL", "-lsds")
+
+    # rpaths (macOS): the four the make path always baked, plus libsds and
+    # StatusQ's cmake lib dir so the bare binary resolves every @rpath
+    # dependency without DYLD_LIBRARY_PATH (issue 0013 phase C groundwork;
+    # macdeployqt rewrites rpaths when bundling, so packaging is unaffected).
+    if hostOS == "macosx":
+      for rpath in [qtLibDir, statusgoLibDir, keycardLibDir, statusqLibPath,
+                    nimsdsLibDir, statusqExtraLibs]:
+        switch("passL", "-rpath" & " " & rpath)

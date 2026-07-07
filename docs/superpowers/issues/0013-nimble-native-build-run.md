@@ -115,3 +115,53 @@ store content cannot leak.
 ## Blocked by
 
 Nothing (iteration-2 issues all closed). Holds the in-tree build lock.
+
+## Implementation notes
+
+### Pre-work empirics (2026-07-07, nimble 0.22.3 @42ef70c2 source + tiny-package experiments)
+
+The hook ↔ bin-compile contract, verified before phase A (blocker 1 in this
+issue) — scratch package with a `before build` hook, a file:// dep, a
+config.nims path override, and a probe module present in both path sets:
+
+- **Bin compile command** (vNext `build`/`run`):
+  `<store nim> c --colors:X --noNimblePath -d:release [user flags]
+  -d:NimblePkgVersion=<v> --path:<every solution pkg> [--hints:off]
+  -o:<pkgdir>/[binDir/]<bin> <src>` — run with cwd = package dir, env =
+  plain process inheritance. `-d:release` is UNCONDITIONAL for root builds
+  (vnext.nim `buildPkg`); the nim used is the STORE-resolved nim
+  (`pkgs2/nim-2.2.4-<checksum>/bin/nim` — on this machine byte-the-same
+  install as the PATH nim).
+- **config.nims `--path` beats nimble's command-line `--path`** for module
+  resolution (probe resolved to the config-supplied dir). Consequence: the
+  ADR-0004 overlay (applied to nimble.paths, included by config.nims) wins
+  over nimble's own store paths — develop mode composes with `nimble build`
+  with no extra machinery. No ambiguity error: first match wins silently.
+- **CLI `-d:X=v` beats config `switch("define", "X=v")`** (nim processes the
+  command line before AND after configs; defines re-apply). So config-derived
+  defines are pure fallbacks — prefer-invoker semantics for free.
+- **`putEnv` in config.nims propagates to compile-time `gorge`** in modules
+  of the same compile — seaqt's `gorge("pkg-config Qt6...")` can be fed the
+  wrapper env without make.
+- **Hooks**: `before build` fires for BOTH `nimble build` and `nimble run`
+  (run builds the root through the same vnext buildFromDir), cwd = package
+  dir, full env inheritance; the hook nimscript is evaluated via a temp shim
+  under the system tmp, so the repo's config.nims does NOT run for the hook
+  itself. A hook whose `exec` fails does NOT stop the action (execHook
+  swallows script failures — `res.success=false` → continue), so the hook
+  catches the failure and `return false`s explicitly (that IS the legitimate
+  use of hook-cancel; the skip switch is the successful-no-op arm).
+- **`binDir = "bin"`** in the manifest lands nimble's binary exactly at
+  `bin/nim_status_client` (make's location).
+- **No-op `nimble build` re-runs the client compile** (needsRebuild returns
+  true for actionBuild/actionRun; only install-type actions honor
+  `--noRebuild`) — nim's own caching applies, but the nim front-end + link
+  always run. The seconds-level no-op criterion applies to the HOOK (past
+  dispatch); the compile re-run is nimble's own behavior, recorded as such.
+- `-d:lto` has zero consumers repo-wide (vestigial next to `-d:release`) —
+  the client compile drops it; make's NIM_PARAMS keeps it for the nim tests
+  only.
+- The 66 stray `githubcom_*` dirs at the repo root (motivating-failure
+  session, 2026-07-07 19:30–19:31) are pkgcache-shaped clones written by a
+  nimble invocation whose `pkgCachePath` was empty (`"" / <name>` = cwd);
+  our target flows write to `<nimbleDir>/pkgcache` — watch for recurrence.
