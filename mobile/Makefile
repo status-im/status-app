@@ -172,9 +172,12 @@ $(QRCODEGEN_LIB): $(QRCODEGEN_FILES) | platform-cleanup
 	@QRCODEGEN=$(QRCODEGEN) $(QRCODEGEN_SCRIPT) $(HANDLE_OUTPUT)
 	@echo "QRCodeGen built $(QRCODEGEN_LIB)"
 
+# Own cmake subtree (issue 0011): the -S dir is now the FetchContent wrapper
+# and an existing cache configured from the old submodule source would refuse
+# the flip; develop redirects ride STATUS_KEYCARD_QT_SOURCE_DIR / KEYCARD_QT.
 $(STATUS_KEYCARD_QT_LIB): $(STATUS_KEYCARD_QT_FILES) $(STATUS_KEYCARD_QT_SCRIPT) $(OPENSSL_LIB)
 	@echo "Building status-keycard-qt"
-	@STATUS_KEYCARD_QT=$(STATUS_KEYCARD_QT) KEYCARD_QT=$(KEYCARD_QT) BUILD_DIR=$(BUILD_PATH) $(STATUS_KEYCARD_QT_SCRIPT) $(HANDLE_OUTPUT)
+	@STATUS_KEYCARD_QT=$(STATUS_KEYCARD_QT) STATUS_KEYCARD_QT_SOURCE_DIR=$(STATUS_KEYCARD_QT_SOURCE_DIR) KEYCARD_QT=$(KEYCARD_QT) BUILD_DIR=$(BUILD_PATH)/status-keycard-qt $(STATUS_KEYCARD_QT_SCRIPT) $(HANDLE_OUTPUT)
 	@echo "status-keycard-qt built $(STATUS_KEYCARD_QT_LIB)"
 
 $(STATUS_DESKTOP_RCC): $(STATUS_DESKTOP_UI_FILES) compile-translations
@@ -324,7 +327,7 @@ clean-qrcodegen:
 .PHONY: clean-status-keycard-qt
 clean-status-keycard-qt:
 	@rm -f $(STATUS_KEYCARD_QT_LIB)
-	@rm -rf $(STATUS_KEYCARD_QT)/build/$(OS)
+	@rm -rf $(BUILD_PATH)/status-keycard-qt
 
 .PHONY: clean-nim-status-client
 clean-nim-status-client:

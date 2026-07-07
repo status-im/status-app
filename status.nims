@@ -291,9 +291,8 @@ type Vendor = object
 
 # Rebuild gating while developed = ADR-0003's FORCE + compare-before-copy arm:
 # the vendor sub-build runs every build (it owns incremental) and cmp-gated
-# copies keep dependents from relinking on identical bytes. Issue 0011 adds
-# the cmake rows (status-keycard-qt, keycard-qt); issue 0012 adds seaqt
-# (developBranch "smo-6.4" per its grilled decision) and nimqml.
+# copies keep dependents from relinking on identical bytes. Issue 0012 adds
+# seaqt (developBranch "smo-6.4" per its grilled decision) and nimqml.
 const vendorTable = [
   Vendor(name: "statusgo", flavor: vfNimbleGraph,
     pinManifest: "nim_status_client.nimble", repoName: "status-go",
@@ -316,6 +315,27 @@ const vendorTable = [
     # (checkout while developed, scratch/store copy otherwise — issue 0010).
     clientRebuild: false, forceTouch: @["@statusgo/nimble.paths"],
     forceRemove: @[]),
+  Vendor(name: "status-keycard-qt", flavor: vfCmake,
+    pinManifest: "cmake/status-keycard-qt/CMakeLists.txt",
+    repoName: "status-keycard-qt",
+    pkgName: "", manifestName: "CMakeLists.txt",
+    checkoutDir: "vendor/status-keycard-qt", developBranch: "develop",
+    # A shared library loaded at runtime — no client rebuild. The make target
+    # has no real prerequisites, so removing the built lib is what re-runs
+    # cmake (the configure re-reads the overlay-derived FETCHCONTENT_SOURCE_
+    # DIR_* redirect pair; the cmake build is internally incremental).
+    clientRebuild: false, forceTouch: @[],
+    forceRemove: @["build/status-keycard-qt/*/libstatus-keycard-qt.*"]),
+  Vendor(name: "keycard-qt", flavor: vfCmake,
+    pinManifest: "@keycard-parent",  # status-keycard-qt's own CMakeLists owns this pin
+    repoName: "keycard-qt",
+    pkgName: "", manifestName: "CMakeLists.txt",
+    checkoutDir: "vendor/keycard-qt", developBranch: "develop",
+    # Nested content, no parent cascade: edits rebuild THROUGH the parent's
+    # cmake build (keycard-qt is compiled static and re-linked into
+    # libstatus-keycard-qt), so the FORCE arm is the parent's artifact.
+    clientRebuild: false, forceTouch: @[],
+    forceRemove: @["build/status-keycard-qt/*/libstatus-keycard-qt.*"]),
 ]
 
 proc vendorByName(name: string): Vendor =
@@ -409,10 +429,58 @@ proc expandVendorPath(f: string): string =
   else:
     thisDir() / f
 
+proc repoBasename(url: string): string =
+  result = url.strip(chars = {'/'}, leading = false).rsplit('/', maxsplit = 1)[^1]
+  if result.endsWith(".git"):
+    result = result[0 .. ^5]
+
+proc cmakePinManifestPath(v: Vendor): string =
+  ## Where a cmake-flavor vendor's pin-owning CMakeLists lives. The sentinel
+  ## "@keycard-parent" = status-keycard-qt's OWN CMakeLists (it owns the
+  ## nested keycard-qt pin — issue 0011): the develop checkout when present,
+  ## else the pinned sources FetchContent materialized under a build tree
+  ## (_deps). Returns "" when no copy exists anywhere yet.
+  if v.pinManifest != "@keycard-parent":
+    return thisDir() / v.pinManifest
+  let checkout = thisDir() / "vendor/status-keycard-qt/CMakeLists.txt"
+  if fileExists(checkout):
+    return checkout
+  let (found, rc) = gorgeEx("ls " &
+    thisDir() / "build/status-keycard-qt/*/_deps/status-keycard-qt-src/CMakeLists.txt" &
+    " " &
+    thisDir() / "mobile/build/*/qt*/status-keycard-qt/_deps/status-keycard-qt-src/CMakeLists.txt" &
+    " 2>/dev/null")
+  if rc == 0 and found.strip.len > 0:
+    return found.strip.splitLines[0]
+
+proc parseCmakePin(manifestPath: string, v: Vendor): tuple[url, rev: string] =
+  ## FetchContent pins: the GIT_REPOSITORY whose repo basename matches
+  ## v.repoName, and the GIT_TAG that follows it in the same declare block.
+  var url = ""
+  for rawLine in readFile(manifestPath).splitLines:
+    let l = rawLine.strip
+    if l.startsWith("GIT_REPOSITORY"):
+      let u = l.splitWhitespace()[^1]
+      url = if repoBasename(u) == v.repoName: u else: ""
+    elif l.startsWith("GIT_TAG") and url.len > 0:
+      return (url, l.splitWhitespace()[^1])
+  fail "no FetchContent GIT_REPOSITORY/GIT_TAG pin for '" & v.repoName &
+    "' found in " & manifestPath & " — the vendor table and the pin-owning" &
+    " CMakeLists are out of sync."
+
 proc pinOf(v: Vendor): tuple[url, rev: string] =
   ## The vendor's pin, parsed live from the owning manifest so a pin flip
   ## (e.g. issue 0010's statusgo file:// → URL#hash) needs no driver change.
   ## file:// pins return rev = "" (the checkout IS what resolution reads).
+  if v.flavor == vfCmake:
+    let mp = cmakePinManifestPath(v)
+    if mp.len == 0:
+      fail "keycard-qt's pin is owned by status-keycard-qt's CMakeLists, and" &
+        " no copy of it exists yet (no vendor/status-keycard-qt checkout and" &
+        " no fetched sources under build/status-keycard-qt/*/_deps). Run" &
+        " `nim app status.nims` once (fetches the pinned sources), or" &
+        " `nim develop status.nims status-keycard-qt`."
+    return parseCmakePin(mp, v)
   let manifestPath =
     if v.pinManifest.startsWith("@statusgo/"):
       statusgoManifestRoot() / v.pinManifest["@statusgo/".len .. ^1]
@@ -489,6 +557,11 @@ proc guardDivergence(v: Vendor, rev: string) =
   ## ADR 0004's one forbidden failure mode is silent drift: dependency
   ## resolution reads the PINNED manifest, so a checkout whose own manifest
   ## diverged must fail the build loudly, with the escape hatch spelled out.
+  if v.flavor == vfCmake:
+    # The FETCHCONTENT_SOURCE_DIR redirect makes cmake read the checkout's
+    # own CMakeLists — build-config edits (incl. nested pins) TAKE effect,
+    # so the silent-drift mode this guard exists for cannot occur.
+    return
   if rev.len == 0:
     # Interim file:// pin (statusgo until issue 0010): resolution already
     # reads the checkout's manifest itself — nothing to diverge from.
@@ -526,6 +599,10 @@ proc overlayApplied(v: Vendor): bool =
   ## the vendor (i.e. the overlay rewrite took effect). A manual `nimble
   ## setup` outside make regenerates the file WITHOUT the overlay — the
   ## driver detects that here and re-invalidates the stamp.
+  if v.flavor == vfCmake:
+    # cmake vendors are not in the nimble graph: their redirect is re-derived
+    # from the overlay by every vendor-recipe configure, never from nimble.paths.
+    return true
   let pathsFile = thisDir() / "nimble.paths"
   if not fileExists(pathsFile):
     return true # no resolution yet — the stamp recipe will generate + apply
@@ -553,13 +630,14 @@ proc developModeMakeArgs(): string =
         v.checkoutDir & ") is missing. Run `nim develop status.nims " &
         v.name & "` to re-materialize it, or `nim undevelop status.nims " &
         v.name & " --force` to return to the pin."
-    let (_, rev) = pinOf(v)
-    guardDivergence(v, rev)
-    if not overlayApplied(v):
-      # nimble.paths was regenerated without the overlay (manual `nimble
-      # setup`); make the overlay file newer than it so the stamp recipe
-      # re-runs setup + applyOverlay.
-      exec "touch " & quoteShell(thisDir() / overlayFile)
+    if v.flavor == vfNimbleGraph:
+      let (_, rev) = pinOf(v)
+      guardDivergence(v, rev)
+      if not overlayApplied(v):
+        # nimble.paths was regenerated without the overlay (manual `nimble
+        # setup`); make the overlay file newer than it so the stamp recipe
+        # re-runs setup + applyOverlay.
+        exec "touch " & quoteShell(thisDir() / overlayFile)
     for f in v.forceTouch:
       let p = expandVendorPath(f)
       if fileExists(p):
@@ -570,7 +648,7 @@ proc developModeMakeArgs(): string =
       clientRebuild = true
   if clientRebuild: " REBUILD_NIM=true" else: ""
 
-proc invalidateClientFor(v: Vendor) =
+proc invalidateOnModeFlip(v: Vendor) =
   ## Mode flips move a clientRebuild vendor's artifact dir (pinned scratch ↔
   ## checkout), and the desktop client bakes that dir as an rpath at link
   ## time — an existing binary would keep loading the OTHER mode's library.
@@ -578,6 +656,13 @@ proc invalidateClientFor(v: Vendor) =
   ## no prerequisite that tracks the artifact dir).
   if v.clientRebuild:
     exec "rm -f " & quoteShell(thisDir() / "bin" / "nim_status_client")
+  if v.flavor == vfCmake:
+    # The vendor recipe only runs when its lib is missing, and the redirect
+    # is a configure-time value: drop the artifacts so the NEXT build
+    # reconfigures with the new mode's FETCHCONTENT_SOURCE_DIR_* values
+    # (undevelop especially — nothing else would re-run the recipe).
+    for g in v.forceRemove:
+      exec "rm -f " & expandVendorPath(g)
 
 proc gitOut(dir, args: string): string =
   let (output, rc) = gorgeEx("git -C " & quoteShell(dir) & " " & args)
@@ -608,9 +693,6 @@ proc developArgv(taskName: string, allowForce = false): tuple[vendor: string, fo
 task develop, "Materialize a vendor as an editable checkout and switch the build to it":
   let (name, _) = developArgv("develop")
   let v = vendorByName(name)
-  if v.flavor == vfCmake:
-    fail "'" & v.name & "' is a cmake-flavor vendor — its develop mode" &
-      " (FETCHCONTENT_SOURCE_DIR redirect) lands with issue 0011."
   let (url, rev) = pinOf(v)
   let checkoutAbs = thisDir() / v.checkoutDir
   if dirExists(checkoutAbs):
@@ -635,7 +717,8 @@ task develop, "Materialize a vendor as an editable checkout and switch the build
     # the only local branch is the remote default — repointing it is safe.
     exec "git -C " & quoteShell(checkoutAbs) & " checkout -B " &
       quoteShell(v.developBranch) & " " & quoteShell(rev)
-  if rev.len > 0 and fileExists(checkoutAbs / v.manifestName) and
+  if v.flavor == vfNimbleGraph and rev.len > 0 and
+      fileExists(checkoutAbs / v.manifestName) and
       readFile(checkoutAbs / v.manifestName).strip != pinnedManifestContent(v, rev).strip:
     echo "develop: WARNING — " & v.checkoutDir & "/" & v.manifestName &
       " already diverges from the pinned revision; the next build will fail" &
@@ -647,10 +730,14 @@ task develop, "Materialize a vendor as an editable checkout and switch the build
   else:
     devs.add v.name
     writeOverlay devs # invalidates the setup stamp (overlay joins its key)
-    invalidateClientFor v
+    invalidateOnModeFlip v
     echo "develop: '" & v.name & "' recorded in " & overlayFile & "."
-  echo "develop: the next `nim app status.nims` re-resolves (nimble setup)," &
-    " applies the overlay, and builds from " & v.checkoutDir & "."
+  if v.flavor == vfCmake:
+    echo "develop: the next `nim app status.nims` redirects the '" & v.name &
+      "' FetchContent to " & v.checkoutDir & " and rebuilds it every build."
+  else:
+    echo "develop: the next `nim app status.nims` re-resolves (nimble setup)," &
+      " applies the overlay, and builds from " & v.checkoutDir & "."
 
 task undevelop, "Return a developed vendor to its pin (--force to skip the dirty/unpushed checks)":
   let (name, force) = developArgv("undevelop", allowForce = true)
@@ -682,7 +769,7 @@ task undevelop, "Return a developed vendor to its pin (--force to skip the dirty
       if n != v.name:
         kept.add n
     writeOverlay kept # invalidates the setup stamp → pin resolution returns
-    invalidateClientFor v
+    invalidateOnModeFlip v
     echo "undevelop: '" & v.name & "' returned to its pin. The checkout at " &
       v.checkoutDir & " is left in place (inert; delete it whenever you like)."
     echo "undevelop: the next `nim app status.nims` re-resolves and builds" &
@@ -693,7 +780,17 @@ task vendors, "List vendors: pin, flavor, and develop state":
   rejectExtras(t, "vendors")
   let devs = readOverlay()
   for v in vendorTable:
-    let (url, rev) = pinOf(v)
+    var url = ""
+    var rev = ""
+    var pinUnavailable = false
+    if v.flavor == vfCmake and cmakePinManifestPath(v).len == 0:
+      # keycard-qt's pin owner (status-keycard-qt's CMakeLists) is not
+      # materialized anywhere yet — don't fail the whole listing over it.
+      pinUnavailable = true
+    else:
+      let pin = pinOf(v)
+      url = pin.url
+      rev = pin.rev
     var state = if v.name in devs: "develop" else: "default"
     if v.name in devs and not overlayApplied(v):
       state &= " (overlay pending — applied by the next build)"
@@ -708,7 +805,11 @@ task vendors, "List vendors: pin, flavor, and develop state":
         (if dirty.strip.len > 0: " (dirty)" else: " (clean)")
     echo v.name & "  [" & (if v.flavor == vfNimbleGraph: "nimble-graph" else: "cmake") &
       ", " & state & "]"
-    echo "  pin:      " & url & (if rev.len > 0: "#" & rev else: " (interim local pin)")
+    if pinUnavailable:
+      echo "  pin:      owned by status-keycard-qt's CMakeLists — visible" &
+        " after the first build (or `develop status-keycard-qt`)"
+    else:
+      echo "  pin:      " & url & (if rev.len > 0: "#" & rev else: " (interim local pin)")
     echo "  checkout: " & checkout
 
 task applyOverlay, "Apply the develop-mode overlay to the generated nimble.paths (internal: make's setup-stamp recipe runs this after every `nimble setup`)":
@@ -727,6 +828,10 @@ task applyOverlay, "Apply the develop-mode overlay to the generated nimble.paths
           v.checkoutDir & ") is missing. Run `nim develop status.nims " &
           v.name & "` to re-materialize it, or `nim undevelop status.nims " &
           v.name & " --force` to return to the pin."
+      if v.flavor == vfCmake:
+        # Not in the nimble graph: nothing to rewrite in nimble.paths — the
+        # redirect is applied by the vendor recipe's cmake configure instead.
+        continue
       let (_, rev) = pinOf(v)
       guardDivergence(v, rev)
       let (rewritten, matched) = rewriteEntries(content, v)

@@ -14,9 +14,6 @@
 [submodule "mobile/vendors/openssl"]
 	path = mobile/vendors/openssl
 	url = https://github.com/openssl/openssl
-[submodule "vendor/status-keycard-qt"]
-	path = vendor/status-keycard-qt
-	url = https://github.com/status-im/status-keycard-qt
 [submodule "vendor/nim-seaqt"]
 	path = vendor/nim-seaqt
 	url = https://github.com/seaqt/nim-seaqt.git

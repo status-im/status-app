@@ -637,20 +637,38 @@ status-go-clean:
 ##	status-keycard-qt (Qt/C++ based keycard library)
 ##
 
-# Allow using local status-keycard-qt for development
+# status-keycard-qt is a pinned CMake FetchContent vendor (issue 0011): the
+# pin lives in cmake/status-keycard-qt/CMakeLists.txt and the pinned sources
+# land under the build tree (_deps) — no vendor checkout exists in default
+# mode. `nim develop status.nims status-keycard-qt` / `… keycard-qt` (issues
+# 0009/0011) materializes vendor/<name> and the recipe below redirects the
+# matching FetchContent to it; develop state is derived from nimble.overlay
+# (same pattern as STATUSGO_ROOT above). Both knobs stay user-overridable
+# (?=) to point at any local folder, matching the pre-0011 behavior.
+STATUS_KEYCARD_QT_DEVELOPED := $(shell grep -sqx status-keycard-qt nimble.overlay 2>/dev/null && echo 1)
+KEYCARD_QT_DEVELOPED := $(shell grep -sqx keycard-qt nimble.overlay 2>/dev/null && echo 1)
+ifeq ($(STATUS_KEYCARD_QT_DEVELOPED),1)
 STATUS_KEYCARD_QT_SOURCE_DIR ?= vendor/status-keycard-qt
-KEYCARD_QT_SOURCE_DIR ?= ""
+else
+STATUS_KEYCARD_QT_SOURCE_DIR ?=
+endif
+ifeq ($(KEYCARD_QT_DEVELOPED),1)
+KEYCARD_QT_SOURCE_DIR ?= vendor/keycard-qt
+else
+KEYCARD_QT_SOURCE_DIR ?=
+endif
 
-# Determine build directory based on platform
+# Determine build directory based on platform (out of the source tree; the
+# pre-0011 location was inside the submodule)
 ifeq ($(mkspecs),macx)
-STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_SOURCE_DIR)/build/macos
+STATUS_KEYCARD_QT_BUILD_DIR := build/status-keycard-qt/macos
 STATUS_KEYCARD_QT_CMAKE_PARAMS += -DOPENSSL_ROOT_DIR=$(BOTTLES_DIR)/openssl@3 -DOPENSSL_USE_STATIC_LIBS=ON
 else ifeq ($(mkspecs),win32)
-STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_SOURCE_DIR)/build/windows
+STATUS_KEYCARD_QT_BUILD_DIR := build/status-keycard-qt/windows
 WIN_OPENSSL_ROOT ?= C:/ProgramData/scoop/apps/openssl-lts/current
 STATUS_KEYCARD_QT_CMAKE_PARAMS += -DOPENSSL_ROOT_DIR=$(WIN_OPENSSL_ROOT) -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON
 else
-STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_SOURCE_DIR)/build/linux
+STATUS_KEYCARD_QT_BUILD_DIR := build/status-keycard-qt/linux
 endif
 
 ifeq ($(USE_SIMULATED_KEYCARD),true)
@@ -688,16 +706,20 @@ keycard-simulator-bundle:
 	cp -R $(addprefix $(KEYCARD_SIM_SRC_DIR)/,$(KEYCARD_SIM_RUNTIME_BITS)) $(KEYCARD_SIM_DEST)/
 
 status-keycard-qt: $(STATUSKEYCARD_QT_LIB)
+# The FETCHCONTENT_SOURCE_DIR_* pair is ALWAYS passed (empty value = pinned
+# fetch; verified: cmake treats an empty cache value as unset) so a develop /
+# undevelop flip can never leave a stale redirect in the cmake cache.
 $(STATUSKEYCARD_QT_LIB): | deps check-qt-dir
 	echo -e $(BUILD_MSG) "status-keycard-qt"
-	  cmake -S "${STATUS_KEYCARD_QT_SOURCE_DIR}" -B "${STATUS_KEYCARD_QT_BUILD_DIR}" \
+	  cmake -S cmake/status-keycard-qt -B "${STATUS_KEYCARD_QT_BUILD_DIR}" \
 		-DCMAKE_BUILD_TYPE=$(COMMON_CMAKE_BUILD_TYPE) \
 		$(COMMON_CMAKE_CONFIG_PARAMS) \
 		$(STATUS_KEYCARD_QT_CMAKE_PARAMS) \
 		-DBUILD_TESTING=OFF \
 		-DBUILD_EXAMPLES=OFF \
 		-DBUILD_SHARED_LIBS=ON \
-		-DKEYCARD_QT_SOURCE_DIR=${KEYCARD_QT_SOURCE_DIR} \
+		"-DFETCHCONTENT_SOURCE_DIR_STATUS-KEYCARD-QT=$(if $(STATUS_KEYCARD_QT_SOURCE_DIR),$(abspath $(STATUS_KEYCARD_QT_SOURCE_DIR)))" \
+		"-DFETCHCONTENT_SOURCE_DIR_KEYCARD-QT=$(if $(KEYCARD_QT_SOURCE_DIR),$(abspath $(KEYCARD_QT_SOURCE_DIR)))" \
 		$(HANDLE_OUTPUT)
 	cmake --build $(STATUS_KEYCARD_QT_BUILD_DIR) --target status-keycard-qt --config $(COMMON_CMAKE_BUILD_TYPE) $(HANDLE_OUTPUT)
 

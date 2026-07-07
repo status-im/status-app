@@ -149,5 +149,9 @@ nimble.develop
 /.statusgo-build/
 # develop-mode statusgo checkout (issue 0009; materialized by `nim develop status.nims statusgo`)
 /vendor/status-go/
+# keycard pair (issue 0011): out-of-checkout cmake build tree + develop-mode checkouts
+/build/status-keycard-qt/
+/vendor/status-keycard-qt/
+/vendor/keycard-qt/
 .phase2-vendor-backup/
 /.claude/

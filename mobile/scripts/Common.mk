@@ -41,7 +41,25 @@ STATUS_GO?=$(STATUS_DESKTOP)/.statusgo-build
 endif
 OPENSSL?=$(ROOT_DIR)/vendors/openssl
 QRCODEGEN?=$(STATUS_DESKTOP)/vendor/QR-Code-generator/c
-STATUS_KEYCARD_QT?=$(STATUS_DESKTOP)/vendor/status-keycard-qt
+# status-keycard-qt is a pinned CMake FetchContent vendor (issue 0011): the
+# -S dir is the app-owned wrapper project that carries the pin; the pinned
+# sources land under the cmake build tree (_deps). Develop mode (issues
+# 0009/0011) materializes vendor/status-keycard-qt / vendor/keycard-qt and
+# redirects the matching FetchContent to it (derived from nimble.overlay;
+# same pattern as STATUS_GO above).
+STATUS_KEYCARD_QT?=$(STATUS_DESKTOP)/cmake/status-keycard-qt
+STATUS_KEYCARD_QT_DEVELOPED := $(shell grep -sqx status-keycard-qt $(STATUS_DESKTOP)/nimble.overlay 2>/dev/null && echo 1)
+KEYCARD_QT_DEVELOPED := $(shell grep -sqx keycard-qt $(STATUS_DESKTOP)/nimble.overlay 2>/dev/null && echo 1)
+ifeq ($(STATUS_KEYCARD_QT_DEVELOPED),1)
+STATUS_KEYCARD_QT_SOURCE_DIR ?= $(STATUS_DESKTOP)/vendor/status-keycard-qt
+else
+STATUS_KEYCARD_QT_SOURCE_DIR ?=
+endif
+ifeq ($(KEYCARD_QT_DEVELOPED),1)
+KEYCARD_QT ?= $(STATUS_DESKTOP)/vendor/keycard-qt
+else
+KEYCARD_QT ?=
+endif
 
 # compile macros: pr -> StatusPR, release -> Status
 ifeq ($(BUILD_VARIANT),pr)
@@ -74,7 +92,9 @@ STATUS_Q_UI_FILES := $(shell find $(STATUSQ) -type f \( -iname '*.qml' -o -iname
 # own PHONY sub-make via FORCE.
 OPENSSL_FILES := $(shell find $(OPENSSL) -type f \( -iname '*.c' -o -iname '*.h' \))
 QRCODEGEN_FILES := $(shell find $(QRCODEGEN) -type f \( -iname '*.c' -o -iname '*.h' \))
-STATUS_KEYCARD_QT_FILES := $(shell find $(STATUS_KEYCARD_QT) -type f \( -iname '*.cpp' -o -iname '*.h' \) 2>/dev/null || echo "")
+# Developed keycard checkouts are file-tracked so edits rebuild the lib; in
+# default mode both vars are empty (pinned _deps sources, lib-missing gating).
+STATUS_KEYCARD_QT_FILES := $(shell find $(STATUS_KEYCARD_QT_SOURCE_DIR) $(KEYCARD_QT) -type f \( -iname '*.cpp' -o -iname '*.h' \) 2>/dev/null || echo "")
 WRAPPER_APP_FILES := $(shell find $(WRAPPER_APP) -type f)
 STATUS_GO_STUB_GEN := $(STATUS_GO)/build/bin/statusgo_stub_exports.cpp
 STATUS_GO_SERVICE_GEN := $(STATUS_GO)/build/bin/statusgo_service_dispatch.cpp
