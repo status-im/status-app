@@ -126,13 +126,6 @@ unclosed fence here (no closing triple-tick)
     readonly property var emph: textArea.emphasisAt(textArea.cursorPosition)
     readonly property var vemph: textArea.emphasisAtInsertion(textArea.cursorPosition)
 
-    function randomName() {
-        const n = 1 + Math.floor(Math.random() * 5)
-        let s = "@"
-        for (let i = 0; i < n; ++i)
-            s += String.fromCharCode(65 + Math.floor(Math.random() * 26))
-        return s
-    }
     // A detectable uncompressed key: "0x" + 130 hex (what the parser's mention rule requires).
     function randomPubKey() {
         const chars = "0123456789abcdef"
@@ -142,11 +135,13 @@ unclosed fence here (no closing triple-tick)
         return s
     }
 
-    // pubKey -> display name, for resolving textual mentions when rendering / loading.
-    readonly property var mentionsMap: {
-        const m = {}
-        root.sampleMentions.forEach(u => m[u.pubKey] = u.name)
-        return m
+    // pubKey -> display name, for resolving textual mentions when rendering / loading. Sourced
+    // from the users model through the reusable resolver (reactive to model changes).
+    readonly property var mentionsMap: mentionResolver.map
+
+    MentionResolver {
+        id: mentionResolver
+        sourceModel: usersModel
     }
 
     // Load the initial sample through loadText (not the text property) so its textual mentions —
@@ -202,6 +197,9 @@ unclosed fence here (no closing triple-tick)
         // True while the user has dismissed (Escape) the popup for the current @-token;
         // reset when the token changes so typing re-shows suggestions.
         property bool dismissed: false
+
+        // Distinguishes successive renames of the exemplary mentioned user.
+        property int renameCounter: 0
     }
 
     // Sample users to mention (display name + pub key). Some share prefixes so filtering
@@ -620,15 +618,14 @@ unclosed fence here (no closing triple-tick)
                     checked: true
                     text: "Selectable static text"
                 }
-            }
-            Button {
-                focusPolicy: Qt.NoFocus
 
-                text: "Add random mention"
-                onClicked: {
-                    const pos = textArea.cursorPosition
-                    textArea.insertMention(pos, root.randomName(), root.randomPubKey())
-                    textArea.insert(textArea.cursorPosition, " ")
+                // Renames the exemplary mentioned user (row 0) in the users model. The resolver
+                // rebuilds mentionsMap reactively, so the mention in the static render updates
+                // live to the new name — without touching the text.
+                Button {
+                    text: "Rename mentioned user"
+                    focusPolicy: Qt.NoFocus
+                    onClicked: usersModel.setProperty(0, "name", "Renamed-" + (++d.renameCounter))
                 }
             }
             Row {
