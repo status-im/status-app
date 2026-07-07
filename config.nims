@@ -41,6 +41,22 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
           elif entry.endsWith(DirSep & "src") and not dirExists(entry):
             switch("path", entry[0 ..< entry.len - 4])
 
+  # Nested-git-worktree guard (issue 0013): when this checkout sits inside
+  # another status-desktop checkout (e.g. .claude/worktrees/<name>), the
+  # ENCLOSING checkout's nim.cfg (`path = "src"`) puts ITS src on the module
+  # search path via Nim's parent-dir config walk — and any compile that also
+  # receives our src as a COMMAND-LINE --path (nimble's bin compile passes
+  # the root package's srcDir) then resolves every app module to the
+  # PARENT's sources: CLI --path is processed before configs, so the
+  # enclosing checkout's entry outranks it, and the build silently compiles
+  # the other checkout. Exclude every ancestor checkout's src explicitly
+  # (ours is re-added by nim.cfg and/or the command line).
+  var ancestorDir = thisDir().parentDir
+  while ancestorDir.len > 1:
+    if fileExists(ancestorDir / "src" / "nim_status_client.nim"):
+      switch("excludePath", ancestorDir / "src")
+    ancestorDir = ancestorDir.parentDir
+
   # The status_go wrapper (shipped inside the statusgo package, resolved via
   # the app's nimble graph) auto-links the static libstatus/libsds it builds
   # for standalone consumers. This app links the shared flavors with its own
@@ -73,6 +89,18 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
     switch("nimcache", "nimcache/release" & kcSuffix & "/$projectName")
   else:
     switch("nimcache", "nimcache/debug" & kcSuffix & "/$projectName")
+
+  # Flavor selection must precede the per-OS block: -d:release is a SPECIAL
+  # define that also flips debug-info defaults, so it has to be processed
+  # BEFORE switch("debugger", "native") re-enables debug info — the same
+  # order the command-line spelling produces (nimble passes -d:release ahead
+  # of every config; make used to). Setting it after the debugger switch
+  # silently strips the binary's debug map (found via a 6 MB __LINKEDIT /
+  # 415k-vs-133k symbol asymmetry between the nimble and make outputs).
+  if clientRelease and not defined(release):
+    switch("define", "release")
+  elif isDesktopClient and not clientRelease:
+    switch("define", "debug")
 
   switch("threads", "on")
   switch("opt", "speed") # -O3
@@ -219,12 +247,16 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
           ":\n  exported: " & env & "\n  derived:  " & derived
       env
 
-    if clientRelease:
-      if not defined(release):
-        switch("define", "release")
-    else:
-      switch("define", "debug")
+    # make exports MACOSX_DEPLOYMENT_TARGET=14.0 (variables block); clang
+    # reads it at LINK time and it decides ObjC-metadata section placement
+    # (__DATA vs __DATA_CONST) — without it the nimble/bare link targets the
+    # host OS and the binaries diverge. putEnv propagates to the linker
+    # subprocess. Keep in sync with the Makefile + the version-min passC.
+    if hostOS == "macosx" and getEnv("MACOSX_DEPLOYMENT_TARGET").len == 0:
+      putEnv("MACOSX_DEPLOYMENT_TARGET", "14.0")
 
+    # (release/debug flavor is set at the top of this file — order vs
+    # debugger:native matters.)
     switch("mm", "orc")
     switch("define", "useMalloc")
     switch("outdir", repo / "bin")
