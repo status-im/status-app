@@ -305,15 +305,16 @@ const vendorTable = [
     clientRebuild: true, forceTouch: @[],
     forceRemove: @["vendor/status-go/build/bin/libstatus.*"]),
   Vendor(name: "sds", flavor: vfNimbleGraph,
-    pinManifest: "vendor/status-go/statusgo.nimble", repoName: "nim-sds",
+    pinManifest: "@statusgo/statusgo.nimble", repoName: "nim-sds",
     pkgName: "sds", manifestName: "sds.nimble",
     checkoutDir: "vendor/nim-sds", developBranch: "develop",
     # libsds is a shared library loaded at runtime — no client rebuild.
     # Touching the derived nimble.paths copy forces the $(NIMSDS_LIBFILE)
     # recipe (the statusgo.nims sds engine): an overlaid resolution builds the
     # checkout in place and cmp-mirrors artifacts into .sds-build/, the layout
-    # every Makefile reads.
-    clientRebuild: false, forceTouch: @["vendor/status-go/nimble.paths"],
+    # every Makefile reads. "@statusgo/…" = inside the active statusgo root
+    # (checkout while developed, scratch/store copy otherwise — issue 0010).
+    clientRebuild: false, forceTouch: @["@statusgo/nimble.paths"],
     forceRemove: @[]),
 ]
 
@@ -325,11 +326,99 @@ proc vendorByName(name: string): Vendor =
     known.add v.name
   fail "unknown vendor '" & name & "' (known vendors: " & known.join(", ") & ")."
 
+proc readOverlay(): seq[string] =
+  if not fileExists(thisDir() / overlayFile):
+    return
+  for line in readFile(thisDir() / overlayFile).splitLines:
+    let l = line.strip
+    if l.len > 0 and not l.startsWith("#"):
+      result.add l
+
+proc vendorRootIn(v: Vendor, entry: string): string =
+  ## The vendor's package root inside a resolved nimble.paths entry
+  ## ("" = the entry is not this vendor's). Matches both store copies
+  ## (<store>/pkgs2/<pkg>-<version>-<checksum>[/srcdir]) and entries already
+  ## pointing into the checkout (idempotent re-application; a develop-mode
+  ## statusgo resolution).
+  let checkoutAbs = thisDir() / v.checkoutDir
+  if entry == checkoutAbs or entry.startsWith(checkoutAbs & $DirSep):
+    return checkoutAbs
+  let marker = DirSep & "pkgs2" & DirSep & v.pkgName & "-"
+  let i = entry.find(marker)
+  if i < 0 or i + marker.len >= entry.len or entry[i + marker.len] notin {'0' .. '9'}:
+    return ""
+  let rootEnd = entry.find(DirSep, start = i + marker.len)
+  if rootEnd < 0: entry else: entry[0 ..< rootEnd]
+
+# --- statusgo root resolution (issue 0010) -----------------------------------
+#
+# statusgo is a pinned URL#hash dependency: in default mode it resolves to a
+# read-only store copy, and the build runs in a scratch copy of it at
+# .statusgo-build (maintained by the prepareStatusgo task below). While
+# developed (issue 0009) the vendor/status-go checkout is both. Anything that
+# needs "the statusgo tree" must pick by mode, via these two views:
+#   - the MANIFEST root (pin parsing, divergence baseline): store copy or
+#     checkout — never the scratch (it may not exist yet).
+#   - the BUILD root (nimble.paths beside statusgo.nims, artifacts under
+#     build/bin): scratch copy or checkout.
+
+const statusgoScratchDir = ".statusgo-build"  # gitignored scratch at the repo root
+
+proc statusgoStoreRoot(): string =
+  ## The statusgo store entry in the generated nimble.paths ("" when the
+  ## resolution is absent or points at the checkout).
+  let pathsFile = thisDir() / "nimble.paths"
+  if not fileExists(pathsFile):
+    return ""
+  let sg = vendorByName("statusgo")
+  for line in readFile(pathsFile).splitLines:
+    const pre = "--path:\""
+    if line.startsWith(pre) and line.endsWith("\""):
+      let root = vendorRootIn(sg, line[pre.len .. ^2])
+      if root.len > 0 and (DirSep & "pkgs2" & DirSep) in root:
+        return root
+
+proc statusgoDeveloped(): bool =
+  "statusgo" in readOverlay()
+
+proc statusgoBuildRoot(): string =
+  ## Where statusgo builds run and artifacts live (Makefiles derive the same
+  ## path themselves; keep both in sync).
+  if statusgoDeveloped(): thisDir() / "vendor/status-go"
+  else: thisDir() / statusgoScratchDir
+
+proc statusgoManifestRoot(): string =
+  ## Where statusgo.nimble (the sds pin owner) is read from.
+  if statusgoDeveloped() and fileExists(thisDir() / "vendor/status-go/statusgo.nimble"):
+    return thisDir() / "vendor/status-go"
+  result = statusgoStoreRoot()
+  if result.len == 0:
+    # No resolution yet: fall back to a present checkout (fresh develop flip,
+    # pre-first-build), else there is nothing to read from.
+    if fileExists(thisDir() / "vendor/status-go/statusgo.nimble"):
+      return thisDir() / "vendor/status-go"
+    fail "statusgo is not resolved yet (no statusgo entry in nimble.paths" &
+      " and no vendor/status-go checkout). Run `nim app status.nims` or" &
+      " `make nimble-deps` first."
+
+proc expandVendorPath(f: string): string =
+  ## Vendor-table paths may address the active statusgo build root via the
+  ## "@statusgo/" prefix; everything else is repo-relative.
+  if f.startsWith("@statusgo/"):
+    statusgoBuildRoot() / f["@statusgo/".len .. ^1]
+  else:
+    thisDir() / f
+
 proc pinOf(v: Vendor): tuple[url, rev: string] =
   ## The vendor's pin, parsed live from the owning manifest so a pin flip
   ## (e.g. issue 0010's statusgo file:// → URL#hash) needs no driver change.
   ## file:// pins return rev = "" (the checkout IS what resolution reads).
-  for line in readFile(thisDir() / v.pinManifest).splitLines:
+  let manifestPath =
+    if v.pinManifest.startsWith("@statusgo/"):
+      statusgoManifestRoot() / v.pinManifest["@statusgo/".len .. ^1]
+    else:
+      thisDir() / v.pinManifest
+  for line in readFile(manifestPath).splitLines:
     let l = line.strip
     if not l.startsWith("requires"):
       continue
@@ -356,14 +445,6 @@ proc shortRev(rev: string): string =
   ## Abbreviate #hash pins for messages; #branch pins pass through.
   rev[0 ..< min(8, rev.len)]
 
-proc readOverlay(): seq[string] =
-  if not fileExists(thisDir() / overlayFile):
-    return
-  for line in readFile(thisDir() / overlayFile).splitLines:
-    let l = line.strip
-    if l.len > 0 and not l.startsWith("#"):
-      result.add l
-
 proc writeOverlay(names: seq[string]) =
   ## The file stays in place once created (even with no entries): it is a
   ## $(wildcard) prerequisite of make's setup stamp, so rewriting it is what
@@ -373,22 +454,6 @@ proc writeOverlay(names: seq[string]) =
   for n in names:
     content &= n & "\n"
   writeFile(thisDir() / overlayFile, content)
-
-proc vendorRootIn(v: Vendor, entry: string): string =
-  ## The vendor's package root inside a resolved nimble.paths entry
-  ## ("" = the entry is not this vendor's). Matches both store copies
-  ## (<store>/pkgs2/<pkg>-<version>-<checksum>[/srcdir]) and entries already
-  ## pointing into the checkout (idempotent re-application; the interim
-  ## file:// statusgo resolution).
-  let checkoutAbs = thisDir() / v.checkoutDir
-  if entry == checkoutAbs or entry.startsWith(checkoutAbs & $DirSep):
-    return checkoutAbs
-  let marker = DirSep & "pkgs2" & DirSep & v.pkgName & "-"
-  let i = entry.find(marker)
-  if i < 0 or i + marker.len >= entry.len or entry[i + marker.len] notin {'0' .. '9'}:
-    return ""
-  let rootEnd = entry.find(DirSep, start = i + marker.len)
-  if rootEnd < 0: entry else: entry[0 ..< rootEnd]
 
 proc rewriteEntries(content: string, v: Vendor): tuple[content: string, matched: int] =
   ## Rewrites the vendor's path entries in nimble.paths content to the
@@ -496,13 +561,23 @@ proc developModeMakeArgs(): string =
       # re-runs setup + applyOverlay.
       exec "touch " & quoteShell(thisDir() / overlayFile)
     for f in v.forceTouch:
-      if fileExists(thisDir() / f):
-        exec "touch " & quoteShell(thisDir() / f)
+      let p = expandVendorPath(f)
+      if fileExists(p):
+        exec "touch " & quoteShell(p)
     for g in v.forceRemove:
-      exec "rm -f " & thisDir() / g
+      exec "rm -f " & expandVendorPath(g)
     if v.clientRebuild:
       clientRebuild = true
   if clientRebuild: " REBUILD_NIM=true" else: ""
+
+proc invalidateClientFor(v: Vendor) =
+  ## Mode flips move a clientRebuild vendor's artifact dir (pinned scratch ↔
+  ## checkout), and the desktop client bakes that dir as an rpath at link
+  ## time — an existing binary would keep loading the OTHER mode's library.
+  ## Dropping the binary forces a relink on the next build (the make rule has
+  ## no prerequisite that tracks the artifact dir).
+  if v.clientRebuild:
+    exec "rm -f " & quoteShell(thisDir() / "bin" / "nim_status_client")
 
 proc gitOut(dir, args: string): string =
   let (output, rc) = gorgeEx("git -C " & quoteShell(dir) & " " & args)
@@ -572,6 +647,7 @@ task develop, "Materialize a vendor as an editable checkout and switch the build
   else:
     devs.add v.name
     writeOverlay devs # invalidates the setup stamp (overlay joins its key)
+    invalidateClientFor v
     echo "develop: '" & v.name & "' recorded in " & overlayFile & "."
   echo "develop: the next `nim app status.nims` re-resolves (nimble setup)," &
     " applies the overlay, and builds from " & v.checkoutDir & "."
@@ -606,6 +682,7 @@ task undevelop, "Return a developed vendor to its pin (--force to skip the dirty
       if n != v.name:
         kept.add n
     writeOverlay kept # invalidates the setup stamp → pin resolution returns
+    invalidateClientFor v
     echo "undevelop: '" & v.name & "' returned to its pin. The checkout at " &
       v.checkoutDir & " is left in place (inert; delete it whenever you like)."
     echo "undevelop: the next `nim app status.nims` re-resolves and builds" &
@@ -662,3 +739,58 @@ task applyOverlay, "Apply the develop-mode overlay to the generated nimble.paths
         " (" & $matched & " path entr" & (if matched == 1: "y" else: "ies") & ")"
     if content != before:
       writeFile(pathsFile, content)
+
+# --- pinned statusgo scratch engine (issue 0010) ------------------------------
+#
+# Default mode resolves statusgo to a READ-ONLY store copy; libstatus/libsds
+# builds need a writable tree (nimble.paths beside statusgo.nims, .sds-build,
+# build/bin, go generate outputs). prepareStatusgo maintains that tree at
+# .statusgo-build: wiped and re-copied only when the resolved store path or
+# the caller's artifact key changes — this IS the pinned-mode rebuild stamp
+# (store path ⊃ pin revision + manifest checksum; the platform sentinel covers
+# target-triple flips; --key carries the flag set). While the scratch is
+# up-to-date and artifacts exist, the Makefiles skip the status-go sub-make
+# entirely (the stamp-skip default arm; ADR 0004). Developed statusgo keeps
+# ADR 0003's FORCE + compare-before-copy semantics in the checkout instead.
+
+task prepareStatusgo, "Maintain the pinned-statusgo scratch copy (.statusgo-build) — internal: make runs this before statusgo builds":
+  var key = ""
+  for p in taskArgv():
+    let k = flagVal(p, "key")
+    if k.len > 0:
+      key = k
+  if statusgoDeveloped():
+    echo "prepareStatusgo: statusgo is developed — building the checkout, no scratch."
+  else:
+    let storeRoot = statusgoStoreRoot()
+    if storeRoot.len == 0:
+      fail "statusgo has no store entry in nimble.paths — run `make" &
+        " nimble-deps` (or `nim app status.nims`) so the resolution exists" &
+        " before building."
+    let scratch = thisDir() / statusgoScratchDir
+    let originFile = scratch / ".statusgo-origin"
+    let keyFile = scratch / ".statusgo-artifact-key"
+    let origin = if fileExists(originFile): readFile(originFile) else: ""
+    if origin != storeRoot or not fileExists(scratch / "statusgo.nims"):
+      echo "prepareStatusgo: refreshing " & statusgoScratchDir & " from " & storeRoot
+      if dirExists(scratch):
+        exec "chmod -R u+w " & quoteShell(scratch)
+        rmDir scratch
+      exec "cp -R " & quoteShell(storeRoot) & " " & quoteShell(scratch)
+      # Store trees can be read-only; the build writes into the copy.
+      exec "chmod -R u+w " & quoteShell(scratch)
+      writeFile(originFile, storeRoot)
+      if key.len > 0:
+        writeFile(keyFile, key)
+    elif key.len > 0 and (not fileExists(keyFile) or readFile(keyFile) != key):
+      # Same pin, different build-flag set (e.g. desktop debug flip, another
+      # mobile SDK): drop the artifacts and FORCE dependents by touching the
+      # scratch nimble.paths (prereq of the sds engine and, via cmp-copies,
+      # of the mobile status-go rule) — the sub-makes then rebuild in place.
+      echo "prepareStatusgo: build flags changed (" & key & ") — dropping artifacts"
+      exec "rm -f " & scratch / "build" / "bin" / "libstatus.*"
+      if fileExists(scratch / "nimble.paths"):
+        exec "touch " & quoteShell(scratch / "nimble.paths")
+      writeFile(keyFile, key)
+    else:
+      echo "prepareStatusgo: scratch up-to-date (pin unchanged)"

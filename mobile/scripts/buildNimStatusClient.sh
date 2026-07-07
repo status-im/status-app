@@ -21,7 +21,18 @@ FLAG_BRIDGE_ENABLED=${FLAG_BRIDGE_ENABLED:-1}
 
 BUNDLE_IDENTIFIER=${BUNDLE_IDENTIFIER:-"app.status.mobile"}
 DESKTOP_VERSION=$(cd "$STATUS_DESKTOP" && ./scripts/version.sh)
-STATUSGO_VERSION=$(cd "$STATUS_DESKTOP/vendor/status-go" && ./scripts/version.sh)
+# Pinned statusgo (issue 0010): the store/scratch copy has no .git, so the
+# version is the pin revision, read from the store entry's nimblemeta.json
+# via the resolved nimble.paths. A developed checkout keeps `git describe`.
+if [[ -z "${STATUSGO_VERSION:-}" ]]; then
+    if [[ -d "$STATUS_DESKTOP/vendor/status-go/.git" || -f "$STATUS_DESKTOP/vendor/status-go/.git" ]] \
+       && grep -sqx statusgo "$STATUS_DESKTOP/nimble.overlay" 2>/dev/null; then
+        STATUSGO_VERSION=$(cd "$STATUS_DESKTOP/vendor/status-go" && ./scripts/version.sh)
+    else
+        STATUSGO_STORE=$(sed -n 's|^--path:"\(.*/pkgs2/statusgo-[^"/]*\)".*|\1|p' "$STATUS_DESKTOP/nimble.paths" 2>/dev/null | head -1)
+        STATUSGO_VERSION=$(sed -n 's|.*"vcsRevision": "\([0-9a-f]*\)".*|\1|p' "$STATUSGO_STORE/nimblemeta.json" 2>/dev/null | cut -c1-10)
+    fi
+fi
 
 if [[ "$ARCH" == "x86_64" ]]; then
     CARCH="amd64"
