@@ -10898,6 +10898,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Copy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Copy message</source>
         <translation type="unfinished"></translation>
     </message>

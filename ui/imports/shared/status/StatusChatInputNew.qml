@@ -769,7 +769,7 @@ Control {
                         Shortcut {
                             enabled: messageInputField.activeFocus
                             sequences: ["Ctrl+Meta+Space", "Ctrl+E"]
-                            onActivated: toolBar.emojiButton.clicked(null)
+                            onActivated: toolBar.emojiButton.click()
                         }
 
                         StatusChatInputSelectionMarker {

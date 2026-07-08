@@ -13,6 +13,8 @@ Item {
     id: root
 
     readonly property alias hoveredLink: chatTextLoader.hoveredLink
+    readonly property string selectedText: chatTextLoader.item && chatTextLoader.sourceComponent === chatTextDesktopComp ? chatTextLoader.item.selectedText
+                                                                                                                         : ""
 
     property string highlightedLink: ""
     property bool linkAddressAndEnsName

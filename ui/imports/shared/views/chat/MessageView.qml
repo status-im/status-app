@@ -247,7 +247,7 @@ Loader {
         profileContextMenuComponent.createObject(root, params).popup(x, y)
     }
 
-    function openMessageContextMenu(point) {
+    function openMessageContextMenu(point, selectedText = "") {
         if (isViewMemberMessagesePopup || placeholderMessage || !root.joined)
             return
 
@@ -272,6 +272,7 @@ Loader {
             pinnedMessage: root.pinnedMessage,
             canPin: !!root.messageStore && root.messageStore.getNumberOfPinnedMessages() < Constants.maxNumberOfPins,
             editRestricted: root.editRestricted,
+            selectedText
         }
 
         d.preventVirtualKeyboardOpening()
@@ -939,17 +940,17 @@ Loader {
                     root.messageStore.resendMessage(root.messageId)
                 }
 
-                onContextMenuRequested: pos => root.openMessageContextMenu(pos) // for StatusTextMessage which would eat the press events internally
+                onContextMenuRequested: pos => root.openMessageContextMenu(pos, delegate.selectedText) // for StatusTextMessage which would eat the press events internally
                 TapHandler {
                     gesturePolicy: TapHandler.ReleaseWithinBounds // exclusive grab on press
                     acceptedDevices: PointerDevice.TouchScreen
-                    onLongPressed: root.openMessageContextMenu(point.position)
+                    onLongPressed: root.openMessageContextMenu(point.position, delegate.selectedText)
                 }
 
                 TapHandler {
                     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
                     acceptedButtons: Qt.RightButton
-                    onTapped: (point, button) => root.openMessageContextMenu(point.position)
+                    onTapped: (point, button) => root.openMessageContextMenu(point.position, delegate.selectedText)
                 }
 
                 messageDetails: StatusMessageDetails {

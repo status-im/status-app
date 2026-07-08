@@ -25,6 +25,7 @@ StatusMenu {
     property string unparsedText: ""
     property string messageSenderId: ""
     property int messageContentType: Constants.messageContentType.unknownContentType
+    property string selectedText
 
     property bool pinMessageAllowedForMembers: false
     property bool isDebugEnabled: false
@@ -88,11 +89,20 @@ StatusMenu {
         id: editMessageAction
         objectName: "messageContextMenu_edit"
         text: qsTr("Edit message")
-        onTriggered: editClicked()
+        onTriggered: root.editClicked()
         icon.name: "edit"
         enabled: root.isMyMessage &&
                  !root.editRestricted &&
                  !root.disabledForChat
+    }
+
+    StatusAction {
+        id: copySelectedTextItem
+        objectName: "messageContextMenu_copySelection"
+        text: qsTr("Copy")
+        icon.name: "copy"
+        enabled: !!root.selectedText
+        onTriggered: root.copyToClipboard(root.selectedText)
     }
 
     StatusAction {
@@ -102,6 +112,8 @@ StatusMenu {
         icon.name: "copy"
         onTriggered: root.copyToClipboard(root.unparsedText)
         enabled: (root.messageContentType === Constants.messageContentType.messageType ||
+                  root.messageContentType === Constants.messageContentType.contactRequestType ||
+                  root.messageContentType === Constants.messageContentType.bridgeMessageType ||
                 (root.messageContentType === Constants.messageContentType.imageType && root.unparsedText != "")) &&
                 replyToMenuItem.enabled
     }

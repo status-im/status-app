@@ -10963,6 +10963,10 @@ selhalo</translation>
         <translation>Upravit zprávu</translation>
     </message>
     <message>
+        <source>Copy</source>
+        <translation type="unfinished">Kopírovat</translation>
+    </message>
+    <message>
         <source>Copy message</source>
         <translation>Kopírovar zprávu</translation>
     </message>

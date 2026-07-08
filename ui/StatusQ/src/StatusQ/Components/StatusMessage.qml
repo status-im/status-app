@@ -80,6 +80,7 @@ Control {
     property string hoveredLink: ""
     property bool linkAddressAndEnsName
     property string disabledTooltipText
+    readonly property string selectedText: d.selectedText
 
     property bool isMobile: Utils.isMobile
 
@@ -407,6 +408,11 @@ Control {
         }
     }
 
+    QtObject {
+        id: d
+        property string selectedText
+    }
+
     component StatusTextMessageCommon: StatusTextMessage {
         objectName: "StatusMessage_textMessage"
         messageDetails: root.messageDetails
@@ -420,5 +426,6 @@ Control {
         onLinkActivated: link => root.linkActivated(link)
         onHoveredLinkChanged: root.hoveredLink = hoveredLink
         onContextMenuRequested: pos => root.contextMenuRequested(pos)
+        onSelectedTextChanged: d.selectedText = selectedText
     }
 }

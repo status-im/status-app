@@ -10911,6 +10911,10 @@ al cargar</translation>
         <translation>Editar mensaje</translation>
     </message>
     <message>
+        <source>Copy</source>
+        <translation type="unfinished">Copiar</translation>
+    </message>
+    <message>
         <source>Copy message</source>
         <translation>Copiar mensaje</translation>
     </message>
