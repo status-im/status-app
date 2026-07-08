@@ -55,7 +55,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Status desktop&apos;s GitHub Repositories</source>
+        <source>status-app</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -63,7 +63,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>status-desktop</source>
+        <source>Status App&apos;s GitHub Repositories</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5693,23 +5693,11 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Full metadata privacy means it’s impossible to tell who you are talking to by surveilling your internet traffic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Status is truly private - none of your personal details (or any other information) are sent to us</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Messages sent using Status are end to end encrypted and can only be opened by the recipient</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF’s original Whisper protocol</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status is home to crypto’s leading multi-chain self-custodial wallet</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5729,14 +5717,6 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Your cryptographic key pair encrypts all of your messages which can only be unlocked by the intended recipient</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status’ Web3 browser requires all DApps to ask permission before connecting to your wallet</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Your non-custodial wallet gives you full control over your funds without the use of a server</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5745,7 +5725,27 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Status is open source software that lets you use with p2p networks. Status itself doesn’t provide any services</source>
+        <source>Full metadata privacy means it&apos;s impossible to tell who you are talking to by surveilling your internet traffic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status is home to crypto&apos;s leading multi-chain self-custodial wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your cryptographic key pairs encrypt all of your messages which can only be unlocked by the intended recipient</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Web3 browser requires all DApps to ask permission before connecting to your wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status is open source software that lets you interact with p2p networks. Status itself doesn&apos;t provide any services</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5777,7 +5777,35 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Status is a public good licensed under the MIT open source license, for anyone to share, modify and benefit from</source>
+        <source>Status is a public good licensed under the MPL-2.0 open source license, for anyone to share, modify and benefit from</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The only continent that doesn&apos;t (yet!) have any Status core contributors is Antarctica</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We are the 5th most active crypto project on GitHub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Many other messengers with e2e encryption don&apos;t have metadata privacy!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Help to translate Status into your native language. See https://status.app/translations for more info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status has a multi-chain wallet which will allow quick and easy multi-chain txns.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Nimbus team is collaborating with the Ethereum Foundation to create the Portal Network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Portal Network client (Fluffy) will let Status users interact with Ethereum in a fully decentralised way</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5797,19 +5825,7 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Status is a globally distributed team of 150+ specialist core contributors</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Our team of core contributors work remotely from over 50+ countries spread across 6 continents</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The only continent that doesn’t (yet!) have any Status core contributors is Antarctica</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>We are the 5th most active crypto project on github</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5837,47 +5853,11 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Many other messengers with e2e encryption don’t have metadata privacy!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Help to translate Status into your native language see https://translate.status.im/ for more info</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>By using Keycard, you can ensure your funds are safe even if your phone is stolen</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You can enhance security by using Keycard + PIN entry as two-factor authentication</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status is currently working on a multi-chain wallet which will allow quick and easy multi-chain txns.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The new Status mobile app is being actively developed and is earmarked for release in 2023</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The all new Status desktop app is being actively developed and is earmarked for release in 2023</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status also builds the Nimbus Ethereum consensus, execution and light clients</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status’s Nimbus team is collaborating with the Ethereum Foundation to create the Portal Network</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status’s Portal Network client (Fluffy) will let Status users interact with Ethereum in a fully decenteralised way</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>We are currently working on a tool to let you import an existing Telegram or Discord group into Status</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

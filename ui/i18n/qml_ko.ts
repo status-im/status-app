@@ -55,7 +55,7 @@
         <translation>Status 도움말</translation>
     </message>
     <message>
-        <source>Status desktop&apos;s GitHub Repositories</source>
+        <source>status-app</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -63,8 +63,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>status-desktop</source>
-        <translation>status-desktop</translation>
+        <source>Status App&apos;s GitHub Repositories</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>status-go</source>
@@ -5686,24 +5686,12 @@ key pair. Keycard will be required for signing</source>
         <translation>Status 메신저는 세계에서 가장 안전한 완전 탈중앙화 메신저입니다</translation>
     </message>
     <message>
-        <source>Full metadata privacy means it’s impossible to tell who you are talking to by surveilling your internet traffic</source>
-        <translation>메타데이터 프라이버시가 완전해야, 인터넷 트래픽을 감시해도 누구와 대화하는지 알 수 없습니다</translation>
-    </message>
-    <message>
         <source>Status is truly private - none of your personal details (or any other information) are sent to us</source>
         <translation>Status는 진정한 프라이버시를 제공합니다 - 당신의 개인 정보(또는 그 밖의 어떤 정보도)도 우리에게 전송되지 않습니다</translation>
     </message>
     <message>
         <source>Messages sent using Status are end to end encrypted and can only be opened by the recipient</source>
         <translation>Status로 보내는 메시지는 종단 간 암호화되며, 수신자만 열 수 있습니다</translation>
-    </message>
-    <message>
-        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF’s original Whisper protocol</source>
-        <translation>Status는 Waku p2p 가십 메시징 프로토콜을 사용합니다 — EF의 오리지널 Whisper 프로토콜을 발전시킨 것입니다</translation>
-    </message>
-    <message>
-        <source>Status is home to crypto’s leading multi-chain self-custodial wallet</source>
-        <translation>Status는 크립토 업계 선도적 멀티체인 자기보관 지갑의 집입니다</translation>
     </message>
     <message>
         <source>Status removes intermediaries to keep your messages private and your assets secure</source>
@@ -5722,14 +5710,6 @@ key pair. Keycard will be required for signing</source>
         <translation>Status Network token (SNT)는 Status 네트워크를 구동하는 모듈형 유틸리티 토큰입니다</translation>
     </message>
     <message>
-        <source>Your cryptographic key pair encrypts all of your messages which can only be unlocked by the intended recipient</source>
-        <translation>당신의 암호화 키 쌍은 모든 메시지를 암호화하며, 의도된 수신자만 이를 해독할 수 있습니다</translation>
-    </message>
-    <message>
-        <source>Status’ Web3 browser requires all DApps to ask permission before connecting to your wallet</source>
-        <translation>Status의 Web3 브라우저는 모든 DApps가 지갑에 연결하기 전에 반드시 권한을 요청하도록 합니다</translation>
-    </message>
-    <message>
         <source>Your non-custodial wallet gives you full control over your funds without the use of a server</source>
         <translation>서버 없이 자금에 대한 완전한 통제권을 주는 비수탁형 지갑</translation>
     </message>
@@ -5738,8 +5718,28 @@ key pair. Keycard will be required for signing</source>
         <translation>Status는 탈중앙화되고 서버가 없습니다 - 감시와 검열 없이 채팅하고, 결제하고, 탐색하세요</translation>
     </message>
     <message>
-        <source>Status is open source software that lets you use with p2p networks. Status itself doesn’t provide any services</source>
-        <translation>Status는 p2p 네트워크를 사용할 수 있게 해주는 오픈 소스 소프트웨어입니다. Status 자체는 어떤 서비스도 제공하지 않습니다</translation>
+        <source>Full metadata privacy means it&apos;s impossible to tell who you are talking to by surveilling your internet traffic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status is home to crypto&apos;s leading multi-chain self-custodial wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your cryptographic key pairs encrypt all of your messages which can only be unlocked by the intended recipient</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Web3 browser requires all DApps to ask permission before connecting to your wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status is open source software that lets you interact with p2p networks. Status itself doesn&apos;t provide any services</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status is a way to access p2p networks that are permissionlessly created and run by individuals around the world</source>
@@ -5770,8 +5770,36 @@ key pair. Keycard will be required for signing</source>
         <translation>Status는 검열 저항이라는 암호경제 설계 원칙을 따릅니다</translation>
     </message>
     <message>
-        <source>Status is a public good licensed under the MIT open source license, for anyone to share, modify and benefit from</source>
-        <translation>Status는 누구나 공유하고, 수정하고, 혜택을 누릴 수 있도록 MIT 오픈 소스 라이선스 하에 배포되는 퍼블릭 굿입니다</translation>
+        <source>Status is a public good licensed under the MPL-2.0 open source license, for anyone to share, modify and benefit from</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The only continent that doesn&apos;t (yet!) have any Status core contributors is Antarctica</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We are the 5th most active crypto project on GitHub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Many other messengers with e2e encryption don&apos;t have metadata privacy!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Help to translate Status into your native language. See https://status.app/translations for more info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status has a multi-chain wallet which will allow quick and easy multi-chain txns.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Nimbus team is collaborating with the Ethereum Foundation to create the Portal Network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Portal Network client (Fluffy) will let Status users interact with Ethereum in a fully decentralised way</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status supports free communication without the approval or oversight of big tech</source>
@@ -5790,20 +5818,8 @@ key pair. Keycard will be required for signing</source>
         <translation>Status는 완전히 오픈 소스이며 전 세계 기여자들이 함께 만듭니다</translation>
     </message>
     <message>
-        <source>Status is a globally distributed team of 150+ specialist core contributors</source>
-        <translation>Status는 전 세계에 분산된 150명+ 전문 코어 기여자로 이루어진 팀입니다</translation>
-    </message>
-    <message>
         <source>Our team of core contributors work remotely from over 50+ countries spread across 6 continents</source>
         <translation>우리 핵심 기여자 팀은 6개 대륙, 50개국 이상에서 원격으로 함께 일하고 있어요</translation>
-    </message>
-    <message>
-        <source>The only continent that doesn’t (yet!) have any Status core contributors is Antarctica</source>
-        <translation>Status 핵심 기여자가 (아직!) 한 명도 없는 유일한 대륙은 남극이에요</translation>
-    </message>
-    <message>
-        <source>We are the 5th most active crypto project on github</source>
-        <translation>우리는 GitHub에서 다섯 번째로 활발한 크립토 프로젝트입니다</translation>
     </message>
     <message>
         <source>We are dedicated to transitioning our governance model to being decentralised and autonomous</source>
@@ -5830,48 +5846,12 @@ key pair. Keycard will be required for signing</source>
         <translation>당신의 통신사와 정부는 당신의 모든 비공개 SMS 메시지 내용에 접근할 수 있습니다</translation>
     </message>
     <message>
-        <source>Many other messengers with e2e encryption don’t have metadata privacy!</source>
-        <translation>e2e 암호화를 쓰는 다른 메신저들도 메타데이터 프라이버시는 없는 경우가 많아요!</translation>
-    </message>
-    <message>
-        <source>Help to translate Status into your native language see https://translate.status.im/ for more info</source>
-        <translation>당신의 언어로 Status 번역에 참여하세요. 자세한 내용은 https://translate.status.im/ 에서 확인하세요</translation>
-    </message>
-    <message>
         <source>By using Keycard, you can ensure your funds are safe even if your phone is stolen</source>
         <translation>Keycard를 사용하면 휴대폰이 도난당해도 자금을 안전하게 보호할 수 있습니다</translation>
     </message>
     <message>
         <source>You can enhance security by using Keycard + PIN entry as two-factor authentication</source>
         <translation>Keycard + PIN 입력을 이중 인증으로 사용하면 보안을 강화할 수 있습니다</translation>
-    </message>
-    <message>
-        <source>Status is currently working on a multi-chain wallet which will allow quick and easy multi-chain txns.</source>
-        <translation>Status는 현재 빠르고 간편한 멀티체인 트랜잭션을 지원하는 멀티체인 지갑을 개발 중입니다.</translation>
-    </message>
-    <message>
-        <source>The new Status mobile app is being actively developed and is earmarked for release in 2023</source>
-        <translation>새로운 Status 모바일 앱은 활발히 개발 중이며 2023년에 출시될 예정입니다</translation>
-    </message>
-    <message>
-        <source>The all new Status desktop app is being actively developed and is earmarked for release in 2023</source>
-        <translation>완전히 새로워진 Status 데스크톱 앱은 현재 활발히 개발 중이며, 2023년 출시를 목표로 합니다</translation>
-    </message>
-    <message>
-        <source>Status also builds the Nimbus Ethereum consensus, execution and light clients</source>
-        <translation>Status는 Ethereum 합의, 실행, 라이트 클라이언트인 Nimbus도 함께 구축합니다</translation>
-    </message>
-    <message>
-        <source>Status’s Nimbus team is collaborating with the Ethereum Foundation to create the Portal Network</source>
-        <translation>Status의 Nimbus 팀은 Ethereum Foundation과 협력해 Portal Network를 만들고 있습니다</translation>
-    </message>
-    <message>
-        <source>Status’s Portal Network client (Fluffy) will let Status users interact with Ethereum in a fully decenteralised way</source>
-        <translation>Status의 Portal Network 클라이언트(Fluffy)를 통해 Status 사용자는 완전히 탈중앙화된 방식으로 Ethereum과 상호작용할 수 있게 됩니다</translation>
-    </message>
-    <message>
-        <source>We are currently working on a tool to let you import an existing Telegram or Discord group into Status</source>
-        <translation>현재 기존 Telegram 또는 Discord 그룹을 Status로 가져올 수 있는 도구를 개발 중입니다</translation>
     </message>
 </context>
 <context>

@@ -163,12 +163,12 @@ SettingsContentBase {
                 Layout.fillWidth: true
                 Layout.topMargin: Theme.padding
                 Layout.leftMargin: Theme.padding
-                text: qsTr("Status desktop's GitHub Repositories")
+                text: qsTr("Status App's GitHub Repositories")
                 color: Theme.palette.secondaryText
             }
 
             LinkItem {
-                title: qsTr("status-desktop")
+                title: qsTr("status-app")
                 onClicked: root.openLink("https://github.com/status-im/status-app")
             }
 
