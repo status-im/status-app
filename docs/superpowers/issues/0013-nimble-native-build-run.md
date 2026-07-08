@@ -205,6 +205,31 @@ make no-op unchanged.
 
 ## Implementation notes
 
+### Post-close field report (2026-07-08): the nested-worktree wall bit for real
+### — parent guarded + fail-fast added
+
+First real-user `nimble run` (nested worktree, plain shell) failed at link:
+the PARENT checkout sat on release/2.38.x, whose config.nims emits
+`switch("passL", "-rpath " & getEnv(...))` UNGUARDED — with the make env
+absent, Nim's parent-dir config walk injects four bare `-rpath` tokens and
+ld mis-pairs them, leaving `/StatusQ` as an input file ("fails to link
+StatusQ"). master already carries the empty-env guard; 2.38.x predates it.
+Resolution (user-grilled): (a) master's guard hunk applied to the parent
+checkout's config.nims as a LOCAL UNCOMMITTED edit, (b) this repo's
+config.nims now detects an unguarded ancestor config + missing env and
+statusEnvFails in ~2 s with the remedies, instead of a mangled link minutes
+in. Verified: plain-env `nimble build` (kit qmake via PATH) → exit 0.
+
+Follow-up gap found while verifying: with NO `QMAKE` and only the homebrew
+qmake on PATH (qtbase 6.11.1 → /opt/homebrew/lib), the artifact hook derives
+the brew kit, finds no committed .pc tree, invokes `qt-pkgconfig-generate`,
+and dies building prl_to_pc ("cannot open file: regex" — the vendored
+nim-regex sibling doesn't exist here and `--skipParentCfg` hides the nimble
+graph). Should fail fast with a kit message instead; candidate fix in
+qt-pkgconfig.mk (guard the generate path when the regex sources are absent).
+Only reachable when artifacts are stale AND the kit derives to one without a
+committed .pc tree.
+
 ### Pre-work empirics (2026-07-07, nimble 0.22.3 @42ef70c2 source + tiny-package experiments)
 
 The hook ↔ bin-compile contract, verified before phase A (blocker 1 in this
