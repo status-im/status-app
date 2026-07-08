@@ -18,6 +18,7 @@ predecessor: 2026-07-03-statusgo-nimble-package-prd.md (closed over issues 0001�
 | 0011 keycard pair | wrapper cmake project owns the status-keycard-qt pin (a6cbdd05), keycard-qt pin audit passed (df00b931 fixed SHA), submodule removed (backup at .phase2-vendor-backup), `FETCHCONTENT_SOURCE_DIR_*` develop redirect live for both (nested-alone works), offline no-fetch proven, no-op 6 s | done (2026-07-07) |
 | 0012 seaqt pair | spike PASS (specs/2026-07-06-seaqt-graph-spike.md), then pass-path conversion: seaqt (smo-6.4 #2d95808) + nimqml (#c5e5831) as URL#hash pins, config.nims switches deleted, BOTH submodules removed (backup at .phase2-vendor-backup), vendor rows w/ srcDir overlay remap, iOS leg from store proven | done (2026-07-07) |
 | 0013 nimble-native build/run | config.nims owns the client's full flag set env-or-derived (parity-asserted); `before build` hook → `nim buildArtifacts` → make client-deps (no-op 6.5 s); binDir=bin + bare-exec spike PASS (no launcher); one store = default ~/.nimble (APP_NIMBLE_DIR retired; pkgcache carried over after a divergent-solve incident); clean-room fresh clone + empty store: nimble build 9:54 → launch; make↔nimble byte-parity to the LC_UUID/stab-mtime floor (3 parity bugs fixed); iOS leg re-proven | done (2026-07-08) |
+| 0014 prl-to-pc graph adoption | version-tag pin #v0.2.0 (first tag-shaped pin), source-only manifest, submodule removed, mk consumed overlay-aware from the store; BLOCKED-ON-PUSH for remote resolvability | in progress (2026-07-08) |
 
 ## Problem Statement
 
