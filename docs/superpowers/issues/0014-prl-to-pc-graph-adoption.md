@@ -117,9 +117,9 @@ in-tree build lock.
 ## What was built (2026-07-08)
 
 - **prl-to-pc commits** (local branch `fix/lockfile-nimblepath`, now at
-  `84b29f8` = f56ac40 manifest/mk changes + 84b29f8 refusal-message fix;
-  annotated tag `v0.2.0` RE-POINTED from abb3604 to 84b29f8 — legitimate
-  because neither was ever pushed):
+  `f649ba6` = f56ac40 manifest/mk changes + 84b29f8 refusal-message fix +
+  f649ba6 README rewrite; annotated tag `v0.2.0` RE-POINTED from abb3604 to
+  f649ba6 — legitimate because neither was ever pushed):
   - `prl_to_pc.nimble`: source-only AND full-tree — `bin` dropped (nimble
     builds dependency bins unconditionally during every consumer setup;
     wall #1) and `srcDir` dropped too. The srcDir drop is a NEW finding
@@ -139,7 +139,7 @@ in-tree build lock.
   empirically (spike + app solve): an annotated tag ref resolves on nimble
   0.22.3 exactly like a `#sha` special, `specialVersions` records
   `['#v0.2.0', '0.2.0']` (the semantic version rides along), and
-  `vcsRevision` is the PEELED commit (84b29f8), not the tag object.
+  `vcsRevision` is the PEELED commit (f649ba6), not the tag object.
 - **Consumers, overlay-aware**: `prlToPcRoot()` in status_env.nims
   (develop checkout per nimble.overlay, else the `pkgs2/prl_to_pc-` entry
   from nimble.paths); config.nims reads the .pc trees from that root and
@@ -196,8 +196,9 @@ Store entry checksum is content-addressed and URL-independent (verified
 during the spike: loopback and github materializations of the same commit
 produced the identical `prl_to_pc-0.2.0-b47270b3…` entry), so the
 post-push entry will be identical to the verified one:
-`prl_to_pc-0.2.0-f2e23b5d861f468e047ecc888a5f7ea476dbea69` (tag target
-84b29f8).
+`prl_to_pc-0.2.0-d902f8c93f0fefb23e12e1a0b4800a0b840bb298` (tag target
+f649ba6; re-verified after the README rewrite moved the tag — wiped entry,
+re-solve from the seeded cache, full `nim app` 1:09.9, no-op 5.9 s).
 
 ## Verification record (2026-07-08, macOS arm64 host; Qt 6.11.0 kits; nim 2.2.4 + nimble 0.22.3; store = ~/.nimble)
 

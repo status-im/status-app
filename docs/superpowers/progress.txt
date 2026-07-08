@@ -1017,7 +1017,7 @@ Picked up: docs/superpowers/issues/0014-prl-to-pc-graph-adoption.md
 manifest, pinned transitive deps, staged submodule removal)
 
 What was built:
-- prl-to-pc commits (local branch fix/lockfile-nimblepath -> 84b29f8;
+- prl-to-pc commits (local branch fix/lockfile-nimblepath -> f649ba6;
   annotated tag v0.2.0 RE-POINTED there — never pushed, so legitimate):
   manifest drops bin AND srcDir + pins regex/unicodedb by SHA;
   qt-pkgconfig.mk gains consumer-overridable QT_PC_BUILD_DIR +
@@ -1050,7 +1050,10 @@ Empirics that shaped it:
   (~/.nimble/pkgcache/githubcom_statusimprltopcgit_v020) is seeded from
   the backup repo — nimble reuses cached clones, store checksums are
   content-addressed and URL-independent, so post-push machines
-  materialize the identical entry (f2e23b5d).
+  materialize the identical entry (d902f8c9). Post-close addendum
+  2026-07-08: README rewritten to document the real shape (three layers +
+  mk knobs + store-copy semantics); tag re-pointed to f649ba6, entry
+  re-verified (full build 1:09.9, no-op 5.9 s).
 
 Verification (record in the issue): default build with NO checkout +
 wiped entry = 1:09.95 (known-good graph held); no-op 6.95-7.33 s; nimble
