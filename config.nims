@@ -317,22 +317,33 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
     let qrcodegen = repo / "vendor/QR-Code-generator/c/libqrcodegen.a"
 
     # seaqt resolves Qt at compile time via gorge("pkg-config Qt6..."): the
-    # make path exports the wrapper env (vendor/prl-to-pc/qt-pkgconfig.mk);
+    # make path exports the wrapper env (prl-to-pc's qt-pkgconfig.mk);
     # off-make paths get the identical environment injected here — putEnv in
     # config.nims propagates to every compile-time gorge of this nim process.
-    let pcWrapperDir = repo / "vendor/prl-to-pc/.pcwrap"
+    # prl-to-pc is a pinned nimble dependency (issue 0014): the .pc trees are
+    # read from its package root (store copy, or the develop checkout via the
+    # overlay), and the wrapper is built into the repo-local scratch dir
+    # (make exports QT_PC_BUILD_DIR there) — the store copy is never written.
+    let pcWrapperDir = repo / ".prl-to-pc-build/.pcwrap"
     let pcKit = qtPrefix.lastPathPart
     let pcVer = qtPrefix.parentDir.lastPathPart
-    let pcFileDir = repo / "vendor/prl-to-pc" / pcVer / pcKit / "lib/pkgconfig"
+    let prlRoot = prlToPcRoot()
+    let pcFileDir =
+      if prlRoot.len > 0: prlRoot / pcVer / pcKit / "lib/pkgconfig" else: ""
     if getEnv("PKG_CONFIG_PATH").len == 0:
+      if prlRoot.len == 0:
+        statusEnvFail "prl-to-pc is not resolved yet (no prl_to_pc entry in" &
+          " nimble.paths).\nRun `make nimble-deps` (or `nim app status.nims`" &
+          " / `nimble build` — they do this for you)."
       if not fileExists(pcWrapperDir / "pkg-config"):
         statusEnvFail "the Qt pkg-config wrapper is missing (" &
           pcWrapperDir / "pkg-config" & ").\nRun `make qt-pkgconfig` once — " &
           "`nim app status.nims` and `nimble build` do this for you."
       if not dirExists(pcFileDir):
         statusEnvFail "no committed Qt .pc tree for this kit (" & pcFileDir &
-          ").\nGenerate + commit it with `make qt-pkgconfig-generate` " &
-          "(see vendor/prl-to-pc/qt-pkgconfig.mk)."
+          ").\nAdd it from a prl-to-pc checkout (`nim develop status.nims" &
+          " prl-to-pc`, then `make qt-pkgconfig-generate`) and commit it" &
+          " upstream — store copies are read-only pinned content."
       putEnv("PKG_CONFIG_PATH", pcFileDir)
       putEnv("PKG_CONFIG_PREFIX_OVERRIDE", "Qt*=" & qtPrefix)
       putEnv("PATH", pcWrapperDir & ":" & getEnv("PATH"))

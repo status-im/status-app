@@ -285,6 +285,11 @@ type Vendor = object
   clientRebuild: bool   # vendor Nim sources compile INTO nim_status_client → force a client rebuild while developed
   forceTouch: seq[string]  # files touched before every build while developed (make FORCE arm)
   forceRemove: seq[string] # artifact globs removed before every build while developed (make FORCE arm)
+  flipRemove: seq[string]  # artifact globs removed ONCE per develop/undevelop flip: artifacts
+                           # whose make prerequisites live under the vendor ROOT (checkout vs
+                           # store), so a mode flip can leave them newer than the other mode's
+                           # sources and mtime tracking alone would keep them stale (prl-to-pc
+                           # wrapper/generator after undevelop of pushed edits)
 
 # Rebuild gating while developed = ADR-0003's FORCE + compare-before-copy arm:
 # the vendor sub-build runs every build (it owns incremental) and cmp-gated
@@ -332,6 +337,21 @@ const vendorTable = [
     # keeps them under src/ — the overlay remaps accordingly.
     srcDir: "src",
     clientRebuild: true, forceTouch: @[], forceRemove: @[]),
+  Vendor(name: "prl-to-pc", flavor: vfNimbleGraph,
+    pinManifest: "nim_status_client.nimble", repoName: "prl-to-pc",
+    pkgName: "prl_to_pc", manifestName: "prl_to_pc.nimble",
+    # First version-TAG pin in the graph (#v0.2.0); developBranch main per
+    # the 0014 grill. Consumed as package-root FILES: make includes
+    # <root>/qt-pkgconfig.mk (parse-time — always fresh) and the committed
+    # .pc trees are read per compile, so a developed checkout needs no
+    # client rebuild and no per-build FORCE arm: the wrapper/generator
+    # binaries have real make prerequisites under the resolved root and
+    # rebuild on source edits by mtime. Only mode FLIPS need invalidation
+    # (the binaries can be newer than the other mode's sources), hence
+    # flipRemove of the repo-local tool build dir.
+    checkoutDir: "vendor/prl-to-pc", developBranch: "main",
+    clientRebuild: false, forceTouch: @[], forceRemove: @[],
+    flipRemove: @[".prl-to-pc-build/.pcwrap/*"]),
   Vendor(name: "status-keycard-qt", flavor: vfCmake,
     pinManifest: "cmake/status-keycard-qt/CMakeLists.txt",
     repoName: "status-keycard-qt",
@@ -671,6 +691,8 @@ proc invalidateOnModeFlip(v: Vendor) =
     # (undevelop especially — nothing else would re-run the recipe).
     for g in v.forceRemove:
       exec "rm -f " & expandVendorPath(g)
+  for g in v.flipRemove:
+    exec "rm -f " & expandVendorPath(g)
 
 proc gitOut(dir, args: string): string =
   let (output, rc) = gorgeEx("git -C " & quoteShell(dir) & " " & args)

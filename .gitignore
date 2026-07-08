@@ -156,5 +156,9 @@ nimble.develop
 # seaqt pair (issue 0012): develop-mode checkouts (`nim develop status.nims seaqt|nimqml`)
 /vendor/nim-seaqt/
 /vendor/nimqml-seaqt/
+# prl-to-pc (issue 0014): repo-local tool build dir (the store copy is
+# read-only) + develop-mode checkout
+/.prl-to-pc-build/
+/vendor/prl-to-pc/
 .phase2-vendor-backup/
 /.claude/

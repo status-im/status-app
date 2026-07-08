@@ -245,10 +245,42 @@ ifneq ($(QT_MAJOR_VERSION),6)
 endif
 
 #-------- PKG_CONFIG wrapper for Qt's .pc files --------
-# This tool generates the .pc files
-# Installs a pkg-config wrapper that's profiding the `prefix` config for pkg-config files
-
-include vendor/prl-to-pc/qt-pkgconfig.mk
+# prl-to-pc (qt-pkgconfig.mk + the committed Qt .pc trees + the wrapper/
+# generator sources) is a pinned nimble dependency (issue 0014): its mk is
+# included from the resolved package root — the vendor/prl-to-pc checkout
+# when nimble.overlay says it's developed, else the read-only store entry
+# named by the generated nimble.paths. Store copies must never be written:
+# the tool build is redirected to a repo-local scratch dir, and the
+# generator's regex/unicodedb deps come from OUR nimble.paths (the mk's
+# consumer-override knobs). config.nims derives the same root itself
+# (prlToPcRoot in status_env.nims) — keep the two derivations in sync.
+QT_PC_BUILD_DIR := $(CURDIR)/.prl-to-pc-build/.pcwrap
+QT_PC_CONSUMER_PATHS := $(CURDIR)/nimble.paths
+PRL_TO_PC_DEVELOPED := $(shell grep -sqx prl-to-pc nimble.overlay 2>/dev/null && echo 1)
+ifeq ($(PRL_TO_PC_DEVELOPED),1)
+PRL_TO_PC_ROOT := vendor/prl-to-pc
+else
+PRL_TO_PC_ROOT := $(shell sed -n 's|^--path:"\(.*/pkgs2/prl_to_pc-[^"/]*\)".*|\1|p' nimble.paths 2>/dev/null | head -1)
+endif
+ifneq (,$(PRL_TO_PC_ROOT))
+include $(PRL_TO_PC_ROOT)/qt-pkgconfig.mk
+else
+# No resolution yet (fresh clone, or the first build after the pin landed):
+# an included file with a remake rule makes GNU make build it and RE-EXECUTE
+# this Makefile, so the second parse resolves the store root and runs the
+# real include above. bootstrap.mk exists only to trigger that mechanism —
+# its one prerequisite is the nimble setup product.
+-include .prl-to-pc-build/bootstrap.mk
+.prl-to-pc-build/bootstrap.mk: nimble.paths
+	@mkdir -p $(@D)
+	@echo '# auto-generated re-exec trigger for the prl-to-pc include (see Makefile)' > $@
+# Reached only when nimble.paths exists yet carries no prl_to_pc entry (a
+# resolution predating the pin, or a failed setup): fail loudly instead of
+# "No rule to make target 'qt-pkgconfig'".
+qt-pkgconfig qt-pkgconfig-tools qt-pkgconfig-generate:
+	@echo "Makefile ERROR: the nimble resolution (nimble.paths) has no prl_to_pc entry." >&2; \
+	 echo "Run 'make nimble-deps'; if this persists, delete nimble.paths and re-run." >&2; exit 1
+endif
 # -----------------------------------------------------
 
 ifneq ($(mkspecs),win32)
