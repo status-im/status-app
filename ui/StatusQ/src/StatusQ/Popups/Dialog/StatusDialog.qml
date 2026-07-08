@@ -154,6 +154,18 @@ Dialog {
         value: root.desiredY
     }
 
+// Full-screen bottom sheets (e.g. AddAccountPopup) must always be pinned to the
+// top of the screen. Without this binding, `y` is only ever set once, by the
+// enter transition, and is never re-affirmed afterwards - so it can end up stuck
+// at a stale value (leaving the header/close button unreachable in portrait)
+// until one of the other `y` bindings recomputes it, e.g. after an orientation
+// change flips `bottomSheet` to false.
+
+    Binding on y {
+    when: root.bottomSheet && root.fullScreenSheet && !enterTransition.running
+    value: 0
+    }
+
     Binding on y {
         when: !root.bottomSheet && !enterTransition.running
         value: (d.windowHeight - root.height) / 2
