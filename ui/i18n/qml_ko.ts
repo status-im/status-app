@@ -9881,8 +9881,8 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>활성화하면, 채팅에 올린 링크가 해당 사이트/소유자에게 메타데이터를 공유할 수 있습니다</translation>
     </message>
     <message>
-        <source>Enable in Settings</source>
-        <translation>설정에서 사용 설정</translation>
+        <source>Always Enable</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Don&apos;t ask me again</source>

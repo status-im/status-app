@@ -9919,8 +9919,8 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>Una vez habilitado, los enlaces publicados en el chat pueden compartir tus metadatos con sus propietarios</translation>
     </message>
     <message>
-        <source>Enable in Settings</source>
-        <translation>Habilitar en Configuración</translation>
+        <source>Always Enable</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Don&apos;t ask me again</source>

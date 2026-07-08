@@ -9907,7 +9907,7 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Enable in Settings</source>
+        <source>Always Enable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

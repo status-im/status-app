@@ -9958,8 +9958,8 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>Po povolení mohou odkazy zveřejněné v chatu sdílet vaše metadata s jejich vlastníky</translation>
     </message>
     <message>
-        <source>Enable in Settings</source>
-        <translation>Povolit v Nastavení</translation>
+        <source>Always Enable</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Don&apos;t ask me again</source>

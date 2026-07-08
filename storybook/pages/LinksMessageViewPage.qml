@@ -36,12 +36,18 @@ SplitView {
 
             senderName: "Alice"
 
-            gifUnfurlingEnabled: false
+            gifUnfurlingEnabled: d.gifUnfurlingEnabled
+            onSetGifUnfurlingEnabled: d.gifUnfurlingEnabled = true
             canAskToUnfurlGifs: true
             onImageClicked: {
                 console.log("image clicked")
             }
         }
+    }
+
+    QtObject {
+        id: d
+        property bool gifUnfurlingEnabled
     }
 
     Pane {
@@ -56,8 +62,8 @@ SplitView {
                 }
                 CheckBox {
                     text: qsTr("Enabled")
-                    checked: linksMessageView.gifUnfurlingEnabled
-                    onToggled: linksMessageView.gifUnfurlingEnabled = !linksMessageView.gifUnfurlingEnabled
+                    checked: d.gifUnfurlingEnabled
+                    onToggled: d.gifUnfurlingEnabled = !d.gifUnfurlingEnabled
                 }
                 CheckBox {
                     text: qsTr("Can ask about GIF unfurling")
