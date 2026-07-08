@@ -197,6 +197,7 @@ StatusDialog {
 
     header: ToolBar {
         position: ToolBar.Top
+        contentHeight: headerImpl.implicitHeight
         background: StatusDialogBackground {
             implicitHeight: headerImpl.implicitHeight
         }
