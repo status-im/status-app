@@ -38,6 +38,7 @@ Control {
     property color quoteBarColor: Theme.palette.baseColor1
     property color linkColor: Theme.palette.primaryColor1
     property color mentionBackgroundColor: Theme.palette.mentionColor4
+    property color linkHoverColor: Theme.palette.primaryColor3
 
     // Copies the current cross-block selection to the clipboard.
     function copySelection() {
@@ -61,13 +62,18 @@ Control {
         property bool strikethrough: false
         property bool selectable: false
 
-        // Rich-text HTML for the non-code renderers: a code-background CSS rule (so inline
-        // `code` spans match the code frames / editor) plus the pre-wrapped content.
-        readonly property string richText:
-            "<style>code { background-color: " + root.codeBackgroundColor + " }"
-            + " a { color: " + root.linkColor + " }"
-            + " a.mention { background-color: " + root.mentionBackgroundColor + " }</style>"
-            + "<span style=\"white-space:pre-wrap\">" + content + "</span>"
+        // Rich-text HTML for the non-code renderers: CSS rules (inline `code` background, link
+        // color, mention background) plus the pre-wrapped content. `hoveredLink` (selectable
+        // mode) adds a hover background on the link currently under the pointer.
+        function richTextFor(hoveredLink) {
+            let style = "<style>code { background-color: " + root.codeBackgroundColor + " }"
+                      + " a { color: " + root.linkColor + " }"
+                      + " a.mention { background-color: " + root.mentionBackgroundColor + " }"
+            if (hoveredLink)
+                style += " a[href=\"" + hoveredLink + "\"] { background-color: "
+                       + root.linkHoverColor + " }"
+            return style + "</style><span style=\"white-space:pre-wrap\">" + content + "</span>"
+        }
 
         sourceComponent: isCode ? (selectable ? codeEditComp : codeLabelComp)
                                 : (selectable ? richEditComp : richLabelComp)
@@ -82,8 +88,8 @@ Control {
                 color: Theme.palette.directColor1
                 font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
-                // pre-wrap so extra/leading spaces are preserved
-                text: piece.richText
+                // pre-wrap so extra/leading spaces are preserved; no hover in non-selectable mode
+                text: piece.richTextFor("")
                 // Connecting this enables Text's built-in link click handling (non-selectable mode).
                 onLinkActivated: (link) => d.activateLink(link)
             }
@@ -102,7 +108,8 @@ Control {
                 color: Theme.palette.directColor1
                 font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
-                text: piece.richText
+                // hoveredLink drives the link hover background (updated as the pointer moves).
+                text: piece.richTextFor(hoveredLink)
             }
         }
 
