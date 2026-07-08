@@ -51,11 +51,35 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
   # enclosing checkout's entry outranks it, and the build silently compiles
   # the other checkout. Exclude every ancestor checkout's src explicitly
   # (ours is re-added by nim.cfg and/or the command line).
+  # The same walk also evaluates every ancestor's config.nims — and checkouts
+  # on branches that predate the rpath empty-env guard (e.g. release/2.38.x)
+  # emit a bare `-rpath` per unset make variable, which ld mis-parses (it
+  # consumes the next -rpath flag as the value and treats the leftover path
+  # as an input file: "cannot open file: /StatusQ"). config files can't undo
+  # an ancestor's passL flags, so fail fast with the remedy instead of
+  # letting the link die minutes later.
+  var unguardedAncestorCfg = ""
   var ancestorDir = thisDir().parentDir
   while ancestorDir.len > 1:
     if fileExists(ancestorDir / "src" / "nim_status_client.nim"):
       switch("excludePath", ancestorDir / "src")
+      let ancestorCfg = ancestorDir / "config.nims"
+      if fileExists(ancestorCfg) and
+          "\"-rpath\" & \" \" & getEnv(" in readFile(ancestorCfg):
+        unguardedAncestorCfg = ancestorCfg
     ancestorDir = ancestorDir.parentDir
+  if unguardedAncestorCfg.len > 0:
+    for envName in ["QT_LIBDIR", "STATUSGO_LIBDIR", "STATUSKEYCARDGO_LIBDIR",
+                    "STATUSQ_INSTALL_PATH"]:
+      if getEnv(envName).len == 0:
+        statusEnvFail "this checkout is nested inside another status-desktop " &
+          "checkout whose config.nims lacks the rpath empty-env guard:\n  " &
+          unguardedAncestorCfg & "\nWith " & envName & " unset it injects a " &
+          "bare -rpath that breaks the link (ld eats the next flag; " &
+          "\"cannot open file: /StatusQ\").\nFix one of:\n" &
+          "  - port master's guarded rpath block into that config.nims, or\n" &
+          "  - build via `make run` / `nim app status.nims` (they export the " &
+          "env), or\n  - export the four variables above before `nimble build/run`."
 
   # The status_go wrapper (shipped inside the statusgo package, resolved via
   # the app's nimble graph) auto-links the static libstatus/libsds it builds
