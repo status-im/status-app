@@ -94,3 +94,28 @@ when not declared(statusgoBuildRoot):
     ## path themselves; keep all three in sync).
     if statusgoDeveloped(): thisDir() / "vendor/status-go"
     else: thisDir() / statusgoScratchDir
+
+when not declared(prlToPcRoot):
+  proc prlToPcRoot(): string =
+    ## The prl-to-pc package root (issue 0014): qt-pkgconfig.mk and the
+    ## committed Qt .pc trees live at that root. The develop checkout when
+    ## the overlay says so, else the store entry from the generated
+    ## nimble.paths ("" when the resolution doesn't exist yet). The Makefile
+    ## derives the same answer itself (PRL_TO_PC_ROOT) — keep them in sync.
+    if "prl-to-pc" in readOverlay() and
+        dirExists(thisDir() / "vendor/prl-to-pc"):
+      return thisDir() / "vendor/prl-to-pc"
+    let pathsFile = thisDir() / "nimble.paths"
+    if not fileExists(pathsFile):
+      return ""
+    for line in readFile(pathsFile).splitLines:
+      const pre = "--path:\""
+      if line.startsWith(pre) and line.endsWith("\""):
+        let entry = line[pre.len .. ^2]
+        let marker = DirSep & "pkgs2" & DirSep & "prl_to_pc-"
+        let i = entry.find(marker)
+        if i >= 0:
+          # The package root is the store entry itself (the manifest declares
+          # no srcDir, so entries are never suffixed — but stay defensive).
+          let rootEnd = entry.find(DirSep, i + marker.len)
+          return if rootEnd < 0: entry else: entry[0 ..< rootEnd]
