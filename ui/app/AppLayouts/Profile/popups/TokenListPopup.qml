@@ -46,6 +46,7 @@ StatusAdaptiveDialog {
 
         ScrollBar.vertical: null
 
+        implicitHeight: contentHeight
         model: root.tokensListModel
 
         header: ColumnLayout {
@@ -54,7 +55,6 @@ StatusAdaptiveDialog {
 
             CustomSourceInfoComponent {
                 Layout.fillWidth: true
-                Layout.margins: Theme.padding
             }
 
             Separator {}

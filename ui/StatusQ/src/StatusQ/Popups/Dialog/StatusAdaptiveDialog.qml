@@ -14,11 +14,9 @@ import StatusQ.Core.Theme
 //
 // Consumers configure the header data/actions and provide content/footer components.
 // Layout decisions such as mode selection, size caps, positioning and overlay behavior
-// stay centralized here so individual dialogs do not duplicate geometry rules. Content
-// hosting is also resolved by the base dialog: it decides whether to reuse a provided
-// Flickable (Strategy A) or wrap regular content in an internal scroll container (Strategy B).
-// When Strategy A applies, the dialog owns the scrollbar — the content item must disable any
-// built-in scrollbar it carries to avoid duplicates (e.g. StatusListView.ScrollBar.vertical: null).
+// stay centralized here so individual dialogs do not duplicate geometry rules.
+// Content hosting is also resolved by the base dialog: it configures either regular
+// content or a Flickable/ListView body and owns the visible scrollbar.
 //
 // The dialog can also host one nested StatusAdaptiveDialog inside its own surface.
 // This is intended for secondary steps that must dim and cover the current dialog
@@ -34,6 +32,13 @@ Dialog {
     readonly property alias headerActions: headerToolbarItem.actions
     property alias headerCustomButtons: headerToolbarItem.actions.customButtons
 
+    // Dialog body supplied by consumers. The component should describe only the
+    // content itself; StatusAdaptiveDialog owns sizing, padding/insets and scroll
+    // hosting. Flickable/ListView bodies are detected from the root item or its
+    // contentItem. If that body has its own vertical scrollbar, expose it as:
+    //   readonly property alias statusAdaptiveDialogContentVerticalScrollBar: <bar>
+    // That property describes the loaded root only; the base dialog still owns
+    // the vertical scrollbar and contentY/interactive policy.
     property Component contentComponent
 
     // Footer related properties:
@@ -75,8 +80,9 @@ Dialog {
         internalPopupLayer.close()
     }
 
-    // Internal: used when this dialog is hosted as another StatusAdaptiveDialog's
-    // internal dialog. Consumers should create/open dialogs normally.
+    // Internal bridge used only when another StatusAdaptiveDialog hosts this instance.
+    // It stays on root because the parent dialog configures the loaded child instance.
+    // Consumers should create/open dialogs normally.
     function setHostSurface(surface) {
         d.hostSurface = surface
     }
@@ -114,10 +120,16 @@ Dialog {
             ? (root.contentItem.Window.window?.SafeArea.margins.top ?? 0) : 0
         readonly property real footerSafeArea: bottomSheet
             ? (root.contentItem.Window.window?.SafeArea.margins.bottom ?? 0) : 0
+        readonly property real leftSafeArea: bottomSheet
+            ? (root.contentItem.Window.window?.SafeArea.margins.left ?? 0) : 0
+        readonly property real rightSafeArea: bottomSheet
+            ? (root.contentItem.Window.window?.SafeArea.margins.right ?? 0) : 0
         // Vertical padding owned by the content host. When the content is the last visible
         // section in a bottom sheet, bottom padding also absorbs the home-indicator safe area.
         readonly property real contentTopPadding: edgePadding
-        readonly property real contentBottomPadding: edgePadding + (bottomSheet && !hasFooterSection ? footerSafeArea : 0)
+        readonly property real contentBottomPadding: edgePadding + (hasFooterSection ? 0 : footerSafeArea)
+        readonly property real contentLeftPadding: edgePadding + leftSafeArea
+        readonly property real contentRightPadding: edgePadding + rightSafeArea
 
         // Internal max width for centered dialogs.
         readonly property real centeredMaxWidth: 560
@@ -162,14 +174,6 @@ Dialog {
             ? hostSurface.height - root.height
             : bottomSheet ? windowHeight - root.height
                           : (windowHeight - root.height) / 2
-        // Make the loaded component root follow the area owned by the dialog layout.
-        function bindLoadedItemToContentArea(item, contentArea) {
-            if (!item)
-                return;
-
-            item.width = Qt.binding(() => contentArea.width);
-            item.height = Qt.binding(() => contentArea.height);
-        }
     }
 
     parent: Overlay.overlay
@@ -253,8 +257,8 @@ Dialog {
 
             Layout.fillWidth: true
             Layout.topMargin: d.edgePadding
-            Layout.leftMargin: d.edgePadding
-            Layout.rightMargin: d.edgePadding
+            Layout.leftMargin: d.edgePadding + d.leftSafeArea
+            Layout.rightMargin: d.edgePadding + d.rightSafeArea
             visible: d.hasHeader
             title: root.title
             actions.closeButton.onClicked: mouse => root.close()
@@ -275,9 +279,10 @@ Dialog {
         implicitHeight: visible ? naturalHeight + d.contentTopPadding + d.contentBottomPadding : 0
         visible: root.visible && d.hasContent
         contentComponent: root.contentComponent
-        contentMargin: d.edgePadding
-        contentTopMargin: d.contentTopPadding
-        contentBottomMargin: d.contentBottomPadding
+        leftPadding: d.contentLeftPadding
+        rightPadding: d.contentRightPadding
+        topPadding: d.contentTopPadding
+        bottomPadding: d.contentBottomPadding
     }
 
     // Footer contract:
@@ -300,8 +305,8 @@ Dialog {
             Layout.fillWidth: true
             Layout.topMargin: d.hasErrorTags ? d.edgePadding : 0
             Layout.bottomMargin: d.hasFooter ? 0 : d.edgePadding + d.footerSafeArea
-            Layout.leftMargin: d.edgePadding
-            Layout.rightMargin: d.edgePadding
+            Layout.leftMargin: d.edgePadding + d.leftSafeArea
+            Layout.rightMargin: d.edgePadding + d.rightSafeArea
             spacing: Math.max(Theme.halfPadding, 8)
             visible: d.hasErrorTags
 
@@ -317,8 +322,8 @@ Dialog {
             Layout.fillWidth: true
             Layout.topMargin: d.hasErrorTags ? Math.max(Theme.halfPadding, 8) : d.edgePadding
             Layout.bottomMargin: d.edgePadding + d.footerSafeArea
-            Layout.leftMargin: d.edgePadding
-            Layout.rightMargin: d.edgePadding
+            Layout.leftMargin: d.edgePadding + d.leftSafeArea
+            Layout.rightMargin: d.edgePadding + d.rightSafeArea
             visible: d.hasFooter
 
             leftButtons: root.footerLeftButtons
@@ -341,6 +346,10 @@ Dialog {
     Item {
         id: internalPopupLayer
 
+        // Hosts a secondary StatusAdaptiveDialog over the current dialog surface.
+        // The layer tracks root geometry during normal use, paints the local dimmer,
+        // and freezes its bounds for the parent-close frame so both exit animations
+        // can complete without the nested dialog jumping back to window coordinates.
         objectName: "statusAdaptiveDialogInternalPopupLayer"
         parent: null
         x: hiddenDuringParentClose ? frozenX : root.x
@@ -472,7 +481,8 @@ Dialog {
             MouseArea {
                 anchors.fill: parent
                 anchors.bottomMargin: internalPopupLayer.popupObject ? internalPopupLayer.popupObject.height : 0
-                onClicked: if (internalPopupLayer.closeOnOverlayClick) root.closeInternalPopup()
+                onClicked: if (internalPopupLayer.closeOnOverlayClick)
+                    root.closeInternalPopup()
             }
         }
     }
