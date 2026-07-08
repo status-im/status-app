@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import StatusQ
+import StatusQ.Components
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils
 

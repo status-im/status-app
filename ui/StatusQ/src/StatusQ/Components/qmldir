@@ -1,5 +1,6 @@
 module StatusQ.Components
 
+ChatTextView 0.1 ChatTextView.qml
 LoadingComponent 0.1 LoadingComponent.qml
 LoadingErrorComponent 0.1 LoadingErrorComponent.qml
 StatusAnimatedImage 0.1 StatusAnimatedImage.qml

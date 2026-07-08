@@ -2,8 +2,7 @@ import QtQuick
 import QtTest
 
 import StatusQ
-
-import shared.status
+import StatusQ.Components
 
 Item {
     id: root

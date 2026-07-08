@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+        <file>StatusQ/Components/ChatTextView.qml</file>
         <file>StatusQ/Components/LoadingComponent.qml</file>
         <file>StatusQ/Components/LoadingErrorComponent.qml</file>
         <file>StatusQ/Components/StatusAnimatedImage.qml</file>
