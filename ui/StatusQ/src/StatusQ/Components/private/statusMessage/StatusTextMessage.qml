@@ -115,7 +115,7 @@ Item {
     Loader {
         id: chatTextLoader
 
-        readonly property string hoveredLink: item ? item.hoveredLink : ""
+        readonly property string hoveredLink: item?.hoveredLink ?? ""
 
         readonly property int effectiveHeight: showMoreButtonLoader.active && !d.readMore ? d.maxHeight
                                                                                           : item.implicitHeight
@@ -125,11 +125,12 @@ Item {
 
         opacity: !showMoreOpacityMask.active && !horizontalOpacityMask.active ? 1 : 0
 
-        // Mobile uses the lightweight StatusBaseText, except for quote messages
-        // which need StatusTextArea (textDocument/positionToRectangle) to draw the
-        // quote bar. Desktop always uses StatusTextArea to allow selection by mouse.
-        sourceComponent: (root.isMobile && !d.hasBlockQuote) ? chatTextMobileComp
-                                                             : chatTextDesktopComp
+        sourceComponent: {
+            if (root.isReply)
+                return chatTextMobileComp
+
+            return chatTextViewComp
+        }
         onItemChanged: d.updateQuoteRanges()
 
         HoverHandler {
@@ -225,6 +226,46 @@ Item {
                     root.contextMenuRequested(Qt.point(event.x, event.y))
                 }
             }
+        }
+    }
+
+    // Client-side markdown render path (main desktop bubble): renders `unparsedText` via the
+    // StatusQ parser + ChatTextView, matching the editor. Quote bars, code frames and link-hover
+    // are drawn inside ChatTextView, so the legacy quote-bar overlay and StatusSyntaxHighlighter
+    // below stay inert on this path (both key off a textDocument, which ChatTextView doesn't expose).
+    Component {
+        id: chatTextViewComp
+        ChatTextView {
+            id: chatTextView
+            objectName: "StatusTextMessage_chatText"
+            Accessible.role: Accessible.StaticText
+            Accessible.name: d.plainText
+            selectable: !root.isMobile
+            font.pixelSize: root.isReply ? Theme.secondaryTextFontSize : Theme.primaryTextFontSize
+
+            blocks: {
+                const blocks = MarkdownUtils.toBlocks(
+                                 root.messageDetails.unparsedText,
+                                 root.messageDetails.mentionsMap,
+                                 chatTextView.font,
+                                 false /*formatUnclosedCodeFence*/,
+                                 true /*enlargeEmojis*/)
+                if (root.isEdited && blocks.length > 0) {
+                    const editedSpan = ` <span style="color:${Theme.palette.baseColor1}">`
+                                     + qsTr("(edited)") + `</span>`
+                    const last = blocks[blocks.length - 1]
+
+                    if (last.type === "text")
+                        last.html = (last.html || "") + editedSpan
+                    else
+                        blocks.push({ type: "text", html: editedSpan })
+                }
+                return blocks
+            }
+
+            // Reuse the existing linkActivated contract: "//<pubkey>" opens the profile, a URL opens.
+            onMentionClicked: (pubKey) => root.linkActivated("//" + pubKey)
+            onLinkClicked: (url) => root.linkActivated(url)
         }
     }
 

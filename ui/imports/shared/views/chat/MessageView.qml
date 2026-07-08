@@ -67,6 +67,8 @@ Loader {
     property string compressedKey: ""
     property string messageText: ""
     property string unparsedText: ""
+    // pubKey -> display name, used by the client-side renderer to resolve mentions in unparsedText.
+    property var mentionsMap: ({})
     property string messageImage: ""
     property double messageTimestamp: 0 // We use double, because QML's int is too small
     property string messageOutgoingStatus: ""
@@ -946,6 +948,8 @@ Loader {
                         return ""
                     }
                     messageText: root.messageText
+                    unparsedText: root.unparsedText
+                    mentionsMap: root.mentionsMap
                     messageContent: {
                         switch (delegate.contentType)
                         {
