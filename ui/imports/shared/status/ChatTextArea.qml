@@ -138,40 +138,39 @@ StatusTextArea {
             return highlighter.parseQuoteBlocks(root.text)
         }
 
-        delegate: Rectangle {
+        delegate: ChatTextAreaQuoteBar {
             required property var modelData
 
-            readonly property int startPosition: modelData.start
             readonly property int lastLinePosition:
-                Math.max(modelData.start, modelData.end - 1)
+                Math.max(startPosition, endPosition - 1)
 
-            readonly property rect _startRect: {
-                root.contentHeight; root.width // recompute on layout
+            // The quote group's document range (a ChatInputHighlighter.parseQuoteBlocks
+            // entry's start/end).
+            readonly property int startPosition: modelData.start
+            readonly property int endPosition: modelData.end
+
+            readonly property rect startRect: {
+                root.leftPadding; root.topPadding // recompute on layout change
+                root.contentHeight; root.width
 
                 // clamp: positions may briefly outrun a just-shrunk document
                 return root.positionToRectangle(Math.min(startPosition, root.length))
             }
-            readonly property rect _lastRect: {
+            readonly property rect lastRect: {
+                root.leftPadding; root.topPadding // recompute on layout change
                 root.contentHeight; root.width
                 return root.positionToRectangle(Math.min(lastLinePosition, root.length))
             }
 
-            x: _startRect.x
-            y: _startRect.y
+            x: startRect.x
+            y: startRect.y
+
+            // Width of the bar's cell (the "> " prefix advance width).
             width: gtMetrics.advanceWidth
-            height: _lastRect.y + _lastRect.height - _startRect.y
-            color: root.backgroundColor
+            height: lastRect.y + lastRect.height - startRect.y
 
-            Rectangle {
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: 3
-                color: Theme.palette.baseColor1
-
-                bottomLeftRadius: 3
-                topLeftRadius: 3
-            }
+            backgroundColor: root.backgroundColor
+            barColor: Theme.palette.baseColor1
         }
     }
 
@@ -179,39 +178,30 @@ StatusTextArea {
     Repeater {
         model: highlighter.mentionsModel
 
-        delegate: Rectangle {
-            required property int position
-            required property string name
-            required property string pubKey
+        delegate: ChatTextAreaMentionPill {
+            readonly property int position: model.position
 
             readonly property rect _r: {
-                root.contentHeight; root.width // recompute on layout
+                root.leftPadding; root.topPadding // recompute on layout change
+                root.contentHeight; root.width
                 return root.positionToRectangle(Math.min(position, root.length))
             }
             readonly property real mentionWidth:
-                root.positionToRectangle(Math.min(position + 1, root.length)).x - _r.x
+                root.positionToRectangle(
+                    Math.min(position + 1, root.length)).x - _r.x
 
             x: _r.x
             y: _r.y + 1
+
             // Math.min so a mention occupying the whole line doesn't overflow
-            width: Math.min(mentionWidth, parent.width - x)
+            width: Math.min(mentionWidth, root.width - x)
             height: _r.height - 2
-            radius: 3
-            color: Theme.palette.mentionColor2
 
-            Text {
-                anchors.fill: parent
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                text: parent.name
-                color: Theme.palette.mentionColor1
-                elide: Text.ElideRight
-                font.pixelSize: root.font.pixelSize - 2
-            }
+            name: model.name
+            pubKey: model.pubKey
 
-            ToolTip.visible: hover.hovered
-            ToolTip.text: "pub key: " + pubKey
-            HoverHandler { id: hover }
+            font.family: root.font.family
+            font.pixelSize: root.font.pixelSize - 2
         }
     }
 
