@@ -76,6 +76,16 @@ records 0007–0012.
   the `qt-6.11` generation (matches the actual Qt kit; app-wide API-churn
   risk — needs its own compile/QA pass).
 
+## prl-to-pc (status-im/prl-to-pc)
+
+- Local branch `fix/lockfile-nimblepath` (at `84b29f8`) + annotated tag
+  `v0.2.0` need pushing (the 0014 pin `#v0.2.0` resolves from the remote
+  only after that; a merge to `main` is nice-to-have — the tag is what the
+  pin needs). Contents: efcd65a nimble.paths dep resolution, abb3604 v0.2.0
+  bump, f56ac40 source-only/full-tree manifest + store-copy-safe mk,
+  84b29f8 message fix. The backup checkout at
+  `.phase2-vendor-backup/prl-to-pc` is the only holder of these refs.
+
 ## CMake vendors
 
 - No upstream asks — status-keycard-qt `a6cbdd05` and keycard-qt `df00b931`
