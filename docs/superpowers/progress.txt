@@ -1009,3 +1009,70 @@ Gotchas for next sessions:
 
 Carry-overs: file the bootstrap-ordering follow-up; standing 0003–0012
 items unchanged; upstream asks doc already current.
+
+=== 2026-07-08 — Issue 0014: prl-to-pc into the nimble graph (#v0.2.0 tag pin) — DONE (pass: true; push pending) ===
+
+Picked up: docs/superpowers/issues/0014-prl-to-pc-graph-adoption.md
+(PRD row 0014; decisions grilled 2026-07-08: tag pin #v0.2.0, source-only
+manifest, pinned transitive deps, staged submodule removal)
+
+What was built:
+- prl-to-pc commits (local branch fix/lockfile-nimblepath -> 84b29f8;
+  annotated tag v0.2.0 RE-POINTED there — never pushed, so legitimate):
+  manifest drops bin AND srcDir + pins regex/unicodedb by SHA;
+  qt-pkgconfig.mk gains consumer-overridable QT_PC_BUILD_DIR +
+  QT_PC_CONSUMER_PATHS and a store-copy generate REFUSAL
+  (nimblemeta.json marker).
+- App: requires status-im/prl-to-pc.git#v0.2.0 (the graph's FIRST
+  version-tag pin); prlToPcRoot() in status_env.nims (overlay-aware root,
+  shared config.nims/make); config.nims reads .pc trees from the resolved
+  root, wrapper from repo-local .prl-to-pc-build/.pcwrap; Makefile
+  includes $(PRL_TO_PC_ROOT)/qt-pkgconfig.mk with an include-remake-reexec
+  bootstrap for fresh clones; vendor row prl-to-pc (developBranch main) +
+  new flipRemove FORCE arm (mode flips drop the repo-local tool binaries).
+- Submodule removed (staged playbook); backup FUNCTIONAL at
+  .phase2-vendor-backup/prl-to-pc — the ONLY holder of the branch+tag
+  until the user pushes. BUILDING.md updated; upstream-asks gains the
+  prl-to-pc push item.
+
+Empirics that shaped it:
+- #v0.2.0 annotated-tag pin RESOLVES on nimble 0.22.3 (loopback spike):
+  specialVersions ['#v0.2.0','0.2.0'], vcsRevision = peeled commit. The
+  pre-identified tag-ref grill trigger never fired.
+- NEW WALL SHARPENING: a srcDir-declaring package's store copy is hoisted
+  and STRIPPED to srcDir contents (nimqml/regex evidence + spike) — bin
+  AND srcDir must both be absent for full-tree store copies (statusgo
+  precedent). The issue's "hoist wobble doesn't matter" assumption was
+  wrong in a load-bearing way.
+- Pre-push bring-up: the brief's overlay-only sketch is structurally
+  impossible (unresolvable require fails nimble setup BEFORE overlay
+  application); instead the pkgcache clone
+  (~/.nimble/pkgcache/githubcom_statusimprltopcgit_v020) is seeded from
+  the backup repo — nimble reuses cached clones, store checksums are
+  content-addressed and URL-independent, so post-push machines
+  materialize the identical entry (f2e23b5d).
+
+Verification (record in the issue): default build with NO checkout +
+wiped entry = 1:09.95 (known-good graph held); no-op 6.95-7.33 s; nimble
+build (hook) 1:37 warm rc=0 + bare-exec launch smoke clean; store entry
+per-file md5+mtime IDENTICAL across a full build (tools in
+.prl-to-pc-build); generate-refusal fires from the store copy; develop
+round-trip (checkout from backup, mk probe consumed, applyOverlay 1
+entry, divergence guard fired on tag-shaped rev, undevelop restored the
+pin); vendors lists 7; iOS leg 2:29.6 signed + codesign strict OK;
+desktop flip-back 54.5 s. Post-push flip command recorded (NOT run —
+push didn't happen in-session).
+
+Gotchas for next sessions:
+- Do NOT delete ~/.nimble/pkgcache/githubcom_statusimprltopcgit_v020
+  before the push — it is what keeps the #v0.2.0 solve alive.
+- develop prl-to-pc pre-push: materialize the checkout from
+  .phase2-vendor-backup/prl-to-pc (fresh GitHub clones lack the tag).
+- vendors/develop pin display shows "(HEAD <sha>; pin v0.2.0)" for tag
+  pins (string compare) — cosmetic.
+- A 12.5 h orphan nim_status_client from the 0013 overnight session held
+  the single-instance lock; killed during the launch smoke.
+
+Carry-overs: user push of prl-to-pc branch+tag, then run the post-push
+flip; standing items unchanged (NBS deletion Phase 3, CI migration,
+seaqt qt-6.11 evaluation, 0013 bootstrap-ordering follow-up).

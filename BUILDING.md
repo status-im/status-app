@@ -382,12 +382,26 @@ packages: the generated C++ shims compile via Nim `{.compile.}` pragmas into
 the client's own nimcache, so the read-only store copies are consumed
 directly — no sub-build, no scratch copy. The app-owned `seaqt_compat/`
 include shim (`config.nims`) and the pkg-config-based Qt flag discovery
-(`vendor/prl-to-pc`) work unchanged from store paths. To hack on them:
+(prl-to-pc, below) work unchanged from store paths. To hack on them:
 `nim develop status.nims seaqt` / `nim develop status.nims nimqml`.
+
+**prl-to-pc in the same graph:** the Qt pkg-config machinery —
+`qt-pkgconfig.mk`, the committed relocatable Qt `.pc` trees per kit, and the
+wrapper/generator sources — is the pinned dependency
+`https://github.com/status-im/prl-to-pc.git#v0.2.0` (the graph's first
+version-*tag* pin; tag pins resolve like any `#sha` special version). It is
+consumed as package-root *files*, not Nim modules: the Makefile includes
+`qt-pkgconfig.mk` from the resolved package root (store copy, or the
+`vendor/prl-to-pc` checkout while developed) and `config.nims` derives the
+same root for off-make builds. The store copy is read-only, so the
+pkg-config wrapper builds into the repo-local `.prl-to-pc-build/.pcwrap/`,
+and generating a *new* kit's `.pc` tree from a store copy is refused — add
+kits from a checkout (`nim develop status.nims prl-to-pc`, then
+`make qt-pkgconfig-generate`) and commit them upstream.
 
 **What's still a git submodule:** only things that aren't pure Nim (C/C++):
 `DOtherSide`, `SortFilterProxyModel`, `QR-Code-generator`, `fcitx5-qt`,
-`prl-to-pc`, `mobile/vendors/openssl`, `nimbus-build-system`.
+`mobile/vendors/openssl`, `nimbus-build-system`.
 
 **Hacking on a dependency locally:** to edit one of the pinned libraries in
 place instead of at its pinned SHA, edit `nim_status_client.nimble` and point

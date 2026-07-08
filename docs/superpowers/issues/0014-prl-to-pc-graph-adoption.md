@@ -4,7 +4,8 @@ title: prl-to-pc into the nimble graph — version pin (#v0.2.0), submodule remo
 date: 2026-07-08
 tracker: local (GH publication deferred by user)
 triage-label: ready-for-agent
-status: open
+status: done (2026-07-08; final remote resolvability blocked on the user
+  pushing prl-to-pc branch+tag — see the INTERIM section)
 ---
 
 ## Parent
@@ -76,23 +77,28 @@ imports here.
 
 ## Acceptance criteria
 
-- [ ] `nim_status_client.nimble` requires
+- [x] `nim_status_client.nimble` requires
   `https://github.com/status-im/prl-to-pc.git#v0.2.0`; no
   `vendor/prl-to-pc` submodule (gitmodules section gone, backup dir
-  functional).
-- [ ] Default-mode desktop build with NO vendor/prl-to-pc checkout: overlay
-  pointed at the backup/local repo (documented interim until push), full
+  functional). (Verification record, 2026-07-08.)
+- [x] Default-mode desktop build with NO vendor/prl-to-pc checkout: full
   `nim app status.nims` + `nimble build` pass; `make qt-pkgconfig` no-op
   when the committed .pc tree is present; tools build into the repo-local
-  build dir, store copy untouched (verify mtimes/checksums).
-- [ ] `nim develop status.nims prl-to-pc` → edit qt-pkgconfig.mk → next
-  build consumes the edit → `undevelop` restores.
-- [ ] `nim vendors status.nims` lists prl-to-pc (7 vendors).
-- [ ] Post-push flip documented: once branch+tag are on status-im, a wiped
-  pkgcache + store re-solve resolves `#v0.2.0` (record the command; run it
-  only if the push happens during your session).
-- [ ] Mobile spot-check unaffected (the mk is included by mobile legs too —
-  one `--os:ios` compile-config sanity pass).
+  build dir, store copy untouched (per-file md5 + mtimes identical).
+  *Interim mechanism differs from the sketch:* resolution stays alive via
+  the SEEDED PKGCACHE, not the overlay — an unresolvable require fails
+  `nimble setup` before any overlay applies, so overlay-only bring-up is
+  structurally impossible; the overlay remains the develop-mode arm
+  (record leg 0/1 + the INTERIM section).
+- [x] `nim develop status.nims prl-to-pc` → edit qt-pkgconfig.mk → next
+  build consumes the edit → `undevelop` restores. (Record leg 3; incl. a
+  divergence-guard probe against the tag-shaped rev.)
+- [x] `nim vendors status.nims` lists prl-to-pc (7 vendors).
+- [x] Post-push flip documented (INTERIM section): wiped seeded pkgcache +
+  store entry + nimble.paths → `make nimble-deps` re-solves `#v0.2.0` from
+  the remote. NOT run — the push did not happen during the session.
+- [x] Mobile spot-check unaffected: `--os:ios --cpu:arm64` full leg,
+  signed app, codesign strict OK (record leg 5).
 
 ## Blockers — grill before implementing
 
@@ -107,3 +113,185 @@ imports here.
 User push of prl-to-pc branch+tag (for the FINAL resolvable state only;
 all implementation and overlay-based verification proceeds now). Holds the
 in-tree build lock.
+
+## What was built (2026-07-08)
+
+- **prl-to-pc commits** (local branch `fix/lockfile-nimblepath`, now at
+  `84b29f8` = f56ac40 manifest/mk changes + 84b29f8 refusal-message fix;
+  annotated tag `v0.2.0` RE-POINTED from abb3604 to 84b29f8 — legitimate
+  because neither was ever pushed):
+  - `prl_to_pc.nimble`: source-only AND full-tree — `bin` dropped (nimble
+    builds dependency bins unconditionally during every consumer setup;
+    wall #1) and `srcDir` dropped too. The srcDir drop is a NEW finding
+    beyond the grilled decisions: a srcDir-declaring package's store copy
+    is hoisted and **stripped to the srcDir contents** (verified on
+    nimqml/regex entries + a spike materialization) — qt-pkgconfig.mk and
+    the committed .pc trees would simply not exist in the store. Without
+    srcDir the full repo tree materializes (statusgo precedent). regex +
+    unicodedb pinned by revision (wall #6), same SHAs the app graph pins.
+  - `qt-pkgconfig.mk`: `QT_PC_BUILD_DIR` + `QT_PC_CONSUMER_PATHS` are
+    consumer-overridable (`?=`); `qt-pkgconfig-generate` refuses to write
+    .pc trees into a store copy (detected via the `nimblemeta.json` root
+    marker) and points at the develop-and-commit-upstream flow. mk audit
+    found no in-package writes beyond the tool build + generate.
+- **App manifest**: `requires "https://github.com/status-im/
+  prl-to-pc.git#v0.2.0"` — the graph's first version-TAG pin. Verified
+  empirically (spike + app solve): an annotated tag ref resolves on nimble
+  0.22.3 exactly like a `#sha` special, `specialVersions` records
+  `['#v0.2.0', '0.2.0']` (the semantic version rides along), and
+  `vcsRevision` is the PEELED commit (84b29f8), not the tag object.
+- **Consumers, overlay-aware**: `prlToPcRoot()` in status_env.nims
+  (develop checkout per nimble.overlay, else the `pkgs2/prl_to_pc-` entry
+  from nimble.paths); config.nims reads the .pc trees from that root and
+  the wrapper from the repo-local `.prl-to-pc-build/.pcwrap`; the Makefile
+  includes `$(PRL_TO_PC_ROOT)/qt-pkgconfig.mk` (same two-arm derivation)
+  and exports the two mk override knobs. Missing-resolution bootstrap:
+  GNU make include-remake-reexec on `.prl-to-pc-build/bootstrap.mk`
+  (prereq = nimble.paths) — fresh clones self-heal; an entryless
+  resolution hits a loud stub error instead of "No rule to make target".
+- **Vendor row** `prl-to-pc` (nimble flavor, developBranch `main`, pin
+  parsed live from the manifest). No FORCE arms: the mk is re-read every
+  make parse and the wrapper/generator have real make prerequisites under
+  the resolved root. New `flipRemove` arm on the Vendor object: mode
+  flips drop `.prl-to-pc-build/.pcwrap/*` so a stale tool binary can
+  never survive a develop/undevelop transition (mtime tracking alone
+  can't catch undevelop-after-pushed-edits).
+- **Submodule removed** (staged playbook): backup branch
+  `backup/nimble-0014-pin`; working dir functional at
+  `.phase2-vendor-backup/prl-to-pc` (core.worktree repointed via the
+  module gitdir config; `.git` pointer file rewritten absolute). The
+  local branch + re-pointed tag live ONLY in that gitdir until pushed.
+- BUILDING.md: prl-to-pc paragraph; submodule list shrinks again.
+- `nimble.lock` intentionally NOT regenerated (0010/0012 precedent: the
+  lock never constrains URL-pinned solves).
+
+### INTERIM until the user pushes branch+tag (read this before wiping caches)
+
+The tag exists only locally, so `nimble setup` can resolve the pin ONLY
+through the seeded pkgcache clone (nimble reuses existing pkgcache clones
+and never refetches). The brief's overlay-only bring-up sketch cannot
+work by itself: an unresolvable require fails `nimble setup` before any
+overlay is applied — the seed is what keeps resolution alive, the overlay
+stays the develop-mode mechanism it always was. Seeded on this machine:
+
+    git clone https://github.com/status-im/prl-to-pc.git \
+      ~/.nimble/pkgcache/githubcom_statusimprltopcgit_v020
+    git -C ~/.nimble/pkgcache/githubcom_statusimprltopcgit_v020 \
+      fetch <backup-repo> '+refs/tags/v0.2.0:refs/tags/v0.2.0'
+    git -C ~/.nimble/pkgcache/githubcom_statusimprltopcgit_v020 checkout v0.2.0
+
+(`<backup-repo>` = `.phase2-vendor-backup/prl-to-pc`.) Deleting that
+pkgcache dir before the push breaks the next full re-solve.
+
+**Push checklist for the user** (from `.phase2-vendor-backup/prl-to-pc`):
+`git push origin fix/lockfile-nimblepath v0.2.0` (or merge to main first —
+the tag is what the pin needs). **Post-push flip** (run to prove remote
+resolvability; also the recipe for every other machine):
+
+    rm -rf ~/.nimble/pkgcache/githubcom_statusimprltopcgit_v020 \
+           ~/.nimble/pkgs2/prl_to_pc-* nimble.paths
+    make nimble-deps        # re-solves #v0.2.0 from status-im/prl-to-pc
+
+Store entry checksum is content-addressed and URL-independent (verified
+during the spike: loopback and github materializations of the same commit
+produced the identical `prl_to_pc-0.2.0-b47270b3…` entry), so the
+post-push entry will be identical to the verified one:
+`prl_to_pc-0.2.0-f2e23b5d861f468e047ecc888a5f7ea476dbea69` (tag target
+84b29f8).
+
+## Verification record (2026-07-08, macOS arm64 host; Qt 6.11.0 kits; nim 2.2.4 + nimble 0.22.3; store = ~/.nimble)
+
+Env: `PATH=$PWD/vendor/nimbus-build-system/vendor/Nim/bin:$PATH`,
+`QMAKE=~/Qt/6.11.0/macos/bin/qmake USE_SYSTEM_NIM=1` (iOS leg:
+`QMAKE=~/Qt/6.11.0/ios/bin/qmake IPHONE_SDK=iphoneos
+QMAKE_DEVELOPMENT_TEAM=8B5X2M6H2Y`). Pre-push interim: pkgcache seeded
+per the INTERIM section above (spike C proved the mechanism from a
+throwaway NIMBLE_DIR before the app graph consumed it).
+
+0. **Spikes** (scratch consumers, loopback dumb-HTTP serve of the local
+   repo per the AGENTS.md recipe, throwaway stores `~/.nb0014{a,b,c}`):
+   (A) `requires "<loopback>#v0.2.0"` on the OLD manifest — the annotated
+   tag ref RESOLVES on nimble 0.22.3 (no grill needed on the pre-identified
+   blocker): store dir `prl_to_pc-0.2.0-<checksum>`, `specialVersions:
+   ['#v0.2.0', '0.2.0']`, `vcsRevision` = the PEELED commit. But the entry
+   was srcDir-HOISTED AND STRIPPED (only src/ contents + manifest), and
+   setup BUILT the bin (wall #1 live) — both fatal for mk/.pc-tree
+   consumption; hence the manifest fix (bin AND srcDir dropped — the
+   srcDir strip is a new finding sharpening the issue's "hoist wobble
+   doesn't matter" assumption). (B) fixed manifest: FULL tree in the store
+   (6.11.0/ trees + qt-pkgconfig.mk + src/), no bin build, regex/unicodedb
+   resolved at the pinned SHAs. (C) the real
+   `https://github.com/status-im/prl-to-pc.git#v0.2.0` URL resolves from
+   the seeded pkgcache clone with the correct github URL + vcsRevision in
+   nimblemeta — the pre-push bring-up. Same content checksum as (B).
+1. **Default-mode build, NO checkout, wiped entry** (criterion 2): with
+   `vendor/prl-to-pc` absent, `rm -rf ~/.nimble/pkgs2/prl_to_pc-*
+   nimble.paths .prl-to-pc-build` → `nim app status.nims` = **1:09.95**
+   end-to-end (re-solve + entry re-materialization + libsds refresh; the
+   solve kept the known-good graph: libp2p 2.0.0 / websock 0.4.0 / lsquic
+   0.5.4; regex/unicodedb re-materialized at the same revisions under new
+   content checksums — same-version/different-materialization variance,
+   root entries valid). Default no-op `nim app` = **6.95 s** (0013
+   baseline 5.9–7 s). `nimble build` (hook incl.) = **1:37** warm, rc=0
+   (0013: ≈89 s; ≈78 s of it is nimble's dispatch tax). Launch smoke via
+   bare `./bin/nim_status_client`: QML up, libstatus/libsds/StatusQ/
+   keycard-qt all loaded (lsof), clean SIGTERM. (A 12.5 h orphan client
+   from the overnight 0013 session held the single-instance lock and was
+   killed first.)
+2. **Store copy untouched by builds** (the .pcwrap relocation check): the
+   wrapper builds into `.prl-to-pc-build/.pcwrap/pkg-config` (functional:
+   resolves `--libs Qt6Core` from the store .pc tree with the prefix
+   override) and per-file md5 + mtime/size snapshots of the whole store
+   entry are IDENTICAL before/after a full `nim app` build.
+   `make qt-pkgconfig` no-op = **2.2 s**; wrapper rebuild = 1.7 s.
+   `make qt-pkgconfig-generate` against the store copy REFUSES (exit 1)
+   with the develop-and-commit-upstream message (criterion: no store
+   scribbling; the missing-kit auto path hits the same refusal).
+3. **Develop round-trip** (criterion 3): checkout materialized from the
+   backup (`git clone .phase2-vendor-backup/prl-to-pc vendor/prl-to-pc` +
+   origin reset to the github URL — pre-push interim; post-push `nim
+   develop status.nims prl-to-pc` clones directly) → `develop` reused it
+   ("never clobbered") and recorded the overlay → probe line appended to
+   the checkout's qt-pkgconfig.mk → next `nim app` (1:05) printed the
+   probe (mk consumed from the checkout), `applyOverlay: prl-to-pc →
+   vendor/prl-to-pc (1 path entry)`, wrapper re-built from the checkout
+   (flipRemove dropped the store-built one). Divergence guard probed with
+   the TAG-shaped rev: a manifest edit failed the next build in seconds
+   ("DIVERGED manifest", names v0.2.0 + exact revert commands + file://
+   escape hatch); revert recovered. `undevelop` exited cleanly (this
+   checkout's remote-tracking refs cover all commits since they came from
+   the backup clone — the unpushed-work refusal semantics are 0012-proven)
+   → next build back to the store entry, probe gone, overlay empty.
+4. **`nim vendors status.nims`** (criterion 4): 7 vendors — the 6 from
+   0012 + `prl-to-pc [nimble-graph, default]` with pin
+   `https://github.com/status-im/prl-to-pc.git#v0.2.0`.
+5. **Mobile spot-check** (criterion 6): `nim app status.nims --os:ios
+   --cpu:arm64` = **2:29.6**, signed `mobile/bin/ios/qt6/Status.app`,
+   `codesign --verify --deep --strict` OK — the mobile make legs consumed
+   qt-pkgconfig.mk + the ios kit's committed .pc tree from the store copy.
+   Desktop flip-back rebuild (platform sentinel) = 54.5 s; final default
+   no-op = **7.33 s**.
+6. **Post-push flip** (criterion 5): NOT run — the push did not happen
+   during this session; the exact command is in the INTERIM section above.
+
+Timing summary (vs 0013): driver no-op 6.95–7.33 s (0013: 5.9–7 s);
+nimble build warm 1:37 (0013 ≈89 s — within the dispatch-tax noise band);
+full default rebuild after entry wipe 1:09.95; develop-mode build 1:05;
+qt-pkgconfig no-op 2.2 s; iOS leg 2:29.6 (0013: 2:19); desktop flip-back
+54.5 s.
+
+### Residuals / notes
+
+- Pre-existing noise, not 0014: `install_name_tool -delete_rpath … no
+  LC_RPATH` lines from StatusQ's cmake_install re-running fixups on an
+  already-fixed libStatusQ.dylib; the special-versions "Multiple
+  dependencies require different special versions" warning wall.
+- `develop` on a fresh machine pre-push cannot clone the pin (tag not on
+  the remote): materialize from `.phase2-vendor-backup/prl-to-pc` as in
+  leg 3. Self-heals post-push.
+- The `vendors`/`develop` pin-match display compares the checkout HEAD
+  SHA against the literal ref string, so tag pins always print
+  "(HEAD <sha>; pin v0.2.0)" — cosmetic.
+- The develop checkout at `vendor/prl-to-pc` was LEFT in place
+  (undeveloped, gitignored, inert in default mode) as the pre-push
+  develop convenience; delete freely.
