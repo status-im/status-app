@@ -220,15 +220,22 @@ config.nims now detects an unguarded ancestor config + missing env and
 statusEnvFails in ~2 s with the remedies, instead of a mangled link minutes
 in. Verified: plain-env `nimble build` (kit qmake via PATH) → exit 0.
 
-Follow-up gap found while verifying: with NO `QMAKE` and only the homebrew
-qmake on PATH (qtbase 6.11.1 → /opt/homebrew/lib), the artifact hook derives
-the brew kit, finds no committed .pc tree, invokes `qt-pkgconfig-generate`,
-and dies building prl_to_pc ("cannot open file: regex" — the vendored
-nim-regex sibling doesn't exist here and `--skipParentCfg` hides the nimble
-graph). Should fail fast with a kit message instead; candidate fix in
-qt-pkgconfig.mk (guard the generate path when the regex sources are absent).
-Only reachable when artifacts are stale AND the kit derives to one without a
-committed .pc tree.
+Follow-up gap found while verifying (FIXED 2026-07-08): with NO `QMAKE` and
+only the homebrew qmake on PATH (qtbase 6.11.1 → /opt/homebrew/lib), the
+artifact hook derives the brew kit, finds no committed .pc tree, invokes
+`qt-pkgconfig-generate`, and died building prl_to_pc with "cannot open
+file: regex". Root cause (a NEW WALL, isolated empirically): **nim disables
+its default `~/.nimble/pkgs2` nimblepath when the compile's cwd contains a
+`nimble.lock`** — this repo gained one, make runs from the repo root, and
+the generator recipe compiles with `--skipParentCfg` and no explicit paths,
+so `import regex` resolves nowhere. The same command works from any
+lock-free cwd. Fix: vendor/prl-to-pc `efcd65a` (local branch
+fix/lockfile-nimblepath, unpushed; superproject pin NOT bumped until it's
+on the remote) — qt-pkgconfig.mk falls back to explicit `--path` flags
+parsed from the consumer's nimble.paths when the vendored regex sibling is
+absent. The wrong-kit UX (brew qmake silently selected) remains: the
+generate step now succeeds for the brew kit, and config.nims'
+committed-.pc-tree check is the fail-fast for the client compile.
 
 ### Pre-work empirics (2026-07-07, nimble 0.22.3 @42ef70c2 source + tiny-package experiments)
 
