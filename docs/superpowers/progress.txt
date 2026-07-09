@@ -1265,3 +1265,23 @@ AS-IS (the app's interim pin names that SHA; a seeded pkgcache clone at
 ~/.nimble/pkgcache/githubcom_statusimprltopcgit_4a31fc06… is the only other
 place it exists — do not delete it before the push). Then run 2: pin -> #v0.3.0,
 wipe pkgcache + store entry + nimble.paths, `make nimble-deps`, re-verify.
+
+2026-07-09  ISSUE 0015 addendum — nimExe() context fix (orchestrator spike folded in)
+  status.nims used getCurrentCompilerExe() to run `nim e` and to set QT_PC_NIM.
+  Correct under `nim <task> status.nims`; WRONG under `nimble <task>` (the
+  manifest include's the driver), where it names nimble's EVALUATOR, not the
+  pinned compiler. Replaced by nimExe(): $STATUS_NIM, else findExe("nim") when
+  defined(NimbleVersion) — nimble marks its VM with --define:NimbleVersion and
+  injects <store>/pkgs2/nim-<pinned>/bin onto PATH for tasks+hooks — else
+  getCurrentCompilerExe(). selfExe()/querySetting(libPath) are never used.
+  Verified: throwaway package showed defined(NimbleVersion) true only in the
+  nimble VM, with findExe("nim") -> the store nim; in-tree, `nim app` writes
+  tool key "… 2.2.10" and `nimble buildArtifacts` writes "… 2.2.4" (73.0 s, rc 0),
+  `nimble build` 108.1 s rc 0, STATUS_NIM=/nonexistent/nim fails loudly.
+  Compiler provenance recorded per leg in the 0015 verification record: all
+  `nim app`/`nim e`/prl-to-pc `nimble test` legs ran on NBS nim 2.2.10, all
+  `nimble build`/`nimble buildArtifacts` legs on the pinned store nim 2.2.4.
+  No cross-path parity is claimed; store byte-identity is unaffected. Cost of
+  the divergence today: alternating front doors rebuilds prl-to-pc's two tools
+  (~2 s), because NimVersion is in their content key. Goes away with 0018.
+  Both walls added to .phase2-vendor-backup/status-go/AGENTS.md.

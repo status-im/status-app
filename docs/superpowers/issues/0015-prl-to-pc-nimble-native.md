@@ -181,10 +181,21 @@ prove the tag re-solves from the remote, and re-run legs 4/6/7.
 - `prepareQtPkgconfig` needs the resolution before make runs, but a full
   `make nimble-deps` costs a ~2.3 s Makefile parse. It is gated on an mtime
   scan (`test -nt`, ~20 ms) against the same key make's setup stamp uses.
-- The driver passes its own compiler (`getCurrentCompilerExe()`) to prl-to-pc
-  as `QT_PC_NIM` and uses it to run `nim e`, so the tools are never built by a
-  stray `PATH` nim. `NimVersion` is in the tool key, so a compiler flip
-  rebuilds them.
+- The driver hands prl-to-pc its own compiler as `QT_PC_NIM`, and uses it to
+  run `nim e`, so the tools are never built by a stray `PATH` nim. Resolving
+  "its own compiler" needs `nimExe()`, not `getCurrentCompilerExe()` alone:
+  `status.nims` is both a `nim <task>` driver and — via the manifest's
+  `include` — a nimble task script, and **under `nimble <task>`
+  `getCurrentCompilerExe()` names nimble's EVALUATOR, not the pinned
+  compiler**. nimble marks its own VM with `--define:NimbleVersion=…` and
+  injects the pinned `<store>/pkgs2/nim-<ver>/bin` onto PATH for tasks and
+  hooks, so `nimExe()` is: `$STATUS_NIM`, else `findExe("nim")` when
+  `defined(NimbleVersion)`, else `getCurrentCompilerExe()`. `selfExe()` and
+  `querySetting(libPath)` are wrong in both directions and are never used.
+  (Measured 2026-07-09 with a throwaway package; the orchestrator's spike found
+  the hazard.)
+- `NimVersion` is in the tool key, so a compiler flip rebuilds the two tools
+  (~2 s). That is not cosmetic today: see the compiler-divergence note below.
 
 ## Verification record (2026-07-09, macOS arm64 host; nim 2.2.4 + nimble 0.22.3; store = ~/.nimble)
 
@@ -193,6 +204,26 @@ Env: `PATH=$PWD/vendor/nimbus-build-system/vendor/Nim/bin:$PATH`,
 Generated** (its `Qt6Core.pc` carries the build-farm libdir
 `/Users/qt/work/install/lib`), **6.11.1 and 6.12.0 = System**, **6.11.0/ios and
 6.11.0/android_arm64_v8a = Generated** (no `Qt6Core.pc` at all).
+
+**Which compiler compiled what.** The two front doors do not agree today, and
+this record does not pretend otherwise: every `nim app status.nims` /
+`nim e` / prl-to-pc `nimble test` leg ran under **NBS's vendored nim, 2.2.10**
+(what the brief's `PATH` prepends); every `nimble build` / `nimble
+buildArtifacts` leg ran under the **manifest-pinned store nim, 2.2.4** (nimble
+injects `<store>/pkgs2/nim-2.2.4-b4bb510b…/bin` onto PATH for tasks and hooks).
+Directly observable in prl-to-pc's tool key, which records `NimVersion`:
+
+```
+$ rm -rf .prl-to-pc-build/.pcwrap && nim app status.nims && cat …/.pkg-config.key
+-9147668065795348352 2.2.10
+$ rm -rf .prl-to-pc-build/.pcwrap && nimble buildArtifacts && cat …/.pkg-config.key
+-9147668065795348352 2.2.4
+```
+
+No claim below is a cross-path *parity* claim. Store byte-identity (leg 6) is
+unaffected — nothing this issue builds lands in the store. The one real cost is
+that alternating front doors rebuilds the two prl-to-pc tools (~2 s), which is
+correct behaviour and disappears with issue 0018.
 
 1. **The interface, against all five real kits.** `nim e --skipParentCfg:on
    <root>/qt_pkgconfig.nims env <buildDir>` printed, exit 0: 6.11.0 → generated
@@ -263,6 +294,16 @@ Generated** (its `Qt6Core.pc` carries the build-farm libdir
    '^qt-pkgconfig qt-pkgconfig-tools qt-pkgconfig-generate:' Makefile` → 0) and
    `update:` no longer shells into `make qt-pkgconfig`. The sole `qt-pkgconfig`
    string in a desktop dry-run is the mk's parse-time `$(info …)` mode report.
+8b. **`nimExe()` in both evaluation contexts** (folded in after the
+   orchestrator's spike). `STATUS_NIM=/nonexistent/nim nim app status.nims` →
+   exit 1, `sh: /nonexistent/nim: No such file or directory` (the override is
+   honoured, and it reaches prl-to-pc as `QT_PC_NIM`). `nimble buildArtifacts`
+   — the nimble-VM path issue 0019 will use — is green (73.0 s) and builds the
+   tools with the pinned 2.2.4, while `nim app status.nims` builds them with
+   PATH's 2.2.10; both keys shown in the preamble above. A throwaway package
+   confirmed the mechanism in isolation: in nimble's VM `defined(NimbleVersion)`
+   is true, `getCurrentCompilerExe()` returns the evaluator on PATH, and
+   `findExe("nim")` returns `<store>/pkgs2/nim-<pinned>-<sum>/bin/nim`.
 9. **Interim mobile leg unaffected** (it still consumes the mk): `nim app
    status.nims --os:ios --cpu:arm64` = **147.1 s** rc 0, mk reported "generated
    mode: kit ships no Qt6Core.pc", `mobile/bin/ios/qt6/Status.app` signed,

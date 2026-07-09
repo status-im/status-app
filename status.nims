@@ -230,12 +230,48 @@ proc runMake(target: string, extraArgs = "") =
 # that cache instead of forking a subprocess per nim invocation.
 # qtPcBuildDir / qtPcEnvCache / qtPkgConfigKey come from status_env.nims.
 
+proc nimExe(): string =
+  ## The Nim compiler this driver should hand to anything it shells out to.
+  ## This file is BOTH a `nim <task> status.nims` driver and (via the
+  ## manifest's `include "status.nims"`) a nimble task script, and the two
+  ## contexts disagree — measured 2026-07-09 on nimble 0.22.3:
+  ##
+  ##   under `nim <task> status.nims`   getCurrentCompilerExe() = the running
+  ##                                    compiler (correct); findExe("nim") =
+  ##                                    the same, unless nim was invoked by a
+  ##                                    path that is not on PATH.
+  ##   under `nimble <task>`            nimble re-execs `nim e` with whatever
+  ##                                    `nim` it found on PATH, so
+  ##                                    getCurrentCompilerExe() is that
+  ##                                    EVALUATOR, *not* the manifest's pinned
+  ##                                    compiler. nimble does, however, inject
+  ##                                    the pinned `<store>/pkgs2/nim-<ver>-…
+  ##                                    /bin` onto PATH for tasks and hooks, so
+  ##                                    findExe("nim") is the pinned one.
+  ##
+  ## nimble marks its own evaluation with `--define:NimbleVersion=…`; that is
+  ## the discriminator. Never use selfExe()/querySetting(libPath) here — both
+  ## name the evaluator in the nimble context.
+  result = getEnv("STATUS_NIM")
+  if result.len > 0:
+    return
+  when defined(NimbleVersion):
+    result = findExe("nim")
+    if result.len > 0:
+      return
+  result = getCurrentCompilerExe()
+  if result.len == 0:
+    result = findExe("nim")
+  if result.len == 0:
+    fail "no Nim compiler found: neither STATUS_NIM, nor the running" &
+      " compiler, nor `nim` on PATH."
+
 proc nimEval(script: string): string =
   ## `nim e` on a foreign package's script. --skipParentCfg is mandatory: the
   ## script lives under this repo (develop checkout) or under the store, and
   ## Nim's parent-dir config walk would otherwise hand it THIS repo's
   ## config.nims — which reads the very cache we are about to write.
-  quoteShell(getCurrentCompilerExe()) & " e --skipParentCfg:on --hints:off " &
+  quoteShell(nimExe()) & " e --skipParentCfg:on --hints:off " &
     quoteShell(script)
 
 proc nimblePathsStale(): bool =
@@ -280,7 +316,7 @@ proc prepareQtPkgconfig() =
   let buildDir = thisDir() / qtPcBuildDir
   # prl-to-pc compiles its tools with `nim`; hand it the compiler that is
   # running this driver rather than whatever the caller's PATH holds.
-  putEnv("QT_PC_NIM", getCurrentCompilerExe())
+  putEnv("QT_PC_NIM", nimExe())
   exec nimEval(script) & " tools " & quoteShell(buildDir) & " " &
     quoteShell(thisDir() / "nimble.paths")
 
@@ -355,7 +391,7 @@ task qtPkgconfigGenerate, "Regenerate the active Qt kit's committed .pc tree in 
     fail "'qtPkgconfigGenerate' takes no arguments; it regenerates the tree" &
       " for the kit QMAKE selects. Got: " & taskArgv().join(" ")
   let script = prlToPcScript()
-  putEnv("QT_PC_NIM", getCurrentCompilerExe())
+  putEnv("QT_PC_NIM", nimExe())
   exec nimEval(script) & " generate " & quoteShell(thisDir() / qtPcBuildDir) &
     " " & quoteShell(thisDir() / "nimble.paths")
 
