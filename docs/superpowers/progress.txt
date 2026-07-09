@@ -1232,7 +1232,7 @@ VERIFIED (details in the issue's verification record):
   build 123.9 s with NO wrapper built at all (counter-proof: the OLD config.nims
   fails there — "the Qt pkg-config wrapper is missing"); default-mode build
   against a real store copy 65.5 s, store entry byte-identical (1161 files,
-  per-file md5) before/after; no-op 6.78-6.80 s (0014: 6.95-7.33); nimble build
+  per-file md5) before/after; no-op 6.78-7.25 s (0014: 6.95-7.33); nimble build
   132 s; iOS leg 147 s signed; develop round-trip + cache re-key both directions.
 
 NEW WALLS (added to .phase2-vendor-backup/status-go/AGENTS.md):

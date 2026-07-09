@@ -241,9 +241,10 @@ Generated** (its `Qt6Core.pc` carries the build-farm libdir
    after** (and still identical after the iOS leg + `nimble build` + three
    no-ops). `nim qtPkgconfigGenerate status.nims` against the store copy →
    exit 1 with the develop-and-commit-upstream message. Steady-state no-op
-   `nim app` = **6.78 / 6.80 / 6.80 s** (0014 baseline 6.95–7.33 s: the driver's
-   0.33 s `nim e tools` replaced a 2.2 s `make qt-pkgconfig` no-op).
-   `nimble build` = 132.1 s, rc 0.
+   `nim app`, five runs: **6.78 / 6.80 / 6.80 / 6.92 / 7.25 s** (0014 baseline
+   6.95–7.33 s: the driver's 0.33 s `nim e tools` replaced a 2.2 s
+   `make qt-pkgconfig` no-op; the first run after any commit costs ~1.5 s more,
+   for `git describe`). `nimble build` = 132.1 s, rc 0.
 7. **Develop round-trip + cache invalidation.**
    (A) A stray non-`KEY=VAL` line added to the checkout's `cmdEnv` → `nim app`
    exit 1, *"prl-to-pc's `env` printed a line that is not KEY=VAL"*, and the
@@ -267,7 +268,7 @@ Generated** (its `Qt6Core.pc` carries the build-farm libdir
    mode: kit ships no Qt6Core.pc", `mobile/bin/ios/qt6/Status.app` signed,
    `codesign --verify --deep --strict` OK. Desktop flip-back = 65.6 s.
 
-Timing summary (vs 0014): driver no-op **6.78–6.80 s** (0014: 6.95–7.33);
+Timing summary (vs 0014): driver no-op **6.78–7.25 s** (0014: 6.95–7.33);
 full default rebuild after a store wipe 65.5 s + 1:07 re-solve (0014: 1:09.95
 combined); `nimble build` 132.1 s (0014: 1:37); iOS leg 147.1 s (0014: 149.6);
 desktop flip-back 65.6 s (0014: 54.5).
