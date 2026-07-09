@@ -1370,3 +1370,29 @@ nim-test-run legs still need). Orchestrator independently re-verified run 1.
 Cleanup available: ~/.nimble/bak-0015-postpush/ (pre-push clones + old entry)
 can be deleted; the .phase2-vendor-backup/prl-to-pc backup/nimble-0015-v0.3.0
 branch is now redundant with the remote.
+
+--- 2026-07-09 — ORCHESTRATOR RE-VERIFICATION of 0015 run 2 ---
+Push verified independently BEFORE resuming the agent: refs/heads/main =
+4a31fc06…, refs/tags/v0.3.0 = c758a2ab… (a real ANNOTATED tag object) whose
+peeled target v0.3.0^{} = 4a31fc06…. The pin resolves the peeled commit.
+
+Re-verified after run 2:
+  - pin = https://github.com/status-im/prl-to-pc.git#v0.3.0
+  - the wipe was REAL: old SHA-keyed pkgcache moved to ~/.nimble/bak-0015-
+    postpush, new key githubcom_statusimprltopcgit_v030 cloned at 14:57.
+  - nimblemeta: url = the GitHub remote, vcsRevision = 4a31fc06…,
+    specialVersions = ['0.3.0', '#v0.3.0'].
+  - PREDICTION HELD: the tag-solve produced the SAME store checksum as the
+    interim SHA-solve (prl_to_pc-0.3.0-efc5e3d1…) — content-addressed,
+    pin-shape-independent.
+  - `nim app` from the tag pin: rc=0, 7.9 s; System-mode kit still probes
+    system. Store unchanged across the build.
+
+NEW GOTCHA (cost the orchestrator a false alarm — record it):
+  A whole-directory fingerprint of a store entry is NOT stable across a pin
+  SHAPE change, even when the entry name is identical. Payload is byte-
+  identical (1160 files, md5 2dafd66f…), but `nimblemeta.json` differs:
+  specialVersions '#4a31fc06…' -> '#v0.3.0', and the tag-solve additionally
+  lists "/nimblemeta.json" inside its own `files` array. Byte-identity checks
+  on store entries MUST exclude nimblemeta.json; otherwise a pin bump looks
+  like content drift.
