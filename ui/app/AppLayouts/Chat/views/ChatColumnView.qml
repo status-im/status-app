@@ -227,7 +227,7 @@ Item {
                 return
             }
             return Backpressure.debounce(this, 250, () => {
-                                             const messageText = root.rootStore.cleanMessageText(chatInput.textInput.text)
+                                             const messageText = root.rootStore.cleanMessageText(chatInput.getTextWithPublicKeys())
                                              d.activeChatContentModule.inputAreaModule.setText(messageText)
                                          })
         }
@@ -500,8 +500,6 @@ Item {
                             Global.playSendMessageSound()
 
                             chatInput.setText("")
-                            chatInput.textInput.textFormat = TextEdit.PlainText;
-                            chatInput.textInput.textFormat = TextEdit.RichText;
                             d.activeChatContentModule.inputAreaModule.removeAllPaymentRequestPreviewData()
                         }
                     }
