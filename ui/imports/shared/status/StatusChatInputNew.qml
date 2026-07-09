@@ -10,6 +10,7 @@ import StatusQ.Popups.Dialog
 import StatusQ.Core.Utils as StatusQUtils
 import StatusQ.Controls as StatusQ
 
+import AppLayouts.Chat.adaptors
 import AppLayouts.Chat.panels
 import mainui
 import utils
@@ -86,48 +87,6 @@ Control {
         hideExtendedArea()
     }
 
-    function parseMessage(message: string) {
-        let mentionsMap = new Map()
-        let index = 0
-        while (true) {
-            index = message.indexOf("<a href=", index)
-            if (index < 0) {
-                break
-            }
-            const startIndex = index
-            const endIndex = message.indexOf("</a>", index) + 4
-            if (endIndex < 0) {
-                index += 8 // "<a href="
-                continue
-            }
-            const addrIndex = message.indexOf("0x", index + 8)
-            if (addrIndex < 0) {
-                index += 8 // "<a href="
-                continue
-            }
-            const addrEndIndex = message.indexOf("\"", addrIndex)
-            if (addrEndIndex < 0) {
-                index += 8 // "<a href="
-                continue
-            }
-            const mentionLink = message.substring(startIndex, endIndex)
-            const linkTag = message.substring(index, endIndex)
-            const linkText = linkTag.replace(/(<([^>]+)>)/ig,"").trim()
-            const atSymbol = linkText.startsWith("@") ? '' : '@'
-            const mentionTag = messageInputField.mentionTagStart + atSymbol + linkText + '</span> '
-            mentionsMap.set(mentionLink, mentionTag)
-            index += linkTag.length
-        }
-
-        let text = message;
-
-        for (let [key, value] of mentionsMap)
-            text = text.replace(new RegExp(key, 'g'), value)
-
-        textInput.text = text
-        textInput.cursorPosition = textInput.length
-    }
-
     function setText(text) {
         textInput.clear()
         textInput.append(text)
@@ -150,6 +109,15 @@ Control {
 
         property bool emojiPopupOpened: false
         property bool stickersPopupOpened: false
+
+        // Replaces the ":filter" shortcode being typed with the selected emoji char + a space.
+        // `unicode` is the twemoji code-point file name (e.g. "1f600.svg").
+        function insertEmoji(unicode) {
+            const cursor = messageInputField.cursorPosition
+            const at = cursor - messageInputField.emojiFilter.length - 1 // the ":"
+            messageInputField.remove(at, cursor)
+            messageInputField.insert(at, StatusQUtils.Emoji.getEmojiCodepoint(unicode.split(".")[0]) + " ")
+        }
 
         // common popups are emoji, gif and stickers
         // Put controlWidth as argument with default value for binding
@@ -237,8 +205,8 @@ Control {
             // commit any potential preedit text first
             InputMethod.commit()
 
-            messageInputField.insertInTextInput(atCursor ? messageInputField.cursorPosition
-                                                         : messageInputField.length, text)
+            messageInputField.insert(atCursor ? messageInputField.cursorPosition
+                                              : messageInputField.length, text)
             messageInputField.forceActiveFocus();
         }
         function onClosed() {
@@ -316,8 +284,7 @@ Control {
 
     function checkTextInsert() {
         if (emojiSuggestions.visible) {
-            messageInputField.replaceWithEmoji(emojiSuggestions.shortname,
-                                               emojiSuggestions.unicode)
+            d.insertEmoji(emojiSuggestions.unicode)
             return true
         }
         if (suggestionsBox.visible) {
@@ -338,7 +305,8 @@ Control {
         - hides extended area
       */
     function tryFinalizeMessage() {
-        const messageLength = messageInputField.length
+        // Count against the wire text (mentions expanded to @0xpubkey), not the pill-placeholder text.
+        const messageLength = messageInputField.textWithMentions().length
         const wasEdit = root.isEdit
 
         if (checkTextInsert())
@@ -350,7 +318,7 @@ Control {
             return
         }
 
-        messageInputField.convertInlineEmojis()
+        // Emojis are already plain unicode (no ":)" conversion needed).
         root.sendMessageRequested()
         if (!wasEdit)
             root.hideExtendedArea()
@@ -358,7 +326,7 @@ Control {
 
     // exposed because tests use it
     function getPlainText() {
-        return messageInputField.getPlainText()
+        return messageInputField.textWithMentions()
     }
 
     function parseMarkdown(markdownText) {
@@ -371,18 +339,13 @@ Control {
     }
 
     function getFormattedText(start, end) {
-        start = start || 0
-        end = end || messageInputField.length
-
-        const oldFormattedText = messageInputField.getFormattedText(start, end)
-
-        const found = oldFormattedText.match(/<!--StartFragment-->([\w\W\s]*)<!--EndFragment-->/m);
-
-        return found[1]
+        // TODO(later): rich/formatted-text extraction. ChatTextArea is plain-text markdown, so
+        // return the wire text (mentions as @0xpubkey) for now.
+        return messageInputField.textWithMentions()
     }
 
     function getTextWithPublicKeys() {
-        return messageInputField.getTextWithPublicKeys()
+        return messageInputField.textWithMentions()
     }
 
     function resetImageArea() {
@@ -521,15 +484,24 @@ Control {
             }
 
             const unicode = emojiSuggestions.modelList[index].unicode
-            messageInputField.replaceWithEmoji(emojiSuggestions.shortname, unicode)
+            d.insertEmoji(unicode)
         }
+    }
+
+    // Mention suggestions: filtered from the chat users model by ChatTextArea's live mentionsFilter
+    // ("everyone" is added by the adaptor).
+    SuggestionsFilterAdaptor {
+        id: mentionsAdaptor
+        sourceModel: root.usersModel
+        filter: messageInputField.mentionsFilter
+        usersModelIncludeAtEveryone: root.usersModelIncludeAtEveryone
     }
 
     SuggestionBoxPanel {
         id: suggestionsBox
         objectName: "suggestionsBox"
 
-        model: messageInputField.suggestionsModel
+        model: mentionsAdaptor.model
         inputField: messageInputField
 
         y: -height - root.Theme.smallPadding
@@ -537,17 +509,25 @@ Control {
         height: Math.min(400, implicitHeight)
         z: parent.z + 100
 
-        visible: !shouldHide && messageInputField.activeMentionInput
+        visible: !shouldHide && messageInputField.enteringSuggestion
 
         property bool shouldHide: false
 
         function selectItem(index: int) {
             InputMethod.commit()
 
-            const item = messageInputField.suggestionsModel.get(index)
+            const item = StatusQUtils.ModelUtils.get(mentionsAdaptor.model, index)
+            if (!item)
+                return
 
             messageInputField.forceActiveFocus()
-            messageInputField.insertMention(item.preferredDisplayName, item.pubKey)
+
+            // Replace the "@filter" being typed with a mention pill + a trailing space.
+            const cursor = messageInputField.cursorPosition
+            const at = cursor - messageInputField.mentionsFilter.length - 1 // the "@"
+            messageInputField.remove(at, cursor)
+            messageInputField.insertMention(at, "@" + item.preferredDisplayName, item.pubKey)
+            messageInputField.insert(messageInputField.cursorPosition, " ")
         }
 
         function selectCurrentItem() {
@@ -764,7 +744,7 @@ Control {
                     padding: 0
                     contentWidth: availableWidth
 
-                    StatusChatInputTextArea {
+                    ChatTextArea {
                         id: messageInputField
                         objectName: "messageInputField"
 
@@ -794,43 +774,17 @@ Control {
                                 flickable.contentY = height - flickable.height
                         }
 
-                        messageLimit: root.messageLimit
-                        messageLimitHard: root.messageLimitHard
-
-                        urlsList: root.urlsList
-                        usersModel: root.usersModel
-                        usersModelIncludeAtEveryone: root.usersModelIncludeAtEveryone
-                        urlToBeHighlighted: linkPreviewArea.hoveredUrl
-
-                        suggestedMentionPubKey: {
-                            suggestionsBox.listView.count
-
-                            return suggestionsBox.visible
-                                    ? StatusQUtils.ModelUtils.get(
-                                          suggestionsBox.model,
-                                          suggestionsBox.listView.currentIndex,
-                                          "pubKey") ?? ""
-                                    : ""
-                        }
-
                         placeholderText: root.chatInputPlaceholder
 
+                        // Emoji shortcode suggestions: ChatTextArea exposes enteringEmoji/emojiFilter
+                        // (>= 2 chars); feed the twemoji suggestion popup off it.
                         onEmojiFilterChanged: {
-                            if (emojiFilter.length > 2) {
+                            if (enteringEmoji) {
                                 const emojis = StatusQUtils.Emoji.getSuggestions(emojiFilter)
                                 emojiSuggestions.openPopup(emojis, emojiFilter)
                             } else {
                                 emojiSuggestions.close()
                             }
-                        }
-
-                        onAttemptToExceedHardLimit: {
-                            lengthLimitTooltip.open()
-                        }
-
-                        onPasteImageRequested: {
-                            if (root.imageFeaturesEnabled)
-                                root.validateImagesAndShowImageArea([ClipboardUtils.imageBase64])
                         }
 
                         Shortcut {
@@ -914,49 +868,9 @@ Control {
 
             Layout.fillWidth: true
 
-            boldButton.checked: isFormatted("**")
-            boldButton.onClicked: toggleFormatting("**")
-
-            italicButton.checked: isFormatted("*")
-
-            italicButton.onClicked: toggleFormatting("*")
-
-            strikeThroughButton.checked: isFormatted("~~")
-            strikeThroughButton.onClicked: toggleFormatting("~~")
-
-            quoteButton.checked: !!messageInputField.selectedText
-                && messageInputField.isSelectedLinePrefixedBy(messageInputField.selectionStart, "> ")
-            quoteButton.onClicked: {
-                if (messageInputField.isSelectedLinePrefixedBy(messageInputField.selectionStart, "> "))
-                    messageInputField.unprefixSelectedLine("> ")
-                else
-                    messageInputField.prefixSelectedLine("> ")
-            }
-
-            codeButton.checked: isFormatted(codeWrapper)
-            codeButton.onClicked: toggleFormatting(codeWrapper)
-
-            readonly property bool multilineSelection:
-                messageInputField.positionToRectangle(messageInputField.selectionEnd).y >
-                messageInputField.positionToRectangle(messageInputField.selectionStart).y
-
-            readonly property string codeWrapper: multilineSelection ? "```" : "`"
-
-            function isFormatted(wrapper: string) : bool {
-                if (wrapper === "*") {
-                    const text = d.getSelectedTextWithFormationChars(messageInputField)
-                    return (d.surroundedBy(text, "*") && !d.surroundedBy(text, "**")) || d.surroundedBy(text, "***")
-                }
-
-                return d.surroundedBy(d.getSelectedTextWithFormationChars(messageInputField), wrapper)
-            }
-
-            function toggleFormatting(wrapper: string) {
-                if (isFormatted(wrapper))
-                    messageInputField.unwrapSelection(wrapper, d.getSelectedTextWithFormationChars(messageInputField))
-                else
-                    messageInputField.wrapSelection(wrapper)
-            }
+            // Formatting toolbar (bold/italic/strike/quote/code) is intentionally left unwired for
+            // now — the buttons stay visible (showFormatting unchanged) but do nothing until the
+            // markdown formatting helpers are wired into ChatTextArea in a later step.
 
             stickersButton.checked: d.stickersPopupOpened
             stickersButton.visible: root.stickersButtonVisible
@@ -1013,14 +927,13 @@ Control {
                 }
             }
 
-            mentionButton.checked: !suggestionsBox.shouldHide && messageInputField.activeMentionInput
+            mentionButton.checked: !suggestionsBox.shouldHide && messageInputField.enteringSuggestion
 
             mentionButton.onClicked: {
                 if (mentionButton.checked) {
                     suggestionsBox.shouldHide = false
-                    messageInputField.getPlainText()
 
-                    if (!messageInputField.activeMentionInput)
+                    if (!messageInputField.enteringSuggestion)
                         messageInputField.insert(messageInputField.length, "@")
                 } else {
                     suggestionsBox.shouldHide = true
