@@ -28,11 +28,29 @@ store.
   `pkgs2/nim-2.2.4-<checksum>/bin/nim`, and `nimble shellenv` emitted that
   `bin/` directory on `PATH`.
 
-- **Internal `nim` invocations resolve the store compiler** — the driver, the
-  status-go tasks, and the interim mobile make legs (which derive a `NIM`
-  variable from `nimble.paths`). Artifacts are therefore governed by the
-  manifest pin even when the caller's shell was never bootstrapped. This is
-  what lets nimble-only CI agents run `make mobile-build`.
+- **Internal `nim` invocations resolve the store compiler.** *Revised
+  2026-07-09 by spike (record in `progress.txt`); the original sketch was
+  broader than the evidence warrants:*
+  - nimble **injects the pinned compiler's `bin/` into PATH** for tasks and for
+    `before build` hooks. Anything nimble invokes — and any `make`/`nim` child
+    that inherits that PATH — already gets the pinned compiler for free. No
+    rule needed there.
+  - The rule is therefore needed only **outside** nimble: a bare
+    `make mobile-build` on a nim-free agent. Preferred fix is to reach make
+    through a nimble task alias (or a `nimble shellenv` shell) rather than
+    deriving a `NIM` variable — `nimble path nim` is unusable (it prints two
+    same-version store entries).
+  - **Context hazard:** in the `.nimble` manifest VM, `selfExe()` and
+    `querySetting(libPath)` return nimble's *evaluator* compiler (measured:
+    2.2.10), not the pin. Only `findExe("nim")` is correct there.
+    `getCurrentCompilerExe()` (from `std/os`) is correct in `.nims` scripts run
+    by `nim`. Since the manifest `include`s `status.nims`, any compiler lookup
+    reachable from both must branch on context.
+
+- **Pre-existing divergence this issue closes** (found 2026-07-09): the NBS
+  vendored compiler is **2.2.10** while the manifest pins **2.2.4**, so today
+  `nim app status.nims` and `nimble build` compile the client with *different
+  compilers*. Deleting NBS is what makes the pin authoritative.
 
 - **The submodule is removed** with the established backup-ref playbook
   (functional git dir preserved under the phase-2 vendor backup).
@@ -60,8 +78,17 @@ say so.
       `nimble` and **no `nim`**, `nimble setup && nimble build` produces a
       runnable app; then `eval "$(nimble shellenv)" && nim app status.nims`
       succeeds. Recorded with the exact scrubbed `PATH`.
-- [ ] Cold-store materialisation of the pinned compiler is verified (not just
-      warm-store reuse).
+- [x] Cold-store materialisation of the pinned compiler is verified (not just
+      warm-store reuse). **Done 2026-07-09 by orchestrator spike**: with `HOME`
+      redirected (the only way to defeat the `~/.nimble/nimbinaries` cache,
+      which survives a `NIMBLE_DIR` override) and PATH scrubbed of both
+      `~/.nimble/bin` and NBS, `nimble setup` on a `requires "nim == 2.2.4"`
+      package built the compiler and used it: 5:18 wall, 7.9 GB, warm re-run
+      0.57 s, store checksum identical to this machine's
+      (`nim-2.2.4-b4bb510b…`).
+- [ ] The compiler that builds the client is the pinned one on **both** paths
+      (`nim app status.nims` and `nimble build`) — closing the 2.2.10/2.2.4
+      divergence.
 - [ ] The nimbus-build-system submodule is gone; a backup ref preserves it.
 - [ ] The root Makefile includes no external makefile and defines its own
       verbosity/output handling.

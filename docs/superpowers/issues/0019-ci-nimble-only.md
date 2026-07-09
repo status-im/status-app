@@ -21,11 +21,25 @@ same paths a developer uses.
   no build-system submodule. (`choosenim` provisioning and a manifest-version
   extraction script were considered and rejected: the compiler already comes
   from the nimble graph.)
-- **Build via `nimble build`**, which needs no `nim` on `PATH`. Driver tasks CI
-  needs (tests, the Windows launcher) are reached through the **nimble task
-  aliases** the manifest already exposes, with `--os`/`--cpu` forwarding
-  (verified 2026-07-07). The ~1-minute nimble dispatch tax is noise on CI while
-  developers keep the fast `nim` driver path.
+- **Build via `nimble build`**, which needs no `nim` on `PATH` (spike-verified
+  2026-07-09). Driver tasks CI needs (tests, the Windows launcher) are reached
+  through the **nimble task aliases** the manifest already exposes, with
+  `--os`/`--cpu` forwarding (verified 2026-07-07). The ~1-minute nimble
+  dispatch tax is noise on CI while developers keep the fast `nim` driver path.
+- **Everything must be reached THROUGH nimble** (task alias, or a shell with
+  `eval "$(nimble shellenv)"`) — never a bare `make`. Spike finding: nimble
+  injects the pinned compiler into task/hook PATH, so children inherit the
+  right `nim` for free; a bare `make mobile-build` on a nim-free agent has no
+  compiler and no reliable way to find one (`nimble path nim` prints two
+  same-version entries).
+- **Cold-agent cost is real**: a fresh agent with no `~/.nimble` pays ~5 min and
+  ~8 GB to materialise the pinned compiler (spike-measured). Either cache
+  `~/.nimble` on the agent image or accept the first-build cost. This is the
+  concrete infra ask; it must be filed, not assumed away.
+- **Manifest-VM hazard**: any compiler lookup reachable from the manifest VM
+  must use `findExe("nim")`; `selfExe()`/`querySetting(libPath)` there return
+  nimble's evaluator (2.2.10), not the pin. CI is the context that exercises
+  this path, so a regression here fails only in CI.
 - **Packaging pipelines** call `make pkg-*` against the prebuilt binary.
 - Pipelines that called `make deps` / `make update` drop those steps: resolution
   and bootstrap are part of the build.
@@ -49,6 +63,12 @@ gate from unverifiable edits.
       which use the store compiler per 0018).
 - [ ] Every pipeline's agent prerequisite is documented as "nimble" and nothing
       else.
+- [ ] No pipeline invokes `make` bare; every make entry goes through a nimble
+      task alias or a `nimble shellenv` shell (so the pinned compiler is on
+      PATH for make's children).
+- [ ] The cold-agent cost (~5 min, ~8 GB for first compiler materialisation) is
+      either eliminated by caching `~/.nimble` on the agent image, or accepted
+      and documented, with the infra request filed.
 - [ ] Static review recorded: each Jenkinsfile diff walked against the targets
       it invokes, confirming every invoked target still exists.
 - [ ] **Post-push checklist** (not verifiable here): each pipeline runs green;
