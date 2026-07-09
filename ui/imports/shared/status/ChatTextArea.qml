@@ -37,6 +37,14 @@ StatusTextArea {
     // suggestion.
     readonly property string mentionsFilter: d.mentionContext.filter
 
+    // True when the caret is in the middle of typing an emoji shortcode: a ":" at line/text
+    // start or right after whitespace, followed by at least two token chars ([a-zA-Z0-9_]) up
+    // to the caret, and not inside a code span/block.
+    readonly property bool enteringEmoji: d.emojiContext.entering
+
+    // The partial shortcode typed after that ":" (up to the caret); "" when not entering one.
+    readonly property string emojiFilter: d.emojiContext.filter
+
     function insertMention(pos, name, pubKey) {
         highlighter.insertMention(pos, name, pubKey)
     }
@@ -119,6 +127,47 @@ StatusTextArea {
                 return none
 
             return { entering: true, filter: text.substring(at + 1, cursor) }
+        }
+
+        // {entering, filter} for the emoji shortcode being typed at the caret. Recomputed on
+        // text or caret changes; isInsideCode reuses the highlighter's cached AST.
+        readonly property var emojiContext: {
+            root.text
+            root.cursorPosition
+            return d.computeEmojiContext()
+        }
+
+        function computeEmojiContext() {
+            const text = root.text
+            const cursor = root.cursorPosition
+            const none = { entering: false, filter: "" }
+
+            // Walk back from the caret: only shortcode chars ([a-zA-Z0-9_]) may precede it, and
+            // we must reach a ":". Any other char before a ":" means no emoji in progress.
+            let colon = -1
+            for (let i = cursor; i > 0; --i) {
+                const ch = text.charAt(i - 1)
+                if (ch === ":") { colon = i - 1; break }
+                if (!/[a-zA-Z0-9_]/.test(ch)) return none
+            }
+            if (colon < 0)
+                return none
+
+            // The ":" must start a token: at text/line start, or right after whitespace.
+            if (colon > 0 && !/\s/.test(text.charAt(colon - 1)))
+                return none
+
+            // Emoji shortcodes are not allowed inside code spans/blocks.
+            if (highlighter.isInsideCode(colon))
+                return none
+
+            const filter = text.substring(colon + 1, cursor)
+
+            // Trigger only after at least two shortcode chars have been typed.
+            if (filter.length < 2)
+                return none
+
+            return { entering: true, filter: filter }
         }
     }
 

@@ -169,13 +169,28 @@ unclosed fence here (no closing triple-tick)
         d.dismissed = false
     }
 
-    // Accepts the highlighted suggestion when the popup is open; otherwise lets the key
-    // fall through to the editor's default handling.
+    // Replaces the ":filter" being typed with the selected emoji character + a trailing space.
+    // `unicode` is the twemoji code-point file name (e.g. "1f600.svg").
+    function acceptEmoji(unicode) {
+        const cursor = textArea.cursorPosition
+        const at = cursor - textArea.emojiFilter.length - 1 // the ":"
+        textArea.remove(at, cursor)
+        textArea.insert(at, Emoji.getEmojiCodepoint(unicode.split(".")[0]) + " ") // caret ends past the space
+        d.emojiDismissed = false
+    }
+
+    // Accepts the highlighted item of whichever suggestion popup is open (mention or emoji);
+    // otherwise lets the key fall through to the editor's default handling.
     function acceptOrPassSuggestion(event) {
         if (suggestionsPopup.visible) {
             const item = suggestionsProxy.get(suggestionsList.currentIndex)
             if (item)
                 acceptSuggestion(item.name, item.pubKey)
+            event.accepted = true
+        } else if (emojiPopup.visible) {
+            const emoji = root.emojiSuggestions[emojiList.currentIndex]
+            if (emoji)
+                acceptEmoji(emoji.unicode)
             event.accepted = true
         } else {
             event.accepted = false
@@ -197,6 +212,9 @@ unclosed fence here (no closing triple-tick)
         // True while the user has dismissed (Escape) the popup for the current @-token;
         // reset when the token changes so typing re-shows suggestions.
         property bool dismissed: false
+
+        // Same, for the emoji (":"-token) popup.
+        property bool emojiDismissed: false
 
         // Distinguishes successive renames of the exemplary mentioned user.
         property int renameCounter: 0
@@ -228,12 +246,20 @@ unclosed fence here (no closing triple-tick)
         }
     }
 
+    // The twemoji suggestions shown in the emoji popup — filtered live by the editor's emojiFilter.
+    readonly property var emojiSuggestions:
+        textArea.enteringEmoji ? Emoji.getSuggestions(textArea.emojiFilter) : []
+
     Connections {
         target: textArea
 
         // A changed @-token (more typing, or moving away) re-arms the popup.
         function onMentionsFilterChanged() { d.dismissed = false }
         function onEnteringSuggestionChanged() { d.dismissed = false }
+
+        // Same for the emoji (":"-token) popup.
+        function onEmojiFilterChanged() { d.emojiDismissed = false }
+        function onEnteringEmojiChanged() { d.emojiDismissed = false }
     }
 
     // Suggestions list shown over the caret.
@@ -300,6 +326,72 @@ unclosed fence here (no closing triple-tick)
         }
     }
 
+    // Emoji suggestions list shown over the caret (parallel to the mention popup).
+    Popup {
+        id: emojiPopup
+
+        parent: textArea
+        focus: false
+        closePolicy: Popup.NoAutoClose
+        padding: 1
+
+        readonly property rect caret: {
+            textArea.text; textArea.cursorPosition // reposition as the caret moves
+            return textArea.positionToRectangle(textArea.cursorPosition)
+        }
+        x: caret.x
+        y: caret.y + caret.height
+
+        visible: textArea.enteringEmoji && root.emojiSuggestions.length > 0 && !d.emojiDismissed
+
+        background: Rectangle {
+            color: "white"
+            border.color: "#cccccc"
+            radius: 4
+        }
+
+        contentItem: ListView {
+            id: emojiList
+
+            implicitWidth: 260
+            implicitHeight: Math.min(contentHeight, 8 * 32)
+            clip: true
+            model: root.emojiSuggestions
+
+            onCountChanged: currentIndex = 0
+            onVisibleChanged: currentIndex = 0
+
+            delegate: ItemDelegate {
+                required property int index
+                required property var modelData
+
+                width: ListView.view.width
+                highlighted: ListView.isCurrentItem
+
+                contentItem: Row {
+                    spacing: 8
+                    Image {
+                        width: 20
+                        height: 20
+                        sourceSize.width: 20
+                        sourceSize.height: 20
+                        source: Emoji.svgImage(modelData.unicode)
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: modelData.shortname
+                        elide: Text.ElideRight
+                    }
+                }
+
+                HoverHandler {
+                    onHoveredChanged: if (hovered) emojiList.currentIndex = parent.index
+                }
+                onClicked: root.acceptEmoji(modelData.unicode)
+            }
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 12
@@ -350,26 +442,36 @@ unclosed fence here (no closing triple-tick)
                             codeBackground: Theme.palette.baseColor4
                             quoteBarVisible: quoteBarSwitch.checked
 
-                            // Mention-suggestions navigation is handled here (in the page),
+                            // Mention/emoji-suggestions navigation is handled here (in the page),
                             // not inside ChatTextArea. These attached handlers coexist with
-                            // the component's own Keys.onPressed and only act while the popup
-                            // is open; otherwise the keys pass through to the editor.
+                            // the component's own Keys.onPressed and only act while a popup is
+                            // open; otherwise the keys pass through to the editor. The two popups
+                            // are mutually exclusive ("@" vs ":" tokens).
                             Keys.onUpPressed: (event) => {
+                                // Stop at the first item (no wrap-around).
                                 if (suggestionsPopup.visible) {
-                                    // Stop at the first item (no wrap-around).
                                     suggestionsList.currentIndex =
                                         Math.max(suggestionsList.currentIndex - 1, 0)
+                                    event.accepted = true
+                                } else if (emojiPopup.visible) {
+                                    emojiList.currentIndex =
+                                        Math.max(emojiList.currentIndex - 1, 0)
                                     event.accepted = true
                                 } else {
                                     event.accepted = false
                                 }
                             }
                             Keys.onDownPressed: (event) => {
+                                // Stop at the last item (no wrap-around).
                                 if (suggestionsPopup.visible) {
-                                    // Stop at the last item (no wrap-around).
                                     suggestionsList.currentIndex =
                                         Math.min(suggestionsList.currentIndex + 1,
                                                  suggestionsList.count - 1)
+                                    event.accepted = true
+                                } else if (emojiPopup.visible) {
+                                    emojiList.currentIndex =
+                                        Math.min(emojiList.currentIndex + 1,
+                                                 emojiList.count - 1)
                                     event.accepted = true
                                 } else {
                                     event.accepted = false
@@ -381,6 +483,9 @@ unclosed fence here (no closing triple-tick)
                             Keys.onEscapePressed: (event) => {
                                 if (suggestionsPopup.visible) {
                                     d.dismissed = true
+                                    event.accepted = true
+                                } else if (emojiPopup.visible) {
+                                    d.emojiDismissed = true
                                     event.accepted = true
                                 } else {
                                     event.accepted = false
@@ -650,6 +755,12 @@ unclosed fence here (no closing triple-tick)
                 spacing: 16
                 Text { text: "entering suggestion: " + textArea.enteringSuggestion }
                 Text { text: "mentions filter: \"" + textArea.mentionsFilter + "\"" }
+            }
+
+            Row {
+                spacing: 16
+                Text { text: "entering emoji: " + textArea.enteringEmoji }
+                Text { text: "emoji filter: \"" + textArea.emojiFilter + "\"" }
             }
 
             Row {

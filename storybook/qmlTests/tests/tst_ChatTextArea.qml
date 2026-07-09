@@ -160,6 +160,60 @@ Item {
             compare(control.textWithMentions(), "@0x00001")
         }
 
+        // ── emoji shortcode context (":" trigger) ───────────────────────────────
+
+        // ":" at text start + two token chars ⇒ entering, filter is the typed shortcode.
+        function test_enteringEmoji_triggersAfterTwoChars() {
+            control.text = ":ab"
+            control.cursorPosition = 3
+            compare(control.enteringEmoji, true)
+            compare(control.emojiFilter, "ab")
+        }
+
+        // A single char after ":" is not enough to trigger.
+        function test_enteringEmoji_requiresTwoChars() {
+            control.text = ":a"
+            control.cursorPosition = 2
+            compare(control.enteringEmoji, false)
+        }
+
+        // Digits and underscores are valid shortcode chars.
+        function test_enteringEmoji_allowsDigitsAndUnderscore() {
+            control.text = ":a_1"
+            control.cursorPosition = 4
+            compare(control.enteringEmoji, true)
+            compare(control.emojiFilter, "a_1")
+        }
+
+        // The ":" must start a token (line start or after whitespace).
+        function test_enteringEmoji_requiresTokenStart() {
+            control.text = "x:ab"
+            control.cursorPosition = 4
+            compare(control.enteringEmoji, false)
+        }
+
+        // ":" right after whitespace triggers; filter is the text up to the caret.
+        function test_enteringEmoji_afterWhitespace() {
+            control.text = "hi :ab"
+            control.cursorPosition = 6
+            compare(control.enteringEmoji, true)
+            compare(control.emojiFilter, "ab")
+        }
+
+        // A whitespace after the shortcode ends the token.
+        function test_enteringEmoji_stopsAfterWhitespace() {
+            control.text = ":ab "
+            control.cursorPosition = 4
+            compare(control.enteringEmoji, false)
+        }
+
+        // Shortcodes inside a code span are ignored.
+        function test_enteringEmoji_notInCodeSpan() {
+            control.text = "`:ab`"
+            control.cursorPosition = 4 // between "b" and the closing backtick
+            tryCompare(control, "enteringEmoji", false)
+        }
+
         // ── mention demotion inside a (closing) code fence ──────────────────────
 
         // Initial document (formatUnclosedCodeFence stays off):
