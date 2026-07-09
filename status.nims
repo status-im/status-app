@@ -216,6 +216,98 @@ proc runMake(target: string, extraArgs = "") =
   exec "cd " & quoteShell(thisDir()) & " && make -j" & ncpu() & extraArgs &
     " " & target
 
+# --- prl-to-pc, the executed consumer interface (issue 0015) ------------------
+#
+# prl-to-pc publishes `qt_pkgconfig.nims` at its package root and we EXECUTE it:
+# `include`/`import` resolve at parse time while nimble.paths' --path switches
+# only apply at script runtime, and the package root is a dynamic store path
+# (`pkgs2/prl_to_pc-<version>-<checksum>`), so no config or driver script can
+# ever name that file at parse time.
+#
+# Two calls per host build: `tools` (builds the wrapper + generator into the
+# repo-local scratch — the store copy stays byte-identical) and `env`, whose
+# output is cached in .prl-to-pc-build/qt-pkgconfig.env. config.nims replays
+# that cache instead of forking a subprocess per nim invocation.
+# qtPcBuildDir / qtPcEnvCache / qtPkgConfigKey come from status_env.nims.
+
+proc nimEval(script: string): string =
+  ## `nim e` on a foreign package's script. --skipParentCfg is mandatory: the
+  ## script lives under this repo (develop checkout) or under the store, and
+  ## Nim's parent-dir config walk would otherwise hand it THIS repo's
+  ## config.nims — which reads the very cache we are about to write.
+  quoteShell(getCurrentCompilerExe()) & " e --skipParentCfg:on --hints:off " &
+    quoteShell(script)
+
+proc nimblePathsStale(): bool =
+  ## Same key make's setup stamp uses. The driver must know the resolution
+  ## before it can locate prl-to-pc, but a full `make nimble-deps` costs a
+  ## ~2.3 s Makefile parse, so gate it on an mtime scan (a few milliseconds).
+  let paths = thisDir() / "nimble.paths"
+  if not fileExists(paths):
+    return true
+  if hostOS == "windows":
+    return false # `test -nt` is POSIX-shell only; the stamp still runs in make
+  for input in ["nimble.lock", "nim_status_client.nimble", overlayFile,
+                "vendor/status-go/statusgo.nimble"]:
+    let p = thisDir() / input
+    if fileExists(p):
+      let (_, rc) = gorgeEx("test " & quoteShell(p) & " -nt " & quoteShell(paths))
+      if rc == 0:
+        return true
+
+proc prlToPcScript(): string =
+  ## Fails fast when prl-to-pc is unresolved, or resolved to a copy that
+  ## predates the nimscript interface (i.e. an old pin).
+  let root = prlToPcRoot()
+  if root.len == 0:
+    fail "prl-to-pc is not resolved yet (no prl_to_pc entry in nimble.paths)." &
+      "\nRun `make nimble-deps` — or just re-run this command; it resolves" &
+      " the graph itself on a fresh clone."
+  result = root / "qt_pkgconfig.nims"
+  if not fileExists(result):
+    fail "the resolved prl-to-pc copy has no qt_pkgconfig.nims:\n  " & root &
+      "\nThat interface arrived in prl-to-pc v0.3.0 (issue 0015). Bump the" &
+      " prl-to-pc requires in nim_status_client.nimble, or `nim develop" &
+      " status.nims prl-to-pc` onto a checkout that carries it."
+
+proc prepareQtPkgconfig() =
+  ## Build prl-to-pc's tools, then cache its `env` answer. Host targets only:
+  ## the interim mobile make legs consume the same knowledge through
+  ## <root>/qt-pkgconfig.mk, which the root Makefile still includes.
+  if nimblePathsStale():
+    runMake "nimble-deps"
+  let script = prlToPcScript()
+  let buildDir = thisDir() / qtPcBuildDir
+  # prl-to-pc compiles its tools with `nim`; hand it the compiler that is
+  # running this driver rather than whatever the caller's PATH holds.
+  putEnv("QT_PC_NIM", getCurrentCompilerExe())
+  exec nimEval(script) & " tools " & quoteShell(buildDir) & " " &
+    quoteShell(thisDir() / "nimble.paths")
+
+  let qmake = qmakeExe()
+  let key = qtPkgConfigKey(qmake, prlToPcRoot(),
+    qmakeQuery(qmake, "QT_INSTALL_PREFIX"))
+  let cache = thisDir() / qtPcEnvCache
+  if fileExists(cache) and ("\nkey=" & key & "\n") in readFile(cache):
+    return
+  let (output, rc) = gorgeEx(nimEval(script) & " env " & quoteShell(buildDir))
+  if rc != 0:
+    fail "prl-to-pc's `env` failed for this Qt kit:\n" & output
+  # gorgeEx merges stderr into the output, so validate the shape rather than
+  # caching whatever noise a future nim/config might print.
+  for line in output.splitLines:
+    let l = line.strip
+    if l.len == 0: continue
+    let i = l.find('=')
+    if i <= 0 or l[0] notin {'A' .. 'Z'}:
+      fail "prl-to-pc's `env` printed a line that is not KEY=VAL:\n  " & l &
+        "\nFull output:\n" & output
+  writeFile(cache,
+    "# Qt pkg-config environment, printed by prl-to-pc's `qt_pkgconfig.nims" &
+    " env`\n# and cached by `nim app status.nims` (issue 0015). Generated —" &
+    " do not edit.\n" &
+    "key=" & key & "\n" & output.strip & "\n")
+
 task app, "Build the Status dev build: host by default, --os:ios / --os:android (+ --cpu) for mobile":
   let t = parseTarget()
   rejectExtras(t, "app")
@@ -231,6 +323,7 @@ task app, "Build the Status dev build: host by default, --os:ios / --os:android 
     runMake "mobile-build", devArgs
   else:
     validateHost(t)
+    prepareQtPkgconfig()
     runMake "nim_status_client", devArgs
 
 task buildArtifacts, "Build every artifact the client links/loads except the client compile itself (internal: nimble's before-build hook — issue 0013)":
@@ -240,7 +333,9 @@ task buildArtifacts, "Build every artifact the client links/loads except the cli
     fail "buildArtifacts is host-only (nimble build/run is the host front" &
       " door; mobile builds go through `nim app status.nims --os:...`)."
   validateHost(t)
-  runMake "client-deps", developModeMakeArgs()
+  let devArgs = developModeMakeArgs()
+  prepareQtPkgconfig()
+  runMake "client-deps", devArgs
 
 task run, "Build if needed and launch the host dev build (StatusDev.app on macOS)":
   let t = parseTarget()
@@ -249,7 +344,20 @@ task run, "Build if needed and launch the host dev build (StatusDev.app on macOS
     fail "'run' launches the host desktop build only; for mobile use" &
       " `make mobile-run` (a driver mobile run may come with issue 0009+)."
   validateHost(t)
-  runMake "run", developModeMakeArgs()
+  let devArgs = developModeMakeArgs()
+  prepareQtPkgconfig()
+  runMake "run", devArgs
+
+task qtPkgconfigGenerate, "Regenerate the active Qt kit's committed .pc tree in a prl-to-pc develop checkout (never a build step; refuses on a store copy)":
+  # The kit comes from QMAKE, not from --os: regenerating the iOS or Android
+  # tree from a desktop host is exactly why a maintainer runs this.
+  if taskArgv().len > 0:
+    fail "'qtPkgconfigGenerate' takes no arguments; it regenerates the tree" &
+      " for the kit QMAKE selects. Got: " & taskArgv().join(" ")
+  let script = prlToPcScript()
+  putEnv("QT_PC_NIM", getCurrentCompilerExe())
+  exec nimEval(script) & " generate " & quoteShell(thisDir() / qtPcBuildDir) &
+    " " & quoteShell(thisDir() / "nimble.paths")
 
 # --- develop mode (issue 0009; mechanism: ADR 0004 nimble.paths overlay) -----
 #
@@ -340,18 +448,19 @@ const vendorTable = [
   Vendor(name: "prl-to-pc", flavor: vfNimbleGraph,
     pinManifest: "nim_status_client.nimble", repoName: "prl-to-pc",
     pkgName: "prl_to_pc", manifestName: "prl_to_pc.nimble",
-    # First version-TAG pin in the graph (#v0.2.0); developBranch main per
-    # the 0014 grill. Consumed as package-root FILES: make includes
-    # <root>/qt-pkgconfig.mk (parse-time — always fresh) and the committed
-    # .pc trees are read per compile, so a developed checkout needs no
-    # client rebuild and no per-build FORCE arm: the wrapper/generator
-    # binaries have real make prerequisites under the resolved root and
-    # rebuild on source edits by mtime. Only mode FLIPS need invalidation
-    # (the binaries can be newer than the other mode's sources), hence
-    # flipRemove of the repo-local tool build dir.
+    # developBranch main per the 0014 grill. Consumed as package-root FILES:
+    # the driver executes <root>/qt_pkgconfig.nims every build (issue 0015)
+    # and make still includes <root>/qt-pkgconfig.mk for the interim
+    # mobile/nim-test legs — nothing nim-imports it, so a developed checkout
+    # needs neither a client rebuild nor a per-build FORCE arm. A mode flip
+    # changes the package root, which invalidates the cached `env` answer (its
+    # key carries the root) and may change the tool sources; flipRemove drops
+    # both artifacts so neither mode can ever consume the other's.
     checkoutDir: "vendor/prl-to-pc", developBranch: "main",
     clientRebuild: false, forceTouch: @[], forceRemove: @[],
-    flipRemove: @[".prl-to-pc-build/.pcwrap/*"]),
+    flipRemove: @[".prl-to-pc-build/.pcwrap/*",
+                  ".prl-to-pc-build/.pcwrap/.*.key",
+                  ".prl-to-pc-build/qt-pkgconfig.env"]),
   Vendor(name: "status-keycard-qt", flavor: vfCmake,
     pinManifest: "cmake/status-keycard-qt/CMakeLists.txt",
     repoName: "status-keycard-qt",

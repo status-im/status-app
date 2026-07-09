@@ -97,11 +97,12 @@ when not declared(statusgoBuildRoot):
 
 when not declared(prlToPcRoot):
   proc prlToPcRoot(): string =
-    ## The prl-to-pc package root (issue 0014): qt-pkgconfig.mk and the
-    ## committed Qt .pc trees live at that root. The develop checkout when
-    ## the overlay says so, else the store entry from the generated
-    ## nimble.paths ("" when the resolution doesn't exist yet). The Makefile
-    ## derives the same answer itself (PRL_TO_PC_ROOT) — keep them in sync.
+    ## The prl-to-pc package root (issue 0014): qt_pkgconfig.nims,
+    ## qt-pkgconfig.mk and the committed Qt .pc trees live at that root. The
+    ## develop checkout when the overlay says so, else the store entry from the
+    ## generated nimble.paths ("" when the resolution doesn't exist yet). The
+    ## Makefile derives the same answer itself (PRL_TO_PC_ROOT) — keep them in
+    ## sync.
     if "prl-to-pc" in readOverlay() and
         dirExists(thisDir() / "vendor/prl-to-pc"):
       return thisDir() / "vendor/prl-to-pc"
@@ -119,3 +120,55 @@ when not declared(prlToPcRoot):
           # no srcDir, so entries are never suffixed — but stay defensive).
           let rootEnd = entry.find(DirSep, i + marker.len)
           return if rootEnd < 0: entry else: entry[0 ..< rootEnd]
+
+# --- the Qt pkg-config environment cache (issue 0015) -------------------------
+# prl-to-pc owns kit derivation and the System/Generated probe; its
+# `qt_pkgconfig.nims env` prints the resulting environment. Running that per nim
+# invocation would fork a subprocess for every compile (nimsuggest included), so
+# the driver runs it ONCE per build and caches the answer here. config.nims only
+# replays the cache — it derives no .pc path, no kit, no version, and it must
+# never assume a pkg-config wrapper exists (System-mode kits have none).
+
+when not declared(qtPcBuildDir):
+  const qtPcBuildDir = ".prl-to-pc-build/.pcwrap"  # gitignored; tools never land in the store
+
+when not declared(qtPcEnvCache):
+  const qtPcEnvCache = ".prl-to-pc-build/qt-pkgconfig.env"  # gitignored
+
+when not declared(qtPkgConfigKey):
+  proc qtPkgConfigKey(qmake, prlRoot, qtPrefix: string): string =
+    ## Everything the cached environment depends on. All three are already in
+    ## hand at both call sites (config.nims dumps `qmake -query` once anyway),
+    ## so a stale cache is detected without spawning anything.
+    qmake & "|" & prlRoot & "|" & qtPrefix
+
+when not declared(qtPkgConfigEnv):
+  proc qtPkgConfigEnv(key: string): seq[tuple[k, v: string]] =
+    let cache = thisDir() / qtPcEnvCache
+    const rerun = "\nRun `nim app status.nims` (or `nimble build` — its" &
+      " before-build hook does this for you); they ask prl-to-pc for the" &
+      " environment and cache it."
+    if not fileExists(cache):
+      statusEnvFail "the Qt pkg-config environment cache is missing (" &
+        qtPcEnvCache & ")." & rerun
+    var keyed = false
+    for line in readFile(cache).splitLines:
+      let l = line.strip
+      if l.len == 0 or l.startsWith("#"):
+        continue
+      let i = l.find('=')
+      if i <= 0:
+        statusEnvFail "malformed line in " & qtPcEnvCache & ": '" & l & "'." & rerun
+      let name = l[0 ..< i]
+      let val = l[i + 1 .. ^1]
+      if name == "key":
+        keyed = true
+        if val != key:
+          statusEnvFail "the Qt pkg-config environment cache (" & qtPcEnvCache &
+            ") was built for another Qt kit, another prl-to-pc copy or another" &
+            " qmake:\n  cached: " & val & "\n  wanted: " & key & rerun
+      else:
+        result.add (name, val)
+    if not keyed:
+      statusEnvFail "the Qt pkg-config environment cache (" & qtPcEnvCache &
+        ") carries no key line." & rerun

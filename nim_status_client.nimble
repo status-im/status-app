@@ -74,23 +74,28 @@ requires "https://github.com/status-im/nim-keycard-go.git#c8a39e8d4a8abd1bba2fb3
 # materializes editable checkouts (ADR 0004 overlay).
 requires "https://github.com/seaqt/nim-seaqt.git#2d95808bdd9f6dd2c212b69a57af4618da241d37"  # seaqt (branch smo-6.4)
 requires "https://github.com/seaqt/nimqml-seaqt.git#c5e5831ae7d71e09f7061bc7735a8f3e1adc8fb3"  # nimqml
-# prl-to-pc (issue 0014): qt-pkgconfig.mk + the committed relocatable Qt .pc
-# trees + the pkg-config wrapper/generator sources — the Qt-flag discovery
-# seaqt's compile-time `gorge("pkg-config …")` depends on. Consumed as
-# package-root FILES (make includes <root>/qt-pkgconfig.mk; nothing
-# nim-imports its modules), so its manifest declares neither bin nor srcDir:
-# either one makes nimble strip the store copy down to sources. First
-# VERSION-TAG pin in the graph (#v0.2.0, annotated tag — resolves like any
-# special version and additionally carries the semantic version). The tools
-# build into the repo-local .prl-to-pc-build/ scratch; the store copy is
-# never written to. `nim develop status.nims prl-to-pc` for an editable
-# checkout (ADR 0004 overlay).
-# INTERIM until the user pushes branch+tag to status-im/prl-to-pc: the tag
-# only exists locally, so fresh resolution needs the seeded pkgcache clone
-# (~/.nimble/pkgcache/githubcom_statusimprltopcgit_v020, fetched from the
-# local backup repo — see the 0014 verification record for the exact seed
-# commands). Post-push, plain `nimble setup` resolves it from the remote.
-requires "https://github.com/status-im/prl-to-pc.git#v0.2.0"  # prl_to_pc
+# prl-to-pc (issues 0014, 0015): qt_pkgconfig.nims (the executed consumer
+# interface: kit derivation, the System/Generated probe, tool building and
+# .pc generation) + the committed relocatable Qt .pc trees + the
+# wrapper/generator sources — the Qt-flag discovery seaqt's compile-time
+# `gorge("pkg-config …")` depends on. Consumed as package-root FILES (the
+# driver runs `nim e <root>/qt_pkgconfig.nims <cmd>`; the root Makefile
+# still includes <root>/qt-pkgconfig.mk for the interim mobile/nim-test make
+# legs; nothing nim-imports its modules), so its manifest declares neither
+# bin nor srcDir: either one makes nimble strip the store copy down to
+# sources. The tools build into the repo-local .prl-to-pc-build/ scratch;
+# the store copy is never written to. `nim develop status.nims prl-to-pc`
+# for an editable checkout (ADR 0004 overlay).
+#
+# INTERIM PIN (issue 0015). The final pin is the annotated tag `#v0.3.0`,
+# which cannot land before prl-to-pc's `main` + that tag are pushed (the
+# PRD's push gate). This pins the exact commit the tag will point at. Until
+# the push, `nimble setup` can only resolve it through a seeded pkgcache
+# clone (~/.nimble/pkgcache/githubcom_statusimprltopcgit_4a31fc06…, fetched
+# from .phase2-vendor-backup/prl-to-pc) — same interim mechanism as 0014;
+# see the 0015 verification record for the seed commands. Post-push, plain
+# `nimble setup` resolves it from the remote and the pin becomes `#v0.3.0`.
+requires "https://github.com/status-im/prl-to-pc.git#4a31fc06e8c8e38fca6a9396d7cedffacecda010"  # prl_to_pc
 
 include "status.nims"
 
