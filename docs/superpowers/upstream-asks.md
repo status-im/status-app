@@ -80,13 +80,13 @@ records 0007–0012.
 
 ## prl-to-pc (status-im/prl-to-pc)
 
-- Local branch `fix/lockfile-nimblepath` (at `f649ba6`) + annotated tag
-  `v0.2.0` need pushing (the 0014 pin `#v0.2.0` resolves from the remote
-  only after that; a merge to `main` is nice-to-have — the tag is what the
-  pin needs). Contents: efcd65a nimble.paths dep resolution, abb3604 v0.2.0
-  bump, f56ac40 source-only/full-tree manifest + store-copy-safe mk,
-  84b29f8 message fix, f649ba6 README rewrite. The backup checkout at
-  `.phase2-vendor-backup/prl-to-pc` is the only holder of these refs.
+- PUSHED + MERGED (2026-07-09): tag `v0.2.0` (peeled f649ba6) live on the
+  remote; PR status-im/prl-to-pc#1 merged the branch to `main`. Post-push
+  flip verified: wiped seeded pkgcache/store → re-solve from GitHub
+  materialized the identical entry `prl_to_pc-0.2.0-d902f8c9…`. Residual:
+  `main` is 2 commits past the tag (probe-based System/Generated mode
+  merge + 81aa1e8 space-safe consumer-paths review fix) — bump the app pin
+  when upstream tags a v0.2.1, not urgent.
 
 ## CMake vendors
 

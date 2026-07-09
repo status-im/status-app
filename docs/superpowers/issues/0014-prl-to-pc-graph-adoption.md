@@ -96,7 +96,16 @@ imports here.
 - [x] `nim vendors status.nims` lists prl-to-pc (7 vendors).
 - [x] Post-push flip documented (INTERIM section): wiped seeded pkgcache +
   store entry + nimble.paths → `make nimble-deps` re-solves `#v0.2.0` from
-  the remote. NOT run — the push did not happen during the session.
+  the remote. RUN 2026-07-09 (push happened): seeded pkgcache + store entry
+  + nimble.paths moved to `~/.nimble/bak-0014-postpush/` (reversible wipe),
+  `make nimble-deps` downloaded status-im/prl-to-pc from GitHub in 1:10,
+  materialized the IDENTICAL entry `prl_to_pc-0.2.0-d902f8c9…`
+  (vcsRevision f649ba6, specialVersions ['#v0.2.0','0.2.0'], per-file md5
+  byte-identical to the seeded entry) → `nim app` 10.4 s, no-op 6.3 s,
+  vendors row clean. Remote state: branch + tag pushed, PR
+  status-im/prl-to-pc#1 MERGED to main; main is 2 commits past the tag
+  (origin/main probe-mode merge + 81aa1e8 space-safe consumer-paths review
+  fix) — pin bump to a future tag optional.
 - [x] Mobile spot-check unaffected: `--os:ios --cpu:arm64` full leg,
   signed app, codesign strict OK (record leg 5).
 
@@ -272,8 +281,9 @@ throwaway NIMBLE_DIR before the app graph consumed it).
    qt-pkgconfig.mk + the ios kit's committed .pc tree from the store copy.
    Desktop flip-back rebuild (platform sentinel) = 54.5 s; final default
    no-op = **7.33 s**.
-6. **Post-push flip** (criterion 5): NOT run — the push did not happen
-   during this session; the exact command is in the INTERIM section above.
+6. **Post-push flip** (criterion 5): RUN 2026-07-09 after the user push —
+   see the checklist entry above for the full record (identical store
+   entry from the real remote; pass).
 
 Timing summary (vs 0013): driver no-op 6.95–7.33 s (0013: 5.9–7 s);
 nimble build warm 1:37 (0013 ≈89 s — within the dispatch-tax noise band);

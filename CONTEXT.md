@@ -25,7 +25,10 @@ Two flavors, one develop-mode UX:
   FetchContent `GIT_TAG`; develop mode via `FETCHCONTENT_SOURCE_DIR_<NAME>`
   redirect to the materialized checkout. Nested CMake vendors (keycard-qt)
   need no parent cascade.
-End-state: **default mode has no vendor checkouts at all** (no submodules).
+End-state: **default mode has no Vendor checkouts at all** — no submodule
+carries a Vendor. (Third-party C/C++ submodules — DOtherSide, SFPM,
+QR-Code-generator, fcitx5-qt, mobile openssl — are pins, not Vendors, and may
+remain submodules; converting them is a separate decision.)
 Vendor names, as used by `develop <vendor>`, are the package/project names
 above.
 
