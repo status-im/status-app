@@ -133,6 +133,7 @@ Control {
                         width: Math.min(implicitWidth, piece.width - 16)
                         wrapMode: Text.Wrap
                         textFormat: Text.PlainText
+                        color: Theme.palette.directColor1
                         font.family: Fonts.codeFont.family
                         font.pixelSize: root.font.pixelSize
                         font.bold: piece.bold
