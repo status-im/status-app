@@ -87,15 +87,13 @@ requires "https://github.com/seaqt/nimqml-seaqt.git#c5e5831ae7d71e09f7061bc7735a
 # the store copy is never written to. `nim develop status.nims prl-to-pc`
 # for an editable checkout (ADR 0004 overlay).
 #
-# INTERIM PIN (issue 0015). The final pin is the annotated tag `#v0.3.0`,
-# which cannot land before prl-to-pc's `main` + that tag are pushed (the
-# PRD's push gate). This pins the exact commit the tag will point at. Until
-# the push, `nimble setup` can only resolve it through a seeded pkgcache
-# clone (~/.nimble/pkgcache/githubcom_statusimprltopcgit_4a31fc06…, fetched
-# from .phase2-vendor-backup/prl-to-pc) — same interim mechanism as 0014;
-# see the 0015 verification record for the seed commands. Post-push, plain
-# `nimble setup` resolves it from the remote and the pin becomes `#v0.3.0`.
-requires "https://github.com/status-im/prl-to-pc.git#4a31fc06e8c8e38fca6a9396d7cedffacecda010"  # prl_to_pc
+# Pinned to the annotated tag `v0.3.0` (peels to 4a31fc06). Tag pins resolve
+# on nimble 0.22.3 exactly like a `#sha` special version, and additionally
+# carry the manifest's semantic version: the store entry's nimblemeta.json
+# records `specialVersions ['0.3.0', '#v0.3.0']`. The pkgcache key embeds the
+# ref, so bumping the tag mints a fresh clone — the pkgcache-staleness wall
+# (walls doc) does not bite here.
+requires "https://github.com/status-im/prl-to-pc.git#v0.3.0"  # prl_to_pc
 
 include "status.nims"
 

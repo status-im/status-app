@@ -1320,3 +1320,53 @@ NOT on the remote (verified via git ls-remote). It exists in vendor/prl-to-pc
 (gitignored) and, as a safety net, on backup/nimble-0015-v0.3.0 in
 .phase2-vendor-backup/prl-to-pc. The app pin names that commit as an interim;
 the pin becomes #v0.3.0 after the human pushes.
+
+================================================================================
+2026-07-09  ISSUE 0015 — DONE (run 2: push gate closed, tag pin re-solved)
+================================================================================
+The human pushed prl-to-pc main (4a31fc06) and the annotated tag v0.3.0
+(c758a2ab, peels to 4a31fc06). Confirmed via git ls-remote.
+
+App pin bumped: #4a31fc06… -> #v0.3.0.
+
+Remote re-solve, proved from scratch: all three
+~/.nimble/pkgcache/githubcom_statusimprltopcgit_* clones (incl. the pre-push
+seed), the prl_to_pc store entry, nimble.paths and .prl-to-pc-build moved
+(NOT rm'd) to ~/.nimble/bak-0015-postpush/. Then `make nimble-deps` = 69.9 s,
+rc 0, log carries "Downloading https://github.com/status-im/prl-to-pc.git using
+git". Fresh pkgcache clone minted for the ref (…_v030 — the key embeds the ref,
+so the pkgcache-staleness wall doesn't apply). Store entry:
+prl_to_pc-0.3.0-efc5e3d18f1e6e11e2f3a6b6ed034e84d634771b, nimblemeta url =
+github, vcsRevision 4a31fc06…, specialVersions ['0.3.0', '#v0.3.0'].
+
+NEW FINDING (walls doc): the store entry checksum is IDENTICAL to the interim
+SHA-pinned one, and a per-file md5 diff shows why — of 1161 files, 1160 are
+byte-identical and the ONLY difference is nimblemeta.json (specialVersions
+'#4a31fc06…' -> '#v0.3.0'). nimble's content checksum covers the package tree
+and excludes the metadata file nimble writes itself. Same mechanism as 0014's
+loopback-vs-github collision. A pin-form change therefore never re-materializes
+the tree.
+
+Re-verified against the remote-resolved store copy (Qt 6.11.0, Generated mode):
+  nim vendors -> pin …/prl-to-pc.git#v0.3.0
+  full nim app 62.9 s rc 0; launch smoke OK (libstatus/libsds/libStatusQ,
+    QtCore from ~/Qt/6.11.0/macos, clean SIGTERM)
+  store byte-identity across the build: 1161 files identical (and still
+    identical after nimble build + the develop round-trip)
+  no-op nim app 7.92 / 7.39 / 7.34 s;  nimble build 128.9 s rc 0
+  nim qtPkgconfigGenerate -> exit 1, refuses the store copy
+  develop round-trip on the TAG pin: develop reused the checkout ("HEAD 4a31fc0;
+    pin v0.3.0"), marker edit observed (73.3 s), cache key re-rooted to the
+    checkout; after revert, `undevelop` SUCCEEDED WITHOUT --force (the commits
+    are pushed now — the unpushed-work guard correctly stands down), and the
+    next build (74.6 s) dropped the marker and re-keyed to the store entry.
+
+All 11 acceptance criteria met. Two are recorded as amended/scoped rather than
+literal (System-mode `env` is not empty — it must still export PKG_CONFIG_PATH
+or pkg-config picks brew's ambient Qt; `make qt-pkgconfig*` "no longer exists"
+scopes to the APP's targets, the mk's survive with the include the mobile +
+nim-test-run legs still need). Orchestrator independently re-verified run 1.
+
+Cleanup available: ~/.nimble/bak-0015-postpush/ (pre-push clones + old entry)
+can be deleted; the .phase2-vendor-backup/prl-to-pc backup/nimble-0015-v0.3.0
+branch is now redundant with the remote.

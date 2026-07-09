@@ -4,9 +4,8 @@ title: prl-to-pc nimble-native — executed nimscript interface, v0.3.0 pin, env
 date: 2026-07-09
 tracker: local (GH publication deferred by user)
 triage-label: ready-for-agent
-status: in progress (2026-07-09; everything authored, built and verified —
-  the last two criteria are gated on the human pushing prl-to-pc `main` +
-  the annotated tag `v0.3.0`, see PUSH HANDOFF)
+status: done (2026-07-09; prl-to-pc v0.3.0 pushed + tagged, the app pins
+  `#v0.3.0`, and a wiped store re-solves it from the remote — see leg 10)
 ---
 
 ## Parent
@@ -101,13 +100,8 @@ front (unlike 0014, where it was discovered at the end).
       deliberately leaves alone (mobile, `nim-test-run/%`) — which the issue's
       own "the Makefile's inclusion survives" sentence requires. They disappear
       with those legs, not here.
-- [ ] prl-to-pc `v0.3.0` is pushed and tagged; the app pin is `#v0.3.0`; a
-      wiped store entry re-solves it from the remote.
-      **BLOCKED on the human push — see PUSH HANDOFF.** Everything except the
-      literal tag is proven: the pin is the exact commit the tag must point at,
-      and a wiped store entry re-solves it (leg 6) through the seeded pkgcache
-      clone (0014's interim mechanism), producing a store copy whose
-      `nimblemeta.json` records the real GitHub URL.
+- [x] prl-to-pc `v0.3.0` is pushed and tagged; the app pin is `#v0.3.0`; a
+      wiped store entry re-solves it from the remote. (Leg 10, 2026-07-09.)
 - [x] Develop round-trip: `develop prl-to-pc` → an upstream edit is observed in
       the app build → `undevelop` → build returns to the pinned store entry.
       (Leg 7.)
@@ -115,38 +109,32 @@ front (unlike 0014, where it was discovered at the end).
 
 ## Blocked by
 
-The human's push of prl-to-pc `main` + the annotated tag `v0.3.0` — for the
-final pin bump only. All authoring and verification are done.
+Nothing. The push gate closed on 2026-07-09: prl-to-pc `main` is at
+`4a31fc06`, the annotated tag `v0.3.0` (`c758a2ab`) peels to it, and the app
+pins `#v0.3.0`.
 
-## PUSH HANDOFF (the only thing left)
+## Push record (closed 2026-07-09)
 
-prl-to-pc commit **`4a31fc06e8c8e38fca6a9396d7cedffacecda010`** ("feat:
-qt_pkgconfig.nims — an executed consumer interface (v0.3.0)") sits on branch
-`main` of `vendor/prl-to-pc` (gitignored) and is mirrored, as a safety net, on
-`backup/nimble-0015-v0.3.0` in `.phase2-vendor-backup/prl-to-pc`. It is 1
-commit ahead of `origin/main` (`359064f`). From the checkout:
+The human pushed prl-to-pc commit `4a31fc06e8c8e38fca6a9396d7cedffacecda010`
+("feat: qt_pkgconfig.nims — an executed consumer interface (v0.3.0)") to `main`
+and tagged it `v0.3.0`. Independently confirmed:
 
-```sh
-cd vendor/prl-to-pc
-git push origin main
-git tag -a v0.3.0 -m "v0.3.0 — qt_pkgconfig.nims, the executed consumer interface"
-git push origin v0.3.0
+```
+$ git ls-remote https://github.com/status-im/prl-to-pc.git main 'refs/tags/v0.3.0*'
+4a31fc06e8c8e38fca6a9396d7cedffacecda010  refs/heads/main
+c758a2abc55860be012c2fd17583218777953bec  refs/tags/v0.3.0
+4a31fc06e8c8e38fca6a9396d7cedffacecda010  refs/tags/v0.3.0^{}
 ```
 
-**Push the commit as-is.** Amending or rebasing it changes the SHA the app's
-interim pin names, and the seeded pkgcache clone
-(`~/.nimble/pkgcache/githubcom_statusimprltopcgit_4a31fc06…`) would then be the
-only place it exists. Do not delete that pkgcache dir before the push.
-
-Afterwards (agent run 2): bump the pin in `nim_status_client.nimble` from
-`#4a31fc06…` to `#v0.3.0`, wipe
-`~/.nimble/pkgcache/githubcom_statusimprltopcgit_*` and
-`~/.nimble/pkgs2/prl_to_pc-*` plus `nimble.paths`, then `make nimble-deps` to
-prove the tag re-solves from the remote, and re-run legs 4/6/7.
+The interim SHA pin, the seeded pkgcache clone and the local backup branch
+(`backup/nimble-0015-v0.3.0` in `.phase2-vendor-backup/prl-to-pc`) have all
+served their purpose. The backup branch is harmless to keep; the pre-push
+pkgcache clones and store entry were moved to `~/.nimble/bak-0015-postpush/`
+(reversible) for the leg-10 re-solve and can be deleted.
 
 ## What was built (2026-07-09)
 
-- **prl-to-pc `4a31fc0`** (branch `main`, unpushed):
+- **prl-to-pc `4a31fc0`** (branch `main`; pushed and tagged `v0.3.0`):
   - `qt_pkgconfig.nims` — the executed consumer interface. `env [<buildDir>]`
     prints `KEY=VAL` lines (`QT_PC_MODE`, `QT_PC_REASON`, `QT_PC_PREFIX`,
     `PKG_CONFIG_PATH`, and in Generated mode `PKG_CONFIG_PREFIX_OVERRIDE`,
@@ -309,7 +297,47 @@ correct behaviour and disappears with issue 0018.
    mode: kit ships no Qt6Core.pc", `mobile/bin/ios/qt6/Status.app` signed,
    `codesign --verify --deep --strict` OK. Desktop flip-back = 65.6 s.
 
-Timing summary (vs 0014): driver no-op **6.78–7.25 s** (0014: 6.95–7.33);
+10. **Post-push: the tag pin re-solves from the remote** (2026-07-09, after the
+   human's push; the criterion the run-1 record left open). Pin bumped to
+   `#v0.3.0`. Everything prl-to-pc-shaped moved aside — reversibly, with `mv`
+   rather than `rm` — into `~/.nimble/bak-0015-postpush/`: all three
+   `~/.nimble/pkgcache/githubcom_statusimprltopcgit_*` clones (including the
+   pre-push seed), the `prl_to_pc-0.3.0-efc5e3d1…` store entry, `nimble.paths`
+   and `.prl-to-pc-build`. Then `make nimble-deps` = **69.9 s**, rc 0, and it
+   went to the network: *"Downloading https://github.com/status-im/prl-to-pc.git
+   using git"*. A fresh pkgcache clone was minted for the ref
+   (`githubcom_statusimprltopcgit_v030` — the key embeds the ref, so the
+   pkgcache-staleness wall does not apply), and the store entry came back as
+   `prl_to_pc-0.3.0-efc5e3d18f1e6e11e2f3a6b6ed034e84d634771b` with
+   `nimblemeta.json`: url `https://github.com/status-im/prl-to-pc.git`,
+   vcsRevision `4a31fc06…`, `specialVersions ['0.3.0', '#v0.3.0']` — the tag
+   carries the semantic version alongside the special, exactly as 0014 found.
+
+   **The entry checksum is unchanged from the interim SHA-pinned resolve**, and
+   a per-file md5 diff sharpens why: of 1161 files, **1160 are byte-identical
+   and the sole difference is `nimblemeta.json`** (its `specialVersions` moved
+   from `['0.3.0', '#4a31fc06…']` to `['0.3.0', '#v0.3.0']`). So nimble's
+   content checksum covers the *package tree* and excludes the metadata file it
+   writes itself — which is why the same commit reached through a different
+   ref, and through a different URL (0014's loopback-vs-github spike), lands in
+   the same store directory.
+
+   Then, against that remote-resolved store copy: `nim vendors` shows
+   `pin: …/prl-to-pc.git#v0.3.0`; full `nim app status.nims` (client forced) =
+   **62.9 s** rc 0; per-file md5 of the store entry **identical before and
+   after** (1161 files) and still identical after everything below; no-op
+   `nim app` = **7.92 / 7.39 / 7.34 s**; `nimble build` = 128.9 s rc 0;
+   `nim qtPkgconfigGenerate status.nims` → exit 1, refusing the store copy;
+   launch smoke: alive after 12 s with libstatus/libsds/libStatusQ loaded,
+   `QtCore` from `~/Qt/6.11.0/macos/lib/…`, clean SIGTERM. Develop round-trip
+   re-run on the tag pin: `develop` reused the checkout (`HEAD 4a31fc0; pin
+   v0.3.0`), the marker edit was observed (73.3 s) and the cache key's root
+   became the checkout; after reverting, **`undevelop` succeeded WITHOUT
+   `--force`** — the commit is pushed now, so the unpushed-work guard that
+   fired in leg 7 correctly stands down — and the next build (74.6 s) dropped
+   the marker and re-keyed the cache to the store entry.
+
+Timing summary (vs 0014): driver no-op **6.78–7.92 s** (0014: 6.95–7.33);
 full default rebuild after a store wipe 65.5 s + 1:07 re-solve (0014: 1:09.95
 combined); `nimble build` 132.1 s (0014: 1:37); iOS leg 147.1 s (0014: 149.6);
 desktop flip-back 65.6 s (0014: 54.5).
