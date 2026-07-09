@@ -1632,9 +1632,6 @@ method newCommunityMembershipRequestReceived*[T](self: Module[T], membershipRequ
 method communityMembershipRequestCanceled*[T](self: Module[T], communityId: string, requestId: string, pubKey: string) =
   self.view.model().removeMember(communityId, pubKey)
 
-method meMentionedCountChanged*[T](self: Module[T], allMentions: int) =
-  singletonInstance.globalEvents.meMentionedIconBadgeNotification(allMentions)
-
 method displayEphemeralNotification*[T](
     self: Module[T],
     title: string,

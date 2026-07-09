@@ -1,5 +1,4 @@
-#ifndef STATUSQ_OS_NOTIFICATION_H
-#define STATUSQ_OS_NOTIFICATION_H
+#pragma once
 
 #include <QObject>
 #include <QString>
@@ -24,7 +23,7 @@ namespace Status
         void showIconBadgeNotification(int notificationsCount);
 
     signals:
-        void notificationClicked(QString identifier);
+        void notificationClicked(const QString& identifier);
 
 #ifdef Q_OS_WIN
     public:
@@ -39,10 +38,7 @@ namespace Status
     private:
         void initNotificationMacOs();
         void showNotificationMacOs(QString title, QString message, QString identifier);
-        void showIconBadgeNotificationMacOs(int notificationsCount);
         void* m_delegate = nullptr; // StatusQNotificationDelegate* (opaque to C++)
 #endif
     };
 }
-
-#endif // STATUSQ_OS_NOTIFICATION_H

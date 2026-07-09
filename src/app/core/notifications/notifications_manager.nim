@@ -173,8 +173,8 @@ QtObject:
     sectionId: sectionId)
     self.processNotification(title, message, details)
 
-  proc onMeMentionedIconBadgeNotification(self: NotificationsManager, allMentions: int) {.slot.} =
-    self.osNotification.showIconBadgeNotification(allMentions)
+  proc onNotificationsCountChanged(self: NotificationsManager, count: int) {.slot.} =
+    self.osNotification.showIconBadgeNotification(count)
 
   proc onShowCommunityMemberKickedNotification*(self: NotificationsManager, title: string, message: string, sectionId: string) {.slot.} =
     let details = NotificationDetails(notificationType: NotificationType.CommunityMemberKicked, sectionId: sectionId, isCommunitySection: true)
@@ -201,7 +201,7 @@ QtObject:
     discard QObject.connect(singletonInstance.globalEvents, newCommunityMembershipRequestNotification, self, onNewCommunityMembershipRequestNotification, ConnectionType.QueuedConnection)
     discard QObject.connect(singletonInstance.globalEvents, myRequestToJoinCommunityAcccepted, self, onMyRequestToJoinCommunityAcccepted, ConnectionType.QueuedConnection)
     discard QObject.connect(singletonInstance.globalEvents, myRequestToJoinCommunityRejected, self, onMyRequestToJoinCommunityRejected, ConnectionType.QueuedConnection)
-    discard QObject.connect(singletonInstance.globalEvents, meMentionedIconBadgeNotification, self, onMeMentionedIconBadgeNotification, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, notificationsCountChanged, self, onNotificationsCountChanged, ConnectionType.QueuedConnection)
     discard QObject.connect(singletonInstance.globalEvents, showCommunityTokenPermissionCreatedNotification, self, onShowCommunityTokenPermissionCreatedNotification, ConnectionType.QueuedConnection)
     discard QObject.connect(singletonInstance.globalEvents, showCommunityTokenPermissionUpdatedNotification, self, onShowCommunityTokenPermissionUpdatedNotification, ConnectionType.QueuedConnection)
     discard QObject.connect(singletonInstance.globalEvents, showCommunityTokenPermissionDeletedNotification, self, onShowCommunityTokenPermissionDeletedNotification, ConnectionType.QueuedConnection)

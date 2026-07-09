@@ -120,7 +120,7 @@
 [submodule "vendor/nim-seaqt"]
 	path = vendor/nim-seaqt
 	url = https://github.com/seaqt/nim-seaqt.git
-	branch = qt-6.4
+	branch = qt-6.8
 [submodule "vendor/nimqml-seaqt"]
 	path = vendor/nimqml-seaqt
 	url = https://github.com/seaqt/nimqml-seaqt.git

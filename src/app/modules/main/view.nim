@@ -28,9 +28,6 @@ QtObject:
 
   proc delete*(self: View)
 
-  proc onNotificationsCountChanged*(self: View) {.slot.} =
-    self.delegate.meMentionedCountChanged(self.model.allMentionsCount())
-
   proc newView*(delegate: io_interface.AccessInterface): View =
     new(result, delete)
     result.QObject.setup
@@ -45,8 +42,6 @@ QtObject:
     result.ephemeralNotificationModel = ephemeralNotification_model.newModel()
     result.ephemeralNotificationModelVariant = newQVariant(result.ephemeralNotificationModel)
     result.mainLoaded = false
-
-    discard QObject.connect(result.model, notificationsCountChanged, result, onNotificationsCountChanged, ConnectionType.QueuedConnection)
 
   proc load*(self: View) =
     # In some point, here, we will setup some exposed main module related things.

@@ -6,6 +6,7 @@ import section_item, member_model, member_item
 import ../main/communities/tokens/models/[token_item, token_model]
 import model_utils
 import ../../../app_service/common/types
+import app/global/global_singleton
 
 type
   ModelRole {.pure.} = enum
@@ -393,8 +394,6 @@ QtObject:
 
   proc sectionVisibilityUpdated*(self: SectionModel) {.signal.}
 
-  proc notificationsCountChanged*(self: SectionModel) {.signal.}
-
   proc enableDisableSection(self: SectionModel, sectionType: SectionType, value: bool) =
     if sectionType != SectionType.Community:
       for i in 0 ..< self.items.len:
@@ -463,7 +462,7 @@ QtObject:
       updateRole(hasNotification)
       updateRole(notificationsCount)
 
-    self.notificationsCountChanged()
+    singletonInstance.globalEvents.notificationsCountChanged(notificationsCount)
 
   proc isThereASectionWithUnreadMessages*(self: SectionModel): bool =
     for item in self.items:

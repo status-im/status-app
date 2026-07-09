@@ -1,3 +1,5 @@
+#include <QGuiApplication>
+
 #include "StatusQ/osnotification.h"
 
 #ifdef Q_OS_WIN
@@ -148,9 +150,5 @@ void OSNotification::showNotification(const QString& title,
 
 void OSNotification::showIconBadgeNotification(int notificationsCount)
 {
-#ifdef Q_OS_MACOS
-    showIconBadgeNotificationMacOs(notificationsCount);
-#else
-    Q_UNUSED(notificationsCount)
-#endif
+    qGuiApp->setBadgeNumber(notificationsCount);
 }

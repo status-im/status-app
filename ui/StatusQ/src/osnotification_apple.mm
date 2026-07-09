@@ -68,16 +68,6 @@ void OSNotification::showNotificationMacOs(QString title, QString message, QStri
     [content release];
 }
 
-void OSNotification::showIconBadgeNotificationMacOs(int notificationsCount)
-{
-    QString s; // empty clears the badge
-    if (notificationsCount > 0 && notificationsCount < 10)
-        s = QString::number(notificationsCount);
-    else if (notificationsCount >= 10)
-        s = "9+";
-    [[NSApp dockTile] setBadgeLabel:s.toNSString()];
-}
-
 // Destructor lives here so it can release the Obj-C delegate (non-ARC).
 OSNotification::~OSNotification()
 {

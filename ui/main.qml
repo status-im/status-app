@@ -92,12 +92,7 @@ Window {
     objectName: "mainWindow"
     color: Theme.palette.background
     title: {
-        // Set application settings
-        Qt.application.name = "Status Desktop"
         Qt.application.displayName = d.macOSWindowed ? "" : qsTr("Status Desktop")
-        Qt.application.organization = "Status"
-        Qt.application.domain = "status.im"
-        Qt.application.version = aboutModule.getCurrentVersion()
         return Qt.application.displayName
     }
 
