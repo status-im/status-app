@@ -1079,3 +1079,75 @@ Gotchas for next sessions:
 Carry-overs: user push of prl-to-pc branch+tag, then run the post-push
 flip; standing items unchanged (NBS deletion Phase 3, CI migration,
 seaqt qt-6.11 evaluation, 0013 bootstrap-ordering follow-up).
+
+--- 2026-07-09 — 0014 post-push flip (carry-over closed) ---
+User pushed prl-to-pc: tag v0.2.0 (peeled f649ba6) + branch live on
+status-im/prl-to-pc; PR #1 MERGED to main. Flip run: seeded pkgcache +
+store entry + nimble.paths moved to ~/.nimble/bak-0014-postpush/
+(classifier blocked rm; mv = reversible wipe) → make nimble-deps
+re-solved #v0.2.0 from GitHub in 1:10 → IDENTICAL store entry
+prl_to_pc-0.2.0-d902f8c9… (vcsRevision f649ba6, specialVersions
+['#v0.2.0','0.2.0'], per-file md5 byte-identical to the seeded one,
+proving the content-addressed/URL-independent claim on the real remote).
+nim app 10.4 s, no-op 6.3 s, vendors row clean. The seeded-pkgcache
+DO-NOT-DELETE gotcha is RETIRED. Residual: upstream main is 2 commits
+past the tag (probe-mode merge — the qt-pkgconfig-mode work is now
+upstream — + 81aa1e8 space-safe consumer-paths review fix); optional pin
+bump when a v0.2.1 tag appears. Backup dir ~/.nimble/bak-0014-postpush
+deletable freely.
+Remaining carry-overs: NBS deletion (Phase 3), CI migration, seaqt
+qt-6.11 evaluation, 0013 bootstrap-ordering follow-up, 0006
+(upstream-gated), status-go nimble-phase1-pin → develop PR, sds PR#85 +
+uuids#15 still open (isaac#4 merged).
+
+=== ITERATION 3 DESIGNED 2026-07-09 (grill session) ===
+PRD docs/superpowers/prds/2026-07-09-nimble-owns-nim-compilation-prd.md.
+Goal: nimble/nimscript own ALL nim compilation; make demoted to packaging +
+CI helpers + interim mobile; NBS deleted; prl-to-pc consumed nimble-native.
+
+Decisions (grilled):
+- Dev flow 100% make-free (option c). make survives for pkg-*, signing,
+  flatpak, storybook, mobile interim, CI helpers. Invariant: root Makefile
+  never invokes nim (grep-checked); mobile Makefile joins at its follow-on.
+- prl-to-pc gains an UPSTREAM nimscript interface qt_pkgconfig.nims run via
+  `nim e` (env/tools/generate). MECHANISM FINDING: include/import resolve at
+  PARSE time but nimble.paths --path switches apply at script RUNTIME → a
+  dynamic store path can never be included; it must be executed. Driver caches
+  `env` output into a repo-local gitignored file; config.nims reads it (no
+  subprocess per nim invocation) and STOPS duplicating kit derivation.
+  Ships as v0.3.0 off main (probe-mode + space-safe fix already there);
+  qt-pkgconfig.mk RETAINED (dual interface). PUSH GATE known up front.
+  pkgcache key embeds the ref (githubcom_statusimprltopcgit_v020) → a new tag
+  pin mints a fresh clone; staleness wall (ask #8) does not bite.
+- TOOLCHAIN (spiked 2026-07-09): with PATH scrubbed of ~/.nimble/bin AND NBS,
+  `nimble setup` still resolves+uses pkgs2/nim-2.2.4/bin/nim, and
+  `nimble shellenv` emits that bin dir. => machine prerequisite is NIMBLE
+  ONLY. Bootstrap: `nimble setup && eval "$(nimble shellenv)"`. No version
+  guard needed (user call) — a bootstrapped shell cannot drift. Internal
+  `exec nim` calls resolve the STORE nim (incl. `NIM :=` for interim mobile
+  make legs, which run on nimble-only CI agents).
+- Artifacts: status_artifacts.nims, one generic cmake proc (StatusQ,
+  DOtherSide, keycard wrapper, translations — cmake's own incrementality is
+  the no-op path); QR-Code-generator is NIM-ONLY (no StatusQ consumer) →
+  {.compile.} in its existing wrapper, kill the .a + passL + platform-cleanup;
+  rcc + bottles + submodule bootstrap + setup-stamp absorbed; TWO gating
+  patterns only: stale(outputs,inputs) + the .statusgo-build key-file.
+  compile-translations = task, not a build step.
+- nimterop REJECTED (dormant since 2023-04; cCompile discouraged by its own
+  docs; bindings are handwritten; stdlib {.compile.} covers the need).
+- DOtherSide: dead on origin/master (d3b8917a04) → zero investment, rides the
+  generic cmake proc until master merges.
+- REBUILD_NIM replaced: developed vendor ⇒ skip stale() gate + always compile;
+  human `--force` flag. .update.timestamp/NIM_SOURCES/deps/update deleted.
+  `make update` NOT kept as a shim.
+- Windows NIM_PARAMS branches ported into config.nims NOW (ported, unverified
+  — 0012 Android-leg precedent). run-* make targets deleted.
+- CI (user call): NIMBLE-ONLY agents; pipelines use `nimble build` + nimble
+  task aliases; Jenkinsfiles updated THIS iteration, verified post-push
+  (checklist, not a pass claim). choosenim/nim-version.sh rejected.
+- Slices: 0015 prl-to-pc nimble-native (first — push gate is the long pole)
+  → 0016 buildArtifacts native → 0017 driver owns nim compiles → 0018 NBS
+  deleted (gate: nim-free machine proof) → 0019 CI. Every slice leaves
+  `nim app` AND `nimble build` green.
+- CONTEXT.md amended: the no-checkouts end-state scopes to VENDORS; the 5
+  C/C++ submodules are pins, not Vendors.
