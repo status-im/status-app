@@ -1151,3 +1151,52 @@ Decisions (grilled):
   `nim app` AND `nimble build` green.
 - CONTEXT.md amended: the no-checkouts end-state scopes to VENDORS; the 5
   C/C++ submodules are pins, not Vendors.
+
+--- 2026-07-09 — SPIKE (orchestrator-run; de-risks 0018/0019) ---
+The spike SUBAGENT produced nothing and marked its task done; completion
+rejected, task reopened, agent stopped. Orchestrator ran the spike itself.
+Full report: scratchpad/spike-i3/REPORT.md. Real ~/.nimble never written
+(cold tests via redirected HOME).
+
+Q1 COLD STORE = YES. `nimble setup` with HOME redirected + PATH scrubbed of
+~/.nimble/bin and NBS: succeeds, builds nim 2.2.4 (nimbinaries + csources_v3)
+and ALSO downloads a prebuilt nim-2.2.10 as evaluator. 5:18 wall, 7.9 GB,
+warm re-run 0.57 s. Store checksum IDENTICAL to the real machine's
+(nim-2.2.4-b4bb510b…) → content-addressed, machine-independent.
+=> 0019 must budget ~5 min + ~8 GB per fresh agent, or cache ~/.nimble.
+Trap: ~/.nimble/nimbinaries survives a NIMBLE_DIR override — only a HOME
+redirect gives a genuinely cold store.
+
+Q2 = YES. `nimble build` with no nim on PATH builds and the binary runs.
+
+Q3 = YES, and it REFUTES a PRD assumption: nimble INJECTS the pinned
+compiler's bin/ into PATH for tasks AND for `before build` hooks. A bare
+`exec "nim --version"` inside a hook prints 2.2.4 with no nim on the caller's
+PATH. => the store-nim rule is unnecessary for anything nimble invokes; it is
+needed only for things invoked OUTSIDE nimble (bare `make mobile-build` on a
+nim-free agent). Simplest 0019 rule: CI reaches make through a nimble task
+alias (or a shellenv shell), never bare.
+
+Q4 = context-dependent; the obvious answer is WRONG in one VM:
+  - manifest VM (tasks/hooks/aliases): findExe("nim") = pinned 2.2.4 ✅;
+    selfExe()/querySetting(libPath) = nimble's EVALUATOR 2.2.10 ❌.
+  - .nims run by nim (driver): getCurrentCompilerExe() ✅ (it lives in std/os
+    as a compileTime proc — needs `import std/os`; status.nims:31 has it).
+  - `nimble path nim` is UNUSABLE: prints TWO same-version entries
+    (nim-2.2.4-9e6d4e22… specialVersions ['2.2.4'] and nim-2.2.4-b4bb510b…).
+  LIVE HAZARD: status.nims calls getCurrentCompilerExe() and is include'd by
+  the manifest. Via `nim <task> status.nims` correct; via `nimble <task>`
+  (which 0019 mandates for CI) it yields the 2.2.10 evaluator. nimExe() must
+  branch on context.
+
+UNPLANNED FINDING — the divergence this migration exists to fix:
+  NBS vendored nim (today's dev+CI PATH) = 2.2.10
+  manifest pin                           = nim == 2.2.4
+  ~/.nimble/bin/nim (shellenv/store)     = 2.2.4
+So `nim app status.nims` compiles with 2.2.10 while `nimble build` compiles
+with 2.2.4 — two compilers, one repo, right now. This weakens 0013's
+make↔nimble byte-parity record (it compared two different compilers' output)
+and is the strongest single argument for 0018. Iteration-3 briefs must stop
+prepending the NBS nim to PATH.
+
+Incidental: nimble rejects package names ending in "pkg".
