@@ -295,15 +295,15 @@ StatusTextArea {
         }
 
         // Quote-block continuation and atomic "> " editing. These mirror the
-        // ChatInputMentions UX: Enter inside a quote starts a new "> " line (two
-        // Enters on an empty quote line exit), a single Backspace at the start of
-        // quote content removes the whole "> " prefix, Delete at a line end before a
-        // quote joins the lines, and Left at content-start jumps to the previous line.
+        // ChatInputMentions UX: Enter/Shift+Enter inside a quote start a new "> " line (two
+        // on an empty quote line exit), a single Backspace at the start of quote content removes
+        // the whole "> " prefix, Delete at a line end before a quote joins the lines, and Left at
+        // content-start jumps to the previous line.
         const noShift = !(event.modifiers & Qt.ShiftModifier)
         const noSelection = root.selectionStart === root.selectionEnd
 
         if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
-                && noShift && highlighter.isInQuoteBlock(root.cursorPosition)) {
+                && highlighter.isInQuoteBlock(root.cursorPosition)) {
             event.accepted = true
             const prevPos = highlighter.endOfPreviousBlock(root.cursorPosition)
             if (prevPos !== root.cursorPosition
@@ -316,6 +316,19 @@ StatusTextArea {
             } else {
                 root.insert(root.cursorPosition, "\n> ")
             }
+            return
+        }
+
+        // Outside a quote, Shift+Enter must also behave like Enter: insert a real newline (a new
+        // block) instead of QQuickTextEdit's default soft line separator (U+2028), which stays
+        // inside the current block and breaks the one-line-per-block model the parser and the
+        // quote-bar overlay rely on. (insert() turns "\n" into a block separator.)
+        if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+                && (event.modifiers & Qt.ShiftModifier)) {
+            event.accepted = true
+            if (!noSelection)
+                root.remove(root.selectionStart, root.selectionEnd)
+            root.insert(root.cursorPosition, "\n")
             return
         }
 

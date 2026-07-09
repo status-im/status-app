@@ -95,6 +95,32 @@ Item {
             compare(control.text, "`")
         }
 
+        // ── Shift+Enter behaves like Enter (no soft U+2028 line separator) ──────
+
+        // Outside a quote, Shift+Enter inserts a real newline (a new block), not a U+2028
+        // soft line separator that would stay inside the current block.
+        function test_shiftEnter_insertsNewlineNotSoftBreak() {
+            control.text = "ab"
+            control.cursorPosition = 2
+            control.forceActiveFocus()
+
+            keyClick(Qt.Key_Return, Qt.ShiftModifier)
+
+            compare(control.text, "ab\n")
+            verify(control.text.indexOf("\u2028") === -1)
+        }
+
+        // Inside a quote, Shift+Enter continues the quote exactly like Enter ("\n> ").
+        function test_shiftEnter_continuesQuoteLikeEnter() {
+            control.text = "> hi"
+            control.cursorPosition = 4
+            control.forceActiveFocus()
+
+            keyClick(Qt.Key_Return, Qt.ShiftModifier)
+
+            compare(control.text, "> hi\n> ")
+        }
+
         // ── insertMention ───────────────────────────────────────────────────────
 
         // A mention is one embedded object (ObjectReplacementCharacter, U+FFFC).

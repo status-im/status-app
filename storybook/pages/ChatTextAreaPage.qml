@@ -197,6 +197,20 @@ unclosed fence here (no closing triple-tick)
         }
     }
 
+    // Enter/Return: first try to accept an open suggestion popup; otherwise, when "Flush on
+    // Enter" is enabled, mimic the chat composer's send by clearing the input. Only Enter alone
+    // flushes — Shift+Enter always falls through to insert a newline.
+    function onReturnOrEnter(event) {
+        acceptOrPassSuggestion(event)
+        if (event.accepted)
+            return
+
+        if (flushOnEnterSwitch.checked && !(event.modifiers & Qt.ShiftModifier)) {
+            textArea.clear() // simulate send
+            event.accepted = true
+        }
+    }
+
     // Pops the click bubble at the last pointer position over the static render.
     function showClickBubble(message) {
         clickBubble.message = message
@@ -477,8 +491,8 @@ unclosed fence here (no closing triple-tick)
                                     event.accepted = false
                                 }
                             }
-                            Keys.onReturnPressed: (event) => root.acceptOrPassSuggestion(event)
-                            Keys.onEnterPressed: (event) => root.acceptOrPassSuggestion(event)
+                            Keys.onReturnPressed: (event) => root.onReturnOrEnter(event)
+                            Keys.onEnterPressed: (event) => root.onReturnOrEnter(event)
                             Keys.onTabPressed: (event) => root.acceptOrPassSuggestion(event)
                             Keys.onEscapePressed: (event) => {
                                 if (suggestionsPopup.visible) {
@@ -723,6 +737,13 @@ unclosed fence here (no closing triple-tick)
                     text: "Enlarge emojis"
                     checked: textArea.enlargeEmojis
                     onToggled: textArea.enlargeEmojis = checked
+                }
+                Switch {
+                    id: flushOnEnterSwitch
+
+                    // Enter inserts a newline (default ChatTextArea behavior).
+                    // When on, Enter mimics the chat composer's "send" by clearing the input.
+                    text: "Flush on Enter"
                 }
                 Switch {
                     id: selectableSwitch
