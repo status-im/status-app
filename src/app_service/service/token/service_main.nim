@@ -132,13 +132,16 @@ proc onAsyncFetchAllTokenListsDone(self: Service, response: string) {.slot.} =
   except Exception as e:
     error "error processing async fetch all token lists", msg = e.msg
 
-proc asyncRefreshTokens(self: Service) =
+# fetchAllTokens must be true only when the full catalogue can change (init /
+# token-lists-updated); routine refreshes skip the ~3MB getAllTokens fetch+decode.
+proc asyncRefreshTokens(self: Service, fetchAllTokens: bool = false) =
   inc self.refreshTokensRequestId
   let arg = AsyncRefreshTokensTaskArg(
     tptr: asyncRefreshTokensTask,
     vptr: cast[uint](self.vptr),
     slot: "onAsyncRefreshTokensDone",
     requestId: self.refreshTokensRequestId,
+    fetchAllTokens: fetchAllTokens,
   )
   self.threadpool.start(arg)
 
@@ -171,7 +174,7 @@ proc init*(self: Service) =
         self.rebuildMarketData()
   # update and populate internal list and then emit signal when new custom token detected?
   self.events.on(SignalType.WalletTokensListsUpdated.event) do(e:Args):
-    self.asyncRefreshTokens()
+    self.asyncRefreshTokens(fetchAllTokens = true)
     self.asyncFetchAllTokenLists()
 
   self.events.on(SIGNAL_NETWORK_MODE_UPDATED) do(e:Args):
@@ -181,7 +184,7 @@ proc init*(self: Service) =
   self.events.on(SIGNAL_CURRENCY_UPDATED) do(e:Args):
     self.rebuildMarketData()
 
-  self.asyncRefreshTokens()
+  self.asyncRefreshTokens(fetchAllTokens = true)
   self.prefetchParaswapSupport()
 
 proc getMandatoryTokenGroupKeys*(self: Service): seq[string] =
