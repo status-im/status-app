@@ -67,6 +67,10 @@ proc prefetchParaswapSupportRetrieved(self: Service, response: string) {.slot.} 
 proc applyRefreshTokensData(self: Service, tokenDtos: seq[TokenDtoSafe], allTokenDtos: seq[TokenDtoSafe], tokenPrefsNode: JsonNode) =
   let tokens = tokenDtos.map(t => createTokenItem(t))
 
+  # Token catalogue changed -> previously-unresolvable keys may now resolve.
+  if tokenDtos.len > 0 or allTokenDtos.len > 0:
+    self.notFoundKeys.clear()
+
   if tokens.len > 0 or self.groupsOfInterestByKey.len == 0:
     self.tokensOfInterestByKey.clear()
     self.groupsOfInterestByKey.clear()
@@ -286,6 +290,8 @@ proc getTokenByKey*(self: Service, key: string): TokenItem =
     return nil
   if self.tokensOfInterestByKey.hasKey(key):
     return self.tokensOfInterestByKey[key]
+  if self.notFoundKeys.contains(key):
+    return nil
   let tokens = getTokensByKeys(@[key])
   if tokens.len > 0:
     # add newly found tokens to the groups of interest
@@ -293,6 +299,7 @@ proc getTokenByKey*(self: Service, key: string): TokenItem =
 
     self.tokensOfInterestByKey[key] = tokens[0]
     return self.tokensOfInterestByKey[key]
+  self.notFoundKeys.incl(key)
   return nil
 
 proc getTokenByChainAddress*(self: Service, chainId: int, address: string): TokenItem =
