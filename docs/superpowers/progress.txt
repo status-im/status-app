@@ -1200,3 +1200,68 @@ and is the strongest single argument for 0018. Iteration-3 briefs must stop
 prepending the NBS nim to PATH.
 
 Incidental: nimble rejects package names ending in "pkg".
+
+================================================================================
+2026-07-09  ISSUE 0015 — prl-to-pc nimble-native (implementer agent, run 1)
+================================================================================
+DONE except the push gate. prl-to-pc now publishes qt_pkgconfig.nims, an
+EXECUTED consumer interface (`nim e <root>/qt_pkgconfig.nims <cmd>`), and the
+app consumes it as the single source of truth for Qt pkg-config.
+
+Upstream (prl-to-pc commit 4a31fc06, branch main, UNPUSHED; mirrored at
+.phase2-vendor-backup/prl-to-pc backup/nimble-0015-v0.3.0):
+  - qt_pkgconfig.nims: `env [buildDir]` / `tools <buildDir> <consumerPaths>` /
+    `generate [buildDir [consumerPaths]]`. Owns kit derivation + the
+    System/Generated probe. Refuses to generate into a store copy.
+  - tests/test_qt_pkgconfig_nims.nim (10 tests) wired into `nimble test`;
+    drives the same three fixture kits as the mk suite.
+  - manifest -> 0.3.0. qt-pkgconfig.mk RETAINED, untouched (dual interface).
+
+App:
+  - status.nims: prepareQtPkgconfig() (app/run/buildArtifacts, host only) runs
+    `tools`, then `env` ONCE, caching to .prl-to-pc-build/qt-pkgconfig.env keyed
+    on (qmake path, resolved package root, kit). New task qtPkgconfigGenerate.
+    flipRemove drops the tools + the cache on develop/undevelop flips.
+  - config.nims: kit derivation and the wrapper assertion DELETED; it replays
+    the cache (prepend semantics for PKG_CONFIG_PATH / PATH, idempotent).
+  - Makefile: desktop's `qt-pkgconfig` prerequisites and the app's stub targets
+    gone; the mk include SURVIVES for the interim mobile + nim-test-run legs.
+
+VERIFIED (details in the issue's verification record):
+  Generated kit 6.11.0 full build 97.9 s + launch smoke; System kit 6.11.1 full
+  build 123.9 s with NO wrapper built at all (counter-proof: the OLD config.nims
+  fails there — "the Qt pkg-config wrapper is missing"); default-mode build
+  against a real store copy 65.5 s, store entry byte-identical (1161 files,
+  per-file md5) before/after; no-op 6.78-6.80 s (0014: 6.95-7.33); nimble build
+  132 s; iOS leg 147 s signed; develop round-trip + cache re-key both directions.
+
+NEW WALLS (added to .phase2-vendor-backup/status-go/AGENTS.md):
+  - nimscript has NO mtime API (os.getLastModificationTime is {.error.} there)
+    -> gate on content keys (hash(src)+NimVersion+flags) or shell `test -nt`.
+  - gorgeEx MERGES the child's stderr into the captured output -> validate the
+    shape of anything you parse (the driver rejects non-KEY=VAL lines).
+  - putEnv propagates to gorgeEx/exec children (portable probe, no env-prefix).
+  - thisDir() is canonicalized (macOS /var -> /private/var); script args are not.
+  - `nim e` on a script inside the repo NEEDS --skipParentCfg:on, or the parent
+    walk hands it the app's config.nims (which reads the cache it is producing).
+  - `nim applyOverlay` writes nimble.paths, which IS make's setup stamp: running
+    it by hand marks the stamp fresh and the next build SILENTLY SKIPS
+    `nimble setup`. Cost an hour: a pin bump appeared to resolve while the store
+    still held the old entry.
+
+AMENDED CRITERION: `env` on a System-mode kit is NOT empty — it still prints
+PKG_CONFIG_PATH=<kit's own pkgconfig dir>. Without it pkg-config answers from
+its built-in search path (brew's Qt at /opt/homebrew/lib on this machine). What
+is empty is the generated machinery: no wrapper, no PATH prepend, no override.
+The mk has always behaved this way; the dual interface must not diverge.
+
+SCOPED CRITERION: `make qt-pkgconfig*` "no longer exists" = the APP's stub
+targets are gone and the desktop build has no such prerequisite. The mk's own
+targets survive with the include the mobile/nim-test legs still need.
+
+PUSH GATE (human): from vendor/prl-to-pc — `git push origin main`, then
+`git tag -a v0.3.0` at 4a31fc06 and `git push origin v0.3.0`. Push the commit
+AS-IS (the app's interim pin names that SHA; a seeded pkgcache clone at
+~/.nimble/pkgcache/githubcom_statusimprltopcgit_4a31fc06… is the only other
+place it exists — do not delete it before the push). Then run 2: pin -> #v0.3.0,
+wipe pkgcache + store entry + nimble.paths, `make nimble-deps`, re-verify.
