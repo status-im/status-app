@@ -1285,3 +1285,38 @@ wipe pkgcache + store entry + nimble.paths, `make nimble-deps`, re-verify.
   the divergence today: alternating front doors rebuilds prl-to-pc's two tools
   (~2 s), because NimVersion is in their content key. Goes away with 0018.
   Both walls added to .phase2-vendor-backup/status-go/AGENTS.md.
+
+--- 2026-07-09 — ORCHESTRATOR RE-VERIFICATION of 0015 (independent) ---
+Every claim in the 0015 agent's verification record was re-checked by the
+orchestrator, not taken on trust. All held.
+
+  - env, GENERATED kit (6.11.0): QT_PC_MODE=generated, reason "Qt6Core.pc
+    libdir mismatch (broken prefix)", PKG_CONFIG_PATH -> the store's committed
+    .pc tree, prefix override + wrapper prepend present.
+  - env, SYSTEM kit (6.11.1): QT_PC_MODE=system, reason "libdir matches qmake
+    QT_INSTALL_LIBS", PKG_CONFIG_PATH -> the KIT's own pkgconfig dir; no
+    wrapper, no prepend, no prefix override. The agent's amendment to the
+    criterion is CORRECT: "empty env" would have silently selected brew's
+    ambient Qt. Criterion text was wrong; the code is right.
+  - generate from the store copy: refuses with an actionable message.
+  - Store entry byte-identical across BOTH a `nim app` build and a
+    `nimble build`: 1161 files, aggregate md5 6644afbd… unchanged. `.pcwrap`
+    absent from the store; tools live in .prl-to-pc-build/.pcwrap.
+  - Env cache carries the REPO-LOCAL prepend (not the store default that a
+    bare `env` invocation prints); config.nims replays it idempotently.
+  - no-op `nim app`: 7.10 s / 6.93 s steady state (first run 10.3 s was cold
+    cache) — the agent's 6.78-7.25 s range is honest.
+  - `nimble build` rc=0 in 1:44; binary 30262032 B, 13 Qt libs linked.
+  - Upstream: qt-pkgconfig.mk has ZERO diff vs origin/main (dual interface
+    intact); +317 lines qt_pkgconfig.nims, +287 lines tests.
+  - nimExe() now branches on VM context, citing the 2026-07-09 measurement.
+
+COMPILER NOTE (unresolved until 0018): the driver ran under NBS nim 2.2.10
+while `nimble build` used the pinned store nim 2.2.4. Both produce a working
+binary; no cross-path binary parity is claimed for 0015.
+
+PUSH GATE OPEN: prl-to-pc commit 4a31fc06e8c8e38fca6a9396d7cedffacecda010 is
+NOT on the remote (verified via git ls-remote). It exists in vendor/prl-to-pc
+(gitignored) and, as a safety net, on backup/nimble-0015-v0.3.0 in
+.phase2-vendor-backup/prl-to-pc. The app pin names that commit as an interim;
+the pin becomes #v0.3.0 after the human pushes.
