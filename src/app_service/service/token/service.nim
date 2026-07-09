@@ -1,4 +1,4 @@
-import nimqml, tables, json, std/sequtils, chronicles, strutils, sugar, algorithm
+import nimqml, tables, json, std/sequtils, chronicles, strutils, sugar, algorithm, std/sets
 
 import web3/eth_api_types
 import backend/backend as backend
@@ -66,6 +66,9 @@ QtObject:
     hasPriceValuesCache: bool
     tokenListUpdatedAt: int64
     refreshTokensRequestId: int
+    # Negative cache: token keys that status-go could not resolve. Prevents re-hitting
+    # wallet_getTokensByKeys for the same unknown key on every lookup. Cleared on token refresh.
+    notFoundKeys: HashSet[string]
 
   # Forward declaration
   proc getCurrency*(self: Service): string
@@ -111,6 +114,7 @@ QtObject:
     result.tokensMarketDetailsLoading = true
     result.hasMarketDetailsCache = false
     result.hasPriceValuesCache = false
+    result.notFoundKeys = initHashSet[string]()
 
 
   include service_tokens
