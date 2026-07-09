@@ -64,9 +64,11 @@ records 0007–0012.
 
 ## uuids / isaac (pragmagic)
 
-- Fork pins `alexjba/uuids#5d79d279` (+ isaac pinned within) exist only
-  because of nimble ask #5. Either upstream modernizes the manifests or the
-  nimble fix lands — then restore upstream pins.
+- isaac#4 MERGED (2026-07-09): pragmagic/isaac master `ca0a1e25` carries the
+  modern manifest. uuids PR #15 (head `1a8111cc`, amended to pin that isaac
+  rev) still open; the app pins the PR head from the pragmagic URL — bump to
+  the merge commit when #15 lands. Both pins stay revision-shaped until
+  upstream tags releases with modern manifests (nimble ask #5).
 
 ## seaqt (seaqt/nim-seaqt, seaqt/nimqml-seaqt)
 
