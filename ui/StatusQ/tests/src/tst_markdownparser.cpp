@@ -505,6 +505,82 @@ Document [0,7)
                  QString::fromUtf8(expected).trimmed());
     }
 
+    void topUnclosedFenceOverQuotedFence_formatUnclosedCodeFenceOff()
+    {
+        // Snippet:
+        //   ```          <- top-level opening fence (no "> " prefix)
+        //   > ```
+        //   > quoted
+        //   > ```
+        //   normal text
+        //
+        // Surprising resolution (flag off): the top-level ``` on line 1 pairs with the ``` on
+        // line 2 *across* its "> " prefix, forming a CodeBlock over "```\n> ```" (content "\n> ").
+        // Lines 3-4 then form a QuoteBlock — its own ``` on line 4 stays plain text (unclosed
+        // within the quote, flag off) — and "normal text" is trailing plain text.
+        auto input = R"(
+```
+> ```
+> quoted
+> ```
+normal text
+)";
+
+        auto expected = R"(
+Document [0,36)
+  Paragraph [0,36)
+    CodeBlock [0,9)
+      Delimiter [0,3) "```"
+      Text [3,6) "\n> "
+      Delimiter [6,9) "```"
+    Text [9,10) "\n"
+    QuoteBlock [10,25)
+      Delimiter [10,12) "> "
+      Text [12,19) "quoted\n"
+      Delimiter [19,21) "> "
+      Text [21,25) "```\n"
+    Text [25,36) "normal text"
+)";
+        QCOMPARE(d(QString(input).trimmed()),
+                 QString::fromUtf8(expected).trimmed());
+    }
+
+    void topUnclosedFenceOverQuotedFence_formatUnclosedCodeFenceOn()
+    {
+        // Same snippet with formatUnclosedCodeFence on: identical to the flag-off case except
+        // line 4's ``` (unclosed within the quote) is now formatted as a CodeBlock inside the
+        // QuoteBlock. Line 1's fence still pairs with line 2's, so it is not treated as unclosed.
+        Options uf;
+        uf.formatUnclosedCodeFence = true;
+        auto input = R"(
+```
+> ```
+> quoted
+> ```
+normal text
+)";
+
+        auto expected = R"(
+Document [0,36)
+  Paragraph [0,36)
+    CodeBlock [0,9)
+      Delimiter [0,3) "```"
+      Text [3,6) "\n> "
+      Delimiter [6,9) "```"
+    Text [9,10) "\n"
+    QuoteBlock [10,25)
+      Delimiter [10,12) "> "
+      Text [12,19) "quoted\n"
+      Delimiter [19,21) "> "
+      CodeBlock [21,25)
+        Delimiter [21,24) "```"
+        Text [24,25) "\n"
+    Text [25,36) "normal text"
+)";
+        QCOMPARE(d(QString(input).trimmed(), uf),
+                 QString::fromUtf8(expected).trimmed());
+    }
+
     void unclosedFence_withoutFlag()
     {
         // Without the flag, an unclosed fence is plain text.
