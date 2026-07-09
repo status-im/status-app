@@ -38,17 +38,17 @@ requires "https://github.com/nitely/nim-regex.git#2c41f0b2fee9fe78cf22f029bc854a
 requires "https://github.com/nitely/nim-unicodedb.git#8938e71cdb3332b8a16eb27a6984c8565ea4643e"  # unicodedb
 requires "https://github.com/vacp2p/nim-intops.git#d30bd41f7492a21e4e0baeafac493978a010568f"  # intops
 requires "https://github.com/cheatfate/nimcrypto.git#423ea4fed8de6f4544b7e3b30d868f527ed3b947"  # nimcrypto
-# uuids: upstream-PR head = 0.1.12 (42052ba) + one commit: modern-format
-# manifest with isaac pinned by revision. Upstream pragmagic/{uuids,isaac}
-# ship INI-style ([Package]) manifests, and nimble 0.22.3's dependency
-# validation extracts an EMPTY version from an INI manifest on a fresh clone
-# — uuids' former `isaac >= 0.1.3` range then fails ("wanted >= 0.1.3 got .")
-# and uuids is dropped from the graph, hard-failing every clean-store
-# lock-mode solve. isaac stays unlisted here: the pinned uuids manifest pins
-# it (pragmagic/isaac#5bd05be4 = the pragmagic/isaac#4 head; v0.1.3 content,
-# modern manifest). PR-only commits resolve fine (verified 2026-07-07); bump
-# both pins to the merge commits when the pragmagic PRs land.
-requires "https://github.com/pragmagic/uuids.git#f89d1f5ce7901bb3f0dd637019d3b8fe58219d5c"  # uuids
+# uuids: upstream-PR head (pragmagic/uuids#15) = 0.1.12 (42052ba) + one
+# commit: modern-format manifest with isaac pinned by revision. Upstream
+# uuids still ships an INI-style ([Package]) manifest at its tags, and
+# nimble 0.22.3's dependency validation extracts an EMPTY version from an
+# INI manifest on a fresh clone — uuids' former `isaac >= 0.1.3` range then
+# fails ("wanted >= 0.1.3 got .") and uuids is dropped from the graph,
+# hard-failing every clean-store lock-mode solve. isaac stays unlisted
+# here: the pinned uuids manifest pins it at pragmagic/isaac master
+# ca0a1e25 (= merged isaac#4, 2026-07-09; modern manifest). Bump this pin
+# to the merge commit when uuids#15 lands.
+requires "https://github.com/pragmagic/uuids.git#1a8111cc2b0e82867d19d584012e510560446d97"  # uuids
 # status-go is a nimble package (the status_go wrapper ships inside it, so the
 # former separate nim-status-go wrapper requirement is gone); its manifest
 # carries the nim-sds pin, which lands in this graph transitively. INTERIM
