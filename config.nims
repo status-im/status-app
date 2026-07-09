@@ -317,36 +317,30 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
     let qrcodegen = repo / "vendor/QR-Code-generator/c/libqrcodegen.a"
 
     # seaqt resolves Qt at compile time via gorge("pkg-config Qt6..."): the
-    # make path exports the wrapper env (prl-to-pc's qt-pkgconfig.mk);
-    # off-make paths get the identical environment injected here — putEnv in
-    # config.nims propagates to every compile-time gorge of this nim process.
-    # prl-to-pc is a pinned nimble dependency (issue 0014): the .pc trees are
-    # read from its package root (store copy, or the develop checkout via the
-    # overlay), and the wrapper is built into the repo-local scratch dir
-    # (make exports QT_PC_BUILD_DIR there) — the store copy is never written.
-    let pcWrapperDir = repo / ".prl-to-pc-build/.pcwrap"
-    let pcKit = qtPrefix.lastPathPart
-    let pcVer = qtPrefix.parentDir.lastPathPart
-    let prlRoot = prlToPcRoot()
-    let pcFileDir =
-      if prlRoot.len > 0: prlRoot / pcVer / pcKit / "lib/pkgconfig" else: ""
-    if getEnv("PKG_CONFIG_PATH").len == 0:
-      if prlRoot.len == 0:
-        statusEnvFail "prl-to-pc is not resolved yet (no prl_to_pc entry in" &
-          " nimble.paths).\nRun `make nimble-deps` (or `nim app status.nims`" &
-          " / `nimble build` — they do this for you)."
-      if not fileExists(pcWrapperDir / "pkg-config"):
-        statusEnvFail "the Qt pkg-config wrapper is missing (" &
-          pcWrapperDir / "pkg-config" & ").\nRun `make qt-pkgconfig` once — " &
-          "`nim app status.nims` and `nimble build` do this for you."
-      if not dirExists(pcFileDir):
-        statusEnvFail "no committed Qt .pc tree for this kit (" & pcFileDir &
-          ").\nAdd it from a prl-to-pc checkout (`nim develop status.nims" &
-          " prl-to-pc`, then `make qt-pkgconfig-generate`) and commit it" &
-          " upstream — store copies are read-only pinned content."
-      putEnv("PKG_CONFIG_PATH", pcFileDir)
-      putEnv("PKG_CONFIG_PREFIX_OVERRIDE", "Qt*=" & qtPrefix)
-      putEnv("PATH", pcWrapperDir & ":" & getEnv("PATH"))
+    # environment that makes that resolve the ACTIVE kit is prl-to-pc's to
+    # decide — kit layout AND the System/Generated probe (issue 0015). This
+    # file only REPLAYS the answer the driver cached, so nothing here can drift
+    # from upstream: no .pc path, no kit, no Qt version, and no assumption that
+    # a wrapper exists (System-mode kits ship usable .pc and get none).
+    # putEnv in config.nims propagates to every compile-time gorge of this nim
+    # process. Both composed variables keep the mk's prepend semantics, and
+    # both are idempotent: on the make path the included qt-pkgconfig.mk has
+    # already exported the same values (mobile/nim-test legs need it), and
+    # re-applying them must not stack duplicates.
+    for (name, val) in qtPkgConfigEnv(
+        qtPkgConfigKey(qmake, prlToPcRoot(), qtPrefix)):
+      case name
+      of "PKG_CONFIG_PATH":
+        let cur = getEnv("PKG_CONFIG_PATH")
+        if cur.len == 0: putEnv(name, val)
+        elif not cur.startsWith(val): putEnv(name, val & ":" & cur)
+      of "PKG_CONFIG_PREFIX_OVERRIDE", "PKG_CONFIG_ARCH":
+        putEnv(name, val)
+      of "QT_PC_PATH_PREPEND":
+        let cur = getEnv("PATH")
+        if not cur.startsWith(val & ":"): putEnv("PATH", val & ":" & cur)
+      else:
+        discard  # QT_PC_MODE / QT_PC_REASON / QT_PC_PREFIX: diagnostics only
 
     # App version defines (previously injected by make's recipe): derived so
     # every path agrees. DESKTOP_VERSION intentionally skips version.sh's
@@ -409,8 +403,8 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
       "Qt6Widgets Qt6Svg Qt6Multimedia Qt6WebView Qt6WebChannel")
     if seaqtRc != 0:
       statusEnvFail "pkg-config failed to resolve the Qt link libraries:\n" &
-        seaqtQtLibs & "\nIs the committed .pc tree present for this kit (" &
-        pcFileDir & ")?"
+        seaqtQtLibs & "\nPKG_CONFIG_PATH is " & getEnv("PKG_CONFIG_PATH") &
+        " (from prl-to-pc's `env`; see " & qtPcEnvCache & ")."
     switch("passL", seaqtQtLibs)
     switch("passL", "-L" & statusgoLibDir)
     switch("passL", "-lstatus")

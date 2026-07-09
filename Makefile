@@ -209,8 +209,6 @@ endif
 deps: | check-qt-dir deps-common bottles
 
 update: | check-qt-dir update-common
-# Build the pkg-config wrapper (and generate this kit's Qt .pc if missing)
-	+ "$(MAKE)" --no-print-directory qt-pkgconfig
 
 QML_DEBUG ?= false
 QML_DEBUG_PORT ?= 49152
@@ -245,15 +243,21 @@ ifneq ($(QT_MAJOR_VERSION),6)
 endif
 
 #-------- PKG_CONFIG wrapper for Qt's .pc files --------
-# prl-to-pc (qt-pkgconfig.mk + the committed Qt .pc trees + the wrapper/
-# generator sources) is a pinned nimble dependency (issue 0014): its mk is
-# included from the resolved package root — the vendor/prl-to-pc checkout
-# when nimble.overlay says it's developed, else the read-only store entry
-# named by the generated nimble.paths. Store copies must never be written:
-# the tool build is redirected to a repo-local scratch dir, and the
-# generator's regex/unicodedb deps come from OUR nimble.paths (the mk's
-# consumer-override knobs). config.nims derives the same root itself
-# (prlToPcRoot in status_env.nims) — keep the two derivations in sync.
+# prl-to-pc is a pinned nimble dependency (issue 0014). Since issue 0015 the
+# DESKTOP build no longer consumes it through make at all: the driver executes
+# the package's own `qt_pkgconfig.nims` (tools + a cached `env`), and
+# config.nims replays that cache. What survives here is the mk interface, for
+# the two make legs this iteration deliberately leaves alone — the mobile
+# builds and nim-test-run. They get the wrapper built and the pkg-config env
+# exported at parse time, exactly as before.
+#
+# The mk is included from the resolved package root: the vendor/prl-to-pc
+# checkout when nimble.overlay says it's developed, else the read-only store
+# entry named by the generated nimble.paths. Store copies must never be
+# written: the tool build is redirected to the same repo-local scratch dir the
+# driver uses, and the generator's regex/unicodedb deps come from OUR
+# nimble.paths (the mk's consumer-override knobs). status_env.nims derives the
+# same root itself (prlToPcRoot) — keep the two derivations in sync.
 QT_PC_BUILD_DIR := $(CURDIR)/.prl-to-pc-build/.pcwrap
 QT_PC_CONSUMER_PATHS := $(CURDIR)/nimble.paths
 PRL_TO_PC_DEVELOPED := $(shell grep -sqx prl-to-pc nimble.overlay 2>/dev/null && echo 1)
@@ -269,17 +273,14 @@ else
 # an included file with a remake rule makes GNU make build it and RE-EXECUTE
 # this Makefile, so the second parse resolves the store root and runs the
 # real include above. bootstrap.mk exists only to trigger that mechanism —
-# its one prerequisite is the nimble setup product.
+# its one prerequisite is the nimble setup product. The desktop build no
+# longer depends on the include, so there is nothing to stub out when the
+# resolution exists but carries no prl_to_pc entry: the mobile/nim-test legs
+# then fail on a missing `qt-pkgconfig` rule, and `make nimble-deps` fixes it.
 -include .prl-to-pc-build/bootstrap.mk
 .prl-to-pc-build/bootstrap.mk: nimble.paths
 	@mkdir -p $(@D)
 	@echo '# auto-generated re-exec trigger for the prl-to-pc include (see Makefile)' > $@
-# Reached only when nimble.paths exists yet carries no prl_to_pc entry (a
-# resolution predating the pin, or a failed setup): fail loudly instead of
-# "No rule to make target 'qt-pkgconfig'".
-qt-pkgconfig qt-pkgconfig-tools qt-pkgconfig-generate:
-	@echo "Makefile ERROR: the nimble resolution (nimble.paths) has no prl_to_pc entry." >&2; \
-	 echo "Run 'make nimble-deps'; if this persists, delete nimble.paths and re-run." >&2; exit 1
 endif
 # -----------------------------------------------------
 
@@ -880,16 +881,17 @@ STATUS_RC_FILE := status.rc
 compile_windows_resources:
 	windres $(STATUS_RC_FILE) -o status.o
 
+# The pkg-config wrapper and the environment seaqt's compile-time
+# gorge("pkg-config Qt6Core") needs are prepared by the driver before it calls
+# make (issue 0015): `nim app status.nims` / nimble's before-build hook run
+# prl-to-pc's `qt_pkgconfig.nims tools` and cache its `env`. A bare `make
+# nim_status_client` on a tree the driver never touched fails fast in
+# config.nims, naming the command to run.
 ifeq ($(mkspecs),win32)
  NIM_STATUS_CLIENT := bin/nim_status_client.exe
- # Build the pkg-config wrapper + ensure the committed Qt .pc tree (rules from the
- # prl-to-pc module) before compiling the nim client, so seaqt's compile-time
- # gorge("pkg-config Qt6Core") resolves. Order-only: their mtimes shouldn't force a relink.
- $(NIM_STATUS_CLIENT): | qt-pkgconfig $(WIN_IMPORT_LIBS)
+ $(NIM_STATUS_CLIENT): | $(WIN_IMPORT_LIBS)
 else
  NIM_STATUS_CLIENT := bin/nim_status_client
- # The pkg-config wrapper + committed .pc must exist before seaqt's compile-time gorge runs.
- $(NIM_STATUS_CLIENT): | qt-pkgconfig
 endif
 
 # Writing the QMAKE variable to a file to compare its value from the previous
@@ -969,7 +971,7 @@ endif
 # (issue 0013 phase B) — drives this, so `nimble build`/`nimble run` produce
 # the exact artifact set `make nim_status_client` would, stamp-gated the
 # same way (a no-op pass is seconds).
-client-deps: $(NIM_CLIENT_PRECLEAN) | statusq dotherside qt-pkgconfig check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps $(NIMBLE_SETUP_STAMP)
+client-deps: $(NIM_CLIENT_PRECLEAN) | statusq dotherside check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps $(NIMBLE_SETUP_STAMP)
 .PHONY: client-deps
 
 # Depends on libsds directly: platform cleanup can delete it while libstatus

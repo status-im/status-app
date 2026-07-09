@@ -385,19 +385,35 @@ include shim (`config.nims`) and the pkg-config-based Qt flag discovery
 (prl-to-pc, below) work unchanged from store paths. To hack on them:
 `nim develop status.nims seaqt` / `nim develop status.nims nimqml`.
 
-**prl-to-pc in the same graph:** the Qt pkg-config machinery —
-`qt-pkgconfig.mk`, the committed relocatable Qt `.pc` trees per kit, and the
-wrapper/generator sources — is the pinned dependency
-`https://github.com/status-im/prl-to-pc.git#v0.2.0` (the graph's first
-version-*tag* pin; tag pins resolve like any `#sha` special version). It is
-consumed as package-root *files*, not Nim modules: the Makefile includes
-`qt-pkgconfig.mk` from the resolved package root (store copy, or the
-`vendor/prl-to-pc` checkout while developed) and `config.nims` derives the
-same root for off-make builds. The store copy is read-only, so the
-pkg-config wrapper builds into the repo-local `.prl-to-pc-build/.pcwrap/`,
-and generating a *new* kit's `.pc` tree from a store copy is refused — add
-kits from a checkout (`nim develop status.nims prl-to-pc`, then
-`make qt-pkgconfig-generate`) and commit them upstream.
+**prl-to-pc in the same graph:** the Qt pkg-config machinery — the committed
+relocatable Qt `.pc` trees per kit, the wrapper/generator sources, and the two
+consumer interfaces `qt_pkgconfig.nims` and `qt-pkgconfig.mk` — is a pinned
+dependency (`https://github.com/status-im/prl-to-pc.git#v0.3.0`; tag pins
+resolve like any `#sha` special version). It is consumed as package-root
+*files*, not Nim modules.
+
+prl-to-pc decides which of two pkg-config modes the active Qt kit needs, by
+probing it: **System mode** when the kit ships usable `.pc` metadata of its own
+(nothing is built, no wrapper exists), **Generated mode** otherwise (Qt's
+`.prl`-only kits, and kits whose `.pc` carry a broken build-farm prefix) — then
+the committed relocatable tree plus the `pkg-config` wrapper that resolves its
+`@@QT_PREFIX@@` placeholder are used. The app never re-implements any of that:
+
+- the driver runs `nim e <root>/qt_pkgconfig.nims tools <buildDir> <paths>` and,
+  once per build, `… env`, caching the answer in
+  `.prl-to-pc-build/qt-pkgconfig.env` (keyed on the qmake path, the resolved
+  package root and the kit);
+- `config.nims` replays that cache — a build outside the driver (`make
+  nim_status_client` on a fresh tree) fails fast and names the command to run;
+- the root `Makefile` still `include`s `qt-pkgconfig.mk`, but only the mobile
+  legs and `nim-test-run` consume it. The desktop build has no `qt-pkgconfig`
+  make dependency.
+
+The store copy is read-only, so the tools build into the repo-local
+`.prl-to-pc-build/.pcwrap/`, and generating a *new* kit's `.pc` tree from a
+store copy is refused — add kits from a checkout (`nim develop status.nims
+prl-to-pc`, then `nim qtPkgconfigGenerate status.nims`) and commit them
+upstream.
 
 **What's still a git submodule:** only things that aren't pure Nim (C/C++):
 `DOtherSide`, `SortFilterProxyModel`, `QR-Code-generator`, `fcitx5-qt`,
