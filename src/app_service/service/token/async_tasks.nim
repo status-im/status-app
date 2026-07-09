@@ -44,6 +44,10 @@ type
 type
   AsyncRefreshTokensTaskArg = ref object of QObjectTaskArg
     requestId: int
+    # When false, the full token catalogue (~3MB) is NOT fetched and "allTokens" stays
+    # empty, so the main-thread slot keeps the existing cache and skips the heavy decode.
+    # Only init / token-lists-updated set this to true.
+    fetchAllTokens: bool
 
 proc asyncRefreshTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncRefreshTokensTaskArg](argEncoded)
@@ -68,16 +72,18 @@ proc asyncRefreshTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
   except Exception as e:
     output["error"] = %* fmt"Error refreshing tokens: {e.msg}"
 
-  # fetch all tokens for the group-key index
-  try:
-    var allTokensResponse: JsonNode
-    let allTokensErr = status_go_tokens.getAllTokens(allTokensResponse)
-    if allTokensErr.len > 0:
-      warn "asyncRefreshTokensTask: getAllTokens failed", err = allTokensErr
-    else:
-      output["allTokens"] = if allTokensResponse.isNil: newJArray() else: allTokensResponse
-  except Exception as e:
-    warn "asyncRefreshTokensTask: getAllTokens exception", err = e.msg
+  # fetch all tokens for the group-key index only when the catalogue may have changed.
+  # Skipping this on routine refreshes avoids shipping+decoding ~3MB on the main thread.
+  if arg.fetchAllTokens:
+    try:
+      var allTokensResponse: JsonNode
+      let allTokensErr = status_go_tokens.getAllTokens(allTokensResponse)
+      if allTokensErr.len > 0:
+        warn "asyncRefreshTokensTask: getAllTokens failed", err = allTokensErr
+      else:
+        output["allTokens"] = if allTokensResponse.isNil: newJArray() else: allTokensResponse
+    except Exception as e:
+      warn "asyncRefreshTokensTask: getAllTokens exception", err = e.msg
 
   arg.finish(output)
 
