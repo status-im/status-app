@@ -37,10 +37,14 @@
 #    `.statusgo-artifact-key`; issue 0010) and reused here for the client
 #    binary (`.status-client.key`, which absorbs make's `.qmake_previous`).
 #
-# cmake artifacts (StatusQ, DOtherSide, status-keycard-qt, the translations
-# project) are gated by NEITHER: they run their own configure+build every
-# time and cmake's incrementality IS the no-op path. That is also how they
-# behaved under make.
+# A cmake artifact's BUILD step is gated by neither: `cmake --build` runs every
+# time and cmake's own incrementality (including its check-build-system
+# re-configure) IS the no-op path, exactly as under make. Its CONFIGURE step is
+# gated by pattern 2 on the argument list — the one input cmake cannot see.
+#
+# `stale(outputs, [])` is the degenerate "the artifact exists ⇒ it is fresh"
+# gate (libstatus, whose freshness is owned by the key file next to the scratch
+# copy). It is pattern 1, not a third pattern; spell it that way.
 
 # --- staleness (pattern 1) ----------------------------------------------------
 
@@ -364,8 +368,9 @@ proc buildLibstatus() =
   ## nimscript task upstream, so this is the one sub-build the driver still
   ## delegates to a foreign Makefile — never to THIS repo's Makefile.
   ## In pinned mode the artifact's existence is the whole gate (the scratch
-  ## engine's key file already covers pin and flag changes).
-  if fileExists(statusgoLibFile()):
+  ## engine's key file already covers pin and flag changes; a develop-mode
+  ## checkout gets its FORCE arm from developModeForce()).
+  if not stale([statusgoLibFile()], []):
     return
   echo "\e[92mBuilding:\e[39m status-go"
   # protoc-gen-go is a `go generate` prerequisite of status-go's own build.
