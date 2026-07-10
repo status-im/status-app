@@ -305,9 +305,15 @@ make update
 Build and run the app:
 
 ```bash
-make run
+nim run status.nims
 ```
 🎉
+
+> Since issue 0017 the driver owns every Nim compile. `nim app status.nims`
+> builds; `nim run status.nims` builds if needed and launches;
+> `nim app status.nims --force` forces a full client rebuild (the old
+> `REBUILD_NIM=true`); `nim tests status.nims` runs the Nim suite.
+> `make run` / `make nim_status_client` / `make tests-nim-linux` are gone.
 
 ### Nim toolchain and Nim C libraries (nimble)
 
@@ -342,8 +348,8 @@ This runs automatically for the desktop build: the `nimble.paths` Make target
 whenever `nimble.lock` or one of the graph's manifests
 (`nim_status_client.nimble`; plus `vendor/status-go/statusgo.nimble` when a
 statusgo develop checkout exists) changes, so
-a plain `make run` /
-`make nim_status_client` keeps the resolution in sync without a manual step.
+a plain `nim run status.nims` /
+`nim app status.nims` keeps the resolution in sync without a manual step.
 Ad-hoc nimble commands (e.g. `nimble lock` after editing a manifest) need no
 store flags anymore. Mobile builds pick up the same
 `config.nims`/`nimble.paths` resolution
@@ -440,7 +446,7 @@ requires — they are silently ignored and the store copy wins. See
   pristine; no `vendor/nim-sds` checkout exists), a develop-linked local
   checkout is built in place.
 
-These run automatically as part of `make nim_status_client` / mobile builds.
+These run automatically as part of `nim app status.nims` / mobile builds.
 No sibling `../nim-sds` clone is needed or used.
 
 > **📝 Note:** if you have an old local run script that exports `CGO_LDFLAGS`
@@ -464,7 +470,7 @@ The following environment variables can be used to customize the build:
 - QML_DEBUG (true,false) - Enable qml debugger and profiler. Defaults to `false`
 - QML_DEBUG_PORT (number) - Configure the qml debugger port. Defaults to `49152`
 - QT_ARCH (string) - Configure the Qt architecture for macOS cross-compilation. Can be used to compile Intel builds on ARM64 OS. Defaults to `$(shell uname -m)`
-- REBUILD_NIM (true,false) - Force nim recompilation
+- REBUILD_NIM — **removed** (issue 0017). Use `nim app status.nims --force`.
 - REBUILD_UI (true,false) - Force qrc recompilation
 - STATUS_KEYCARD_QT_SOURCE_DIR (path) - Point the build system to a local status-keycard-qt folder. Defaults to empty (the pin in `cmake/status-keycard-qt/CMakeLists.txt` is fetched by CMake FetchContent); `nim develop status.nims status-keycard-qt` sets it to `vendor/status-keycard-qt`
 - VCINSTALLDIR (path) - Visual Studio compiler installation path. Defaults to `C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\`
@@ -478,14 +484,18 @@ To have nim code parsing, set the environment variables before opening your ID
 
 ### Data folder
 
-The developer builds (using `make run`) compiled with `make` will generate and use the `Status` data folder at the root of the source tree as the user folder.
+The developer builds (using `nim run status.nims`) will generate and use the `Status` data folder at the root of the source tree as the user folder.
 
 The release binaries (CI or `make pkg`) will use a user location to create and load user data.
 
-For testing purposes, you can use a custom data folder by passing the `-d` flag. For example:
+For testing purposes, you can use a custom data folder by passing the `-d` flag
+to the binary the driver built — the `run` task takes no application arguments
+(the old `make run ARGS=...`; see issue 0017's follow-ups):
 
 ```bash
-make run ARGS="-d=./dir"
+nim app status.nims
+./bin/StatusDev.app/Contents/MacOS/nim_status_client -d=./dir   # macOS
+./bin/nim_status_client -d=./dir                                # Linux
 ```
 
 ## 🐞 Troubleshooting
@@ -501,10 +511,10 @@ export PATH=$QTDIR/bin:$PATH
 
 ### Application doesn't build
 
-Get more log output:
+Get more log output — the driver streams the compiler's own output:
 
 ```bash
-make run V=1
+nim app status.nims
 ```
 
 ## 📬 Need Further Help?

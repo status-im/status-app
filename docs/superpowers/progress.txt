@@ -1560,3 +1560,79 @@ the source of truth.
 
 Post-fix: no-op 4.37/4.57/4.45/4.61/4.71 s; `nim app` rc=0; `nimble build`
 rc=0. Envelope holds (it improved).
+
+--- 2026-07-10 — issue 0017: the driver owns every Nim compile ---
+
+Landed: the client, the Nim test suite and the Windows launcher are driver
+tasks; the root Makefile invokes no `nim c` / `nim e` / $(ENV_SCRIPT) and
+carries no NIM_PARAMS. Packaging (pkg-macos/linux/windows, flatpak, AppImage)
+asks the driver for the binary it ships. `run`/`run-macos`/`run-linux`/
+`run-linux-gdb`/`run-windows`, `nim_status_client`, `nim_windows_launcher`,
+`nim-test-run/%`, `tests-nim-linux`, `.qmake_previous`, `.update.timestamp`,
+`NIM_SOURCES` and `REBUILD_NIM` are deleted. `--force` on app/run replaces
+REBUILD_NIM for humans; a developed clientRebuild Vendor forces the compile by
+itself. Windows client flags moved into config.nims (ported, unverified).
+
+ORDERING THAT MATTERED: the parity comparison ran BEFORE deleting
+`make nim_status_client`. Result is better than the 0013 floor: **0 differing
+bytes**, same LC_UUID, same `nm -a` (OSO stabs included). Both front doors now
+use nim 2.2.4, so the 0015-era compiler divergence is gone. FIRST attempt
+compared a driver binary left from the previous commit and __TEXT,__const
+differed — it decoded to the DESKTOP_VERSION/GIT_COMMIT strdefines. Neither
+make's NIM_SOURCES nor the driver's source key watches git HEAD (follow-up).
+
+`stale()` is now a portable CONTENT key (user adjudication). The walls-doc
+spelling — hash(readFile) per input in the nimscript VM — costs 13-16 s for
+this repo's 1762 inputs / 11.7 MB (VM hashes at ~1.1 us/byte). Instead: ONE
+`find -print0 | xargs -0 cksum | sort | cksum` per gate. 0.2 s (src) / 1.1 s
+(ui), same subprocess count as the mtime scan. A/B on the same (loaded) tree,
+`nim buildArtifacts` x5: NEW cpu 13.00-14.08 s vs OLD cpu 13.54-14.23 s — no
+regression. Wall times are meaningless right now: SIX ORPHANED qmlprofiler
+PROCESSES (ppid 1, 22h-2d old, ~65% CPU each) + 201 WebKit.WebContent had the
+machine at load 109. 0016's 4.4-5.6 s no-op is not reproducible today under
+EITHER engine (it measures 13-22 s wall for both). Re-measure when idle.
+
+Traps the content key introduced (both handled, both in the walls doc):
+- `forceTouch` FORCE arms silently die. nim-sds' arm touched a derived
+  nimble.paths; buildLibsds() now forces on `"sds" in readOverlay()`.
+- nimble.paths is no longer the setup stamp (`.status-setup.key` is), which
+  CLOSES the walls-doc applyOverlay trap: a hand-run `nimble setup` can no
+  longer make the next build skip resolution.
+New gitignored key files: .status-setup.key, .status-rcc.key, .libsds.key.
+
+NEW WALL: `make nim-test-run/<test>` NEVER worked on macOS. The recipe exports
+LD_LIBRARY_PATH (ignored by dyld) and config.nims' non-client arm bakes rpaths
+only for env vars that are set — NIMSDS_LIBDIR is not one, so the test binary
+died with `Library not loaded: @rpath/libsds.dylib`. Reproduced before deleting
+the target. The driver's `tests` task compiles and runs as two steps and hands
+the run the same library path launchHostApp gives the app. 8 suites / 59 [OK] /
+0 failed, 15:26.
+
+Verification (evidence in the issue): check-no-nim-compiles.sh green + negative
+control; parity 0 bytes; `nim tests` green; `nim windowsLauncher --compileOnly`
+emits Windows C (full link needs mingw -> ported, unverified); every deleted
+target reports "No rule to make target"; run-storybook*/run-statusq-* survive
+(other products, no nim, used by Jenkinsfile.tests-ui); --force rebuilds,
+touch-without-edit does not; rcc key flips on content not mtime; develop round
+trip with nimqml (clientRebuild) + sds: forced client every build, the checkout
+edit reached the compile (static echo probe), undevelop returned to the pins;
+`nim app` and `nimble build` both rc=0.
+
+NOT VERIFIED: `make pkg-macos` signed dmg — this machine has no `nix` (which
+supplies dmgbuild) and no MACOS_CODESIGN_IDENT. What IS proven: the dmg target's
+only client-producing step is `nim app status.nims`, RESOURCES_LAYOUT=-d:production
+relinks by key, and the .app's executable has the same __TEXT,__text md5 as
+bin/nim_status_client (macdeployqt only strips __LINKEDIT: 15.9 MB -> 2.5 MB).
+Windows and Linux legs: ported/re-pointed, unverified. Jenkinsfile.tests-nim and
+Jenkinsfile.flatpak were edited because 0017 deleted the targets they invoked
+(CI itself is 0019).
+
+Carry-overs (recorded in the issue, NOT implemented):
+1. client is not rebuilt when git HEAD moves (DESKTOP_VERSION/GIT_COMMIT).
+2. prepareQtPkgconfig() runs prl-to-pc's `tools` (a nim e, 1.95 s) every build.
+3. no-op is now dominated by cmake --build no-ops (StatusQ 4.3 s, automoc).
+4. REBUILD_UI has no driver equivalent.
+5. first build after this lands re-runs setup/rcc/libsds once (new key files).
+6. `make all` is the last root-Makefile target that builds the app.
+7. `nim run status.nims` forwards no app ARGS (make run ARGS= did).
+8. `nim tests` costs 15 min (per-test nimcache + -d:lto).
