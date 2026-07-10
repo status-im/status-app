@@ -21,6 +21,12 @@ method cleanJoinEditCommunityData*(self: AccessInterface) {.base.} =
 method onActivated*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method setCuratedCommunitiesNetworkExpensive*(self: AccessInterface, value: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method requestCuratedCommunitiesLoad*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method communityDataLoaded*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 

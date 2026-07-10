@@ -23,6 +23,7 @@ QtObject:
       curatedCommunitiesModel: CuratedCommunityModel
       curatedCommunitiesModelVariant: QVariant
       curatedCommunitiesLoading: bool
+      curatedCommunitiesLoaded: bool
       tokenListLoading: bool
       tokenListModel: TokenListModel
       tokenListModelVariant: QVariant
@@ -76,6 +77,7 @@ QtObject:
     result.curatedCommunitiesModel = newCuratedCommunityModel()
     result.curatedCommunitiesModelVariant = newQVariant(result.curatedCommunitiesModel)
     result.curatedCommunitiesLoading = false
+    result.curatedCommunitiesLoaded = false
     result.discordFileListModel = newDiscordFileListModel()
     result.discordFileListModelVariant = newQVariant(result.discordFileListModel)
     result.discordCategoriesModel = newDiscordCategoriesModel()
@@ -104,6 +106,12 @@ QtObject:
 
   proc load*(self: View) =
     self.delegate.viewDidLoad()
+
+  proc setCuratedCommunitiesNetworkExpensive*(self: View, value: bool) {.slot.} =
+    self.delegate.setCuratedCommunitiesNetworkExpensive(value)
+
+  proc requestCuratedCommunitiesLoad*(self: View) {.slot.} =
+    self.delegate.requestCuratedCommunitiesLoad()
 
   proc cleanJoinEditCommunityData*(self: View) {.slot.} =
     self.delegate.cleanJoinEditCommunityData()
@@ -374,6 +382,20 @@ QtObject:
   QtProperty[bool] curatedCommunitiesLoading:
     read = getCuratedCommunitiesLoading
     notify = curatedCommunitiesLoadingChanged
+
+  proc curatedCommunitiesLoadedChanged*(self: View) {.signal.}
+
+  proc setCuratedCommunitiesLoaded*(self: View, flag: bool) =
+    if (self.curatedCommunitiesLoaded == flag): return
+    self.curatedCommunitiesLoaded = flag
+    self.curatedCommunitiesLoadedChanged()
+
+  proc getCuratedCommunitiesLoaded*(self: View): bool {.slot.} =
+    return self.curatedCommunitiesLoaded
+
+  QtProperty[bool] curatedCommunitiesLoaded:
+    read = getCuratedCommunitiesLoaded
+    notify = curatedCommunitiesLoadedChanged
 
   proc discordFileListModel*(self: View): DiscordFileListModel =
     result = self.discordFileListModel

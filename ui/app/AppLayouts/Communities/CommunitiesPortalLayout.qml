@@ -49,6 +49,10 @@ StatusSectionLayout {
 
         // Read-only flag that turns true when the component enters a “compact” layout automatically on resize.
         readonly property bool compactMode: root.width < 600
+        readonly property bool curatedCommunitiesLoading: root.communitiesStore.curatedCommunitiesLoading
+        readonly property bool curatedCommunitiesBlockedByNetwork: root.communitiesStore.isExpensiveNetwork
+                                                                && !root.communitiesStore.curatedCommunitiesLoaded
+                                                                && !d.curatedCommunitiesLoading
     }
 
     SortFilterProxyModel {
@@ -83,6 +87,16 @@ StatusSectionLayout {
                 value: false
             }
         ]
+    }
+
+    Connections {
+        target: root.communitiesStore
+
+        function onIsExpensiveNetworkChanged() {
+            if (!root.communitiesStore.isExpensiveNetwork && !root.communitiesStore.curatedCommunitiesLoaded) {
+                root.communitiesStore.requestCuratedCommunitiesLoad()
+            }
+        }
     }
 
     centerPanel: Item {
@@ -146,8 +160,68 @@ StatusSectionLayout {
                 }
             }
 
+            ColumnLayout {
+                visible: d.curatedCommunitiesBlockedByNetwork
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: Theme.bigPadding
+
+                Item {
+                    Layout.fillHeight: true
+                }
+
+                StatusBaseText {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredWidth: root.width
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    text: qsTr("You are currently on a network that is considered expensive.\nLoading curated communities can be data heavy, so it is disabled by default.")
+                    color: Theme.palette.baseColor1
+                }
+
+                StatusButton {
+                    Layout.alignment: Qt.AlignHCenter
+                    text: qsTr("Load curated communities anyway")
+                    type: StatusBaseButton.Type.Primary
+                    onClicked: root.communitiesStore.requestCuratedCommunitiesLoad()
+                }
+
+                Item {
+                    Layout.fillHeight: true
+                }
+            }
+
+            ColumnLayout {
+                visible: d.curatedCommunitiesLoading
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: Theme.padding
+
+                Item {
+                    Layout.fillHeight: true
+                }
+
+                StatusLoadingIndicator {
+                    Layout.alignment: Qt.AlignHCenter
+                }
+
+                StatusBaseText {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredWidth: root.width
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    text: qsTr("Loading curated communities...")
+                    color: Theme.palette.baseColor1
+                }
+
+                Item {
+                    Layout.fillHeight: true
+                }
+            }
+
             TagsRow {
                 id: communityTags
+                visible: !d.curatedCommunitiesBlockedByNetwork && !d.curatedCommunitiesLoading
                 Layout.fillWidth: true
                 Layout.rightMargin: Theme.xlPadding
 
@@ -156,6 +230,7 @@ StatusSectionLayout {
 
             CommunitiesGridView {
                 id: communitiesGrid
+                visible: !d.curatedCommunitiesBlockedByNetwork && !d.curatedCommunitiesLoading
 
                 Layout.fillWidth: true
                 Layout.fillHeight: true

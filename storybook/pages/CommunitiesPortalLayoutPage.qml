@@ -46,6 +46,9 @@ SplitView {
             collectiblesModel: CollectiblesModel {}
             communitiesStore: CommunitiesStore {
                 readonly property string communityTags: ModelsData.communityTags
+                property bool isExpensiveNetwork: ctrlExpensiveNetwork.checked
+                property bool curatedCommunitiesLoaded: false
+                property bool curatedCommunitiesLoading: ctrlCuratedCommunitiesLoading.checked
 
                 readonly property var curatedCommunitiesModel: SortFilterProxyModel {
                     sourceModel: CommunitiesPortalDummyModel { id: mockedModel }
@@ -58,6 +61,11 @@ SplitView {
 
                 function navigateToCommunity() {
                     logs.logEvent("CommunitiesStore::navigateToCommunity", ["communityId"], arguments)
+                }
+
+                function requestCuratedCommunitiesLoad() {
+                    curatedCommunitiesLoaded = true
+                    logs.logEvent("CommunitiesStore::requestCuratedCommunitiesLoad", [], arguments)
                 }
             }
 
@@ -94,6 +102,18 @@ SplitView {
                     id: ctrlCommunityCreationEnabled
                     text: "Community creation enabled"
                     checked: true
+                }
+
+                Switch {
+                    id: ctrlExpensiveNetwork
+                    text: "Expensive network"
+                    checked: false
+                }
+
+                Switch {
+                    id: ctrlCuratedCommunitiesLoading
+                    text: "Curated communities loading"
+                    checked: false
                 }
             }
         }

@@ -8,9 +8,11 @@ QtObject {
 
     property var communitiesModuleInst: communitiesModule
     property var mainModuleInst: mainModule
+    property bool isExpensiveNetwork: false
 
     readonly property var curatedCommunitiesModel: root.communitiesModuleInst.curatedCommunities
     readonly property bool curatedCommunitiesLoading: root.communitiesModuleInst.curatedCommunitiesLoading
+    readonly property bool curatedCommunitiesLoaded: root.communitiesModuleInst.curatedCommunitiesLoaded
 
     property var discordFileList: root.communitiesModuleInst.discordFileList
     property var discordCategoriesModel: root.communitiesModuleInst.discordCategories
@@ -48,6 +50,18 @@ QtObject {
     signal importingCommunityStateChanged(string communityId, int state, string errorMsg)
 
     signal communityInfoRequestCompleted(string communityId, string errorMsg)
+
+    function syncCuratedCommunitiesNetworkCostState() {
+        root.communitiesModuleInst.setCuratedCommunitiesNetworkExpensive(root.isExpensiveNetwork)
+    }
+
+    function requestCuratedCommunitiesLoad() {
+        root.communitiesModuleInst.requestCuratedCommunitiesLoad()
+    }
+
+    Component.onCompleted: syncCuratedCommunitiesNetworkCostState()
+
+    onIsExpensiveNetworkChanged: syncCuratedCommunitiesNetworkCostState()
 
     readonly property Connections _signingRequestConnections: Connections {
         target: root.communitiesModuleInst

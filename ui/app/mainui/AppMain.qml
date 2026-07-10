@@ -126,7 +126,9 @@ Item {
     property SharedStores.CommunityTokensStore communityTokensStore: SharedStores.CommunityTokensStore {
         currencyStore: appMain.currencyStore
     }
-    property CommunitiesStore communitiesStore: CommunitiesStore {}
+    property CommunitiesStore communitiesStore: CommunitiesStore {
+        isExpensiveNetwork: d.networkChecker.isExpensive
+    }
     // Main wallet root store. It is currently a singleton, but should be refactored to be an instance
     // created only by AppStores.RootStore rootStore. Until then, access it through this single property.
     readonly property WalletStores.RootStore walletRootStore: WalletStores.RootStore

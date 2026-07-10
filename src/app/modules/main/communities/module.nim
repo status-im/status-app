@@ -80,7 +80,7 @@ type
     viewVariant: QVariant
     moduleLoaded: bool
     events: EventEmitter
-    curatedCommunitiesLoaded: bool
+    curatedCommunitiesNetworkExpensive: bool
     communityTokensModule: community_tokens_module.AccessInterface
     checkingPermissionToJoinInProgress: bool
     checkingAllChannelPermissionsInProgress: bool
@@ -123,7 +123,7 @@ proc newModule*(
   communityTokensService, transactionService, networksService, communityService)
   result.moduleLoaded = false
   result.events = events
-  result.curatedCommunitiesLoaded = false
+  result.curatedCommunitiesNetworkExpensive = false
   result.setCheckingPermissionToJoinInProgress(false)
   result.checkingAllChannelPermissionsInProgress = false
 
@@ -155,13 +155,23 @@ method communityDataLoaded*(self: Module) =
   self.setAllCommunities(self.controller.getAllCommunities())
   self.buildTokensAndCollectiblesFromAllCommunities()
 
-method onActivated*(self: Module) =
-  if self.curatedCommunitiesLoaded:
+method setCuratedCommunitiesNetworkExpensive*(self: Module, value: bool) =
+  self.curatedCommunitiesNetworkExpensive = value
+
+method requestCuratedCommunitiesLoad*(self: Module) =
+  if self.view.getCuratedCommunitiesLoaded() or self.view.getCuratedCommunitiesLoading():
     return
   self.controller.asyncLoadCuratedCommunities()
 
+method onActivated*(self: Module) =
+  if self.view.getCuratedCommunitiesLoaded():
+    return
+  if self.curatedCommunitiesNetworkExpensive:
+    return
+  self.requestCuratedCommunitiesLoad()
+
 method curatedCommunitiesLoaded*(self: Module, curatedCommunities: seq[CommunityDto]) =
-  self.curatedCommunitiesLoaded = true
+  self.view.setCuratedCommunitiesLoaded(true)
   self.setCuratedCommunities(curatedCommunities)
   self.view.setCuratedCommunitiesLoading(false)
 
@@ -170,7 +180,7 @@ method curatedCommunitiesLoading*(self: Module) =
 
 method curatedCommunitiesLoadingFailed*(self: Module) =
   # TODO we probably want to show an error in the UI later
-  self.curatedCommunitiesLoaded = true
+  self.view.setCuratedCommunitiesLoaded(true)
   self.view.setCuratedCommunitiesLoading(false)
 
 method getCommunityItem(self: Module, community: CommunityDto): SectionItem =

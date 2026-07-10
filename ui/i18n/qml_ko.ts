@@ -3388,6 +3388,19 @@ file format</source>
         <translation>커뮤니티 발견하기</translation>
     </message>
     <message>
+        <source>You are currently on a network that is considered expensive.
+Loading curated communities can be data heavy, so it is disabled by default.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load curated communities anyway</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading curated communities...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Join Community</source>
         <translation>커뮤니티 참여</translation>
     </message>

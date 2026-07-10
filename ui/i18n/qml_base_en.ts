@@ -3397,6 +3397,19 @@ file format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>You are currently on a network that is considered expensive.
+Loading curated communities can be data heavy, so it is disabled by default.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load curated communities anyway</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading curated communities...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Join Community</source>
         <translation type="unfinished"></translation>
     </message>
