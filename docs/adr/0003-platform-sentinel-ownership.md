@@ -16,6 +16,12 @@ This ADR combines two platform-target-specific concerns that compose without ove
 Several third-party libraries built from `vendor/` write to **shared output paths** that are reused across desktop macOS, iOS, and Android builds in the same working tree:
 
 - `vendor/QR-Code-generator/c/` (object files and `libqrcodegen.a` in the source tree; cleaned via `make clean`)
+  — **amended 2026-07-10 (issue 0016):** the desktop client no longer builds this
+  library; its Nim wrapper `{.compile.}`s the C source into the consuming compile's
+  own nimcache, and nim re-runs that C compile whenever its command hash changes.
+  The sentinel's qrcodegen entry and the root `$(QRCODEGEN)` target are deleted.
+  Only `mobile/Makefile` still builds `libqrcodegen.a`, and its `buildQRCodeGen.sh`
+  already `make clean`s the shared source tree before every build.
 - `vendor/nim-sds/build/` (whole directory: `libsds.*` plus nim-sds nimcache)
 - `vendor/status-go/build/` (whole directory: `libstatus.*`, generated bindings, etc.)
 - `nimcache/` (flat mobile nim cache at repo root plus desktop subdirs under `release/` / `debug/`)
@@ -40,7 +46,7 @@ Implement a **single umbrella platform sentinel in status-desktop**:
 1. Caller Makefiles define a `.PHONY` target `platform-cleanup` that runs `scripts/platform_pre_build_cleanup.sh` with `PLATFORM_TARGET`:
    - Root: `$(host_os)-$(QT_ARCH)` (e.g. `darwin-arm64`)
    - Mobile: `$(OS)-$(ARCH)` (e.g. `ios-arm64`, `android-arm64`)
-2. Shared-artifact build targets (`$(NIMSDS_LIBFILE)`, `$(STATUSGO)`, `$(QRCODEGEN)` in root; `$(STATUS_GO_LIB)`, `$(QRCODEGEN_LIB)` in mobile) list `platform-cleanup` as an **order-only** prerequisite (`| platform-cleanup`), so cleanup runs before those targets are built without forcing them (or their dependents) to relink every time.
+2. Shared-artifact build targets (`$(NIMSDS_LIBFILE)`, `$(STATUSGO)` in root — since 0016 the root sentinel is invoked by the driver, not by make; `$(STATUS_GO_LIB)`, `$(QRCODEGEN_LIB)` in mobile) list `platform-cleanup` as an **order-only** prerequisite (`| platform-cleanup`), so cleanup runs before those targets are built without forcing them (or their dependents) to relink every time.
 3. The script compares the key to `.platform-target` at the repo root. On mismatch, **delete** shared artifacts (registry above) via coarse directory-level cleanup and write the new key.
 4. Remove the libsds-specific sentinel from `vendor/status-go/Makefile`. Keep the independent iOS C++ CGO fix (`CXX` / `CGO_CXXFLAGS` for libutp). The separate iOS duplicate-Nim-runtime collision is handled by [Part 2](#part-2-ios-libsds-nim-runtime-symbol-localization), not by this sentinel.
 5. Make `$(STATUS_GO_LIB)` in `mobile/Makefile` depend on a `FORCE` empty target so it **always** delegates to status-go's PHONY sub-make (which owns the incremental-rebuild decision per #18377). The recipe copies `libstatus`/`libsds` into `mobile/lib` with `cmp -s … || cp`, so dependents (`stub`, `service`, the app) only relink when the output actually changed. status-desktop therefore does not track status-go/nim-sds sources.
