@@ -22,7 +22,7 @@ Issue [#18377](https://github.com/status-im/status-desktop/issues/18377) moved t
 A single umbrella platform sentinel in status-desktop:
 
 1. Caller Makefiles define a `.PHONY` target `platform-cleanup` running `scripts/platform_pre_build_cleanup.sh` with `PLATFORM_TARGET` (root: `$(host_os)-$(QT_ARCH)`; mobile: `$(OS)-$(ARCH)`).
-2. Shared-artifact build targets list `platform-cleanup` as an **order-only** prerequisite (`| platform-cleanup`), so cleanup runs before them without forcing relinks.
+2. Shared-artifact build targets list `platform-cleanup` as an **order-only** prerequisite (`| platform-cleanup`), so cleanup runs before them without forcing relinks. Since issue 0016 the root sentinel is invoked by the build driver (`status.nims`), not by make; the mobile targets (`$(STATUS_GO_LIB)`, `$(QRCODEGEN_LIB)`) keep the make prerequisite.
 3. The script compares the key to `.platform-target`; on mismatch it deletes the shared paths in [Maintenance](#maintenance) (coarse, directory-level) and writes the new key.
 4. `$(STATUS_GO_LIB)` in `mobile/Makefile` depends on a `FORCE` target so it **always** delegates to status-go's sub-make, then copies into `mobile/lib` with `cmp -s … || cp` — dependents relink only when the library content actually changed.
 
@@ -42,7 +42,7 @@ Currently cleaned on platform switch:
 
 | Path | Action |
 |------|--------|
-| `vendor/QR-Code-generator/c/` | `make clean` (artifacts in the source tree, not `build/`) |
+| `vendor/QR-Code-generator/c/` | `make clean` (artifacts in the source tree, not `build/`) — **amended 2026-07-10 (issue 0016):** the desktop client no longer builds this library; its Nim wrapper `{.compile.}`s the C source into the consuming compile's own nimcache, and nim re-runs that C compile whenever its command hash changes. The sentinel's qrcodegen entry and the root `$(QRCODEGEN)` target are deleted. Only `mobile/Makefile` still builds `libqrcodegen.a`, and its `buildQRCodeGen.sh` already `make clean`s the shared source tree before every build. |
 | `vendor/nim-sds/build/` | `rm -rf` |
 | `vendor/status-go/build/` | `rm -rf` (whole tree) |
 

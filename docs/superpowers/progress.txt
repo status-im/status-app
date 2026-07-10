@@ -1396,3 +1396,104 @@ NEW GOTCHA (cost the orchestrator a false alarm — record it):
   lists "/nimblemeta.json" inside its own `files` array. Byte-identity checks
   on store entries MUST exclude nimblemeta.json; otherwise a pin bump looks
   like content drift.
+
+=== 2026-07-10 — Issue 0016: buildArtifacts goes native — DONE (pass: true) ===
+
+Picked up: docs/superpowers/issues/0016-build-artifacts-native.md
+(PRD row 0016; brief's settled decisions: stale() is DRIVER-PRIVATE, the
+issue's "What to build" + the PRD's Implementation Decisions are approved)
+
+Commits: f19b0479d3, a7017dbfd5, 0f913789c9 (+ this doc slice)
+
+What was built:
+- status_artifacts.nims (new include, driver-side ONLY — never config.nims,
+  which runs on every nim invocation incl. nimsuggest and must never gate on
+  the filesystem). One proc per artifact; buildArtifacts is an ordered call
+  list; the nimble before-build hook contract is unchanged.
+- stale(outputs, inputs): make semantics, ONE subprocess per call — inputs
+  stream through a heredoc into the shell's own `-nt` (no exec per file, no
+  ARG_MAX). Prefactor for 0017's client compile.
+- Exactly two gating patterns, both documented in the driver header: stale()
+  and the key file. Audit table in the issue's verification record.
+- ONE generic cmake proc for StatusQ / DOtherSide / status-keycard-qt /
+  translations. `cmake --build` always runs (its check-build-system rule IS
+  cmake re-configuring itself); the CONFIGURE is key-file gated on its
+  argument list — the one input cmake cannot see. The 0011
+  FETCHCONTENT_SOURCE_DIR_<NAME> pair contract survives verbatim and a
+  develop flip now changes the KEY instead of relying on the artifact being
+  deleted (strictly safer than the make rule it replaces).
+- qrcodegen: {.compile.} in the Nim wrapper. Static-lib target, --passL (x3
+  sites), `make clean` recursion and the platform-sentinel entry all deleted;
+  ADR 0003 amended.
+- Bootstrap: targeted submodule init (DOtherSide, QR-Code-generator,
+  SortFilterProxyModel) + macOS brew bottles.
+- Setup stamp RELOCATED: nimble setup gated on nimble.paths vs
+  lock/manifests/overlay; applyOverlayNow() runs inside the same gate (the
+  ordering wall from 0015 is preserved by construction).
+- compileTranslations / updateTranslations are driver tasks. REBUILD_NIM →
+  developModeForce(). `run` assembles+launches natively. client-deps deleted.
+
+Empirics that shaped it:
+- StatusQ's cmake CONFIGURE rewrites ui/StatusQ/build/Qt<ver>/
+  TestConfig.generated.qrc EVERY run. make's UI_SOURCES glob covers ui/**,
+  so resources.rcc was permanently stale. Fix: scan only what
+  ui/generate-rcc.go itself walks (it prunes StatusQ/vendor/tests/
+  node_modules). Also added *.qm to the pattern, since translations left the
+  artifact set and nothing else would notice a compileTranslations run.
+- Running the three cmake configures unconditionally (the issue's literal
+  wording) costs 5.26+0.57+1.13 s → no-op 14.1–17.7 s, blowing criterion 2.
+  Key-file gating the configure gets it to 4.6–5.6 s (baseline was 8.1 s).
+
+NEW WALL (the honest one): **"no make process in the tree" is not achievable
+and its stated test does not prove it.** cmake's default generator on
+macOS/Linux is Unix Makefiles → `cmake --build` execs CMAKE_MAKE_PROGRAM, an
+ABSOLUTE /usr/bin/make baked into CMakeCache at configure time. 31 make
+processes sampled under a green `nim app`. Removing make from PATH proves
+nothing: cmake finds /usr/bin/make outside PATH at configure time too
+(verified on a throwaway project). The second source is status-go's own
+Makefile: `statusgo-shared-library` exists ONLY there — statusgo.nims exposes
+libstatus (STATIC) + libsds*, not the shared flavor. What IS true and
+verified: no target of THIS repo's Makefile is invoked by the host dev flow,
+and both front doors are green with make stripped from PATH. Recorded in the
+walls doc; -G Ninja is the fix if the literal claim is wanted.
+
+Verification (all 13 criteria; record in the issue): make-off-PATH build
+rc=0; no-op 4.61–5.57 s over 10 runs; wiped store (NIMBLE_DIR scratch, 0
+pkgs2 entries) + all artifacts dropped → 9:04.14, 46 entries materialized,
+bare-exec launch OK; nm shows qrcodegen_* T-symbols and 0 libqrcodegen on the
+link line; rcc skipped/regenerated correctly (incl. after compileTranslations);
+submodule deinit → Bootstrapping → rc=0 1:14.9; setup skipped on unchanged
+inputs, re-run on a touched manifest and on an overlay flip; compileTranslations
+is a task and does not run in a build; develop round trip proven for BOTH
+flavors (status-keycard-qt: key flip + checkout edit compiled + undevelop;
+prl-to-pc: re-solve, 1 overlay entry, env cache re-keyed, undevelop back to
+pkgs2/prl_to_pc-0.3.0-efc5e3d1…); sentinel desktop→iOS (3:45, Status.app,
+0 duplicate symbols)→desktop (1:32, artifacts rebuilt, launch OK);
+`make client-deps` → "No rule to make target"; nimble build rc=0 2:17.
+
+Gotchas for next sessions:
+- {.compile.} + a `-lqrcodegen` on the same link is safe: the linker never
+  pulls an archive member whose symbols are already defined (iOS leg proved
+  it). Mobile keeps its own libqrcodegen.a for now.
+- The client is NOT relinked when a vendor artifact changes (order-only
+  semantics, same as make). A libstatus rebuild leaves the old binary; it
+  still loads the new dylib via @rpath.
+- stale() compares SECONDS (shell `-nt`), make compares nanoseconds.
+- On Windows stale() is always true → every gated artifact rebuilds. Ported,
+  unverified. 0017 will want the walls-doc content-key variant anyway.
+
+Carry-overs / follow-ups (recorded in the issue, NOT implemented):
+1. Fresh clones lose ui/i18n/*.qm → resources.rcc has no catalogs until
+   `nim compileTranslations status.nims` runs. Direct consequence of the
+   approved "translations are not part of the client's artifact set". Decide:
+   commit the .qm, run the task in bootstrap(), or accept.
+2. -G Ninja would make criterion 1 literally true.
+3. statusgo-shared-library wants a nimscript task (fold into 0018's
+   status-go-deps move).
+4. stale() Windows content-key variant.
+5. run-* make targets are now dead (0017 deletes them).
+6. .qmake_previous superseded by .status-client.key (dies with 0017).
+
+Standing items unchanged: NBS deletion (0018), CI migration (0019), seaqt
+qt-6.11 evaluation, 0006 (upstream-gated), status-go nimble-phase1-pin →
+develop PR, 0013 bootstrap-ordering follow-up.
