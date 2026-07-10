@@ -115,8 +115,8 @@ proc parseTarget(): Target =
 
 proc rejectExtras(t: Target, taskName: string, allowForce = false) =
   if t.force and not allowForce:
-    fail "'" & taskName & "' does not accept --force (only 'app', 'run' and" &
-      " 'buildArtifacts' do — it forces the client compile)."
+    fail "'" & taskName & "' does not accept --force (only 'app' and 'run'" &
+      " do — it forces the client compile)."
   if t.extra.len > 0:
     fail "unrecognized arguments for '" & taskName & "': " &
       t.extra.join(" ") & "\nOnly --os:<ios|android>, --cpu:<cpu>" &
@@ -351,15 +351,38 @@ proc prepareQtPkgconfig() =
 include "status_artifacts.nims"
 
 proc launchHostApp(args: string) =
-  ## make's run-macos / run-linux, minus the client build (the driver owns it).
-  ## The binary bakes every @rpath it needs (issue 0013), so the library paths
-  ## below are belt-and-braces for a partially relinked tree.
+  ## make's run-macos / run-linux / run-windows, minus the client build (the
+  ## driver owns it). The binary bakes every @rpath it needs (issue 0013), so
+  ## the library paths below are belt-and-braces for a partially relinked tree.
   let bin = clientBinary()
   var libPath = ""
   for d in [qtProp("QT_INSTALL_LIBS"), nimsdsLibDir(), statusgoLibDir(),
-            keycardBuildDir(), thisDir() / "bin/StatusQ", statusqBuildPath() / "lib"]:
+            keycardLibDir(), thisDir() / "bin/StatusQ", statusqBuildPath() / "lib"]:
     libPath &= d & ":"
-  if hostOS == "macosx":
+  if hostOS == "windows":
+    # PORTED from the deleted `run-windows` recipe, UNVERIFIED (no Windows
+    # host; issue 0017 review, I2). Windows has no rpath: the loader searches
+    # the .exe's own directory, so every shared library the client links must be
+    # STAGED next to it before it can start.
+    echo "\e[92mStaging:\e[39m bin/ (Windows has no rpath)"
+    let binDir = thisDir() / "bin"
+    exec "cp -f -R " & quoteShell(statusqBuildPath() / "bin" / buildType()) & "/* " &
+      quoteShell(binDir) & "/"
+    for f in [dotherSideLibDir(qtProp("QT_VERSION")) / "DOtherSide.dll",
+              statusgoLibDir() / "libstatus.dll",
+              keycardLibDir() / "status-keycard-qt.dll",
+              nimsdsLibDir() / "libsds.dll"]:
+      exec "cp -f " & quoteShell(f) & " " & quoteShell(binDir) & "/"
+    # The MSVC/UCRT runtime the clang-cl-built client needs, from the system
+    # (msys2 mounts C:\ at /c). `api-ms-win-crt-*` is a glob: no quoteShell.
+    for f in ["/c/Windows/System32/ucrtbase.dll",
+              "/c/Windows/System32/vcruntime140.dll",
+              "/c/Windows/System32/vcruntime140_1.dll",
+              "/c/Windows/System32/downlevel/api-ms-win-crt-*.dll"]:
+      exec "cp -f " & f & " " & quoteShell(binDir) & "/"
+    echo "\e[92mRunning:\e[39m bin/nim_status_client.exe"
+    exec "cd " & quoteShell(binDir) & " && ./nim_status_client.exe " & args
+  elif hostOS == "macosx":
     let contents = thisDir() / "bin/StatusDev.app/Contents"
     mkDir contents / "MacOS"
     mkDir contents / "Resources"
@@ -392,18 +415,21 @@ task app, "Build the Status dev build: host by default, --os:ios / --os:android 
     runMake "mobile-build", (if force: " REBUILD_NIM=true" else: "")
   else:
     validateHost(t)
-    buildHostArtifacts(force)
+    buildHostArtifacts()
     buildClient(force)
 
 task buildArtifacts, "Build every artifact the client links/loads except the client compile itself (internal: nimble's before-build hook — issue 0013)":
   let t = parseTarget()
-  rejectExtras(t, "buildArtifacts", allowForce = true)
+  # --force forces the CLIENT compile, and this task never compiles the client
+  # (nimble's own bin compile follows this hook). Accepting it silently was a
+  # lie: nothing here can honor it (issue 0017 review, M2).
+  rejectExtras(t, "buildArtifacts")
   if t.os != "host":
     fail "buildArtifacts is host-only (nimble build/run is the host front" &
       " door; mobile builds go through `nim app status.nims --os:...`)."
   validateHost(t)
-  discard t.force  # accepted for symmetry with `app`; no client compile here
-  buildHostArtifacts(applyDevelopModeArms())
+  discard applyDevelopModeArms()  # side effects: divergence guard + FORCE arms
+  buildHostArtifacts()
 
 task run, "Build if needed and launch the host dev build (StatusDev.app on macOS); --force recompiles the client":
   let t = parseTarget()
@@ -413,7 +439,7 @@ task run, "Build if needed and launch the host dev build (StatusDev.app on macOS
       " `make mobile-run` (a driver mobile run may come with issue 0009+)."
   validateHost(t)
   let force = applyDevelopModeArms() or t.force
-  buildHostArtifacts(force)
+  buildHostArtifacts()
   buildClient(force)
   launchHostApp("")
 
@@ -429,21 +455,21 @@ task tests, "Run the Nim test suite (test/nim/*.nim); pass a test name to run on
   let t = Target(os: "host")
   validateHost(t)
   discard applyDevelopModeArms()
-  bootstrap()
-  nimbleSetupIfStale()
-  prepareQtPkgconfig()
-  exportBuildEnv()
-  platformCleanup()
-  buildStatusgo()
-  buildDOtherSide()
+  prepareHostBuild()   # shared with buildHostArtifacts (issue 0017 review, M7)
+  buildDOtherSide()    # the suite links libDOtherSideStatic.a
   runNimTests(only)
 
 task windowsLauncher, "Build bin/nim_windows_launcher.exe for `make pkg-windows` (--compileOnly stops before the link; issue 0017)":
+  # The task parses its own argv and hands the VALUE down, exactly like
+  # `tests`/`app` do — a builder never re-reads the command line.
+  var compileOnly = false
   for p in taskArgv():
-    if p != "--compileOnly":
+    if p == "--compileOnly":
+      compileOnly = true
+    else:
       fail "unrecognized argument for 'windowsLauncher': " & p &
         "\nusage: nim windowsLauncher status.nims [--compileOnly]"
-  buildWindowsLauncher()
+  buildWindowsLauncher(compileOnly)
 
 task compileTranslations, "Compile the Qt translation catalogs (ui/i18n/*.qm) — a maintainer command, NOT a build step (issue 0016)":
   let t = parseTarget()
@@ -504,7 +530,12 @@ type Vendor = object
                         # this subdir, so the overlay rewrite must remap store
                         # roots onto <checkout>/<srcDir> (nimqml)
   clientRebuild: bool   # vendor Nim sources compile INTO nim_status_client → force a client rebuild while developed
-  forceTouch: seq[string]  # files touched before every build while developed (make FORCE arm)
+  # NOTE: there is no `forceTouch` any more (issue 0017 review, M5). Its only
+  # user was sds — a `touch` of the derived nimble.paths, which forced make's
+  # mtime-gated libsds rule. Since the gate became a CONTENT key a touch changes
+  # nothing, and buildLibsds() forces on `"sds" in readOverlay()` instead. A
+  # field whose every value is `@[]` and whose loop cannot have an effect is a
+  # trap for the next reader.
   forceRemove: seq[string] # artifact globs removed before every build while developed (make FORCE arm)
   flipRemove: seq[string]  # artifact globs removed ONCE per develop/undevelop flip: artifacts
                            # whose make prerequisites live under the vendor ROOT (checkout vs
@@ -523,20 +554,18 @@ const vendorTable = [
     # The status_go wrapper compiles into the client; libstatus has no real
     # make prerequisites, so removing it is what forces the sub-make (which
     # is internally incremental) to re-delegate.
-    clientRebuild: true, forceTouch: @[],
+    clientRebuild: true,
     forceRemove: @["vendor/status-go/build/bin/libstatus.*"]),
   Vendor(name: "sds", flavor: vfNimbleGraph,
     pinManifest: "@statusgo/statusgo.nimble", repoName: "nim-sds",
     pkgName: "sds", manifestName: "sds.nimble",
     checkoutDir: "vendor/nim-sds", developBranch: "develop",
-    # libsds is a shared library loaded at runtime — no client rebuild.
-    # Touching the derived nimble.paths copy forces the $(NIMSDS_LIBFILE)
-    # recipe (the statusgo.nims sds engine): an overlaid resolution builds the
+    # libsds is a shared library loaded at runtime — no client rebuild. Its
+    # FORCE arm lives in buildLibsds() (`"sds" in readOverlay()`): a content key
+    # cannot be forced by touching a file. An overlaid resolution builds the
     # checkout in place and cmp-mirrors artifacts into .sds-build/, the layout
-    # every Makefile reads. "@statusgo/…" = inside the active statusgo root
-    # (checkout while developed, scratch/store copy otherwise — issue 0010).
-    clientRebuild: false, forceTouch: @["@statusgo/nimble.paths"],
-    forceRemove: @[]),
+    # every Makefile reads.
+    clientRebuild: false, forceRemove: @[]),
   Vendor(name: "seaqt", flavor: vfNimbleGraph,
     pinManifest: "nim_status_client.nimble", repoName: "nim-seaqt",
     pkgName: "seaqt", manifestName: "seaqt.nimble",
@@ -547,7 +576,7 @@ const vendorTable = [
     # The generated bindings (and their C++ shims, via {.compile.}) build
     # INTO the client: REBUILD_NIM is the whole FORCE arm — no vendor
     # artifacts exist.
-    clientRebuild: true, forceTouch: @[], forceRemove: @[]),
+    clientRebuild: true, forceRemove: @[]),
   Vendor(name: "nimqml", flavor: vfNimbleGraph,
     pinManifest: "nim_status_client.nimble", repoName: "nimqml-seaqt",
     pkgName: "nimqml", manifestName: "nimqml.nimble",
@@ -557,7 +586,7 @@ const vendorTable = [
     # store copies are hoisted (modules at the entry root), the checkout
     # keeps them under src/ — the overlay remaps accordingly.
     srcDir: "src",
-    clientRebuild: true, forceTouch: @[], forceRemove: @[]),
+    clientRebuild: true, forceRemove: @[]),
   Vendor(name: "prl-to-pc", flavor: vfNimbleGraph,
     pinManifest: "nim_status_client.nimble", repoName: "prl-to-pc",
     pkgName: "prl_to_pc", manifestName: "prl_to_pc.nimble",
@@ -570,7 +599,7 @@ const vendorTable = [
     # key carries the root) and may change the tool sources; flipRemove drops
     # both artifacts so neither mode can ever consume the other's.
     checkoutDir: "vendor/prl-to-pc", developBranch: "main",
-    clientRebuild: false, forceTouch: @[], forceRemove: @[],
+    clientRebuild: false, forceRemove: @[],
     flipRemove: @[".prl-to-pc-build/.pcwrap/*",
                   ".prl-to-pc-build/.pcwrap/.*.key",
                   ".prl-to-pc-build/qt-pkgconfig.env"]),
@@ -583,7 +612,7 @@ const vendorTable = [
     # has no real prerequisites, so removing the built lib is what re-runs
     # cmake (the configure re-reads the overlay-derived FETCHCONTENT_SOURCE_
     # DIR_* redirect pair; the cmake build is internally incremental).
-    clientRebuild: false, forceTouch: @[],
+    clientRebuild: false,
     forceRemove: @["build/status-keycard-qt/*/libstatus-keycard-qt.*"]),
   Vendor(name: "keycard-qt", flavor: vfCmake,
     pinManifest: "@keycard-parent",  # status-keycard-qt's own CMakeLists owns this pin
@@ -593,7 +622,7 @@ const vendorTable = [
     # Nested content, no parent cascade: edits rebuild THROUGH the parent's
     # cmake build (keycard-qt is compiled static and re-linked into
     # libstatus-keycard-qt), so the FORCE arm is the parent's artifact.
-    clientRebuild: false, forceTouch: @[],
+    clientRebuild: false,
     forceRemove: @["build/status-keycard-qt/*/libstatus-keycard-qt.*"]),
 ]
 
@@ -889,14 +918,13 @@ proc applyDevelopModeArms(): bool =
       let (_, rev) = pinOf(v)
       guardDivergence(v, rev)
       if not overlayApplied(v):
-        # nimble.paths was regenerated without the overlay (manual `nimble
-        # setup`); make the overlay file newer than it so the stamp recipe
-        # re-runs setup + applyOverlay.
-        exec "touch " & quoteShell(thisDir() / overlayFile)
-    for f in v.forceTouch:
-      let p = expandVendorPath(f)
-      if fileExists(p):
-        exec "touch " & quoteShell(p)
+        # nimble.paths was regenerated without the overlay (a hand-run `nimble
+        # setup`): drop the setup key so nimbleSetupIfStale() re-resolves and
+        # re-applies the overlay. Under 0016's mtime gate this was a `touch` of
+        # the overlay file; a CONTENT key ignores a touch (same trap as the
+        # deleted `forceTouch` — issue 0017 review, M5), which would have left
+        # the build silently resolving the PIN while the overlay says develop.
+        rmFile(thisDir() / setupKeyFile)
     for g in v.forceRemove:
       exec "rm -f " & expandVendorPath(g)
     if v.clientRebuild:
