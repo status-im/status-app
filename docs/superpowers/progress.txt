@@ -1636,3 +1636,81 @@ Carry-overs (recorded in the issue, NOT implemented):
 6. `make all` is the last root-Makefile target that builds the app.
 7. `nim run status.nims` forwards no app ARGS (make run ARGS= did).
 8. `nim tests` costs 15 min (per-test nimcache + -d:lto).
+
+================================================================================
+2026-07-10 — issue 0017 REVIEW FIX WAVE (fresh implementer; in-tree build lock)
+================================================================================
+
+Two-axis review of 994c7913e5..c942984e66 returned 3 Critical + 5 Important +
+10 Minor. All applied. Six commits, 3e26014e80..7d9f79559d.
+
+CRITICAL
+C1 contentKey() died under dash. `set -o pipefail` is a POSIX *special builtin*,
+   so an unknown option to it is FATAL in a non-interactive shell — and
+   `2>/dev/null` hid the message. /bin/sh is dash on Debian/Ubuntu = the flatpak
+   CI image. rc=2, no digest, every gate (nimbleSetupIfStale, buildResources,
+   buildLibsds, buildClient) dead. Fix: probe in a subshell —
+   `(set -o pipefail) 2>/dev/null && set -o pipefail;`. Verified on /bin/dash,
+   /bin/sh and /bin/bash (same digest; bash still gets real pipefail).
+C2 The empty-input digest was well-formed: `find <nothing> | xargs -0 cksum |
+   sort | cksum` = "4294967295 0", rc=0. An artifact whose inputs all vanished
+   recorded that key and read FRESH forever. contentKey now fails loudly on a
+   `<crc> 0` digest and on an all-missing `extra` set. This is ALSO the guard
+   that saves shells lacking pipefail: there a broken `find` exits 0 with
+   exactly that digest.
+C3 Packaging targets had zero always-stale prerequisites since the .PHONY
+   nim_status_client target died: with pkg/Status.dmg present, `make pkg-macos`
+   was "up to date" and never dispatched the driver. Proven against HEAD's
+   Makefile. Fix: a `FORCE` phony prereq on all four packaging artifacts,
+   defined AFTER `all:` so it cannot steal the default goal.
+
+IMPORTANT
+I1 Windows `-d:lto` was unconditional; make gated it on INCLUDE_DEBUG_SYMBOLS.
+I2 launchHostApp had no Windows arm — `run-windows`'s DLL staging (no rpath on
+   Windows) was deleted with the target. Ported, unverified.
+I3 `.libsds.key` was written under statusgoBuildRoot() = the vendor/status-go
+   CHECKOUT in develop mode → permanently dirty submodule. Moved to the repo
+   root; added to .gitignore (follow-up 5 had claimed all three key files were
+   ignored; only two were).
+I4/I5 Shared-definition duplication: the Qt pkg-config env replay and the seaqt
+   pkg-config link libs were byte-copies of config.nims; dotherSideLibDir() and
+   keycardBuildDir() carried "keep in sync" comments and HAD ALREADY DIVERGED
+   (config.nims appends cmake's per-config lib/<Release|Debug> leg on Windows).
+   All hoisted into status_env.nims. The cmake BUILD dir and the LINK dir are
+   different directories on Windows, so they became separate procs.
+
+NEW WALL (not in the review; found while deleting the dead `forceTouch` field):
+   A CONTENT KEY CANNOT BE FORCED BY TOUCHING A FILE — and 0017 left TWO such
+   touches. The sds forceTouch arm was the known one. The other was in
+   applyDevelopModeArms(): when a hand-run `nimble setup` regenerates
+   nimble.paths without the overlay, it `touch`ed nimble.overlay to invalidate
+   the setup stamp. Under the content key that is a no-op → the next build skips
+   resolution, never applies the overlay, and silently compiles a DEVELOPED
+   vendor against its PIN (ADR 0004's one forbidden failure mode). Fixed by
+   rmFile'ing .status-setup.key. Generalization for the next agent: after
+   swapping an mtime gate for a content key, grep the tree for `touch` and ask
+   of each one "what content does this change?".
+
+RETRACTED (do not re-propose): adding --skipParentCfg:on to the driver's `nim c`
+   recipes. The client's project file is src/nim_status_client.nim, so the
+   REPO-ROOT config.nims is itself reached by the parent-dir walk — the flag
+   would strip the client's entire flag set. Recorded as issue follow-up 9.
+
+MINOR: M1 stale() one-arg overload replaces the stale("",[out]) sentinel; M2
+   buildArtifacts rejects --force (it compiles no client) and buildHostArtifacts
+   lost its unused force param; M3 check-no-nim-compiles.sh reported line numbers
+   of the STRIPPED stream (blank lines filtered), missed `nim compile`, and its
+   comment-strip ate the char before '#'; M4 dead NIM_STATUS_CLIENT deleted;
+   M5 forceTouch deleted; M6 stale docs (mobile/TROUBLESHOOTING.md `make run`,
+   BUILDING.md's emptied troubleshooting section); M7 `tests` re-implemented
+   buildHostArtifacts' prologue and omitted buildWindowsImportLibs (broken
+   Windows test link) → extracted prepareHostBuild(); M8 buildWindowsLauncher
+   takes the parsed --compileOnly value. M9/M10 recorded as follow-ups 10/11.
+
+VERIFIED: check-no-nim-compiles.sh green (+ negative control with correct line
+numbers); `nim app status.nims` rc=0 then two no-ops at 11.6 s / 11.7 s;
+`nim tests status.nims utils_test` rc=0 (62 s, 9 OK, 0 FAILED);
+`nim windowsLauncher status.nims --compileOnly` rc=0 (18 windows C sources);
+`touch pkg/Status.dmg && make -n pkg-macos` -> `nim app status.nims`;
+dash/sh/bash digest probes. NOT VERIFIED: everything Windows (I1, I2, contentKey
+under msys2), Linux packaging, and the dmg signature — no hosts, unchanged.

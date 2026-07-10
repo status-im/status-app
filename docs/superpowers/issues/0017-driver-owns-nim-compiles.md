@@ -112,7 +112,7 @@ driver's source key watches git HEAD; recorded as follow-up 3.*
 Re-runnable, and it is a committed script rather than a one-liner in a doc:
 
     $ scripts/check-no-nim-compiles.sh
-    ok: a Nim compile (`nim c`) — absent
+    ok: a Nim compile (`nim c`/`nim compile`) — absent
     ok: a nimscript eval (`nim e`) — absent
     ok: the NBS env-script wrapper — absent
     ok: NIM_PARAMS — absent
@@ -124,11 +124,18 @@ that is how a packaging recipe asks for a binary. Negative control, on a copy
 with a re-introduced compile appended:
 
     $ ./scripts/check-no-nim-compiles.sh /tmp/0017/mk-probe
-    FAIL: /tmp/0017/mk-probe still carries a Nim compile (`nim c`):
-    740:	$(ENV_SCRIPT) nim c src/x.nim
-    FAIL: … still carries the NBS env-script wrapper:  740:…
-    FAIL: … still carries NIM_PARAMS:                  741:	NIM_PARAMS += -d:x
+    FAIL: /tmp/0017/mk-probe still carries a Nim compile (`nim c`/`nim compile`):
+    1173:	$(ENV_SCRIPT) nim compile src/x.nim
+    FAIL: … still carries the NBS env-script wrapper:  1173:…
+    FAIL: … still carries NIM_PARAMS:                  1174:	NIM_PARAMS += -d:x
     rc=1
+
+**Amended 2026-07-10 (review round).** As first written the script had three
+defects: `grep -n` numbered the *stripped* stream (whose blank lines had been
+filtered out), so every reported line number was wrong; `nim compile` — the long
+form of `nim c` — was unchecked; and the comment strip `s/[^\\]#.*$//` ate the
+character before an unescaped `#` (`A=x#y` → `A=`). All three fixed; the numbers
+above are the probe file's real ones (`grep -n` agrees).
 
 `ifeq ($(NIM_PARAMS),)` — the NBS-was-included probe at the top of the Makefile
 — became `ifeq ($(wildcard $(BUILD_SYSTEM_DIR)/makefiles/variables.mk),)`, which
@@ -231,6 +238,13 @@ The launcher is built with the DEFAULT cc (mingw/gcc). That is why the client's
 clang/MSVC-ABI flags live inside `config.nims`' `isDesktopClient` block: the
 launcher must not inherit them.
 
+*Review round: the task now parses `--compileOnly` and passes the VALUE to
+`buildWindowsLauncher(compileOnly)`, instead of the builder re-reading
+`taskArgv()` — the shape `runNimTests(only)` already had.*
+
+    $ nim windowsLauncher status.nims --compileOnly   rc=0 (18 windows C sources)
+    $ nim windowsLauncher status.nims --bogus         rejected
+
 ### 5. `make pkg-macos` — NOT verifiable here; what was verified
 
     $ command -v nix dmgbuild   → (nothing)
@@ -251,6 +265,26 @@ Everything up to it is verified:
     $ make -n pkg-macos | grep -E 'nim |cp bin'
     nim app status.nims                                     ← the ONLY client-producing step
     cp bin/nim_status_client tmp/macos/dist/Status.app/Contents/MacOS/
+
+**Amended 2026-07-10 (review round): that dispatch could be skipped entirely.**
+`$(STATUS_CLIENT_DMG)` and `$(STATUS_CLIENT_FLATPAK)` were left with **zero**
+prerequisites when the `.PHONY nim_status_client` prereq died, and the AppImage's
+are all plain files — so make considered an existing `pkg/Status.dmg` up to date
+and never ran the driver (`pkg:`'s old `rm $(NIM_STATUS_CLIENT)` is gone too):
+
+    # HEAD's Makefile, pkg/Status.dmg present:
+    $ make -f /tmp/0017/mk-old -n pkg-macos
+    echo "Cleaning libsds_d from cache..."      ← and nothing else
+    rm -rf ~/.cache/nim/libsds_d
+
+    # fixed:
+    $ touch pkg/Status.dmg && make -n pkg-macos
+    nim app status.nims
+
+All four packaging artifacts (AppImage, flatpak, dmg, exe) now take a `FORCE`
+phony prerequisite — defined *after* `all:` so it cannot become the default goal
+(`make -n` still resolves to `all:` → `nim app status.nims`). They stay real
+files for their own dependents; the driver's key file decides the relink.
 
     client key after the run:   RESOURCES_LAYOUT=-d:production
     (the -d:production flip is part of clientKey(), so it relinks BY CONSTRUCTION;
@@ -289,6 +323,15 @@ and this iteration replaces none of them. They stay. Deleted: `run`,
 `run-linux`, `run-linux-gdb`, `run-macos`, `run-windows`, and `RUN_TARGET`.
 `nim run status.nims` is the app's one front door (0016 verified `launchHostApp`;
 `run` is unchanged here beyond gaining `--force`).
+
+**Amended 2026-07-10 (review round).** `launchHostApp` had **no Windows arm**,
+so deleting `run-windows` deleted the DLL staging it did (Windows has no rpath:
+the loader searches the .exe's directory). Ported from `13545e159d:Makefile`
+into a `hostOS == "windows"` arm — StatusQ's `bin/<cfg>/*`, `DOtherSide.dll`,
+`libstatus.dll`, `status-keycard-qt.dll`, `libsds.dll`, `ucrtbase.dll`,
+`vcruntime140{,_1}.dll`, `api-ms-win-crt-*.dll`, then `cd bin && ./nim_status_client.exe`.
+**Ported, unverified** (no Windows host), consistent with how the flag branches
+were handled. Its `status-dev.rc` icon step is *not* ported — see follow-up 12.
 
 Also deleted with them: `nim_status_client` (+ `$(NIM_STATUS_CLIENT)` rule),
 `nim_windows_launcher`, `nim-test-run/%`, `tests-nim-linux`, `.qmake_previous`
@@ -372,6 +415,47 @@ The digest is produced where the input list is already produced:
 (`gorgeEx` merges stderr) and `set -o pipefail` is requested best-effort so a
 broken `find` cannot yield a well-formed digest of a truncated set.
 
+**Amended 2026-07-10 (review round) — two defects in that one shell line.**
+
+1. `set -o pipefail 2>/dev/null; …` **killed the whole scan under dash**
+   (`/bin/sh` on Debian/Ubuntu, i.e. the flatpak CI image): `set` is a POSIX
+   *special builtin*, so an unknown option to it is a fatal error in a
+   non-interactive shell, and the redirect merely hid the message. rc=2, no
+   digest — and every gate (nimbleSetupIfStale, buildResources, buildLibsds,
+   buildClient) died. The fix probes the option in a **subshell** first:
+
+       $ /bin/dash -c 'cd … && set -o pipefail 2>/dev/null; { find src … } | …'
+       rc=2                                                  (no output at all)
+       $ /bin/dash -c 'cd … && (set -o pipefail) 2>/dev/null && set -o pipefail; …'
+       2310363601 47390     rc=0
+       $ /bin/sh -c '…same…'   2310363601 47390   rc=0     # macOS, unchanged
+       $ /bin/bash -c '…same…' 2310363601 47390   rc=0     # and pipefail IS set:
+       $ /bin/bash -c '… (set -o pipefail) … ; find nosuchdir … | …'  rc=1
+
+2. **The empty-input digest looked valid.** `find <nothing> -print0 | xargs -0
+   cksum | sort | cksum` prints `4294967295 0` with rc=0 — well-formed, so an
+   artifact whose inputs all disappeared recorded a stable key and read FRESH
+   forever (resources.rcc would never regenerate again). The digest's second
+   field is the byte count of the `cksum` lines, so `<crc> 0` means "zero files
+   hashed" exactly: `contentKey` now **fails loudly** on it, and on an `extra`
+   set none of whose paths exist (which used to return an empty key, i.e. the
+   "exists ⇒ fresh" gate). Verified by pointing `uiFindCmd()` at an empty
+   directory:
+
+       $ nim buildArtifacts status.nims
+       status.nims ERROR: the content-key scan matched NO files (digest
+       '4294967295 0'):
+         cd <repo> && (set -o pipefail) … find empty-probe -type f -print0 …
+       Every input of this artifact has disappeared; the tree is broken (or the
+       scan's spec is wrong).
+
+   This guard is also what protects the shells that *have* no `pipefail`: there
+   a broken `find` still exits 0 with exactly this empty digest (reproduced on
+   `/bin/dash`), and only the empty-set check catches it.
+
+The docstring's claim that a vanished `extra` path "changes the digest" is now
+true in every case, including the all-vanished one.
+
 Semantics, verified:
 
     touch src/nim_status_client.nim ; nim app  →  SKIPPED  (mtime gate rebuilt)
@@ -416,6 +500,19 @@ Consequences, all deliberate:
   Vendor's FORCE arm was a `touch` of the derived `nimble.paths`, which a
   content key ignores. `buildLibsds()` now forces on `"sds" in readOverlay()`.
   This is the one behavioural trap the change introduced; it is verified below.
+  *(Review round: the dead field, its values and its loop are now DELETED, not
+  merely unused — a `@[]`-only field with an ineffective loop is a trap for the
+  next reader.)*
+- **A second dead `touch` was found in the review round, and it was not
+  cosmetic.** `applyDevelopModeArms()` re-invalidated the setup stamp by
+  `touch`ing `nimble.overlay` when it noticed that a hand-run `nimble setup` had
+  regenerated `nimble.paths` without the overlay. Under a content key that touch
+  changes nothing: the next build would find `.status-setup.key` current, skip
+  resolution, never apply the overlay — and silently compile a developed vendor
+  against its **PIN**. That is ADR 0004's one forbidden failure mode, so the
+  "`applyOverlay` trap is closed" bullet above was only half true when written.
+  It now `rmFile`s `.status-setup.key`, which is what invalidating a key-file
+  stamp means.
 
 Gating audit after the change (0016's criterion 11 still holds — two spellings,
 no bare `fileExists`):
@@ -426,8 +523,8 @@ no bare `fileExists`):
 | `nimble setup` | `stale(.status-setup.key, [nimble.paths], contentKey(lock, manifests, overlay))` | content |
 | statusgo scratch tree | `keyStale(.statusgo-origin, <store path>, witness = statusgo.nims)` | configuration |
 | statusgo artifacts | `keyStale(.statusgo-artifact-key, <flag set>)` | configuration |
-| libsds | `stale(.libsds.key, [libsds], contentKey(...))` + force when sds is developed | content |
-| libstatus | `stale("", [libstatus])` — exists ⇒ fresh | — |
+| libsds | `stale(<repo>/.libsds.key, [libsds], contentKey(...))` + force when sds is developed | content |
+| libstatus | `stale([libstatus])` — the one-arg overload: exists ⇒ fresh | — |
 | resources.rcc | `stale(.status-rcc.key, [resources.rcc], contentKey(uiFindCmd()))` | content |
 | windows import libs | `stale(<lib>.key, [lib], contentKey(dll))` | content |
 | the client binary | `stale(.status-client.key, [bin], clientKey() & contentKey(src…))` | both, one key file |
@@ -491,8 +588,47 @@ Together with criterion 8's `--force` evidence, this closes the criterion:
 *"forcing a full client rebuild works via the `app` task's force flag, and a
 developed Vendor's source change always reaches the binary."*
 
+### Fix wave — 2026-07-10 (review round)
+
+A two-axis review of `994c7913e5..c942984e66` found three criticals and five
+important items. All are applied; each is evidenced in the amended sections
+above. Same machine, same environment.
+
+| # | what | where |
+|---|------|-------|
+| C1 | `contentKey()` died under dash (`set -o pipefail` is a special builtin) | §10 |
+| C2 | the empty-input digest `4294967295 0` read as permanently fresh | §10 |
+| C3 | packaging targets had lost their only always-stale prerequisite | §5 |
+| I1 | Windows `-d:lto` was unconditional (make gated it on the release flavor) | §7 |
+| I2 | `launchHostApp` had no Windows arm (the deleted `run-windows` staging) | §6 |
+| I3 | `.libsds.key` landed inside `vendor/status-go` in develop mode | follow-up 5 |
+| I4 | env replay + seaqt link libs were byte-copies of config.nims | §7 |
+| I5 | `dotherSideLibDir`/`keycardBuildDir` had already drifted from config.nims | §7 |
+| M1–M8 | see the fix-wave brief; M9/M10 recorded as follow-ups 10/11 | — |
+
+Plus one defect the review did not name, found while deleting `forceTouch`: the
+develop-mode **overlay re-invalidation was the same dead `touch`**, which could
+silently build a developed vendor against its pin (§10, second amended bullet).
+
+Regression set re-run after the wave:
+
+    $ scripts/check-no-nim-compiles.sh                       rc=0, all four ok
+    $ nim app status.nims                                    rc=0, 84.9 s (relink:
+        config.nims + status_env.nims are inputs of clientSourcesKey)
+    $ nim app status.nims                                    rc=0, 11.6 s  no-op
+    $ nim app status.nims                                    rc=0, 11.7 s  no-op
+        (no client / rcc / libsds rebuild; the three cmake `--build` no-ops are
+         the documented envelope. Machine no longer saturated: cf. §10's 13–21 s)
+    $ nim tests status.nims utils_test                       rc=0, 62.3 s, 9 [OK]
+    $ nim windowsLauncher status.nims --compileOnly          rc=0, 18 C sources
+    $ nim buildArtifacts status.nims --force                 rejected (M2)
+    $ touch pkg/Status.dmg && make -n pkg-macos              nim app status.nims
+    $ /bin/dash -c '<the emitted contentKey command>'        digest, rc=0
+
 ### Not verified
 - **`make pkg-macos`'s dmg + signature** (criterion 5): no `nix`, no identity.
+- **The fix wave's Windows arms**: `launchHostApp`'s staging (I2) and the `-d:lto`
+  guard (I1) are ported, unverified — as is `contentKey` under msys2.
 - **Windows**, everywhere: the client flag branches, the launcher link, the
   import libraries, `contentKey` under msys2. Ported, unverified.
 - **Linux**: the AppImage/flatpak re-point and `run`'s `LD_LIBRARY_PATH` arm are
@@ -523,6 +659,11 @@ developed Vendor's source change always reaches the binary."*
 5. **`.status-setup.key`, `.status-rcc.key`, `.libsds.key`** are new gitignored
    key files. A tree built by an older commit has none; the first build after
    this lands re-runs `nimble setup`, `rcc` and `libsds` once. Expected, cheap.
+   *(Review round: only two of the three were actually gitignored, and
+   `.libsds.key` was written under `statusgoBuildRoot()` — the vendor/status-go
+   CHECKOUT in develop mode, leaving the submodule permanently dirty. It now
+   lives at the repo root beside the others, and `.gitignore` covers it. Fixed,
+   not a follow-up.)*
 6. **`make all` now shells to the driver.** It is the last root-Makefile target
    that builds the app; 0018 may delete it outright rather than keep a shim.
 7. **`nim run status.nims` forwards no application arguments.** `make run
@@ -534,3 +675,42 @@ developed Vendor's source change always reaches the binary."*
    `nimcache/release/<name>` and re-compiles the whole app dependency tree with
    `-d:release -d:lto` (make's flag set, kept for fidelity). Dropping `-d:lto`
    from the test compile is a free win if CI cares.
+
+### Follow-ups added by the 2026-07-10 review round
+
+9. **`--skipParentCfg:on` must NOT be added to the driver's three `nim c`
+   recipes.** The orchestrator queued it (to stop a nested worktree from
+   inheriting an enclosing checkout's `config.nims`); it was refuted
+   empirically on nim 2.2.4. The client's project file is
+   `src/nim_status_client.nim`, so the **repo-root `config.nims` is itself
+   reached by the parent-dir walk** — the flag would strip the client's entire
+   flag set. The recipes are correct verbatim; the nested-worktree leak stays
+   covered by config.nims' existing fail-fast guard. (Recorded so the next agent
+   does not re-propose it.)
+10. **Both edited Jenkinsfiles now invoke a bare `nim`** (`Jenkinsfile.tests-nim`
+    runs `nim tests status.nims`, `Jenkinsfile.flatpak` runs `nim app
+    status.nims`) and nothing in their Deps stage provides one — the NBS nim
+    they used to build is what 0018 deletes. **0019 (CI) owns this**; noted here
+    because 0017 created the dependency.
+11. **`make update` no longer forces a client relink.** It used to bump
+    `.update.timestamp`, which was a prerequisite of the client rule; the rule
+    and the stamp both died here. `nim app status.nims --force` recovers it. Fix
+    shape: fold the vendored-dependency revision set into `clientKey()`.
+12. **`nim run status.nims` on Windows ships the production icon, or fails to
+    link.** `run-windows` built `status.o` from `status-dev.rc` (via make's
+    `compile_windows_resources`, with `STATUS_RC_FILE` overridden) before the
+    client compile, and `src/nim_status_client.nim` `{.link: "../status.o".}`s
+    it. The driver's ported Windows arm does the staging and the launch, not
+    that resource compile. Fix shape: a `windowsResources(rc)` driver step
+    called before `buildClient` on Windows; `make pkg-windows` keeps
+    `status.rc`. Unverifiable here either way (no Windows host).
+13. **The macOS test-compile flag block is the third copy** of the
+    frameworks / `-headerpad_max_install_names` / `-F$QT_LIBDIR` / `-d:lto`
+    list (config.nims' client arm, config.nims' non-client arm, `runNimTests`).
+    Not extracted: config.nims emits them through `switch()` while the driver
+    builds a command line, so the shared thing would be a list of strings that
+    each consumer re-spells anyway. The env replay and the seaqt link libs —
+    which *were* byte-identical — were hoisted into `status_env.nims` instead.
+14. **`buildHostArtifacts()` no longer takes `force`** and `buildArtifacts`
+    rejects `--force`: nothing in that task compiles the client, which is the
+    only thing `--force` ever forced. `rejectExtras`' error text follows.
