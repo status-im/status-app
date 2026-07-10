@@ -27,11 +27,14 @@ Item {
             h.record("B")
             h.record("C")
             compare(h.canGoBack, true)
+            compare(h.peek(), "C")
             compare(h.back(), "C")
+            compare(h.peek(), "B")
             compare(h.back(), "B")
             compare(h.back(), "A")
             compare(h.canGoBack, false)
             compare(h.back(), "")
+            compare(h.peek(), "")
         }
 
         function test_consecutive_dedup() {
