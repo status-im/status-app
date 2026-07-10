@@ -28,7 +28,8 @@ ModuleNotFoundError: No module named 'distutils'
 Simulator device failed to install the application.
 The application's Info.plist does not contain a valid CFBundleVersion.
 ```
-**Fix**: Remove `bin/Status.app` and run `make run`
+**Fix**: Remove `bin/Status.app` and run `nim run status.nims` (the `make run`
+targets were deleted in issue 0017 — the driver is the app's one front door)
 
 5. **FBSOpenApplicationServiceErrorDomain**
 ```

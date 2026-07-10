@@ -511,11 +511,18 @@ export PATH=$QTDIR/bin:$PATH
 
 ### Application doesn't build
 
-Get more log output — the driver streams the compiler's own output:
+The driver streams the compiler's own output, so a failing build already shows
+you the error. `make run V=1` (which used to be the answer here) is gone.
+
+To see the client compile again after a successful build — the driver skips it
+when nothing changed — force it:
 
 ```bash
-nim app status.nims
+nim app status.nims --force
 ```
+
+To see WHY a step re-ran, delete its key file (`.status-client.key`,
+`.status-rcc.key`, `.status-setup.key`, `.libsds.key`) and re-run.
 
 ## 📬 Need Further Help?
 
