@@ -49,9 +49,12 @@ StatusSectionLayout {
 
         // Read-only flag that turns true when the component enters a “compact” layout automatically on resize.
         readonly property bool compactMode: root.width < 600
+        readonly property int stateContentWidth: Math.min(560, Math.max(0, root.width - Theme.xlPadding * 4))
         readonly property bool curatedCommunitiesLoading: root.communitiesStore.curatedCommunitiesLoading
+        readonly property bool curatedCommunitiesLoadingFailed: root.communitiesStore.curatedCommunitiesLoadingFailed
         readonly property bool curatedCommunitiesBlockedByNetwork: root.communitiesStore.isExpensiveNetwork
                                                                 && !root.communitiesStore.curatedCommunitiesLoaded
+                                                                && !d.curatedCommunitiesLoadingFailed
                                                                 && !d.curatedCommunitiesLoading
     }
 
@@ -162,7 +165,8 @@ StatusSectionLayout {
 
             ColumnLayout {
                 visible: d.curatedCommunitiesBlockedByNetwork
-                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: d.stateContentWidth
                 Layout.fillHeight: true
                 spacing: Theme.bigPadding
 
@@ -171,8 +175,7 @@ StatusSectionLayout {
                 }
 
                 StatusBaseText {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredWidth: root.width
+                    Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
                     text: qsTr("You are currently on a network that is considered expensive.\nLoading curated communities can be data heavy, so it is disabled by default.")
@@ -193,7 +196,8 @@ StatusSectionLayout {
 
             ColumnLayout {
                 visible: d.curatedCommunitiesLoading
-                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: d.stateContentWidth
                 Layout.fillHeight: true
                 spacing: Theme.padding
 
@@ -206,8 +210,7 @@ StatusSectionLayout {
                 }
 
                 StatusBaseText {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredWidth: root.width
+                    Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
                     text: qsTr("Loading curated communities...")
@@ -219,9 +222,40 @@ StatusSectionLayout {
                 }
             }
 
+            ColumnLayout {
+                visible: d.curatedCommunitiesLoadingFailed
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: d.stateContentWidth
+                Layout.fillHeight: true
+                spacing: Theme.bigPadding
+
+                Item {
+                    Layout.fillHeight: true
+                }
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    text: qsTr("Couldn't load curated communities. Please try again.")
+                    color: Theme.palette.baseColor1
+                }
+
+                StatusButton {
+                    Layout.alignment: Qt.AlignHCenter
+                    text: qsTr("Retry")
+                    type: StatusBaseButton.Type.Primary
+                    onClicked: root.communitiesStore.requestCuratedCommunitiesLoad()
+                }
+
+                Item {
+                    Layout.fillHeight: true
+                }
+            }
+
             TagsRow {
                 id: communityTags
-                visible: !d.curatedCommunitiesBlockedByNetwork && !d.curatedCommunitiesLoading
+                visible: !d.curatedCommunitiesBlockedByNetwork && !d.curatedCommunitiesLoading && !d.curatedCommunitiesLoadingFailed
                 Layout.fillWidth: true
                 Layout.rightMargin: Theme.xlPadding
 
@@ -230,7 +264,7 @@ StatusSectionLayout {
 
             CommunitiesGridView {
                 id: communitiesGrid
-                visible: !d.curatedCommunitiesBlockedByNetwork && !d.curatedCommunitiesLoading
+                visible: !d.curatedCommunitiesBlockedByNetwork && !d.curatedCommunitiesLoading && !d.curatedCommunitiesLoadingFailed
 
                 Layout.fillWidth: true
                 Layout.fillHeight: true

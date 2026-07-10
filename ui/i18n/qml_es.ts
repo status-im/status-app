@@ -3413,6 +3413,14 @@ Loading curated communities can be data heavy, so it is disabled by default.</so
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Couldn&apos;t load curated communities. Please try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished">Reintentar</translation>
+    </message>
+    <message>
         <source>Join Community</source>
         <translation></translation>
     </message>

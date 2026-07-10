@@ -12,6 +12,7 @@ QtObject {
 
     readonly property var curatedCommunitiesModel: root.communitiesModuleInst.curatedCommunities
     readonly property bool curatedCommunitiesLoading: root.communitiesModuleInst.curatedCommunitiesLoading
+    readonly property bool curatedCommunitiesLoadingFailed: root.communitiesModuleInst.curatedCommunitiesLoadingFailed
     readonly property bool curatedCommunitiesLoaded: root.communitiesModuleInst.curatedCommunitiesLoaded
 
     property var discordFileList: root.communitiesModuleInst.discordFileList

@@ -23,6 +23,7 @@ QtObject:
       curatedCommunitiesModel: CuratedCommunityModel
       curatedCommunitiesModelVariant: QVariant
       curatedCommunitiesLoading: bool
+      curatedCommunitiesLoadingFailed: bool
       curatedCommunitiesLoaded: bool
       tokenListLoading: bool
       tokenListModel: TokenListModel
@@ -77,6 +78,7 @@ QtObject:
     result.curatedCommunitiesModel = newCuratedCommunityModel()
     result.curatedCommunitiesModelVariant = newQVariant(result.curatedCommunitiesModel)
     result.curatedCommunitiesLoading = false
+    result.curatedCommunitiesLoadingFailed = false
     result.curatedCommunitiesLoaded = false
     result.discordFileListModel = newDiscordFileListModel()
     result.discordFileListModelVariant = newQVariant(result.discordFileListModel)
@@ -382,6 +384,20 @@ QtObject:
   QtProperty[bool] curatedCommunitiesLoading:
     read = getCuratedCommunitiesLoading
     notify = curatedCommunitiesLoadingChanged
+
+  proc curatedCommunitiesLoadingFailedChanged*(self: View) {.signal.}
+
+  proc setCuratedCommunitiesLoadingFailed*(self: View, flag: bool) = # not a slot
+    if (self.curatedCommunitiesLoadingFailed == flag): return
+    self.curatedCommunitiesLoadingFailed = flag
+    self.curatedCommunitiesLoadingFailedChanged()
+
+  proc getCuratedCommunitiesLoadingFailed*(self: View): bool {.slot.} =
+    return self.curatedCommunitiesLoadingFailed
+
+  QtProperty[bool] curatedCommunitiesLoadingFailed:
+    read = getCuratedCommunitiesLoadingFailed
+    notify = curatedCommunitiesLoadingFailedChanged
 
   proc curatedCommunitiesLoadedChanged*(self: View) {.signal.}
 

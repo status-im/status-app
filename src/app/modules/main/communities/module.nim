@@ -161,16 +161,18 @@ method setCuratedCommunitiesNetworkExpensive*(self: Module, value: bool) =
 method requestCuratedCommunitiesLoad*(self: Module) =
   if self.view.getCuratedCommunitiesLoaded() or self.view.getCuratedCommunitiesLoading():
     return
+  self.view.setCuratedCommunitiesLoadingFailed(false)
   self.controller.asyncLoadCuratedCommunities()
 
 method onActivated*(self: Module) =
-  if self.view.getCuratedCommunitiesLoaded():
-    return
-  if self.curatedCommunitiesNetworkExpensive:
+  if self.view.getCuratedCommunitiesLoaded() or
+      self.curatedCommunitiesNetworkExpensive or
+      self.view.getCuratedCommunitiesLoadingFailed():
     return
   self.requestCuratedCommunitiesLoad()
 
 method curatedCommunitiesLoaded*(self: Module, curatedCommunities: seq[CommunityDto]) =
+  self.view.setCuratedCommunitiesLoadingFailed(false)
   self.view.setCuratedCommunitiesLoaded(true)
   self.setCuratedCommunities(curatedCommunities)
   self.view.setCuratedCommunitiesLoading(false)
@@ -179,8 +181,8 @@ method curatedCommunitiesLoading*(self: Module) =
   self.view.setCuratedCommunitiesLoading(true)
 
 method curatedCommunitiesLoadingFailed*(self: Module) =
-  # TODO we probably want to show an error in the UI later
-  self.view.setCuratedCommunitiesLoaded(true)
+  self.view.setCuratedCommunitiesLoadingFailed(true)
+  self.view.setCuratedCommunitiesLoaded(false)
   self.view.setCuratedCommunitiesLoading(false)
 
 method getCommunityItem(self: Module, community: CommunityDto): SectionItem =

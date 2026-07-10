@@ -49,6 +49,7 @@ SplitView {
                 property bool isExpensiveNetwork: ctrlExpensiveNetwork.checked
                 property bool curatedCommunitiesLoaded: false
                 property bool curatedCommunitiesLoading: ctrlCuratedCommunitiesLoading.checked
+                property bool curatedCommunitiesLoadingFailed: ctrlCuratedCommunitiesLoadingFailed.checked
 
                 readonly property var curatedCommunitiesModel: SortFilterProxyModel {
                     sourceModel: CommunitiesPortalDummyModel { id: mockedModel }
@@ -64,6 +65,7 @@ SplitView {
                 }
 
                 function requestCuratedCommunitiesLoad() {
+                    curatedCommunitiesLoadingFailed = false
                     curatedCommunitiesLoaded = true
                     logs.logEvent("CommunitiesStore::requestCuratedCommunitiesLoad", [], arguments)
                 }
@@ -113,6 +115,12 @@ SplitView {
                 Switch {
                     id: ctrlCuratedCommunitiesLoading
                     text: "Curated communities loading"
+                    checked: false
+                }
+
+                Switch {
+                    id: ctrlCuratedCommunitiesLoadingFailed
+                    text: "Curated communities loading failed"
                     checked: false
                 }
             }
