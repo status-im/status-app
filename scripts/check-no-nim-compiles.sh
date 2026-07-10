@@ -10,7 +10,7 @@
 #
 # This asserts the invariant mechanically:
 #
-#   * no `nim c` / `nim e` — a Nim compile or a nimscript evaluation
+#   * no `nim c` / `nim compile` / `nim e` — a Nim compile or a nimscript eval
 #   * no `$(ENV_SCRIPT)`   — nimbus-build-system's compiler-environment wrapper
 #   * no `NIM_PARAMS`      — the flag set lives in config.nims, for every platform
 #
@@ -35,9 +35,12 @@ if [[ ! -f $makefile ]]; then
   exit 1
 fi
 
-# Comments explain the invariant and must not trip it: drop everything from an
-# unescaped '#' to end of line, then drop blank lines.
-stripped="$(sed -e 's/[^\\]#.*$//' -e 's/^#.*$//' "$makefile" | grep -v '^[[:space:]]*$')"
+# Comments explain the invariant and must not trip it: blank out everything from
+# an unescaped '#' to end of line. The capture group PRESERVES the character
+# before the '#' (the old `[^\\]#` ate it), and blank lines are kept rather than
+# filtered, so `grep -n` below reports the line numbers of the FILE — the numbers
+# a reader is about to open an editor at.
+stripped="$(sed -e 's/\([^\\]\)#.*$/\1/' -e 's/^#.*$//' "$makefile")"
 
 fail=0
 check() { # <description> <extended regex>
@@ -51,8 +54,11 @@ check() { # <description> <extended regex>
   fi
 }
 
-#           `nim c ...` at a word boundary; a `nim app status.nims` dispatch passes
-check "a Nim compile (\`nim c\`)"            '(^|[^[:alnum:]_./-])nim[[:space:]]+c([[:space:]]|$)'
+#           `nim c ...` / `nim compile ...` at a word boundary. A driver dispatch
+#           (`nim app status.nims`, `nim compileTranslations status.nims`) passes:
+#           the trailing anchor demands the WHOLE word be the compile command.
+check "a Nim compile (\`nim c\`/\`nim compile\`)" \
+                                            '(^|[^[:alnum:]_./-])nim[[:space:]]+(c|compile)([[:space:]]|$)'
 check "a nimscript eval (\`nim e\`)"         '(^|[^[:alnum:]_./-])nim[[:space:]]+e([[:space:]]|$)'
 check "the NBS env-script wrapper"           '\$\(ENV_SCRIPT\)|ENV_SCRIPT[[:space:]]*[:?+]?='
 check "NIM_PARAMS"                           'NIM_PARAMS'
