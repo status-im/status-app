@@ -59,25 +59,21 @@ class ProcessMonitor:
         return processes
 
     def _sample_once(self) -> tuple[float, float]:
-        cpu_total = 0.0
+        try:
+            cpu_percent = psutil.Process(self._pid).cpu_percent(interval=self._interval_sec)
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            cpu_percent = 0.0
+
         ram_total_bytes = 0
         for proc in self._iter_processes():
             try:
-                cpu_total += proc.cpu_percent(None)
                 ram_total_bytes += proc.memory_info().rss
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 continue
-        return cpu_total, ram_total_bytes / (1024 * 1024)
+        return cpu_percent, ram_total_bytes / (1024 * 1024)
 
     def _sample_loop(self) -> None:
-        for proc in self._iter_processes():
-            try:
-                proc.cpu_percent(None)
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                continue
-
         while not self._stop_event.is_set():
             cpu, ram_mb = self._sample_once()
             self._cpu_samples.append(cpu)
             self._ram_samples.append(ram_mb)
-            self._stop_event.wait(self._interval_sec)
