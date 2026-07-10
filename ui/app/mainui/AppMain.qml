@@ -77,6 +77,7 @@ Item {
                                    appMain.privacyStore.thirdpartyServicesEnabled: true
         onOpenUrl: (link) => Global.requestOpenLink(link)
         onOpenActivityCenter: () => {
+            d.closeActivityCenterOnNextBack = false
             mainLayoutItem.openACCenterPanel = true
         }
         onWcLinkActivated: (link) => {
@@ -168,6 +169,8 @@ Item {
     // internal back, or the cross-section history. Drives the desktop Back entry
     // points (StandardKey shortcut + mouse Back button).
     readonly property bool canGoBackAnywhere: createChatView.opened
+            || (appMain.isPortraitMode && mainLayoutItem.openACCenterPanel)
+            || (mainLayoutItem.openACCenterPanel && d.closeActivityCenterOnNextBack)
             || d.sectionCanGoBack || sectionNavigationHistory.canGoBack
 
     function showEnableBiometricsFlow() {
@@ -184,7 +187,10 @@ Item {
     Connections {
         target: appMain.rootStore
         function onActiveSectionIdChanged() {
-            if (!d.navigatingBack && d.lastRecordedSectionId) {
+            if (d.skipNextSectionHistoryRecordFor !== ""
+                    && d.lastRecordedSectionId === d.skipNextSectionHistoryRecordFor) {
+                d.skipNextSectionHistoryRecordFor = ""
+            } else if (!d.navigatingBack && d.lastRecordedSectionId) {
                 sectionNavigationHistory.record(d.lastRecordedSectionId)
             }
             d.lastRecordedSectionId = appMain.rootStore.activeSectionId
@@ -879,6 +885,40 @@ Item {
         // Most-recently-observed activeSectionId; the recorder pushes the
         // *previous* id when activeSectionId changes.
         property string lastRecordedSectionId: ""
+
+        readonly property string activityCenterHistoryToken: "__activityCenterPanel"
+        property string skipNextSectionHistoryRecordFor: ""
+        property bool closeActivityCenterOnNextBack: false
+
+        function recordActivityCenterHistory() {
+            d.skipNextSectionHistoryRecordFor = appMain.rootStore.activeSectionId
+            sectionNavigationHistory.record(appMain.rootStore.activeSectionId)
+            sectionNavigationHistory.record(d.activityCenterHistoryToken)
+            Backpressure.setTimeout(appMain, 100, () => {
+                d.skipNextSectionHistoryRecordFor = ""
+            })
+        }
+
+        function restoreActivityCenterFromHistory() {
+            if (sectionNavigationHistory.peek() !== d.activityCenterHistoryToken)
+                return false
+
+            sectionNavigationHistory.back()
+            d.closeActivityCenterOnNextBack = true
+            mainLayoutItem.openACCenterPanel = true
+            return true
+        }
+
+        function tryHandleActivityCenterBack() {
+            if (mainLayoutItem.openACCenterPanel
+                    && (appMain.isPortraitMode || d.closeActivityCenterOnNextBack)) {
+                d.closeActivityCenterOnNextBack = false
+                mainLayoutItem.openACCenterPanel = false
+                return true
+            }
+
+            return d.restoreActivityCenterFromHistory()
+        }
 
         // The active section's loaded item (appView's children stay in sync with
         // currentIndex). May be null while a section is still loading.
@@ -1705,6 +1745,8 @@ Item {
                 } else if (isPortraitMode && !openACCenterPanel) {
                     acPortraitPopup.close()
                 }
+                if (!openACCenterPanel)
+                    d.closeActivityCenterOnNextBack = false
             }
 
             // Ensure closing the popup when changing from portrait to landscape,
@@ -1825,6 +1867,12 @@ Item {
                     anchors.fill: parent
                 }
 
+                Shortcut {
+                    enabled: acPortraitPopup.opened
+                    sequences: [StandardKey.Back, StandardKey.Cancel]
+                    onActivated: d.tryHandleActivityCenterBack()
+                }
+
                 // Sync the main property when autoclose
                 onClosed: { mainLayoutItem.openACCenterPanel = false }
             }
@@ -1888,6 +1936,7 @@ Item {
                 onMarkNotificationUnread: (notificationId) => { appMain.activityCenterStore.markActivityCenterNotificationUnread(notificationId) }
                 onAvatarClicked: (avatarId) => { Global.openProfilePopup(avatarId) }
                 onRedirectToDetails: (sectionId, subsectionId, subsectionItemId) => {
+                                         d.recordActivityCenterHistory()
                                          appMain.rootStore.setNavToMsgDetailsFlag(true) // It covers in-app link navigation in portrait mode
                                          appMain.activityCenterStore.switchTo(sectionId, subsectionId, subsectionItemId)
 
@@ -1895,12 +1944,14 @@ Item {
                                          acPortraitPopup.close()
                                      }
                 onRedirectToSection: (sectionId) => {
+                                         d.recordActivityCenterHistory()
                                          appMain.changeAppSectionBySectionId(sectionId)
 
                                          // Guard in case of portrait
                                          acPortraitPopup.close()
                                      }
                 onRedirectToCommunitySettingsSubsection: (communityId, subsection, subsectionItem) => {
+                                                             d.recordActivityCenterHistory()
                                                              appMain.changeAppSectionBySectionId(communityId)
                                                              Global.switchToCommunitySettingsSubsection(communityId, subsection, subsectionItem)
 
@@ -1908,6 +1959,7 @@ Item {
                                                              acPortraitPopup.close()
                                                          }
                 onRedirectToPopup: (notification) => {
+                                       d.recordActivityCenterHistory()
                                        // Right now, this is the only popup open, when more, we can add a popup type to determine it
                                        Global.openNewsMessagePopupRequested(notification)
 
@@ -1915,6 +1967,7 @@ Item {
                                        acPortraitPopup.close()
                                    }
                 onRedirectToWallet: (address, txHash) => {
+                                        d.recordActivityCenterHistory()
                                         Global.changeAppSectionBySectionType(Constants.appSection.wallet,
                                                                              WalletLayout.LeftPanelSelection.Address,
                                                                              WalletLayout.RightPanelSelection.Activity,
@@ -2366,7 +2419,10 @@ Item {
                 }
                 thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
 
-                onActivityCenterRequested: function(shouldShow) { mainLayoutItem.openACCenterPanel = shouldShow }
+                onActivityCenterRequested: function(shouldShow) {
+                    d.closeActivityCenterOnNextBack = false
+                    mainLayoutItem.openACCenterPanel = shouldShow
+                }
                 onSetCurrentUserStatusRequested: status => appMain.rootStore.setCurrentUserStatus(status)
                 onViewProfileRequested: pubKey => Global.openProfilePopup(pubKey)
                 onShareOwnProfileRequested: Global.shareProfileDialogRequested(ownContactDetails.publicKey)
@@ -3116,8 +3172,11 @@ Item {
     // Returns true if the Back press was handled, false if exhausted (caller
     // then falls through to Quit/minimize).
     function tryGoBack() {
-        // Link 1: AppMain overlay-loaders (e.g. CreateChatView) — Loaders with an
-        // `opened` property, not Qt Popups, so native popup-close misses them.
+        // Link 1: AppMain overlays/panels (e.g. Activity Center, CreateChatView)
+        // that are not always native Qt Popups, so native popup-close misses them.
+        if (d.tryHandleActivityCenterBack())
+            return true
+
         if (createChatView.opened) {
             createChatView.opened = false
             return true
@@ -3134,6 +3193,11 @@ Item {
         // Link 3: pop section history, skipping stale tokens.
         while (sectionNavigationHistory.canGoBack) {
             const token = sectionNavigationHistory.back()
+            if (token === d.activityCenterHistoryToken) {
+                d.closeActivityCenterOnNextBack = true
+                mainLayoutItem.openACCenterPanel = true
+                return true
+            }
             if (SQUtils.ModelUtils.indexOf(appMain.rootStore.sectionsModel, "id", token) >= 0) {
                 d.navigatingBack = true
                 try {

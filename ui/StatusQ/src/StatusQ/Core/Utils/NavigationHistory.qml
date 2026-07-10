@@ -41,6 +41,13 @@ QtObject {
         d.trim()
     }
 
+    /*! Returns the top token without popping it, or "" when the stack is empty. */
+    function peek() {
+        if (d.stack.length === 0)
+            return ""
+        return d.stack[d.stack.length - 1]
+    }
+
     /*!
        Pops and returns the top token. The recorder pushes the *previous*
        section id whenever the active section changes, so the popped value
