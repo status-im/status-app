@@ -99,13 +99,22 @@ proc contentKey(findCmd: string, extra: openArray[string] = []): string =
   ## digest, which is exactly the invalidation we want.
   ##
   ## An EMPTY input set is a hard error, never a digest. `find <nothing> |
-  ## xargs -0 cksum | sort | cksum` prints a perfectly well-formed `4294967295
-  ## 0`, so an artifact whose inputs all vanished would otherwise record a
-  ## stable key and read FRESH forever (resources.rcc would never rebuild
-  ## again). Every call site's input set is non-empty in a healthy tree, so an
-  ## empty one means a broken scan — the same reasoning as the shape check
-  ## below. The digest's second field is the byte count of the `cksum` lines,
-  ## so `<crc> 0` ⇔ "zero files hashed" exactly.
+  ## xargs -0 -r cksum | sort | cksum` prints a perfectly well-formed
+  ## `4294967295 0`, so an artifact whose inputs all vanished would otherwise
+  ## record a stable key and read FRESH forever (resources.rcc would never
+  ## rebuild again). Every call site's input set is non-empty in a healthy
+  ## tree, so an empty one means a broken scan — the same reasoning as the shape
+  ## check below. The digest's second field is the byte count of the `cksum`
+  ## lines, so `<crc> 0` ⇔ "zero files hashed" exactly.
+  ##
+  ## `xargs -0 -r` is load-bearing for that guard. GNU xargs runs its utility
+  ## ONCE even on empty input unless `--no-run-if-empty` (`-r`) is given, so on
+  ## Linux a vanished set would run `cksum </dev/null` → `4294967295 0`, and the
+  ## outer `cksum` of that non-empty line yields `3871339299 13` — well-formed,
+  ## bytes≠0, guard bypassed, empty set FRESH forever. With `-r` the pipeline
+  ## stays empty and the final `cksum` is `4294967295 0`, which the guard
+  ## catches. `-r` is a documented no-op on BSD/macOS xargs (which already skips
+  ## the utility on empty input), so it is safe everywhere.
   ##
   ## The obvious spelling of a content key — `hash(readFile(f))` per input, in
   ## the nimscript VM, as the walls doc sketches — is unaffordable here:
@@ -130,7 +139,12 @@ proc contentKey(findCmd: string, extra: openArray[string] = []): string =
   ## exists in this tree, and `find`'s own output is already line-oriented).
   var emit: seq[string]
   if findCmd.len > 0:
-    emit.add findCmd & " -print0"
+    # `|| exit 1` is required, not decorative. When an `extra` list follows, the
+    # emitted group is `{ find … -print0; printf … }` and a brace group's exit
+    # status is its LAST command's — printf's — so a failing `find` would be
+    # masked and pipefail could never see it. Making `find` exit the (subshell)
+    # pipe-stage on failure is what lets pipefail reject a truncated scan.
+    emit.add findCmd & " -print0 || exit 1"
   var present: seq[string]
   for f in extra:
     if fileExists(f):
@@ -151,11 +165,12 @@ proc contentKey(findCmd: string, extra: openArray[string] = []): string =
   # the digest never appears (rc=2). Probing it in a SUBSHELL first is fatal to
   # nothing: the subshell dies, `&&` short-circuits, and the pipeline runs
   # unprotected exactly as it must on a shell that lacks the option.
-  # With it, a failing `find` cannot yield a well-formed digest of a truncated
-  # input set.
+  # Together with `find … || exit 1` above (which propagates find's failure past
+  # the brace group's printf), pipefail ensures a failing `find` cannot yield a
+  # well-formed digest of a truncated input set.
   let cmd = "cd " & quoteShell(thisDir()) &
     " && (set -o pipefail) 2>/dev/null && set -o pipefail; { " & emit.join("; ") &
-    "; } | xargs -0 cksum | sort | cksum"
+    "; } | xargs -0 -r cksum | sort | cksum"
   let (output, rc) = gorgeEx(cmd)
   let key = output.strip
   # gorgeEx merges stderr into the output (walls doc), so validate the SHAPE:
