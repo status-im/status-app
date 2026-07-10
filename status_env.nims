@@ -134,6 +134,41 @@ when not declared(buildType):
     ## make's COMMON_CMAKE_BUILD_TYPE.
     if qmlDebug(): "Debug" else: "Release"
 
+when not declared(winCfgSuffix):
+  proc winCfgSuffix(): string =
+    ## The per-config leg cmake appends to its output directories on Windows
+    ## (multi-config generator), and nothing anywhere else.
+    if hostOS == "windows": "/" & buildType() else: ""
+
+# --- artifact directories (ONE definition, driver + config.nims; issue 0017) --
+# These were duplicated with a "keep in sync with config.nims" comment, and had
+# already drifted: config.nims appended the per-config `winCfg` leg, the driver's
+# copies did not. The cmake BUILD dir and the LINK dir are different directories
+# on Windows, so they get different procs rather than a re-synced comment.
+
+when not declared(dotherSideBuildDir):
+  proc dotherSideBuildDir(qtVersion: string): string =
+    thisDir() / "vendor/DOtherSide/build/Qt" & qtVersion
+
+when not declared(dotherSideLibDir):
+  proc dotherSideLibDir(qtVersion: string): string =
+    ## Where DOtherSide's static lib / import lib lands (make's DOTHERSIDE_LIBDIR).
+    dotherSideBuildDir(qtVersion) / "lib" & winCfgSuffix()
+
+when not declared(keycardBuildDir):
+  proc keycardBuildDir(): string =
+    ## The cmake `-B` tree. NOT the link dir on Windows — see keycardLibDir.
+    thisDir() / "build/status-keycard-qt" /
+      (case hostOS
+       of "macosx": "macos"
+       of "windows": "windows"
+       else: "linux")
+
+when not declared(keycardLibDir):
+  proc keycardLibDir(): string =
+    ## make's STATUSKEYCARD_QT_LIBDIR: the built shared library's directory.
+    keycardBuildDir() & winCfgSuffix()
+
 # --- the Qt pkg-config environment cache (issue 0015) -------------------------
 # prl-to-pc owns kit derivation and the System/Generated probe; its
 # `qt_pkgconfig.nims env` prints the resulting environment. Running that per nim
@@ -185,3 +220,46 @@ when not declared(qtPkgConfigEnv):
     if not keyed:
       statusEnvFail "the Qt pkg-config environment cache (" & qtPcEnvCache &
         ") carries no key line." & rerun
+
+when not declared(applyQtPkgConfigEnv):
+  proc applyQtPkgConfigEnv(qmake, qtPrefix: string) =
+    ## Replay the cached environment into THIS nim process, so every
+    ## compile-time `gorge("pkg-config Qt6…")` (seaqt's) and every `exec`/
+    ## `gorgeEx` child resolves the active kit. Under make this arrived as
+    ## qt-pkgconfig.mk's parse-time exports.
+    ##
+    ## ONE definition, two consumers (issue 0017 review, I4): config.nims needs
+    ## it inside its `isDesktopClient` block, and the driver needs it before it
+    ## compiles the Nim test suite — which is not that client.
+    ##
+    ## Both composed variables keep the mk's prepend semantics and are
+    ## idempotent: on the make path the included qt-pkgconfig.mk has already
+    ## exported the same values, and re-applying them must not stack duplicates.
+    for (name, val) in qtPkgConfigEnv(qtPkgConfigKey(qmake, prlToPcRoot(), qtPrefix)):
+      case name
+      of "PKG_CONFIG_PATH":
+        let cur = getEnv("PKG_CONFIG_PATH")
+        if cur.len == 0: putEnv(name, val)
+        elif not cur.startsWith(val): putEnv(name, val & ":" & cur)
+      of "PKG_CONFIG_PREFIX_OVERRIDE", "PKG_CONFIG_ARCH":
+        putEnv(name, val)
+      of "QT_PC_PATH_PREPEND":
+        let cur = getEnv("PATH")
+        if not cur.startsWith(val & ":"): putEnv("PATH", val & ":" & cur)
+      else:
+        discard  # QT_PC_MODE / QT_PC_REASON / QT_PC_PREFIX: diagnostics only
+
+when not declared(qtSeaqtExtraLibs):
+  proc qtSeaqtExtraLibs(): string =
+    ## make's `QT_SEAQT_EXTRA_LIBS`: the Qt modules the binary links beyond what
+    ## the seaqt bindings pull in themselves. Needs applyQtPkgConfigEnv() first.
+    ## (The win32 make branch never passed these, hence config.nims' Windows arm
+    ## does not call this.)
+    let (output, rc) = gorgeEx(
+      "pkg-config --libs Qt6Core Qt6Qml Qt6Gui Qt6Quick Qt6QuickControls2 " &
+      "Qt6Widgets Qt6Svg Qt6Multimedia Qt6WebView Qt6WebChannel")
+    if rc != 0:
+      statusEnvFail "pkg-config failed to resolve the Qt link libraries:\n" &
+        output & "\nPKG_CONFIG_PATH is " & getEnv("PKG_CONFIG_PATH") & " (from" &
+        " prl-to-pc's `env`; see " & qtPcEnvCache & ")."
+    output.strip
