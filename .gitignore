@@ -33,6 +33,8 @@ nim_status_client.log
 .flatpak-builder
 /ui/StatusQ/sandbox/android/.gradle/
 .qmake_previous
+# issue 0016: the driver's client key file (absorbs .qmake_previous)
+.status-client.key
 *.qm
 
 # Squish test ================================================================
