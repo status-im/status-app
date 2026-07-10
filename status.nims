@@ -3,9 +3,12 @@
 # docs/superpowers/prds/2026-07-06-one-command-and-develop-mode-prd.md).
 #
 #   nim app status.nims                            # host desktop dev build
+#   nim app status.nims --force                    # ... and recompile the client
 #   nim app status.nims --os:ios --cpu:arm64       # signed iOS device app
 #   nim app status.nims --os:android --cpu:arm64   # Android debug APK
 #   nim run status.nims                            # host build if needed + launch
+#   nim tests status.nims [<test name>]            # the Nim test suite
+#   nim windowsLauncher status.nims                # bin/nim_windows_launcher.exe
 #   nim help status.nims                           # list tasks
 #
 # --os/--cpu select the TARGET (host is the default). Kit selection stays
@@ -21,6 +24,11 @@
 # builds every artifact the client links or loads (status_artifacts.nims) and
 # compiles the client itself. `make` survives for the mobile legs, packaging
 # and CI helpers, and for status-go's own (vendored, foreign) Makefile.
+#
+# Since issue 0017 the driver owns EVERY Nim compile: the client, the Nim test
+# suite and the Windows launcher. The root Makefile invokes no `nim c` / `nim e`
+# — asserted by scripts/check-no-nim-compiles.sh — and its packaging recipes ask
+# this driver for the binary they ship.
 # This file is a nimscript driver, NOT a nimble task: `nimble <task>` re-pays
 # ~46–48 s of graph revalidation per warm invocation on this manifest
 # (measured 2026-07-06); `nim <task> status.nims` starts in about a second.
@@ -62,6 +70,7 @@ proc flagVal(p, name: string): string =
 type Target = object
   os: string          # "host", "ios" or "android"
   cpu: string         # nim CPU name ("" = target default)
+  force: bool         # --force: rebuild the client even when its key is fresh
   extra: seq[string]  # unrecognized task arguments (rejected)
 
 proc normalizedCpu(v: string): string =
@@ -88,7 +97,9 @@ proc parseTarget(): Target =
     elif cpuv.len > 0:
       result.cpu = normalizedCpu(cpuv)
   for p in taskArgv():
-    if p.len > 0 and flagVal(p, "os").len == 0 and flagVal(p, "cpu").len == 0:
+    if p == "--force":
+      result.force = true
+    elif p.len > 0 and flagVal(p, "os").len == 0 and flagVal(p, "cpu").len == 0:
       result.extra.add p
   # Spelling the build host explicitly is the host target.
   if result.os in ["macosx", "macos", "linux", "windows"]:
@@ -102,10 +113,14 @@ proc parseTarget(): Target =
     fail "unknown --os value '" & result.os &
       "' (expected ios, android, or omit for the host desktop build)."
 
-proc rejectExtras(t: Target, taskName: string) =
+proc rejectExtras(t: Target, taskName: string, allowForce = false) =
+  if t.force and not allowForce:
+    fail "'" & taskName & "' does not accept --force (only 'app', 'run' and" &
+      " 'buildArtifacts' do — it forces the client compile)."
   if t.extra.len > 0:
     fail "unrecognized arguments for '" & taskName & "': " &
-      t.extra.join(" ") & "\nOnly --os:<ios|android> and --cpu:<cpu> are accepted."
+      t.extra.join(" ") & "\nOnly --os:<ios|android>, --cpu:<cpu>" &
+      (if allowForce: " and --force" else: "") & " are accepted."
 
 # --- kit-environment validation (fail fast, name the exact variables) --------
 # kitHint / qmakeExe / qmakeQuery come from status_env.nims (shared with
@@ -363,12 +378,14 @@ proc launchHostApp(args: string) =
     exec "LD_LIBRARY_PATH=" & quoteShell(libPath & getEnv("LD_LIBRARY_PATH")) &
       " " & quoteShell(bin) & " " & args
 
-task app, "Build the Status dev build: host by default, --os:ios / --os:android (+ --cpu) for mobile":
+task app, "Build the Status dev build: host by default, --os:ios / --os:android (+ --cpu) for mobile; --force recompiles the client":
   let t = parseTarget()
-  rejectExtras(t, "app")
+  rejectExtras(t, "app", allowForce = true)
   # Develop-mode gating (issue 0009): divergence guard + the FORCE arms for
-  # developed vendors run first; default mode adds nothing.
-  let force = applyDevelopModeArms()
+  # developed vendors run first; default mode adds nothing. `--force` is the
+  # human's half of make's REBUILD_NIM (the other half is a developed vendor
+  # whose Nim sources compile INTO the client — issue 0017).
+  let force = applyDevelopModeArms() or t.force
   case t.os
   of "ios", "android":
     if t.os == "ios": validateIos(t) else: validateAndroid(t)
@@ -380,24 +397,53 @@ task app, "Build the Status dev build: host by default, --os:ios / --os:android 
 
 task buildArtifacts, "Build every artifact the client links/loads except the client compile itself (internal: nimble's before-build hook — issue 0013)":
   let t = parseTarget()
-  rejectExtras(t, "buildArtifacts")
+  rejectExtras(t, "buildArtifacts", allowForce = true)
   if t.os != "host":
     fail "buildArtifacts is host-only (nimble build/run is the host front" &
       " door; mobile builds go through `nim app status.nims --os:...`)."
   validateHost(t)
+  discard t.force  # accepted for symmetry with `app`; no client compile here
   buildHostArtifacts(applyDevelopModeArms())
 
-task run, "Build if needed and launch the host dev build (StatusDev.app on macOS)":
+task run, "Build if needed and launch the host dev build (StatusDev.app on macOS); --force recompiles the client":
   let t = parseTarget()
-  rejectExtras(t, "run")
+  rejectExtras(t, "run", allowForce = true)
   if t.os != "host":
     fail "'run' launches the host desktop build only; for mobile use" &
       " `make mobile-run` (a driver mobile run may come with issue 0009+)."
   validateHost(t)
-  let force = applyDevelopModeArms()
+  let force = applyDevelopModeArms() or t.force
   buildHostArtifacts(force)
   buildClient(force)
   launchHostApp("")
+
+task tests, "Run the Nim test suite (test/nim/*.nim); pass a test name to run one (issue 0017)":
+  # The suite links libstatus/libsds and the Qt frameworks, so it needs the
+  # same artifacts the client does, minus StatusQ / status-keycard-qt / rcc.
+  var only: seq[string]
+  for p in taskArgv():
+    if p.startsWith("-"):
+      fail "unrecognized flag for 'tests': " & p &
+        "\nusage: nim tests status.nims [<test name> ...]"
+    only.add p
+  let t = Target(os: "host")
+  validateHost(t)
+  discard applyDevelopModeArms()
+  bootstrap()
+  nimbleSetupIfStale()
+  prepareQtPkgconfig()
+  exportBuildEnv()
+  platformCleanup()
+  buildStatusgo()
+  buildDOtherSide()
+  runNimTests(only)
+
+task windowsLauncher, "Build bin/nim_windows_launcher.exe for `make pkg-windows` (--compileOnly stops before the link; issue 0017)":
+  for p in taskArgv():
+    if p != "--compileOnly":
+      fail "unrecognized argument for 'windowsLauncher': " & p &
+        "\nusage: nim windowsLauncher status.nims [--compileOnly]"
+  buildWindowsLauncher()
 
 task compileTranslations, "Compile the Qt translation catalogs (ui/i18n/*.qm) — a maintainer command, NOT a build step (issue 0016)":
   let t = parseTarget()
