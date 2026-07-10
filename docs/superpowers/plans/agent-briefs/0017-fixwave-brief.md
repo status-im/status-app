@@ -128,3 +128,47 @@ Update the issue's Verification record + follow-ups where your fixes change
 its statements. Commit in slices. Final message: SendMessage TOOL call to
 "main" — commits, evidence per C/I item, what you recorded vs applied.
 Plain-text final output is NOT delivered; you MUST use the SendMessage tool.
+
+---
+
+# Addendum — re-review round 2 (2026-07-10, later)
+
+The fix wave's re-review confirmed everything EXCEPT:
+
+R1 (CRITICAL). `contentKey()`'s `<crc> 0` empty-set guard is inert on GNU
+xargs: it runs the command ONCE on empty input (`-r` is opt-in), so Linux
+gets `cksum </dev/null | sort | cksum` = `3871339299 13` — well-formed,
+guard bypassed, empty set reads FRESH forever. Fix: `xargs -0 -r cksum`
+(`-r` is a documented no-op on BSD/macOS — verified). Keep the `bytes=="0"`
+check. VERIFY on macOS: digest unchanged for a real set; empty set still
+fails; and simulate the GNU arm (`cksum </dev/null | sort | cksum` shows
+what the guard must reject — with `-r` the cksum never runs, output is
+empty → not well-formed → fails, which is correct).
+
+R2 (Important). With a non-empty `extra` list the pipeline's first element
+is `{ find …; printf …; }` whose status is printf's → pipefail cannot see a
+failing find; only the stderr-merge shape check catches it. Fix:
+`{ find … || exit 1; printf …; }`. Amend the docstring claim to match.
+
+R3 (Important — decision: ACCEPT + RECORD, do not re-engineer). The FORCE
+prereq makes chained invocations (`make pkg-linux && make tgz-linux`)
+re-run linuxdeployqt/appimagetool twice because the artifact mtime always
+moves. CI calls the terminal target in one invocation and is unaffected.
+Record as a follow-up (dev-only double re-deploy); do NOT interpose a phony
+client-binary prereq (a phony prereq marks dependents perpetually stale —
+same disease).
+
+R4 (Minor, record-only). Reclassify follow-up 12: the client source has
+`when defined(windows): {.link:"../status.o".}` and NO driver step builds
+status.o (make's windres rule died with the deleted targets) — so the
+Windows CLIENT COMPILE is a known hard gap for the Windows push, not an
+icon cosmetic. Amend the issue text accordingly.
+
+R5 (Minor, record-only note in the issue): a failed `cd` still runs the
+contentKey pipeline in the wrong cwd (pre-existing shape, unchanged).
+
+Completion: re-run the C1 dash probe, the empty-set probe through the real
+code path (as the fix wave did), `scripts/check-no-nim-compiles.sh`, one
+`nim app status.nims` no-op, `nim tests status.nims utils_test`. Amend the
+issue's Verification record where R1/R2 change its statements. Commit
+slices; report via the SendMessage TOOL to "team-lead".
