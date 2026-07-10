@@ -66,7 +66,8 @@ export USE_SYSTEM_NIM
 	flatpak-run \
 	flatpak-clean \
 	macos-icon-assets \
-	platform-cleanup
+	platform-cleanup \
+	FORCE
 
 # --- this Makefile never invokes `nim c` / `nim e` (issue 0017) ---------------
 # Every Nim compile — the client, the Nim test suite, the Windows launcher —
@@ -97,6 +98,16 @@ else # "variables.mk" was included. Business as usual until the end of this file
 
 all:
 	nim app status.nims
+
+# An always-out-of-date prerequisite (declared .PHONY above). The packaging
+# artifacts further down are real files with real recipes, but their only
+# client-producing step is a driver dispatch (`nim app status.nims`), and the
+# DRIVER — not make — owns the decision whether the client needs a relink
+# (.status-client.key). Without a force prerequisite an existing pkg/Status.dmg
+# makes `make pkg-macos` "up to date" and the driver never runs: the old
+# `.PHONY nim_status_client` prerequisite and `pkg:`'s `rm $(NIM_STATUS_CLIENT)`
+# both died with the client rule in issue 0017.
+FORCE:
 
 nix-shell: export NIX_USER_CONF_FILES := $(PWD)/nix/nix.conf
 nix-shell:
@@ -805,12 +816,6 @@ compile_windows_resources:
 # carrying a second compile. That is a driver dispatch, not a Nim compile: the
 # invariant (scripts/check-no-nim-compiles.sh) forbids `nim c` / `nim e` /
 # $(ENV_SCRIPT), which no longer appear anywhere in this file.
-ifeq ($(mkspecs),win32)
- NIM_STATUS_CLIENT := bin/nim_status_client.exe
-else
- NIM_STATUS_CLIENT := bin/nim_status_client
-endif
-
 STATUSQ_LIB_PATH := $(STATUSQ_INSTALL_PATH)/StatusQ
 EXTRA_LIBS_PATH := $(STATUSQ_BUILD_PATH)/lib
 ifeq ($(mkspecs),win32)
@@ -828,7 +833,8 @@ export QT_ARCH
 
 # The driver build a packaging target asks for. RESOURCES_LAYOUT is part of the
 # client key, so flipping it to -d:production relinks by construction — the old
-# `rm $(NIM_STATUS_CLIENT)` dance is unnecessary.
+# `rm bin/nim_status_client` dance is unnecessary. Every artifact that runs this
+# takes the `FORCE` prerequisite, so make can never skip the dispatch.
 STATUS_CLIENT_BUILD := nim app status.nims
 
 ifdef IN_NIX_SHELL
@@ -874,7 +880,7 @@ PRODUCTION_PARAMETERS ?= -d:production
 export APP_DIR := tmp/linux/dist
 
 $(STATUS_CLIENT_APPIMAGE): override RESOURCES_LAYOUT := $(PRODUCTION_PARAMETERS)
-$(STATUS_CLIENT_APPIMAGE): $(APPIMAGE_TOOL) nim-status.desktop $(FCITX5_QT)
+$(STATUS_CLIENT_APPIMAGE): $(APPIMAGE_TOOL) nim-status.desktop $(FCITX5_QT) FORCE
 	$(STATUS_CLIENT_BUILD)
 	rm -rf pkg/*.AppImage
 	chmod -R u+w tmp || true
@@ -935,7 +941,7 @@ export FLATPAK_BUILD_DIR     ?= tmp/linux/flatpak/build-dir
 export FLATPAK_REPO_DIR      ?= tmp/linux/flatpak/repo
 
 flatpak: $(STATUS_CLIENT_FLATPAK)
-$(STATUS_CLIENT_FLATPAK):
+$(STATUS_CLIENT_FLATPAK): FORCE
 	$(STATUS_CLIENT_BUILD)
 	echo -e $(BUILD_MSG) "Flatpak"
 	DESKTOP_VERSION="$(DESKTOP_VERSION)" scripts/bundle-flatpak.sh
@@ -967,7 +973,7 @@ STATUS_CLIENT_DMG ?= pkg/Status.dmg
 
 $(STATUS_CLIENT_DMG): override RESOURCES_LAYOUT := $(PRODUCTION_PARAMETERS)
 $(STATUS_CLIENT_DMG): ENTITLEMENTS ?= resources/Entitlements.plist
-$(STATUS_CLIENT_DMG):
+$(STATUS_CLIENT_DMG): FORCE
 	$(STATUS_CLIENT_BUILD)
 	rm -rf tmp/macos pkg/*.dmg
 	mkdir -p $(MACOS_OUTER_BUNDLE)/Contents/MacOS
@@ -1024,7 +1030,7 @@ STATUS_CLIENT_7Z ?= pkg/Status.7z
 $(STATUS_CLIENT_EXE): override RESOURCES_LAYOUT := $(PRODUCTION_PARAMETERS)
 $(STATUS_CLIENT_EXE): OUTPUT := tmp/windows/dist/Status
 $(STATUS_CLIENT_EXE): INSTALLER_OUTPUT := pkg
-$(STATUS_CLIENT_EXE): compile_windows_resources
+$(STATUS_CLIENT_EXE): compile_windows_resources FORCE
 	$(STATUS_CLIENT_BUILD)
 	nim windowsLauncher status.nims
 	rm -rf pkg/*.exe tmp/windows/dist
