@@ -314,7 +314,6 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
       repo / "build/status-keycard-qt" / (if hostOS == "macosx": "macos" else: "linux"))
     let dosLibDir = envOr("DOTHERSIDE_LIBDIR",
       repo / "vendor/DOtherSide/build/Qt" & qtVersion & "/lib")
-    let qrcodegen = repo / "vendor/QR-Code-generator/c/libqrcodegen.a"
 
     # seaqt resolves Qt at compile time via gorge("pkg-config Qt6..."): the
     # environment that makes that resolve the ACTIVE kit is prl-to-pc's to
@@ -413,7 +412,9 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
     switch("passL", "-lStatusQ")
     switch("passL", "-L" & keycardLibDir)
     switch("passL", "-lstatus-keycard-qt")
-    switch("passL", qrcodegen)
+    # QR-Code-generator is {.compile.}d by src/app/global/utils/qrcodegen.nim
+    # (issue 0016) — no static library, no link flag. -lm stays: the C source
+    # needs libm.
     switch("passL", "-lm")
     switch("passL", "-L" & nimsdsLibDir)
     switch("passL", "-lsds")

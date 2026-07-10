@@ -1,5 +1,5 @@
 # Nim host tests and benchmarks (test/nim/). Included from the main Makefile;
-# relies on NIM_PARAMS, STATUSQ_LIB_PATH, STATUSGO*, QRCODEGEN and the Qt
+# relies on NIM_PARAMS, STATUSQ_LIB_PATH, STATUSGO* and the Qt
 # variables being defined at the include site.
 #
 # Naming convention: benchmarks end in `_bench.nim`; everything else is a test.
@@ -59,9 +59,9 @@ endif
 NIMCACHE_BASE ?= $(or $(WORKSPACE_TMP),build)/nimcache
 nim-test-run/%: NIM_PARAMS += --nimcache:$(NIMCACHE_BASE)-$(notdir $(basename $@))
 
-nim-test-run/%: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN) $(NIMBLE_SETUP_STAMP)
+nim-test-run/%: | qt-pkgconfig $(STATUSGO) $(NIMBLE_SETUP_STAMP)
 	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" $(ENV_SCRIPT) \
-	nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
+	nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" -r $(subst nim-test-run/,,$@)
 
 tests-nim: $(NIM_TESTS)
 

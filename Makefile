@@ -150,7 +150,6 @@ ifeq ($(mkspecs),macx)
 else ifeq ($(mkspecs),win32)
  LIB_EXT := dll
  PKG_TARGET := pkg-windows
- QRCODEGEN_MAKE_PARAMS := CC=gcc
  RUN_TARGET := run-windows
  # No libm on Windows/MSVC — math lives in the CRT, and lld-link has no `m.lib`.
  NIM_MATH_LIB :=
@@ -322,7 +321,6 @@ ifeq ($(mkspecs),macx)
    ifneq ($(QT_ARCH),arm64)
 	STATUSGO_MAKE_PARAMS += GOBIN_SHARED_LIB_CFLAGS="CGO_ENABLED=1 GOOS=darwin GOARCH=amd64"
 	COMMON_CMAKE_CONFIG_PARAMS += -DCMAKE_OSX_ARCHITECTURES=x86_64
-	QRCODEGEN_MAKE_PARAMS += CFLAGS="-target x86_64-apple-macos10.12"
 	NIM_PARAMS += --cpu:amd64 --os:MacOSX --passL:"-arch x86_64" --passC:"-arch x86_64"
   endif
  endif
@@ -374,7 +372,7 @@ else ifeq ($(mkspecs),win32)
 PLATFORM_TARGET := windows-$(or $(QT_ARCH),$(shell uname -m))
 endif
 
-# Order-only prerequisite: delete shared vendor artifacts (qrcodegen, nim-sds, libstatus) when the build platform/arch changes.
+# Order-only prerequisite: delete shared vendor artifacts (nim-sds, libstatus) when the build platform/arch changes.
 platform-cleanup:
 ifneq ($(PLATFORM_TARGET),)
 	scripts/platform_pre_build_cleanup.sh "$(PLATFORM_TARGET)"
@@ -791,16 +789,13 @@ ifeq ($(mkspecs),win32)
  import-libs: $(WIN_IMPORT_LIBS)
 endif
 
-QRCODEGEN := vendor/QR-Code-generator/c/libqrcodegen.a
-
-$(QRCODEGEN): | deps platform-cleanup
-	echo -e $(BUILD_MSG) "QR-Code-generator"
-	+ cd vendor/QR-Code-generator/c && \
-	  $(MAKE) $(QRCODEGEN_MAKE_PARAMS) $(HANDLE_OUTPUT)
-
-# Named alias so callers (ci/Jenkinsfile.linux) don't hardcode the archive path.
-qrcodegen: $(QRCODEGEN)
-
+# QR-Code-generator has no target here since issue 0016: the Nim wrapper that
+# binds it ({.compile.} in src/app/global/utils/qrcodegen.nim) compiles the C
+# source into whatever binary consumes it. The mobile Makefile still builds its
+# own libqrcodegen.a; that leg is untouched this iteration.
+# Named no-op alias kept so ci/Jenkinsfile.linux's `make qrcodegen` step keeps
+# working until the pipelines move onto the driver (issue 0019).
+qrcodegen:
 
 # When modifying files that are not tracked in UI_SOURCES (see below),
 # e.g. ui/shared/img/*.svg, REBUILD_UI=true can be supplied to `make` to ensure
@@ -819,7 +814,10 @@ endif
 
 UI_RESOURCES := resources.rcc
 
-$(UI_RESOURCES): $(UI_SOURCES) | check-qt-dir compile-translations
+# `compile-translations` is NOT a prerequisite since issue 0016: it is a
+# maintainer command (`nim compileTranslations status.nims`), not a build step.
+# The .qm catalogs it produces are picked up by ui/generate-rcc.go when present.
+$(UI_RESOURCES): $(UI_SOURCES) | check-qt-dir
 	echo -e $(BUILD_MSG) "resources.rcc"
 	rm -f ./resources.rcc
 	rm -f ./ui/resources.qrc ./ui/resources_webscripts.qrc
@@ -951,7 +949,6 @@ $(NIM_STATUS_CLIENT): NIM_PARAMS += $(RESOURCES_LAYOUT)
 	--passL:"-lStatusQ" \
 	--passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" \
 	--passL:"-l$(STATUSKEYCARD_QT_LINKNAME)" \
-	--passL:"$(QRCODEGEN)" \
 	$(NIM_MATH_LIB) \
 	--parallelBuild:0 \
 	$(NIM_EXTRA_PARAMS) src/nim_status_client.nim
@@ -966,17 +963,9 @@ ifeq ($(STATUSGO_DEVELOPED),1)
 NIM_CLIENT_PRECLEAN := force-rebuild-status-go
 endif
 
-# Everything bin/nim_status_client links or loads, except the client compile
-# itself. `nim buildArtifacts status.nims` — nimble's before-build hook
-# (issue 0013 phase B) — drives this, so `nimble build`/`nimble run` produce
-# the exact artifact set `make nim_status_client` would, stamp-gated the
-# same way (a no-op pass is seconds).
-client-deps: $(NIM_CLIENT_PRECLEAN) | statusq dotherside check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps $(NIMBLE_SETUP_STAMP)
-.PHONY: client-deps
-
 # Depends on libsds directly: platform cleanup can delete it while libstatus
 # survives, and the client would otherwise link against a missing dylib.
-$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps $(NIMBLE_SETUP_STAMP)
+$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) rcc deps $(NIMBLE_SETUP_STAMP)
 	echo -e $(BUILD_MSG) "$@"
 	$(ENV_SCRIPT) $(NIM_CLIENT_COMPILE)
 ifeq ($(mkspecs),macx)
@@ -1253,7 +1242,6 @@ clean-destdir:
 
 clean: | clean-common clean-destdir statusq-clean status-go-clean status-keycard-qt-clean storybook-clean clean-translations
 	rm -rf bottles/* pkg/* tmp/*
-	+ $(MAKE) -C vendor/QR-Code-generator/c/ --no-print-directory clean
 
 clean-git:
 	./scripts/clean-git.sh

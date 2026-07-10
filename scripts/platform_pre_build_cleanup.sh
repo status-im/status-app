@@ -14,8 +14,10 @@ PREV="$(cat "$STATE" 2>/dev/null || echo none)"
 
 echo "platform changed ($PREV -> $KEY); cleaning shared artifacts" >&2
 
-# 1) qrcodegen (desktop links directly, mobile builds into the same tree)
-make -C "$GIT_ROOT/vendor/QR-Code-generator/c" clean 2>/dev/null || true
+# 1) qrcodegen needs no entry since issue 0016: the desktop client {.compile.}s
+# the C source into its own nimcache (nim re-runs the C compile when the flags
+# change), and the mobile build's buildQRCodeGen.sh already `make clean`s the
+# shared source tree before every build.
 # 2) nim-sds (shared libsds.* + nimcache): default flow builds a store
 # scratch copy under <statusgo root>/.sds-build (the .statusgo-build scratch
 # in pinned mode, the vendor/status-go checkout while developed); a
