@@ -83,7 +83,9 @@ pipeline {
 
     stage('Tests') {
       steps {
-        sh 'make tests-nim-linux V=1'
+        /* The Nim suite is a driver task since issue 0017; it owns the
+         * library-path environment the tests need. */
+        sh 'nim tests status.nims'
       }
     }
   }

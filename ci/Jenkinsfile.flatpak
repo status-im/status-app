@@ -128,7 +128,9 @@ pipeline {
 
     stage('Build') {
       steps {
-        sh 'make nim_status_client'
+        /* The driver owns the client compile since issue 0017 (the
+         * `nim_status_client` make target is gone). */
+        sh 'nim app status.nims'
       }
     }
 
