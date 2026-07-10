@@ -123,6 +123,7 @@ AbstractButton {
                 text: root.title
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
+                font.pixelSize: Theme.fontSize(14)
 
                 HoverHandler {
                     id: titleTextHHandler
@@ -140,7 +141,7 @@ AbstractButton {
             StatusBaseText {
                 Layout.fillWidth: true
                 text: root.subtitle
-                font.pixelSize: Theme.additionalTextSize
+                font.pixelSize: Theme.fontSize(13)
                 font.weight: Font.Medium
                 color: Theme.palette.baseColor1
                 elide: Text.ElideRight

@@ -38,7 +38,7 @@ HomePageGridItem {
         StatusBaseText {
             Layout.fillWidth: true
             text: root.currencyBalance
-            font.pixelSize: Theme.tertiaryTextFontSize
+            font.pixelSize: Theme.fontSize(12)
             font.weight: Font.Medium
         }
         StatusIcon {

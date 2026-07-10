@@ -9,9 +9,6 @@ import utils
 HomePageGridItem {
     id: root
 
-    property int membersCount
-    property int activeMembersCount
-
     sectionType: Constants.appSection.profile
     color: Theme.palette.primaryColor2
 

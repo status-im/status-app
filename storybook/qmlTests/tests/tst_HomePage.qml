@@ -148,6 +148,7 @@ Item {
             const gridView = findChild(controlUnderTest, "homePageGridView")
             verify(!!gridView)
             gridView.forceLayout()
+            waitForRendering(gridView)
 
             var anyDappsFound = false
             const count = gridView.count

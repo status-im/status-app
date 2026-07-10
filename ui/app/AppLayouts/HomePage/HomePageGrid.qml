@@ -9,6 +9,8 @@ import StatusQ.Core.Theme
 
 import AppLayouts.HomePage.delegates
 
+import QtModelsToolkit
+
 import utils
 
 Control {
@@ -62,7 +64,7 @@ Control {
     signal itemPinRequested(string key, bool pin)
     signal dappDisconnectRequested(string dappUrl)
 
-    padding: Theme.defaultHalfPadding
+    padding: 0
 
     contentItem: Item {
         StatusGridView {
@@ -70,18 +72,19 @@ Control {
 
             objectName: "homePageGridView"
 
-            readonly property int delegateCountPerRow: Math.trunc(parent.width / (root.delegateWidth + root.spacing))
+            readonly property int delegateCountPerRow: Math.min(Math.trunc(parent.width / (root.delegateWidth + root.spacing)),
+                                                                root.model.ModelCount.count) // for small models where count < delegateCountPerRow
 
             height: parent.height
-            width: (delegateCountPerRow * cellWidth) + (delegateCountPerRow - 1)
+            width: delegateCountPerRow * cellWidth
             anchors.horizontalCenter: parent.horizontalCenter
 
             ScrollBar.vertical: StatusScrollBar {
+                implicitWidth: Theme.defaultSmallPadding
                 parent: gridView.parent
                 anchors.top: gridView.top
                 anchors.bottom: gridView.bottom
-                anchors.left: parent.right
-                anchors.leftMargin: root.rightPadding
+                anchors.right: parent.right
             }
 
             cellWidth: root.delegateWidth + root.spacing
