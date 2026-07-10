@@ -41,8 +41,14 @@ to tell him must travel through the orchestrator in your **final message**.
 
 ## Build environment (this machine)
 
-    export PATH=$PWD/vendor/nimbus-build-system/vendor/Nim/bin:$PATH   # until 0018
     export QMAKE=~/Qt/6.11.0/macos/bin/qmake USE_SYSTEM_NIM=1
+
+- **Do NOT prepend the NBS nim** (`vendor/nimbus-build-system/vendor/Nim/bin`)
+  to PATH. It is nim 2.2.10 while the manifest pins 2.2.4, and it shadows the
+  correct compiler: `~/.nimble/bin/nim` is already on PATH and resolves to the
+  pinned store nim 2.2.4 (verified 2026-07-10). Earlier briefs said to prepend
+  it; that instruction caused the recorded 2.2.10/2.2.4 divergence (progress.txt
+  2026-07-09) and is withdrawn. 0018 deletes the NBS copy entirely.
 
 - Bare `make` without `QMAKE=` picks Linux paths in status-keycard-qt. Always
   pass it.
