@@ -1497,3 +1497,66 @@ Carry-overs / follow-ups (recorded in the issue, NOT implemented):
 Standing items unchanged: NBS deletion (0018), CI migration (0019), seaqt
 qt-6.11 evaluation, 0006 (upstream-gated), status-go nimble-phase1-pin →
 develop PR, 0013 bootstrap-ordering follow-up.
+
+--- 2026-07-10 — 0016 review round (two-axis) + user adjudications + fix wave ---
+
+Orchestrator independently re-verified the headline claims (client-deps gone,
+qrcodegen in-binary, stale() driver-private, no-op 4.71–5.03 s) — all held.
+Four spec conflicts went to the human; all four ACCEPTED as built:
+
+1. Criterion 1 accepted AS MET per its own verification method. cmake's
+   Unix-Makefiles generator and cold-libstatus's foreign make are accepted
+   residuals; -G Ninja and a status-go shared-library nimscript task remain
+   recorded follow-ups.
+2. The key-file-gated cmake CONFIGURE is accepted over the spec's "invoked
+   unconditionally" wording. The issue's "What to build" bullet was amended in
+   place with the reason: three unconditional configures = 14–17 s no-op vs a
+   ~7 s criterion; `cmake --build` re-configures itself on CMakeLists changes;
+   the key covers the one input cmake cannot see (its argument list) and makes
+   the develop redirect flip safe BY CONSTRUCTION rather than by relying on
+   the artifact having been deleted.
+3. buildClient()/launchHostApp() pulled forward from 0017 — accepted;
+   criterion 1 forced it. 0017's remaining scope: nim tests, Windows launcher,
+   run-*/nim_status_client target deletion + .qmake_previous, packaging against
+   the driver binary, the explicit force flag, Windows flag branches, portable
+   stale().
+4. The Windows always-stale behaviour is a DISCLOSED REGRESSION, not an
+   unverified leg: slow-but-correct replacing fast-but-wrong (the old
+   nimblePathsStale() returned false on Windows — it declared the resolution
+   fresh without looking, and leaned on make's stamp rule, which this issue
+   deletes). 0017's content-key stale() fixes it.
+
+Fix wave (c072056813, ed3208e2b9):
+A. fetchBottles()'s dirExists is classified as BOOTSTRAP, in the header and in
+   the audit table — bootstrap materializes inputs a fresh clone lacks that
+   nothing in the build can invalidate. NEW follow-up: the bottle FLAVOR is
+   unkeyed (cross-desktop reuses arm64_sonoma). Pre-existing — make's
+   $(BOTTLES) had the same hole — and not fixed here because keying it forces
+   a one-time network refetch on every existing tree and CI agent.
+B. keyStale(keyFile, key, witness) is now the ONE key-file spelling. The
+   cmake configure's bare fileExists(CMakeCache.txt) is folded into it. There
+   is no bare fileExists gate left in the file. Verified: rm CMakeCache while
+   the key file survives → reconfigures.
+C. prepareStatusgoScratch's open-coded origin compare → keyStale(originFile,
+   storeRoot, witness = scratch/statusgo.nims). Verified: corrupt the origin →
+   "prepareStatusgo: refreshing".
+D. uiSources' prune is now `*/<name>/*` per name. NOTE — the reported bug was
+   a FALSE POSITIVE: find's -path uses fnmatch WITHOUT FNM_PATHNAME, so
+   `ui/*/vendor/*` already matched ui/a/b/vendor/x.qml (proved). Kept the new
+   spelling because it says what it means. Re-verified with a synthetic
+   depth-3 pruned file.
+E. clientKey() under-keyed the relink — REAL bug. config.nims' envOr(NAME,
+   derived) prefers an exported value, so QT_LIBDIR / STATUSGO_LIBDIR /
+   NIMSDS_LIBDIR / STATUSQ_INSTALL_PATH / STATUSKEYCARD_QT_LIBDIR /
+   DOTHERSIDE_LIBDIR / MACOSX_DEPLOYMENT_TARGET each move link flags and baked
+   rpaths while touching no file stale() watches. All now in a named
+   clientFlagEnv list; prl-to-pc's cached env joined clientSources() (it
+   decides what `pkg-config --libs Qt6…` puts on the link line). Verified:
+   export STATUSGO_LIBDIR → relink; unset → relink; then stable.
+Minor applied: developModeForce() → applyDevelopModeArms() (it mutates the
+tree; a query name invites a second call); qmlDebug() shared; the two identical
+mobile arms of `app` folded; rccSkipDirs' comment names ui/generate-rcc.go as
+the source of truth.
+
+Post-fix: no-op 4.37/4.57/4.45/4.61/4.71 s; `nim app` rc=0; `nimble build`
+rc=0. Envelope holds (it improved).
