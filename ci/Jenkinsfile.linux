@@ -116,7 +116,7 @@ pipeline {
     USE_SIMULATED_KEYCARD =  "${params.USE_SIMULATED_KEYCARD}"
     /* FIXME: figure out why NIMFLAGS are not respected */
     XDG_CACHE_HOME = "${env.WORKSPACE_TMP}"
-    /* Ensure nimcache is not shared between builds. Note: per-test nimcache is set in nim-tests.mk */
+    /* Ensure nimcache is not shared between builds. */
     NIMFLAGS = "${params.NIMFLAGS} --colors:off"
   }
 
@@ -184,7 +184,9 @@ pipeline {
         stage('Nim Tests') {
           when { expression { params.RUN_NIM_TESTS } }
           steps { script {
-            sh 'make tests-nim-linux V=1'
+            /* The Nim suite is a driver task since issue 0017; it owns the
+             * library-path environment the tests need. */
+            sh 'nim tests status.nims'
           } }
         }
 

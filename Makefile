@@ -37,20 +37,11 @@ export USE_SYSTEM_NIM
 	update-translations \
 	compile-translations \
 	deps \
-	nim_status_client \
 	seaqt-test \
-	nim_windows_launcher \
 	pkg \
 	pkg-linux \
 	pkg-macos \
 	pkg-windows \
-	run \
-	run-linux \
-	run-macos \
-	run-windows \
-	tests-nim \
-	tests-nim-linux \
-	benches-nim \
 	status-go \
 	qrcodegen \
 	status-keycard-qt \
@@ -77,7 +68,19 @@ export USE_SYSTEM_NIM
 	macos-icon-assets \
 	platform-cleanup
 
-ifeq ($(NIM_PARAMS),)
+# --- this Makefile never invokes `nim c` / `nim e` (issue 0017) ---------------
+# Every Nim compile — the client, the Nim test suite, the Windows launcher —
+# belongs to the driver (`nim <task> status.nims`). What survives here is
+# packaging, storybook, the StatusQ/QML checks, the interim mobile legs and CI
+# helpers; they CONSUME the binary the driver produced. The invariant is
+# mechanical and re-runnable:
+#
+#     scripts/check-no-nim-compiles.sh
+#
+# `nim <task> status.nims` calls (driver dispatch) are not compiles and are the
+# supported way for a packaging recipe to ask for a binary.
+
+ifeq ($(wildcard $(BUILD_SYSTEM_DIR)/makefiles/variables.mk),)
 # "variables.mk" was not included, so we update the submodules.
 GIT_SUBMODULE_UPDATE := git submodule update --init --recursive
 .DEFAULT:
@@ -92,7 +95,8 @@ GIT_SUBMODULE_UPDATE := git submodule update --init --recursive
 
 else # "variables.mk" was included. Business as usual until the end of this file.
 
-all: nim_status_client
+all:
+	nim app status.nims
 
 nix-shell: export NIX_USER_CONF_FILES := $(PWD)/nix/nix.conf
 nix-shell:
@@ -132,9 +136,6 @@ ifneq ($(USE_SYSTEM_NIM),1)
  export PATH := $(CURDIR)/$(NIM_DIR)/bin:$(PATH)
 endif
 
-# Link libm by default; the win32 branch below clears it (MSVC has no libm).
-NIM_MATH_LIB := --passL:"-lm"
-
 ifeq ($(mkspecs),macx)
  CFLAGS := -mmacosx-version-min=14.0
  export CFLAGS
@@ -145,28 +146,13 @@ ifeq ($(mkspecs),macx)
  MACOSX_DEPLOYMENT_TARGET := 14.0
  export MACOSX_DEPLOYMENT_TARGET
  PKG_TARGET := pkg-macos
- RUN_TARGET := run-macos
  QT_ARCH ?= $(shell uname -m)
 else ifeq ($(mkspecs),win32)
  LIB_EXT := dll
  PKG_TARGET := pkg-windows
- RUN_TARGET := run-windows
- # No libm on Windows/MSVC — math lives in the CRT, and lld-link has no `m.lib`.
- NIM_MATH_LIB :=
- # clang (--target=*-windows-msvc) locates the MSVC toolchain + Windows SDK itself
- # via vswhere, finding the CRT libs/headers with no vcvars setup. But its env probe
- # takes PRECEDENCE over that auto-detection: a LIB/INCLUDE/LIBPATH/VCINSTALLDIR
- # inherited from the shell overrides it with stale paths and breaks the link
- # ("could not open 'msvcrt.lib'") — even a valid VCINSTALLDIR misfires. Strip them
- # so clang always self-detects.
- unexport LIB
- unexport INCLUDE
- unexport LIBPATH
- unexport VCINSTALLDIR
 else
  LIB_EXT := so
  PKG_TARGET := pkg-linux
- RUN_TARGET := run-linux
 endif
 
 check-qt-dir:
@@ -246,9 +232,9 @@ endif
 # DESKTOP build no longer consumes it through make at all: the driver executes
 # the package's own `qt_pkgconfig.nims` (tools + a cached `env`), and
 # config.nims replays that cache. What survives here is the mk interface, for
-# the two make legs this iteration deliberately leaves alone — the mobile
-# builds and nim-test-run. They get the wrapper built and the pkg-config env
-# exported at parse time, exactly as before.
+# the one make leg this iteration deliberately leaves alone — the mobile builds
+# (the Nim test suite left with issue 0017). They get the wrapper built and the
+# pkg-config env exported at parse time, exactly as before.
 #
 # The mk is included from the resolved package root: the vendor/prl-to-pc
 # checkout when nimble.overlay says it's developed, else the read-only store
@@ -283,37 +269,16 @@ else
 endif
 # -----------------------------------------------------
 
+# The client's compile/link flags live in config.nims — for EVERY platform since
+# issue 0017 (Windows included). What survives here are the values packaging and
+# the interim mobile legs still read.
 ifneq ($(mkspecs),win32)
  export QT_LIBDIR := $(shell $(QMAKE) -query QT_INSTALL_LIBS 2>/dev/null)
  QT_QMLDIR := $(shell $(QMAKE) -query QT_INSTALL_QML 2>/dev/null)
- # some manually installed Qt instances have wrong paths in their *.pc files, so we pass the right one to the linker here
- ifeq ($(mkspecs),macx)
-  NIM_PARAMS += -L:"-framework Foundation -framework AppKit -framework Security -framework IOKit -framework CoreServices -framework LocalAuthentication"
-  # Fix for failures due to 'can't allocate code signature data for'
-  NIM_PARAMS += --passL:"-headerpad_max_install_names"
-  NIM_PARAMS += --passL:"-F$(QT_LIBDIR)"
-
- else
-  NIM_PARAMS += --passL:"-L$(QT_LIBDIR)"
-  # GNU ld resolves transitive shared-lib deps (libStatusQ.so -> libQt6WebEngineQuick.so.6)
-  # through -rpath-link, not -L; without it linking fails when Qt lives outside the
-  # system library paths
-  NIM_PARAMS += --passL:"-Wl,-rpath-link,$(QT_LIBDIR)"
- endif
- QT_SEAQT_EXTRA_LIBS = $(shell PKG_CONFIG_PATH="$(QT_PCFILEDIR)" PKG_CONFIG_PREFIX_OVERRIDE="Qt*=$(QT_PC_PREFIX)" $(QT_PC_PKGCONFIG) --libs Qt"$(QT_MAJOR_VERSION)"Core Qt"$(QT_MAJOR_VERSION)"Qml Qt"$(QT_MAJOR_VERSION)"Gui Qt"$(QT_MAJOR_VERSION)"Quick Qt"$(QT_MAJOR_VERSION)"QuickControls2 Qt"$(QT_MAJOR_VERSION)"Widgets Qt"$(QT_MAJOR_VERSION)"Svg Qt"$(QT_MAJOR_VERSION)"Multimedia Qt"$(QT_MAJOR_VERSION)"WebView Qt"$(QT_MAJOR_VERSION)"WebChannel)
-else
- WIN_SYS_LIBS := --passL:"-luser32"
- NIM_EXTRA_PARAMS := $(WIN_SYS_LIBS)
 endif
 
 ifeq ($(mkspecs),win32)
  COMMON_CMAKE_CONFIG_PARAMS += -A x64
- NIM_PARAMS += -d:sslVersion=3-x64
- NIM_PARAMS += --cc:clang
- REAL_CLANG := $(shell command -v clang 2>/dev/null)
- NIM_PARAMS += --clang.exe:"$(REAL_CLANG)" --clang.linkerexe:"$(REAL_CLANG)"
- NIM_PARAMS += --passC:"--target=x86_64-pc-windows-msvc -fms-runtime-lib=dll"
- NIM_PARAMS += --passL:"--target=x86_64-pc-windows-msvc -fuse-ld=lld -fms-runtime-lib=dll"
 endif
 
 ifeq ($(mkspecs),macx)
@@ -321,7 +286,6 @@ ifeq ($(mkspecs),macx)
    ifneq ($(QT_ARCH),arm64)
 	STATUSGO_MAKE_PARAMS += GOBIN_SHARED_LIB_CFLAGS="CGO_ENABLED=1 GOOS=darwin GOARCH=amd64"
 	COMMON_CMAKE_CONFIG_PARAMS += -DCMAKE_OSX_ARCHITECTURES=x86_64
-	NIM_PARAMS += --cpu:amd64 --os:MacOSX --passL:"-arch x86_64" --passC:"-arch x86_64"
   endif
  endif
 endif
@@ -357,7 +321,6 @@ NIMSDS_LIBDIR := $(NIMSDS_BUILD_ROOT)/build
 export NIMSDS_LIBDIR
 NIMSDS_INCDIR := $(NIMSDS_BUILD_ROOT)/library
 NIMSDS_LIBFILE := $(NIMSDS_LIBDIR)/libsds.$(LIB_EXT)
-NIM_EXTRA_PARAMS += --passL:"-L$(NIMSDS_LIBDIR)" --passL:"-lsds"
 STATUSGO_MAKE_PARAMS += NIM_SDS_LIB_DIR="$(NIMSDS_LIBDIR)" NIM_SDS_INC_DIR="$(NIMSDS_INCDIR)"
 # statusgo.nims resolves nim-sds from a nimble.paths next to itself; under the
 # single graph that file is a copy of the app's resolution (see its rule below),
@@ -425,20 +388,13 @@ endif
 
 INCLUDE_DEBUG_SYMBOLS ?= false
 ifeq ($(INCLUDE_DEBUG_SYMBOLS),true)
- # We need `-d:debug` to get Nim's default stack traces
- NIM_PARAMS += -d:debug
- # Enable debugging symbols, in case we need GDB backtraces
+ # Enable debugging symbols in the C/C++ deps, in case we need GDB backtraces
  CFLAGS += -g
  CXXFLAGS += -g
  RCC_PARAMS = --no-compress
 else
- # Additional optimization flags for release builds are not included at present;
- # adding them will involve refactoring config.nims in the root of this repo
  STATUSGO_MAKE_PARAMS += CGO_CFLAGS="-O3"
- NIM_PARAMS += -d:release -d:lto
 endif
-
-NIM_PARAMS += --outdir:./bin
 
 # App version
 DESKTOP_VERSION = $(shell ./scripts/version.sh)
@@ -452,18 +408,6 @@ STATUSGO_VERSION = $(shell make -C vendor/status-go version -s)
 else
 STATUSGO_VERSION = $(shell sed -n 's|^--path:"\(.*/pkgs2/statusgo-[^"/]*\)".*|\1|p' nimble.paths 2>/dev/null | head -1 | xargs -I{} sed -n 's|.*"vcsRevision": "\([0-9a-f]*\)".*|\1|p' {}/nimblemeta.json 2>/dev/null | cut -c1-10)
 endif
-NIM_PARAMS += -d:DESKTOP_VERSION="$(DESKTOP_VERSION)"
-NIM_PARAMS += -d:STATUSGO_VERSION="$(STATUSGO_VERSION)"
-
-GIT_COMMIT=`git log --pretty=format:'%h' -n 1`
-NIM_PARAMS += -d:GIT_COMMIT="$(GIT_COMMIT)"
-
-OUTPUT_CSV ?= false
-ifeq ($(OUTPUT_CSV), true)
-  NIM_PARAMS += -d:output_csv
-  $(shell touch .update.timestamp)
-endif
-
 ##
 ## Versioning
 ##
@@ -719,6 +663,8 @@ ifeq ($(mkspecs),win32)
 STATUSKEYCARD_QT_LIB_PREFIX :=
 STATUSKEYCARD_QT_LIB_SUBDIR := /$(COMMON_CMAKE_BUILD_TYPE)
 endif
+# Note: config.nims derives the same STATUSKEYCARD_QT_LIBDIR itself (issue 0013);
+# these exports are what the mobile legs and the packaging scripts still read.
 # Absolute (issue 0013): config.nims derives the same value, and the client
 # bakes it as an rpath — a relative rpath only resolves from the repo root.
 export STATUSKEYCARD_QT_LIBDIR := $(CURDIR)/$(STATUS_KEYCARD_QT_BUILD_DIR)$(STATUSKEYCARD_QT_LIB_SUBDIR)
@@ -729,8 +675,6 @@ export STATUSKEYCARD_QT_LIBDIR := $(CURDIR)/$(STATUS_KEYCARD_QT_BUILD_DIR)$(STAT
 # with "file cannot be mmap()ed" on bin/StatusQ.
 export STATUSKEYCARDGO_LIBDIR := $(STATUSKEYCARD_QT_LIBDIR)
 export STATUSKEYCARD_QT_LIB := $(STATUSKEYCARD_QT_LIBDIR)/$(STATUSKEYCARD_QT_LIB_PREFIX)status-keycard-qt.$(LIB_EXT)
-STATUSKEYCARD_QT_DYLIB_NAME := $(notdir $(STATUSKEYCARD_QT_LIB))
-STATUSKEYCARD_QT_LINKNAME := $(patsubst lib%,%,$(basename $(STATUSKEYCARD_QT_DYLIB_NAME)))
 
 KEYCARD_SIM_SRC_DIR := $(STATUS_KEYCARD_QT_SOURCE_DIR)/test/keycard-simulator
 KEYCARD_SIM_RUNTIME_BITS := run.sh libs versions out
@@ -765,29 +709,10 @@ status-keycard-qt-clean:
 	echo -e "\033[92mCleaning:\033[39m status-keycard-qt"
 	rm -rf $(STATUS_KEYCARD_QT_BUILD_DIR)
 
-ifeq ($(mkspecs),win32)
- # MSVC import libraries for the c-shared DLLs. The client links with clang/lld-
- # link (MSVC ABI, to use Qt's msvc build), and lld-link — unlike mingw's ld —
- # cannot link a .dll directly; it needs an import library. status-go/keycard
- # (Go) and nim-sds ship only .dll + .h, so synthesize the import libs from each
- # header via scripts/gen-import-lib.sh. They're named to match the -l flags in
- # the client link (status/<keycard>/sds.lib) and dropped into the dirs already
- # on -L. (The Qt keycard variant is a CMake shared lib that already emits its
- # own import lib, so only the Go keycard needs this.)
- STATUSGO_IMPLIB := $(STATUSGO_LIBDIR)/status.lib
- NIMSDS_IMPLIB := $(NIMSDS_LIBDIR)/sds.lib
- WIN_IMPORT_LIBS := $(STATUSGO_IMPLIB) $(NIMSDS_IMPLIB)
-
- $(STATUSGO_IMPLIB): $(STATUSGO)
-	echo -e $(BUILD_MSG) "import lib: $(notdir $(STATUSGO_IMPLIB))"
-	bash scripts/gen-import-lib.sh "$(STATUSGO_LIBDIR)/libstatus.h" "$(notdir $(STATUSGO))" "$(STATUSGO_IMPLIB)" $(HANDLE_OUTPUT)
-
- $(NIMSDS_IMPLIB): $(NIMSDS_LIBFILE)
-	echo -e $(BUILD_MSG) "import lib: $(notdir $(NIMSDS_IMPLIB))"
-	bash scripts/gen-import-lib.sh "$(NIMSDS_INCDIR)/libsds.h" "$(notdir $(NIMSDS_LIBFILE))" "$(NIMSDS_IMPLIB)" $(HANDLE_OUTPUT)
-
- import-libs: $(WIN_IMPORT_LIBS)
-endif
+# The Windows MSVC import libraries (status.lib, sds.lib, synthesized from the
+# c-shared headers by scripts/gen-import-lib.sh) are built by the driver since
+# issue 0017 — `genImportLib` in status_artifacts.nims, keyed on the DLL's
+# content. They exist for the client link, which the driver owns.
 
 # QR-Code-generator has no target here since issue 0016: the Nim wrapper that
 # binds it ({.compile.} in src/app/global/utils/qrcodegen.nim) compiles the C
@@ -849,29 +774,16 @@ compile-translations: | update-translations log-compile-translations
 clean-translations:
 	rm -rf $(TS_BUILD_DIR)
 
-# used to override the default number of kdf iterations for sqlcipher
+# used to override the default number of kdf iterations for sqlcipher; read by
+# config.nims (which owns the client's flag set since issue 0013).
 KDF_ITERATIONS ?= 0
-ifeq ($(shell test $(KDF_ITERATIONS) -gt 0; echo $$?),0)
-  NIM_PARAMS += -d:KDF_ITERATIONS:"$(KDF_ITERATIONS)"
-endif
 
 RESOURCES_LAYOUT ?= -d:development
 
-# When modifying files that are not tracked in NIM_SOURCES (see below),
-# e.g. vendor/*.nim, REBUILD_NIM=true can be supplied to `make` to ensure a
-# rebuild of bin/nim_status_client: `make REBUILD_NIM=true run`
-# Note: it is not necessary to supply REBUILD_NIM=true after `make update`
-# because that target bumps .update.timestamp
-REBUILD_NIM ?= false
-
-ifeq ($(REBUILD_NIM),true)
- $(shell touch .update.timestamp)
-endif
-
-.update.timestamp:
-	touch .update.timestamp
-
-NIM_SOURCES := .update.timestamp $(shell find src -type f)
+# REBUILD_NIM is gone with the client rule (issue 0017). Its two jobs are now
+#   - `nim app status.nims --force`            (the human's explicit rebuild)
+#   - a developed vendor whose Nim sources compile INTO the client, which the
+#     driver forces by itself (applyDevelopModeArms).
 
 STATUS_RC_FILE := status.rc
 
@@ -879,45 +791,24 @@ STATUS_RC_FILE := status.rc
 compile_windows_resources:
 	windres $(STATUS_RC_FILE) -o status.o
 
-# The pkg-config wrapper and the environment seaqt's compile-time
-# gorge("pkg-config Qt6Core") needs are prepared by the driver before it calls
-# make (issue 0015): `nim app status.nims` / nimble's before-build hook run
-# prl-to-pc's `qt_pkgconfig.nims tools` and cache its `env`. A bare `make
-# nim_status_client` on a tree the driver never touched fails fast in
-# config.nims, naming the command to run.
+# --- the client binary: built by the driver, consumed here --------------------
+#
+# `nim app status.nims` compiles the client (issue 0016) with the flag set
+# config.nims owns for EVERY platform (issue 0013 + 0017's Windows port), gates
+# the relink on `.status-client.key` (which absorbed `.qmake_previous`), and
+# orchestrates every artifact it links. The Makefile's own client rule, its
+# `NIM_PARAMS` flag soup, `.qmake_previous`, `NIM_SOURCES`, `.update.timestamp`
+# and `REBUILD_NIM` are gone with it.
+#
+# Packaging recipes therefore ASK the driver for a binary — `nim app
+# status.nims`, with the production RESOURCES_LAYOUT exported — instead of
+# carrying a second compile. That is a driver dispatch, not a Nim compile: the
+# invariant (scripts/check-no-nim-compiles.sh) forbids `nim c` / `nim e` /
+# $(ENV_SCRIPT), which no longer appear anywhere in this file.
 ifeq ($(mkspecs),win32)
  NIM_STATUS_CLIENT := bin/nim_status_client.exe
- $(NIM_STATUS_CLIENT): | $(WIN_IMPORT_LIBS)
 else
  NIM_STATUS_CLIENT := bin/nim_status_client
-endif
-
-# Writing the QMAKE variable to a file to compare its value from the previous
-# make call and forcing linking of NIM_STATUS_CLIENT if the value has changed.
-
-# Define the file to store the previous QMAKE value
-QMAKE_PREVIOUS := .qmake_previous
-
-# Check if the QMAKE value has changed
-QMAKE_CHANGED := $(shell [ -f $(QMAKE_PREVIOUS) ] && [ "$$(cat $(QMAKE_PREVIOUS))" = "$(QMAKE)" ] && echo "no" || echo "yes")
-
-# Target to store the current QMAKE value
-update-qmake-previous:
-	@echo $(QMAKE) > $(QMAKE_PREVIOUS)
-
-# Add a dependency on update-qmake-previous if QMAKE has changed
-ifeq ($(QMAKE_CHANGED),yes)
-$(NIM_STATUS_CLIENT): update-qmake-previous
-endif
-
-# Force a rebuild of nim_status_client when USE_SIMULATED_KEYCARD is toggled.
-SIMKC_MODE := $(if $(filter true,$(USE_SIMULATED_KEYCARD)),on,off)
-SIMKC_PREVIOUS := .use_simulated_keycard_previous
-SIMKC_CHANGED := $(shell [ -f $(SIMKC_PREVIOUS) ] && [ "$$(cat $(SIMKC_PREVIOUS))" = "$(SIMKC_MODE)" ] && echo "no" || echo "yes")
-update-use-simulated-keycard-previous:
-	@echo $(SIMKC_MODE) > $(SIMKC_PREVIOUS)
-ifeq ($(SIMKC_CHANGED),yes)
-$(NIM_STATUS_CLIENT): update-use-simulated-keycard-previous
 endif
 
 STATUSQ_LIB_PATH := $(STATUSQ_INSTALL_PATH)/StatusQ
@@ -925,61 +816,20 @@ EXTRA_LIBS_PATH := $(STATUSQ_BUILD_PATH)/lib
 ifeq ($(mkspecs),win32)
  STATUSQ_LIB_PATH := $(STATUSQ_BUILD_PATH)/lib/$(COMMON_CMAKE_BUILD_TYPE)
 endif
-# The desktop client's flag set lives in config.nims (issue 0013 phase A):
-# make exports its knobs/derived env (config.nims prefers env when present,
-# and derives identical values without it) and invokes a bare compile — the
-# same compile nimble's bin build and a bare `nim c src/nim_status_client.nim`
-# run, so every front door shares one flag set by construction. Windows still
-# passes the legacy flag soup (config.nims owns only the macx/linux client
-# block; Windows validation is out of the PRD's scope).
+# config.nims prefers an exported value and derives the identical one without it
+# (STATUS_BUILD_ENV_ASSERT=1 turns the preference into a hard comparison). These
+# exports keep the packaging recipes and the mobile legs authoritative for the
+# knobs a release sets.
 export RESOURCES_LAYOUT
 export INCLUDE_DEBUG_SYMBOLS
 export KDF_ITERATIONS
 export OUTPUT_CSV
 export QT_ARCH
-ifeq ($(mkspecs),win32)
-$(NIM_STATUS_CLIENT): NIM_PARAMS += $(RESOURCES_LAYOUT)
- NIM_CLIENT_COMPILE = nim c $(NIM_PARAMS) \
-	--mm:orc \
-	-d:useMalloc \
-	--passL:"-L$(STATUSGO_LIBDIR)" \
-	--passL:"-lstatus" \
-	--passL:"-L$(STATUSQ_LIB_PATH)" \
-	--passL:"-L$(EXTRA_LIBS_PATH)" \
-	--passL:"-lStatusQ" \
-	--passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" \
-	--passL:"-l$(STATUSKEYCARD_QT_LINKNAME)" \
-	$(NIM_MATH_LIB) \
-	--parallelBuild:0 \
-	$(NIM_EXTRA_PARAMS) src/nim_status_client.nim
-else
- NIM_CLIENT_COMPILE = nim c src/nim_status_client.nim
-endif
-# The 24h staleness rebuild only makes sense for a mutable checkout: a pinned
-# statusgo cannot go stale (stamp-skip arm, issue 0010), so the pre-clean is
-# develop-mode-only. (Defined before its first prerequisite use below — make
-# expands prerequisite lists immediately.)
-ifeq ($(STATUSGO_DEVELOPED),1)
-NIM_CLIENT_PRECLEAN := force-rebuild-status-go
-endif
 
-# Depends on libsds directly: platform cleanup can delete it while libstatus
-# survives, and the client would otherwise link against a missing dylib.
-$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) rcc deps $(NIMBLE_SETUP_STAMP)
-	echo -e $(BUILD_MSG) "$@"
-	$(ENV_SCRIPT) $(NIM_CLIENT_COMPILE)
-ifeq ($(mkspecs),macx)
-	install_name_tool -change \
-		libstatus.dylib \
-		@rpath/libstatus.dylib \
-		bin/nim_status_client
-	install_name_tool -change \
-		$(STATUSKEYCARD_QT_DYLIB_NAME) \
-		@rpath/$(STATUSKEYCARD_QT_DYLIB_NAME) \
-		bin/nim_status_client
-endif
-
-nim_status_client: $(NIM_CLIENT_PRECLEAN) statusq $(NIM_STATUS_CLIENT)
+# The driver build a packaging target asks for. RESOURCES_LAYOUT is part of the
+# client key, so flipping it to -d:production relinks by construction — the old
+# `rm $(NIM_STATUS_CLIENT)` dance is unnecessary.
+STATUS_CLIENT_BUILD := nim app status.nims
 
 ifdef IN_NIX_SHELL
 APPIMAGE_TOOL := appimagetool
@@ -1024,7 +874,8 @@ PRODUCTION_PARAMETERS ?= -d:production
 export APP_DIR := tmp/linux/dist
 
 $(STATUS_CLIENT_APPIMAGE): override RESOURCES_LAYOUT := $(PRODUCTION_PARAMETERS)
-$(STATUS_CLIENT_APPIMAGE): nim_status_client $(APPIMAGE_TOOL) nim-status.desktop $(FCITX5_QT)
+$(STATUS_CLIENT_APPIMAGE): $(APPIMAGE_TOOL) nim-status.desktop $(FCITX5_QT)
+	$(STATUS_CLIENT_BUILD)
 	rm -rf pkg/*.AppImage
 	chmod -R u+w tmp || true
 
@@ -1084,7 +935,8 @@ export FLATPAK_BUILD_DIR     ?= tmp/linux/flatpak/build-dir
 export FLATPAK_REPO_DIR      ?= tmp/linux/flatpak/repo
 
 flatpak: $(STATUS_CLIENT_FLATPAK)
-$(STATUS_CLIENT_FLATPAK): nim_status_client
+$(STATUS_CLIENT_FLATPAK):
+	$(STATUS_CLIENT_BUILD)
 	echo -e $(BUILD_MSG) "Flatpak"
 	DESKTOP_VERSION="$(DESKTOP_VERSION)" scripts/bundle-flatpak.sh
 
@@ -1115,7 +967,8 @@ STATUS_CLIENT_DMG ?= pkg/Status.dmg
 
 $(STATUS_CLIENT_DMG): override RESOURCES_LAYOUT := $(PRODUCTION_PARAMETERS)
 $(STATUS_CLIENT_DMG): ENTITLEMENTS ?= resources/Entitlements.plist
-$(STATUS_CLIENT_DMG): nim_status_client
+$(STATUS_CLIENT_DMG):
+	$(STATUS_CLIENT_BUILD)
 	rm -rf tmp/macos pkg/*.dmg
 	mkdir -p $(MACOS_OUTER_BUNDLE)/Contents/MacOS
 	mkdir -p $(MACOS_OUTER_BUNDLE)/Contents/Resources
@@ -1163,16 +1016,17 @@ notarize-macos: export MACOS_BUNDLE_ID ?= im.status.ethereum.desktop
 notarize-macos:
 	scripts/notarize-macos-pkg.sh $(STATUS_CLIENT_DMG)
 
-nim_windows_launcher: | deps
-	$(ENV_SCRIPT) nim c -d:debug --outdir:./bin --passL:"-static-libgcc -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive" src/nim_windows_launcher.nim
-
+# The Windows launcher is a driver task (issue 0017):
+#     nim windowsLauncher status.nims
 STATUS_CLIENT_EXE ?= pkg/Status.exe
 STATUS_CLIENT_7Z ?= pkg/Status.7z
 
 $(STATUS_CLIENT_EXE): override RESOURCES_LAYOUT := $(PRODUCTION_PARAMETERS)
 $(STATUS_CLIENT_EXE): OUTPUT := tmp/windows/dist/Status
 $(STATUS_CLIENT_EXE): INSTALLER_OUTPUT := pkg
-$(STATUS_CLIENT_EXE): compile_windows_resources nim_status_client nim_windows_launcher
+$(STATUS_CLIENT_EXE): compile_windows_resources
+	$(STATUS_CLIENT_BUILD)
+	nim windowsLauncher status.nims
 	rm -rf pkg/*.exe tmp/windows/dist
 	mkdir -p $(OUTPUT)/bin $(OUTPUT)/resources $(OUTPUT)/vendor $(OUTPUT)/bin/plugins/tls
 	cat windows-install.txt | unix2dos > $(OUTPUT)/INSTALL.txt
@@ -1218,10 +1072,9 @@ $(STATUS_CLIENT_7Z): $(STATUS_CLIENT_EXE)
 	echo -e $(BUILD_MSG) "7z"
 	7z a $(STATUS_CLIENT_7Z) ./$(OUTPUT)
 
-# pkg target rebuilds status client
-# this is to ensure production version of the app is deployed
+# pkg builds the production flavor of the client: RESOURCES_LAYOUT is part of
+# the driver's client key, so the -d:production flip relinks by itself.
 pkg:
-	rm $(NIM_STATUS_CLIENT) | :
 	$(MAKE) $(PKG_TARGET)
 
 pkg-linux: check-pkg-target-linux $(STATUS_CLIENT_APPIMAGE)
@@ -1260,54 +1113,21 @@ fix-wallet-migrations:
 	cd vendor/status-go && go generate ./internal/db/walletdb/migrations/sql && go run ./cmd/fix-wallet-migrations \
 		$(if $(FIX_WALLET_MIGRATIONS_ARGS),$(abspath $(word 1,$(FIX_WALLET_MIGRATIONS_ARGS))) $(word 2,$(FIX_WALLET_MIGRATIONS_ARGS)))
 
-run: $(RUN_TARGET)
-
-# Will only work at password login. Keycard login doesn't forward the configuration
-# STATUS_PORT ?= 30306
-# WAKUV2_PORT ?= 30307
-
-run-linux: nim_status_client
-	echo -e "\033[92mRunning:\033[39m bin/nim_status_client"
-	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(STATUSKEYCARD_QT_LIBDIR)":"$(STATUSQ_LIB_PATH)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" \
-	./bin/nim_status_client $(ARGS)
-
-run-linux-gdb: nim_status_client
-	echo -e "\033[92mRunning:\033[39m bin/nim_status_client"
-	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(STATUSKEYCARD_QT_LIBDIR)":"$(STATUSQ_LIB_PATH)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" \
-	gdb -ex=r ./bin/nim_status_client $(ARGS)
-
-run-macos: nim_status_client
-	mkdir -p bin/StatusDev.app/Contents/{MacOS,Resources}
-	cp Info.dev.plist bin/StatusDev.app/Contents/Info.plist
-	cp status-dev.icns bin/StatusDev.app/Contents/Resources/
-	cp resources/macos/dev/Assets.car bin/StatusDev.app/Contents/Resources/
-	cp resources.rcc bin/StatusDev.app/Contents/
-	# Monitoring tool loads MONITORING_QML_ENTRY_POINT="/../monitoring/Main.qml" relative to the app
-	# binary dir (Contents/MacOS -> Contents/monitoring). Copy the QML into the bundle for MONITORING builds.
-	[ "$(MONITORING)" = "false" ] || rm -rf bin/StatusDev.app/Contents/monitoring
-	[ "$(MONITORING)" = "false" ] || cp -R monitoring bin/StatusDev.app/Contents/monitoring
-	cd bin/StatusDev.app/Contents/MacOS && \
-		ln -fs ../../../nim_status_client ./
-	fileicon set bin/nim_status_client status-dev.icns
-	echo -e "\033[92mRunning:\033[39m bin/StatusDev.app/Contents/MacOS/nim_status_client"
-	DYLD_LIBRARY_PATH="$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(STATUSKEYCARD_QT_LIBDIR)":"$(STATUSQ_LIB_PATH)":"$(EXTRA_LIBS_PATH)":"$(DYLD_LIBRARY_PATH)" \
-	./bin/StatusDev.app/Contents/MacOS/nim_status_client $(ARGS)
-
-run-windows: STATUS_RC_FILE = status-dev.rc
-run-windows: compile_windows_resources nim_status_client
-	echo -e "\033[92mCopying DLLs to bin/\033[39m"
-	cp -f -R $(STATUSQ_BUILD_PATH)/bin/$(COMMON_CMAKE_BUILD_TYPE)/* ./bin/
-	cp -f $(STATUSGO_LIBDIR)/libstatus.dll ./bin/
-	cp -f $(STATUSKEYCARD_QT_LIB) ./bin/
-	cp -f $(NIMSDS_LIBDIR)/libsds.dll ./bin/
-	cp -f /c/Windows/System32/ucrtbase.dll ./bin/
-	cp -f /c/Windows/System32/vcruntime140.dll ./bin/
-	cp -f /c/Windows/System32/vcruntime140_1.dll ./bin/
-	cp -f /c/Windows/System32/downlevel/api-ms-win-crt-*.dll ./bin/
-	echo -e "\033[92mRunning:\033[39m bin/nim_status_client.exe"
-	cd bin && ./nim_status_client.exe $(ARGS)
-
-include makefiles/nim-tests.mk
+# `run`, `run-linux`, `run-linux-gdb`, `run-macos`, `run-windows` are DELETED
+# (issue 0017): the driver's `run` task has owned the launch environment since
+# issue 0013, and keeping both perpetuated two ways to run the app.
+#
+#     nim run status.nims          # build if needed + launch
+#     nim app status.nims --force  # what `make REBUILD_NIM=true run` was
+#
+# The surviving `run-*` targets (run-storybook*, run-statusq-*) launch OTHER
+# products and invoke no Nim compile; they stay.
+#
+# `tests-nim-linux` / `nim-test-run/%` are DELETED too — the Nim suite is a
+# driver task that owns the library-path environment the suite needs:
+#
+#     nim tests status.nims                 # whole suite
+#     nim tests status.nims utils_test      # one suite
 
 define qmkq
 $(shell $(QMAKE) -query $(1))
