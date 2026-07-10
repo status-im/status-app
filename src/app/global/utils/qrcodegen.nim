@@ -35,6 +35,18 @@
 ##    qrcodegen_encodeSegments() or qrcodegen_encodeSegmentsAdvanced().
 ##  (Note that all ways require supplying the desired error correction level and various byte buffers.)
 ##
+
+##  QR-Code-generator is a Nim-only dependency of this app (no StatusQ or C++
+##  consumer), so the wrapper that binds it also compiles it: the C source
+##  lands in this compile's own nimcache and inherits its flag set — cross-arch
+##  desktop, iOS and Android alike. Before issue 0016 it was a separate
+##  `make`-built static library (`vendor/QR-Code-generator/c/libqrcodegen.a`)
+##  passed to the linker with `--passL`, and its object files (in the source
+##  tree, shared with the mobile build) needed a platform-sentinel cleanup
+##  entry. All three are gone; nim's per-file command hash re-runs the C
+##  compile whenever the flags change.
+{.compile: "../../../../vendor/QR-Code-generator/c/qrcodegen.c".}
+
 ## ---- Enum and struct types----
 ##
 ##  The error correction level in a QR Code symbol.
