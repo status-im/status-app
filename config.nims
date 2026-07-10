@@ -313,8 +313,10 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
     # Windows: cmake writes shared libraries into a per-config subdirectory, so
     # StatusQ / status-keycard-qt / DOtherSide all gain a `/<BuildType>` leg —
     # the same STATUSQ_LIB_PATH / STATUSKEYCARD_QT_LIBDIR / DOTHERSIDE_LIBDIR
-    # the win32 Makefile branch derived.
-    let winCfg = "/" & buildType()
+    # the win32 Makefile branch derived. `winCfgSuffix()`, `keycardLibDir()` and
+    # `dotherSideLibDir()` come from status_env.nims — the driver links/loads
+    # exactly these directories, so there is one definition, not two (0017).
+    let winCfg = winCfgSuffix()
     let sgRoot = statusgoBuildRoot()
     let statusgoLibDir = envOr("STATUSGO_LIBDIR", sgRoot / "build/bin")
     let nimsdsLibDir = envOr("NIMSDS_LIBDIR", sgRoot / ".sds-build/build")
@@ -324,15 +326,10 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
       if hostOS == "windows": statusqBuild / "lib" & winCfg
       else: statusqInstall / "StatusQ"
     let statusqExtraLibs = statusqBuild / "lib"
-    let keycardLibDir = envOr("STATUSKEYCARD_QT_LIBDIR",
-      repo / "build/status-keycard-qt" /
-        (case hostOS
-         of "macosx": "macos"
-         of "windows": "windows" & winCfg
-         else: "linux"))
-    let dosLibDir = envOr("DOTHERSIDE_LIBDIR",
-      (repo / "vendor/DOtherSide/build/Qt" & qtVersion & "/lib") &
-        (if hostOS == "windows": winCfg else: ""))
+    let keycardDefault = keycardLibDir()   # status_env.nims (shared with the driver)
+    let dosDefault = dotherSideLibDir(qtVersion)
+    let keycardLibDir = envOr("STATUSKEYCARD_QT_LIBDIR", keycardDefault)
+    let dosLibDir = envOr("DOTHERSIDE_LIBDIR", dosDefault)
 
     # seaqt resolves Qt at compile time via gorge("pkg-config Qt6..."): the
     # environment that makes that resolve the ACTIVE kit is prl-to-pc's to
@@ -341,24 +338,9 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
     # from upstream: no .pc path, no kit, no Qt version, and no assumption that
     # a wrapper exists (System-mode kits ship usable .pc and get none).
     # putEnv in config.nims propagates to every compile-time gorge of this nim
-    # process. Both composed variables keep the mk's prepend semantics, and
-    # both are idempotent: on the make path the included qt-pkgconfig.mk has
-    # already exported the same values (mobile/nim-test legs need it), and
-    # re-applying them must not stack duplicates.
-    for (name, val) in qtPkgConfigEnv(
-        qtPkgConfigKey(qmake, prlToPcRoot(), qtPrefix)):
-      case name
-      of "PKG_CONFIG_PATH":
-        let cur = getEnv("PKG_CONFIG_PATH")
-        if cur.len == 0: putEnv(name, val)
-        elif not cur.startsWith(val): putEnv(name, val & ":" & cur)
-      of "PKG_CONFIG_PREFIX_OVERRIDE", "PKG_CONFIG_ARCH":
-        putEnv(name, val)
-      of "QT_PC_PATH_PREPEND":
-        let cur = getEnv("PATH")
-        if not cur.startsWith(val & ":"): putEnv("PATH", val & ":" & cur)
-      else:
-        discard  # QT_PC_MODE / QT_PC_REASON / QT_PC_PREFIX: diagnostics only
+    # process. The replay itself lives in status_env.nims (one definition; the
+    # driver's `tests` task needs the same environment — issue 0017 review).
+    applyQtPkgConfigEnv(qmake, qtPrefix)
 
     # App version defines (previously injected by make's recipe): derived so
     # every path agrees. DESKTOP_VERSION intentionally skips version.sh's
@@ -413,7 +395,11 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
       # (issue 0017). They apply to the CLIENT only — `src/nim_windows_launcher.nim`
       # is still built with the default mingw/gcc toolchain, which is why they
       # live inside `isDesktopClient` and not in the generic Windows block above.
-      switch("define", "lto")  # make's NIM_PARAMS release arm reached the client
+      # make's win32 arm gave `-d:release -d:lto` only when INCLUDE_DEBUG_SYMBOLS
+      # != true (otherwise `-d:debug`, and NO lto). Same guard here — a debug
+      # Windows client must not be link-time optimized (issue 0017 review, I1).
+      if clientRelease:
+        switch("define", "lto")
       switch("define", "sslVersion=3-x64")
       switch("cc", "clang")
       let realClang = findExe("clang")
@@ -462,15 +448,9 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
       switch("passL", dosLibDir / "libDOtherSideStatic.a")
       # The Qt modules the app links beyond what the seaqt bindings pull in
       # themselves (the former QT_SEAQT_EXTRA_LIBS make var — which the win32
-      # branch never passed, hence its absence above).
-      let (seaqtQtLibs, seaqtRc) = gorgeEx(
-        "pkg-config --libs Qt6Core Qt6Qml Qt6Gui Qt6Quick Qt6QuickControls2 " &
-        "Qt6Widgets Qt6Svg Qt6Multimedia Qt6WebView Qt6WebChannel")
-      if seaqtRc != 0:
-        statusEnvFail "pkg-config failed to resolve the Qt link libraries:\n" &
-          seaqtQtLibs & "\nPKG_CONFIG_PATH is " & getEnv("PKG_CONFIG_PATH") &
-          " (from prl-to-pc's `env`; see " & qtPcEnvCache & ")."
-      switch("passL", seaqtQtLibs)
+      # branch never passed, hence its absence above). status_env.nims owns the
+      # one definition; the driver's `tests` task links the same set.
+      switch("passL", qtSeaqtExtraLibs())
       switch("passL", "-L" & statusgoLibDir)
       switch("passL", "-lstatus")
       switch("passL", "-L" & statusqLibPath)
