@@ -97,10 +97,16 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
   # env — nimble build/run, bare nim c — the same values are derived from the
   # repo layout, nimble.paths/nimble.overlay and `qmake -query`.
   # Mobile client compiles (--os:ios/--os:android) keep their make-owned flag
-  # sets: this issue targets the HOST build. Windows stays make-owned too
-  # (PRD: Windows validation out of scope).
+  # sets: that issue targeted the HOST build.
+  #
+  # Windows joined this block in issue 0017: its flag branches (clang/MSVC-ABI
+  # target flags, the ssl version define, the import-lib link names, the cmake
+  # per-config lib dirs) moved out of the Makefile's `NIM_PARAMS`, which is
+  # gone. They are PORTED, UNVERIFIED — a real Windows build belongs to the
+  # Windows push. Leaving them in make would have restored the two-owners-of-
+  # one-flag-set problem that iteration exists to end.
   let isDesktopClient = projectPath().splitFile.name == "nim_status_client" and
-      not (defined(ios) or defined(android)) and hostOS != "windows"
+      not (defined(ios) or defined(android))
   # Release is the canonical dev-build flavor on every path: nimble's bin
   # compile passes -d:release itself, make exports INCLUDE_DEBUG_SYMBOLS.
   let clientRelease = isDesktopClient and getEnv("INCLUDE_DEBUG_SYMBOLS") != "true"
@@ -304,16 +310,29 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
 
     # Artifact locations follow the develop-mode overlay exactly like the
     # Makefiles do (nimble.overlay → scratch copy vs vendor checkout).
+    # Windows: cmake writes shared libraries into a per-config subdirectory, so
+    # StatusQ / status-keycard-qt / DOtherSide all gain a `/<BuildType>` leg —
+    # the same STATUSQ_LIB_PATH / STATUSKEYCARD_QT_LIBDIR / DOTHERSIDE_LIBDIR
+    # the win32 Makefile branch derived.
+    let winCfg = "/" & buildType()
     let sgRoot = statusgoBuildRoot()
     let statusgoLibDir = envOr("STATUSGO_LIBDIR", sgRoot / "build/bin")
     let nimsdsLibDir = envOr("NIMSDS_LIBDIR", sgRoot / ".sds-build/build")
     let statusqInstall = envOr("STATUSQ_INSTALL_PATH", repo / "bin")
-    let statusqLibPath = statusqInstall / "StatusQ"
-    let statusqExtraLibs = repo / "ui/StatusQ/build/Qt" & qtVersion & "/lib"
+    let statusqBuild = repo / "ui/StatusQ/build/Qt" & qtVersion
+    let statusqLibPath =
+      if hostOS == "windows": statusqBuild / "lib" & winCfg
+      else: statusqInstall / "StatusQ"
+    let statusqExtraLibs = statusqBuild / "lib"
     let keycardLibDir = envOr("STATUSKEYCARD_QT_LIBDIR",
-      repo / "build/status-keycard-qt" / (if hostOS == "macosx": "macos" else: "linux"))
+      repo / "build/status-keycard-qt" /
+        (case hostOS
+         of "macosx": "macos"
+         of "windows": "windows" & winCfg
+         else: "linux"))
     let dosLibDir = envOr("DOTHERSIDE_LIBDIR",
-      repo / "vendor/DOtherSide/build/Qt" & qtVersion & "/lib")
+      (repo / "vendor/DOtherSide/build/Qt" & qtVersion & "/lib") &
+        (if hostOS == "windows": winCfg else: ""))
 
     # seaqt resolves Qt at compile time via gorge("pkg-config Qt6..."): the
     # environment that makes that resolve the ACTIVE kit is prl-to-pc's to
@@ -386,38 +405,85 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
     if getEnv("OUTPUT_CSV") == "true":
       switch("define", "output_csv")
 
-    # Link inputs, in the order the make recipe used to pass them.
-    if hostOS == "macosx":
-      switch("passL", "-framework Foundation -framework AppKit -framework Security -framework IOKit -framework CoreServices -framework LocalAuthentication")
-      # Fix for failures due to 'can't allocate code signature data for'
-      switch("passL", "-headerpad_max_install_names")
-      switch("passL", "-F" & qtLibDir)
+    if hostOS == "windows":
+      # --- the Windows client's flag set (PORTED from make, UNVERIFIED) -------
+      # The client links Qt's MSVC build, so it is compiled with clang targeting
+      # the MSVC ABI and linked with lld-link. These flags were the Makefile's
+      # win32 `NIM_PARAMS` / `NIM_CLIENT_COMPILE` / `NIM_EXTRA_PARAMS` branches
+      # (issue 0017). They apply to the CLIENT only — `src/nim_windows_launcher.nim`
+      # is still built with the default mingw/gcc toolchain, which is why they
+      # live inside `isDesktopClient` and not in the generic Windows block above.
+      switch("define", "lto")  # make's NIM_PARAMS release arm reached the client
+      switch("define", "sslVersion=3-x64")
+      switch("cc", "clang")
+      let realClang = findExe("clang")
+      if realClang.len == 0:
+        statusEnvFail "the Windows client is compiled with clang (MSVC ABI, to" &
+          " link Qt's msvc build) but no `clang` is on PATH."
+      switch("clang.exe", realClang)
+      switch("clang.linkerexe", realClang)
+      switch("passC", "--target=x86_64-pc-windows-msvc -fms-runtime-lib=dll")
+      switch("passL", "--target=x86_64-pc-windows-msvc -fuse-ld=lld -fms-runtime-lib=dll")
+      # clang (--target=*-windows-msvc) locates the MSVC toolchain + Windows SDK
+      # itself via vswhere. But its env probe takes PRECEDENCE over that
+      # auto-detection: a LIB/INCLUDE/LIBPATH/VCINSTALLDIR inherited from the
+      # shell overrides it with stale paths and breaks the link ("could not open
+      # 'msvcrt.lib'") — even a valid VCINSTALLDIR misfires. Strip them so clang
+      # always self-detects. (make's `unexport`; `delEnv` from a config
+      # propagates to the compiler's own children.)
+      for staleVar in ["LIB", "INCLUDE", "LIBPATH", "VCINSTALLDIR"]:
+        delEnv(staleVar)
+      # lld-link links the IMPORT library, not the .dll (passing the .dll gives
+      # "bad file type"). cmake emits DOtherSide.lib next to the .dll; the Go
+      # c-shared libs get theirs synthesized by the driver (genImportLib), named
+      # status.lib / sds.lib to match the -l flags below.
+      switch("passL", dosLibDir / "DOtherSide.lib")
+      switch("passL", "-L" & statusgoLibDir)
+      switch("passL", "-lstatus")
+      switch("passL", "-L" & statusqLibPath)
+      switch("passL", "-L" & statusqExtraLibs)
+      switch("passL", "-lStatusQ")
+      switch("passL", "-L" & keycardLibDir)
+      switch("passL", "-lstatus-keycard-qt")
+      # No -lm: math lives in the CRT and lld-link has no `m.lib` (make's
+      # NIM_MATH_LIB was cleared on win32).
+      switch("passL", "-L" & nimsdsLibDir)
+      switch("passL", "-lsds")
+      switch("passL", "-luser32")  # make's WIN_SYS_LIBS
     else:
-      switch("passL", "-L" & qtLibDir)
-    switch("passL", dosLibDir / "libDOtherSideStatic.a")
-    # The Qt modules the app links beyond what the seaqt bindings pull in
-    # themselves (the former QT_SEAQT_EXTRA_LIBS make var).
-    let (seaqtQtLibs, seaqtRc) = gorgeEx(
-      "pkg-config --libs Qt6Core Qt6Qml Qt6Gui Qt6Quick Qt6QuickControls2 " &
-      "Qt6Widgets Qt6Svg Qt6Multimedia Qt6WebView Qt6WebChannel")
-    if seaqtRc != 0:
-      statusEnvFail "pkg-config failed to resolve the Qt link libraries:\n" &
-        seaqtQtLibs & "\nPKG_CONFIG_PATH is " & getEnv("PKG_CONFIG_PATH") &
-        " (from prl-to-pc's `env`; see " & qtPcEnvCache & ")."
-    switch("passL", seaqtQtLibs)
-    switch("passL", "-L" & statusgoLibDir)
-    switch("passL", "-lstatus")
-    switch("passL", "-L" & statusqLibPath)
-    switch("passL", "-L" & statusqExtraLibs)
-    switch("passL", "-lStatusQ")
-    switch("passL", "-L" & keycardLibDir)
-    switch("passL", "-lstatus-keycard-qt")
-    # QR-Code-generator is {.compile.}d by src/app/global/utils/qrcodegen.nim
-    # (issue 0016) — no static library, no link flag. -lm stays: the C source
-    # needs libm.
-    switch("passL", "-lm")
-    switch("passL", "-L" & nimsdsLibDir)
-    switch("passL", "-lsds")
+      # Link inputs, in the order the make recipe used to pass them.
+      if hostOS == "macosx":
+        switch("passL", "-framework Foundation -framework AppKit -framework Security -framework IOKit -framework CoreServices -framework LocalAuthentication")
+        # Fix for failures due to 'can't allocate code signature data for'
+        switch("passL", "-headerpad_max_install_names")
+        switch("passL", "-F" & qtLibDir)
+      else:
+        switch("passL", "-L" & qtLibDir)
+      switch("passL", dosLibDir / "libDOtherSideStatic.a")
+      # The Qt modules the app links beyond what the seaqt bindings pull in
+      # themselves (the former QT_SEAQT_EXTRA_LIBS make var — which the win32
+      # branch never passed, hence its absence above).
+      let (seaqtQtLibs, seaqtRc) = gorgeEx(
+        "pkg-config --libs Qt6Core Qt6Qml Qt6Gui Qt6Quick Qt6QuickControls2 " &
+        "Qt6Widgets Qt6Svg Qt6Multimedia Qt6WebView Qt6WebChannel")
+      if seaqtRc != 0:
+        statusEnvFail "pkg-config failed to resolve the Qt link libraries:\n" &
+          seaqtQtLibs & "\nPKG_CONFIG_PATH is " & getEnv("PKG_CONFIG_PATH") &
+          " (from prl-to-pc's `env`; see " & qtPcEnvCache & ")."
+      switch("passL", seaqtQtLibs)
+      switch("passL", "-L" & statusgoLibDir)
+      switch("passL", "-lstatus")
+      switch("passL", "-L" & statusqLibPath)
+      switch("passL", "-L" & statusqExtraLibs)
+      switch("passL", "-lStatusQ")
+      switch("passL", "-L" & keycardLibDir)
+      switch("passL", "-lstatus-keycard-qt")
+      # QR-Code-generator is {.compile.}d by src/app/global/utils/qrcodegen.nim
+      # (issue 0016) — no static library, no link flag. -lm stays: the C source
+      # needs libm.
+      switch("passL", "-lm")
+      switch("passL", "-L" & nimsdsLibDir)
+      switch("passL", "-lsds")
 
     # rpaths (macOS): the four the make path always baked, plus libsds and
     # StatusQ's cmake lib dir so the bare binary resolves every @rpath

@@ -36,11 +36,15 @@ nim_status_client.log
 .flatpak-builder
 /ui/StatusQ/sandbox/android/.gradle/
 mobile/android/qt6/.gradle/
+# issue 0016/0017: the driver's key files. .status-client.key absorbed make's
+# .qmake_previous, whose rule died with the client target in 0017 — the entry
+# stays so an existing tree's leftover copy is not suddenly untracked.
 .qmake_previous
 # Used to track the simulated keycard mode changes via the USE_SIMULATED_KEYCARD build flag
 .use_simulated_keycard_previous
-# issue 0016: the driver's client key file (absorbs .qmake_previous)
 .status-client.key
+.status-setup.key
+.status-rcc.key
 *.qm
 
 # Squish test ================================================================

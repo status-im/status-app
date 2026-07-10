@@ -17,31 +17,46 @@
 # THE TWO GATING PATTERNS — there are exactly two, and no others may be added
 # ---------------------------------------------------------------------------
 #
-# 1. `stale(outputs, inputs)` — an mtime scan with make's semantics: rebuild
-#    when an output is missing, or when any input is NEWER than the oldest
-#    output. Used for artifacts whose inputs are files we can enumerate
-#    (resources.rcc, libsds, the client binary, the `nimble setup` product).
-#    Costs one subprocess per call, whatever the input count.
+# Both are **key files**: the build records a key next to the artifact, and a
+# build whose key differs rebuilds. They differ only in where the key comes
+# from.
 #
-#    Limits, both inherited from `test -nt` and both documented here rather
-#    than worked around: second-granularity comparison (an edit landing inside
-#    the same second as the output's mtime is missed — make compares
-#    nanoseconds), and POSIX-shell only, so on Windows `stale()` always
-#    reports stale.
+# 1. `stale(keyFile, outputs, key)` with `key = contentKey(...)` — the key is a
+#    digest of the CONTENT of the artifact's file inputs (resources.rcc, libsds,
+#    the client binary, the `nimble setup` product). Rebuild when an output is
+#    missing or the recorded digest differs.
 #
-# 2. The **key file** — keyed invalidation for artifacts whose inputs are not
-#    files but a *configuration*: the resolved store path, the target triple,
-#    the flag set, a cmake configure's argument list. The build writes the key
-#    next to the artifact; a build whose key differs rebuilds. Established by
-#    the status-go scratch engine (`.statusgo-build/.statusgo-origin`,
-#    `.statusgo-artifact-key`; issue 0010) and reused here for the client
-#    binary (`.status-client.key`, which absorbs make's `.qmake_previous`) and
-#    for every cmake configure (`<buildDir>/.status-cmake.key`).
+#    Issue 0016 spelled this as an mtime scan over the shell's `test -nt`.
+#    Issue 0017 replaced it with a content key, for three reasons:
+#      - `-nt` is a POSIX-shell builtin, so `stale()` returned unconditionally
+#        true on Windows: every gated artifact rebuilt on every build (0016's
+#        disclosed regression).
+#      - mtime is simply the wrong question across a develop/undevelop flip.
+#        Restoring identical sources rebuilt; checking out older-but-different
+#        sources did not.
+#      - `test -nt` compares SECONDS, so an edit landing inside the output's own
+#        second was missed. make compares nanoseconds; a content key compares
+#        bytes and has no granularity at all.
+#
+#    `stale(keyFile, outputs)` (no key) is the degenerate "the artifact exists
+#    ⇒ it is fresh" gate (libstatus, whose freshness is owned by the key file
+#    next to the scratch copy). It is pattern 1, not a third pattern.
+#
+# 2. The **configuration key** — keyed invalidation for artifacts whose inputs
+#    are not files but a *configuration*: the resolved store path, the target
+#    triple, the flag set, a cmake configure's argument list. Established by the
+#    status-go scratch engine (`.statusgo-build/.statusgo-origin`,
+#    `.statusgo-artifact-key`; issue 0010) and reused for every cmake configure
+#    (`<buildDir>/.status-cmake.key`).
 #
 #    `keyStale(keyFile, key, witness)` is the ONE spelling. `witness` is the
 #    artifact whose existence the key vouches for (a cmake cache, a scratch
 #    tree): a missing witness is stale however well the key matches. There is
 #    no bare `fileExists` gate anywhere in this file.
+#
+# The client binary uses BOTH key sources in one key file (`.status-client.key`,
+# which absorbs make's `.qmake_previous`): its configuration key (qmake + the
+# flag env) concatenated with the content key of its sources.
 #
 # A cmake artifact's BUILD step is gated by neither: `cmake --build` runs every
 # time and cmake's own incrementality (including its check-build-system
@@ -50,48 +65,12 @@
 # (The issue's "invoked unconditionally" wording was amended for this: three
 # unconditional configures put the no-op at 14–17 s against a ~7 s criterion.)
 #
-# `stale(outputs, [])` is the degenerate "the artifact exists ⇒ it is fresh"
-# gate (libstatus, whose freshness is owned by the key file next to the scratch
-# copy). It is pattern 1, not a third pattern; spell it that way.
-#
 # Bootstrap — `initSubmodules()` and `fetchBottles()` — is NOT gating. It
 # materializes inputs that a fresh clone lacks and that nothing in the build
 # can invalidate (a git submodule tracks its own revision; a brew bottle is
 # content-addressed by its flavor). It tests for presence, and that is all it
 # can ever do. Kept out of the two patterns deliberately, and out of the
 # rebuild-decision audit.
-
-# --- staleness (pattern 1) ----------------------------------------------------
-
-proc stale(outputs, inputs: openArray[string]): bool =
-  ## True when any output is missing, or any input is newer than the OLDEST
-  ## output. Paths are absolute. Empty `inputs` means "exists ⇒ fresh".
-  ##
-  ## nimscript has no mtime API (`os.getLastModificationTime` is an `{.error.}`
-  ## on the NimScript target — walls doc), so this shells out exactly once: the
-  ## inputs stream through the shell's own `-nt` test on a heredoc, which costs
-  ## no exec per file and has no ARG_MAX ceiling.
-  if outputs.len == 0:
-    return true
-  for o in outputs:
-    if not fileExists(o) and not dirExists(o):
-      return true
-  if inputs.len == 0:
-    return false
-  if hostOS == "windows":
-    return true # `test -nt` is POSIX-shell only; always rebuild there
-  var cmd = "ref=$(ls -td --"
-  for o in outputs:
-    cmd &= " " & quoteShell(o)
-  cmd &= " | tail -1)\n" &
-    "while IFS= read -r f; do\n" &
-    "  if [ \"$f\" -nt \"$ref\" ]; then echo __STATUS_STALE__; exit 0; fi\n" &
-    "done <<'__STATUS_INPUTS__'\n" &
-    inputs.join("\n") & "\n__STATUS_INPUTS__\nexit 0\n"
-  let (output, rc) = gorgeEx(cmd)
-  if rc != 0:
-    fail "the staleness scan failed (outputs: " & outputs.join(" ") & "):\n" & output
-  "__STATUS_STALE__" in output
 
 # --- keyed invalidation (pattern 2) -------------------------------------------
 
@@ -107,6 +86,88 @@ proc keyStale(keyFile, key: string, witness = ""): bool =
 proc writeKey(keyFile, key: string) =
   mkDir keyFile.parentDir
   writeFile(keyFile, key)
+
+# --- staleness (pattern 1): a portable CONTENT key ----------------------------
+
+proc contentKey(findCmd: string, extra: openArray[string] = []): string =
+  ## A digest of the CONTENT of an input set, computed in ONE subprocess.
+  ##
+  ## `findCmd` is a `find(1)` invocation relative to the repo root (this proc
+  ## appends `-print0`); `extra` names additional absolute paths. A path in
+  ## `extra` that does not exist is dropped — its disappearance changes the
+  ## digest, which is exactly the invalidation we want.
+  ##
+  ## The obvious spelling of a content key — `hash(readFile(f))` per input, in
+  ## the nimscript VM, as the walls doc sketches — is unaffordable here:
+  ## measured 2026-07-10, the 1762 inputs / 11.7 MB of `src/` + the rcc set cost
+  ## **13–16 s**, against a whole-build no-op budget of ~5 s. The VM's string
+  ## hash runs one byte at a time. So the digest is produced where the input
+  ## list is already produced: one `find`, piped into `cksum`, folded by a
+  ## second `cksum`. It reads every byte, costs 0.3 s (src) / 0.9 s (ui), and
+  ## spends exactly one subprocess — the same count as the mtime scan it
+  ## replaced.
+  ##
+  ## Residual portability limit, stated rather than hidden: the digest needs a
+  ## POSIX shell with `find`, `xargs`, `sort` and `cksum`. So does the input
+  ## enumeration it subsumes, and so does every `scripts/*.sh` the build already
+  ## runs, and the root Makefile's `SHELL := bash`. On Windows that is msys2 —
+  ## the same environment the Windows build has always required. What is gone is
+  ## the `-nt` BUILTIN dependency, which is what made `stale()` unconditionally
+  ## true there.
+  ##
+  ## `sort` makes the digest independent of readdir order. A path containing a
+  ## newline would split a `cksum` line and is not supported (no such path
+  ## exists in this tree, and `find`'s own output is already line-oriented).
+  var emit: seq[string]
+  if findCmd.len > 0:
+    emit.add findCmd & " -print0"
+  var present: seq[string]
+  for f in extra:
+    if fileExists(f):
+      present.add f
+  if present.len > 0:
+    var p = "printf '%s\\0'"
+    for f in present:
+      p &= " " & quoteShell(f)
+    emit.add p
+  if emit.len == 0:
+    return ""
+  # `set -o pipefail` where the shell has it (bash/ksh/zsh; dash silently
+  # declines): without it a failing `find` would still yield a well-formed
+  # digest of a truncated input set.
+  let cmd = "cd " & quoteShell(thisDir()) &
+    " && set -o pipefail 2>/dev/null; { " & emit.join("; ") &
+    "; } | xargs -0 cksum | sort | cksum"
+  let (output, rc) = gorgeEx(cmd)
+  let key = output.strip
+  # gorgeEx merges stderr into the output (walls doc), so validate the SHAPE:
+  # `cksum` prints exactly "<crc> <bytes>". Anything else is a broken scan.
+  var wellFormed = rc == 0 and key.len > 0 and '\n' notin key
+  if wellFormed:
+    let parts = key.splitWhitespace()
+    wellFormed = parts.len == 2
+    for p in parts:
+      for c in p:
+        if c notin {'0' .. '9'}: wellFormed = false
+  if not wellFormed:
+    fail "the content-key scan failed:\n  " & cmd & "\n" & output
+  key
+
+proc stale(keyFile: string, outputs: openArray[string], key = ""): bool =
+  ## Pattern 1. True when any output is missing, or when the recorded content
+  ## key of the inputs differs from `key`. An empty `key` means "exists ⇒
+  ## fresh" (and then `keyFile` is unused).
+  ##
+  ## A caller that rebuilds must `writeKey(keyFile, key)` afterwards — the key
+  ## is recorded by the build, never by the check.
+  if outputs.len == 0:
+    return true
+  for o in outputs:
+    if not fileExists(o) and not dirExists(o):
+      return true
+  if key.len == 0:
+    return false
+  keyStale(keyFile, key)
 
 # --- shared build environment --------------------------------------------------
 
@@ -158,10 +219,8 @@ proc platformTarget(): string =
   let arch = if qtArch().len > 0: qtArch() else: uname("-m")
   uname("-s").toLowerAscii & "-" & arch
 
-proc qmlDebug(): bool = getEnv("QML_DEBUG", "false") != "false"
-
-proc buildType(): string =
-  if qmlDebug(): "Debug" else: "Release"
+## qmlDebug() / buildType() live in status_env.nims: config.nims' Windows client
+## arm needs the same cmake flavor to find `lib/<Release|Debug>` (issue 0017).
 
 proc exportBuildEnv() =
   ## What the root Makefile exported into every artifact recipe. cmake reads
@@ -284,6 +343,8 @@ proc bootstrap() =
 
 # --- dependency resolution (the relocated setup stamp) ------------------------
 
+const setupKeyFile = ".status-setup.key"  # gitignored
+
 proc nimbleSetupIfStale() =
   ## The setup stamp is not preserved but RELOCATED (issue 0016): `nimble
   ## setup` re-runs only when its product (nimble.paths) is stale w.r.t. the
@@ -291,15 +352,21 @@ proc nimbleSetupIfStale() =
   ## make's `$(NIMBLE_SETUP_STAMP)` rule used.
   ##
   ## Ordering is load-bearing and must survive: `nimble setup` FIRST, then the
-  ## overlay is applied to the freshly generated nimble.paths (ADR 0004). Note
-  ## that applying the overlay rewrites nimble.paths, which is also what makes
-  ## the stamp fresh — the same `touch` make's recipe ended with.
+  ## overlay is applied to the freshly generated nimble.paths (ADR 0004).
+  ##
+  ## Since the gate became a content key (issue 0017) the stamp no longer *is*
+  ## nimble.paths' mtime, which closes the walls doc's `applyOverlay` trap: a
+  ## hand-run `nimble setup` / `nim applyOverlay status.nims` rewrites
+  ## nimble.paths but does NOT record the inputs' key, so the next build still
+  ## resolves. It used to silently skip.
   var inputs: seq[string]
   for f in ["nimble.lock", "nim_status_client.nimble", overlayFile,
             "vendor/status-go/statusgo.nimble"]:
     if fileExists(thisDir() / f):
       inputs.add thisDir() / f
-  if not stale([thisDir() / "nimble.paths"], inputs):
+  let keyFile = thisDir() / setupKeyFile
+  let key = contentKey("", inputs)
+  if not stale(keyFile, [thisDir() / "nimble.paths"], key):
     return
   if findExe("nimble").len == 0:
     fail "nimble is not on PATH (see BUILDING.md) — it resolves the whole" &
@@ -312,6 +379,7 @@ proc nimbleSetupIfStale() =
       " minutes) and retry."
   echo output.strip
   applyOverlayNow()
+  writeKey(keyFile, key)
 
 # --- the platform sentinel (ADR 0003) -----------------------------------------
 
@@ -382,15 +450,24 @@ proc syncStatusgoPaths() =
     quoteShell(dst) & " || cp nimble.paths " & quoteShell(dst)
 
 proc buildLibsds() =
+  ## A developed nim-sds is FORCED: its sources live in the checkout, which is
+  ## not among the inputs below (enumerating a whole vendor tree per build costs
+  ## more than the sub-build's own no-op). Under 0016's mtime gate the same job
+  ## was done by the sds vendor's `forceTouch` arm — a `touch` of the derived
+  ## nimble.paths — which a content key correctly ignores.
+  let force = "sds" in readOverlay()
   var inputs = @[statusgoBuildRoot() / "nimble.paths"]
   let devManifest = thisDir() / "vendor/status-go/statusgo.nimble"
   if fileExists(devManifest):
     inputs.add devManifest # a nim-sds pin bump must invalidate the built lib
-  if not stale([nimsdsLibFile()], inputs):
+  let keyFile = statusgoBuildRoot() / ".libsds.key"
+  let key = contentKey("", inputs)
+  if not force and not stale(keyFile, [nimsdsLibFile()], key):
     return
   echo "\e[92mBuilding:\e[39m libsds"
   exec "cd " & quoteShell(statusgoBuildRoot()) & " && " &
     quoteShell(nimExe()) & " libsds statusgo.nims"
+  writeKey(keyFile, key)
 
 proc buildLibstatus() =
   ## status-go owns its own build system (a Go/make project vendored as a
@@ -401,7 +478,7 @@ proc buildLibstatus() =
   ## In pinned mode the artifact's existence is the whole gate (the scratch
   ## engine's key file already covers pin and flag changes; a develop-mode
   ## checkout gets its FORCE arm from applyDevelopModeArms()).
-  if not stale([statusgoLibFile()], []):
+  if not stale("", [statusgoLibFile()]):
     return
   echo "\e[92mBuilding:\e[39m status-go"
   # protoc-gen-go is a `go generate` prerequisite of status-go's own build.
@@ -458,6 +535,10 @@ proc buildDOtherSide() =
   cmakeArtifact("DOtherSide", thisDir() / "vendor/DOtherSide",
     thisDir() / "vendor/DOtherSide/build/Qt" & qtProp("QT_VERSION"), args)
 
+proc dotherSideLibDir(): string =
+  ## Keep in sync with config.nims' DOTHERSIDE_LIBDIR default.
+  thisDir() / "vendor/DOtherSide/build/Qt" & qtProp("QT_VERSION") / "lib"
+
 proc keycardBuildDir(): string =
   thisDir() / "build/status-keycard-qt" /
     (case hostOS
@@ -510,13 +591,17 @@ const rccSkipDirs = ["StatusQ", "vendor", "tests", "node_modules"]
   ## missed here only costs spurious rcc rebuilds; the reverse silently stops
   ## regenerating a resource.
 
-proc uiSources(): seq[string] =
-  ## make's UI_SOURCES, with two corrections that `stale()` forces:
+const rccKeyFile = ".status-rcc.key"  # gitignored
+
+proc uiFindCmd(): string =
+  ## make's UI_SOURCES, with two corrections that the gate forces:
   ##
   ## - the generator's pruned directories are excluded. make's glob included
   ##   `ui/StatusQ/**`, where StatusQ's own cmake CONFIGURE rewrites
   ##   `build/Qt<ver>/TestConfig.generated.qrc` on every run — an input that is
   ##   newer than resources.rcc on every build, i.e. a permanently stale target.
+  ##   (A content key would also see the rewrite; cmake stamps a new timestamp
+  ##   comment into it.)
   ## - `.qm` joins the pattern: the generator embeds the compiled catalogs, and
   ##   since translations stopped being a build step (issue 0016) nothing else
   ##   would notice a `nim compileTranslations status.nims` run.
@@ -527,22 +612,18 @@ proc uiSources(): seq[string] =
   var prune = ""
   for d in rccSkipDirs:
     prune &= " -not -path '*/" & d & "/*'"
-  let findCmd =
+  result =
     if hostOS == "macosx":
       "find -E ui -type f -iregex '.*(qmldir|qml|qrc|js|qm)$'"
     else:
       "find ui -type f -regextype egrep -iregex '.*(qmldir|qml|qrc|js|qm)$'"
-  let (output, rc) = gorgeEx("cd " & quoteShell(thisDir()) & " && " & findCmd &
-    prune & " -not -iname 'resources.qrc'")
-  if rc != 0:
-    fail "could not enumerate the UI sources:\n" & output
-  for line in output.splitLines:
-    if line.strip.len > 0:
-      result.add thisDir() / line.strip
+  result &= prune & " -not -iname 'resources.qrc'"
 
 proc buildResources() =
   let rcc = thisDir() / "resources.rcc"
-  if not stale([rcc], uiSources()):
+  let keyFile = thisDir() / rccKeyFile
+  let key = contentKey(uiFindCmd())
+  if not stale(keyFile, [rcc], key):
     return
   echo "\e[92mBuilding:\e[39m resources.rcc"
   rmFile rcc
@@ -552,6 +633,7 @@ proc buildResources() =
   exec "cd " & quoteShell(thisDir()) & " && rcc -binary " &
     (if debugSymbols(): "--no-compress " else: "") &
     "ui/resources.qrc -o ./resources.rcc"
+  writeKey(keyFile, key)
 
 # --- the client binary ---------------------------------------------------------
 
@@ -591,28 +673,28 @@ proc clientKey(): string =
   for name in clientFlagEnv:
     result &= "|" & name & "=" & getEnv(name)
 
-proc clientSources(): seq[string] =
-  let (output, rc) = gorgeEx("cd " & quoteShell(thisDir()) & " && find src -type f")
-  if rc != 0:
-    fail "could not enumerate the client sources:\n" & output
-  for line in output.splitLines:
-    if line.strip.len > 0:
-      result.add thisDir() / line.strip
-  # The flag set itself is an input (issue 0013 put it in config.nims), and so
-  # is the resolution it reads — plus prl-to-pc's cached `env`, which decides
-  # what `pkg-config --libs Qt6…` puts on the link line (issue 0015).
+proc clientSourcesKey(): string =
+  ## The content key of everything the client compile reads outside the nimble
+  ## graph. The flag set itself is an input (issue 0013 put it in config.nims),
+  ## and so is the resolution it reads — plus prl-to-pc's cached `env`, which
+  ## decides what `pkg-config --libs Qt6…` puts on the link line (issue 0015).
+  var extra: seq[string]
   for f in ["config.nims", "status_env.nims", "nimble.paths", qtPcEnvCache]:
-    if fileExists(thisDir() / f):
-      result.add thisDir() / f
+    extra.add thisDir() / f
+  contentKey("find src -type f", extra)
 
 proc buildClient(force: bool) =
   ## `force` is the replacement for make's REBUILD_NIM: a developed vendor
   ## whose Nim sources compile INTO the client (seaqt, nimqml, the statusgo
-  ## wrapper) skips the mtime gate entirely.
+  ## wrapper) skips the gate entirely, and so does `nim app status.nims --force`.
+  ##
+  ## ONE key file carries both key sources (see the header): the configuration
+  ## key (qmake + the flag env, which move link flags and baked rpaths without
+  ## touching a file) and the content key of the sources.
   let bin = clientBinary()
   let keyFile = thisDir() / ".status-client.key"
-  let key = clientKey()
-  if not force and not keyStale(keyFile, key) and not stale([bin], clientSources()):
+  let key = clientKey() & "\n" & clientSourcesKey()
+  if not force and not stale(keyFile, [bin], key):
     return
   echo "\e[92mBuilding:\e[39m " & bin.extractFilename
   exec "cd " & quoteShell(thisDir()) & " && " & quoteShell(nimExe()) &
@@ -626,6 +708,182 @@ proc buildClient(force: bool) =
     exec "install_name_tool -change libstatus-keycard-qt.dylib" &
       " @rpath/libstatus-keycard-qt.dylib " & quoteShell(bin)
   writeKey(keyFile, key)
+
+# --- the Nim test suite (issue 0017) ------------------------------------------
+
+proc exportQtPkgConfigEnv() =
+  ## config.nims replays prl-to-pc's cached `env` only inside its
+  ## `isDesktopClient` block; the Nim tests are not that client, so the driver
+  ## applies it here before invoking `nim`. `putEnv` from nimscript propagates
+  ## to `exec`/`gorgeEx` children (walls doc), which is what makes seaqt's
+  ## compile-time `gorge("pkg-config Qt6Core")` resolve the active kit.
+  ## Under make this arrived as qt-pkgconfig.mk's parse-time exports.
+  let qmake = qmakeExe()
+  for (name, val) in qtPkgConfigEnv(
+      qtPkgConfigKey(qmake, prlToPcRoot(), qtProp("QT_INSTALL_PREFIX"))):
+    case name
+    of "PKG_CONFIG_PATH":
+      let cur = getEnv("PKG_CONFIG_PATH")
+      if cur.len == 0: putEnv(name, val)
+      elif not cur.startsWith(val): putEnv(name, val & ":" & cur)
+    of "PKG_CONFIG_PREFIX_OVERRIDE", "PKG_CONFIG_ARCH":
+      putEnv(name, val)
+    of "QT_PC_PATH_PREPEND":
+      let cur = getEnv("PATH")
+      if not cur.startsWith(val & ":"): putEnv("PATH", val & ":" & cur)
+    else:
+      discard  # QT_PC_MODE / QT_PC_REASON / QT_PC_PREFIX: diagnostics only
+
+proc qtSeaqtExtraLibs(): string =
+  ## make's `QT_SEAQT_EXTRA_LIBS`: the Qt modules the binary links beyond what
+  ## the seaqt bindings pull in themselves. Needs exportQtPkgConfigEnv() first.
+  let (output, rc) = gorgeEx(
+    "pkg-config --libs Qt6Core Qt6Qml Qt6Gui Qt6Quick Qt6QuickControls2 " &
+    "Qt6Widgets Qt6Svg Qt6Multimedia Qt6WebView Qt6WebChannel")
+  if rc != 0:
+    fail "pkg-config failed to resolve the Qt link libraries:\n" & output &
+      "\nPKG_CONFIG_PATH is " & getEnv("PKG_CONFIG_PATH") & " (from" &
+      " prl-to-pc's `env`; see " & qtPcEnvCache & ")."
+  output.strip
+
+proc nimTestFiles(): seq[string] =
+  let (output, rc) = gorgeEx("cd " & quoteShell(thisDir()) &
+    " && find test/nim -type f -name '*.nim' | sort")
+  if rc != 0:
+    fail "could not enumerate the Nim tests (test/nim/*.nim):\n" & output
+  for line in output.splitLines:
+    if line.strip.len > 0:
+      result.add line.strip
+
+proc runNimTests(only: seq[string]) =
+  ## `make nim-test-run/%` + `tests-nim-linux`, moved to the driver.
+  ##
+  ## The driver owns the library-path environment, which is the whole reason
+  ## this could not stay a make one-liner: make's recipe exported
+  ## `LD_LIBRARY_PATH` only, so on macOS the freshly linked test binary died at
+  ## startup with `Library not loaded: @rpath/libsds.dylib` (reproduced
+  ## 2026-07-10 on `make nim-test-run/test/nim/utils_test.nim`). Compile and run
+  ## are therefore separate steps here, and the run gets the same library path
+  ## `launchHostApp` gives the app.
+  ##
+  ## The flag set is make's, minus the `-d:DESKTOP_VERSION` / `-d:GIT_COMMIT` /
+  ## `-d:STATUSGO_VERSION` trio: those are `{.strdefine.}`s with defaults
+  ## (src/constants.nim) that no test asserts on, and re-deriving them here
+  ## would be a second copy of config.nims' derivation.
+  exportQtPkgConfigEnv()
+  let qtLibDir = qtProp("QT_INSTALL_LIBS")
+  # config.nims' non-client arms bake one rpath per env var that is SET; make
+  # exported these. Only the two libraries the tests actually link need one.
+  # (The client's key is untouched: this task never compiles the client.)
+  putEnv("QT_LIBDIR", qtLibDir)
+  putEnv("STATUSGO_LIBDIR", statusgoLibDir())
+
+  var flags = @["c", "--mm:refc", "--outdir:./bin"]
+  if debugSymbols():
+    flags.add "-d:debug"
+  else:
+    flags.add "-d:release"
+    flags.add "-d:lto"
+  if hostOS == "macosx":
+    flags.add "--passL:-framework Foundation -framework AppKit -framework" &
+      " Security -framework IOKit -framework CoreServices -framework" &
+      " LocalAuthentication"
+    flags.add "--passL:-headerpad_max_install_names"
+    flags.add "--passL:-F" & qtLibDir
+  else:
+    flags.add "--passL:-L" & qtLibDir
+  flags.add "--passL:" & dotherSideLibDir() / "libDOtherSideStatic.a"
+  flags.add "--passL:" & qtSeaqtExtraLibs()
+  flags.add "--passL:-L" & nimsdsLibDir()
+  flags.add "--passL:-lsds"
+  flags.add "--passL:-L" & statusgoLibDir()
+  flags.add "--passL:-lstatus"
+
+  var libPath = ""
+  for d in [qtLibDir, nimsdsLibDir(), statusgoLibDir()]:
+    libPath &= d & ":"
+  let libPathVar = if hostOS == "macosx": "DYLD_LIBRARY_PATH" else: "LD_LIBRARY_PATH"
+
+  var tests = nimTestFiles()
+  if only.len > 0:
+    var picked: seq[string]
+    for t in tests:
+      for o in only:
+        if o == t or o == t.extractFilename or o == t.splitFile.name:
+          picked.add t
+    if picked.len == 0:
+      fail "no test matches " & only.join(" ") & "\nKnown tests:\n  " &
+        tests.join("\n  ")
+    tests = picked
+
+  var cmd = quoteShell(nimExe())
+  for f in flags:
+    cmd &= " " & quoteShell(f)
+  for t in tests:
+    echo "\e[92mBuilding:\e[39m " & t
+    exec "cd " & quoteShell(thisDir()) & " && " & cmd & " " & quoteShell(t)
+    let bin = thisDir() / "bin" / t.splitFile.name
+    echo "\e[92mRunning:\e[39m " & bin.extractFilename
+    exec "cd " & quoteShell(thisDir()) & " && " & libPathVar & "=" &
+      quoteShell(libPath & getEnv(libPathVar)) & " " & quoteShell(bin)
+  echo "\e[92mNim tests:\e[39m " & $tests.len & " suite(s) green"
+
+# --- the Windows launcher (issue 0017) ----------------------------------------
+
+proc buildWindowsLauncher() =
+  ## `make nim_windows_launcher`, moved to the driver. The launcher is the small
+  ## GUI shim that `pkg-windows` ships as `Status.exe` next to `bin/Status.exe`;
+  ## it shellExecuteW's the real client so the console window never appears.
+  ##
+  ## Built with the DEFAULT cc (mingw/gcc), never with the client's
+  ## clang/MSVC-ABI flag set — those live inside config.nims' `isDesktopClient`
+  ## block precisely so this compile does not inherit them.
+  ##
+  ## PORTED, UNVERIFIED on a non-Windows host: `--os:windows` reaches the C
+  ## backend (verified: `--compileOnly` emits the Windows C sources) but the
+  ## link needs an x86_64-w64-mingw32 toolchain this machine does not carry.
+  ## `nim windowsLauncher status.nims --compileOnly` is the check a non-Windows
+  ## host can run.
+  var cmd = "cd " & quoteShell(thisDir()) & " && " & quoteShell(nimExe()) &
+    " c -d:debug --outdir:./bin" &
+    " --passL:\"-static-libgcc -Wl,-Bstatic,--whole-archive -lwinpthread" &
+    " -Wl,--no-whole-archive\""
+  if hostOS != "windows":
+    cmd &= " --os:windows --cpu:amd64"
+  if "--compileOnly" in taskArgv():
+    cmd &= " --compileOnly:on --nimcache:" &
+      quoteShell(thisDir() / "nimcache/windows-launcher")
+  echo "\e[92mBuilding:\e[39m nim_windows_launcher"
+  exec cmd & " src/nim_windows_launcher.nim"
+
+# --- Windows import libraries (issue 0017) ------------------------------------
+
+proc genImportLib(header, dll, outLib: string) =
+  ## lld-link (MSVC ABI, needed to link Qt's msvc build) cannot link a `.dll`
+  ## directly — unlike mingw's ld it needs an import library. status-go and
+  ## nim-sds ship only `.dll` + `.h`, so synthesize one from each header. The
+  ## names match the `-l` flags config.nims puts on the client link line, and
+  ## they land in the directories already on `-L`.
+  ##
+  ## Keyed on the DLL's content: a rebuilt DLL with new exports needs a new
+  ## import library. (make keyed it on the DLL's mtime.)
+  let keyFile = outLib.parentDir / ("." & outLib.extractFilename & ".key")
+  let key = contentKey("", [dll])
+  if not stale(keyFile, [outLib], key):
+    return
+  echo "\e[92mBuilding:\e[39m import lib: " & outLib.extractFilename
+  exec "cd " & quoteShell(thisDir()) & " && bash scripts/gen-import-lib.sh " &
+    quoteShell(header) & " " & quoteShell(dll.extractFilename) & " " &
+    quoteShell(outLib)
+  writeKey(keyFile, key)
+
+proc buildWindowsImportLibs() =
+  if hostOS != "windows":
+    return
+  genImportLib(statusgoLibDir() / "libstatus.h", statusgoLibFile(),
+    statusgoLibDir() / "status.lib")
+  genImportLib(nimsdsIncDir() / "libsds.h", nimsdsLibFile(),
+    nimsdsLibDir() / "sds.lib")
 
 # --- the ordered call list ------------------------------------------------------
 
@@ -644,6 +902,7 @@ proc buildHostArtifacts(force: bool) =
   exportBuildEnv()
   platformCleanup()
   buildStatusgo()
+  buildWindowsImportLibs()  # no-op off Windows; needs libstatus + libsds
   buildStatusQ()
   buildDOtherSide()
   buildKeycardQt()

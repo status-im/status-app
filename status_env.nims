@@ -121,6 +121,19 @@ when not declared(prlToPcRoot):
           let rootEnd = entry.find(DirSep, i + marker.len)
           return if rootEnd < 0: entry else: entry[0 ..< rootEnd]
 
+# --- cmake build flavor (shared with config.nims' Windows arm; issue 0017) ----
+# The Windows client links artifacts out of cmake's per-config subdirectories
+# (`lib/Release`, `lib/Debug`), so the compiler config must derive the very same
+# flavor the driver hands cmake. One definition, two consumers.
+
+when not declared(qmlDebug):
+  proc qmlDebug(): bool = getEnv("QML_DEBUG", "false") != "false"
+
+when not declared(buildType):
+  proc buildType(): string =
+    ## make's COMMON_CMAKE_BUILD_TYPE.
+    if qmlDebug(): "Debug" else: "Release"
+
 # --- the Qt pkg-config environment cache (issue 0015) -------------------------
 # prl-to-pc owns kit derivation and the System/Generated probe; its
 # `qt_pkgconfig.nims env` prints the resulting environment. Running that per nim
