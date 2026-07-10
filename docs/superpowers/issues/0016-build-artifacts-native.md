@@ -26,10 +26,25 @@ What moves:
 
 - **cmake artifacts** — StatusQ, DOtherSide, the status-keycard-qt wrapper and
   the translations project all go through **one generic configure/build
-  procedure**, invoked unconditionally: cmake's own incrementality is the no-op
-  path (this is already how these behave under make). The 0011
-  `FETCHCONTENT_SOURCE_DIR_<NAME>` redirect-pair contract is preserved
-  verbatim — always pass the pair, empty value means pinned.
+  procedure**. The **build** step is invoked unconditionally: cmake's own
+  incrementality is the no-op path (this is already how these behave under
+  make). The 0011 `FETCHCONTENT_SOURCE_DIR_<NAME>` redirect-pair contract is
+  preserved verbatim — always pass the pair, empty value means pinned.
+
+  **Amended 2026-07-10 (user-adjudicated).** The original wording said the
+  whole procedure was "invoked unconditionally". Measured, the three
+  *configures* cost 5.26 s (StatusQ) + 0.57 s (DOtherSide) + 1.13 s (keycard),
+  putting the no-op at **14–17 s** against this issue's own ~7 s criterion. So
+  the **configure** step is gated by the key-file pattern on its argument list.
+  This is not a loss of correctness, it is a gain:
+  - `cmake --build` re-runs the configure *itself* when a `CMakeLists.txt`
+    changes — every generator emits a check-build-system rule. That is cmake's
+    incrementality, and it still owns the no-op path.
+  - The only input cmake cannot see is a change in its own configure
+    ARGUMENTS: a develop `FETCHCONTENT_SOURCE_DIR_*` flip, a build-type flip,
+    another Qt kit. Keying exactly that makes the redirect flip safe *by
+    construction*, where the make rule it replaces relied on the artifact
+    happening to have been deleted first.
 - **DOtherSide gets no investment**: it is dead on `origin/master` (`chore:
   Drop DOtherSide`) and simply rides the generic procedure until this branch
   merges master.
@@ -58,12 +73,23 @@ driver header:
 `client-deps` is deleted. The mobile Makefile keeps its own path this
 iteration and is untouched here.
 
+**Scope note, 2026-07-10 (user-adjudicated).** Criterion 1 ("no `make` in the
+tree") cannot be met while `nim app status.nims` still shells to
+`make nim_status_client`, so the **client compile** (`buildClient()`) and the
+**launch** (`launchHostApp()`) were pulled forward from issue 0017 into this
+slice, together with the `REBUILD_NIM` → `applyDevelopModeArms()` replacement.
+0017's remaining scope shrinks accordingly, to: the Nim test suite, the Windows
+launcher, deleting the `run-*` and `nim_status_client` make targets (plus
+`.qmake_previous`), pointing packaging at the driver-built binary, the explicit
+force flag on `app`, the Windows flag branches, and a portable (content-key)
+`stale()`.
+
 ## Acceptance criteria
 
 - [x] `nim app status.nims` builds a runnable app with **no `make` process in
       the tree** (verifiable by removing make from `PATH` for the run).
-      *Met as stated and as verified; the literal wording is not achievable —
-      see criterion 1 in the verification record.*
+      *Adjudicated met per its own method; two residual `make` sources are
+      accepted — see criterion 1 in the verification record.*
 - [x] No-op rebuild stays within the established envelope (~7 s desktop).
 - [x] Full build from a wiped store succeeds.
 - [x] The client links a QR code generator compiled via `{.compile.}`; the
@@ -105,8 +131,10 @@ Commits: `f19b0479d3` (engine + driver rewire), `a7017dbfd5` (qrcodegen
 
 ### 1. `nim app status.nims` builds a runnable app with no `make` process in the tree
 
-**Met as stated. The literal wording is not achievable and never was —
-recorded honestly rather than worked around.**
+**Met.** *Adjudicated 2026-07-10: accepted as met per its own stated
+verification method. The two residual `make` sources below (cmake's generator,
+cold-libstatus) are accepted residuals; the Ninja switch and a status-go
+shared-library nimscript task stay as recorded follow-ups.*
 
 *The criterion's own verification method passes.* With `make` stripped from
 `PATH` (`/usr/bin` removed, every other needed `/usr/bin` tool re-exposed
@@ -153,18 +181,21 @@ doc and as follow-ups below.
 
 ### 2. No-op rebuild within the established envelope (~7 s)
 
-Five consecutive `nim app status.nims` no-ops on the final tree:
+Five consecutive `nim app status.nims` no-ops after the 2026-07-10 review
+fixes (which added six env vars to the client key and rewrote the rcc prune):
 
-    real 5.48 / 5.17 / 4.91 / 4.92 / 4.78
+    real 4.37 / 4.57 / 4.45 / 4.61 / 4.71
 
-and an earlier five-run set after the same code landed: `5.27 / 4.98 / 4.61 /
-4.96 / 4.98`. **4.61–5.57 s** across ten runs — inside the 6.78–7.25 s
+and, before them, `5.48 / 5.17 / 4.91 / 4.92 / 4.78` and `5.27 / 4.98 / 4.61 /
+4.96 / 4.98`. **4.37–5.57 s** across fifteen runs — inside the 6.78–7.25 s
 envelope, and faster than the pre-change `make`-delegating baseline measured on
 this machine the same session (`8.10 / 8.06 / 8.25 s`).
 
 Two things bought it, and both are load-bearing:
 
-- **the cmake configure is key-file gated.** Measured per phase:
+- **the cmake configure is key-file gated** (the spec's "invoked
+  unconditionally" wording was amended for this; user-adjudicated 2026-07-10).
+  Measured per phase:
   `statusq configure 5.26 s` / `statusq build 2.56 s` / `install 0.23 s`,
   `dos configure 0.57 s` / `build 0.42 s`, `keycard configure 1.13 s` /
   `build 0.61 s`. Running all three configures unconditionally put the no-op at
@@ -253,6 +284,19 @@ archive member whose symbols are already defined.
 The last one is a deliberate addition: `.qm` joined the input pattern, because
 `ui/generate-rcc.go` embeds the catalogs and translations stopped being a build
 step in this issue.
+
+The prune now matches the generator's `filepath.SkipDir`-on-a-basename exactly,
+with `*/<name>/*` per pruned name (commit `c072056813`). Review raised the
+depth-limited form as a correctness bug; it was not one — find's `-path` uses
+`fnmatch` **without** `FNM_PATHNAME`, so its `*` already crossed `/`:
+
+    $ find ui -type f -path 'ui/*/vendor/*'   # ui/a/b/vendor/x.qml → 1 match
+    $ find ui -type f -path '*/vendor/*'      # ui/a/b/vendor/x.qml → 1 match
+
+Re-verified on a synthetic depth-3 pruned file (`ui/app/mainui/vendor/Probe.qml`,
+which `generate-rcc.go` also skips): touching it leaves rcc skipped; touching
+`ui/main.qml` regenerates it. The new spelling says what it means rather than
+relying on that fnmatch detail.
 
 ### 6. Fresh clone with uninitialised submodules
 
@@ -361,23 +405,66 @@ legs write the same `.platform-target` file.
 
 Full audit of every rebuild decision in `status_artifacts.nims`:
 
-| line | gate | pattern |
+Rewritten after the 2026-07-10 review round (commit `c072056813`): every
+rebuild decision now uses one of the two spellings, and there is **no bare
+`fileExists` gate left in the file**.
+
+| what | gate | pattern |
 |------|------|---------|
-| 202 | cmake configure (`CMakeCache.txt` + argument-list key) | key file |
-| 230 | submodule `.git` presence | bootstrap, not a rebuild gate |
-| 271 | `nimble setup` (nimble.paths vs lock/manifests/overlay) | `stale()` |
-| 316/326 | statusgo scratch (`.statusgo-origin`, `.statusgo-artifact-key`) | key file |
-| 354 | libsds | `stale()` |
-| 368 | libstatus | `stale(out, [])` |
-| 501 | resources.rcc | `stale()` |
-| 546 | the client binary (`.status-client.key` + sources) | key file + `stale()` |
+| cmake configure | `keyStale(.status-cmake.key, <argument list>, witness = CMakeCache.txt)` | key file |
+| `nimble setup` | `stale([nimble.paths], [lock, manifests, overlay])` | `stale()` |
+| statusgo scratch tree | `keyStale(.statusgo-origin, <store path>, witness = statusgo.nims)` | key file |
+| statusgo artifacts | `keyStale(.statusgo-artifact-key, <flag set>)` | key file |
+| libsds | `stale([libsds], [statusgo nimble.paths, statusgo.nimble])` | `stale()` |
+| libstatus | `stale([libstatus], [])` | `stale()` |
+| resources.rcc | `stale([resources.rcc], uiSources())` | `stale()` |
+| the client binary | `keyStale(.status-client.key, clientKey())` + `stale([bin], clientSources())` | both |
+| submodules, brew bottles | presence | **bootstrap, not gating** — see below |
+
+`keyStale(keyFile, key, witness)` is the single key-file spelling. `witness` is
+the artifact whose existence the key vouches for, so a key file that outlived
+an `rm -rf` of its build tree cannot read fresh:
+
+    $ rm -f ui/StatusQ/build/Qt6.11.0/CMakeCache.txt   # key file survives
+    $ nim app status.nims
+      Configuring: StatusQ                              ← witness gone ⇒ stale
+
+    $ echo /nonexistent/store/path > .statusgo-build/.statusgo-origin
+    $ nim buildArtifacts status.nims
+      prepareStatusgo: refreshing .statusgo-build from ~/.nimble/pkgs2/statusgo-0.1.0-4f85453a…
+
+**Bootstrap is not gating.** `initSubmodules()` and `fetchBottles()` materialize
+inputs a fresh clone lacks and that nothing in the build can invalidate — a git
+submodule tracks its own revision, a brew bottle is content-addressed by its
+flavor. Presence is the only question they can ask, so they are deliberately
+outside the two patterns and outside this table. The header says so.
 
 Both patterns, their semantics and their limits (second granularity;
 `stale()` always true on Windows) are documented in the header of
 `status_artifacts.nims`, together with the reason `stale()` may never move into
 `status_env.nims`. `libstatus`'s "the artifact exists ⇒ it is fresh" check is
-spelled `stale(outputs, [])` rather than a bare `fileExists`, so the audit is
-literally true (commit `0f913789c9`).
+spelled `stale(outputs, [])` rather than a bare `fileExists` (commit
+`0f913789c9`).
+
+The client key (fix E, commit `c072056813`) covers **every** environment
+variable `config.nims` reads inside its `isDesktopClient` block that moves a
+compile or link flag — `envOr(NAME, derived)` prefers an exported value, so any
+of them changes the binary while leaving every file `stale()` watches untouched:
+
+    $ cat .status-client.key | tr '|' '\n'
+    /Users/…/Qt/6.11.0/macos/bin/qmake
+    INCLUDE_DEBUG_SYMBOLS=      QT_ARCH=                  RESOURCES_LAYOUT=
+    KDF_ITERATIONS=             OUTPUT_CSV=               QT_LIBDIR=
+    STATUSGO_LIBDIR=            NIMSDS_LIBDIR=            STATUSQ_INSTALL_PATH=
+    STATUSKEYCARD_QT_LIBDIR=    DOTHERSIDE_LIBDIR=        MACOSX_DEPLOYMENT_TARGET=14.0
+
+    nim app status.nims                          → not relinked
+    export STATUSGO_LIBDIR=…/build/bin; nim app  → relinked   (moves -L and an rpath)
+    unset STATUSGO_LIBDIR;             nim app   → relinked
+    nim app status.nims                          → not relinked   (stable again)
+
+`prl-to-pc`'s cached `env` joined `clientSources()` for the same reason: it
+decides what `pkg-config --libs Qt6…` puts on the link line.
 
 ### 12. `client-deps` no longer exists
 
@@ -398,12 +485,27 @@ now calls `buildHostArtifacts()`.
     $ ./bin/nim_status_client --datadir=/tmp/status-0016-smoke
       still running after 8 s; "starting application..." in the log
 
-### Not verified
+### Disclosed regression: Windows rebuilds everything, every build
 
-- **Windows.** `stale()` returns `true` unconditionally there (no POSIX
-  `test -nt`), so `nimble setup` and every gated artifact would rebuild on
-  every build. The Windows client compile also still carries its make-owned
-  flag soup. Ported, unverified — the same honest-record pattern 0012 used.
+Not a gap in verification — a **known, accepted regression**, adjudicated
+2026-07-10. `stale()` shells out to the POSIX `test -nt`, which Windows has no
+shell for, so it returns `true` unconditionally: `nimble setup` and every
+`stale()`-gated artifact (resources.rcc, libsds, the client binary) rebuild on
+every Windows build.
+
+It trades **slow-but-correct** for the **fast-but-wrong** behaviour it
+replaces. The old `nimblePathsStale()` returned `false` on Windows — it
+declared the resolution fresh without looking, and relied on make's stamp rule
+(which this issue deletes) to catch a changed lock or manifest. A Windows
+developer who bumped a pin would silently have built against the old store.
+
+Fixed by 0017's portable `stale()`: the content-key variant the walls doc
+already describes (`hash(readFile(src))` + compiler version + flags, written to
+a key file), which is also what 0017 wants for the client compile across
+develop flips. Recorded as follow-up 4. The Windows client compile separately
+still carries its make-owned flag soup — ported, unverified, as 0012 did.
+
+### Not verified
 - **Linux.** The `run` task's `LD_LIBRARY_PATH` launch arm, the `sonoma`
   (non-arm64) bottle flavor and the `linux` keycard build dir are code-review
   only; no Linux host here.
@@ -439,3 +541,15 @@ now calls `buildHostArtifacts()`.
    launches natively). 0017 deletes them, as planned.
 6. **`.qmake_previous`** is superseded by `.status-client.key` but the make
    rule that writes it still exists; it dies with 0017's client-compile move.
+7. **The brew bottle's flavor is not keyed.** `fetchBottles()` gates on the
+   directory's presence, so a cross-desktop flip (`QT_ARCH=x86_64`, which wants
+   the `sonoma` bottle rather than `arm64_sonoma`) reuses the wrong bottle.
+   Pre-existing — make's `$(BOTTLES)` file target had the identical hole — and
+   deliberately not fixed here: keying it would force a one-time network
+   refetch on every existing tree and CI agent.
+8. **0017's scope shrank.** `buildClient()` and `launchHostApp()` landed here
+   because criterion 1 required them. What remains for 0017: the Nim test
+   suite, the Windows launcher, deleting the `run-*` / `nim_status_client` make
+   targets and `.qmake_previous`, packaging against the driver-built binary,
+   the explicit force flag on `app`, the Windows flag branches, and the
+   portable `stale()` of follow-up 4.
