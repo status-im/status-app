@@ -456,6 +456,46 @@ broken `find` cannot yield a well-formed digest of a truncated set.
 The docstring's claim that a vanished `extra` path "changes the digest" is now
 true in every case, including the all-vanished one.
 
+**Amended 2026-07-10 (review round 2) — the round-1 fixes above were confirmed
+except for two shell-portability holes in the same line.**
+
+R1 (CRITICAL). The `<crc> 0` empty-set guard was **inert on GNU xargs**. GNU
+xargs runs its utility ONCE even on empty input unless `--no-run-if-empty`
+(`-r`) is given; the round-1 line lacked it. So on Linux a vanished set ran
+`cksum </dev/null` → `4294967295 0`, and the outer `cksum` of that one non-empty
+line yielded `3871339299 13` — well-formed, bytes≠0, guard bypassed, empty set
+FRESH forever. macOS/BSD xargs already skips the utility on empty input, which
+is why round 1 (verified only on macOS) missed it. Fix: `xargs -0 -r cksum`
+(`-r` is a documented no-op on BSD/macOS — verified accepted on this host).
+Evidence — the two arms of GNU xargs, reproduced on macOS by hand:
+
+    # GNU WITHOUT -r (xargs runs cksum on empty stdin):
+    $ cksum </dev/null | sort | cksum          → 3871339299 13   (bytes≠0, BYPASSED)
+    # GNU WITH -r (pipeline stays empty):
+    $ printf '' | sort | cksum                 → 4294967295 0    (bytes=0, guard FIRES)
+    # macOS xargs, empty set, both with and without -r:
+    $ printf '' | xargs -0 -r cksum | sort | cksum → 4294967295 0 (already skips)
+
+R2 (Important). With a non-empty `extra` list the emitted pipe stage is a brace
+group `{ find … -print0; printf … }`, whose exit status is its LAST command's —
+`printf`'s — so a **failing `find` was masked** and pipefail never saw it; only
+the empty-set shape check could catch a *fully* truncated scan, not a partial
+one. Fix: `{ find … -print0 || exit 1; printf … }`. Evidence, bash+pipefail:
+
+    # WITHOUT the fix — find fails, printf survives → truncated digest ACCEPTED:
+    $ { find /nonexistent -print0; printf '%s\0' src/constants.nim; } \
+        | xargs -0 -r cksum | sort | cksum   → 1362895266 34   rc=0   (silent truncation)
+    # WITH the fix — find's failure aborts the stage → pipefail rejects:
+    $ { find /nonexistent -print0 || exit 1; printf '%s\0' src/constants.nim; } \
+        | xargs -0 -r cksum | sort | cksum   → 4294967295 0    rc=1   (rejected)
+
+Both fixes re-verified through the REAL code path (`uiFindCmd()` pointed at an
+empty dir → `nim buildArtifacts status.nims`): the gate fails loudly with the
+empty-set error, and the printed command now carries both `-print0 || exit 1`
+and `xargs -0 -r cksum`. The C1 dash probe still yields `2310363601 47390`,
+rc=0, and is unchanged on `/bin/sh` and `/bin/bash`. The line 409 sketch above
+(`xargs -0 cksum`) is superseded by `xargs -0 -r cksum`.
+
 Semantics, verified:
 
     touch src/nim_status_client.nim ; nim app  →  SKIPPED  (mtime gate rebuilt)
@@ -625,6 +665,38 @@ Regression set re-run after the wave:
     $ touch pkg/Status.dmg && make -n pkg-macos              nim app status.nims
     $ /bin/dash -c '<the emitted contentKey command>'        digest, rc=0
 
+### Fix wave — round 2 (2026-07-10, later)
+
+The round-1 wave's re-review confirmed everything except two shell-portability
+holes in `contentKey()`'s one command line, plus three record-only items.
+
+| # | what | disposition | where |
+|---|------|-------------|-------|
+| R1 | `<crc> 0` empty-set guard inert on GNU xargs (`-r` was missing → runs `cksum` once on empty input) | fixed: `xargs -0 -r cksum` | §10 |
+| R2 | failing `find` masked by trailing `printf` in the brace group → truncated digest accepted | fixed: `find … -print0 \|\| exit 1` | §10 |
+| R3 | FORCE phony prereq → chained make invocations re-deploy twice (dev-only) | recorded (accept, no re-engineer) | follow-up 15 |
+| R4 | Windows client compile is a hard gap — `status.o` has no producer | reclassified | follow-up 12 |
+| R5 | a failed `cd` still runs the pipeline in the wrong cwd (pre-existing) | recorded | follow-up 16 |
+
+Both code fixes are in `status_artifacts.nims`'s `contentKey()` (the emit line
+and the pipeline line); the docstring was amended to match. Regression set
+re-run after round 2 (same machine; the six orphaned `qmlprofiler` processes of
+§10 are gone, so the no-op envelope is back near the round-1 numbers):
+
+    $ scripts/check-no-nim-compiles.sh                       rc=0, all four ok
+    $ <empty-set through real path: uiFindCmd → empty dir>   loud empty-set error,
+        emitted cmd carries `-print0 || exit 1` and `xargs -0 -r cksum`
+    $ nim app status.nims                                    rc=0, 25.4 s (relink)
+    $ nim app status.nims                                    rc=0, no-op (client/rcc
+        SKIPPED; only the three cmake `--build` no-ops)
+    $ nim tests status.nims utils_test                       rc=0, 66.0 s, 9 [OK]
+    $ /bin/dash -c '<emitted contentKey cmd, src set>'       2310363601 47390, rc=0
+    $ /bin/sh   -c '<same>'                                  2310363601 47390, rc=0
+    $ /bin/bash -c '<same>'                                  2310363601 47390, rc=0
+    # R2 demonstrated on macOS bash+pipefail (find /nonexistent + printf):
+    #   without || exit 1 → 1362895266 34, rc=0  (truncated set silently accepted)
+    #   with    || exit 1 → 4294967295 0, rc=1   (rejected)
+
 ### Not verified
 - **`make pkg-macos`'s dmg + signature** (criterion 5): no `nix`, no identity.
 - **The fix wave's Windows arms**: `launchHostApp`'s staging (I2) and the `-d:lto`
@@ -696,14 +768,20 @@ Regression set re-run after the wave:
     `.update.timestamp`, which was a prerequisite of the client rule; the rule
     and the stamp both died here. `nim app status.nims --force` recovers it. Fix
     shape: fold the vendored-dependency revision set into `clientKey()`.
-12. **`nim run status.nims` on Windows ships the production icon, or fails to
-    link.** `run-windows` built `status.o` from `status-dev.rc` (via make's
-    `compile_windows_resources`, with `STATUS_RC_FILE` overridden) before the
-    client compile, and `src/nim_status_client.nim` `{.link: "../status.o".}`s
-    it. The driver's ported Windows arm does the staging and the launch, not
-    that resource compile. Fix shape: a `windowsResources(rc)` driver step
-    called before `buildClient` on Windows; `make pkg-windows` keeps
-    `status.rc`. Unverifiable here either way (no Windows host).
+12. **The Windows CLIENT COMPILE is a known hard gap — `status.o` has no
+    producer.** *(Reclassified 2026-07-10, review round 2: this is not an icon
+    cosmetic, it blocks the Windows client link.)* `src/nim_status_client.nim`
+    contains `when defined(windows): {.link: "../status.o".}`, so the client
+    link REQUIRES `status.o`. That object was built by make's
+    `compile_windows_resources` rule (from `status-dev.rc` for `run-windows`,
+    `status.rc` for packaging, via windres) — and that rule died with the
+    deleted make targets. **No driver step now produces `status.o`**, so a real
+    Windows client build would fail to link (missing `status.o`), not merely
+    ship the wrong icon. The ported Windows arms cover DLL staging and launch,
+    not this resource compile. Fix shape: a `windowsResources(rc)` driver step
+    that runs windres before `buildClient` on Windows and feeds the `{.link.}`;
+    `make pkg-windows` supplies `status.rc`. This belongs to the Windows push;
+    unverifiable here (no Windows host) either way.
 13. **The macOS test-compile flag block is the third copy** of the
     frameworks / `-headerpad_max_install_names` / `-F$QT_LIBDIR` / `-d:lto`
     list (config.nims' client arm, config.nims' non-client arm, `runNimTests`).
@@ -714,3 +792,28 @@ Regression set re-run after the wave:
 14. **`buildHostArtifacts()` no longer takes `force`** and `buildArtifacts`
     rejects `--force`: nothing in that task compiles the client, which is the
     only thing `--force` ever forced. `rejectExtras`' error text follows.
+
+### Follow-ups added by the 2026-07-10 review round 2
+
+15. **The FORCE phony prereq makes chained make invocations re-deploy twice**
+    (dev-only; decision: ACCEPT + RECORD, do NOT re-engineer). C3's fix gave the
+    four packaging artifacts a `FORCE` phony prerequisite so an existing
+    `pkg/Status.*` can no longer read "up to date" and skip the driver. Because
+    a phony prereq is always out of date, the artifact recipe's own
+    `linuxdeployqt`/`appimagetool`/`macdeployqt` step re-runs on every make
+    invocation — so `make pkg-linux && make tgz-linux` re-deploys the AppImage
+    twice, since the first target's mtime bump does not satisfy the second. CI
+    is unaffected: it calls the terminal packaging target in a single invocation.
+    The rejected alternative — interposing a phony *client-binary* prereq instead
+    — has the same disease (it would mark every dependent perpetually stale), so
+    the FORCE-on-the-artifact shape stays. Cost is a dev-only double re-deploy,
+    not a correctness bug.
+16. **A failed `cd` still runs the contentKey pipeline in the wrong cwd**
+    (pre-existing shape, unchanged by this wave). `contentKey`'s command is
+    `cd <repo> && (set -o pipefail) … ; { find … } | …`. The `&&` guards only the
+    pipefail probe; the `find | xargs | cksum` pipeline is separated by `;`, so a
+    failing `cd` (repo path deleted mid-build, etc.) would still run `find`
+    against whatever the process's cwd happens to be and could produce a
+    plausible digest of the wrong tree. Not observed in practice (the driver
+    always runs from a valid `thisDir()`), and unchanged by R1/R2 — recorded so a
+    future hardening pass can chain the pipeline behind the `cd` with `&&`.
