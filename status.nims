@@ -16,17 +16,14 @@
 # before the file name nim consumes them (they are still honored, but nim
 # also re-targets its own evaluation of this script — harmless, yet noisier).
 #
-# The driver only DELEGATES to the existing make recipes (make is frozen:
-# new build logic lives in nimscript, none is added to make). Dependency
-# bootstrap is inherited from the delegation, not reimplemented: every make
-# target used below depends on make's `nimble.paths` setup stamp (see
-# `nimble-deps` in the Makefile — nimble.lock + the graph's manifests →
-# `nimble setup` into the default store only when stale), and on a clean clone
-# the Makefile's .DEFAULT rule auto-runs `git submodule update --init
-# --recursive` first. This file is a nimscript driver, NOT a nimble task:
-# `nimble <task>` re-pays ~46–48 s of graph revalidation per warm invocation
-# on this manifest (measured 2026-07-06); `nim <task> status.nims` starts in
-# about a second.
+# Since issue 0016 the HOST desktop build has no make in its process tree: the
+# driver bootstraps (submodules, brew bottles), resolves the nimble graph,
+# builds every artifact the client links or loads (status_artifacts.nims) and
+# compiles the client itself. `make` survives for the mobile legs, packaging
+# and CI helpers, and for status-go's own (vendored, foreign) Makefile.
+# This file is a nimscript driver, NOT a nimble task: `nimble <task>` re-pays
+# ~46–48 s of graph revalidation per warm invocation on this manifest
+# (measured 2026-07-06); `nim <task> status.nims` starts in about a second.
 
 import std/[os, strutils]
 
@@ -203,9 +200,14 @@ proc validateAndroid(t: Target) =
     putEnv("GRADLE_TARGETS", "assembleDebug")
 
 # --- delegation ---------------------------------------------------------------
+#
+# Only the mobile legs still delegate to make (out of scope this iteration).
 
-# Defined with the develop-mode machinery below; app/run gate through it.
-proc developModeMakeArgs(): string
+# Defined with the develop-mode machinery below; app/run gate through them.
+proc developModeForce(): bool
+# Defined below; status_artifacts.nims (included further down) calls into them.
+proc statusgoStoreRoot(): string
+proc applyOverlayNow()
 
 proc ncpu(): string =
   let probe = if buildOS == "macosx": "sysctl -n hw.ncpu" else: "nproc"
@@ -274,23 +276,6 @@ proc nimEval(script: string): string =
   quoteShell(nimExe()) & " e --skipParentCfg:on --hints:off " &
     quoteShell(script)
 
-proc nimblePathsStale(): bool =
-  ## Same key make's setup stamp uses. The driver must know the resolution
-  ## before it can locate prl-to-pc, but a full `make nimble-deps` costs a
-  ## ~2.3 s Makefile parse, so gate it on an mtime scan (a few milliseconds).
-  let paths = thisDir() / "nimble.paths"
-  if not fileExists(paths):
-    return true
-  if hostOS == "windows":
-    return false # `test -nt` is POSIX-shell only; the stamp still runs in make
-  for input in ["nimble.lock", "nim_status_client.nimble", overlayFile,
-                "vendor/status-go/statusgo.nimble"]:
-    let p = thisDir() / input
-    if fileExists(p):
-      let (_, rc) = gorgeEx("test " & quoteShell(p) & " -nt " & quoteShell(paths))
-      if rc == 0:
-        return true
-
 proc prlToPcScript(): string =
   ## Fails fast when prl-to-pc is unresolved, or resolved to a copy that
   ## predates the nimscript interface (i.e. an old pin).
@@ -310,8 +295,8 @@ proc prepareQtPkgconfig() =
   ## Build prl-to-pc's tools, then cache its `env` answer. Host targets only:
   ## the interim mobile make legs consume the same knowledge through
   ## <root>/qt-pkgconfig.mk, which the root Makefile still includes.
-  if nimblePathsStale():
-    runMake "nimble-deps"
+  ## Callers must have resolved the graph first (nimbleSetupIfStale): the
+  ## package root is read from the generated nimble.paths.
   let script = prlToPcScript()
   let buildDir = thisDir() / qtPcBuildDir
   # prl-to-pc compiles its tools with `nim`; hand it the compiler that is
@@ -344,23 +329,57 @@ proc prepareQtPkgconfig() =
     " do not edit.\n" &
     "key=" & key & "\n" & output.strip & "\n")
 
+# The artifact engine (issue 0016): one procedure per artifact, the generic
+# cmake procedure, and the two — and only two — gating patterns. Included here
+# because it uses fail/nimExe/ncpu/prepareQtPkgconfig above, and is used by the
+# tasks below. NEVER included by config.nims (its header explains why).
+include "status_artifacts.nims"
+
+proc launchHostApp(args: string) =
+  ## make's run-macos / run-linux, minus the client build (the driver owns it).
+  ## The binary bakes every @rpath it needs (issue 0013), so the library paths
+  ## below are belt-and-braces for a partially relinked tree.
+  let bin = clientBinary()
+  var libPath = ""
+  for d in [qtProp("QT_INSTALL_LIBS"), nimsdsLibDir(), statusgoLibDir(),
+            keycardBuildDir(), thisDir() / "bin/StatusQ", statusqBuildPath() / "lib"]:
+    libPath &= d & ":"
+  if hostOS == "macosx":
+    let contents = thisDir() / "bin/StatusDev.app/Contents"
+    mkDir contents / "MacOS"
+    mkDir contents / "Resources"
+    cpFile(thisDir() / "Info.dev.plist", contents / "Info.plist")
+    cpFile(thisDir() / "status-dev.icns", contents / "Resources/status-dev.icns")
+    cpFile(thisDir() / "resources.rcc", contents / "resources.rcc")
+    exec "cd " & quoteShell(contents / "MacOS") & " && ln -fs ../../../nim_status_client ./"
+    # `fileicon` is a nicety, not a build input.
+    exec "fileicon set " & quoteShell(bin) & " " &
+      quoteShell(thisDir() / "status-dev.icns") & " || true"
+    echo "\e[92mRunning:\e[39m bin/StatusDev.app/Contents/MacOS/nim_status_client"
+    exec "DYLD_LIBRARY_PATH=" & quoteShell(libPath & getEnv("DYLD_LIBRARY_PATH")) &
+      " " & quoteShell(contents / "MacOS/nim_status_client") & " " & args
+  else:
+    echo "\e[92mRunning:\e[39m bin/nim_status_client"
+    exec "LD_LIBRARY_PATH=" & quoteShell(libPath & getEnv("LD_LIBRARY_PATH")) &
+      " " & quoteShell(bin) & " " & args
+
 task app, "Build the Status dev build: host by default, --os:ios / --os:android (+ --cpu) for mobile":
   let t = parseTarget()
   rejectExtras(t, "app")
   # Develop-mode gating (issue 0009): divergence guard + the FORCE arms for
-  # developed vendors run before make takes over; default mode adds nothing.
-  let devArgs = developModeMakeArgs()
+  # developed vendors run first; default mode adds nothing.
+  let force = developModeForce()
   case t.os
   of "ios":
     validateIos(t)
-    runMake "mobile-build", devArgs
+    runMake "mobile-build", (if force: " REBUILD_NIM=true" else: "")
   of "android":
     validateAndroid(t)
-    runMake "mobile-build", devArgs
+    runMake "mobile-build", (if force: " REBUILD_NIM=true" else: "")
   else:
     validateHost(t)
-    prepareQtPkgconfig()
-    runMake "nim_status_client", devArgs
+    buildHostArtifacts(force)
+    buildClient(force)
 
 task buildArtifacts, "Build every artifact the client links/loads except the client compile itself (internal: nimble's before-build hook — issue 0013)":
   let t = parseTarget()
@@ -369,9 +388,7 @@ task buildArtifacts, "Build every artifact the client links/loads except the cli
     fail "buildArtifacts is host-only (nimble build/run is the host front" &
       " door; mobile builds go through `nim app status.nims --os:...`)."
   validateHost(t)
-  let devArgs = developModeMakeArgs()
-  prepareQtPkgconfig()
-  runMake "client-deps", devArgs
+  buildHostArtifacts(developModeForce())
 
 task run, "Build if needed and launch the host dev build (StatusDev.app on macOS)":
   let t = parseTarget()
@@ -380,9 +397,26 @@ task run, "Build if needed and launch the host dev build (StatusDev.app on macOS
     fail "'run' launches the host desktop build only; for mobile use" &
       " `make mobile-run` (a driver mobile run may come with issue 0009+)."
   validateHost(t)
-  let devArgs = developModeMakeArgs()
-  prepareQtPkgconfig()
-  runMake "run", devArgs
+  let force = developModeForce()
+  buildHostArtifacts(force)
+  buildClient(force)
+  launchHostApp("")
+
+task compileTranslations, "Compile the Qt translation catalogs (ui/i18n/*.qm) — a maintainer command, NOT a build step (issue 0016)":
+  let t = parseTarget()
+  rejectExtras(t, "compileTranslations")
+  validateHost(t)
+  exportBuildEnv()
+  buildTranslations("compile_application_translations")
+
+task updateTranslations, "Re-extract translatable strings into ui/i18n/*.ts and run the lokalise fixup":
+  let t = parseTarget()
+  rejectExtras(t, "updateTranslations")
+  validateHost(t)
+  exportBuildEnv()
+  buildTranslations("update_application_translations")
+  exec "cd " & quoteShell(thisDir() / "scripts/translationScripts") &
+    " && go run fixup-base-ts-for-lokalise.go"
 
 task qtPkgconfigGenerate, "Regenerate the active Qt kit's committed .pc tree in a prl-to-pc develop checkout (never a build step; refuses on a store copy)":
   # The kit comes from QMAKE, not from --os: regenerating the iOS or Android
@@ -788,13 +822,17 @@ proc overlayApplied(v: Vendor): bool =
         return false
   true
 
-proc developModeMakeArgs(): string =
-  ## Pre-delegation develop-mode work for `app`/`run`: the divergence guard,
-  ## stamp re-invalidation when a manual `nimble setup` dropped the overlay,
-  ## and the per-vendor FORCE arms. Returns extra make arguments.
+proc developModeForce(): bool =
+  ## Pre-build develop-mode work for `app`/`run`/`buildArtifacts`: the
+  ## divergence guard, stamp re-invalidation when a manual `nimble setup`
+  ## dropped the overlay, and the per-vendor FORCE arms. Returns true when a
+  ## developed vendor's Nim sources compile INTO the client, i.e. when the
+  ## client compile must skip its `stale()` gate (make's REBUILD_NIM).
+  ##
+  ## Side effects, so call it EXACTLY ONCE per build, before any artifact runs.
   let devs = readOverlay()
   if devs.len == 0:
-    return ""
+    return false
   var clientRebuild = false
   for name in devs:
     let v = vendorByName(name)
@@ -819,7 +857,7 @@ proc developModeMakeArgs(): string =
       exec "rm -f " & expandVendorPath(g)
     if v.clientRebuild:
       clientRebuild = true
-  if clientRebuild: " REBUILD_NIM=true" else: ""
+  clientRebuild
 
 proc invalidateOnModeFlip(v: Vendor) =
   ## Mode flips move a clientRebuild vendor's artifact dir (pinned scratch ↔
@@ -987,7 +1025,10 @@ task vendors, "List vendors: pin, flavor, and develop state":
       echo "  pin:      " & url & (if rev.len > 0: "#" & rev else: " (interim local pin)")
     echo "  checkout: " & checkout
 
-task applyOverlay, "Apply the develop-mode overlay to the generated nimble.paths (internal: make's setup-stamp recipe runs this after every `nimble setup`)":
+proc applyOverlayNow() =
+  ## Runs immediately after every `nimble setup` (nimbleSetupIfStale), never on
+  ## its own: rewriting nimble.paths also refreshes the setup stamp, so a manual
+  ## run makes the NEXT build skip resolution (walls doc).
   let devs = readOverlay()
   if devs.len > 0:
     let pathsFile = thisDir() / "nimble.paths"
@@ -1020,6 +1061,9 @@ task applyOverlay, "Apply the develop-mode overlay to the generated nimble.paths
     if content != before:
       writeFile(pathsFile, content)
 
+task applyOverlay, "Apply the develop-mode overlay to the generated nimble.paths (internal: the setup-stamp gate runs this after every `nimble setup`)":
+  applyOverlayNow()
+
 # --- pinned statusgo scratch engine (issue 0010) ------------------------------
 #
 # Default mode resolves statusgo to a READ-ONLY store copy; libstatus/libsds
@@ -1033,44 +1077,10 @@ task applyOverlay, "Apply the develop-mode overlay to the generated nimble.paths
 # entirely (the stamp-skip default arm; ADR 0004). Developed statusgo keeps
 # ADR 0003's FORCE + compare-before-copy semantics in the checkout instead.
 
-task prepareStatusgo, "Maintain the pinned-statusgo scratch copy (.statusgo-build) — internal: make runs this before statusgo builds":
+task prepareStatusgo, "Maintain the pinned-statusgo scratch copy (.statusgo-build) — internal: the mobile make legs run this before statusgo builds":
   var key = ""
   for p in taskArgv():
     let k = flagVal(p, "key")
     if k.len > 0:
       key = k
-  if statusgoDeveloped():
-    echo "prepareStatusgo: statusgo is developed — building the checkout, no scratch."
-  else:
-    let storeRoot = statusgoStoreRoot()
-    if storeRoot.len == 0:
-      fail "statusgo has no store entry in nimble.paths — run `make" &
-        " nimble-deps` (or `nim app status.nims`) so the resolution exists" &
-        " before building."
-    let scratch = thisDir() / statusgoScratchDir
-    let originFile = scratch / ".statusgo-origin"
-    let keyFile = scratch / ".statusgo-artifact-key"
-    let origin = if fileExists(originFile): readFile(originFile) else: ""
-    if origin != storeRoot or not fileExists(scratch / "statusgo.nims"):
-      echo "prepareStatusgo: refreshing " & statusgoScratchDir & " from " & storeRoot
-      if dirExists(scratch):
-        exec "chmod -R u+w " & quoteShell(scratch)
-        rmDir scratch
-      exec "cp -R " & quoteShell(storeRoot) & " " & quoteShell(scratch)
-      # Store trees can be read-only; the build writes into the copy.
-      exec "chmod -R u+w " & quoteShell(scratch)
-      writeFile(originFile, storeRoot)
-      if key.len > 0:
-        writeFile(keyFile, key)
-    elif key.len > 0 and (not fileExists(keyFile) or readFile(keyFile) != key):
-      # Same pin, different build-flag set (e.g. desktop debug flip, another
-      # mobile SDK): drop the artifacts and FORCE dependents by touching the
-      # scratch nimble.paths (prereq of the sds engine and, via cmp-copies,
-      # of the mobile status-go rule) — the sub-makes then rebuild in place.
-      echo "prepareStatusgo: build flags changed (" & key & ") — dropping artifacts"
-      exec "rm -f " & scratch / "build" / "bin" / "libstatus.*"
-      if fileExists(scratch / "nimble.paths"):
-        exec "touch " & quoteShell(scratch / "nimble.paths")
-      writeFile(keyFile, key)
-    else:
-      echo "prepareStatusgo: scratch up-to-date (pin unchanged)"
+  prepareStatusgoScratch(key)

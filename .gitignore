@@ -39,6 +39,8 @@ mobile/android/qt6/.gradle/
 .qmake_previous
 # Used to track the simulated keycard mode changes via the USE_SIMULATED_KEYCARD build flag
 .use_simulated_keycard_previous
+# issue 0016: the driver's client key file (absorbs .qmake_previous)
+.status-client.key
 *.qm
 
 # Squish test ================================================================
