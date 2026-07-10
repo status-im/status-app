@@ -39,6 +39,9 @@ nim_status_client.log
 .status-client.key
 .status-setup.key
 .status-rcc.key
+# Not anchored: an older tree may still carry a copy inside .statusgo-build/ or
+# (worse) vendor/status-go/, where buildLibsds used to write it.
+.libsds.key
 *.qm
 
 # Squish test ================================================================
