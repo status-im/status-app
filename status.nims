@@ -204,7 +204,7 @@ proc validateAndroid(t: Target) =
 # Only the mobile legs still delegate to make (out of scope this iteration).
 
 # Defined with the develop-mode machinery below; app/run gate through them.
-proc developModeForce(): bool
+proc applyDevelopModeArms(): bool
 # Defined below; status_artifacts.nims (included further down) calls into them.
 proc statusgoStoreRoot(): string
 proc applyOverlayNow()
@@ -368,13 +368,10 @@ task app, "Build the Status dev build: host by default, --os:ios / --os:android 
   rejectExtras(t, "app")
   # Develop-mode gating (issue 0009): divergence guard + the FORCE arms for
   # developed vendors run first; default mode adds nothing.
-  let force = developModeForce()
+  let force = applyDevelopModeArms()
   case t.os
-  of "ios":
-    validateIos(t)
-    runMake "mobile-build", (if force: " REBUILD_NIM=true" else: "")
-  of "android":
-    validateAndroid(t)
+  of "ios", "android":
+    if t.os == "ios": validateIos(t) else: validateAndroid(t)
     runMake "mobile-build", (if force: " REBUILD_NIM=true" else: "")
   else:
     validateHost(t)
@@ -388,7 +385,7 @@ task buildArtifacts, "Build every artifact the client links/loads except the cli
     fail "buildArtifacts is host-only (nimble build/run is the host front" &
       " door; mobile builds go through `nim app status.nims --os:...`)."
   validateHost(t)
-  buildHostArtifacts(developModeForce())
+  buildHostArtifacts(applyDevelopModeArms())
 
 task run, "Build if needed and launch the host dev build (StatusDev.app on macOS)":
   let t = parseTarget()
@@ -397,7 +394,7 @@ task run, "Build if needed and launch the host dev build (StatusDev.app on macOS
     fail "'run' launches the host desktop build only; for mobile use" &
       " `make mobile-run` (a driver mobile run may come with issue 0009+)."
   validateHost(t)
-  let force = developModeForce()
+  let force = applyDevelopModeArms()
   buildHostArtifacts(force)
   buildClient(force)
   launchHostApp("")
@@ -822,7 +819,8 @@ proc overlayApplied(v: Vendor): bool =
         return false
   true
 
-proc developModeForce(): bool =
+proc applyDevelopModeArms(): bool =
+  ## Named for what it DOES, not what it returns: this mutates the tree.
   ## Pre-build develop-mode work for `app`/`run`/`buildArtifacts`: the
   ## divergence guard, stamp re-invalidation when a manual `nimble setup`
   ## dropped the overlay, and the per-vendor FORCE arms. Returns true when a
