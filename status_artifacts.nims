@@ -31,20 +31,35 @@
 #
 # 2. The **key file** — keyed invalidation for artifacts whose inputs are not
 #    files but a *configuration*: the resolved store path, the target triple,
-#    the flag set. The build writes the key next to the artifact; a build
-#    whose key differs drops the artifact. Established by the status-go
-#    scratch engine (`.statusgo-build/.statusgo-origin`,
+#    the flag set, a cmake configure's argument list. The build writes the key
+#    next to the artifact; a build whose key differs rebuilds. Established by
+#    the status-go scratch engine (`.statusgo-build/.statusgo-origin`,
 #    `.statusgo-artifact-key`; issue 0010) and reused here for the client
-#    binary (`.status-client.key`, which absorbs make's `.qmake_previous`).
+#    binary (`.status-client.key`, which absorbs make's `.qmake_previous`) and
+#    for every cmake configure (`<buildDir>/.status-cmake.key`).
+#
+#    `keyStale(keyFile, key, witness)` is the ONE spelling. `witness` is the
+#    artifact whose existence the key vouches for (a cmake cache, a scratch
+#    tree): a missing witness is stale however well the key matches. There is
+#    no bare `fileExists` gate anywhere in this file.
 #
 # A cmake artifact's BUILD step is gated by neither: `cmake --build` runs every
 # time and cmake's own incrementality (including its check-build-system
 # re-configure) IS the no-op path, exactly as under make. Its CONFIGURE step is
 # gated by pattern 2 on the argument list — the one input cmake cannot see.
+# (The issue's "invoked unconditionally" wording was amended for this: three
+# unconditional configures put the no-op at 14–17 s against a ~7 s criterion.)
 #
 # `stale(outputs, [])` is the degenerate "the artifact exists ⇒ it is fresh"
 # gate (libstatus, whose freshness is owned by the key file next to the scratch
 # copy). It is pattern 1, not a third pattern; spell it that way.
+#
+# Bootstrap — `initSubmodules()` and `fetchBottles()` — is NOT gating. It
+# materializes inputs that a fresh clone lacks and that nothing in the build
+# can invalidate (a git submodule tracks its own revision; a brew bottle is
+# content-addressed by its flavor). It tests for presence, and that is all it
+# can ever do. Kept out of the two patterns deliberately, and out of the
+# rebuild-decision audit.
 
 # --- staleness (pattern 1) ----------------------------------------------------
 
@@ -80,7 +95,13 @@ proc stale(outputs, inputs: openArray[string]): bool =
 
 # --- keyed invalidation (pattern 2) -------------------------------------------
 
-proc keyStale(keyFile, key: string): bool =
+proc keyStale(keyFile, key: string, witness = ""): bool =
+  ## True when the recorded key differs from `key`, when no key was ever
+  ## recorded, or when `witness` — the artifact the key vouches for — is gone.
+  ## The witness arm is what keeps a bare `fileExists` out of the call sites:
+  ## a key file that survived an `rm -rf` of its build tree must not read fresh.
+  if witness.len > 0 and not fileExists(witness) and not dirExists(witness):
+    return true
   not fileExists(keyFile) or readFile(keyFile).strip != key
 
 proc writeKey(keyFile, key: string) =
@@ -137,8 +158,10 @@ proc platformTarget(): string =
   let arch = if qtArch().len > 0: qtArch() else: uname("-m")
   uname("-s").toLowerAscii & "-" & arch
 
+proc qmlDebug(): bool = getEnv("QML_DEBUG", "false") != "false"
+
 proc buildType(): string =
-  if getEnv("QML_DEBUG", "false") != "false": "Debug" else: "Release"
+  if qmlDebug(): "Debug" else: "Release"
 
 proc exportBuildEnv() =
   ## What the root Makefile exported into every artifact recipe. cmake reads
@@ -203,7 +226,7 @@ proc cmakeArtifact(label, source, buildDir: string,
   for a in configureArgs:
     cfg &= " " & quoteShell(a)
   let keyFile = buildDir / ".status-cmake.key"
-  if not fileExists(buildDir / "CMakeCache.txt") or keyStale(keyFile, cfg):
+  if keyStale(keyFile, cfg, witness = buildDir / "CMakeCache.txt"):
     echo "\e[92mConfiguring:\e[39m " & label
     exec cfg
     writeKey(keyFile, cfg)
@@ -242,6 +265,10 @@ proc initSubmodules() =
 proc fetchBottles() =
   ## macOS only: the statically linked OpenSSL 3 the client and
   ## status-keycard-qt both consume.
+  ##
+  ## Bootstrap, not gating (see the header): a bottle is content-addressed by
+  ## its flavor, so a present one is by definition the right one and nothing in
+  ## the build can invalidate it. Presence is the only question there is.
   if hostOS != "macosx":
     return
   if dirExists(thisDir() / "bottles/openssl@3"):
@@ -316,17 +343,21 @@ proc prepareStatusgoScratch(key: string) =
   let scratch = thisDir() / statusgoScratchDir
   let originFile = scratch / ".statusgo-origin"
   let keyFile = scratch / ".statusgo-artifact-key"
-  let origin = if fileExists(originFile): readFile(originFile) else: ""
-  if origin != storeRoot or not fileExists(scratch / "statusgo.nims"):
+  # Two keys, two scopes: the ORIGIN key (the resolved store path — which
+  # embeds the pin revision and the manifest checksum) decides whether the
+  # whole scratch tree is the right tree; its witness is the copy's own
+  # statusgo.nims. The ARTIFACT key (the flag set) decides only whether the
+  # artifacts inside a correct tree are still valid.
+  if keyStale(originFile, storeRoot, witness = scratch / "statusgo.nims"):
     echo "prepareStatusgo: refreshing " & statusgoScratchDir & " from " & storeRoot
     if dirExists(scratch):
       exec "chmod -R u+w " & quoteShell(scratch)
       rmDir scratch
     exec "cp -R " & quoteShell(storeRoot) & " " & quoteShell(scratch)
     exec "chmod -R u+w " & quoteShell(scratch)
-    writeFile(originFile, storeRoot)
+    writeKey(originFile, storeRoot)
     if key.len > 0:
-      writeFile(keyFile, key)
+      writeKey(keyFile, key)
   elif key.len > 0 and keyStale(keyFile, key):
     echo "prepareStatusgo: build flags changed (" & key & ") — dropping artifacts"
     exec "rm -f " & scratch / "build" / "bin" / "libstatus.*"
@@ -369,7 +400,7 @@ proc buildLibstatus() =
   ## delegates to a foreign Makefile — never to THIS repo's Makefile.
   ## In pinned mode the artifact's existence is the whole gate (the scratch
   ## engine's key file already covers pin and flag changes; a develop-mode
-  ## checkout gets its FORCE arm from developModeForce()).
+  ## checkout gets its FORCE arm from applyDevelopModeArms()).
   if not stale([statusgoLibFile()], []):
     return
   echo "\e[92mBuilding:\e[39m status-go"
@@ -419,7 +450,7 @@ proc buildDOtherSide() =
   else:
     args.add "-DENABLE_DYNAMIC_LIBS=OFF"
     args.add "-DENABLE_STATIC_LIBS=ON"
-  if getEnv("QML_DEBUG", "false") != "false":
+  if qmlDebug():
     args.add "-DQML_DEBUG_PORT=" & getEnv("QML_DEBUG_PORT", "49152")
   if getEnv("MONITORING", "false") != "false":
     args.add "-DMONITORING:BOOL=ON"
@@ -472,8 +503,12 @@ proc buildTranslations(target: string) =
 # --- Qt resources (rcc) --------------------------------------------------------
 
 const rccSkipDirs = ["StatusQ", "vendor", "tests", "node_modules"]
-  ## The directories `ui/generate-rcc.go` itself prunes. resources.rcc's inputs
-  ## are exactly what that generator walks, so the scan must prune them too.
+  ## SOURCE OF TRUTH: `ui/generate-rcc.go`'s own prune list (it skips any
+  ## DIRECTORY with one of these names, at ANY depth). resources.rcc's inputs
+  ## are exactly what that generator walks, so this scan must prune the same
+  ## names at the same depths. Keep the two in sync — a name added there and
+  ## missed here only costs spurious rcc rebuilds; the reverse silently stops
+  ## regenerating a resource.
 
 proc uiSources(): seq[string] =
   ## make's UI_SOURCES, with two corrections that `stale()` forces:
@@ -485,9 +520,13 @@ proc uiSources(): seq[string] =
   ## - `.qm` joins the pattern: the generator embeds the compiled catalogs, and
   ##   since translations stopped being a build step (issue 0016) nothing else
   ##   would notice a `nim compileTranslations status.nims` run.
+  ##
+  ## `*/<name>/*` is depth-independent, like the generator's `filepath.SkipDir`
+  ## on a directory basename. A depth-limited prune leaves deeper matches in
+  ## the input set and reintroduces the spurious-staleness bug above.
   var prune = ""
   for d in rccSkipDirs:
-    prune &= " -not -path 'ui/" & d & "/*' -not -path 'ui/*/" & d & "/*'"
+    prune &= " -not -path '*/" & d & "/*'"
   let findCmd =
     if hostOS == "macosx":
       "find -E ui -type f -iregex '.*(qmldir|qml|qrc|js|qm)$'"
@@ -520,14 +559,37 @@ proc clientBinary(): string =
   thisDir() / "bin" / (if hostOS == "windows": "nim_status_client.exe"
                        else: "nim_status_client")
 
+const clientFlagEnv = [
+  ## EVERY environment variable `config.nims` reads inside its `isDesktopClient`
+  ## block that moves a compile or link flag. `envOr(NAME, derived)` prefers the
+  ## exported value, so exporting one — or changing it — changes the binary
+  ## while leaving every file `stale()` watches untouched. Keep this list in
+  ## step with config.nims; a missing entry is a silently stale binary.
+  "INCLUDE_DEBUG_SYMBOLS",   # release/debug flavor + nimcache dir
+  "QT_ARCH",                 # cross-desktop: --cpu/--os/-arch
+  "RESOURCES_LAYOUT",        # -d:development / -d:production
+  "KDF_ITERATIONS",          # -d:KDF_ITERATIONS
+  "OUTPUT_CSV",              # -d:output_csv
+  "QT_LIBDIR",               # -F/-L + rpath
+  "STATUSGO_LIBDIR",         # -L + rpath
+  "NIMSDS_LIBDIR",           # -L + rpath
+  "STATUSQ_INSTALL_PATH",    # -L + rpath
+  "STATUSKEYCARD_QT_LIBDIR", # -L + rpath
+  "DOTHERSIDE_LIBDIR",       # the static lib's path on the link line
+  "MACOSX_DEPLOYMENT_TARGET",# decides ObjC-metadata section placement at link
+]
+
 proc clientKey(): string =
   ## Keyed invalidation (pattern 2), absorbing make's `.qmake_previous`: the
   ## client bakes the kit's libdirs as rpaths and its flag set comes from
   ## config.nims' env-or-derived knobs, none of which are files `stale()` can
   ## see. A changed key forces a relink.
-  [qmakeExe(), qtArch(), $debugSymbols(),
-   getEnv("RESOURCES_LAYOUT", "-d:development"), getEnv("KDF_ITERATIONS"),
-   getEnv("OUTPUT_CSV")].join("|")
+  ##
+  ## QMAKE joins them: it is what `.qmake_previous` tracked, and every derived
+  ## Qt value (libdir, version, the .pc tree) hangs off it.
+  result = qmakeExe()
+  for name in clientFlagEnv:
+    result &= "|" & name & "=" & getEnv(name)
 
 proc clientSources(): seq[string] =
   let (output, rc) = gorgeEx("cd " & quoteShell(thisDir()) & " && find src -type f")
@@ -536,8 +598,10 @@ proc clientSources(): seq[string] =
   for line in output.splitLines:
     if line.strip.len > 0:
       result.add thisDir() / line.strip
-  # The flag set itself is an input (issue 0013 put it in config.nims).
-  for f in ["config.nims", "status_env.nims", "nimble.paths"]:
+  # The flag set itself is an input (issue 0013 put it in config.nims), and so
+  # is the resolution it reads — plus prl-to-pc's cached `env`, which decides
+  # what `pkg-config --libs Qt6…` puts on the link line (issue 0015).
+  for f in ["config.nims", "status_env.nims", "nimble.paths", qtPcEnvCache]:
     if fileExists(thisDir() / f):
       result.add thisDir() / f
 
