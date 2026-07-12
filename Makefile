@@ -1098,13 +1098,19 @@ clean-destdir:
 
 # What survives of NBS's `clean-common`: the nimcache. (Its other targets — the
 # vendored compiler, the fake vendor/.nimble link dir, the nat-traversal C libs —
-# no longer exist. The driver's key files go with the artifacts they gate.)
+# no longer exist.)
 clean-nimcache:
 	rm -rf nimcache
 
+# The driver's REPO-ROOT key files are all named `.status-<artifact>.key`
+# (status_artifacts.nims states the convention), so this glob is total and there
+# is no second list here to drift out of step with those consts (issue 0018
+# review, I2). Key files that live inside a build tree (.status-cmake.key,
+# .statusgo-artifact-key) go with the tree their vendor-clean target removes.
 clean: | clean-nimcache clean-destdir statusq-clean status-go-clean status-keycard-qt-clean storybook-clean clean-translations
 	rm -rf bottles/* pkg/* tmp/*
-	rm -f .status-client.key .status-rcc.key .status-setup.key .libsds.key
+	rm -f .status-*.key
+	rm -f .libsds.key   # legacy: the libsds key's pre-convention name (0018 fix wave)
 
 clean-git:
 	./scripts/clean-git.sh

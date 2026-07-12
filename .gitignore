@@ -34,14 +34,16 @@ mobile/android/qt6/.gradle/
 # issue 0016/0017: the driver's key files. .status-client.key absorbed make's
 # .qmake_previous, whose rule died with the client target in 0017 — the entry
 # stays so an existing tree's leftover copy is not suddenly untracked.
+# Every repo-root key file is `.status-<artifact>.key` (issue 0018 review, I2:
+# the convention that makes `make clean`'s glob total) — the pattern covers the
+# in-tree ones too (<buildDir>/.status-cmake.key).
 .qmake_previous
 # Used to track the simulated keycard mode changes via the USE_SIMULATED_KEYCARD build flag
 .use_simulated_keycard_previous
-.status-client.key
-.status-setup.key
-.status-rcc.key
-# Not anchored: an older tree may still carry a copy inside .statusgo-build/ or
-# (worse) vendor/status-go/, where buildLibsds used to write it.
+.status-*.key
+# Not anchored: an older tree may still carry a copy of the libsds key — under
+# its pre-0018 name, and inside .statusgo-build/ or (worse) vendor/status-go/,
+# where buildLibsds used to write it.
 .libsds.key
 *.qm
 
