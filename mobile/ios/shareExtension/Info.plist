@@ -31,9 +31,9 @@
         <string>ShareViewController</string>
         <key>NSExtensionAttributes</key>
         <dict>
-            <!-- Do-nothing slice (#13): text is enough to appear in the share
-                 sheet; URLs cost nothing and make Safari testing possible.
-                 Expand alongside real payload handling (#14, #15). -->
+            <!-- Text & links slice (#14): exactly what ShareViewController
+                 extracts today. Extend with image types in the image slice
+                 (#15). -->
             <key>NSExtensionActivationRule</key>
             <dict>
                 <key>NSExtensionActivationSupportsText</key>
