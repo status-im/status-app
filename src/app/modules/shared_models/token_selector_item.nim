@@ -12,7 +12,8 @@ type
     chainId*: int
     iconUrl*: string     ## network icon
     chainName*: string
-    balance*: float      ## logical units (already divided by decimals)
+    balance*: float      ## logical units (already divided by decimals), for display
+    rawBalance*: string  ## on-chain wei as a BigInt string; send reads this directly
 
   TokenSelectorTokenRef* = object
     ## Per-chain token identity, independent of balances. Feeds the `tokens`
@@ -27,6 +28,7 @@ type
     symbol*: string
     logoUri*: string
     communityId*: string
+    decimals*: int           ## token decimals; send pairs it with a chip's rawBalance
     currentBalance*: float   ## summed token amount over the filtered chips
     currencyBalance*: float  ## currentBalance * marketPrice (fiat), 0 when no price
     hasBalance*: bool        ## currentBalance != 0 -> "owned" section, else "popular"

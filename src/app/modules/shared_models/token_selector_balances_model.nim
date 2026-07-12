@@ -19,6 +19,7 @@ type
     IconUrl
     ChainName
     Balance
+    RawBalance
 
 QtObject:
   type
@@ -48,6 +49,7 @@ QtObject:
       ModelRole.IconUrl.int: "iconUrl",
       ModelRole.ChainName.int: "chainName",
       ModelRole.Balance.int: "balance",
+      ModelRole.RawBalance.int: "rawBalance",
     }.toTable
 
   method data(self: TokenSelectorBalancesModel, index: QModelIndex, role: int): QVariant =
@@ -58,12 +60,14 @@ QtObject:
     of ModelRole.IconUrl: return newQVariant(item.iconUrl)
     of ModelRole.ChainName: return newQVariant(item.chainName)
     of ModelRole.Balance: return newQVariant(item.balance)
+    of ModelRole.RawBalance: return newQVariant(item.rawBalance)
 
   proc chipRoles(o, n: TokenSelectorChip): seq[int] =
     result = @[]
     if o.iconUrl != n.iconUrl: result.add(ModelRole.IconUrl.int)
     if o.chainName != n.chainName: result.add(ModelRole.ChainName.int)
     if o.balance != n.balance: result.add(ModelRole.Balance.int)
+    if o.rawBalance != n.rawBalance: result.add(ModelRole.RawBalance.int)
 
   proc updateChips*(self: TokenSelectorBalancesModel, chips: seq[TokenSelectorChip]) =
     setItemsWithSync(
@@ -82,3 +86,5 @@ QtObject:
   when defined(testing) or defined(QT_MODEL_SPY):
     proc chainIdsInOrder*(self: TokenSelectorBalancesModel): seq[int] =
       for it in self.items: result.add(it.chainId)
+    proc rawBalancesInOrder*(self: TokenSelectorBalancesModel): seq[string] =
+      for it in self.items: result.add(it.rawBalance)

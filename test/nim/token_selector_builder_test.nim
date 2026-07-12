@@ -124,6 +124,16 @@ suite "buildTokenSelectorItems — chips join with networks":
     check chips[1].chainId == 10
     check chips[1].balance == 0.5
 
+  test "chip carries the raw wei balance string and the item carries decimals":
+    # send reads the picker chip's raw wei (AmountsArithmetic.fromString) together
+    # with the item's decimals to reconstruct the on-chain max.
+    let g = group("USDC", decimals = 6, balances = @[bal("0xA", 1, "1500000")]) # 1.5 USDC
+    let it = buildTokenSelectorItems(@[g], networks, noFilterParams()).findItem("USDC")
+    check it.decimals == 6
+    check it.chips.len == 1
+    check it.chips[0].rawBalance == "1500000"
+    check it.chips[0].balance == 1.5
+
   test "chip for an unknown network has empty icon/name but keeps the balance":
     let g = group("ETH", balances = @[bal("0xA", 999, "1000000000000000000")])
     let chips = buildTokenSelectorItems(@[g], networks, noFilterParams()).findItem("ETH").chips
@@ -182,6 +192,7 @@ suite "mergePopularWithOwned — all-tokens / search path":
     check eth.currencyBalance == 2.0
     check eth.hasBalance
     check eth.chips.len == 1
+    check eth.decimals == 18               # decimals come from the owned side
     check eth.name == "Ethereum"          # popular's metadata wins
     check eth.logoUri == "logo/eth"
 

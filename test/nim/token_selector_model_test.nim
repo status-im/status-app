@@ -293,6 +293,32 @@ suite "TokenSelectorModel - producer-driven recompute":
     check tm.tokenRefs() == @[TokenSelectorTokenRef(key: "eth:1", chainId: 1),
                               TokenSelectorTokenRef(key: "eth:10", chainId: 10)]
 
+  test "item decimals and chip rawBalance surface through the producer path (send needs)":
+    let m = newTokenSelectorModel(TokenSelectorMode.Owned)
+    let g = AggTokenGroup(key: "USDC", name: "USDC", symbol: "USDC", decimals: 6,
+      marketPrice: 1.0,
+      balances: @[AggBalance(account: "0xA", chainId: 1, balance: parse("1500000", UInt256))])
+    m.setOwnedSource(@[g], networks)
+    check m.decimalsAtForTest(0) == 6
+    let bm = m.balancesModelForKey("USDC")
+    check bm != nil
+    check bm.rawBalancesInOrder() == @["1500000"]
+
+  test "swap chain-scoped popular yields one token per group (SwapInputPanel count==1)":
+    # swap's popular list is tokenGroupsForChModel built for the selected chain, so
+    # each merged row's tokens submodel must carry exactly one token ref.
+    let m = newTokenSelectorModel(TokenSelectorMode.AllTokens)
+    var source: TokenSelectorSource
+    source.getPopular = proc(): seq[PopularGroup] =
+      @[PopularGroup(key: "ETH", name: "ETH", symbol: "ETH",
+          tokens: @[(key: "eth:1", chainId: 1)])]
+    m.setSource(source)
+    m.setEnabledChainId(1)
+    m.setOwnedSource(@[], networks)
+    let tm = m.tokensModelForKey("ETH")
+    check tm != nil
+    check tm.tokenRefs().len == 1
+
   test "hasMoreItems / isLoadingMore passthrough to the active lazy source":
     let m = newTokenSelectorModel(TokenSelectorMode.AllTokens)
     var source: TokenSelectorSource

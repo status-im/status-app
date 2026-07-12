@@ -70,7 +70,8 @@ proc buildTokenSelectorItems*(groups: seq[AggTokenGroup],
       total = total + b.balance
       let net = netByChain.getOrDefault(b.chainId)
       chips.add(TokenSelectorChip(chainId: b.chainId, iconUrl: net.iconUrl,
-        chainName: net.chainName, balance: toFloatUnits(b.balance, g.decimals)))
+        chainName: net.chainName, balance: toFloatUnits(b.balance, g.decimals),
+        rawBalance: $b.balance))
 
     # Drop groups with no surviving balance (QML `balancesModelCount != 0`).
     if chips.len == 0:
@@ -86,6 +87,7 @@ proc buildTokenSelectorItems*(groups: seq[AggTokenGroup],
       symbol: g.symbol,
       logoUri: g.logoUri,
       communityId: g.communityId,
+      decimals: g.decimals,
       currentBalance: currentBalance,
       currencyBalance: currentBalance * g.marketPrice,
       hasBalance: currentBalance != 0.0,
@@ -124,6 +126,7 @@ proc mergePopularWithOwned*(popular: seq[PopularGroup],
       item.currencyBalance = o.currencyBalance
       item.hasBalance = o.hasBalance
       item.chips = o.chips
+      item.decimals = o.decimals
     result.add(item)
 
 proc buildDisplayItems*(

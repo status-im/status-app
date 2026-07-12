@@ -34,6 +34,7 @@ type
     Name
     Symbol
     LogoUri
+    Decimals
     CurrentBalance
     CurrencyBalance
     SectionName
@@ -99,6 +100,7 @@ QtObject:
       ModelRole.Name.int: "name",
       ModelRole.Symbol.int: "symbol",
       ModelRole.LogoUri.int: "logoUri",
+      ModelRole.Decimals.int: "decimals",
       ModelRole.CurrentBalance.int: "currentBalance",
       ModelRole.CurrencyBalance.int: "currencyBalance",
       ModelRole.SectionName.int: "sectionName",
@@ -117,6 +119,7 @@ QtObject:
     of ModelRole.Name: return newQVariant(item.name)
     of ModelRole.Symbol: return newQVariant(item.symbol)
     of ModelRole.LogoUri: return newQVariant(item.logoUri)
+    of ModelRole.Decimals: return newQVariant(item.decimals)
     of ModelRole.CurrentBalance: return newQVariant(item.currentBalance)
     of ModelRole.CurrencyBalance: return newQVariant(item.currencyBalance)
     of ModelRole.SectionName: return newQVariant(self.sectionNameFor(item))
@@ -313,6 +316,8 @@ QtObject:
       self.items.mapIt(it.key)
     proc sectionNameAtForTest*(self: TokenSelectorModel, i: int): string =
       self.sectionNameFor(self.items[i])
+    proc decimalsAtForTest*(self: TokenSelectorModel, i: int): int =
+      self.items[i].decimals
     proc balancesModelForKey*(self: TokenSelectorModel, key: string): TokenSelectorBalancesModel =
       if self.balancesByKey.hasKey(key): return self.balancesByKey[key]
       return nil
