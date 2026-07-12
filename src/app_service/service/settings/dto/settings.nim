@@ -1,4 +1,4 @@
-import tables, json, options, tables, strutils, times, chronicles
+import tables, json, options, tables, strutils, chronicles
 
 import constants
 import app_service/service/stickers/dto/stickers
@@ -251,12 +251,9 @@ proc toSettingsDto*(jsonObj: JsonNode): SettingsDto =
 
   var lastTokensUpdate: string
   discard jsonObj.getProp(KEY_LAST_TOKENS_UPDATE, lastTokensUpdate)
-  if lastTokensUpdate == "":
-    try:
-      let dateTime = parse(lastTokensUpdate, DATE_TIME_FORMAT_2)
-      result.lastTokensUpdate = dateTime.toTime().toUnix()
-    except Exception as e:
-      warn "failed to parse lastTokensUpdate: ", data=lastTokensUpdate, errName = e.name, errDesription = e.msg
+  # timestampToUnix accepts the formats seen in the field and returns 0 without
+  # raising on empty/unparseable input, so this stays off the exception path at wake.
+  result.lastTokensUpdate = timestampToUnix(lastTokensUpdate)
 
   var urlUnfurlingMode: int
   discard jsonObj.getProp(KEY_URL_UNFURLING_MODE, urlUnfurlingMode)

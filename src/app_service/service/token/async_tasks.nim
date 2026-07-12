@@ -22,7 +22,13 @@ type
     error*: string
 
   FetchAllTokenListsResponse* = object
+    requestId*: int # generation stamp for coalescing
     allTokenLists*: seq[TokenListDto]
+    error*: string
+
+  FetchMissingTokensResponse* = object
+    requestedKeys*: seq[string] # echoed back so the slot knows which keys were asked for
+    tokens*: seq[TokenDtoSafe]  # the subset the backend actually resolved
     error*: string
 
   TokensMarketValuesSlotResponse* = object
@@ -89,11 +95,12 @@ proc asyncRefreshTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
 
 type
   AsyncFetchAllTokenListsTaskArg = ref object of QObjectTaskArg
-    discard
+    requestId: int
 
 proc asyncFetchAllTokenListsTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncFetchAllTokenListsTaskArg](argEncoded)
   var output = %*{
+    "requestId": arg.requestId,
     "allTokenLists": newJArray(),
     "error": ""
   }
@@ -146,6 +153,27 @@ proc asyncBuildGroupsForChainTask*(argEncoded: string) {.gcsafe, nimcall.} =
     output["tokens"] = if response.isNil: newJArray() else: response
   except Exception as e:
     output["error"] = %* fmt"Error building groups for chain {arg.chainId}: {e.msg}"
+  arg.finish(output)
+
+type
+  AsyncFetchMissingTokensTaskArg = ref object of QObjectTaskArg
+    keys: seq[string]
+
+proc asyncFetchMissingTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncFetchMissingTokensTaskArg](argEncoded)
+  var output = %*{
+    "requestedKeys": arg.keys,
+    "tokens": newJArray(),
+    "error": ""
+  }
+  try:
+    var response: JsonNode
+    let err = status_go_tokens.getTokensByKeys(response, arg.keys)
+    if err.len > 0:
+      raise newException(CatchableError, "getTokensByKeys failed: " & err)
+    output["tokens"] = if response.isNil: newJArray() else: response
+  except Exception as e:
+    output["error"] = %* fmt"Error fetching missing tokens: {e.msg}"
   arg.finish(output)
 
 #################################################
