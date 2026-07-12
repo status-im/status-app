@@ -36,6 +36,6 @@ export NIM_SDS_SOURCE_DIR="$BUILD_DIR/vendor/nim-sds"
 # materialises the pinned Nim compiler in nimble's store; `nimble shellenv` puts
 # that compiler on PATH, which is what the mobile make legs compile with.
 nimble setup
-eval "$(nimble shellenv)"
+source ./env.sh
 
 make -C mobile apk-fdroid BUILD_VARIANT=release ARCH=arm64 V=3

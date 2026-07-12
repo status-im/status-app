@@ -359,7 +359,7 @@ const hostSubmodules = [
 proc initSubmodules() =
   ## Targeted, never blanket-recursive: only the submodules the HOST desktop
   ## build consumes. (fcitx5-qt is Linux packaging, mobile/vendors/openssl is
-  ## mobile, nimbus-build-system dies in issue 0018.)
+  ## mobile; nimbus-build-system is gone — issue 0018.)
   var missing: seq[string]
   for s in hostSubmodules:
     let dotGit = thisDir() / s / ".git"

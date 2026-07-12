@@ -309,8 +309,14 @@ Bootstrap the Nim toolchain — **this is the whole prerequisite**:
 
 ```bash
 nimble setup            # resolves the graph AND materialises the pinned compiler
-eval "$(nimble shellenv)"   # puts that compiler (and only that one) on PATH
+source ./env.sh         # puts THAT compiler at the front of PATH
 ```
+
+> `env.sh` wraps `eval "$(nimble shellenv)"` and then hoists the pinned
+> compiler's `pkgs2/nim-<version>-<checksum>/bin` to the front of `PATH`. Use it
+> rather than bare `shellenv`: shellenv lists `~/.nimble/bin` *first*, and if you
+> ever installed another Nim through nimble or choosenim, the `nim` symlink there
+> would shadow the pin.
 
 Build and run the app:
 
@@ -321,8 +327,8 @@ nim run status.nims
 
 > **You do not install Nim.** `nim_status_client.nimble` pins the compiler
 > (`requires "nim == 2.2.4"`) and nimble materialises it in its own store, so
-> after `eval "$(nimble shellenv)"` the `nim` on your PATH *is* the pinned
-> compiler, by construction — nothing can drift, and no version guard is needed.
+> after `source ./env.sh` the `nim` on your PATH *is* the pinned compiler, by
+> construction — nothing can drift, and no version guard is needed.
 > **Nimble is the only machine prerequisite** of the Nim side (plus Qt, Go, cmake
 > and the platform packages listed above). The vendored `nimbus-build-system`,
 > `make update`, `make deps`, `make status-go-deps` and `USE_SYSTEM_NIM` are all
@@ -343,7 +349,7 @@ Mobile builds are still make legs (they compile the client for iOS/Android).
 They take the compiler from `PATH` too, so run them from a bootstrapped shell:
 
 ```bash
-eval "$(nimble shellenv)" && make mobile-build
+source ./env.sh && make mobile-build
 ```
 
 ### Nim toolchain and Nim C libraries (nimble)
@@ -357,9 +363,9 @@ status-go and not by a vendored compiler.
 The compiler is not a prerequisite: `nim_status_client.nimble` pins it
 (`requires "nim == 2.2.4"`) and `nimble setup` materialises it in nimble's store
 (`~/.nimble/pkgs2/nim-<version>-<checksum>/`), building it from source once if
-no binary is cached. `eval "$(nimble shellenv)"` then puts that store compiler
-on `PATH`, and every Nim compile in this repo — the client, the Nim test suite,
-the mobile legs — uses it. nimble also injects it itself for its own tasks and
+no binary is cached. `source ./env.sh` (a `nimble shellenv` wrapper) then puts
+that store compiler at the FRONT of `PATH`, and every Nim compile in this repo —
+the client, the Nim test suite, the mobile legs — uses it. nimble also injects it itself for its own tasks and
 hooks, so `nimble build` / `nimble run` need no shell bootstrap.
 
 There is no vendored compiler and no `nimbus-build-system` any more (issue
@@ -387,8 +393,8 @@ whenever `nimble.lock`, one of the graph's manifests
 statusgo develop checkout exists) or the develop overlay changes (content-keyed
 in `.status-setup.key`), so a plain `nim run status.nims` /
 `nim app status.nims` keeps the resolution in sync without a manual step. The
-one-time bootstrap above (`nimble setup && eval "$(nimble shellenv)"`) exists
-only to put the pinned compiler on your PATH in the first place.
+one-time bootstrap above (`nimble setup` + `source ./env.sh`) exists only to put
+the pinned compiler on your PATH in the first place.
 Ad-hoc nimble commands (e.g. `nimble lock` after editing a manifest) need no
 store flags anymore. Mobile builds pick up the same
 `config.nims`/`nimble.paths` resolution

@@ -33,6 +33,20 @@ STATUS_SHELLENV="$(cd "${ABS_PATH}" && nimble shellenv)" || {
 }
 eval "${STATUS_SHELLENV}"
 
+# WALL (measured 2026-07-12, nimble 0.22.3): shellenv emits the store's own
+# `bin` directory ($NIMBLE_DIR/bin) BEFORE the pinned compiler's
+# pkgs2/nim-<version>-<checksum>/bin. That directory usually carries a `nim`
+# symlink — normally the pin itself, but choosenim (or `nimble install nim@X`)
+# repoints it — and it would then SHADOW the pin for every `nim` we run. So
+# hoist the pinned compiler's bin to the front: after this line `nim` is the
+# pin, whatever else the machine has installed.
+STATUS_NIM_BIN="$(printf '%s' "${PATH}" | tr ':' '\n' | grep -m1 -E '/pkgs2/nim-[^/]+/bin$')"
+if [[ -n "${STATUS_NIM_BIN}" ]]; then
+	export PATH="${STATUS_NIM_BIN}:${PATH}"
+else
+	echo "WARNING: no pinned Nim (pkgs2/nim-*/bin) in \`nimble shellenv\`'s PATH — is the graph resolved?" 1>&2
+fi
+
 if [[ $# -gt 0 ]]; then
 	if [[ $# == 1 && $1 == "bash" ]]; then
 		export PS1="[status env] \[\033[0;32m\]\w\[\033[0m\]\n\u\$ "
