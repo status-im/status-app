@@ -49,7 +49,7 @@ $(TARGET): $(STATUS_DESKTOP_NIM_FILES) $(STATUS_DESKTOP_UI_FILES) $(STATUS_Q_FIL
 			export QMAKE=$$(which qmake) && \
 			echo "=== Resolving the nimble graph (incl. the pinned Nim compiler) ===" && \
 			nimble setup && \
-			eval "$$(nimble shellenv)" && \
+			source ./env.sh && \
 			echo "=== Building Android APK ===" && \
 			cd mobile && \
 			make apk-debug ARCH=$(ARCH) PACKAGE_TYPE=$(PACKAGE_TYPE) NIM_SDS_SOURCE_DIR=/tmp/nim-sds V=$(V) \

@@ -412,7 +412,16 @@ task app, "Build the Status dev build: host by default, --os:ios / --os:android 
   case t.os
   of "ios", "android":
     if t.os == "ios": validateIos(t) else: validateAndroid(t)
-    runMake "mobile-build", (if force: " REBUILD_NIM=true" else: "")
+    # `--force` does NOT reach the mobile legs: it used to be passed on as
+    # REBUILD_NIM=true, and REBUILD_NIM no longer exists anywhere (issue 0017
+    # deleted it from the root Makefile; mobile/Makefile never had it) — so the
+    # pass-through named a dead variable (issue 0018). mobile/Makefile's own
+    # client rule is prerequisite-driven (STATUS_DESKTOP_NIM_FILES), so an edit
+    # rebuilds by itself; a forced mobile rebuild is
+    # `make -C mobile clean-nim-status-client`. Recorded as a follow-up.
+    if force:
+      echo "note: --force has no effect on the mobile leg (see status.nims)."
+    runMake "mobile-build"
   else:
     validateHost(t)
     buildHostArtifacts()

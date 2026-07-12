@@ -14,7 +14,7 @@ GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 # compiler on PATH and auto-initialising submodules — belong to nimble and to
 # the driver's bootstrap now:
 #
-#   nimble setup && eval "$(nimble shellenv)"   # the ONE prerequisite (BUILDING.md)
+#   nimble setup && source ./env.sh   # the ONE prerequisite (BUILDING.md)
 #
 # after which `nim` on PATH IS the compiler `nim_status_client.nimble` pins, by
 # construction. `deps`, `update`, `deps-common`, `NIM_PARAMS`, the env-script
