@@ -75,6 +75,42 @@ gate from unverifiable edits.
       first-run store materialisation time recorded; any agent-image change
       requested from infra is filed.
 
+## Blocked-by-0018 handoff (written 2026-07-12 by 0018's fix wave — read first)
+
+0018 deleted the targets CI called (`make update`, `make deps`,
+`make status-go-deps`) and edited `ci/` **only** to stop calling them. It gave
+the pipelines a **half bootstrap**, and it is 0019's job to finish it. Reviewed
+and decided (orchestrator + user, 2026-07-12): 0018 must NOT touch `ci/`
+further, so the gap is written down here rather than patched there.
+
+Exactly what is open:
+
+1. **`nimble setup` without a PATH bootstrap — 6 files.** `Jenkinsfile.macos`,
+   `.linux`, `.windows`, `.flatpak`, `.tests-nim` run `sh 'nimble setup'`;
+   `.linux-nix` runs `nix.shell('nimble setup', pure: true)`. Each Jenkins `sh`
+   step is its OWN shell, so the resolution is done but no later step has the
+   pinned compiler on `PATH`: a subsequent `nim <task> status.nims` or a bare
+   `make` leg takes the image's `nim` (or finds none). Fix per step: reach the
+   build through nimble (`nimble build`, or a task alias) — or, where a make
+   leg is unavoidable, `source ./env.sh && make …` (env.sh hoists and *asserts*
+   the pinned compiler; a bare `eval "$(nimble shellenv)"` loses the PATH-order
+   race — 0018 §7).
+2. **`Jenkinsfile.ios` has NO bootstrap at all** — it goes straight to
+   `sh 'make status-go'` and the mobile leg. `Jenkinsfile.android` likewise has
+   no `nimble setup` (it drives make legs only). Both compile the client
+   through `mobile/scripts/buildNimStatusClient.sh`, which is now a plain
+   `nim c` — i.e. it needs the bootstrapped PATH that nothing gives it.
+3. **Criterion 3 of 0018 ("both front doors compile the client with the pin")
+   is scoped to the LOCAL front doors** — its CI leg is deliberately unclaimed
+   and belongs to this issue's acceptance criteria.
+
+New in 0018's fix wave, and load-bearing for this work: the driver now **fails
+fast** when the compiler about to compile the client is not the pinned store
+entry (adjudication A1). A pipeline that forgets the bootstrap therefore fails
+loudly instead of silently building with the image's Nim — but it *does* fail,
+so every make/driver leg in CI must be given the bootstrap before this issue can
+go green.
+
 ## Blocked by
 
 - 0018 (pipelines cannot assume a Nim-free agent until the build system that

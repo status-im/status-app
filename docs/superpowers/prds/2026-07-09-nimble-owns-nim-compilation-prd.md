@@ -14,7 +14,7 @@ predecessor: 2026-07-06-one-command-and-develop-mode-prd.md (closed over issues 
 | 0015 prl-to-pc nimble-native | upstream `qt_pkgconfig.nims` (`env`/`tools`/`generate`) authored in develop mode → prl-to-pc **v0.3.0** pushed + tagged → app pin bump; env-cache artifact; `config.nims` stops duplicating kit derivation; `make qt-pkgconfig*` deleted | **done** — both kits proven (Generated 6.11.0, System 6.11.1), store byte-identical across builds, no-op 6.8–7.9 s; prl-to-pc **v0.3.0** pushed + tagged, the app pins `#v0.3.0`, and a wiped store re-solves it from the remote |
 | 0016 `buildArtifacts` goes native | `status_artifacts.nims`: generic cmake proc (StatusQ, DOtherSide, status-keycard-qt, translations), qrcodegen via `{.compile.}`, rcc, brew bottles, submodule bootstrap, setup-stamp absorption, `stale()` helper; `client-deps` deleted | **done** — host `nim app` invokes no target of this repo's Makefile (green with make off `PATH`); no-op **4.6–5.6 s** (was 8.1 s); wiped-store full build 9:04; iOS↔desktop sentinel flip, both develop round trips and the submodule bootstrap verified. Residual `make` processes come from cmake's `Unix Makefiles` generator and status-go's own Makefile — recorded, not hidden |
 | 0017 driver owns the Nim compiles | client, nim tests, windows launcher become driver tasks; `run-*` targets deleted; Windows flag branches ported into `config.nims` (ported, unverified); packaging consumes the prebuilt binary; `stale()` becomes a portable content key | **done** — driver binary is **byte-identical** to the make-built one (0 differing bytes, same LC_UUID); `scripts/check-no-nim-compiles.sh` is the re-runnable invariant (no `nim c`/`nim e`/`ENV_SCRIPT`/`NIM_PARAMS` in the root Makefile); `nim tests status.nims` green (8 suites, 59 OK) where `make nim-test-run` was broken on macOS; `nim windowsLauncher status.nims` cross-compiles to C (link needs mingw — ported, unverified); `--force` lands on `app`/`run`; content-key `stale()` fixes 0016's Windows always-rebuild at no CPU cost. **`make pkg-macos`'s signed dmg is NOT verifiable here** (no `nix`/`dmgbuild`, no identity) — the `.app` provably carries the driver binary. **Review fix wave 2026-07-10:** 3 criticals (contentKey died under dash `/bin/sh`; the empty-input digest read as permanently fresh; packaging targets had lost their always-stale prereq so `make pkg-macos` was a no-op with a stale dmg) + 5 important (unconditional Windows `-d:lto`; no Windows arm in `launchHostApp`; `.libsds.key` dirtied vendor/status-go; two shared-definition duplications hoisted into `status_env.nims`) + one unnamed find (the develop-overlay re-invalidation was a dead `touch` under the content key → could silently build a developed vendor against its PIN). All applied and re-verified |
-| 0018 NBS deleted | submodule removed (backup ref); root Makefile self-contained; store-nim rule; `REBUILD_NIM`/`.update.timestamp`/`NIM_SOURCES`/`deps`/`update` gone | **done** — nimble is the only Nim-side prerequisite: on a PATH carrying `nimble` and **no `nim`**, a fresh clone runs `nimble setup && nimble build` to a runnable app (nimble spawns `pkgs2/nim-2.2.4-b4bb510b…/bin/nim` — observed in `ps`), and `eval "$(nimble shellenv)" && nim app status.nims` is green. Both front doors compile the client with the pin: the driver-built and nimble-built binaries share `__text`/`__const`/`__cstring`/`__data` byte-for-byte and the same `nm` md5 (the 0017 parity floor; residue = LC_UUID/signature). The NBS submodule is gone (backup ref `backup/nimble-0018-nbs`, git dir preserved by reference, **nothing pruned under the shared `.git/modules`**); the root Makefile includes no external makefile and defines its own `V`/`HANDLE_OUTPUT`/`BUILD_MSG`/`.SILENT`; `deps`/`update`/`deps-common`/`status-go-deps`/`USE_SYSTEM_NIM`/`NIM_PARAMS`/`.update.timestamp`/`NIM_SOURCES`/`REBUILD_NIM` are absent from both Makefiles; the mobile leg compiles with the store compiler through a `shellenv` shell. **`make pkg-macos`'s signed dmg stays unverifiable here** (no `nix`/`dmgbuild`, no identity) — verified as far as 0017 did |
+| 0018 NBS deleted | submodule removed (backup ref); root Makefile self-contained; store-nim rule; `REBUILD_NIM`/`.update.timestamp`/`NIM_SOURCES`/`deps`/`update` gone | **done** — nimble is the only Nim-side prerequisite: on a PATH carrying `nimble` and **no `nim`**, a fresh clone runs `nimble setup && nimble build` to a runnable app (nimble spawns `pkgs2/nim-2.2.4-b4bb510b…/bin/nim` — observed in `ps`), and `eval "$(nimble shellenv)" && nim app status.nims` is green. Both front doors compile the client with the pin: the driver-built and nimble-built binaries share `__text`/`__const`/`__cstring`/`__data` byte-for-byte and the same `nm` md5 (the 0017 parity floor; residue = LC_UUID/signature). The NBS submodule is gone (backup ref `backup/nimble-0018-nbs`, git dir preserved by reference, **nothing pruned under the shared `.git/modules`**); the root Makefile includes no external makefile and defines its own `V`/`HANDLE_OUTPUT`/`BUILD_MSG`/`.SILENT`; `deps`/`update`/`deps-common`/`status-go-deps`/`USE_SYSTEM_NIM`/`NIM_PARAMS`/`.update.timestamp`/`NIM_SOURCES`/`REBUILD_NIM` are absent from both Makefiles; the mobile leg compiles with the store compiler through a `shellenv` shell. **`make pkg-macos`'s signed dmg stays unverifiable here** (no `nix`/`dmgbuild`, no identity) — verified as far as 0017 did. **Review fix wave 2026-07-12:** 3 user adjudications — **A1** a driver-side compiler guard IS added (this PRD's "no version guard" decision is amended: it rested on "a bootstrapped shell cannot drift", which shellenv's PATH order falsifies), **A2** the `status-go-deps` inline is accepted and the status-go-side move is filed as a push-bearing upstream ask, **A3** `nimble setup && source ./env.sh` is the blessed bootstrap — plus 3 criticals in `env.sh`, the bootstrap SPOF (a `grep` rc=1 killed every `set -e` caller *silently*; a SOURCED file inherits the caller's `$@`, so the `exec "$@"` arm hijacked any argful caller; the hoist asserted nothing about the version, so a second store nim would win) — all three reproduced against the old file and re-probed in bash **and** zsh, sourced/executed, with/without args, under `set -e` (14/14) — plus 3 important (CI's half-bootstrap handed to 0019 as an explicit blocker; one naming convention `.status-<artifact>.key` + glob replaces `make clean`'s hand-kept list; the mobile arms now REJECT `--force` instead of warn-and-ignore). Guard evidence: with this machine's *three* store nims, the driver passes only under `pkgs2/nim-2.2.4-b4bb510b…` — it rejects even the other **2.2.4** entry (right version, wrong store entry), and stays silent under `nimble build` |
 | 0019 CI nimble-only | Jenkinsfiles build via `nimble build` + task aliases; agent prerequisite becomes **nimble only** | open |
 
 ## Problem Statement
@@ -60,9 +60,13 @@ packaging and CI-only helpers, and never invokes `nim`.**
 From the developer's perspective:
 
 - The only machine prerequisite is **nimble**. After cloning:
-  `nimble setup && eval "$(nimble shellenv)"` puts the *pinned* compiler on
-  `PATH` — by construction, not by convention. `nimble build` works with no
-  Nim on `PATH` at all.
+  `nimble setup && source ./env.sh` puts the *pinned* compiler on `PATH` — by
+  construction, not by convention. (**Amended 2026-07-12, adjudication A3**:
+  the bootstrap was written here as a bare `eval "$(nimble shellenv)"`; that
+  loses the PATH-order race against `$NIMBLE_DIR/bin`'s repointable `nim`
+  symlink — see 0018 §7 and the walls doc. `env.sh` *is* that eval plus the
+  hoist, and it is the blessed bootstrap.) `nimble build` works with no Nim on
+  `PATH` at all.
 - `nim app status.nims` remains the fast daily front door (~6 s no-op) and now
   builds everything itself: it orchestrates the cmake artifacts, the
   resources, the Qt pkg-config tooling and the client compile, with no `make`
@@ -195,10 +199,24 @@ From the developer's perspective:
   tax nor the driver's role is re-litigated.
 - The **dev environment owns nimble only**. `requires "nim == 2.2.4"` in the
   app manifest is the single source of truth for the compiler; nimble
-  materialises it in the store, and `nimble shellenv` exposes it. No version
-  guard is added — a bootstrapped shell cannot drift. *(Spiked 2026-07-09: with
-  `PATH` scrubbed of `~/.nimble/bin` and NBS, `nimble setup` resolves and uses
-  the store compiler; `nimble shellenv` emits its `bin/` directory.)*
+  materialises it in the store, and `nimble shellenv` exposes it. *(Spiked
+  2026-07-09: with `PATH` scrubbed of `~/.nimble/bin` and NBS, `nimble setup`
+  resolves and uses the store compiler; `nimble shellenv` emits its `bin/`
+  directory.)*
+  - **AMENDED 2026-07-12 (user adjudication A1, issue 0018 review): a compiler
+    guard IS added.** This block used to end "No version guard is added — a
+    bootstrapped shell cannot drift." That premise did not survive contact:
+    `nimble shellenv` lists `$NIMBLE_DIR/bin` *before* the pinned
+    `pkgs2/nim-<ver>-<checksum>/bin` (0018 §7), and `~/.nimble/bin/nim` is a
+    symlink choosenim (or `nimble install nim@X`) repoints — so a shell
+    bootstrapped by a bare `eval "$(nimble shellenv)"` *can* drift, silently.
+    The bootstrap is therefore `nimble setup && source ./env.sh` (env.sh hoists
+    the pin and asserts its version against the manifest), and the **driver**
+    refuses to compile the client with anything but the store entry the
+    resolution names. The guard lives in the driver, **never in
+    `config.nims`** — nimsuggest evaluates that file with its own compiler and
+    would false-positive on every keystroke — and it cannot fire under
+    `nimble build`/`nimble run`, which inject the pin themselves.
 - **Internal `nim` invocations resolve the store compiler** (driver, statusgo
   tasks, and the interim mobile make legs via a `NIM :=` derived from
   `nimble.paths`), so artifacts are governed by the manifest pin even when the
@@ -304,7 +322,12 @@ From the developer's perspective:
   update` is not preserved as a shim — a shim perpetuates the front door being
   removed; `BUILDING.md` teaches the driver instead.
 - `status-go-deps` (a Go tool install) moves into status-go's own nimscript
-  tasks.
+  tasks. *(Adjudicated 2026-07-12, A2: the make target is deleted and its one
+  `go install …/protoc-gen-go` line is INLINED in the `$(STATUSGO)` recipe —
+  which is what the driver's `buildLibstatus()` already did, so both front
+  doors behave identically. The status-go-side nimscript move needs a commit in
+  status-go and a pin bump — a push-bearing human task, filed in
+  `docs/superpowers/upstream-asks.md`.)*
 - The remaining C/C++ submodules (SortFilterProxyModel, QR-Code-generator,
   fcitx5-qt, mobile openssl, and DOtherSide until master merges) are **pins,
   not Vendors**, and stay submodules. `CONTEXT.md`'s end-state has been
@@ -340,8 +363,8 @@ verification record per issue, reproducible from a clean state.
    make from `PATH` for the duration).
 2. **`nimble build`** — the out-of-the-box seam. Asserted from a **fresh
    clone with a `PATH` containing nimble and no Nim**, proving the
-   nimble-only-machine contract; then `eval "$(nimble shellenv)"` and the
-   driver path.
+   nimble-only-machine contract; then `source ./env.sh` (2026-07-12: not a bare
+   `eval "$(nimble shellenv)"` — A3) and the driver path.
 3. **`nim e <package root>/qt_pkgconfig.nims <subcommand>`** — prl-to-pc's new
    public interface. Tested in prl-to-pc against real kits (System-mode kit and
    Generated-mode kit) via its existing hermetic harness (prl-to-pc already
@@ -404,9 +427,12 @@ itself; there is no product behaviour to test.
 - **Serendipity worth recording**: `nimble shellenv` already derives the store
   compiler's `bin/` from the project's own graph. The "dev environment owns
   the toolchain" ruling from Phase 1 therefore costs nothing and provisions
-  the *pinned* compiler rather than merely *a* compiler — closing, by
-  construction, the drift hole that a version guard would otherwise have to
-  police.
+  the *pinned* compiler rather than merely *a* compiler. **Corrected
+  2026-07-12**: it does not close the drift hole *by construction* — shellenv
+  puts `$NIMBLE_DIR/bin` (a repointable `nim` symlink) ahead of the pin, so the
+  hole is closed by `env.sh`'s hoist + version assert and by the driver's
+  compiler guard (adjudication A1). The guard is cheap precisely *because*
+  shellenv derives the entry: the store path is the thing to compare against.
 - Two decisions in this PRD are candidates for an ADR once implemented: *Nim
   compilation is owned by nimble/the driver, and the store compiler is the
   compiler* (hard to reverse, surprising, genuinely traded off against a

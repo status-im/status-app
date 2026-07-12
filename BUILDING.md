@@ -328,7 +328,10 @@ nim run status.nims
 > **You do not install Nim.** `nim_status_client.nimble` pins the compiler
 > (`requires "nim == 2.2.4"`) and nimble materialises it in its own store, so
 > after `source ./env.sh` the `nim` on your PATH *is* the pinned compiler, by
-> construction — nothing can drift, and no version guard is needed.
+> construction. Two guards keep it that way (issue 0018 review): `env.sh`
+> asserts the compiler it hoists against the manifest's `requires "nim == …"`,
+> and the driver refuses to compile the client with anything but the pinned
+> store entry — naming `source ./env.sh` when it refuses.
 > **Nimble is the only machine prerequisite** of the Nim side (plus Qt, Go, cmake
 > and the platform packages listed above). The vendored `nimbus-build-system`,
 > `make update`, `make deps`, `make status-go-deps` and `USE_SYSTEM_NIM` are all
@@ -569,8 +572,10 @@ when nothing changed — force it:
 nim app status.nims --force
 ```
 
-To see WHY a step re-ran, delete its key file (`.status-client.key`,
-`.status-rcc.key`, `.status-setup.key`, `.libsds.key`) and re-run.
+To see WHY a step re-ran, delete its key file and re-run. Every key file the
+driver keeps at the repo root is named `.status-<artifact>.key`
+(`.status-client.key`, `.status-rcc.key`, `.status-setup.key`,
+`.status-libsds.key`) — which is also what `make clean` removes, with one glob.
 
 ## 📬 Need Further Help?
 

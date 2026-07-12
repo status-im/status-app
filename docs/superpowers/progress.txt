@@ -1794,3 +1794,101 @@ CI (0019 owns it: nothing yet carries the bootstrapped PATH across Jenkins `sh`
 steps — 0017's follow-up 10); Linux/Windows (no hosts); the shellenv-shadowing
 CONSEQUENCE (proven from PATH order, not reproduced — that needs a second Nim
 installed on this machine).
+
+================================================================================
+2026-07-12  issue 0018 — REVIEW FIX WAVE (3 adjudications, 3 critical, 3
+            important, 3 minor). Local only, nothing pushed.
+
+A1 (user, amends the PRD) A DRIVER-SIDE COMPILER GUARD IS ADDED. The PRD said no
+version guard was needed because "a bootstrapped shell cannot drift"; 0018 §7
+falsified the premise (shellenv lists $NIMBLE_DIR/bin, whose `nim` symlink
+choosenim repoints, BEFORE the pinned pkgs2 entry). status_artifacts.nims now
+carries pinnedNimEntry() + guardPinnedCompiler(), called from buildClient() after
+the staleness gate and just before `nim c`: two file reads on the compiling path,
+nothing on the no-op path, no subprocess. It compares the compiler that WILL run
+(getCurrentCompilerExe() — measured: it already resolves the ~/.nimble/bin/nim
+symlink to the store path, so no realpath fork) against pkgs2/nim-<version>-
+<checksum>: version from the manifest's `requires "nim == X"`, checksum from
+nimble.lock's packages.nim.checksums.sha1. NEW FACT: nimble.paths carries NO nim
+entry (the compiler is not a --path:), so the LOCK is where the resolution writes
+the entry down — and its sha1 IS the store directory's checksum. NEVER in
+config.nims: nimsuggest evaluates that file with its own compiler and would
+false-positive on every keystroke.
+  Evidence — this machine happens to carry THREE store nims (2.2.10, and TWO
+  2.2.4s with different checksums), so the guard was unit-proved against all of
+  them: PASS only under nim-2.2.4-b4bb510b (the lock's entry); nim-2.2.10 and
+  nim-2.2.4-a092a045 (right version, wrong entry — version-only matching would
+  have passed it) both fail loudly, naming `source ./env.sh`; STATUS_NIM is a
+  deliberate, announced override. Happy path: `nim app status.nims --force` rc=0
+  (32.6 s). `nimble build` rc=0 (1:46.6) with the guard SILENT — it is not on
+  nimble's client-compile path, and nimble injects the pin for its own hooks.
+
+A2 status-go-deps inline ACCEPTED; the status-go-side nimscript move is filed in
+docs/superpowers/upstream-asks.md as a push-bearing human task. It collapses the
+three surviving copies of `go install …/protoc-gen-go@v1.34.1`: Makefile:639,
+status_artifacts.nims:550 (buildLibstatus), fdroid/build-app.sh:31.
+
+A3 `nimble setup && source ./env.sh` is the blessed bootstrap (not the bare
+eval). Issue + PRD + BUILDING.md say so.
+
+CRITICALS — env.sh was the bootstrap SPOF, and all three were real:
+  C1 `grep -m1` returns rc=1 on no match and a command substitution propagates
+     it: under a caller's `set -e` (fdroid/build-app.sh has `set -eou pipefail`;
+     ContainerBuilds uses `bash -c 'set -e && …'`) sourcing DIED SILENTLY and the
+     WARNING branch was unreachable. Reproduced against the old file (rc=1, no
+     output). Fixed with `|| true` inside the substitution.
+  C2 A SOURCED file inherits the CALLER's positional parameters — so
+     `if [[ $# -gt 0 ]]; then exec "$@"; fi` HIJACKED any argful caller.
+     Reproduced against the old file: the caller's argv was exec'd and its own
+     code after `source` never ran. The exec arm is now gated on
+     executed-not-sourced. WALL for the next reader: in zsh, BASH_SOURCE is unset
+     and `$0` is the sourced file in BOTH cases — the discriminator is
+     ZSH_EVAL_CONTEXT (`toplevel:file` sourced, `toplevel` executed).
+  C3 The hoist took the FIRST pkgs2/nim-*/bin on shellenv's PATH and asserted
+     NOTHING about its version — with two store nims the wrong one silently wins,
+     the exact class the file exists to prevent. It now parses the pin from the
+     manifest (never hardcoded) and compares it to the version embedded in the
+     store entry's own directory name (nimble mints that name — no `nim -v`
+     fork), failing loudly on mismatch.
+  M1 idempotent hoist + PATH dedupe (shellenv re-prepends its dirs to whatever
+     PATH it inherits) + every STATUS_* temp unset on every exit path.
+  PROBE MATRIX (/tmp/0018-probes/run.sh) 14/14: bash and zsh × sourced/executed ×
+  args/no-args × set -e; the fdroid and ContainerBuilds call shapes; an argful
+  caller must survive; a two-nim PATH must fail loudly (stub shellenv naming
+  nim-2.2.10 first → rc=1 in both shells) with a pin-first positive control.
+  Probe wall: `set -eou pipefail` is BASH syntax — zsh rejects it ("no such
+  option: u") and never reaches env.sh; the zsh cell must use
+  `set -e; set -u; set -o pipefail`.
+
+IMPORTANT:
+  I1 CI's half-bootstrap is NOT fixed here (orchestrator decision: 0019 owns
+     ci/). Instead 0018's record §3 is retitled "Both LOCAL front doors …" and
+     criterion 3 is scoped, and 0019 gains a "Blocked-by-0018 handoff" section:
+     six pipelines run `nimble setup` with no PATH bootstrap in their LATER `sh`
+     steps (macos, linux, windows, flatpak, tests-nim, linux-nix), Jenkinsfile.ios
+     and .android have NO bootstrap at all while still compiling the client
+     through a now-plain `nim c`, plus criterion-3's CI leg. A1's guard makes that
+     gap fail loudly instead of silently.
+  I2 One source of truth for the key files: every repo-root key file is
+     `.status-<artifact>.key`, so `make clean`'s `rm -f .status-*.key` is TOTAL
+     and no hand-kept list can drift from the consts. `.libsds.key` → renamed
+     `.status-libsds.key` (the one name that broke the pattern); Makefile,
+     .gitignore, BUILDING.md and 0017's gating-audit row updated; the
+     contradictory comment above `clean` removed; a legacy `rm -f .libsds.key`
+     stays for trees built before this commit. Keys INSIDE a build tree
+     (.status-cmake.key, .statusgo-artifact-key) are exempt — they die with the
+     tree they gate.
+  I3 `app --os:ios|--os:android --force` now REJECTS the flag (it used to warn
+     and ignore, while buildArtifacts rejected it — one file, two contracts). The
+     rejection runs BEFORE applyDevelopModeArms(), which mutates the tree.
+
+MINOR: M2 recorded (commit 96d76723d4's title overstates — prl-to-pc's
+qt-pkgconfig.mk include remains, and is check-no-nim-compiles.sh's known blind
+spot; no amend on a shared branch). M3 reviewed and accepted (deletion-list names
+survive in comments only — signposts, not live references).
+
+REGRESSION (all from a `source ./env.sh` shell): check-no-nim-compiles.sh rc=0;
+`nim app status.nims` ×3 no-op 3.76/3.20/3.20 s; `nim app status.nims --force`
+rc=0; `nim tests status.nims utils_test` rc=0 (all OK); `nimble build` rc=0
+1:46.6; `make -n clean` rc=0. NOT re-verified (unchanged, unverifiable here):
+signed dmg, Android leg, CI, Linux/Windows.
