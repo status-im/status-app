@@ -128,6 +128,18 @@
                 <data android:scheme="http" />
                 <data android:scheme="https" />
             </intent-filter>
+            <!--
+              Share target: text and links shared from other apps (share sheet).
+              Only text/plain is declared - exactly what chat can send today;
+              image MIME types join in the image-share slice. Extraction is
+              decision-free (StatusQtActivity.handleShareIntake); the share flow
+              launches at the Nim external-intake seam.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
         </activity>
 
         <provider
