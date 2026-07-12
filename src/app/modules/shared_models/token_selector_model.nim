@@ -1,10 +1,12 @@
-import nimqml, tables, algorithm, sequtils
+import nimqml, tables, algorithm, sequtils, strutils
 
 import app/modules/shared_models/model_utils
 import app/modules/shared/model_sync
+import app/modules/shared_models/assets_aggregator
 import ./token_selector_item
+import ./token_selector_builder
 import ./token_selector_balances_model
-export token_selector_item, token_selector_balances_model
+export token_selector_item, token_selector_builder, token_selector_balances_model
 
 when defined(QT_MODEL_SPY):
   import app/modules/shared/qt_model_spy
@@ -35,6 +37,18 @@ type
     SectionName
     Balances
 
+  TokenSelectorSource* = object
+    ## Closures the producer wires to the all_tokens lazy models, so the terminal
+    ## model can (re)read the popular/search rows and drive their lazy loading
+    ## without middleware coupling. All optional: send owns no popular list, buy
+    ## has no search source. `searching` selects which lazy list to act on.
+    getPopular*: proc(): seq[PopularGroup] {.closure.}          ## loaded popular rows (AllTokens mode)
+    getSearch*: proc(): seq[PopularGroup] {.closure.}           ## loaded search rows
+    doSearch*: proc(keyword: string) {.closure.}               ## trigger a backend search
+    fetchMore*: proc(searching: bool) {.closure.}              ## grow the active lazy list
+    hasMore*: proc(searching: bool): bool {.closure.}
+    isLoadingMore*: proc(searching: bool): bool {.closure.}
+
 QtObject:
   type
     TokenSelectorModel* = ref object of QAbstractListModel
@@ -46,12 +60,20 @@ QtObject:
       # keeping i18n out of the middleware.
       ownedSectionName: string
       popularSectionName: string
+      # Producer-driven inputs the model re-derives its rows from on any change.
+      mode: TokenSelectorMode
+      ownedGroups: seq[AggTokenGroup]
+      networks: seq[NetworkInfo]
+      params: TokenSelectorParams
+      source: TokenSelectorSource
+      searchKeyword: string
 
   proc delete(self: TokenSelectorModel)
   proc setup(self: TokenSelectorModel)
-  proc newTokenSelectorModel*(): TokenSelectorModel =
+  proc newTokenSelectorModel*(mode = TokenSelectorMode.Owned): TokenSelectorModel =
     new(result, delete)
     result.setup
+    result.mode = mode
     result.balancesByKey = initTable[string, TokenSelectorBalancesModel]()
 
   proc countChanged(self: TokenSelectorModel) {.signal.}
@@ -151,6 +173,110 @@ QtObject:
       self.dataChanged(first, last, @[ModelRole.SectionName.int])
       first.delete
       last.delete
+
+  # --- producer-driven recompute + dynamic params + lazy passthrough ----------
+  #
+  # The model holds the owned aggregation source (pushed by the producer), its
+  # per-modal params, and closures onto the all_tokens lazy popular/search lists.
+  # Any change (a param setter, a fresh owned push, a fetchMore, a search) re-runs
+  # buildDisplayItems and diffs the result into the display via setSourceItems —
+  # so the granular emissions above still hold end to end.
+
+  proc hasMoreItemsChanged(self: TokenSelectorModel) {.signal.}
+  proc isLoadingMoreChanged(self: TokenSelectorModel) {.signal.}
+
+  proc recompute(self: TokenSelectorModel) =
+    let searching = self.searchKeyword.len > 0
+    var popularGroups: seq[PopularGroup] = @[]
+    var searchGroups: seq[PopularGroup] = @[]
+    if searching:
+      if self.source.getSearch != nil:
+        searchGroups = self.source.getSearch()
+    elif self.mode == TokenSelectorMode.AllTokens and self.source.getPopular != nil:
+      popularGroups = self.source.getPopular()
+    self.setSourceItems(buildDisplayItems(
+      self.ownedGroups, self.networks, self.params, self.mode, searching,
+      popularGroups, searchGroups))
+
+  proc setOwnedSource*(self: TokenSelectorModel, groups: seq[AggTokenGroup],
+      networks: seq[NetworkInfo]) =
+    ## Producer push of the shared owned aggregation source (+ network join data).
+    self.ownedGroups = groups
+    self.networks = networks
+    self.recompute()
+    self.hasMoreItemsChanged()
+
+  proc refresh*(self: TokenSelectorModel) =
+    ## Producer nudge when only the popular/search lazy list changed (e.g. groups
+    ## for a chain finished loading) — owned source unchanged. Re-runs an active
+    ## search so results appear once the backing groups-for-chain finish loading.
+    if self.searchKeyword.len > 0 and self.source.doSearch != nil:
+      self.source.doSearch(self.searchKeyword)
+    self.recompute()
+    self.hasMoreItemsChanged()
+
+  proc setAccountAddress*(self: TokenSelectorModel, address: string) {.slot.} =
+    if address == self.params.accountAddress: return
+    self.params.accountAddress = address
+    self.recompute()
+
+  proc setEnabledChainId*(self: TokenSelectorModel, chainId: int) {.slot.} =
+    ## -1 means "no chain filter". The pickers only ever scope to a single chain
+    ## (or none), matching the retired adaptor's single-element enabledChainIds.
+    let chains = if chainId == -1: @[] else: @[chainId]
+    if chains == self.params.enabledChainIds: return
+    self.params.enabledChainIds = chains
+    self.recompute()
+
+  proc setShowZeroBalanceForDefaultTokens*(self: TokenSelectorModel, value: bool) {.slot.} =
+    if value == self.params.showZeroBalanceForDefaultTokens: return
+    self.params.showZeroBalanceForDefaultTokens = value
+    self.recompute()
+
+  proc setShowCommunityAssets*(self: TokenSelectorModel, value: bool) {.slot.} =
+    if value == self.params.showCommunityAssets: return
+    self.params.showCommunityAssets = value
+    self.recompute()
+
+  proc search*(self: TokenSelectorModel, keyword: string) {.slot.} =
+    let kw = keyword.strip()
+    if self.source.doSearch != nil:
+      self.source.doSearch(kw)
+    self.searchKeyword = kw
+    self.recompute()
+    self.hasMoreItemsChanged()
+    self.isLoadingMoreChanged()
+
+  proc getSearchString(self: TokenSelectorModel): string {.slot.} =
+    return self.searchKeyword
+  QtProperty[string] searchString:
+    read = getSearchString
+
+  proc fetchMore*(self: TokenSelectorModel) {.slot.} =
+    let searching = self.searchKeyword.len > 0
+    if self.source.fetchMore != nil:
+      self.source.fetchMore(searching)  # grows the underlying lazy list in place
+    self.recompute()
+    self.hasMoreItemsChanged()
+    self.isLoadingMoreChanged()
+
+  proc getHasMoreItems*(self: TokenSelectorModel): bool {.slot.} =
+    if self.source.hasMore == nil: return false
+    return self.source.hasMore(self.searchKeyword.len > 0)
+  QtProperty[bool] hasMoreItems:
+    read = getHasMoreItems
+    notify = hasMoreItemsChanged
+
+  proc getIsLoadingMore*(self: TokenSelectorModel): bool {.slot.} =
+    if self.source.isLoadingMore == nil: return false
+    return self.source.isLoadingMore(self.searchKeyword.len > 0)
+  QtProperty[bool] isLoadingMore:
+    read = getIsLoadingMore
+    notify = isLoadingMoreChanged
+
+  proc setSource*(self: TokenSelectorModel, source: TokenSelectorSource) =
+    ## Producer wiring of the lazy popular/search closures at creation time.
+    self.source = source
 
   proc delete(self: TokenSelectorModel) =
     for bm in self.balancesByKey.values:

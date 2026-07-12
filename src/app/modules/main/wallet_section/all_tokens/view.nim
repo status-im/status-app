@@ -145,6 +145,15 @@ QtObject:
       return ""
     return $(%* token)
 
+  proc getTokenGroupsModelObj*(self: View): TokenGroupsModel =
+    ## Non-QML accessor: the raw model instances, so a sibling producer can
+    ## snapshot their loaded rows and drive their lazy loading directly.
+    self.tokenGroupsModel
+  proc getTokenGroupsForChainModelObj*(self: View): TokenGroupsModel =
+    self.tokenGroupsForChainModel
+  proc getSearchResultModelObj*(self: View): TokenGroupsModel =
+    self.searchResultModel
+
   proc modelsUpdated*(self: View) =
     self.tokenGroupsModel.modelsUpdated()
 

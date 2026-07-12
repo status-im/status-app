@@ -8,9 +8,11 @@
 ## through its own signals.
 
 import unittest, sequtils
+import stint
 import nimqml
 
 import app/modules/shared_models/token_selector_model
+import app/modules/shared_models/assets_aggregator
 import app/modules/shared/qt_model_spy
 
 proc dataChangedRows(spy: QtModelSpy): int =
@@ -199,3 +201,69 @@ suite "TokenSelectorModel - nested balances submodel":
     check bm.chainIdsInOrder() == @[1]
     check spy.countResets() == 0
     check spy.countDataChanged() >= 1 # nested chip dataChanged (+ parent balance roles)
+
+suite "TokenSelectorModel - producer-driven recompute":
+
+  let networks = @[NetworkInfo(chainId: 1, chainName: "Ethereum", iconUrl: "net/eth")]
+
+  proc ownedGroup(key: string, account: string, chainId: int, wei: string,
+      price = 0.0): AggTokenGroup =
+    AggTokenGroup(key: key, name: key, symbol: key, decimals: 18, marketPrice: price,
+      balances: @[AggBalance(account: account, chainId: chainId, balance: parse(wei, UInt256))])
+
+  test "Owned mode: setOwnedSource derives owned rows through the builder":
+    let m = newTokenSelectorModel(TokenSelectorMode.Owned)
+    m.setOwnedSource(@[
+      ownedGroup("ETH", "0xA", 1, "1000000000000000000", price = 2.0),
+      ownedGroup("SNT", "0xA", 1, "5000000000000000000", price = 1.0),
+    ], networks)
+    check m.keysInOrder() == @["SNT", "ETH"] # SNT fiat 5 > ETH fiat 2
+
+  test "setAccountAddress recomputes and filters other accounts out":
+    let m = newTokenSelectorModel(TokenSelectorMode.Owned)
+    m.setOwnedSource(@[
+      ownedGroup("ETH", "0xB", 1, "1000000000000000000", price = 2.0),
+    ], networks)
+    check m.keysInOrder() == @["ETH"]
+    m.setAccountAddress("0xA") # 0xB balance now excluded -> ETH drops out
+    check m.keysInOrder().len == 0
+
+  test "AllTokens mode: popular source merged with owned on recompute":
+    let m = newTokenSelectorModel(TokenSelectorMode.AllTokens)
+    var source: TokenSelectorSource
+    source.getPopular = proc(): seq[PopularGroup] =
+      @[PopularGroup(key: "ETH", name: "ETH", symbol: "ETH"),
+        PopularGroup(key: "DAI", name: "DAI", symbol: "DAI")]
+    m.setSource(source)
+    m.setOwnedSource(@[ownedGroup("ETH", "0xA", 1, "1000000000000000000", price = 2.0)], networks)
+    check m.keysInOrder() == @["ETH", "DAI"] # owned ETH first, popular DAI after
+    check m.balancesModelForKey("ETH") != nil
+
+  test "search routes through the search source; clearing restores the list":
+    let m = newTokenSelectorModel(TokenSelectorMode.AllTokens)
+    var source: TokenSelectorSource
+    source.getPopular = proc(): seq[PopularGroup] =
+      @[PopularGroup(key: "ETH", name: "ETH", symbol: "ETH")]
+    source.getSearch = proc(): seq[PopularGroup] =
+      @[PopularGroup(key: "DAI", name: "DAI", symbol: "DAI")]
+    m.setSource(source)
+    m.setOwnedSource(@[], networks)
+    check m.keysInOrder() == @["ETH"]
+    m.search("da")
+    check m.keysInOrder() == @["DAI"]
+    m.search("")
+    check m.keysInOrder() == @["ETH"]
+
+  test "hasMoreItems / isLoadingMore passthrough to the active lazy source":
+    let m = newTokenSelectorModel(TokenSelectorMode.AllTokens)
+    var source: TokenSelectorSource
+    source.hasMore = proc(searching: bool): bool = not searching
+    source.isLoadingMore = proc(searching: bool): bool = searching
+    source.getSearch = proc(): seq[PopularGroup] = @[]
+    m.setSource(source)
+    m.setOwnedSource(@[], networks)
+    check m.getHasMoreItems()      # not searching -> hasMore true
+    check not m.getIsLoadingMore()
+    m.search("x")
+    check not m.getHasMoreItems()  # searching -> hasMore false
+    check m.getIsLoadingMore()

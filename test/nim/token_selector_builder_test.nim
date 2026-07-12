@@ -191,3 +191,43 @@ suite "mergePopularWithOwned — all-tokens / search path":
     let p = @[popular("CT", communityId = "comm1")]
     check mergePopularWithOwned(p, @[], showCommunityAssets = false).len == 0
     check mergePopularWithOwned(p, @[], showCommunityAssets = true).len == 1
+
+suite "buildDisplayItems — path selection":
+  let ownedGroups = @[
+    group("ETH", price = 2.0, balances = @[bal("0xA", 1, "1000000000000000000")]), # owned 1.0 -> fiat 2.0
+    group("SNT", price = 1.0, balances = @[bal("0xA", 1, "5000000000000000000")]), # owned 5.0
+  ]
+
+  test "Owned mode, no search: exactly the owned tokens":
+    let items = buildDisplayItems(ownedGroups, networks, noFilterParams(),
+      TokenSelectorMode.Owned, searchActive = false, popularGroups = @[], searchGroups = @[])
+    check items.mapIt(it.key).sorted == @["ETH", "SNT"]
+    check items.findItem("ETH").currencyBalance == 2.0
+
+  test "Owned mode ignores popularGroups (send never shows the all-tokens list)":
+    let items = buildDisplayItems(ownedGroups, networks, noFilterParams(),
+      TokenSelectorMode.Owned, searchActive = false,
+      popularGroups = @[popular("DAI")], searchGroups = @[])
+    check items.mapIt(it.key).sorted == @["ETH", "SNT"]
+
+  test "AllTokens mode: popular list merged with owned balances":
+    let items = buildDisplayItems(ownedGroups, networks, noFilterParams(),
+      TokenSelectorMode.AllTokens, searchActive = false,
+      popularGroups = @[popular("ETH"), popular("DAI")], searchGroups = @[])
+    check items.mapIt(it.key) == @["ETH", "DAI"]      # row set follows popular
+    check items.findItem("ETH").hasBalance            # enriched from owned
+    check not items.findItem("DAI").hasBalance
+
+  test "Owned mode + search: results filtered to owned only":
+    let items = buildDisplayItems(ownedGroups, networks, noFilterParams(),
+      TokenSelectorMode.Owned, searchActive = true, popularGroups = @[],
+      searchGroups = @[popular("ETH"), popular("DAI")])   # DAI not owned -> dropped
+    check items.mapIt(it.key) == @["ETH"]
+
+  test "AllTokens mode + search: results shown even when not owned":
+    let items = buildDisplayItems(ownedGroups, networks, noFilterParams(),
+      TokenSelectorMode.AllTokens, searchActive = true, popularGroups = @[],
+      searchGroups = @[popular("ETH"), popular("DAI")])
+    check items.mapIt(it.key) == @["ETH", "DAI"]
+    check items.findItem("ETH").hasBalance
+    check not items.findItem("DAI").hasBalance

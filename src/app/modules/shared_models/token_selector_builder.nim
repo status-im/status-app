@@ -11,7 +11,7 @@
 # Reuses AggTokenGroup / AggBalance from assets_aggregator (the same raw shape the
 # AssetsView producer already assembles). Qt-free on purpose.
 
-import std/[tables, math, sets, strutils, algorithm]
+import std/[tables, math, sets, strutils, algorithm, sequtils]
 import stint
 
 import ./assets_aggregator
@@ -90,6 +90,11 @@ proc buildTokenSelectorItems*(groups: seq[AggTokenGroup],
       hasBalance: currentBalance != 0.0,
       chips: chips))
 
+type
+  TokenSelectorMode* {.pure.} = enum
+    Owned      ## send: base list = owned tokens; a search filters results to owned only
+    AllTokens  ## swap/buy: base list = the popular list merged with owned balances
+
 proc mergePopularWithOwned*(popular: seq[PopularGroup],
     owned: seq[TokenSelectorItem], showCommunityAssets: bool): seq[TokenSelectorItem] =
   ## The all-tokens / search path (showAllTokens): the row set follows the
@@ -117,3 +122,24 @@ proc mergePopularWithOwned*(popular: seq[PopularGroup],
       item.hasBalance = o.hasBalance
       item.chips = o.chips
     result.add(item)
+
+proc buildDisplayItems*(
+    ownedGroups: seq[AggTokenGroup], networks: seq[NetworkInfo],
+    params: TokenSelectorParams, mode: TokenSelectorMode, searchActive: bool,
+    popularGroups: seq[PopularGroup], searchGroups: seq[PopularGroup]): seq[TokenSelectorItem] =
+  ## Single entry point the terminal model calls to (re)derive its display rows.
+  ## Selects the path the retired TokenSelectorViewAdaptor branched on:
+  ##   - a search is active  -> merge the backend search rows with the owned balances;
+  ##     Owned mode (send) then keeps only the rows the user actually owns
+  ##     (the adaptor's `UndefinedFilter currentBalance` when !showAllTokens).
+  ##   - AllTokens (swap/buy) -> merge the lazily-loaded popular list with owned.
+  ##   - Owned (send), no search -> just the owned tokens.
+  let owned = buildTokenSelectorItems(ownedGroups, networks, params)
+  if searchActive:
+    let merged = mergePopularWithOwned(searchGroups, owned, params.showCommunityAssets)
+    if mode == TokenSelectorMode.Owned:
+      return merged.filterIt(it.hasBalance)
+    return merged
+  if mode == TokenSelectorMode.AllTokens:
+    return mergePopularWithOwned(popularGroups, owned, params.showCommunityAssets)
+  return owned
