@@ -439,6 +439,10 @@ QtObject:
   proc emitOpenUrlInNewBrowserTabSignal*(self: View, url: string) =
     self.openUrlInNewBrowserTab(url)
 
+  proc launchShareFlow*(self: View, text: string) {.signal.}
+  proc emitLaunchShareFlowSignal*(self: View, text: string) =
+    self.launchShareFlow(text)
+
   proc navigateToMessageDetails*(self: View) {.signal.}
   proc emitNavigateToMessageDetailsSignal*(self: View) =
     self.navigateToMessageDetails()

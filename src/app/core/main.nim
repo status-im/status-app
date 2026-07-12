@@ -5,7 +5,8 @@ import
   eventemitter,
   ./tasks/threadpool,
   ./signals/signals_manager,
-  ./custom_urls/urls_manager
+  ./custom_urls/urls_manager,
+  ./intake/pending_intake_slot
 
 export eventemitter
 export threadpool, signals_manager
@@ -28,9 +29,10 @@ proc delete*(self: StatusFoundation) =
   self.threadpool.teardown()
 
 proc initUrlSchemeManager*(self: StatusFoundation, urlSchemeEvent: UrlSchemeEvent,
-    singleInstance: SingleInstance, protocolUriOnStart: string) =
+    singleInstance: SingleInstance, protocolUriOnStart: string,
+    intakeSlot: PendingIntakeSlot = nil) =
   self.urlsManager = newUrlsManager(self.events, urlSchemeEvent, singleInstance,
-    protocolUriOnStart)
+    protocolUriOnStart, intakeSlot)
 
 proc appReady*(self: StatusFoundation) =
   self.urlsManager.appReady()

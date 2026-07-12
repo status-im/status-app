@@ -376,6 +376,8 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
           self.controller.getCommunityById(chat.communityId).chats)
       else:
         self.controller.getMessagesParsedPlainText(chat.lastMessage, []),
+    lastMessageTimestamp = chat.timestamp.int,
+    canPost = chat.canPost,
   )
 
 method buildChatSearchModel*(self: Module) =
@@ -418,6 +420,7 @@ method updateChatItems*(self: Module, updatedChats: seq[ChatDto]) =
       # 1-1 chat properties are updated when a contact is updated, so we can skip it here
       continue
     self.view.chatSearchModel().updateChatItem(chat.id, chat.name, chat.color, chat.icon, chat.emoji)
+    self.view.chatSearchModel().updateCanPostOnChatItem(chat.id, chat.canPost)
 
 method contactUpdated*(self: Module, contactId: string) =
   let contactDetails = self.controller.getContactDetails(contactId)
@@ -439,7 +442,7 @@ method chatAdded*(self: Module, chat: ChatDto) =
 method chatRemoved*(self: Module, chatId: string) =
   self.view.chatSearchModel().removeItemById(chatId)
 
-method updateLastMessage*(self: Module, chatId, communityId: string, chatType: ChatType, lastMessage: MessageDto) =
+method updateLastMessage*(self: Module, chatId, communityId: string, chatType: ChatType, lastMessage: MessageDto, lastMessageTimestamp: int) =
   self.view.chatSearchModel().updateLastMessageTextOnChatItem(
     chatId,
     if chatType == ChatType.CommunityChat and communityId != "":
@@ -448,3 +451,5 @@ method updateLastMessage*(self: Module, chatId, communityId: string, chatType: C
     else:
       self.controller.getMessagesParsedPlainText(lastMessage, [])
   )
+  if lastMessageTimestamp > 0:
+    self.view.chatSearchModel().updateLastMessageTimestampOnChatItem(chatId, lastMessageTimestamp)
