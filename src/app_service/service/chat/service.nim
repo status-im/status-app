@@ -15,6 +15,7 @@ import backend/communities as status_communities
 import backend/group_chat as status_group_chat
 import app/global/[global_singleton, utils]
 import app/core/eventemitter
+import app/core/intake/share_intake_cache
 import app/core/signals/types
 
 import ../../common/message as message_common
