@@ -148,12 +148,14 @@ type
     statusDeepLinkToActivate: string
     pendingProfileMigrationCheck: bool
     profileMigrationFlowInProgress: bool
+    urlToOpenInNewBrowserTab: string
 
 {.push warning[Deprecated]: off.}
 
 # Forward declaration
 proc switchToContactOrDisplayUserProfile[T](self: Module[T], publicKey: string)
 method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string)
+method openUrlInNewBrowserTab*[T](self: Module[T], url: string)
 proc checkIfWeHaveNotifications[T](self: Module[T])
 proc updateIconBadgeNumber[T](self: Module[T])
 proc createMemberItem[T](self: Module[T], memberId: string, requestId: string, state: MembershipRequestState, role: MemberRole, airdropAddress: string = ""): MemberItem
@@ -1043,6 +1045,10 @@ method onChatsLoaded*[T](
   if self.pendingProfileMigrationCheck:
     self.pendingProfileMigrationCheck = false
     self.checkAndPerformProfileMigrationIfNeeded()
+  if self.urlToOpenInNewBrowserTab != "":
+    let url = self.urlToOpenInNewBrowserTab
+    self.urlToOpenInNewBrowserTab = ""
+    self.openUrlInNewBrowserTab(url)
 
 method onMediaServerStarted*[T](self: Module[T], port: int) =
   self.view.model().updateMediaServerPort(port)
@@ -2177,6 +2183,16 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
     self.onStatusUrlRequested(StatusUrlAction.DisplayUserProfile, communityId="", channelId="", url="",
       userId = urlData.contact.publicKey)
     return
+
+method openUrlInNewBrowserTab*[T](self: Module[T], url: string) =
+  ## Browser-tab route of the external intake seam: an externally received web
+  ## URL always opens as a new tab in the in-app browser, browser section
+  ## foregrounded. Buffered until the main view is loaded, mirroring the
+  ## deep-link route above.
+  if not self.chatsLoaded:
+    self.urlToOpenInNewBrowserTab = url
+    return
+  self.view.emitOpenUrlInNewBrowserTabSignal(url)
 
 method onDeactivateChatLoader*[T](self: Module[T], sectionId: string, chatId: string) =
   if (sectionId.len > 0 and self.chatSectionModules.contains(sectionId)):

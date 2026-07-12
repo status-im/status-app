@@ -80,6 +80,7 @@ Item {
         thirdpartyServicesEnabled: appMain.featureFlagsStore.privacyModeFeatureEnabled ?
                                    appMain.privacyStore?.thirdpartyServicesEnabled ?? true : true
         onOpenUrl: (link) => Global.requestOpenLink(link)
+        onOpenUrlInNewBrowserTab: (link) => d.openUrlInNewBrowserTab(link)
         onOpenActivityCenter: () => {
             d.closeActivityCenterOnNextBack = false
             mainLayoutItem.openACCenterPanel = true
@@ -1134,6 +1135,20 @@ Item {
             globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.browser)
             Qt.callLater(() => browserLayoutContainer.item.openUrlInNewTab(link))
             Global.linkOpenedExternally(link)
+        }
+
+        // External intake, browser-tab route: the OS handed us this URL explicitly
+        // (browser candidacy), so it opens as a new tab in the in-app browser with
+        // the browser section foregrounded — no confirmation popup and no external
+        // hand-off, which would bounce straight back when Status is the default
+        // browser.
+        function openUrlInNewBrowserTab(link: string) {
+            if (!d.isBrowserEnabled) {
+                Global.requestOpenLink(link)
+                return
+            }
+            globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.browser)
+            Qt.callLater(() => browserLayoutContainer.item.openUrlInNewTab(link))
         }
 
         function tryOpenNavigationEducationPopup() {
