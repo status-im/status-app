@@ -2,7 +2,9 @@ import std/strformat
 
 
 type
-  TokenPreferencesItem* = ref object of RootObj
+  # {.acyclic.}: only value fields, no refs — ORC must skip cycle tracking so a
+  # worker-built preferences row applied on the GUI thread never calls rememberCycle.
+  TokenPreferencesItem* {.acyclic.} = ref object of RootObj
     key*: string # key used here should be crossChainId if not empty, otherwise tokenKey
     position*: int
     groupPosition*: int

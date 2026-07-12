@@ -100,6 +100,13 @@ suite "typed task completion (end-to-end bridge)":
     check r.order.len == 0                      # drained object never applied
     check r.nilCount == 1                       # slot ran, claim nil-safe
 
+  test "takeTyped returns nil on a non-numeric handle (no raise)":
+    # A slot wired to the wrong producer could receive a non-handle string; takeTyped
+    # must yield nil (drained semantics), never raise out of the completion path
+    # No QObject needed — this is pure claim-path behaviour.
+    check takeTyped[PilotResult]("not-a-handle").isNil
+    check takeTyped[PilotResult]("").isNil
+
   test "finishTyped is a no-op once shutting down":
     # Kept last: markShuttingDown flips a process-global that later completions
     # would also observe.
