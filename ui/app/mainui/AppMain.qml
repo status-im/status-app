@@ -81,7 +81,7 @@ Item {
                                    appMain.privacyStore?.thirdpartyServicesEnabled ?? true : true
         onOpenUrl: (link) => Global.requestOpenLink(link)
         onOpenUrlInNewBrowserTab: (link) => d.openUrlInNewBrowserTab(link)
-        onLaunchShareFlow: (text) => d.launchShareFlow(text)
+        onLaunchShareFlow: (text, imagePaths) => d.launchShareFlow(text, imagePaths)
         onOpenActivityCenter: () => {
             d.closeActivityCenterOnNextBack = false
             mainLayoutItem.openACCenterPanel = true
@@ -1117,9 +1117,12 @@ Item {
         // External intake, share route: content shared to Status from another
         // app launches the share flow (destination picker -> preview -> send).
         // Last-wins: a share arriving while the flow is open restarts it with
-        // the new text.
-        function launchShareFlow(text: string) {
+        // the new payload; the replaced share's cached image copies are
+        // released so they don't accumulate.
+        function launchShareFlow(text: string, imagePaths) {
+            d.releaseShareFlowImages()
             shareFlowLoader.sharedText = text
+            shareFlowLoader.sharedImagePaths = imagePaths
             if (!shareFlowLoader.active)
                 shareFlowLoader.active = true
             else
@@ -1127,19 +1130,34 @@ Item {
             shareFlowLoader.item.open()
         }
 
-        // Cancel from picker or preview: nothing is sent; on Android the whole
-        // task is backgrounded so the user lands back in the source app.
+        // Cancel from picker or preview: nothing is sent, the cached copies of
+        // the shared images are released; on Android the whole task is
+        // backgrounded so the user lands back in the source app.
         function cancelShareFlow() {
+            d.releaseShareFlowImages()
             shareFlowLoader.item.close()
             if (SQUtils.Utils.isAndroid)
                 SystemUtils.moveAppTaskToBack()
         }
 
-        // Send the shared text to the picked destination and land in that chat.
+        // Send the shared content to the picked destination and land in that
+        // chat. The cached image copies are NOT released here — the image-send
+        // task consumes the files asynchronously and releases them once done.
         function completeShareFlow(sectionId: string, chatId: string, text: string) {
+            const imagePaths = shareFlowLoader.sharedImagePaths
+            shareFlowLoader.sharedImagePaths = []
             shareFlowLoader.item.close()
-            appMain.rootChatStore.sendMessageToChat(sectionId, chatId, text)
+            appMain.rootChatStore.sendMessageToChat(sectionId, chatId, text, imagePaths)
             rootStore.setActiveSectionChat(sectionId, chatId)
+        }
+
+        // Cache lifecycle: drop the flow's cached shared-image copies (cancel
+        // and last-wins-replacement paths).
+        function releaseShareFlowImages() {
+            if (shareFlowLoader.sharedImagePaths.length === 0)
+                return
+            rootStore.releaseShareIntakeFiles(shareFlowLoader.sharedImagePaths)
+            shareFlowLoader.sharedImagePaths = []
         }
 
         function tryOpenNavigationEducationPopup() {
@@ -2877,9 +2895,12 @@ Item {
         id: shareFlowLoader
         active: false
 
-        // The shared text (external intake, share route); editable in the
-        // preview step before sending.
+        // The shared payload (external intake, share route): text editable in
+        // the preview step; image paths are app-private cached copies whose
+        // lifecycle ends with the flow (released on cancel/replace, or by the
+        // image-send task after send).
         property string sharedText
+        property var sharedImagePaths: []
 
         sourceComponent: Popup {
             id: shareFlowPopup
@@ -2930,6 +2951,7 @@ Item {
                     property string destinationChatId
 
                     text: shareFlowLoader.sharedText
+                    imagePaths: shareFlowLoader.sharedImagePaths
 
                     onSendRequested: (text) => d.completeShareFlow(destinationSectionId,
                                                                    destinationChatId, text)

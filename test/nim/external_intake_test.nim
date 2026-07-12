@@ -13,6 +13,8 @@ type Capture = ref object
   deepLinks: seq[string]
   browserTabs: seq[string]
   shares: seq[string]
+  shareImagePaths: seq[seq[string]]
+  discardedImagePaths: seq[seq[string]]
 
 proc newCapturingIntake(capture: Capture): ExternalIntake =
   result = newExternalIntake()
@@ -20,14 +22,17 @@ proc newCapturingIntake(capture: Capture): ExternalIntake =
     capture.deepLinks.add(url)
   result.onBrowserTabUrl = proc(url: string) =
     capture.browserTabs.add(url)
-  result.onShareText = proc(text: string) =
+  result.onShare = proc(text: string, imagePaths: seq[string]) =
     capture.shares.add(text)
+    capture.shareImagePaths.add(imagePaths)
+  result.onShareImagesDiscarded = proc(imagePaths: seq[string]) =
+    capture.discardedImagePaths.add(imagePaths)
 
 proc urlIntake(url: string): ExternalIntakeEvent =
   ExternalIntakeEvent(kind: ExternalIntakeUrl, url: url)
 
-proc shareIntake(text: string): ExternalIntakeEvent =
-  ExternalIntakeEvent(kind: ExternalIntakeShare, text: text)
+proc shareIntake(text: string, imagePaths: seq[string] = @[]): ExternalIntakeEvent =
+  ExternalIntakeEvent(kind: ExternalIntakeShare, text: text, imagePaths: imagePaths)
 
 suite "external_intake routing":
 
@@ -152,6 +157,76 @@ suite "external_intake share events":
     intake.submit(shareIntake("   \n  "))
 
     check capture.shares.len == 0
+
+  test "share image paths reach the share handler once ready":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.setReady()
+
+    intake.submit(shareIntake("caption",
+      @["/cache/share-intake/a.png", "/cache/share-intake/b.jpg"]))
+
+    check capture.shares == @["caption"]
+    check capture.shareImagePaths ==
+      @[@["/cache/share-intake/a.png", "/cache/share-intake/b.jpg"]]
+
+  test "an image share with blank text dispatches with an empty caption":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.setReady()
+
+    intake.submit(shareIntake("", @["/cache/share-intake/screenshot.png"]))
+
+    check capture.shares == @[""]
+    check capture.shareImagePaths == @[@["/cache/share-intake/screenshot.png"]]
+
+  test "an image share buffered before ready is delivered at ready":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+
+    intake.submit(shareIntake("pre-login", @["/cache/share-intake/a.png"]))
+    check capture.shares.len == 0
+    check intake.hasPending()
+
+    intake.setReady()
+
+    check capture.shares == @["pre-login"]
+    check capture.shareImagePaths == @[@["/cache/share-intake/a.png"]]
+    check capture.discardedImagePaths.len == 0
+
+  test "a pending image share overwritten in the slot reports its images as discarded":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+
+    intake.submit(shareIntake("first", @["/cache/share-intake/old.png"]))
+    intake.submit(shareIntake("second", @["/cache/share-intake/new.png"]))
+    intake.setReady()
+
+    check capture.discardedImagePaths == @[@["/cache/share-intake/old.png"]]
+    check capture.shares == @["second"]
+    check capture.shareImagePaths == @[@["/cache/share-intake/new.png"]]
+
+  test "a url overwriting a pending image share reports the images as discarded":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+
+    intake.submit(shareIntake("share", @["/cache/share-intake/img.png"]))
+    intake.submit(urlIntake("https://status.app/c/community-id"))
+    intake.setReady()
+
+    check capture.discardedImagePaths == @[@["/cache/share-intake/img.png"]]
+    check capture.shares.len == 0
+    check capture.deepLinks == @["https://status.app/c/community-id"]
+
+  test "overwriting a pending text-only share reports no discarded images":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+
+    intake.submit(shareIntake("text only"))
+    intake.submit(shareIntake("later", @["/cache/share-intake/a.png"]))
+    intake.setReady()
+
+    check capture.discardedImagePaths.len == 0
 
 suite "external_intake pending slot":
 

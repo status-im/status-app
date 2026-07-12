@@ -81,6 +81,7 @@ import app/core/notifications/details
 import app/core/eventemitter
 import app/core/custom_urls/urls_manager
 import app/core/intake/external_intake
+import app/core/intake/share_intake_cache
 
 export io_interface
 
@@ -151,6 +152,8 @@ type
     profileMigrationFlowInProgress: bool
     urlToOpenInNewBrowserTab: string
     shareTextToDeliver: string
+    shareImagePathsToDeliver: seq[string]
+    shareToDeliverPending: bool
 
 {.push warning[Deprecated]: off.}
 
@@ -158,7 +161,7 @@ type
 proc switchToContactOrDisplayUserProfile[T](self: Module[T], publicKey: string)
 method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string)
 method openUrlInNewBrowserTab*[T](self: Module[T], url: string)
-method launchShareFlow*[T](self: Module[T], text: string)
+method launchShareFlow*[T](self: Module[T], text: string, imagePaths: seq[string])
 proc checkIfWeHaveNotifications[T](self: Module[T])
 proc updateIconBadgeNumber[T](self: Module[T])
 proc createMemberItem[T](self: Module[T], memberId: string, requestId: string, state: MembershipRequestState, role: MemberRole, airdropAddress: string = ""): MemberItem
@@ -1053,10 +1056,13 @@ method onChatsLoaded*[T](
     self.urlToOpenInNewBrowserTab = ""
     self.openUrlInNewBrowserTab(url)
 
-  if self.shareTextToDeliver != "":
+  if self.shareToDeliverPending:
     let text = self.shareTextToDeliver
+    let imagePaths = self.shareImagePathsToDeliver
+    self.shareToDeliverPending = false
     self.shareTextToDeliver = ""
-    self.launchShareFlow(text)
+    self.shareImagePathsToDeliver = @[]
+    self.launchShareFlow(text, imagePaths)
 
 method onMediaServerStarted*[T](self: Module[T], port: int) =
   self.view.model().updateMediaServerPort(port)
@@ -2211,15 +2217,33 @@ method openUrlInNewBrowserTab*[T](self: Module[T], url: string) =
     return
   self.view.emitOpenUrlInNewBrowserTabSignal(url)
 
-method launchShareFlow*[T](self: Module[T], text: string) =
+method launchShareFlow*[T](self: Module[T], text: string, imagePaths: seq[string]) =
   ## Share route of the external intake seam: content shared to Status from
   ## another app launches the share flow (destination picker -> preview ->
   ## send). Buffered until the main view is loaded, mirroring the deep-link
-  ## and browser-tab routes above.
+  ## and browser-tab routes above; the buffer is last-wins, and a replaced
+  ## share's cached image copies are released so they don't accumulate.
   if not self.chatsLoaded:
+    if self.shareToDeliverPending:
+      releaseCachedShareFiles(self.shareImagePathsToDeliver)
+    self.shareToDeliverPending = true
     self.shareTextToDeliver = text
+    self.shareImagePathsToDeliver = imagePaths
     return
-  self.view.emitLaunchShareFlowSignal(text)
+  self.view.emitLaunchShareFlowSignal(text, $(%imagePaths))
+
+method releaseShareIntakeFiles*[T](self: Module[T], imagePathsJson: string) =
+  ## Cache lifecycle, cancel path: the share flow was dismissed without
+  ## sending, so the cached copies of the shared images are released here.
+  ## (The send path releases them in the image-send task, after the files
+  ## have been consumed.)
+  try:
+    var imagePaths: seq[string] = @[]
+    for pathNode in parseJson(imagePathsJson).getElems():
+      imagePaths.add(pathNode.getStr())
+    releaseCachedShareFiles(imagePaths)
+  except CatchableError:
+    error "invalid share intake image paths payload", imagePathsJson
 
 method onDeactivateChatLoader*[T](self: Module[T], sectionId: string, chatId: string) =
   if (sectionId.len > 0 and self.chatSectionModules.contains(sectionId)):
