@@ -99,3 +99,65 @@ green (A1 guard must not fire there). Update issue record + PRD row +
 progress.txt. Commits `fix(nimble/0018): …`/`docs(nimble/0018): …`, gpgsign
 off, no --amend/add -A. Delivery: SendMessage TOOL to "team-lead",
 summary "0018 fix wave report" — plain text is not delivered.
+
+---
+
+# Addendum — re-review round 2 (2026-07-12, later)
+
+Re-review of the wave (static; its shell was broken) + orchestrator probes
+(both reproduced empirically) leave these. R1/R2/R3 are the substance: the
+compiler-pin story is only half-closed.
+
+R1 (CRITICAL, orchestrator-reproduced). **env.sh fails open under any
+POSIX shell that is not bash/zsh.** Probe: `#!/bin/sh` (dash) caller doing
+`. ./env.sh` with args → env.sh dies at the `${BASH_SOURCE[0]:-${(%):-%x}}`
+substitution ("Bad substitution") AND execution CONTINUES to the exec arm,
+which then `exec`s the caller's $1 ("exec: release: not found" — had $1
+been `make`, a full hijack). Fix shape: a POSIX-safe prologue that decides
+shell + sourced-ness BEFORE any bashism; unknown/other shell ⇒ treat as
+SOURCED (never exec) and either do the work in pure POSIX or print one
+clear "use bash or zsh" line and return WITHOUT reaching any bashism or
+the exec arm. `return` outside a sourced context is itself an error in
+some shells — structure so that path is safe both ways. Probe matrix adds:
+dash sourced+args, dash sourced no-args, dash EXECUTED (shebang saves it —
+confirm), plus the old bash/zsh cells.
+
+R2 (Important, orchestrator-reproduced). **env.sh asserts version-only.**
+Stub shellenv naming `pkgs2/nim-2.2.4-<wrong-checksum>/bin` first → env.sh
+hoisted it to PATH front silently (and never checked the dir even contains
+a nim). Fix: parse `nimble.lock`'s `packages.nim.checksums.sha1` (the same
+key the driver guard uses) and compare the full `nim-<ver>-<sha1>` dir
+name; also require `<dir>/nim` to exist and be executable. Degrade to
+version-only ONLY if the lock has no nim entry, and say so in the warning.
+
+R3 (Important). **Only `buildClient()` is guarded.** Add
+`guardPinnedCompiler()` to `runNimTests()` and `buildWindowsLauncher()`
+(same placement: after their cheap gates, before the compile; STATUS_NIM
+override honored). For `mobile/scripts/buildNimStatusClient.sh` (bare
+`nim c` off PATH): add the cheapest equivalent shell check — resolved
+`nim` path must live under `pkgs2/nim-<ver>-<lock sha1>` unless STATUS_NIM
+is set — sourced from the same lock file, not hardcoded.
+
+R4 (Minor). Manifest pin parser (status_artifacts.nims ~1277) matches any
+requires containing "nim"+"==" (`nimcrypto == …` would hit if ordered
+first). Tighten: `parts[1].split("==")[0].strip == "nim"`.
+
+R5 (Minor). env.sh idempotency/dedup lives only on the pinned path; the
+WARNING path grows PATH per re-source, and the R2-error path leaves the
+eval'd shellenv PATH mutated (foreign nim possibly first). Save PATH at
+entry; restore it on every error return.
+
+R6 (Docs). Disclose the per-`source` cost: `nimble shellenv` runs a full
+re-solve (~50 s here; the 0013-recorded dispatch tax — pre-existing, NOT
+introduced by this wave; orchestrator re-measured 49-57 s at HEAD and in a
+pre-0018 scratch clone). Add to the fix-wave record AND to 0019's handoff:
+pipelines should bootstrap ONCE per shell/stage, not per step, and a
+cached-shellenv follow-up (key = lock+manifests, like the qt env cache) is
+recorded.
+
+Completion: full probe matrix (bash, zsh, dash × sourced/executed ×
+args/none × set -e; two-nim stub; wrong-checksum stub), then
+check-no-nim-compiles.sh, `nim app` no-op ×3, `nim tests status.nims
+utils_test`, `nim app --force` (guard happy path). Update the 0018 record
++ 0019 handoff. Commits `fix(nimble/0018): …`. Report via SendMessage TOOL
+to "team-lead".
