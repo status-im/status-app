@@ -1057,6 +1057,11 @@ nim-test-run/test/nim/signal_handler_test.nim: | statusq
 nim-test-run/test/nim/url_scheme_event_test.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
 nim-test-run/test/nim/url_scheme_event_test.nim: | statusq
 
+# typed_completion_test drives finishTyped -> signal_handler -> statusq_invoke_method_queued,
+# so it needs the StatusQ library linked (like signal_handler_test above).
+nim-test-run/test/nim/typed_completion_test.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+nim-test-run/test/nim/typed_completion_test.nim: | statusq
+
 ifneq ($(mkspecs),win32)
 nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
