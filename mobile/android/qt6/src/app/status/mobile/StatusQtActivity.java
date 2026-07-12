@@ -28,9 +28,14 @@ public class StatusQtActivity extends QtActivity {
     private static StatusQtActivity sInstance = null;
 
     private static final AtomicBoolean userLoggedIn = new AtomicBoolean(false);
-    private static String savedDeepLink = null;
+    // Java mirror of the Nim pending intake slot (single, last-wins): holds the
+    // intake URL until mainWindowReady, since on a cold start the native side
+    // isn't up yet to receive it. No routing here — that lives at the Nim
+    // external-intake seam.
+    private static String pendingIntakeUrl = null;
 
-    // JNI hook: implemented in native code to forward deep links to Qt
+    // JNI hook: implemented in native code to forward external intake URLs
+    // (deep links and arbitrary web links) to Qt
     private static native void passDeepLinkToQt(String deepLink);
 
     @Override
@@ -53,7 +58,7 @@ public class StatusQtActivity extends QtActivity {
         // Set up shake detection (used for share-on-shake)
         ShakeDetector.start(this);
 
-        handleDeepLink(getIntent());
+        handleUrlIntake(getIntent());
     }
 
     @Override
@@ -76,7 +81,7 @@ public class StatusQtActivity extends QtActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        handleDeepLink(intent);
+        handleUrlIntake(intent);
     }
 
     @Override
@@ -117,19 +122,21 @@ public class StatusQtActivity extends QtActivity {
     public static void mainWindowReady() {
         splashShouldHide.set(true);
         userLoggedIn.set(true);
-        if (savedDeepLink != null) {
-            passDeepLinkToQt(savedDeepLink);
-            savedDeepLink = null;
+        if (pendingIntakeUrl != null) {
+            passDeepLinkToQt(pendingIntakeUrl);
+            pendingIntakeUrl = null;
         }
     }
 
-    private void handleDeepLink(Intent intent) {
+    // Thin, decision-free platform layer: extract the URL payload from the
+    // VIEW intent and forward it to the external-intake seam.
+    private void handleUrlIntake(Intent intent) {
         if (intent == null) return;
         String action = intent.getAction();
         Uri data = intent.getData();
         if (Intent.ACTION_VIEW.equals(action) && data != null) {
             if (!userLoggedIn.get()) {
-                savedDeepLink = data.toString();
+                pendingIntakeUrl = data.toString();
                 return;
             }
             passDeepLinkToQt(data.toString());

@@ -114,6 +114,20 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="status-app" />
             </intent-filter>
+            <!--
+              Browser candidacy: handle arbitrary http/https links so Status appears
+              in the OS link-open chooser and in Settings > Default apps > Browser.
+              A scheme-only VIEW+BROWSABLE filter (no host) is what qualifies an app
+              as a browser. Routing happens at the Nim external-intake seam: Status
+              links keep deep-link behavior, anything else opens a new browser tab.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
         </activity>
 
         <provider
