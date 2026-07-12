@@ -4,6 +4,7 @@ import app/global/single_instance
 import ../eventemitter
 import ../intake/external_intake
 import ../intake/pending_intake_slot
+import ../intake/share_intake_cache
 
 import ../../global/app_signals
 
@@ -14,6 +15,18 @@ logScope:
 
 const StatusInternalLink* = "status-app://"
 const StatusExternalLink* = "https://status.app/"
+
+proc parseImagePaths(imagePathsJson: string): seq[string] =
+  ## Tolerant decode of a JSON array of image paths; a malformed payload is
+  ## logged and treated as no images — it must never take the app down.
+  if imagePathsJson.len == 0:
+    return @[]
+  try:
+    for pathNode in parseJson(imagePathsJson).getElems():
+      result.add(pathNode.getStr())
+  except CatchableError:
+    warn "share intake image paths payload is not valid JSON", imagePathsJson
+    return @[]
 
 QtObject:
   type UrlsManager* = ref object of QObject
@@ -28,8 +41,10 @@ QtObject:
       self, SLOT("onUrlActivated(QString)"), ConnectionType.QueuedConnection)
     discard QObject.connect(singleInstance, SIGNAL("eventReceived(QString)"),
       self, SLOT("onUrlActivated(QString)"), ConnectionType.QueuedConnection)
-    discard QObject.connect(urlSchemeEvent, SIGNAL("shareTextActivated(QString)"),
-      self, SLOT("onShareTextActivated(QString)"), ConnectionType.QueuedConnection)
+    discard QObject.connect(urlSchemeEvent, SIGNAL("shareActivated(QString,QString)"),
+      self, SLOT("onShareActivated(QString,QString)"), ConnectionType.QueuedConnection)
+    discard QObject.connect(urlSchemeEvent, SIGNAL("appForegrounded()"),
+      self, SLOT("onAppForegrounded()"), ConnectionType.QueuedConnection)
 
   proc delete*(self: UrlsManager) =
     self.QObject.delete
@@ -37,9 +52,10 @@ QtObject:
   proc consumePendingIntake(self: UrlsManager) =
     ## Delivers (reads + clears) the App Group pending intake slot written by
     ## the iOS share extension and feeds it into the external intake seam.
-    ## Payload contract (ShareViewController.m): {"type": "share", "text": ...}.
-    ## Malformed payloads are logged and dropped — a broken slot file must
-    ## never take the app down.
+    ## Payload contract (ShareViewController.m):
+    ## {"type": "share", "text": ..., "imagePaths": [...]} (imagePaths
+    ## optional). Malformed payloads are logged and dropped — a broken slot
+    ## file must never take the app down.
     if self.intakeSlot.isNil:
       return
     let payload = self.intakeSlot.take()
@@ -48,8 +64,11 @@ QtObject:
     try:
       let parsed = parseJson(payload)
       if parsed{"type"}.getStr() == "share":
+        var imagePaths: seq[string] = @[]
+        for pathNode in parsed{"imagePaths"}.getElems():
+          imagePaths.add(pathNode.getStr())
         self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeShare,
-          text: parsed{"text"}.getStr()))
+          text: parsed{"text"}.getStr(), imagePaths: imagePaths))
       else:
         warn "pending intake slot payload has an unknown type", payload
     except CatchableError:
@@ -74,11 +93,21 @@ QtObject:
       .multiReplace(("\n", ""))
     self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeUrl, url: url))
 
-  proc onShareTextActivated*(self: UrlsManager, text: string) {.slot.} =
-    ## Share-target hand-off (Android SEND intent): shared text/links launch
-    ## the share flow. The payload is kept verbatim — unlike URLs it may
-    ## legitimately contain whitespace and newlines.
-    self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeShare, text: text))
+  proc onAppForegrounded*(self: UrlsManager) {.slot.} =
+    ## Wake-less fallback (iOS): the app came to the foreground; if the share
+    ## extension left a payload in the slot because its unsupported openURL
+    ## wake failed or was dropped, deliver it now instead of waiting for the
+    ## next full app start. No-op when the slot is inactive or empty.
+    self.consumePendingIntake()
+
+  proc onShareActivated*(self: UrlsManager, text: string, imagePathsJson: string) {.slot.} =
+    ## Share-target hand-off (Android SEND/SEND_MULTIPLE intents): shared
+    ## text/links and images launch the share flow. The text is kept verbatim —
+    ## unlike URLs it may legitimately contain whitespace and newlines; image
+    ## paths are app-private cached copies made by the platform layer at
+    ## receipt.
+    self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeShare,
+      text: text, imagePaths: parseImagePaths(imagePathsJson)))
 
   proc newUrlsManager*(events: EventEmitter, urlSchemeEvent: UrlSchemeEvent,
       singleInstance: SingleInstance, protocolUriOnStart: string,
@@ -96,9 +125,13 @@ QtObject:
     result.intake.onBrowserTabUrl = proc(url: string) =
       self.events.emit(SIGNAL_EXTERNAL_URL_INTAKE_BROWSER_TAB,
         ExternalUrlIntakeArgs(url: url))
-    result.intake.onShareText = proc(text: string) =
+    result.intake.onShare = proc(text: string, imagePaths: seq[string]) =
       self.events.emit(SIGNAL_EXTERNAL_SHARE_INTAKE,
-        ExternalShareIntakeArgs(text: text))
+        ExternalShareIntakeArgs(text: text, imagePaths: imagePaths))
+    result.intake.onShareImagesDiscarded = proc(imagePaths: seq[string]) =
+      # A pending share was replaced last-wins before delivery: its cached
+      # image copies are unreferenced now and must not accumulate.
+      releaseCachedShareFiles(imagePaths)
 
     if protocolUriOnStart != "":
       # Launched via URL: park it in the pending intake slot until appReady.

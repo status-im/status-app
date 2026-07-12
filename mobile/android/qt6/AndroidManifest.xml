@@ -129,16 +129,24 @@
                 <data android:scheme="https" />
             </intent-filter>
             <!--
-              Share target: text and links shared from other apps (share sheet).
-              Only text/plain is declared - exactly what chat can send today;
-              image MIME types join in the image-share slice. Extraction is
-              decision-free (StatusQtActivity.handleShareIntake); the share flow
-              launches at the Nim external-intake seam.
+              Share target: text, links and images shared from other apps
+              (share sheet). Only text/plain and image/* are declared - exactly
+              what chat can send today; video/audio/arbitrary files are not.
+              Extraction is decision-free (StatusQtActivity.handleShareIntake):
+              image streams are copied to app-private cache at receipt (OS read
+              grants expire); the share flow launches at the Nim
+              external-intake seam.
             -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
 

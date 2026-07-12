@@ -114,9 +114,11 @@ type
 
 const asyncSendImagesTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncSendImagesTaskArg](argEncoded)
+  var imagePaths: seq[string] = @[]
   try:
     var images = Json.decode(arg.imagePathsJson, seq[string])
-    var imagePaths: seq[string] = @[]
+    # imagePaths is declared above the try: the finally below releases the
+    # share-intake cached copies and needs it in scope.
     var temporaryImagePaths: seq[string] = @[]
     defer:
       for imagePath in temporaryImagePaths:
@@ -153,3 +155,9 @@ const asyncSendImagesTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
       "error": e.msg,
       "chatId": arg.chatId,
     })
+  finally:
+    # Share-intake cache lifecycle, send path: the shared images have been
+    # consumed (or the send failed for good) — release the app-private cached
+    # copies. Guarded inside releaseCachedShareFiles to files in a
+    # `share-intake` directory, so regular picker sends are untouched.
+    releaseCachedShareFiles(imagePaths)
