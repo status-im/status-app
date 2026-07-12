@@ -62,6 +62,21 @@ records 0007–0012.
   export, cbindings determinism (sorted emit, `-buildid=`, ZERO_AR_DATE
   repack). After merge: bump the app pin; eventually pin release tags.
 
+- **`status-go-deps` → a statusgo.nims task** (issue 0018, adjudication A2,
+  2026-07-12; **push-bearing, human**). Desktop's `make status-go-deps` is
+  deleted; its one line — `go install
+  google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.1` (the plugin status-go's
+  own `go generate` needs) — is now inlined at the desktop call sites, which is
+  what the driver's `buildLibstatus()` already did. The tool install belongs to
+  status-go, not to its consumer: add it as a task/hook in `statusgo.nims` (the
+  same place `libsds`/`statusgo` live), then bump the app pin. That collapses
+  **three copies of the same `go install` line** into one:
+  1. `Makefile`'s `$(STATUSGO)` recipe (status-desktop),
+  2. `status_artifacts.nims`' `buildLibstatus()` (status-desktop),
+  3. `fdroid/build-app.sh` (status-desktop).
+  Until it lands, a version bump of `protoc-gen-go` must be applied in all
+  three — the drift risk this ask exists to remove.
+
 ## uuids / isaac (pragmagic)
 
 - isaac#4 MERGED (2026-07-09): pragmagic/isaac master `ca0a1e25` carries the
@@ -92,3 +107,18 @@ records 0007–0012.
 
 - No upstream asks — status-keycard-qt `a6cbdd05` and keycard-qt `df00b931`
   are consumed as-is via FetchContent.
+
+## nimside (seaqt/nimside)
+
+- ASK (2026-07-10, from wake-stall issue 0015 spike): to become the idiomatic
+  home for Nim view-controllers it needs (1) compatibility with the app's
+  vendored nim-seaqt tag (currently 57 compile errors: pkg-config `gorge`
+  version probing + `PropertyDef` drift), (2) arbitrary base classes in the
+  `qobject` macro (today hardcoded to QObject — no QAbstractListModel
+  subclassing), (3) QML type registration (none exists; its compile-time
+  metaobject generation is the right primitive for it — cleaner than
+  DOtherSide's template-slot pool). Until then: classic-nimqml/nimqml-seaqt
+  carry production; a bounded registrar port (~150 lines over
+  QQmlPrivate::qmlregister) sits on the seaqt-migration checklist and gets
+  deleted in nimside's favor when it matures. Evidence:
+  docs/investigations/21395-wake-stall/issues/0015-nim-view-controller-spike.md.

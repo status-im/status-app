@@ -563,7 +563,7 @@ no bare `fileExists`):
 | `nimble setup` | `stale(.status-setup.key, [nimble.paths], contentKey(lock, manifests, overlay))` | content |
 | statusgo scratch tree | `keyStale(.statusgo-origin, <store path>, witness = statusgo.nims)` | configuration |
 | statusgo artifacts | `keyStale(.statusgo-artifact-key, <flag set>)` | configuration |
-| libsds | `stale(<repo>/.libsds.key, [libsds], contentKey(...))` + force when sds is developed | content |
+| libsds | `stale(<repo>/.status-libsds.key, [libsds], contentKey(...))` + force when sds is developed | content | <!-- renamed from `.libsds.key` by 0018's fix wave (I2): every repo-root key file is `.status-<artifact>.key`, so `make clean`'s glob is total -->
 | libstatus | `stale([libstatus])` — the one-arg overload: exists ⇒ fresh | — |
 | resources.rcc | `stale(.status-rcc.key, [resources.rcc], contentKey(uiFindCmd()))` | content |
 | windows import libs | `stale(<lib>.key, [lib], contentKey(dll))` | content |
