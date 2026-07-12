@@ -1,7 +1,9 @@
 ## The single typed entry point where the platform layer (Android JNI deep-link
 ## hand-off, macOS QFileOpenEvent, iOS QDesktopServices handler, desktop
-## single-instance forwarding) hands the app an intake event. This slice covers
-## the `url` kind; share payloads extend `ExternalIntakeKind` later.
+## single-instance forwarding) hands the app an intake event. Covers the `url`
+## kind (browser candidacy slice) and the `share` kind (share target slice:
+## text and links shared from another app launch the share flow); image share
+## payloads extend the `share` kind later.
 ##
 ## Routing lives at this seam, not in the platform layer:
 ## - `status-app:` links and `status.app` web links keep the existing
@@ -19,11 +21,14 @@ import std/[options, strutils, uri]
 type
   ExternalIntakeKind* = enum
     ExternalIntakeUrl
+    ExternalIntakeShare
 
   ExternalIntakeEvent* = object
     case kind*: ExternalIntakeKind
     of ExternalIntakeUrl:
       url*: string
+    of ExternalIntakeShare:
+      text*: string ## shared plain text; shared links arrive as text too
 
   UrlIntakeRoute* = enum
     UrlIntakeDeepLink   ## existing Status deep-link routing
@@ -34,6 +39,7 @@ type
     pendingSlot: Option[ExternalIntakeEvent]
     onDeepLinkUrl*: proc(url: string)
     onBrowserTabUrl*: proc(url: string)
+    onShareText*: proc(text: string)
 
 const StatusExternalLinkHost = "status.app"
 
@@ -77,10 +83,17 @@ proc dispatch(self: ExternalIntake, event: ExternalIntakeEvent) =
     of UrlIntakeBrowserTab:
       if not self.onBrowserTabUrl.isNil:
         self.onBrowserTabUrl(event.url)
+  of ExternalIntakeShare:
+    if not self.onShareText.isNil:
+      self.onShareText(event.text)
 
 proc submit*(self: ExternalIntake, event: ExternalIntakeEvent) =
   ## Platform-layer entry point. Until ready, events land in the pending
-  ## intake slot — single, last-wins.
+  ## intake slot — single, last-wins across kinds. Blank share payloads are
+  ## dropped here (the platform layer is decision-free), so they can neither
+  ## launch an empty share flow nor clobber a pending intake.
+  if event.kind == ExternalIntakeShare and event.text.strip().len == 0:
+    return
   if not self.ready:
     self.pendingSlot = some(event)
     return

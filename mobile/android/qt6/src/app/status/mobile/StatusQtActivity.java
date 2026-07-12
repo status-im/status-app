@@ -28,15 +28,20 @@ public class StatusQtActivity extends QtActivity {
     private static StatusQtActivity sInstance = null;
 
     private static final AtomicBoolean userLoggedIn = new AtomicBoolean(false);
-    // Java mirror of the Nim pending intake slot (single, last-wins): holds the
-    // intake URL until mainWindowReady, since on a cold start the native side
-    // isn't up yet to receive it. No routing here — that lives at the Nim
-    // external-intake seam.
+    // Java mirror of the Nim pending intake slot (single, last-wins across
+    // kinds): holds the intake URL or shared text until mainWindowReady, since
+    // on a cold start the native side isn't up yet to receive it. Setting one
+    // clears the other. No routing here — that lives at the Nim external-intake
+    // seam.
     private static String pendingIntakeUrl = null;
+    private static String pendingIntakeShareText = null;
 
-    // JNI hook: implemented in native code to forward external intake URLs
-    // (deep links and arbitrary web links) to Qt
+    // JNI hooks: implemented in native code (StatusQ urlschemeevent.cpp) to
+    // forward external intake to Qt — URLs (deep links and arbitrary web
+    // links) and shared text (share target; a shared link arrives as text and
+    // must launch the share flow, not URL routing).
     private static native void passDeepLinkToQt(String deepLink);
+    private static native void passShareTextToQt(String text);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -59,6 +64,7 @@ public class StatusQtActivity extends QtActivity {
         ShakeDetector.start(this);
 
         handleUrlIntake(getIntent());
+        handleShareIntake(getIntent());
     }
 
     @Override
@@ -82,6 +88,7 @@ public class StatusQtActivity extends QtActivity {
         super.onNewIntent(intent);
         setIntent(intent);
         handleUrlIntake(intent);
+        handleShareIntake(intent);
     }
 
     @Override
@@ -126,6 +133,10 @@ public class StatusQtActivity extends QtActivity {
             passDeepLinkToQt(pendingIntakeUrl);
             pendingIntakeUrl = null;
         }
+        if (pendingIntakeShareText != null) {
+            passShareTextToQt(pendingIntakeShareText);
+            pendingIntakeShareText = null;
+        }
     }
 
     // Thin, decision-free platform layer: extract the URL payload from the
@@ -137,9 +148,40 @@ public class StatusQtActivity extends QtActivity {
         if (Intent.ACTION_VIEW.equals(action) && data != null) {
             if (!userLoggedIn.get()) {
                 pendingIntakeUrl = data.toString();
+                pendingIntakeShareText = null;
                 return;
             }
             passDeepLinkToQt(data.toString());
+        }
+    }
+
+    // Thin, decision-free platform layer: extract the shared text from the
+    // SEND intent and forward it to the external-intake seam.
+    private void handleShareIntake(Intent intent) {
+        if (intent == null) return;
+        if (!Intent.ACTION_SEND.equals(intent.getAction())) return;
+        String type = intent.getType();
+        if (type == null || !type.startsWith("text/")) return;
+        String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+        if (text == null || text.isEmpty()) {
+            text = intent.getStringExtra(Intent.EXTRA_SUBJECT);
+        }
+        if (text == null || text.isEmpty()) return;
+        if (!userLoggedIn.get()) {
+            pendingIntakeShareText = text;
+            pendingIntakeUrl = null;
+            return;
+        }
+        passShareTextToQt(text);
+    }
+
+    // Backgrounds the whole task, revealing the app the user came from — used
+    // when the share flow is cancelled ("cancel returns to the source app").
+    // Called from Qt via JNI.
+    public static void moveAppTaskToBack() {
+        final StatusQtActivity activity = sInstance;
+        if (activity != null) {
+            activity.runOnUiThread(() -> activity.moveTaskToBack(true));
         }
     }
 
