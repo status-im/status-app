@@ -41,14 +41,32 @@ to tell him must travel through the orchestrator in your **final message**.
 
 ## Build environment (this machine)
 
-    export QMAKE=~/Qt/6.11.0/macos/bin/qmake USE_SYSTEM_NIM=1
+    export QMAKE=~/Qt/6.11.0/macos/bin/qmake
 
-- **Do NOT prepend the NBS nim** (`vendor/nimbus-build-system/vendor/Nim/bin`)
-  to PATH. It is nim 2.2.10 while the manifest pins 2.2.4, and it shadows the
-  correct compiler: `~/.nimble/bin/nim` is already on PATH and resolves to the
-  pinned store nim 2.2.4 (verified 2026-07-10). Earlier briefs said to prepend
-  it; that instruction caused the recorded 2.2.10/2.2.4 divergence (progress.txt
-  2026-07-09) and is withdrawn. 0018 deletes the NBS copy entirely.
+**`USE_SYSTEM_NIM` is dead** (issue 0018, 2026-07-12): it was a
+nimbus-build-system variable, and NBS is gone — submodule, makefiles, vendored
+compiler and env-script wrapper. Exporting it now does nothing at all. So is
+`make update` / `make deps` / `make status-go-deps`.
+
+**The bootstrap, and the only Nim-side prerequisite, is nimble:**
+
+    nimble setup       # resolves the graph AND materialises the pinned compiler
+    source ./env.sh    # puts <store>/pkgs2/nim-2.2.4-<checksum>/bin FIRST on PATH
+
+After that, the `nim` on PATH **is** the compiler `nim_status_client.nimble`
+pins. Do this in any shell from which you run `nim <task> status.nims` or a make
+leg (`make mobile-build`, `make pkg-macos`). `nimble build` / `nimble run` need
+no bootstrap: nimble injects the pinned compiler for its own tasks and hooks.
+
+- **Use `env.sh`, not a bare `eval "$(nimble shellenv)"`** (wall, measured
+  2026-07-12): shellenv's PATH lists `$NIMBLE_DIR/bin` *before* the pinned
+  `pkgs2/nim-<ver>-<checksum>/bin`, and `~/.nimble/bin/nim` is a symlink that
+  choosenim (or `nimble install nim@X`) can repoint at another compiler — which
+  would then shadow the pin. `env.sh` re-hoists the pinned bin to the front.
+  On this machine the symlink happens to BE the pin, so the hazard is invisible
+  until it isn't.
+- There is **no NBS nim to avoid prepending** any more; the 2.2.10/2.2.4
+  divergence that rule existed for is closed at the root.
 
 - Bare `make` without `QMAKE=` picks Linux paths in status-keycard-qt. Always
   pass it.

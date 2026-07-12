@@ -1714,3 +1714,83 @@ numbers); `nim app status.nims` rc=0 then two no-ops at 11.6 s / 11.7 s;
 `touch pkg/Status.dmg && make -n pkg-macos` -> `nim app status.nims`;
 dash/sh/bash digest probes. NOT VERIFIED: everything Windows (I1, I2, contentKey
 under msys2), Linux packaging, and the dmg signature — no hosts, unchanged.
+
+=== 2026-07-12 — Issue 0018: NBS deleted (nimble is the only prerequisite) — DONE (pass: true) ===
+
+The vendored nimbus-build-system is GONE — submodule, makefiles, vendored
+compiler, env-script wrapper. The Nim-side machine prerequisite is NIMBLE, and
+the compiler is whatever nim_status_client.nimble pins (nim == 2.2.4), which
+nimble materialises in its store.
+
+- Root Makefile: no external include; local V / HANDLE_OUTPUT / BUILD_MSG /
+  .SILENT replace variables.mk+targets.mk. Deleted: BUILD_SYSTEM_DIR, both
+  -includes, USE_SYSTEM_NIM (+ its PATH arm), the .DEFAULT submodule auto-init
+  (the driver's bootstrap owns it since 0016), deps, update, status-go-deps,
+  clean-common. `bottles` moved out of the macOS arm (it was UNDEFINED off
+  macOS, so `deps`' bottles prerequisite could not even parse there).
+  status-go-deps' one line (go install protoc-gen-go) is inlined in $(STATUSGO)
+  — the driver's buildLibstatus() has run the same line since 0016. Moving it
+  into status-go's nimscript needs a status-go commit+push+pin bump (forbidden
+  here) — follow-up 4.
+- mobile/scripts/buildNimStatusClient.sh: the LAST consumer of the NBS
+  env-script wrapper. With USE_SYSTEM_NIM=1 (the only mode this repo ran) that
+  wrapper only echoed "[using system Nim]" and exec'd the same nim → it becomes
+  a plain `nim c`. What guarantees the PIN is PATH: nimble injects the store
+  compiler for tasks/hooks; `source ./env.sh` does it for a bare make leg.
+- env.sh: was `source vendor/nimbus-build-system/scripts/env.sh`; now wraps
+  `nimble shellenv`.
+- CI/fdroid/container: `make update` + `make deps` → `nimble setup` (forced by
+  the deletions; 0019 owns CI). macOS Deps stage keeps its GITHUB creds block
+  around `make bottles`.
+- Submodule removal (P2 playbook): backup branch backup/nimble-0018-nbs in the
+  module's own git dir; .gitmodules staged BEFORE `git rm --cached`; working
+  tree moved to .phase2-vendor-backup/nimbus-build-system with core.worktree
+  repointed. NOTHING under the shared .git/modules was pruned/deleted/rewritten
+  (the parent checkout's other branches still use NBS); its
+  .git/modules/vendor/nimbus-build-system verified intact afterwards. 5
+  submodules left (DOtherSide, QR-Code-generator, SortFilterProxyModel,
+  fcitx5-qt, mobile/vendors/openssl) — pins, not Vendors.
+
+NEW WALL (added to .phase2-vendor-backup/status-go/AGENTS.md): **`nimble
+shellenv` lists $NIMBLE_DIR/bin BEFORE the pinned compiler's
+pkgs2/nim-<ver>-<checksum>/bin.** ~/.nimble/bin/nim is a symlink — normally the
+pin, but choosenim / `nimble install nim@X` repoints it, and it then SHADOWS the
+pin in a "bootstrapped" shell. The issue's "a bootstrapped shell cannot drift"
+holds only by luck of that symlink. env.sh now re-hoists the pinned bin to the
+front, and BUILDING.md/SHARED-i3/fdroid/container all teach `source ./env.sh`
+instead of a bare eval. A compiler GUARD (config.nims comparing
+getCurrentCompilerExe() with the resolved pin) is a PRD-level decision — NOT
+taken; recorded as follow-up 1.
+
+VERIFIED (macOS arm64, Qt 6.11.0 macos + ios kits):
+- NIM-FREE MACHINE, FRESH CLONE (PATH = one dir holding only a `nimble`
+  symlink; `command -v nim` → nothing): `nimble setup` rc=0 52.9 s ("Info: using
+  .../pkgs2/nim-2.2.4-b4bb510b.../bin/nim for compilation"); `nimble build` rc=0
+  5:55.8 → runnable 30.2 MB client, with the driver's bootstrap initialising the
+  submodules; `ps` caught the compile process = .../pkgs2/nim-2.2.4-.../bin/nim c.
+  Then `source ./env.sh` → nim = the store pin (2.2.4) → `nim app status.nims`
+  rc=0 53.8 s. (The bottle fetch 401'd for want of GITHUB_USER/TOKEN — a
+  pre-existing prerequisite; the bottle was copied in and the run redone.)
+- BOTH FRONT DOORS USE THE PIN: driver's client compile prints the store nim's
+  config chain; nimble names it explicitly; and the two binaries are
+  section-identical (__text/__const/__cstring/__data + nm md5
+  e17529d38a0c3803edafb487700378d6 — the same md5 0017 recorded), residue 15 279
+  bytes = LC_UUID + signature + OSO stabs (the 0017 parity floor).
+- MOBILE LEG (iOS device, from a nim-free shell + `source ./env.sh`):
+  `make mobile-build V=3` rc=0 3:46.6 → mobile/bin/ios/qt6/Status.app; the client
+  compile is a bare `nim c --app:staticlib -d:ios …` whose config hints name
+  .../pkgs2/nim-2.2.4-b4bb510b.../config/nim.cfg. Sentinel flipped back
+  (ios-arm64 → darwin-arm64), desktop rebuild rc=0 1:34.
+- MAKE: `make -n all` → `nim app status.nims`; deps/update/status-go-deps/
+  deps-common/update-common/clean-common all "No rule to make target";
+  pkg-macos/status-go/rcc/statusq/storybook-build/clean/nimble-deps/
+  compile-translations all parse; scripts/check-no-nim-compiles.sh green.
+- NO-OP ENVELOPE: 3.42 / 3.96 / 4.10 s (brief's idle-machine envelope 3.51–3.89;
+  another agent was building a Nim compiler on the box for part of the session).
+
+NOT VERIFIED: the signed dmg (no nix/dmgbuild/identity — unchanged from 0017,
+checkbox left unticked); the Android leg (no SDK/NDK — same script line as iOS);
+CI (0019 owns it: nothing yet carries the bootstrapped PATH across Jenkins `sh`
+steps — 0017's follow-up 10); Linux/Windows (no hosts); the shellenv-shadowing
+CONSEQUENCE (proven from PATH order, not reproduced — that needs a second Nim
+installed on this machine).
