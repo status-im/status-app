@@ -408,19 +408,32 @@ task app, "Build the Status dev build: host by default, --os:ios / --os:android 
   # developed vendors run first; default mode adds nothing. `--force` is the
   # human's half of make's REBUILD_NIM (the other half is a developed vendor
   # whose Nim sources compile INTO the client — issue 0017).
+  # `--force` cannot reach the mobile legs, so the mobile arms REJECT it rather
+  # than warn-and-ignore (issue 0018 review, I3 — the same stance `buildArtifacts`
+  # takes: accepting a flag nothing can honor is a lie, and this file must not
+  # hold two contracts for one flag). It used to be passed on as REBUILD_NIM=true,
+  # and REBUILD_NIM no longer exists anywhere (0017 deleted it from the root
+  # Makefile; mobile/Makefile never had it), so the pass-through named a dead
+  # variable. This must be checked BEFORE applyDevelopModeArms() — that proc
+  # mutates the tree (FORCE arms), and a rejected invocation must change nothing.
+  if t.force and t.os in ["ios", "android"]:
+    fail "'app --os:" & t.os & "' does not accept --force: nothing in the" &
+      " mobile leg can honor it.\nmobile/Makefile's client rule is" &
+      " prerequisite-driven (STATUS_DESKTOP_NIM_FILES), so an edited source" &
+      " rebuilds by itself; a FORCED mobile rebuild is\n" &
+      "  make -C mobile clean-nim-status-client\n" &
+      "A real mobile force arm comes with the mobile follow-on (issue 0018," &
+      " follow-up 2)."
   let force = applyDevelopModeArms() or t.force
   case t.os
   of "ios", "android":
     if t.os == "ios": validateIos(t) else: validateAndroid(t)
-    # `--force` does NOT reach the mobile legs: it used to be passed on as
-    # REBUILD_NIM=true, and REBUILD_NIM no longer exists anywhere (issue 0017
-    # deleted it from the root Makefile; mobile/Makefile never had it) — so the
-    # pass-through named a dead variable (issue 0018). mobile/Makefile's own
-    # client rule is prerequisite-driven (STATUS_DESKTOP_NIM_FILES), so an edit
-    # rebuilds by itself; a forced mobile rebuild is
-    # `make -C mobile clean-nim-status-client`. Recorded as a follow-up.
     if force:
-      echo "note: --force has no effect on the mobile leg (see status.nims)."
+      # A developed vendor whose Nim sources compile INTO the client (seaqt,
+      # nimqml, the statusgo wrapper) sets `force` too — that arm is not
+      # user-supplied, so it is reported, not rejected.
+      echo "note: a developed vendor forces a client rebuild on the host leg;" &
+        " the mobile leg rebuilds from mobile/Makefile's prerequisites instead."
     runMake "mobile-build"
   else:
     validateHost(t)
