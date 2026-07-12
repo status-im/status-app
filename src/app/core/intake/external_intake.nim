@@ -39,15 +39,26 @@ type
 
 const StatusExternalLinkHost = "status.app"
 
+proc isStatusWebUrl*(url: string): bool =
+  ## True for web URLs on status.app or a subdomain — links Status itself
+  ## handles (and the in-app browser can render). An external hand-off of such
+  ## a URL routes straight back here when Status holds the browser role, so
+  ## the unresolvable-deep-link fallback opens them as an in-app browser tab
+  ## instead of handing off externally.
+  let parsed = parseUri(url)
+  let scheme = parsed.scheme.toLowerAscii()
+  if scheme != "http" and scheme != "https":
+    return false
+  let host = parsed.hostname.toLowerAscii()
+  return host == StatusExternalLinkHost or host.endsWith("." & StatusExternalLinkHost)
+
 proc routeForUrl*(url: string): UrlIntakeRoute =
   ## Status links keep their deep-link behavior; any other web URL opens in a
   ## browser tab. Non-web schemes keep the historical deep-link path (the
   ## deep-link pipeline already falls back for unsupported links).
-  let parsed = parseUri(url)
-  let scheme = parsed.scheme.toLowerAscii()
+  let scheme = parseUri(url).scheme.toLowerAscii()
   if scheme == "http" or scheme == "https":
-    let host = parsed.hostname.toLowerAscii()
-    if host == StatusExternalLinkHost or host.endsWith("." & StatusExternalLinkHost):
+    if isStatusWebUrl(url):
       return UrlIntakeDeepLink
     return UrlIntakeBrowserTab
   return UrlIntakeDeepLink
