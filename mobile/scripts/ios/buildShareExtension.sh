@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Builds the do-nothing share extension (mobile/ios/shareExtension/, fork
-# issue #13) via xcodebuild, embeds it into the already-built app bundle's
+# Builds the share extension (mobile/ios/shareExtension/, fork issues #13/#14)
+# via xcodebuild, embeds it into the already-built app bundle's
 # PlugIns/, and re-signs the outer app (adding nested code after signing
 # breaks the app's signature seal).
 #
