@@ -74,6 +74,8 @@ Item {
             const preview = createPreview()
             const textArea = findChild(preview, "sharePreviewTextArea")
             const sendButton = findChild(preview, "sharePreviewSendButton")
+            verify(textArea)
+            verify(sendButton)
 
             textArea.text = "   "
             verify(!sendButton.enabled)
