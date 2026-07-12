@@ -109,14 +109,15 @@ proc refreshModels(self: Module) =
   for m in self.models:
     m.refresh()
 
-proc toPopularGroups(groups: seq[TokenGroupItem]): seq[PopularGroup] =
+proc toPopularGroups(self: Module, groups: seq[TokenGroupItem]): seq[PopularGroup] =
   for g in groups:
     let communityId = if g.tokens.len > 0: g.tokens[0].communityData.id else: ""
     var tokenRefs: seq[tuple[key: string, chainId: int]] = @[]
     for t in g.tokens:
       tokenRefs.add((key: t.key, chainId: t.chainId))
     result.add(PopularGroup(key: g.key, name: g.name, symbol: g.symbol,
-      logoUri: g.logoUri, communityId: communityId, tokens: tokenRefs))
+      logoUri: g.logoUri, communityId: communityId, marketPrice: self.priceForGroup(g),
+      tokens: tokenRefs))
 
 method createModelForKind*(self: Module, kind: int): TokenSelectorModel =
   let atm = self.allTokensModule
@@ -125,7 +126,7 @@ method createModelForKind*(self: Module, kind: int): TokenSelectorModel =
   var source: TokenSelectorSource
   # Search source (send + swap): snapshot the lazy search-result model.
   if kind == KIND_SEND or kind == KIND_SWAP:
-    source.getSearch = proc(): seq[PopularGroup] = toPopularGroups(searchModel.getLoadedGroups())
+    source.getSearch = proc(): seq[PopularGroup] = self.toPopularGroups(searchModel.getLoadedGroups())
     source.doSearch = proc(keyword: string) = searchModel.search(keyword)
 
   var mode = TokenSelectorMode.Owned
@@ -133,7 +134,7 @@ method createModelForKind*(self: Module, kind: int): TokenSelectorModel =
   of KIND_SWAP:
     mode = TokenSelectorMode.AllTokens
     let popularModel = atm.getTokenGroupsForChainModelObj()
-    source.getPopular = proc(): seq[PopularGroup] = toPopularGroups(popularModel.getLoadedGroups())
+    source.getPopular = proc(): seq[PopularGroup] = self.toPopularGroups(popularModel.getLoadedGroups())
     source.fetchMore = proc(searching: bool) =
       if searching: searchModel.fetchMore() else: popularModel.fetchMore()
     source.hasMore = proc(searching: bool): bool =
@@ -143,7 +144,7 @@ method createModelForKind*(self: Module, kind: int): TokenSelectorModel =
   of KIND_BUY:
     mode = TokenSelectorMode.AllTokens
     let popularModel = atm.getTokenGroupsModelObj()
-    source.getPopular = proc(): seq[PopularGroup] = toPopularGroups(popularModel.getLoadedGroups())
+    source.getPopular = proc(): seq[PopularGroup] = self.toPopularGroups(popularModel.getLoadedGroups())
     # tokenGroupsModel is non-lazy: no fetchMore / hasMore.
   else:
     # KIND_SEND: owned list; search results filtered to owned. Lazy loading on the

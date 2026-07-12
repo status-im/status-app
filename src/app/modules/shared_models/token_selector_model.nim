@@ -35,6 +35,7 @@ type
     Symbol
     LogoUri
     Decimals
+    CryptoPrice
     CurrentBalance
     CurrencyBalance
     SectionName
@@ -101,6 +102,7 @@ QtObject:
       ModelRole.Symbol.int: "symbol",
       ModelRole.LogoUri.int: "logoUri",
       ModelRole.Decimals.int: "decimals",
+      ModelRole.CryptoPrice.int: "cryptoPrice",
       ModelRole.CurrentBalance.int: "currentBalance",
       ModelRole.CurrencyBalance.int: "currencyBalance",
       ModelRole.SectionName.int: "sectionName",
@@ -120,6 +122,7 @@ QtObject:
     of ModelRole.Symbol: return newQVariant(item.symbol)
     of ModelRole.LogoUri: return newQVariant(item.logoUri)
     of ModelRole.Decimals: return newQVariant(item.decimals)
+    of ModelRole.CryptoPrice: return newQVariant(item.marketPrice)
     of ModelRole.CurrentBalance: return newQVariant(item.currentBalance)
     of ModelRole.CurrencyBalance: return newQVariant(item.currencyBalance)
     of ModelRole.SectionName: return newQVariant(self.sectionNameFor(item))
@@ -143,6 +146,7 @@ QtObject:
     if o.name != n.name: result.add(ModelRole.Name.int)
     if o.symbol != n.symbol: result.add(ModelRole.Symbol.int)
     if o.logoUri != n.logoUri: result.add(ModelRole.LogoUri.int)
+    if o.marketPrice != n.marketPrice: result.add(ModelRole.CryptoPrice.int)
     if o.currentBalance != n.currentBalance: result.add(ModelRole.CurrentBalance.int)
     if o.currencyBalance != n.currencyBalance: result.add(ModelRole.CurrencyBalance.int)
     if o.hasBalance != n.hasBalance: result.add(ModelRole.SectionName.int)
@@ -183,7 +187,7 @@ QtObject:
       countChanged = proc() = self.countChanged(),
       useBulkOps = true)
 
-  proc setSectionNames*(self: TokenSelectorModel, owned, popular: string) =
+  proc setSectionNames*(self: TokenSelectorModel, owned: string, popular: string) {.slot.} =
     if owned == self.ownedSectionName and popular == self.popularSectionName:
       return
     self.ownedSectionName = owned
@@ -318,6 +322,8 @@ QtObject:
       self.sectionNameFor(self.items[i])
     proc decimalsAtForTest*(self: TokenSelectorModel, i: int): int =
       self.items[i].decimals
+    proc cryptoPriceAtForTest*(self: TokenSelectorModel, i: int): float =
+      self.items[i].marketPrice
     proc balancesModelForKey*(self: TokenSelectorModel, key: string): TokenSelectorBalancesModel =
       if self.balancesByKey.hasKey(key): return self.balancesByKey[key]
       return nil

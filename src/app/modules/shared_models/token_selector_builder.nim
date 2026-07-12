@@ -36,6 +36,7 @@ type
     symbol*: string
     logoUri*: string
     communityId*: string
+    marketPrice*: float
     tokens*: seq[tuple[key: string, chainId: int]]
 
 proc toFloatUnits(v: UInt256, decimals: int): float =
@@ -88,6 +89,7 @@ proc buildTokenSelectorItems*(groups: seq[AggTokenGroup],
       logoUri: g.logoUri,
       communityId: g.communityId,
       decimals: g.decimals,
+      marketPrice: g.marketPrice,
       currentBalance: currentBalance,
       currencyBalance: currentBalance * g.marketPrice,
       hasBalance: currentBalance != 0.0,
@@ -118,7 +120,7 @@ proc mergePopularWithOwned*(popular: seq[PopularGroup],
       continue
     var item = TokenSelectorItem(
       key: p.key, name: p.name, symbol: p.symbol, logoUri: p.logoUri,
-      communityId: p.communityId,
+      communityId: p.communityId, marketPrice: p.marketPrice,
       tokens: p.tokens.mapIt(TokenSelectorTokenRef(key: it.key, chainId: it.chainId)))
     if ownedByKey.hasKey(p.key):
       let o = ownedByKey[p.key]
@@ -127,6 +129,7 @@ proc mergePopularWithOwned*(popular: seq[PopularGroup],
       item.hasBalance = o.hasBalance
       item.chips = o.chips
       item.decimals = o.decimals
+      item.marketPrice = o.marketPrice
     result.add(item)
 
 proc buildDisplayItems*(

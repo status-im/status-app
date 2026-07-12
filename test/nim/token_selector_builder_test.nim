@@ -193,6 +193,7 @@ suite "mergePopularWithOwned — all-tokens / search path":
     check eth.hasBalance
     check eth.chips.len == 1
     check eth.decimals == 18               # decimals come from the owned side
+    check eth.marketPrice == 2.0           # price from the owned side
     check eth.name == "Ethereum"          # popular's metadata wins
     check eth.logoUri == "logo/eth"
 
@@ -211,6 +212,12 @@ suite "mergePopularWithOwned — all-tokens / search path":
     ], networks, noFilterParams())
     let merged = mergePopularWithOwned(@[popular("DAI")], owned, showCommunityAssets = false)
     check merged.mapIt(it.key) == @["DAI"]
+
+  test "non-owned popular token carries its own market price":
+    let merged = mergePopularWithOwned(
+      @[PopularGroup(key: "DAI", name: "DAI", symbol: "DAI", marketPrice: 0.99)],
+      @[], showCommunityAssets = false)
+    check merged.findItem("DAI").marketPrice == 0.99
 
   test "community popular token dropped unless showCommunityAssets":
     let p = @[popular("CT", communityId = "comm1")]

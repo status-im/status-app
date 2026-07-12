@@ -304,6 +304,14 @@ suite "TokenSelectorModel - producer-driven recompute":
     check bm != nil
     check bm.rawBalancesInOrder() == @["1500000"]
 
+  test "cryptoPrice role surfaces the per-token market price (swap needs)":
+    let m = newTokenSelectorModel(TokenSelectorMode.Owned)
+    let g = AggTokenGroup(key: "ETH", name: "ETH", symbol: "ETH", decimals: 18,
+      marketPrice: 3500.0,
+      balances: @[AggBalance(account: "0xA", chainId: 1, balance: parse("1000000000000000000", UInt256))])
+    m.setOwnedSource(@[g], networks)
+    check m.cryptoPriceAtForTest(0) == 3500.0
+
   test "swap chain-scoped popular yields one token per group (SwapInputPanel count==1)":
     # swap's popular list is tokenGroupsForChModel built for the selected chain, so
     # each merged row's tokens submodel must carry exactly one token ref.

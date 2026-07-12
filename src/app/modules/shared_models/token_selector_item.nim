@@ -29,6 +29,7 @@ type
     logoUri*: string
     communityId*: string
     decimals*: int           ## token decimals; send pairs it with a chip's rawBalance
+    marketPrice*: float      ## per-token fiat price; swap reads it as `cryptoPrice`
     currentBalance*: float   ## summed token amount over the filtered chips
     currencyBalance*: float  ## currentBalance * marketPrice (fiat), 0 when no price
     hasBalance*: bool        ## currentBalance != 0 -> "owned" section, else "popular"
