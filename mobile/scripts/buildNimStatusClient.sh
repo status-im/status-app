@@ -105,8 +105,18 @@ else
     NIM_FLAGS+=(-d:release -d:production)
 fi
 
-# build status-client with feature flags
-env "${FEATURE_FLAGS[@]}" ./vendor/nimbus-build-system/scripts/env.sh nim c "${PLATFORM_SPECIFIC[@]}" "${APP_CONFIG_DEFINES[@]}" ${QML_SERVER_DEFINES}  \
+# Build status-client with feature flags.
+#
+# `nim` comes from PATH, and PATH is what carries the pinned compiler (issue
+# 0018): nimble injects <store>/pkgs2/nim-<ver>-<checksum>/bin into the
+# environment of its tasks and hooks, and a `nimble shellenv` shell (the
+# documented bootstrap, BUILDING.md) does the same for a bare `make
+# mobile-build` — so this compile uses exactly the compiler
+# nim_status_client.nimble pins, with no compiler on the machine. This used to
+# go through nimbus-build-system's scripts/env.sh, which — with USE_SYSTEM_NIM=1,
+# the only mode this repo ever ran — did nothing but echo "[using system Nim]"
+# and exec the same `nim`. NBS is gone; so is the wrapper.
+env "${FEATURE_FLAGS[@]}" nim c "${PLATFORM_SPECIFIC[@]}" "${APP_CONFIG_DEFINES[@]}" ${QML_SERVER_DEFINES}  \
     "${NIM_FLAGS[@]}" \
     "$STATUS_DESKTOP"/src/nim_status_client.nim
 
