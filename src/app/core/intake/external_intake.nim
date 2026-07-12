@@ -37,7 +37,6 @@ type
     onDeepLinkUrl*: proc(url: string)
     onBrowserTabUrl*: proc(url: string)
 
-const StatusInternalLinkScheme = "status-app"
 const StatusExternalLinkHost = "status.app"
 
 proc routeForUrl*(url: string): UrlIntakeRoute =
