@@ -1,0 +1,26 @@
+# DTOs consumed by TokenSelectorModel, the terminal model behind the send/swap/buy
+# token pickers. Qt-free so the builder and its DTOs unit-test with a plain
+# `nim c -r` (no nimqml/seaqt toolchain).
+#
+# The per-chain `chips` are the `balances` submodel the picker delegate renders
+# (network icon + formatted amount). Balance is carried as a float in logical
+# units; locale formatting stays in the QML delegate (guideline: convert to
+# display form only at the UI layer).
+
+type
+  TokenSelectorChip* = object
+    chainId*: int
+    iconUrl*: string     ## network icon
+    chainName*: string
+    balance*: float      ## logical units (already divided by decimals)
+
+  TokenSelectorItem* = object
+    key*: string
+    name*: string
+    symbol*: string
+    logoUri*: string
+    communityId*: string
+    currentBalance*: float   ## summed token amount over the filtered chips
+    currencyBalance*: float  ## currentBalance * marketPrice (fiat), 0 when no price
+    hasBalance*: bool        ## currentBalance != 0 -> "owned" section, else "popular"
+    chips*: seq[TokenSelectorChip]
