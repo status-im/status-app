@@ -45,6 +45,27 @@ suite "external_intake routing":
   test "non-web schemes keep the historical deep-link path":
     check routeForUrl("mailto:someone@example.com") == UrlIntakeDeepLink
 
+suite "external_intake status web url classification":
+  ## Backs the unresolvable-deep-link fallback: a status.app web URL handed
+  ## off externally routes straight back to Status when it holds the browser
+  ## role, so the fallback must open it as an in-app browser tab instead.
+
+  test "status.app web urls (incl. subdomains) are Status's own web urls":
+    check isStatusWebUrl("https://status.app/c/invalid-community-key")
+    check isStatusWebUrl("http://status.app/u/user-key")
+    check isStatusWebUrl("https://status.app/")
+    check isStatusWebUrl("https://www.status.app/c/community-id")
+
+  test "other web urls are not Status's own":
+    check not isStatusWebUrl("https://example.com/article")
+    check not isStatusWebUrl("https://notstatus.app/c/x")
+    check not isStatusWebUrl("https://status.app.evil.com/")
+
+  test "non-web schemes are not renderable web urls":
+    check not isStatusWebUrl("status-app://c/community-id")
+    check not isStatusWebUrl("mailto:someone@example.com")
+    check not isStatusWebUrl("")
+
 suite "external_intake dispatch":
 
   test "deep-link url reaches the deep-link handler once ready":
