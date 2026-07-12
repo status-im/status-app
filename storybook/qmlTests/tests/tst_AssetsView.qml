@@ -4,6 +4,8 @@ import QtTest
 import shared.views
 import utils
 
+import SortFilterProxyModel
+
 
 Item {
     id: root
@@ -29,12 +31,50 @@ Item {
         "Wrapped Ether", "Status Test Token", "Ether", "Dai Stablecoin"
     ]
 
-    ListModel {
+    // Role-compatible stub for the terminal AssetsAdaptorModel: derives
+    // isCommunity/marketBalance/change1DayFiat, filters to visible rows and
+    // re-sorts in place via sortBy(roleName, order) — mirrors the Nim model.
+    SortFilterProxyModel {
         id: assetsModel
 
-        function formatBalance(amount, symbol) {
-            return amount.toLocaleCurrencyString(Qt.locale(), symbol)
+        property int sortRoleOrder: Qt.DescendingOrder
+        property string sortRoleName: "name"
+
+        function sortBy(roleName, order) {
+            assetsModel.sortRoleName = roleName
+            assetsModel.sortRoleOrder = order
         }
+
+        sourceModel: baseAssetsModel
+        proxyRoles: [
+            FastExpressionRole {
+                name: "isCommunity"
+                expression: !!model.communityId ? "community" : ""
+                expectedRoles: ["communityId"]
+            },
+            FastExpressionRole {
+                name: "marketBalance"
+                expression: model.balance * model.marketPrice
+                expectedRoles: ["balance", "marketPrice"]
+            },
+            FastExpressionRole {
+                name: "change1DayFiat"
+                expression: model.marketBalance * (1 - (1 / (model.marketChangePct24hour / 100 + 1)))
+                expectedRoles: ["marketBalance", "marketChangePct24hour"]
+            }
+        ]
+        filters: ValueFilter { roleName: "visible"; value: true }
+        sorters: [
+            RoleSorter { roleName: "isCommunity" },
+            RoleSorter {
+                roleName: assetsModel.sortRoleName
+                sortOrder: assetsModel.sortRoleOrder
+            }
+        ]
+    }
+
+    ListModel {
+        id: baseAssetsModel
 
         Component.onCompleted: {
             append([
@@ -44,18 +84,18 @@ Item {
                     name: "Dai Stablecoin",
                     logoUri: Constants.tokenIcon("DAI", false),
                     balance: 1.0,
-                    balanceText: formatBalance(1.0, "DAI"),
                     balanceLoading: false,
-                    error: "",
                     marketDetailsAvailable: true,
                     marketDetailsLoading: false,
                     marketPrice: 3.0,
                     marketChangePct24hour: 5.0,
                     communityId: "",
                     communityName: "",
-                    communityIcon: Qt.resolvedUrl(""),
+                    communityImage: Qt.resolvedUrl(""),
                     position: 1,
-                    canBeHidden: true
+                    canBeHidden: true,
+                    visible: true,
+                    chainIds: "1"
                 },
                 {
                     key: "key_STT",
@@ -63,18 +103,18 @@ Item {
                     name: "Status Test Token",
                     logoUri: Constants.tokenIcon("STT", false),
                     balance: 2.0,
-                    balanceText: formatBalance(2.0, "STT"),
                     balanceLoading: false,
-                    error: "",
                     marketDetailsAvailable: true,
                     marketDetailsLoading: false,
                     marketPrice: 2.0,
                     marketChangePct24hour: 5.0,
                     communityId: "",
                     communityName: "",
-                    communityIcon: Qt.resolvedUrl(""),
+                    communityImage: Qt.resolvedUrl(""),
                     position: 2,
-                    canBeHidden: true
+                    canBeHidden: true,
+                    visible: true,
+                    chainIds: "1"
                 },
                 {
                     key: "key_WETH",
@@ -82,18 +122,18 @@ Item {
                     name: "Wrapped Ether",
                     logoUri: Constants.tokenIcon("ETH", false),
                     balance: 3.0,
-                    balanceText: formatBalance(3.0, "WETH"),
                     balanceLoading: false,
-                    error: "",
                     marketDetailsAvailable: true,
                     marketDetailsLoading: false,
                     marketPrice: 3.1,
                     marketChangePct24hour: 5.0,
                     communityId: "",
                     communityName: "",
-                    communityIcon: Qt.resolvedUrl(""),
+                    communityImage: Qt.resolvedUrl(""),
                     position: 3,
-                    canBeHidden: true
+                    canBeHidden: true,
+                    visible: true,
+                    chainIds: "1"
                 },
                 {
                     key: "key_ETH",
@@ -101,18 +141,18 @@ Item {
                     name: "Ether",
                     logoUri: Constants.tokenIcon("ETH", false),
                     balance: 4.0,
-                    balanceText: formatBalance(4.0, "ETH"),
                     balanceLoading: false,
-                    error: "",
                     marketDetailsAvailable: true,
                     marketDetailsLoading: false,
                     marketPrice: 4.1,
                     marketChangePct24hour: 5.0,
                     communityId: "",
                     communityName: "",
-                    communityIcon: Qt.resolvedUrl(""),
+                    communityImage: Qt.resolvedUrl(""),
                     position: 4,
-                    canBeHidden: false
+                    canBeHidden: false,
+                    visible: true,
+                    chainIds: "1"
                 }
             ])
         }
@@ -125,6 +165,7 @@ Item {
             height: root.height
             sorterVisible: true
             model: assetsModel
+            onSortRequested: (roleName, order) => assetsModel.sortBy(roleName, order)
         }
     }
 
