@@ -354,7 +354,10 @@ method activateStatusDeepLink*(self: AccessInterface, statusDeepLink: string) {.
 method openUrlInNewBrowserTab*(self: AccessInterface, url: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method launchShareFlow*(self: AccessInterface, text: string) {.base.} =
+method launchShareFlow*(self: AccessInterface, text: string, imagePaths: seq[string]) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method releaseShareIntakeFiles*(self: AccessInterface, imagePathsJson: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method setCommunityIdToSpectate*(self: AccessInterface, commnityId: string, channelUuid: string = "") {.base.} =

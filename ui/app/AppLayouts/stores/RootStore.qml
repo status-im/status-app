@@ -259,8 +259,8 @@ QtObject {
                 root.openUrlInNewBrowserTab(url)
             }
 
-            function onLaunchShareFlow(text) {
-                root.launchShareFlow(text)
+            function onLaunchShareFlow(text, imagePathsJson) {
+                root.launchShareFlow(text, JSON.parse(imagePathsJson))
             }
 
             function onOpenActivityCenter(group) {
@@ -319,12 +319,18 @@ QtObject {
     signal ensNameResolved(string resolvedPubKey, string resolvedAddress, string uuid)
     signal openUrl(string link)
     signal openUrlInNewBrowserTab(string link)
-    signal launchShareFlow(string text)
+    signal launchShareFlow(string text, var imagePaths)
     signal openActivityCenter()
     signal wcLinkActivated(string link)
     signal profileMigrationFlowRequested(bool migrateToKeycard)
     signal displayUserProfile(string publicKey)
     signal showToastPairingFallbackCompleted()
+
+    // Share-flow cancel path: releases the app-private cached copies of the
+    // shared images (the send path releases them after the send consumed them).
+    function releaseShareIntakeFiles(imagePaths) {
+        internal.mainModuleInst.releaseShareIntakeFiles(JSON.stringify(imagePaths))
+    }
     // End of Settings related stuff
 
     // End of Onboarding related stuff
