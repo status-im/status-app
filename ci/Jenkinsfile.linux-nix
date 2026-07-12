@@ -94,8 +94,8 @@ pipeline {
     }
     stage('Deps') {
       steps { script {
-        nix.shell('make update', pure: true)
-        nix.shell('make deps', pure: true)
+        /* nimble is the only prerequisite (issue 0018). */
+        nix.shell('nimble setup', pure: true)
       } }
     }
 

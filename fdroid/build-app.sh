@@ -29,9 +29,13 @@ export PATH="$QT_BASE/gcc_64/bin:$QT_BASE/android_arm64_v8a/bin:$NDK_TOOLCHAIN/b
 cd "$BUILD_DIR"
 
 ulimit -n 65536 || true
-export USE_SYSTEM_NIM=1
 export NIM_SDS_SOURCE_DIR="$BUILD_DIR/vendor/nim-sds"
 
-make deps
+# nimble is the only prerequisite (issue 0018: nimbus-build-system, `make deps`
+# and USE_SYSTEM_NIM are gone). `nimble setup` resolves the graph and
+# materialises the pinned Nim compiler in nimble's store; `nimble shellenv` puts
+# that compiler on PATH, which is what the mobile make legs compile with.
+nimble setup
+eval "$(nimble shellenv)"
 
 make -C mobile apk-fdroid BUILD_VARIANT=release ARCH=arm64 V=3

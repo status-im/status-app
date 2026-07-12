@@ -133,8 +133,11 @@ pipeline {
     }
     stage('Deps') {
       steps {
-        sh 'make update'
-        sh 'make deps'
+        /* nimble is the only prerequisite (issue 0018: `make update` / `make deps`
+         * and the vendored nimbus-build-system are gone). `nimble setup` resolves the
+         * graph AND materialises the pinned Nim compiler in nimble's store; the build
+         * stages below reach it through the driver. */
+        sh 'nimble setup'
       }
     }
 

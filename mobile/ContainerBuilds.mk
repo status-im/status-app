@@ -47,10 +47,9 @@ $(TARGET): $(STATUS_DESKTOP_NIM_FILES) $(STATUS_DESKTOP_UI_FILES) $(STATUS_Q_FIL
 		bash -c '\
 			set -e && \
 			export QMAKE=$$(which qmake) && \
-			echo "=== Running make update ===" && \
-			make update V=$(V) && \
-			echo "=== Running make deps ===" && \
-			make deps V=$(V) && \
+			echo "=== Resolving the nimble graph (incl. the pinned Nim compiler) ===" && \
+			nimble setup && \
+			eval "$$(nimble shellenv)" && \
 			echo "=== Building Android APK ===" && \
 			cd mobile && \
 			make apk-debug ARCH=$(ARCH) PACKAGE_TYPE=$(PACKAGE_TYPE) NIM_SDS_SOURCE_DIR=/tmp/nim-sds V=$(V) \

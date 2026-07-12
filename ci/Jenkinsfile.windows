@@ -126,8 +126,8 @@ pipeline {
     }
     stage('Deps') {
       steps {
-        sh 'make update'
-        sh 'make deps'
+        /* nimble is the only prerequisite (issue 0018). */
+        sh 'nimble setup'
       }
     }
 
