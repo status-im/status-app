@@ -304,6 +304,10 @@ Q_DECL_EXPORT void statusq_urlscheme_emit_appbackgrounded(void* obj) {
     static_cast<Status::UrlSchemeEvent*>(obj)->emitAppBackgroundedToQt();
 }
 
+Q_DECL_EXPORT void statusq_urlscheme_emit_sharetext(void* obj, const char* text) {
+    static_cast<Status::UrlSchemeEvent*>(obj)->emitShareTextToQt(QString::fromUtf8(text));
+}
+
 Q_DECL_EXPORT void statusq_urlscheme_delete(void* obj) {
     static_cast<QObject*>(obj)->deleteLater();
 }

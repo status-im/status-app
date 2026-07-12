@@ -81,6 +81,7 @@ Item {
                                    appMain.privacyStore?.thirdpartyServicesEnabled ?? true : true
         onOpenUrl: (link) => Global.requestOpenLink(link)
         onOpenUrlInNewBrowserTab: (link) => d.openUrlInNewBrowserTab(link)
+        onLaunchShareFlow: (text) => d.launchShareFlow(text)
         onOpenActivityCenter: () => {
             d.closeActivityCenterOnNextBack = false
             mainLayoutItem.openACCenterPanel = true
@@ -1111,6 +1112,34 @@ Item {
                 if (browser && browser.openUrlInNewTab)
                     browser.openUrlInNewTab(link)
             })
+        }
+
+        // External intake, share route: content shared to Status from another
+        // app launches the share flow (destination picker -> preview -> send).
+        // Last-wins: a share arriving while the flow is open restarts it with
+        // the new text.
+        function launchShareFlow(text: string) {
+            shareFlowLoader.sharedText = text
+            if (!shareFlowLoader.active)
+                shareFlowLoader.active = true
+            else
+                shareFlowLoader.item.restart()
+            shareFlowLoader.item.open()
+        }
+
+        // Cancel from picker or preview: nothing is sent; on Android the whole
+        // task is backgrounded so the user lands back in the source app.
+        function cancelShareFlow() {
+            shareFlowLoader.item.close()
+            if (SQUtils.Utils.isAndroid)
+                SystemUtils.moveAppTaskToBack()
+        }
+
+        // Send the shared text to the picked destination and land in that chat.
+        function completeShareFlow(sectionId: string, chatId: string, text: string) {
+            shareFlowLoader.item.close()
+            appMain.rootChatStore.sendMessageToChat(sectionId, chatId, text)
+            rootStore.setActiveSectionChat(sectionId, chatId)
         }
 
         function tryOpenNavigationEducationPopup() {
@@ -2842,6 +2871,73 @@ Item {
         sequences: ["Ctrl+,", StandardKey.Preferences]
         onActivated: globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.profile,
                                                                   Utils.getSettingsSubsectionForSection(d.activeSectionType))
+    }
+
+    Loader {
+        id: shareFlowLoader
+        active: false
+
+        // The shared text (external intake, share route); editable in the
+        // preview step before sending.
+        property string sharedText
+
+        sourceComponent: Popup {
+            id: shareFlowPopup
+
+            parent: appMain
+            x: (appMain.width - width) / 2
+            y: (appMain.height - height) / 2
+            width: appMain.isPortraitMode ? appMain.width : 480
+            height: appMain.isPortraitMode ? appMain.height
+                                           : Math.min(640, appMain.height - 2 * Theme.bigPadding)
+            modal: true
+            closePolicy: Popup.NoAutoClose
+            padding: Theme.padding
+
+            onClosed: shareFlowLoader.active = false
+
+            function restart() {
+                shareFlowSteps.currentIndex = 0
+                sharePreviewPanel.text = shareFlowLoader.sharedText
+            }
+
+            RecentPostableDestinationsAdaptor {
+                id: shareDestinationsAdaptor
+                sourceModel: rootStore.chatSearchModel
+            }
+
+            StackLayout {
+                id: shareFlowSteps
+                anchors.fill: parent
+                currentIndex: 0
+
+                ShareDestinationPickerPanel {
+                    model: shareDestinationsAdaptor.model
+
+                    onDestinationPicked: (sectionId, chatId, name) => {
+                        sharePreviewPanel.destinationSectionId = sectionId
+                        sharePreviewPanel.destinationChatId = chatId
+                        sharePreviewPanel.destinationName = name
+                        shareFlowSteps.currentIndex = 1
+                    }
+                    onCancelRequested: d.cancelShareFlow()
+                }
+
+                SharePreviewPanel {
+                    id: sharePreviewPanel
+
+                    property string destinationSectionId
+                    property string destinationChatId
+
+                    text: shareFlowLoader.sharedText
+
+                    onSendRequested: (text) => d.completeShareFlow(destinationSectionId,
+                                                                   destinationChatId, text)
+                    onBackRequested: shareFlowSteps.currentIndex = 0
+                    onCancelRequested: d.cancelShareFlow()
+                }
+            }
+        }
     }
 
     Loader {

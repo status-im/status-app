@@ -310,6 +310,31 @@ QtObject {
         return result
     }
 
+    function sendMessageToChat(sectionId, chatId, text) {
+        // Share-flow send: resolves the destination's own section module, so it
+        // works for any destination regardless of which section this store
+        // instance is bound to. The personal chat section hosts 1-1 and group
+        // chats; any other destination lives in a community section.
+        const isPersonalSectionChat =
+            StatusQUtils.ModelUtils.contains(root.mainModuleInst.getChatSectionModule().model,
+                                             "itemId", chatId)
+        const sectionModule = isPersonalSectionChat ? root.mainModuleInst.getChatSectionModule()
+                                                    : getCommunitySectionModule(sectionId)
+        sectionModule.prepareChatContentModuleForChatId(chatId)
+        const chatContentModule = sectionModule.getChatContentModule()
+
+        const textMsg = cleanMessageText(text)
+        if (textMsg.trim() === "")
+            return false
+
+        chatContentModule.inputAreaModule.sendMessage(
+                    textMsg,
+                    "",
+                    Utils.isOnlyEmoji(textMsg) ? Constants.messageContentType.emojiType
+                                               : Constants.messageContentType.messageType)
+        return true
+    }
+
     function openCloseCreateChatView() {
         if (root.openCreateChat) {
             Global.closeCreateChatView()

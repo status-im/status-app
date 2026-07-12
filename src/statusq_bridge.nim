@@ -22,6 +22,7 @@ proc statusq_urlscheme_install_event_filter*(obj: pointer) {.cdecl, importc.}
 proc statusq_urlscheme_emit_deeplink*(obj: pointer, url: cstring) {.cdecl, importc.}
 proc statusq_urlscheme_emit_appforegrounded*(obj: pointer) {.cdecl, importc.}
 proc statusq_urlscheme_emit_appbackgrounded*(obj: pointer) {.cdecl, importc.}
+proc statusq_urlscheme_emit_sharetext*(obj: pointer, text: cstring) {.cdecl, importc.}
 proc statusq_urlscheme_delete*(obj: pointer) {.cdecl, importc.}
 
 when defined(monitoring):
