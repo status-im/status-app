@@ -735,6 +735,84 @@ proc clientSourcesKey(): string =
     extra.add thisDir() / f
   contentKey("find src -type f", extra)
 
+proc pinnedNimEntry(): tuple[version, checksum: string] =
+  ## The nim store entry THIS resolution names: the version from the manifest's
+  ## `requires "nim == X"` (the pin itself) and, when the lock records it, the
+  ## checksum that completes the store entry's directory name
+  ## (`pkgs2/nim-<version>-<checksum>`). nimble.paths carries no nim entry —
+  ## the compiler is not a `--path:` — so the lock is where the resolution
+  ## writes it down (`packages.nim.checksums.sha1`, verified 2026-07-12: it IS
+  ## the store directory's checksum).
+  let manifest = thisDir() / "nim_status_client.nimble"
+  if fileExists(manifest):
+    for line in readFile(manifest).splitLines:
+      let l = line.strip
+      if not l.startsWith("requires"):
+        continue
+      let parts = l.split('"')
+      if parts.len >= 2 and parts[1].strip.startsWith("nim") and "==" in parts[1]:
+        result.version = parts[1].split("==")[1].strip
+        break
+  let lock = thisDir() / "nimble.lock"
+  if result.version.len > 0 and fileExists(lock):
+    var inNim = false
+    for raw in readFile(lock).splitLines:
+      let l = raw.strip
+      if raw.startsWith("    \"") and l.endsWith("{"):
+        inNim = l.startsWith("\"nim\":")   # a package block starts here
+        continue
+      if inNim and l.startsWith("\"sha1\":"):
+        let parts = l.split('"')
+        if parts.len >= 4:
+          result.checksum = parts[3]
+        break
+
+proc guardPinnedCompiler() =
+  ## The compiler about to compile the client MUST be the pinned store entry
+  ## (issue 0018 review, adjudication A1 — it amends the PRD's "no version
+  ## guard" decision).
+  ##
+  ## The PRD's reasoning was "a bootstrapped shell cannot drift". True only
+  ## while `~/.nimble/bin/nim` happens to BE the pin: `nimble shellenv` lists
+  ## $NIMBLE_DIR/bin BEFORE the pinned `pkgs2/nim-<ver>-<checksum>/bin` (0018
+  ## §7), and choosenim (or `nimble install nim@X`) repoints that symlink — so
+  ## a hand-typed `eval "$(nimble shellenv)"` can silently compile the client
+  ## with another compiler. `env.sh` hoists the pin; this guard is what catches
+  ## the shell that did not use it.
+  ##
+  ## It lives in the DRIVER, never in config.nims: nimsuggest evaluates
+  ## config.nims with ITS OWN compiler (an editor's nimsuggest is not the pin),
+  ## so a guard there would false-positive on every keystroke. And it runs only
+  ## when a client compile is actually about to happen — two small file reads,
+  ## no subprocess, nothing on the no-op path.
+  ##
+  ## It cannot fire under `nimble build`/`nimble run`: nimble compiles the
+  ## client itself (this proc is not on that path) and injects the pinned
+  ## compiler into the PATH of the tasks and hooks it does run.
+  let exe = nimExe()
+  if getEnv("STATUS_NIM").len > 0:
+    echo "note: STATUS_NIM overrides the pinned compiler (" & exe & ")."
+    return
+  let (version, checksum) = pinnedNimEntry()
+  if version.len == 0:
+    return  # no `requires "nim == X"` in the manifest: nothing to assert
+  let entry = "nim-" & version & (if checksum.len > 0: "-" & checksum else: "")
+  let marker = $DirSep & "pkgs2" & $DirSep & entry
+  if (if checksum.len > 0: (marker & $DirSep) in exe else: (marker & "-") in exe):
+    return
+  fail "the Nim that is about to compile the client is NOT the pinned" &
+    " compiler.\n" &
+    "  running: " & exe & "\n" &
+    "  pinned:  <store>/pkgs2/" & entry & "/bin/nim" &
+    "   (nim_status_client.nimble: requires \"nim == " & version & "\")\n\n" &
+    "Bootstrap the shell so the pin wins the PATH race:\n" &
+    "  nimble setup && source ./env.sh\n\n" &
+    "A bare `eval \"$(nimble shellenv)\"` is NOT enough: it puts" &
+    " $NIMBLE_DIR/bin — whose `nim` symlink choosenim can repoint — ahead of" &
+    " the pinned pkgs2 entry (issue 0018 §7). `nimble build` / `nimble run`" &
+    " need no bootstrap at all: nimble injects the pin itself.\n" &
+    "STATUS_NIM=<path> deliberately overrides this check."
+
 proc buildClient(force: bool) =
   ## `force` is the replacement for make's REBUILD_NIM: a developed vendor
   ## whose Nim sources compile INTO the client (seaqt, nimqml, the statusgo
@@ -748,6 +826,7 @@ proc buildClient(force: bool) =
   let key = clientKey() & "\n" & clientSourcesKey()
   if not force and not stale(keyFile, [bin], key):
     return
+  guardPinnedCompiler()
   echo "\e[92mBuilding:\e[39m " & bin.extractFilename
   exec "cd " & quoteShell(thisDir()) & " && " & quoteShell(nimExe()) &
     " c src/nim_status_client.nim"
