@@ -1062,6 +1062,11 @@ nim-test-run/test/nim/url_scheme_event_test.nim: | statusq
 nim-test-run/test/nim/typed_completion_test.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
 nim-test-run/test/nim/typed_completion_test.nim: | statusq
 
+# asset_proxy_chain_bench stands up the real StatusQ/SFPM proxy chain in an
+# offscreen QML engine, so it links StatusQ and needs the installed QML modules.
+nim-test-run/test/nim/asset_proxy_chain_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+nim-test-run/test/nim/asset_proxy_chain_bench.nim: | statusq
+
 ifneq ($(mkspecs),win32)
 nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
