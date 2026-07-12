@@ -76,6 +76,23 @@ QList<TokenData> ManageTokensModel::takeAllItems(const QString& groupId)
     return result;
 }
 
+int ManageTokensModel::rowForKey(const QString& key) const
+{
+    for (int i = 0; i < m_data.size(); ++i) {
+        if (m_data.at(i).key == key)
+            return i;
+    }
+    return -1;
+}
+
+void ManageTokensModel::notifyItemChanged(int row, const QList<int>& roles)
+{
+    if (row < 0 || row >= m_data.size())
+        return;
+    const auto idx = index(row, 0);
+    emit dataChanged(idx, idx, roles);
+}
+
 void ManageTokensModel::clear()
 {
     beginResetModel();

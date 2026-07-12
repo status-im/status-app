@@ -60,3 +60,10 @@ target_link_libraries(MarkdownParserBenchmark PRIVATE Qt::Test StatusQ)
 # auto-tunes to many iterations + calibration). Enough for a stable-enough reference number.
 add_test(NAME MarkdownParserBenchmark COMMAND MarkdownParserBenchmark -iterations 5)
 set_tests_properties(MarkdownParserBenchmark PROPERTIES LABELS "benchmark")
+
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Test REQUIRED)
+
+add_executable(TestManageTokensController tst_ManageTokensController.cpp)
+target_link_libraries(TestManageTokensController PRIVATE Qt::Test Qt::Gui Qt::Qml StatusQ)
+target_include_directories(TestManageTokensController PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src/wallet)
+add_test(NAME TestManageTokensController COMMAND TestManageTokensController)
