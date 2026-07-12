@@ -1,5 +1,3 @@
-## External intake seam (see CONTEXT.md -> "External intake").
-##
 ## The single typed entry point where the platform layer (Android JNI deep-link
 ## hand-off, macOS QFileOpenEvent, iOS QDesktopServices handler, desktop
 ## single-instance forwarding) hands the app an intake event. This slice covers
@@ -56,10 +54,10 @@ proc routeForUrl*(url: string): UrlIntakeRoute =
   ## Status links keep their deep-link behavior; any other web URL opens in a
   ## browser tab. Non-web schemes keep the historical deep-link path (the
   ## deep-link pipeline already falls back for unsupported links).
+  if isStatusWebUrl(url):
+    return UrlIntakeDeepLink
   let scheme = parseUri(url).scheme.toLowerAscii()
   if scheme == "http" or scheme == "https":
-    if isStatusWebUrl(url):
-      return UrlIntakeDeepLink
     return UrlIntakeBrowserTab
   return UrlIntakeDeepLink
 
