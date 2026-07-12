@@ -149,3 +149,45 @@ suite "buildTokenSelectorItems — community and passthrough":
     check it.symbol == "ETH"
     check it.logoUri == "logo/eth"
     check it.communityId == ""
+
+proc popular(key: string, name = "", symbol = "", logoUri = "", communityId = ""): PopularGroup =
+  PopularGroup(key: key, name: if name.len > 0: name else: key,
+    symbol: if symbol.len > 0: symbol else: key, logoUri: logoUri, communityId: communityId)
+
+suite "mergePopularWithOwned — all-tokens / search path":
+  test "popular token the user owns is enriched with the owned balance data":
+    let owned = buildTokenSelectorItems(@[
+      group("ETH", price = 2.0, balances = @[bal("0xA", 1, "1000000000000000000")]) # 1.0, fiat 2.0
+    ], networks, noFilterParams())
+    let merged = mergePopularWithOwned(
+      @[popular("ETH", name = "Ethereum", logoUri = "logo/eth"), popular("DAI")],
+      owned, showCommunityAssets = false)
+    check merged.mapIt(it.key) == @["ETH", "DAI"]
+    let eth = merged.findItem("ETH")
+    check eth.currentBalance == 1.0
+    check eth.currencyBalance == 2.0
+    check eth.hasBalance
+    check eth.chips.len == 1
+    check eth.name == "Ethereum"          # popular's metadata wins
+    check eth.logoUri == "logo/eth"
+
+  test "popular token the user does not own becomes a zero-balance popular item":
+    let merged = mergePopularWithOwned(@[popular("DAI", name = "Dai")], @[], showCommunityAssets = false)
+    let dai = merged.findItem("DAI")
+    check dai.currentBalance == 0.0
+    check not dai.hasBalance
+    check dai.chips.len == 0
+    check dai.name == "Dai"
+
+  test "row set follows the popular list, not the owned list":
+    # an owned token absent from the popular list does not appear (search filters it out)
+    let owned = buildTokenSelectorItems(@[
+      group("ETH", balances = @[bal("0xA", 1, "1000000000000000000")])
+    ], networks, noFilterParams())
+    let merged = mergePopularWithOwned(@[popular("DAI")], owned, showCommunityAssets = false)
+    check merged.mapIt(it.key) == @["DAI"]
+
+  test "community popular token dropped unless showCommunityAssets":
+    let p = @[popular("CT", communityId = "comm1")]
+    check mergePopularWithOwned(p, @[], showCommunityAssets = false).len == 0
+    check mergePopularWithOwned(p, @[], showCommunityAssets = true).len == 1

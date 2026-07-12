@@ -30,6 +30,13 @@ type
     showZeroBalanceForDefaultTokens*: bool
     showCommunityAssets*: bool
 
+  PopularGroup* = object
+    key*: string
+    name*: string
+    symbol*: string
+    logoUri*: string
+    communityId*: string
+
 proc toFloatUnits(v: UInt256, decimals: int): float =
   ## wei -> logical units as float64, matching QML AmountsArithmetic.toNumber.
   if v.isZero:
@@ -82,3 +89,31 @@ proc buildTokenSelectorItems*(groups: seq[AggTokenGroup],
       currencyBalance: currentBalance * g.marketPrice,
       hasBalance: currentBalance != 0.0,
       chips: chips))
+
+proc mergePopularWithOwned*(popular: seq[PopularGroup],
+    owned: seq[TokenSelectorItem], showCommunityAssets: bool): seq[TokenSelectorItem] =
+  ## The all-tokens / search path (showAllTokens): the row set follows the
+  ## popular list (all-tokens page or backend search result); a popular token the
+  ## user owns is enriched with its owned balance data (chips / currentBalance /
+  ## currencyBalance), one they don't own becomes a zero-balance popular item.
+  ## Mirrors TokenSelectorViewAdaptor's LeftJoin(allTokens ⋈ tokensWithBalance):
+  ## metadata (name/symbol/logoUri) comes from the popular side, balances from the
+  ## owned side.
+  var ownedByKey = initTable[string, TokenSelectorItem]()
+  for it in owned:
+    ownedByKey[it.key] = it
+
+  result = newSeqOfCap[TokenSelectorItem](popular.len)
+  for p in popular:
+    if p.communityId.len > 0 and not showCommunityAssets:
+      continue
+    var item = TokenSelectorItem(
+      key: p.key, name: p.name, symbol: p.symbol, logoUri: p.logoUri,
+      communityId: p.communityId)
+    if ownedByKey.hasKey(p.key):
+      let o = ownedByKey[p.key]
+      item.currentBalance = o.currentBalance
+      item.currencyBalance = o.currencyBalance
+      item.hasBalance = o.hasBalance
+      item.chips = o.chips
+    result.add(item)
