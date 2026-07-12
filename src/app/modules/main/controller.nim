@@ -304,6 +304,10 @@ proc init*(self: Controller) =
     let args = ExternalUrlIntakeArgs(e)
     self.delegate.openUrlInNewBrowserTab(args.url)
 
+  self.events.on(SIGNAL_EXTERNAL_SHARE_INTAKE) do(e: Args):
+    let args = ExternalShareIntakeArgs(e)
+    self.delegate.launchShareFlow(args.text)
+
   self.events.on(SIGNAL_OS_NOTIFICATION_CLICKED) do(e: Args):
     var args = ClickedNotificationArgs(e)
     self.delegate.osNotificationClicked(args.details)
