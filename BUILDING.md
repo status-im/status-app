@@ -15,7 +15,7 @@ If you're looking for instructions to build Status Mobile instead, go [here](/mo
       - [Install Required Packages](#install-required-packages)
       - [Install Microsoft Visual C++ Build Tools](#install-microsoft-visual-c-build-tools)
       - [Install Go 1.26](#install-go-126)
-      - [Install Nim 2.2.x](#install-nim-22x)
+      - [Install Nimble](#install-nimble)
       - [Install protobuf](#install-protobuf)
     - [Linux](#linux)
       - [Ubuntu](#ubuntu)
@@ -76,9 +76,15 @@ You can install them from the [Microsoft website](https://visualstudio.microsoft
 
 Download and install Go 1.26 from the [official website](https://go.dev/dl/).
 
-#### Install Nim 2.2.x
+#### Install Nimble
 
-Download and install Nim 2.2.x from the [official website](https://nim-lang.org/install_windows.html).
+The Nim-side prerequisite is **nimble**, *not* a particular Nim compiler: the
+compiler is pinned in `nim_status_client.nimble` and nimble materialises it in
+its own store (see [4️⃣ Build the App](#4️⃣-build-the-app)). Nimble ships with
+every Nim distribution, so install Nim from the
+[official website](https://nim-lang.org/install_windows.html) — or
+[choosenim](https://github.com/nim-lang/choosenim) — and then stop caring about
+its version: the pin decides what compiles this repo.
 
 #### Install protobuf
 
@@ -149,8 +155,13 @@ Install [Homebrew](https://brew.sh/) if not already installed.
 #### Install Required Packages
 
 ```bash
-brew install cmake pkg-config go qt protobuf 
+brew install cmake pkg-config go qt protobuf nim
 ```
+
+> The `nim` formula is installed **for its nimble**, which is the actual
+> prerequisite. Its compiler version is irrelevant: `nim_status_client.nimble`
+> pins the compiler this repo builds with, and nimble materialises that one in
+> its store (see [4️⃣ Build the App](#4️⃣-build-the-app)).
 
 Install additional packages if you are planning to build DMG
 
@@ -294,13 +305,12 @@ cd status-desktop
 ```
 
 
-Update all submodules and build the dependencies:
+Bootstrap the Nim toolchain — **this is the whole prerequisite**:
 
 ```bash
-make update
+nimble setup            # resolves the graph AND materialises the pinned compiler
+eval "$(nimble shellenv)"   # puts that compiler (and only that one) on PATH
 ```
-
-> Tip: Nim takes a long compile. Try using the `-j8` flag where 8 is the number of cores you want to allocate
 
 Build and run the app:
 
@@ -309,11 +319,32 @@ nim run status.nims
 ```
 🎉
 
+> **You do not install Nim.** `nim_status_client.nimble` pins the compiler
+> (`requires "nim == 2.2.4"`) and nimble materialises it in its own store, so
+> after `eval "$(nimble shellenv)"` the `nim` on your PATH *is* the pinned
+> compiler, by construction — nothing can drift, and no version guard is needed.
+> **Nimble is the only machine prerequisite** of the Nim side (plus Qt, Go, cmake
+> and the platform packages listed above). The vendored `nimbus-build-system`,
+> `make update`, `make deps`, `make status-go-deps` and `USE_SYSTEM_NIM` are all
+> **gone** (issue 0018) — no shims: the driver bootstraps the submodules and the
+> brew bottles itself, and nimble owns the compiler.
+>
+> The shell bootstrap is only needed for commands you run *yourself* outside
+> nimble (`nim <task> status.nims`, `make mobile-build`). `nimble build` /
+> `nimble run` inject the pinned compiler on their own.
+>
 > Since issue 0017 the driver owns every Nim compile. `nim app status.nims`
 > builds; `nim run status.nims` builds if needed and launches;
 > `nim app status.nims --force` forces a full client rebuild (the old
 > `REBUILD_NIM=true`); `nim tests status.nims` runs the Nim suite.
 > `make run` / `make nim_status_client` / `make tests-nim-linux` are gone.
+
+Mobile builds are still make legs (they compile the client for iOS/Android).
+They take the compiler from `PATH` too, so run them from a bootstrapped shell:
+
+```bash
+eval "$(nimble shellenv)" && make mobile-build
+```
 
 ### Nim toolchain and Nim C libraries (nimble)
 
@@ -322,11 +353,18 @@ libraries linked by status-go (nim-sds) — is resolved and built by this
 repo's build system via [Nimble](https://github.com/nim-lang/nimble), not by
 status-go and not by a vendored compiler.
 
-**Prerequisite:** Nim and Nimble (>= 0.22) on your PATH, matching the version
-pinned in `nim_status_client.nimble` (`requires "nim == X"`), e.g. via
-[choosenim](https://github.com/nim-lang/choosenim). `USE_SYSTEM_NIM` defaults
-to `1`, so nimbus-build-system (still the top-level Make orchestrator) never
-builds or uses its own vendored compiler.
+**Prerequisite:** **Nimble (>= 0.22) on your PATH — and nothing else Nim-side.**
+The compiler is not a prerequisite: `nim_status_client.nimble` pins it
+(`requires "nim == 2.2.4"`) and `nimble setup` materialises it in nimble's store
+(`~/.nimble/pkgs2/nim-<version>-<checksum>/`), building it from source once if
+no binary is cached. `eval "$(nimble shellenv)"` then puts that store compiler
+on `PATH`, and every Nim compile in this repo — the client, the Nim test suite,
+the mobile legs — uses it. nimble also injects it itself for its own tasks and
+hooks, so `nimble build` / `nimble run` need no shell bootstrap.
+
+There is no vendored compiler and no `nimbus-build-system` any more (issue
+0018), and therefore no `USE_SYSTEM_NIM`: a bootstrapped shell cannot disagree
+with the pin.
 
 **App dependencies (`nimble.lock` → `~/.nimble`, nimble's default store):**
 `nim_status_client.nimble` lists every Nim library the app needs as a
@@ -343,13 +381,14 @@ with the `NIMBLE_DIR` env var (nimble reads it natively) for CI or clean-room
 runs. *Migration note:* the former dedicated store at
 `~/.cache/status-desktop-nimbledeps` is retired — delete it whenever you
 like (`rm -rf ~/.cache/status-desktop-nimbledeps`).
-This runs automatically for the desktop build: the `nimble.paths` Make target
-(an order-only prerequisite of `nim_status_client`) re-runs `nimble setup`
-whenever `nimble.lock` or one of the graph's manifests
+This runs automatically for the desktop build: the driver re-runs `nimble setup`
+whenever `nimble.lock`, one of the graph's manifests
 (`nim_status_client.nimble`; plus `vendor/status-go/statusgo.nimble` when a
-statusgo develop checkout exists) changes, so
-a plain `nim run status.nims` /
-`nim app status.nims` keeps the resolution in sync without a manual step.
+statusgo develop checkout exists) or the develop overlay changes (content-keyed
+in `.status-setup.key`), so a plain `nim run status.nims` /
+`nim app status.nims` keeps the resolution in sync without a manual step. The
+one-time bootstrap above (`nimble setup && eval "$(nimble shellenv)"`) exists
+only to put the pinned compiler on your PATH in the first place.
 Ad-hoc nimble commands (e.g. `nimble lock` after editing a manifest) need no
 store flags anymore. Mobile builds pick up the same
 `config.nims`/`nimble.paths` resolution
@@ -423,7 +462,9 @@ upstream.
 
 **What's still a git submodule:** only things that aren't pure Nim (C/C++):
 `DOtherSide`, `SortFilterProxyModel`, `QR-Code-generator`, `fcitx5-qt`,
-`mobile/vendors/openssl`, `nimbus-build-system`.
+`mobile/vendors/openssl`. They are *pins*, not Vendors (CONTEXT.md), and the
+driver initialises the ones the host build consumes itself — there is no
+`make update` and no submodule auto-init in the Makefile.
 
 **Hacking on a dependency locally:** to edit one of the pinned libraries in
 place instead of at its pinned SHA, edit `nim_status_client.nimble` and point
@@ -471,6 +512,7 @@ The following environment variables can be used to customize the build:
 - QML_DEBUG_PORT (number) - Configure the qml debugger port. Defaults to `49152`
 - QT_ARCH (string) - Configure the Qt architecture for macOS cross-compilation. Can be used to compile Intel builds on ARM64 OS. Defaults to `$(shell uname -m)`
 - REBUILD_NIM — **removed** (issue 0017). Use `nim app status.nims --force`.
+- USE_SYSTEM_NIM — **removed** (issue 0018): a nimbus-build-system knob, and there is no vendored compiler left to bypass.
 - REBUILD_UI (true,false) - Force qrc recompilation
 - STATUS_KEYCARD_QT_SOURCE_DIR (path) - Point the build system to a local status-keycard-qt folder. Defaults to empty (the pin in `cmake/status-keycard-qt/CMakeLists.txt` is fetched by CMake FetchContent); `nim develop status.nims status-keycard-qt` sets it to `vendor/status-keycard-qt`
 - VCINSTALLDIR (path) - Visual Studio compiler installation path. Defaults to `C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\`
@@ -480,7 +522,7 @@ The following environment variables can be used to customize the build:
 
 ### Working with VS Code
 
-To have nim code parsing, set the environment variables before opening your IDE. E.g. run `./env.sh code .` in the source root folder.
+To have nim code parsing, set the environment variables before opening your IDE. E.g. run `./env.sh code .` in the source root folder. `env.sh` is now a thin wrapper over `nimble shellenv` (issue 0018): it puts the *pinned* compiler on PATH and then execs what you gave it. `./env.sh bash` opens a shell in that environment; `source ./env.sh` bootstraps the current one.
 
 ### Data folder
 
