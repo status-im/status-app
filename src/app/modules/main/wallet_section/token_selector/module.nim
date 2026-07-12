@@ -80,6 +80,9 @@ proc buildOwnedSource(self: Module): tuple[groups: seq[AggTokenGroup], networks:
   for group in self.controller.getTokenGroups():
     if group.tokens.len == 0:
       continue
+    var tokenRefs: seq[tuple[key: string, chainId: int]] = @[]
+    for t in group.tokens:
+      tokenRefs.add((key: t.key, chainId: t.chainId))
     aggGroups.add(AggTokenGroup(
       key: group.key,
       name: group.name,
@@ -88,7 +91,8 @@ proc buildOwnedSource(self: Module): tuple[groups: seq[AggTokenGroup], networks:
       decimals: group.decimals,
       communityId: group.tokens[0].communityData.id,
       marketPrice: self.priceForGroup(group),
-      balances: balancesByKey.getOrDefault(group.key, @[])))
+      balances: balancesByKey.getOrDefault(group.key, @[]),
+      tokens: tokenRefs))
 
   var networks: seq[NetworkInfo] = @[]
   for n in self.controller.getCurrentNetworks():
@@ -108,8 +112,11 @@ proc refreshModels(self: Module) =
 proc toPopularGroups(groups: seq[TokenGroupItem]): seq[PopularGroup] =
   for g in groups:
     let communityId = if g.tokens.len > 0: g.tokens[0].communityData.id else: ""
+    var tokenRefs: seq[tuple[key: string, chainId: int]] = @[]
+    for t in g.tokens:
+      tokenRefs.add((key: t.key, chainId: t.chainId))
     result.add(PopularGroup(key: g.key, name: g.name, symbol: g.symbol,
-      logoUri: g.logoUri, communityId: communityId))
+      logoUri: g.logoUri, communityId: communityId, tokens: tokenRefs))
 
 method createModelForKind*(self: Module, kind: int): TokenSelectorModel =
   let atm = self.allTokensModule

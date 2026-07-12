@@ -6,7 +6,9 @@ import app/modules/shared_models/assets_aggregator
 import ./token_selector_item
 import ./token_selector_builder
 import ./token_selector_balances_model
-export token_selector_item, token_selector_builder, token_selector_balances_model
+import ./token_selector_tokens_model
+export token_selector_item, token_selector_builder, token_selector_balances_model,
+  token_selector_tokens_model
 
 when defined(QT_MODEL_SPY):
   import app/modules/shared/qt_model_spy
@@ -36,6 +38,7 @@ type
     CurrencyBalance
     SectionName
     Balances
+    Tokens
 
   TokenSelectorSource* = object
     ## Closures the producer wires to the all_tokens lazy models, so the terminal
@@ -56,6 +59,9 @@ QtObject:
       # One nested balances model per group KEY, preserved across refreshes so
       # QML keeps its bound submodel alive; chip changes travel through it.
       balancesByKey: Table[string, TokenSelectorBalancesModel]
+      # One nested tokens model per group KEY (static per-chain token identity),
+      # read by the buy modal's provider filter; preserved for the same reason.
+      tokensByKey: Table[string, TokenSelectorTokensModel]
       # Section titles are translated + chain-interpolated in QML and pushed down,
       # keeping i18n out of the middleware.
       ownedSectionName: string
@@ -75,6 +81,7 @@ QtObject:
     result.setup
     result.mode = mode
     result.balancesByKey = initTable[string, TokenSelectorBalancesModel]()
+    result.tokensByKey = initTable[string, TokenSelectorTokensModel]()
 
   proc countChanged(self: TokenSelectorModel) {.signal.}
   proc getCount*(self: TokenSelectorModel): int {.slot.} =
@@ -96,6 +103,7 @@ QtObject:
       ModelRole.CurrencyBalance.int: "currencyBalance",
       ModelRole.SectionName.int: "sectionName",
       ModelRole.Balances.int: "balances",
+      ModelRole.Tokens.int: "tokens",
     }.toTable
 
   proc sectionNameFor(self: TokenSelectorModel, item: TokenSelectorItem): string =
@@ -115,6 +123,9 @@ QtObject:
     of ModelRole.Balances:
       if self.balancesByKey.hasKey(item.key):
         return newQVariant(self.balancesByKey[item.key])
+    of ModelRole.Tokens:
+      if self.tokensByKey.hasKey(item.key):
+        return newQVariant(self.tokensByKey[item.key])
 
   proc compareItems(a, b: TokenSelectorItem): int =
     # Owned first (hasBalance desc, matching the sectionName-descending sort:
@@ -135,24 +146,33 @@ QtObject:
     # Balances (chips) travel through the nested model's own signals, so no
     # parent-level dataChanged for the Balances role here.
 
-  proc reconcileBalances(self: TokenSelectorModel, newItems: seq[TokenSelectorItem]) =
-    # Rebuild balancesByKey identity-preservingly BEFORE setItemsWithSync
-    # announces inserts, so data(Balances) is populated for a newly inserted row
-    # within this same call.
-    var updated = initTable[string, TokenSelectorBalancesModel]()
+  proc reconcileNested(self: TokenSelectorModel, newItems: seq[TokenSelectorItem]) =
+    # Rebuild the per-key nested balances + tokens models identity-preservingly
+    # BEFORE setItemsWithSync announces inserts, so data(Balances)/data(Tokens) is
+    # populated for a newly inserted row within this same call.
+    var updatedBalances = initTable[string, TokenSelectorBalancesModel]()
+    var updatedTokens = initTable[string, TokenSelectorTokensModel]()
     for item in newItems:
       if self.balancesByKey.hasKey(item.key):
         let bm = self.balancesByKey[item.key]
         bm.updateChips(item.chips)
-        updated[item.key] = bm
+        updatedBalances[item.key] = bm
       else:
-        updated[item.key] = newTokenSelectorBalancesModel(item.chips)
-    self.balancesByKey = updated
+        updatedBalances[item.key] = newTokenSelectorBalancesModel(item.chips)
+      if self.tokensByKey.hasKey(item.key):
+        let tm = self.tokensByKey[item.key]
+        if tm.tokenRefs() != item.tokens:
+          tm.setItems(item.tokens)
+        updatedTokens[item.key] = tm
+      else:
+        updatedTokens[item.key] = newTokenSelectorTokensModel(item.tokens)
+    self.balancesByKey = updatedBalances
+    self.tokensByKey = updatedTokens
 
   proc setSourceItems*(self: TokenSelectorModel, items: seq[TokenSelectorItem]) =
     var display = items
     display.sort(compareItems)
-    self.reconcileBalances(display)
+    self.reconcileNested(display)
     setItemsWithSync(
       self, self.items, display,
       getId = proc(it: TokenSelectorItem): string = it.key,
@@ -281,6 +301,8 @@ QtObject:
   proc delete(self: TokenSelectorModel) =
     for bm in self.balancesByKey.values:
       bm.delete
+    for tm in self.tokensByKey.values:
+      tm.delete
     self.QAbstractListModel.delete
 
   proc setup(self: TokenSelectorModel) =
@@ -293,4 +315,7 @@ QtObject:
       self.sectionNameFor(self.items[i])
     proc balancesModelForKey*(self: TokenSelectorModel, key: string): TokenSelectorBalancesModel =
       if self.balancesByKey.hasKey(key): return self.balancesByKey[key]
+      return nil
+    proc tokensModelForKey*(self: TokenSelectorModel, key: string): TokenSelectorTokensModel =
+      if self.tokensByKey.hasKey(key): return self.tokensByKey[key]
       return nil

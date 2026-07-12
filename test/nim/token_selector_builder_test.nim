@@ -150,6 +150,20 @@ suite "buildTokenSelectorItems — community and passthrough":
     check it.logoUri == "logo/eth"
     check it.communityId == ""
 
+  test "carries per-chain token refs through (buy provider filter input)":
+    var g = group("ETH", balances = @[bal("0xA", 1, "1000000000000000000")])
+    g.tokens = @[(key: "eth:1", chainId: 1), (key: "eth:10", chainId: 10)]
+    let it = buildTokenSelectorItems(@[g], networks, noFilterParams()).findItem("ETH")
+    check it.tokens == @[TokenSelectorTokenRef(key: "eth:1", chainId: 1),
+                         TokenSelectorTokenRef(key: "eth:10", chainId: 10)]
+
+  test "merge path takes token refs from the popular side":
+    let merged = mergePopularWithOwned(
+      @[PopularGroup(key: "DAI", name: "DAI", symbol: "DAI",
+        tokens: @[(key: "dai:1", chainId: 1)])],
+      @[], showCommunityAssets = false)
+    check merged.findItem("DAI").tokens == @[TokenSelectorTokenRef(key: "dai:1", chainId: 1)]
+
 proc popular(key: string, name = "", symbol = "", logoUri = "", communityId = ""): PopularGroup =
   PopularGroup(key: key, name: if name.len > 0: name else: key,
     symbol: if symbol.len > 0: symbol else: key, logoUri: logoUri, communityId: communityId)

@@ -254,6 +254,18 @@ suite "TokenSelectorModel - producer-driven recompute":
     m.search("")
     check m.keysInOrder() == @["ETH"]
 
+  test "tokens submodel exposes per-chain token refs for a row":
+    let m = newTokenSelectorModel(TokenSelectorMode.Owned)
+    var g = AggTokenGroup(key: "ETH", name: "ETH", symbol: "ETH", decimals: 18,
+      marketPrice: 1.0,
+      balances: @[AggBalance(account: "0xA", chainId: 1, balance: parse("1000000000000000000", UInt256))])
+    g.tokens = @[(key: "eth:1", chainId: 1), (key: "eth:10", chainId: 10)]
+    m.setOwnedSource(@[g], networks)
+    let tm = m.tokensModelForKey("ETH")
+    check tm != nil
+    check tm.tokenRefs() == @[TokenSelectorTokenRef(key: "eth:1", chainId: 1),
+                              TokenSelectorTokenRef(key: "eth:10", chainId: 10)]
+
   test "hasMoreItems / isLoadingMore passthrough to the active lazy source":
     let m = newTokenSelectorModel(TokenSelectorMode.AllTokens)
     var source: TokenSelectorSource

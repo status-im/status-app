@@ -36,6 +36,7 @@ type
     symbol*: string
     logoUri*: string
     communityId*: string
+    tokens*: seq[tuple[key: string, chainId: int]]
 
 proc toFloatUnits(v: UInt256, decimals: int): float =
   ## wei -> logical units as float64, matching QML AmountsArithmetic.toNumber.
@@ -88,7 +89,8 @@ proc buildTokenSelectorItems*(groups: seq[AggTokenGroup],
       currentBalance: currentBalance,
       currencyBalance: currentBalance * g.marketPrice,
       hasBalance: currentBalance != 0.0,
-      chips: chips))
+      chips: chips,
+      tokens: g.tokens.mapIt(TokenSelectorTokenRef(key: it.key, chainId: it.chainId))))
 
 type
   TokenSelectorMode* {.pure.} = enum
@@ -114,7 +116,8 @@ proc mergePopularWithOwned*(popular: seq[PopularGroup],
       continue
     var item = TokenSelectorItem(
       key: p.key, name: p.name, symbol: p.symbol, logoUri: p.logoUri,
-      communityId: p.communityId)
+      communityId: p.communityId,
+      tokens: p.tokens.mapIt(TokenSelectorTokenRef(key: it.key, chainId: it.chainId)))
     if ownedByKey.hasKey(p.key):
       let o = ownedByKey[p.key]
       item.currentBalance = o.currentBalance
