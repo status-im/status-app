@@ -80,6 +80,7 @@ import app/core/notifications/notifications_manager
 import app/core/notifications/details
 import app/core/eventemitter
 import app/core/custom_urls/urls_manager
+import app/core/intake/external_intake
 
 export io_interface
 
@@ -2168,6 +2169,14 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
 
   let urlData = self.sharedUrlsModule.parseSharedUrl(statusDeepLink)
   if urlData.notASupportedStatusLink:
+    if isStatusWebUrl(statusDeepLink):
+      # Unresolvable status.app link: an external hand-off would route straight
+      # back here when Status holds the browser role (default browser on
+      # Android) — a dead-end bounce via the external-open dialog. Open it as
+      # an in-app browser tab instead, same as the browser-candidacy route of
+      # the external intake seam.
+      self.openUrlInNewBrowserTab(statusDeepLink)
+      return
     # Just open it in the browser
     self.view.emitOpenUrlSignal(statusDeepLink)
     return
@@ -2188,7 +2197,8 @@ method openUrlInNewBrowserTab*[T](self: Module[T], url: string) =
   ## Browser-tab route of the external intake seam: an externally received web
   ## URL always opens as a new tab in the in-app browser, browser section
   ## foregrounded. Buffered until the main view is loaded, mirroring the
-  ## deep-link route above.
+  ## deep-link route above. Also the fallback for unresolvable status.app deep
+  ## links, whose external hand-off would bounce back to Status itself.
   if not self.chatsLoaded:
     self.urlToOpenInNewBrowserTab = url
     return
