@@ -201,6 +201,22 @@ suite "TokenSelectorModel - nested balances submodel":
     check m.balancesModelForKey("b") == nil # dropped from the table -> ORC frees it
     check m.tokensModelForKey("b") == nil
 
+  test "repeated disjoint refreshes free dropped submodels via ORC without a crash":
+    # Regression for the delete()-double-free: the nested models are new(_, delete),
+    # so dropping them from the tables must let ORC run their finalizers exactly
+    # once. Churn fully-disjoint key sets so every refresh frees the previous
+    # submodels mid-life, then confirm the survivors are intact.
+    let m = newTokenSelectorModel()
+    for i in 0 ..< 20:
+      m.setSourceItems(@[
+        mkItem("k" & $i & "a", chips = @[chip(1, 1.0)]),
+        mkItem("k" & $i & "b", chips = @[chip(10, 2.0)]),
+      ])
+      check m.balancesModelForKey("k" & $i & "a") != nil
+      if i > 0:
+        check m.balancesModelForKey("k" & $(i-1) & "a") == nil
+    check m.keysInOrder().len == 2
+
   test "chip balance change travels through the nested model as a dataChanged":
     let m = newTokenSelectorModel()
     m.setSourceItems(@[mkItem("eth", currentBalance = 1.0, currencyBalance = 1.0,
