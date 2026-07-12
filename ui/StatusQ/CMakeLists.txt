@@ -303,6 +303,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
     target_sources(StatusQ PRIVATE
         src/ios_utils.mm
         src/shareutils_ios.mm
+        src/shareintake_ios.mm
         src/keychain_apple.mm
         src/accessibility_crash_filter.mm
         src/StatusQ/Controls/NativeSwipeHandlerItem_ios.mm

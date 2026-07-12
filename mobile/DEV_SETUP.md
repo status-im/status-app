@@ -47,7 +47,22 @@ Signing is required for deploying to physical iOS devices. You need to be added 
 Please ask Infra team if you're not already added. You would also need to open Xcode (only once) and make sure you have logged 
 in with the same apple ID that's part of the development team set up in Apple Developer Portal.
 
-#### 
+#### Share extension
+
+The iOS build embeds a share extension (`StatusShareExtension.appex`) that makes Status appear in the iOS share sheet. Sources live in `mobile/ios/shareExtension/` (own Xcode project, Info.plist and entitlements — the app itself is qmake-generated, so there is no shared Xcode project to add the target to).
+
+Build flow (automatic, part of `make mobile-build` / `make mobile-run` for iOS):
+
+1. `mobile/scripts/buildApp.sh` builds the app as before.
+2. As a post-link step it calls `mobile/scripts/ios/buildShareExtension.sh`, which builds the extension via `xcodebuild` (same SDK/arch/signing mode as the app; the extension bundle id is `<host bundle id>.ShareExtension`), copies the `.appex` into the app bundle's `PlugIns/`, and re-signs the outer app (embedding invalidates the app's signature seal). In fastlane CI mode signing is disabled for both app and extension; fastlane signs afterwards.
+
+Set `FLAG_SHARE_EXTENSION_ENABLED=0` to skip the extension build entirely.
+
+Hand-off mechanics (fork issue #13): the extension writes a payload into the shared App Group container `group.app.status.mobile` (the *pending intake slot*, file `pending-intake/share.json`) and wakes the host app via the unsupported responder-chain `openURL` workaround (`status-app://share-intake`). The host app reads, logs and clears the slot when the wake URL arrives — or, if the wake fails, on the next manual app open (degraded fallback, no data loss). The App Group is declared in both `Status.entitlements` and `Status-NoKeycard.entitlements`; iOS App Groups work with free personal teams too.
+
+To verify: build and run on a simulator or device, share some text from Notes/Safari, pick Status in the share sheet, and look for `share intake delivered from pending intake slot` in the app log. To test the fallback, remove the wake step (or kill the app before it foregrounds) and open Status manually — the payload must still be logged.
+
+
 
 ### Android Development Setup
 
@@ -145,6 +160,7 @@ The build system uses several environment variables to control the build process
 #### iOS-specific Variables
 - `IPHONE_SDK`: iOS SDK to use (`iphoneos` or `iphonesimulator`)
 - `IOS_TARGET`: Minimum iOS version (17 for Qt6)
+- `FLAG_SHARE_EXTENSION_ENABLED`: Build + embed the share extension (default: 1; set 0 to skip)
 
 ### Qt Version Compatibility
 
