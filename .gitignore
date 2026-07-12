@@ -6,16 +6,12 @@ noBackup/
 *.pro.autosave
 *.qml.autosave
 *.log
-.update.timestamp
 .vscode
 *.code-workspace
 .tours
 bin/
 /bottles/
 pkg/
-vendor/.nimble
-# nim-sds is vendored from status-go. Remove this when we support Nimble
-vendor/nim-sds
 *.AppImage
 tmp
 nimcache
@@ -28,7 +24,6 @@ resources.rcc
 ui/resources.qrc
 ui/resources_webscripts.qrc
 status-react-translations/
-/.update.timestamp
 notarization.log
 status-desktop.log
 nim_status_client.log
@@ -119,7 +114,6 @@ builds/
 *.exe
 *.out
 *.app
-nimbus-build-system.paths
 
 # ui-tests
 /test/ui-pytest/configs/_local.py
