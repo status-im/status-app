@@ -245,6 +245,18 @@ Window {
         tokenGroups.setProperty(i, "balanceText", String(cur + 1.0))
     }
 
+    // Every token's market detail changes in one tick, reshuffling the
+    // marketBalance ranking wholesale (global re-rank worst case). Each
+    // setProperty on the right-joined tokenGroups fans out to a whole-model
+    // dataChanged, so this is O(N^2) row-touches through the proxy chain.
+    function doAllPricesChange() {
+        const n = tokenGroups.count
+        for (let i = 0; i < n; i++) {
+            tokenGroups.setProperty(i, "marketPrice", ((n - i) % 500) * 0.02 + 0.5)
+            tokenGroups.setProperty(i, "marketChangePct24hour", tokenGroups.get(i).marketChangePct24hour + 0.5)
+        }
+    }
+
     // Add/remove operate on the outer-join LEFT (the row-set driver); a matching
     // group row keeps marketBalance defined, mirroring "new asset + its group".
     function doAddToken() {
@@ -300,6 +312,7 @@ Window {
         measure(size, chains, "add_token", () => doAddToken())
         measure(size, chains, "remove_token", () => doRemoveToken())
         measure(size, chains, "source_reorder", () => doSourceReorder())
+        measure(size, chains, "all_prices_change", () => doAllPricesChange())
         measure(size, chains, "sort_flip", () => doSortFlip())
         measure(size, chains, "full_refresh", () => doFullRefresh(size, chains))
     }

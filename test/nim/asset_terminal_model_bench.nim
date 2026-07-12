@@ -203,6 +203,17 @@ when isMainModule:
         universe.add(a)
       model.setSourceItems(universe))
 
+    measure(size, "all_prices_change", proc() =
+      # Honest worst case: every token's market detail changes in one tick and
+      # the new prices reshuffle the marketBalance ranking wholesale (global
+      # re-rank). No amplification to remove here — the work is inherent — so
+      # this is the row where terminal and proxy costs converge; the win the
+      # series claims is on the single-cell scenarios above, not this one.
+      for i in 0 ..< universe.len:
+        universe[i].marketPrice = float((universe.len - i) mod 500) * 0.02 + 0.5
+        universe[i].marketChangePct24hour = universe[i].marketChangePct24hour + 0.5
+      model.setSourceItems(universe))
+
     measure(size, "sort_flip", proc() =
       model.sortBy("marketBalance", 0)) # flip to ascending
 
@@ -231,6 +242,8 @@ when isMainModule:
   for r in bench.rows:
     doAssert r.resets == 0,
       &"terminal model reset in scenario '{r.scenario}' at size {r.size}"
+    # model_sync never emits layoutChanged (it diffs into insert/remove/dataChanged);
+    # this assert only carries meaning against the SFPM proxy baseline, which does.
     doAssert r.layoutChanged == 0,
       &"terminal model emitted layoutChanged in '{r.scenario}' at size {r.size}"
     if r.scenario in ["market_detail_change", "balance_update"]:
