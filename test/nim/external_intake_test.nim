@@ -1,9 +1,10 @@
 ## Unit tests for the external intake seam (app/core/intake/external_intake).
 ## Covers the routing decision (Status links keep deep-link behavior, any other
-## web URL becomes a browser-tab intake) and the pending intake slot semantics
-## (pre-ready buffering, single slot, last-wins, delivered once at ready).
-## Prior art: url_scheme_event_test.nim exercises the platform side of this
-## same boundary.
+## web URL becomes a browser-tab intake), the share-event route (share target:
+## shared text/links launch the share flow) and the pending intake slot
+## semantics (pre-ready buffering, single slot, last-wins across kinds,
+## delivered once at ready). Prior art: url_scheme_event_test.nim exercises the
+## platform side of this same boundary.
 
 import unittest
 import app/core/intake/external_intake
@@ -11,6 +12,7 @@ import app/core/intake/external_intake
 type Capture = ref object
   deepLinks: seq[string]
   browserTabs: seq[string]
+  shares: seq[string]
 
 proc newCapturingIntake(capture: Capture): ExternalIntake =
   result = newExternalIntake()
@@ -18,9 +20,14 @@ proc newCapturingIntake(capture: Capture): ExternalIntake =
     capture.deepLinks.add(url)
   result.onBrowserTabUrl = proc(url: string) =
     capture.browserTabs.add(url)
+  result.onShareText = proc(text: string) =
+    capture.shares.add(text)
 
 proc urlIntake(url: string): ExternalIntakeEvent =
   ExternalIntakeEvent(kind: ExternalIntakeUrl, url: url)
+
+proc shareIntake(text: string): ExternalIntakeEvent =
+  ExternalIntakeEvent(kind: ExternalIntakeShare, text: text)
 
 suite "external_intake routing":
 
@@ -87,6 +94,64 @@ suite "external_intake dispatch":
 
     check capture.browserTabs == @["https://example.com/article"]
     check capture.deepLinks.len == 0
+
+suite "external_intake share events":
+
+  test "share text reaches the share handler once ready":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.setReady()
+
+    intake.submit(shareIntake("look at this https://example.com/article"))
+
+    check capture.shares == @["look at this https://example.com/article"]
+    check capture.deepLinks.len == 0
+    check capture.browserTabs.len == 0
+
+  test "share submitted before ready is buffered and delivered at ready":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+
+    intake.submit(shareIntake("quote from another app"))
+    check capture.shares.len == 0
+    check intake.hasPending()
+
+    intake.setReady()
+
+    check capture.shares == @["quote from another app"]
+    check not intake.hasPending()
+
+  test "the pending slot is last-wins across intake kinds":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+
+    intake.submit(urlIntake("https://example.com/article"))
+    intake.submit(shareIntake("second share wins"))
+    intake.setReady()
+
+    check capture.browserTabs.len == 0
+    check capture.shares == @["second share wins"]
+
+  test "a later url intake overwrites a pending share":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+
+    intake.submit(shareIntake("first share"))
+    intake.submit(urlIntake("https://status.app/c/community-id"))
+    intake.setReady()
+
+    check capture.shares.len == 0
+    check capture.deepLinks == @["https://status.app/c/community-id"]
+
+  test "blank share text dispatches nothing":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.setReady()
+
+    intake.submit(shareIntake(""))
+    intake.submit(shareIntake("   \n  "))
+
+    check capture.shares.len == 0
 
 suite "external_intake pending slot":
 
