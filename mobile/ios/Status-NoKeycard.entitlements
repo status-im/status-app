@@ -10,7 +10,15 @@
     <!-- NOTE: This works with a FREE Apple Developer account! -->
     <key>aps-environment</key>
     <string>development</string>
-    
+
+    <!-- App Group shared with the share extension (pending intake slot).
+         Must match mobile/ios/shareExtension/ShareExtension.entitlements.
+         iOS App Groups work with free personal teams too. -->
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.app.status.mobile</string>
+    </array>
+
     <!-- NOTE: NO NFC entitlement here - NFC requires paid Apple Developer account -->
     <!-- This version can be used with a free account for testing -->
 </dict>

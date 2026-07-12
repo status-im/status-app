@@ -176,5 +176,16 @@ else
 
   [[ ! -e "$BIN_DIR/${OUTPUT_NAME}.app/Info.plist" ]] && { echo "Build failed"; exit 1; }
 
+  # Post-link: build + embed the share extension into PlugIns/ and re-sign
+  # (see mobile/ios/shareExtension/ and mobile/scripts/ios/buildShareExtension.sh).
+  if [[ "${FLAG_SHARE_EXTENSION_ENABLED:-1}" == "1" ]]; then
+    SDK="$SDK" ARCH="$ARCH" BUILD_DIR="$BUILD_DIR" \
+    VERSION="$VERSION" BUILD_VERSION="$BUILD_VERSION" \
+    QMAKE_EXTRA_CONFIG="${QMAKE_EXTRA_CONFIG:-}" \
+      "$CWD/ios/buildShareExtension.sh" "$BIN_DIR/${OUTPUT_NAME}.app"
+  else
+    echo "Skipping share extension (FLAG_SHARE_EXTENSION_ENABLED=0)"
+  fi
+
   echo "Build succeeded: $BIN_DIR/${OUTPUT_NAME}.app"
 fi
