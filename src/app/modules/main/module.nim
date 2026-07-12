@@ -2237,13 +2237,7 @@ method releaseShareIntakeFiles*[T](self: Module[T], imagePathsJson: string) =
   ## sending, so the cached copies of the shared images are released here.
   ## (The send path releases them in the image-send task, after the files
   ## have been consumed.)
-  try:
-    var imagePaths: seq[string] = @[]
-    for pathNode in parseJson(imagePathsJson).getElems():
-      imagePaths.add(pathNode.getStr())
-    releaseCachedShareFiles(imagePaths)
-  except CatchableError:
-    error "invalid share intake image paths payload", imagePathsJson
+  releaseCachedShareFiles(parseImagePathsJson(imagePathsJson))
 
 method onDeactivateChatLoader*[T](self: Module[T], sectionId: string, chatId: string) =
   if (sectionId.len > 0 and self.chatSectionModules.contains(sectionId)):
