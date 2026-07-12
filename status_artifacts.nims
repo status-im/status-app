@@ -485,7 +485,15 @@ proc prepareStatusgoScratch(key: string) =
   else:
     echo "prepareStatusgo: scratch up-to-date (pin unchanged)"
 
-const libsdsKeyFile = ".libsds.key"  # gitignored; at the repo root (see buildLibsds)
+# NAMING CONVENTION (issue 0018 review, I2): every key file the driver writes at
+# the REPO ROOT is `.status-<artifact>.key` — .status-client.key, .status-rcc.key,
+# .status-setup.key, .status-libsds.key. That makes `rm -f .status-*.key` a TOTAL
+# glob, which is why `make clean` no longer carries a hand-kept list to drift out
+# of step with these consts (the libsds key used to be spelled `.libsds.key`, and
+# the Makefile's list was the only place that knew). Key files that live INSIDE a
+# build tree (<buildDir>/.status-cmake.key, <scratch>/.statusgo-artifact-key) are
+# exempt: they are removed with the tree they gate, and no clean rule names them.
+const libsdsKeyFile = ".status-libsds.key"  # gitignored; at the repo root (see buildLibsds)
 
 proc nimsdsLibDir(): string = statusgoBuildRoot() / ".sds-build/build"
 proc nimsdsIncDir(): string = statusgoBuildRoot() / ".sds-build/library"
