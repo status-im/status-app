@@ -7,21 +7,33 @@
 
 SHELL := bash # the shell used internally by Make
 
-# used inside the included makefiles
-BUILD_SYSTEM_DIR := vendor/nimbus-build-system
-
 GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 
-# The developer environment owns the Nim toolchain (see BUILDING.md).
-USE_SYSTEM_NIM ?= 1
-export USE_SYSTEM_NIM
+# --- this Makefile includes no external makefile (issue 0018) ------------------
+# The vendored nimbus-build-system is GONE. Its last two jobs — putting a Nim
+# compiler on PATH and auto-initialising submodules — belong to nimble and to
+# the driver's bootstrap now:
+#
+#   nimble setup && eval "$(nimble shellenv)"   # the ONE prerequisite (BUILDING.md)
+#
+# after which `nim` on PATH IS the compiler `nim_status_client.nimble` pins, by
+# construction. `deps`, `update`, `deps-common`, `NIM_PARAMS`, the env-script
+# wrapper, `.update.timestamp`, `NIM_SOURCES`, `REBUILD_NIM` and `USE_SYSTEM_NIM`
+# died with it. What NBS still provided this file — verbosity/output handling and
+# the coloured build message — is defined right here:
 
-# we don't want an error here, so we can handle things later, in the ".DEFAULT" target
--include $(BUILD_SYSTEM_DIR)/makefiles/variables.mk
+# verbosity level (V=1 shows every recipe and every sub-build's output)
+V ?= 0
+HANDLE_OUTPUT :=
+ifeq ($(V),0)
+ # don't swallow stderr, in case it's important
+ HANDLE_OUTPUT := >/dev/null
+ # silence the recipes themselves (NBS spelled this `$(SILENT_TARGET_PREFIX).SILENT`)
+ .SILENT:
+endif
 
-# variables.mk clobbers USE_SYSTEM_NIM with := 0; reassert (command line still wins).
-USE_SYSTEM_NIM := 1
-export USE_SYSTEM_NIM
+# coloured messages
+BUILD_MSG := "\\x1B[92mBuilding:\\x1B[39m"
 
 .PHONY: \
 	all \
@@ -32,9 +44,9 @@ export USE_SYSTEM_NIM
 	check-pkg-target-macos \
 	check-pkg-target-windows \
 	clean \
+	clean-nimcache \
 	update-translations \
 	compile-translations \
-	deps \
 	seaqt-test \
 	pkg \
 	pkg-linux \
@@ -51,7 +63,6 @@ export USE_SYSTEM_NIM
 	storybook-build \
 	run-storybook \
 	run-storybook-tests \
-	update \
 	mobile-run \
 	mobile-build \
 	mobile-clean \
@@ -76,20 +87,9 @@ export USE_SYSTEM_NIM
 # `nim <task> status.nims` calls (driver dispatch) are not compiles and are the
 # supported way for a packaging recipe to ask for a binary.
 
-ifeq ($(wildcard $(BUILD_SYSTEM_DIR)/makefiles/variables.mk),)
-# "variables.mk" was not included, so we update the submodules.
-GIT_SUBMODULE_UPDATE := git submodule update --init --recursive
-.DEFAULT:
-	+@ echo -e "Git submodules not found. Running '$(GIT_SUBMODULE_UPDATE)'.\n"; \
-		$(GIT_SUBMODULE_UPDATE); \
-		echo
-# Now that the included *.mk files appeared, and are newer than this file, Make will restart itself:
-# https://www.gnu.org/software/make/manual/make.html#Remaking-Makefiles
-#
-# After restarting, it will execute its original goal, so we don't have to start a child Make here
-# with "$(MAKE) $(MAKECMDGOALS)". Isn't hidden control flow great?
-
-else # "variables.mk" was included. Business as usual until the end of this file.
+# There is no `.DEFAULT` submodule auto-init any more (issue 0018): the driver's
+# bootstrap owns submodule initialisation since issue 0016 — targeted at the
+# submodules the build actually consumes, not a blanket recursive update.
 
 all:
 	nim app status.nims
@@ -107,9 +107,6 @@ FORCE:
 nix-shell: export NIX_USER_CONF_FILES := $(PWD)/nix/nix.conf
 nix-shell:
 	nix-shell
-
-# must be included after the default target
--include $(BUILD_SYSTEM_DIR)/makefiles/targets.mk
 
 # `qmake` path, either passed explicitely, or as found in PATH
 # (makes it possible to override with a custom Qt6 install dir)
@@ -135,11 +132,6 @@ host_os:=$(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 ifeq ($(mkspecs),)
 	$(error Cannot find your Qt installation. Please make sure to export correct Qt installation binaries path to PATH env)
-endif
-
-ifneq ($(USE_SYSTEM_NIM),1)
- # Add it to PATH for external build tools that use nim directly
- export PATH := $(CURDIR)/$(NIM_DIR)/bin:$(PATH)
 endif
 
 ifeq ($(mkspecs),macx)
@@ -193,13 +185,14 @@ endif
 $(BOTTLES):
 	echo -e "\033[92mFetching:\033[39m $(notdir $@) bottle arch $(QT_ARCH) $(BOTTLE_MACOS_VERSION)"
 	./scripts/fetch-brew-bottle.sh $(notdir $@) $(BOTTLE_MACOS_VERSION) $(HANDLE_OUTPUT)
-
-bottles: $(BOTTLES)
 endif
 
-deps: | check-qt-dir deps-common status-go-deps bottles
-
-update: | check-qt-dir update-common
+# Declared outside the macOS arm: elsewhere $(BOTTLES) is empty and this is a
+# no-op, which is what the order-only prerequisites below want. (`deps` — which
+# used to carry it — is deleted with NBS: its other halves were `deps-common`
+# (NBS), `check-qt-dir` and `status-go-deps`; the driver's bootstrap fetches the
+# same bottle for `nim app status.nims`.)
+bottles: $(BOTTLES)
 
 QML_DEBUG ?= false
 QML_DEBUG_PORT ?= 49152
@@ -576,7 +569,7 @@ DOTHERSIDE_CMAKE_CACHE := $(DOTHERSIDE_BUILD_PATH)/CMakeCache.txt
 DOTHERSIDE_LIBDIR := $(shell pwd)/$(shell dirname "$(DOTHERSIDE_LIBFILE)")
 export DOTHERSIDE_LIBDIR
 
-$(DOTHERSIDE_CMAKE_CACHE): | deps
+$(DOTHERSIDE_CMAKE_CACHE): | check-qt-dir bottles
 	echo -e "\033[92mConfiguring:\033[39m DOtherSide"
 	cmake \
 		-DCMAKE_BUILD_TYPE=$(COMMON_CMAKE_BUILD_TYPE) \
@@ -637,8 +630,13 @@ $(NIMSDS_LIBFILE): $(wildcard vendor/status-go/statusgo.nimble) $(STATUSGO_NIMBL
 	echo -e $(BUILD_MSG) "libsds"
 	cd $(STATUSGO_ROOT) && nim libsds statusgo.nims $(HANDLE_OUTPUT)
 
-$(STATUSGO): | deps status-go-deps $(NIMSDS_LIBFILE) statusgo-scratch platform-cleanup
+$(STATUSGO): | check-qt-dir bottles $(NIMSDS_LIBFILE) statusgo-scratch platform-cleanup
 	echo -e $(BUILD_MSG) "status-go"
+	# protoc-gen-go is a `go generate` prerequisite of status-go's own build. It
+	# was the whole body of the deleted `status-go-deps` target (issue 0018); the
+	# driver's buildLibstatus() already runs this exact line before delegating to
+	# the same foreign Makefile.
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.1
 	# FIXME: Nix shell usage breaks builds due to Glibc mismatch.
 	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C $(STATUSGO_ROOT) statusgo-shared-library SHELL=/bin/sh \
 		SENTRY_CONTEXT_NAME="status-desktop" \
@@ -646,9 +644,6 @@ $(STATUSGO): | deps status-go-deps $(NIMSDS_LIBFILE) statusgo-scratch platform-c
 		 $(HANDLE_OUTPUT)
 
 status-go: $(STATUSGO)
-
-status-go-deps:
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.1
 
 status-go-clean:
 	echo -e "\033[92mCleaning:\033[39m status-go"
@@ -717,7 +712,7 @@ status-keycard-qt: $(STATUSKEYCARD_QT_LIB)
 # The FETCHCONTENT_SOURCE_DIR_* pair is ALWAYS passed (empty value = pinned
 # fetch; verified: cmake treats an empty cache value as unset) so a develop /
 # undevelop flip can never leave a stale redirect in the cmake cache.
-$(STATUSKEYCARD_QT_LIB): | deps check-qt-dir
+$(STATUSKEYCARD_QT_LIB): | check-qt-dir bottles
 	echo -e $(BUILD_MSG) "status-keycard-qt"
 	  cmake -S cmake/status-keycard-qt -B "${STATUS_KEYCARD_QT_BUILD_DIR}" \
 		-DCMAKE_BUILD_TYPE=$(COMMON_CMAKE_BUILD_TYPE) \
@@ -878,7 +873,7 @@ ifeq ($(mkspecs),linux)
  FCITX5_QT_BUILD_CMD := cmake --build . --config Release $(HANDLE_OUTPUT)
 endif
 
-$(FCITX5_QT): | check-qt-dir deps
+$(FCITX5_QT): | check-qt-dir bottles
 	echo -e $(BUILD_MSG) "fcitx5-qt"
 	+ cd vendor/fcitx5-qt && \
 		mkdir -p build && \
@@ -1085,8 +1080,15 @@ zip-windows: check-pkg-target-windows $(STATUS_CLIENT_7Z)
 clean-destdir:
 	rm -rf bin/*
 
-clean: | clean-common clean-destdir statusq-clean status-go-clean status-keycard-qt-clean dotherside-clean storybook-clean clean-translations
+# What survives of NBS's `clean-common`: the nimcache. (Its other targets — the
+# vendored compiler, the fake vendor/.nimble link dir, the nat-traversal C libs —
+# no longer exist. The driver's key files go with the artifacts they gate.)
+clean-nimcache:
+	rm -rf nimcache
+
+clean: | clean-nimcache clean-destdir statusq-clean status-go-clean status-keycard-qt-clean dotherside-clean storybook-clean clean-translations
 	rm -rf bottles/* pkg/* tmp/*
+	rm -f .status-client.key .status-rcc.key .status-setup.key .libsds.key
 
 clean-git:
 	./scripts/clean-git.sh
@@ -1135,11 +1137,11 @@ mobile-profile-mode-check:
 	fi
 	@echo $(MOBILE_PROFILE_DESIRED) > $(MOBILE_PROFILE_SENTINEL)
 
-mobile-run: qt-pkgconfig deps-common mobile-profile-mode-check | $(NIMBLE_SETUP_STAMP)
+mobile-run: qt-pkgconfig mobile-profile-mode-check | $(NIMBLE_SETUP_STAMP)
 	echo -e "\033[92mRunning:\033[39m mobile app"
 	$(MAKE) -C mobile run DEBUG=1 GRADLE_TARGETS=assembleDebug
 
-mobile-profile: qt-pkgconfig deps-common mobile-profile-mode-check | $(NIMBLE_SETUP_STAMP)
+mobile-profile: qt-pkgconfig mobile-profile-mode-check | $(NIMBLE_SETUP_STAMP)
 ifeq ($(mkspecs),ios)
 	@echo "TODO: iOS profiling is not implemented yet"; exit 1
 else
@@ -1150,8 +1152,7 @@ else
 	    QML_DEBUG_PORT=$(QML_DEBUG_PORT)
 endif
 
-mobile-build: USE_SYSTEM_NIM=1
-mobile-build: qt-pkgconfig | deps-common $(NIMBLE_SETUP_STAMP)
+mobile-build: qt-pkgconfig | $(NIMBLE_SETUP_STAMP)
 	echo -e "\033[92mBuilding:\033[39m mobile app ($(or $(PACKAGE_TYPE),default))"
 ifeq ($(PACKAGE_TYPE),aab)
 	$(MAKE) -C mobile aab
@@ -1166,5 +1167,3 @@ endif
 mobile-clean:
 	echo -e "\033[92mCleaning:\033[39m mobile app"
 	$(MAKE) -C mobile clean
-
-endif # "variables.mk" was not included

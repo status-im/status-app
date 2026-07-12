@@ -6,14 +6,12 @@ noBackup/
 *.pro.autosave
 *.qml.autosave
 *.log
-.update.timestamp
 .vscode
 *.code-workspace
 .tours
 bin/
 /bottles/
 pkg/
-vendor/.nimble
 *.AppImage
 tmp
 nimcache
@@ -25,7 +23,6 @@ TODO
 resources.rcc
 ui/resources.qrc
 status-react-translations/
-/.update.timestamp
 notarization.log
 status-desktop.log
 nim_status_client.log
@@ -108,7 +105,6 @@ build/
 *.exe
 *.out
 *.app
-nimbus-build-system.paths
 
 # ui-tests
 /test/ui-pytest/configs/_local.py

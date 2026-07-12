@@ -1,7 +1,3 @@
-[submodule "vendor/nimbus-build-system"]
-	path = vendor/nimbus-build-system
-	url = https://github.com/status-im/nimbus-build-system.git
-	branch = master
 [submodule "vendor/QR-Code-generator"]
 	path = vendor/QR-Code-generator
 	url = https://github.com/status-im/QR-Code-generator
