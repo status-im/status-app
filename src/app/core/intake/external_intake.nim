@@ -92,7 +92,7 @@ proc submit*(self: ExternalIntake, event: ExternalIntakeEvent) =
   ## intake slot — single, last-wins across kinds. Blank share payloads are
   ## dropped here (the platform layer is decision-free), so they can neither
   ## launch an empty share flow nor clobber a pending intake.
-  if event.kind == ExternalIntakeShare and event.text.strip().len == 0:
+  if event.kind == ExternalIntakeShare and event.text.isEmptyOrWhitespace:
     return
   if not self.ready:
     self.pendingSlot = some(event)
