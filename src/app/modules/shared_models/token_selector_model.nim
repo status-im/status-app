@@ -242,10 +242,18 @@ QtObject:
     self.recompute()
     self.hasMoreItemsChanged()
 
+  # The params are exposed as read+write QtProperties so the QML sites can drive
+  # them declaratively (Binding onto the picker model); the write setters guard
+  # and recompute. No notify is needed — the binding is one-way QML -> model.
   proc setAccountAddress*(self: TokenSelectorModel, address: string) {.slot.} =
     if address == self.params.accountAddress: return
     self.params.accountAddress = address
     self.recompute()
+  proc getAccountAddress(self: TokenSelectorModel): string {.slot.} =
+    self.params.accountAddress
+  QtProperty[string] accountAddress:
+    read = getAccountAddress
+    write = setAccountAddress
 
   proc setEnabledChainId*(self: TokenSelectorModel, chainId: int) {.slot.} =
     ## -1 means "no chain filter". The pickers only ever scope to a single chain
@@ -254,16 +262,31 @@ QtObject:
     if chains == self.params.enabledChainIds: return
     self.params.enabledChainIds = chains
     self.recompute()
+  proc getEnabledChainId(self: TokenSelectorModel): int {.slot.} =
+    if self.params.enabledChainIds.len == 0: -1 else: self.params.enabledChainIds[0]
+  QtProperty[int] enabledChainId:
+    read = getEnabledChainId
+    write = setEnabledChainId
 
   proc setShowZeroBalanceForDefaultTokens*(self: TokenSelectorModel, value: bool) {.slot.} =
     if value == self.params.showZeroBalanceForDefaultTokens: return
     self.params.showZeroBalanceForDefaultTokens = value
     self.recompute()
+  proc getShowZeroBalanceForDefaultTokens(self: TokenSelectorModel): bool {.slot.} =
+    self.params.showZeroBalanceForDefaultTokens
+  QtProperty[bool] showZeroBalanceForDefaultTokens:
+    read = getShowZeroBalanceForDefaultTokens
+    write = setShowZeroBalanceForDefaultTokens
 
   proc setShowCommunityAssets*(self: TokenSelectorModel, value: bool) {.slot.} =
     if value == self.params.showCommunityAssets: return
     self.params.showCommunityAssets = value
     self.recompute()
+  proc getShowCommunityAssets(self: TokenSelectorModel): bool {.slot.} =
+    self.params.showCommunityAssets
+  QtProperty[bool] showCommunityAssets:
+    read = getShowCommunityAssets
+    write = setShowCommunityAssets
 
   proc search*(self: TokenSelectorModel, keyword: string) {.slot.} =
     let kw = keyword.strip()
