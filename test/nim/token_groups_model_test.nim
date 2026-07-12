@@ -1,9 +1,9 @@
-## Conversion tests for token_groups_model (setItemsWithSync + move detection
-## + Table-keyed market details). Compile with -d:QT_MODEL_SPY.
+## Conversion tests for token_groups_model (setItemsWithSync + Table-keyed
+## market details). Compile with -d:QT_MODEL_SPY.
 ##
 ## Covers the acceptance gate: identity preservation of MarketDetailsItem across
-## insert+remove+move; reorder read-back + granular moves + no reset; stable-set
-## refresh emits no reset / no move / no spurious churn.
+## insert+remove+reorder; reorder read-back (remove+insert, no moves) + no reset;
+## stable-set refresh emits no reset / no move / no spurious churn.
 
 import unittest, tables, sequtils
 import nimqml
@@ -55,7 +55,7 @@ suite "token_groups_model - identity, reorder, stable-set":
   teardown:
     spy.disable()
 
-  test "MarketDetailsItem identity preserved across insert+remove+move":
+  test "MarketDetailsItem identity preserved across insert+remove+reorder":
     gGroups = @[mkGroup("a"), mkGroup("b"), mkGroup("c")]
     let m = newModel()
     m.modelsUpdated()
@@ -79,7 +79,7 @@ suite "token_groups_model - identity, reorder, stable-set":
     m.tokensMarketValuesUpdated()
     check m.marketDetailsItemForKey("a") == mdA
 
-  test "reorder (hash-order change): reads back in target order, moves emitted, no reset":
+  test "reorder (hash-order change): reads back in target order, remove+insert, no move, no reset":
     gGroups = @[mkGroup("a"), mkGroup("b"), mkGroup("c"), mkGroup("d")]
     let m = newModel()
     m.modelsUpdated()
@@ -89,10 +89,10 @@ suite "token_groups_model - identity, reorder, stable-set":
     m.modelsUpdated()
 
     check m.groupKeysInOrder() == @["d", "c", "b", "a"]
-    check spy.moves() > 0
+    check spy.moves() == 0
     check spy.countResets() == 0
-    check spy.countInserts() == 0
-    check spy.countRemoves() == 0
+    check spy.countInserts() > 0
+    check spy.countRemoves() > 0
 
   test "stable set, no metadata change: no reset, no move, no churn":
     gGroups = @[mkGroup("a"), mkGroup("b")]

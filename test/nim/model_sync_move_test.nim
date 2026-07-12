@@ -1,9 +1,9 @@
-## Functional verification of move detection under the real Qt model path
-## Compile with -d:QT_MODEL_SPY so model_sync records the
-## granular signals it emits. Proves the previously-dead beginMoveRows path is
-## live: after a reorder the model reads back in the target order, the recorded
-## signals are moves (no reset), and the concurrent insert+reorder / remove+reorder
-## cases walk the reconciled indices.
+## Functional verification of syncModel's reorder handling under the real Qt
+## model path. Compile with -d:QT_MODEL_SPY so model_sync records the granular
+## signals it emits. Reorders degrade to remove+insert (no beginMoveRows): after
+## a reorder the model reads back in the target order via data(), the recorded
+## signals are inserts/removes (never a reset), and the concurrent insert+reorder
+## / remove+reorder cases walk the reconciled indices.
 
 import unittest, tables, sequtils
 import nimqml
@@ -44,8 +44,7 @@ QtObject:
     setItemsWithSync(
       self, self.items, newItems,
       getId = proc(x: TItem): string = x.id,
-      getRoles = proc(a, b: TItem): seq[int] = (if a.v != b.v: @[1] else: @[]),
-      detectMoves = true)
+      getRoles = proc(a, b: TItem): seq[int] = (if a.v != b.v: @[1] else: @[]))
 
 proc ids(items: seq[TItem]): seq[string] = items.mapIt(it.id)
 
@@ -59,7 +58,7 @@ proc orderViaData(m: TModel): seq[string] =
 proc mk(idsSeq: seq[string]): seq[TItem] =
   idsSeq.mapIt(TItem(id: it, v: 0))
 
-suite "model_sync move detection - functional (seaqt beginMoveRows)":
+suite "model_sync reorder - functional (remove+insert, no moves)":
 
   setup:
     let spy = newQtModelSpy()
@@ -68,7 +67,7 @@ suite "model_sync move detection - functional (seaqt beginMoveRows)":
   teardown:
     spy.disable()
 
-  test "reversal: model reads back in target order via data(), moves emitted, no reset":
+  test "reversal: model reads back in target order via data(), remove+insert, no move, no reset":
     let m = newTModel()
     m.sync(mk(@["a", "b", "c", "d"]))
     spy.clear()
@@ -76,11 +75,10 @@ suite "model_sync move detection - functional (seaqt beginMoveRows)":
     m.sync(mk(@["d", "c", "b", "a"]))
 
     check m.orderViaData() == @["d", "c", "b", "a"]
-    check spy.calls.filterIt(it.kind == BeginMoveRows).len > 0
+    check spy.calls.filterIt(it.kind == BeginMoveRows).len == 0
+    check spy.countInserts() > 0
+    check spy.countRemoves() > 0
     check spy.countResets() == 0
-    # move-up only: every emitted move has sourceFirst > destChild
-    for c in spy.calls.filterIt(it.kind == BeginMoveRows):
-      check c.sourceFirst > c.destChild
 
   test "stable set + data change: dataChanged only, no move, no reset":
     let m = newTModel()
@@ -92,6 +90,8 @@ suite "model_sync move detection - functional (seaqt beginMoveRows)":
     check m.orderViaData() == @["a", "b"]
     check spy.countDataChanged() > 0
     check spy.calls.filterIt(it.kind == BeginMoveRows).len == 0
+    check spy.countInserts() == 0
+    check spy.countRemoves() == 0
     check spy.countResets() == 0
 
   test "reorder + concurrent insert (walks reconciled indices)":
@@ -102,8 +102,8 @@ suite "model_sync move detection - functional (seaqt beginMoveRows)":
     m.sync(mk(@["c", "x", "a", "b"]))  # insert x, reorder survivors
 
     check m.orderViaData() == @["c", "x", "a", "b"]
-    check spy.countInserts() == 1
     check spy.countResets() == 0
+    check spy.calls.filterIt(it.kind == BeginMoveRows).len == 0
 
   test "reorder + concurrent remove (walks reconciled indices)":
     let m = newTModel()
@@ -113,5 +113,5 @@ suite "model_sync move detection - functional (seaqt beginMoveRows)":
     m.sync(mk(@["d", "a", "c"]))  # remove b, reorder survivors
 
     check m.orderViaData() == @["d", "a", "c"]
-    check spy.countRemoves() == 1
     check spy.countResets() == 0
+    check spy.calls.filterIt(it.kind == BeginMoveRows).len == 0

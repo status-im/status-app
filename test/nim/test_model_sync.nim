@@ -406,7 +406,7 @@ suite "Model Sync Tests":
     check result.toInsert.len == 100  # Added 1000-1099
     check result.toUpdate.len == 90   # Updated every 10th from 0-899
 
-suite "Nested Model Sync (afterItemSync callback)":
+suite "Nested Model Sync (update detection for nested models)":
   test "afterItemSync callback is called for updated items":
     var callbackCalled = 0
     var lastOldId = ""
@@ -440,7 +440,7 @@ suite "Nested Model Sync (afterItemSync callback)":
     for updateOp in syncResult.toUpdate:
       let oldItem = items[updateOp.index]
       items[updateOp.index] = updateOp.item
-      # Simulate afterItemSync callback
+      # Simulate nested-sync side effect on update
       callbackCalled.inc
       lastOldId = oldItem.id
       lastNewId = updateOp.item.id
@@ -499,7 +499,7 @@ suite "Nested Model Sync (afterItemSync callback)":
     for updateOp in syncResult.toUpdate:
       let oldItem = items[updateOp.index]
       items[updateOp.index] = updateOp.item
-      # Simulate afterItemSync callback
+      # Simulate nested-sync side effect on update
       for i in 0..<updateOp.item.nested.len:
         if i < oldItem.nested.len:
           if oldItem.nested[i].count != updateOp.item.nested[i].count:
@@ -531,7 +531,7 @@ suite "Nested Model Sync (afterItemSync callback)":
         if old.name != new.name: @[1] else: @[]
     )
     
-    # Simulate afterItemSync for each update
+    # Simulate a nested-sync side effect for each update
     for updateOp in syncResult.toUpdate:
       items[updateOp.index] = updateOp.item
       callbackCount.inc
@@ -568,6 +568,64 @@ suite "Nested Model Sync (afterItemSync callback)":
     check callbackCount == 0
     check syncResult.toInsert.len == 1
     check syncResult.toRemove.len == 1
+
+suite "Reorder detection (LIS)":
+  # syncModel must detect surviving-row reorders and emit them as minimal
+  # remove+insert pairs (it does NOT emit Qt moves). A pure reorder of the same
+  # set therefore has changes.
+  test "swap last two -> minimal remove+insert":
+    # old = [a, b, c], new = [a, c, b].
+    # LIS over the common oldIdx sequence keeps {a, b} stable; c is moved.
+    let old = @[TestItem(id: "a"), TestItem(id: "b"), TestItem(id: "c")]
+    let nu = @[TestItem(id: "a"), TestItem(id: "c"), TestItem(id: "b")]
+    let r = syncModel(old, nu, getId = proc(it: TestItem): string = it.id)
+    check r.hasChanges
+    check r.toInsert.len == 1
+    check r.toInsert[0].index == 1
+    check r.toRemove.len == 1
+    check r.toRemove[0].index == 2
+
+  test "full reverse -> LIS keeps one stable element":
+    let old = @[TestItem(id: "a"), TestItem(id: "b"), TestItem(id: "c")]
+    let nu = @[TestItem(id: "c"), TestItem(id: "b"), TestItem(id: "a")]
+    let r = syncModel(old, nu, getId = proc(it: TestItem): string = it.id)
+    check r.hasChanges
+    check r.toInsert.len == 2
+    check r.toRemove.len == 2
+
+  test "pure mid-list insert does NOT flag survivors as reordered":
+    # Regression guard: a cheap oldIdx==newIdx heuristic would spuriously mark
+    # every shifted survivor as moved. The LIS keeps them stable.
+    let old = @[TestItem(id: "a"), TestItem(id: "b"), TestItem(id: "c")]
+    let nu = @[TestItem(id: "x"), TestItem(id: "a"), TestItem(id: "b"), TestItem(id: "c")]
+    let r = syncModel(old, nu, getId = proc(it: TestItem): string = it.id)
+    check r.toInsert.len == 1
+    check r.toInsert[0].index == 0
+    check r.toRemove.len == 0
+
+  test "reorder deltas applied to a plain seq reproduce target order":
+    # Simulate applySync ordering (removes descending, then inserts ascending)
+    # on a plain seq and check it reproduces the target.
+    proc simulate(current, target: seq[string]): seq[string] =
+      let old = current.mapIt(TestItem(id: it))
+      let nu = target.mapIt(TestItem(id: it))
+      var work = old
+      let r = syncModel(old, nu, getId = proc(it: TestItem): string = it.id)
+      for rem in r.toRemove:            # descending from syncModel
+        work.delete(rem.index)
+      var ins = r.toInsert
+      ins.sort(proc(a, b: InsertOp[TestItem]): int = cmp(a.index, b.index))
+      for op in ins:
+        work.insert(op.item, op.index)
+      return work.mapIt(it.id)
+
+    check simulate(@["a", "b", "c"], @["b", "a", "c"]) == @["b", "a", "c"]
+    check simulate(@["a", "b", "c", "d", "e"], @["e", "d", "c", "b", "a"]) ==
+      @["e", "d", "c", "b", "a"]
+    check simulate(@["a", "b", "c", "d"], @["d", "a", "b", "c"]) ==
+      @["d", "a", "b", "c"]
+    check simulate(@["a", "b", "c", "d", "e", "f"], @["c", "f", "a", "e", "b", "d"]) ==
+      @["c", "f", "a", "e", "b", "d"]
 
 suite "Bulk Operations Tests":
   test "Bulk remove - consecutive ranges are grouped":

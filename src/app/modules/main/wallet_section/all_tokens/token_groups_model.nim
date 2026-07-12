@@ -260,11 +260,12 @@ QtObject:
                       ModelMode.IsSearchResult notin self.modelModes
 
     # Incremental path: the main model on a plain refresh diffs the new
-    # groups against its cached snapshot and emits granular insert/remove/move/
+    # groups against its cached snapshot and emits granular insert/remove/
     # dataChanged instead of a full beginResetModel (which tears down every QML
-    # delegate and rebuilds every per-row sub-model). detectMoves=true handles the
-    # hash-order reorder of the group set. Market details are re-keyed by group key
-    # so surviving groups keep their MarketDetailsItem instance across the diff.
+    # delegate and rebuilds every per-row sub-model). syncModel detects the
+    # hash-order reorder of the group set via LIS and degrades it to
+    # remove+insert. Market details are re-keyed by group key so surviving
+    # groups keep their MarketDetailsItem instance across the diff.
     if isMainModel and not resetModelSize:
       # CORRECTNESS DEPENDENCY: this old-vs-new diff only works because the token
       # service swaps in FRESH TokenGroupItem instances each refresh
@@ -284,8 +285,7 @@ QtObject:
         self, self.cachedGroups, newGroups,
         getId = proc(item: TokenGroupItem): string = item.key,
         getRoles = proc(oldItem, newItem: TokenGroupItem): seq[int] = groupRolesChanged(oldItem, newItem),
-        countChanged = proc() = self.countChanged(),
-        detectMoves = true)
+        countChanged = proc() = self.countChanged())
       self.hasMoreItemsChanged()
       return
 

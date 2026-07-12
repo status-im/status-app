@@ -89,10 +89,9 @@ QtObject:
     # object identity per key); balance value changes travel through the BalancesModel's
     # own dataChanged, so surviving rows need no parent-level dataChanged. Only the group
     # SET is synced here.
-    # detectMoves=false is safe *because* newGroups is key-sorted above: survivors keep
-    # their relative order across refreshes, so a diff of matched ids never needs a move
-    # (only inserts/removes at sorted positions). This also avoids model_sync's move path
-    # entirely.
+    # Key-sorted above so survivors keep their relative order across refreshes: the
+    # diff of matched ids never reorders (only inserts/removes at sorted positions),
+    # so syncModel's remove+insert reorder path is never exercised here.
     setItemsWithSync(
       self, self.items, newGroups,
       getId = proc(item: AssetGroupItem): string = item.key,
