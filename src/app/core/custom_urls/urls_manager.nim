@@ -16,18 +16,6 @@ logScope:
 const StatusInternalLink* = "status-app://"
 const StatusExternalLink* = "https://status.app/"
 
-proc parseImagePaths(imagePathsJson: string): seq[string] =
-  ## Tolerant decode of a JSON array of image paths; a malformed payload is
-  ## logged and treated as no images — it must never take the app down.
-  if imagePathsJson.len == 0:
-    return @[]
-  try:
-    for pathNode in parseJson(imagePathsJson).getElems():
-      result.add(pathNode.getStr())
-  except CatchableError:
-    warn "share intake image paths payload is not valid JSON", imagePathsJson
-    return @[]
-
 QtObject:
   type UrlsManager* = ref object of QObject
     events: EventEmitter
@@ -107,7 +95,7 @@ QtObject:
     ## paths are app-private cached copies made by the platform layer at
     ## receipt.
     self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeShare,
-      text: text, imagePaths: parseImagePaths(imagePathsJson)))
+      text: text, imagePaths: parseImagePathsJson(imagePathsJson)))
 
   proc newUrlsManager*(events: EventEmitter, urlSchemeEvent: UrlSchemeEvent,
       singleInstance: SingleInstance, protocolUriOnStart: string,
