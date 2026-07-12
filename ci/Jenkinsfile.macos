@@ -117,7 +117,10 @@ pipeline {
     }
     stage('Deps') {
       steps {
-        sh 'make update'
+        /* nimble is the only prerequisite (issue 0018: `make update` / `make deps`
+         * and the vendored nimbus-build-system are gone). `nimble setup` resolves the
+         * graph AND materialises the pinned Nim compiler in nimble's store. */
+        sh 'nimble setup'
         withCredentials([
           usernamePassword( /* For fetching HomeBrew bottles. */
             credentialsId: "status-im-auto-pkgs",
@@ -125,7 +128,9 @@ pipeline {
             passwordVariable: 'GITHUB_TOKEN'
           )
         ]) {
-          sh 'make deps'
+          /* The bottle fetch needs the credentials; the driver's bootstrap would
+           * otherwise do it later, outside this block. */
+          sh 'make bottles'
         }
       }
     }
