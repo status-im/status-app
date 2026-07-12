@@ -90,6 +90,13 @@ void UrlSchemeEvent::emitDeepLinkToQt(const QString& url)
     emit urlActivated(url);
 }
 
+void UrlSchemeEvent::emitShareTextToQt(const QString& text)
+{
+    if (text.isEmpty()) return;
+
+    emit shareTextActivated(text);
+}
+
 static UrlSchemeEvent* g_urlSchemeEventInstance = nullptr;
 
 void UrlSchemeEvent::setInstance(UrlSchemeEvent* instance)
@@ -106,6 +113,20 @@ Java_app_status_mobile_StatusQtActivity_passDeepLinkToQt(JNIEnv* /*env*/, jclass
 
     if (g_urlSchemeEventInstance) {
         g_urlSchemeEventInstance->emitDeepLinkToQt(deepLink);
+    }
+}
+
+// Share-target hand-off: text/links shared from another app. Kept separate
+// from the URL channel — a shared link must launch the share flow, not URL
+// routing.
+extern "C" JNIEXPORT void JNICALL
+Java_app_status_mobile_StatusQtActivity_passShareTextToQt(JNIEnv* /*env*/, jclass /*clazz*/, jstring text)
+{
+    const QString shareText = QJniObject(text).toString();
+    if (shareText.isEmpty()) return;
+
+    if (g_urlSchemeEventInstance) {
+        g_urlSchemeEventInstance->emitShareTextToQt(shareText);
     }
 }
 #endif

@@ -15,6 +15,7 @@ namespace Status
             void emitAppForegroundedToQt();
             void emitAppBackgroundedToQt();
             void watchApplicationState();
+            void emitShareTextToQt(const QString& text);
             static void setInstance(UrlSchemeEvent* instance);
 
             void registerUrlHandler();
@@ -33,6 +34,7 @@ namespace Status
             // NOT backgrounded: share sheets and system alerts briefly
             // deactivate the app without suspending it.
             void appBackgrounded();
+            void shareTextActivated(const QString& text);
     };
 }
 
