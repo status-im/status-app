@@ -9,10 +9,27 @@
 ## Deletion is guarded to files inside a `share-intake` directory: the same
 ## image-send path also carries user-owned files (regular picker sends), which
 ## must never be touched.
+##
+## Also owns the wire format the paths travel in across the Qt signal/slot
+## boundary: a JSON array of absolute paths.
 
-import std/os
+import std/[json, os]
+import chronicles
 
 const ShareIntakeCacheDirName* = "share-intake"
+
+proc parseImagePathsJson*(imagePathsJson: string): seq[string] =
+  ## Tolerant decode of the image-paths wire format (a JSON array of absolute
+  ## paths); a malformed payload is logged and treated as no images — it must
+  ## never take the app down.
+  if imagePathsJson.len == 0:
+    return @[]
+  try:
+    for pathNode in parseJson(imagePathsJson).getElems():
+      result.add(pathNode.getStr())
+  except CatchableError:
+    warn "share intake image paths payload is not valid JSON", imagePathsJson
+    return @[]
 
 proc isShareIntakeCachedFile*(path: string): bool =
   ## True only for files directly inside a `share-intake` directory — the only

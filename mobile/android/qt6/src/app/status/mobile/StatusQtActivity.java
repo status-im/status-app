@@ -156,10 +156,9 @@ public class StatusQtActivity extends QtActivity {
             passDeepLinkToQt(pendingIntakeUrl);
             pendingIntakeUrl = null;
         }
-        if (pendingIntakeShareText != null || pendingIntakeShareImagePaths != null) {
-            passShareToQt(pendingIntakeShareText != null ? pendingIntakeShareText : "",
-                          pendingIntakeShareImagePaths != null ? pendingIntakeShareImagePaths
-                                                               : new String[0]);
+        // Text and image paths are always set (non-null) and cleared together.
+        if (pendingIntakeShareText != null) {
+            passShareToQt(pendingIntakeShareText, pendingIntakeShareImagePaths);
             pendingIntakeShareText = null;
             pendingIntakeShareImagePaths = null;
         }
@@ -193,6 +192,10 @@ public class StatusQtActivity extends QtActivity {
         if (!isSend && !isSendMultiple) return;
         String type = intent.getType();
         if (type == null) return;
+        // Mirrors the manifest: image shares (single or multiple) and
+        // single text shares; anything else is dropped.
+        boolean isImageShare = type.startsWith("image/");
+        if (!isImageShare && !(isSend && type.startsWith("text/"))) return;
 
         String text = intent.getStringExtra(Intent.EXTRA_TEXT);
         if (text == null || text.isEmpty()) {
@@ -200,12 +203,9 @@ public class StatusQtActivity extends QtActivity {
         }
         if (text == null) text = "";
 
-        String[] imagePaths = new String[0];
-        if (type.startsWith("image/")) {
-            imagePaths = copySharedImagesToCache(extractStreamUris(intent, isSendMultiple));
-        } else if (!isSend || !type.startsWith("text/")) {
-            return;
-        }
+        String[] imagePaths = isImageShare
+                ? copySharedImagesToCache(extractStreamUris(intent, isSendMultiple))
+                : new String[0];
         if (text.isEmpty() && imagePaths.length == 0) return;
 
         if (!userLoggedIn.get()) {

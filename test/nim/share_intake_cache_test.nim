@@ -41,3 +41,12 @@ suite "share_intake_cache":
     releaseCachedShareFiles(@[cacheDir / "already-gone.png"])
     releaseCachedShareFiles(@[])
     check true
+
+  test "decodes the image-paths wire format":
+    check parseImagePathsJson("""["/cache/share-intake/a.png","/b.jpg"]""") ==
+      @["/cache/share-intake/a.png", "/b.jpg"]
+
+  test "empty and malformed image-paths payloads decode to no images":
+    check parseImagePathsJson("").len == 0
+    check parseImagePathsJson("[]").len == 0
+    check parseImagePathsJson("not json").len == 0
