@@ -1,7 +1,9 @@
-import nimqml, tables, algorithm, sequtils
+import nimqml, tables, algorithm, sequtils, strutils
 
 import app/modules/shared_models/model_utils
 import app/modules/shared/model_sync
+import ./assets_adaptor_item
+export assets_adaptor_item
 
 # AssetsAdaptorModel — terminal model for AssetsView.
 #
@@ -18,27 +20,6 @@ import app/modules/shared/model_sync
 # Input is a flat, already-aggregated list of AssetItem value DTOs (balances
 # summed, market/community joined upstream). `setSourceItems` diffs the new
 # filtered+sorted view against the mirror; `sortBy` re-sorts in place.
-
-type
-  AssetItem* = object
-    key*: string
-    name*: string
-    symbol*: string
-    logoUri*: string
-    balance*: float
-    balanceText*: string
-    balanceLoading*: bool
-    error*: string
-    marketPrice*: float
-    marketChangePct24hour*: float
-    marketDetailsAvailable*: bool
-    marketDetailsLoading*: bool
-    communityId*: string
-    communityName*: string
-    communityImage*: string
-    canBeHidden*: bool
-    position*: int
-    visible*: bool
 
 proc isCommunityStr(it: AssetItem): string =
   if it.communityId.len > 0: "community" else: ""
@@ -74,6 +55,7 @@ type
     IsCommunity
     MarketBalance
     Change1DayFiat
+    ChainIds
 
 QtObject:
   type
@@ -122,6 +104,7 @@ QtObject:
       ModelRole.IsCommunity.int: "isCommunity",
       ModelRole.MarketBalance.int: "marketBalance",
       ModelRole.Change1DayFiat.int: "change1DayFiat",
+      ModelRole.ChainIds.int: "chainIds",
     }.toTable
 
   method data(self: AssetsAdaptorModel, index: QModelIndex, role: int): QVariant =
@@ -150,6 +133,9 @@ QtObject:
     of ModelRole.IsCommunity: return newQVariant(isCommunityStr(item))
     of ModelRole.MarketBalance: return newQVariant(marketBalance(item))
     of ModelRole.Change1DayFiat: return newQVariant(change1DayFiat(item))
+    # Contributing chain ids as a comma-separated string ("1,10,42161"); the
+    # delegate splits it for chainsError. seaqt has no seq-of-int QVariant role.
+    of ModelRole.ChainIds: return newQVariant(item.chainIds.mapIt($it).join(","))
 
   proc compareItems(self: AssetsAdaptorModel, a, b: AssetItem): int =
     # Primary: isCommunity ascending (regular tokens before community, matching
@@ -188,6 +174,7 @@ QtObject:
     if o.communityImage != n.communityImage: result.add(ModelRole.CommunityImage.int)
     if o.canBeHidden != n.canBeHidden: result.add(ModelRole.CanBeHidden.int)
     if o.position != n.position: result.add(ModelRole.Position.int)
+    if o.chainIds != n.chainIds: result.add(ModelRole.ChainIds.int)
     if o.communityId != n.communityId:
       result.add(ModelRole.CommunityId.int)
       result.add(ModelRole.IsCommunity.int)

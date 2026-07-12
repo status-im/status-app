@@ -8,6 +8,7 @@ import ./accounts/module as accounts_module
 import ./all_tokens/module as all_tokens_module
 import ./all_collectibles/module as all_collectibles_module
 import ./assets/module as assets_module
+import ./assets_view/module as assets_view_module
 import ./saved_addresses/module as saved_addresses_module
 import ./following_addresses/module as following_addresses_module
 import ./buy_sell_crypto/module as buy_sell_crypto_module
@@ -71,6 +72,7 @@ type
     allTokensModule: all_tokens_module.AccessInterface
     allCollectiblesModule: all_collectibles_module.AccessInterface
     assetsModule: assets_module.AccessInterface
+    assetsViewModule: assets_view_module.AccessInterface
     sendModule: send_module.AccessInterface
     # TODO: replace this with sendModule when old one is removed
     newSendModule: new_send_module.AccessInterface
@@ -144,6 +146,8 @@ proc newModule*(
   result.allCollectiblesModule = allCollectiblesModule
   result.assetsModule = assets_module.newModule(result, events, walletAccountService, networkService, tokenService,
     currencyService)
+  result.assetsViewModule = assets_view_module.newModule(events, tokenService, walletAccountService, networkService,
+    settingsService)
   result.sendModule = send_module.newModule(result, events, tokenService, walletAccountService, networkService, currencyService,
   transactionService)
   result.newSendModule = newSendModule.newModule(result, events, walletAccountService, networkService, transactionService)
@@ -192,6 +196,7 @@ method delete*(self: Module) =
   self.allTokensModule.delete
   self.allCollectiblesModule.delete
   self.assetsModule.delete
+  self.assetsViewModule.delete
   self.savedAddressesModule.delete
   self.followingAddressesModule.delete
   self.buySellCryptoModule.delete
@@ -232,6 +237,7 @@ proc notifyModulesOnFilterChanged(self: Module) =
   self.allTokensModule.filterChanged(self.filter.addresses)
   self.allCollectiblesModule.refreshWalletAccounts()
   self.assetsModule.filterChanged(self.filter.addresses, self.filter.chainIds)
+  self.assetsViewModule.filterChanged(self.filter.addresses, self.filter.chainIds)
   self.filter.isDirty = false
 
 proc notifyModulesBalanceIsLoaded(self: Module) =
@@ -356,6 +362,7 @@ method load*(self: Module) =
   self.allTokensModule.load()
   self.allCollectiblesModule.load()
   self.assetsModule.load()
+  self.assetsViewModule.load()
   self.savedAddressesModule.load()
   self.followingAddressesModule.load()
   self.buySellCryptoModule.load()
