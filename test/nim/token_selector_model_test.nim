@@ -190,6 +190,17 @@ suite "TokenSelectorModel - nested balances submodel":
     let bm2 = m.balancesModelForKey("eth")
     check bm1 == bm2 # identity preserved -> QML binding stays alive
 
+  test "removed row drops its nested balances + tokens models (no double-free on teardown)":
+    let m = newTokenSelectorModel()
+    m.setSourceItems(@[mkItem("a", chips = @[chip(1, 1.0)]),
+                       mkItem("b", chips = @[chip(1, 2.0)])])
+    check m.balancesModelForKey("b") != nil
+    check m.tokensModelForKey("b") != nil
+    m.setSourceItems(@[mkItem("a", chips = @[chip(1, 1.0)])]) # b removed
+    check m.balancesModelForKey("a") != nil
+    check m.balancesModelForKey("b") == nil # dropped from the table -> ORC frees it
+    check m.tokensModelForKey("b") == nil
+
   test "chip balance change travels through the nested model as a dataChanged":
     let m = newTokenSelectorModel()
     m.setSourceItems(@[mkItem("eth", currentBalance = 1.0, currencyBalance = 1.0,

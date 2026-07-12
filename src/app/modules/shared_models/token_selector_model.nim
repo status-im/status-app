@@ -299,10 +299,10 @@ QtObject:
     self.source = source
 
   proc delete(self: TokenSelectorModel) =
-    for bm in self.balancesByKey.values:
-      bm.delete
-    for tm in self.tokensByKey.values:
-      tm.delete
+    # The per-key nested models are constructed with `new(_, delete)`, so ORC runs
+    # their finalizers when balancesByKey/tokensByKey are collected — deleting them
+    # explicitly here would double-free the underlying QObject. Match the repo
+    # convention (keypair_model, collectibles_model): only tear down self.
     self.QAbstractListModel.delete
 
   proc setup(self: TokenSelectorModel) =
