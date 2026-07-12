@@ -4,6 +4,7 @@ import QtTest
 import shared.views
 import utils
 
+import StatusQ
 import SortFilterProxyModel
 
 

@@ -22,17 +22,29 @@ proc layoutChanges(spy: QtModelSpy): int =
   # slipped back in. BeginMoveRows stands in for "row reshuffle" churn.
   spy.calls.filterIt(it.kind == BeginMoveRows).len
 
-# Brute-force reference: filter visible, sort (isCommunity asc, then role/order,
-# key tiebreak), independent of the model's implementation.
+# Brute-force reference, constructed INDEPENDENTLY of the model's comparator:
+# filter visible, sort (isCommunity asc, then role/order) and break ties on
+# SOURCE ORDER — not key. Production's SFPM has no tiebreak and is stable, so
+# source order is the correct expectation; a comparator that broke ties on key
+# would diverge from this reference, which is what makes the value-fidelity
+# check below a real guard against re-introducing a key tiebreak.
 proc refMarketBalance(it: AssetItem): float = it.balance * it.marketPrice
 proc refChange1Day(it: AssetItem): float =
-  refMarketBalance(it) * (1.0 - (1.0 / (it.marketChangePct24hour / 100.0 + 1.0)))
+  let denom = it.marketChangePct24hour / 100.0 + 1.0
+  if denom == 0.0: return 0.0
+  refMarketBalance(it) * (1.0 - (1.0 / denom))
 proc refIsCommunity(it: AssetItem): string =
   if it.communityId.len > 0: "community" else: ""
 
 proc reference(items: seq[AssetItem], roleName: string, order: int): seq[AssetItem] =
-  result = items.filterIt(it.visible)
-  result.sort(proc(a, b: AssetItem): int =
+  # Decorate each visible item with its source index so ties resolve to source
+  # order explicitly, independent of the model (which relies on stable-sort).
+  var decorated: seq[(int, AssetItem)] = @[]
+  for i, it in items:
+    if it.visible: decorated.add((i, it))
+  decorated.sort(proc(x, y: (int, AssetItem)): int =
+    let a = x[1]
+    let b = y[1]
     let ca = refIsCommunity(a)
     let cb = refIsCommunity(b)
     if ca != cb: return cmp(ca, cb)
@@ -47,7 +59,8 @@ proc reference(items: seq[AssetItem], roleName: string, order: int): seq[AssetIt
     else: r = 0
     if order == 1: r = -r
     if r != 0: return r
-    return cmp(a.key, b.key))
+    return cmp(x[0], y[0])) # source-order tiebreak, NOT key
+  result = decorated.mapIt(it[1])
 
 proc mkItem(key: string, name = "", balance = 0.0, marketPrice = 0.0,
     marketChangePct24hour = 0.0, communityId = "", visible = true): AssetItem =
@@ -192,6 +205,33 @@ suite "AssetsAdaptorModel - terminal filter/sort/derive":
     # regular first (desc by mb): reg2, reg1; then community: com1
     check m.keysInOrder() == @["reg2", "reg1", "com1"]
     check m.isCommunityAtForTest(2) == "community"
+
+  test "ties preserve source order (no key tiebreak)":
+    # Two rows with an identical sort key, keys in reverse of source order. A
+    # stable, tiebreak-free sort keeps source order; a key tiebreak would flip
+    # them to ["a", "z"].
+    let m = newAssetsAdaptorModel()
+    m.sortBy("marketBalance", 1) # descending
+    m.setSourceItems(@[
+      mkItem("z", balance = 1.0, marketPrice = 5.0), # mb 5, source idx 0
+      mkItem("a", balance = 1.0, marketPrice = 5.0), # mb 5, source idx 1
+    ])
+    check m.keysInOrder() == @["z", "a"]
+
+  test "change1DayFiat guards -100% (finite, sorts as zero, no NaN)":
+    let m = newAssetsAdaptorModel()
+    m.sortBy("change1DayFiat", 1) # descending
+    m.setSourceItems(@[
+      mkItem("gain", balance = 1.0, marketPrice = 1.0, marketChangePct24hour = 100.0),  # +0.5
+      mkItem("wiped", balance = 1.0, marketPrice = 1.0, marketChangePct24hour = -100.0), # guarded -> 0
+      mkItem("loss", balance = 1.0, marketPrice = 1.0, marketChangePct24hour = -50.0),   # -1.0
+    ])
+    # -100% collapses to 0 fiat change (not NaN/Inf), sorting between the gain
+    # and the loss; a NaN here would break comparator antisymmetry.
+    check m.keysInOrder() == @["gain", "wiped", "loss"]
+    for i in 0 ..< m.getCount():
+      if m.itemAtForTest(i).key == "wiped":
+        check m.change1DayFiatAtForTest(i) == 0.0
 
   test "role values match a brute-force reference across the universe":
     var src: seq[AssetItem] = @[]

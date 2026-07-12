@@ -29,8 +29,14 @@ proc marketBalance(it: AssetItem): float =
 
 proc change1DayFiat(it: AssetItem): float =
   ## Fiat value gained/lost over the last day, matching AssetsView's
-  ## change1DayFiat FastExpressionRole.
-  marketBalance(it) * (1.0 - (1.0 / (it.marketChangePct24hour / 100.0 + 1.0)))
+  ## change1DayFiat FastExpressionRole. A -100% change zeroes the denominator
+  ## (a day ago the value was effectively unbounded); the QML expression yields
+  ## ±Inf/NaN there, and NaN breaks the sort comparator's antisymmetry, so the
+  ## degenerate case is defined as 0.
+  let denom = it.marketChangePct24hour / 100.0 + 1.0
+  if denom == 0.0:
+    return 0.0
+  marketBalance(it) * (1.0 - (1.0 / denom))
 
 type
   ModelRole {.pure.} = enum
@@ -140,7 +146,8 @@ QtObject:
   proc compareItems(self: AssetsAdaptorModel, a, b: AssetItem): int =
     # Primary: isCommunity ascending (regular tokens before community, matching
     # AssetsView's first RoleSorter). Secondary: chosen role honouring sortOrder.
-    # Final tiebreak on key so the sort is stable across service hash-order churn.
+    # No further tiebreak: returning 0 on ties lets Nim's stable sort preserve
+    # source order, matching production SFPM (which has no tiebreak either).
     let ca = isCommunityStr(a)
     let cb = isCommunityStr(b)
     if ca != cb:
@@ -156,9 +163,7 @@ QtObject:
     else: r = 0
     if self.sortOrder == 1: # Qt.DescendingOrder
       r = -r
-    if r != 0:
-      return r
-    return cmp(a.key, b.key)
+    return r
 
   proc rolesChanged(o, n: AssetItem): seq[int] =
     result = @[]
@@ -216,16 +221,17 @@ QtObject:
   proc setup(self: AssetsAdaptorModel) =
     self.QAbstractListModel.setup
     self.sortRoleName = "name"
-    self.sortOrder = 0
+    self.sortOrder = 1 # Qt.DescendingOrder — matches AssetsView's default
 
-  # Test/inspection accessors.
-  proc keysInOrder*(self: AssetsAdaptorModel): seq[string] =
-    self.items.mapIt(it.key)
-  proc itemAtForTest*(self: AssetsAdaptorModel, i: int): AssetItem =
-    self.items[i]
-  proc marketBalanceAtForTest*(self: AssetsAdaptorModel, i: int): float =
-    marketBalance(self.items[i])
-  proc change1DayFiatAtForTest*(self: AssetsAdaptorModel, i: int): float =
-    change1DayFiat(self.items[i])
-  proc isCommunityAtForTest*(self: AssetsAdaptorModel, i: int): string =
-    isCommunityStr(self.items[i])
+  # Test/inspection accessors — kept out of production builds.
+  when defined(testing) or defined(QT_MODEL_SPY):
+    proc keysInOrder*(self: AssetsAdaptorModel): seq[string] =
+      self.items.mapIt(it.key)
+    proc itemAtForTest*(self: AssetsAdaptorModel, i: int): AssetItem =
+      self.items[i]
+    proc marketBalanceAtForTest*(self: AssetsAdaptorModel, i: int): float =
+      marketBalance(self.items[i])
+    proc change1DayFiatAtForTest*(self: AssetsAdaptorModel, i: int): float =
+      change1DayFiat(self.items[i])
+    proc isCommunityAtForTest*(self: AssetsAdaptorModel, i: int): string =
+      isCommunityStr(self.items[i])
