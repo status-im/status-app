@@ -4,6 +4,8 @@ import QtQuick.Layouts
 
 import QtQml.Models
 
+import QtModelsToolkit
+
 import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -166,10 +168,16 @@ Control {
         property int sortOrder: Qt.DescendingOrder
         property int sortValue: -1
 
-        // Latched true once the regular model has ever had rows. Keeps the list
+        // Latched true once the source model has ever had rows. Keeps the list
         // bound to the real model across periodic refreshes that toggle
         // `loading`; the placeholder only ever shows before the first real data.
+        // Latch from the source model (not the regular DelegateModel): the
+        // DelegateModel only reports rows while a view consumes it, so at
+        // startup — when the list shows the loading placeholder — it would
+        // never fire and every `loading` toggle would rebuild all delegates.
         property bool everHadContent: false
+        readonly property bool hasData: (root.model?.ModelCount?.count ?? 0) > 0
+        onHasDataChanged: if (hasData) everHadContent = true
 
         // Emit the current sorter selection as an intent; separators carry an
         // empty role name and are ignored.
@@ -275,8 +283,6 @@ Control {
             id: regularModel
 
             model: root.model ?? null
-
-            onCountChanged: if (count > 0) d.everHadContent = true
 
             delegate: TokenDelegate {
                 objectName: `AssetView_TokenListItem_${model.symbol}` // TODO: use model.key

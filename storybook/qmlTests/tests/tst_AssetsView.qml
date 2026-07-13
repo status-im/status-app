@@ -170,6 +170,63 @@ Item {
         }
     }
 
+    // A source model that starts empty; rows are appended during the test to
+    // reproduce the production timing where token rows arrive asynchronously,
+    // after the view is already up in its `loading` state.
+    ListModel {
+        id: asyncBaseModel
+    }
+
+    SortFilterProxyModel {
+        id: asyncAssetsModel
+
+        property int sortRoleOrder: Qt.DescendingOrder
+        property string sortRoleName: "name"
+
+        function sortBy(roleName, order) {
+            asyncAssetsModel.sortRoleName = roleName
+            asyncAssetsModel.sortRoleOrder = order
+        }
+
+        sourceModel: asyncBaseModel
+        proxyRoles: [
+            FastExpressionRole {
+                name: "isCommunity"
+                expression: !!model.communityId ? "community" : ""
+                expectedRoles: ["communityId"]
+            },
+            FastExpressionRole {
+                name: "marketBalance"
+                expression: model.balance * model.marketPrice
+                expectedRoles: ["balance", "marketPrice"]
+            },
+            FastExpressionRole {
+                name: "change1DayFiat"
+                expression: model.marketBalance * (1 - (1 / (model.marketChangePct24hour / 100 + 1)))
+                expectedRoles: ["marketBalance", "marketChangePct24hour"]
+            }
+        ]
+        filters: ValueFilter { roleName: "visible"; value: true }
+        sorters: [
+            RoleSorter { roleName: "isCommunity" },
+            RoleSorter {
+                roleName: asyncAssetsModel.sortRoleName
+                sortOrder: asyncAssetsModel.sortRoleOrder
+            }
+        ]
+    }
+
+    Component {
+        id: asyncAssetsViewComponent
+        AssetsView {
+            width: root.width
+            height: root.height
+            sorterVisible: true
+            model: asyncAssetsModel
+            onSortRequested: (roleName, order) => asyncAssetsModel.sortBy(roleName, order)
+        }
+    }
+
     TestCase {
         id: assetsViewTest
         name: "AssetsView"
@@ -282,6 +339,55 @@ Item {
             controlUnderTest.loading = false
             verify(listView.model === modelInstance)
             compare(listView.count, 4)
+        }
+
+        // Covers the production initial condition the sort test above does not:
+        // the view starts in the global `loading` state (list on the placeholder)
+        // and token rows arrive asynchronously afterwards. Once real data has
+        // arrived the list must switch to and stay on the regular model across
+        // the periodic `loading` toggles, never rebuilding against the
+        // placeholder. NOTE: the on-device regression this guards is driven by
+        // the C++ terminal model not reporting its rows until a view consumes
+        // the regular DelegateModel; QML ListModel/SortFilterProxyModel report
+        // rows eagerly, so this case cannot fully reproduce that timing here —
+        // the authoritative red/green for it is the on-device startup trace.
+        function test_loadingStartTrue_latchesFromSourceModel() {
+            asyncBaseModel.clear()
+            const view = createTemporaryObject(asyncAssetsViewComponent, root,
+                { loading: true })
+            verify(!!view)
+            const listView = getListView(view)
+            waitForRendering(listView)
+
+            // Rows arrive while still loading and while the list is on the
+            // placeholder (the regular DelegateModel is not consumed yet).
+            asyncBaseModel.append({
+                key: "key_ETH", symbol: "ETH", name: "Ether",
+                logoUri: Constants.tokenIcon("ETH", false),
+                balance: 4.0, balanceLoading: false,
+                marketDetailsAvailable: true, marketDetailsLoading: false,
+                marketPrice: 4.1, marketChangePct24hour: 5.0,
+                communityId: "", communityName: "",
+                communityImage: Qt.resolvedUrl(""),
+                position: 1, canBeHidden: false, visible: true, chainIds: "1"
+            })
+            waitForRendering(listView)
+
+            // First real data has arrived: switch to the regular model and stay
+            // there across the periodic loading toggle.
+            view.loading = false
+            waitForRendering(listView)
+            const populatedModel = listView.model
+            compare(listView.count, 1)
+
+            view.loading = true
+            verify(listView.model === populatedModel,
+                "loading placeholder must not replace the populated model after first data")
+            compare(listView.count, 1)
+
+            view.loading = false
+            verify(listView.model === populatedModel)
+            compare(listView.count, 1)
         }
     }
 }
