@@ -54,6 +54,11 @@ StatusDialog {
 
         readonly property string mandatoryKeysSeparator: "$$"
 
+        // Guards the double rebuildGroupsForChain per open (Component.onCompleted +
+        // onSelectedNetworkChainIdChanged both fire for the same chain): skip the
+        // redundant harvest + async fetch when the chain hasn't actually changed.
+        property int lastRequestedChainId: -1
+
         // One terminal picker model per side ({ model, id }); released on modal
         // destruction so the producer stops tracking them (avoids a per-open leak).
         readonly property var payTokenSelector: root.swapAdaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(1)
@@ -106,6 +111,10 @@ StatusDialog {
                 return
             }
 
+            if (chainId === d.lastRequestedChainId) {
+                return
+            }
+
             const chainAvailableForSwapViaParaswap = root.swapAdaptor.walletAssetsStore.walletTokensStore.isChainSupportedForSwapViaParaswap(chainId)
             if (!chainAvailableForSwapViaParaswap) {
                 console.warn("swap via paraswap not supported for chain", chainId)
@@ -121,6 +130,7 @@ StatusDialog {
                 return
             }
 
+            d.lastRequestedChainId = chainId
             const keys = SQUtils.ModelUtils.joinModelEntries(root.swapAdaptor.walletAssetsStore.groupedAccountAssetsModel, "key", d.mandatoryKeysSeparator)
             root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(chainId, keys)
         }
@@ -172,6 +182,7 @@ StatusDialog {
         payPanel.forceActiveFocus()
     }
     onClosed: {
+        d.lastRequestedChainId = -1
         root.swapAdaptor.resetData()
     }
 
