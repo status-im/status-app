@@ -39,6 +39,7 @@ Control {
     property color quoteBarColor: Theme.palette.baseColor1
     property color quoteTextColor: Theme.palette.baseColor1
     property color linkColor: Theme.palette.primaryColor1
+    property color mentionTextColor: Theme.palette.mentionColor1
     property color mentionBackgroundColor: Theme.palette.mentionColor4
     property color linkHoverColor: Theme.palette.primaryColor3
 
@@ -69,9 +70,12 @@ Control {
         // color, mention background) plus the pre-wrapped content. `hoveredLink` (selectable
         // mode) adds a hover background on the link currently under the pointer.
         function richTextFor(hoveredLink) {
-            let style = "<style>code { background-color: " + root.codeBackgroundColor + " }"
+            let style = "<style>code { background-color: " + root.codeBackgroundColor
+                      + "; font-family: '" + Fonts.codeFont.family + "' }"
                       + " a { color: " + root.linkColor + " }"
-                      + " a.mention { background-color: " + root.mentionBackgroundColor + " }"
+                      + " a.mention { color: " + root.mentionTextColor
+                      + "; background-color: " + root.mentionBackgroundColor
+                      + "; text-decoration: none }"
             if (hoveredLink)
                 style += " a[href=\"" + hoveredLink + "\"] { background-color: "
                        + root.linkHoverColor + " }"
