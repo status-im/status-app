@@ -215,8 +215,28 @@ StatusDialog {
     /** Output signal to fetch more assets **/
     signal fetchMoreAssets()
 
+    /** Output: latches true the first time the collectibles pipeline is actually
+        needed -- the user opens the collectibles tab, or a collectible send is
+        preselected. Lets the owner defer building the expensive collectibles
+        model (CollectiblesSelectionAdaptor) off the modal-open path. **/
+    readonly property bool collectiblesNeeded: d.collectiblesNeeded
+
     QtObject {
         id: d
+
+        // The collectibles model feeding the token selector is produced by an
+        // O(collectibles) synchronous proxy chain. The modal opens on the assets
+        // tab, so it is deferred: this latches true the first time collectibles
+        // are needed (collectibles tab opened, or a collectible send preselected
+        // via deep-link/transferOwnership) and never falls back.
+        property bool collectiblesNeeded: false
+        readonly property bool wantsCollectibles:
+            !root.displayOnlyAssets &&
+            (root.transferOwnership
+             || root.sendType === Constants.SendType.ERC721Transfer
+             || root.sendType === Constants.SendType.ERC1155Transfer
+             || sendModalHeader.tokenSelectorTab === TokenSelectorPanel.Tabs.Collectibles)
+        onWantsCollectiblesChanged: if (wantsCollectibles) collectiblesNeeded = true
 
         readonly property bool selectedTokenExistsInAssetsModel: selectedAssetEntry.available
         onSelectedTokenExistsInAssetsModelChanged: d.updateResolvedSelectedToken()

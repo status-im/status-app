@@ -352,8 +352,12 @@ QtObject {
             accountsModel: handler.accountsSelectorAdaptor.processedWalletAccounts
             assetsModel: handler.assetsSelectorModel
             groupedAccountAssetsModel: root.groupedAccountAssetsModel
-            flatCollectiblesModel: handler.collectiblesSelectionAdaptor.filteredFlatModel
-            collectiblesModel: handler.collectiblesSelectionAdaptor.model
+            flatCollectiblesModel: handler.collectiblesSelectionAdaptorLoader.item
+                                   ? handler.collectiblesSelectionAdaptorLoader.item.filteredFlatModel
+                                   : handler.emptyCollectiblesModel
+            collectiblesModel: handler.collectiblesSelectionAdaptorLoader.item
+                               ? handler.collectiblesSelectionAdaptorLoader.item.model
+                               : handler.emptyCollectiblesModel
             networksModel: root.filteredFlatNetworksModel
             recipientsModel: handler.recipientViewAdaptor.recipientsModel
             recipientsFilterModel: handler.recipientViewAdaptor.recipientsFilterModel
@@ -636,20 +640,31 @@ QtObject {
                 }
                 Component.onCompleted: handler.updateSendSectionNames()
 
-                readonly property var collectiblesSelectionAdaptor: CollectiblesSelectionAdaptor {
-                    accountKey: simpleSendModal.selectedAccountAddress
-                    enabledChainIds: [simpleSendModal.selectedChainId]
+                // Deferred: CollectiblesSelectionAdaptor is an O(collectibles)
+                // synchronous proxy-chain build (LeftJoin + SFPM + nested per-group
+                // ObjectProxyModels) that is pure waste while the modal sits on the
+                // assets tab. Built only once collectibles are needed
+                // (simpleSendModal.collectiblesNeeded: collectibles tab opened or a
+                // collectible send preselected); until then consumers see an empty model.
+                readonly property Loader collectiblesSelectionAdaptorLoader: Loader {
+                    active: simpleSendModal.collectiblesNeeded
+                    sourceComponent: CollectiblesSelectionAdaptor {
+                        accountKey: simpleSendModal.selectedAccountAddress
+                        enabledChainIds: [simpleSendModal.selectedChainId]
 
-                    networksModel: root.filteredFlatNetworksModel
-                    collectiblesModel: SortFilterProxyModel {
-                        sourceModel: root.collectiblesBySymbolModel
-                        filters: ValueFilter {
-                            roleName: "soulbound"
-                            value: false
+                        networksModel: root.filteredFlatNetworksModel
+                        collectiblesModel: SortFilterProxyModel {
+                            sourceModel: root.collectiblesBySymbolModel
+                            filters: ValueFilter {
+                                roleName: "soulbound"
+                                value: false
+                            }
                         }
+                        filterCommunityOwnerAndMasterTokens: !simpleSendModal.transferOwnership
                     }
-                    filterCommunityOwnerAndMasterTokens: !simpleSendModal.transferOwnership
                 }
+
+                readonly property ListModel emptyCollectiblesModel: ListModel {}
 
                 readonly property var totalFeesAggregator: FunctionAggregator {
                     model: !!handler.fetchedPathModel ?
