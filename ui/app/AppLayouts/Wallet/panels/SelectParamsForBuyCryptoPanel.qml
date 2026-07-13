@@ -22,6 +22,9 @@ ColumnLayout {
     required property int selectedNetworkChainId
     required property var filteredFlatNetworksModel
 
+    /** Forwarded to AssetSelectorCompact; see SearchableAssetsPanel.formatCurrencyBalance. **/
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : String(amount))
+
     signal networkSelected(int chainId)
     signal tokenSelected(string tokenGroupKey)
 
@@ -95,6 +98,7 @@ ColumnLayout {
             Layout.fillWidth: true
 
             model: root.assetsModel
+            formatCurrencyBalance: root.formatCurrencyBalance
 
             onSelected: root.tokenSelected(key)
 
@@ -108,7 +112,7 @@ ColumnLayout {
                                                       "key", root.selectedTokenGroupKey)
                     if (entry) {
                         assetSelector.setSelection(entry.name, entry.symbol,
-                                                   entry.iconSource, entry.key)
+                                                   entry.logoUri || Constants.tokenIcon(entry.symbol), entry.key)
                         root.tokenSelected(entry.key)
                     } else {
                         assetSelector.reset()

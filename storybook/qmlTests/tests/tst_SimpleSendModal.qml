@@ -111,7 +111,8 @@ Item {
                         "sectionName":"Your assets on Mainnet",
                         "balances":[
                             {
-                                "balance":"122082928968121891",
+                                "balance":0.1220829289681219,
+                                "rawBalance":"122082928968121891",
                                 "balanceAsDouble":0.1220829289681219,
                                 "chainId":1,
                                 "account":"0x7F47C2e98a4BBf5487E6fb082eC2D9Ab0E6d8884",
@@ -153,7 +154,8 @@ Item {
                         "sectionName":"Popular assets",
                         "balances":[
                             {
-                                "balance":"122082928968121891",
+                                "balance":1000,
+                                "rawBalance":"122082928968121891",
                                 "balanceAsDouble":1000,
                                 "chainId":10,
                                 "account":"0x7F47C2e98a4BBf5487E6fb082eC2D9Ab0E6d8884",

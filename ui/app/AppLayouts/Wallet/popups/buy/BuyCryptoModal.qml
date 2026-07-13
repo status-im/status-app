@@ -15,9 +15,7 @@ import StatusQ.Core.Utils
 import utils
 
 import AppLayouts.Wallet.controls
-import AppLayouts.Wallet.adaptors
 import AppLayouts.Wallet.panels
-import AppLayouts.Wallet.stores
 
 import QtModelsToolkit
 
@@ -34,6 +32,11 @@ StatusStackModal {
     required property var walletAccountsModel
     required property var networksModel
     required property string currentCurrency
+
+    // Terminal token-selector picker model (buy/all-tokens, non-lazy), created and
+    // released by the owner (Popups.qml) so it can be stubbed in isolation. The
+    // params below scope it to the selected account and chain.
+    required property var tokenSelectorModel
 
     signal fetchProviders()
     signal fetchProviderUrl(string uuid,
@@ -114,20 +117,37 @@ StatusStackModal {
 
         // used to filter items based on search string in the token selector
 
-        readonly property var tokenSelectorViewAdaptor: TokenSelectorViewAdaptor {
-            assetsModel: root.groupedAccountAssetsModel
-            allTokenGroupsForChainModel: root.tokenGroupsModel
-            flatNetworksModel: root.networksModel
-            currentCurrency: root.currentCurrency
-
-            showAllTokens: true
-            enabledChainIds: root.buyCryptoInputParamsForm.selectedNetworkChainId !== -1 ? [root.buyCryptoInputParamsForm.selectedNetworkChainId] : []
-            accountAddress: root.buyCryptoInputParamsForm.selectedWalletAddress
+        // Drive the injected picker model's per-modal params (buy = all-tokens;
+        // scoped to the selected account and chain).
+        readonly property Binding _buyChainBinding: Binding {
+            target: root.tokenSelectorModel
+            property: "enabledChainId"
+            value: root.buyCryptoInputParamsForm.selectedNetworkChainId
+            restoreMode: Binding.RestoreNone
         }
+        readonly property Binding _buyAccountBinding: Binding {
+            target: root.tokenSelectorModel
+            property: "accountAddress"
+            value: root.buyCryptoInputParamsForm.selectedWalletAddress
+            restoreMode: Binding.RestoreNone
+        }
+        function updateSectionNames() {
+            if (!root.tokenSelectorModel)
+                return
+            const chainName = ModelUtils.getByKey(
+                root.networksModel, "chainId", root.buyCryptoInputParamsForm.selectedNetworkChainId, "chainName") || ""
+            root.tokenSelectorModel.setSectionNames(
+                qsTr("Your assets on %1").arg(chainName), qsTr("Popular assets"))
+        }
+        readonly property Connections _buySectionSync: Connections {
+            target: root.buyCryptoInputParamsForm
+            function onSelectedNetworkChainIdChanged() { d.updateSectionNames() }
+        }
+        Component.onCompleted: d.updateSectionNames()
 
         readonly property var buyCryptoAdaptor: BuyCryptoModalAdaptor {
             networksModel: root.networksModel
-            processedTokenSelectorAssetsModel: d.tokenSelectorViewAdaptor.outputAssetsModel
+            processedTokenSelectorAssetsModel: root.tokenSelectorModel
             selectedProviderSupportedAssetsArray: {
                 if (!!d.selectedProviderEntry.item && !!d.selectedProviderEntry.item.supportedAssets)
                     return ModelUtils.modelToFlatArray(d.selectedProviderEntry.item.supportedAssets, "key")
@@ -183,6 +203,7 @@ StatusStackModal {
         SelectParamsForBuyCryptoPanel {
             objectName: "selectParamsPanel"
             assetsModel: d.buyCryptoAdaptor.filteredAssetsModel
+            formatCurrencyBalance: (amount) => LocaleUtils.currencyAmountToLocaleString({amount, symbol: root.currentCurrency})
             selectedProvider: d.selectedProviderEntry.item
             selectedTokenGroupKey: root.buyCryptoInputParamsForm.selectedTokenGroupKey
             selectedNetworkChainId: root.buyCryptoInputParamsForm.selectedNetworkChainId

@@ -38,6 +38,9 @@ Control {
 
     property bool showSectionName: true
 
+    /** Forwarded to SearchableAssetsPanel; see its formatCurrencyBalance. **/
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : String(amount))
+
     signal assetSelected(string key)
     signal collectionSelected(string key)
     signal collectibleSelected(string key)
@@ -100,6 +103,7 @@ Control {
 
             highlightedKey: root.highlightedKey
             showSectionName: root.showSectionName
+            formatCurrencyBalance: root.formatCurrencyBalance
 
             onSelected: (key) => root.assetSelected(key)
             onSearch: (keyword) => root.searchInAssets(keyword)

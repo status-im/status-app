@@ -19,6 +19,9 @@ Control {
     property bool hasMoreItems: false
     property bool isLoadingMore: false
 
+    /** Forwarded to SearchableAssetsPanel; see its formatCurrencyBalance. **/
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : String(amount))
+
     readonly property bool isSelected: button.selected
 
     signal search(string keyword)
@@ -80,6 +83,7 @@ Control {
             nonInteractiveKey: root.nonInteractiveKey
             hasMoreItems: root.hasMoreItems
             isLoadingMore: root.isLoadingMore
+            formatCurrencyBalance: root.formatCurrencyBalance
 
             onLoadMoreRequested: root.loadMoreRequested()
 
@@ -95,7 +99,7 @@ Control {
                     return
                 }
 
-                setCurrentAndClose(entry.symbol, entry.logoUri, entry.key)
+                setCurrentAndClose(entry.symbol, entry.logoUri || Constants.tokenIcon(entry.symbol), entry.key)
                 root.selected(entry.key)
             }
 

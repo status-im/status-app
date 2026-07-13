@@ -28,6 +28,9 @@ RowLayout {
     - iconSource: string
     **/
     required property var assetsModel
+
+    /** Formats the numeric currencyBalance role for the asset list rows. **/
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : String(amount))
     /**
     Expected model structure:
     - groupName: group name (from collection or community name)
@@ -127,6 +130,7 @@ RowLayout {
         showSectionName: false
 
         assetsModel: root.assetsModel
+        formatCurrencyBalance: root.formatCurrencyBalance
         collectiblesModel: root.displayOnlyAssets ? null: root.collectiblesModel
 
         onCollectibleSelected: (key) => root.collectibleSelected(key)
