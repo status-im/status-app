@@ -152,6 +152,10 @@ pipeline {
                   credentialsId: 'browserstack-status-mobile-android',
                   usernameVariable: 'BROWSERSTACK_USERNAME',
                   passwordVariable: 'BROWSERSTACK_ACCESS_KEY'
+                ),
+                string(
+                  credentialsId: 'wallet-test-user-seed',
+                  variable: 'WALLET_TEST_USER_SEED'
                 )
               ]) {
                 sh "BROWSERSTACK_APP_ID=${appId} ${VIRTUAL_ENV}/bin/python -m pytest --env browserstack ${params.PYTEST_ARGS?.trim() ?: ''}"
