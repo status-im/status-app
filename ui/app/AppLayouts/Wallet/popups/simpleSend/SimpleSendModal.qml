@@ -614,7 +614,10 @@ StatusDialog {
                     width: stickyHeaderLoader.width
                     blurSource: scrollView.contentItem
 
-                    stickyHeaderVisible: d.stickyHeaderVisible
+                    // Start hidden so the first reveal animates via the height
+                    // Behavior instead of popping to full height on Loader creation.
+                    property bool initialRevealDone: false
+                    stickyHeaderVisible: d.stickyHeaderVisible && initialRevealDone
 
                     interactive: root.interactive && !root.transferOwnership
                     displayOnlyAssets: root.displayOnlyAssets
@@ -640,7 +643,10 @@ StatusDialog {
                                            root.selectedChainId = chainId
                                        }
                     // Replay the token selected before this header was created.
-                    Component.onCompleted: setToken(d.lastTokenName, d.lastTokenIcon, d.lastTokenKey)
+                    Component.onCompleted: {
+                        setToken(d.lastTokenName, d.lastTokenIcon, d.lastTokenKey)
+                        Qt.callLater(() => initialRevealDone = true)
+                    }
                 }
             }
         }
