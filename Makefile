@@ -1067,6 +1067,11 @@ nim-test-run/test/nim/typed_completion_test.nim: | statusq
 nim-test-run/test/nim/asset_proxy_chain_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
 nim-test-run/test/nim/asset_proxy_chain_bench.nim: | statusq
 
+# swap_key_harvest_bench drives the real QtMT.ModelQuery (registerStatusQTypes) in an
+# offscreen QML engine, so it links StatusQ.
+nim-test-run/test/nim/swap_key_harvest_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+nim-test-run/test/nim/swap_key_harvest_bench.nim: | statusq
+
 ifneq ($(mkspecs),win32)
 nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
