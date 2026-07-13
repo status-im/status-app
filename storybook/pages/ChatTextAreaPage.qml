@@ -48,10 +48,10 @@ For bigger chunks of code it's better to use triple-ticks code block:
 using namespace std;
 
 int main() {
-// This statement prints "Hello World"
-cout << "Hello World";
+    // This statement prints "Hello World"
+    cout << "Hello World";
 
-return 0;
+    return 0;
 }
 \`\`\`
 
@@ -452,6 +452,8 @@ unclosed fence here (no closing triple-tick)
                                 color: Theme.palette.background
                                 radius: 4
                             }
+
+                            textMargin: 10
 
                             font.pixelSize: 15
                             codeBackground: Theme.palette.baseColor4

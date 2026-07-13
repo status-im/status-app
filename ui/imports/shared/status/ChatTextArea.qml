@@ -72,6 +72,7 @@ StatusTextArea {
     }
 
     wrapMode: TextEdit.Wrap
+    background: null
 
     // Keep the caret out of the "> " quote prefix so it feels atomic. Self-terminating:
     // re-firing with an already-snapped position is a no-op.
