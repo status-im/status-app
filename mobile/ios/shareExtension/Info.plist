@@ -31,15 +31,18 @@
         <string>ShareViewController</string>
         <key>NSExtensionAttributes</key>
         <dict>
-            <!-- Text & links slice (#14): exactly what ShareViewController
-                 extracts today. Extend with image types in the image slice
-                 (#15). -->
+            <!-- Exactly what ShareViewController extracts and chat can send:
+                 text, at most one web URL (#14), and images (#15) up to the
+                 in-app per-message limit (Constants.maxUploadFiles = 6 in
+                 ui/imports/utils/Constants.qml). No video/arbitrary files. -->
             <key>NSExtensionActivationRule</key>
             <dict>
                 <key>NSExtensionActivationSupportsText</key>
                 <true/>
                 <key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
                 <integer>1</integer>
+                <key>NSExtensionActivationSupportsImageWithMaxCount</key>
+                <integer>6</integer>
             </dict>
         </dict>
     </dict>

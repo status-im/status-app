@@ -231,6 +231,9 @@ add_library(StatusQ ${LIB_TYPE}
         src/imageencoderutils.cpp
         src/inputmethodeventfilter.cpp
         src/keychain.cpp
+        # self-#ifdef'd on Q_OS_ANDROID: every platform needs the extern-C
+        # stubs (systemutilsinternal.cpp calls them unconditionally)
+        src/lifecycleutils_android.cpp
         src/osnotification.cpp
         src/urlschemeevent.cpp
         src/localnetworkpermission.cpp
@@ -331,7 +334,6 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
     target_sources(StatusQ PRIVATE
         src/keychain_android.cpp
         src/safutils_android.cpp
-        src/lifecycleutils_android.cpp
         src/StatusQ/Controls/NativeSwipeHandlerItem_android.cpp
         src/StatusQ/Controls/NativeIndicatorItem_android.cpp
         src/shareutils_android.cpp
