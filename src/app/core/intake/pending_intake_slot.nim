@@ -51,6 +51,18 @@ proc write*(self: PendingIntakeSlot, payload: string) =
   except CatchableError:
     discard
 
+proc peek*(self: PendingIntakeSlot): string =
+  ## Reads the pending payload without clearing it; "" when there is none.
+  ## Used by the fresh-launch cache sweep to learn which cached image copies
+  ## the still-pending payload references before delivery.
+  let path = self.filePath()
+  if not self.isActive() or not fileExists(path):
+    return ""
+  try:
+    result = readFile(path)
+  except CatchableError:
+    result = ""
+
 proc take*(self: PendingIntakeSlot): string =
   ## Reads and clears the pending payload; "" when there is none.
   let path = self.filePath()

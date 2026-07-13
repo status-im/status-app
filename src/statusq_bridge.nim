@@ -29,6 +29,10 @@ proc statusq_urlscheme_delete*(obj: pointer) {.cdecl, importc.}
 # platforms without an App Group container. Pointer valid for process lifetime.
 proc statusq_shareintake_pending_dir*(): cstring {.cdecl, importc.}
 
+# App Group `share-intake` cache dir holding the extension-made copies of
+# shared images; "" outside iOS. Pointer valid for process lifetime.
+proc statusq_shareintake_cache_dir*(): cstring {.cdecl, importc.}
+
 when defined(monitoring):
   proc statusq_registerMonitoringType*() {.cdecl, importc.}
   proc statusq_initializeMonitoring*(engine: pointer) {.cdecl, importc.}
