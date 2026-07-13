@@ -16,6 +16,7 @@
 
 #include <StatusQ/networkaccessfactory.h>
 #include <StatusQ/typesregistration.h>
+#include <StatusQ/lifecycleutils.h>
 #include <StatusQ/osnotification.h>
 #include <StatusQ/shareintake.h>
 #include <StatusQ/urlschemeevent.h>
@@ -56,6 +57,15 @@ Q_DECL_EXPORT void statusq_registerQmlTypes() {
 
 Q_DECL_EXPORT float statusq_getMobileUIScaleFactor(float baseWidth, float baseDpi, float baseScale) {
     return MobileUI::getSmartScaleFactor(baseWidth, baseDpi, baseScale);
+}
+
+// Logout hygiene (declared in StatusQ/lifecycleutils.h): donated send-message
+// interactions carry chat names and avatars on OS surfaces outside the app
+// process (iOS share-sheet suggestion chips), so they are deleted
+// unconditionally when the profile logs out (called from the Nim main
+// module). MobileUI implements the deletion on iOS and no-ops elsewhere.
+Q_DECL_EXPORT void statusq_deleteDonatedInteractions() {
+    MobileUI::deleteAllDonatedInteractions();
 }
 
 Q_DECL_EXPORT void statusq_installMessageHandler(StatusQMessageHandler cb) {
