@@ -2702,6 +2702,14 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Ways to buy %1 for %2</source>
         <translation type="unfinished"></translation>
     </message>
@@ -14720,6 +14728,14 @@ to load</source>
         <source>Token that you&apos;re trying to send is not supported.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SendModalHeader</name>
@@ -16477,6 +16493,14 @@ to load</source>
         <source>Receive</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SwapModal</name>
@@ -17418,17 +17442,6 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Collectibles</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>TokenSelectorViewAdaptor</name>
-    <message>
-        <source>Popular assets</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your assets on %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
