@@ -1032,5 +1032,44 @@ Item {
             tryCompare(controlUnderTest, "selectedRawAmount", "1")
         }
 
+        // The sticky header carries its own tab state, so switching to the
+        // collectibles tab there must also latch the deferred pipeline.
+        function test_collectiblesNeeded_onStickyHeaderCollectiblesTab() {
+            verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened)
+
+            waitForRendering(controlUnderTest.contentItem)
+
+            // Opening on the assets tab must not request the collectibles pipeline.
+            const sendModalHeader = findChild(controlUnderTest, "sendModalHeader")
+            verify(!!sendModalHeader)
+            if (sendModalHeader.tokenSelectorTab === 0)
+                verify(!controlUnderTest.collectiblesNeeded)
+
+            // Scroll to instantiate the deferred sticky header.
+            const scrollView = findChild(controlUnderTest, "scrollView")
+            verify(!!scrollView)
+            scrollView.scrollEnd()
+
+            const stickySendModalHeader = findChild(controlUnderTest, "stickySendModalHeader")
+            verify(!!stickySendModalHeader)
+            tryVerify(() => stickySendModalHeader.height > 0)
+
+            // Switching the sticky header to the collectibles tab latches the pipeline.
+            stickySendModalHeader.tokenSelectorTab = 1 // TokenSelectorPanel.Tabs.Collectibles
+            verify(controlUnderTest.collectiblesNeeded)
+
+            // ...and the collectibles content is available in the sticky token selector.
+            const stickyTokenSelector = findChild(stickySendModalHeader, "tokenSelector")
+            verify(!!stickyTokenSelector)
+            verify(!!stickyTokenSelector.collectiblesModel)
+            verify(stickyTokenSelector.collectiblesModel.rowCount() > 0)
+
+            // The latch never falls back once collectibles have been shown.
+            stickySendModalHeader.tokenSelectorTab = 0 // back to Assets
+            verify(controlUnderTest.collectiblesNeeded)
+        }
+
     }
 }

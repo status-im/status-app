@@ -235,7 +235,13 @@ StatusDialog {
             (root.transferOwnership
              || root.sendType === Constants.SendType.ERC721Transfer
              || root.sendType === Constants.SendType.ERC1155Transfer
-             || sendModalHeader.tokenSelectorTab === TokenSelectorPanel.Tabs.Collectibles)
+             || sendModalHeader.tokenSelectorTab === TokenSelectorPanel.Tabs.Collectibles
+             // The sticky header carries its own tab state, so its live tab must
+             // also feed the latch; otherwise switching to Collectibles there
+             // never builds the deferred model.
+             || (stickyHeaderLoader.item
+                 ? stickyHeaderLoader.item.tokenSelectorTab === TokenSelectorPanel.Tabs.Collectibles
+                 : false))
         onWantsCollectiblesChanged: if (wantsCollectibles) collectiblesNeeded = true
 
         readonly property bool selectedTokenExistsInAssetsModel: selectedAssetEntry.available
