@@ -1,5 +1,7 @@
 #include "StatusQ/systemutilsinternal.h"
 
+#include "StatusQ/lifecycleutils.h"
+
 #include <QDesktopServices>
 #include <QGuiApplication>
 #include <QUrl>
@@ -582,18 +584,7 @@ void SystemUtilsInternal::publishShareShortcuts(const QString& shortcutsJson)
 
 void SystemUtilsInternal::clearShareShortcuts()
 {
-#ifdef Q_OS_ANDROID
-    QJniObject context = QNativeInterface::QAndroidApplication::context();
-    if (!context.isValid())
-        return;
-
-    QJniObject::callStaticMethod<void>(
-        "app/status/mobile/ShareShortcutsHelper",
-        "clear",
-        "(Landroid/content/Context;)V",
-        context.object()
-    );
-#endif
+    statusq_clearShareShortcuts();
 }
 
 QString SystemUtilsInternal::shareShortcutsIconDirectory() const
