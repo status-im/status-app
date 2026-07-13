@@ -9,6 +9,9 @@
 // are team-scoped, not bundle-id-scoped.
 static NSString *const kAppGroupId = @"group.app.status.mobile";
 static NSString *const kPendingIntakeDirName = @"pending-intake";
+// Must match kShareIntakeCacheDirName in ShareViewController.m and
+// ShareIntakeCacheDirName in src/app/core/intake/share_intake_cache.nim.
+static NSString *const kShareIntakeCacheDirName = @"share-intake";
 
 QString Status::ShareIntake::pendingIntakeDir()
 {
@@ -18,5 +21,16 @@ QString Status::ShareIntake::pendingIntakeDir()
         return {};
 
     NSURL *dir = [container URLByAppendingPathComponent:kPendingIntakeDirName isDirectory:YES];
+    return QString::fromNSString(dir.path);
+}
+
+QString Status::ShareIntake::shareIntakeCacheDir()
+{
+    NSURL *container = [[NSFileManager defaultManager]
+        containerURLForSecurityApplicationGroupIdentifier:kAppGroupId];
+    if (container == nil)
+        return {};
+
+    NSURL *dir = [container URLByAppendingPathComponent:kShareIntakeCacheDirName isDirectory:YES];
     return QString::fromNSString(dir.path);
 }

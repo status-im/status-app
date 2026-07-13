@@ -17,12 +17,13 @@
 ##    with pre-ready buffering; a direct-share shortcut tap carries its
 ##    destination chat id through (empty for plain shares and slot payloads).
 
-import unittest, os
+import unittest, os, json
 import nimqml
 import app/core/eventemitter
 import app/core/custom_urls/url_scheme_event
 import app/core/custom_urls/urls_manager
 import app/core/intake/pending_intake_slot
+import app/core/intake/share_intake_cache
 import app/global/app_signals
 import app/global/single_instance
 import statusq_bridge
@@ -50,6 +51,11 @@ suite "share_intake_wake":
     # socket under that name in the temp dir and removeDir would trip on it.
     let slotDir = getTempDir() / "share_intake_wake_test_slot"
     removeDir(slotDir)
+    # App-Group-style cache dir the iOS extension copies shared images into;
+    # must be named `share-intake` for the Nim cache-lifecycle guard to own it.
+    let cacheBase = getTempDir() / "share_intake_wake_test_cache"
+    removeDir(cacheBase)
+    let cacheDir = cacheBase / ShareIntakeCacheDirName
     let events = createEventEmitter()
     let urlSchemeEvent = newUrlSchemeEvent()
     let singleInstance = newSingleInstance("share_intake_wake_test", "")
@@ -66,6 +72,7 @@ suite "share_intake_wake":
 
   teardown:
     removeDir(slotDir)
+    removeDir(cacheBase)
 
   test "wake url delivers the slot share payload to the intake seam":
     manager.appReady()
@@ -137,6 +144,71 @@ suite "share_intake_wake":
 
     check sharedTexts == @["pic"]
     check sharedImagePaths == @[@["/cache/share-intake/img.png"]]
+
+  test "slot share delivers App Group cached image paths with the files intact":
+    # iOS end-to-end: the extension copied the shared images into the App
+    # Group share-intake dir and referenced them in the payload; delivery
+    # hands the paths over with the files still on disk — release happens
+    # only after send/cancel, not at delivery.
+    manager.appReady()
+    createDir(cacheDir)
+    let img = cacheDir / "shared.png"
+    writeFile(img, "img")
+    slot.write($ %*{"type": "share", "text": "pic", "imagePaths": [img]})
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = sharedTexts.len > 0)
+
+    check sharedTexts == @["pic"]
+    check sharedImagePaths == @[@[img]]
+    check fileExists(img)
+
+  test "a slot image share replaced before delivery releases its cached copies":
+    # Logged-out user shares twice: the second slot payload wins; the first
+    # share's App Group copies are unreferenced now and must not accumulate.
+    createDir(cacheDir)
+    let oldImg = cacheDir / "old.png"
+    let newImg = cacheDir / "new.png"
+    writeFile(oldImg, "img")
+    writeFile(newImg, "img")
+
+    slot.write($ %*{"type": "share", "text": "first", "imagePaths": [oldImg]})
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    slot.write($ %*{"type": "share", "text": "second", "imagePaths": [newImg]})
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    manager.appReady()
+
+    check sharedTexts == @["second"]
+    check sharedImagePaths == @[@[newImg]]
+    check not fileExists(oldImg)
+    check fileExists(newImg)
+
+  test "manager construction sweeps leftover cached copies, keeping slot-referenced ones":
+    # Fresh-launch hygiene: a previous run killed mid-flow left copies in the
+    # App Group cache; only the copies the still-pending slot payload
+    # references survive the sweep (a logged-out share survives restarts).
+    createDir(cacheDir)
+    let leftover = cacheDir / "leftover.png"
+    let referenced = cacheDir / "pending.png"
+    writeFile(leftover, "img")
+    writeFile(referenced, "img")
+    slot.write($ %*{"type": "share", "text": "pic", "imagePaths": [referenced]})
+
+    let freshManager = newUrlsManager(events, urlSchemeEvent, singleInstance,
+      "", slot, cacheDir)
+
+    check not fileExists(leftover)
+    check fileExists(referenced)
+
+    freshManager.appReady()
+
+    check sharedTexts == @["pic"]
+    check sharedImagePaths == @[@[referenced]]
+    check fileExists(referenced)
 
   test "malformed slot payload is cleared and dispatches nothing":
     manager.appReady()
