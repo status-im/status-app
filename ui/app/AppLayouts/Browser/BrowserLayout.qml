@@ -650,6 +650,11 @@ StatusSectionLayout {
         incognitoMode: _internal.currentTabIncognito
         zoomFactor: _internal.currentWebView?.zoomFactor ?? 1
         browserSettings: localAccountSensitiveSettings
+        clearingCache: _internal.currentWebView?.clearing ?? false
+        clearSiteDataSupported: _internal.currentWebView?.clearSiteDataSupported ?? true
+        onForceReload: webViewContext.forceReloadCurrent()
+        onClearSiteData: webViewContext.clearSiteDataCurrent()
+        onClearCache: webViewContext.clearCacheCurrent()
         onAddNewTab: _internal.addNewEmptyTab()
         onAddNewDownloadTab: _internal.addNewDownloadTab()
         onGoIncognito: (checked) => root.applyIncognitoMode(checked)
@@ -687,6 +692,12 @@ StatusSectionLayout {
 
         supportsFind: _internal.currentTabSupportsFindInPage
         onLaunchFindBar: _internal.showFindBar()
+
+        clearSiteDataSupported: _internal.currentWebView?.clearSiteDataSupported ?? false
+        clearing: _internal.currentWebView?.clearing ?? false
+        onForceReload: webViewContext.forceReloadCurrent()
+        onClearSiteData: webViewContext.clearSiteDataCurrent()
+        onClearCache: webViewContext.clearCacheCurrent()
 
         onGoIncognito: checked => root.applyIncognitoMode(checked)
         onSettingsRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings)

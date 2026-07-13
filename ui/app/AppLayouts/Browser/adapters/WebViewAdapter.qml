@@ -35,6 +35,8 @@ AbstractWebView {
     supportsIncognito: true
     supportsHistory: true
     hasNativeFindPanel: false
+    // WebEngine can clear the current origin's web storage via injected JS (site_utils.js).
+    clearSiteDataSupported: true
 
     // Override functions
     function loadUrl(newUrl) { webView.url = newUrl }
@@ -43,6 +45,29 @@ AbstractWebView {
     function goBackOrForward(offset) { webView.goBackOrForward(offset) }
     function reload() { webView.reload() }
     function stop() { webView.stop() }
+    function forceReload() { webView.triggerWebAction(WebEngineView.ReloadAndBypassCache) }
+    // Per-origin web storage clear via injected site_utils.js, which reloads on completion.
+    // WebEngine has no honest per-site cookie/cache primitive (see mobilewebview ADR 0004).
+    function clearSiteData() {
+        webView.runJavaScript("window.StatusSiteUtils && window.StatusSiteUtils.clearSiteDataAndReload()")
+    }
+    // Profile-wide "clear browsing data": HTTP cache, cookies and visited links.
+    function clearCache() {
+        if (root.clearing || !root.profile)
+            return
+        root.clearing = true
+        root.profile.cookieStore.deleteAllCookies()
+        root.profile.clearAllVisitedLinks()
+        root.profile.clearHttpCache() // async; completion drives _finishClearCache()
+        _clearCacheFallbackTimer.restart()
+    }
+    function _finishClearCache() {
+        if (!root.clearing)
+            return
+        _clearCacheFallbackTimer.stop()
+        root.clearing = false
+        webView.reload()
+    }
     function findText(text, flags) { webView.findText(text, flags) }
     function changeZoomFactor(factor) { webView.zoomFactor = factor }
     function acceptAsNewWindow(request) { request.openIn(webView) }
@@ -160,6 +185,11 @@ AbstractWebView {
                 webView.htmlPageLoaded = true
         }
         onNavigationRequested: function(request) {
+            if (root.clearing) {
+                // Block navigation while browsing data is being cleared.
+                request.reject()
+                return
+            }
             if (request.url.toString().startsWith("file:/")) {
                 console.log("Local file browsing is disabled")
                 request.reject()
@@ -202,6 +232,15 @@ AbstractWebView {
                 return
             root.downloadRequested(download)
         }
+        function onClearHttpCacheCompleted() { root._finishClearCache() }
+    }
+
+    // Fallback in case clearHttpCacheCompleted doesn't fire (e.g. empty cache).
+    Timer {
+        id: _clearCacheFallbackTimer
+        interval: 1000
+        repeat: false
+        onTriggered: root._finishClearCache()
     }
 
     WebEngineView {

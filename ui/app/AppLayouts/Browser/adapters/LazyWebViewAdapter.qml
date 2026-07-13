@@ -19,12 +19,14 @@ AbstractWebView {
     // WARN: needs to remain a var to avoid mixing platform-specific types
     property var profileManager: null
 
-    supportsZoom:       loader.item ? loader.item.supportsZoom       : false
-    supportsDevTools:   loader.item ? loader.item.supportsDevTools   : false
-    supportsFindInPage: loader.item ? loader.item.supportsFindInPage : false
-    supportsIncognito:  loader.item ? loader.item.supportsIncognito  : false
-    supportsHistory:    loader.item ? loader.item.supportsHistory    : false
-    hasNativeFindPanel: loader.item ? loader.item.hasNativeFindPanel : false
+    supportsZoom:           loader.item ? loader.item.supportsZoom           : false
+    supportsDevTools:       loader.item ? loader.item.supportsDevTools       : false
+    supportsFindInPage:     loader.item ? loader.item.supportsFindInPage     : false
+    supportsIncognito:      loader.item ? loader.item.supportsIncognito      : false
+    supportsHistory:        loader.item ? loader.item.supportsHistory        : false
+    hasNativeFindPanel:     loader.item ? loader.item.hasNativeFindPanel     : false
+    clearSiteDataSupported: loader.item ? loader.item.clearSiteDataSupported : false
+    clearing:               loader.item ? loader.item.clearing               : false
 
     property string title: ""
     property url icon: ""
@@ -89,6 +91,21 @@ AbstractWebView {
             loader.item.reload()
     }
     function stop()               { if (loader.item) loader.item.stop() }
+    function forceReload() {
+        ensureLoaded()
+        if (loader.item)
+            loader.item.forceReload()
+    }
+    function clearSiteData() {
+        ensureLoaded()
+        if (loader.item)
+            loader.item.clearSiteData()
+    }
+    function clearCache() {
+        ensureLoaded()
+        if (loader.item)
+            loader.item.clearCache()
+    }
     function findText(text, flags){ if (loader.item) loader.item.findText(text, flags) }
     function showFindPanel()      { if (loader.item) loader.item.showFindPanel() }
     function hideFindPanel()      { if (loader.item) loader.item.hideFindPanel() }

@@ -1,5 +1,7 @@
 import QtQuick
 
+import StatusQ.Core.Utils as SQUtils
+
 import AppLayouts.Browser.adapters
 
 /**
@@ -15,13 +17,23 @@ QtObject {
     property bool featureEnabled: true
     property string httpUserAgent: ""
 
-    readonly property var scriptPaths: root.featureEnabled ? [
-        { path: Qt.resolvedUrl("../js/webengine_runtime_guard.js"), runOnSubFrames: true },
-        { path: Qt.resolvedUrl("../js/qwebchannel.js"), runOnSubFrames: true },
-        { path: Qt.resolvedUrl("../js/ethereum_wrapper.js"), runOnSubFrames: true },
-        { path: Qt.resolvedUrl("../js/eip6963_announcer.js"), runOnSubFrames: false },
-        { path: Qt.resolvedUrl("../js/ethereum_injector.js"), runOnSubFrames: true }
-    ] : []
+    readonly property var scriptPaths: {
+        const scripts = []
+        // Injected regardless of the dApp connector feature so "Clear site data"
+        // works standalone. Desktop only: mobile uses the native clearSiteData()
+        // (mobilewebview ADR 0004), never this JS snippet.
+        if (!SQUtils.Utils.isMobile)
+            scripts.push({ path: Qt.resolvedUrl("../js/site_utils.js"), runOnSubFrames: true })
+
+        if (root.featureEnabled) {
+            scripts.push({ path: Qt.resolvedUrl("../js/webengine_runtime_guard.js"), runOnSubFrames: true })
+            scripts.push({ path: Qt.resolvedUrl("../js/qwebchannel.js"), runOnSubFrames: true })
+            scripts.push({ path: Qt.resolvedUrl("../js/ethereum_wrapper.js"), runOnSubFrames: true })
+            scripts.push({ path: Qt.resolvedUrl("../js/eip6963_announcer.js"), runOnSubFrames: false })
+            scripts.push({ path: Qt.resolvedUrl("../js/ethereum_injector.js"), runOnSubFrames: true })
+        }
+        return scripts
+    }
 
     readonly property ProfileParams defaultProfileParams: ProfileParams {
         userId: root.userUID

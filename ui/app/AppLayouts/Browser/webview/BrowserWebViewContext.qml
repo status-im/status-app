@@ -192,6 +192,26 @@ QtObject {
         currentWebView.stop()
     }
 
+    function forceReloadCurrent() {
+        if (!currentWebView)
+            return
+        if (typeof currentWebView.ensureLoaded === "function")
+            currentWebView.ensureLoaded()
+        currentWebView.forceReload()
+    }
+
+    function clearSiteDataCurrent() {
+        if (!currentWebView)
+            return
+        currentWebView.clearSiteData()
+    }
+
+    function clearCacheCurrent() {
+        if (!currentWebView)
+            return
+        currentWebView.clearCache()
+    }
+
     function findTextCurrent(text, backward = false) {
         if (!currentWebView)
             return

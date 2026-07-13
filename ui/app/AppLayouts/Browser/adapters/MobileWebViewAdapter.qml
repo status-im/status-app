@@ -27,6 +27,8 @@ AbstractWebView {
     supportsIncognito: true
     supportsHistory: true
     hasNativeFindPanel: backend.hasNativeFindPanel
+    clearSiteDataSupported: backend.clearSiteDataSupported
+    clearing: backend.clearing
 
     MobileWebViewBackend {
         id: backend
@@ -60,6 +62,9 @@ AbstractWebView {
 
         function onHistoryItemsChanged() { root.rebuildHistoryModel() }
         function onCurrentHistoryIndexChanged() { root.rebuildHistoryModel() }
+
+        // clearSiteData reloads natively (cache-bypass); clearProfileData does not.
+        function onClearProfileDataCompleted() { backend.reload() }
     }
 
     function rebuildHistoryModel() {
@@ -98,6 +103,22 @@ AbstractWebView {
 
     function stop() {
         backend.stop()
+    }
+
+    function forceReload() {
+        backend.reloadAndBypassCache()
+    }
+
+    // Full native per-site wipe (cookies + cache + storage + SW); backend
+    // reloads with cache-bypass on completion (mobilewebview ADR 0004).
+    function clearSiteData() {
+        backend.clearSiteData()
+    }
+
+    // Profile-wide "clear browsing data": HTTP cache + cookies + DOM storage.
+    // Reloads the current view once clearProfileDataCompleted fires.
+    function clearCache() {
+        backend.clearProfileData()
     }
 
     function findText(text, flags) {

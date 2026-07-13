@@ -31,6 +31,9 @@ Item {
     readonly property bool htmlPageLoaded: false
     readonly property var scrollPosition: Qt.point(0, 0)
 
+    // True while at least one data-clearing operation is in flight (see CONTEXT: Clearing).
+    property bool clearing: false
+
     // === Capability Flags ===
     required property bool supportsZoom
     required property bool supportsDevTools
@@ -38,6 +41,10 @@ Item {
     required property bool supportsIncognito
     required property bool supportsHistory
     required property bool hasNativeFindPanel
+
+    // Whether "clear current site data" is available on this platform/backend.
+    // Desktop: always true (JS path). Mobile: reflects native capability.
+    property bool clearSiteDataSupported: false
 
     // Mobile-only: pauses native webview updates (no-op on desktop)
     property bool freeze: false
@@ -105,6 +112,17 @@ Item {
     function goBackOrForward(offset) { console.warn("AbstractWebView: goBackOrForward not implemented") }
     function reload() { console.warn("AbstractWebView: reload not implemented") }
     function stop() { console.warn("AbstractWebView: stop not implemented") }
+
+    // Force reload: refetch every resource from the network for this navigation,
+    // bypassing (not evicting) the cache (see CONTEXT: Force reload).
+    function forceReload() { console.warn("AbstractWebView: forceReload not implemented") }
+
+    // Clear current site data: wipe the current tab's site data, then reload.
+    // The implementation reloads itself; callers must not reload afterwards.
+    function clearSiteData() { console.warn("AbstractWebView: clearSiteData not implemented") }
+
+    // Clear browsing data (profile-wide cache, cookies, DOM storage), then reload.
+    function clearCache() { console.warn("AbstractWebView: clearCache not implemented") }
 
     function findText(text, flags) {}
     function showFindPanel() {}

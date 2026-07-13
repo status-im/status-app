@@ -18,11 +18,19 @@ StatusDialog {
 
     required property bool supportsFind
 
+    // Whether "Clear site data" is available on the current backend (see ADR 0004).
+    property bool clearSiteDataSupported: false
+    // True while a data-clearing operation is in flight.
+    property bool clearing: false
+
     signal goIncognito(bool checked)
     signal launchFindBar
     signal zoomIn
     signal zoomOut
     signal resetZoomFactor
+    signal forceReload
+    signal clearSiteData
+    signal clearCache
     signal settingsRequested
 
     title: qsTr("Browser")
@@ -94,6 +102,32 @@ StatusDialog {
             ]
             onClicked: {
                 root.resetZoomFactor()
+                root.close()
+            }
+        }
+        SettingsListItem {
+            title: qsTr("Force reload")
+            asset.name: "refresh"
+            onClicked: {
+                root.forceReload()
+                root.close()
+            }
+        }
+        SettingsListItem {
+            visible: root.clearSiteDataSupported
+            title: qsTr("Clear site data")
+            asset.name: "delete"
+            onClicked: {
+                root.clearSiteData()
+                root.close()
+            }
+        }
+        SettingsListItem {
+            title: root.clearing ? qsTr("Clearing cache...") : qsTr("Clear cache")
+            asset.name: "broom"
+            enabled: !root.clearing
+            onClicked: {
+                root.clearCache()
                 root.close()
             }
         }

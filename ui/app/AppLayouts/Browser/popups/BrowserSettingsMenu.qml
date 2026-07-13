@@ -25,10 +25,12 @@ StatusMenu {
     signal launchFindBar()
     signal toggleCompatibilityMode(bool checked)
     signal launchBrowserSettings()
+    signal forceReload()
     signal clearSiteData()
     signal clearCache()
 
     property bool clearingCache: false
+    property bool clearSiteDataSupported: true
 
     background: Rectangle {
         color: root.incognitoMode ?
@@ -134,10 +136,19 @@ StatusMenu {
         }
     }
 
+    StatusAction {
+        text: qsTr("Force reload")
+        icon.name: "refresh"
+        shortcut: "Ctrl+Shift+R"
+        onTriggered: forceReload()
+    }
+
     StatusMenuItem {
         text: qsTr("Clear site data")
         icon.name: "delete"
         icon.color: Theme.palette.primaryColor1
+        enabled: root.clearSiteDataSupported
+        visible: root.clearSiteDataSupported
         onTriggered: clearSiteData()
 
         StatusToolTip {
