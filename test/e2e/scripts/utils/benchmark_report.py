@@ -8,7 +8,8 @@ import allure
 from allure_commons.types import AttachmentType
 from allure_commons._allure import step
 
-from scripts.utils.process_metrics import ProcessSampleStats, ProcessMonitor
+from driver.aut import AUT
+from scripts.utils.process_metrics import ProcessSampleStats, ProcessMonitor, resolve_monitored_pid
 
 LOG = logging.getLogger(__name__)
 
@@ -122,7 +123,8 @@ def attach_community_scenario_reports(tmp_path: Path, scenario: str, samples: Co
     ])
 
 
-def monitored_call(pid: int, action: Callable[[], T], interval_sec: float = 0.1) -> tuple[T, ProcessSampleStats]:
-    with ProcessMonitor(pid, interval_sec=interval_sec) as monitor:
+def monitored_call(aut: AUT, action: Callable[[], T], interval_sec: float = 0.1) -> tuple[T, ProcessSampleStats]:
+    monitor_pid = resolve_monitored_pid(aut.pid, aut.path, aut.app_data)
+    with ProcessMonitor(monitor_pid, interval_sec=interval_sec) as monitor:
         result = action()
     return result, monitor.stats()

@@ -25,8 +25,9 @@ COMMUNITY_BENCHMARK_PARAMS = pytest.mark.parametrize(
 
 
 def _record_monitored_community_open(aut: AUT, main_screen, samples: CommunityOpenSamples) -> None:
+    """Shared by first-open and second-open community benchmark tests (load, CPU, RAM)."""
     (_, load_time), stats = monitored_call(
-        aut.pid,
+        aut,
         lambda: main_screen.left_panel.open_community_and_record_load_time(COMMUNITY_NAME),
     )
     samples.record(load_time, stats)
