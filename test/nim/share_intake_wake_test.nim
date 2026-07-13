@@ -15,7 +15,10 @@
 ##  - the Android SEND/SEND_MULTIPLE hand-off (shareActivated signal) reaches
 ##    SIGNAL_EXTERNAL_SHARE_INTAKE — text-only and with cached image paths —
 ##    with pre-ready buffering; a direct-share shortcut tap carries its
-##    destination chat id through (empty for plain shares and slot payloads).
+##    destination chat id through (empty for plain shares);
+##  - an iOS suggestion-chip tap (donated send-message intent) carries its
+##    destination chat id through the slot payload the same way (empty when
+##    the payload has none).
 
 import unittest, os, json
 import nimqml
@@ -288,9 +291,9 @@ suite "share_intake_wake":
 
     check sharedDestinations == @[""]
 
-  test "slot share payload carries no direct-share destination":
-    # iOS App Group slot path: direct-share shortcuts are Android-only, the
-    # slot payload never preselects a destination.
+  test "slot share payload without a destination carries none":
+    # iOS App Group slot path, plain share (the user picked the app row, not a
+    # suggestion chip): no preselected destination, picker step downstream.
     manager.appReady()
     slot.write("""{"type":"share","text":"from the extension"}""")
 
@@ -298,6 +301,34 @@ suite "share_intake_wake":
     processEventsUntil(proc(): bool = sharedTexts.len > 0)
 
     check sharedDestinations == @[""]
+
+  test "slot share destination chat id reaches the intake seam":
+    # iOS suggestion-chip tap (donated send-message intent): the extension put
+    # the conversation id the OS handed it into the slot payload, so the
+    # destination is already decided and the picker is skipped downstream —
+    # same contract as an Android direct-share shortcut tap.
+    manager.appReady()
+    slot.write("""{"type":"share","text":"to alice","destinationChatId":"chat-alice"}""")
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = sharedTexts.len > 0)
+
+    check sharedTexts == @["to alice"]
+    check sharedDestinations == @["chat-alice"]
+
+  test "slot share destination survives login-first buffering":
+    # Suggestion-chip share while logged out: the payload (and its destination)
+    # parks in the seam until appReady, then opens pre-selected.
+    slot.write("""{"type":"share","text":"parked","destinationChatId":"chat-bob"}""")
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+    check sharedTexts.len == 0
+
+    manager.appReady()
+
+    check sharedTexts == @["parked"]
+    check sharedDestinations == @["chat-bob"]
 
   test "share text before appReady is buffered and delivered at appReady":
     statusq_urlscheme_emit_share(urlSchemeEvent.vptr, "pre-login share", "[]", "")

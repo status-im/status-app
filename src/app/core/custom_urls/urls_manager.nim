@@ -59,9 +59,14 @@ QtObject:
     ## Delivers (reads + clears) the App Group pending intake slot written by
     ## the iOS share extension and feeds it into the external intake seam.
     ## Payload contract (ShareViewController.m):
-    ## {"type": "share", "text": ..., "imagePaths": [...]} (imagePaths
-    ## optional). Malformed payloads are logged and dropped — a broken slot
-    ## file must never take the app down.
+    ## {"type": "share", "text": ..., "imagePaths": [...],
+    ## "destinationChatId": ...} (imagePaths and destinationChatId optional).
+    ## destinationChatId is non-empty only when the share arrived through a
+    ## donated send-message suggestion chip (the donated conversation id is
+    ## the chat id): the destination is already decided and the picker step
+    ## is skipped downstream — same contract as an Android direct-share
+    ## shortcut tap. Malformed payloads are logged and dropped — a broken
+    ## slot file must never take the app down.
     if self.intakeSlot.isNil:
       return
     let payload = self.intakeSlot.take()
@@ -71,7 +76,8 @@ QtObject:
       let parsed = parseJson(payload)
       if parsed{"type"}.getStr() == "share":
         self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeShare,
-          text: parsed{"text"}.getStr(), imagePaths: intakeImagePaths(parsed)))
+          text: parsed{"text"}.getStr(), imagePaths: intakeImagePaths(parsed),
+          destinationChatId: parsed{"destinationChatId"}.getStr()))
       else:
         warn "pending intake slot payload has an unknown type", payload
     except CatchableError:

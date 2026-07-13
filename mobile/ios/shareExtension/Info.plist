@@ -31,6 +31,16 @@
         <string>ShareViewController</string>
         <key>NSExtensionAttributes</key>
         <dict>
+            <!-- Recent-contact suggestion chips (#16): the host app donates
+                 INSendMessageIntents after successful sends; declaring the
+                 intent here makes iOS surface those conversations as one-tap
+                 chips above this extension in the share sheet. A chip tap
+                 hands the donated conversation id back via
+                 extensionContext.intent (ShareViewController.m). -->
+            <key>IntentsSupported</key>
+            <array>
+                <string>INSendMessageIntent</string>
+            </array>
             <!-- Exactly what ShareViewController extracts and chat can send:
                  text, at most one web URL (#14), and images (#15) up to the
                  in-app per-message limit (Constants.maxUploadFiles = 6 in

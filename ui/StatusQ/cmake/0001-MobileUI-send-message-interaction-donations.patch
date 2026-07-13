@@ -1,0 +1,262 @@
+From 6dbe42efffbdd29b9abebfff529903955db6db96 Mon Sep 17 00:00:00 2001
+From: Alex Jbanca <alexjb@status.im>
+Date: Mon, 13 Jul 2026 10:11:22 +0000
+Subject: [PATCH] feat: send-message interaction donations (iOS share-sheet
+ suggestions)
+
+Add a generic donation API:
+- donateSendMessageInteraction(conversationId, displayName, avatarImagePath):
+  donates an INSendMessageIntent via INInteraction so iOS can surface the
+  conversation as a suggestion (e.g. a one-tap contact chip in the share
+  sheet when the app's share extension declares INSendMessageIntent in
+  IntentsSupported). The avatar file is read eagerly so callers may reuse or
+  delete the rendered image afterwards.
+- deleteAllDonatedInteractions(): removes every donation (privacy: logout
+  must not leave conversation names/avatars on OS surfaces).
+
+No-ops on Android (share-sheet suggestions use sharing shortcuts there) and
+desktop. Links the Intents framework on iOS (CMake + qmake).
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+---
+ CMakeLists.txt       |  2 +-
+ MobileUI.cpp         | 14 +++++++++++
+ MobileUI.h           | 34 ++++++++++++++++++++++++++
+ MobileUI.pri         |  2 +-
+ MobileUI_android.cpp | 18 ++++++++++++++
+ MobileUI_dummy.cpp   | 13 ++++++++++
+ MobileUI_ios.mm      | 58 ++++++++++++++++++++++++++++++++++++++++++++
+ MobileUI_private.h   |  5 ++++
+ 8 files changed, 144 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 9042edb..3fa06df 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -31,7 +31,7 @@ elseif(IOS)
+         pushnotification_ios.mm
+         mobileuiappdelegate_ios.h
+         mobileuiappdelegate_ios.mm)
+-    set(PLATFORM_LIBRARIES "-framework UIKit -framework UserNotifications")
++    set(PLATFORM_LIBRARIES "-framework UIKit -framework UserNotifications -framework Intents")
+ else()
+     set(PLATFORM_SOURCES MobileUI_dummy.cpp)
+ endif()
+diff --git a/MobileUI.cpp b/MobileUI.cpp
+index e3bffec..18b33bd 100644
+--- a/MobileUI.cpp
++++ b/MobileUI.cpp
+@@ -255,3 +255,17 @@ void MobileUI::stopAccessingPath(const QString& filePath)
+ }
+ 
+ /* ************************************************************************** */
++
++void MobileUI::donateSendMessageInteraction(const QString& conversationId,
++                                            const QString& displayName,
++                                            const QString& avatarImagePath)
++{
++    MobileUIPrivate::donateSendMessageInteraction(conversationId, displayName, avatarImagePath);
++}
++
++void MobileUI::deleteAllDonatedInteractions()
++{
++    MobileUIPrivate::deleteAllDonatedInteractions();
++}
++
++/* ************************************************************************** */
+diff --git a/MobileUI.h b/MobileUI.h
+index 5b41aae..58396be 100644
+--- a/MobileUI.h
++++ b/MobileUI.h
+@@ -237,6 +237,40 @@ public:
+      *        should be stopped.
+      */
+     Q_INVOKABLE static void stopAccessingPath(const QString& filePath);
++
++    // Interaction donations ///////////////////////////////////////////////////
++    /*!
++     * \brief Donate a send-message interaction for a conversation to the OS.
++     *
++     * On iOS this donates an INSendMessageIntent (via INInteraction) so the
++     * system can surface the conversation as a suggestion, e.g. as a one-tap
++     * contact chip in the share sheet for apps whose share extension declares
++     * INSendMessageIntent in IntentsSupported. Call it after the user sends a
++     * message to that conversation.
++     *
++     * On Android and desktop this method is a no-op (Android share-sheet
++     * suggestions use the sharing-shortcuts mechanism instead).
++     *
++     * \param conversationId Stable identifier of the conversation; handed back
++     *        by the OS (e.g. INSendMessageIntent.conversationIdentifier) when
++     *        the user picks the suggestion.
++     * \param displayName Name the OS shows on the suggestion.
++     * \param avatarImagePath Optional absolute path to an image file shown as
++     *        the suggestion's avatar; pass an empty string for no avatar.
++     */
++    Q_INVOKABLE static void donateSendMessageInteraction(const QString& conversationId,
++                                                         const QString& displayName,
++                                                         const QString& avatarImagePath);
++
++    /*!
++     * \brief Delete every interaction this app has donated to the OS.
++     *
++     * On iOS this removes all INInteraction donations (and with them the
++     * suggestions they power). Intended for privacy-sensitive moments such as
++     * logout, where donated conversation names/avatars must not linger on OS
++     * surfaces. No-op on Android and desktop.
++     */
++    Q_INVOKABLE static void deleteAllDonatedInteractions();
+ };
+ 
+ /* ************************************************************************** */
+diff --git a/MobileUI.pri b/MobileUI.pri
+index 5bd8eda..ccec5f3 100644
+--- a/MobileUI.pri
++++ b/MobileUI.pri
+@@ -10,7 +10,7 @@ INCLUDEPATH += $${PWD}
+ android {
+     SOURCES += $${PWD}/MobileUI_android.cpp
+ } else: ios {
+-    LIBS += -framework UIKit
++    LIBS += -framework UIKit -framework Intents
+     SOURCES += $${PWD}/MobileUI_ios.mm
+ } else {
+     SOURCES += $${PWD}/MobileUI_dummy.cpp
+diff --git a/MobileUI_android.cpp b/MobileUI_android.cpp
+index be2b74d..d517bf9 100644
+--- a/MobileUI_android.cpp
++++ b/MobileUI_android.cpp
+@@ -558,6 +558,24 @@ void MobileUIPrivate::stopAccessingPath(const QString& filePath)
+ 
+ /* ************************************************************************** */
+ 
++// Android share-sheet suggestions are published through the sharing-shortcuts
++// mechanism (ShortcutManagerCompat), owned by the application; there is no
++// interaction-donation counterpart to implement here.
++void MobileUIPrivate::donateSendMessageInteraction(const QString& conversationId,
++                                                   const QString& displayName,
++                                                   const QString& avatarImagePath)
++{
++    Q_UNUSED(conversationId)
++    Q_UNUSED(displayName)
++    Q_UNUSED(avatarImagePath)
++}
++
++void MobileUIPrivate::deleteAllDonatedInteractions()
++{
++}
++
++/* ************************************************************************** */
++
+ float MobileUI::getSmartScaleFactor(float baseWidth, float baseDpi, float baseScale)
+ {
+     return QNativeInterface::QAndroidApplication::runOnAndroidMainThread([=] {
+diff --git a/MobileUI_dummy.cpp b/MobileUI_dummy.cpp
+index 6a2a59a..2a6fb70 100644
+--- a/MobileUI_dummy.cpp
++++ b/MobileUI_dummy.cpp
+@@ -121,6 +121,19 @@ void MobileUIPrivate::stopAccessingPath(const QString& filePath)
+     Q_UNUSED(filePath)
+ }
+ 
++void MobileUIPrivate::donateSendMessageInteraction(const QString& conversationId,
++                                                   const QString& displayName,
++                                                   const QString& avatarImagePath)
++{
++    Q_UNUSED(conversationId)
++    Q_UNUSED(displayName)
++    Q_UNUSED(avatarImagePath)
++}
++
++void MobileUIPrivate::deleteAllDonatedInteractions()
++{
++}
++
+ float MobileUI::getSmartScaleFactor(float baseWidth, float baseDpi, float baseScale)
+ {
+     Q_UNUSED(baseWidth);
+diff --git a/MobileUI_ios.mm b/MobileUI_ios.mm
+index 3d62f2e..ed5a9b4 100644
+--- a/MobileUI_ios.mm
++++ b/MobileUI_ios.mm
+@@ -425,3 +425,61 @@ float MobileUI::getSmartScaleFactor(float baseWidth, float baseDpi, float baseSc
+ }
+ 
+ /* ************************************************************************** */
++
++/* ************************************************************************** */
++
++#include <Intents/Intents.h>
++
++void MobileUIPrivate::donateSendMessageInteraction(const QString& conversationId,
++                                                   const QString& displayName,
++                                                   const QString& avatarImagePath)
++{
++    if (conversationId.isEmpty() || displayName.isEmpty()) {
++        NSLog(@"MobileUI: donateSendMessageInteraction needs a conversation id and a display name");
++        return;
++    }
++
++    INSpeakableString *groupName =
++        [[INSpeakableString alloc] initWithSpokenPhrase:displayName.toNSString()];
++    INSendMessageIntent *intent =
++        [[INSendMessageIntent alloc] initWithRecipients:nil
++                                    outgoingMessageType:INOutgoingMessageTypeOutgoingMessageText
++                                                content:nil
++                                     speakableGroupName:groupName
++                                 conversationIdentifier:conversationId.toNSString()
++                                            serviceName:nil
++                                                 sender:nil
++                                            attachments:nil];
++
++    if (!avatarImagePath.isEmpty()) {
++        // Read the file now instead of handing over a URL: the caller may
++        // overwrite or delete the rendered avatar file after this returns.
++        NSData *imageData = [NSData dataWithContentsOfFile:avatarImagePath.toNSString()];
++        if (imageData) {
++            [intent setImage:[INImage imageWithImageData:imageData]
++           forParameterNamed:@"speakableGroupName"];
++        } else {
++            NSLog(@"MobileUI: cannot read the suggestion avatar at %@ (donating without it)",
++                  avatarImagePath.toNSString());
++        }
++    }
++
++    INInteraction *interaction = [[INInteraction alloc] initWithIntent:intent response:nil];
++    interaction.direction = INInteractionDirectionOutgoing;
++    [interaction donateInteractionWithCompletion:^(NSError * _Nullable error) {
++        if (error) {
++            NSLog(@"MobileUI: send-message interaction donation failed: %@", error);
++        }
++    }];
++}
++
++void MobileUIPrivate::deleteAllDonatedInteractions()
++{
++    [INInteraction deleteAllInteractionsWithCompletion:^(NSError * _Nullable error) {
++        if (error) {
++            NSLog(@"MobileUI: deleting the donated interactions failed: %@", error);
++        }
++    }];
++}
++
++/* ************************************************************************** */
+diff --git a/MobileUI_private.h b/MobileUI_private.h
+index 85c11b8..c2d7535 100644
+--- a/MobileUI_private.h
++++ b/MobileUI_private.h
+@@ -77,6 +77,11 @@ public:
+ 
+     static bool startAccessingPath(const QString& filePath);
+     static void stopAccessingPath(const QString& filePath);
++
++    static void donateSendMessageInteraction(const QString& conversationId,
++                                             const QString& displayName,
++                                             const QString& avatarImagePath);
++    static void deleteAllDonatedInteractions();
+ };
+ 
+ /* ************************************************************************** */
+-- 
+2.54.0
+
