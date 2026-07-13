@@ -40,7 +40,7 @@ Item {
        never donated. Safe to call in bursts: donations are processed one
        avatar grab at a time, and a chat already waiting is not re-queued. */
     function donateForChat(chatId) {
-        if (d.queue.indexOf(chatId) !== -1)
+        if (d.queue.includes(chatId))
             return
         d.queue.push(chatId)
         d.processNext()
