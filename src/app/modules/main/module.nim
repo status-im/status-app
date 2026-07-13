@@ -13,6 +13,7 @@ import app/global/[global_singleton, feature_flags]
 import app/global/app_lifecycle
 import app/android/lifecycle
 import app/android/share_shortcuts
+import app/ios/intent_donations
 import app/global/utils as utils
 import app_service/service/activity_center/dto/notification as activity_center_notification_dto
 import constants
@@ -2105,10 +2106,13 @@ method getKeycardManagementModule*[T](self: Module[T]): QVariant =
 method signOutAndQuit*[T](self: Module[T]) =
   info "signOutAndQuit: logging out and quitting"
   markShuttingDown()
-  # Direct-share shortcuts carry chat names and avatars on OS surfaces outside
-  # the app; clear them unconditionally before quitting so a logged-out
-  # profile's data cannot linger there (no-op off Android).
+  # Direct-share shortcuts (Android) and donated send-message interactions
+  # (iOS share-sheet suggestion chips) carry chat names and avatars on OS
+  # surfaces outside the app; clear them unconditionally before quitting so a
+  # logged-out profile's data cannot linger there (each is a no-op off its
+  # platform).
   clearShareShortcuts()
+  deleteDonatedInteractions()
   when defined(ios) or defined(android):
     # Since on mobile devices, application.exit() ends in _exit(0), a graceful status_go.logout() is unnecessary
     # cause it does a few other things (stops the node, closes the DBs, then re-initializes the node and restarts
@@ -2251,6 +2255,16 @@ method releaseShareIntakeFiles*[T](self: Module[T], imagePathsJson: string) =
   ## (The send path releases them in the image-send task, after the files
   ## have been consumed.)
   releaseCachedShareFiles(parseImagePathsJson(imagePathsJson))
+
+method onMessageSent*[T](self: Module[T], chatId: string) =
+  ## A message the user sent was accepted (SIGNAL_SENDING_SUCCESS, in-app and
+  ## share-flow sends alike). Surfaced to QML so per-send hooks can run there
+  ## — e.g. donating an iOS send-message intent for the destination so it
+  ## appears as a share-sheet suggestion chip. Sends can't happen before the
+  ## main view is up, so no pre-chatsLoaded buffering is needed.
+  if not self.chatsLoaded:
+    return
+  self.view.emitMessageSentToChatSignal(chatId)
 
 method onDeactivateChatLoader*[T](self: Module[T], sectionId: string, chatId: string) =
   if (sectionId.len > 0 and self.chatSectionModules.contains(sectionId)):

@@ -398,6 +398,13 @@ FetchContent_Declare(
 
   GIT_REPOSITORY https://github.com/status-im/MobileUI.git
   GIT_TAG 50917eb9cde14cf96e61646cbed71f835ee72d1b
+  # Send-message interaction donations (iOS share-sheet contact suggestions).
+  # Carried as an upstream-ready commit (git-am-able format-patch) until the
+  # MobileUI PR lands — then drop the patch and bump GIT_TAG instead. The
+  # helper script makes re-running the patch step a no-op.
+  PATCH_COMMAND ${CMAKE_COMMAND}
+    -DPATCH_FILE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/0001-MobileUI-send-message-interaction-donations.patch
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/apply_patch.cmake
 )
 FetchContent_MakeAvailable(MobileUI)
 

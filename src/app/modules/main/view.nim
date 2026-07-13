@@ -450,6 +450,12 @@ QtObject:
     ## (JSON array of absolute paths, as delivered by launchShareFlow).
     self.delegate.releaseShareIntakeFiles(imagePathsJson)
 
+  proc messageSentToChat*(self: View, chatId: string) {.signal.}
+  proc emitMessageSentToChatSignal*(self: View, chatId: string) =
+    ## Per-send hook for QML (e.g. iOS send-message intent donations): the
+    ## user's message to chatId was accepted for sending.
+    self.messageSentToChat(chatId)
+
   proc navigateToMessageDetails*(self: View) {.signal.}
   proc emitNavigateToMessageDetailsSignal*(self: View) =
     self.navigateToMessageDetails()
