@@ -108,6 +108,7 @@ const kindNames = [
   "CollectiblesSelectionAdaptor@3000",
   "WalletAccountsSelectorAdaptor",
   "RecipientViewAdaptor",
+  "Collectibles@3000 DEFERRED (open->activate)",
 ]
 
 when isMainModule:
@@ -158,7 +159,7 @@ when isMainModule:
         stderr.writeLine(&"[bench] {kindNames[kind]} create={bench.lastCreateMs:.2f}ms settle={bench.lastSettleMs:.2f}ms maxStall={bench.maxStallMs:.2f}ms over32={bench.over32} counts={bench.lastCountA}/{bench.lastCountB} err={bench.lastError}")
         stderr.flushFile()
 
-  for kind in 0 .. 4:
+  for kind in 0 .. 5:
     measure(kind)
 
   let table = formatTable(rows)
@@ -176,12 +177,18 @@ when isMainModule:
     doAssert false, "missing kind " & $kind
 
   # All adaptors must actually instantiate + populate (the point of the bench).
-  for kind in 0 .. 4:
+  for kind in 0 .. 5:
     let r = rowFor(kind)
     doAssert r.error.len == 0, &"{r.name} failed to instantiate: {r.error}"
     doAssert r.createMs >= 0.0, &"{r.name} createMs not measured: {r.createMs}"
   # The 3000-item collectibles pipeline must produce the full flat model.
   doAssert rowFor(2).countA == 3000,
     &"collectibles@3000 flat model incomplete: {rowFor(2).countA}"
+  # GREEN: the deferred Loader builds nothing at open (open-window createMs well
+  # below the direct build), yet produces the full model once activated.
+  doAssert rowFor(5).countA == 3000,
+    &"deferred collectibles did not populate on activation: {rowFor(5).countA}"
+  doAssert rowFor(5).createMs < rowFor(2).createMs,
+    &"deferred open cost {rowFor(5).createMs} not below direct build {rowFor(2).createMs}"
 
   echo "assertions passed"

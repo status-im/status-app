@@ -197,6 +197,27 @@ Item {
         }
     }
 
+    // Mirrors the GREEN fix in SendModalHandler: the collectibles adaptor lives
+    // behind a Loader gated on `collectiblesNeeded`. Inactive at open (assets tab),
+    // activated when the user first opens the collectibles tab.
+    Component {
+        id: deferredCollectiblesComp
+        Loader {
+            property var source
+            active: false
+            sourceComponent: CollectiblesSelectionAdaptor {
+                accountKey: root.probedAccount
+                enabledChainIds: []
+                networksModel: netSrc
+                collectiblesModel: SortFilterProxyModel {
+                    sourceModel: source
+                    filters: ValueFilter { roleName: "soulbound"; value: false }
+                }
+                filterCommunityOwnerAndMasterTokens: true
+            }
+        }
+    }
+
     function createFor(kind) {
         switch (kind) {
         case 0: return collectiblesComp.createObject(root, { source: collectibles200Src })
@@ -215,6 +236,7 @@ Item {
             return [obj.filteredFlatModel.rowCount(), obj.model.rowCount()]
         case 3: return [obj.processedWalletAccounts.rowCount(), 0]
         case 4: return [obj.recipientsModel.rowCount(), 0]
+        case 5: return obj.item ? [obj.item.filteredFlatModel.rowCount(), obj.item.model.rowCount()] : [0, 0]
         }
         return [0, 0]
     }
@@ -229,6 +251,27 @@ Item {
     property int _settleStable: 0
 
     function runKind(kind) {
+        // Deferred collectibles: createObject is the OPEN-window cost (Loader
+        // inactive -> adaptor not built); the settle timing then measures the
+        // FIRST-TAB-OPEN cost when the gate flips active.
+        if (kind === 5) {
+            const dt0 = bench.nowMs()
+            const loader = deferredCollectiblesComp.createObject(root, { source: collectibles3000Src })
+            const dt1 = bench.nowMs()
+            if (!loader) { bench.reportInstantiation(kind, -1, "no-comp"); bench.reportSettle(kind, 0, 0, 0); return }
+            _held.push(loader)
+            bench.reportInstantiation(kind, dt1 - dt0, "") // open-window cost (~0)
+
+            _settleObj = loader
+            _settleKind = kind
+            _settleStart = bench.nowMs()
+            _settleLastSum = -1
+            _settleStable = 0
+            loader.active = true // user opens the collectibles tab
+            settleTimer.restart()
+            return
+        }
+
         const t0 = bench.nowMs()
         const obj = createFor(kind)
         const t1 = bench.nowMs()
