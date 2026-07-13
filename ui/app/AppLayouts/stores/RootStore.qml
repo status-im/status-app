@@ -259,8 +259,8 @@ QtObject {
                 root.openUrlInNewBrowserTab(url)
             }
 
-            function onLaunchShareFlow(text, imagePathsJson) {
-                root.launchShareFlow(text, JSON.parse(imagePathsJson))
+            function onLaunchShareFlow(text, imagePathsJson, destinationChatId) {
+                root.launchShareFlow(text, JSON.parse(imagePathsJson), destinationChatId)
             }
 
             function onOpenActivityCenter(group) {
@@ -319,7 +319,7 @@ QtObject {
     signal ensNameResolved(string resolvedPubKey, string resolvedAddress, string uuid)
     signal openUrl(string link)
     signal openUrlInNewBrowserTab(string link)
-    signal launchShareFlow(string text, var imagePaths)
+    signal launchShareFlow(string text, var imagePaths, string destinationChatId)
     signal openActivityCenter()
     signal wcLinkActivated(string link)
     signal profileMigrationFlowRequested(bool migrateToKeycard)

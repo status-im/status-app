@@ -306,7 +306,7 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_EXTERNAL_SHARE_INTAKE) do(e: Args):
     let args = ExternalShareIntakeArgs(e)
-    self.delegate.launchShareFlow(args.text, args.imagePaths)
+    self.delegate.launchShareFlow(args.text, args.imagePaths, args.destinationChatId)
 
   self.events.on(SIGNAL_OS_NOTIFICATION_CLICKED) do(e: Args):
     var args = ClickedNotificationArgs(e)

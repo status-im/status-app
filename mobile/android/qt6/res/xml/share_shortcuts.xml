@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Direct-share declaration: dynamic shortcuts published with this category
+  (ShareShortcutsHelper) surface as one-tap targets in the share sheet for
+  exactly the payloads the share target accepts (text and images — mirrors
+  the SEND/SEND_MULTIPLE intent filters in AndroidManifest.xml).
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <share-target android:targetClass="app.status.mobile.StatusQtActivity">
+        <data android:mimeType="text/plain" />
+        <category android:name="app.status.mobile.directshare.category.SHARE_TARGET" />
+    </share-target>
+    <share-target android:targetClass="app.status.mobile.StatusQtActivity">
+        <data android:mimeType="image/*" />
+        <category android:name="app.status.mobile.directshare.category.SHARE_TARGET" />
+    </share-target>
+</shortcuts>

@@ -54,12 +54,16 @@ type
   ExternalShareIntakeArgs* = ref object of Args
     text*: string
     imagePaths*: seq[string]
+    destinationChatId*: string
 
 const SIGNAL_EXTERNAL_SHARE_INTAKE* = "externalShareIntake"
 ## Emitted for content shared to Status from another app (share target):
 ## it must launch the share flow (destination picker -> preview -> send).
 ## Text and links both arrive as `text`; shared images arrive as `imagePaths`
 ## (app-private cached copies made at receipt, never OS-managed URIs).
+## `destinationChatId` is non-empty only when the share arrived through a
+## direct-share shortcut: the destination chat is already decided and the
+## picker step is skipped.
 
 const SIGNAL_MAIN_LOADED* = "signalMainLoaded"
 

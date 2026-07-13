@@ -14,6 +14,7 @@ type Capture = ref object
   browserTabs: seq[string]
   shares: seq[string]
   shareImagePaths: seq[seq[string]]
+  shareDestinations: seq[string]
   discardedImagePaths: seq[seq[string]]
 
 proc newCapturingIntake(capture: Capture): ExternalIntake =
@@ -22,17 +23,20 @@ proc newCapturingIntake(capture: Capture): ExternalIntake =
     capture.deepLinks.add(url)
   result.onBrowserTabUrl = proc(url: string) =
     capture.browserTabs.add(url)
-  result.onShare = proc(text: string, imagePaths: seq[string]) =
+  result.onShare = proc(text: string, imagePaths: seq[string], destinationChatId: string) =
     capture.shares.add(text)
     capture.shareImagePaths.add(imagePaths)
+    capture.shareDestinations.add(destinationChatId)
   result.onShareImagesDiscarded = proc(imagePaths: seq[string]) =
     capture.discardedImagePaths.add(imagePaths)
 
 proc urlIntake(url: string): ExternalIntakeEvent =
   ExternalIntakeEvent(kind: ExternalIntakeUrl, url: url)
 
-proc shareIntake(text: string, imagePaths: seq[string] = @[]): ExternalIntakeEvent =
-  ExternalIntakeEvent(kind: ExternalIntakeShare, text: text, imagePaths: imagePaths)
+proc shareIntake(text: string, imagePaths: seq[string] = @[],
+    destinationChatId: string = ""): ExternalIntakeEvent =
+  ExternalIntakeEvent(kind: ExternalIntakeShare, text: text,
+    imagePaths: imagePaths, destinationChatId: destinationChatId)
 
 suite "external_intake routing":
 
@@ -179,6 +183,55 @@ suite "external_intake share events":
 
     check capture.shares == @[""]
     check capture.shareImagePaths == @[@["/cache/share-intake/screenshot.png"]]
+
+  test "a share without a destination dispatches with an empty destination":
+    ## Regular share-sheet path: the user picks the destination in the app.
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.setReady()
+
+    intake.submit(shareIntake("no preselection"))
+
+    check capture.shareDestinations == @[""]
+
+  test "a direct-share destination rides the share event to the handler":
+    ## Direct-share shortcut path: the OS share sheet delivered the tap on a
+    ## published shortcut, so the destination chat is already decided and the
+    ## picker step is skipped downstream.
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.setReady()
+
+    intake.submit(shareIntake("to alice", @["/cache/share-intake/a.png"],
+      destinationChatId = "chat-alice"))
+
+    check capture.shares == @["to alice"]
+    check capture.shareImagePaths == @[@["/cache/share-intake/a.png"]]
+    check capture.shareDestinations == @["chat-alice"]
+
+  test "a direct-share destination buffered before ready survives to delivery":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+
+    intake.submit(shareIntake("pre-login direct share",
+      destinationChatId = "chat-alice"))
+    check capture.shares.len == 0
+
+    intake.setReady()
+
+    check capture.shares == @["pre-login direct share"]
+    check capture.shareDestinations == @["chat-alice"]
+
+  test "an empty share is dropped even when it carries a destination":
+    ## The destination alone is not shareable content; an empty payload must
+    ## neither launch the flow nor clobber a pending intake.
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.setReady()
+
+    intake.submit(shareIntake("  ", destinationChatId = "chat-alice"))
+
+    check capture.shares.len == 0
 
   test "an image share buffered before ready is delivered at ready":
     let capture = Capture()

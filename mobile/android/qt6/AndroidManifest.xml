@@ -150,6 +150,14 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="image/*" />
             </intent-filter>
+            <!--
+              Direct-share shortcuts: recent chats published as one-tap share
+              targets (ShareShortcutsHelper); the share-target declaration
+              lives in res/xml/share_shortcuts.xml.
+            -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/share_shortcuts" />
         </activity>
 
         <provider

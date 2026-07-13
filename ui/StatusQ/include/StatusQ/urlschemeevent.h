@@ -15,7 +15,8 @@ namespace Status
             void emitAppForegroundedToQt();
             void emitAppBackgroundedToQt();
             void watchApplicationState();
-            void emitShareToQt(const QString& text, const QStringList& imagePaths);
+            void emitShareToQt(const QString& text, const QStringList& imagePaths,
+                               const QString& destinationChatId);
             static void setInstance(UrlSchemeEvent* instance);
 
             void registerUrlHandler();
@@ -37,7 +38,11 @@ namespace Status
             // Share-target hand-off: shared text/links plus app-private cached
             // copies of shared images, as a JSON array of absolute paths (a
             // JSON string keeps the Nim slot signature to plain QStrings).
-            void shareActivated(const QString& text, const QString& imagePathsJson);
+            // destinationChatId is non-empty only when the share arrived via a
+            // direct-share shortcut (the shortcut id is the chat id): the
+            // destination is already decided and the picker step is skipped.
+            void shareActivated(const QString& text, const QString& imagePathsJson,
+                                const QString& destinationChatId);
     };
 }
 
