@@ -37,6 +37,7 @@ Control {
     property color codeBackgroundColor: Theme.palette.baseColor4
     property color codeBorderColor: Theme.palette.baseColor2
     property color quoteBarColor: Theme.palette.baseColor1
+    property color quoteTextColor: Theme.palette.baseColor1
     property color linkColor: Theme.palette.primaryColor1
     property color mentionBackgroundColor: Theme.palette.mentionColor4
     property color linkHoverColor: Theme.palette.primaryColor3
@@ -62,6 +63,7 @@ Control {
         property bool italic: false
         property bool strikethrough: false
         property bool selectable: false
+        property color textColor: Theme.palette.directColor1
 
         // Rich-text HTML for the non-code renderers: CSS rules (inline `code` background, link
         // color, mention background) plus the pre-wrapped content. `hoveredLink` (selectable
@@ -86,7 +88,7 @@ Control {
                 width: block.width
                 wrapMode: Text.Wrap
                 textFormat: Text.RichText
-                color: Theme.palette.directColor1
+                color: block.textColor
                 font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
                 // pre-wrap so extra/leading spaces are preserved; no hover in non-selectable mode
@@ -106,7 +108,7 @@ Control {
                 wrapMode: Text.Wrap
                 textFormat: Text.RichText
                 selectionColor: root.palette.highlight
-                color: Theme.palette.directColor1
+                color: block.textColor
                 font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
                 // hoveredLink drives the link hover background (updated as the pointer moves).
@@ -136,7 +138,7 @@ Control {
                     width: Math.min(implicitWidth, parent.width)
                     wrapMode: Text.Wrap
                     textFormat: Text.PlainText
-                    color: Theme.palette.directColor1
+                    color: block.textColor
                     font.family: Fonts.codeFont.family
                     font.pixelSize: root.font.pixelSize
                     font.bold: block.bold
@@ -174,7 +176,7 @@ Control {
                     wrapMode: Text.Wrap
                     textFormat: Text.PlainText
                     selectionColor: root.palette.highlight
-                    color: Theme.palette.directColor1
+                    color: block.textColor
                     font.family: Fonts.codeFont.family
                     font.pixelSize: root.font.pixelSize
                     font.bold: block.bold
@@ -389,6 +391,7 @@ Control {
                                     bold: !!modelData.bold
                                     italic: !!modelData.italic
                                     strikethrough: !!modelData.strikethrough
+                                    textColor: root.quoteTextColor // dim quoted text
                                 }
                             }
                         }
