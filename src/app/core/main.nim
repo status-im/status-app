@@ -30,9 +30,9 @@ proc delete*(self: StatusFoundation) =
 
 proc initUrlSchemeManager*(self: StatusFoundation, urlSchemeEvent: UrlSchemeEvent,
     singleInstance: SingleInstance, protocolUriOnStart: string,
-    intakeSlot: PendingIntakeSlot = nil) =
+    intakeSlot: PendingIntakeSlot = nil, shareIntakeCacheDir: string = "") =
   self.urlsManager = newUrlsManager(self.events, urlSchemeEvent, singleInstance,
-    protocolUriOnStart, intakeSlot)
+    protocolUriOnStart, intakeSlot, shareIntakeCacheDir)
 
 proc appReady*(self: StatusFoundation) =
   self.urlsManager.appReady()

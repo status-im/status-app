@@ -42,6 +42,35 @@ suite "share_intake_cache":
     releaseCachedShareFiles(@[])
     check true
 
+  test "sweep deletes leftover files but keeps the referenced ones":
+    # Fresh-launch cleanup (iOS App Group container): a previous run killed
+    # mid-flow leaves copies behind; the pending slot payload's copies must
+    # survive (a logged-out share survives login and app restarts).
+    let leftover = cacheDir / "leftover.png"
+    let referenced = cacheDir / "pending.png"
+    writeFile(leftover, "img")
+    writeFile(referenced, "img")
+
+    sweepShareIntakeCacheDir(cacheDir, @[referenced])
+
+    check not fileExists(leftover)
+    check fileExists(referenced)
+
+  test "sweep refuses to touch a directory not named share-intake":
+    let userDir = baseDir / "photos"
+    createDir(userDir)
+    let userFile = userDir / "keep.png"
+    writeFile(userFile, "img")
+
+    sweepShareIntakeCacheDir(userDir, @[])
+
+    check fileExists(userFile)
+
+  test "sweep of a missing dir or an empty dir path is a no-op":
+    sweepShareIntakeCacheDir(baseDir / "missing" / ShareIntakeCacheDirName, @[])
+    sweepShareIntakeCacheDir("", @[])
+    check true
+
   test "decodes the image-paths wire format":
     check parseImagePathsJson("""["/cache/share-intake/a.png","/b.jpg"]""") ==
       @["/cache/share-intake/a.png", "/b.jpg"]

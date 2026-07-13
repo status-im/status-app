@@ -47,6 +47,19 @@ suite "pending_intake_slot":
     let slot = newPendingIntakeSlot(slotDir)
     check slot.take() == ""
 
+  test "peek reads the payload without clearing it":
+    # The fresh-launch cache sweep must know which cached image copies the
+    # still-pending payload references, without consuming the payload.
+    let slot = newPendingIntakeSlot(slotDir)
+    slot.write("payload")
+    check slot.peek() == "payload"
+    check slot.take() == "payload"
+
+  test "peek on an empty or inactive slot returns empty string":
+    let slot = newPendingIntakeSlot(slotDir)
+    check slot.peek() == ""
+    check newPendingIntakeSlot("").peek() == ""
+
   test "payload survives across slot instances (writer and reader are different processes)":
     let writer = newPendingIntakeSlot(slotDir)
     writer.write("from-extension")

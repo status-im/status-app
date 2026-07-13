@@ -16,6 +16,11 @@ logScope:
 const StatusInternalLink* = "status-app://"
 const StatusExternalLink* = "https://status.app/"
 
+proc intakeImagePaths(parsed: JsonNode): seq[string] =
+  ## imagePaths array of a slot payload (optional key; absent means none).
+  for pathNode in parsed{"imagePaths"}.getElems():
+    result.add(pathNode.getStr())
+
 QtObject:
   type UrlsManager* = ref object of QObject
     events: EventEmitter
@@ -37,6 +42,19 @@ QtObject:
   proc delete*(self: UrlsManager) =
     self.QObject.delete
 
+  proc pendingSlotImagePaths(self: UrlsManager): seq[string] =
+    ## Cached image copies referenced by the still-pending slot payload,
+    ## without consuming it; empty for no/blank/malformed payloads.
+    if self.intakeSlot.isNil:
+      return @[]
+    let payload = self.intakeSlot.peek()
+    if payload.len == 0:
+      return @[]
+    try:
+      result = intakeImagePaths(parseJson(payload))
+    except CatchableError:
+      discard
+
   proc consumePendingIntake(self: UrlsManager) =
     ## Delivers (reads + clears) the App Group pending intake slot written by
     ## the iOS share extension and feeds it into the external intake seam.
@@ -52,11 +70,8 @@ QtObject:
     try:
       let parsed = parseJson(payload)
       if parsed{"type"}.getStr() == "share":
-        var imagePaths: seq[string] = @[]
-        for pathNode in parsed{"imagePaths"}.getElems():
-          imagePaths.add(pathNode.getStr())
         self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeShare,
-          text: parsed{"text"}.getStr(), imagePaths: imagePaths))
+          text: parsed{"text"}.getStr(), imagePaths: intakeImagePaths(parsed)))
       else:
         warn "pending intake slot payload has an unknown type", payload
     except CatchableError:
@@ -103,12 +118,24 @@ QtObject:
 
   proc newUrlsManager*(events: EventEmitter, urlSchemeEvent: UrlSchemeEvent,
       singleInstance: SingleInstance, protocolUriOnStart: string,
-      intakeSlot: PendingIntakeSlot = nil): UrlsManager =
+      intakeSlot: PendingIntakeSlot = nil,
+      shareIntakeCacheDir: string = ""): UrlsManager =
     new(result)
     result.setup(urlSchemeEvent, singleInstance)
     result.events = events
     result.intake = newExternalIntake()
     result.intakeSlot = intakeSlot
+
+    # A fresh launch can't have an in-flight share flow: drop cached copies a
+    # previous run left behind (killed before the send/cancel release), except
+    # those the still-pending slot payload references — a logged-out share
+    # must survive login and app restarts with its images. Android does the
+    # equivalent sweep in the platform layer (StatusQtActivity.onCreate); on
+    # iOS the App Group cache is shared with the extension, so the host owns
+    # the fresh-launch sweep.
+    if shareIntakeCacheDir.len > 0:
+      sweepShareIntakeCacheDir(shareIntakeCacheDir,
+        result.pendingSlotImagePaths())
 
     let self = result
     result.intake.onDeepLinkUrl = proc(url: string) =
