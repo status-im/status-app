@@ -171,13 +171,14 @@ Control {
         // Latched true once the source model has ever had rows. Keeps the list
         // bound to the real model across periodic refreshes that toggle
         // `loading`; the placeholder only ever shows before the first real data.
-        // Latch from the source model (not the regular DelegateModel): the
-        // DelegateModel only reports rows while a view consumes it, so at
-        // startup — when the list shows the loading placeholder — it would
-        // never fire and every `loading` toggle would rebuild all delegates.
         property bool everHadContent: false
-        readonly property bool hasData: (root.model?.ModelCount?.count ?? 0) > 0
-        onHasDataChanged: if (hasData) everHadContent = true
+        // Latch off the source model's row count. Guard the null case with `&&`
+        // rather than optional chaining: the AOT-compiled mobile build drops the
+        // reactive dependency captured through `?.`, so the latch would never
+        // re-evaluate when rows arrive after creation.
+        readonly property int modelCount: !!root.model ? root.model.ModelCount.count : 0
+        onModelCountChanged: if (modelCount > 0) everHadContent = true
+        Component.onCompleted: if (modelCount > 0) everHadContent = true
 
         // Emit the current sorter selection as an intent; separators carry an
         // empty role name and are ignored.
@@ -347,7 +348,14 @@ Control {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            model: (root.loading && !d.everHadContent) ? loadingModel : regularModel
+            // Operand order matters: once `everHadContent` latches true,
+            // `!d.everHadContent` is false and short-circuits `&&`, dropping
+            // `root.loading` from this binding's captured dependencies. The
+            // periodic `loading` toggles then no longer re-evaluate and re-assign
+            // the model — re-assigning even the same DelegateModel makes the view
+            // rebuild every delegate. Before first data it still shows the
+            // placeholder while `loading` is true.
+            model: (!d.everHadContent && root.loading) ? loadingModel : regularModel
 
             section {
                 property: "isCommunity"

@@ -227,6 +227,11 @@ Item {
         }
     }
 
+    Component {
+        id: modelChangedSpyComponent
+        SignalSpy { signalName: "modelChanged" }
+    }
+
     TestCase {
         id: assetsViewTest
         name: "AssetsView"
@@ -339,6 +344,31 @@ Item {
             controlUnderTest.loading = false
             verify(listView.model === modelInstance)
             compare(listView.count, 4)
+        }
+
+        // Once data is present, toggling `loading` must not re-assign the list's
+        // model at all. Keeping the same model instance is not enough: on the
+        // production ListView, re-assigning even the identical DelegateModel makes
+        // the view rebuild every delegate. The model binding must therefore drop
+        // `loading` from its dependencies once the content latch is set, so the
+        // periodic refresh toggles never re-evaluate it.
+        function test_loadingToggle_doesNotReassignModel() {
+            const listView = getListView(controlUnderTest)
+            waitForRendering(listView)
+            compare(listView.count, 4)   // regular model, data present
+
+            const spy = modelChangedSpyComponent.createObject(root, { target: listView })
+            verify(spy.valid)
+            spy.clear()
+
+            for (let i = 0; i < 4; ++i) {
+                controlUnderTest.loading = (i % 2 === 0)
+                waitForRendering(listView)
+            }
+
+            compare(spy.count, 0,
+                "loading toggles must not re-assign the list model once data is present")
+            spy.destroy()
         }
 
         // Covers the production initial condition the sort test above does not:
