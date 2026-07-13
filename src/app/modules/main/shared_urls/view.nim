@@ -25,6 +25,9 @@ QtObject:
   proc parseContactSharedUrl*(self: View, url: string): string {.slot.} =
     return self.delegate.parseContactSharedUrl(url)
 
+  proc createMessageUrl*(self: View, chatId: string, messageId: string): string {.slot.} =
+    return self.delegate.createMessageUrl(chatId, messageId)
+
   proc delete*(self: View) =
     self.QObject.delete
 

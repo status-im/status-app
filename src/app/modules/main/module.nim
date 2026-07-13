@@ -1904,6 +1904,21 @@ proc activateChatDeepLink[T](self: Module[T], statusDeepLink: string): bool =
 
   return true
 
+proc activateMessageDeepLink[T](self: Module[T], statusDeepLink: string): bool =
+  let data = self.sharedUrlsModule.parseMessageUrl(statusDeepLink)
+  if data.chatId.len == 0 or data.messageId.len == 0:
+    return false
+
+  var sectionId = singletonInstance.userProfile.getPubKey()
+  if data.communityId.len > 0:
+    sectionId = data.communityId
+
+  if self.getActiveSectionId() != sectionId:
+    self.setActiveSectionById(sectionId)
+
+  self.view.emitNavigateToMessageDetailsSignal()
+  return self.openSectionChatAndMessage(sectionId, data.chatId, data.messageId)
+
 method onStatusUrlRequested*[T](self: Module[T], action: StatusUrlAction, communityId: string, channelId: string,
     url: string, userId: string) =
 
@@ -2048,6 +2063,8 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
   if statusDeepLink.contains("/wc?"):
     self.view.wcLinkActivated(statusDeepLink)
     return
+  if self.activateMessageDeepLink(statusDeepLink):
+    return
   # Generic, id-less navigation deep links (e.g. bundled in remote push notifications).
   # Matched before the chat/community/contact routes so the reserved keywords never
   # collide with a public-chat link of the form `status-app://<id>`.
@@ -2130,9 +2147,11 @@ method addressWasShown*[T](self: Module[T], address: string) =
     return
   self.walletAccountService.addressWasShown(address)
 
-method openSectionChatAndMessage*[T](self: Module[T], sectionId: string, chatId: string, messageId: string) =
-  if sectionId in self.chatSectionModules:
-    self.chatSectionModules[sectionId].openCommunityChatAndScrollToMessage(chatId, messageId)
+method openSectionChatAndMessage*[T](self: Module[T], sectionId: string, chatId: string, messageId: string): bool =
+  if sectionId notin self.chatSectionModules:
+    return false
+
+  return self.chatSectionModules[sectionId].openCommunityChatAndScrollToMessage(chatId, messageId)
 
 method updateRequestToJoinState*[T](self: Module[T], sectionId: string, requestToJoinState: RequestToJoinState) =
   if sectionId in self.chatSectionModules:

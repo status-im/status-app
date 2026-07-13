@@ -61,6 +61,7 @@ ColumnLayout {
     }
 
     property bool sendViaPersonalChatEnabled
+    property bool messageLinkSharingEnabled
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -121,6 +122,7 @@ ColumnLayout {
             isContactBlocked: root.isBlocked
             channelEmoji: !chatContentModule ? "" : (chatContentModule.chatDetails.emoji || "")
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
+            messageLinkSharingEnabled: root.messageLinkSharingEnabled
             disabledTooltipText: root.disabledTooltipText
             areTestNetworksEnabled: root.areTestNetworksEnabled
             extraLeftPadding: root.extraLeftPadding

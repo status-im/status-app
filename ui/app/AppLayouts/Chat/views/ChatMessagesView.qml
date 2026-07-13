@@ -55,6 +55,7 @@ Item {
     property bool joined
 
     property bool sendViaPersonalChatEnabled
+    property bool messageLinkSharingEnabled
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -366,6 +367,8 @@ Item {
             joined: root.joined
 
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
+            messageLinkSharingEnabled: root.messageLinkSharingEnabled
+            createMessageLink: (chatId, messageId) => root.messageStore.createMessageLink(chatId, messageId)
             disabledTooltipText: root.disabledTooltipText
             areTestNetworksEnabled: root.areTestNetworksEnabled
             extraLeftPadding: root.extraLeftPadding

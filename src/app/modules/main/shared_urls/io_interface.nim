@@ -24,6 +24,12 @@ method parseCommunityChannelSharedUrl*(self: AccessInterface, url: string): stri
 method parseContactSharedUrl*(self: AccessInterface, url: string): string {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method createMessageUrl*(self: AccessInterface, chatId: string, messageId: string): string {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method parseMessageUrl*(self: AccessInterface, url: string): MessageUrlDataDto {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method parseSharedUrl*(self: AccessInterface, url: string): UrlDataDto {.base.} =
   raise newException(ValueError, "No implementation available")
 

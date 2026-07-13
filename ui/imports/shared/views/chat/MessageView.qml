@@ -149,6 +149,7 @@ Loader {
     property bool hasMention: false
 
     property bool sendViaPersonalChatEnabled
+    property bool messageLinkSharingEnabled
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -174,6 +175,8 @@ Loader {
 
     // Contacts related data:
     property string myPublicKey
+
+    property var createMessageLink // function(chatId, messageId) → string
 
     // Contacts related requests:
     signal changeContactNicknameRequest(string pubKey, string nickname, string displayName, bool isEdit)
@@ -278,6 +281,18 @@ Loader {
         d.preventVirtualKeyboardOpening()
         d.contextMenu = messageContextMenuComponent.createObject(root, params)
         d.contextMenu.popup(point)
+    }
+
+    function getMessageLinkUrl() {
+        if (!root.messageLinkSharingEnabled || !root.messageId) {
+            return ""
+        }
+
+        if (!root.createMessageLink) {
+            return ""
+        }
+
+        return root.createMessageLink(root.chatId, root.messageId) || ""
     }
 
     function setMessageActive(messageId, active) {
@@ -1371,6 +1386,7 @@ Loader {
             disabledForChat: !root.rootStore.isUserAllowedToSendMessage
             forceEnableEmojiReactions: !root.rootStore.isUserAllowedToSendMessage && d.addReactionAllowed
             isDebugEnabled: root.rootStore && root.rootStore.isDebugEnabled
+            messageLinkSharingEnabled: root.messageLinkSharingEnabled
             onPinMessage: root.messageStore.pinMessage(messageContextMenuView.messageId)
             onUnpinMessage: root.messageStore.unpinMessage(messageContextMenuView.messageId)
             onPinnedMessagesLimitReached: () => {
@@ -1393,6 +1409,11 @@ Loader {
             }
             onCopyToClipboard: (text) => {
                 ClipboardUtils.setText(text)
+            }
+            onCopyMessageLink: () => {
+                const url = root.getMessageLinkUrl()
+                if (url)
+                    ClipboardUtils.setText(url)
             }
             onOpenEmojiPopup: (parent, mouse) => d.addReactionClicked(parent, mouse)
             onOpened: {

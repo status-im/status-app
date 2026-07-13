@@ -10856,6 +10856,10 @@ to load</source>
         <translation>메시지 ID 복사</translation>
     </message>
     <message>
+        <source>Copy link to message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Unpin</source>
         <translation>고정 해제</translation>
     </message>

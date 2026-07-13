@@ -165,6 +165,7 @@ Loader {
             currencyStore:                  Qt.binding(() => root.currencyStore),
             networksStore:                  Qt.binding(() => root.networksStore),
             advancedStore:                  Qt.binding(() => root.advancedStore),
+            messageLinkSharingEnabled:      Qt.binding(() => root.featureFlagsStore.messageLinkSharingEnabled),
             paymentRequestFeatureEnabled:   Qt.binding(() => root.featureFlagsStore.paymentRequestEnabled),
             extraLeftPadding:               Qt.binding(() => root.isPortraitMode ? SQUtils.Utils.swipeIndicatorWidth : 0),
             mutualContactsModel:            Qt.binding(() => root.contactsAdaptor.mutualContacts),

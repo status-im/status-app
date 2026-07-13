@@ -286,7 +286,7 @@ proc init*(self: Controller) =
     self.delegate.activeSectionSet(self.activeSectionId)
 
     if args.chatId != "":
-      self.delegate.openSectionChatAndMessage(args.sectionId, args.chatId, args.messageId)
+      discard self.delegate.openSectionChatAndMessage(args.sectionId, args.chatId, args.messageId)
 
   self.events.on(SIGNAL_STATUS_URL_ACTIVATED) do(e: Args):
     var args = StatusUrlArgs(e)

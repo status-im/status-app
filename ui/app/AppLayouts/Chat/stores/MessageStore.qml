@@ -235,4 +235,12 @@ QtObject {
             return ""
         return messageModule.firstUnseenMentionMessageId()
     }
+
+    function createMessageLink(chatId, messageId) {
+        if (!chatId || !messageId || !sharedUrlsModule) {
+            return ""
+        }
+
+        return sharedUrlsModule.createMessageUrl(chatId, messageId)
+    }
 }

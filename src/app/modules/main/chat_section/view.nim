@@ -476,8 +476,8 @@ QtObject:
   proc deleteCommunityMemberMessages*(self: View, memberPubKey: string, messageId: string, chatId: string) {.slot.} =
     self.delegate.deleteCommunityMemberMessages(memberPubKey, messageId, chatId)
 
-  proc openCommunityChatAndScrollToMessage*(self: View, chatId: string, messageId: string) {.slot.} =
-    self.delegate.openCommunityChatAndScrollToMessage(chatId, messageId)
+  proc openCommunityChatAndScrollToMessage*(self: View, chatId: string, messageId: string): bool {.slot.} =
+    return self.delegate.openCommunityChatAndScrollToMessage(chatId, messageId)
 
   proc requestToJoinStateChanged*(self: View) {.signal.}
 

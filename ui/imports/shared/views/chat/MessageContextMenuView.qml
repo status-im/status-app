@@ -33,6 +33,7 @@ StatusMenu {
     property bool pinnedMessage: false
     property bool canPin: false
     property bool emojiReactionLimitReached: false
+    property bool messageLinkSharingEnabled: false
 
     readonly property bool isMyMessage: {
         return root.messageSenderId !== "" && root.messageSenderId === root.myPublicKey;
@@ -47,6 +48,7 @@ StatusMenu {
     signal editClicked()
     signal markMessageAsUnread()
     signal copyToClipboard(string text)
+    signal copyMessageLink()
     signal openEmojiPopup(var parent, var mouse)
 
     MessageReactionsRow {
@@ -114,8 +116,7 @@ StatusMenu {
         enabled: (root.messageContentType === Constants.messageContentType.messageType ||
                   root.messageContentType === Constants.messageContentType.contactRequestType ||
                   root.messageContentType === Constants.messageContentType.bridgeMessageType ||
-                (root.messageContentType === Constants.messageContentType.imageType && root.unparsedText != "")) &&
-                replyToMenuItem.enabled
+                (root.messageContentType === Constants.messageContentType.imageType && root.unparsedText != ""))
     }
 
     StatusAction {
@@ -123,8 +124,17 @@ StatusMenu {
         objectName: "messageContextMenu_copyId"
         text: qsTr("Copy Message Id")
         icon.name: "copy"
-        enabled: root.isDebugEnabled && replyToMenuItem.enabled
+        enabled: root.isDebugEnabled
         onTriggered: root.copyToClipboard(root.messageId)
+    }
+
+    StatusAction {
+        id: copyMessageLinkAction
+        objectName: "messageContextMenu_copyLink"
+        text: qsTr("Copy link to message")
+        icon.name: "copy"
+        enabled: root.messageLinkSharingEnabled
+        onTriggered: root.copyMessageLink()
     }
 
     StatusAction {
@@ -170,6 +180,7 @@ StatusMenu {
                  (replyToMenuItem.enabled ||
                   copyMessageMenuItem.enabled ||
                   copyMessageIdAction.enabled ||
+                  copyMessageLinkAction.enabled ||
                   editMessageAction.enabled ||
                   pinAction.enabled ||
                   markMessageAsUnreadAction.enabled)

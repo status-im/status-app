@@ -81,6 +81,7 @@ StatusSectionLayout {
     property var collectiblesModel
 
     property bool sendViaPersonalChatEnabled
+    property bool messageLinkSharingEnabled
     property string disabledTooltipText
     property bool paymentRequestFeatureEnabled
 
@@ -368,6 +369,7 @@ StatusSectionLayout {
             amISectionAdmin: root.amISectionAdmin
             amIBanned: root.sectionItemModel ? root.sectionItemModel.amIBanned : false
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
+            messageLinkSharingEnabled: root.messageLinkSharingEnabled
             disabledTooltipText: root.disabledTooltipText
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
             extraLeftPadding: root.extraLeftPadding

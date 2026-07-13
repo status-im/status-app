@@ -69,6 +69,7 @@ StackLayout {
     property bool showUsersList
 
     property bool sendViaPersonalChatEnabled
+    property bool messageLinkSharingEnabled
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -285,6 +286,7 @@ StackLayout {
                              root.sectionItemModel.memberRole === Constants.memberRole.tokenMaster
             hasViewOnlyPermissions: root.communityPermissionsStore.viewOnlyPermissionsModel.count > 0
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
+            messageLinkSharingEnabled: root.messageLinkSharingEnabled
             disabledTooltipText: root.disabledTooltipText
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
             extraLeftPadding: root.extraLeftPadding

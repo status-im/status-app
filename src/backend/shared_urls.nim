@@ -25,5 +25,11 @@ proc shareUserUrlWithChatKey*(pubkey: string): RpcResponse[JsonNode] =
 proc shareUserUrlWithENS*(pubkey: string): RpcResponse[JsonNode] =
   result = callPrivateRPC("shareUserURLWithENS".prefix, %*[pubkey])
 
+proc shareMessageUrl*(chatId: string, messageId: string): RpcResponse[JsonNode] =
+  result = callPrivateRPC("shareMessageURL".prefix, %*[chatId, messageId])
+
 proc parseSharedUrl*(url: string): RpcResponse[JsonNode] =
   result = callPrivateRPC("parseSharedURL".prefix, %*[url])
+
+proc parseMessageUrl*(url: string): RpcResponse[JsonNode] =
+  result = callPrivateRPC("parseMessageURL".prefix, %*[url])

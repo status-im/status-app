@@ -50,6 +50,7 @@ Window {
         homePageEnabled: featureFlags ? featureFlags.homePageEnabled : false
         localBackupEnabled: featureFlags ? featureFlags.localBackupEnabled : false
         privacyModeFeatureEnabled: featureFlags ? featureFlags.privacyModeFeatureEnabled : false
+        messageLinkSharingEnabled: featureFlags ? featureFlags.messageLinkSharingEnabled : false
         buyEnabled: featureFlags ? featureFlags.buyEnabled : false
     }
 

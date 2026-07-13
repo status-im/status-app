@@ -182,7 +182,10 @@ QtObject {
 
         if (linkAddressAndEnsName) {
             // Wallet address
-            var replacePatternWalletAddress = /(^|[^\/])(0x[a-fA-F0-9]{40})/gim;
+            // Require a boundary before 0x so values inside URLs (e.g. query
+            // params) are not rewritten; include '>' to match addresses right
+            // after rich-text tags like <p> or <blockquote>.
+            var replacePatternWalletAddress = /(^|[\s\(\[,;:>])(0x[a-fA-F0-9]{40})/gim;
             replacedText = replacedText.replace(replacePatternWalletAddress, "$1<a class='eth-link' href='//send-via-personal-chat//$2'>$2</a>");
 
             // Ens Name

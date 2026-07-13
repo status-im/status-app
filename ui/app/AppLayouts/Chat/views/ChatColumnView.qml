@@ -56,6 +56,7 @@ Item {
     property bool amISectionAdmin: false
     property bool amIBanned: false
     property bool sendViaPersonalChatEnabled
+    property bool messageLinkSharingEnabled
     property string disabledTooltipText
     property bool paymentRequestFeatureEnabled
     property bool joined
@@ -330,6 +331,7 @@ Item {
                         stickersLoaded: root.stickersLoaded
                         isBlocked: model.blocked
                         sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
+                        messageLinkSharingEnabled: root.messageLinkSharingEnabled
                         disabledTooltipText: root.disabledTooltipText
                         areTestNetworksEnabled: root.areTestNetworksEnabled
                         extraLeftPadding: root.extraLeftPadding

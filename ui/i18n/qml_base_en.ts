@@ -10894,6 +10894,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Copy link to message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Unpin</source>
         <translation type="unfinished"></translation>
     </message>
