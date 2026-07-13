@@ -35,6 +35,7 @@ StatusQ.StatusTextArea {
     // Model of users used for creating mention suggestions list. Expected
     // roles: "pubKey", "preferredDisplayName".
     required property var usersModel
+    property bool usersModelIncludeAtEveryone: true
 
     // Read-only model of mentions suggestions. It's subset of usersModel
     // filtered according to the provided partial name.
@@ -782,6 +783,7 @@ StatusQ.StatusTextArea {
         id: suggestionsFilterAdaptor
 
         sourceModel: root.usersModel
+        usersModelIncludeAtEveryone: root.usersModelIncludeAtEveryone
 
         filter: {
             const effectiveCursor = root.cursorPosition + root.preeditText.length

@@ -39,6 +39,7 @@ Control {
     signal linkClicked(string link)
 
     property var usersModel
+    property bool usersModelIncludeAtEveryone: true
 
     property var emojiPopup: null
     property var stickersPopup: null
@@ -736,6 +737,7 @@ Control {
 
                         urlsList: root.urlsList
                         usersModel: root.usersModel
+                        usersModelIncludeAtEveryone: root.usersModelIncludeAtEveryone
                         urlToBeHighlighted: linkPreviewArea.hoveredUrl
 
                         suggestedMentionPubKey: {

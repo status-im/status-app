@@ -126,7 +126,8 @@ Loader {
             mutualContactsModel:            Qt.binding(() => root.contactsAdaptor.mutualContacts),
             gifUnfurlingEnabled:            Qt.binding(() => root.sharedRootStore.gifUnfurlingEnabled),
             neverAskAboutUnfurlingAgain:    Qt.binding(() => root.sharedRootStore.neverAskAboutUnfurlingAgain),
-            usersModel:                     Qt.binding(() => d.chatRootStore.usersStore.usersModel),
+            usersModel:                     Qt.binding(() => d.chatRootStore.activeChatType === Constants.chatType.oneToOne ? root.contactsAdaptor.mutualContacts
+                                                                                                                            : d.chatRootStore.usersStore.usersModel),
             myPublicKey:                    Qt.binding(() => root.contactsStore.myPublicKey),
             navToMsgDetails:                Qt.binding(() => root.rootStore.navToMsgDetails),
             navToMsgList:                   Qt.binding(() => root.rootStore.navToMsgList),

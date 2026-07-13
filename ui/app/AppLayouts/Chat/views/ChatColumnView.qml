@@ -47,9 +47,9 @@ Item {
     property var stickersPopup
     property bool areTestNetworksEnabled
 
-    property string activeChatId: parentModule && parentModule.activeItem.id
-    property int chatsCount: parentModule && parentModule.model ? parentModule.model.count : 0
-    property int activeChatType: parentModule && parentModule.activeItem.type
+    readonly property string activeChatId: parentModule && parentModule.activeItem.id
+    readonly property int chatsCount: parentModule && parentModule.model ? parentModule.model.count : 0
+    readonly property int activeChatType: rootStore.activeChatType
     property bool stickersLoaded: false
     property bool canPost: true
     property var viewAndPostHoldingsModel
@@ -420,6 +420,7 @@ Item {
                     textInput.readOnly: d.sendingInProgress
 
                     usersModel: root.usersModel
+                    usersModelIncludeAtEveryone: root.activeChatType !== Constants.chatType.oneToOne
                     linkPreviewModel: !!d.activeChatContentModule ? d.activeChatContentModule.inputAreaModule.linkPreviewModel : null
                     paymentRequestModel: !!d.activeChatContentModule ? d.activeChatContentModule.inputAreaModule.paymentRequestModel : null
                     formatBalance: d.formatBalance
