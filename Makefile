@@ -1080,6 +1080,11 @@ nim-test-run/test/nim/send_modal_instantiation_bench.nim: | statusq
 nim-test-run/test/nim/send_handler_lookup_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
 nim-test-run/test/nim/send_handler_lookup_bench.nim: | statusq
 
+# send_handler_adaptors_bench builds the real CollectiblesSelectionAdaptor /
+# WalletAccountsSelectorAdaptor / RecipientViewAdaptor proxy chains offscreen -- links StatusQ.
+nim-test-run/test/nim/send_handler_adaptors_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+nim-test-run/test/nim/send_handler_adaptors_bench.nim: | statusq
+
 ifneq ($(mkspecs),win32)
 nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
