@@ -1,5 +1,6 @@
 AppMain 1.0 AppMain.qml
 GlobalBanner 1.0 GlobalBanner.qml
+ShareShortcutsPublisher 1.0 ShareShortcutsPublisher.qml
 SplashScreen 1.0 SplashScreen.qml
 Popups 1.0 Popups.qml
 StatusTrayIcon 1.0 StatusTrayIcon.qml

@@ -11,7 +11,8 @@
 ##    (degraded fallback: next manual app open, no data loss);
 ##  - the Android SEND/SEND_MULTIPLE hand-off (shareActivated signal) reaches
 ##    SIGNAL_EXTERNAL_SHARE_INTAKE — text-only and with cached image paths —
-##    with pre-ready buffering.
+##    with pre-ready buffering; a direct-share shortcut tap carries its
+##    destination chat id through (empty for plain shares and slot payloads).
 
 import unittest, os
 import nimqml
@@ -53,10 +54,12 @@ suite "share_intake_wake":
     let manager = newUrlsManager(events, urlSchemeEvent, singleInstance, "", slot)
     var sharedTexts: seq[string] = @[]
     var sharedImagePaths: seq[seq[string]] = @[]
+    var sharedDestinations: seq[string] = @[]
     events.on(SIGNAL_EXTERNAL_SHARE_INTAKE) do(e: Args):
       let args = ExternalShareIntakeArgs(e)
       sharedTexts.add(args.text)
       sharedImagePaths.add(args.imagePaths)
+      sharedDestinations.add(args.destinationChatId)
 
   teardown:
     removeDir(slotDir)
@@ -146,7 +149,7 @@ suite "share_intake_wake":
     manager.appReady()
 
     statusq_urlscheme_emit_share(urlSchemeEvent.vptr,
-      "look at this https://example.com/article", "[]")
+      "look at this https://example.com/article", "[]", "")
     processEventsUntil(proc(): bool = sharedTexts.len > 0)
 
     check sharedTexts == @["look at this https://example.com/article"]
@@ -156,7 +159,7 @@ suite "share_intake_wake":
     manager.appReady()
 
     statusq_urlscheme_emit_share(urlSchemeEvent.vptr, "gallery caption",
-      """["/cache/share-intake/a.png","/cache/share-intake/b.jpg"]""")
+      """["/cache/share-intake/a.png","/cache/share-intake/b.jpg"]""", "")
     processEventsUntil(proc(): bool = sharedTexts.len > 0)
 
     check sharedTexts == @["gallery caption"]
@@ -167,14 +170,47 @@ suite "share_intake_wake":
     manager.appReady()
 
     statusq_urlscheme_emit_share(urlSchemeEvent.vptr, "",
-      """["/cache/share-intake/screenshot.png"]""")
+      """["/cache/share-intake/screenshot.png"]""", "")
     processEventsUntil(proc(): bool = sharedTexts.len > 0)
 
     check sharedTexts == @[""]
     check sharedImagePaths == @[@["/cache/share-intake/screenshot.png"]]
 
+  test "android direct-share destination reaches the intake seam":
+    # Direct-share shortcut tap: the OS attached the shortcut id (the chat id)
+    # to the SEND intent, so the destination is already decided and the picker
+    # step is skipped downstream.
+    manager.appReady()
+
+    statusq_urlscheme_emit_share(urlSchemeEvent.vptr, "to alice",
+      """["/cache/share-intake/a.png"]""", "chat-alice")
+    processEventsUntil(proc(): bool = sharedTexts.len > 0)
+
+    check sharedTexts == @["to alice"]
+    check sharedImagePaths == @[@["/cache/share-intake/a.png"]]
+    check sharedDestinations == @["chat-alice"]
+
+  test "android share without a shortcut id carries no destination":
+    manager.appReady()
+
+    statusq_urlscheme_emit_share(urlSchemeEvent.vptr, "plain share", "[]", "")
+    processEventsUntil(proc(): bool = sharedTexts.len > 0)
+
+    check sharedDestinations == @[""]
+
+  test "slot share payload carries no direct-share destination":
+    # iOS App Group slot path: direct-share shortcuts are Android-only, the
+    # slot payload never preselects a destination.
+    manager.appReady()
+    slot.write("""{"type":"share","text":"from the extension"}""")
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = sharedTexts.len > 0)
+
+    check sharedDestinations == @[""]
+
   test "share text before appReady is buffered and delivered at appReady":
-    statusq_urlscheme_emit_share(urlSchemeEvent.vptr, "pre-login share", "[]")
+    statusq_urlscheme_emit_share(urlSchemeEvent.vptr, "pre-login share", "[]", "")
     drainEvents() # let the queued slot run; the seam must buffer, not dispatch
     check sharedTexts.len == 0
 

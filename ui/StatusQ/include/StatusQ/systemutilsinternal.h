@@ -47,7 +47,18 @@ public:
     // Background the whole Android task, revealing the app the user came from
     // (share flow cancel: "return to the source app"); no-op elsewhere
     Q_INVOKABLE void moveAppTaskToBack();
-    
+
+    // Android direct-share shortcuts (one-tap share-sheet targets).
+    // shortcutsJson: JSON array of {id, name, iconPath?} objects in rank order
+    // (most recent first); publishing replaces the previously published set.
+    // Both no-op off Android.
+    Q_INVOKABLE void publishShareShortcuts(const QString& shortcutsJson);
+    Q_INVOKABLE void clearShareShortcuts();
+    // App-private directory the rendered shortcut avatars are written to
+    // (created on demand); works on all platforms so the shortcut publisher
+    // stays testable off-device
+    Q_INVOKABLE QString shareShortcutsIconDirectory() const;
+
     // Get Android keyboard state (uses WindowInsets API, works Android 11-16+)
     Q_INVOKABLE int androidKeyboardHeight() const;
     Q_INVOKABLE bool androidKeyboardVisible() const;
