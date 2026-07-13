@@ -9,6 +9,9 @@
 ##    blank/unknown-type/malformed payloads are cleared and dispatch nothing;
 ##  - appReady delivers a payload left behind when the wake never arrived
 ##    (degraded fallback: next manual app open, no data loss);
+##  - foregrounding an already-running app (appForegrounded) delivers the slot
+##    the same way — immediately when logged in, parked in the seam until
+##    appReady when logged out; empty-slot foregrounds are no-ops;
 ##  - the Android SEND/SEND_MULTIPLE hand-off (shareActivated signal) reaches
 ##    SIGNAL_EXTERNAL_SHARE_INTAKE — text-only and with cached image paths —
 ##    with pre-ready buffering.
@@ -195,6 +198,31 @@ suite "share_intake_wake":
 
     check not fileExists(slot.filePath())
     check sharedTexts == @["delivered on foreground"]
+
+  test "app foregrounding before appReady parks the payload until appReady (login-first)":
+    # Logged-out warm app: the user foregrounds Status manually after sharing.
+    # The slot is consumed from disk right away (file cleared) but the seam
+    # must hold the share until login/onboarding completes — parked, not lost.
+    slot.write("""{"type":"share","text":"shared while logged out, foregrounded"}""")
+
+    statusq_urlscheme_emit_appforegrounded(urlSchemeEvent.vptr)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    check not fileExists(slot.filePath())
+    check sharedTexts.len == 0
+
+    manager.appReady()
+
+    check sharedTexts == @["shared while logged out, foregrounded"]
+
+  test "app foregrounding with an empty slot is a no-op":
+    manager.appReady()
+
+    statusq_urlscheme_emit_appforegrounded(urlSchemeEvent.vptr)
+    drainEvents()
+
+    check sharedTexts.len == 0
+    check slot.take() == ""
 
   test "appReady delivers a payload left behind when the wake never arrived":
     slot.write("""{"type":"share","text":"payload from a killed wake"}""")
