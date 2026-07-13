@@ -1072,6 +1072,14 @@ nim-test-run/test/nim/asset_proxy_chain_bench.nim: | statusq
 nim-test-run/test/nim/swap_key_harvest_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
 nim-test-run/test/nim/swap_key_harvest_bench.nim: | statusq
 
+# send_modal_instantiation_bench loads the real SimpleSendModal QML tree, and
+# send_handler_lookup_bench drives the real ModelUtils/ModelQuery -- both link StatusQ.
+nim-test-run/test/nim/send_modal_instantiation_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+nim-test-run/test/nim/send_modal_instantiation_bench.nim: | statusq
+
+nim-test-run/test/nim/send_handler_lookup_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+nim-test-run/test/nim/send_handler_lookup_bench.nim: | statusq
+
 ifneq ($(mkspecs),win32)
 nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
