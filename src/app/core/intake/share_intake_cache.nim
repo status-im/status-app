@@ -36,6 +36,26 @@ proc isShareIntakeCachedFile*(path: string): bool =
   ## files the cache lifecycle owns.
   extractFilename(parentDir(path)) == ShareIntakeCacheDirName
 
+proc sweepShareIntakeCacheDir*(cacheDir: string, referencedPaths: seq[string]) =
+  ## Fresh-launch cleanup of cached copies a previous run left behind (killed
+  ## before the send/cancel release could run). Deletes every file directly
+  ## inside the given `share-intake` cache directory except the ones still
+  ## referenced — on iOS the pending intake slot payload's copies must survive
+  ## until delivery (a logged-out share survives login and app restarts).
+  ## Guarded to directories actually named `share-intake`; best-effort, IO
+  ## failures must never take the app down.
+  if extractFilename(cacheDir) != ShareIntakeCacheDirName or not dirExists(cacheDir):
+    return
+  try:
+    for kind, path in walkDir(cacheDir):
+      if kind == pcFile and path notin referencedPaths:
+        try:
+          removeFile(path)
+        except CatchableError:
+          discard
+  except CatchableError:
+    discard
+
 proc releaseCachedShareFiles*(imagePaths: seq[string]) =
   ## Best-effort deletion of share-intake cached copies; paths outside a
   ## `share-intake` directory and already-missing files are ignored.
