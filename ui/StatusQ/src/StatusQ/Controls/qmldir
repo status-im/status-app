@@ -44,6 +44,7 @@ StatusPickerButton 0.1 StatusPickerButton.qml
 StatusPinInput 0.1 StatusPinInput.qml
 StatusProgressBar 0.1 StatusProgressBar.qml
 StatusRadioButton 0.1 StatusRadioButton.qml
+StatusRipple 0.1 StatusRipple.qml
 StatusRoundButton 0.1 StatusRoundButton.qml
 StatusScrollBar 0.1 StatusScrollBar.qml
 StatusSecondaryActionHandler 0.1 StatusSecondaryActionHandler.qml

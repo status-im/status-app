@@ -9,13 +9,21 @@ import Storybook
 SplitView {
     Logs { id: logs }
 
+    ButtonGroup {
+        id: rippleOriginButtonGroup
+    }
+
     QtObject {
         id: d
         readonly property var sizesModel: [StatusBaseButton.Size.XSmall, StatusBaseButton.Size.Tiny, StatusBaseButton.Size.Small, StatusBaseButton.Size.Large]
+        readonly property real disabledControlOpacity: 0.5
 
         readonly property string effectiveEmoji: ctrlEmojiEnabled.checked ? ctrlEmoji.text : ""
         readonly property int effectiveTextPosition: ctrlTextPosLeft.checked ? StatusBaseButton.TextPosition.Left
                                                                              : StatusBaseButton.TextPosition.Right
+        readonly property int effectiveRippleOrigin: ctrlRippleFollowPointer.checked
+                                                     ? StatusRipple.RippleOrigin.Pointer
+                                                     : StatusRipple.RippleOrigin.Center
     }
 
     SplitView {
@@ -59,6 +67,9 @@ SplitView {
                         loadingWithText: ctrlLoadingWithText.checked
                         enabled: ctrlEnabled.checked
                         interactive: ctrlInteractive.checked
+                        rippleEnabled: ctrlRipple.checked
+                        rippleOrigin: d.effectiveRippleOrigin
+                        scaleOnPressEnabled: ctrlScaleOnPress.checked
                         textFillWidth: ctrlFillWidth.checked
                         isOutline: ctrlIsOutline.checked
                     }
@@ -79,6 +90,9 @@ SplitView {
                         loadingWithText: ctrlLoadingWithText.checked
                         enabled: ctrlEnabled.checked
                         interactive: ctrlInteractive.checked
+                        rippleEnabled: ctrlRipple.checked
+                        rippleOrigin: d.effectiveRippleOrigin
+                        scaleOnPressEnabled: ctrlScaleOnPress.checked
                         textFillWidth: ctrlFillWidth.checked
                         isOutline: ctrlIsOutline.checked
                     }
@@ -100,6 +114,9 @@ SplitView {
                         loadingWithText: ctrlLoadingWithText.checked
                         enabled: ctrlEnabled.checked
                         interactive: ctrlInteractive.checked
+                        rippleEnabled: ctrlRipple.checked
+                        rippleOrigin: d.effectiveRippleOrigin
+                        scaleOnPressEnabled: ctrlScaleOnPress.checked
                         textFillWidth: ctrlFillWidth.checked
                         isOutline: ctrlIsOutline.checked
                     }
@@ -121,6 +138,9 @@ SplitView {
                         loadingWithText: ctrlLoadingWithText.checked
                         enabled: ctrlEnabled.checked
                         interactive: ctrlInteractive.checked
+                        rippleEnabled: ctrlRipple.checked
+                        rippleOrigin: d.effectiveRippleOrigin
+                        scaleOnPressEnabled: ctrlScaleOnPress.checked
                         isRoundIcon: true
                         textFillWidth: ctrlFillWidth.checked
                         isOutline: ctrlIsOutline.checked
@@ -148,6 +168,9 @@ SplitView {
                         loadingWithText: ctrlLoadingWithText.checked
                         enabled: ctrlEnabled.checked
                         interactive: ctrlInteractive.checked
+                        rippleEnabled: ctrlRipple.checked
+                        rippleOrigin: d.effectiveRippleOrigin
+                        scaleOnPressEnabled: ctrlScaleOnPress.checked
                         textFillWidth: ctrlFillWidth.checked
                     }
                 }
@@ -167,6 +190,9 @@ SplitView {
                         loadingWithText: ctrlLoadingWithText.checked
                         enabled: ctrlEnabled.checked
                         interactive: ctrlInteractive.checked
+                        rippleEnabled: ctrlRipple.checked
+                        rippleOrigin: d.effectiveRippleOrigin
+                        scaleOnPressEnabled: ctrlScaleOnPress.checked
                         textFillWidth: ctrlFillWidth.checked
                     }
                 }
@@ -187,6 +213,9 @@ SplitView {
                         loadingWithText: ctrlLoadingWithText.checked
                         enabled: ctrlEnabled.checked
                         interactive: ctrlInteractive.checked
+                        rippleEnabled: ctrlRipple.checked
+                        rippleOrigin: d.effectiveRippleOrigin
+                        scaleOnPressEnabled: ctrlScaleOnPress.checked
                         textFillWidth: ctrlFillWidth.checked
                     }
                 }
@@ -207,6 +236,9 @@ SplitView {
                         loadingWithText: ctrlLoadingWithText.checked
                         enabled: ctrlEnabled.checked
                         interactive: ctrlInteractive.checked
+                        rippleEnabled: ctrlRipple.checked
+                        rippleOrigin: d.effectiveRippleOrigin
+                        scaleOnPressEnabled: ctrlScaleOnPress.checked
                         isRoundIcon: true
                         textFillWidth: ctrlFillWidth.checked
                     }
@@ -311,6 +343,39 @@ SplitView {
                 Switch {
                     id: ctrlEnabled
                     text: "Enabled"
+                    checked: true
+                }
+                Label {
+                    Layout.topMargin: Theme.defaultPadding
+                    text: "Animation on tap"
+                    font.weight: Font.Bold
+                }
+                CheckBox {
+                    id: ctrlRipple
+                    Layout.leftMargin: Theme.defaultPadding
+                    text: "Ripple"
+                    checked: true
+                }
+                RowLayout {
+                    Layout.leftMargin: Theme.defaultBigPadding
+                    enabled: ctrlRipple.checked
+                    opacity: enabled ? 1 : d.disabledControlOpacity
+                    RadioButton {
+                        id: ctrlRippleFollowPointer
+                        ButtonGroup.group: rippleOriginButtonGroup
+                        text: "Follow pointer"
+                    }
+                    RadioButton {
+                        id: ctrlRippleCentered
+                        ButtonGroup.group: rippleOriginButtonGroup
+                        text: "Centered"
+                        checked: true
+                    }
+                }
+                CheckBox {
+                    id: ctrlScaleOnPress
+                    Layout.leftMargin: Theme.defaultPadding
+                    text: "Scale down"
                     checked: true
                 }
             }
