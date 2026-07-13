@@ -263,5 +263,25 @@ Item {
         function test_sortByUi_asc_desc(data) {
             verifySortByUi(data.optionText, data.orderAsc, data.orderDesc)
         }
+
+        // A periodic market/balance refresh toggles `loading` while real data is
+        // already present. Once the regular model has content the list must stay
+        // bound to it — swapping to the loading placeholder tears down and
+        // recreates every delegate on each refresh.
+        function test_loadingToggle_keepsPopulatedModel() {
+            const listView = getListView(controlUnderTest)
+            waitForRendering(listView)
+            compare(listView.count, 4)
+            const modelInstance = listView.model
+
+            controlUnderTest.loading = true
+            verify(listView.model === modelInstance,
+                "loading placeholder must not replace the populated model on refresh")
+            compare(listView.count, 4)
+
+            controlUnderTest.loading = false
+            verify(listView.model === modelInstance)
+            compare(listView.count, 4)
+        }
     }
 }

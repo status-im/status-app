@@ -166,6 +166,11 @@ Control {
         property int sortOrder: Qt.DescendingOrder
         property int sortValue: -1
 
+        // Latched true once the regular model has ever had rows. Keeps the list
+        // bound to the real model across periodic refreshes that toggle
+        // `loading`; the placeholder only ever shows before the first real data.
+        property bool everHadContent: false
+
         // Emit the current sorter selection as an intent; separators carry an
         // empty role name and are ignored.
         function requestSort() {
@@ -271,6 +276,8 @@ Control {
 
             model: root.model ?? null
 
+            onCountChanged: if (count > 0) d.everHadContent = true
+
             delegate: TokenDelegate {
                 objectName: `AssetView_TokenListItem_${model.symbol}` // TODO: use model.key
 
@@ -334,7 +341,7 @@ Control {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            model: root.loading ? loadingModel : regularModel
+            model: (root.loading && !d.everHadContent) ? loadingModel : regularModel
 
             section {
                 property: "isCommunity"
