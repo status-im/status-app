@@ -86,8 +86,22 @@ public class StatusQtActivity extends QtActivity {
             sweepShareIntakeCache();
         }
 
-        handleUrlIntake(getIntent());
-        handleShareIntake(getIntent());
+        // Delivery dedup, not routing: getIntent() on an Activity recreation
+        // (unlock, config change, process-death restore) or a history/recents
+        // launch returns the task-root intent — possibly a days-old VIEW/SEND
+        // a previous instance already processed. Re-processing it clobbers a
+        // newer buffered share (URL buffering clears the pending share) or
+        // replays an old deep link. Only a truly fresh launch handles the
+        // creation intent; fresh warm deliveries arrive via onNewIntent.
+        if (savedInstanceState == null && !isHistoryLaunch(getIntent())) {
+            handleUrlIntake(getIntent());
+            handleShareIntake(getIntent());
+        }
+    }
+
+    private static boolean isHistoryLaunch(Intent intent) {
+        return intent != null
+                && (intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0;
     }
 
     @Override
