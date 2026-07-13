@@ -491,10 +491,8 @@ Item {
             compare(accountSelectorAssetContent.asset.color, Utils.getColorForId(palette, defaultAccountItem.colorId))
             compare(accountSelectorTextContent.text, defaultAccountItem.name)
 
-            // Sticky Header should not be visible when not scrolling
-            const stickySendModalHeader = findChild(controlUnderTest, "stickySendModalHeader")
-            verify(!!stickySendModalHeader)
-            compare(stickySendModalHeader.height, 0)
+            // Sticky Header is deferred and not instantiated until the first scroll
+            verify(!findChild(controlUnderTest, "stickySendModalHeader"))
 
             // Regular Header
             const sendModalHeader = findChild(controlUnderTest, "sendModalHeader")
@@ -583,10 +581,8 @@ Item {
             compare(accountSelectorAssetContent.asset.color, Utils.getColorForId(palette, selectedAccount.colorId))
             compare(accountSelectorTextContent.text, selectedAccount.name)
 
-            // Sticky Header should not be visible when not scrolling
-            const stickySendModalHeader = findChild(controlUnderTest, "stickySendModalHeader")
-            verify(!!stickySendModalHeader)
-            compare(stickySendModalHeader.height, 0)
+            // Sticky Header is deferred and not instantiated until the first scroll
+            verify(!findChild(controlUnderTest, "stickySendModalHeader"))
 
             // Regular Header
             const sendModalHeader = findChild(controlUnderTest, "sendModalHeader")
@@ -732,33 +728,8 @@ Item {
             // Default network item from model at 0th position
             const defaultNetworkItem = SQUtils.ModelUtils.get(controlUnderTest.networksModel, 0)
 
-            // Sticky Header should not be visible when not scrolling
-            const stickySendModalHeader = findChild(controlUnderTest, "stickySendModalHeader")
-            verify(!!stickySendModalHeader)
-            verify(stickySendModalHeader.height === 0)
-
-            // Sticky Header Title
-            const stickyHeaderTitleText = findChild(stickySendModalHeader, "sendModalTitleText")
-            verify(!!stickyHeaderTitleText)
-            compare(stickyHeaderTitleText.text, qsTr("Send"))
-
-            // Sticky Header Token Selector
-            const stickyHeaderTokenSelector = findChild(stickySendModalHeader, "tokenSelector")
-            verify(!!stickyHeaderTokenSelector)
-            const  stickyHeaderTokenSelectorButton = findChild(stickySendModalHeader, "tokenSelectorButton")
-            verify(!!stickyHeaderTokenSelectorButton)
-            const  stickyHeaderTokenSelectorDropdown = findChild(stickySendModalHeader, "dropdown")
-            verify(!!stickyHeaderTokenSelectorDropdown)
-
-            verify(!stickyHeaderTokenSelectorButton.selected)
-            compare(stickyHeaderTokenSelectorButton.name, "")
-            compare(stickyHeaderTokenSelectorButton.icon, "")
-            compare(stickyHeaderTokenSelectorButton.text, qsTr("Select token"))
-
-            // Sticky Header Network picker
-            const  stickyHeaderNetworkFilter = findChild(stickySendModalHeader, "networkFilter")
-            verify(!!stickyHeaderNetworkFilter)
-            compare(stickyHeaderNetworkFilter.selection, [defaultNetworkItem.chainId])
+            // Sticky Header is deferred and not instantiated until the first scroll
+            verify(!findChild(controlUnderTest, "stickySendModalHeader"))
 
             // Regular Header
             const sendModalHeader = findChild(controlUnderTest, "sendModalHeader")
@@ -797,9 +768,35 @@ Item {
             verify(!!scrollView)
             scrollView.scrollEnd()
 
-            // the opened popup should be closed and sticky header should become visible
+            // the opened popup should be closed and the sticky header should now be
+            // instantiated and become visible
             tryCompare(tokenSelectorDropdown, "opened", false)
+            const stickySendModalHeader = findChild(controlUnderTest, "stickySendModalHeader")
+            verify(!!stickySendModalHeader)
             tryVerify(() => stickySendModalHeader.height > 0)
+
+            // Sticky Header Title
+            const stickyHeaderTitleText = findChild(stickySendModalHeader, "sendModalTitleText")
+            verify(!!stickyHeaderTitleText)
+            compare(stickyHeaderTitleText.text, qsTr("Send"))
+
+            // Sticky Header Token Selector
+            const stickyHeaderTokenSelector = findChild(stickySendModalHeader, "tokenSelector")
+            verify(!!stickyHeaderTokenSelector)
+            const stickyHeaderTokenSelectorButton = findChild(stickySendModalHeader, "tokenSelectorButton")
+            verify(!!stickyHeaderTokenSelectorButton)
+            const stickyHeaderTokenSelectorDropdown = findChild(stickySendModalHeader, "dropdown")
+            verify(!!stickyHeaderTokenSelectorDropdown)
+
+            verify(!stickyHeaderTokenSelectorButton.selected)
+            compare(stickyHeaderTokenSelectorButton.name, "")
+            compare(stickyHeaderTokenSelectorButton.icon, "")
+            compare(stickyHeaderTokenSelectorButton.text, qsTr("Select token"))
+
+            // Sticky Header Network picker
+            const stickyHeaderNetworkFilter = findChild(stickySendModalHeader, "networkFilter")
+            verify(!!stickyHeaderNetworkFilter)
+            compare(stickyHeaderNetworkFilter.selection, [defaultNetworkItem.chainId])
 
             stickyHeaderTokenSelectorButton.clicked()
             verify(stickyHeaderTokenSelectorDropdown.opened)
@@ -822,10 +819,10 @@ Item {
             compare(networkFilter.selection, [10])
 
             // Check sticky header
-            verify(tokenSelectorButton.selected)
-            compare(tokenSelectorButton.name, selectedToken.symbol)
-            compare(tokenSelectorButton.icon, Constants.tokenIcon(selectedToken.symbol))
-            compare(networkFilter.selection, [10])
+            verify(stickyHeaderTokenSelectorButton.selected)
+            compare(stickyHeaderTokenSelectorButton.name, selectedToken.symbol)
+            compare(stickyHeaderTokenSelectorButton.icon, Constants.tokenIcon(selectedToken.symbol))
+            compare(stickyHeaderNetworkFilter.selection, [10])
         }
 
         function test_set_interactive_false() {
@@ -833,9 +830,14 @@ Item {
             controlUnderTest.open()
             tryVerify(() => controlUnderTest.opened)
 
-            // waitForRendering(controlUnderTest.contentItem)
+            waitForRendering(controlUnderTest.contentItem)
 
             controlUnderTest.interactive = false
+
+            // Scroll to instantiate the deferred sticky header
+            const scrollView = findChild(controlUnderTest, "scrollView")
+            verify(!!scrollView)
+            scrollView.scrollEnd()
 
             // Sticky Header
             const stickySendModalHeader = findChild(controlUnderTest, "stickySendModalHeader")
@@ -893,6 +895,13 @@ Item {
             verify(!!controlUnderTest)
             controlUnderTest.open()
             tryVerify(() => controlUnderTest.opened)
+
+            waitForRendering(controlUnderTest.contentItem)
+
+            // Scroll to instantiate the deferred sticky header
+            const scrollView = findChild(controlUnderTest, "scrollView")
+            verify(!!scrollView)
+            scrollView.scrollEnd()
 
             const stickySendModalHeader = findChild(controlUnderTest, "stickySendModalHeader")
             verify(!!stickySendModalHeader)

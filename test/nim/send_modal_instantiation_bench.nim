@@ -160,7 +160,9 @@ when isMainModule:
 
   # The full modal must actually instantiate (the whole point of this bench).
   let full = rowFor(0)
-  doAssert full.createMs >= 0.0,
+  doAssert full.error.len == 0,
     &"SimpleSendModal failed to instantiate offscreen: {full.error}"
+  doAssert full.createMs > 0.0,
+    &"SimpleSendModal createMs was not measured: {full.createMs}"
 
   echo "assertions passed"
