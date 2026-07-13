@@ -114,20 +114,22 @@ void flatten(const Node& node, unsigned int acc, QVector<unsigned int>& flags)
         break;
     case NodeKind::CodeSpan:
         // Markers and content are monospace + background (kCode). The content inherits
-        // any outer emphasis (nested code can be bold/italic/struck through); the
-        // backtick markers keep only their own kCode style — no inherited emphasis.
+        // any outer emphasis (nested code can be bold/italic/struck through); both markers
+        // and content inherit kQuote so nested code inside a quote is dimmed too.
         for (const Node& c : node.children)
             stamp(flags, c.start, c.end,
                   c.kind == NodeKind::Delimiter
-                      ? kCode
-                      : kCode | (acc & kEmphasisMask));
+                      ? kCode | (acc & kQuote)
+                      : kCode | (acc & (kEmphasisMask | kQuote)));
         break;
     case NodeKind::CodeBlock:
+        // Fence markers stay kDelimiter (already delimiter-colored); the content inherits
+        // outer emphasis and kQuote (dimmed inside a quote).
         for (const Node& c : node.children)
             stamp(flags, c.start, c.end,
                   c.kind == NodeKind::Delimiter
                       ? kDelimiter
-                      : kCodeFence | (acc & kEmphasisMask));
+                      : kCodeFence | (acc & (kEmphasisMask | kQuote)));
         break;
     case NodeKind::Text:
         stamp(flags, node.start, node.end, acc);
@@ -708,6 +710,20 @@ void ChatInputHighlighter::setLinkColor(QColor color)
     emit linkColorChanged();
 }
 
+QColor ChatInputHighlighter::quoteTextColor() const
+{
+    return m_quoteTextColor;
+}
+void ChatInputHighlighter::setQuoteTextColor(QColor color)
+{
+    if (m_quoteTextColor == color)
+        return;
+    m_quoteTextColor = color;
+    m_cachedText.clear();
+    rehighlight();
+    emit quoteTextColorChanged();
+}
+
 bool ChatInputHighlighter::formatUnclosedCodeFence() const
 {
     return m_formatUnclosedCodeFence;
@@ -763,6 +779,8 @@ QTextCharFormat ChatInputHighlighter::buildFormat(unsigned int bits) const
     if (bits & kItalic)        fmt.setFontItalic(true);
     if (bits & kStrikeThrough) fmt.setFontStrikeOut(true);
     if (bits & kLink)          fmt.setForeground(m_linkColor);
+    else if ((bits & kQuote) && m_quoteTextColor.isValid())
+        fmt.setForeground(m_quoteTextColor); // dim quote content (incl. nested code)
     return fmt;
 }
 

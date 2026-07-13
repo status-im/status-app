@@ -60,6 +60,9 @@ class ChatInputHighlighter : public QSyntaxHighlighter
     Q_PROPERTY(QColor linkColor
                READ linkColor WRITE setLinkColor
                NOTIFY linkColorChanged)
+    Q_PROPERTY(QColor quoteTextColor
+               READ quoteTextColor WRITE setQuoteTextColor
+               NOTIFY quoteTextColorChanged)
     Q_PROPERTY(bool formatUnclosedCodeFence
                READ formatUnclosedCodeFence WRITE setFormatUnclosedCodeFence
                NOTIFY formatUnclosedCodeFenceChanged)
@@ -83,6 +86,9 @@ public:
 
     QColor linkColor() const;
     void setLinkColor(QColor color);
+
+    QColor quoteTextColor() const;
+    void setQuoteTextColor(QColor color);
 
     bool formatUnclosedCodeFence() const;
     void setFormatUnclosedCodeFence(bool enabled);
@@ -160,6 +166,7 @@ signals:
     void codeBackgroundChanged();
     void delimiterColorChanged();
     void linkColorChanged();
+    void quoteTextColorChanged();
     void formatUnclosedCodeFenceChanged();
     void enlargeEmojisChanged();
 
@@ -194,6 +201,7 @@ private:
     QColor m_codeBackground{Qt::transparent};
     QColor m_delimiterColor{Qt::darkGray};
     QColor m_linkColor{Qt::blue};
+    QColor m_quoteTextColor{}; // invalid = no quote-text dimming unless set
     bool m_formatUnclosedCodeFence{false};
     bool m_enlargeEmojis{true};
     ChatInputLinksModel* m_linksModel{nullptr};

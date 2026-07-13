@@ -21,6 +21,7 @@ StatusTextArea {
     property alias codeBackground: highlighter.codeBackground
     property alias delimiterColor: highlighter.delimiterColor
     property alias linkColor: highlighter.linkColor
+    property alias quoteTextColor: highlighter.quoteTextColor
 
     // Background color needed for proper rendering of quote block's vertical line.
     property color backgroundColor: Theme.palette.background
@@ -90,6 +91,7 @@ StatusTextArea {
         quickTextDocument: root.textDocument
         delimiterColor: Theme.palette.baseColor1
         linkColor: Theme.palette.primaryColor1
+        quoteTextColor: Theme.palette.baseColor1
     }
 
     QtObject {
