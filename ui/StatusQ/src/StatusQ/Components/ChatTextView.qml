@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 import StatusQ
 import StatusQ.Core.Theme
@@ -53,7 +54,7 @@ Control {
     // (not selectable) or a read-only TextEdit (selectable), plain or framed for code. Widths
     // flow down from `width` (set by the parent); heights flow up via implicitHeight.
     component BlockText: Loader {
-        id: piece
+        id: block
 
         property string content
         property bool isCode: false
@@ -82,14 +83,14 @@ Control {
         Component {
             id: richLabelComp
             Label {
-                width: piece.width
+                width: block.width
                 wrapMode: Text.Wrap
                 textFormat: Text.RichText
                 color: Theme.palette.directColor1
                 font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
                 // pre-wrap so extra/leading spaces are preserved; no hover in non-selectable mode
-                text: piece.richTextFor("")
+                text: block.richTextFor("")
                 // Connecting this enables Text's built-in link click handling (non-selectable mode).
                 onLinkActivated: (link) => d.activateLink(link)
             }
@@ -98,7 +99,7 @@ Control {
             id: richEditComp
             TextEdit {
                 property bool selectionParticipant: true
-                width: piece.width
+                width: block.width
                 readOnly: true
                 selectByMouse: false
                 persistentSelection: true
@@ -109,73 +110,77 @@ Control {
                 font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
                 // hoveredLink drives the link hover background (updated as the pointer moves).
-                text: piece.richTextFor(hoveredLink)
+                text: block.richTextFor(hoveredLink)
             }
         }
 
         // ── code (framed monospace) — a full-width Item wrapping the hugging frame ──
         Component {
             id: codeLabelComp
-            Item {
-                implicitHeight: frame.implicitHeight
-                Rectangle {
-                    id: frame
-                    width: inner.width + 16
-                    implicitHeight: inner.implicitHeight + 16
-                    radius: 6
-                    border.width: 1
-                    border.color: root.codeBorderColor
-                    color: root.codeBackgroundColor
 
-                    Label {
-                        id: inner
-                        x: 8; y: 8
-                        width: Math.min(implicitWidth, piece.width - 16)
-                        wrapMode: Text.Wrap
-                        textFormat: Text.PlainText
-                        color: Theme.palette.directColor1
-                        font.family: Fonts.codeFont.family
-                        font.pixelSize: root.font.pixelSize
-                        font.bold: piece.bold
-                        font.italic: piece.italic
-                        font.strikeout: piece.strikethrough
-                        text: piece.content
+            Item {
+                implicitHeight: inner.implicitHeight
+
+                Label {
+                    id: inner
+
+                    padding: d.padding
+
+                    background: Rectangle {
+                        radius: 6
+                        border.width: 1
+                        border.color: root.codeBorderColor
+                        color: root.codeBackgroundColor
                     }
+
+                    width: Math.min(implicitWidth, parent.width)
+                    wrapMode: Text.Wrap
+                    textFormat: Text.PlainText
+                    color: Theme.palette.directColor1
+                    font.family: Fonts.codeFont.family
+                    font.pixelSize: root.font.pixelSize
+                    font.bold: block.bold
+                    font.italic: block.italic
+                    font.strikeout: block.strikethrough
+                    text: block.content
                 }
             }
         }
         Component {
             id: codeEditComp
             Item {
-                implicitHeight: frame.implicitHeight
+                implicitHeight: inner.implicitHeight
+
                 Rectangle {
-                    id: frame
-                    width: inner.width + 16
-                    implicitHeight: inner.implicitHeight + 16
+                    width: inner.width
+                    height: inner.implicitHeight
                     radius: 6
                     border.width: 1
                     border.color: root.codeBorderColor
                     color: root.codeBackgroundColor
+                }
 
-                    TextEdit {
-                        id: inner
-                        property bool selectionParticipant: true
-                        x: 8; y: 8
-                        width: Math.min(implicitWidth, piece.width - 16)
-                        readOnly: true
-                        selectByMouse: false
-                        persistentSelection: true
-                        wrapMode: Text.Wrap
-                        textFormat: Text.PlainText
-                        selectionColor: root.palette.highlight
-                        color: Theme.palette.directColor1
-                        font.family: Fonts.codeFont.family
-                        font.pixelSize: root.font.pixelSize
-                        font.bold: piece.bold
-                        font.italic: piece.italic
-                        font.strikeout: piece.strikethrough
-                        text: piece.content
-                    }
+                TextEdit {
+                    id: inner
+
+                    property bool selectionParticipant: true
+
+                    padding: d.padding
+                    width: Math.min(implicitWidth, parent.width)
+
+                    readOnly: true
+                    selectByMouse: false
+                    persistentSelection: true
+                    wrapMode: Text.Wrap
+                    textFormat: Text.PlainText
+                    selectionColor: root.palette.highlight
+                    color: Theme.palette.directColor1
+                    font.family: Fonts.codeFont.family
+                    font.pixelSize: root.font.pixelSize
+                    font.bold: block.bold
+                    font.italic: block.italic
+                    font.strikeout: block.strikethrough
+                    text: block.content
                 }
             }
         }
@@ -183,6 +188,9 @@ Control {
 
     QtObject {
         id: d
+
+        readonly property int padding: 8
+        readonly property int quoteBarWidth: 3
 
         property string selectedText: ""
         property var editors: []        // participant TextEdits, document order
@@ -313,35 +321,29 @@ Control {
         }
     }
 
-    contentItem: Column {
+    contentItem: ColumnLayout {
         id: blocksColumn
 
-        spacing: 8
+        spacing: d.padding
 
         Repeater {
             model: root.blocks
 
             // One Loader per block builds only the matching renderer (text/code or quote).
-            delegate: Item {
+            delegate: Loader {
                 id: blk
 
                 required property var modelData
                 readonly property var block: modelData
 
-                width: blocksColumn.width
-                implicitHeight: blockLoader.implicitHeight
-                height: implicitHeight
-
-                Loader {
-                    id: blockLoader
-                    width: parent.width
-                    sourceComponent: blk.block.type === "quote" ? quoteComp : textComp
-                }
+                Layout.fillWidth: true
+                sourceComponent: blk.block.type === "quote" ? quoteComp : textComp
 
                 Component {
                     id: textComp
+
                     BlockText {
-                        width: blockLoader.width
+                        width: blk.width
                         selectable: root.selectable
                         isCode: blk.block.type === "code"
                         content: blk.block.type === "code" ? (blk.block.code || "")
@@ -354,21 +356,23 @@ Control {
 
                 Component {
                     id: quoteComp
-                    Row {
-                        spacing: 8
+
+                    RowLayout {
+                        spacing: d.padding
 
                         Rectangle {
-                            width: 3
-                            height: quoteCol.height
+                            Layout.preferredWidth: d.quoteBarWidth
+                            Layout.fillHeight: true
                             color: root.quoteBarColor
 
-                            bottomLeftRadius: 3
-                            topLeftRadius: 3
+                            bottomLeftRadius: width
+                            topLeftRadius: width
                         }
-                        Column {
+                        ColumnLayout {
                             id: quoteCol
-                            width: blockLoader.width - 11 // bar (3) + spacing (8)
-                            spacing: 8
+
+                            Layout.fillWidth: true
+                            spacing: d.padding
 
                             Repeater {
                                 model: blk.block.blocks
@@ -376,7 +380,8 @@ Control {
                                 delegate: BlockText {
                                     required property var modelData
 
-                                    width: quoteCol.width
+                                    Layout.fillWidth: true
+
                                     selectable: root.selectable
                                     isCode: modelData.type === "code"
                                     content: modelData.type === "code" ? (modelData.code || "")
