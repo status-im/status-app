@@ -596,6 +596,7 @@ StatusSectionLayout {
         active: root.visible
         sourceComponent: BrowserShortcutActions {
             currentWebView: _internal.currentWebView
+            isMobile: SQUtils.Utils.isMobile
             onActivateAddressBar: browserToolbarLoader.activateAddressBar()
             onHideFindBar: _internal.hideFindBar()
             onFindNextRequested: findBar.findNext()

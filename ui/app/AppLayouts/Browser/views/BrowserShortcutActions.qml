@@ -59,6 +59,11 @@ QObject {
 
     property var currentWebView
 
+    // On Android the hardware/gesture Back key matches StandardKey.PreviousChild,
+    // so the tab-navigation shortcuts must be disabled on mobile or Back triggers a
+    // phantom "previous tab" switch. Mobile switches tabs via the tab-bar UI anyway.
+    property bool isMobile: false
+
     function triggerWebAction(action) {
         if (!currentWebView)
             return
@@ -153,10 +158,12 @@ QObject {
     }
     Shortcut {
         sequences: [StandardKey.NextChild]
+        enabled: !root.isMobile
         onActivated: root.nextTabRequested()
     }
     Shortcut {
         sequences: [StandardKey.PreviousChild]
+        enabled: !root.isMobile // Android Back matches PreviousChild; see isMobile
         onActivated: root.previousTabRequested()
     }
 }
