@@ -3070,12 +3070,13 @@ Item {
         value: appMain.Theme.palette
     }
 
-    // Back entry point for the mobile Back key and the StandardKey.Back shortcut
-    // (Alt+←). On Android the event may not reach QML (the platform can close the
-    // window first); main.qml's onClosing is the catch-all and calls tryGoBack().
+    // Back entry point for the mobile Back key. On Android the event may not reach
+    // QML at all (e.g. during onboarding, before AppMain is loaded); main.qml's
+    // onClosing is the failsafe and offers the press to tryGoBack() before
+    // minimizing. The desktop StandardKey.Back shortcut is handled by the Shortcut
+    // below, not here.
     Keys.onPressed: function(event) {
-        if (event.key !== Qt.Key_Back // Back key on mobile
-                && !event.matches(StandardKey.Back)) // Back std shortcut, e.g. Alt+←
+        if (event.key !== Qt.Key_Back) // Back key on mobile
             return
 
         if (tryGoBack()) {
@@ -3089,12 +3090,14 @@ Item {
          }
     }
 
-    Keys.onShortcutOverride: function (event) {
-        // Browser is excluded: QtWebEngine handles StandardKey.Back natively for
-        // web-history navigation, so we let the event reach the web view.
-        event.accepted = d.activeSectionType !== Constants.appSection.browser &&
-                event.matches(StandardKey.Back) &&
-                appMain.canGoBackAnywhere
+    // Desktop Back (Alt+← / Cmd+[). A Shortcut, not Keys.onPressed: the shortcut map
+    // is consulted before the key event reaches the focus chain, which is the only
+    // route that works in the Browser — a focused WebEngineView accepts every key
+    // event and nothing bubbles out of it.
+    Shortcut {
+        sequences: [StandardKey.Back]
+        enabled: !SQUtils.Utils.isMobile && appMain.canGoBackAnywhere
+        onActivated: appMain.tryGoBack()
     }
 
     MouseArea {

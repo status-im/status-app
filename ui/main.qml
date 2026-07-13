@@ -347,7 +347,13 @@ Window {
             // save the geometry just before closing
             applicationWindow.storeAppState() // noop on mobile
             if (SQUtils.Utils.isMobile) {
-                close.accepted = true
+                close.accepted = false
+                if (loader.item && loader.item.tryGoBack())
+                    return
+                if (SQUtils.Utils.isAndroid)
+                    MobileUI.backToHomeScreen()
+                else
+                    applicationWindow.showMinimized()
                 return
             } else if (!loader.item) {
                 close.accepted = true

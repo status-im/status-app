@@ -128,10 +128,6 @@ QObject {
         onActivated: triggerWebAction(AbstractWebView.WebAction.Redo)
     }
     Shortcut {
-        sequences: [StandardKey.Back]
-        onActivated: triggerWebAction(AbstractWebView.WebAction.Back)
-    }
-    Shortcut {
         sequences: [StandardKey.Forward]
         onActivated: triggerWebAction(AbstractWebView.WebAction.Forward)
     }

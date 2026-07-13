@@ -75,13 +75,17 @@ StatusSectionLayout {
     function saveBrowserSession() {
         savedSessionContext.saveSession()
     }
-    // Overrides StatusSectionLayout.tryGoBack: web history first, then tab history.
-    function tryGoBack() {
-        if (!!_internal.currentWebView && _internal.currentWebView.canGoBack) {
+    // Innermost Back tier: the current tab's web history. StatusSectionLayout
+    // tries this before the view tier and the tab (subsection) tier.
+    contentHistory: QtObject {
+        readonly property bool canGoBack: _internal.currentWebView?.canGoBack ?? false
+
+        function tryGoBack() {
+            if (!canGoBack)
+                return false
             webViewContext.goBackCurrent()
             return true
         }
-        return subsectionHistory.tryGoBack()
     }
 
     // Subsection back history: each tab keyed by the webview's stable `uid`

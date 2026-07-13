@@ -182,6 +182,19 @@ LayoutChooser {
     }
 
     /*!
+        Optional innermost Back tier, offered the press before the view tier.
+        Duck-typed as \c {{ readonly property bool canGoBack; function tryGoBack(): bool }} —
+        the same interface as \c subsectionHistory. Set it to give a section
+        navigation that lives *inside* its content, e.g. the Browser's web history.
+
+        Prefer this over redeclaring \c tryGoBack() in a derived component: QML has
+        no way to call the shadowed base implementation, so an override silently
+        drops the view and subsection tiers, and \c canGoBack (being \c readonly)
+        cannot be extended to match.
+    */
+    property var contentHistory: null
+
+    /*!
         Optional StatusQ.Core.Utils.SubsectionNavigationHistory. When set, Back
         steps the portrait SwipeView panels first, then retraces subsection
         navigation within the section before the section is left.
@@ -189,6 +202,8 @@ LayoutChooser {
     property var subsectionHistory: null
 
     function tryGoBack() {
+        if (root.contentHistory && root.contentHistory.tryGoBack()) // content tier
+            return true
         if (portraitView.visible && portraitView.tryGoBack()) // view tier
             return true
         if (root.subsectionHistory && root.subsectionHistory.tryGoBack()) { // subsection tier
@@ -212,12 +227,15 @@ LayoutChooser {
     }
 
     /*!
-        True when Back can step the portrait SwipeView, trigger the header back
-        button, or retrace subsection history. Used by AppMain to enable the
-        desktop Back shortcut / mouse button for in-section navigation.
+        True when Back can step the section's content, the portrait SwipeView,
+        trigger the header back button, or retrace subsection history. Used by
+        AppMain to enable the desktop Back shortcut / mouse button for in-section
+        navigation. Must stay the exact disjunction of the tiers tried by
+        \c tryGoBack(), or the entry points will be gated on a stale predicate.
     */
     readonly property bool canGoBack:
-        (portraitView.visible && portraitView.canGoBackInternally)
+        (!!root.contentHistory && root.contentHistory.canGoBack)
+        || (portraitView.visible && portraitView.canGoBackInternally)
         || (!!root.subsectionHistory && root.subsectionHistory.canGoBack)
 
     readonly property int windowWidth: root.Window?.width ?? Screen.width

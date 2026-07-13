@@ -28,7 +28,6 @@ Rectangle {
         onClicked: function(mouse) {
             if (mouse.button !== Qt.BackButton)
                 return
-            mouse.accepted = true
             root.closeRequested()
         }
     }
