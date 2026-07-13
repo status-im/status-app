@@ -81,7 +81,7 @@ Item {
                                    appMain.privacyStore?.thirdpartyServicesEnabled ?? true : true
         onOpenUrl: (link) => Global.requestOpenLink(link)
         onOpenUrlInNewBrowserTab: (link) => d.openUrlInNewBrowserTab(link)
-        onLaunchShareFlow: (text, imagePaths) => d.launchShareFlow(text, imagePaths)
+        onLaunchShareFlow: (text, imagePaths, destinationChatId) => d.launchShareFlow(text, imagePaths, destinationChatId)
         onOpenActivityCenter: () => {
             d.closeActivityCenterOnNextBack = false
             mainLayoutItem.openACCenterPanel = true
@@ -1116,13 +1116,16 @@ Item {
 
         // External intake, share route: content shared to Status from another
         // app launches the share flow (destination picker -> preview -> send).
+        // A non-empty destinationChatId (direct-share shortcut tap) skips the
+        // picker and lands on the preview with that chat pre-selected.
         // Last-wins: a share arriving while the flow is open restarts it with
         // the new payload; the replaced share's cached image copies are
         // released so they don't accumulate.
-        function launchShareFlow(text: string, imagePaths) {
+        function launchShareFlow(text: string, imagePaths, destinationChatId) {
             d.releaseShareFlowImages()
             shareFlowLoader.sharedText = text
             shareFlowLoader.sharedImagePaths = imagePaths
+            shareFlowLoader.preselectedDestinationChatId = destinationChatId ?? ""
             if (!shareFlowLoader.active)
                 shareFlowLoader.active = true
             else
@@ -2891,6 +2894,30 @@ Item {
                                                                   Utils.getSettingsSubsectionForSection(d.activeSectionType))
     }
 
+    // Recent postable destinations (recency-sorted, postable-only), shared by
+    // the share flow's destination picker and the direct-share shortcut
+    // publisher — single recency source, no duplicated logic.
+    RecentPostableDestinationsAdaptor {
+        id: shareDestinationsAdaptor
+        sourceModel: rootStore.chatSearchModel
+    }
+
+    // Android direct-share shortcuts: the top recent postable destinations
+    // are published as one-tap targets in the OS share sheet. Event-driven:
+    // successful sends reorder the recency model, which republishes. Living
+    // inside AppMain, the publisher only exists while a profile is logged in;
+    // logout clears the published set unconditionally on the Nim side
+    // (main module signOutAndQuit).
+    Loader {
+        active: SQUtils.Utils.isAndroid
+
+        sourceComponent: ShareShortcutsPublisher {
+            model: shareDestinationsAdaptor.model
+            iconDirectory: SystemUtils.shareShortcutsIconDirectory()
+            onPublishRequested: (shortcutsJson) => SystemUtils.publishShareShortcuts(shortcutsJson)
+        }
+    }
+
     Loader {
         id: shareFlowLoader
         active: false
@@ -2898,9 +2925,12 @@ Item {
         // The shared payload (external intake, share route): text editable in
         // the preview step; image paths are app-private cached copies whose
         // lifecycle ends with the flow (released on cancel/replace, or by the
-        // image-send task after send).
+        // image-send task after send). A non-empty preselected destination
+        // (direct-share shortcut tap; the shortcut id is the chat id) skips
+        // the picker step.
         property string sharedText
         property var sharedImagePaths: []
+        property string preselectedDestinationChatId
 
         sourceComponent: Popup {
             id: shareFlowPopup
@@ -2915,16 +2945,31 @@ Item {
             closePolicy: Popup.NoAutoClose
             padding: Theme.padding
 
+            Component.onCompleted: applyPreselectedDestination()
+
             onClosed: shareFlowLoader.active = false
 
             function restart() {
                 shareFlowSteps.currentIndex = 0
                 sharePreviewPanel.text = shareFlowLoader.sharedText
+                applyPreselectedDestination()
             }
 
-            RecentPostableDestinationsAdaptor {
-                id: shareDestinationsAdaptor
-                sourceModel: rootStore.chatSearchModel
+            // Direct-share path: the destination is already decided, so land
+            // on the preview with it pre-selected. Falls back to the picker
+            // when the chat is no longer among the postable destinations.
+            function applyPreselectedDestination() {
+                const chatId = shareFlowLoader.preselectedDestinationChatId
+                if (chatId === "")
+                    return
+                const destination = SQUtils.ModelUtils.getByKey(
+                                      shareDestinationsAdaptor.model, "chatId", chatId)
+                if (!destination)
+                    return
+                sharePreviewPanel.destinationSectionId = destination.sectionId
+                sharePreviewPanel.destinationChatId = destination.chatId
+                sharePreviewPanel.destinationName = destination.name
+                shareFlowSteps.currentIndex = 1
             }
 
             StackLayout {

@@ -561,6 +561,49 @@ void SystemUtilsInternal::moveAppTaskToBack()
 #endif
 }
 
+void SystemUtilsInternal::publishShareShortcuts(const QString& shortcutsJson)
+{
+#ifdef Q_OS_ANDROID
+    QJniObject context = QNativeInterface::QAndroidApplication::context();
+    if (!context.isValid())
+        return;
+
+    QJniObject::callStaticMethod<void>(
+        "app/status/mobile/ShareShortcutsHelper",
+        "publish",
+        "(Landroid/content/Context;Ljava/lang/String;)V",
+        context.object(),
+        QJniObject::fromString(shortcutsJson).object<jstring>()
+    );
+#else
+    Q_UNUSED(shortcutsJson);
+#endif
+}
+
+void SystemUtilsInternal::clearShareShortcuts()
+{
+#ifdef Q_OS_ANDROID
+    QJniObject context = QNativeInterface::QAndroidApplication::context();
+    if (!context.isValid())
+        return;
+
+    QJniObject::callStaticMethod<void>(
+        "app/status/mobile/ShareShortcutsHelper",
+        "clear",
+        "(Landroid/content/Context;)V",
+        context.object()
+    );
+#endif
+}
+
+QString SystemUtilsInternal::shareShortcutsIconDirectory() const
+{
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation)
+                        + QStringLiteral("/share-shortcuts");
+    QDir().mkpath(dir);
+    return dir;
+}
+
 int SystemUtilsInternal::androidKeyboardHeight() const
 {
     return m_androidKeyboardHeight;

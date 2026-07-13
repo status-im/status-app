@@ -53,14 +53,17 @@ public class StatusQtActivity extends QtActivity {
     private static String pendingIntakeUrl = null;
     private static String pendingIntakeShareText = null;
     private static String[] pendingIntakeShareImagePaths = null;
+    private static String pendingIntakeShareDestinationChatId = null;
 
     // JNI hooks: implemented in native code (StatusQ urlschemeevent.cpp) to
     // forward external intake to Qt — URLs (deep links and arbitrary web
     // links) and shared content (share target; a shared link arrives as text
     // and must launch the share flow, not URL routing; imagePaths are the
-    // app-private cached copies, never OS-managed URIs).
+    // app-private cached copies, never OS-managed URIs; destinationChatId is
+    // the tapped direct-share shortcut's id, or "" for a plain share).
     private static native void passDeepLinkToQt(String deepLink);
-    private static native void passShareToQt(String text, String[] imagePaths);
+    private static native void passShareToQt(String text, String[] imagePaths,
+            String destinationChatId);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -175,11 +178,13 @@ public class StatusQtActivity extends QtActivity {
             passDeepLinkToQt(pendingIntakeUrl);
             pendingIntakeUrl = null;
         }
-        // Text and image paths are always set (non-null) and cleared together.
+        // The share fields are always set (non-null) and cleared together.
         if (pendingIntakeShareText != null) {
-            passShareToQt(pendingIntakeShareText, pendingIntakeShareImagePaths);
+            passShareToQt(pendingIntakeShareText, pendingIntakeShareImagePaths,
+                    pendingIntakeShareDestinationChatId);
             pendingIntakeShareText = null;
             pendingIntakeShareImagePaths = null;
+            pendingIntakeShareDestinationChatId = null;
         }
     }
 
@@ -235,14 +240,21 @@ public class StatusQtActivity extends QtActivity {
             return;
         }
 
+        // A tap on a direct-share shortcut arrives as the same SEND intent
+        // with the shortcut id (the destination chat id) attached; forwarding
+        // it lets the app skip the destination picker.
+        String destinationChatId = intent.getStringExtra(Intent.EXTRA_SHORTCUT_ID);
+        if (destinationChatId == null) destinationChatId = "";
+
         if (!userLoggedIn.get()) {
             clearPendingShare();
             pendingIntakeShareText = text;
             pendingIntakeShareImagePaths = imagePaths;
+            pendingIntakeShareDestinationChatId = destinationChatId;
             pendingIntakeUrl = null;
             return;
         }
-        passShareToQt(text, imagePaths);
+        passShareToQt(text, imagePaths, destinationChatId);
     }
 
     // Last-wins: a replaced pending share must not leak its cached copies.
@@ -254,6 +266,7 @@ public class StatusQtActivity extends QtActivity {
         }
         pendingIntakeShareImagePaths = null;
         pendingIntakeShareText = null;
+        pendingIntakeShareDestinationChatId = null;
     }
 
     private static List<Uri> extractStreamUris(Context ctx, Intent intent, boolean multiple) {

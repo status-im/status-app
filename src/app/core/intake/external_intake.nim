@@ -30,6 +30,9 @@ type
       text*: string ## shared plain text; shared links arrive as text too
       imagePaths*: seq[string] ## app-private cached copies of shared images
                                ## (copied at receipt; never OS-managed URIs)
+      destinationChatId*: string ## non-empty when the share arrived through a
+                                 ## direct-share shortcut: the destination is
+                                 ## already decided and the picker is skipped
 
   UrlIntakeRoute* = enum
     UrlIntakeDeepLink   ## existing Status deep-link routing
@@ -40,7 +43,7 @@ type
     pendingSlot: Option[ExternalIntakeEvent]
     onDeepLinkUrl*: proc(url: string)
     onBrowserTabUrl*: proc(url: string)
-    onShare*: proc(text: string, imagePaths: seq[string])
+    onShare*: proc(text: string, imagePaths: seq[string], destinationChatId: string)
     onShareImagesDiscarded*: proc(imagePaths: seq[string])
       ## A buffered share carrying images was dropped without dispatch
       ## (last-wins overwrite of the pending slot); the cached copies are now
@@ -90,7 +93,7 @@ proc dispatch(self: ExternalIntake, event: ExternalIntakeEvent) =
         self.onBrowserTabUrl(event.url)
   of ExternalIntakeShare:
     if not self.onShare.isNil:
-      self.onShare(event.text, event.imagePaths)
+      self.onShare(event.text, event.imagePaths, event.destinationChatId)
 
 proc discardPendingShareImages(self: ExternalIntake) =
   ## The pending slot is about to be overwritten (last-wins): if it holds a

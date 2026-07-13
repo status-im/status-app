@@ -29,8 +29,8 @@ QtObject:
       self, SLOT("onUrlActivated(QString)"), ConnectionType.QueuedConnection)
     discard QObject.connect(singleInstance, SIGNAL("eventReceived(QString)"),
       self, SLOT("onUrlActivated(QString)"), ConnectionType.QueuedConnection)
-    discard QObject.connect(urlSchemeEvent, SIGNAL("shareActivated(QString,QString)"),
-      self, SLOT("onShareActivated(QString,QString)"), ConnectionType.QueuedConnection)
+    discard QObject.connect(urlSchemeEvent, SIGNAL("shareActivated(QString,QString,QString)"),
+      self, SLOT("onShareActivated(QString,QString,QString)"), ConnectionType.QueuedConnection)
     discard QObject.connect(urlSchemeEvent, SIGNAL("appForegrounded()"),
       self, SLOT("onAppForegrounded()"), ConnectionType.QueuedConnection)
 
@@ -88,14 +88,18 @@ QtObject:
     ## next full app start. No-op when the slot is inactive or empty.
     self.consumePendingIntake()
 
-  proc onShareActivated*(self: UrlsManager, text: string, imagePathsJson: string) {.slot.} =
+  proc onShareActivated*(self: UrlsManager, text: string, imagePathsJson: string,
+      destinationChatId: string) {.slot.} =
     ## Share-target hand-off (Android SEND/SEND_MULTIPLE intents): shared
     ## text/links and images launch the share flow. The text is kept verbatim —
     ## unlike URLs it may legitimately contain whitespace and newlines; image
     ## paths are app-private cached copies made by the platform layer at
-    ## receipt.
+    ## receipt. destinationChatId is non-empty only for a direct-share shortcut
+    ## tap (the shortcut id is the chat id): the destination is already decided
+    ## and the picker step is skipped downstream.
     self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeShare,
-      text: text, imagePaths: parseImagePathsJson(imagePathsJson)))
+      text: text, imagePaths: parseImagePathsJson(imagePathsJson),
+      destinationChatId: destinationChatId))
 
   proc newUrlsManager*(events: EventEmitter, urlSchemeEvent: UrlSchemeEvent,
       singleInstance: SingleInstance, protocolUriOnStart: string,
@@ -113,9 +117,11 @@ QtObject:
     result.intake.onBrowserTabUrl = proc(url: string) =
       self.events.emit(SIGNAL_EXTERNAL_URL_INTAKE_BROWSER_TAB,
         ExternalUrlIntakeArgs(url: url))
-    result.intake.onShare = proc(text: string, imagePaths: seq[string]) =
+    result.intake.onShare = proc(text: string, imagePaths: seq[string],
+        destinationChatId: string) =
       self.events.emit(SIGNAL_EXTERNAL_SHARE_INTAKE,
-        ExternalShareIntakeArgs(text: text, imagePaths: imagePaths))
+        ExternalShareIntakeArgs(text: text, imagePaths: imagePaths,
+          destinationChatId: destinationChatId))
     result.intake.onShareImagesDiscarded = proc(imagePaths: seq[string]) =
       # A pending share was replaced last-wins before delivery: its cached
       # image copies are unreferenced now and must not accumulate.
