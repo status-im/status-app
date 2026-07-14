@@ -88,7 +88,9 @@ QtObject:
   proc hasOwnership(self: CollectiblesEntry): bool =
     return self.data != nil and isSome(self.data.ownership)
 
-  proc getOwnership(self: CollectiblesEntry): seq[backend.AccountBalance] =
+  proc getOwnership*(self: CollectiblesEntry): seq[backend.AccountBalance] =
+    if not self.hasOwnership():
+      return @[]
     return self.data.ownership.get()
 
   proc getChainID*(self: CollectiblesEntry): int {.slot.} =
@@ -269,6 +271,11 @@ QtObject:
   QtProperty[string] communityName:
     read = getCommunityName
     notify = communityNameChanged
+
+  proc getCommunityRawName*(self: CollectiblesEntry): string =
+    ## Embedded community name with no communityId fallback (empty stays empty).
+    if self.hasCommunityData():
+      return self.getCommunityData().name
 
   proc communityColorChanged*(self: CollectiblesEntry) {.signal.}
   proc getCommunityColor*(self: CollectiblesEntry): string {.slot.} =

@@ -5,6 +5,7 @@ import ./io_interface
 import app/core/eventemitter
 import app_service/service/collectible/service as collectible_service
 import app_service/service/network/service as network_service
+import app_service/service/network/network_item
 import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/settings/service as settings_service
 
@@ -51,6 +52,9 @@ proc getWalletAddresses*(self: Controller): seq[string] =
 
 proc getChainIds*(self: Controller): seq[int] =
   return self.networkService.getCurrentNetworksChainIds()
+
+proc getFlatNetworks*(self: Controller): seq[NetworkItem] =
+  return self.networkService.getFlatNetworks()
 
 proc updateCollectiblePreferences*(self: Controller, tokenPreferencesJson: string) =
   self.collectibleService.updateCollectiblePreferences(tokenPreferencesJson)

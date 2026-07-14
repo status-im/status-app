@@ -104,10 +104,10 @@ QtObject:
     of ModelRole.CommunityPrivilegesLevel: return newQVariant(item.communityPrivilegesLevel)
     of ModelRole.Balance: return newQVariant(item.balance)
 
-  proc flatId(it: FlatCollectible): string =
+  proc syncKey(it: FlatCollectible): string =
     it.key & "@" & $it.chainId
 
-  proc flatRoles(o, n: FlatCollectible): seq[int] =
+  proc syncRoles(o, n: FlatCollectible): seq[int] =
     # Only mutable roles are diffed. key/uid (identity), chainId, tokenId,
     # tokenType, collectionUid, contractAddress are immutable for a given
     # key@chainId row, so a value change there means a different row (handled as
@@ -122,12 +122,7 @@ QtObject:
     if o.communityImage != n.communityImage: result.add(ModelRole.CommunityImage.int)
 
   proc setRows*(self: CollectiblesSelectorFlatModel, rows: seq[FlatCollectible]) =
-    setItemsWithSync(
-      self, self.items, rows,
-      getId = proc(it: FlatCollectible): string = flatId(it),
-      getRoles = proc(o, n: FlatCollectible): seq[int] = flatRoles(o, n),
-      countChanged = proc() = self.countChanged(),
-      useBulkOps = true)
+    self.modelSync(self.items, rows)
 
   proc setup(self: CollectiblesSelectorFlatModel) =
     self.QAbstractListModel.setup
