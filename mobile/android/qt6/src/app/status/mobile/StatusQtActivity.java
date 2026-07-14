@@ -53,6 +53,9 @@ public class StatusQtActivity extends QtActivity {
         // Set up shake detection (used for share-on-shake)
         ShakeDetector.start(this);
 
+        // Dev-only debug seam; no-op on release/fdroid builds.
+        app.status.mobile.debug.DebugCommandReceiver.registerIfDevBuild(this, BuildConfig.BUILD_TYPE);
+
         handleDeepLink(getIntent());
     }
 

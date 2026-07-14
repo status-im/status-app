@@ -236,6 +236,24 @@ proc onAsyncFetchMissingTokensDone(self: Service, response: string) {.slot.} =
   except Exception as e:
     error "error processing async fetch missing tokens", msg = e.msg
 
+proc dumpTokenModelState(self: Service) =
+  ## Dev-only: write a deterministic, sorted snapshot of the token service's
+  ## observable state to the app data dir (external files dir on Android), so two
+  ## dumps of identical state diff clean and a fix can be checked pre/post.
+  let content = dumpTokenState(
+    self.tokensOfInterestByKey,
+    self.groupsOfInterestByKey,
+    self.allTokensByGroupKey,
+    self.tokenPreferencesTable,
+    self.knownMissingKeys,
+    self.pendingTokenFetch.pendingKeys(),
+    self.pendingTokenFetch.inFlightKeys())
+  try:
+    let path = writeTokenDump(content)
+    info "TOKENDUMP wrote token model dump", path = path, bytes = content.len
+  except Exception as e:
+    error "TOKENDUMP failed to write token model dump", msg = e.msg
+
 proc startRefreshTokensTask(self: Service, generation: int, fetchAllTokens: bool = false) =
   let arg = AsyncRefreshTokensTaskArg(
     tptr: asyncRefreshTokensTask,
@@ -303,6 +321,10 @@ proc init*(self: Service) =
     case data.eventType:
       of "wallet-tick-reload":
         self.rebuildMarketData()
+      of "token-dump":
+        # Dev-only debug seam: the DebugCommandReceiver injects a synthetic wallet
+        # signal with this eventType to trigger a state dump.
+        self.dumpTokenModelState()
   # update and populate internal list and then emit signal when new custom token detected?
   self.events.on(SignalType.WalletTokensListsUpdated.event) do(e:Args):
     self.asyncRefreshTokens(fetchAllTokens = true)
