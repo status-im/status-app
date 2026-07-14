@@ -4,6 +4,22 @@
 
 #include <QJsonObject>
 #include <QElapsedTimer>
+#include <QTimer>
+
+namespace
+{
+// Source roles whose changes are pure passthrough to token cells: they never
+// affect which model a token lives in, group membership/metadata, group
+// child-counts, or sort order. A dataChanged limited to these can be applied
+// in place; anything else forces a full re-parse.
+const QSet<QByteArray> kDataOnlyRoleNames{
+    kEnabledNetworkBalanceRoleName,
+    kEnabledNetworkCurrencyBalanceRoleName,
+    kBalancesRoleName,
+    kDecimalsRoleName,
+    kMarketDetailsRoleName,
+};
+} // namespace
 
 ManageTokensController::ManageTokensController(QObject* parent)
     : QObject(parent)
@@ -19,6 +35,11 @@ ManageTokensController::ManageTokensController(QObject* parent)
         connect(model, &ManageTokensModel::dirtyChanged, this, &ManageTokensController::dirtyChanged);
     }
 
+    m_sourceUpdateBatchTimer = new QTimer(this);
+    m_sourceUpdateBatchTimer->setSingleShot(true);
+    m_sourceUpdateBatchTimer->setInterval(0);
+    connect(m_sourceUpdateBatchTimer, &QTimer::timeout, this, &ManageTokensController::flushPendingSourceUpdates);
+
     connect(this, &ManageTokensController::sourceModelChanged, this, [this]() {
         if (!m_sourceModel) {
             m_modelConnectionsInitialized = false;
@@ -30,6 +51,13 @@ ManageTokensController::ManageTokensController(QObject* parent)
                 &QAbstractItemModel::rowsInserted,
                 this,
                 [this](const QModelIndex& parent, int first, int last) {
+                    Q_UNUSED(parent)
+                    // A structural change interleaving with queued in-place updates
+                    // shifts row indices; fall back to a correct full re-parse.
+                    if (hasPendingSourceUpdates()) {
+                        parseSourceModel();
+                        return;
+                    }
 #ifdef QT_DEBUG
                     QElapsedTimer t;
                     t.start();
@@ -49,7 +77,7 @@ ManageTokensController::ManageTokensController(QObject* parent)
 #endif
                 });
         connect(m_sourceModel, &QAbstractItemModel::rowsRemoved, this, &ManageTokensController::parseSourceModel);
-        connect(m_sourceModel, &QAbstractItemModel::dataChanged, this, &ManageTokensController::parseSourceModel);
+        connect(m_sourceModel, &QAbstractItemModel::dataChanged, this, &ManageTokensController::onSourceDataChanged);
         m_modelConnectionsInitialized = true;
     });
 }
@@ -359,6 +387,7 @@ void ManageTokensController::setSourceModel(QAbstractItemModel* newSourceModel)
 
     if (!newSourceModel) {
         disconnect(sourceModel());
+        cancelPendingSourceUpdates();
         // clear all the models
         for (auto model : m_allModels)
             model->clear();
@@ -390,6 +419,10 @@ void ManageTokensController::parseSourceModel()
     if (!m_sourceModel)
         return;
 
+    // A full re-parse rebuilds everything from scratch, superseding any queued
+    // in-place updates.
+    cancelPendingSourceUpdates();
+
     disconnect(m_sourceModel, &QAbstractItemModel::rowsInserted, this, &ManageTokensController::parseSourceModel);
 
 #ifdef QT_DEBUG
@@ -415,6 +448,124 @@ void ManageTokensController::parseSourceModel()
 #endif
 
     emit sourceModelChanged();
+}
+
+bool ManageTokensController::hasPendingSourceUpdates() const
+{
+    return m_pendingFullReparse || !m_pendingChangedRows.isEmpty();
+}
+
+void ManageTokensController::cancelPendingSourceUpdates()
+{
+    if (m_sourceUpdateBatchTimer)
+        m_sourceUpdateBatchTimer->stop();
+    m_pendingFullReparse = false;
+    m_pendingChangedRows.clear();
+    m_pendingChangedRoleNames.clear();
+}
+
+void ManageTokensController::scheduleSourceUpdateFlush()
+{
+    if (m_sourceUpdateBatchTimer && !m_sourceUpdateBatchTimer->isActive())
+        m_sourceUpdateBatchTimer->start();
+}
+
+void ManageTokensController::onSourceDataChanged(const QModelIndex& topLeft,
+                                                 const QModelIndex& bottomRight,
+                                                 const QList<int>& roles)
+{
+    if (!m_sourceModel)
+        return;
+
+    // An empty roles list means "every role changed" — treat as structural.
+    if (roles.isEmpty()) {
+        m_pendingFullReparse = true;
+    } else if (!m_pendingFullReparse) {
+        const auto sourceRoleNames = m_sourceModel->roleNames();
+        for (const auto roleId : roles) {
+            const auto roleName = sourceRoleNames.value(roleId);
+            if (kDataOnlyRoleNames.contains(roleName))
+                m_pendingChangedRoleNames.insert(roleName);
+            else
+                m_pendingFullReparse = true;
+        }
+    }
+
+    if (!m_pendingFullReparse) {
+        for (int row = topLeft.row(); row <= bottomRight.row(); ++row)
+            m_pendingChangedRows.insert(row);
+    }
+
+    scheduleSourceUpdateFlush();
+}
+
+void ManageTokensController::flushPendingSourceUpdates()
+{
+    if (!m_sourceModel) {
+        cancelPendingSourceUpdates();
+        return;
+    }
+
+    if (m_pendingFullReparse) {
+        parseSourceModel(); // clears pending state itself
+        return;
+    }
+
+    const auto rows = m_pendingChangedRows;
+    for (const auto row : rows)
+        applyIncrementalDataUpdate(row);
+
+    cancelPendingSourceUpdates();
+}
+
+void ManageTokensController::applyIncrementalDataUpdate(int sourceRow)
+{
+    if (!m_sourceModel || sourceRow < 0 || sourceRow >= m_sourceModel->rowCount())
+        return;
+
+    const auto sourceRoleNames = m_sourceModel->roleNames();
+    const auto srcIndex = m_sourceModel->index(sourceRow, 0);
+    const auto key = srcIndex.data(sourceRoleNames.key(kKeyRoleName, -1)).toString();
+    if (key.isEmpty())
+        return;
+
+    // The token lives in exactly one leaf model. Group models are aggregates that
+    // don't display these data-only roles, so they need no update here.
+    for (auto model : {m_regularTokensModel, m_communityTokensModel, m_hiddenTokensModel}) {
+        const auto row = model->rowForKey(key);
+        if (row < 0)
+            continue;
+
+        TokenData& token = model->itemAt(row);
+        QList<int> changedRoles;
+
+        const auto dataForRole = [&](const QByteArray& rolename) {
+            return srcIndex.data(sourceRoleNames.key(rolename, -1));
+        };
+
+        for (const auto& roleName : m_pendingChangedRoleNames) {
+            if (roleName == kEnabledNetworkBalanceRoleName) {
+                token.balance = dataForRole(kEnabledNetworkBalanceRoleName);
+                changedRoles << ManageTokensModel::BalanceRole;
+            } else if (roleName == kEnabledNetworkCurrencyBalanceRoleName) {
+                token.currencyBalance = dataForRole(kEnabledNetworkCurrencyBalanceRoleName);
+                changedRoles << ManageTokensModel::CurrencyBalanceRole;
+            } else if (roleName == kBalancesRoleName) {
+                token.balances = dataForRole(kBalancesRoleName);
+                changedRoles << ManageTokensModel::TokenBalancesRole;
+            } else if (roleName == kDecimalsRoleName) {
+                token.decimals = dataForRole(kDecimalsRoleName);
+                changedRoles << ManageTokensModel::TokenDecimalsRole;
+            } else if (roleName == kMarketDetailsRoleName) {
+                token.marketDetails = dataForRole(kMarketDetailsRoleName);
+                changedRoles << ManageTokensModel::TokenMarketDetailsRole;
+            }
+        }
+
+        if (!changedRoles.isEmpty())
+            model->notifyItemChanged(row, changedRoles);
+        return;
+    }
 }
 
 void ManageTokensController::rebuildModels()
