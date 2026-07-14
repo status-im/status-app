@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Lifecycle wrapper for the agent QML dev loop (see .claude/skills/qml-storybook-loop).
+# Lifecycle wrapper for the agent QML dev loop (see .claude/skills/qml-dev).
 # Manages a single Storybook instance used as a live harness for QML iteration.
 #
 # Usage:

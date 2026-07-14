@@ -1,5 +1,5 @@
 ---
-name: qml-storybook-loop
+name: qml-dev
 description: Use when developing, fixing, or visually verifying a QML component on macOS — iterate against a live Storybook with hot reload, driving and inspecting the UI through the macOS Accessibility API instead of running the full Status app.
 ---
 
@@ -17,9 +17,27 @@ tree → confirm. The Status client itself never runs.
 - Permissions: `scripts/storybook-agent.sh start` runs `tools/ax/ax preflight`
   automatically (and builds the CLI if needed) — it verifies Accessibility
   AND Screen Recording for the terminal, triggers the system grant prompts,
-  and **fails hard if either is missing**. Do not proceed with the loop until
-  preflight passes; ask the user to grant the permission and restart the
-  terminal if needed.
+  and **fails hard if either is missing**.
+
+### If preflight fails — permission protocol
+
+1. **Check your memory first**: if a memory records that the human already
+   declined this permission, do NOT ask again — skip straight to step 4.
+2. **Ping the human** and wait: tell them which permission is missing and
+   where to grant it (System Settings → Privacy & Security → Accessibility /
+   Screen Recording → enable the terminal app; the system prompt fires only
+   once, and the grant takes effect after the terminal app restarts). Use a
+   desktop notification if available (`cmux notify --title "QML dev loop"
+   --body "<permission> needed"`) plus a direct question in the conversation.
+   Do not silently continue.
+3. **If the human grants**: re-run preflight and proceed with the full loop.
+4. **If the human declines (once is enough)**: save a memory recording the
+   refusal (e.g. `<permission>-declined — do not ask again`), then continue
+   without that channel:
+   - No Accessibility → the loop is unusable; stop and say so.
+   - No Screen Recording → proceed AX-only (`ax screenshot` will fail; skip
+     visual verification and say you did).
+   Never re-ask in later sessions — the saved memory is the source of truth.
 
 ## The loop
 
