@@ -2704,6 +2704,14 @@ Do you wish to override the security check and continue?</source>
         <translation>Comprar vía %1</translation>
     </message>
     <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">Tus activos en %1</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">Activos populares</translation>
+    </message>
+    <message>
         <source>Ways to buy %1 for %2</source>
         <translation>Formas de comprar %1 para %2</translation>
     </message>
@@ -14735,6 +14743,14 @@ al cargar</translation>
         <source>Token that you&apos;re trying to send is not supported.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">Tus activos en %1</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">Activos populares</translation>
+    </message>
 </context>
 <context>
     <name>SendModalHeader</name>
@@ -16493,6 +16509,14 @@ al cargar</translation>
         <source>Receive</source>
         <translation>Recibir</translation>
     </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">Tus activos en %1</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">Activos populares</translation>
+    </message>
 </context>
 <context>
     <name>SwapModal</name>
@@ -17436,17 +17460,6 @@ This action cannot be undone.</source>
     <message>
         <source>Collectibles</source>
         <translation>Coleccionables</translation>
-    </message>
-</context>
-<context>
-    <name>TokenSelectorViewAdaptor</name>
-    <message>
-        <source>Popular assets</source>
-        <translation>Activos populares</translation>
-    </message>
-    <message>
-        <source>Your assets on %1</source>
-        <translation>Tus activos en %1</translation>
     </message>
 </context>
 <context>
