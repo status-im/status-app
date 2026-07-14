@@ -178,3 +178,36 @@ suite "token apply builder — worker result assembly (deadlock-safe)":
     check res.generation == 2
     check res.error == "boom"
     check res.allTokenLists.len == 0
+
+suite "token apply builder — token groups (by-chain / all-groups)":
+
+  test "builds name-sorted groups, collapsing a shared crossChainId":
+    # C ("Gamma") then the A/B group ("Alpha") -> sorted by name = Alpha, Gamma.
+    let groups = buildTokenGroupsApply(arr(tokenC, tokenA, tokenB))
+    check groups.len == 2
+    check groups.mapIt(it.name) == @["Alpha", "Gamma"]
+    let alpha = groups.filterIt(it.name == "Alpha")[0]
+    check alpha.key == "grp-eth"
+    check alpha.tokens.len == 2   # A + B collapsed
+    check groups.filterIt(it.name == "Gamma")[0].tokens.len == 1
+
+  test "empty tokens node yields no groups":
+    check buildTokenGroupsApply(newJArray()).len == 0
+
+  test "assemble: success carries the built groups, no error":
+    let res = assembleTokenGroupsResult(arr(tokenA, tokenB, tokenC), rpcError = "")
+    check res != nil
+    check res.error == ""
+    check res.groups.len == 2
+
+  test "assemble: an RPC error is passed through, no build":
+    let res = assembleTokenGroupsResult(newJArray(), rpcError = "getTokensByChain failed")
+    check res != nil
+    check res.error == "getTokensByChain failed"
+    check res.groups.len == 0
+
+  test "assemble: a build exception becomes an error, never raises":
+    let res = assembleTokenGroupsResult(arr(badToken), rpcError = "")
+    check res != nil
+    check res.error.len > 0
+    check res.groups.len == 0
