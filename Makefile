@@ -1061,6 +1061,14 @@ nim-test-run/test/nim/signal_handler_test.nim: | statusq
 nim-test-run/test/nim/url_scheme_event_test.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
 nim-test-run/test/nim/url_scheme_event_test.nim: | statusq
 
+# Model-spy tests call inspection accessors gated behind
+# `when defined(testing) or defined(QT_MODEL_SPY)` or assert on the granular
+# signals model_sync records only under QT_MODEL_SPY. The define is applied
+# per-file, NOT globally, so the timing benches keep measuring uninstrumented
+# models.
+nim-test-run/test/nim/model_sync_move_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
+nim-test-run/test/nim/model_sync_unified_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
+
 ifneq ($(mkspecs),win32)
 nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
