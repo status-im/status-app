@@ -1,5 +1,6 @@
 import app/modules/shared_models/model_utils
-import nimqml, tables, strutils, algorithm
+import app/modules/shared/model_sync
+import nimqml, tables, strutils, algorithm, sequtils
 
 import io_interface, tokens_model, market_details_item
 
@@ -35,7 +36,13 @@ QtObject:
     delegate: io_interface.TokenGroupsModelDataSource
     tokensModel: TokensModel
     marketValuesDelegate: io_interface.TokenMarketValuesDataSource
-    tokenMarketDetails: seq[MarketDetailsItem]
+    # Market details keyed by group key (not row index): identity-independent of
+    # insert/remove/move so survivors keep the SAME MarketDetailsItem instance the
+    # QML view is bound to.
+    tokenMarketDetails: Table[string, MarketDetailsItem]
+    # Cached snapshot the main (non-lazy) model diffs against via modelSync,
+    # replacing the beginResetModel on every refresh. data()/rowCount read this.
+    cachedGroups: seq[TokenGroupItem]
     modelModes: seq[ModelMode]
     lazyLoadingBatchSize: int
     lazyLoadingInitialCount: int
@@ -58,7 +65,7 @@ QtObject:
     result.setup
     result.delegate = delegate
     result.marketValuesDelegate = marketValuesDelegate
-    result.tokenMarketDetails = @[]
+    result.tokenMarketDetails = initTable[string, MarketDetailsItem]()
     result.modelModes = modelModes
     result.lazyLoadingBatchSize = lazyLoadingBatchSize
     result.lazyLoadingInitialCount = lazyLoadingInitialCount
@@ -72,7 +79,9 @@ QtObject:
   proc getDisplayModel(self: TokenGroupsModel): var seq[TokenGroupItem] =
     if ModelMode.UseLazyLoading in self.modelModes or ModelMode.IsSearchResult in self.modelModes:
       return self.loadedItems
-    return self.getSourceModel()
+    # Main model: read the cached snapshot maintained by modelSync, not the
+    # live delegate seq — so the model's rows are what the granular diff produced.
+    return self.cachedGroups
 
   method rowCount(self: TokenGroupsModel, index: QModelIndex = nil): int =
     return self.getDisplayModel().len
@@ -131,10 +140,11 @@ QtObject:
     guardModelData(index, self.rowCount(), role, ModelRole)
 
     let noMarketDetails = ModelMode.NoMarketDetails in self.modelModes
-    if not noMarketDetails and index.row >= self.tokenMarketDetails.len:
-      return
 
     let item = self.getDisplayModel()[index.row]
+
+    if not noMarketDetails and not self.tokenMarketDetails.hasKey(item.key):
+      return
 
     let enumRole = role.ModelRole
     case enumRole:
@@ -175,7 +185,7 @@ QtObject:
       of ModelRole.MarketDetails:
         if noMarketDetails:
           return newQVariant("")
-        return newQVariant(self.tokenMarketDetails[index.row])
+        return newQVariant(self.tokenMarketDetails[item.key])
       of ModelRole.DetailsLoading:
         return newQVariant(self.delegate.getTokensDetailsLoading())
       of ModelRole.MarketDetailsLoading:
@@ -194,16 +204,86 @@ QtObject:
       return (tokens[0].key, self.marketValuesDelegate.getPriceForToken(tokens[0].key))
     return ("", 0.0)
 
-  proc addMarketDetailsItem*(self: TokenGroupsModel, index: int, tokensList: var seq[TokenGroupItem], currencyFormat: var CurrencyFormatDto) =
-    let group = tokensList[index]
-    if group.tokens.len == 0:
-      return
+  proc buildMarketDetailsItem(self: TokenGroupsModel, group: TokenGroupItem, currencyFormat: CurrencyFormatDto): MarketDetailsItem =
     let (tokenKey, tokenPrice) = self.priceForTokenGroup(group.tokens)
     let tokenMarketValues = self.marketValuesDelegate.getMarketValuesForToken(tokenKey)
-    let item = newMarketDetailsItem(tokenKey, tokenPrice, tokenMarketValues, currencyFormat)
-    self.tokenMarketDetails.add(item)
+    return newMarketDetailsItem(tokenKey, tokenPrice, tokenMarketValues, currencyFormat)
+
+  proc syncKey(it: TokenGroupItem): string = it.key
+
+  proc rebuildMarketDetails(self: TokenGroupsModel, groups: seq[TokenGroupItem]) =
+    ## Rebuild tokenMarketDetails (keyed by group key) for the given display list,
+    ## PRESERVING the existing MarketDetailsItem instance for a surviving group key
+    ## (QML is bound to it, and the market-values signal path updates it in place),
+    ## creating a new one only for a new key, and dropping removed keys. Keying by
+    ## group key makes this immune to insert/remove/move — no index realignment.
+    if ModelMode.NoMarketDetails in self.modelModes:
+      return
+    let currencyFormat = self.marketValuesDelegate.getCurrentCurrencyFormat()
+    # Groups with no tokens carry no market details; drop them before reconciling
+    # so a tokenless key never gets an instance (matches the pre-modelSync skip).
+    let withTokens = groups.filterIt(it.tokens.len > 0)
+    reconcileByKey(self.tokenMarketDetails, withTokens,
+      create = proc(group: TokenGroupItem): MarketDetailsItem =
+        self.buildMarketDetailsItem(group, currencyFormat))
+
+  proc syncRoles(oldItem, newItem: TokenGroupItem): seq[int] =
+    ## Item-derived roles only (Name/Symbol/Decimals/LogoUri/Type/Tokens/CommunityId).
+    ## Service-getter roles (WebsiteUrl/Description/Visible/Position/*Loading) are
+    ## driven by their own separate dataChanged signals and are NOT folded in here.
+    ## TokenItem holds only static metadata (no balances), so a plain refresh with an
+    ## unchanged group set yields no role changes — the common, zero-work case.
+    result = @[]
+    if oldItem.name != newItem.name: result.add(ModelRole.Name.int)
+    if oldItem.symbol != newItem.symbol: result.add(ModelRole.Symbol.int)
+    if oldItem.decimals != newItem.decimals: result.add(ModelRole.Decimals.int)
+    if oldItem.logoUri != newItem.logoUri: result.add(ModelRole.LogoUri.int)
+    if oldItem.`type` != newItem.`type`: result.add(ModelRole.Type.int)
+    # Tokens is a ref seq — compare by content signature, not reference identity.
+    # Includes customToken (tokens_model shows it) so a customToken flip on a
+    # surviving token key re-reads the Tokens sub-model.
+    let oldSig = oldItem.tokens.mapIt((it.key, it.name, it.symbol, it.decimals,
+      it.chainId, it.address, it.logoUri, it.communityData.id, it.customToken, it.`type`))
+    let newSig = newItem.tokens.mapIt((it.key, it.name, it.symbol, it.decimals,
+      it.chainId, it.address, it.logoUri, it.communityData.id, it.customToken, it.`type`))
+    if oldSig != newSig:
+      result.add(ModelRole.Tokens.int)
+      result.add(ModelRole.MarketDetails.int)
+      result.add(ModelRole.CommunityId.int)
+      # Description is community-branched (isCommunityTokenGroup); a community-status
+      # flip is captured by communityData.id in the signature above, so re-read it.
+      result.add(ModelRole.Description.int)
 
   proc modelsUpdated*(self: TokenGroupsModel, resetModelSize: bool = false, mandatoryKeys: seq[string] = @[]) =
+    let isMainModel = ModelMode.UseLazyLoading notin self.modelModes and
+                      ModelMode.IsSearchResult notin self.modelModes
+
+    # Incremental path: the main model on a plain refresh diffs the new
+    # groups against its cached snapshot and emits granular insert/remove/
+    # dataChanged instead of a full beginResetModel (which tears down every QML
+    # delegate and rebuilds every per-row sub-model). syncModel detects the
+    # hash-order reorder of the group set via LIS and degrades it to
+    # remove+insert. Market details are re-keyed by group key so surviving
+    # groups keep their MarketDetailsItem instance across the diff.
+    if isMainModel and not resetModelSize:
+      # CORRECTNESS DEPENDENCY: this old-vs-new diff only works because the token
+      # service swaps in FRESH TokenGroupItem instances each refresh
+      # (swap-not-clear) rather than mutating in place — cachedGroups holds
+      # the prior fresh instances as the snapshot. If a future change mutates the
+      # group items in place, cachedGroups would alias newGroups and every diff
+      # would see "no change". Keep the swap.
+      let newGroups = self.getSourceModel()
+      # Build market-details keys BEFORE modelSync announces beginInsertRows
+      # for any new group: data(MarketDetails) early-returns an empty QVariant when
+      # the row's key is missing from the table, and nothing emits dataChanged
+      # afterwards — so a newly-inserted row would render empty until an unrelated
+      # signal fired. rebuildMarketDetails is identity-preserving, so survivors keep
+      # their instances and the transient gating of a being-removed row is harmless.
+      self.rebuildMarketDetails(newGroups)
+      self.modelSync(self.cachedGroups, newGroups)
+      self.hasMoreItemsChanged()
+      return
+
     self.beginResetModel()
     defer:
       self.endResetModel()
@@ -241,15 +321,7 @@ QtObject:
           if self.loadedItems.len >= self.lazyLoadingInitialCount:
             break
 
-    if ModelMode.NoMarketDetails in self.modelModes:
-      return
-
-    self.tokenMarketDetails = @[]
-    var
-      tokensList = self.getDisplayModel()
-      currencyFormat = self.marketValuesDelegate.getCurrentCurrencyFormat()
-    for index in countup(0, self.rowCount()-1):
-      self.addMarketDetailsItem(index, tokensList, currencyFormat)
+    self.rebuildMarketDetails(self.getDisplayModel())
 
   proc fetchMore*(self: TokenGroupsModel) {.slot.} =
     if not self.getHasMoreItems() or self.isLoadingMore:
@@ -276,14 +348,7 @@ QtObject:
         self.loadedKeys[key] = true
         self.loadedItems.add(sourceModel[index])
 
-    if ModelMode.NoMarketDetails in self.modelModes:
-      return
-
-    var
-      tokensList = self.getDisplayModel()
-      currencyFormat = self.marketValuesDelegate.getCurrentCurrencyFormat()
-    for index in countup(first, last):
-      self.addMarketDetailsItem(index, tokensList, currencyFormat)
+    self.rebuildMarketDetails(self.getDisplayModel())
 
   proc getSearchRelevance(item: TokenGroupItem, keywordLower: string): int =
     if keywordLower.len == 0:
@@ -350,7 +415,7 @@ QtObject:
     if ModelMode.NoMarketDetails in self.modelModes:
       return
     if not self.delegate.getTokensMarketValuesLoading():
-      for marketDetails in self.tokenMarketDetails:
+      for marketDetails in self.tokenMarketDetails.values:
         marketDetails.updateTokenPrice(self.marketValuesDelegate.getPriceForToken(marketDetails.tokenKey))
         marketDetails.updateTokenMarketValues(self.marketValuesDelegate.getMarketValuesForToken(marketDetails.tokenKey))
 
@@ -376,7 +441,7 @@ QtObject:
     if ModelMode.NoMarketDetails in self.modelModes:
       return
     let currencyFormat = self.marketValuesDelegate.getCurrentCurrencyFormat()
-    for marketDetails in self.tokenMarketDetails:
+    for marketDetails in self.tokenMarketDetails.values:
         marketDetails.updateCurrencyFormat(currencyFormat)
 
   proc tokenPreferencesUpdated*(self: TokenGroupsModel) =
@@ -388,9 +453,18 @@ QtObject:
       defer: lastindex.delete
       self.dataChanged(index, lastindex, @[ModelRole.Visible.int, ModelRole.Position.int])
 
+  proc marketDetailsItemForKey*(self: TokenGroupsModel, groupKey: string): MarketDetailsItem =
+    ## Test/inspection accessor: the MarketDetailsItem instance held for a group
+    ## key, or nil if none. Used to assert identity preservation across a diff.
+    self.tokenMarketDetails.getOrDefault(groupKey, nil)
+
+  proc groupKeysInOrder*(self: TokenGroupsModel): seq[string] =
+    ## Test/inspection accessor: the group keys in display order (what QML sees).
+    self.getDisplayModel().mapIt(it.key)
+
   proc setup(self: TokenGroupsModel) =
     self.QAbstractListModel.setup
-    self.tokenMarketDetails = @[]
+    self.tokenMarketDetails = initTable[string, MarketDetailsItem]()
 
   proc delete(self: TokenGroupsModel) =
     self.QAbstractListModel.delete
