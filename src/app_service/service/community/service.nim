@@ -1167,7 +1167,6 @@ QtObject:
         chatDto.id = fullChatId
         # TODO find a way to populate missing infos like the color
         self.chatService.updateOrAddChat(chatDto)
-        self.messageService.asyncLoadInitialMessagesForChat(fullChatId)
 
       self.events.emit(SIGNAL_COMMUNITIES_UPDATE, CommunitiesArgs(communities: @[updatedCommunity]))
       self.events.emit(SIGNAL_COMMUNITY_SPECTATED, CommunityArgs(community: updatedCommunity, fromUserAction: true, isPendingOwnershipRequest: (ownerTokenNotification != nil)))
