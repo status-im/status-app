@@ -27,6 +27,14 @@ proc enqueue*(self: var PendingTokenFetch, key: string): bool =
 proc hasPending*(self: PendingTokenFetch): bool =
   self.pending.len > 0
 
+proc pendingKeys*(self: PendingTokenFetch): seq[string] =
+  ## Snapshot of the keys awaiting a batch (unordered; callers sort if needed).
+  toSeq(self.pending.items)
+
+proc inFlightKeys*(self: PendingTokenFetch): seq[string] =
+  ## Snapshot of the keys in a running batch (unordered; callers sort if needed).
+  toSeq(self.inFlight.items)
+
 proc takeBatch*(self: var PendingTokenFetch): seq[string] =
   ## Drain the pending keys into the in-flight set and return them as the batch to
   ## fetch. Draining is atomic from the GUI thread's view: after this the pending

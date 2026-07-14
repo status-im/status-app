@@ -110,6 +110,19 @@ public final class StatusGoServiceClient {
         }
     }
 
+    /**
+     * Injects a synthetic status-go signal into the exact delivery path the Binder
+     * callback uses, so a dev build can drive signal handling on demand. Reachable only
+     * from the dev-build-only DebugCommandReceiver; status-go never calls it.
+     */
+    public void injectSignalForDebug(String jsonSignal) {
+        if (jsonSignal == null || jsonSignal.isEmpty()) {
+            Log.w(TAG, "injectSignalForDebug: empty payload");
+            return;
+        }
+        StatusGoStub.nativeDeliverSignal(jsonSignal);
+    }
+
     private final ServiceConnection conn = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
