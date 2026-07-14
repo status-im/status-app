@@ -600,9 +600,9 @@ QtObject {
 
                 // Terminal collectibles picker model as { model, id }. Replaces the
                 // O(collectibles) CollectiblesSelectionAdaptor proxy chain; the Nim
-                // model derives both the grouped and the flat views in ~2ms, so the
-                // former modal-open deferral (collectiblesNeeded latch) is no longer
-                // needed. Released on destruction to stop the producer tracking it.
+                // model derives both the grouped and the flat views in ~2ms, so it is
+                // built eagerly with the assets selector (no modal-open deferral).
+                // Released on destruction to stop the producer tracking it.
                 readonly property var collectiblesSelector: root.walletCollectiblesStore.createCollectiblesSelectorModel()
                 readonly property var collectiblesSelectorModel: handler.collectiblesSelector.model
 

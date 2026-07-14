@@ -986,9 +986,9 @@ Item {
             compare(bottomItemText.text, "", "Secondary value should be empty when cryptoPrice is 0 in crypto mode")
         }
 
-        // The collectibles pipeline is deferred: the owner (SendModalHandler) only
-        // builds the expensive collectibles adaptor once collectiblesNeeded latches.
-        function test_collectiblesNeeded_onCollectiblesTab() {
+        // Switching to the collectibles tab surfaces the collectibles model
+        // content in the token selector.
+        function test_collectiblesTab_showsContent() {
             verify(!!controlUnderTest)
             controlUnderTest.open()
             tryVerify(() => controlUnderTest.opened)
@@ -998,28 +998,17 @@ Item {
             const sendModalHeader = findChild(controlUnderTest, "sendModalHeader")
             verify(!!sendModalHeader)
 
-            // Opening on the assets tab must not request the collectibles pipeline.
-            if (sendModalHeader.tokenSelectorTab === 0)
-                verify(!controlUnderTest.collectiblesNeeded)
-
-            // Switching to the collectibles tab latches the pipeline as needed...
             sendModalHeader.tokenSelectorTab = 1 // TokenSelectorPanel.Tabs.Collectibles
-            verify(controlUnderTest.collectiblesNeeded)
 
-            // ...and the collectibles content is available in the token selector.
             const tokenSelector = findChild(sendModalHeader, "tokenSelector")
             verify(!!tokenSelector)
             verify(!!tokenSelector.collectiblesModel)
             verify(tokenSelector.collectiblesModel.rowCount() > 0)
-
-            // The latch never falls back once collectibles have been shown.
-            sendModalHeader.tokenSelectorTab = 0 // back to Assets
-            verify(controlUnderTest.collectiblesNeeded)
         }
 
-        // Deep-link parity: a preselected collectible send needs the pipeline
-        // immediately even though the modal still opens on the assets tab.
-        function test_collectiblesNeeded_whenPreselected() {
+        // Deep-link parity: a preselected collectible resolves against the flat
+        // collectibles model (a single ERC-721's amount is hardcoded to "1").
+        function test_preselectedCollectible_resolves() {
             verify(!!controlUnderTest)
             controlUnderTest.open()
             tryVerify(() => controlUnderTest.opened)
@@ -1027,28 +1016,18 @@ Item {
             waitForRendering(controlUnderTest.contentItem)
 
             controlUnderTest.sendType = Constants.SendType.ERC721Transfer
-            verify(controlUnderTest.collectiblesNeeded)
-
-            // The preselected collectible resolves against the flat collectibles model
-            // (the resolved amount for a single ERC-721 is hardcoded to "1").
             controlUnderTest.selectedGroupKey = "abc"
             tryCompare(controlUnderTest, "selectedRawAmount", "1")
         }
 
-        // The sticky header carries its own tab state, so switching to the
-        // collectibles tab there must also latch the deferred pipeline.
-        function test_collectiblesNeeded_onStickyHeaderCollectiblesTab() {
+        // The sticky header carries its own tab state, so its collectibles tab
+        // must also surface the collectibles content.
+        function test_stickyHeaderCollectiblesTab_showsContent() {
             verify(!!controlUnderTest)
             controlUnderTest.open()
             tryVerify(() => controlUnderTest.opened)
 
             waitForRendering(controlUnderTest.contentItem)
-
-            // Opening on the assets tab must not request the collectibles pipeline.
-            const sendModalHeader = findChild(controlUnderTest, "sendModalHeader")
-            verify(!!sendModalHeader)
-            if (sendModalHeader.tokenSelectorTab === 0)
-                verify(!controlUnderTest.collectiblesNeeded)
 
             // Scroll to instantiate the deferred sticky header.
             const scrollView = findChild(controlUnderTest, "scrollView")
@@ -1059,19 +1038,12 @@ Item {
             verify(!!stickySendModalHeader)
             tryVerify(() => stickySendModalHeader.height > 0)
 
-            // Switching the sticky header to the collectibles tab latches the pipeline.
             stickySendModalHeader.tokenSelectorTab = 1 // TokenSelectorPanel.Tabs.Collectibles
-            verify(controlUnderTest.collectiblesNeeded)
 
-            // ...and the collectibles content is available in the sticky token selector.
             const stickyTokenSelector = findChild(stickySendModalHeader, "tokenSelector")
             verify(!!stickyTokenSelector)
             verify(!!stickyTokenSelector.collectiblesModel)
             verify(stickyTokenSelector.collectiblesModel.rowCount() > 0)
-
-            // The latch never falls back once collectibles have been shown.
-            stickySendModalHeader.tokenSelectorTab = 0 // back to Assets
-            verify(controlUnderTest.collectiblesNeeded)
         }
 
     }
