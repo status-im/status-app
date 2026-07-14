@@ -96,6 +96,11 @@ public:
     const TokenData& itemAt(int row) const { return m_data.at(row); }
     TokenData& itemAt(int row) { return m_data[row]; }
 
+    /// Row holding the item with the given key, or -1 if absent.
+    int rowForKey(const QString& key) const;
+    /// Emit dataChanged for a single already-mutated row (used for in-place updates).
+    void notifyItemChanged(int row, const QList<int>& roles);
+
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QHash<int, QByteArray> roleNames() const override;
     QVariant data(const QModelIndex &index, int role) const override;
