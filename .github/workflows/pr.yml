@@ -108,3 +108,19 @@ jobs:
             echo "::error::status-go submodule commit in PR is older than the one on the base branch."
             exit 1
           fi
+  wakuext-binding-contract:
+    name: wakuext FFI binding contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          submodules: false
+      - name: Init vendored status-go (the shipped pin)
+        run: git submodule update --init vendor/status-go
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+      - run: pip install pytest
+      - name: Run the binding contract
+        run: python -m pytest test/contract/test_wakuext_binding.py -v
