@@ -129,3 +129,6 @@ mobile/fastlane/Preview.html
 mobile/fastlane/screenshots/
 mobile/fastlane/test_output/
 mobile/fastlane/result
+
+# Benchmark output (regenerated locally, never committed)
+test/nim/benchmarks/results/
