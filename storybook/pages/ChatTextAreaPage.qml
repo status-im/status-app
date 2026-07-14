@@ -455,7 +455,7 @@ unclosed fence here (no closing triple-tick)
 
                             textMargin: 10
 
-                            font.pixelSize: 15
+                            font.pixelSize: Theme.primaryTextFontSize
                             codeBackground: Theme.palette.baseColor4
                             quoteBarVisible: quoteBarSwitch.checked
 
@@ -553,12 +553,12 @@ unclosed fence here (no closing triple-tick)
                             // text document — mentions are resolved via mentionsMap.
                             blocks: {
                                 textArea.text            // re-build on every edit
-                                textArea.enlargeEmojis   // and when the emoji toggle changes
+                                textArea.fullLineHeightEmojis   // and when the emoji toggle changes
                                 return MarkdownUtils.toBlocks(textArea.textWithMentions(),
                                                               root.mentionsMap,
                                                               chatTextView.font,
                                                               textArea.formatUnclosedCodeFence,
-                                                              textArea.enlargeEmojis)
+                                                              textArea.fullLineHeightEmojis)
                             }
 
                             // Tracks the pointer so the click bubble can appear where you clicked.
@@ -737,9 +737,9 @@ unclosed fence here (no closing triple-tick)
                    checked: true
                 }
                 Switch {
-                    text: "Enlarge emojis"
-                    checked: textArea.enlargeEmojis
-                    onToggled: textArea.enlargeEmojis = checked
+                    text: "Full line height emojis"
+                    checked: textArea.fullLineHeightEmojis
+                    onToggled: textArea.fullLineHeightEmojis = checked
                 }
                 Switch {
                     id: flushOnEnterSwitch

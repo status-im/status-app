@@ -385,9 +385,9 @@ Item {
             compare(control.positionToRectangle(0).height, plainLineH)
         }
 
-        // With enlargeEmojis off, the emoji keeps its base size (not grown to the line).
+        // With fullLineHeightEmojis off, the emoji keeps its base size (not grown to the line).
         function test_emoji_enlargingCanBeDisabled() {
-            control.enlargeEmojis = false
+            control.fullLineHeightEmojis = false
 
             control.text = "AAA"
             control.forceActiveFocus()

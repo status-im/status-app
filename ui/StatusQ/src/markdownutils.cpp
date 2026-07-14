@@ -41,7 +41,7 @@ QString MarkdownUtils::dumpAst(const QString& text, bool formatUnclosedCodeFence
 
 QVariantList MarkdownUtils::toBlocks(const QString& text, const QVariantMap& mentions,
                                      const QFont& font, bool formatUnclosedCodeFence,
-                                     bool enlargeEmojis) const
+                                     bool fullLineHeightEmojis) const
 {
     Markdown::Options opts;
     opts.formatUnclosedCodeFence = formatUnclosedCodeFence;
@@ -50,6 +50,6 @@ QVariantList MarkdownUtils::toBlocks(const QString& text, const QVariantMap& men
     QHash<int, QPair<QString, QString>> mentionMap;
     collectTextMentions(root, mentions, mentionMap);
 
-    const int emojiPx = enlargeEmojis ? qRound(QFontMetricsF(font).height()) : 0;
+    const int emojiPx = fullLineHeightEmojis ? qRound(QFontMetricsF(font).height()) : 0;
     return Markdown::toBlocks(root, mentionMap, emojiPx);
 }

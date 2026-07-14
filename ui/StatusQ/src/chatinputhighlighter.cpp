@@ -739,18 +739,18 @@ void ChatInputHighlighter::setFormatUnclosedCodeFence(bool enabled)
     emit formatUnclosedCodeFenceChanged();
 }
 
-bool ChatInputHighlighter::enlargeEmojis() const
+bool ChatInputHighlighter::fullLineHeightEmojis() const
 {
-    return m_enlargeEmojis;
+    return m_fullLineHeightEmojis;
 }
 
-void ChatInputHighlighter::setEnlargeEmojis(bool enabled)
+void ChatInputHighlighter::setFullLineHeightEmojis(bool enabled)
 {
-    if (m_enlargeEmojis == enabled) return;
-    m_enlargeEmojis = enabled;
+    if (m_fullLineHeightEmojis == enabled) return;
+    m_fullLineHeightEmojis = enabled;
     m_cachedText.clear();
     rehighlight();
-    emit enlargeEmojisChanged();
+    emit fullLineHeightEmojisChanged();
 }
 
 bool ChatInputHighlighter::inUnclosedCodeFence(int position) const
@@ -990,10 +990,10 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
         i = j;
     }
 
-    // Enlarge emojis to fill the line. They render smaller than the line height, so we
+    // Size emojis to fill the line height. They render smaller than the line height, so we
     // bump their font size to the line height — the line already has slack over the font
     // size, so this fills the line without making it taller. (See isEmojiCodePoint.)
-    if (m_enlargeEmojis) {
+    if (m_fullLineHeightEmojis) {
         const QFont base = document()->defaultFont();
         const qreal lineHeight = QFontMetricsF(base).height();
         QTextCharFormat emojiFormat; // size-only, so it merges with any existing format

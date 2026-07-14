@@ -17,7 +17,7 @@ StatusTextArea {
     property bool quoteBarVisible: true
 
     property alias formatUnclosedCodeFence: highlighter.formatUnclosedCodeFence
-    property alias enlargeEmojis: highlighter.enlargeEmojis
+    property alias fullLineHeightEmojis: highlighter.fullLineHeightEmojis
     property alias codeBackground: highlighter.codeBackground
     property alias delimiterColor: highlighter.delimiterColor
     property alias linkColor: highlighter.linkColor
