@@ -165,7 +165,8 @@ QtObject:
       r = -r
     return r
 
-  proc rolesChanged(o, n: AssetItem): seq[int] =
+  proc syncKey(it: AssetItem): string = it.key
+  proc syncRoles(o, n: AssetItem): seq[int] =
     result = @[]
     if o.name != n.name: result.add(ModelRole.Name.int)
     if o.symbol != n.symbol: result.add(ModelRole.Symbol.int)
@@ -197,12 +198,7 @@ QtObject:
   proc recompute(self: AssetsAdaptorModel) =
     var display = self.source.filterIt(it.visible)
     display.sort(proc(a, b: AssetItem): int = self.compareItems(a, b))
-    setItemsWithSync(
-      self, self.items, display,
-      getId = proc(it: AssetItem): string = it.key,
-      getRoles = proc(o, n: AssetItem): seq[int] = rolesChanged(o, n),
-      countChanged = proc() = self.countChanged(),
-      useBulkOps = true)
+    self.modelSync(self.items, display)
 
   proc setSourceItems*(self: AssetsAdaptorModel, items: seq[AssetItem]) =
     self.source = items

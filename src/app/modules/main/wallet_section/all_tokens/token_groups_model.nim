@@ -209,6 +209,8 @@ QtObject:
     let tokenMarketValues = self.marketValuesDelegate.getMarketValuesForToken(tokenKey)
     return newMarketDetailsItem(tokenKey, tokenPrice, tokenMarketValues, currencyFormat)
 
+  proc syncKey(it: TokenGroupItem): string = it.key
+
   proc rebuildMarketDetails(self: TokenGroupsModel, groups: seq[TokenGroupItem]) =
     ## Rebuild tokenMarketDetails (keyed by group key) for the given display list,
     ## PRESERVING the existing MarketDetailsItem instance for a surviving group key
@@ -217,18 +219,15 @@ QtObject:
     ## group key makes this immune to insert/remove/move — no index realignment.
     if ModelMode.NoMarketDetails in self.modelModes:
       return
-    var updated = initTable[string, MarketDetailsItem]()
     let currencyFormat = self.marketValuesDelegate.getCurrentCurrencyFormat()
-    for group in groups:
-      if group.tokens.len == 0:
-        continue
-      if self.tokenMarketDetails.hasKey(group.key):
-        updated[group.key] = self.tokenMarketDetails[group.key]
-      else:
-        updated[group.key] = self.buildMarketDetailsItem(group, currencyFormat)
-    self.tokenMarketDetails = updated
+    # Groups with no tokens carry no market details; drop them before reconciling
+    # so a tokenless key never gets an instance (matches the pre-modelSync skip).
+    let withTokens = groups.filterIt(it.tokens.len > 0)
+    reconcileByKey(self.tokenMarketDetails, withTokens,
+      create = proc(group: TokenGroupItem): MarketDetailsItem =
+        self.buildMarketDetailsItem(group, currencyFormat))
 
-  proc groupRolesChanged(oldItem, newItem: TokenGroupItem): seq[int] =
+  proc syncRoles(oldItem, newItem: TokenGroupItem): seq[int] =
     ## Item-derived roles only (Name/Symbol/Decimals/LogoUri/Type/Tokens/CommunityId).
     ## Service-getter roles (WebsiteUrl/Description/Visible/Position/*Loading) are
     ## driven by their own separate dataChanged signals and are NOT folded in here.
@@ -281,11 +280,7 @@ QtObject:
       # signal fired. rebuildMarketDetails is identity-preserving, so survivors keep
       # their instances and the transient gating of a being-removed row is harmless.
       self.rebuildMarketDetails(newGroups)
-      setItemsWithSync(
-        self, self.cachedGroups, newGroups,
-        getId = proc(item: TokenGroupItem): string = item.key,
-        getRoles = proc(oldItem, newItem: TokenGroupItem): seq[int] = groupRolesChanged(oldItem, newItem),
-        countChanged = proc() = self.countChanged())
+      self.modelSync(self.cachedGroups, newGroups)
       self.hasMoreItemsChanged()
       return
 
