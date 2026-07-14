@@ -74,28 +74,24 @@ QtObject:
       of ModelRole.Loading:
         result = newQVariant(item.loading)
 
-  proc balanceId(item: BalanceItem): string =
+  proc syncKey(it: BalanceItem): string =
     # A balance row is uniquely a (token, account) pair (tokenKey already encodes
     # the chain). Stable across refreshes -> lets the diff recognise survivors.
-    item.tokenKey & "|" & item.account
+    it.tokenKey & "|" & it.account
 
-  proc balanceRolesChanged(oldItem, newItem: BalanceItem): seq[int] =
+  proc syncRoles(o, n: BalanceItem): seq[int] =
     # Identity fields (account/tokenKey/chainId/tokenAddress/groupKey) are static for
     # a given id; only the fetched value and its loading flag move.
     result = @[]
-    if oldItem.balance != newItem.balance: result.add(ModelRole.Balance.int)
-    if oldItem.loading != newItem.loading: result.add(ModelRole.Loading.int)
+    if o.balance != n.balance: result.add(ModelRole.Balance.int)
+    if o.loading != n.loading: result.add(ModelRole.Loading.int)
 
   proc updateBalances*(self: BalancesModel, newBalances: seq[BalanceItem]) =
     # Granular in-place update: diff the new balances against the cached snapshot and
     # emit only the minimal insert/remove/dataChanged. No beginResetModel -> the
     # nested filteredBalances SFPM and the FunctionAggregators in AssetsViewAdaptor
     # update in place instead of being rebuilt.
-    setItemsWithSync(
-      self, self.items, newBalances,
-      getId = proc(item: BalanceItem): string = balanceId(item),
-      getRoles = proc(oldItem, newItem: BalanceItem): seq[int] = balanceRolesChanged(oldItem, newItem),
-      countChanged = proc() = self.countChanged())
+    self.modelSync(self.items, newBalances)
 
   proc setup(self: BalancesModel) =
     self.QAbstractListModel.setup
