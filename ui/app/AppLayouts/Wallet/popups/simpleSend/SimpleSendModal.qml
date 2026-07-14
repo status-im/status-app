@@ -387,7 +387,10 @@ StatusDialog {
             }
             !!d.selectedAssetEntry.item.balances ? d.selectedAssetEntry.item.balances.ModelCount.count : null
             if (selectedCollectibleEntryValid) {
-                let collectibleBalance = SQUtils.ModelUtils.getByKey(selectedCollectibleEntry.item.ownership, "accountAddress", root.selectedAccountAddress, "balance")
+                // The flat collectibles model is already filtered to the selected
+                // account, so its `balance` role is that account's owned amount
+                // (ERC-1155 count; 1 for ERC-721).
+                let collectibleBalance = selectedCollectibleEntry.item.balance
                 return !!collectibleBalance ? collectibleBalance: 0
             } else if (!!d.selectedAssetEntry.item && d.selectedAssetEntryValid) {
                 let maxCryptoBalance = 0.0
