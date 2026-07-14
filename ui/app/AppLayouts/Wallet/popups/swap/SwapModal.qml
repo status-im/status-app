@@ -55,6 +55,13 @@ StatusDialog {
 
         readonly property string mandatoryKeysSeparator: "$$"
 
+        // Guards the double rebuildGroupsForChain per open (Component.onCompleted +
+        // the chain-changed handler both fire for the same chain): skip the redundant
+        // harvest + async fetch when the chain hasn't changed. One guard per side
+        // (source pay chain / destination bridge chain).
+        property int lastRequestedChainId: -1
+        property int lastRequestedChainIdTo: -1
+
         // One terminal picker model per side ({ model, id }); released on modal
         // destruction so the producer stops tracking them (avoids a per-open leak).
         // The receive side has two: the source-chain picker (plain swap) and the
@@ -121,6 +128,16 @@ StatusDialog {
                 return
             }
 
+            // Skip the redundant harvest + async fetch when this side's chain hasn't
+            // changed (Component.onCompleted + the chain-changed handler both fire for
+            // the same chain on open). Tracked per side; reset on close.
+            if (isToSide) {
+                if (chainId === d.lastRequestedChainIdTo)
+                    return
+            } else if (chainId === d.lastRequestedChainId) {
+                return
+            }
+
             const walletTokensStore = root.swapAdaptor.walletAssetsStore.walletTokensStore
             const chainAvailableForSwap = walletTokensStore.isChainSupportedForSwapViaParaswap(chainId)
                                        || walletTokensStore.isChainSupportedForSwapViaLiFi(chainId)
@@ -142,6 +159,10 @@ StatusDialog {
                 return
             }
 
+            if (isToSide)
+                d.lastRequestedChainIdTo = chainId
+            else
+                d.lastRequestedChainId = chainId
             const keys = SQUtils.ModelUtils.joinModelEntries(root.swapAdaptor.walletAssetsStore.groupedAccountAssetsModel, "key", d.mandatoryKeysSeparator)
             if (isToSide)
                 walletTokensStore.buildGroupsForChainTo(chainId, keys)
@@ -211,6 +232,8 @@ StatusDialog {
         payPanel.forceActiveFocus()
     }
     onClosed: {
+        d.lastRequestedChainId = -1
+        d.lastRequestedChainIdTo = -1
         root.swapAdaptor.resetData()
     }
 
