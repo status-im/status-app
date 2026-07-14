@@ -240,6 +240,15 @@ StatusDialog {
             }
         }
         property bool stickyHeaderVisible: false
+        // The sticky header duplicates the token-selector header and is invisible
+        // until the user first scrolls; it is deferred (Loader) to keep it off the
+        // modal-open instantiation path. This latch keeps it loaded once revealed,
+        // and the token cache replays the pre-load selection into it on creation.
+        property bool stickyHeaderActivated: false
+        onStickyHeaderVisibleChanged: if (stickyHeaderVisible) d.stickyHeaderActivated = true
+        property string lastTokenName: ""
+        property string lastTokenIcon: ""
+        property string lastTokenKey: ""
 
         // Used to get asset entry if selected token is an asset
         readonly property var selectedAssetEntry: ModelEntry {
@@ -346,8 +355,12 @@ StatusDialog {
         }
 
         function setTokenOnBothHeaders(name, icon, key) {
+            d.lastTokenName = name
+            d.lastTokenIcon = icon
+            d.lastTokenKey = key
             sendModalHeader.setToken(name, icon, key)
-            stickySendModalHeader.setToken(name, icon, key)
+            if (stickyHeaderLoader.item)
+                stickyHeaderLoader.item.setToken(name, icon, key)
         }
 
         readonly property var debounceResetTokenSelector: Backpressure.debounce(root, 200, function() {
@@ -589,39 +602,55 @@ StatusDialog {
             clip: true
             z: 1
 
-            StickySendModalHeader {
-                id: stickySendModalHeader
-
-                objectName: "stickySendModalHeader"
+            // Deferred until the user first scrolls the sticky header into view
+            // (d.stickyHeaderActivated); building it eagerly costs ~15ms of the
+            // modal's open-time instantiation for a view that is initially hidden.
+            Loader {
+                id: stickyHeaderLoader
 
                 width: parent.width
-                blurSource: scrollView.contentItem
+                active: d.stickyHeaderActivated
 
-                stickyHeaderVisible: d.stickyHeaderVisible
+                sourceComponent: StickySendModalHeader {
+                    objectName: "stickySendModalHeader"
 
-                interactive: root.interactive && !root.transferOwnership
-                displayOnlyAssets: root.displayOnlyAssets
-                tokenSelectorTab: d.lastTabSettings.lastSelectedTab
+                    width: stickyHeaderLoader.width
+                    blurSource: scrollView.contentItem
 
-                networksModel: root.networksModel
-                assetsModel: root.assetsModel
-                collectiblesModel: root.collectiblesModel
-                formatCurrencyBalance: (amount) => root.fnFormatCurrencyAmount(amount, root.currentCurrency)
+                    // Start hidden so the first reveal animates via the height
+                    // Behavior instead of popping to full height on Loader creation.
+                    property bool initialRevealDone: false
+                    stickyHeaderVisible: d.stickyHeaderVisible && initialRevealDone
 
-                selectedChainId: root.selectedChainId
+                    interactive: root.interactive && !root.transferOwnership
+                    displayOnlyAssets: root.displayOnlyAssets
+                    tokenSelectorTab: d.lastTabSettings.lastSelectedTab
 
-                onCollectibleSelected: (key) => {
-                                           d.setSelectedCollectible(key)
+                    networksModel: root.networksModel
+                    assetsModel: root.assetsModel
+                    collectiblesModel: root.collectiblesModel
+                    formatCurrencyBalance: (amount) => root.fnFormatCurrencyAmount(amount, root.currentCurrency)
+
+                    selectedChainId: root.selectedChainId
+
+                    onCollectibleSelected: (key) => {
+                                               d.setSelectedCollectible(key)
+                                           }
+                    onCollectionSelected: (key) => {
+                                              d.setSelectedCollectible(key)
+                                          }
+                    onAssetSelected: (key) => {
+                                         d.setSelectedAsset(key)
+                                     }
+                    onNetworkSelected: (chainId) => {
+                                           root.selectedChainId = chainId
                                        }
-                onCollectionSelected: (key) => {
-                                          d.setSelectedCollectible(key)
-                                      }
-                onAssetSelected: (key) => {
-                                     d.setSelectedAsset(key)
-                                 }
-                onNetworkSelected: (chainId) => {
-                                       root.selectedChainId = chainId
-                                   }
+                    // Replay the token selected before this header was created.
+                    Component.onCompleted: {
+                        setToken(d.lastTokenName, d.lastTokenIcon, d.lastTokenKey)
+                        Qt.callLater(() => initialRevealDone = true)
+                    }
+                }
             }
         }
 
