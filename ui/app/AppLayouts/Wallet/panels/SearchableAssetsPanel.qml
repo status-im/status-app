@@ -12,6 +12,8 @@ import StatusQ.Popups.Dialog
 
 import AppLayouts.Wallet.views
 
+import utils
+
 import QtModelsToolkit
 import SortFilterProxyModel
 
@@ -29,21 +31,24 @@ Control {
         symbol                  [string] - symbol
         decimals                [int] - decimals
         logoUri                 [string] - icon
-        currencyBalanceAsString [string] - formatted balance
+        currencyBalance         [double] - fiat balance; formatted to a string via formatCurrencyBalance
         sectionName (optional)  [string] - text to be rendered as a section
-        balances            [model]  - contains a single entry for (token, accountAddress) pair
-            account         [string] - wallet account address
-            groupKey        [string] - group key that the token belongs to (cross chain id or token key if cross chain id is empty)
-            tokenKey        [string] - token unique key (chain - address)
+        balances            [model]  - one entry per chain the token has a balance on
             chainId         [int]    - token's chain id
-            tokenAddress    [string] - token's address (contract)
-            balance         [string] - raw balance that the `account` has for token with `tokenKey`
-            balanceAsString [string] - display value for balance that the `account` has for token with `tokenKey`
+            iconUrl         [string] - network icon
+            chainName       [string] - network name
+            balance         [double] - balance in logical units (already divided by decimals)
+            rawBalance      [string] - raw on-chain wei as a BigInt string
     **/
     property var model
     property string highlightedKey
     property string nonInteractiveKey
     property bool showSectionName: true
+
+    // Formats the numeric `currencyBalance` role into the localized fiat string
+    // shown per row. Sites inject a currency-aware formatter; the default just
+    // stringifies (used by isolated storybook pages).
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : String(amount))
 
     // Lazy loading properties
     property bool hasMoreItems: false
@@ -153,8 +158,8 @@ Control {
 
                 name: model.name
                 symbol: model.symbol
-                currencyBalanceAsString: model.currencyBalanceAsString ?? ""
-                iconSource: model.logoUri
+                currencyBalanceAsString: root.formatCurrencyBalance(model.currencyBalance)
+                iconSource: model.logoUri || Constants.tokenIcon(model.symbol)
                 balancesModel: model.balances
 
                 onClicked: root.selected(model.key)

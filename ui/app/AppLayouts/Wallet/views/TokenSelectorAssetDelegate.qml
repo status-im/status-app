@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import StatusQ.Core
 import StatusQ.Components
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils
 
 import utils
 
@@ -19,7 +20,7 @@ ItemDelegate {
     required property string iconSource
     required property bool isAutoHovered
 
-    // expected structure: [iconUrl: string, balanceAsString: string]
+    // expected structure: [iconUrl: string, balance: double]
     property alias balancesModel: balancesListView.model
 
     property alias balancesListInteractive: balancesListView.interactive
@@ -126,7 +127,9 @@ ItemDelegate {
                     }
                     StatusBaseText {
                         font.pixelSize: Theme.tertiaryTextFontSize
-                        text: model.balanceAsString
+                        // numeric balance formatted at the UI layer (no currency symbol)
+                        text: LocaleUtils.currencyAmountToLocaleString(
+                                  {amount: model.balance, displayDecimals: 2}, {noSymbol: true})
                     }
                 }
 

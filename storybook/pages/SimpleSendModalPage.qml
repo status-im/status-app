@@ -133,7 +133,7 @@ SplitView {
         transferOwnership: transferOwnershipCheckbox.checked
 
         accountsModel: accountsSelectorAdaptor.processedWalletAccounts
-        assetsModel: assetsSelectorViewAdaptor.outputAssetsModel
+        assetsModel: sendAssetsModel
         groupedAccountAssetsModel: d.walletAssetStore.groupedAccountAssetsModel
         flatCollectiblesModel: collectiblesSelectionAdaptor.filteredFlatModel
         collectiblesModel: collectiblesSelectionAdaptor.model
@@ -208,17 +208,33 @@ SplitView {
         }
     }
 
-    TokenSelectorViewAdaptor {
-        id: assetsSelectorViewAdaptor
+    // Stub for the terminal token-selector picker model (the producer that backs
+    // it in the app is unavailable in storybook). Roles mirror TokenSelectorModel.
+    ListModel {
+        id: sendAssetsModel
 
-        assetsModel: d.walletAssetStore.groupedAccountAssetsModel
-        flatNetworksModel: NetworksModel.flatNetworks
+        readonly property var data: [
+            {
+                key: "STT", name: "Status Test Token", symbol: "STT",
+                logoUri: Constants.tokenIcon("STT"), decimals: 18,
+                currencyBalance: 42.23, cryptoPrice: 0.05, sectionName: "Your assets on Mainnet",
+                balances: [
+                    { chainId: 1, iconUrl: "network/ethereum", chainName: "Mainnet", balance: 0.56, rawBalance: "560000000000000000" }
+                ],
+                tokens: [ { key: "STT", chainId: 1 } ]
+            },
+            {
+                key: "ETH", name: "Ether", symbol: "ETH",
+                logoUri: Constants.tokenIcon("ETH"), decimals: 18,
+                currencyBalance: 4276.86, cryptoPrice: 3500.0, sectionName: "Your assets on Mainnet",
+                balances: [
+                    { chainId: 1, iconUrl: "network/ethereum", chainName: "Mainnet", balance: 1.22, rawBalance: "1220000000000000000" }
+                ],
+                tokens: [ { key: "ETH", chainId: 1 } ]
+            }
+        ]
 
-        currentCurrency: "USD"
-        showCommunityAssets: true
-
-        accountAddress: simpleSend.selectedAccountAddress
-        enabledChainIds: [simpleSend.selectedChainId]
+        Component.onCompleted: append(data)
     }
 
     CollectiblesSelectionAdaptor {

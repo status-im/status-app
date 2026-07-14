@@ -24,6 +24,9 @@ Control {
     - iconSource: string
     **/
     required property var assetsModel
+
+    /** Forwarded to the inner SendModalHeader. **/
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : String(amount))
     /**
     Expected model structure:
     - groupName: group name (from collection or community name)
@@ -171,6 +174,7 @@ Control {
 
         networksModel: root.networksModel
         assetsModel: root.assetsModel
+        formatCurrencyBalance: root.formatCurrencyBalance
         collectiblesModel: root.collectiblesModel
 
         selectedChainId: root.selectedChainId

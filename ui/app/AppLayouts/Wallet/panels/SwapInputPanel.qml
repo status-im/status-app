@@ -13,7 +13,6 @@ import StatusQ.Core.Theme
 import AppLayouts.Wallet
 import AppLayouts.Wallet.controls
 import AppLayouts.Wallet.stores
-import AppLayouts.Wallet.adaptors
 
 import shared.popups.send.views
 
@@ -29,13 +28,17 @@ Control {
     // input API
     required property CurrenciesStore currencyStore
     required property var flatNetworksModel
-    required property var processedAssetsModel
 
-    property var allTokenGroupsForChainModel
-    property var searchResultModel
+    // Terminal picker model (swap/all-tokens), created by the caller from the
+    // token-selector producer. Its per-modal params are driven by the bindings
+    // below; owned/popular/search rows are fed by the producer.
+    required property var tokenSelectorModel
 
     property int selectedNetworkChainId: -1
-    onSelectedNetworkChainIdChanged: reevaluateSelectedId()
+    onSelectedNetworkChainIdChanged: {
+        reevaluateSelectedId()
+        root.updateSectionNames()
+    }
     property string selectedAccountAddress
     onSelectedAccountAddressChanged: reevaluateSelectedId()
     property string nonInteractiveGroupKey
@@ -95,8 +98,32 @@ Control {
     }
 
     function reset() {
-        d.adaptor.search("")
+        root.tokenSelectorModel.search("")
     }
+
+    // Drive the picker model's per-panel params (swap = all-tokens; -1 chain = no
+    // filter, matching the retired adaptor's empty enabledChainIds).
+    Binding {
+        target: root.tokenSelectorModel
+        property: "enabledChainId"
+        value: root.selectedNetworkChainId
+        restoreMode: Binding.RestoreNone
+    }
+    Binding {
+        target: root.tokenSelectorModel
+        property: "accountAddress"
+        value: root.selectedAccountAddress
+        restoreMode: Binding.RestoreNone
+    }
+    function updateSectionNames() {
+        if (!root.tokenSelectorModel)
+            return
+        const chainName = SQUtils.ModelUtils.getByKey(
+            root.flatNetworksModel, "chainId", root.selectedNetworkChainId, "chainName") || ""
+        root.tokenSelectorModel.setSectionNames(
+            qsTr("Your assets on %1").arg(chainName), qsTr("Popular assets"))
+    }
+    Component.onCompleted: root.updateSectionNames()
 
     enum SwapSide {
         Pay = 0,
@@ -116,7 +143,7 @@ Control {
         property string selectedHoldingTokenKey: ""
 
         function reevaluateSelectedId() {
-            const entry = SQUtils.ModelUtils.getByKey(d.adaptor.outputAssetsModel, "key", d.selectedHoldingId)
+            const entry = SQUtils.ModelUtils.getByKey(root.tokenSelectorModel, "key", d.selectedHoldingId)
             if (!entry) {
                 // Token doesn't exist in destination chain
                 d.selectedHoldingId = root.defaultGroupKey
@@ -125,7 +152,7 @@ Control {
 
 
         readonly property var selectedHolding: ModelEntry {
-            sourceModel: d.adaptor.outputAssetsModel
+            sourceModel: root.tokenSelectorModel
             key: "key"
             value: d.selectedHoldingId
             onValueChanged: d.setHoldingToSelector()
@@ -133,7 +160,6 @@ Control {
         }
 
         function setHoldingToSelector() {
-            // search in currentlly selected output asset model (full(lazy-loaded) or search)
             if (selectedHolding.available && !!selectedHolding.item) {
                 if (!selectedHolding.item.tokens || selectedHolding.item.tokens.ModelCount.count !== 1) {
                     console.error("token for the selected group cannot be resolved", "group-key", d.selectedHoldingId, "chain", root.selectedNetworkChainId)
@@ -142,23 +168,14 @@ Control {
 
                 d.selectedHoldingTokenKey = SQUtils.ModelUtils.get(selectedHolding.item.tokens, 0, "key")
 
-                holdingSelector.setSelection(selectedHolding.item.symbol, selectedHolding.item.iconSource, selectedHolding.item.key)
+                holdingSelector.setSelection(selectedHolding.item.symbol, selectedHolding.item.logoUri, selectedHolding.item.key)
                 return
             }
-            // search in full model (lazy-loaded items) if not found in selected model (fir example while searching, but the other token is selected)
-            const entry = SQUtils.ModelUtils.getByKey(d.adaptor.fullOutputAssetsModel, "key", d.selectedHoldingId)
-            if (!!entry) {
-                if (!entry.tokens || entry.tokens.ModelCount.count !== 1) {
-                    console.error("token for the selected group (full model) cannot be resolved", "group-key", d.selectedHoldingId, "chain", root.selectedNetworkChainId)
-                    return
-                }
-
-                d.selectedHoldingTokenKey = SQUtils.ModelUtils.get(entry.tokens, 0, "key")
-
-                holdingSelector.setSelection(entry.symbol, entry.iconSource, entry.key)
-                return
-            }
-            holdingSelector.reset()
+            // The terminal model swaps its rows to the search results while searching,
+            // so the selected token may not be present then; keep the current button
+            // rather than resetting it (it is restored once the search is cleared).
+            if (root.tokenSelectorModel.searchString === "")
+                holdingSelector.reset()
         }
 
         readonly property bool isSelectedHoldingValidAsset: selectedHolding.available && !!selectedHolding.item
@@ -168,18 +185,6 @@ Control {
         readonly property string inputSymbol: amountToSendInput.fiatMode ? root.currencyStore.currentCurrency
                                                                          : (!!isSelectedHoldingValidAsset ? selectedHolding.item.symbol : "")
 
-        readonly property var adaptor: TokenSelectorViewAdaptor {
-            assetsModel: root.processedAssetsModel
-            allTokenGroupsForChainModel: root.allTokenGroupsForChainModel
-            searchResultModel: root.searchResultModel
-
-            flatNetworksModel: root.flatNetworksModel
-            currentCurrency: root.currencyStore.currentCurrency
-
-            showAllTokens: true
-            enabledChainIds: root.selectedNetworkChainId !== -1 ? [root.selectedNetworkChainId] : []
-            accountAddress: root.selectedAccountAddress
-        }
 
         function updateInputText() {
             if (!tokenAmount) {
@@ -302,8 +307,7 @@ Control {
                 markAsInvalid: (root.swapSide === SwapInputPanel.SwapSide.Pay && (balanceExceeded || d.maxInputBalance === 0)) || (!!text && !valid)
                 fiatInputInteractive: root.fiatInputInteractive
                 multiplierIndex: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.decimals ? d.selectedHolding.item.decimals : 18
-                cryptoPrice: d.isSelectedHoldingValidAsset ? (!!d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.marketDetails ? d.selectedHolding.item.marketDetails.currencyPrice.amount : 0)
-                                                     : 0
+                cryptoPrice: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.cryptoPrice ? d.selectedHolding.item.cryptoPrice : 0
                 formatFiat: amount => root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency)
                 formatBalance: amount => root.currencyStore.formatCurrencyAmount(amount, d.inputSymbol)
 
@@ -341,16 +345,17 @@ Control {
 
                 Layout.alignment: Qt.AlignRight
 
-                model: d.adaptor.outputAssetsModel
-                hasMoreItems: d.adaptor.outputAssetsModel.hasMoreItems
-                isLoadingMore: root.tokenSelectorLoading || d.adaptor.outputAssetsModel.isLoadingMore
+                model: root.tokenSelectorModel
+                hasMoreItems: root.tokenSelectorModel.hasMoreItems
+                isLoadingMore: root.tokenSelectorLoading || root.tokenSelectorModel.isLoadingMore
                 nonInteractiveKey: root.nonInteractiveGroupKey
+                formatCurrencyBalance: (amount) => root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency)
 
                 onSearch: function(keyword) {
-                    d.adaptor.search(keyword)
+                    root.tokenSelectorModel.search(keyword)
                 }
 
-                onLoadMoreRequested: d.adaptor.loadMoreItems()
+                onLoadMoreRequested: root.tokenSelectorModel.fetchMore()
 
                 onSelected: function(key) {
                     // Token existance checked with plainTokensBySymbolModel

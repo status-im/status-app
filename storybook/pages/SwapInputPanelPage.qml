@@ -107,9 +107,9 @@ SplitView {
 
                 currencyStore: d.adaptor.currencyStore
                 flatNetworksModel: d.adaptor.networksStore.activeNetworks
-                processedAssetsModel: d.adaptor.walletAssetsStore.groupedAccountAssetsModel
-                allTokenGroupsForChainModel: d.adaptor.walletAssetsStore.walletTokensStore.tokenGroupsForChainModel
-                searchResultModel: d.adaptor.walletAssetsStore.walletTokensStore.searchResultModel
+                tokenSelectorModel: TokenSelectorModelMock {
+                    sourceModel: d.adaptor.walletAssetsStore.walletTokensStore.tokenGroupsModel
+                }
 
                 selectedNetworkChainId: d.swapInputParamsForm.selectedNetworkChainId
                 selectedAccountAddress: d.swapInputParamsForm.selectedAccountAddress
@@ -135,9 +135,9 @@ SplitView {
 
                 currencyStore: d.adaptor.currencyStore
                 flatNetworksModel: d.adaptor.networksStore.activeNetworks
-                processedAssetsModel: d.adaptor.walletAssetsStore.groupedAccountAssetsModel
-                allTokenGroupsForChainModel: d.adaptor.walletAssetsStore.walletTokensStore.tokenGroupsForChainModel
-                searchResultModel: d.adaptor.walletAssetsStore.walletTokensStore.searchResultModel
+                tokenSelectorModel: TokenSelectorModelMock {
+                    sourceModel: d.adaptor.walletAssetsStore.walletTokensStore.tokenGroupsModel
+                }
 
                 selectedNetworkChainId: d.swapInputParamsForm.selectedNetworkChainId
                 selectedAccountAddress: d.swapInputParamsForm.selectedAccountAddress
