@@ -3,7 +3,7 @@
 ## Given the raw RPC response JSON, produce the COMPLETE finished structures the
 ## GUI slot currently builds inline in `applyRefreshTokensData` /
 ## `applyAllTokenListsData` (service_main.nim). Running this on the threadpool and
-## handing the result to the GUI slot via the 0005 typed-completion primitive
+## handing the result to the GUI slot via the typed-completion primitive
 ## (finishTyped/takeTyped) removes the multi-MB JSON decode + token-model build
 ## from the GUI thread.
 ##
@@ -25,7 +25,7 @@ import token_lookup_cache
 
 type
   RefreshTokensApplyResult* = ref object of RootObj
-    generation*: int                                     ## 0004 stamp, echoed to the slot's onCompletion
+    generation*: int                                     ## generation stamp, echoed to the slot's onCompletion
     error*: string                                       ## non-empty -> slot skips apply (after onCompletion)
     tokensOfInterestCount*: int                          ## gate input for the slot
     tokensOfInterestByKey*: Table[string, TokenItem]
@@ -73,6 +73,7 @@ proc buildRefreshTokensApply*(tokensOfInterestNode, allTokensNode, tokenPrefsNod
   createTokenGroupsFromTokens(tokens, groupsByKey)
   result.groupsOfInterestByKey = groupsByKey
   result.groupsOfInterest = toSeq(groupsByKey.values)
+  sortTokenGroupsByKey(result.groupsOfInterest)  # deterministic order
 
   # Preferences: keep the backend array string for QML; decode rows for the table.
   # Matches applyRefreshTokensData exactly (including the "[]" default).
@@ -107,15 +108,15 @@ proc buildAllTokenListsApply*(allTokenListsNode: JsonNode): AllTokenListsApplyRe
 # These wrap the pure builders with the transport concerns (generation stamp,
 # error passthrough) and — critically — GUARANTEE a non-nil result even on an RPC
 # error or a build exception. The worker always calls finishTyped(result), so the
-# GUI slot always runs and the 0004 generation coordinator never wedges its
+# GUI slot always runs and the generation coordinator never wedges its
 # in-flight gate (deadlock-safety). Building here also keeps the heavy decode +
-# token-model construction off the GUI thread (fix A).
+# token-model construction off the GUI thread.
 
 # The build catches `Exception`, NOT `CatchableError`: a Defect (e.g. OutOfMemDefect
-# building the 3.5+4.1MB token model on a memory-pressured wake — exactly this
+# building the multi-MB token model on a memory-pressured wake — exactly this
 # path) is not a CatchableError. With --panics:off it is catchable as Exception, so
 # catching Exception keeps the result non-nil there too. If a Defect escaped
-# assemble*, the worker would skip finishTyped and the 0004 in-flight gate would
+# assemble*, the worker would skip finishTyped and the in-flight gate would
 # wedge permanently (no more token refreshes until app restart). The worker adds a
 # structural finally as a second guarantee (see async_tasks.nim).
 

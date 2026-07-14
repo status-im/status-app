@@ -1,6 +1,6 @@
 ## Unit tests for the pure worker-side token-apply builder.
 ##
-## This is the off-GUI-thread core that will feed the 0005 typed-completion
+## This is the off-GUI-thread core that will feed the typed-completion
 ## handoff: given the raw RPC response JSON (tokens-of-interest, all-tokens,
 ## token-preferences, token-lists), it produces the COMPLETE finished structures
 ## the GUI slot currently builds inline in applyRefreshTokensData /
@@ -93,6 +93,15 @@ suite "token apply builder — refresh tokens":
     check toSeq(a.tokensOfInterestByKey.keys).sorted == toSeq(b.tokensOfInterestByKey.keys).sorted
     check toSeq(a.groupsOfInterestByKey.keys).sorted == toSeq(b.groupsOfInterestByKey.keys).sorted
 
+  test "groups-of-interest is ordered deterministically by group key":
+    let res = buildRefreshTokensApply(arr(tokenA, tokenB, tokenC), arr(tokenA), parseJson(prefsJson))
+    let orderKeys = res.groupsOfInterest.mapIt(it.key)
+    # the exposed group seq is sorted by key (not Table hash order)...
+    check orderKeys == orderKeys.sorted
+    # ...and its order is exactly the by-key set (the getId diffs on) in sorted
+    # order, so a structural change only inserts/removes and never reshuffles survivors.
+    check orderKeys == toSeq(res.groupsOfInterestByKey.keys).sorted
+
 suite "token apply builder — all token lists":
 
   test "builds token-list items with version, source and nested tokens":
@@ -115,7 +124,7 @@ suite "token apply builder — all token lists":
 
 # The worker calls assemble*Result, then finishTyped(result). These must ALWAYS
 # return a non-nil result carrying the generation stamp — even on an RPC error or
-# a build exception — so the GUI slot always runs and the 0004 generation
+# a build exception — so the GUI slot always runs and the generation
 # coordinator never wedges (deadlock-safety).
 const badToken = """{"chainId":0,"address":"","name":"Bad","symbol":"BAD","decimals":0,
   "custom":false,"crossChainId":"","communityData":{"id":"","name":"","color":"","image":""}}"""
@@ -142,7 +151,7 @@ suite "token apply builder — worker result assembly (deadlock-safe)":
     # A malformed token dto makes createTokenItem raise (ValueError) inside the build.
     # assemble* catches `Exception` (not `CatchableError`) so that a Defect — e.g.
     # OutOfMemDefect building the multi-MB model on a memory-pressured wake — is also
-    # turned into a stamped, non-nil result rather than escaping and wedging the 0004
+    # turned into a stamped, non-nil result rather than escaping and wedging the
     # in-flight gate. A real Defect has no clean injection seam in
     # this build path, so the Defect case is covered by the `except Exception` choice
     # plus the worker's structural try/finally (async_tasks.nim); this test exercises
