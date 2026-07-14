@@ -98,7 +98,7 @@ _KNOWN_MISSING: dict[str, str] = {
     # Profile > Backup "import local backup file" — no such method exists in
     # status-go (any branch), so the UI flow fails at runtime with
     # "method not found". Remove when the backend lands or the app call goes.
-    "importLocalBackupFile": "no status-go backend",
+    "importLocalBackupFile": "no status-go backend, see #21495",
 }
 
 # Files where `wakuext_` appears in text beyond what the extractors account
