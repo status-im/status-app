@@ -181,6 +181,7 @@ Item {
                     {
                         tokenId: "id_3",
                         key: "abc",
+                        balance: 1,
                         symbol: "abc",
                         groupingValue: "abc",
                         chainId: NetworksModel.mainnetChainId,
@@ -205,6 +206,7 @@ Item {
                     {
                         tokenId: "id_4",
                         key: "def",
+                        balance: 1,
                         symbol: "def",
                         groupingValue: "def",
                         chainId: NetworksModel.mainnetChainId,
@@ -229,6 +231,7 @@ Item {
                     {
                         tokenId: "id_5",
                         key: "ghi",
+                        balance: 1,
                         symbol: "ghi",
                         groupingValue: "ghi",
                         chainId: NetworksModel.mainnetChainId,
