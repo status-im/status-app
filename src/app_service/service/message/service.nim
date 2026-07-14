@@ -571,6 +571,12 @@ QtObject:
         token = tokenFound
         break
 
+    if token.isNil:
+      # Defensive: the native anchor above resolves synchronously (getTokenByChainAddress
+      # synthesizes native tokens), so this should not happen; guard the deref anyway in
+      # case neither the native nor a contract token is available (nil-first).
+      return ("", message.transactionParameters.value)
+
     let tokenStr = $(Json.encode(token))
     var weiStr = service_conversion.wei2Eth(message.transactionParameters.value, token.decimals)
     weiStr.trimZeros()

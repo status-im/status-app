@@ -1,10 +1,11 @@
-import nimqml, chronicles, json, strutils, sequtils, tables, times
+import nimqml, chronicles, json, strutils, sequtils, tables
 
 import app/core/eventemitter
 import app/core/signals/types
 when defined(android):
   import app/android/safutils
 import app_service/common/types as common_types
+import app_service/common/utils as common_utils
 import backend/newsfeed as status_newsfeed
 import backend/mailservers as status_mailservers
 import backend/settings as status_settings
@@ -1115,18 +1116,17 @@ QtObject:
     return self.settings.autoRefreshTokens
 
   proc getLastTokensUpdate*(self: Service): int64 =
-    var lastTokensUpdate: string
     try:
       let response = status_settings.lastTokensUpdate()
       if not response.error.isNil:
         error "fetching lastTokensUpdate: ", errDescription = response.error.message
         return
 
-      lastTokensUpdate = response.result.getStr
-      let dateTime = parse(lastTokensUpdate, DATE_TIME_FORMAT_2)
-      self.settings.lastTokensUpdate = dateTime.toTime().toUnix()
+      # timestampToUnix normalizes the formats seen in the field and never raises
+      # on the hot path (returns 0 on failure), so the wake path stays exception-free.
+      self.settings.lastTokensUpdate = common_utils.timestampToUnix(response.result.getStr)
     except Exception as e:
-      error "parse lastTokensUpdate: ", data=lastTokensUpdate, errName = e.name, errDesription = e.msg
+      error "fetching lastTokensUpdate: ", errName = e.name, errDesription = e.msg
     return self.settings.lastTokensUpdate
 
   ### News Feed Settings ###

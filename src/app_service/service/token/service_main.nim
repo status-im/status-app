@@ -100,16 +100,17 @@ proc prefetchLiFiSupportRetrieved(self: Service, response: string) {.slot.} =
 proc applyRefreshTokensData(self: Service, tokenDtos: seq[TokenDtoSafe], allTokenDtos: seq[TokenDtoSafe], tokenPrefsNode: JsonNode) =
   let tokens = tokenDtos.map(t => createTokenItem(t))
 
-  # Token catalogue changed -> previously-unresolvable keys may now resolve.
-  if tokenDtos.len > 0 or allTokenDtos.len > 0:
-    self.notFoundKeys.clear()
-
-  if tokens.len > 0 or self.groupsOfInterestByKey.len == 0:
-    self.tokensOfInterestByKey.clear()
-    self.groupsOfInterestByKey.clear()
-    for token in tokens:
-      self.tokensOfInterestByKey[token.key] = token
-    self.addNewTokensToGroupsOfInterest(tokens)
+  if shouldReplaceTokensCache(tokens.len, self.groupsOfInterestByKey.len):
+    # Build the replacement state aside and swap it in, rather than clear-then-fill:
+    # a wiped-then-refilled table would leave a window where every key lookup misses.
+    var newGroupsByKey = initTable[string, TokenGroupItem]()
+    createTokenGroupsFromTokens(tokens, newGroupsByKey)
+    self.tokensOfInterestByKey = buildTokensByKey(tokens)
+    self.groupsOfInterestByKey = newGroupsByKey
+    self.groupsOfInterest = toSeq(self.groupsOfInterestByKey.values)
+    # Fresh token data invalidates prior "not found" markers: a key that was
+    # missing before may now resolve.
+    self.knownMissingKeys.clear()
   else:
     debug "ignoring empty tokens-of-interest refresh; keeping existing token groups cache"
 
@@ -126,11 +127,13 @@ proc applyRefreshTokensData(self: Service, tokenDtos: seq[TokenDtoSafe], allToke
         visible: dto.visible,
         communityId: dto.communityId)
 
-  if allTokenDtos.len > 0 or self.allTokensByGroupKey.len == 0:
-    self.allTokensByGroupKey.clear()
+  if shouldReplaceTokensCache(allTokenDtos.len, self.allTokensByGroupKey.len):
+    # Same swap-not-clear discipline as the tokens-of-interest cache above.
+    var newAllTokensByGroupKey = initTable[string, seq[TokenItem]]()
     for dto in allTokenDtos:
       let item = createTokenItem(dto)
-      self.allTokensByGroupKey.mgetOrPut(item.groupKey, @[]).add(item)
+      newAllTokensByGroupKey.mgetOrPut(item.groupKey, @[]).add(item)
+    self.allTokensByGroupKey = newAllTokensByGroupKey
   else:
     debug "ignoring empty all-tokens refresh; keeping existing all tokens cache"
   self.rebuildMarketData()
@@ -140,52 +143,155 @@ proc applyRefreshTokensData(self: Service, tokenDtos: seq[TokenDtoSafe], allToke
   self.events.emit(SIGNAL_TOKEN_PREFERENCES_UPDATED, Args())
 
 proc onAsyncRefreshTokensDone(self: Service, response: string) {.slot.} =
+  var env: RefreshTokensResponse
+  var decodeOk = false
   try:
-    let env = Json.decode(response, RefreshTokensResponse, allowUnknownFields = true)
-    if env.error.len > 0:
-      error "async refresh tokens failed", errDescription = env.error
-      return
-    if env.requestId != self.refreshTokensRequestId:
-      debug "ignoring stale async refresh tokens response",
-        requestId = env.requestId, latestRequestId = self.refreshTokensRequestId
-      return
-    self.applyRefreshTokensData(env.tokensOfInterest, env.allTokens, env.tokenPreferences)
+    env = Json.decode(response, RefreshTokensResponse, allowUnknownFields = true)
+    decodeOk = true
   except Exception as e:
     error "error processing async refresh tokens", msg = e.msg
+  # Always advance the coordinator so a failed/undecodable completion never wedges
+  # the in-flight gate. On decode failure use the in-flight generation (not a stale
+  # sentinel) so a persistently undecodable response cannot re-fire forever.
+  let completedGen = if decodeOk: env.requestId else: self.refreshTokensGen.currentGeneration
+  let c = self.refreshTokensGen.onCompletion(completedGen)
+  if c.action == rcaDropAndRefire:
+    debug "dropping stale async refresh tokens response; re-firing newest",
+      completedGen = completedGen
+    # A dropped flagged result discards the catalogue it fetched — the re-fire must
+    # re-fetch it, in addition to any want queued by the triggers that made us stale.
+    let refireFetchAllTokens = self.pendingFetchAllTokens or self.inFlightFetchAllTokens
+    self.pendingFetchAllTokens = false
+    self.inFlightFetchAllTokens = refireFetchAllTokens
+    self.startRefreshTokensTask(c.gen, refireFetchAllTokens)
+    return
+  # rcaApply: this is the newest generation.
+  if not decodeOk:
+    return
+  if env.error.len > 0:
+    error "async refresh tokens failed", errDescription = env.error
+    return
+  self.applyRefreshTokensData(env.tokensOfInterest, env.allTokens, env.tokenPreferences)
 
 proc onAsyncFetchAllTokenListsDone(self: Service, response: string) {.slot.} =
-  self.tokenListsLoading = false
+  var env: FetchAllTokenListsResponse
+  var decodeOk = false
   try:
-    let env = Json.decode(response, FetchAllTokenListsResponse, allowUnknownFields = true)
-    if env.error.len > 0:
-      error "async fetch all token lists failed", errDescription = env.error
-      return
-    self.applyAllTokenListsData(env.allTokenLists)
-    self.events.emit(SIGNAL_TOKEN_LISTS_LOADED, Args())
+    env = Json.decode(response, FetchAllTokenListsResponse, allowUnknownFields = true)
+    decodeOk = true
   except Exception as e:
     error "error processing async fetch all token lists", msg = e.msg
+  let completedGen = if decodeOk: env.requestId else: self.fetchAllTokenListsGen.currentGeneration
+  let c = self.fetchAllTokenListsGen.onCompletion(completedGen)
+  if c.action == rcaDropAndRefire:
+    debug "dropping stale async fetch all token lists response; re-firing newest",
+      completedGen = completedGen
+    self.startFetchAllTokenListsTask(c.gen) # keeps tokenListsLoading true
+    return
+  # rcaApply: newest generation, nothing more in flight.
+  self.tokenListsLoading = false
+  if not decodeOk:
+    return
+  if env.error.len > 0:
+    error "async fetch all token lists failed", errDescription = env.error
+    return
+  self.applyAllTokenListsData(env.allTokenLists)
+  self.events.emit(SIGNAL_TOKEN_LISTS_LOADED, Args())
 
-# fetchAllTokens must be true only when the full catalogue can change (init /
-# token-lists-updated); routine refreshes skip the ~3MB getAllTokens fetch+decode.
-proc asyncRefreshTokens(self: Service, fetchAllTokens: bool = false) =
-  inc self.refreshTokensRequestId
+proc fetchPendingMissingTokenKeys(self: Service) =
+  # Debounced: drain every key that missed since the last batch and fetch them in
+  # one async RPC on the threadpool.
+  let keys = self.pendingTokenFetch.takeBatch()
+  if keys.len == 0:
+    return
+  let arg = AsyncFetchMissingTokensTaskArg(
+    tptr: asyncFetchMissingTokensTask,
+    vptr: cast[uint](self.vptr),
+    slot: "onAsyncFetchMissingTokensDone",
+    keys: keys,
+  )
+  self.threadpool.start(arg)
+
+proc scheduleMissingTokenKeysFetch(self: Service) =
+  self.missingTokenKeysFetchDebouncer.call()
+
+proc onAsyncFetchMissingTokensDone(self: Service, response: string) {.slot.} =
+  try:
+    let env = Json.decode(response, FetchMissingTokensResponse, allowUnknownFields = true)
+    # Release the batch's keys from the in-flight set regardless of outcome.
+    self.pendingTokenFetch.completeBatch(env.requestedKeys)
+    if env.error.len > 0:
+      # Transient backend failure: leave the keys unmarked so a later lookup retries
+      # (async, off the GUI thread) rather than caching a false "missing".
+      error "async fetch missing tokens failed", errDescription = env.error
+      return
+    # Index the returned tokens by their (lower-cased) key so each requested key is
+    # cached under the exact string that was looked up. This preserves the old
+    # getTokenByKey semantics (store under the requested key) even when the request
+    # used a checksummed/mixed-case address, so the next lookup Hits instead of
+    # re-enqueuing forever.
+    var tokenByLowerKey = initTable[string, TokenItem]()
+    for token in env.tokens.map(t => createTokenItem(t)):
+      tokenByLowerKey[token.key.toLowerAscii] = token
+    var foundTokens: seq[TokenItem]
+    var foundKeys = initHashSet[string]()
+    for requestedKey in env.requestedKeys:
+      let matched = tokenByLowerKey.getOrDefault(requestedKey.toLowerAscii)
+      if not matched.isNil:
+        self.tokensOfInterestByKey[requestedKey] = matched
+        foundTokens.add(matched)
+        foundKeys.incl(requestedKey)
+    if foundTokens.len > 0:
+      self.addNewTokensToGroupsOfInterest(foundTokens)
+    # Keys the backend did not return are genuinely missing -> feed the 0001 markers.
+    for key in missingFromBatch(env.requestedKeys, foundKeys):
+      self.knownMissingKeys.incl(key)
+    if foundTokens.len > 0:
+      # Notify consumers so they re-read and the late tokens resolve.
+      self.events.emit(SIGNAL_TOKENS_LIST_UPDATED, Args())
+  except Exception as e:
+    error "error processing async fetch missing tokens", msg = e.msg
+
+proc startRefreshTokensTask(self: Service, generation: int, fetchAllTokens: bool = false) =
   let arg = AsyncRefreshTokensTaskArg(
     tptr: asyncRefreshTokensTask,
     vptr: cast[uint](self.vptr),
     slot: "onAsyncRefreshTokensDone",
-    requestId: self.refreshTokensRequestId,
+    requestId: generation,
     fetchAllTokens: fetchAllTokens,
   )
   self.threadpool.start(arg)
 
-proc asyncFetchAllTokenLists*(self: Service) =
+# fetchAllTokens must be true only when the full catalogue can change (init /
+# token-lists-updated); routine refreshes skip the ~3MB getAllTokens fetch+decode.
+# The want is ORed across coalesced triggers and consumed when
+# a task actually starts, so a flagged trigger arriving while a task is in flight
+# still gets its catalogue fetch on the eventual re-fire.
+proc asyncRefreshTokens(self: Service, fetchAllTokens: bool = false) =
+  # Coalesced: bump the generation and start a task only when none is
+  # in flight; an in-flight task re-fires once on completion if newer triggers came.
+  if fetchAllTokens:
+    self.pendingFetchAllTokens = true
+  let (shouldStart, gen) = self.refreshTokensGen.requestRefresh()
+  if shouldStart:
+    self.inFlightFetchAllTokens = self.pendingFetchAllTokens
+    self.pendingFetchAllTokens = false
+    self.startRefreshTokensTask(gen, self.inFlightFetchAllTokens)
+
+proc startFetchAllTokenListsTask(self: Service, generation: int) =
   self.tokenListsLoading = true
   let arg = AsyncFetchAllTokenListsTaskArg(
     tptr: asyncFetchAllTokenListsTask,
     vptr: cast[uint](self.vptr),
     slot: "onAsyncFetchAllTokenListsDone",
+    requestId: generation,
   )
   self.threadpool.start(arg)
+
+proc asyncFetchAllTokenLists*(self: Service) =
+  let (shouldStart, gen) = self.fetchAllTokenListsGen.requestRefresh()
+  if shouldStart:
+    self.startFetchAllTokenListsTask(gen)
 
 proc getTokenListsLoading*(self: Service): bool =
   return self.tokenListsLoading
@@ -199,6 +305,14 @@ proc init*(self: Service) =
     delayMs = 1000,
     checkIntervalMs = 500)
   self.rebuildMarketDataDebouncer.registerCall0(callback = proc() = self.rebuildMarketDataInternal())
+
+  # Coalesce a burst of by-key misses (e.g. a model rebuild) into one batch fetch.
+  # Short delay so late tokens resolve quickly while still collapsing the burst.
+  self.missingTokenKeysFetchDebouncer = debouncer_service.newDebouncer(
+    self.threadpool,
+    delayMs = 200,
+    checkIntervalMs = 100)
+  self.missingTokenKeysFetchDebouncer.registerCall0(callback = proc() = self.fetchPendingMissingTokenKeys())
 
   self.events.on(SignalType.Wallet.event) do(e:Args):
     var data = WalletSignal(e)
@@ -363,23 +477,30 @@ proc getTokenBySymbolOnChain*(self: Service, symbol: string, chainId: int): Toke
 proc getTokenByKey*(self: Service, key: string): TokenItem =
   if not common_utils.isTokenKey(key):
     return nil
-  if self.tokensOfInterestByKey.hasKey(key):
+  case classifyTokenLookup(self.tokensOfInterestByKey, self.knownMissingKeys, key)
+  of TokenLookupOutcome.Hit:
     return self.tokensOfInterestByKey[key]
-  if self.notFoundKeys.contains(key):
+  of TokenLookupOutcome.KnownMissing:
+    # The backend already reported this key as "not found"; return nil without
+    # repeating the blocking RPC. Cleared when a refresh applies fresh token data.
     return nil
-  let tokens = getTokensByKeys(@[key])
-  if tokens.len > 0:
-    # add newly found tokens to the groups of interest
-    self.addNewTokensToGroupsOfInterest(tokens)
-
-    self.tokensOfInterestByKey[key] = tokens[0]
-    return self.tokensOfInterestByKey[key]
-  self.notFoundKeys.incl(key)
-  return nil
+  of TokenLookupOutcome.NeedsFetch:
+    # No synchronous backend RPC on the GUI thread: enqueue the key
+    # for a coalesced async batch and return nil now. When the batch completes the
+    # service updates its caches/markers and emits SIGNAL_TOKENS_LIST_UPDATED, so
+    # consumers re-read and the token resolves (placeholder -> value).
+    if self.pendingTokenFetch.enqueue(key):
+      self.scheduleMissingTokenKeysFetch()
+    return nil
 
 proc getTokenByChainAddress*(self: Service, chainId: int, address: string): TokenItem =
   let key = common_utils.createTokenKey(chainId, address)
-  return self.getTokenByKey(key)
+  result = self.getTokenByKey(key)
+  if result.isNil and address.toLowerAscii == common_wallet_constants.ZERO_ADDRESS:
+    # Native tokens are well-known: resolve them synchronously so paths like the
+    # message transaction details never see a nil-first. Once a refresh
+    # caches the backend's richer native token, getTokenByKey Hits it instead.
+    result = createNativeTokenItem(chainId)
 
 proc getTokensByGroupKey*(self: Service, groupKey: string): seq[TokenItem] =
   if not self.groupsOfInterestByKey.hasKey(groupKey):
