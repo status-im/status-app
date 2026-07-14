@@ -40,6 +40,9 @@
 extern void registerNativeSwipeHandlerItemType();
 extern void registerNativeIndicatorItemType();
 #endif
+#if defined(Q_OS_IOS) || defined(Q_OS_MACOS)
+extern "C" void statusq_linkAccessibilityCrashFilter();
+#endif
 
 #include <qtmodelstoolkit/registerqmltypes.h>
 #include <qqmlsortfilterproxymodeltypes.h>
@@ -165,6 +168,12 @@ void registerStatusQTypes() {
 #else
     qmlRegisterType<NativeSwipeHandlerItem>("StatusQ.Controls", 0, 1, "NativeSwipeHandlerItem");
     qmlRegisterType<NativeIndicatorItem>("StatusQ.Controls", 0, 1, "NativeIndicatorItem");
+#endif
+
+#if defined(Q_OS_IOS) || defined(Q_OS_MACOS)
+    // Force-link the Qt 6.11 a11y crash filter TU for STATUSQ_STATIC_LIB builds
+    // (constructor alone is not a live reference; #21450, #21491).
+    statusq_linkAccessibilityCrashFilter();
 #endif
 
 #ifdef BUNDLE_QML_RESOURCES

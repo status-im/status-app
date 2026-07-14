@@ -2,8 +2,11 @@
 // QAccessible::installUpdateHandler() so events are filtered before they reach
 // the platform plugin (see qaccessible.cpp updateAccessibility()).
 //
-// Loaded automatically when libStatusQ is mapped (constructor below) — before
-// main() / NimMain() — so no explicit call sites are required.
+// Shared libStatusQ: constructor below runs when the dylib is mapped (before
+// main). Static StatusQ (STATUSQ_STATIC_LIB): the linker may drop this TU unless
+// a symbol is referenced — statusq_linkAccessibilityCrashFilter() is called from
+// typesregistration.cpp (always-linked) to force this object into the final
+// binary; the constructor then still runs before main.
 //
 // iOS (#21450): destroying a QQuickControl while VoiceOver (etc.) is active
 // SIGBUS-es in the iOS plugin's ObjectDestroyed path (role() on a half-destroyed
@@ -11,6 +14,7 @@
 //
 // macOS (#21491): Qt WebEngine HTML datepicker / table-like popups SIGSEGV in
 // QMacAccessibilityElement initWithId:role: when a table cell's table() is null.
+// Minimal reproducer: https://github.com/friofry/qtbug-macos-webengine-datepicker
 //
 // installUpdateHandler is documented \internal but exported from QtGui public
 // headers (also used by QTestLib). Define STATUS_DISABLE_A11Y_CRASH_FILTER to
@@ -67,27 +71,40 @@ static void accessibilityUpdateHandler(QAccessibleEvent *event)
     }
 #elif defined(Q_OS_MACOS)
     // #21491: Cocoa crashes creating AX elements for table cells whose table()
-    // is null (HTML datepicker via WebEngine). Drop those updates.
-    QAccessibleInterface *iface = event->accessibleInterface();
-    if (!iface || !iface->isValid())
-        return;
-
-    if (const auto *cell = iface->tableCellInterface()) {
-        QAccessibleInterface *table = cell->table();
-        if (!table || !table->isValid() || !table->tableInterface())
-            return;
+    // is null (HTML datepicker via WebEngine). Drop only those updates; let the
+    // platform handle missing/invalid interfaces (e.g. ObjectDestroyed teardown).
+    if (QAccessibleInterface *iface = event->accessibleInterface()) {
+        if (iface->isValid()) {
+            if (const auto *cell = iface->tableCellInterface()) {
+                QAccessibleInterface *table = cell->table();
+                if (!table || !table->isValid() || !table->tableInterface())
+                    return;
+            }
+        }
     }
 #endif
 
     forwardToPlatform(event);
 }
 
+static void installAccessibilityCrashFilter()
+{
 #if !defined(STATUS_DISABLE_A11Y_CRASH_FILTER)
+    QAccessible::installUpdateHandler(accessibilityUpdateHandler);
+#endif
+}
+
+// Referenced from typesregistration.cpp so static archives keep this TU.
+// Idempotent if the constructor already installed the handler.
+extern "C" Q_DECL_EXPORT void statusq_linkAccessibilityCrashFilter()
+{
+    installAccessibilityCrashFilter();
+}
+
 __attribute__((constructor))
 static void statusq_autoInstallAccessibilityCrashFilter()
 {
-    QAccessible::installUpdateHandler(accessibilityUpdateHandler);
+    installAccessibilityCrashFilter();
 }
-#endif
 
 #endif // Q_OS_IOS || Q_OS_MACOS
