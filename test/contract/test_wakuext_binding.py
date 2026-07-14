@@ -19,12 +19,13 @@ Name-existence only: a method that exists but changed its params is out of
 scope — the registered set is a superset of the truly-callable one.
 
 Coverage is guarded from two independent directions. The extractors above
-collect names to check. Separately, every `callPrivateRPC*` first argument is
-classified against the known forms; an argument that fits none of them (a
-variable, string concatenation, an f-string) must be listed in
-_UNRESOLVED_ALLOWLIST or the gate fails. A new composition idiom therefore
-extends the parser (or the allowlist, with a reason) — it cannot silently
-shrink coverage.
+collect names to check. Separately, every occurrence of a private-RPC entry
+point (the callPrivateRPC / makePrivateRpcCall families and the rpc macro) is
+counted, and each occurrence must yield a classified argument — an argument
+the parser cannot read at all counts as unresolved, the same as a variable or
+a concatenation. Unresolved sites must be pinned in _UNRESOLVED_ALLOWLIST or
+the gate fails, so within the scanned suffixes and entry points, a new
+composition idiom turns the gate red instead of silently shrinking coverage.
 """
 from __future__ import annotations
 
@@ -45,7 +46,8 @@ _GO_API_RELPATHS = ("services/ext/api.go", "services/wakuv2ext/api.go")
 
 # Scan the whole tree so a call site in a new location (e.g. mobile/ios) can't
 # silently drop out; over-scanning only risks a false FAIL.
-_APP_SRC_SUFFIXES = {".nim", ".java", ".kt", ".swift", ".m", ".mm", ".qml", ".js"}
+_APP_SRC_SUFFIXES = {".nim", ".java", ".kt", ".swift", ".m", ".mm", ".qml", ".js",
+                     ".cpp", ".cc", ".h", ".hpp"}
 _SCAN_SKIP_DIRS = {"vendor", ".git", "build", "node_modules", "result", ".cache"}
 
 _GO_METHOD_RE = re.compile(r"^func \(api \*PublicAPI\) ([A-Z][A-Za-z0-9]*)\(", re.M)
@@ -60,7 +62,14 @@ _PREFIX_DEF_RE = re.compile(
 )
 _UTILS_IMPORT_RE = re.compile(r"^\s*import\b[^\n]*app_service/common/utils", re.M)
 _RPC_MACRO_RE = re.compile(r'^\s*rpc\(([A-Za-z0-9_]+),\s*"([A-Za-z0-9_]+)"\)', re.M)
-_ENTRY_ARG_RE = re.compile(r"callPrivateRPC(?:NoDecode|Raw)?\(\s*([^,()]+?)\s*[,)]")
+# Every occurrence of an entry token is counted; an occurrence whose argument
+# the anchored regex cannot read becomes an unresolved site instead of
+# silently producing no match (a call-shaped argument, for example).
+_ENTRY_TOKEN_RE = re.compile(r"\b(?:callPrivateRPC(?:NoDecode|Raw)?|makePrivateRpcCall(?:NoDecode)?)\(")
+_ENTRY_ARG_ANCHORED_RE = re.compile(
+    r"\b(?:callPrivateRPC(?:NoDecode|Raw)?|makePrivateRpcCall(?:NoDecode)?)\(\s*([^,()]+?)\s*[,)]"
+)
+_RPC_TOKEN_RE = re.compile(r"^\s*rpc\(", re.M)
 
 _WAKUEXT_LITERAL_ARG_RE = re.compile(r'"wakuext_([A-Za-z0-9_]+)"')
 _OTHER_NS_LITERAL_ARG_RE = re.compile(r'"[a-z0-9]+_[A-Za-z0-9_]+"')
@@ -71,9 +80,11 @@ _PREFIX_ARG_RE = re.compile(r'"([A-Za-z0-9_]+)"\.prefix')
 # unresolved argument fails until listed here (or the parser learns its form),
 # and a stale entry fails until removed.
 _UNRESOLVED_ALLOWLIST: set[tuple[str, str]] = {
-    # transport layer: forwards a caller-built JSON envelope, not a method name
+    # transport layer: forwards a caller-built JSON envelope or an
+    # already-composed method name, not a new composition idiom
     ("src/backend/core.nim", "inputJSON"),
     ("src/backend/core.nim", "$inputJSON"),
+    ("src/backend/core.nim", "methodName"),
 }
 
 # Call sites that name a method the shipped status-go genuinely does not
@@ -89,19 +100,19 @@ _KNOWN_MISSING: dict[str, str] = {
 }
 
 # Files where `wakuext_` appears in text beyond what the extractors account
-# for (comments, log strings). Pinned so a new unaccounted mention is looked
-# at once instead of ignored forever.
-_MENTION_ALLOWLIST: set[str] = {
+# for (comments, log strings), pinned with the exact expected excess so one
+# accepted mention cannot grandfather a later composed call in the same file.
+_MENTION_ALLOWLIST: dict[str, int] = {
     # class doc comment names wakuext_sendChatMessage; the file's actual call
     # sites are clean literals and are checked
-    "mobile/android/qt6/src/app/status/mobile/ipc/NotificationReplyReceiver.java",
+    "mobile/android/qt6/src/app/status/mobile/ipc/NotificationReplyReceiver.java": 1,
 }
 
-# Parser-rot tripwires, not coverage targets: each extraction class matches
-# far more sites than this today (19 / ~151 / 16 on 2026-07-14). A regex or
-# walk change that zeroes a whole class must fail even if every extracted
+# Parser-rot tripwires, not coverage targets: ~80% of what each extraction
+# class matches at baseline (21 / 146 / 16). A regex or walk change
+# that drops a meaningful share of a class must fail even if every extracted
 # name still resolves.
-_CLASS_FLOORS = {"literal": 10, "prefix": 100, "rpc_macro": 10}
+_CLASS_FLOORS = {"literal": 16, "prefix": 120, "rpc_macro": 12}
 
 
 def _rpc_name(go_method: str) -> str:
@@ -167,12 +178,12 @@ def collect(app_root: Path = APP_ROOT):
 
     checked        {method name: [where it is named]} — must all resolve
     unresolved     {(relpath, argument)} — entry args no extractor understands
-    mentions       [relpath] — files with unaccounted `wakuext_` text
+    mentions       {relpath: excess} — unaccounted `wakuext_` text per file
     class_counts   {extraction class: matched site count}
     """
     checked: dict[str, list[str]] = {}
     unresolved: set[tuple[str, str]] = set()
-    mentions: list[str] = []
+    mentions: dict[str, int] = {}
     class_counts = {"literal": 0, "prefix": 0, "rpc_macro": 0}
 
     def _add(name: str, where: str):
@@ -198,20 +209,31 @@ def collect(app_root: Path = APP_ROOT):
             elif ns is None and prefix_sites:
                 unresolved.update((rel, f'"{n}".prefix') for n in prefix_sites)
 
-            for name, macro_ns in _RPC_MACRO_RE.findall(text):
+            macro_sites = _RPC_MACRO_RE.findall(text)
+            for name, macro_ns in macro_sites:
                 if macro_ns == "wakuext":
                     _add(name, f"{rel} (rpc macro)")
                     class_counts["rpc_macro"] += 1
+            # an rpc() invocation without a literal namespace never reaches
+            # _RPC_MACRO_RE — the occurrence count exposes it
+            if len(_RPC_TOKEN_RE.findall(text)) > len(macro_sites):
+                unresolved.add((rel, "rpc( with a non-literal namespace"))
 
-            for arg in _ENTRY_ARG_RE.findall(text):
-                kind, name = _classify_entry_arg(arg, ns)
+            for token in _ENTRY_TOKEN_RE.finditer(text):
+                arg_match = _ENTRY_ARG_ANCHORED_RE.match(text, token.start())
+                if arg_match is None:
+                    snippet = text[token.start():].split("\n", 1)[0][:60].strip()
+                    unresolved.add((rel, snippet))
+                    continue
+                kind, _name = _classify_entry_arg(arg_match.group(1), ns)
                 if kind == "unresolved":
-                    unresolved.add((rel, arg.strip()))
+                    unresolved.add((rel, arg_match.group(1).strip()))
 
-        if len(_ANY_MENTION_RE.findall(text)) > accounted:
-            mentions.append(rel)
+        excess = len(_ANY_MENTION_RE.findall(text)) - accounted
+        if excess > 0:
+            mentions[rel] = excess
 
-    return checked, unresolved, sorted(set(mentions)), class_counts
+    return checked, unresolved, mentions, class_counts
 
 
 @pytest.mark.gate
@@ -273,13 +295,16 @@ def test_every_entry_arg_is_classified():
         "stale _UNRESOLVED_ALLOWLIST entries (site changed or removed) — "
         "delete them:\n" + "\n".join(f"  {f}: {a}" for f, a in sorted(stale))
     )
-    new_mentions = set(mentions) - _MENTION_ALLOWLIST
-    assert not new_mentions, (
+    wrong_mentions = {f: n for f, n in mentions.items()
+                      if _MENTION_ALLOWLIST.get(f) != n}
+    assert not wrong_mentions, (
         "files mention wakuext_ beyond what the extractors account for "
         "(comment? log string? new idiom?) — check each, then extend the "
-        "parser or _MENTION_ALLOWLIST:\n  " + "\n  ".join(sorted(new_mentions))
+        "parser or pin the exact excess in _MENTION_ALLOWLIST:\n  "
+        + "\n  ".join(f"{f}: excess {n} (pinned: {_MENTION_ALLOWLIST.get(f)})"
+                      for f, n in sorted(wrong_mentions.items()))
     )
-    stale_mentions = _MENTION_ALLOWLIST - set(mentions)
+    stale_mentions = set(_MENTION_ALLOWLIST) - set(mentions)
     assert not stale_mentions, (
         "stale _MENTION_ALLOWLIST entries — delete them:\n  "
         + "\n  ".join(sorted(stale_mentions))
@@ -373,3 +398,49 @@ def test_selftest_unknown_entry_arg_is_caught(tmp_path):
            "let m = composeName()\ndiscard callPrivateRPC(m, payload)\n")
     _, unresolved, _, _ = collect(app)
     assert ("src/backend/dynamic.nim", "m") in unresolved
+
+
+def test_selftest_call_shaped_entry_arg_is_caught(tmp_path):
+    # a parenthesised argument never matches the arg regex; the occurrence
+    # count must surface it anyway
+    app = tmp_path / "app"
+    _write(app, "src/backend/dynamic.nim",
+           "discard callPrivateRPC(composeName(chatId), payload)\n")
+    _, unresolved, _, _ = collect(app)
+    assert any(f == "src/backend/dynamic.nim" for f, _ in unresolved)
+
+
+def test_selftest_make_private_rpc_call_is_an_entry_point(tmp_path):
+    # the lower-level transport proc is callable directly
+    app = tmp_path / "app"
+    _write(app, "src/backend/sneaky.nim",
+           "discard makePrivateRpcCall(m, inputJSON)\n")
+    _, unresolved, _, _ = collect(app)
+    assert ("src/backend/sneaky.nim", "m") in unresolved
+
+
+def test_selftest_rpc_macro_nonliteral_namespace_is_caught(tmp_path):
+    # rpc() with a const namespace never reaches the macro regex
+    app = tmp_path / "app"
+    _write(app, "src/backend/backend.nim",
+           'const ns = "wakuext"\nrpc(hiddenViaConst, ns):\n  discard\n')
+    _, unresolved, _, _ = collect(app)
+    assert ("src/backend/backend.nim", "rpc( with a non-literal namespace") in unresolved
+
+
+def test_selftest_cpp_literal_is_checked(tmp_path):
+    _write(tmp_path / "app", "src/native/bridge.cpp",
+           'call("wakuext_droppedNativeMethod");\n')
+    go = _mini_status_go(tmp_path)
+    assert _missing(tmp_path / "app", go) == {"droppedNativeMethod"}
+
+
+def test_selftest_mention_excess_is_counted_per_file(tmp_path):
+    # one pinned comment mention must not grandfather a later composed call
+    # in the same file
+    app = tmp_path / "app"
+    _write(app, "src/Replies.java",
+           "// replies go through wakuext_sendChatMessage\n"
+           'String method = "wakuext_" + dynamicName;\n')
+    _, _, mentions, _ = collect(app)
+    assert mentions == {"src/Replies.java": 2}
