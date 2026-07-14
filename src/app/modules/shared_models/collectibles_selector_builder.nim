@@ -115,7 +115,9 @@ proc buildCollectibleGroups*(flat: seq[FlatCollectible]): seq[CollectibleGroup] 
     var group = CollectibleGroup(
       groupKey: gv,
       groupType: if isCommunity: "community" else: "other",
-      groupName: if isCommunity: rep.communityName else: rep.collectionName,
+      # communityName || collectionName parity: an empty embedded community name
+      # (grouping is keyed on communityId, not the label) falls back to collectionName.
+      groupName: if isCommunity and rep.communityName.len > 0: rep.communityName else: rep.collectionName,
       icon: if isCommunity: rep.communityImage else: rep.icon,
       iconUrl: rep.iconUrl,
       # Representative collectible's raw media; the shared SearchableCollectiblesPanel

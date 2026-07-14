@@ -26,7 +26,7 @@ when defined(QT_MODEL_SPY):
 #
 # The producer pushes plain Nim seqs via setSource; recompute() runs the pure
 # builder (one O(global) scan, no per-row QObjects) then diffs both views into
-# place via setItemsWithSync — a balance tick on a shown collectible is a single
+# place via modelSync — a balance tick on a shown collectible is a single
 # nested-row dataChanged, an account switch is O(displayed) inserts/removes, and
 # nothing resets.
 
@@ -104,7 +104,8 @@ QtObject:
       if self.subitemsByKey.hasKey(group.groupKey):
         return newQVariant(self.subitemsByKey[group.groupKey])
 
-  proc groupRoles(o, n: CollectibleGroup): seq[int] =
+  proc syncKey(it: CollectibleGroup): string = it.groupKey
+  proc syncRoles(o, n: CollectibleGroup): seq[int] =
     result = @[]
     if o.groupName != n.groupName: result.add(ModelRole.GroupName.int)
     if o.icon != n.icon: result.add(ModelRole.Icon.int)
@@ -115,28 +116,16 @@ QtObject:
     # Subitems travel through the nested model's own signals, so no parent-level
     # dataChanged for the Subitems role here.
 
-  proc reconcileNested(self: CollectiblesSelectorModel, newGroups: seq[CollectibleGroup]) =
-    # Rebuild the per-key nested subitems models identity-preservingly BEFORE
-    # setItemsWithSync announces inserts, so data(Subitems) is populated for a
-    # newly inserted group within this same call.
-    var updated = initTable[string, CollectiblesSelectorSubitemsModel]()
-    for g in newGroups:
-      if self.subitemsByKey.hasKey(g.groupKey):
-        let sm = self.subitemsByKey[g.groupKey]
-        sm.setSubItems(g.subitems)
-        updated[g.groupKey] = sm
-      else:
-        updated[g.groupKey] = newCollectiblesSelectorSubitemsModel(g.subitems)
-    self.subitemsByKey = updated
-
   proc setGroups(self: CollectiblesSelectorModel, newGroups: seq[CollectibleGroup]) =
-    self.reconcileNested(newGroups)
-    setItemsWithSync(
-      self, self.groups, newGroups,
-      getId = proc(g: CollectibleGroup): string = g.groupKey,
-      getRoles = proc(o, n: CollectibleGroup): seq[int] = groupRoles(o, n),
-      countChanged = proc() = self.countChanged(),
-      useBulkOps = true)
+    # Reconcile the per-key nested subitems models BEFORE modelSync announces
+    # inserts, so data(Subitems) is populated for a newly inserted group within
+    # this same call. The update closure recurses into the surviving child model.
+    reconcileByKey(self.subitemsByKey, newGroups,
+      create = proc(g: CollectibleGroup): CollectiblesSelectorSubitemsModel =
+        newCollectiblesSelectorSubitemsModel(g.subitems),
+      update = proc(sm: CollectiblesSelectorSubitemsModel, g: CollectibleGroup) =
+        sm.setSubItems(g.subitems))
+    self.modelSync(self.groups, newGroups)
 
   proc recompute(self: CollectiblesSelectorModel) =
     let display = buildDisplay(self.source, self.networks, self.params)
@@ -174,6 +163,18 @@ QtObject:
     if chainIds == self.params.enabledChainIds: return
     self.params.enabledChainIds = chainIds
     self.recompute()
+
+  # Single-chain convenience for the send modal. Faithful to the retired adaptor's
+  # `enabledChainIds: [selectedChainId]`: the value maps to a single-element list
+  # (chainId 0 therefore filters to nothing, exactly as before), so the picker
+  # shows the selected chain's collectibles.
+  proc setEnabledChainId*(self: CollectiblesSelectorModel, chainId: int) {.slot.} =
+    self.setEnabledChainIds(@[chainId])
+  proc getEnabledChainId(self: CollectiblesSelectorModel): int {.slot.} =
+    if self.params.enabledChainIds.len > 0: self.params.enabledChainIds[0] else: 0
+  QtProperty[int] enabledChainId:
+    read = getEnabledChainId
+    write = setEnabledChainId
 
   proc setFilterCommunityOwnerAndMasterTokens*(self: CollectiblesSelectorModel, value: bool) {.slot.} =
     if value == self.params.filterCommunityOwnerAndMasterTokens: return

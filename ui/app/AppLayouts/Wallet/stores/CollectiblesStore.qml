@@ -33,6 +33,24 @@ QtObject {
         ]
     }
 
+    /* Creates a terminal collectibles-picker model for the send modal, seeded
+       with the current collectibles universe and kept updated by the module.
+       Returns { model, id }; the caller sets the model's per-modal params
+       (accountKey/enabledChainId/filterCommunityOwnerAndMasterTokens) and must
+       pass the id to releaseCollectiblesSelectorModel when the modal is
+       destroyed so the model stops being tracked and can be freed. */
+    function createCollectiblesSelectorModel() {
+        if (!root._allCollectiblesModule)
+            return { model: null, id: -1 }
+        const model = root._allCollectiblesModule.createCollectiblesSelectorModel()
+        return { model: model, id: root._allCollectiblesModule.lastCreatedSelectorModelId }
+    }
+
+    function releaseCollectiblesSelectorModel(id) {
+        if (!!root._allCollectiblesModule && id >= 0)
+            root._allCollectiblesModule.releaseCollectiblesSelectorModel(id)
+    }
+
     readonly property var collectiblesController: ManageTokensController {
         sourceModel: root.jointCollectiblesBySymbolModel
         settingsKey: "WalletCollectibles"

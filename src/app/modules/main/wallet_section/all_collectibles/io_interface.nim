@@ -1,4 +1,5 @@
 import app/modules/shared_models/collectibles_model as collectibles_model
+import app/modules/shared_models/collectibles_selector_model as collectibles_selector_model
 
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
@@ -47,4 +48,18 @@ method toggleCollectibleGroupByCollection*(self: AccessInterface): bool {.base.}
   raise newException(ValueError, "No implementation available")
 
 method setSelectedAccount*(self: AccessInterface, address: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+# Send-modal collectibles picker: create a terminal CollectiblesSelectorModel
+# seeded with the current collectibles universe; the owner releases it by id when
+# the modal is destroyed. refreshCollectiblesSelectorModels re-pushes the source
+# to every live model on a collectibles data update.
+method createCollectiblesSelectorModel*(self: AccessInterface):
+    tuple[id: int, model: collectibles_selector_model.CollectiblesSelectorModel] {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method releaseCollectiblesSelectorModel*(self: AccessInterface, id: int) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method refreshCollectiblesSelectorModels*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")

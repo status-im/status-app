@@ -53,7 +53,7 @@ QtObject:
     for i in 0 ..< self.items.len:
       result &= fmt"""[{i}]:({$self.items[i]})"""
 
-  proc countChanged(self: Model) {.signal.}
+  proc countChanged*(self: Model) {.signal.}
   proc getCount*(self: Model): int {.slot.} =
     return self.items.len
 
@@ -298,7 +298,7 @@ QtObject:
     self.updateCollectibleItems(newItems)
     self.setHasMore(false)
 
-  proc itemsDataUpdated(self: Model) {.signal.}
+  proc itemsDataUpdated*(self: Model) {.signal.}
   proc updateItemsData*(self: Model, updates: seq[backend_collectibles.Collectible]) =
     var anyUpdated = false
     for i in countdown(self.items.high, 0):
