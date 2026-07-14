@@ -1,7 +1,9 @@
 import nimqml, chronicles
 
-import ./io_interface, ./view, ./controller
+import ./io_interface, ./view, ./controller, ./token_groups_model
 import ../io_interface as delegate_interface
+
+export token_groups_model
 
 import app/global/global_singleton
 import app/core/eventemitter
@@ -150,6 +152,17 @@ method buildGroupsForChain*(self: Module, chainId: int) =
 
 method buildGroupsForChainTo*(self: Module, chainId: int) =
   self.controller.buildGroupsForChainTo(chainId)
+
+# Non-QML accessors so the token-selector producer can snapshot the lazy popular
+# and search lists and drive their fetchMore/search directly.
+proc getTokenGroupsModelObj*(self: Module): TokenGroupsModel =
+  self.view.getTokenGroupsModelObj()
+proc getTokenGroupsForChainModelObj*(self: Module): TokenGroupsModel =
+  self.view.getTokenGroupsForChainModelObj()
+proc getTokenGroupsForChainToModelObj*(self: Module): TokenGroupsModel =
+  self.view.getTokenGroupsForChainToModelObj()
+proc getSearchResultModelObj*(self: Module): TokenGroupsModel =
+  self.view.getSearchResultModelObj()
 
 method getTokenByKeyOrGroupKeyFromAllTokens*(self: Module, key: string): TokenItem =
   return self.controller.getTokenByKeyOrGroupKeyFromAllTokens(key)

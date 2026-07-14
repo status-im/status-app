@@ -9,6 +9,7 @@ import ./all_tokens/module as all_tokens_module
 import ./all_collectibles/module as all_collectibles_module
 import ./assets/module as assets_module
 import ./assets_view/module as assets_view_module
+import ./token_selector/module as token_selector_module
 import ./saved_addresses/module as saved_addresses_module
 import ./following_addresses/module as following_addresses_module
 import ./buy_sell_crypto/module as buy_sell_crypto_module
@@ -73,6 +74,7 @@ type
     allCollectiblesModule: all_collectibles_module.AccessInterface
     assetsModule: assets_module.AccessInterface
     assetsViewModule: assets_view_module.AccessInterface
+    tokenSelectorModule: token_selector_module.AccessInterface
     sendModule: send_module.AccessInterface
     # TODO: replace this with sendModule when old one is removed
     newSendModule: new_send_module.AccessInterface
@@ -141,7 +143,9 @@ proc newModule*(
   result.threadpool = threadpool
 
   result.accountsModule = accounts_module.newModule(result, events, walletAccountService, networkService, currencyService)
-  result.allTokensModule = all_tokens_module.newModule(result, events, tokenService, walletAccountService, settingsService, communityTokensService)
+  let allTokensModule = all_tokens_module.newModule(result, events, tokenService, walletAccountService, settingsService, communityTokensService)
+  result.allTokensModule = allTokensModule
+  result.tokenSelectorModule = token_selector_module.newModule(events, tokenService, walletAccountService, networkService, allTokensModule)
   let allCollectiblesModule = all_collectibles_module.newModule(result, events, collectibleService, networkService, walletAccountService, settingsService)
   result.allCollectiblesModule = allCollectiblesModule
   result.assetsModule = assets_module.newModule(result, events, walletAccountService, networkService, tokenService,
@@ -197,6 +201,7 @@ method delete*(self: Module) =
   self.allCollectiblesModule.delete
   self.assetsModule.delete
   self.assetsViewModule.delete
+  self.tokenSelectorModule.delete
   self.savedAddressesModule.delete
   self.followingAddressesModule.delete
   self.buySellCryptoModule.delete
@@ -363,6 +368,7 @@ method load*(self: Module) =
   self.allCollectiblesModule.load()
   self.assetsModule.load()
   self.assetsViewModule.load()
+  self.tokenSelectorModule.load()
   self.savedAddressesModule.load()
   self.followingAddressesModule.load()
   self.buySellCryptoModule.load()
