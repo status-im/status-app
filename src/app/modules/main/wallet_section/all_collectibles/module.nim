@@ -91,7 +91,7 @@ proc buildSelectorSource(self: Module): tuple[
       mediaUrl: entry.getMediaURL(),
       imageUrl: entry.getImageURL(),
       communityId: entry.getCommunityId(),
-      communityName: entry.getCommunityName(),
+      communityName: entry.getCommunityRawName(),
       communityImage: entry.getCommunityImage(),
       communityPrivilegesLevel: entry.getCommunityPrivilegesLevel(),
       ownership: ownership))

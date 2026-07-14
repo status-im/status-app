@@ -272,6 +272,11 @@ QtObject:
     read = getCommunityName
     notify = communityNameChanged
 
+  proc getCommunityRawName*(self: CollectiblesEntry): string =
+    ## Embedded community name with no communityId fallback (empty stays empty).
+    if self.hasCommunityData():
+      return self.getCommunityData().name
+
   proc communityColorChanged*(self: CollectiblesEntry) {.signal.}
   proc getCommunityColor*(self: CollectiblesEntry): string {.slot.} =
     if not self.hasCommunityData():
