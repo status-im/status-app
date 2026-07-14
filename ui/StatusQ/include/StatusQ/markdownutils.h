@@ -24,10 +24,10 @@ public:
     // blocks) for rendering one Label per block. See Markdown::toBlocks. Mentions are textual
     // ("@0x…", "@0x00001"): the parser detects them and each display name is resolved from
     // `mentions` (pubKey → name; the system tag 0x00001 falls back to "everyone"). `font` is
-    // used only to size enlarged emojis when `enlargeEmojis` is true.
+    // used only to size emojis to the line height when `fullLineHeightEmojis` is true.
     Q_INVOKABLE QVariantList toBlocks(const QString& text,
                                       const QVariantMap& mentions = {},
                                       const QFont& font = {},
                                       bool formatUnclosedCodeFence = false,
-                                      bool enlargeEmojis = false) const;
+                                      bool fullLineHeightEmojis = false) const;
 };

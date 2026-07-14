@@ -66,9 +66,9 @@ class ChatInputHighlighter : public QSyntaxHighlighter
     Q_PROPERTY(bool formatUnclosedCodeFence
                READ formatUnclosedCodeFence WRITE setFormatUnclosedCodeFence
                NOTIFY formatUnclosedCodeFenceChanged)
-    Q_PROPERTY(bool enlargeEmojis
-               READ enlargeEmojis WRITE setEnlargeEmojis
-               NOTIFY enlargeEmojisChanged)
+    Q_PROPERTY(bool fullLineHeightEmojis
+               READ fullLineHeightEmojis WRITE setFullLineHeightEmojis
+               NOTIFY fullLineHeightEmojisChanged)
     Q_PROPERTY(QAbstractListModel* linksModel READ linksModel CONSTANT)
     Q_PROPERTY(QAbstractListModel* mentionsModel READ mentionsModel CONSTANT)
 
@@ -93,8 +93,8 @@ public:
     bool formatUnclosedCodeFence() const;
     void setFormatUnclosedCodeFence(bool enabled);
 
-    bool enlargeEmojis() const;
-    void setEnlargeEmojis(bool enabled);
+    bool fullLineHeightEmojis() const;
+    void setFullLineHeightEmojis(bool enabled);
 
     QAbstractListModel* linksModel() const;
     QAbstractListModel* mentionsModel() const;
@@ -168,7 +168,7 @@ signals:
     void linkColorChanged();
     void quoteTextColorChanged();
     void formatUnclosedCodeFenceChanged();
-    void enlargeEmojisChanged();
+    void fullLineHeightEmojisChanged();
 
 protected:
     void highlightBlock(const QString& text) override;
@@ -203,7 +203,7 @@ private:
     QColor m_linkColor{Qt::blue};
     QColor m_quoteTextColor{}; // invalid = no quote-text dimming unless set
     bool m_formatUnclosedCodeFence{false};
-    bool m_enlargeEmojis{true};
+    bool m_fullLineHeightEmojis{true};
     ChatInputLinksModel* m_linksModel{nullptr};
     ChatInputMentionsModel* m_mentionsModel{nullptr};
     int m_mentionCounter{0};
