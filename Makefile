@@ -1071,6 +1071,7 @@ nim-test-run/test/nim/typed_completion_test.nim: | statusq
 # signals model_sync records only under QT_MODEL_SPY. The define is applied
 # per-file, NOT globally, so the timing benches keep measuring uninstrumented
 # models.
+nim-test-run/test/nim/assets_adaptor_model_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
 nim-test-run/test/nim/model_sync_move_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
 nim-test-run/test/nim/model_sync_unified_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
 nim-test-run/test/nim/token_groups_model_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
