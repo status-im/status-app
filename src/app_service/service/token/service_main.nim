@@ -18,12 +18,6 @@ proc createTokenGroupsFromTokens(tokens: seq[TokenItem], groupsByKey: var Table[
       )
     groupsByKey[groupKey].addToken(token)
 
-proc sortTokenGroupsByName(groups: var seq[TokenGroupItem]) =
-  groups.sort(
-    proc(a: TokenGroupItem, b: TokenGroupItem): int =
-      return a.name.cmp(b.name)
-  )
-
 proc addNewTokensToGroupsOfInterest(self: Service, tokens: seq[TokenItem]) =
   createTokenGroupsFromTokens(tokens, self.groupsOfInterestByKey)
   self.groupsOfInterest = toSeq(self.groupsOfInterestByKey.values)
@@ -354,22 +348,20 @@ proc buildGroupsForChain*(self: Service, chainId: int) =
   self.threadpool.start(arg)
 
 proc onAsyncBuildGroupsForChainDone(self: Service, response: string) {.slot.} =
+  # The worker already decoded + built the name-sorted groups; MOVE them into state
+  # (never copy — see applyRefreshTokensResult) with no GUI-thread JSON parse or
+  # group build. `res` is nil only if the handoff was drained at shutdown.
   self.groupsForChainLoading = false
-  try:
-    let env = Json.decode(response, BuildGroupsForChainResponse, allowUnknownFields = true)
-    if env.error.len > 0:
-      error "async build groups for chain failed", errDescription = env.error
-      self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_LOADED, Args())
-      return
-    let tokens = env.tokens.map(t => createTokenItem(t))
-    var groupsByKey = initTable[string, TokenGroupItem](tokens.len)
-    createTokenGroupsFromTokens(tokens, groupsByKey)
-    self.groupsForChain = toSeq(groupsByKey.values)
-    sortTokenGroupsByName(self.groupsForChain)
+  let res = takeTyped[TokenGroupsApplyResult](response)
+  if res.isNil:
     self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_LOADED, Args())
-  except Exception as e:
-    error "error processing async build groups for chain", msg = e.msg
+    return
+  if res.error.len > 0:
+    error "async build groups for chain failed", errDescription = res.error
     self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_LOADED, Args())
+    return
+  self.groupsForChain = move res.groups
+  self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_LOADED, Args())
 
 proc getGroupsForChainLoading*(self: Service): bool =
   return self.groupsForChainLoading
@@ -388,22 +380,19 @@ proc buildGroupsForChainTo*(self: Service, chainId: int) =
   self.threadpool.start(arg)
 
 proc onAsyncBuildGroupsForChainToDone(self: Service, response: string) {.slot.} =
+  # Same typed handoff as the source-chain slot: the worker already built the
+  # name-sorted groups; MOVE them into state (never copy).
   self.groupsForChainToLoading = false
-  try:
-    let env = Json.decode(response, BuildGroupsForChainResponse, allowUnknownFields = true)
-    if env.error.len > 0:
-      error "async build groups for chain (to) failed", errDescription = env.error
-      self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED, Args())
-      return
-    let tokens = env.tokens.map(t => createTokenItem(t))
-    var groupsByKey = initTable[string, TokenGroupItem](tokens.len)
-    createTokenGroupsFromTokens(tokens, groupsByKey)
-    self.groupsForChainTo = toSeq(groupsByKey.values)
-    sortTokenGroupsByName(self.groupsForChainTo)
+  let res = takeTyped[TokenGroupsApplyResult](response)
+  if res.isNil:
     self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED, Args())
-  except Exception as e:
-    error "error processing async build groups for chain (to)", msg = e.msg
+    return
+  if res.error.len > 0:
+    error "async build groups for chain (to) failed", errDescription = res.error
     self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED, Args())
+    return
+  self.groupsForChainTo = move res.groups
+  self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED, Args())
 
 proc getGroupsForChainToLoading*(self: Service): bool =
   return self.groupsForChainToLoading
@@ -418,22 +407,18 @@ proc asyncFetchAllTokenGroups*(self: Service) =
   self.threadpool.start(arg)
 
 proc onAsyncFetchAllTokenGroupsDone(self: Service, response: string) {.slot.} =
+  # Worker-built, name-sorted groups moved into state (see onAsyncBuildGroupsForChainDone).
   self.allTokenGroupsLoading = false
-  try:
-    let env = Json.decode(response, FetchAllTokenGroupsResponse, allowUnknownFields = true)
-    if env.error.len > 0:
-      error "async fetch all token groups failed", errDescription = env.error
-      self.events.emit(SIGNAL_ALL_TOKEN_GROUPS_LOADED, Args())
-      return
-    let tokens = env.tokens.map(t => createTokenItem(t))
-    var groupsByKey = initTable[string, TokenGroupItem](tokens.len)
-    createTokenGroupsFromTokens(tokens, groupsByKey)
-    self.allTokenGroupsForActiveNetworks = toSeq(groupsByKey.values)
-    sortTokenGroupsByName(self.allTokenGroupsForActiveNetworks)
+  let res = takeTyped[TokenGroupsApplyResult](response)
+  if res.isNil:
     self.events.emit(SIGNAL_ALL_TOKEN_GROUPS_LOADED, Args())
-  except Exception as e:
-    error "error processing async fetch all token groups", msg = e.msg
+    return
+  if res.error.len > 0:
+    error "async fetch all token groups failed", errDescription = res.error
     self.events.emit(SIGNAL_ALL_TOKEN_GROUPS_LOADED, Args())
+    return
+  self.allTokenGroupsForActiveNetworks = move res.groups
+  self.events.emit(SIGNAL_ALL_TOKEN_GROUPS_LOADED, Args())
 
 proc getAllTokenGroupsForActiveNetworksMode*(self: Service): seq[TokenGroupItem] =
   return self.allTokenGroupsForActiveNetworks
