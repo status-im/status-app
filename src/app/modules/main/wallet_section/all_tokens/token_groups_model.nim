@@ -40,7 +40,7 @@ QtObject:
     # insert/remove/move so survivors keep the SAME MarketDetailsItem instance the
     # QML view is bound to.
     tokenMarketDetails: Table[string, MarketDetailsItem]
-    # Cached snapshot the main (non-lazy) model diffs against via setItemsWithSync,
+    # Cached snapshot the main (non-lazy) model diffs against via modelSync,
     # replacing the beginResetModel on every refresh. data()/rowCount read this.
     cachedGroups: seq[TokenGroupItem]
     modelModes: seq[ModelMode]
@@ -79,7 +79,7 @@ QtObject:
   proc getDisplayModel(self: TokenGroupsModel): var seq[TokenGroupItem] =
     if ModelMode.UseLazyLoading in self.modelModes or ModelMode.IsSearchResult in self.modelModes:
       return self.loadedItems
-    # Main model: read the cached snapshot maintained by setItemsWithSync, not the
+    # Main model: read the cached snapshot maintained by modelSync, not the
     # live delegate seq — so the model's rows are what the granular diff produced.
     return self.cachedGroups
 
@@ -273,7 +273,7 @@ QtObject:
       # group items in place, cachedGroups would alias newGroups and every diff
       # would see "no change". Keep the swap.
       let newGroups = self.getSourceModel()
-      # Build market-details keys BEFORE setItemsWithSync announces beginInsertRows
+      # Build market-details keys BEFORE modelSync announces beginInsertRows
       # for any new group: data(MarketDetails) early-returns an empty QVariant when
       # the row's key is missing from the table, and nothing emits dataChanged
       # afterwards — so a newly-inserted row would render empty until an unrelated

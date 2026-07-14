@@ -26,7 +26,7 @@ when defined(QT_MODEL_SPY):
 #
 # The producer pushes plain Nim seqs via setSource; recompute() runs the pure
 # builder (one O(global) scan, no per-row QObjects) then diffs both views into
-# place via setItemsWithSync — a balance tick on a shown collectible is a single
+# place via modelSync — a balance tick on a shown collectible is a single
 # nested-row dataChanged, an account switch is O(displayed) inserts/removes, and
 # nothing resets.
 
