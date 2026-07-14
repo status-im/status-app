@@ -219,6 +219,8 @@ Dialog {
         }
     }
 
+    enabled: opened && !enterTransition.running
+
     exit: Transition {
         ParallelAnimation {
             NumberAnimation {

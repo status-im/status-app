@@ -331,6 +331,7 @@ SettingsContentBase {
                 headerSettings.title: qsTr("Unpair Device")
                 confirmationText: qsTr("Are you sure you want to unpair this device?")
                 confirmButtonLabel: qsTr("Unpair")
+                confirmButtonObjectName: "unpairDeviceConfirmationDialogUnpairButton"
                 onConfirmButtonClicked: {
                     const error = devicesStore.devicesModule.unpairDevice(installationId)
                     if (error) {

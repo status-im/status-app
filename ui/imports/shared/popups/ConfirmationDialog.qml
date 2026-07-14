@@ -11,6 +11,8 @@ import StatusQ.Popups.Dialog
 StatusAdaptiveDialog {
     id: root
 
+    objectName: "ConfirmationDialog"
+
     property var executeConfirm
     property string confirmButtonObjectName: ""
     property string btnType: "warn"
