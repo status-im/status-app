@@ -1,5 +1,6 @@
 #include "StatusQ/markdownutils.h"
 
+#include "StatusQ/markdownast.h"
 #include "StatusQ/markdownhtml.h"
 #include "StatusQ/markdownparser.h"
 
@@ -41,7 +42,7 @@ QString MarkdownUtils::dumpAst(const QString& text, bool formatUnclosedCodeFence
 
 QVariantList MarkdownUtils::toBlocks(const QString& text, const QVariantMap& mentions,
                                      const QFont& font, bool formatUnclosedCodeFence,
-                                     bool fullLineHeightEmojis) const
+                                     bool fullLineHeightEmojis, int emojiSizeOffset) const
 {
     Markdown::Options opts;
     opts.formatUnclosedCodeFence = formatUnclosedCodeFence;
@@ -50,6 +51,11 @@ QVariantList MarkdownUtils::toBlocks(const QString& text, const QVariantMap& men
     QHash<int, QPair<QString, QString>> mentionMap;
     collectTextMentions(root, mentions, mentionMap);
 
-    const int emojiPx = fullLineHeightEmojis ? qRound(QFontMetricsF(font).height()) : 0;
+    const qreal lineHeight = QFontMetricsF(font).height();
+    int emojiPx = fullLineHeightEmojis ? qRound(lineHeight) : 0;
+    // Emoji-only messages get their emoji runs enlarged by `emojiSizeOffset` on top of the line
+    // height (only the emoji runs, so blank lines keep their normal height).
+    if (emojiSizeOffset > 0 && Markdown::isOnlyEmoji(text))
+        emojiPx = qRound(lineHeight) + emojiSizeOffset;
     return Markdown::toBlocks(root, mentionMap, emojiPx);
 }

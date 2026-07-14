@@ -90,4 +90,29 @@ bool isEmojiCodePoint(char32_t cp)
         || (cp == 0x200D);                    // zero-width joiner
 }
 
+bool isOnlyEmoji(const QString& text)
+{
+    bool hasEmoji = false;
+    int i = 0;
+    while (i < text.size()) {
+        const QChar c = text[i];
+        if (c.isSpace()) {
+            ++i;
+            continue;
+        }
+        char32_t cp;
+        if (c.isHighSurrogate() && i + 1 < text.size() && text[i + 1].isLowSurrogate()) {
+            cp = QChar::surrogateToUcs4(c, text[i + 1]);
+            i += 2;
+        } else {
+            cp = c.unicode();
+            ++i;
+        }
+        if (!isEmojiCodePoint(cp))
+            return false;
+        hasEmoji = true;
+    }
+    return hasEmoji;
+}
+
 } // namespace Markdown

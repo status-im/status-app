@@ -68,4 +68,9 @@ QString dump(const Node& node, bool withRanges = true);
 // sequence is treated as one unit. Shared by the live highlighter and the static renderer.
 bool isEmojiCodePoint(char32_t cp);
 
+// True when `text` consists solely of emoji code points and whitespace (spaces, tabs and line
+// breaks are allowed between/around the emojis), with at least one emoji present. Used by the
+// static renderer to enlarge emoji-only messages. Empty or whitespace-only text returns false.
+bool isOnlyEmoji(const QString& text);
+
 } // namespace Markdown

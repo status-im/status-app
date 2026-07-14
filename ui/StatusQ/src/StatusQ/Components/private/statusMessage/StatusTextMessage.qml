@@ -249,7 +249,8 @@ Item {
                                  root.messageDetails.mentionsMap,
                                  chatTextView.font,
                                  false /*formatUnclosedCodeFence*/,
-                                 true /*fullLineHeightEmojis*/)
+                                 true /*fullLineHeightEmojis*/,
+                                 Theme.primaryTextFontSize /*emojiSizeOffset*/)
                 if (root.isEdited && blocks.length > 0) {
                     const editedSpan = ` <span style="color:${Theme.palette.baseColor1}">`
                                      + qsTr("(edited)") + `</span>`
