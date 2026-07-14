@@ -1071,6 +1071,24 @@ nim-test-run/test/nim/typed_completion_test.nim: | statusq
 nim-test-run/test/nim/asset_proxy_chain_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
 nim-test-run/test/nim/asset_proxy_chain_bench.nim: | statusq
 
+# swap_key_harvest_bench drives the real QtMT.ModelQuery (registerStatusQTypes) in an
+# offscreen QML engine, so it links StatusQ.
+nim-test-run/test/nim/swap_key_harvest_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+nim-test-run/test/nim/swap_key_harvest_bench.nim: | statusq
+
+# send_modal_instantiation_bench loads the real SimpleSendModal QML tree, and
+# send_handler_lookup_bench drives the real ModelUtils/ModelQuery -- both link StatusQ.
+nim-test-run/test/nim/send_modal_instantiation_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+nim-test-run/test/nim/send_modal_instantiation_bench.nim: | statusq
+
+nim-test-run/test/nim/send_handler_lookup_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+nim-test-run/test/nim/send_handler_lookup_bench.nim: | statusq
+
+# send_handler_adaptors_bench builds the real CollectiblesSelectionAdaptor /
+# WalletAccountsSelectorAdaptor / RecipientViewAdaptor proxy chains offscreen -- links StatusQ.
+nim-test-run/test/nim/send_handler_adaptors_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+nim-test-run/test/nim/send_handler_adaptors_bench.nim: | statusq
+
 # Model-spy tests call inspection accessors gated behind
 # `when defined(testing) or defined(QT_MODEL_SPY)` or assert on the granular
 # signals model_sync records only under QT_MODEL_SPY. The define is applied
