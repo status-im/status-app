@@ -1,5 +1,6 @@
 #include <QObject>
 #include <QQmlParserStatus>
+#include <QSet>
 #include <QSettings>
 
 #include <array>
@@ -7,6 +8,7 @@
 #include "managetokensmodel.h"
 
 class QAbstractItemModel;
+class QTimer;
 
 /// @brief Controller for managing visibility and order for all kind of tokens and groups.
 ///
@@ -115,6 +117,23 @@ private:
     void rebuildModels();
 
     void addItem(int index);
+
+    // Incremental source-model dataChanged handling: instead of re-parsing the
+    // whole source model on every dataChanged, accumulate the changed rows,
+    // coalesce a storm into a single batched pass, and update only the affected
+    // token rows in place. A change touching any role the partitioning/grouping/
+    // ordering depends on falls back to a full re-parse.
+    void onSourceDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QList<int>& roles);
+    void scheduleSourceUpdateFlush();
+    void flushPendingSourceUpdates();
+    void applyIncrementalDataUpdate(int sourceRow);
+    void cancelPendingSourceUpdates();
+    bool hasPendingSourceUpdates() const;
+
+    QTimer* m_sourceUpdateBatchTimer{nullptr};
+    QSet<int> m_pendingChangedRows;
+    QSet<QByteArray> m_pendingChangedRoleNames;
+    bool m_pendingFullReparse{false};
 
     ManageTokensModel* m_regularTokensModel{nullptr};
     QAbstractItemModel* regularTokensModel() const { return m_regularTokensModel; }
