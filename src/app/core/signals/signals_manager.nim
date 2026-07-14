@@ -1,5 +1,6 @@
 import nimqml, json, strutils, chronicles
 import ../eventemitter
+import ./signal_type_scan
 
 include types
 
@@ -26,7 +27,16 @@ QtObject:
     result.setup()
     result.events = events
 
-  proc processSignal(self: SignalsManager, statusSignal: string) =
+  proc processSignal*(self: SignalsManager, statusSignal: string) =
+    # Cheap triage before any JSON parsing: extract the envelope type
+    # by substring scan and drop payloads of types the desktop does not handle,
+    # so a large unhandled event is never fully decoded on the Qt main thread.
+    let signalType = extractSignalType(statusSignal)
+    if not isKnownSignalType(signalType):
+      noteUnhandledSignal()
+      debug "Skipping unhandled signal type", signalType, bytes = statusSignal.len
+      return
+
     var jsonSignal: JsonNode
     try:
       jsonSignal = statusSignal.parseJson
