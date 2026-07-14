@@ -598,7 +598,8 @@ delete_StatusButton = {"container": statusDesktop_mainWindow_overlay,
 confirm_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
                         "objectName": "confirmDeleteCategoryButton", "type": "StatusButton", "visible": True}
 confirm_permission_delete_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
-                                          "id": "confirmButton", "type": "StatusButton", "unnamed": 1, "visible": True}
+                                          "objectName": "confirmDeletePermissionButton", "type": "StatusButton",
+                                          "visible": True}
 confirm_delete_message_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
                                        "objectName": "chatButtonsPanelConfirmDeleteMessageButton", "text": "Confirm",
                                        "type": "StatusButton", "visible": True}
