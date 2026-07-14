@@ -132,9 +132,41 @@ Rectangle {
     }
     radius: Theme.radius
 
+    StatusRipple {
+        id: listItemRipple
+        objectName: "statusListItemRipple"
+        anchors.fill: parent
+        enabled: root.enabled && sensor.enabled
+        color: root.type === StatusListItem.Type.Danger ? Theme.palette.dangerColor1
+                                                        : Theme.palette.directColor1
+        radius: root.radius
+        origin: StatusRipple.RippleOrigin.Pointer
+    }
+
+    QtObject {
+        id: rippleFeedback
+
+        function pressRipple(mouse, sourceItem) {
+            if (!listItemRipple.enabled || mouse.button !== Qt.LeftButton)
+                return
+
+            const ripplePoint = sourceItem.mapToItem(root, mouse.x, mouse.y)
+            listItemRipple.press(ripplePoint.x, ripplePoint.y)
+        }
+
+        function releaseRipple() {
+            listItemRipple.release()
+        }
+    }
+
     StatusMouseArea {
+        id: clickSensor
+
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onPressed: (mouse) => rippleFeedback.pressRipple(mouse, clickSensor)
+        onReleased: () => rippleFeedback.releaseRipple()
+        onCanceled: () => rippleFeedback.releaseRipple()
         onClicked: (mouse) => {
             root.clicked(root.itemId, mouse)
         }
@@ -243,6 +275,9 @@ Rectangle {
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     propagateComposedEvents: root.propagateTitleClicks
+                    onPressed: (mouse) => rippleFeedback.pressRipple(mouse, statusListItemTitleMouseArea)
+                    onReleased: () => rippleFeedback.releaseRipple()
+                    onCanceled: () => rippleFeedback.releaseRipple()
                     onClicked: (mouse) => {
                         root.titleClicked(root.titleId, mouse)
                         mouse.accepted = false

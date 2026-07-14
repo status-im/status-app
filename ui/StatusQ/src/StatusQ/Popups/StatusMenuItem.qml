@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
+import StatusQ.Controls
 import StatusQ.Core.Utils
 
 MenuItem {
@@ -175,6 +176,33 @@ MenuItem {
             if (d.isStatusSuccessAction)
                 return Theme.palette.successColor3;
             return Theme.palette.statusMenu.hoverBackgroundColor;
+        }
+
+        StatusRipple {
+            id: menuItemRipple
+            objectName: "statusMenuItemRipple"
+            anchors.fill: parent
+            enabled: root.enabled
+            color: d.isStatusDangerAction ? Theme.palette.dangerColor1
+                  : d.isStatusSuccessAction ? Theme.palette.successColor1
+                                            : Theme.palette.directColor1
+            radius: parent.radius
+            origin: StatusRipple.RippleOrigin.Pointer
+        }
+    }
+
+    TapHandler {
+        enabled: menuItemRipple.enabled
+        acceptedButtons: Qt.LeftButton
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen | PointerDevice.TouchPad | PointerDevice.Stylus
+
+        onPressedChanged: {
+            if (pressed) {
+                const ripplePoint = root.mapToItem(menuItemRipple, point.position.x, point.position.y)
+                menuItemRipple.press(ripplePoint.x, ripplePoint.y)
+            } else {
+                menuItemRipple.release()
+            }
         }
     }
 

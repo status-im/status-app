@@ -53,6 +53,31 @@ ItemDelegate {
     background: Rectangle {
         color: root.highlighted ? root.highlightColor : "transparent"
         radius: root.radius
+
+        StatusRipple {
+            id: itemDelegateRipple
+            objectName: "statusItemDelegateRipple"
+            anchors.fill: parent
+            enabled: root.enabled
+            color: root.highlighted ? StatusColors.white : Theme.palette.directColor1
+            radius: parent.radius
+            origin: StatusRipple.RippleOrigin.Pointer
+        }
+    }
+
+    TapHandler {
+        enabled: itemDelegateRipple.enabled
+        acceptedButtons: Qt.LeftButton
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen | PointerDevice.TouchPad | PointerDevice.Stylus
+
+        onPressedChanged: {
+            if (pressed) {
+                const ripplePoint = root.mapToItem(itemDelegateRipple, point.position.x, point.position.y)
+                itemDelegateRipple.press(ripplePoint.x, ripplePoint.y)
+            } else {
+                itemDelegateRipple.release()
+            }
+        }
     }
 
     HoverHandler {
