@@ -19,5 +19,7 @@ class CloseChatPopup(QObject):
 
     @allure.step("Confirm closing chat")
     def confirm_closing_chat(self):
+        self._close_chat_button.wait_until_appears()
+        self._close_chat_button.wait_until_enabled()
         self._close_chat_button.click()
         self._close_chat_button.wait_until_hidden()

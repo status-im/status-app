@@ -602,11 +602,12 @@ confirm_permission_delete_StatusButton = {"checkable": False, "container": statu
 confirm_delete_message_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
                                        "objectName": "chatButtonsPanelConfirmDeleteMessageButton", "text": "Confirm",
                                        "type": "StatusButton", "visible": True}
-confirmationDialog = {"container": statusDesktop_mainWindow_overlay, "objectName": "ConfirmationDialog",
-                      "type": "PopupItem", "visible": True}
+confirmationDialog = {"container": statusDesktop_mainWindow_overlay, "objectName": "ConfirmationDialog", "visible": True}
 confirmationDeleteMessagePopup = {"container": statusDesktop_mainWindow_overlay,
                                   "objectName": "DeleteMessageConfirmationPopup", "type": "PopupItem", "visible": True}
-unpairButton =  {"container": statusDesktop_mainWindow_overlay, "id": "confirmButton", "type": "StatusButton", "unnamed": 1, "visible": True}
+unpairButton = {"container": statusDesktop_mainWindow_overlay,
+                "objectName": "unpairDeviceConfirmationDialogUnpairButton", "type": "StatusButton",
+                "visible": True}
 
 # Education popup
 educationPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "NavigationEducationDialog", "type": "PopupItem", "visible": True}
