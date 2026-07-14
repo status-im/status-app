@@ -584,6 +584,13 @@ proc modelSync*[M: QAbstractListModel, T](
   ## Requires `syncKey(T): string` in scope; `syncRoles(T, T): seq[int]` optional
   ## (omit for identity-only rows). Emits `model.countChanged()` if it exists.
   mixin syncKey, syncRoles, countChanged
+  # DX guard: surface the missing-overload requirement at the CALLER's instantiation
+  # instead of failing deep inside the getId closure with a bare "undeclared
+  # identifier: 'syncKey'". Fires per-instantiation on the offending T.
+  when not compiles(syncKey(newItems[0])):
+    {.error: "modelSync requires `proc syncKey(it: T): string` declared before this call " &
+      "(and optional `proc syncRoles(o, n: T): seq[int]`) near the item type T — see the " &
+      "model_sync.nim v3 header.".}
   let getId = proc(it: T): string = syncKey(it)
   var getRoles: RoleDetector[T] = nil
   when compiles(syncRoles(newItems[0], newItems[0])):
