@@ -6,7 +6,7 @@ every app call site that names it — no compile error, no test unless one hits
 that exact call.
 
 Three static forms name a wakuext method in the app:
-  1. a `"wakuext_<name>"` string literal (any app language),
+  1. a `"wakuext_<name>"` string literal (any scanned language),
   2. `"<name>".prefix` in Nim — `prefix` prepends a namespace; which namespace
      depends on the file (src/app_service/common/utils.nim exports the
      `wakuext_` one; three backend files define their own non-wakuext prefix),
@@ -18,18 +18,17 @@ status-go (the shipped pin) registers under the `wakuext` namespace.
 Name-existence only: a method that exists but changed its params is out of
 scope — the registered set is a superset of the truly-callable one.
 
-Coverage is guarded from two independent directions. The extractors above
-collect names to check. Separately, every occurrence of a private-RPC entry
-point (the callPrivateRPC / makePrivateRpcCall families and the rpc macro) is
-counted, and each occurrence must yield a classified argument — an argument
-the parser cannot read at all counts as unresolved, the same as a variable or
-a concatenation. Unresolved sites must be pinned in _UNRESOLVED_ALLOWLIST or
-the gate fails, so within the scanned suffixes and entry points, a new
-composition idiom turns the gate red instead of silently shrinking coverage.
+Coverage is guarded from both ends: extracted names must resolve, and every
+occurrence of a private-RPC entry point must yield an argument the parser can
+classify — an unreadable one counts as unresolved and must be pinned in
+_UNRESOLVED_ALLOWLIST, so within the scanned suffixes and entry points a new
+composition idiom turns the gate red instead of shrinking coverage silently.
 """
 from __future__ import annotations
 
+import os
 import re
+from functools import lru_cache
 from pathlib import Path
 
 import pytest
@@ -46,11 +45,12 @@ _GO_API_RELPATHS = ("services/ext/api.go", "services/wakuv2ext/api.go")
 
 # Scan the whole tree so a call site in a new location (e.g. mobile/ios) can't
 # silently drop out; over-scanning only risks a false FAIL.
-_APP_SRC_SUFFIXES = {".nim", ".java", ".kt", ".swift", ".m", ".mm", ".qml", ".js",
-                     ".cpp", ".cc", ".h", ".hpp"}
+_APP_SRC_SUFFIXES = {".nim", ".java", ".kt", ".swift", ".m", ".mm", ".qml",
+                     ".js", ".jsx", ".mjs", ".ts", ".tsx", ".cpp", ".cc",
+                     ".h", ".hpp"}
 _SCAN_SKIP_DIRS = {"vendor", ".git", "build", "node_modules", "result", ".cache"}
 
-_GO_METHOD_RE = re.compile(r"^func \(api \*PublicAPI\) ([A-Z][A-Za-z0-9]*)\(", re.M)
+_GO_METHOD_RE = re.compile(r"^func \(\w+ \*PublicAPI\) ([A-Z][A-Za-z0-9]*)\(", re.M)
 _LITERAL_RE = re.compile(r'"wakuext_([A-Za-z0-9_]+)"')
 _ANY_MENTION_RE = re.compile(r"wakuext_")
 _PREFIX_SITE_RE = re.compile(r'"([A-Za-z0-9_]+)"\.prefix\b')
@@ -60,25 +60,28 @@ _PREFIX_SITE_RE = re.compile(r'"([A-Za-z0-9_]+)"\.prefix\b')
 _PREFIX_DEF_RE = re.compile(
     r'proc prefix\*\(methodName: string\): string =\s*\n\s*result = "([A-Za-z0-9]+)_" & methodName'
 )
-_UTILS_IMPORT_RE = re.compile(r"^\s*import\b[^\n]*app_service/common/utils", re.M)
-_RPC_MACRO_RE = re.compile(r'^\s*rpc\(([A-Za-z0-9_]+),\s*"([A-Za-z0-9_]+)"\)', re.M)
+# `import`/`include` line, or a continuation line of a block import that
+# holds only the module path.
+_UTILS_IMPORT_RE = re.compile(
+    r"^\s*(?:import|include)\b[^\n]*app_service/common/utils"
+    r"|^\s*[\w./]*app_service/common/utils\s*,?\s*$",
+    re.M,
+)
+_ENTRY_ALT = r"(?:callPrivateRPC(?:NoDecode|Raw)?|makePrivateRpcCall(?:NoDecode)?)"
 # Every occurrence of an entry token is counted; an occurrence whose argument
 # the anchored regex cannot read becomes an unresolved site instead of
 # silently producing no match (a call-shaped argument, for example).
-_ENTRY_TOKEN_RE = re.compile(r"\b(?:callPrivateRPC(?:NoDecode|Raw)?|makePrivateRpcCall(?:NoDecode)?)\(")
-_ENTRY_ARG_ANCHORED_RE = re.compile(
-    r"\b(?:callPrivateRPC(?:NoDecode|Raw)?|makePrivateRpcCall(?:NoDecode)?)\(\s*([^,()]+?)\s*[,)]"
-)
-_RPC_TOKEN_RE = re.compile(r"^\s*rpc\(", re.M)
+_ENTRY_TOKEN_RE = re.compile(rf"\b{_ENTRY_ALT}\(")
+_ENTRY_ARG_ANCHORED_RE = re.compile(rf"\b{_ENTRY_ALT}\(\s*([^,()]+?)\s*[,)]")
+_RPC_TOKEN_RE = re.compile(r"^[ \t]*(rpc\()", re.M)
+_RPC_MACRO_ANCHORED_RE = re.compile(r'rpc\(([A-Za-z0-9_]+),\s*"([A-Za-z0-9_]+)"\)')
 
-_WAKUEXT_LITERAL_ARG_RE = re.compile(r'"wakuext_([A-Za-z0-9_]+)"')
 _OTHER_NS_LITERAL_ARG_RE = re.compile(r'"[a-z0-9]+_[A-Za-z0-9_]+"')
-_PREFIX_ARG_RE = re.compile(r'"([A-Za-z0-9_]+)"\.prefix')
 
-# callPrivateRPC first arguments that are known not to be statically
-# resolvable, pinned as (file, argument). Both directions are enforced: a new
-# unresolved argument fails until listed here (or the parser learns its form),
-# and a stale entry fails until removed.
+# Entry-point arguments that are known not to be statically resolvable,
+# pinned as (file, argument or site snippet). Both directions are enforced:
+# a new unresolved site fails until listed here (or the parser learns its
+# form), and a stale entry fails until removed.
 _UNRESOLVED_ALLOWLIST: set[tuple[str, str]] = {
     # transport layer: forwards a caller-built JSON envelope or an
     # already-composed method name, not a new composition idiom
@@ -88,30 +91,30 @@ _UNRESOLVED_ALLOWLIST: set[tuple[str, str]] = {
 }
 
 # Call sites that name a method the shipped status-go genuinely does not
-# register, each pinned to its tracking issue. The gate stays green on the
-# known break and fails on any new one; an entry whose method starts resolving
-# is stale and fails until removed.
+# register, each pinned with its reason (cite the tracking issue once one
+# exists). The gate stays green on the known break and fails on any new one;
+# an entry whose method starts resolving is stale and fails until removed.
 _KNOWN_MISSING: dict[str, str] = {
     # Profile > Backup "import local backup file" — no such method exists in
-    # status-go (any branch); the UI flow fails at runtime with
-    # "method not found". Tracking issue to be filed; remove when the backend
-    # lands or the app call is removed.
+    # status-go (any branch), so the UI flow fails at runtime with
+    # "method not found". Remove when the backend lands or the app call goes.
     "importLocalBackupFile": "no status-go backend",
 }
 
 # Files where `wakuext_` appears in text beyond what the extractors account
-# for (comments, log strings), pinned with the exact expected excess so one
-# accepted mention cannot grandfather a later composed call in the same file.
+# for (comments, log strings), pinned with the exact expected excess so an
+# accepted mention in a file does not let a later composed call in the same
+# file pass unchecked.
 _MENTION_ALLOWLIST: dict[str, int] = {
     # class doc comment names wakuext_sendChatMessage; the file's actual call
     # sites are clean literals and are checked
     "mobile/android/qt6/src/app/status/mobile/ipc/NotificationReplyReceiver.java": 1,
 }
 
-# Parser-rot tripwires, not coverage targets: ~80% of what each extraction
-# class matches at baseline (21 / 146 / 16). A regex or walk change
-# that drops a meaningful share of a class must fail even if every extracted
-# name still resolves.
+# These floors detect parser rot; they are not coverage targets. Set at ~80%
+# of what each extraction class matches at baseline (21 / 146 / 16), so a
+# regex or walk change that drops a meaningful share of a class fails even if
+# every extracted name still resolves.
 _CLASS_FLOORS = {"literal": 16, "prefix": 120, "rpc_macro": 12}
 
 
@@ -130,14 +133,17 @@ def registered_methods(status_go_root: Path = STATUS_GO_ROOT) -> set[str]:
 
 
 def _app_files(root: Path):
-    for path in root.rglob("*"):
-        if path.suffix not in _APP_SRC_SUFFIXES or not path.is_file():
-            continue
-        if _SCAN_SKIP_DIRS & set(path.relative_to(root).parts):
-            continue
-        if path.resolve() == _HERE:  # this file's own docstring examples
-            continue
-        yield path
+    # os.walk with in-place pruning: never descend vendor/, .git/, etc.
+    # (rglob would enumerate them all before any filter could apply).
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in _SCAN_SKIP_DIRS]
+        for filename in filenames:
+            path = Path(dirpath) / filename
+            if path.suffix not in _APP_SRC_SUFFIXES:
+                continue
+            if path.resolve() == _HERE:  # this file's own docstring examples
+                continue
+            yield path
 
 
 def _nim_prefix_namespace(text: str) -> str | None:
@@ -151,17 +157,17 @@ def _nim_prefix_namespace(text: str) -> str | None:
 
 
 def _classify_entry_arg(arg: str, file_ns: str | None):
-    """Classify a callPrivateRPC first argument.
+    """Classify an entry-point first argument.
 
     Returns ("wakuext", name) for an argument this gate must check,
     ("other", None) for a resolvable non-wakuext argument, or
     ("unresolved", None) when the form is not statically resolvable.
     """
     arg = arg.strip()
-    m = _WAKUEXT_LITERAL_ARG_RE.fullmatch(arg)
+    m = _LITERAL_RE.fullmatch(arg)
     if m:
         return "wakuext", m.group(1)
-    m = _PREFIX_ARG_RE.fullmatch(arg)
+    m = _PREFIX_SITE_RE.fullmatch(arg)
     if m:
         if file_ns == "wakuext":
             return "wakuext", m.group(1)
@@ -173,13 +179,21 @@ def _classify_entry_arg(arg: str, file_ns: str | None):
     return "unresolved", None
 
 
+def _first_line(text: str, start: int, limit: int = 60) -> str:
+    return text[start:].split("\n", 1)[0][:limit].strip()
+
+
+@lru_cache(maxsize=None)
 def collect(app_root: Path = APP_ROOT):
     """Walk the app tree once and return everything the gates assert on:
 
     checked        {method name: [where it is named]} — must all resolve
-    unresolved     {(relpath, argument)} — entry args no extractor understands
+    unresolved     {(relpath, site text)} — sites no extractor understands
     mentions       {relpath: excess} — unaccounted `wakuext_` text per file
     class_counts   {extraction class: matched site count}
+
+    Cached per root: the gate tests all walk the same real tree, and the
+    result is read-only by convention.
     """
     checked: dict[str, list[str]] = {}
     unresolved: set[tuple[str, str]] = set()
@@ -209,21 +223,18 @@ def collect(app_root: Path = APP_ROOT):
             elif ns is None and prefix_sites:
                 unresolved.update((rel, f'"{n}".prefix') for n in prefix_sites)
 
-            macro_sites = _RPC_MACRO_RE.findall(text)
-            for name, macro_ns in macro_sites:
-                if macro_ns == "wakuext":
-                    _add(name, f"{rel} (rpc macro)")
+            for token in _RPC_TOKEN_RE.finditer(text):
+                site = _RPC_MACRO_ANCHORED_RE.match(text, token.start(1))
+                if site is None:
+                    unresolved.add((rel, _first_line(text, token.start(1))))
+                elif site.group(2) == "wakuext":
+                    _add(site.group(1), f"{rel} (rpc macro)")
                     class_counts["rpc_macro"] += 1
-            # an rpc() invocation without a literal namespace never reaches
-            # _RPC_MACRO_RE — the occurrence count exposes it
-            if len(_RPC_TOKEN_RE.findall(text)) > len(macro_sites):
-                unresolved.add((rel, "rpc( with a non-literal namespace"))
 
             for token in _ENTRY_TOKEN_RE.finditer(text):
                 arg_match = _ENTRY_ARG_ANCHORED_RE.match(text, token.start())
                 if arg_match is None:
-                    snippet = text[token.start():].split("\n", 1)[0][:60].strip()
-                    unresolved.add((rel, snippet))
+                    unresolved.add((rel, _first_line(text, token.start())))
                     continue
                 kind, _name = _classify_entry_arg(arg_match.group(1), ns)
                 if kind == "unresolved":
@@ -286,8 +297,8 @@ def test_every_entry_arg_is_classified():
     _, unresolved, mentions, _ = collect()
     new = unresolved - _UNRESOLVED_ALLOWLIST
     assert not new, (
-        "callPrivateRPC arguments no extractor understands — teach the parser "
-        "this form, or add to _UNRESOLVED_ALLOWLIST with a reason:\n"
+        "call sites no extractor understands — teach the parser this form, "
+        "or add to _UNRESOLVED_ALLOWLIST with a reason:\n"
         + "\n".join(f"  {f}: {a}" for f, a in sorted(new))
     )
     stale = _UNRESOLVED_ALLOWLIST - unresolved
@@ -325,8 +336,8 @@ def test_extraction_floors():
 
 # ---------------------------------------------------------------------------
 # Self-tests: prove on a synthetic tree that each extraction class turns the
-# gate RED when status-go drops a method it names. These run with the gate and
-# keep the "would this actually catch the break?" question answered forever.
+# gate RED when status-go drops a method it names, and that each known bypass
+# shape stays caught. These run with the gate.
 # ---------------------------------------------------------------------------
 
 _MINI_UTILS = (
@@ -354,6 +365,10 @@ def _mini_status_go(tmp_path: Path, methods=("KeptMethod",)) -> Path:
 def _missing(app_root: Path, go_root: Path) -> set[str]:
     checked, _, _, _ = collect(app_root)
     return {n for n in checked if n not in registered_methods(go_root)}
+
+
+def _unresolved(app_root: Path) -> set[tuple[str, str]]:
+    return collect(app_root)[1]
 
 
 def test_selftest_literal_site_goes_red(tmp_path):
@@ -396,8 +411,7 @@ def test_selftest_unknown_entry_arg_is_caught(tmp_path):
     app = tmp_path / "app"
     _write(app, "src/backend/dynamic.nim",
            "let m = composeName()\ndiscard callPrivateRPC(m, payload)\n")
-    _, unresolved, _, _ = collect(app)
-    assert ("src/backend/dynamic.nim", "m") in unresolved
+    assert ("src/backend/dynamic.nim", "m") in _unresolved(app)
 
 
 def test_selftest_call_shaped_entry_arg_is_caught(tmp_path):
@@ -406,8 +420,7 @@ def test_selftest_call_shaped_entry_arg_is_caught(tmp_path):
     app = tmp_path / "app"
     _write(app, "src/backend/dynamic.nim",
            "discard callPrivateRPC(composeName(chatId), payload)\n")
-    _, unresolved, _, _ = collect(app)
-    assert any(f == "src/backend/dynamic.nim" for f, _ in unresolved)
+    assert any(f == "src/backend/dynamic.nim" for f, _ in _unresolved(app))
 
 
 def test_selftest_make_private_rpc_call_is_an_entry_point(tmp_path):
@@ -415,29 +428,55 @@ def test_selftest_make_private_rpc_call_is_an_entry_point(tmp_path):
     app = tmp_path / "app"
     _write(app, "src/backend/sneaky.nim",
            "discard makePrivateRpcCall(m, inputJSON)\n")
-    _, unresolved, _, _ = collect(app)
-    assert ("src/backend/sneaky.nim", "m") in unresolved
+    assert ("src/backend/sneaky.nim", "m") in _unresolved(app)
 
 
-def test_selftest_rpc_macro_nonliteral_namespace_is_caught(tmp_path):
-    # rpc() with a const namespace never reaches the macro regex
+def test_selftest_rpc_macro_nonliteral_namespace_is_caught_per_site(tmp_path):
+    # rpc() with a const namespace never matches the macro regex; each such
+    # site must be reported separately, so pinning one cannot hide the next
     app = tmp_path / "app"
     _write(app, "src/backend/backend.nim",
-           'const ns = "wakuext"\nrpc(hiddenViaConst, ns):\n  discard\n')
-    _, unresolved, _, _ = collect(app)
-    assert ("src/backend/backend.nim", "rpc( with a non-literal namespace") in unresolved
+           'const ns = "wakuext"\n'
+           "rpc(hiddenOne, ns):\n  discard\n"
+           "rpc(hiddenTwo, ns):\n  discard\n")
+    unresolved = _unresolved(app)
+    assert ("src/backend/backend.nim", "rpc(hiddenOne, ns):") in unresolved
+    assert ("src/backend/backend.nim", "rpc(hiddenTwo, ns):") in unresolved
 
 
-def test_selftest_cpp_literal_is_checked(tmp_path):
+def test_selftest_cpp_and_ts_literals_are_checked(tmp_path):
     _write(tmp_path / "app", "src/native/bridge.cpp",
            'call("wakuext_droppedNativeMethod");\n')
+    _write(tmp_path / "app", "src/bridge/api.ts",
+           'rpc("wakuext_droppedTsMethod")\n')
     go = _mini_status_go(tmp_path)
-    assert _missing(tmp_path / "app", go) == {"droppedNativeMethod"}
+    assert _missing(tmp_path / "app", go) == {"droppedNativeMethod",
+                                              "droppedTsMethod"}
+
+
+def test_selftest_include_and_block_import_resolve_prefix(tmp_path):
+    app = tmp_path / "app"
+    _write(app, "src/app_service/common/utils.nim", _MINI_UTILS)
+    _write(app, "src/backend/via_include.nim",
+           "include app_service/common/utils\n"
+           'let r = callPrivateRPC("droppedViaInclude".prefix, payload)\n')
+    _write(app, "src/backend/via_block.nim",
+           "import\n  core,\n  ../app_service/common/utils\n"
+           'let r = callPrivateRPC("droppedViaBlock".prefix, payload)\n')
+    go = _mini_status_go(tmp_path)
+    assert _missing(app, go) == {"droppedViaInclude", "droppedViaBlock"}
+
+
+def test_selftest_go_receiver_name_is_not_hardcoded(tmp_path):
+    go_root = tmp_path / "status-go"
+    _write(go_root, "services/ext/api.go",
+           "func (a *PublicAPI) RenamedReceiverMethod(ctx context.Context) {}\n")
+    assert registered_methods(go_root) == {"renamedReceiverMethod"}
 
 
 def test_selftest_mention_excess_is_counted_per_file(tmp_path):
-    # one pinned comment mention must not grandfather a later composed call
-    # in the same file
+    # one pinned comment mention must not let a later composed call in the
+    # same file pass unchecked
     app = tmp_path / "app"
     _write(app, "src/Replies.java",
            "// replies go through wakuext_sendChatMessage\n"
