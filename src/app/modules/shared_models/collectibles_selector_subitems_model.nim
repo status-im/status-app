@@ -61,7 +61,8 @@ QtObject:
     of ModelRole.Icon: return newQVariant(item.icon)
     of ModelRole.IconUrl: return newQVariant(item.iconUrl)
 
-  proc subItemRoles(o, n: CollectibleSubItem): seq[int] =
+  proc syncKey(it: CollectibleSubItem): string = it.key
+  proc syncRoles(o, n: CollectibleSubItem): seq[int] =
     result = @[]
     if o.name != n.name: result.add(ModelRole.Name.int)
     if o.balance != n.balance: result.add(ModelRole.Balance.int)
@@ -69,12 +70,7 @@ QtObject:
     if o.iconUrl != n.iconUrl: result.add(ModelRole.IconUrl.int)
 
   proc setSubItems*(self: CollectiblesSelectorSubitemsModel, items: seq[CollectibleSubItem]) =
-    setItemsWithSync(
-      self, self.items, items,
-      getId = proc(it: CollectibleSubItem): string = it.key,
-      getRoles = proc(o, n: CollectibleSubItem): seq[int] = subItemRoles(o, n),
-      countChanged = proc() = self.countChanged(),
-      useBulkOps = true)
+    self.modelSync(self.items, items)
 
   proc setup(self: CollectiblesSelectorSubitemsModel) =
     self.QAbstractListModel.setup
