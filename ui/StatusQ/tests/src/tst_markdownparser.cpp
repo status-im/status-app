@@ -661,6 +661,19 @@ Document [0,12)
         QVERIFY(!d("`@0x00001`").contains(QLatin1String("Mention")));
         QVERIFY(!d("```\n@0x00001\n```").contains(QLatin1String("Mention")));
     }
+
+    void isOnlyEmojiDetection()
+    {
+        QVERIFY(isOnlyEmoji(QString::fromUtf8("\U0001F600\U0001F600")));       // two emojis
+        QVERIFY(isOnlyEmoji(QString::fromUtf8("  \U0001F600 \U0001F600  ")));  // whitespace around
+        QVERIFY(isOnlyEmoji(QString::fromUtf8("\U0001F600\n\U0001F600")));     // line break between
+
+        QVERIFY(!isOnlyEmoji(QString::fromUtf8("\U0001F600 hi"))); // emoji + text
+        QVERIFY(!isOnlyEmoji(QStringLiteral("hi")));               // text only
+        QVERIFY(!isOnlyEmoji(QString()));                          // empty
+        QVERIFY(!isOnlyEmoji(QStringLiteral("   ")));              // whitespace only
+        QVERIFY(!isOnlyEmoji(QStringLiteral("@0x1234")));          // mention-like text
+    }
 };
 
 QTEST_GUILESS_MAIN(TestMarkdownParser)

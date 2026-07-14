@@ -558,7 +558,8 @@ unclosed fence here (no closing triple-tick)
                                                               root.mentionsMap,
                                                               chatTextView.font,
                                                               textArea.formatUnclosedCodeFence,
-                                                              textArea.fullLineHeightEmojis)
+                                                              textArea.fullLineHeightEmojis,
+                                                              12 /* emoji enlargement for only-emojis message */)
                             }
 
                             // Tracks the pointer so the click bubble can appear where you clicked.
