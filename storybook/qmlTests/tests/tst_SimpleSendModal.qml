@@ -181,6 +181,7 @@ Item {
                     {
                         tokenId: "id_3",
                         key: "abc",
+                        balance: 1,
                         symbol: "abc",
                         groupingValue: "abc",
                         chainId: NetworksModel.mainnetChainId,
@@ -205,6 +206,7 @@ Item {
                     {
                         tokenId: "id_4",
                         key: "def",
+                        balance: 1,
                         symbol: "def",
                         groupingValue: "def",
                         chainId: NetworksModel.mainnetChainId,
@@ -229,6 +231,7 @@ Item {
                     {
                         tokenId: "id_5",
                         key: "ghi",
+                        balance: 1,
                         symbol: "ghi",
                         groupingValue: "ghi",
                         chainId: NetworksModel.mainnetChainId,
@@ -282,7 +285,6 @@ Item {
                                 "communityImage":"",
                                 "name":"Multi-seq NFT 1",
                                 "chainId":1,
-                                "symbol":"abc",
                                 "tokenId":"id_3",
                                 "ownership":[{"txTimestamp":1714059810,"balance":1,"accountAddress":"0x7F47C2e98a4BBf5487E6fb082eC2D9Ab0E6d8884"}],
                                 "collectionUid":"collection_2",
@@ -312,7 +314,6 @@ Item {
                                 "communityImage":"",
                                 "name":"Multi-seq NFT 2",
                                 "chainId":1,
-                                "symbol":"def",
                                 "tokenId":"id_4",
                                 "ownership":[{"txTimestamp":1714059811,"balance":1,"accountAddress":"0x7F47C2e98a4BBf5487E6fb082eC2D9Ab0E6d8884"}],
                                 "collectionUid":"collection_2",
@@ -342,7 +343,6 @@ Item {
                                 "communityImage":"",
                                 "name":"Multi-seq NFT 3",
                                 "chainId":1,
-                                "symbol":"ghi",
                                 "tokenId":"id_5",
                                 "ownership":[{"txTimestamp":1714059899,"balance":1,"accountAddress":"0x7F47C2e98a4BBf5487E6fb082eC2D9Ab0E6d8884"}],
                                 "collectionUid":"collection_2",
@@ -370,7 +370,6 @@ Item {
                         "communityImage":"",
                         "name":"Multi-seq NFT 1",
                         "chainId":1,
-                        "symbol":"abc",
                         "tokenId":"id_3",
                         "ownership":[{"txTimestamp":1714059810,"balance":1,"accountAddress":"0x7F47C2e98a4BBf5487E6fb082eC2D9Ab0E6d8884"}],
                         "collectionUid":"collection_2",
@@ -972,6 +971,66 @@ Item {
             const bottomItemText = findChild(amountToSend, "bottomItemText")
             verify(!!bottomItemText)
             compare(bottomItemText.text, "", "Secondary value should be empty when cryptoPrice is 0 in crypto mode")
+        }
+
+        // Switching to the collectibles tab surfaces the collectibles model
+        // content in the token selector.
+        function test_collectiblesTab_showsContent() {
+            verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened)
+
+            waitForRendering(controlUnderTest.contentItem)
+
+            const sendModalHeader = findChild(controlUnderTest, "sendModalHeader")
+            verify(!!sendModalHeader)
+
+            sendModalHeader.tokenSelectorTab = 1 // TokenSelectorPanel.Tabs.Collectibles
+
+            const tokenSelector = findChild(sendModalHeader, "tokenSelector")
+            verify(!!tokenSelector)
+            verify(!!tokenSelector.collectiblesModel)
+            verify(tokenSelector.collectiblesModel.rowCount() > 0)
+        }
+
+        // Deep-link parity: a preselected collectible resolves against the flat
+        // collectibles model (a single ERC-721's amount is hardcoded to "1").
+        function test_preselectedCollectible_resolves() {
+            verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened)
+
+            waitForRendering(controlUnderTest.contentItem)
+
+            controlUnderTest.sendType = Constants.SendType.ERC721Transfer
+            controlUnderTest.selectedGroupKey = "abc"
+            tryCompare(controlUnderTest, "selectedRawAmount", "1")
+        }
+
+        // The sticky header carries its own tab state, so its collectibles tab
+        // must also surface the collectibles content.
+        function test_stickyHeaderCollectiblesTab_showsContent() {
+            verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened)
+
+            waitForRendering(controlUnderTest.contentItem)
+
+            // Scroll to instantiate the deferred sticky header.
+            const scrollView = findChild(controlUnderTest, "scrollView")
+            verify(!!scrollView)
+            scrollView.scrollEnd()
+
+            const stickySendModalHeader = findChild(controlUnderTest, "stickySendModalHeader")
+            verify(!!stickySendModalHeader)
+            tryVerify(() => stickySendModalHeader.height > 0)
+
+            stickySendModalHeader.tokenSelectorTab = 1 // TokenSelectorPanel.Tabs.Collectibles
+
+            const stickyTokenSelector = findChild(stickySendModalHeader, "tokenSelector")
+            verify(!!stickyTokenSelector)
+            verify(!!stickyTokenSelector.collectiblesModel)
+            verify(stickyTokenSelector.collectiblesModel.rowCount() > 0)
         }
 
     }
