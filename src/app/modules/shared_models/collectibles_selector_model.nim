@@ -175,6 +175,18 @@ QtObject:
     self.params.enabledChainIds = chainIds
     self.recompute()
 
+  # Single-chain convenience for the send modal. Faithful to the retired adaptor's
+  # `enabledChainIds: [selectedChainId]`: the value maps to a single-element list
+  # (chainId 0 therefore filters to nothing, exactly as before), so the picker
+  # shows the selected chain's collectibles.
+  proc setEnabledChainId*(self: CollectiblesSelectorModel, chainId: int) {.slot.} =
+    self.setEnabledChainIds(@[chainId])
+  proc getEnabledChainId(self: CollectiblesSelectorModel): int {.slot.} =
+    if self.params.enabledChainIds.len > 0: self.params.enabledChainIds[0] else: 0
+  QtProperty[int] enabledChainId:
+    read = getEnabledChainId
+    write = setEnabledChainId
+
   proc setFilterCommunityOwnerAndMasterTokens*(self: CollectiblesSelectorModel, value: bool) {.slot.} =
     if value == self.params.filterCommunityOwnerAndMasterTokens: return
     self.params.filterCommunityOwnerAndMasterTokens = value
