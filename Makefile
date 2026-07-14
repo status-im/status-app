@@ -1061,6 +1061,11 @@ nim-test-run/test/nim/signal_handler_test.nim: | statusq
 nim-test-run/test/nim/url_scheme_event_test.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
 nim-test-run/test/nim/url_scheme_event_test.nim: | statusq
 
+# typed_completion_test drives finishTyped -> signal_handler -> statusq_invoke_method_queued,
+# so it needs the StatusQ library linked (like signal_handler_test above).
+nim-test-run/test/nim/typed_completion_test.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+nim-test-run/test/nim/typed_completion_test.nim: | statusq
+
 # Model-spy tests call inspection accessors gated behind
 # `when defined(testing) or defined(QT_MODEL_SPY)` or assert on the granular
 # signals model_sync records only under QT_MODEL_SPY. The define is applied
