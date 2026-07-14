@@ -215,6 +215,14 @@ suite "model_sync v3 unified API":
     check spy.getDataChanged()[0].roles == @[1]
     check spy.countResets() == 0
 
+  test "duplicate keys in input trip the debug/test uniqueness guard":
+    let m = newLeafModel()
+    m.sync(@[Leaf(id: "a", name: "A", v: 1)])
+    # Two rows share id "a": the diff's id->index map would be last-wins and emit a
+    # spurious op for the shadowed row. The debug/testing guard rejects it up front.
+    expect AssertionDefect:
+      m.sync(@[Leaf(id: "a", name: "A", v: 1), Leaf(id: "a", name: "B", v: 2)])
+
   test "reconcileByKey preserves QObject instance across a diff, drops removed keys":
     var table = initTable[string, Detail]()
     reconcileByKey(table, @[Leaf(id: "a"), Leaf(id: "b")],

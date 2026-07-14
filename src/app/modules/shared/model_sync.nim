@@ -509,6 +509,19 @@ proc setItemsWithSync*[T](
   ## Pattern 4 (nested models): pass `onInsert` / `onUpdate` / `onRemove` to
   ## keep a sibling `seq[NestedModel]` in sync with `items`.
 
+  # Debug/test contract: input keys must be unique (repo `key` convention). A
+  # duplicate would make the diff's id->index map last-wins and emit a spurious
+  # insert/remove for the shadowed row. Runs in debug app builds and in the
+  # spy-instrumented test/bench builds (which are -d:release); compiled out of
+  # shipping release builds.
+  when defined(QT_MODEL_SPY) or not defined(release):
+    if getId != nil:
+      var seenKeys = initHashSet[string]()
+      for it in newItems:
+        let k = getId(it)
+        doAssert not seenKeys.containsOrIncl(k),
+          "setItemsWithSync: duplicate key in newItems: " & k
+
   # Fast path: first load (empty -> N). The diff pipeline deep-copies every T
   # several times as it walks; bulk-load via beginResetModel instead.
   if items.len == 0 and newItems.len > 0:
