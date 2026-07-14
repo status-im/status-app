@@ -558,9 +558,72 @@ proc setItemsWithSync*[T](
     if countChanged != nil and (syncResult.toInsert.len > 0 or syncResult.toRemove.len > 0):
       countChanged()
 
+# ----------------------------------------------------------------------------
+# v3 unified API
+# ----------------------------------------------------------------------------
+#
+# `modelSync` collapses the four-closure `setItemsWithSync` call into a one-liner.
+# Consumers define two overloads near their item type; `modelSync` resolves them
+# at instantiation via `mixin`, the same way `hash`/`==`/`$` are picked up:
+#
+#   proc syncKey(it: MyItem): string = it.key              # row identity
+#   proc syncRoles(o, n: MyItem): seq[int] = ...           # changed role ints
+#
+# then the whole sync at the call site is:
+#
+#   self.modelSync(self.items, newItems)
+#
+# The model's `countChanged()` signal is emitted automatically when the model
+# type declares one. The bulk-ops path (grouped inserts/removes, ranged
+# dataChanged) and the QT_MODEL_SPY instrumentation are always used.
+
+proc modelSync*[M: QAbstractListModel, T](
+    model: M, container: var seq[T], newItems: sink seq[T]) =
+  ## Unified granular sync. `container` becomes the new state in lockstep with the
+  ## begin/end signals `modelSync` emits; `newItems` is moved in, not copied.
+  ## Requires `syncKey(T): string` in scope; `syncRoles(T, T): seq[int]` optional
+  ## (omit for identity-only rows). Emits `model.countChanged()` if it exists.
+  mixin syncKey, syncRoles, countChanged
+  let getId = proc(it: T): string = syncKey(it)
+  var getRoles: RoleDetector[T] = nil
+  when compiles(syncRoles(newItems[0], newItems[0])):
+    getRoles = proc(o, n: T): seq[int] = syncRoles(o, n)
+  var cc: proc() {.closure.} = nil
+  when compiles(model.countChanged()):
+    cc = proc() = model.countChanged()
+  setItemsWithSync(
+    model.QAbstractListModel, container, newItems,
+    getId = getId,
+    getRoles = getRoles,
+    countChanged = cc,
+    useBulkOps = true)
+
+proc reconcileByKey*[T, C](
+    table: var Table[string, C],
+    items: openArray[T],
+    create: proc(it: T): C {.closure.},
+    update: proc(existing: C, it: T) {.closure.} = nil) =
+  ## Rebuilds `table` to exactly the keys of `items` (via `syncKey`), preserving
+  ## the existing `C` for a surviving key (calling `update` if given) and building
+  ## a fresh one otherwise. Dropped keys fall away with the old table. Run this
+  ## BEFORE `modelSync` so a newly inserted row's `data()` already sees its child.
+  mixin syncKey
+  var updated = initTable[string, C]()
+  for it in items:
+    let k = syncKey(it)
+    if table.hasKey(k):
+      let existing = table[k]
+      if update != nil:
+        update(existing, it)
+      updated[k] = existing
+    else:
+      updated[k] = create(it)
+  table = updated
+
 # Export main types and procs
 export ItemIdentifier, ItemComparator, RoleDetector
 export OnInsertCallback, OnUpdateCallback, OnRemoveCallback
 export UpdateOp, InsertOp, RemoveOp, MoveOp, SyncResult
 export syncModel, applySync, applySyncWithBulkOps, setItemsWithSync
 export groupConsecutiveRanges
+export modelSync, reconcileByKey
