@@ -13,7 +13,9 @@ type VersionItem = VersionDto
 proc `$`*(self: VersionItem): string =
   return $self.major & "." & $self.minor & "." & $self.patch
 
-type TokenListItemObj = object of RootObj
+# {.acyclic.}: tree-shaped (value fields + a seq of acyclic TokenItems), so ORC skips
+# cycle tracking — see the token.nim / token_group.nim note.
+type TokenListItemObj {.acyclic.} = object of RootObj
   id: string
   name: string
   timestamp: int64
