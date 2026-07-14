@@ -62,7 +62,8 @@ QtObject:
     of ModelRole.Balance: return newQVariant(item.balance)
     of ModelRole.RawBalance: return newQVariant(item.rawBalance)
 
-  proc chipRoles(o, n: TokenSelectorChip): seq[int] =
+  proc syncKey(it: TokenSelectorChip): string = $it.chainId
+  proc syncRoles(o, n: TokenSelectorChip): seq[int] =
     result = @[]
     if o.iconUrl != n.iconUrl: result.add(ModelRole.IconUrl.int)
     if o.chainName != n.chainName: result.add(ModelRole.ChainName.int)
@@ -70,12 +71,7 @@ QtObject:
     if o.rawBalance != n.rawBalance: result.add(ModelRole.RawBalance.int)
 
   proc updateChips*(self: TokenSelectorBalancesModel, chips: seq[TokenSelectorChip]) =
-    setItemsWithSync(
-      self, self.items, chips,
-      getId = proc(it: TokenSelectorChip): string = $it.chainId,
-      getRoles = proc(o, n: TokenSelectorChip): seq[int] = chipRoles(o, n),
-      countChanged = proc() = self.countChanged(),
-      useBulkOps = true)
+    self.modelSync(self.items, chips)
 
   proc setup(self: TokenSelectorBalancesModel) =
     self.QAbstractListModel.setup

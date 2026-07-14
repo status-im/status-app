@@ -141,7 +141,8 @@ QtObject:
       return (if a.hasBalance: -1 else: 1)
     return cmp(b.currencyBalance, a.currencyBalance)
 
-  proc itemRoles(o, n: TokenSelectorItem): seq[int] =
+  proc syncKey(it: TokenSelectorItem): string = it.key
+  proc syncRoles(o, n: TokenSelectorItem): seq[int] =
     result = @[]
     if o.name != n.name: result.add(ModelRole.Name.int)
     if o.symbol != n.symbol: result.add(ModelRole.Symbol.int)
@@ -153,39 +154,25 @@ QtObject:
     # Balances (chips) travel through the nested model's own signals, so no
     # parent-level dataChanged for the Balances role here.
 
-  proc reconcileNested(self: TokenSelectorModel, newItems: seq[TokenSelectorItem]) =
-    # Rebuild the per-key nested balances + tokens models identity-preservingly
-    # BEFORE setItemsWithSync announces inserts, so data(Balances)/data(Tokens) is
-    # populated for a newly inserted row within this same call.
-    var updatedBalances = initTable[string, TokenSelectorBalancesModel]()
-    var updatedTokens = initTable[string, TokenSelectorTokensModel]()
-    for item in newItems:
-      if self.balancesByKey.hasKey(item.key):
-        let bm = self.balancesByKey[item.key]
-        bm.updateChips(item.chips)
-        updatedBalances[item.key] = bm
-      else:
-        updatedBalances[item.key] = newTokenSelectorBalancesModel(item.chips)
-      if self.tokensByKey.hasKey(item.key):
-        let tm = self.tokensByKey[item.key]
-        if tm.tokenRefs() != item.tokens:
-          tm.setItems(item.tokens)
-        updatedTokens[item.key] = tm
-      else:
-        updatedTokens[item.key] = newTokenSelectorTokensModel(item.tokens)
-    self.balancesByKey = updatedBalances
-    self.tokensByKey = updatedTokens
-
   proc setSourceItems*(self: TokenSelectorModel, items: seq[TokenSelectorItem]) =
     var display = items
     display.sort(compareItems)
-    self.reconcileNested(display)
-    setItemsWithSync(
-      self, self.items, display,
-      getId = proc(it: TokenSelectorItem): string = it.key,
-      getRoles = proc(o, n: TokenSelectorItem): seq[int] = itemRoles(o, n),
-      countChanged = proc() = self.countChanged(),
-      useBulkOps = true)
+    # Reconcile the per-key nested balances + tokens models BEFORE modelSync
+    # announces inserts, so data(Balances)/data(Tokens) is populated for a newly
+    # inserted row within this same call. Each update closure recurses into the
+    # surviving child model.
+    reconcileByKey(self.balancesByKey, display,
+      create = proc(item: TokenSelectorItem): TokenSelectorBalancesModel =
+        newTokenSelectorBalancesModel(item.chips),
+      update = proc(bm: TokenSelectorBalancesModel, item: TokenSelectorItem) =
+        bm.updateChips(item.chips))
+    reconcileByKey(self.tokensByKey, display,
+      create = proc(item: TokenSelectorItem): TokenSelectorTokensModel =
+        newTokenSelectorTokensModel(item.tokens),
+      update = proc(tm: TokenSelectorTokensModel, item: TokenSelectorItem) =
+        if tm.tokenRefs() != item.tokens:
+          tm.setItems(item.tokens))
+    self.modelSync(self.items, display)
 
   proc setSectionNames*(self: TokenSelectorModel, owned: string, popular: string) {.slot.} =
     if owned == self.ownedSectionName and popular == self.popularSectionName:
