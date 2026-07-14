@@ -41,6 +41,7 @@ type
     visible*: bool
     position*: int
     balances*: seq[AggBalance]
+    tokens*: seq[tuple[key: string, chainId: int]]  ## per-chain token identity (unused by AssetsView)
 
   AggCommunity* = object
     name*: string
