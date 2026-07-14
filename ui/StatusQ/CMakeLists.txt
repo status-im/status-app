@@ -275,6 +275,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         src/shareutils_other.cpp
         src/keychain_apple.mm
         src/osnotification_apple.mm
+        src/accessibility_crash_filter.mm
         src/StatusQ/Controls/NativeSwipeHandlerItem_macos.mm
         src/StatusQ/Controls/NativeIndicatorItem_macos.mm
     )
@@ -293,6 +294,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
         src/ios_utils.mm
         src/shareutils_ios.mm
         src/keychain_apple.mm
+        src/accessibility_crash_filter.mm
         src/StatusQ/Controls/NativeSwipeHandlerItem_ios.mm
         src/StatusQ/Controls/NativeIndicatorItem_ios.mm
         src/localnetworkpermission_ios.mm

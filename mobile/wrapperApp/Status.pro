@@ -66,15 +66,6 @@ ios {
     QMAKE_CXXFLAGS += -Wno-implicit-function-declaration
     QMAKE_CFLAGS += -Wno-implicit-function-declaration
 
-    # Workaround for the Qt 6.11 iOS accessibility crash (#21450): filter
-    # ObjectDestroyed accessibility events before they reach the iOS platform
-    # plugin, which crashes querying role() on a half-destroyed QQuickControl.
-    # gui-private is needed for the forwarding call
-    # (QGuiApplicationPrivate::platformIntegration()->accessibility()).
-    # See sources/ios_accessibility_crash_filter.mm for the full analysis.
-    QT += gui-private
-    OBJECTIVE_SOURCES += sources/ios_accessibility_crash_filter.mm
-
     QMAKE_INFO_PLIST = $$OUT_PWD/Info.plist
     QMAKE_IOS_DEPLOYMENT_TARGET=17.0
 
