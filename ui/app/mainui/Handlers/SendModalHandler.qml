@@ -350,7 +350,7 @@ QtObject {
             id: simpleSendModal
 
             accountsModel: handler.accountsSelectorAdaptor.processedWalletAccounts
-            assetsModel: handler.assetsSelectorViewAdaptor.outputAssetsModel
+            assetsModel: handler.assetsSelectorModel
             groupedAccountAssetsModel: root.groupedAccountAssetsModel
             flatCollectiblesModel: handler.collectiblesSelectionAdaptor.filteredFlatModel
             collectiblesModel: handler.collectiblesSelectionAdaptor.model
@@ -459,15 +459,15 @@ QtObject {
             }
 
             onSearchInAssets: (keyword) => {
-                if (handler.assetsSelectorViewAdaptor.searchString === "" && keyword !== "") {
+                if (handler.assetsSelectorModel.searchString === "" && keyword !== "") {
                     // Request searchable assets
                     WalletStores.RootStore.tokensStore.buildGroupsForChain(simpleSendModal.selectedChainId)
                 }
-                handler.assetsSelectorViewAdaptor.search(keyword)
+                handler.assetsSelectorModel.search(keyword)
             }
 
             onFetchMoreAssets: {
-                handler.assetsSelectorViewAdaptor.loadMoreItems()
+                handler.assetsSelectorModel.fetchMore()
             }
 
             ModelEntry {
@@ -589,18 +589,52 @@ QtObject {
                     fnFormatCurrencyAmountFromBigInt: root.fnFormatCurrencyAmountFromBigInt
                 }
 
-                readonly property var assetsSelectorViewAdaptor: TokenSelectorViewAdaptor {
-                    assetsModel: root.groupedAccountAssetsModel
-                    flatNetworksModel: root.flatNetworksModel
+                // Terminal picker model (send/owned) as { model, id }. The producer
+                // keeps it fed with the owned source; the per-modal params are driven
+                // below. This handler lives inside SimpleSendModal (destroyed on close),
+                // so the model is released on destruction to stop the producer tracking
+                // it (avoids a per-open leak, like the swap/buy modals).
+                readonly property var assetsSelector: WalletStores.RootStore.tokensStore.createTokenSelectorModel(0)
+                readonly property var assetsSelectorModel: handler.assetsSelector.model
+                Component.onDestruction: WalletStores.RootStore.tokensStore.releaseTokenSelectorModel(handler.assetsSelector.id)
 
-                    currentCurrency: root.currentCurrency
-                    showCommunityAssets: root.showCommunityAssetsInSend
-                    showZeroBalanceForDefaultTokens: true
-
-                    accountAddress: simpleSendModal.selectedAccountAddress
-                    enabledChainIds: [simpleSendModal.selectedChainId]
-                    searchResultModel: root.searchResultModel
+                readonly property Binding _sendAccountBinding: Binding {
+                    target: handler.assetsSelectorModel
+                    property: "accountAddress"
+                    value: simpleSendModal.selectedAccountAddress
+                    restoreMode: Binding.RestoreNone
                 }
+                readonly property Binding _sendChainBinding: Binding {
+                    target: handler.assetsSelectorModel
+                    property: "enabledChainId"
+                    value: simpleSendModal.selectedChainId
+                    restoreMode: Binding.RestoreNone
+                }
+                readonly property Binding _sendShowCommunityBinding: Binding {
+                    target: handler.assetsSelectorModel
+                    property: "showCommunityAssets"
+                    value: root.showCommunityAssetsInSend
+                    restoreMode: Binding.RestoreNone
+                }
+                readonly property Binding _sendShowZeroBinding: Binding {
+                    target: handler.assetsSelectorModel
+                    property: "showZeroBalanceForDefaultTokens"
+                    value: true
+                    restoreMode: Binding.RestoreNone
+                }
+                readonly property Connections _sendSectionSync: Connections {
+                    target: simpleSendModal
+                    function onSelectedChainIdChanged() { handler.updateSendSectionNames() }
+                }
+                function updateSendSectionNames() {
+                    if (!handler.assetsSelectorModel)
+                        return
+                    const chainName = SQUtils.ModelUtils.getByKey(
+                        root.flatNetworksModel, "chainId", simpleSendModal.selectedChainId, "chainName") || ""
+                    handler.assetsSelectorModel.setSectionNames(
+                        qsTr("Your assets on %1").arg(chainName), qsTr("Popular assets"))
+                }
+                Component.onCompleted: handler.updateSendSectionNames()
 
                 readonly property var collectiblesSelectionAdaptor: CollectiblesSelectionAdaptor {
                     accountKey: simpleSendModal.selectedAccountAddress

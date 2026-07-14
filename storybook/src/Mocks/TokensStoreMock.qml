@@ -18,6 +18,34 @@ TokensStore {
     property var _displayAssetsBelowBalanceThresholdDisplayAmountFunc: function() { return 0 }
     property double tokenListUpdatedAt
 
+    // Terminal token-selector picker stub. The real producer (context property
+    // walletSectionTokenSelector) is unavailable in storybook, so hand out
+    // configurable TokenSelectorModelMock instances instead. Callers override
+    // tokenSelectorStubData to seed the rows they need.
+    property var tokenSelectorStubData: []
+    property int _tokenSelectorIdCounter: 0
+    readonly property Component _tokenSelectorModelMockComponent: Component { TokenSelectorModelMock {} }
+
+    function createTokenSelectorModel(kind) {
+        // Mirror the producer's per-kind source: swap (1) uses the source-chain
+        // groups, bridge receive (3) uses the destination-chain groups, send (0) /
+        // buy (2) use the full groups. If a caller pre-seeded tokenSelectorStubData,
+        // use that static set instead.
+        let props = {}
+        if (!!root.tokenSelectorStubData && root.tokenSelectorStubData.length > 0)
+            props = { sourceData: root.tokenSelectorStubData }
+        else if (kind === 1)
+            props = { sourceModel: root.tokenGroupsForChainModel }
+        else if (kind === 3)
+            props = { sourceModel: root.tokenGroupsForChainToModel }
+        else
+            props = { sourceModel: root.tokenGroupsModel }
+        const model = _tokenSelectorModelMockComponent.createObject(root, props)
+        return { model: model, id: root._tokenSelectorIdCounter++ }
+    }
+
+    function releaseTokenSelectorModel(id) {}
+
     function getDisplayAssetsBelowBalanceThresholdDisplayAmount() {
         return _displayAssetsBelowBalanceThresholdDisplayAmountFunc()
     }

@@ -33,8 +33,11 @@ type
     controller: Controller
     allTokensModule: all_tokens_module.Module
     moduleLoaded: bool
-    # Live picker models re-pushed the owned source on token/market/preference change.
-    models: seq[TokenSelectorModel]
+    # Live picker models re-pushed the owned source on token/market/preference
+    # change, keyed by the id handed to QML so a destroyed modal can release its
+    # model (createModelForKind adds, releaseModel removes).
+    models: Table[int, TokenSelectorModel]
+    nextModelId: int
 
 proc newModule*(
   events: EventEmitter,
@@ -50,6 +53,7 @@ proc newModule*(
   result.controller = newController(result, tokenService, walletAccountService, networkService)
   result.allTokensModule = allTokensModule
   result.moduleLoaded = false
+  result.models = initTable[int, TokenSelectorModel]()
 
 method delete*(self: Module) =
   self.controller.delete
@@ -103,11 +107,11 @@ proc buildOwnedSource(self: Module): tuple[groups: seq[AggTokenGroup], networks:
 
 proc pushOwnedSource(self: Module) =
   let (groups, networks) = self.buildOwnedSource()
-  for m in self.models:
+  for m in self.models.values:
     m.setOwnedSource(groups, networks)
 
 proc refreshModels(self: Module) =
-  for m in self.models:
+  for m in self.models.values:
     m.refresh()
 
 proc toPopularGroups(self: Module, groups: seq[TokenGroupItem]): seq[PopularGroup] =
@@ -120,7 +124,7 @@ proc toPopularGroups(self: Module, groups: seq[TokenGroupItem]): seq[PopularGrou
       logoUri: g.logoUri, communityId: communityId, marketPrice: self.priceForGroup(g),
       tokens: tokenRefs))
 
-method createModelForKind*(self: Module, kind: int): TokenSelectorModel =
+method createModelForKind*(self: Module, kind: int): tuple[id: int, model: TokenSelectorModel] =
   let atm = self.allTokensModule
   let searchModel = atm.getSearchResultModelObj()
 
@@ -164,11 +168,16 @@ method createModelForKind*(self: Module, kind: int): TokenSelectorModel =
 
   let model = newTokenSelectorModel(mode)
   model.setSource(source)
-  self.models.add(model)
+  let id = self.nextModelId
+  self.nextModelId.inc
+  self.models[id] = model
   # Seed with the current owned source so the model is populated immediately.
   let (groups, networks) = self.buildOwnedSource()
   model.setOwnedSource(groups, networks)
-  return model
+  return (id, model)
+
+method releaseModel*(self: Module, id: int) =
+  self.models.del(id)
 
 method load*(self: Module) =
   singletonInstance.engine.setRootContextProperty("walletSectionTokenSelector", self.viewVariant)

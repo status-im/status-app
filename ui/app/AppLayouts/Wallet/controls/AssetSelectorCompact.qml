@@ -16,6 +16,9 @@ Control {
 
     readonly property bool isSelected: button.selected
 
+    /** Forwarded to SearchableAssetsPanel; see its formatCurrencyBalance. **/
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : String(amount))
+
     signal selected(string key)
 
     function setSelection(name: string, symbol: string, icon: url, key: string) {
@@ -53,6 +56,8 @@ Control {
         contentItem: SearchableAssetsPanel {
             id: searchableAssetsPanel
 
+            formatCurrencyBalance: root.formatCurrencyBalance
+
             function setCurrentAndClose(name, symbol, icon) {
                 button.name = name
                 button.subname = symbol
@@ -63,10 +68,10 @@ Control {
             }
 
             onSelected: {
-                const entry = ModelUtils.getByKey(root.model, "tokensKey", key)
+                const entry = ModelUtils.getByKey(root.model, "key", key)
                 highlightedKey = key
 
-                setCurrentAndClose(entry.name, entry.symbol, entry.iconSource)
+                setCurrentAndClose(entry.name, entry.symbol, entry.logoUri || Constants.tokenIcon(entry.symbol))
                 root.selected(key)
             }
         }
