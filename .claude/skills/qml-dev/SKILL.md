@@ -108,9 +108,20 @@ TextField, CheckBox, ComboBox…) automatically; plain `Item`/`Rectangle`/
   and a restart via `scripts/storybook-agent.sh stop && … start <Page>`.
 - Values render locale-formatted (decimal comma on European locales):
   setting `0.2` reads back as `0,2`.
-- `press` works on AbstractButton-derived controls. If a press has no
-  effect, check `read … | grep Enabled` first, then fall back to `click`
-  (needs the window unobstructed; synthesized events go to screen coords).
+- **Interaction hierarchy — pure AX first.** `press`, `set`, `scroll`,
+  `read`, `tree`, `screenshot` are pure accessibility calls: they work on
+  background windows, never move the cursor, never steal focus, and cannot
+  conflict with the human using the machine. Use them for ~everything.
+- The real-input commands (`click`, `rightclick`, `hover`, `key`, `type`,
+  `mousedown/up/move`) inject global HID events: they require the app
+  frontmost and are inherently disruptive. They self-protect — refusing when
+  the human used mouse/keyboard in the last 2s, when the app can't become
+  frontmost, or when another window covers the target — and restore the
+  cursor position afterwards. Treat a refusal as "wait and retry", never
+  pass --force on a machine a human is actively using. If a flow needs many
+  real-input events while the human works, pause and coordinate with them.
+- `press` works on AbstractButton-derived controls; if it has no effect,
+  check `read … | grep Enabled` before reaching for `click`.
 - **Page knobs can pin state**: storybook pages often install `Binding`
   elements tying component state to the page's own controls (combos, text
   knobs). Interactions that imperatively write the same properties (e.g.
@@ -119,6 +130,13 @@ TextField, CheckBox, ComboBox…) automatically; plain `Item`/`Rectangle`/
   page knobs instead, or check the page QML before concluding a bug.
 - Reload errors and QML warnings land in `$TMPDIR/storybook-agent.log` —
   check it whenever the tree looks stale or empty.
+- Hot reload can be unreliable for popup-heavy pages after production-QML
+  edits (stale component cache; popups relaunch from old components). If a
+  change doesn't show, restart the harness (`storybook-agent.sh stop` +
+  `start <Page>`) instead of debugging ghosts.
+- An occluded window defers Qt layout polish, so screenshots can capture a
+  half-laid-out UI. Run `ax activate --pid P` (no cursor move) before
+  `ax screenshot` when pixel-accuracy matters.
 - The AX tree also contains Storybook's own chrome (sidebar, knobs pane).
   Filter with `--filter <Component>` or match identifier substrings under
   your component's objectName.
