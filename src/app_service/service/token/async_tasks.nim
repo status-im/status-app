@@ -5,19 +5,10 @@ import times, std/strformat, json
 #################################################
 
 type
-  BuildGroupsForChainResponse* = object
-    chainId*: int
-    tokens*: seq[TokenDtoSafe]
-    error*: string
-
-  FetchAllTokenGroupsResponse* = object
-    tokens*: seq[TokenDtoSafe]
-    error*: string
-
-  # The two heavy tasks build their finished structures on the worker and hand
-  # them over typed via finishTyped (see token_apply_builder +
-  # asyncRefreshTokensTask / asyncFetchAllTokenListsTask), so they carry no
-  # string-envelope result type.
+  # The heavy tasks build their finished structures on the worker and hand them
+  # over typed via finishTyped (see token_apply_builder): asyncRefreshTokensTask,
+  # asyncFetchAllTokenListsTask, asyncFetchAllTokenGroupsTask and
+  # asyncBuildGroupsForChainTask, so none carries a string-envelope result type.
 
   FetchMissingTokensResponse* = object
     requestedKeys*: seq[string] # echoed back so the slot knows which keys were asked for
@@ -136,19 +127,27 @@ type
 
 proc asyncFetchAllTokenGroupsTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncFetchAllTokenGroupsTaskArg](argEncoded)
-  var output = %*{
-    "tokens": newJArray(),
-    "error": ""
-  }
+  # Decode + build the name-sorted groups off the GUI thread and hand them over via
+  # finishTyped (no multi-MB JSON crosses the boundary, no group build on the GUI
+  # slot). Always finishes with a non-nil result (structural finally) so the
+  # allTokenGroupsLoading bool the slot clears can never stay stuck true.
+  var tokensNode: JsonNode = newJArray()
+  var errorMsg = ""
   try:
     var response: JsonNode
     var err = status_go_tokens.getTokensForActiveNetworksMode(response)
     if err.len > 0:
       raise newException(CatchableError, "getTokensForActiveNetworksMode failed: " & err)
-    output["tokens"] = if response.isNil: newJArray() else: response
+    if not response.isNil: tokensNode = response
   except Exception as e:
-    output["error"] = %* fmt"Error fetching all token groups: {e.msg}"
-  arg.finish(output)
+    errorMsg = fmt"Error fetching all token groups: {e.msg}"
+  var res: TokenGroupsApplyResult
+  try:
+    res = assembleTokenGroupsResult(tokensNode, errorMsg)
+  finally:
+    if res.isNil:
+      res = TokenGroupsApplyResult(error: "internal: token groups result assembly produced no result")
+    arg.finishTyped(res)
 
 type
   AsyncBuildGroupsForChainTaskArg = ref object of QObjectTaskArg
@@ -156,20 +155,24 @@ type
 
 proc asyncBuildGroupsForChainTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncBuildGroupsForChainTaskArg](argEncoded)
-  var output = %*{
-    "chainId": arg.chainId,
-    "tokens": newJArray(),
-    "error": ""
-  }
+  # Same typed-handoff build as asyncFetchAllTokenGroupsTask, for one chain.
+  var tokensNode: JsonNode = newJArray()
+  var errorMsg = ""
   try:
     var response: JsonNode
     var err = status_go_tokens.getTokensByChain(response, arg.chainId)
     if err.len > 0:
       raise newException(CatchableError, "getTokensByChain failed: " & err)
-    output["tokens"] = if response.isNil: newJArray() else: response
+    if not response.isNil: tokensNode = response
   except Exception as e:
-    output["error"] = %* fmt"Error building groups for chain {arg.chainId}: {e.msg}"
-  arg.finish(output)
+    errorMsg = fmt"Error building groups for chain {arg.chainId}: {e.msg}"
+  var res: TokenGroupsApplyResult
+  try:
+    res = assembleTokenGroupsResult(tokensNode, errorMsg)
+  finally:
+    if res.isNil:
+      res = TokenGroupsApplyResult(error: "internal: groups-for-chain result assembly produced no result")
+    arg.finishTyped(res)
 
 type
   AsyncFetchMissingTokensTaskArg = ref object of QObjectTaskArg

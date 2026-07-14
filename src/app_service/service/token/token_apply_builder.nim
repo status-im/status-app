@@ -16,7 +16,7 @@
 ##
 ## Pure: no Service, no threadpool, no backend — unit-testable against fixture JSON.
 
-import json, tables, sequtils, sugar
+import json, tables, sequtils, sugar, algorithm
 import json_serialization
 
 import items/token, items/token_group, items/token_list, items/preferences
@@ -40,6 +40,13 @@ type
     generation*: int
     error*: string
     allTokenLists*: seq[TokenListItem]
+
+  TokenGroupsApplyResult* = ref object of RootObj
+    ## Finished, name-sorted token groups for the two on-demand group fetches
+    ## (getTokensByChain / getTokensForActiveNetworksMode). No generation stamp:
+    ## those tasks gate on a plain loading bool, not the refresh coordinator.
+    error*: string                                       ## non-empty -> slot skips apply
+    groups*: seq[TokenGroupItem]
 
 proc createTokenGroupsFromTokens(tokens: seq[TokenItem], groupsByKey: var Table[string, TokenGroupItem]) =
   # Byte-identical replica of the private helper in service_main.nim (grouping by
@@ -96,6 +103,16 @@ proc buildRefreshTokensApply*(tokensOfInterestNode, allTokensNode, tokenPrefsNod
     newAllByGroup.mgetOrPut(item.groupKey, @[]).add(item)
   result.allTokensByGroupKey = newAllByGroup
 
+proc buildTokenGroupsApply*(tokensNode: JsonNode): seq[TokenGroupItem] =
+  ## Byte-identical replica of the group build the onAsyncBuildGroupsForChainDone /
+  ## onAsyncFetchAllTokenGroupsDone slots ran inline (decode + createTokenItem +
+  ## group + sort-by-name), moved here so it runs on the threadpool.
+  let tokens = decodeTokens(tokensNode).map(t => createTokenItem(t))
+  var groupsByKey = initTable[string, TokenGroupItem]()
+  createTokenGroupsFromTokens(tokens, groupsByKey)
+  result = toSeq(groupsByKey.values)
+  result.sort(proc(a, b: TokenGroupItem): int = a.name.cmp(b.name))
+
 proc buildAllTokenListsApply*(allTokenListsNode: JsonNode): AllTokenListsApplyResult =
   ## Build the finished token-list items from the raw all-token-lists RPC node.
   result = AllTokenListsApplyResult()
@@ -130,6 +147,18 @@ proc assembleRefreshResult*(tokensOfInterestNode, allTokensNode, tokenPrefsNode:
     except Exception as e:
       result = RefreshTokensApplyResult(error: "Error building refresh tokens result: " & e.msg)
   result.generation = generation
+
+proc assembleTokenGroupsResult*(tokensNode: JsonNode, rpcError: string): TokenGroupsApplyResult =
+  ## Same non-nil / never-raise guarantee as the refresh assembler: the worker
+  ## always finishTyped's a result, so the loading bool the slot clears never
+  ## stays stuck true (no permanently-spinning picker).
+  if rpcError.len > 0:
+    result = TokenGroupsApplyResult(error: rpcError)
+  else:
+    try:
+      result = TokenGroupsApplyResult(groups: buildTokenGroupsApply(tokensNode))
+    except Exception as e:
+      result = TokenGroupsApplyResult(error: "Error building token groups result: " & e.msg)
 
 proc assembleAllTokenListsResult*(allTokenListsNode: JsonNode,
                                   generation: int, rpcError: string): AllTokenListsApplyResult =
