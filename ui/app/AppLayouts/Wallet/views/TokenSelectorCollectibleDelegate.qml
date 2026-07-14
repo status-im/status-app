@@ -32,7 +32,9 @@ ItemDelegate {
 
     icon.width: 32
     icon.height: 32
-    icon.source: root.image
+    // Default-token-icon fallback for empty media lives here at the leaf (the
+    // Assets singleton is not reachable from the Nim picker model).
+    icon.source: root.image != "" ? root.image : Assets.png(Constants.defaultTokenIcon)
 
     enabled: interactive
 
