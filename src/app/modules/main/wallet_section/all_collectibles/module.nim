@@ -1,4 +1,4 @@
-import nimqml
+import nimqml, tables, stint
 
 import ./io_interface, ./view
 import  ./controller as all_collectibles_controller
@@ -8,6 +8,8 @@ import app/global/global_singleton
 import app/core/eventemitter
 import app/modules/shared_modules/collectibles/controller as collectibles_controller
 import app/modules/shared_models/collectibles_model as collectibles_model
+import app/modules/shared_models/collectibles_entry
+import app/modules/shared_models/collectibles_selector_model as collectibles_selector_model
 import app_service/service/collectible/service as collectible_service
 import app_service/service/network/service as network_service
 import app_service/service/wallet_account/service as wallet_account_service
@@ -26,6 +28,10 @@ type
     controller: all_collectibles_controller.Controller
     collectiblesController: collectibles_controller.Controller
     moduleLoaded: bool
+    # Live send-modal picker models, keyed by the id handed to QML; each is
+    # re-pushed the whole collectibles universe on any collectibles data change.
+    selectorModels: Table[int, collectibles_selector_model.CollectiblesSelectorModel]
+    nextSelectorId: int
 
 proc newModule*(
   delegate: delegate_interface.AccessInterface,
@@ -51,6 +57,7 @@ proc newModule*(
   result.view = newView(result)
   result.viewVariant = newQVariant(result.view)
   result.moduleLoaded = false
+  result.selectorModels = initTable[int, collectibles_selector_model.CollectiblesSelectorModel]()
 
 method delete*(self: Module) =
   self.viewVariant.delete
@@ -58,12 +65,79 @@ method delete*(self: Module) =
   self.controller.delete
   self.collectiblesController.delete
 
+proc buildSelectorSource(self: Module): tuple[
+    items: seq[collectibles_selector_model.CollectibleItem],
+    networks: seq[collectibles_selector_model.CollectiblesNetworkInfo]] =
+  ## Map the collectibles universe (all accounts' ownership) onto the picker's
+  ## input DTOs. Soulbound collectibles are dropped (non-transferable), mirroring
+  ## the retired adaptor's `soulbound == false` source filter.
+  var items: seq[collectibles_selector_model.CollectibleItem] = @[]
+  for entry in self.collectiblesController.getModel().getItems():
+    if entry.getSoulbound():
+      continue
+    var ownership: seq[collectibles_selector_model.CollectibleOwnership] = @[]
+    for ob in entry.getOwnership():
+      ownership.add(collectibles_selector_model.CollectibleOwnership(
+        accountAddress: ob.address, balance: ob.balance.truncate(int)))
+    items.add(collectibles_selector_model.CollectibleItem(
+      key: entry.getIDAsString(),
+      chainId: entry.getChainID(),
+      collectionUid: entry.getCollectionIDAsString(),
+      contractAddress: entry.getContractAddress(),
+      tokenId: entry.getTokenIDAsString(),
+      tokenType: entry.getTokenType(),
+      name: entry.getName(),
+      collectionName: entry.getCollectionName(),
+      mediaUrl: entry.getMediaURL(),
+      imageUrl: entry.getImageURL(),
+      communityId: entry.getCommunityId(),
+      communityName: entry.getCommunityRawName(),
+      communityImage: entry.getCommunityImage(),
+      communityPrivilegesLevel: entry.getCommunityPrivilegesLevel(),
+      ownership: ownership))
+
+  var networks: seq[collectibles_selector_model.CollectiblesNetworkInfo] = @[]
+  for n in self.controller.getFlatNetworks():
+    networks.add(collectibles_selector_model.CollectiblesNetworkInfo(
+      chainId: n.chainId, chainName: n.chainName, iconUrl: n.iconUrl))
+  return (items, networks)
+
+proc pushSelectorSource(self: Module) =
+  if self.selectorModels.len == 0:
+    return
+  let (items, networks) = self.buildSelectorSource()
+  for m in self.selectorModels.values:
+    m.setSource(items, networks)
+
+method createCollectiblesSelectorModel*(self: Module):
+    tuple[id: int, model: collectibles_selector_model.CollectiblesSelectorModel] =
+  let model = collectibles_selector_model.newCollectiblesSelectorModel()
+  let id = self.nextSelectorId
+  self.nextSelectorId.inc
+  self.selectorModels[id] = model
+  let (items, networks) = self.buildSelectorSource()
+  model.setSource(items, networks)
+  return (id, model)
+
+method releaseCollectiblesSelectorModel*(self: Module, id: int) =
+  self.selectorModels.del(id)
+
+method refreshCollectiblesSelectorModels*(self: Module) =
+  self.pushSelectorSource()
+
 method load*(self: Module) =
   singletonInstance.engine.setRootContextProperty("walletSectionAllCollectibles", self.viewVariant)
 
   self.events.on(SIGNAL_COLLECTIBLE_PREFERENCES_UPDATED) do(e: Args):
     let args = ResultArgs(e)
     self.view.collectiblePreferencesUpdated(args.success)
+
+  # Re-derive live picker models when the collectibles universe changes.
+  let model = self.collectiblesController.getModel()
+  discard QObject.connect(model, collectibles_model.countChanged,
+    self.view, onCollectiblesUniverseChanged)
+  discard QObject.connect(model, collectibles_model.itemsDataUpdated,
+    self.view, onCollectiblesUniverseChanged)
 
   self.controller.init()
   self.view.load()

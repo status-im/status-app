@@ -161,6 +161,24 @@ suite "collectibles builder - sort and grouping":
     check groups[1].icon == "z.png"
     check groups[1].subitems.mapIt(it.key) == @["o1"]
 
+  test "community group name uses communityName when non-empty":
+    let items = @[
+      item("g1", collectionUid = "collX", collectionName = "Coll X",
+        communityId = "com1", communityName = "Comm One", ownership = @[own("0xA", 1)]),
+    ]
+    let groups = buildDisplay(items, networks, params("0xA")).groups
+    check groups[0].groupType == "community"
+    check groups[0].groupName == "Comm One"
+
+  test "community group name falls back to collectionName when communityName empty":
+    let items = @[
+      item("g1", collectionUid = "collX", collectionName = "Coll X",
+        communityId = "com1", communityName = "", ownership = @[own("0xA", 1)]),
+    ]
+    let groups = buildDisplay(items, networks, params("0xA")).groups
+    check groups[0].groupType == "community"
+    check groups[0].groupName == "Coll X" # communityName || collectionName parity, never the hex communityId
+
   test "community collection subitem balance = number of collectibles in the collection":
     let items = @[
       item("m1", collectionUid = "collX", communityId = "com1", ownership = @[own("0xA", 1)]),
