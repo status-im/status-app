@@ -63,6 +63,7 @@ proc buildFlatCollectibles*(items: seq[CollectibleItem],
     result.add(FlatCollectible(
       key: item.key, chainId: item.chainId, collectionUid: item.collectionUid,
       contractAddress: item.contractAddress, tokenId: item.tokenId,
+      tokenType: item.tokenType,
       name: item.name, collectionName: item.collectionName,
       mediaUrl: item.mediaUrl, imageUrl: item.imageUrl, icon: item.iconFor(),
       iconUrl: net.iconUrl, chainName: net.chainName,
@@ -116,7 +117,10 @@ proc buildCollectibleGroups*(flat: seq[FlatCollectible]): seq[CollectibleGroup] 
       groupType: if isCommunity: "community" else: "other",
       groupName: if isCommunity: rep.communityName else: rep.collectionName,
       icon: if isCommunity: rep.communityImage else: rep.icon,
-      iconUrl: rep.iconUrl)
+      iconUrl: rep.iconUrl,
+      # Representative collectible's raw media; the shared SearchableCollectiblesPanel
+      # top-level delegate reads `imageUrl || mediaUrl` for the group thumbnail.
+      imageUrl: rep.imageUrl, mediaUrl: rep.mediaUrl)
     if isCommunity:
       group.subitems = communitySubitems(members)
     else:

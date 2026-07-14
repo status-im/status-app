@@ -21,11 +21,11 @@ proc own(account: string, balance = 1): CollectibleOwnership =
 
 proc item(key: string, chainId = 1, collectionUid = "c0", collectionName = "Coll 0",
     name = "", communityId = "", communityName = "", communityImage = "",
-    privileges = 2, imageUrl = "", mediaUrl = "",
+    privileges = 2, imageUrl = "", mediaUrl = "", tokenType = 2,
     ownership: seq[CollectibleOwnership] = @[]): CollectibleItem =
   CollectibleItem(
     key: key, chainId: chainId, collectionUid: collectionUid,
-    collectionName: collectionName,
+    collectionName: collectionName, tokenType: tokenType,
     name: if name.len > 0: name else: key,
     communityId: communityId, communityName: communityName,
     communityImage: communityImage, communityPrivilegesLevel: privileges,
@@ -90,6 +90,16 @@ suite "collectibles builder - flat filtering":
     check "master" notin flat.mapIt(it.key)
     check "member" in flat.mapIt(it.key)
     check "noncomm" in flat.mapIt(it.key) # non-community owner-privilege stays
+
+  test "tokenType + key(uid) pass through to the flat rows":
+    let items = @[
+      item("erc721", tokenType = 2, ownership = @[own("0xA", 1)]),
+      item("erc1155", tokenType = 3, ownership = @[own("0xA", 5)]),
+    ]
+    let flat = buildFlatCollectibles(items, networks, params("0xA"))
+    let byKey = flat.mapIt((it.key, it.tokenType)).toTable
+    check byKey["erc721"] == 2   # Constants.TokenType.ERC721
+    check byKey["erc1155"] == 3  # Constants.TokenType.ERC1155
 
   test "network join fills chainName + iconUrl":
     let items = @[item("op", chainId = 10, ownership = @[own("0xA", 1)])]

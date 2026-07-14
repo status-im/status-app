@@ -36,6 +36,8 @@ type
     GroupName
     Icon
     IconUrl
+    ImageUrl
+    MediaUrl
     Type
     Subitems
 
@@ -81,6 +83,8 @@ QtObject:
       ModelRole.GroupName.int: "groupName",
       ModelRole.Icon.int: "icon",
       ModelRole.IconUrl.int: "iconUrl",
+      ModelRole.ImageUrl.int: "imageUrl",
+      ModelRole.MediaUrl.int: "mediaUrl",
       ModelRole.Type.int: "type",
       ModelRole.Subitems.int: "subitems",
     }.toTable
@@ -93,6 +97,8 @@ QtObject:
     of ModelRole.GroupName: return newQVariant(group.groupName)
     of ModelRole.Icon: return newQVariant(group.icon)
     of ModelRole.IconUrl: return newQVariant(group.iconUrl)
+    of ModelRole.ImageUrl: return newQVariant(group.imageUrl)
+    of ModelRole.MediaUrl: return newQVariant(group.mediaUrl)
     of ModelRole.Type: return newQVariant(group.groupType)
     of ModelRole.Subitems:
       if self.subitemsByKey.hasKey(group.groupKey):
@@ -103,6 +109,8 @@ QtObject:
     if o.groupName != n.groupName: result.add(ModelRole.GroupName.int)
     if o.icon != n.icon: result.add(ModelRole.Icon.int)
     if o.iconUrl != n.iconUrl: result.add(ModelRole.IconUrl.int)
+    if o.imageUrl != n.imageUrl: result.add(ModelRole.ImageUrl.int)
+    if o.mediaUrl != n.mediaUrl: result.add(ModelRole.MediaUrl.int)
     if o.groupType != n.groupType: result.add(ModelRole.Type.int)
     # Subitems travel through the nested model's own signals, so no parent-level
     # dataChanged for the Subitems role here.
@@ -193,6 +201,12 @@ QtObject:
       self.groups[i].groupType
     proc groupNameAt*(self: CollectiblesSelectorModel, i: int): string =
       self.groups[i].groupName
+    proc groupImageUrlAt*(self: CollectiblesSelectorModel, i: int): string =
+      self.groups[i].imageUrl
+    proc groupMediaUrlAt*(self: CollectiblesSelectorModel, i: int): string =
+      self.groups[i].mediaUrl
+    proc groupRoleNamesForTest*(self: CollectiblesSelectorModel): seq[string] =
+      for _, name in self.roleNames(): result.add(name)
     proc subitemsModelForKey*(self: CollectiblesSelectorModel,
         key: string): CollectiblesSelectorSubitemsModel =
       if self.subitemsByKey.hasKey(key): return self.subitemsByKey[key]

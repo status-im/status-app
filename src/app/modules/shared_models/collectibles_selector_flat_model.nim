@@ -15,10 +15,12 @@ export collectibles_selector_item
 type
   ModelRole {.pure.} = enum
     Key = UserRole + 1
+    Uid                    # same value as Key; SimpleSendModal reads item.uid
     ChainId
     CollectionUid
     ContractAddress
     TokenId
+    TokenType
     Name
     CollectionName
     MediaUrl
@@ -58,10 +60,12 @@ QtObject:
   method roleNames(self: CollectiblesSelectorFlatModel): Table[int, string] =
     {
       ModelRole.Key.int: "key",
+      ModelRole.Uid.int: "uid",
       ModelRole.ChainId.int: "chainId",
       ModelRole.CollectionUid.int: "collectionUid",
       ModelRole.ContractAddress.int: "contractAddress",
       ModelRole.TokenId.int: "tokenId",
+      ModelRole.TokenType.int: "tokenType",
       ModelRole.Name.int: "name",
       ModelRole.CollectionName.int: "collectionName",
       ModelRole.MediaUrl.int: "mediaUrl",
@@ -81,10 +85,12 @@ QtObject:
     let item = self.items[index.row]
     case role.ModelRole:
     of ModelRole.Key: return newQVariant(item.key)
+    of ModelRole.Uid: return newQVariant(item.key)
     of ModelRole.ChainId: return newQVariant(item.chainId)
     of ModelRole.CollectionUid: return newQVariant(item.collectionUid)
     of ModelRole.ContractAddress: return newQVariant(item.contractAddress)
     of ModelRole.TokenId: return newQVariant(item.tokenId)
+    of ModelRole.TokenType: return newQVariant(item.tokenType)
     of ModelRole.Name: return newQVariant(item.name)
     of ModelRole.CollectionName: return newQVariant(item.collectionName)
     of ModelRole.MediaUrl: return newQVariant(item.mediaUrl)
@@ -102,6 +108,10 @@ QtObject:
     it.key & "@" & $it.chainId
 
   proc flatRoles(o, n: FlatCollectible): seq[int] =
+    # Only mutable roles are diffed. key/uid (identity), chainId, tokenId,
+    # tokenType, collectionUid, contractAddress are immutable for a given
+    # key@chainId row, so a value change there means a different row (handled as
+    # remove+insert by the id-keyed sync), never an in-place dataChanged.
     result = @[]
     if o.name != n.name: result.add(ModelRole.Name.int)
     if o.icon != n.icon: result.add(ModelRole.Icon.int)
@@ -132,3 +142,9 @@ QtObject:
       for it in self.items:
         if it.key == key: return it.balance
       return -1
+    proc tokenTypeForKey*(self: CollectiblesSelectorFlatModel, key: string): int =
+      for it in self.items:
+        if it.key == key: return it.tokenType
+      return -1
+    proc roleNamesForTest*(self: CollectiblesSelectorFlatModel): seq[string] =
+      for _, name in self.roleNames(): result.add(name)

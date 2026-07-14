@@ -16,11 +16,12 @@ type
     ## Input-shaped collectible (the raw cross-chain universe row). Mirrors the
     ## adaptor's `collectiblesModel` contract; the producer maps the service model
     ## onto this (note: the raw model's key role is `uid`).
-    key*: string
+    key*: string                            ## == the raw model's `uid` role value
     chainId*: int
     collectionUid*: string
     contractAddress*: string
     tokenId*: string
+    tokenType*: int                         ## Constants.TokenType (ERC721 = 2, ERC1155 = 3)
     name*: string
     collectionName*: string
     mediaUrl*: string
@@ -45,11 +46,12 @@ type
     ## A row of the `filteredFlatModel` view: input-shaped, filtered to the
     ## account + chains with per-account balance >= 1, joined with its network.
     ## `groupingValue` (communityId else collectionUid) drives grouping + sort.
-    key*: string
+    key*: string                           ## == uid (identity); also exposed as `uid`
     chainId*: int
     collectionUid*: string
     contractAddress*: string
     tokenId*: string
+    tokenType*: int                        ## Constants.TokenType (ERC721/ERC1155)
     name*: string
     collectionName*: string
     mediaUrl*: string
@@ -80,5 +82,7 @@ type
     groupName*: string
     icon*: string
     iconUrl*: string
+    imageUrl*: string                      ## representative collectible's imageUrl
+    mediaUrl*: string                      ## representative collectible's mediaUrl
     groupType*: string                     ## "community" | "other"
     subitems*: seq[CollectibleSubItem]
