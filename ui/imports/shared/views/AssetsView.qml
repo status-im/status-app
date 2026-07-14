@@ -4,6 +4,8 @@ import QtQuick.Layouts
 
 import QtQml.Models
 
+import QtModelsToolkit
+
 import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -14,13 +16,18 @@ import shared.controls
 import shared.popups
 import utils
 
-import SortFilterProxyModel
-
-
 Control {
     id: root
 
     /**
+      Model contract (terminal model — already visible-filtered and sorted; no
+      proxy is placed above it here):
+        - provides the derived roles `isCommunity`, `marketBalance`,
+          `change1DayFiat` and a `chainIds` role (comma-separated chain ids)
+          in addition to the base token roles below;
+        - re-sorts in place via `sortBy(roleName, order)` — this view emits the
+          `sortRequested` intent, the consumer wires it to the model.
+
       Expected model structure:
 
         key                         [string]    - refers to token group key
@@ -118,6 +125,17 @@ Control {
     // formatting function for fiat currency values
     property var formatFiat: balance => `${balance.toLocaleCurrencyString(Qt.locale())}`
 
+    // formats a token's balance for display (moved out of the retired proxy chain;
+    // the consumer supplies the currency context)
+    property var formatBalance: (balance, key) => `${balance.toLocaleString(Qt.locale())} ${key}`
+
+    // returns an error message for a token given its contributing chain ids,
+    // or an empty string when there is none
+    property var chainsError: (chainIds) => ""
+
+    // sort intent — consumer wires this to the model's sortBy(roleName, order)
+    signal sortRequested(string roleName, int order)
+
     signal sendRequested(string key)
     signal receiveRequested(string key)
     signal swapRequested(string key)
@@ -149,41 +167,33 @@ Control {
         readonly property int loadingItemsCount: 25
         property int sortOrder: Qt.DescendingOrder
         property int sortValue: -1
+
+        // Latched true once the source model has ever had rows. Keeps the list
+        // bound to the real model across periodic refreshes that toggle
+        // `loading`; the placeholder only ever shows before the first real data.
+        property bool everHadContent: false
+        // Latch off the source model's row count. Guard the null case with `&&`
+        // rather than optional chaining: the AOT-compiled mobile build drops the
+        // reactive dependency captured through `?.`, so the latch would never
+        // re-evaluate when rows arrive after creation.
+        readonly property int modelCount: !!root.model ? root.model.ModelCount.count : 0
+        onModelCountChanged: if (modelCount > 0) everHadContent = true
+        Component.onCompleted: if (modelCount > 0) everHadContent = true
+
+        // Emit the current sorter selection as an intent; separators carry an
+        // empty role name and are ignored.
+        function requestSort() {
+            const roleName = sortOrderComboBox.currentSortRoleName
+            if (!roleName)
+                return
+            root.sortRequested(roleName, sortOrderComboBox.currentSortOrder)
+        }
     }
 
-    SortFilterProxyModel {
-        id: sfpm
-
-        sourceModel: root.model ?? null
-
-        proxyRoles: [
-            // helper role for rendering section delegate
-            FastExpressionRole {
-                name: "isCommunity"
-                expression: !!model.communityId ? "community" : ""
-                expectedRoles: ["communityId"]
-            },
-            FastExpressionRole {
-                name: "marketBalance"
-                expression: model.balance * model.marketPrice
-                expectedRoles: ["balance", "marketPrice"]
-            },
-            FastExpressionRole {
-                name: "change1DayFiat"
-                expression: model.marketBalance * (1 - (1 / (model.marketChangePct24hour / 100 + 1)))
-                expectedRoles: ["marketBalance", "marketChangePct24hour"]
-            }
-        ]
-
-        sorters: [
-            RoleSorter {
-                roleName: "isCommunity"
-            },
-            RoleSorter {
-                roleName: sortOrderComboBox.currentSortRoleName
-                sortOrder: sortOrderComboBox.currentSortOrder
-            }
-        ]
+    Connections {
+        target: sortOrderComboBox
+        function onCurrentSortRoleNameChanged() { d.requestSort() }
+        function onCurrentSortOrderChanged() { d.requestSort() }
     }
 
     contentItem: ColumnLayout {
@@ -273,16 +283,22 @@ Control {
         DelegateModel {
             id: regularModel
 
-            model: sfpm
+            model: root.model ?? null
 
             delegate: TokenDelegate {
                 objectName: `AssetView_TokenListItem_${model.symbol}` // TODO: use model.key
 
                 width: ListView.view.width
 
+                // chainIds arrives as a comma-separated string from the terminal model
+                readonly property var chainIdsList: {
+                    const ids = model.chainIds
+                    return (ids && ids.length) ? ids.split(",").map(Number) : []
+                }
+
                 name: model.name
                 icon: model.logoUri
-                balance: model.balanceText
+                balance: root.formatBalance(model.balance, model.key)
                 balanceLoading: model.balanceLoading
                 marketBalance: root.formatFiat(model.marketBalance)
 
@@ -295,7 +311,7 @@ Control {
                 communityName: model.communityName ?? ""
                 communityIcon: model.communityImage ?? ""
 
-                errorTooltipText_1: model.error
+                errorTooltipText_1: root.chainsError(chainIdsList)
                 errorTooltipText_2: root.marketDataError
 
                 errorMode: !!root.balanceError
@@ -332,7 +348,14 @@ Control {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            model: root.loading ? loadingModel : regularModel
+            // Operand order matters: once `everHadContent` latches true,
+            // `!d.everHadContent` is false and short-circuits `&&`, dropping
+            // `root.loading` from this binding's captured dependencies. The
+            // periodic `loading` toggles then no longer re-evaluate and re-assign
+            // the model — re-assigning even the same DelegateModel makes the view
+            // rebuild every delegate. Before first data it still shows the
+            // placeholder while `loading` is true.
+            model: (!d.everHadContent && root.loading) ? loadingModel : regularModel
 
             section {
                 property: "isCommunity"

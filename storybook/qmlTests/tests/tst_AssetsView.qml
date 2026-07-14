@@ -2,15 +2,16 @@ import QtCore
 import QtQuick
 import QtTest
 
-import StatusQ
-import StatusQ.Models
-
 import shared.views
 import AppLayouts.Wallet.panels
 import AppLayouts.Wallet.controls
 import utils
+
+import StatusQ
+import StatusQ.Models
 import QtModelsToolkit
 import SortFilterProxyModel
+
 
 Item {
     id: root
@@ -36,12 +37,217 @@ Item {
         "Wrapped Ether", "Status Test Token", "Ether", "Dai Stablecoin"
     ]
 
-    ListModel {
+    // Role-compatible stub for the terminal AssetsAdaptorModel: derives
+    // isCommunity/marketBalance/change1DayFiat, filters to visible rows and
+    // re-sorts in place via sortBy(roleName, order) — mirrors the Nim model.
+    SortFilterProxyModel {
         id: assetsModel
 
-        function formatBalance(amount, symbol) {
-            return amount.toLocaleCurrencyString(Qt.locale(), symbol)
+        property int sortRoleOrder: Qt.DescendingOrder
+        property string sortRoleName: "name"
+
+        function sortBy(roleName, order) {
+            assetsModel.sortRoleName = roleName
+            assetsModel.sortRoleOrder = order
         }
+
+        sourceModel: baseAssetsModel
+        proxyRoles: [
+            FastExpressionRole {
+                name: "isCommunity"
+                expression: !!model.communityId ? "community" : ""
+                expectedRoles: ["communityId"]
+            },
+            FastExpressionRole {
+                name: "marketBalance"
+                expression: model.balance * model.marketPrice
+                expectedRoles: ["balance", "marketPrice"]
+            },
+            FastExpressionRole {
+                name: "change1DayFiat"
+                expression: model.marketBalance * (1 - (1 / (model.marketChangePct24hour / 100 + 1)))
+                expectedRoles: ["marketBalance", "marketChangePct24hour"]
+            }
+        ]
+        filters: ValueFilter { roleName: "visible"; value: true }
+        sorters: [
+            RoleSorter { roleName: "isCommunity" },
+            RoleSorter {
+                roleName: assetsModel.sortRoleName
+                sortOrder: assetsModel.sortRoleOrder
+            }
+        ]
+    }
+
+    ListModel {
+        id: baseAssetsModel
+
+        Component.onCompleted: {
+            append([
+                {
+                    key: "key_DAI",
+                    symbol: "DAI",
+                    name: "Dai Stablecoin",
+                    logoUri: Constants.tokenIcon("DAI", false),
+                    balance: 1.0,
+                    balanceLoading: false,
+                    marketDetailsAvailable: true,
+                    marketDetailsLoading: false,
+                    marketPrice: 3.0,
+                    marketChangePct24hour: 5.0,
+                    communityId: "",
+                    communityName: "",
+                    communityImage: Qt.resolvedUrl(""),
+                    position: 1,
+                    canBeHidden: true,
+                    visible: true,
+                    chainIds: "1"
+                },
+                {
+                    key: "key_STT",
+                    symbol: "STT",
+                    name: "Status Test Token",
+                    logoUri: Constants.tokenIcon("STT", false),
+                    balance: 2.0,
+                    balanceLoading: false,
+                    marketDetailsAvailable: true,
+                    marketDetailsLoading: false,
+                    marketPrice: 2.0,
+                    marketChangePct24hour: 5.0,
+                    communityId: "",
+                    communityName: "",
+                    communityImage: Qt.resolvedUrl(""),
+                    position: 2,
+                    canBeHidden: true,
+                    visible: true,
+                    chainIds: "1"
+                },
+                {
+                    key: "key_WETH",
+                    symbol: "WETH",
+                    name: "Wrapped Ether",
+                    logoUri: Constants.tokenIcon("ETH", false),
+                    balance: 3.0,
+                    balanceLoading: false,
+                    marketDetailsAvailable: true,
+                    marketDetailsLoading: false,
+                    marketPrice: 3.1,
+                    marketChangePct24hour: 5.0,
+                    communityId: "",
+                    communityName: "",
+                    communityImage: Qt.resolvedUrl(""),
+                    position: 3,
+                    canBeHidden: true,
+                    visible: true,
+                    chainIds: "1"
+                },
+                {
+                    key: "key_ETH",
+                    symbol: "ETH",
+                    name: "Ether",
+                    logoUri: Constants.tokenIcon("ETH", false),
+                    balance: 4.0,
+                    balanceLoading: false,
+                    marketDetailsAvailable: true,
+                    marketDetailsLoading: false,
+                    marketPrice: 4.1,
+                    marketChangePct24hour: 5.0,
+                    communityId: "",
+                    communityName: "",
+                    communityImage: Qt.resolvedUrl(""),
+                    position: 4,
+                    canBeHidden: false,
+                    visible: true,
+                    chainIds: "1"
+                }
+            ])
+        }
+    }
+
+    Component {
+        id: assetsViewComponent
+        AssetsView {
+            width: root.width
+            height: root.height
+            sorterVisible: true
+            model: assetsModel
+            onSortRequested: (roleName, order) => assetsModel.sortBy(roleName, order)
+        }
+    }
+
+    // A source model that starts empty; rows are appended during the test to
+    // reproduce the production timing where token rows arrive asynchronously,
+    // after the view is already up in its `loading` state.
+    ListModel {
+        id: asyncBaseModel
+    }
+
+    SortFilterProxyModel {
+        id: asyncAssetsModel
+
+        property int sortRoleOrder: Qt.DescendingOrder
+        property string sortRoleName: "name"
+
+        function sortBy(roleName, order) {
+            asyncAssetsModel.sortRoleName = roleName
+            asyncAssetsModel.sortRoleOrder = order
+        }
+
+        sourceModel: asyncBaseModel
+        proxyRoles: [
+            FastExpressionRole {
+                name: "isCommunity"
+                expression: !!model.communityId ? "community" : ""
+                expectedRoles: ["communityId"]
+            },
+            FastExpressionRole {
+                name: "marketBalance"
+                expression: model.balance * model.marketPrice
+                expectedRoles: ["balance", "marketPrice"]
+            },
+            FastExpressionRole {
+                name: "change1DayFiat"
+                expression: model.marketBalance * (1 - (1 / (model.marketChangePct24hour / 100 + 1)))
+                expectedRoles: ["marketBalance", "marketChangePct24hour"]
+            }
+        ]
+        filters: ValueFilter { roleName: "visible"; value: true }
+        sorters: [
+            RoleSorter { roleName: "isCommunity" },
+            RoleSorter {
+                roleName: asyncAssetsModel.sortRoleName
+                sortOrder: asyncAssetsModel.sortRoleOrder
+            }
+        ]
+    }
+
+    Component {
+        id: asyncAssetsViewComponent
+        AssetsView {
+            width: root.width
+            height: root.height
+            sorterVisible: true
+            model: asyncAssetsModel
+            onSortRequested: (roleName, order) => asyncAssetsModel.sortBy(roleName, order)
+        }
+    }
+
+    Component {
+        id: modelChangedSpyComponent
+        SignalSpy { signalName: "modelChanged" }
+    }
+
+    // ----- Custom-ordering harness -------------------------------------------
+    // Ported from the upstream custom-ordering tests (commit 50c24691dc) and
+    // adapted to the terminal-model architecture: our AssetsView no longer
+    // sorts internally, it emits sortRequested(roleName, order) and the
+    // consumer sorts the model. The harness therefore wires onSortRequested to
+    // a sortBy stub (mirroring RootStore.walletAssetsStore.sortAssets in
+    // production) and gives assetsViewModel a RoleSorter driven by the
+    // requested role. The "position" role is supplied by the controller, so a
+    // TokenOrderCustom sort reorders the wallet list into the saved order.
+    ListModel {
+        id: customOrderAssetsModel
 
         function marketDetailsForPrice(price) {
             return {
@@ -62,7 +268,6 @@ Item {
                     name: "Dai Stablecoin",
                     logoUri: Constants.tokenIcon("DAI", false),
                     balance: 1.0,
-                    balanceText: formatBalance(1.0, "DAI"),
                     balanceLoading: false,
                     error: "",
                     decimals: 18,
@@ -73,8 +278,10 @@ Item {
                     marketChangePct24hour: 5.0,
                     communityId: "",
                     communityName: "",
-                    communityIcon: Qt.resolvedUrl(""),
-                    canBeHidden: true
+                    communityImage: Qt.resolvedUrl(""),
+                    canBeHidden: true,
+                    visible: true,
+                    chainIds: "1"
                 },
                 {
                     key: "key_STT",
@@ -82,7 +289,6 @@ Item {
                     name: "Status Test Token",
                     logoUri: Constants.tokenIcon("STT", false),
                     balance: 2.0,
-                    balanceText: formatBalance(2.0, "STT"),
                     balanceLoading: false,
                     error: "",
                     decimals: 18,
@@ -93,8 +299,10 @@ Item {
                     marketChangePct24hour: 5.0,
                     communityId: "",
                     communityName: "",
-                    communityIcon: Qt.resolvedUrl(""),
-                    canBeHidden: true
+                    communityImage: Qt.resolvedUrl(""),
+                    canBeHidden: true,
+                    visible: true,
+                    chainIds: "1"
                 },
                 {
                     key: "key_WETH",
@@ -102,7 +310,6 @@ Item {
                     name: "Wrapped Ether",
                     logoUri: Constants.tokenIcon("ETH", false),
                     balance: 3.0,
-                    balanceText: formatBalance(3.0, "WETH"),
                     balanceLoading: false,
                     error: "",
                     decimals: 18,
@@ -113,8 +320,10 @@ Item {
                     marketChangePct24hour: 5.0,
                     communityId: "",
                     communityName: "",
-                    communityIcon: Qt.resolvedUrl(""),
-                    canBeHidden: true
+                    communityImage: Qt.resolvedUrl(""),
+                    canBeHidden: true,
+                    visible: true,
+                    chainIds: "1"
                 },
                 {
                     key: "key_ETH",
@@ -122,7 +331,6 @@ Item {
                     name: "Ether",
                     logoUri: Constants.tokenIcon("ETH", false),
                     balance: 4.0,
-                    balanceText: formatBalance(4.0, "ETH"),
                     balanceLoading: false,
                     error: "",
                     decimals: 18,
@@ -133,8 +341,10 @@ Item {
                     marketChangePct24hour: 5.0,
                     communityId: "",
                     communityName: "",
-                    communityIcon: Qt.resolvedUrl(""),
-                    canBeHidden: false
+                    communityImage: Qt.resolvedUrl(""),
+                    canBeHidden: false,
+                    visible: true,
+                    chainIds: "1"
                 }
             ])
         }
@@ -161,7 +371,7 @@ Item {
 
     ManageTokensController {
         id: assetsController
-        sourceModel: assetsModel
+        sourceModel: customOrderAssetsModel
         settingsKey: "AssetsViewCustomOrderTest"
         serializeAsCollectibles: false
 
@@ -179,7 +389,18 @@ Item {
 
     SortFilterProxyModel {
         id: assetsViewModel
-        sourceModel: assetsModel
+
+        // Terminal-model adaptation: our AssetsView asks the consumer to sort;
+        // sortBy(roleName, order) re-sorts this proxy in place.
+        property int sortRoleOrder: Qt.DescendingOrder
+        property string sortRoleName: "balance"
+
+        function sortBy(roleName, order) {
+            assetsViewModel.sortRoleName = roleName
+            assetsViewModel.sortRoleOrder = order
+        }
+
+        sourceModel: customOrderAssetsModel
         proxyRoles: [
             FastExpressionRole {
                 name: "position"
@@ -190,22 +411,18 @@ Item {
                 expectedRoles: ["key"]
             }
         ]
+        sorters: [
+            RoleSorter {
+                roleName: assetsViewModel.sortRoleName
+                sortOrder: assetsViewModel.sortRoleOrder
+            }
+        ]
     }
 
     QtObject {
         id: flowState
         // settings | manageTokens | wallet
         property string screen: "settings"
-    }
-
-    Component {
-        id: assetsViewComponent
-        AssetsView {
-            width: root.width
-            height: root.height
-            sorterVisible: true
-            model: assetsModel
-        }
     }
 
     Component {
@@ -224,6 +441,7 @@ Item {
                 model: assetsViewModel
                 customOrderAvailable: assetsController.hasSettings
                 onManageTokensRequested: flowState.screen = "manageTokens"
+                onSortRequested: (roleName, order) => assetsViewModel.sortBy(roleName, order)
 
                 function refreshSortSettings() {
                     let value = SortOrderComboBox.TokenOrderBalance
@@ -367,6 +585,100 @@ Item {
 
         function test_sortByUi_asc_desc(data) {
             verifySortByUi(data.optionText, data.orderAsc, data.orderDesc)
+        }
+
+        // A periodic market/balance refresh toggles `loading` while real data is
+        // already present. Once the regular model has content the list must stay
+        // bound to it — swapping to the loading placeholder tears down and
+        // recreates every delegate on each refresh.
+        function test_loadingToggle_keepsPopulatedModel() {
+            const listView = getListView(controlUnderTest)
+            waitForRendering(listView)
+            compare(listView.count, 4)
+            const modelInstance = listView.model
+
+            controlUnderTest.loading = true
+            verify(listView.model === modelInstance,
+                "loading placeholder must not replace the populated model on refresh")
+            compare(listView.count, 4)
+
+            controlUnderTest.loading = false
+            verify(listView.model === modelInstance)
+            compare(listView.count, 4)
+        }
+
+        // Once data is present, toggling `loading` must not re-assign the list's
+        // model at all. Keeping the same model instance is not enough: on the
+        // production ListView, re-assigning even the identical DelegateModel makes
+        // the view rebuild every delegate. The model binding must therefore drop
+        // `loading` from its dependencies once the content latch is set, so the
+        // periodic refresh toggles never re-evaluate it.
+        function test_loadingToggle_doesNotReassignModel() {
+            const listView = getListView(controlUnderTest)
+            waitForRendering(listView)
+            compare(listView.count, 4)   // regular model, data present
+
+            const spy = modelChangedSpyComponent.createObject(root, { target: listView })
+            verify(spy.valid)
+            spy.clear()
+
+            for (let i = 0; i < 4; ++i) {
+                controlUnderTest.loading = (i % 2 === 0)
+                waitForRendering(listView)
+            }
+
+            compare(spy.count, 0,
+                "loading toggles must not re-assign the list model once data is present")
+            spy.destroy()
+        }
+
+        // Covers the production initial condition the sort test above does not:
+        // the view starts in the global `loading` state (list on the placeholder)
+        // and token rows arrive asynchronously afterwards. Once real data has
+        // arrived the list must switch to and stay on the regular model across
+        // the periodic `loading` toggles, never rebuilding against the
+        // placeholder. NOTE: the on-device regression this guards is driven by
+        // the C++ terminal model not reporting its rows until a view consumes
+        // the regular DelegateModel; QML ListModel/SortFilterProxyModel report
+        // rows eagerly, so this case cannot fully reproduce that timing here —
+        // the authoritative red/green for it is the on-device startup trace.
+        function test_loadingStartTrue_latchesFromSourceModel() {
+            asyncBaseModel.clear()
+            const view = createTemporaryObject(asyncAssetsViewComponent, root,
+                { loading: true })
+            verify(!!view)
+            const listView = getListView(view)
+            waitForRendering(listView)
+
+            // Rows arrive while still loading and while the list is on the
+            // placeholder (the regular DelegateModel is not consumed yet).
+            asyncBaseModel.append({
+                key: "key_ETH", symbol: "ETH", name: "Ether",
+                logoUri: Constants.tokenIcon("ETH", false),
+                balance: 4.0, balanceLoading: false,
+                marketDetailsAvailable: true, marketDetailsLoading: false,
+                marketPrice: 4.1, marketChangePct24hour: 5.0,
+                communityId: "", communityName: "",
+                communityImage: Qt.resolvedUrl(""),
+                position: 1, canBeHidden: false, visible: true, chainIds: "1"
+            })
+            waitForRendering(listView)
+
+            // First real data has arrived: switch to the regular model and stay
+            // there across the periodic loading toggle.
+            view.loading = false
+            waitForRendering(listView)
+            const populatedModel = listView.model
+            compare(listView.count, 1)
+
+            view.loading = true
+            verify(listView.model === populatedModel,
+                "loading placeholder must not replace the populated model after first data")
+            compare(listView.count, 1)
+
+            view.loading = false
+            verify(listView.model === populatedModel)
+            compare(listView.count, 1)
         }
     }
 

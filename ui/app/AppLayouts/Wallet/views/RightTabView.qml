@@ -305,38 +305,18 @@ RightTabBaseView {
                     AssetsView {
                         id: walletAssetsView
 
-                        AssetsViewAdaptor {
-                            id: assetsViewAdaptor
-
-                            accounts: RootStore.addressFilters
-                            chains: root.networksStore.networkFilters
-
-                            marketValueThreshold:
-                                RootStore.tokensStore.displayAssetsBelowBalance
-                                ? RootStore.tokensStore.getDisplayAssetsBelowBalanceThresholdDisplayAmount()
-                                : 0
-
-                            Connections {
-                                target: RootStore.tokensStore
-
-                                function displayAssetsBelowBalanceThresholdChanged() {
-                                    assetsViewAdaptor.marketValueThresholdChanged()
-                                }
-                            }
-
-                            tokensModel: RootStore.walletAssetsStore.groupedAccountAssetsModel
-
-                            formatBalance: (balance, key) => {
-                                return LocaleUtils.currencyAmountToLocaleString(
-                                                   RootStore.currencyStore.getCurrencyAmount(balance, key))
-                            }
-
-                            chainsError: (chains) => {
-                                if (!root.networkConnectionStore)
-                                    return ""
-                                return root.networkConnectionStore.getBlockchainNetworkDownText(chains)
-                            }
+                        formatBalance: (balance, key) => {
+                            return LocaleUtils.currencyAmountToLocaleString(
+                                               RootStore.currencyStore.getCurrencyAmount(balance, key))
                         }
+
+                        chainsError: (chains) => {
+                            if (!root.networkConnectionStore)
+                                return ""
+                            return root.networkConnectionStore.getBlockchainNetworkDownText(chains)
+                        }
+
+                        onSortRequested: (roleName, order) => RootStore.walletAssetsStore.sortAssets(roleName, order)
 
                         function refreshSortSettings() {
                             settings.category = settingsCategoryName
@@ -387,7 +367,7 @@ RightTabBaseView {
                         loading: RootStore.overview.balanceLoading
                         sorterVisible: filterButton.checked
                         customOrderAvailable: RootStore.walletAssetsStore.assetsController.hasSettings
-                        model: assetsViewAdaptor.model
+                        model: RootStore.walletAssetsStore.assetsModel
                         bannerComponent: buyReceiveBannerComponent
 
                         marketDataError: !!root.networkConnectionStore
@@ -422,15 +402,15 @@ RightTabBaseView {
                         onCommunityClicked: Global.switchToCommunity(communityKey)
 
                         onHideRequested: (key) => {
-                                             const token = SQUtils.ModelUtils.getByKey(model, "key", key)
-                                             Global.openConfirmHideAssetPopup(token.symbol, token.name, token.icon, !!token.communityId)
+                                             const token = SQUtils.ModelUtils.getByKey(RootStore.walletAssetsStore.groupedAccountAssetsModel, "key", key)
+                                             Global.openConfirmHideAssetPopup(token.symbol, token.name, token.logoUri, !!token.communityId)
                                          }
                         onHideCommunityAssetsRequested:
                             (communityKey) => {
-                                const community = SQUtils.ModelUtils.getByKey(model, "communityId", communityKey)
+                                const community = SQUtils.ModelUtils.getByKey(RootStore.walletAssetsStore.groupedAccountAssetsModel, "communityId", communityKey)
                                 confirmHideCommunityAssetsPopup.createObject(root, {
                                                                                  name: community.communityName,
-                                                                                 icon: community.communityIcon,
+                                                                                 icon: community.communityImage,
                                                                                  communityId: communityKey }
                                                                              ).open()
                             }
@@ -439,7 +419,7 @@ RightTabBaseView {
                                                      Constants.settingsSubsection.wallet,
                                                      Constants.walletSettingsSubsection.manageAssets)
                         onAssetClicked: (key) => {
-                            const tokenGroup = SQUtils.ModelUtils.getByKey(model, "key", key)
+                            const tokenGroup = SQUtils.ModelUtils.getByKey(RootStore.walletAssetsStore.groupedAccountAssetsModel, "key", key)
 
                             assetDetailView.tokenGroup = tokenGroup
                             RootStore.setCurrentViewedHolding(tokenGroup.key, Constants.TokenType.ERC20, tokenGroup.communityId ?? "")
