@@ -1,5 +1,5 @@
 import # status-desktop libs
-  ./common, app/global/feature_flags
+  ./common, ./typed_handoff, app/global/feature_flags
 
 featureGuard THREADPOOL_ENABLED:
   import # std libs
@@ -37,6 +37,10 @@ proc teardown*(self: ThreadPool) =
   featureGuard THREADPOOL_ENABLED:
     self.pool.syncAll()
     self.pool.shutdown()
+  # Sweep any typed completions parked by workers whose GUI slot never ran (loop
+  # stopped mid-flight). All workers are quiesced by this point, so no producer
+  # can race the drain. Destroys them on the shutdown thread — see typed_handoff.
+  drainHandoffs()
 
 proc newThreadPool*(): ThreadPool =
   new(result)
