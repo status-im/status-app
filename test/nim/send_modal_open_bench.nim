@@ -10,14 +10,14 @@
 ## Nim side runs `buildOwnedSource()` (walks the owned token groups + grouped
 ## assets) then `setOwnedSource(groups, networks)` -> `recompute` ->
 ## `buildDisplayItems` (filter owned + build per-chain chips) -> `setSourceItems`
-## (sort + diff + reconcileNested: one nested balances model + one nested tokens
+## (sort + diff + reconcileByKey: one nested balances model + one nested tokens
 ## model PER group) -> row inserts; then `updateSendSectionNames()` -> a
 ## whole-list section-name dataChanged. All of that lands on the GUI thread while
 ## the sheet animates open.
 ##
 ## Two regimes are measured on the SAME real model + scene, per owned-set size
 ## (a heavy user's holdings are ~50-200; 500 / 1000 / 2000 are stress points that
-## expose scaling of the reconcileNested nested-QObject construction):
+## expose scaling of the reconcileByKey nested-QObject construction):
 ##
 ##   open_seed (the modal-open cost):  the dropdown is CLOSED (a real dropdown
 ##     realizes no delegates until opened), and mid-open-window the seed burst
