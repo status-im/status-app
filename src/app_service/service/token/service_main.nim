@@ -28,8 +28,10 @@ proc addNewTokensToGroupsOfInterest(self: Service, tokens: seq[TokenItem]) =
   createTokenGroupsFromTokens(tokens, self.groupsOfInterestByKey)
   self.groupsOfInterest = toSeq(self.groupsOfInterestByKey.values)
 
-proc applyAllTokenListsData(self: Service, tokenListsDtos: seq[TokenListDto]) =
-  self.allTokenLists = tokenListsDtos.map(tl => createTokenListItem(tl))
+proc applyAllTokenListsResult(self: Service, res: AllTokenListsApplyResult) =
+  # Slim GUI-thread apply: the worker already built the token-list items; MOVE
+  # them in (never copy — see applyRefreshTokensResult).
+  self.allTokenLists = move res.allTokenLists
 
 proc prefetchParaswapSupport(self: Service) =
   let chainIds = self.networkService.getEnabledChainIds()
@@ -97,43 +99,39 @@ proc prefetchLiFiSupportRetrieved(self: Service, response: string) {.slot.} =
   except Exception as ex:
     error "prefetchLiFiSupportRetrieved", err = ex.msg
 
-proc applyRefreshTokensData(self: Service, tokenDtos: seq[TokenDtoSafe], allTokenDtos: seq[TokenDtoSafe], tokenPrefsNode: JsonNode) =
-  let tokens = tokenDtos.map(t => createTokenItem(t))
-
-  if shouldReplaceTokensCache(tokens.len, self.groupsOfInterestByKey.len):
-    # Build the replacement state aside and swap it in, rather than clear-then-fill:
-    # a wiped-then-refilled table would leave a window where every key lookup misses.
-    var newGroupsByKey = initTable[string, TokenGroupItem]()
-    createTokenGroupsFromTokens(tokens, newGroupsByKey)
-    self.tokensOfInterestByKey = buildTokensByKey(tokens)
-    self.groupsOfInterestByKey = newGroupsByKey
-    self.groupsOfInterest = toSeq(self.groupsOfInterestByKey.values)
+proc applyRefreshTokensResult(self: Service, res: RefreshTokensApplyResult) =
+  # Slim GUI-thread apply: swap in the structures the worker already built
+  # off-thread — same swap-not-clear gate, same knownMissingKeys.clear() on a real
+  # tokens-of-interest refresh, same preferences merge, same market rebuild and
+  # events. The heavy decode + token-model build no longer runs on the GUI thread.
+  # MOVE the worker-built containers into service state — never copy. `res` is
+  # exclusively owned after takeTyped, so a copy would be pure waste: it re-refcounts
+  # every TokenItem/TokenGroupItem (O(graph)) and (before the {.acyclic.} fix on
+  # those types) walked the ORC cycle collector on each ref, which SIGSEGV'd on
+  # Android for this cross-thread graph. `move` transfers each container's storage
+  # in O(1) and does no per-element work.
+  if shouldReplaceTokensCache(res.tokensOfInterestCount, self.groupsOfInterestByKey.len):
+    # Swap the pre-built replacement in atomically, rather than clear-then-fill: a
+    # wiped-then-refilled table would leave a window where every key lookup misses.
+    self.tokensOfInterestByKey = move res.tokensOfInterestByKey
+    self.groupsOfInterestByKey = move res.groupsOfInterestByKey
+    self.groupsOfInterest = move res.groupsOfInterest
     # Fresh token data invalidates prior "not found" markers: a key that was
     # missing before may now resolve.
     self.knownMissingKeys.clear()
   else:
     debug "ignoring empty tokens-of-interest refresh; keeping existing token groups cache"
 
-  # Keep tokenPreferencesJson as the backend array string for QML; fill table from decoded DTOs.
-  self.tokenPreferencesJson = "[]"
-  if not tokenPrefsNode.isNil and tokenPrefsNode.kind == JArray:
-    self.tokenPreferencesJson = $tokenPrefsNode
-    for preferences in tokenPrefsNode:
-      let dto = Json.decode($preferences, TokenPreferencesDto, allowUnknownFields = true)
-      self.tokenPreferencesTable[dto.key] = TokenPreferencesItem(
-        key: dto.key,
-        position: dto.position,
-        groupPosition: dto.groupPosition,
-        visible: dto.visible,
-        communityId: dto.communityId)
+  # Keep tokenPreferencesJson as the backend array string for QML; the worker
+  # already decoded the rows — move them into the table (same merge as before).
+  self.tokenPreferencesJson = move res.tokenPreferencesJson
+  for preferences in res.tokenPreferences.mitems:
+    let key = preferences.key
+    self.tokenPreferencesTable[key] = move preferences
 
-  if shouldReplaceTokensCache(allTokenDtos.len, self.allTokensByGroupKey.len):
+  if shouldReplaceTokensCache(res.allTokensCount, self.allTokensByGroupKey.len):
     # Same swap-not-clear discipline as the tokens-of-interest cache above.
-    var newAllTokensByGroupKey = initTable[string, seq[TokenItem]]()
-    for dto in allTokenDtos:
-      let item = createTokenItem(dto)
-      newAllTokensByGroupKey.mgetOrPut(item.groupKey, @[]).add(item)
-    self.allTokensByGroupKey = newAllTokensByGroupKey
+    self.allTokensByGroupKey = move res.allTokensByGroupKey
   else:
     debug "ignoring empty all-tokens refresh; keeping existing all tokens cache"
   self.rebuildMarketData()
@@ -143,17 +141,14 @@ proc applyRefreshTokensData(self: Service, tokenDtos: seq[TokenDtoSafe], allToke
   self.events.emit(SIGNAL_TOKEN_PREFERENCES_UPDATED, Args())
 
 proc onAsyncRefreshTokensDone(self: Service, response: string) {.slot.} =
-  var env: RefreshTokensResponse
-  var decodeOk = false
-  try:
-    env = Json.decode(response, RefreshTokensResponse, allowUnknownFields = true)
-    decodeOk = true
-  except Exception as e:
-    error "error processing async refresh tokens", msg = e.msg
-  # Always advance the coordinator so a failed/undecodable completion never wedges
-  # the in-flight gate. On decode failure use the in-flight generation (not a stale
-  # sentinel) so a persistently undecodable response cannot re-fire forever.
-  let completedGen = if decodeOk: env.requestId else: self.refreshTokensGen.currentGeneration
+  # The worker already decoded the RPC responses AND built the token structures;
+  # claim the ready object by handle — no GUI-thread JSON parse or token-model
+  # build. `res` is nil only if the handoff was drained at shutdown.
+  let res = takeTyped[RefreshTokensApplyResult](response)
+  # Always advance the coordinator so a failed/nil completion never wedges the
+  # in-flight gate. On a nil handoff use the in-flight generation (not a stale
+  # sentinel) so it cannot re-fire forever.
+  let completedGen = if not res.isNil: res.generation else: self.refreshTokensGen.currentGeneration
   let c = self.refreshTokensGen.onCompletion(completedGen)
   if c.action == rcaDropAndRefire:
     debug "dropping stale async refresh tokens response; re-firing newest",
@@ -166,22 +161,16 @@ proc onAsyncRefreshTokensDone(self: Service, response: string) {.slot.} =
     self.startRefreshTokensTask(c.gen, refireFetchAllTokens)
     return
   # rcaApply: this is the newest generation.
-  if not decodeOk:
+  if res.isNil:
     return
-  if env.error.len > 0:
-    error "async refresh tokens failed", errDescription = env.error
+  if res.error.len > 0:
+    error "async refresh tokens failed", errDescription = res.error
     return
-  self.applyRefreshTokensData(env.tokensOfInterest, env.allTokens, env.tokenPreferences)
+  self.applyRefreshTokensResult(res)
 
 proc onAsyncFetchAllTokenListsDone(self: Service, response: string) {.slot.} =
-  var env: FetchAllTokenListsResponse
-  var decodeOk = false
-  try:
-    env = Json.decode(response, FetchAllTokenListsResponse, allowUnknownFields = true)
-    decodeOk = true
-  except Exception as e:
-    error "error processing async fetch all token lists", msg = e.msg
-  let completedGen = if decodeOk: env.requestId else: self.fetchAllTokenListsGen.currentGeneration
+  let res = takeTyped[AllTokenListsApplyResult](response)
+  let completedGen = if not res.isNil: res.generation else: self.fetchAllTokenListsGen.currentGeneration
   let c = self.fetchAllTokenListsGen.onCompletion(completedGen)
   if c.action == rcaDropAndRefire:
     debug "dropping stale async fetch all token lists response; re-firing newest",
@@ -190,12 +179,12 @@ proc onAsyncFetchAllTokenListsDone(self: Service, response: string) {.slot.} =
     return
   # rcaApply: newest generation, nothing more in flight.
   self.tokenListsLoading = false
-  if not decodeOk:
+  if res.isNil:
     return
-  if env.error.len > 0:
-    error "async fetch all token lists failed", errDescription = env.error
+  if res.error.len > 0:
+    error "async fetch all token lists failed", errDescription = res.error
     return
-  self.applyAllTokenListsData(env.allTokenLists)
+  self.applyAllTokenListsResult(res)
   self.events.emit(SIGNAL_TOKEN_LISTS_LOADED, Args())
 
 proc fetchPendingMissingTokenKeys(self: Service) =

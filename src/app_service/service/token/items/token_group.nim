@@ -7,7 +7,10 @@ import ./token
 
 export token
 
-type TokenGroupItem* = ref object of RootObj
+# {.acyclic.}: a group holds a seq of (acyclic) TokenItems and no back-edge, so it is
+# tree-shaped — ORC must skip cycle tracking (rememberCycle), which crashed on
+# Android arm64 for worker-built graphs applied on the GUI thread.
+type TokenGroupItem* {.acyclic.} = ref object of RootObj
   key*: string
   name*: string
   symbol*: string

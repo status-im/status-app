@@ -13,7 +13,12 @@ type CommunityDataItem* = CommunityDataDto
 
 type TokenDetailsItem* = TokenDetailsDto
 
-type TokenItemObj = object of RootObj
+# {.acyclic.}: TokenItem is tree-shaped (only value fields + a value CommunityDataItem,
+# no ref back-edges), so ORC must never treat it as a cycle candidate. Without this,
+# copying/destroying a TokenItem calls system.rememberCycle — which crashed (SIGSEGV)
+# on Android arm64 when the graph was built on a worker thread and touched on the GUI
+# thread. Acyclic types skip the cycle collector entirely.
+type TokenItemObj {.acyclic.} = object of RootObj
   key: string
   groupKey: string
   crossChainId: string
