@@ -1095,6 +1095,19 @@ nim-test-run/test/nim/collectibles_selector_bench.nim: | statusq
 nim-test-run/test/nim/collectibles_selector_model_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
 nim-test-run/test/nim/collectibles_selector_model_bench.nim: | statusq
 
+# Model-spy tests: these either call inspection accessors gated behind
+# `when defined(testing) or defined(QT_MODEL_SPY)` (compile-fail without it) or
+# assert on the granular signals model_sync records only under QT_MODEL_SPY
+# (runtime-fail without it). The define is applied per-file, NOT globally, so the
+# timing benches keep measuring uninstrumented models.
+nim-test-run/test/nim/assets_adaptor_model_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
+nim-test-run/test/nim/token_selector_model_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
+nim-test-run/test/nim/collectibles_selector_model_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
+nim-test-run/test/nim/token_selector_producer_view_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
+nim-test-run/test/nim/model_sync_move_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
+nim-test-run/test/nim/token_groups_model_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
+nim-test-run/test/nim/grouped_account_assets_model_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
+
 ifneq ($(mkspecs),win32)
 nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
