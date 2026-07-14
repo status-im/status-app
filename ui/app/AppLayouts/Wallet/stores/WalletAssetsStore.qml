@@ -32,6 +32,16 @@ QtObject {
     */
     readonly property var baseGroupedAccountAssetModel: walletSectionAssets.groupedAccountAssetsModel
 
+    // Terminal, already-aggregated assets model built in Nim (replaces the QML
+    // AssetsViewAdaptor proxy chain). Consumed by AssetsView in RightTabView.
+    readonly property var assetsModel: walletSectionAssetsView.assetsModel
+
+    // Re-sorts the terminal assets model in place. AssetsView emits the sort
+    // intent; this wires it to the model.
+    function sortAssets(roleName, order) {
+        walletSectionAssetsView.sortBy(roleName, order)
+    }
+
     readonly property var assetsController: ManageTokensController {
         sourceModel: groupedAccountAssetsModel
         settingsKey: "WalletAssets"

@@ -12,17 +12,62 @@ import Storybook
 import AppLayouts.Wallet.controls
 import AppLayouts.Wallet.panels
 
+import StatusQ
 import StatusQ.Popups.Dialog
+
+import SortFilterProxyModel
 
 SplitView {
     id: root
 
-    ListModel {
+    function format(amount, symbol) {
+        return `${amount.toLocaleString(Qt.locale())} ${symbol}`
+    }
+
+    // Role-compatible stub for the terminal AssetsAdaptorModel: derives
+    // isCommunity/marketBalance/change1DayFiat, filters to visible rows and
+    // re-sorts in place via sortBy(roleName, order) — mirrors the Nim model.
+    SortFilterProxyModel {
         id: assetsModel
 
-        function format(amount, symbol) {
-            return `${amount.toLocaleString(Qt.locale())} ${symbol}`
+        property int sortRoleOrder: Qt.DescendingOrder
+        property string sortRoleName: "name"
+
+        function sortBy(roleName, order) {
+            assetsModel.sortRoleName = roleName
+            assetsModel.sortRoleOrder = order
         }
+
+        sourceModel: baseAssetsModel
+        proxyRoles: [
+            FastExpressionRole {
+                name: "isCommunity"
+                expression: !!model.communityId ? "community" : ""
+                expectedRoles: ["communityId"]
+            },
+            FastExpressionRole {
+                name: "marketBalance"
+                expression: model.balance * model.marketPrice
+                expectedRoles: ["balance", "marketPrice"]
+            },
+            FastExpressionRole {
+                name: "change1DayFiat"
+                expression: model.marketBalance * (1 - (1 / (model.marketChangePct24hour / 100 + 1)))
+                expectedRoles: ["marketBalance", "marketChangePct24hour"]
+            }
+        ]
+        filters: ValueFilter { roleName: "visible"; value: true }
+        sorters: [
+            RoleSorter { roleName: "isCommunity" },
+            RoleSorter {
+                roleName: assetsModel.sortRoleName
+                sortOrder: assetsModel.sortRoleOrder
+            }
+        ]
+    }
+
+    ListModel {
+        id: baseAssetsModel
 
         Component.onCompleted: {
             const data = [
@@ -30,10 +75,9 @@ SplitView {
                     key: "key_ETH",
                     symbol: "ETH",
                     name: "Ether",
-                    icon: Constants.tokenIcon("ETH", false),
+                    logoUri: Constants.tokenIcon("ETH", false),
                     balance: 10.0,
-                    balanceText: format(10.0, "ETH"),
-                    error: "",
+                    balanceLoading: false,
 
                     marketDetailsAvailable: true,
                     marketDetailsLoading: true,
@@ -42,19 +86,20 @@ SplitView {
 
                     communityId: "",
                     communityName: "",
-                    communityIcon: Qt.resolvedUrl(""),
+                    communityImage: Qt.resolvedUrl(""),
 
                     position: 2,
-                    canBeHidden: false
+                    canBeHidden: false,
+                    visible: true,
+                    chainIds: "1"
                 },
                 {
                     key: "key_SNT",
                     symbol: "SNT",
                     name: "Status",
-                    icon: Constants.tokenIcon("SNT", false),
+                    logoUri: Constants.tokenIcon("SNT", false),
                     balance: 20023.0,
-                    balanceText: format(20023.0, "SNT"),
-                    error: "",
+                    balanceLoading: false,
 
                     marketDetailsAvailable: true,
                     marketDetailsLoading: false,
@@ -63,19 +108,20 @@ SplitView {
 
                     communityId: "",
                     communityName: "",
-                    communityIcon: Qt.resolvedUrl(""),
+                    communityImage: Qt.resolvedUrl(""),
 
                     position: 1,
-                    canBeHidden: true
+                    canBeHidden: true,
+                    visible: true,
+                    chainIds: "1,10"
                 },
                 {
                     key: "key_MCT",
                     symbol: "MCT",
                     name: "My custom token",
-                    icon: Constants.tokenIcon("ZRX", false),
+                    logoUri: Constants.tokenIcon("ZRX", false),
                     balance: 102.4,
-                    balanceText: format(102.4, "MCT"),
-                    error: "",
+                    balanceLoading: false,
 
                     marketDetailsAvailable: false,
                     marketDetailsLoading: false,
@@ -84,19 +130,20 @@ SplitView {
 
                     communityId: "34",
                     communityName: "Crypto Kitties",
-                    communityIcon: Constants.tokenIcon("DAI", false),
+                    communityImage: Constants.tokenIcon("DAI", false),
 
                     position: 4,
-                    canBeHidden: true
+                    canBeHidden: true,
+                    visible: true,
+                    chainIds: "1"
                 },
                 {
                     key: "key_DAI",
                     symbol: "DAI",
                     name: "Dai",
-                    icon: Constants.tokenIcon("DAI", false),
+                    logoUri: Constants.tokenIcon("DAI", false),
                     balance: 123.24,
-                    balanceText: format(123.24, "DAI"),
-                    error: "",
+                    balanceLoading: false,
 
                     marketDetailsAvailable: true,
                     marketDetailsLoading: false,
@@ -105,19 +152,20 @@ SplitView {
 
                     communityId: "",
                     communityName: "",
-                    communityIcon: Qt.resolvedUrl(""),
+                    communityImage: Qt.resolvedUrl(""),
 
                     position: 3,
-                    canBeHidden: true
+                    canBeHidden: true,
+                    visible: true,
+                    chainIds: "1"
                 },
                 {
                     key: "key_USDT",
                     symbol: "USDT",
                     name: "USDT",
-                    icon: Constants.tokenIcon("USDT", false),
+                    logoUri: Constants.tokenIcon("USDT", false),
                     balance: 15.24,
-                    balanceText: format(15.24, "USDT"),
-                    error: "",
+                    balanceLoading: false,
 
                     marketDetailsAvailable: true,
                     marketDetailsLoading: false,
@@ -126,21 +174,20 @@ SplitView {
 
                     communityId: "",
                     communityName: "",
-                    communityIcon: Qt.resolvedUrl(""),
+                    communityImage: Qt.resolvedUrl(""),
 
                     position: 5,
-                    canBeHidden: true
+                    canBeHidden: true,
+                    visible: true,
+                    chainIds: "1"
                 },
                 {
                     key: "key_TBT",
                     symbol: "TBT",
                     name: "The best token",
-                    icon: Constants.tokenIcon("UNI", false),
+                    logoUri: Constants.tokenIcon("UNI", false),
                     balance: 102,
-                    balanceText: format(102, "TBT"),
-                    error: "Pocket Network (POKT) & Infura are currently both "
-                               + "unavailable for %1. %1 balances are as of %2."
-                               .arg("TBT").arg("10/06/2024"),
+                    balanceLoading: false,
 
                     marketDetailsAvailable: false,
                     marketDetailsLoading: false,
@@ -149,10 +196,12 @@ SplitView {
 
                     communityId: "3423",
                     communityName: "Best tokens",
-                    communityIcon: Constants.tokenIcon("UNI", false),
+                    communityImage: Constants.tokenIcon("UNI", false),
 
                     position: 6,
-                    canBeHidden: true
+                    canBeHidden: true,
+                    visible: true,
+                    chainIds: "1,10"
                 }
             ]
 
@@ -190,6 +239,8 @@ SplitView {
                                  ? "Market data error!" : ""
 
                 model: assetsModel
+                formatBalance: (balance, key) => root.format(balance, key)
+                onSortRequested: (roleName, order) => assetsModel.sortBy(roleName, order)
 
                 onSendRequested: (key) =>logs.logEvent(`send requested: ${key}`)
                 onReceiveRequested: (key) => logs.logEvent(`receive requested: ${key}`)
