@@ -470,6 +470,18 @@ QtObject:
     ## Test/inspection accessor: the group keys in display order (what QML sees).
     self.getDisplayModel().mapIt(it.key)
 
+  proc getLoadedGroups*(self: TokenGroupsModel): seq[TokenGroupItem] =
+    ## The currently displayed groups (lazily-loaded subset or full set), for a
+    ## producer that snapshots this model's rows into its own terminal model.
+    self.getDisplayModel()
+
+  proc hasMoreItemsForSource*(self: TokenGroupsModel): bool =
+    ## Public alias of the hasMoreItems property read for non-QML callers.
+    self.getHasMoreItems()
+
+  proc isLoadingMoreForSource*(self: TokenGroupsModel): bool =
+    self.getIsLoadingMore()
+
   proc setup(self: TokenGroupsModel) =
     self.QAbstractListModel.setup
     self.tokenMarketDetails = initTable[string, MarketDetailsItem]()
