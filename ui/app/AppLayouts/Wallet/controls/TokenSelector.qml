@@ -25,6 +25,9 @@ Control {
 
     property bool showSectionName: true
 
+    /** Forwarded to SearchableAssetsPanel; see its formatCurrencyBalance. **/
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : String(amount))
+
     signal assetSelected(string key)
     signal collectionSelected(string key)
     signal collectibleSelected(string key)
@@ -112,12 +115,13 @@ Control {
                 }
 
                 showSectionName: root.showSectionName
+                formatCurrencyBalance: root.formatCurrencyBalance
 
                 onAssetSelected: function(key) {
                     const entry = ModelUtils.getByKey(assetsModel, "key", key)
                     highlightedKey = key
 
-                    setCurrentAndClose(entry.symbol, entry.iconSource)
+                    setCurrentAndClose(entry.symbol, entry.logoUri || Constants.tokenIcon(entry.symbol))
                     root.assetSelected(key)
                 }
 

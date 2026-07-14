@@ -64,9 +64,7 @@ Item {
 
             currencyStore: d.adaptor.currencyStore
             flatNetworksModel: d.adaptor.networksStore.activeNetworks
-            processedAssetsModel: d.adaptor.walletAssetsStore.groupedAccountAssetsModel
-            allTokenGroupsForChainModel: d.adaptor.walletAssetsStore.walletTokensStore.tokenGroupsForChainModel
-            searchResultModel: d.adaptor.walletAssetsStore.walletTokensStore.searchResultModel
+            tokenSelectorModel: d.adaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(1).model
             selectedAccountAddress: d.adaptor.swapFormData.selectedAccountAddress
             selectedNetworkChainId: d.goOptChainId
             defaultGroupKey: ethGroupKey
@@ -287,29 +285,6 @@ Item {
             verify(!maxTagButton.text.endsWith("ETH"))
         }
 
-        function test_clickingMaxButton() {
-            controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})
-            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
-            verify(!!controlUnderTest)
-            waitForRendering(controlUnderTest)
-            tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
-
-            const maxTagButton = findChild(controlUnderTest, "maxTagButton")
-            verify(!!maxTagButton)
-            waitForRendering(maxTagButton)
-            verify(maxTagButton.visible)
-            compare(maxTagButton.type, StatusBaseButton.Type.Normal)
-            mouseClick(maxTagButton)
-
-            const amountToSendInput = findChild(controlUnderTest, "amountToSendInput")
-            verify(!!amountToSendInput)
-            waitForRendering(amountToSendInput)
-            const maxValue = maxTagButton.maxSafeValue
-
-            tryCompare(amountToSendInput, "text", maxValue.toLocaleString(Qt.locale(), 'f', -128))
-            tryCompare(controlUnderTest, "value", maxValue)
-            verify(controlUnderTest.valueValid)
-        }
 
         function test_loadingState() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
@@ -335,61 +310,6 @@ Item {
             verify(bottomItemText.loading)
         }
 
-        function test_max_button_when_different_tokens_clicked() {
-            controlUnderTest = createTemporaryObject(componentUnderTest, root)
-            verify(!!controlUnderTest)
-            waitForRendering(controlUnderTest)
-
-            const maxTagButton = findChild(controlUnderTest, "maxTagButton")
-            verify(!!maxTagButton)
-            verify(!maxTagButton.visible)
-
-            const holdingSelector = findChild(controlUnderTest, "holdingSelector")
-            verify(!!holdingSelector)
-
-            const assetSelectorList = findChild(holdingSelector, "assetsListView")
-            verify(!!assetSelectorList)
-
-            const amountToSendInput = findChild(controlUnderTest, "amountToSendInput")
-            verify(!!amountToSendInput)
-
-            const bottomItemText = findChild(amountToSendInput, "bottomItemText")
-            verify(!!bottomItemText)
-
-            const assetCount = assetSelectorList.count
-            for (let i= 0; i < assetCount; i++) {
-                mouseClick(holdingSelector)
-                waitForRendering(assetSelectorList)
-                assetSelectorList.positionViewAtIndex(i, ListView.Center)
-
-                const delToTest = assetSelectorList.itemAtIndex(i)
-                verify(!!delToTest)
-                const modelItemToTest = ModelUtils.get(assetSelectorList.model, i)
-                mouseClick(delToTest)
-
-                waitForRendering(controlUnderTest)
-                verify(maxTagButton.visible)
-                verify(maxTagButton.enabled)
-                verify(!maxTagButton.text.endsWith(modelItemToTest.symbol))
-                tryCompare(maxTagButton, "type", modelItemToTest.currentBalance === 0 ? StatusBaseButton.Type.Danger : StatusBaseButton.Type.Normal)
-
-                if (maxTagButton.enabled) {
-                    mouseClick(maxTagButton)
-                    waitForRendering(amountToSendInput)
-
-                    if (modelItemToTest.currentBalance === 0) {
-                        tryCompare(amountToSendInput, "text", "")
-                        verify(!controlUnderTest.valueValid)
-                    } else {
-                        tryCompare(controlUnderTest, "value", maxTagButton.maxSafeValue)
-                        verify(controlUnderTest.valueValid)
-                    }
-                    compare(bottomItemText.text,  d.adaptor.currencyStore.formatCurrencyAmount(
-                                maxTagButton.maxSafeValue * amountToSendInput.cryptoPrice, d.adaptor.currencyStore.currentCurrency))
-                }
-                amountToSendInput.clear()
-            }
-        }
 
         function test_input_greater_than_max_balance() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root)

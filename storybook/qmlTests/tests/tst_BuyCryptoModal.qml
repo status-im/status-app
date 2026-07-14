@@ -41,6 +41,27 @@ Item {
             networksModel: NetworksModel.flatNetworks
             tokenGroupsModel: assetsStore.walletTokensStore.tokenGroupsModel
             groupedAccountAssetsModel: assetsStore.groupedAccountAssetsModel
+            // Stub for the terminal picker model. Mirrors the eth-native group's
+            // multi-chain tokens so BuyCryptoModalAdaptor's provider/chain filter
+            // behaves as it did against the retired adaptor's output.
+            tokenSelectorModel: TokenSelectorModelMock {
+                sourceData: [
+                    {
+                        key: Constants.ethGroupKey, name: "Ether", symbol: Constants.ethToken,
+                        logoUri: Constants.tokenIcon(Constants.ethToken), decimals: 18,
+                        currencyBalance: 0, cryptoPrice: 0, sectionName: "Popular assets",
+                        balances: [],
+                        tokens: [
+                            { key: "1-0x0000000000000000000000000000000000000000", chainId: 1 },
+                            { key: "10-0x0000000000000000000000000000000000000000", chainId: 10 },
+                            { key: "42161-0x0000000000000000000000000000000000000000", chainId: 42161 },
+                            { key: "11155111-0x0000000000000000000000000000000000000000", chainId: 11155111 },
+                            { key: "11155420-0x0000000000000000000000000000000000000000", chainId: 11155420 },
+                            { key: "421614-0x0000000000000000000000000000000000000000", chainId: 421614 }
+                        ]
+                    }
+                ]
+            }
             buyCryptoInputParamsForm: BuyCryptoParamsForm {
                 selectedWalletAddress: "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
                 selectedNetworkChainId: 11155111
@@ -227,7 +248,7 @@ Item {
             const modelDataToTest = ModelUtils.getByKey(tokenSelector.model, "key",
                                                         controlUnderTest.buyCryptoInputParamsForm.selectedTokenGroupKey)
             compare(selectedAssetButton.selected, true)
-            compare(selectedAssetButton.icon, modelDataToTest.iconSource)
+            compare(selectedAssetButton.icon, modelDataToTest.logoUri)
             compare(selectedAssetButton.name, modelDataToTest.name)
             compare(selectedAssetButton.subname, modelDataToTest.symbol)
 

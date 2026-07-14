@@ -393,7 +393,7 @@ StatusDialog {
                 let maxCryptoBalance = 0.0
                 let balanceOnChain = SQUtils.ModelUtils.getByKey(d.selectedAssetEntry.item.balances, "chainId", root.selectedChainId)
                 if (!!balanceOnChain) {
-                    let bigIntBalance = SQUtils.AmountsArithmetic.fromString(balanceOnChain.balance)
+                    let bigIntBalance = SQUtils.AmountsArithmetic.fromString(balanceOnChain.rawBalance)
                     maxCryptoBalance = SQUtils.AmountsArithmetic.toNumber(bigIntBalance, d.selectedAssetEntry.item.decimals)
                 }
                 return WalletUtils.calculateMaxSafeSendAmount(maxCryptoBalance, d.selectedCryptoTokenSymbol, root.selectedChainId)
@@ -423,7 +423,7 @@ StatusDialog {
                     return allowSend
                 }
 
-                const bigIntBalance = SQUtils.AmountsArithmetic.fromString(balanceOnChain.balance)
+                const bigIntBalance = SQUtils.AmountsArithmetic.fromString(balanceOnChain.rawBalance)
                 const oneGwei = SQUtils.AmountsArithmetic.fromString("1000000000") // 1 GWei
                 if(SQUtils.AmountsArithmetic.cmp(oneGwei, bigIntBalance) >= 0) {
                     // if the balance is less than or equal 1GWei, let the user enter any amount, this way for L2 chains the app allows sending
@@ -603,6 +603,7 @@ StatusDialog {
                 networksModel: root.networksModel
                 assetsModel: root.assetsModel
                 collectiblesModel: root.collectiblesModel
+                formatCurrencyBalance: (amount) => root.fnFormatCurrencyAmount(amount, root.currentCurrency)
 
                 selectedChainId: root.selectedChainId
 
@@ -661,6 +662,7 @@ StatusDialog {
                     networksModel: root.networksModel
                     assetsModel: root.assetsModel
                     collectiblesModel: root.collectiblesModel
+                    formatCurrencyBalance: (amount) => root.fnFormatCurrencyAmount(amount, root.currentCurrency)
 
                     selectedChainId: root.selectedChainId
 

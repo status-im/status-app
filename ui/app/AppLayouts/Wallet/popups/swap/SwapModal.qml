@@ -38,6 +38,13 @@ StatusDialog {
 
     objectName: "swapModal"
 
+    Component.onDestruction: {
+        const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+        store.releaseTokenSelectorModel(d.payTokenSelector.id)
+        store.releaseTokenSelectorModel(d.receiveTokenSelector.id)
+        store.releaseTokenSelectorModel(d.receiveTokenSelectorTo.id)
+    }
+
     implicitWidth: 556
     fillHeightOnBottomSheet: true
     topPadding: Theme.xlPadding
@@ -47,6 +54,14 @@ StatusDialog {
         id: d
 
         readonly property string mandatoryKeysSeparator: "$$"
+
+        // One terminal picker model per side ({ model, id }); released on modal
+        // destruction so the producer stops tracking them (avoids a per-open leak).
+        // The receive side has two: the source-chain picker (plain swap) and the
+        // destination-chain picker (bridge), switched by isSameChainSwap below.
+        readonly property var payTokenSelector: root.swapAdaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(1)
+        readonly property var receiveTokenSelector: root.swapAdaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(1)
+        readonly property var receiveTokenSelectorTo: root.swapAdaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(3)
 
         property var debounceFetchSuggestedRoutes: Backpressure.debounce(root, 1000, function() {
             root.swapAdaptor.fetchSuggestedRoutes(payPanel.rawValue)
@@ -249,9 +264,7 @@ StatusDialog {
 
                     currencyStore: root.swapAdaptor.currencyStore
                     flatNetworksModel: root.swapAdaptor.networksStore.activeNetworks
-                    processedAssetsModel: root.swapAdaptor.walletAssetsStore.groupedAccountAssetsModel
-                    allTokenGroupsForChainModel: root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsForChainModel
-                    searchResultModel: root.swapAdaptor.walletAssetsStore.walletTokensStore.searchResultModel
+                    tokenSelectorModel: d.payTokenSelector.model
 
                     groupKey: root.swapInputParamsForm.fromGroupKey
                     defaultGroupKey: root.swapInputParamsForm.defaultFromGroupKey
@@ -302,12 +315,9 @@ StatusDialog {
 
                     currencyStore: root.swapAdaptor.currencyStore
                     flatNetworksModel: root.swapAdaptor.networksStore.activeNetworks
-                    processedAssetsModel: root.swapAdaptor.walletAssetsStore.groupedAccountAssetsModel
-                    // plain swap reuses the source catalog; only a bridge uses the destination one
-                    allTokenGroupsForChainModel: d.isSameChainSwap
-                        ? root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsForChainModel
-                        : root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsForChainToModel
-                    searchResultModel: root.swapAdaptor.walletAssetsStore.walletTokensStore.searchResultModel
+                    // plain swap reuses the source-chain picker; only a bridge uses the destination one
+                    tokenSelectorModel: d.isSameChainSwap ? d.receiveTokenSelector.model
+                                                          : d.receiveTokenSelectorTo.model
 
                     groupKey: root.swapInputParamsForm.toGroupKey
                     defaultGroupKey: root.swapInputParamsForm.defaultToGroupKey

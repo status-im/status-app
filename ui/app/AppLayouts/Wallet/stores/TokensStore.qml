@@ -17,6 +17,25 @@ QtObject {
     /* PRIVATE: Modules used to get data from backend */
     readonly property var _allTokensModule: !!walletSectionAllTokens ? walletSectionAllTokens : null
     readonly property var _networksModule: !!networksModule ? networksModule : null
+    readonly property var _tokenSelectorModule: !!walletSectionTokenSelector ? walletSectionTokenSelector : null
+
+    /* Creates a terminal token-selector picker model for the given kind
+       (0=send, 1=swap, 2=buy). Returns { model, id }: the producer keeps the
+       model updated with the owned source and the caller sets its per-modal
+       params; the id must be passed to releaseTokenSelectorModel when the owning
+       modal is destroyed so the model stops being tracked and can be freed. */
+    function createTokenSelectorModel(kind) {
+        if (!root._tokenSelectorModule)
+            return { model: null, id: -1 }
+        root._tokenSelectorModule.prepareModel(kind)
+        const model = root._tokenSelectorModule.getPreparedModel()
+        return { model: model, id: root._tokenSelectorModule.lastPreparedModelId }
+    }
+
+    function releaseTokenSelectorModel(id) {
+        if (!!root._tokenSelectorModule && id >= 0)
+            root._tokenSelectorModule.releaseModel(id)
+    }
 
     readonly property double tokenListUpdatedAt: root._allTokensModule.tokenListUpdatedAt
 
