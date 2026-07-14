@@ -27,6 +27,7 @@ proc sortTokenGroupsByName(groups: var seq[TokenGroupItem]) =
 proc addNewTokensToGroupsOfInterest(self: Service, tokens: seq[TokenItem]) =
   createTokenGroupsFromTokens(tokens, self.groupsOfInterestByKey)
   self.groupsOfInterest = toSeq(self.groupsOfInterestByKey.values)
+  sortTokenGroupsByKey(self.groupsOfInterest)  # deterministic order
 
 proc applyAllTokenListsResult(self: Service, res: AllTokenListsApplyResult) =
   # Slim GUI-thread apply: the worker already built the token-list items; MOVE
@@ -232,7 +233,7 @@ proc onAsyncFetchMissingTokensDone(self: Service, response: string) {.slot.} =
         foundKeys.incl(requestedKey)
     if foundTokens.len > 0:
       self.addNewTokensToGroupsOfInterest(foundTokens)
-    # Keys the backend did not return are genuinely missing -> feed the 0001 markers.
+    # Keys the backend did not return are genuinely missing -> feed the negative-cache markers.
     for key in missingFromBatch(env.requestedKeys, foundKeys):
       self.knownMissingKeys.incl(key)
     if foundTokens.len > 0:

@@ -1073,6 +1073,8 @@ nim-test-run/test/nim/typed_completion_test.nim: | statusq
 # models.
 nim-test-run/test/nim/model_sync_move_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
 nim-test-run/test/nim/model_sync_unified_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
+nim-test-run/test/nim/token_groups_model_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
+nim-test-run/test/nim/grouped_account_assets_model_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
 
 ifneq ($(mkspecs),win32)
 nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
