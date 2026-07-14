@@ -1089,6 +1089,16 @@ nim-test-run/test/nim/send_handler_lookup_bench.nim: | statusq
 nim-test-run/test/nim/send_handler_adaptors_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
 nim-test-run/test/nim/send_handler_adaptors_bench.nim: | statusq
 
+# collectibles_selector_bench drives the real CollectiblesSelectionAdaptor proxy
+# chain through two offscreen ListViews (RED baseline) -- links StatusQ.
+nim-test-run/test/nim/collectibles_selector_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+nim-test-run/test/nim/collectibles_selector_bench.nim: | statusq
+
+# collectibles_selector_model_bench measures the GREEN terminal model directly
+# (context-injected, no proxies above it) -- links StatusQ for the offscreen engine.
+nim-test-run/test/nim/collectibles_selector_model_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+nim-test-run/test/nim/collectibles_selector_model_bench.nim: | statusq
+
 # Model-spy tests call inspection accessors gated behind
 # `when defined(testing) or defined(QT_MODEL_SPY)` or assert on the granular
 # signals model_sync records only under QT_MODEL_SPY. The define is applied
