@@ -98,11 +98,20 @@ OnboardingStackView {
         loginScreen.setBiometricResponse(secret, error)
     }
 
+    Connections {
+        target: root.loginAccountsModel?.ModelCount ?? null
+
+        function onCountChanged() {
+            d.showWelcomePageIfNoProfiles()
+        }
+    }
+
     QtObject {
         id: d
 
         property int flow
         property LoginScreen loginScreen: null
+        property var manageProfilesDialog: null
 
 
         function pushOrSkipBiometricsPage() {
@@ -133,7 +142,18 @@ OnboardingStackView {
         }
 
         function openManageProfilesPopup() {
-            manageProfilesPopup.createObject(root).open()
+            d.manageProfilesDialog = manageProfilesPopup.createObject(root)
+            d.manageProfilesDialog.open()
+        }
+
+        function showWelcomePageIfNoProfiles() {
+            if (!root.loginAccountsModel?.ModelCount.empty)
+                return
+
+            if (d.manageProfilesDialog)
+                d.manageProfilesDialog.close()
+
+            root.replace(null, welcomePage)
         }
 
         function openDeleteMultiaccountConfirmationDialog(keyUid, username) {
