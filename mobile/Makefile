@@ -1,7 +1,13 @@
 -include ./scripts/EnvVariables.mk
 -include ./scripts/Common.mk
 
+# iOS device and simulator are both arm64 but produce incompatible objects,
+# so the sentinel key must include the SDK (iphoneos vs iphonesimulator).
+ifeq ($(OS),ios)
+PLATFORM_TARGET := $(OS)-$(ARCH)-$(IPHONE_SDK)
+else
 PLATFORM_TARGET := $(OS)-$(ARCH)
+endif
 
 # FLAG_KEYCARD_ENABLED: Controls NFC/Keycard support
 # - iOS: Default 1 (enabled) - Build with NFC support, works with free Apple Developer account
