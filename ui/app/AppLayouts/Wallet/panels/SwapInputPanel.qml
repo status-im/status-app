@@ -31,12 +31,19 @@ Control {
 
     // Terminal picker model (swap/all-tokens), created by the caller from the
     // token-selector producer. Its per-modal params are driven by the bindings
-    // below; owned/popular/search rows are fed by the producer.
+    // below; owned/popular/search rows are fed by the producer. May be null while
+    // the owning modal defers picker creation until it has opened; the bindings
+    // below tolerate that, and this re-initialises once a model arrives.
     required property var tokenSelectorModel
     // SwapModal rebinds this between the swap and swap-to models when the
     // same-chain check flips, so the titles must follow the instance, not just
     // this panel's chain.
-    onTokenSelectorModelChanged: root.updateSectionNames()
+    onTokenSelectorModelChanged: {
+        if (root.tokenSelectorModel) {
+            root.updateSectionNames()
+            root.reevaluateSelectedId()
+        }
+    }
 
     property int selectedNetworkChainId: -1
     onSelectedNetworkChainIdChanged: {
@@ -102,7 +109,8 @@ Control {
     }
 
     function reset() {
-        root.tokenSelectorModel.search("")
+        if (root.tokenSelectorModel)
+            root.tokenSelectorModel.search("")
     }
 
     // Drive the picker model's per-panel params (swap = all-tokens; -1 chain = no
@@ -147,6 +155,8 @@ Control {
         property string selectedHoldingTokenKey: ""
 
         function reevaluateSelectedId() {
+            if (!root.tokenSelectorModel)
+                return
             const entry = SQUtils.ModelUtils.getByKey(root.tokenSelectorModel, "key", d.selectedHoldingId)
             if (!entry) {
                 // Token doesn't exist in destination chain
@@ -164,6 +174,8 @@ Control {
         }
 
         function setHoldingToSelector() {
+            if (!root.tokenSelectorModel)
+                return
             if (selectedHolding.available && !!selectedHolding.item) {
                 if (!selectedHolding.item.tokens || selectedHolding.item.tokens.ModelCount.count !== 1) {
                     console.error("token for the selected group cannot be resolved", "group-key", d.selectedHoldingId, "chain", root.selectedNetworkChainId)
@@ -352,8 +364,8 @@ Control {
                 Layout.alignment: Qt.AlignRight
 
                 model: root.tokenSelectorModel
-                hasMoreItems: root.tokenSelectorModel.hasMoreItems
-                isLoadingMore: root.tokenSelectorLoading || root.tokenSelectorModel.isLoadingMore
+                hasMoreItems: !!root.tokenSelectorModel && root.tokenSelectorModel.hasMoreItems
+                isLoadingMore: root.tokenSelectorLoading || (!!root.tokenSelectorModel && root.tokenSelectorModel.isLoadingMore)
                 nonInteractiveKey: root.nonInteractiveGroupKey
                 formatCurrencyBalance: (amount) => root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency)
 

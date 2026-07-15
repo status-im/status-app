@@ -132,6 +132,11 @@ Item {
             controlUnderTest.open()
             tryVerify(() => controlUnderTest.opened)
             tryVerify(() => controlUnderTest.enabled)
+            // The token picker models are created lazily just after the modal opens
+            // (kept off the open critical path); wait for them so the tests below can
+            // read payPanel/receivePanel.tokenSelectorModel.
+            const payPanel = findChild(controlUnderTest, "payPanel")
+            tryVerify(() => !!payPanel && !!payPanel.tokenSelectorModel)
         }
 
         function closeAndVerfyModal() {
