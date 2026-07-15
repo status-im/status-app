@@ -66,22 +66,6 @@ Control {
         property bool selectable: false
         property color textColor: Theme.palette.directColor1
 
-        // Rich-text HTML for the non-code renderers: CSS rules (inline `code` background, link
-        // color, mention background) plus the pre-wrapped content. `hoveredLink` (selectable
-        // mode) adds a hover background on the link currently under the pointer.
-        function richTextFor(hoveredLink) {
-            let style = "<style>code { background-color: " + root.codeBackgroundColor
-                      + "; font-family: '" + Fonts.codeFont.family + "' }"
-                      + " a { color: " + root.linkColor + " }"
-                      + " a.mention { color: " + root.mentionTextColor
-                      + "; background-color: " + root.mentionBackgroundColor
-                      + "; text-decoration: none }"
-            if (hoveredLink)
-                style += " a[href=\"" + hoveredLink + "\"] { background-color: "
-                       + root.linkHoverColor + " }"
-            return style + "</style><span style=\"white-space:pre-wrap\">" + content + "</span>"
-        }
-
         sourceComponent: isCode ? (selectable ? codeEditComp : codeLabelComp)
                                 : (selectable ? richEditComp : richLabelComp)
 
@@ -95,16 +79,35 @@ Control {
                 color: block.textColor
                 font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
-                // pre-wrap so extra/leading spaces are preserved; no hover in non-selectable mode
-                text: block.richTextFor("")
-                // Connecting this enables Text's built-in link click handling (non-selectable mode).
+                text: `<style>${d.baseStyle}</style>` + d.spanWrap(content)
+
                 onLinkActivated: (link) => d.activateLink(link)
             }
         }
         Component {
             id: richEditComp
             TextEdit {
+                id: textEdit
+
                 property bool selectionParticipant: true
+                property string hoveredLinkInternal
+
+                readonly property string style:
+                    d.baseStyle +
+                    " a[href=\"" + hoveredLink + "\"] { background-color: " +
+                    root.linkHoverColor + " }"
+                property string effectiveStyle
+
+                // keep selection if only style changes, otherwise selection is lost
+                // on style change, including link hover
+                onStyleChanged: {
+                    const selStart = selectionStart
+                    const selEnd = selectionEnd
+
+                    effectiveStyle = `<style>${style}</style>`
+                    select(selStart, selEnd)
+                }
+
                 width: block.width
                 readOnly: true
                 selectByMouse: false
@@ -115,8 +118,8 @@ Control {
                 color: block.textColor
                 font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
-                // hoveredLink drives the link hover background (updated as the pointer moves).
-                text: block.richTextFor(hoveredLink)
+
+                text: effectiveStyle + d.spanWrap(content)
             }
         }
 
@@ -197,6 +200,20 @@ Control {
 
         readonly property int padding: 8
         readonly property int quoteBarWidth: 3
+
+        // Rich-text CSS rules for the non-code renderers
+        readonly property string baseStyle:
+            `code { background-color: ${root.codeBackgroundColor}`
+            + `; font-family: '${Fonts.codeFont.family}' }`
+            + ` a { color: ${root.linkColor} }`
+            + ` a.mention { color: ${root.mentionTextColor}`
+            + `; background-color: ${root.mentionBackgroundColor}`
+            + `; text-decoration: none }`
+
+        // prevent skipping whitespaces
+        function spanWrap(content) {
+            return `<span style=white-space:pre-wrap>${content}</span>`
+        }
 
         property string selectedText: ""
         property var editors: []        // participant TextEdits, document order

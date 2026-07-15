@@ -131,6 +131,76 @@ Item {
             verify(control.selectedText.indexOf("second") >= 0, "second block not selected")
         }
 
+        // Hovering a link/mention rebuilds a selectable block's rich-text document (the hover
+        // background is baked into the HTML via richTextFor), which clears that editor's
+        // selection. The coordinator must restore it. Here we trigger the same document rebuild
+        // deterministically by changing a richTextFor input (linkColor) and assert the active
+        // cross-block selection survives.
+        function test_selectionSurvivesTextRebuild() {
+            control.selectable = true
+            control.blocks = [
+                { type: "text", html: "first line" },
+                { type: "text", html: "second line" }
+            ]
+            tryVerify(() => control.implicitHeight > 0)
+
+            mousePress(control, 0, 3)
+            mouseMove(control, control.width - 4, control.implicitHeight - 4)
+            mouseRelease(control, control.width - 4, control.implicitHeight - 4)
+
+            verify(control.selectedText.indexOf("first") >= 0, "first block not selected")
+            verify(control.selectedText.indexOf("second") >= 0, "second block not selected")
+
+            const screenshot = grabImage(control)
+
+            // Rebuild the rich-text documents (as a hover would) and confirm
+            // the selection is restored rather than dropped.
+            control.linkColor = "#123456"
+            verify(control.selectedText.indexOf("first") >= 0,
+                   "selection lost on text rebuild (first)")
+            verify(control.selectedText.indexOf("second") >= 0,
+                   "selection lost on text rebuild (second)")
+
+            const screenshot2 = grabImage(control)
+            verify(screenshot.equals(screenshot2))
+        }
+
+        function test_selectionNotSurvivesTextReset() {
+            control.selectable = true
+            control.blocks = [
+                { type: "text", html: "first line" },
+                { type: "text", html: "second line" }
+            ]
+            tryVerify(() => control.implicitHeight > 0)
+
+            mousePress(control, 0, 3)
+            mouseMove(control, control.width - 4, control.implicitHeight - 4)
+            mouseRelease(control, control.width - 4, control.implicitHeight - 4)
+
+            verify(control.selectedText.indexOf("first") >= 0, "first block not selected")
+            verify(control.selectedText.indexOf("second") >= 0, "second block not selected")
+
+            const screenshot = grabImage(control)
+
+            control.blocks = [
+                { type: "text", html: "first line2" },
+                { type: "text", html: "second line" }
+            ]
+
+            control.blocks = [
+                { type: "text", html: "first line" },
+                { type: "text", html: "second line" }
+            ]
+
+            verify(control.selectedText.indexOf("first") === -1,
+                   "selection survived text reset (first)")
+            verify(control.selectedText.indexOf("second") === -1,
+                   "selection survived text reset (second)")
+
+            const screenshot2 = grabImage(control)
+            verify(!screenshot.equals(screenshot2))
+        }
+
         // copySelection() puts the combined selection on the clipboard.
         function test_copySelection() {
             control.selectable = true
