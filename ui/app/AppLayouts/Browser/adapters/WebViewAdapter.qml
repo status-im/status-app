@@ -54,10 +54,9 @@ AbstractWebView {
     }
     // Profile-wide "clear browsing data": HTTP cache + cookies, via the native
     // BrowserProfileUtils (the QML WebEngineProfile exposes no cookie API).
-    // Global DOM storage isn't clearable via Qt's public API, so it's left as-is
-    // (unlike mobile's clearProfileData). The profile's clearHttpCacheCompleted
-    // drives _finishClearBrowsingData(); start the fallback timer first so `clearing`
-    // can never stick if the call fails.
+    // Global DOM storage isn't clearable via Qt's public API, so after the
+    // profile clear completes we also wipe the *current origin* via
+    // StatusSiteUtils (see CONTEXT: Clear browsing data) and reload once.
     function clearBrowsingData() {
         if (root.clearing || !root.profile)
             return
@@ -70,7 +69,15 @@ AbstractWebView {
             return
         _clearBrowsingDataFallbackTimer.stop()
         root.clearing = false
-        webView.reload()
+        // One reload: StatusSiteUtils.clearSiteDataAndReload wipes current-origin
+        // DOM storage then reloads. Fall back to a plain reload if missing.
+        webView.runJavaScript(
+            "(function(){ if (window.StatusSiteUtils) { window.StatusSiteUtils.clearSiteDataAndReload(); return true; } return false; })()",
+            function(ok) {
+                if (!ok)
+                    webView.reload()
+            }
+        )
     }
     function findText(text, flags) { webView.findText(text, flags) }
     function changeZoomFactor(factor) { webView.zoomFactor = factor }
