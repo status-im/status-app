@@ -40,9 +40,15 @@ StatusDialog {
 
     Component.onDestruction: {
         const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
-        store.releaseTokenSelectorModel(d.payTokenSelector.id)
-        store.releaseTokenSelectorModel(d.receiveTokenSelector.id)
-        store.releaseTokenSelectorModel(d.receiveTokenSelectorTo.id)
+        // Only release the pickers that were actually created (they are built
+        // lazily post-open; a modal opened and destroyed before the deferred
+        // setup runs may have none, and a plain swap never builds the bridge one).
+        if (d.payTokenSelector)
+            store.releaseTokenSelectorModel(d.payTokenSelector.id)
+        if (d.receiveTokenSelector)
+            store.releaseTokenSelectorModel(d.receiveTokenSelector.id)
+        if (d.receiveTokenSelectorTo)
+            store.releaseTokenSelectorModel(d.receiveTokenSelectorTo.id)
     }
 
     implicitWidth: 556
@@ -66,9 +72,45 @@ StatusDialog {
         // destruction so the producer stops tracking them (avoids a per-open leak).
         // The receive side has two: the source-chain picker (plain swap) and the
         // destination-chain picker (bridge), switched by isSameChainSwap below.
-        readonly property var payTokenSelector: root.swapAdaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(1)
-        readonly property var receiveTokenSelector: root.swapAdaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(1)
-        readonly property var receiveTokenSelectorTo: root.swapAdaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(3)
+        //
+        // Created LAZILY, off the synchronous createObject path: creating + seeding
+        // these blocks the GUI thread proportionally to the catalog size, so it is
+        // deferred to just after the modal has opened (createPickers, driven from
+        // onOpened). The destination-chain (bridge) picker is created only when a
+        // bridge is actually selected. The panel bindings tolerate a null model
+        // until then; the picker popup can only be tapped once the modal is open.
+        property var payTokenSelector: null
+        property var receiveTokenSelector: null
+        property var receiveTokenSelectorTo: null
+
+        // Guards lazy bridge-picker creation: stays false until createPickers has
+        // run (post-open) so the isBridge binding settling during construction
+        // (a transient true→false toggle as its dependencies resolve) does not
+        // eagerly build the bridge picker back onto the create path.
+        property bool pickersInitialized: false
+
+        // Builds the pay + same-chain-receive pickers (once) and, for a bridge, the
+        // destination picker. Idempotent, so a close+reopen reuses the models.
+        function createPickers() {
+            const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+            if (!d.payTokenSelector) {
+                d.payTokenSelector = store.createTokenSelectorModel(1)
+                d.receiveTokenSelector = store.createTokenSelectorModel(1)
+            }
+            d.pickersInitialized = true
+            if (d.isBridge)
+                d.ensureBridgePicker()
+            payPanel.reset()
+            receivePanel.reset()
+        }
+
+        // The bridge (destination-chain) picker is only needed when bridging; build
+        // it the first time bridge mode is entered (incl. a pre-filled bridge open,
+        // whose toNetworkChainId is set by the deferred handler setup after onOpened).
+        function ensureBridgePicker() {
+            if (!d.receiveTokenSelectorTo)
+                d.receiveTokenSelectorTo = root.swapAdaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(3)
+        }
 
         property var debounceFetchSuggestedRoutes: Backpressure.debounce(root, 1000, function() {
             root.swapAdaptor.fetchSuggestedRoutes(payPanel.rawValue)
@@ -115,6 +157,13 @@ StatusDialog {
         // same chain => plain swap (from/to token must differ); different chains => bridge (same token ok)
         readonly property bool isSameChainSwap: root.swapInputParamsForm.selectedNetworkChainId === root.swapInputParamsForm.toNetworkChainId
         readonly property bool isBridge: root.swapInputParamsForm.toNetworkChainId !== -1 && !isSameChainSwap
+        onIsBridgeChanged: {
+            // Lazily build the destination-chain picker the first time a bridge is
+            // entered — but only after the pickers have been initialized post-open,
+            // so the binding settling during construction can't build it eagerly.
+            if (isBridge && d.pickersInitialized)
+                d.ensureBridgePicker()
+        }
 
         readonly property bool swapViaLiFi: root.swapAdaptor.swapOutputData.txProviderName === Constants.swap.lifiProcessorName
         readonly property string serviceProviderName: d.swapViaLiFi ? Constants.swap.lifiName : Constants.swap.paraswapName
@@ -220,15 +269,18 @@ StatusDialog {
     }
 
     Component.onCompleted: {
-        payPanel.reset()
-        receivePanel.reset()
-
+        // The pickers are created post-open (see d.createPickers); the panel resets
+        // that clear their search move there too. The catalog harvest below is
+        // independent of the picker models and stays on the create path.
         d.rebuildGroupsForChain(root.swapInputParamsForm.selectedNetworkChainId)
         if (d.isBridge)
             d.rebuildGroupsForChain(root.swapInputParamsForm.toNetworkChainId, true)
     }
 
     onOpened: {
+        // Defer the terminal picker model creation + seed off the open critical
+        // path; callLater lets the opened frame render before the seed runs.
+        Qt.callLater(d.createPickers)
         payPanel.forceActiveFocus()
     }
     onClosed: {
@@ -287,7 +339,8 @@ StatusDialog {
 
                     currencyStore: root.swapAdaptor.currencyStore
                     flatNetworksModel: root.swapAdaptor.networksStore.activeNetworks
-                    tokenSelectorModel: d.payTokenSelector.model
+                    // null until the deferred createPickers runs post-open
+                    tokenSelectorModel: d.payTokenSelector ? d.payTokenSelector.model : null
 
                     groupKey: root.swapInputParamsForm.fromGroupKey
                     defaultGroupKey: root.swapInputParamsForm.defaultFromGroupKey
@@ -339,8 +392,12 @@ StatusDialog {
                     currencyStore: root.swapAdaptor.currencyStore
                     flatNetworksModel: root.swapAdaptor.networksStore.activeNetworks
                     // plain swap reuses the source-chain picker; only a bridge uses the destination one
-                    tokenSelectorModel: d.isSameChainSwap ? d.receiveTokenSelector.model
-                                                          : d.receiveTokenSelectorTo.model
+                    // (both null until the deferred createPickers/ensureBridgePicker run post-open)
+                    tokenSelectorModel: {
+                        if (d.isSameChainSwap)
+                            return d.receiveTokenSelector ? d.receiveTokenSelector.model : null
+                        return d.receiveTokenSelectorTo ? d.receiveTokenSelectorTo.model : null
+                    }
 
                     groupKey: root.swapInputParamsForm.toGroupKey
                     defaultGroupKey: root.swapInputParamsForm.defaultToGroupKey
