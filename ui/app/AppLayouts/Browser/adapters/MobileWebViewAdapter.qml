@@ -40,7 +40,7 @@ AbstractWebView {
 
         offTheRecord: root.profileParams.offTheRecord
         storageName: root.profileParams.storageName
-        // TODO(mobile): profileParams.userAgent is not applied — no native backend API.
+        httpUserAgent: root.profileParams.userAgent
     }
 
     Connections {
