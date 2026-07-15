@@ -57,8 +57,9 @@ proc getPasswordStrengthScore*(password: string, userInputs: seq[string]): RpcRe
     raise newException(RpcException, e.msg)
 
 proc importLocalBackupFile*(filePath: string): RpcResponse[JsonNode] =
-  let payload = %* [filePath]
-  result = callPrivateRPC("importLocalBackupFile".prefix, payload)
+  let request = %* {"filePath": filePath}
+  let response = status_go.loadLocalBackup($(request))
+  result = Json.decode(response, RpcResponse[JsonNode])
 
 proc hashMessageForSigning*(message: string): string =
   try:
