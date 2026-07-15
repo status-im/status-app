@@ -27,8 +27,9 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
     //noinspection GradleDependency
     implementation 'androidx.core:core:1.16.0'
-    // Required for WebViewFeature / addDocumentStartJavaScript
-    implementation 'androidx.webkit:webkit:1.12.1'
+    // Required for WebViewFeature / addDocumentStartJavaScript / DELETE_BROWSING_DATA
+    // (clearSiteData). DELETE_BROWSING_DATA + WebStorageCompat need >= 1.13.
+    implementation 'androidx.webkit:webkit:1.13.0'
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.core:core-splashscreen:1.0.1'
     implementation 'com.google.android.material:material:1.12.0'

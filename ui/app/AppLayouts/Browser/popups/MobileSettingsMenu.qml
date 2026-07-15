@@ -47,7 +47,10 @@ StatusDialog {
                 StatusSwitch {
                     id: incognitoSwitch
                     checked: root.incognitoMode
-                    onToggled: root.goIncognito(checked)
+                    onToggled: {
+                        root.goIncognito(checked)
+                        root.close()
+                    }
                 }
             ]
             onClicked: {
