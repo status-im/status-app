@@ -636,7 +636,7 @@ unclosed fence here (no closing triple-tick)
                 visible: debugSwitch.checked
                 spacing: 4
 
-                Text {
+                Label {
                     Layout.fillWidth: true
                     font.bold: true
                     text: "detected links:"
@@ -651,7 +651,7 @@ unclosed fence here (no closing triple-tick)
                     clip: true
                     model: textArea.linksModel
 
-                    delegate: Text {
+                    delegate: Label {
                         width: ListView.view.width
                         text: model.text + " @ " + model.start + " +" + model.length
 
@@ -710,7 +710,7 @@ unclosed fence here (no closing triple-tick)
                 Layout.fillWidth: true
             }
 
-            Text {
+            Label {
                 Layout.fillWidth: true
                 font.bold: true
                 text: "Single-line render:"
@@ -792,8 +792,8 @@ unclosed fence here (no closing triple-tick)
             }
             Row {
                 spacing: 16
-                Text { text: "In unclosed code fence:" }
-                Text {
+                Label { text: "In unclosed code fence:" }
+                Label {
                     text: {
                         textArea.text
                         return textArea.inUnclosedCodeFence(textArea.cursorPosition) ? "true" : "false"
@@ -803,20 +803,20 @@ unclosed fence here (no closing triple-tick)
 
             Row {
                 spacing: 16
-                Text { text: "entering suggestion: " + textArea.enteringSuggestion }
-                Text { text: "mentions filter: \"" + textArea.mentionsFilter + "\"" }
+                Label { text: "entering suggestion: " + textArea.enteringSuggestion }
+                Label { text: "mentions filter: \"" + textArea.mentionsFilter + "\"" }
             }
 
             Row {
                 spacing: 16
-                Text { text: "entering emoji: " + textArea.enteringEmoji }
-                Text { text: "emoji filter: \"" + textArea.emojiFilter + "\"" }
+                Label { text: "entering emoji: " + textArea.enteringEmoji }
+                Label { text: "emoji filter: \"" + textArea.emojiFilter + "\"" }
             }
 
             Row {
                 spacing: 16
-                Text { text: "cursor: " + textArea.cursorPosition }
-                Text {
+                Label { text: "cursor: " + textArea.cursorPosition }
+                Label {
                     readonly property bool hasSelection:
                         textArea.selectionStart !== textArea.selectionEnd
                     text: hasSelection
@@ -827,18 +827,18 @@ unclosed fence here (no closing triple-tick)
 
             Row {
                 spacing: 16
-                Text { text: "emphasis at:\t"}
-                Text { text: "bold: "          + emph.bold }
-                Text { text: "italic: "        + emph.italic }
-                Text { text: "strikethrough: " + emph.strikethrough }
+                Label { text: "emphasis at:\t"}
+                Label { text: "bold: "          + emph.bold }
+                Label { text: "italic: "        + emph.italic }
+                Label { text: "strikethrough: " + emph.strikethrough }
             }
             Row {
                 spacing: 16
 
-                Text { text: "emphasis at insertion:\t"}
-                Text { text: "bold: "          + vemph.bold }
-                Text { text: "italic: "        + vemph.italic }
-                Text { text: "strikethrough: " + vemph.strikethrough }
+                Label { text: "emphasis at insertion:\t"}
+                Label { text: "bold: "          + vemph.bold }
+                Label { text: "italic: "        + vemph.italic }
+                Label { text: "strikethrough: " + vemph.strikethrough }
             }
         }
     }
