@@ -146,6 +146,72 @@ QString renderChildren(const Node& node,
     return out;
 }
 
+QString renderSingleLine(const Node& node,
+                         const QHash<int, QPair<QString, QString>>& mentions, int emojiPx);
+
+QString renderSingleLineChildren(const Node& node,
+                                 const QHash<int, QPair<QString, QString>>& mentions, int emojiPx)
+{
+    QString out;
+    for (const Node& c : node.children)
+        out += renderSingleLine(c, mentions, emojiPx);
+    return out;
+}
+
+// One-line rendering: newlines collapse to spaces, code fences render like inline code spans,
+// and quote blocks become "> "-prefixed classed spans (colored by the consumer's span.quote
+// rule). Inline formatting, links and mentions match renderNode. Used for compact previews.
+QString renderSingleLine(const Node& node,
+                         const QHash<int, QPair<QString, QString>>& mentions, int emojiPx)
+{
+    switch (node.kind) {
+    case NodeKind::Delimiter:
+        return {};
+
+    case NodeKind::Text: {
+        QString t = escape(node.literal);
+        t.replace(QLatin1Char('\n'), QLatin1Char(' '));
+        return emojiWrap(t, emojiPx);
+    }
+
+    case NodeKind::Strong:
+        return QStringLiteral("<b>%1</b>").arg(renderSingleLineChildren(node, mentions, emojiPx));
+    case NodeKind::Emphasis:
+        return QStringLiteral("<i>%1</i>").arg(renderSingleLineChildren(node, mentions, emojiPx));
+    case NodeKind::Strikethrough:
+        return QStringLiteral("<s>%1</s>").arg(renderSingleLineChildren(node, mentions, emojiPx));
+
+    case NodeKind::CodeSpan:
+    case NodeKind::CodeBlock: {
+        // A fenced code block is rendered like an inline code span on one line.
+        QString c = collectCodeText(node);
+        c.replace(QLatin1Char('\n'), QLatin1Char(' '));
+        return codeSpanHtml(c.trimmed());
+    }
+
+    case NodeKind::QuoteBlock:
+        return QStringLiteral("<span class=\"quote\">&gt; %1</span>")
+                .arg(renderSingleLineChildren(node, mentions, emojiPx));
+
+    case NodeKind::Link:
+        return QStringLiteral("<a href=\"%1\">%2</a>")
+                .arg(escape(node.destination), renderSingleLineChildren(node, mentions, emojiPx));
+
+    case NodeKind::Mention: {
+        const auto it = mentions.constFind(static_cast<int>(node.start));
+        const QString name = it != mentions.cend() ? it->first  : QStringLiteral("@mention");
+        const QString href = it != mentions.cend() ? it->second : QString();
+        return QStringLiteral("<a href=\"%1\" class=\"mention\">%2</a>")
+                .arg(escape(href), escape(name));
+    }
+
+    case NodeKind::Document:
+    case NodeKind::Paragraph:
+        return renderSingleLineChildren(node, mentions, emojiPx);
+    }
+    return {};
+}
+
 // Raw (unescaped, newlines preserved) text of every Text descendant, delimiters skipped
 // — the literal content of a code block, trimmed of surrounding blank lines.
 QString collectRawText(const Node& node)
@@ -349,6 +415,12 @@ QString toHtml(const Node& root, const QHash<int, QPair<QString, QString>>& ment
                int emojiPx)
 {
     return renderNode(root, mentions, emojiPx);
+}
+
+QString toSingleLineHtml(const Node& root, const QHash<int, QPair<QString, QString>>& mentions,
+                         int emojiPx)
+{
+    return renderSingleLine(root, mentions, emojiPx);
 }
 
 QVariantList toBlocks(const Node& root,

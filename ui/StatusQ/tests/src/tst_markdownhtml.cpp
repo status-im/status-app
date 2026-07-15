@@ -76,6 +76,51 @@ private slots:
 
     void htmlEscaped() { QCOMPARE(h("a<b>&c"), "a&lt;b&gt;&amp;c"); }
 
+    // ── toSingleLineHtml: one-line preview rendering ────────────────────────────
+
+    static QString hs(const QString& text,
+                      const QHash<int, QPair<QString, QString>>& mentions = {},
+                      const Options& opts = {})
+    {
+        return toSingleLineHtml(parse(text, opts), mentions);
+    }
+
+    // Newlines collapse to spaces (no <br/>).
+    void singleLine_newlineBecomesSpace() { QCOMPARE(hs("a\nb"), "a b"); }
+
+    // A quote block becomes "> "-prefixed classed text, formatting preserved inside.
+    void singleLine_quoteAsText()
+    {
+        QCOMPARE(hs("> **bold** text"),
+                 "<span class=\"quote\">&gt; <b>bold</b> text</span>");
+    }
+
+    // A fenced code block renders like an inline code span, on one line.
+    void singleLine_codeFenceLikeCodeSpan()
+    {
+        QCOMPARE(hs("```hi```"), "<code>hi</code>");
+        QCOMPARE(hs("```\nx\n```"), "<code>x</code>");
+    }
+
+    // A code span keeps its <code>, with newlines collapsed to spaces.
+    void singleLine_codeSpan()
+    {
+        QCOMPARE(hs("`hi`"), "<code>hi</code>");
+        QCOMPARE(hs("`a\nb`"), "<code>a b</code>");
+    }
+
+    // Inline formatting, links and mentions match the inline output of toHtml.
+    void singleLine_inlineFormatting()
+    {
+        QCOMPARE(hs("**b** *i* ~~s~~"), "<b>b</b> <i>i</i> <s>s</s>");
+        QCOMPARE(hs("see https://status.im"),
+                 "see <a href=\"https://status.im\">https://status.im</a>");
+
+        const QString text = "hi " + QString(QChar(0xFFFC));
+        const QHash<int, QPair<QString, QString>> m{ {3, {"@alice", "0xabc"}} };
+        QCOMPARE(hs(text, m), "hi <a href=\"0xabc\" class=\"mention\">@alice</a>");
+    }
+
     // ── toBlocks: split into decorated blocks ───────────────────────────────────
 
     static QVariantList blocks(const QString& text, const Options& opts = {})

@@ -33,4 +33,12 @@ public:
                                       bool formatUnclosedCodeFence = false,
                                       bool fullLineHeightEmojis = false,
                                       int emojiSizeOffset = 0) const;
+
+    // Renders `text` as a single-line HTML fragment for compact previews (newlines → spaces,
+    // quote blocks as "> "-prefixed classed spans, code fences as inline code spans). Mentions
+    // are resolved from `mentions` as in toBlocks. `font` sizes emojis to the line height; the
+    // emoji-only enlargement is never applied here. See Markdown::toSingleLineHtml.
+    Q_INVOKABLE QString singleLineHtml(const QString& text,
+                                       const QVariantMap& mentions = {},
+                                       const QFont& font = {}) const;
 };

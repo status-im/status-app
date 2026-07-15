@@ -88,7 +88,7 @@ Control {
         // ── rich text (non-code) ──
         Component {
             id: richLabelComp
-            Label {
+            Text {
                 width: block.width
                 wrapMode: Text.Wrap
                 textFormat: Text.RichText
