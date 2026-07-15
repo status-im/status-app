@@ -113,16 +113,16 @@ Window {
         networksStore: theNetworksStore
 
         // The linchpin override: hand out a size-N seeded terminal picker model
-        // instead of delegating to the (absent) Nim producer. Suppress kind 3
-        // when the scene asks, to attribute the eager 3rd picker on plain swaps.
+        // instead of delegating to the (absent) Nim producer, and notify the bench
+        // (onPickerBuilt) on each real build so the driver can detect readiness.
+        // Suppress kind 3 when the scene asks (retained for attribution).
         //
-        // Production SwapModal creates exactly 3 pickers (2x kind 1: pay + same-
-        // chain receive; 1x kind 3: KIND_SWAP_TO). But the picker properties are
-        // `readonly property var ... createTokenSelectorModel(k)` whose binding
-        // re-fires as `swapAdaptor` settles from null during construction, so this
-        // override is CALLED many times. We cache per slot (2 kind1 slots +
-        // 1 kind3 slot) so the size-N seed is paid exactly 3x IN the create window
-        // (matching production), while re-eval calls reuse the cached model.
+        // Production SwapModal now builds the pickers LAZILY in createPickers,
+        // driven from onOpened (off the createObject path): 2x kind 1 (pay + same-
+        // chain receive) on any open, plus 1x kind 3 (KIND_SWAP_TO) only when a
+        // bridge is selected. So during `create` this override is NOT called; it is
+        // called post-open. We still cache per slot (2 kind1 slots + 1 kind3 slot)
+        // so the size-N seed is paid once per distinct picker.
         function createTokenSelectorModel(kind) {
             if (kind === 3) {
                 if (root.suppressSwapTo)
@@ -131,6 +131,7 @@ Window {
                     root._preC = root.buildSelectorModel(root.catalogSize)
                     root._held.push(root._preC)
                     root.kind3Count += 1
+                    bench.onPickerBuilt(3)
                 }
                 return { model: root._preC, id: 3 }
             }
@@ -141,6 +142,7 @@ Window {
                     root._preA = root.buildSelectorModel(root.catalogSize)
                     root._held.push(root._preA)
                     root.kind1Count += 1
+                    bench.onPickerBuilt(1)
                 }
                 return { model: root._preA, id: 1 }
             }
@@ -148,6 +150,7 @@ Window {
                 root._preB = root.buildSelectorModel(root.catalogSize)
                 root._held.push(root._preB)
                 root.kind1Count += 1
+                bench.onPickerBuilt(1)
             }
             return { model: root._preB, id: 2 }
         }
@@ -188,13 +191,20 @@ Window {
     function doCreate(size, suppress) {
         root.catalogSize = size
         root.suppressSwapTo = suppress
+        root.swapFormData.resetFormData()
+        if (root.swapFormData.selectedNetworkChainId === -1)
+            root.swapFormData.selectedNetworkChainId = 1
+
+        // Reset the picker counters + per-slot cache AFTER the form writes above:
+        // a not-yet-destroyed modal from the previous scenario (opened, so its
+        // pickers are initialized) can still react to those writes and build a
+        // picker. Resetting here attributes `create` to the NEW modal only. (The
+        // driver's inter-scenario teardown destroys that old modal before the
+        // monitored window, so it does not affect the create stall either.)
         root.lastModelCount = 0
         root.kind1Count = 0
         root.kind3Count = 0
         root._preA = null; root._preB = null; root._preC = null; root._k1idx = 0
-        root.swapFormData.resetFormData()
-        if (root.swapFormData.selectedNetworkChainId === -1)
-            root.swapFormData.selectedNetworkChainId = 1
 
         const t0 = bench.nowMs()
         const obj = modalComp.createObject(root)
@@ -236,7 +246,14 @@ Window {
     }
 
     function doDestroy() {
-        if (!!root._modal) { root._modal.destroy(); root._modal = null }
+        if (!!root._modal) {
+            // close() first so an opened modal isn't kept alive by the Overlay past
+            // destroy(); otherwise it lingers and reacts to the next scenario's
+            // shared-form writes (building a picker attributed to the next create).
+            root._modal.close()
+            root._modal.destroy()
+            root._modal = null
+        }
         for (let i = 0; i < root._held.length; i++) {
             if (!!root._held[i] && !!root._held[i].destroy) root._held[i].destroy()
         }
