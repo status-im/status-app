@@ -101,10 +101,10 @@ AbstractWebView {
         if (loader.item)
             loader.item.clearSiteData()
     }
-    function clearCache() {
+    function clearBrowsingData() {
         ensureLoaded()
         if (loader.item)
-            loader.item.clearCache()
+            loader.item.clearBrowsingData()
     }
     function findText(text, flags){ if (loader.item) loader.item.findText(text, flags) }
     function showFindPanel()      { if (loader.item) loader.item.showFindPanel() }

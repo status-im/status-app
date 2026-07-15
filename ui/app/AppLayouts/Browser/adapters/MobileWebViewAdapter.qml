@@ -117,7 +117,7 @@ AbstractWebView {
 
     // Profile-wide "clear browsing data": HTTP cache + cookies + DOM storage.
     // Reloads the current view once clearProfileDataCompleted fires.
-    function clearCache() {
+    function clearBrowsingData() {
         backend.clearProfileData()
     }
 

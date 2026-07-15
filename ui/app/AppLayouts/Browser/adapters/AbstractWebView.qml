@@ -122,7 +122,7 @@ Item {
     function clearSiteData() { console.warn("AbstractWebView: clearSiteData not implemented") }
 
     // Clear browsing data (profile-wide cache, cookies, DOM storage), then reload.
-    function clearCache() { console.warn("AbstractWebView: clearCache not implemented") }
+    function clearBrowsingData() { console.warn("AbstractWebView: clearBrowsingData not implemented") }
 
     function findText(text, flags) {}
     function showFindPanel() {}

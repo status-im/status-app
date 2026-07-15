@@ -2583,6 +2583,10 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Force reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Clear site data</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2591,15 +2595,15 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clearing cache...</source>
+        <source>Clearing browsing data...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clear cache</source>
+        <source>Clear browsing data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clears cached files, cookies, and history for the entire browser. Browsing is paused until it is done.</source>
+        <source>Clears the cache and cookies for the entire browser. Browsing is paused until it is done.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -11313,6 +11317,22 @@ to load</source>
     </message>
     <message>
         <source>Zoom Fit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Force reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear site data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clearing browsing data...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear browsing data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

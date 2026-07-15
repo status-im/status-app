@@ -408,6 +408,10 @@ target_link_libraries(StatusQ PRIVATE
 if(NOT (IOS OR ANDROID))
     find_package(Qt${QT_VERSION_MAJOR} COMPONENTS WebEngineQuick QUIET)
     if(TARGET Qt::WebEngineQuick)
+        target_sources(StatusQ PRIVATE
+            include/StatusQ/browserprofileutils.h
+            src/browserprofileutils.cpp
+        )
         target_link_libraries(StatusQ PRIVATE Qt::WebEngineQuick)
         target_compile_definitions(StatusQ PRIVATE STATUSQ_HAS_QTWEBENGINE=1)
     endif()

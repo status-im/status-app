@@ -30,7 +30,7 @@ StatusDialog {
     signal resetZoomFactor
     signal forceReload
     signal clearSiteData
-    signal clearCache
+    signal clearBrowsingData
     signal settingsRequested
 
     title: qsTr("Browser")
@@ -123,11 +123,11 @@ StatusDialog {
             }
         }
         SettingsListItem {
-            title: root.clearing ? qsTr("Clearing cache...") : qsTr("Clear cache")
+            title: root.clearing ? qsTr("Clearing browsing data...") : qsTr("Clear browsing data")
             asset.name: "broom"
             enabled: !root.clearing
             onClicked: {
-                root.clearCache()
+                root.clearBrowsingData()
                 root.close()
             }
         }

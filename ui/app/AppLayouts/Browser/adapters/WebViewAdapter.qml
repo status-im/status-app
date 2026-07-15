@@ -3,6 +3,7 @@ import QtQml
 import QtWebEngine
 
 import StatusQ.Core.Theme
+import StatusQ.Internal
 
 import AppLayouts.Browser.views
 
@@ -51,20 +52,23 @@ AbstractWebView {
     function clearSiteData() {
         webView.runJavaScript("window.StatusSiteUtils && window.StatusSiteUtils.clearSiteDataAndReload()")
     }
-    // Profile-wide "clear browsing data": HTTP cache, cookies and visited links.
-    function clearCache() {
+    // Profile-wide "clear browsing data": HTTP cache + cookies, via the native
+    // BrowserProfileUtils (the QML WebEngineProfile exposes no cookie API).
+    // Global DOM storage isn't clearable via Qt's public API, so it's left as-is
+    // (unlike mobile's clearProfileData). The profile's clearHttpCacheCompleted
+    // drives _finishClearBrowsingData(); start the fallback timer first so `clearing`
+    // can never stick if the call fails.
+    function clearBrowsingData() {
         if (root.clearing || !root.profile)
             return
         root.clearing = true
-        root.profile.cookieStore.deleteAllCookies()
-        root.profile.clearAllVisitedLinks()
-        root.profile.clearHttpCache() // async; completion drives _finishClearCache()
-        _clearCacheFallbackTimer.restart()
+        _clearBrowsingDataFallbackTimer.restart()
+        BrowserProfileUtils.clearBrowsingData(root.profile)
     }
-    function _finishClearCache() {
+    function _finishClearBrowsingData() {
         if (!root.clearing)
             return
-        _clearCacheFallbackTimer.stop()
+        _clearBrowsingDataFallbackTimer.stop()
         root.clearing = false
         webView.reload()
     }
@@ -232,15 +236,15 @@ AbstractWebView {
                 return
             root.downloadRequested(download)
         }
-        function onClearHttpCacheCompleted() { root._finishClearCache() }
+        function onClearHttpCacheCompleted() { root._finishClearBrowsingData() }
     }
 
     // Fallback in case clearHttpCacheCompleted doesn't fire (e.g. empty cache).
     Timer {
-        id: _clearCacheFallbackTimer
+        id: _clearBrowsingDataFallbackTimer
         interval: 1000
         repeat: false
-        onTriggered: root._finishClearCache()
+        onTriggered: root._finishClearBrowsingData()
     }
 
     WebEngineView {

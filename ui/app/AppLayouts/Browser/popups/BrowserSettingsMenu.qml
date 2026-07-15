@@ -27,9 +27,9 @@ StatusMenu {
     signal launchBrowserSettings()
     signal forceReload()
     signal clearSiteData()
-    signal clearCache()
+    signal clearBrowsingData()
 
-    property bool clearingCache: false
+    property bool clearingBrowsingData: false
     property bool clearSiteDataSupported: true
 
     background: Rectangle {
@@ -158,16 +158,16 @@ StatusMenu {
     }
 
     StatusMenuItem {
-        text: root.clearingCache ? qsTr("Clearing cache...") : qsTr("Clear cache")
+        text: root.clearingBrowsingData ? qsTr("Clearing browsing data...") : qsTr("Clear browsing data")
         icon.name: "broom"
         icon.color: Theme.palette.primaryColor1
-        enabled: !root.clearingCache
+        enabled: !root.clearingBrowsingData
         visibleOnDisabled: true
-        onTriggered: clearCache()
+        onTriggered: clearBrowsingData()
 
         StatusToolTip {
             visible: parent.hovered
-            text: qsTr("Clears cached files, cookies, and history for the entire browser. Browsing is paused until it is done.")
+            text: qsTr("Clears the cache and cookies for the entire browser. Browsing is paused until it is done.")
         }
     }
 

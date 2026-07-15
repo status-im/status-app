@@ -206,10 +206,10 @@ QtObject {
         currentWebView.clearSiteData()
     }
 
-    function clearCacheCurrent() {
+    function clearBrowsingDataCurrent() {
         if (!currentWebView)
             return
-        currentWebView.clearCache()
+        currentWebView.clearBrowsingData()
     }
 
     function findTextCurrent(text, backward = false) {

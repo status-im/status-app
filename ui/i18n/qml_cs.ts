@@ -2592,6 +2592,10 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Vývojářské nástroje</translation>
     </message>
     <message>
+        <source>Force reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Clear site data</source>
         <translation>Vyčistit data stránky</translation>
     </message>
@@ -2600,16 +2604,16 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Použijte k obnovení aktuální stránky, pokud se nenačítá nebo nefunfuje správně.</translation>
     </message>
     <message>
-        <source>Clearing cache...</source>
-        <translation>Čistí se cache...</translation>
+        <source>Clearing browsing data...</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clear cache</source>
-        <translation>Vyčistit cache</translation>
+        <source>Clear browsing data</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clears cached files, cookies, and history for the entire browser. Browsing is paused until it is done.</source>
-        <translation>Vyčistí soubory, cookies a historii celého prohlížeče. Prohlížení je pozastaveno, dokud není hotovo.</translation>
+        <source>Clears the cache and cookies for the entire browser. Browsing is paused until it is done.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Settings</source>
@@ -11381,6 +11385,22 @@ selhalo</translation>
     <message>
         <source>Zoom Fit</source>
         <translation type="unfinished">Přizpůsobit velikost</translation>
+    </message>
+    <message>
+        <source>Force reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear site data</source>
+        <translation type="unfinished">Vyčistit data stránky</translation>
+    </message>
+    <message>
+        <source>Clearing browsing data...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear browsing data</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Settings</source>

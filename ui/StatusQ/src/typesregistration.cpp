@@ -34,6 +34,10 @@
 #include "MobileWebView/mobilewebviewbackend.h"
 #endif
 
+#if defined(STATUSQ_HAS_QTWEBENGINE)
+#include "StatusQ/browserprofileutils.h"
+#endif
+
 // Forward declare platform-specific registration functions
 // These are implemented in the respective platform files
 #if defined(Q_OS_IOS) || defined(Q_OS_ANDROID) || defined(Q_OS_MACOS)
@@ -160,6 +164,13 @@ void registerStatusQTypes() {
 
 #if defined(STATUSQ_HAS_MOBILEWEBVIEW)
     qmlRegisterType<MobileWebViewBackend>("StatusQ.CustomWebView", 1, 0, "MobileWebViewBackend");
+#endif
+
+#if defined(STATUSQ_HAS_QTWEBENGINE)
+    qmlRegisterSingletonType<BrowserProfileUtils>(
+        "StatusQ.Internal", 0, 1, "BrowserProfileUtils", [](QQmlEngine*, QJSEngine*) {
+            return new BrowserProfileUtils;
+        });
 #endif
     // Register NativeSwipeHandler + NativeIndicator (native on iOS/Android/macOS)
 #if defined(Q_OS_IOS) || defined(Q_OS_ANDROID) || defined(Q_OS_MACOS)
