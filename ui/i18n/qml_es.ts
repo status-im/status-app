@@ -11333,6 +11333,10 @@ al cargar</translation>
         <translation type="unfinished">Ajustar zoom</translation>
     </message>
     <message>
+        <source>Compatibility mode</source>
+        <translation type="unfinished">Modo de compatibilidad</translation>
+    </message>
+    <message>
         <source>Force reload</source>
         <translation type="unfinished"></translation>
     </message>

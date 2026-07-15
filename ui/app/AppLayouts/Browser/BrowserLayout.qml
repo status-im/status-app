@@ -695,9 +695,19 @@ StatusSectionLayout {
 
         clearSiteDataSupported: _internal.currentWebView?.clearSiteDataSupported ?? false
         clearing: _internal.currentWebView?.clearing ?? false
+        compatibilityMode: localAccountSensitiveSettings.compatibilityMode
         onForceReload: webViewContext.forceReloadCurrent()
         onClearSiteData: webViewContext.clearSiteDataCurrent()
         onClearBrowsingData: webViewContext.clearBrowsingDataCurrent()
+        onToggleCompatibilityMode: function(checked) {
+            for (let i = 0; i < tabs.count; ++i) {
+                webViewContext.getWebView(i).stop()
+            }
+            localAccountSensitiveSettings.compatibilityMode = checked
+            for (let i = 0; i < tabs.count; ++i) {
+                webViewContext.getWebView(i).reload()
+            }
+        }
 
         onGoIncognito: checked => root.applyIncognitoMode(checked)
         onSettingsRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings)

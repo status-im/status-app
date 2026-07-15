@@ -11320,6 +11320,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Compatibility mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Force reload</source>
         <translation type="unfinished"></translation>
     </message>

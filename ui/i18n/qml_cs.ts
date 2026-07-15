@@ -11387,6 +11387,10 @@ selhalo</translation>
         <translation type="unfinished">Přizpůsobit velikost</translation>
     </message>
     <message>
+        <source>Compatibility mode</source>
+        <translation type="unfinished">Režim kompatibility</translation>
+    </message>
+    <message>
         <source>Force reload</source>
         <translation type="unfinished"></translation>
     </message>

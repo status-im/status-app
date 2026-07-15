@@ -11280,6 +11280,10 @@ to load</source>
         <translation type="unfinished">맞춤 확대</translation>
     </message>
     <message>
+        <source>Compatibility mode</source>
+        <translation type="unfinished">호환 모드</translation>
+    </message>
+    <message>
         <source>Force reload</source>
         <translation type="unfinished"></translation>
     </message>

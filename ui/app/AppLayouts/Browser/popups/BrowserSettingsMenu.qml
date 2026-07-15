@@ -121,7 +121,7 @@ StatusMenu {
     StatusAction {
         text: qsTr("Compatibility mode")
         checkable: true
-        checked: true
+        checked: root.browserSettings.compatibilityMode
         onToggled: toggleCompatibilityMode(checked)
     }
 
