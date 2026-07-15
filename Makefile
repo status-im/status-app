@@ -1081,6 +1081,11 @@ nim-test-run/test/nim/swap_key_harvest_bench.nim: | statusq
 nim-test-run/test/nim/send_modal_instantiation_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
 nim-test-run/test/nim/send_modal_instantiation_bench.nim: | statusq
 
+# swap_modal_instantiation_bench loads the real SwapModal QML tree + SwapModalAdaptor
+# (inline real-store subclasses, no storybook engine) -- links StatusQ.
+nim-test-run/test/nim/swap_modal_instantiation_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+nim-test-run/test/nim/swap_modal_instantiation_bench.nim: | statusq
+
 nim-test-run/test/nim/send_handler_lookup_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
 nim-test-run/test/nim/send_handler_lookup_bench.nim: | statusq
 
