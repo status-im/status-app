@@ -19,9 +19,8 @@ QtObject {
 
     readonly property var scriptPaths: {
         const scripts = []
-        // Injected regardless of the dApp connector feature so "Clear site data"
-        // works standalone. Desktop only: mobile uses the native clearSiteData()
-        // (mobilewebview ADR 0004), never this JS snippet.
+        // Desktop only: per-origin DOM wipe for clear site / browsing data.
+        // Cookies (incl. HttpOnly) are cleared via BrowserProfileUtils in C++.
         if (!SQUtils.Utils.isMobile)
             scripts.push({ path: Qt.resolvedUrl("../js/site_utils.js"), runOnSubFrames: true })
 

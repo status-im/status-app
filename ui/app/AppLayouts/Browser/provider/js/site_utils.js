@@ -3,8 +3,8 @@
 // Site utilities for Status Browser - clears origin-scoped storage.
 // Injected as a user script so WebViewAdapter can trigger a per-origin clear
 // via runJavaScript("window.StatusSiteUtils.clearSiteDataAndReload()").
-// Desktop only: WebEngine has no honest per-site primitive (see mobilewebview
-// ADR 0004); mobile uses the native clearSiteData() instead.
+// Complements BrowserProfileUtils.clearSiteData (native cookies, incl. HttpOnly):
+// this JS path covers DOM storage that WebEngine does not expose in C++.
 (function() {
     async function clearSiteData() {
         // Clear localStorage
@@ -40,7 +40,7 @@
             } catch(e) {}
         }
 
-        // Clear cookies for current domain
+        // Clear cookies for current domain (non-HttpOnly only; HttpOnly via C++)
         try {
             document.cookie.split(";").forEach(cookie => {
                 const name = cookie.split("=")[0].trim();

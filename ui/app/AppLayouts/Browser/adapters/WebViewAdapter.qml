@@ -36,7 +36,7 @@ AbstractWebView {
     supportsIncognito: true
     supportsHistory: true
     hasNativeFindPanel: false
-    // WebEngine can clear the current origin's web storage via injected JS (site_utils.js).
+    // Cookies (incl. HttpOnly) via BrowserProfileUtils; DOM storage via site_utils.js.
     clearSiteDataSupported: true
 
     // Override functions
@@ -47,16 +47,28 @@ AbstractWebView {
     function reload() { webView.reload() }
     function stop() { webView.stop() }
     function forceReload() { webView.triggerWebAction(WebEngineView.ReloadAndBypassCache) }
-    // Per-origin web storage clear via injected site_utils.js, which reloads on completion.
-    // WebEngine has no honest per-site cookie/cache primitive (see mobilewebview ADR 0004).
+
+    // Native per-site cookies, then site_utils.js for current-origin DOM + reload.
+    property bool _clearingSiteData: false
     function clearSiteData() {
-        webView.runJavaScript("window.StatusSiteUtils && window.StatusSiteUtils.clearSiteDataAndReload()")
+        if (root._clearingSiteData || !root.profile)
+            return
+        const siteUrl = webView.url
+        if (!siteUrl.toString())
+            return
+        root._clearingSiteData = true
+        _clearSiteDataFallbackTimer.restart()
+        BrowserProfileUtils.clearSiteData(root.profile, siteUrl)
     }
-    // Profile-wide "clear browsing data": HTTP cache + cookies, via the native
-    // BrowserProfileUtils (the QML WebEngineProfile exposes no cookie API).
-    // Global DOM storage isn't clearable via Qt's public API, so after the
-    // profile clear completes we also wipe the *current origin* via
-    // StatusSiteUtils (see CONTEXT: Clear browsing data) and reload once.
+    function _finishClearSiteData() {
+        if (!root._clearingSiteData)
+            return
+        root._clearingSiteData = false
+        _clearSiteDataFallbackTimer.stop()
+        root._wipeCurrentOriginDomAndReload()
+    }
+
+    // Profile-wide cookies + HTTP cache, then current-origin DOM via site_utils.js.
     function clearBrowsingData() {
         if (root.clearing || !root.profile)
             return
@@ -69,13 +81,14 @@ AbstractWebView {
             return
         _clearBrowsingDataFallbackTimer.stop()
         root.clearing = false
-        // One reload: StatusSiteUtils.clearSiteDataAndReload wipes current-origin
-        // DOM storage then reloads. Fall back to a plain reload if missing.
+        root._wipeCurrentOriginDomAndReload()
+    }
+    function _wipeCurrentOriginDomAndReload() {
         webView.runJavaScript(
             "(function(){ if (window.StatusSiteUtils) { window.StatusSiteUtils.clearSiteDataAndReload(); return true; } return false; })()",
             function(ok) {
                 if (!ok)
-                    webView.reload()
+                    webView.triggerWebAction(WebEngineView.ReloadAndBypassCache)
             }
         )
     }
@@ -246,12 +259,24 @@ AbstractWebView {
         function onClearHttpCacheCompleted() { root._finishClearBrowsingData() }
     }
 
+    Connections {
+        target: BrowserProfileUtils
+        function onClearSiteDataCompleted() { root._finishClearSiteData() }
+    }
+
     // Fallback in case clearHttpCacheCompleted doesn't fire (e.g. empty cache).
     Timer {
         id: _clearBrowsingDataFallbackTimer
         interval: 1000
         repeat: false
         onTriggered: root._finishClearBrowsingData()
+    }
+
+    Timer {
+        id: _clearSiteDataFallbackTimer
+        interval: 1000
+        repeat: false
+        onTriggered: root._finishClearSiteData()
     }
 
     WebEngineView {
@@ -268,7 +293,9 @@ AbstractWebView {
     }
 
     Binding {
-        when: !!(root.profile && root.profileParams && root.profileParams.userAgent)
+        // Always apply, including "". Empty must clear a previous override;
+        // gating on truthy userAgent leaves the last Chrome UA stuck on the profile.
+        when: !!(root.profile && root.profileParams)
         target: root.profile
         property: "httpUserAgent"
         value: root.profileParams.userAgent
@@ -280,6 +307,10 @@ AbstractWebView {
         root.profile.userScripts.collection = root.profileManager.scriptListForParams(root.profileParams)
     }
 
+    // Qt does not emit *Changed for the initial property value — only for later
+    // changes. Without onCompleted, userScripts (site_utils, dapp injectors) are
+    // never installed when profile is already set at construction time.
+    Component.onCompleted: applyProfileScripts()
     onProfileChanged: applyProfileScripts()
 
     Connections {
