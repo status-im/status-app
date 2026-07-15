@@ -33,6 +33,8 @@ TextField {
     HoverHandler {
         id: hoverHandler
         enabled: root.enabled
+        // Build the edit context menu on first hover (see contextMenuLoader).
+        onHoveredChanged: if (hovered && !Utils.isAndroid) contextMenuLoader.active = true
     }
 
     background: Rectangle {
@@ -65,39 +67,51 @@ TextField {
             deselect()
     }
 
-    StatusMenu {
-        id: contextMenu
+    // The edit context menu (Cut/Copy/Paste/Select All) is only reachable via a
+    // right-click or long-press, both always preceded by the pointer entering the
+    // field or the field gaining focus. Building it eagerly per field is a
+    // dominant instantiation cost (a full StatusMenu with materialised items),
+    // paid even when the field is never interacted with — and on Android it is not
+    // even attached (see below). So build it lazily on first interaction, never on
+    // Android. The menu is null until then; a right-click cannot happen before the
+    // triggering hover/focus, so the menu is always present by the time it opens.
+    onActiveFocusChanged: if (activeFocus && !Utils.isAndroid) contextMenuLoader.active = true
 
-        hideDisabledItems: false
-        popupType: Utils.isIOS ? Popup.Native : Popup.Item
+    Loader {
+        id: contextMenuLoader
+        active: false
+        sourceComponent: StatusMenu {
+            hideDisabledItems: false
+            popupType: Utils.isIOS ? Popup.Native : Popup.Item
 
-        StatusAction {
-            text: qsTr("Cut")
-            enabled: !noSelection
-            onTriggered: root.cut()
-        }
-        StatusAction {
-            text: qsTr("Copy")
-            enabled: !noSelection
-            onTriggered: root.copy()
-        }
-        StatusAction {
-            text: qsTr("Paste")
-            // On iOS, never read the clipboard for UI enablement: reading
-            // canPaste touches UIPasteboard and triggers the system
-            // "paste from..." prompt. Keep Paste always enabled there and let
-            // the actual paste() be the only (user-initiated) clipboard read.
-            // On desktop, reading canPaste is free and keeps the disabled state.
-            enabled: Utils.isIOS || root.canPaste
-            onTriggered: root.paste()
-        }
-        StatusMenuSeparator {}
-        StatusAction {
-            text: qsTr("Select All")
-            enabled: !noSelection
-            onTriggered: root.selectAll()
+            StatusAction {
+                text: qsTr("Cut")
+                enabled: !root.noSelection
+                onTriggered: root.cut()
+            }
+            StatusAction {
+                text: qsTr("Copy")
+                enabled: !root.noSelection
+                onTriggered: root.copy()
+            }
+            StatusAction {
+                text: qsTr("Paste")
+                // On iOS, never read the clipboard for UI enablement: reading
+                // canPaste touches UIPasteboard and triggers the system
+                // "paste from..." prompt. Keep Paste always enabled there and let
+                // the actual paste() be the only (user-initiated) clipboard read.
+                // On desktop, reading canPaste is free and keeps the disabled state.
+                enabled: Utils.isIOS || root.canPaste
+                onTriggered: root.paste()
+            }
+            StatusMenuSeparator {}
+            StatusAction {
+                text: qsTr("Select All")
+                enabled: !root.noSelection
+                onTriggered: root.selectAll()
+            }
         }
     }
 
-    ContextMenu.menu: Utils.isAndroid ? null : contextMenu
+    ContextMenu.menu: contextMenuLoader.item
 }
