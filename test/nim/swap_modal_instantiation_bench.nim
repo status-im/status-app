@@ -36,6 +36,16 @@ import os, times, strformat
 import nimqml
 from seaqt/qcoreapplication import QCoreApplication, processEvents
 import std/monotimes
+import std/strutils
+
+# Optional QML profiling: build with `-d:qmldebug` (port via -d:qmlDebugPort:NNNNN)
+# to start the TCP debug/profiler server and BLOCK until `qmlprofiler --attach`
+# connects, so a trace of the create window can be captured. Mirrors the desktop
+# app's enabler in nim_status_client.nim. Test-only; off by default.
+when defined(qmldebug):
+  # `from ... import nil` keeps every symbol qualified so its transitive QVariant
+  # doesn't clash with nimqml.QVariant in the QtObject macro below.
+  from seaqt/qqmldebuggingenabler import nil
 
 {.compile: "bench_statusq_register.cpp".}
 proc bench_registerStatusQTypes() {.importc.}
@@ -136,6 +146,17 @@ proc formatTable(rows: seq[Row]): string =
 when isMainModule:
   putEnv("QT_QPA_PLATFORM", "offscreen")
   let app = newQApplication()
+
+  when defined(qmldebug):
+    const qmlDebugPort {.intdefine: "qmlDebugPort".} = 49155
+    # WaitForClient: block here until qmlprofiler attaches, so the create window
+    # is inside the recorded window. Must run before the QML engine is created.
+    # mode 1 = WaitForClient (block until qmlprofiler attaches)
+    discard qqmldebuggingenabler.startTcpDebugServer(
+      qqmldebuggingenabler.QQmlDebuggingEnabler, qmlDebugPort.cint, 1.cint)
+    stderr.writeLine("[bench] qml debug/profiler server waiting on port " & $qmlDebugPort)
+    stderr.flushFile()
+
   bench_registerStatusQTypes()
 
   let bench = newBench()
@@ -157,7 +178,14 @@ when isMainModule:
     quit(0)
 
   var rows: seq[Row] = @[]
-  const sizes = [100, 1000, 5000, 10000]
+  # Default sweep; override with SWAP_BENCH_SIZES=10000 (comma-separated) to pin a
+  # single size for a profiled run. Not a committed hardcode — env-driven.
+  var sizes = @[100, 1000, 5000, 10000]
+  let sizesEnv = getEnv("SWAP_BENCH_SIZES", "")
+  if sizesEnv.len > 0:
+    sizes = @[]
+    for s in sizesEnv.split(','):
+      if s.strip().len > 0: sizes.add(parseInt(s.strip()))
   const openTimeoutMs = 2500.0
 
   # Opens the modal and waits for `opened` (or drains to timeout), returning the
@@ -298,4 +326,12 @@ when isMainModule:
   # static destructors (Nim's `quit`/`exit` would run them and crash). Using
   # _exit avoids that unrelated shutdown-ordering bug.
   proc c_exit(code: cint) {.importc: "_exit", header: "<unistd.h>".}
+  when defined(qmldebug):
+    # Under profiling, hold the app + debug connection open so qmlprofiler can
+    # flush a CLEAN trace: an immediate _exit drops the TCP socket mid-stream and
+    # the profiler reports "connection dropped ... damaged". Spin processing events
+    # (keeps the debug thread serviced); the harness stops the profiler + kills us.
+    stderr.writeLine("[bench] measurement done; holding open 300s for qmlprofiler flush")
+    stderr.flushFile()
+    bench.spinFor(300000.0)
   c_exit(0)
