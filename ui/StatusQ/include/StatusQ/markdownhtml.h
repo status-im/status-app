@@ -25,6 +25,15 @@ QString toHtml(const Node& root,
                const QHash<int, QPair<QString, QString>>& mentions = {},
                int emojiPx = 0);
 
+// Renders the document as a single-line HTML fragment for compact previews (e.g. the reply
+// preview): newlines collapse to spaces, a fenced code block is rendered like an inline code
+// span, and a quote block becomes a "> "-prefixed <span class="quote">…</span> (colored by the
+// consumer's CSS). Inline formatting, links and mentions match toHtml. `emojiPx` behaves as in
+// toHtml (enlarges emoji runs when > 0).
+QString toSingleLineHtml(const Node& root,
+                         const QHash<int, QPair<QString, QString>>& mentions = {},
+                         int emojiPx = 0);
+
 // Splits the document into renderable blocks for decorated display (each rendered by its
 // own Label). Division points are code blocks and quote blocks; consecutive inline
 // content is grouped into one block. Returned items are maps:

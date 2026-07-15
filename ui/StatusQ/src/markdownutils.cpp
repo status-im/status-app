@@ -59,3 +59,16 @@ QVariantList MarkdownUtils::toBlocks(const QString& text, const QVariantMap& men
         emojiPx = qRound(lineHeight) + emojiSizeOffset;
     return Markdown::toBlocks(root, mentionMap, emojiPx);
 }
+
+QString MarkdownUtils::singleLineHtml(const QString& text, const QVariantMap& mentions,
+                                      const QFont& font) const
+{
+    const Markdown::Node root = Markdown::parse(text, {});
+
+    QHash<int, QPair<QString, QString>> mentionMap;
+    collectTextMentions(root, mentions, mentionMap);
+
+    // Emojis are sized to the line height; the emoji-only enlargement is intentionally not applied.
+    const int emojiPx = qRound(QFontMetricsF(font).height());
+    return Markdown::toSingleLineHtml(root, mentionMap, emojiPx);
+}

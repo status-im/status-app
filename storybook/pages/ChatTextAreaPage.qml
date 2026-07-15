@@ -710,6 +710,31 @@ unclosed fence here (no closing triple-tick)
                 Layout.fillWidth: true
             }
 
+            Text {
+                Layout.fillWidth: true
+                font.bold: true
+                text: "Single-line render:"
+            }
+
+            ChatSingleLineTextView {
+                Layout.fillWidth: true
+
+                font.pixelSize: Theme.secondaryTextFontSize
+                padding: 10
+
+                background: Rectangle {
+                    color: Theme.palette.background
+                    border.color: "lightgray"
+                    radius: 4
+                }
+
+                html: {
+                    textArea.text // rebuild on every edit
+                    return MarkdownUtils.singleLineHtml(textArea.textWithMentions(),
+                                                        root.mentionsMap, font)
+                }
+            }
+
             Flow {
                 Layout.fillWidth: true
                 spacing: 10
