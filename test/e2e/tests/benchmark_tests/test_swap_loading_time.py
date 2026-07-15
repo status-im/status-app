@@ -1,20 +1,15 @@
 import pytest
 from allure_commons._allure import step
 
-import configs
 from configs import get_platform
-import constants
 from gui.screens.wallet import WalletAccountView
 from scripts.utils.benchmark_report import attach_load_time_report, enable_benchmark_mode
+from tests.benchmark_tests.benchmark_helpers import BENCHMARK_USER_PARAMS, WALLET_BENCHMARK_PARAMS
 
 ITERATIONS = 5
 
 
-@pytest.mark.parametrize('user_data, user_account', [
-    pytest.param(configs.testpath.TEST_USER_DATA / 'wallet_load', constants.user.wallet_load, id='wallet_load_user'),
-    pytest.param(configs.testpath.TEST_USER_DATA / 'wallet_load_alex', constants.user.wallet_load_alex,
-                 id='wallet_load_alex_user')
-])
+@pytest.mark.parametrize('user_data, user_account', WALLET_BENCHMARK_PARAMS, **BENCHMARK_USER_PARAMS)
 @pytest.mark.skipif(get_platform() != 'Windows', reason="Windows only test")
 @pytest.mark.benchmark
 def test_swap_loading_time(main_screen, user_data, user_account, tmp_path):

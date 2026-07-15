@@ -1,9 +1,7 @@
 import pytest
 from allure_commons._allure import step
 
-import configs
 from configs import get_platform
-import constants
 from driver.aut import AUT
 from scripts.utils.benchmark_report import (
     CommunityOpenSamples,
@@ -11,16 +9,18 @@ from scripts.utils.benchmark_report import (
     enable_benchmark_mode,
     monitored_call,
 )
+from tests.benchmark_tests.benchmark_helpers import (
+    BENCHMARK_USER_PARAMS,
+    COMMUNITY_MEMBER_BENCHMARK_PARAMS as _COMMUNITY_MEMBER_PARAM_VALUES,
+)
 
 COMMUNITY_NAME = 'Status'
 SECOND_OPEN_ITERATIONS = 5
 
-COMMUNITY_BENCHMARK_PARAMS = pytest.mark.parametrize(
+COMMUNITY_MEMBER_BENCHMARK_PARAMS = pytest.mark.parametrize(
     'user_data, user_account',
-    [pytest.param(
-        configs.testpath.TEST_USER_DATA / 'status_community_member',
-        constants.user.status_community_member,
-    )],
+    _COMMUNITY_MEMBER_PARAM_VALUES,
+    **BENCHMARK_USER_PARAMS,
 )
 
 
@@ -33,7 +33,7 @@ def _record_monitored_community_open(aut: AUT, main_screen, samples: CommunityOp
     samples.record(load_time, stats)
 
 
-@COMMUNITY_BENCHMARK_PARAMS
+@COMMUNITY_MEMBER_BENCHMARK_PARAMS
 @pytest.mark.skipif(get_platform() != 'Windows', reason="Windows only test")
 @pytest.mark.benchmark
 def test_status_community_first_open_loading_time(
@@ -48,7 +48,7 @@ def test_status_community_first_open_loading_time(
     attach_community_scenario_reports(tmp_path, 'first open', samples)
 
 
-@COMMUNITY_BENCHMARK_PARAMS
+@COMMUNITY_MEMBER_BENCHMARK_PARAMS
 @pytest.mark.skipif(get_platform() != 'Windows', reason="Windows only test")
 @pytest.mark.benchmark
 def test_status_community_second_open_loading_time(
