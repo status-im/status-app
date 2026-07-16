@@ -20,7 +20,7 @@ Rectangle {
         objectName: "dotBlinkAnimation"
 
         loops: Animation.Infinite
-        running: visible
+        running: root.visible
         NumberAnimation { target: root; property: "opacity"; to: 0; duration: root.duration }
         NumberAnimation { target: root; property: "opacity"; to: root.maxOpacity; duration: root.duration }
     }
