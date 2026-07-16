@@ -37,42 +37,25 @@ Control {
     background: null
 
     contentItem: Item {
-        property real contentItemWidth: 0
-        onWidthChanged: {
-            contentItemWidth = width
-            animation.restart()
-        }
+        id: content
+
         Rectangle {
             id: rect
             anchors.fill: parent
             color: Theme.palette.statusLoadingHighlight
             radius: root.radius
-            visible: false
+            visible: false // used only as the OpacityMask source
 
-            LinearGradient {
-                id: gradient
-                width: 100
-                height: 2*parent.height
-                x: -width
-                y: -height/4
-                start: Qt.point(0, height)
-                end: Qt.point(width, height)
-                gradient: Gradient {
-                    GradientStop { position: 0.2; color: "transparent"}
-                    GradientStop { position: 0.5; color: Theme.palette.statusLoadingHighlight2 }
-                    GradientStop { position: 0.8; color: "transparent"}
-                }
-                rotation: 20
-                XAnimator on x {
-                    id: animation
-                    easing.type: Easing.Linear
-                    loops: Animation.Infinite
-                    running: root.visible
-                    from: -gradient.width
-                    to: contentItem.contentItemWidth + gradient.width
-                    duration: 1000
-                    easing.period: 2
-                }
+            // The animated sweep is materialized only while the placeholder is
+            // effectively visible. When hidden, the Loader is inactive so no
+            // animation object exists and the render thread can park instead of
+            // repainting the whole scene at 60fps for a hidden shimmer.
+            Loader {
+                id: sweepLoader
+                width: rect.width
+                height: rect.height
+                active: root.visible
+                sourceComponent: sweepComponent
             }
         }
 
@@ -86,5 +69,46 @@ Control {
             }
         }
     }
-}
 
+    // Native Rectangle gradient sweep — no Qt5Compat LinearGradient (which is an
+    // extra ShaderEffectSource pass). Only the rounded OpacityMask pass remains.
+    Component {
+        id: sweepComponent
+
+        Rectangle {
+            id: sweep
+            objectName: "shimmerSweep"
+
+            width: 100
+            height: 2 * sweepLoader.height
+            x: -width
+            y: -height / 4
+            rotation: 20
+
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.2; color: "transparent" }
+                GradientStop { position: 0.5; color: Theme.palette.statusLoadingHighlight2 }
+                GradientStop { position: 0.8; color: "transparent" }
+            }
+
+            XAnimator on x {
+                id: sweepAnimator
+                objectName: "shimmerAnimator"
+                easing.type: Easing.Linear
+                loops: Animation.Infinite
+                running: true
+                from: -sweep.width
+                to: sweepLoader.width + sweep.width
+                duration: 1000
+            }
+
+            // Restart the sweep when the placeholder is resized, matching the
+            // original behaviour (avoids a stale sweep span for one cycle).
+            Connections {
+                target: sweepLoader
+                function onWidthChanged() { sweepAnimator.restart() }
+            }
+        }
+    }
+}
