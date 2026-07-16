@@ -303,6 +303,8 @@ RightTabBaseView {
                     id: assetsView
 
                     AssetsView {
+                        id: walletAssetsView
+
                         AssetsViewAdaptor {
                             id: assetsViewAdaptor
 
@@ -340,14 +342,13 @@ RightTabBaseView {
                             settings.category = settingsCategoryName
                             walletSettings.sync()
                             settings.sync()
-                            let value = SortOrderComboBox.TokenOrderBalance
                             if (walletSettings.assetsViewCustomOrderApplyTimestamp > settings.sortOrderUpdateTimestamp && customOrderAvailable) {
-                                value = SortOrderComboBox.TokenOrderCustom
+                                sortByValue(SortOrderComboBox.TokenOrderCustom)
+                                setSortOrder(Qt.AscendingOrder) // same as SortOrderComboBox.onActivated for Custom order
                             } else {
-                                value = settings.currentSortValue
+                                sortByValue(settings.currentSortValue)
+                                setSortOrder(settings.currentSortOrder)
                             }
-                            sortByValue(value)
-                            setSortOrder(settings.currentSortOrder)
                         }
 
                         function saveSortSettings() {
@@ -373,6 +374,7 @@ RightTabBaseView {
                             id: walletSettings
                             category: "walletSettings-" + root.contactsStore.myPublicKey
                             property var assetsViewCustomOrderApplyTimestamp
+                            onAssetsViewCustomOrderApplyTimestampChanged: walletAssetsView.refreshSortSettings()
                         }
 
                         readonly property var settings: Settings { /* https://bugreports.qt.io/browse/QTBUG-135039 */
@@ -454,14 +456,13 @@ RightTabBaseView {
                             settings.category = settingsCategoryName
                             walletSettings.sync()
                             settings.sync()
-                            let value = SortOrderComboBox.TokenOrderBalance
                             if (walletSettings.collectiblesViewCustomOrderApplyTimestamp > settings.sortOrderUpdateTimestamp && customOrderAvailable) {
-                                value = SortOrderComboBox.TokenOrderCustom
+                                sortByValue(SortOrderComboBox.TokenOrderCustom)
+                                setSortOrder(Qt.AscendingOrder) // same as SortOrderComboBox.onActivated for Custom order
                             } else {
-                                value = settings.currentSortValue
+                                sortByValue(settings.currentSortValue)
+                                setSortOrder(settings.currentSortOrder)
                             }
-                            sortByValue(value)
-                            setSortOrder(settings.currentSortOrder)
                         }
 
                         function saveSortSettings() {
@@ -479,6 +480,13 @@ RightTabBaseView {
 
                         Component.onCompleted: refreshSortSettings()
                         Component.onDestruction: saveSortSettings()
+
+                        Connections {
+                            target: walletSettings
+                            function onCollectiblesViewCustomOrderApplyTimestampChanged() {
+                                collView.refreshSortSettings()
+                            }
+                        }
 
                         readonly property var settings: Settings { /* https://bugreports.qt.io/browse/QTBUG-135039 */
                             id: settings
