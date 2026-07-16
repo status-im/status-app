@@ -54,6 +54,10 @@ Control {
     property bool isImage: false
     property bool isEdit: false
 
+    // Optional formatting/send toolbar. Hidden by default when editing an existing message
+    // (edit is saved with Enter / cancelled with Escape, so the toolbar is not needed).
+    property bool toolBarVisible: !root.isEdit
+
     readonly property int messageLimit: 2000 // actual message limit, we don't allow sending more than that
     readonly property int messageLimitSoft: 200 // we start showing a char counter when this no. of chars left in the message
     readonly property int messageLimitHard: 20000 // still cut-off attempts to paste beyond this limit, for app usability reasons
@@ -61,6 +65,10 @@ Control {
     property string chatInputPlaceholder: qsTr("Type something")
 
     property alias textInput: messageInputField
+
+    // Background color of the surface the input sits on. Propagated to the text area so the
+    // quote-block bar's cell blends with it.
+    property alias backgroundColor: messageInputField.backgroundColor
 
     property var fileUrlsAndSources: []
 
@@ -753,6 +761,8 @@ Control {
 
         StatusChatInputToolBar {
             id: toolBar
+
+            visible: root.toolBarVisible
 
             padding: Theme.smallPadding
 

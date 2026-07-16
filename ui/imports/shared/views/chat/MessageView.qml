@@ -816,7 +816,9 @@ Loader {
                         return
                     }
 
-                    const message = StatusQUtils.StringUtils.plainText(StatusQUtils.Emoji.deparse(newMessageText))
+                    // newMessageText is already plain text with "@0x…" mentions
+                    // and unicode emojis
+                    const message = newMessageText
 
                     if (message.length <= 0)
                         return;
@@ -1062,7 +1064,7 @@ Loader {
                 }
 
                 statusChatInput: Component {
-                    StatusChatInput {
+                    StatusChatInputNew {
                         id: editTextInput
                         objectName: "editMessageInput"
 
@@ -1085,6 +1087,8 @@ Loader {
                         stickersPopup: root.stickersPopup
 
                         isEdit: true
+                        // Match StatusMessage's edit-mode background so the quote-block bar blends in.
+                        backgroundColor: Theme.palette.baseColor2
 
                         onSendMessageRequested: delegate.editCompletedHandler(editTextInput.getTextWithPublicKeys())
                         onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) => root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
