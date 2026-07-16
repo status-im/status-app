@@ -39,6 +39,15 @@ T.ScrollBar {
         }
     }
 
+    QtObject {
+        id: d
+
+        // The thumb is only opaque (visible) while the bar is interacted with or
+        // forced on. Outside of that it renders nothing, so it need not exist.
+        readonly property bool thumbActive:
+            root.enabled && (root.hovered || root.active || root.policy === T.ScrollBar.AlwaysOn)
+    }
+
     // TODO: add this sizes to Theme
     implicitWidth: 14
     implicitHeight: 14
@@ -48,7 +57,7 @@ T.ScrollBar {
     }
 
     contentItem: Loader {
-        active: false
+        active: d.thumbActive
 
         sourceComponent: Rectangle {
             objectName: "scrollBarThumb"

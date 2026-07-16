@@ -28,6 +28,21 @@ Item {
         }
     }
 
+    // A StatusListView whose content overflows vertically: the vertical scrollbar
+    // is needed. Its thumb should appear only once the bar becomes active.
+    Component {
+        id: overflowingListView
+        StatusListView {
+            width: 200
+            height: 200
+            model: 50
+            delegate: Item {
+                width: 200
+                height: 40
+            }
+        }
+    }
+
     TestCase {
         name: "StatusScrollBar"
         when: windowShown
@@ -49,6 +64,29 @@ Item {
                    "vertical thumb should not be materialized at instantiation")
             verify(!findChild(view.ScrollBar.horizontal, "scrollBarThumb"),
                    "horizontal thumb should not be materialized at instantiation")
+        }
+
+        // --- Cycle 2: materialize + become opaque once the bar is active ---
+        function test_thumb_materializes_and_shows_when_active() {
+            const view = createTemporaryObject(overflowingListView, root)
+            verify(!!view)
+
+            const bar = view.verticalScrollBar
+            tryCompare(bar, "visible", true, 1000,
+                       "vertical scrollbar should be visible for overflowing content")
+
+            // Idle: thumb still not materialized.
+            verify(!findChild(bar, "scrollBarThumb"),
+                   "thumb should stay lazy while the bar is idle")
+
+            // User starts scrolling -> bar becomes active.
+            bar.active = true
+
+            tryVerify(() => !!findChild(bar, "scrollBarThumb"), 1000,
+                      "thumb should materialize once the bar is active")
+            const thumb = findChild(bar, "scrollBarThumb")
+            tryCompare(thumb, "opacity", 1.0, 1000,
+                       "thumb should be fully opaque while the bar is active")
         }
     }
 }
