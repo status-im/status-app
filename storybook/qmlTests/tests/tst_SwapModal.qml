@@ -1959,8 +1959,10 @@ Item {
             const invertQuoteApproximation = findChild(controlUnderTest, "invertQuoteApproximation")
             verify(!!invertQuoteApproximation)
 
-            verify(sellItem.visible) // left item is visible once the from token is set
-            verify(quoteItem.visible)
+            // The post-open form setup runs via Qt.callLater (SwapModal onOpened),
+            // so the row's visibility lands asynchronously — poll, don't assert.
+            tryVerify(() => sellItem.visible) // left item is visible once the from token is set
+            tryVerify(() => quoteItem.visible)
             verify(quoteItem.loading) // right item is loading until routes are fetched
             verify(!priceItem.visible)
             verify(!invertQuoteApproximation.visible)
