@@ -89,6 +89,7 @@ QtObject:
   proc onAsyncBuildGroupsForChainToDone(self: Service, response: string) {.slot.}
   proc onAsyncFetchAllTokenGroupsDone(self: Service, response: string) {.slot.}
   proc prefetchParaswapSupportRetrieved(self: Service, response: string) {.slot.}
+  proc prefetchLiFiSupportRetrieved(self: Service, response: string) {.slot.}
 
 
   proc delete*(self: Service)
