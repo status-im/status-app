@@ -214,7 +214,6 @@ const SIGNAL_NEW_REQUEST_TO_JOIN_COMMUNITY_ACCEPTED* = "requestToJoinCommunityAc
 const SIGNAL_REQUEST_TO_JOIN_COMMUNITY_CANCELED* = "requestToJoinCommunityCanceled"
 const SIGNAL_WAITING_ON_NEW_COMMUNITY_OWNER_TO_CONFIRM_REQUEST_TO_REJOIN* = "waitingOnNewCommunityOwnerToConfirmRequestToRejoin"
 const SIGNAL_CURATED_COMMUNITY_FOUND* = "curatedCommunityFound"
-const SIGNAL_CURATED_COMMUNITIES_UPDATED* = "curatedCommunitiesUpdated"
 const SIGNAL_COMMUNITY_MUTED* = "communityMuted"
 const SIGNAL_CATEGORY_MUTED* = "categoryMuted"
 const SIGNAL_CATEGORY_UNMUTED* = "categoryUnmuted"
@@ -277,9 +276,12 @@ QtObject:
       # miss results — never pass these to procs that take `var T`.
       emptyCommunity: CommunityDto
       emptyCategory: Category
+      curatedCommunitiesLoadInFlight: bool
+      curatedCommunitiesLoadPending: bool
 
   # Forward declaration
   proc asyncLoadCuratedCommunities*(self: Service)
+  proc refreshStoredCuratedCommunities(self: Service, final: bool = false)
   proc asyncAcceptRequestToJoinCommunity*(self: Service, communityId: string, requestId: string)
   proc asyncDeclineRequestToJoinCommunity*(self: Service, communityId: string, requestId: string)
   proc handleCommunityUpdates(self: Service, communities: seq[CommunityDto], updatedChats: seq[ChatDto], removedChats: seq[string])
@@ -352,10 +354,16 @@ QtObject:
           self.communities[receivedData.community.id].isAvailable:
         self.events.emit(SIGNAL_CURATED_COMMUNITY_FOUND, CommunityArgs(community: self.communities[receivedData.community.id]))
 
-    self.events.on(SignalType.CuratedCommunitiesUpdated.event) do(e: Args):
-      var receivedData = CuratedCommunitiesSignal(e)
-      self.events.emit(SIGNAL_CURATED_COMMUNITIES_UPDATED,
-        CommunitiesArgs(communities: receivedData.communities))
+    self.events.on(SignalType.CuratedCommunitiesRefreshStarted.event) do(e: Args):
+      self.events.emit(SIGNAL_CURATED_COMMUNITIES_LOADING, Args())
+
+    self.events.on(SignalType.CuratedCommunityResolved.event) do(e: Args):
+      let receivedData = CuratedCommunityResolvedSignal(e)
+      if receivedData.stored:
+        self.refreshStoredCuratedCommunities()
+
+    self.events.on(SignalType.CuratedCommunitiesRefreshFinished.event) do(e: Args):
+      self.refreshStoredCuratedCommunities(final = true)
 
     self.events.on(SignalType.Message.event) do(e: Args):
       var receivedData = MessageSignal(e)
@@ -1941,6 +1949,7 @@ QtObject:
         CommunityMemberArgs(communityId: communityId, pubKey: userKey, requestId: requestId))
 
   proc asyncLoadCuratedCommunities*(self: Service) =
+    self.curatedCommunitiesLoadInFlight = true
     self.events.emit(SIGNAL_CURATED_COMMUNITIES_LOADING, Args())
     try:
       let arg = AsyncLoadCuratedCommunitiesTaskArg(
@@ -1950,23 +1959,54 @@ QtObject:
       )
       self.threadpool.start(arg)
     except Exception as e:
+      self.curatedCommunitiesLoadInFlight = false
       error "Error loading curated communities", msg = e.msg
 
+  # Coalesces the stored-data reloads triggered by refresh signals: while a load
+  # is in flight, resolves are dropped; a `final` request queues one trailing run
+  # so the last state always lands.
+  proc refreshStoredCuratedCommunities(self: Service, final: bool = false) =
+    if self.curatedCommunitiesLoadInFlight:
+      if final:
+        self.curatedCommunitiesLoadPending = true
+      return
+    self.asyncLoadCuratedCommunities()
+
   proc onAsyncLoadCuratedCommunitiesDone*(self: Service, response: string) {.slot.} =
+    self.curatedCommunitiesLoadInFlight = false
     try:
       let rpcResponseObj = response.parseJson
       if (rpcResponseObj{"error"}.kind != JNull and rpcResponseObj{"error"}.getStr != ""):
         error "Error loading curated communities", msg = rpcResponseObj{"error"}.getStr
         self.events.emit(SIGNAL_CURATED_COMMUNITIES_LOADING_FAILED, Args())
-        return
-      let curatedCommunities = parseCuratedCommunities(rpcResponseObj["response"]["result"])
-      for curatedCommunity in curatedCommunities:
-        self.communities[curatedCommunity.id] = curatedCommunity
-      self.events.emit(SIGNAL_CURATED_COMMUNITIES_LOADED, CommunitiesArgs(communities: curatedCommunities))
+      else:
+        let curatedCommunities = parseCuratedCommunities(rpcResponseObj["response"]["result"])
+        for curatedCommunity in curatedCommunities:
+          self.communities[curatedCommunity.id] = curatedCommunity
+        self.events.emit(SIGNAL_CURATED_COMMUNITIES_LOADED, CommunitiesArgs(communities: curatedCommunities))
     except Exception as e:
       let errMsg = e.msg
       error "error loading curated communities: ", errMsg
       self.events.emit(SIGNAL_CURATED_COMMUNITIES_LOADING_FAILED, Args())
+    if self.curatedCommunitiesLoadPending:
+      self.curatedCommunitiesLoadPending = false
+      self.refreshStoredCuratedCommunities()
+
+  proc refreshCuratedCommunities*(self: Service) =
+    try:
+      let response = status_go.refreshCuratedCommunities()
+      if not response.error.isNil:
+        error "error refreshing curated communities", msg = response.error.message
+    except Exception as e:
+      error "error refreshing curated communities", msg = e.msg
+
+  proc stopCuratedCommunitiesRefresh*(self: Service) =
+    try:
+      let response = status_go.stopCuratedCommunitiesRefresh()
+      if not response.error.isNil:
+        error "error stopping curated communities refresh", msg = response.error.message
+    except Exception as e:
+      error "error stopping curated communities refresh", msg = e.msg
 
   proc getCommunityMetrics*(self: Service, communityId: string, metricsType: CommunityMetricsType): CommunityMetricsDto =
     # NOTE: use metricsType when other metrics types added

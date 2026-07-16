@@ -166,6 +166,12 @@ method onActivated*(self: Module) =
     return
   self.controller.asyncLoadCuratedCommunities()
 
+method refreshCuratedCommunities*(self: Module) =
+  self.controller.refreshCuratedCommunities()
+
+method stopCuratedCommunitiesRefresh*(self: Module) =
+  self.controller.stopCuratedCommunitiesRefresh()
+
 method curatedCommunitiesLoaded*(self: Module, curatedCommunities: seq[CommunityDto]) =
   self.curatedCommunitiesLoaded = true
   self.setCuratedCommunities(curatedCommunities)

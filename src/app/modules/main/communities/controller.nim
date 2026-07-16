@@ -97,11 +97,6 @@ proc init*(self: Controller) =
       self.delegate.communityEdited(community)
       self.delegate.curatedCommunityEdited(community)
 
-  self.events.on(SIGNAL_CURATED_COMMUNITIES_UPDATED) do(e:Args):
-    let args = CommunitiesArgs(e)
-    for community in args.communities:
-      self.delegate.curatedCommunityEdited(community)
-
   self.events.on(SIGNAL_COMMUNITY_MUTED) do(e:Args):
     let args = CommunityMutedArgs(e)
     self.delegate.communityMuted(args.communityId, args.muted)
@@ -337,6 +332,12 @@ proc isMyCommunityRequestPending*(self: Controller, communityId: string): bool =
 
 proc asyncLoadCuratedCommunities*(self: Controller) =
   self.communityService.asyncLoadCuratedCommunities()
+
+proc refreshCuratedCommunities*(self: Controller) =
+  self.communityService.refreshCuratedCommunities()
+
+proc stopCuratedCommunitiesRefresh*(self: Controller) =
+  self.communityService.stopCuratedCommunitiesRefresh()
 
 proc requestExtractDiscordChannelsAndCategories*(self: Controller, filesToImport: seq[string]) =
   self.communityService.requestExtractDiscordChannelsAndCategories(filesToImport)

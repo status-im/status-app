@@ -180,6 +180,12 @@ method communityHistoryArchivesDownloadStarted*(self: AccessInterface, community
 method communityHistoryArchivesDownloadFinished*(self: AccessInterface, communityId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method refreshCuratedCommunities*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method stopCuratedCommunitiesRefresh*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method curatedCommunitiesLoading*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 

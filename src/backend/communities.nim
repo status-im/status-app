@@ -25,6 +25,12 @@ proc getCuratedCommunities*(): RpcResponse[JsonNode] =
   let payload = %* []
   result = callPrivateRPC("curatedCommunities".prefix, payload)
 
+proc refreshCuratedCommunities*(): RpcResponse[JsonNode] =
+  result = callPrivateRPC("refreshCuratedCommunities".prefix)
+
+proc stopCuratedCommunitiesRefresh*(): RpcResponse[JsonNode] =
+  result = callPrivateRPC("stopCuratedCommunitiesRefresh".prefix)
+
 proc getAllCommunities*(): RpcResponse[JsonNode] =
   result = callPrivateRPC("communities".prefix)
 

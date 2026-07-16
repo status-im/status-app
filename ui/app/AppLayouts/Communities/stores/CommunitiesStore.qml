@@ -122,6 +122,14 @@ QtObject {
         root.communitiesModuleInst.navigateToCommunity(communityId)
     }
 
+    function refreshCuratedCommunities() {
+        root.communitiesModuleInst.refreshCuratedCommunities()
+    }
+
+    function stopCuratedCommunitiesRefresh() {
+        root.communitiesModuleInst.stopCuratedCommunitiesRefresh()
+    }
+
     function removeFileListItem(filePath) {
         root.communitiesModuleInst.removeFileListItem(filePath)
     }

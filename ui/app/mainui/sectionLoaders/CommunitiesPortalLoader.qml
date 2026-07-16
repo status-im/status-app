@@ -38,6 +38,12 @@ Loader {
         })
     }
 
-    onActiveChanged: loadSection()
+    onActiveChanged: {
+        loadSection()
+        if (active)
+            communitiesStore.refreshCuratedCommunities()
+        else
+            communitiesStore.stopCuratedCommunitiesRefresh()
+    }
     onLoaded: item.visible = true
 }

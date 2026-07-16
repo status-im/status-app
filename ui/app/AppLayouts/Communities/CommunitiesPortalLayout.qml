@@ -173,6 +173,12 @@ StatusSectionLayout {
                 onCardClicked: (communityId) => root.communitiesStore.navigateToCommunity(communityId)
             }
         }
+
+        StatusLoadingIndicator {
+            anchors.centerIn: parent
+            visible: root.communitiesStore.curatedCommunitiesLoading
+                     && filteredCommunitiesModel.count === 0
+        }
     }
 
     RowLayout {

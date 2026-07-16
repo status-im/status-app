@@ -466,6 +466,12 @@ QtObject:
   proc navigateToCommunity*(self: View, communityId: string) {.slot.} =
     self.delegate.navigateToCommunity(communityId)
 
+  proc refreshCuratedCommunities*(self: View) {.slot.} =
+    self.delegate.refreshCuratedCommunities()
+
+  proc stopCuratedCommunitiesRefresh*(self: View) {.slot.} =
+    self.delegate.stopCuratedCommunitiesRefresh()
+
   proc spectateCommunity*(self: View, communityId: string) {.slot.} =
     discard self.delegate.spectateCommunity(communityId)
 
