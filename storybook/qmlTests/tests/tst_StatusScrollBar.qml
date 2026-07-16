@@ -88,5 +88,28 @@ Item {
             tryCompare(thumb, "opacity", 1.0, 1000,
                        "thumb should be fully opaque while the bar is active")
         }
+
+        // --- Cycle 3: preserve the transient fade-out ---
+        // After the bar goes idle again the thumb must stay alive so its opacity
+        // can animate back to 0 (fade-out), matching the released UX.
+        function test_thumb_fades_out_and_persists_when_bar_goes_idle() {
+            const view = createTemporaryObject(overflowingListView, root)
+            verify(!!view)
+
+            const bar = view.verticalScrollBar
+            tryCompare(bar, "visible", true, 1000)
+
+            bar.active = true
+            tryVerify(() => !!findChild(bar, "scrollBarThumb"), 1000)
+
+            bar.active = false
+
+            // Thumb must remain instantiated to play the fade-out animation...
+            verify(!!findChild(bar, "scrollBarThumb"),
+                   "thumb should persist after the bar goes idle so it can fade out")
+            // ...and settle to fully transparent.
+            tryCompare(findChild(bar, "scrollBarThumb"), "opacity", 0.0, 1000,
+                       "thumb should fade out to transparent when the bar goes idle")
+        }
     }
 }
