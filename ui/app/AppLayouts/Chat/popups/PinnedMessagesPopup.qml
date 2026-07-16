@@ -118,6 +118,7 @@ StatusDialog {
                     links: model.links
                     transactionParams: model.transactionParameters
                     quotedMessageText: model.quotedMessageParsedText
+                    quotedMessageUnparsedText: model.quotedMessageText
                     quotedMessageFrom: model.quotedMessageFrom
                     quotedMessageContentType: model.quotedMessageContentType
                     quotedMessageDeleted: model.quotedMessageDeleted

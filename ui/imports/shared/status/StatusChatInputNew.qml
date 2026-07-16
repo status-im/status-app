@@ -68,6 +68,10 @@ Control {
 
     property alias textInput: messageInputField
 
+    // Background color of the surface the input sits on. Propagated to the text area so the
+    // quote-block bar's cell blends with it.
+    property alias backgroundColor: messageInputField.backgroundColor
+
     property var fileUrlsAndSources: []
 
     property var linkPreviewModel: null

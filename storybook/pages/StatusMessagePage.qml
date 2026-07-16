@@ -325,6 +325,8 @@ SplitView {
                             name: index % 2 ? ModelsData.icons.dribble : ModelsData.icons.socks
                         }
                         messageText: ModelsData.descriptions.mediumLoremIpsum
+                        unparsedText: "Reply with **bold**, `inline code` and a mention @0x00001 — "
+                                      + ModelsData.descriptions.mediumLoremIpsum
                     }
 
                     onSenderNameClicked: logs.logEvent("StatusMessage::senderNameClicked")

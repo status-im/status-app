@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Shapes
 import QtQuick.Layouts
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils
@@ -123,14 +124,13 @@ Item {
                             Layout.fillWidth: true
                             active: !!replyDetails.messageText && replyDetails.contentType !== StatusMessage.ContentType.Sticker
                             visible: active
-                            sourceComponent: StatusTextMessage {
+                            sourceComponent: ChatSingleLineTextView {
                                 objectName: "StatusMessage_replyDetails_textMessage"
-                                isReply: true
-                                isMobile: root.isMobile
-                                allowShowMore: false
-                                stripHtmlTags: true
-                                convertToSingleLine: true
-                                messageDetails: root.replyDetails
+                                font.pixelSize: Theme.secondaryTextFontSize
+                                textColor: Theme.palette.baseColor1     // dimmed reply text
+                                fadeColor: Theme.palette.background      // surface behind the reply
+                                html: MarkdownUtils.singleLineHtml(root.replyDetails.unparsedText,
+                                                                   root.replyDetails.mentionsMap, font)
                             }
                         }
 

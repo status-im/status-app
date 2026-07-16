@@ -423,6 +423,7 @@ Item {
             transactionParams: model.transactionParameters
             hasMention: model.mentioned
             quotedMessageText: model.quotedMessageParsedText
+            quotedMessageUnparsedText: model.quotedMessageText
             quotedMessageFrom: model.quotedMessageFrom
             quotedMessageContentType: model.quotedMessageContentType
             quotedMessageDeleted: model.quotedMessageDeleted

@@ -388,8 +388,7 @@ Control {
                             Layout.fillHeight: true
                             color: root.quoteBarColor
 
-                            bottomLeftRadius: width
-                            topLeftRadius: width
+                            radius: width / 2
                         }
                         ColumnLayout {
                             id: quoteCol
