@@ -39,6 +39,15 @@ AbstractWebView {
     // Cookies (incl. HttpOnly) via BrowserProfileUtils; DOM storage via site_utils.js.
     clearSiteDataSupported: true
 
+    // Unified clear lifecycle (see CONTEXT: Clearing). Mutual exclusion + nav guard.
+    readonly property int _clearIdle: 0
+    readonly property int _clearSite: 1
+    readonly property int _clearProfile: 2
+    readonly property int _clearAwaitingReload: 3
+    property int _clearState: _clearIdle
+    property url _clearingUrl
+    clearing: _clearState !== _clearIdle
+
     // Override functions
     function loadUrl(newUrl) { webView.url = newUrl }
     function goBack() { webView.goBack() }
@@ -48,32 +57,58 @@ AbstractWebView {
     function stop() { webView.stop() }
     function forceReload() { webView.triggerWebAction(WebEngineView.ReloadAndBypassCache) }
 
+    function _sameOrigin(a, b) {
+        if (!a || !b || !a.toString() || !b.toString())
+            return false
+        return a.scheme === b.scheme && a.host === b.host && a.port === b.port
+    }
+
+    function _endClear() {
+        root._clearState = root._clearIdle
+        root._clearingUrl = ""
+        _clearFallbackTimer.stop()
+    }
+
+    function _beginAwaitingReloadWipe() {
+        // Do not wipe DOM / reload a different origin than the one we cleared.
+        if (!root._sameOrigin(webView.url, root._clearingUrl)) {
+            root._endClear()
+            return
+        }
+        root._clearState = root._clearAwaitingReload
+        _clearFallbackTimer.restart()
+        root._wipeCurrentOriginDomAndReload()
+    }
+
     // Native per-site cookies, then site_utils.js for current-origin DOM + reload.
-    property bool _clearingSiteData: false
     function clearSiteData() {
-        if (root._clearingSiteData || !root.profile)
+        if (root._clearState !== root._clearIdle || !root.profile)
             return
         const siteUrl = webView.url
         if (!siteUrl.toString())
             return
-        root._clearingSiteData = true
-        _clearSiteDataFallbackTimer.restart()
-        BrowserProfileUtils.clearSiteData(root.profile, siteUrl)
+        root._clearState = root._clearSite
+        root._clearingUrl = siteUrl
+        _clearFallbackTimer.restart()
+        // Pass `root` so only this adapter reacts to clearSiteDataCompleted.
+        BrowserProfileUtils.clearSiteData(root.profile, siteUrl, root)
     }
-    function _finishClearSiteData() {
-        if (!root._clearingSiteData)
+
+    function _onNativeSiteClearDone(requester) {
+        if (requester !== root)
             return
-        root._clearingSiteData = false
-        _clearSiteDataFallbackTimer.stop()
-        root._wipeCurrentOriginDomAndReload()
+        if (root._clearState !== root._clearSite)
+            return
+        root._beginAwaitingReloadWipe()
     }
 
     // Profile-wide cookies + HTTP cache, then current-origin DOM via site_utils.js.
     function clearBrowsingData() {
-        if (root.clearing || !root.profile)
+        if (root._clearState !== root._clearIdle || !root.profile)
             return
-        root.clearing = true
-        _clearBrowsingDataFallbackTimer.restart()
+        root._clearState = root._clearProfile
+        root._clearingUrl = webView.url
+        _clearFallbackTimer.restart()
         BrowserProfileUtils.clearBrowsingData(root.profile)
     }
 
@@ -83,22 +118,29 @@ AbstractWebView {
         else
             webView.runJavaScript(script, callback)
     }
-    function _finishClearBrowsingData() {
-        if (!root.clearing)
+
+    function _onNativeBrowsingClearDone() {
+        // Profile signal fans out to every tab; only the initiator finishes.
+        if (root._clearState !== root._clearProfile)
             return
-        _clearBrowsingDataFallbackTimer.stop()
-        root.clearing = false
-        root._wipeCurrentOriginDomAndReload()
+        root._beginAwaitingReloadWipe()
     }
+
     function _wipeCurrentOriginDomAndReload() {
+        const expected = root._clearingUrl
         webView.runJavaScript(
             "(function(){ if (window.StatusSiteUtils) { window.StatusSiteUtils.clearSiteDataAndReload(); return true; } return false; })()",
             function(ok) {
+                if (root._clearState !== root._clearAwaitingReload)
+                    return
+                if (!root._sameOrigin(webView.url, expected)) {
+                    root._endClear()
+                    return
+                }
                 if (!ok) {
                     // GET navigate — ReloadAndBypassCache can re-POST and re-Set-Cookie.
-                    const u = webView.url
-                    if (u && u.toString())
-                        webView.url = u
+                    if (expected && expected.toString())
+                        webView.url = expected
                 }
             }
         )
@@ -210,6 +252,11 @@ AbstractWebView {
         onLoadingChanged: function(loadRequest) {
             if (loadRequest.status === WebEngineView.LoadStartedStatus) {
                 webView.htmlPageLoaded = false
+                // Expected GET after clear: unblock once navigation starts.
+                if (root._clearState === root._clearAwaitingReload
+                        && root._sameOrigin(loadRequest.url, root._clearingUrl)) {
+                    root._endClear()
+                }
             }
             if (loadRequest.status === WebEngineView.LoadSucceededStatus) {
                 webView.htmlPageLoaded = true
@@ -220,10 +267,18 @@ AbstractWebView {
                 webView.htmlPageLoaded = true
         }
         onNavigationRequested: function(request) {
-            if (root.clearing) {
-                // Block navigation while browsing data is being cleared.
+            if (root._clearState === root._clearSite
+                    || root._clearState === root._clearProfile) {
+                // Block user/site navigation while native clear is in flight.
                 request.reject()
                 return
+            }
+            if (root._clearState === root._clearAwaitingReload) {
+                // Allow only the expected same-origin GET reload after wipe.
+                if (!root._sameOrigin(request.url, root._clearingUrl)) {
+                    request.reject()
+                    return
+                }
             }
             if (request.url.toString().startsWith("file:/")) {
                 console.log("Local file browsing is disabled")
@@ -267,27 +322,29 @@ AbstractWebView {
                 return
             root.downloadRequested(download)
         }
-        function onClearHttpCacheCompleted() { root._finishClearBrowsingData() }
+        function onClearHttpCacheCompleted() { root._onNativeBrowsingClearDone() }
     }
 
     Connections {
         target: BrowserProfileUtils
-        function onClearSiteDataCompleted() { root._finishClearSiteData() }
+        function onClearSiteDataCompleted(requester) { root._onNativeSiteClearDone(requester) }
     }
 
-    // Fallback in case clearHttpCacheCompleted doesn't fire (e.g. empty cache).
+    // Safety net: unblock if native completion or expected reload never arrives.
     Timer {
-        id: _clearBrowsingDataFallbackTimer
-        interval: 1000
+        id: _clearFallbackTimer
+        interval: 2000
         repeat: false
-        onTriggered: root._finishClearBrowsingData()
-    }
-
-    Timer {
-        id: _clearSiteDataFallbackTimer
-        interval: 1000
-        repeat: false
-        onTriggered: root._finishClearSiteData()
+        onTriggered: {
+            if (root._clearState === root._clearSite
+                    || root._clearState === root._clearProfile) {
+                // Native phase stuck — still try DOM wipe if origin matches.
+                root._beginAwaitingReloadWipe()
+                return
+            }
+            if (root._clearState === root._clearAwaitingReload)
+                root._endClear()
+        }
     }
 
     WebEngineView {

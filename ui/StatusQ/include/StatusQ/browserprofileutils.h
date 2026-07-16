@@ -37,14 +37,14 @@ public:
 
     // Clears cookies that belong to `siteUrl`'s host using the live name index
     // from trackProfile (DeleteCookies is URL-scoped). Emits
-    // clearSiteDataCompleted when deletes settle (or immediately if there is
-    // nothing to clear / profile untracked). Pair with injected site_utils.js
-    // on the page for DOM storage; WebEngine has no public per-site HTTP cache
-    // / DOM storage API in C++.
-    Q_INVOKABLE void clearSiteData(QObject *profile, const QUrl &siteUrl);
+    // clearSiteDataCompleted(requester) when deletes settle so only the
+    // initiating WebViewAdapter finishes. Pair with injected site_utils.js
+    // on the page for DOM storage.
+    Q_INVOKABLE void clearSiteData(QObject *profile, const QUrl &siteUrl,
+                                   QObject *requester = nullptr);
 
 signals:
-    void clearSiteDataCompleted();
+    void clearSiteDataCompleted(QObject *requester);
 
 private:
     struct TrackedStore;
