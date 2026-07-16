@@ -57,7 +57,10 @@ Control {
     onSelectableChanged: d.clearSelection()
     onBlocksChanged: d.clearSelection()
     onEditedChanged: d.clearSelection()
-    onSelectedTextChanged: if (selectedText) forceActiveFocus()
+
+    // Dropping the selection on focus loss keeps a single active selection,
+    // so the copy shortcut stays unambiguous.
+    onActiveFocusChanged: if (!activeFocus) d.clearSelection()
 
     // Renders one text or code region, instantiating exactly one child (via Loader): a Label
     // (not selectable) or a read-only TextEdit (selectable), plain or framed for code. Widths
@@ -461,6 +464,8 @@ Control {
         property bool moved: false
 
         onPressed: (mouse) => {
+            root.forceActiveFocus() // Grab focus (deselects other views)
+
             pressX = mouse.x
             pressY = mouse.y
             moved = false
