@@ -987,9 +987,13 @@ Loader {
                 }
 
                 replyDetails: StatusMessageDetails {
-                    readonly property var responseMessage: contentType === StatusMessage.ContentType.Sticker || contentType === StatusMessage.ContentType.Image
-                                                           ? root.messageStore.getMessageByIdAsJson(responseToMessageWithId)
+                    // Look up the original message (when loaded) to recover data the quotedMessage
+                    // payload lacks: sticker/image content and the edited state.
+                    readonly property var responseMessage: !!root.responseToMessageWithId
+                                                           ? root.messageStore.getMessageByIdAsJson(root.responseToMessageWithId)
                                                            : null
+                    // The quotedMessage payload has no edited flag; derive it from the original.
+                    isEdited: !!responseMessage && !!responseMessage.isEdited
                     onResponseMessageChanged: {
                         if (!responseMessage)
                             return

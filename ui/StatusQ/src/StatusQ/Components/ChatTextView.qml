@@ -4,6 +4,7 @@ import QtQuick.Layouts
 
 import StatusQ
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils
 
 // Renders static formatted chat text from a list of "blocks" (as produced by
 // MarkdownUtils.toBlocks). Each block gets its own item so quote/code blocks can be
@@ -25,6 +26,10 @@ Control {
     // When true, text/code regions become read-only TextEdits and support a mouse selection
     // that spans blocks; when false, they are plain (non-selectable) Labels.
     property bool selectable: false
+
+    // When true, a small, dimmed "(edited)" marker is appended after the last block.
+    property bool edited: false
+    property int editedMarkerFontSize: Theme.tertiaryTextFontSize
 
     // Combined selected text across all blocks ("" when nothing is selected).
     readonly property alias selectedText: d.selectedText
@@ -51,6 +56,7 @@ Control {
 
     onSelectableChanged: d.clearSelection()
     onBlocksChanged: d.clearSelection()
+    onEditedChanged: d.clearSelection()
 
     // Renders one text or code region, instantiating exactly one child (via Loader): a Label
     // (not selectable) or a read-only TextEdit (selectable), plain or framed for code. Widths
@@ -201,6 +207,23 @@ Control {
         readonly property int padding: 8
         readonly property int quoteBarWidth: 3
 
+        // The blocks actually rendered: `blocks` plus, when `edited`, a small "(edited)" marker
+        // appended to the last text block (or as its own trailing text block).
+        readonly property var renderBlocks: {
+            if (!root.edited || root.blocks.length === 0)
+                return root.blocks
+
+            const marker = StringUtils.editedMarker(Theme.palette.baseColor1, root.editedMarkerFontSize)
+
+            const out = root.blocks.slice() // shallow copy so `blocks` is not mutated
+            const last = out[out.length - 1]
+            if (last.type === "text")
+                out[out.length - 1] = { type: "text", html: (last.html || "") + marker }
+            else
+                out.push({ type: "text", html: marker })
+            return out
+        }
+
         // Rich-text CSS rules for the non-code renderers
         readonly property string baseStyle:
             `code { background-color: ${root.codeBackgroundColor}`
@@ -350,7 +373,7 @@ Control {
         spacing: d.padding
 
         Repeater {
-            model: root.blocks
+            model: d.renderBlocks
 
             // One Loader per block builds only the matching renderer (text/code or quote).
             delegate: Loader {

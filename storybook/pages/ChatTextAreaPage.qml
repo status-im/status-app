@@ -549,6 +549,7 @@ unclosed fence here (no closing triple-tick)
                             font.family: Fonts.baseFont.family
                             font.pixelSize: textArea.font.pixelSize
                             selectable: selectableSwitch.checked
+                            edited: editedSwitch.checked
 
                             // Rendered from the editor's plain text (mentions as "@0x…"), not the
                             // text document — mentions are resolved via mentionsMap.
@@ -724,6 +725,7 @@ unclosed fence here (no closing triple-tick)
 
                 font.pixelSize: Theme.secondaryTextFontSize
                 padding: 10
+                edited: editedSwitch.checked
 
                 background: Rectangle {
                     color: Theme.palette.background
@@ -782,6 +784,11 @@ unclosed fence here (no closing triple-tick)
 
                     checked: true
                     text: "Selectable static text"
+                }
+                Switch {
+                    id: editedSwitch
+
+                    text: "Edited marker"
                 }
 
                 // Renames the exemplary mentioned user (row 0) in the users model. The resolver

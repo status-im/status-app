@@ -62,6 +62,45 @@ Item {
             verify(withBlocks > 0)
         }
 
+        // Recursively true when some rendered Text/TextEdit under `item` contains `substr`.
+        function renders(item, substr) {
+            if (typeof item.text === "string" && item.text.indexOf(substr) >= 0)
+                return true
+            const kids = item.children
+            for (let i = 0; i < kids.length; ++i)
+                if (renders(kids[i], substr))
+                    return true
+            return false
+        }
+
+        // The "(edited)" marker is rendered only when `edited` is set (appended after the text).
+        function test_editedMarkerRendered() {
+            control.blocks = [
+                { type: "text", html: "first" },
+                { type: "text", html: "hello" }
+            ]
+            tryVerify(() => control.implicitHeight > 0)
+            verify(!renders(control, "(edited)"), "marker shown without edited")
+
+            control.edited = true
+            tryVerify(() => renders(control, "(edited)"), 1000, "marker not rendered when edited")
+
+            control.edited = false
+            tryVerify(() => !renders(control, "(edited)"), 1000, "marker not removed")
+        }
+
+        // When the last block isn't text (code/quote), the marker is still rendered (as its own
+        // trailing text block).
+        function test_editedMarkerAfterNonTextBlock() {
+            control.blocks = [
+                { type: "text", html: "hello" },
+                { type: "code", code: "x = 1" }
+            ]
+            control.edited = true
+            tryVerify(() => control.implicitHeight > 0)
+            tryVerify(() => renders(control, "(edited)"), 1000, "marker not rendered after code block")
+        }
+
         // A quote block carrying a nested code sub-block renders without errors.
         function test_quoteWithNestedCode() {
             control.blocks = [

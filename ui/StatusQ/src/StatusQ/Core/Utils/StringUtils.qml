@@ -29,6 +29,12 @@ QtObject {
         return Internal.StringUtils.shortcutToText(shortcut)
     }
 
+    // Builds the small, dimmed "(edited)" HTML marker (with a leading space) appended after chat
+    // text in the static renderers. `color` and `fontSize` (px) style the span.
+    function editedMarker(color, fontSize) {
+        return ` <span style="color:${color}; font-size:${fontSize}px">` + qsTr("(edited)") + `</span>`
+    }
+
     // Expands the chat ASCII-emoticon slash-commands ("/shrug", "/tableflip") into their
     // kaomoji, returning any other text unchanged.
     function expandAsciiEmoticonShortcuts(text) {

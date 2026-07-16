@@ -16505,6 +16505,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>StringUtils</name>
+    <message>
+        <source>(edited)</source>
+        <translation type="unfinished">(수정됨)</translation>
+    </message>
+</context>
+<context>
     <name>SupportedTokenListsPanel</name>
     <message numerus="yes">
         <source>%n token(s) · Last updated %1</source>
