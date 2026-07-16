@@ -37,6 +37,8 @@ Control {
     signal openGifPopupRequest(var params, var cbOnGifSelected, var cbOnClose)
     signal imageClicked(var image)
     signal linkClicked(string link)
+    signal editCancelRequested()
+    signal editAcceptRequested()
 
     property var usersModel
     property bool usersModelIncludeAtEveryone: true
@@ -52,6 +54,11 @@ Control {
 
     property bool isImage: false
     property bool isEdit: false
+    property bool imageFeaturesEnabled: !isEdit
+    property bool stickersButtonVisible: !isEdit
+    property bool gifButtonVisible: true
+    property bool paymentRequestButtonVisible: !isEdit && !areTestNetworksEnabled && paymentRequestFeatureEnabled
+    property int editInputMaxLines: 9
 
     readonly property int messageLimit: 2000 // actual message limit, we don't allow sending more than that
     readonly property int messageLimitSoft: 200 // we start showing a char counter when this no. of chars left in the message
@@ -218,7 +225,7 @@ Control {
         }
 
         function isUploadFilePressed(event) {
-            return (event.key === Qt.Key_U) &&
+            return root.imageFeaturesEnabled && (event.key === Qt.Key_U) &&
                     (event.modifiers & Qt.ControlModifier) && !imageDialog.visible
         }
     }
@@ -459,7 +466,7 @@ Control {
     }
 
     DropAreaPanel {
-        enabled: root.visible && root.enabled
+        enabled: root.imageFeaturesEnabled && root.visible && root.enabled
         parent: root.Overlay.overlay
         anchors.fill: parent
         onDroppedOnValidScreen: (drop) => {
@@ -582,10 +589,18 @@ Control {
 
     background: Item {
         Rectangle {
+            anchors.fill: parent
+            visible: root.isEdit
+            color: Theme.palette.background
+            radius: 12
+        }
+
+        Rectangle {
             id: backgroundRect
 
-            width: backgroundRect.parent.width
+            width: parent.width
             height: 1
+            visible: !root.isEdit
             border.color: Theme.palette.directColor7
             color: StatusColors.transparent
         }
@@ -692,10 +707,14 @@ Control {
                 StatusScrollView {
                     id: inputScrollView
 
-                    Layout.preferredHeight: messageInputField.implicitHeight
+                    readonly property real editMaxHeight: Math.ceil(messageInputField.font.pixelSize * 1.4 * root.editInputMaxLines
+                                                                    + messageInputField.topPadding
+                                                                    + messageInputField.bottomPadding)
 
+                    Layout.preferredHeight: root.isEdit ? Math.min(messageInputField.implicitHeight, editMaxHeight)
+                                                        : messageInputField.implicitHeight
                     Layout.fillWidth: true
-                    Layout.maximumHeight: 200
+                    Layout.maximumHeight: root.isEdit ? editMaxHeight : 200
 
                     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                     ScrollBar.vertical.implicitWidth: Theme.halfPadding
@@ -766,7 +785,10 @@ Control {
                             lengthLimitTooltip.open()
                         }
 
-                        onPasteImageRequested: root.validateImagesAndShowImageArea([ClipboardUtils.imageBase64])
+                        onPasteImageRequested: {
+                            if (root.imageFeaturesEnabled)
+                                root.validateImagesAndShowImageArea([ClipboardUtils.imageBase64])
+                        }
 
                         Shortcut {
                             enabled: messageInputField.activeFocus
@@ -802,7 +824,9 @@ Control {
             Theme.padding: Theme.defaultPadding
             Theme.fontSizeOffset: ThemeUtils.fontSizeOffsetM
 
-            styleButtonVisible: false
+            styleButtonVisible: root.isEdit
+            editActionsVisible: root.isEdit
+            editAcceptButtonEnabled: messageInputField.text.trim().length > 0
 
             // On iOS, backspace temporarily creates a selection (selectionStart != selectionEnd)
             // around the character being removed. The binding is configured as delayed to avoid
@@ -815,6 +839,10 @@ Control {
 
             cameraButton.visible: false
 
+            sendButtonVisible: !root.isEdit
+            onEditCancelClicked: root.editCancelRequested()
+            onEditAcceptClicked: root.editAcceptRequested()
+            imageButton.visible: root.imageFeaturesEnabled
             imageButton.checked: imageDialog.visible
             imageButton.onClicked: {
                 imageDialog.open()
@@ -833,7 +861,7 @@ Control {
                 root.tryFinalizeMessage()
             }
 
-            tokenButton.visible: !root.areTestNetworksEnabled && root.paymentRequestFeatureEnabled
+            tokenButton.visible: root.paymentRequestButtonVisible
             tokenButton.onClicked: {
                 root.openPaymentRequestModal(popup => {
                     popup.closed.connect(() => {
@@ -889,6 +917,7 @@ Control {
             }
 
             stickersButton.checked: d.stickersPopupOpened
+            stickersButton.visible: root.stickersButtonVisible
             stickersButton.onClicked: {
                 if (d.stickersPopupOpened) {
                     root.stickersPopup.close()
@@ -901,6 +930,7 @@ Control {
             }
 
             gifButton.checked: false
+            gifButton.visible: root.gifButtonVisible
             gifButton.onClicked: {
                 gifButton.checked = true
 

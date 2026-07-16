@@ -1063,16 +1063,15 @@ Loader {
                 }
 
                 statusChatInput: Component {
-                    StatusChatInput {
+                    StatusChatInputNew {
                         id: editTextInput
                         objectName: "editMessageInput"
-
                         readonly property string messageText: editTextInput.textInput.text
 
-                        // TODO: Move this property and Escape handler to StatusChatInput
-                        property bool suggestionsOpened: false
-
                         width: parent.width
+
+                        // TODO: Move this property and Escape handler to StatusChatInputNew
+                        property bool suggestionsOpened: false
 
                         Keys.onEscapePressed: {
                             if (!suggestionsOpened) {
@@ -1086,8 +1085,11 @@ Loader {
                         stickersPopup: root.stickersPopup
 
                         isEdit: true
+                        imageFeaturesEnabled: false
+                        stickersButtonVisible: false
+                        // editMessage currently persists text only; payment requests cannot be edited safely here.
+                        paymentRequestButtonVisible: false
 
-                        onSendMessageRequested: delegate.editCompletedHandler(editTextInput.getTextWithPublicKeys())
                         onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) => root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
 
                         Component.onCompleted: {

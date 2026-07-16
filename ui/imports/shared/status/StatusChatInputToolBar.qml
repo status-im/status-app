@@ -31,8 +31,13 @@ Control {
     readonly property alias sendButton: sendButton
 
     property bool sendButtonVisible: true
+    property bool editActionsVisible: false
+    property bool editAcceptButtonEnabled: true
     property bool showFormatting: false
     property bool styleButtonVisible: true
+
+    signal editCancelClicked()
+    signal editAcceptClicked()
 
     component ChatIcon: AbstractButton {
         id: chatIconRoot
@@ -306,20 +311,50 @@ Control {
         Item {
             id: buttonWrapper
 
-            Layout.preferredWidth: sendButton.implicitWidth
-            Layout.preferredHeight: sendButton.implicitHeight
+            Layout.preferredWidth: root.editActionsVisible ? editActionsLayout.implicitWidth
+                                                           : sendButton.implicitWidth
+            Layout.preferredHeight: root.editActionsVisible ? editActionsLayout.implicitHeight
+                                                            : sendButton.implicitHeight
+
+            RowLayout {
+                id: editActionsLayout
+
+                visible: root.editActionsVisible
+                anchors.right: parent.right
+                spacing: Theme.halfPadding
+
+                StatusRoundButton {
+                    objectName: "statusChatInputEditCancelButton"
+                    Layout.preferredWidth: sendButton.implicitHeight
+                    Layout.preferredHeight: sendButton.implicitHeight
+                    icon.name: "close"
+                    type: StatusRoundButton.Type.Quaternary
+                    onClicked: root.editCancelClicked()
+                }
+
+                StatusRoundButton {
+                    objectName: "statusChatInputEditAcceptButton"
+                    Layout.preferredWidth: sendButton.implicitHeight
+                    Layout.preferredHeight: sendButton.implicitHeight
+                    icon.name: "checkmark"
+                    type: StatusRoundButton.Type.Primary
+                    enabled: root.editAcceptButtonEnabled
+                    onClicked: root.editAcceptClicked()
+                }
+            }
 
             StatusChatInputSendButton {
                 id: sendButton
 
                 objectName: "statusChatInputSendButton"
 
+                visible: !root.editActionsVisible
                 anchors.right: parent.right
             }
 
             states: [
                 State {
-                    when: !root.sendButtonVisible
+                    when: !root.sendButtonVisible && !root.editActionsVisible
                     PropertyChanges {
                         target: buttonWrapper
                         opacity: 0

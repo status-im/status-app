@@ -136,6 +136,10 @@ SplitView {
             paymentRequestFeatureEnabled: true
             areTestNetworksEnabled: testnetEnabledCheckBox.checked
             isReply: isReplyCheckBox.checked
+            isEdit: editModeCheckBox.checked
+            imageFeaturesEnabled: !isEdit
+            stickersButtonVisible: !isEdit
+            paymentRequestButtonVisible: !isEdit && !areTestNetworksEnabled && paymentRequestFeatureEnabled
 
             onAskToEnableLinkPreviewChanged: {
                 if(askToEnableLinkPreview) {
@@ -180,6 +184,8 @@ SplitView {
                                        logs.logEvent("StatusChatInput:openGifPopupRequest --> Open GIF Popup Request!")
                                        root.openGifTestPopup(params, cbOnGifSelected, cbOnClose)
                                    }
+            onEditCancelRequested: logs.logEvent("StatusChatInput::editCancelRequested")
+            onEditAcceptRequested: logs.logEvent("StatusChatInput::editAcceptRequested", ["MessageWithPk"], [chatInput.getTextWithPublicKeys()])
         }
     }
 
@@ -210,6 +216,12 @@ SplitView {
                 CheckBox {
                     id: isReplyCheckBox
                     text: "is reply"
+                    checked: false
+                }
+
+                CheckBox {
+                    id: editModeCheckBox
+                    text: "edit mode"
                     checked: false
                 }
             }

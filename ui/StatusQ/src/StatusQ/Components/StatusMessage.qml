@@ -255,7 +255,7 @@ Control {
                     }
                     Loader {
                         Layout.fillWidth: true
-                        active: root.showHeader && !editMode
+                        active: root.showHeader
                         visible: active
                         sourceComponent: StatusMessageHeader {
                             sender: root.messageDetails.sender
@@ -357,7 +357,9 @@ Control {
 
                     Loader {
                         Layout.fillWidth: true
-                        Layout.rightMargin: Theme.padding
+                        Layout.rightMargin: Theme.smallPadding
+                        Layout.topMargin: Theme.halfPadding
+                        Layout.bottomMargin: Theme.halfPadding
                         active: root.editMode
                         visible: active
                         sourceComponent: StatusEditMessage {
@@ -371,6 +373,7 @@ Control {
                         active: !!root.reactionsModel && root.reactionsModel.ModelCount.count > 0
                         visible: active
                         Layout.fillWidth: true
+                        Layout.bottomMargin: root.editMode ? Theme.halfPadding : 0
                         sourceComponent: StatusMessageEmojiReactions {
                             id: emojiReactionsPanel
                             enabled: !root.disableEmojis

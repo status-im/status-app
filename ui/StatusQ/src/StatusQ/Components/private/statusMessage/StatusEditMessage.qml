@@ -1,8 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 
-import StatusQ.Core
-import StatusQ.Core.Theme
 import StatusQ.Controls
 
 Item {
@@ -18,6 +16,17 @@ Item {
 
     implicitHeight: layout.implicitHeight
     implicitWidth: layout.implicitWidth
+
+    function editedMessageText() {
+        const input = chatInputLoader.item
+        if (!input)
+            return ""
+
+        if (input.getTextWithPublicKeys)
+            return input.getTextWithPublicKeys()
+
+        return input.messageText || ""
+    }
 
     ColumnLayout {
         id: layout
@@ -42,34 +51,22 @@ Item {
                 maximumHeight: 40
             }
         }
+    }
 
-        RowLayout {
-            spacing: 4
-            StatusFlatButton {
-                id: cancelBtn
-                text: qsTr("Cancel")
-                size: StatusBaseButton.Size.Small
-                onClicked: {
-                    editCancelled()
-                }
-            }
-            StatusButton {
-                id: saveBtn
-                text: qsTr("Save")
-                size: StatusBaseButton.Size.Small
-                enabled: !!chatInputLoader.item && chatInputLoader.item.messageText.trim().length > 0
-                onClicked: {
-                    let text = ""
-                    if (chatInputLoader.item) {
-                        if (chatInputLoader.item.getTextWithPublicKeys) {
-                            text = chatInputLoader.item.getTextWithPublicKeys()
-                        } else {
-                            text = chatInputLoader.item.messageText
-                        }
-                    }
-                    editCompleted(text)
-                }
-            }
+    Connections {
+        target: chatInputLoader.item
+        ignoreUnknownSignals: true
+
+        function onEditCancelRequested() {
+            root.editCancelled()
+        }
+
+        function onEditAcceptRequested() {
+            root.editCompleted(root.editedMessageText())
+        }
+
+        function onSendMessageRequested() {
+            root.editCompleted(root.editedMessageText())
         }
     }
 }
