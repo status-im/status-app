@@ -8,26 +8,164 @@
 #include <QSet>
 #include <QTimer>
 
-#include <functional>
-
 namespace {
 
-bool hostMatchesCookieDomain(const QString &host, QString domain)
+// Written after deletes so cookieAdded(sentinel) means the store has applied
+// every prior deleteCookie for this host (Mojo IPC is ordered per store).
+constexpr char kClearBarrierCookieName[] = "__status_clear_barrier";
+
+void invokeCallback(QJSValue callback)
 {
-    if (domain.startsWith(QLatin1Char('.')))
-        domain.remove(0, 1);
-    if (domain.isEmpty() || host.isEmpty())
-        return false;
-    return host.compare(domain, Qt::CaseInsensitive) == 0
-        || host.endsWith(QLatin1Char('.') + domain, Qt::CaseInsensitive);
+    if (!callback.isCallable())
+        return;
+    const QJSValue result = callback.call();
+    if (result.isError())
+        qWarning("BrowserProfileUtils: clear callback threw: %s",
+                 qPrintable(result.toString()));
 }
 
-bool cookieMatchesHost(const QNetworkCookie &cookie, const QString &host)
+// One-shot: deleteCookie(name, siteUrl) for each known name, then set a sentinel
+// cookie and wait for cookieAdded(sentinel) before notifying. No pending-name
+// counters — Mojo ordering guarantees deletes are applied before the add.
+class SiteCookieClearOp : public QObject
 {
-    const QString domain = cookie.domain();
-    // Empty domain = host-only cookie for the delete origin.
-    return domain.isEmpty() || hostMatchesCookieDomain(host, domain);
-}
+public:
+    SiteCookieClearOp(QWebEngineCookieStore *store,
+                      QSet<QByteArray> names,
+                      QUrl siteUrl,
+                      QJSValue callback,
+                      QObject *parent = nullptr)
+        : QObject(parent)
+        , m_store(store)
+        , m_names(std::move(names))
+        , m_siteUrl(std::move(siteUrl))
+        , m_callback(std::move(callback))
+        , m_timeout(this)
+    {
+        m_timeout.setSingleShot(true);
+        m_timeout.setInterval(2000);
+        connect(&m_timeout, &QTimer::timeout, this, [this]() { finish(); });
+    }
+
+    void start()
+    {
+        if (!m_store || m_siteUrl.host().isEmpty()) {
+            done();
+            return;
+        }
+
+        m_names.remove(QByteArray(kClearBarrierCookieName));
+
+        m_addedConn = connect(
+            m_store,
+            &QWebEngineCookieStore::cookieAdded,
+            this,
+            [this](const QNetworkCookie &cookie) {
+                if (cookie.name() != QByteArray(kClearBarrierCookieName))
+                    return;
+                // Drop the sentinel so it does not linger on the site.
+                m_store->deleteCookie(cookie, m_siteUrl);
+                finish();
+            });
+
+        for (const QByteArray &name : std::as_const(m_names)) {
+            QNetworkCookie cookie(name);
+            m_store->deleteCookie(cookie, m_siteUrl);
+        }
+
+        QNetworkCookie barrier(QByteArray(kClearBarrierCookieName),
+                               QByteArrayLiteral("1"));
+        barrier.setPath(QStringLiteral("/"));
+        m_store->setCookie(barrier, m_siteUrl);
+
+        m_timeout.start();
+    }
+
+private:
+    void finish()
+    {
+        if (m_finished)
+            return;
+        m_finished = true;
+        if (m_addedConn)
+            disconnect(m_addedConn);
+        m_timeout.stop();
+        done();
+    }
+
+    void done()
+    {
+        invokeCallback(m_callback);
+        deleteLater();
+    }
+
+    QPointer<QWebEngineCookieStore> m_store;
+    QSet<QByteArray> m_names;
+    QUrl m_siteUrl;
+    QJSValue m_callback;
+    QMetaObject::Connection m_addedConn;
+    QTimer m_timeout;
+    bool m_finished = false;
+};
+
+// One-shot: wait for clearHttpCacheCompleted (or timeout), then invoke callback.
+class BrowsingDataClearOp : public QObject
+{
+public:
+    BrowsingDataClearOp(QQuickWebEngineProfile *profile,
+                        QJSValue callback,
+                        QObject *parent = nullptr)
+        : QObject(parent)
+        , m_profile(profile)
+        , m_callback(std::move(callback))
+        , m_timeout(this)
+    {
+        m_timeout.setSingleShot(true);
+        m_timeout.setInterval(2000);
+        connect(&m_timeout, &QTimer::timeout, this, [this]() { finish(); });
+    }
+
+    void start()
+    {
+        if (!m_profile) {
+            done();
+            return;
+        }
+
+        m_cacheConn = connect(
+            m_profile,
+            &QQuickWebEngineProfile::clearHttpCacheCompleted,
+            this,
+            [this]() { finish(); });
+
+        m_profile->clearHttpCache();
+        m_timeout.start();
+    }
+
+private:
+    void finish()
+    {
+        if (m_finished)
+            return;
+        m_finished = true;
+        if (m_cacheConn)
+            disconnect(m_cacheConn);
+        m_timeout.stop();
+        done();
+    }
+
+    void done()
+    {
+        invokeCallback(m_callback);
+        deleteLater();
+    }
+
+    QPointer<QQuickWebEngineProfile> m_profile;
+    QJSValue m_callback;
+    QMetaObject::Connection m_cacheConn;
+    QTimer m_timeout;
+    bool m_finished = false;
+};
 
 } // namespace
 
@@ -41,104 +179,6 @@ struct BrowserProfileUtils::TrackedStore
     QMetaObject::Connection addedConn;
     QMetaObject::Connection destroyedConn;
 };
-
-namespace {
-
-// One-shot: deleteCookie(name, siteUrl) for each known name → settle / timeout → notify.
-// Chromium's DeleteCookies filter scopes by URL, so same-named cookies on other
-// hosts are not removed. cookieRemoved is filtered by host so unrelated
-// same-named cookies do not end the wait early.
-class SiteCookieClearOp : public QObject
-{
-public:
-    SiteCookieClearOp(QWebEngineCookieStore *store,
-                      QSet<QByteArray> names,
-                      QUrl siteUrl,
-                      std::function<void()> onDone,
-                      QObject *parent = nullptr)
-        : QObject(parent)
-        , m_store(store)
-        , m_names(std::move(names))
-        , m_siteUrl(std::move(siteUrl))
-        , m_host(m_siteUrl.host())
-        , m_onDone(std::move(onDone))
-        , m_settle(this)
-        , m_timeout(this)
-    {
-        m_settle.setSingleShot(true);
-        m_settle.setInterval(100);
-        connect(&m_settle, &QTimer::timeout, this, [this]() { finish(); });
-
-        m_timeout.setSingleShot(true);
-        m_timeout.setInterval(1000);
-        connect(&m_timeout, &QTimer::timeout, this, [this]() { finish(); });
-    }
-
-    void start()
-    {
-        if (!m_store || m_host.isEmpty() || m_names.isEmpty()) {
-            done();
-            return;
-        }
-
-        m_pendingNames = m_names;
-
-        m_removedConn = connect(
-            m_store,
-            &QWebEngineCookieStore::cookieRemoved,
-            this,
-            [this](const QNetworkCookie &cookie) {
-                if (!cookieMatchesHost(cookie, m_host))
-                    return;
-                if (!m_pendingNames.contains(cookie.name()))
-                    return;
-                m_pendingNames.remove(cookie.name());
-                // After every expected name has been seen, briefly settle so
-                // same-name multi-path deletes can finish before notifying QML.
-                if (m_pendingNames.isEmpty())
-                    m_settle.start();
-            });
-        for (const QByteArray &name : std::as_const(m_names)) {
-            QNetworkCookie cookie(name);
-            m_store->deleteCookie(cookie, m_siteUrl);
-        }
-
-        m_timeout.start();
-    }
-
-private:
-    void finish()
-    {
-        if (m_finished)
-            return;
-        m_finished = true;
-        if (m_removedConn)
-            disconnect(m_removedConn);
-        m_settle.stop();
-        m_timeout.stop();
-        done();
-    }
-
-    void done()
-    {
-        if (m_onDone)
-            m_onDone();
-        deleteLater();
-    }
-
-    QPointer<QWebEngineCookieStore> m_store;
-    QSet<QByteArray> m_names;
-    QUrl m_siteUrl;
-    QString m_host;
-    QSet<QByteArray> m_pendingNames;
-    QMetaObject::Connection m_removedConn;
-    QTimer m_settle;
-    QTimer m_timeout;
-    std::function<void()> m_onDone;
-    bool m_finished = false;
-};
-
-} // namespace
 
 BrowserProfileUtils::BrowserProfileUtils(QObject *parent)
     : QObject(parent)
@@ -194,6 +234,8 @@ void BrowserProfileUtils::trackProfile(QObject *profile)
         &QWebEngineCookieStore::cookieAdded,
         this,
         [tracked](const QNetworkCookie &cookie) {
+            if (cookie.name() == QByteArray(kClearBarrierCookieName))
+                return;
             tracked->cookieNames.insert(cookie.name());
         });
 
@@ -213,11 +255,12 @@ void BrowserProfileUtils::trackProfile(QObject *profile)
     m_tracked.insert(key, tracked);
 }
 
-void BrowserProfileUtils::clearBrowsingData(QObject *profile)
+void BrowserProfileUtils::clearBrowsingData(QObject *profile, QJSValue callback)
 {
     auto *webProfile = qobject_cast<QQuickWebEngineProfile *>(profile);
     if (!webProfile) {
         qWarning("BrowserProfileUtils::clearBrowsingData: expected a WebEngineProfile");
+        invokeCallback(callback);
         return;
     }
 
@@ -227,23 +270,23 @@ void BrowserProfileUtils::clearBrowsingData(QObject *profile)
             tracked->cookieNames.clear();
     }
 
-    // Async; the profile emits clearHttpCacheCompleted when done.
-    webProfile->clearHttpCache();
+    auto *op = new BrowsingDataClearOp(webProfile, std::move(callback), this);
+    op->start();
 }
 
 void BrowserProfileUtils::clearSiteData(QObject *profile, const QUrl &siteUrl,
-                                        QObject *requester)
+                                        QJSValue callback)
 {
     auto *webProfile = qobject_cast<QQuickWebEngineProfile *>(profile);
     if (!webProfile) {
         qWarning("BrowserProfileUtils::clearSiteData: expected a WebEngineProfile");
-        emit clearSiteDataCompleted(requester);
+        invokeCallback(callback);
         return;
     }
 
     if (siteUrl.host().isEmpty()) {
         qWarning("BrowserProfileUtils::clearSiteData: empty host; ignoring");
-        emit clearSiteDataCompleted(requester);
+        invokeCallback(callback);
         return;
     }
 
@@ -251,18 +294,15 @@ void BrowserProfileUtils::clearSiteData(QObject *profile, const QUrl &siteUrl,
     if (!tracked || !tracked->store) {
         qWarning("BrowserProfileUtils::clearSiteData: profile not tracked "
                  "(call trackProfile at profile creation); ignoring");
-        emit clearSiteDataCompleted(requester);
+        invokeCallback(callback);
         return;
     }
 
-    // Hold a QPointer so a destroyed adapter does not leave a dangling
-    // requester in the async completion path.
-    const QPointer<QObject> requesterGuard(requester);
     auto *op = new SiteCookieClearOp(
         tracked->store,
         tracked->cookieNames,
         siteUrl,
-        [this, requesterGuard]() { emit clearSiteDataCompleted(requesterGuard.data()); },
+        std::move(callback),
         this);
     op->start();
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QHash>
+#include <QJSValue>
 #include <QObject>
 #include <QUrl>
 
@@ -29,22 +30,18 @@ public:
 
     // Clears profile-wide browsing data: HTTP cache and all cookies.
     // `profile` must be a QML WebEngineProfile (QQuickWebEngineProfile);
-    // no-op with a warning otherwise. The profile's clearHttpCacheCompleted
-    // signal still fires, so QML can drive completion/reload handling.
+    // no-op with a warning otherwise. Invokes `callback` when clearHttpCache
+    // completes (or after a short timeout fallback).
     // Note: global DOM storage / visited links are not clearable via Qt's
     // public API and are therefore left untouched.
-    Q_INVOKABLE void clearBrowsingData(QObject *profile);
+    Q_INVOKABLE void clearBrowsingData(QObject *profile, QJSValue callback = {});
 
     // Clears cookies that belong to `siteUrl`'s host using the live name index
-    // from trackProfile (DeleteCookies is URL-scoped). Emits
-    // clearSiteDataCompleted(requester) when deletes settle so only the
-    // initiating WebViewAdapter finishes. Pair with injected site_utils.js
-    // on the page for DOM storage.
+    // from trackProfile (DeleteCookies is URL-scoped). Invokes `callback` when
+    // deletes settle (sentinel barrier) so the initiating WebViewAdapter can
+    // wipe DOM storage / reload. Pair with injected site_utils.js on the page.
     Q_INVOKABLE void clearSiteData(QObject *profile, const QUrl &siteUrl,
-                                   QObject *requester = nullptr);
-
-signals:
-    void clearSiteDataCompleted(QObject *requester);
+                                   QJSValue callback = {});
 
 private:
     struct TrackedStore;
