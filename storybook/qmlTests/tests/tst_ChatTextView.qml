@@ -165,6 +165,33 @@ Item {
             verify(control.selectedText.indexOf("second") >= 0, "second block not selected")
         }
 
+        // Loosing focus clears the selection.
+        function test_clickingAnotherViewDeselectsPrevious() {
+            const blocks = [
+                { type: "text", html: "first line" },
+                { type: "text", html: "second line" }
+            ]
+            const first = createTemporaryObject(componentUnderTest, root,
+                                                { selectable: true, blocks: blocks, y: 0 })
+            const second = createTemporaryObject(componentUnderTest, root,
+                                                 { selectable: true, blocks: blocks, y: 200 })
+            verify(first && second)
+            tryVerify(() => first.implicitHeight > 0 && second.implicitHeight > 0)
+
+            // Select in the first view.
+            mousePress(first, 0, 3)
+            mouseMove(first, first.width - 4, first.implicitHeight - 4)
+            mouseRelease(first, first.width - 4, first.implicitHeight - 4)
+            verify(first.selectedText.length > 0, "first view not selected")
+
+            // A plain click (no drag) in the second view must clear the first's selection.
+            mousePress(second, 5, 3)
+            mouseRelease(second, 5, 3)
+            compare(second.selectedText, "", "click should not select the second view")
+
+            tryCompare(first, "selectedText", "")
+        }
+
         // Toggling `selectable` after blocks are set rebuilds each block's renderer (Loader
         // swap) and the coordinator re-collects the newly-created editors.
         function test_selectableToggledAfterBlocks() {
