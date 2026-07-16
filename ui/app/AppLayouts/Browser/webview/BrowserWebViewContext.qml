@@ -232,6 +232,20 @@ QtObject {
             currentWebView.profileParams = target
     }
 
+    // Stop → update setting → deferred reload so profile.httpUserAgent Binding
+    // settles before navigation.
+    function setCompatibilityMode(checked) {
+        for (let i = 0; i < tabsModel.count; ++i)
+            getWebView(i)?.stop()
+
+        browserSettings.compatibilityMode = checked
+
+        Qt.callLater(() => {
+            for (let i = 0; i < tabsModel.count; ++i)
+                getWebView(i)?.reload()
+        })
+    }
+
     function changeZoomCurrent(delta) {
         if (!currentWebView)
             return

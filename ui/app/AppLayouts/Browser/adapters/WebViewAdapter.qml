@@ -293,12 +293,13 @@ AbstractWebView {
     }
 
     Binding {
-        // Always apply, including "". Empty must clear a previous override;
-        // gating on truthy userAgent leaves the last Chrome UA stuck on the profile.
-        when: !!(root.profile && root.profileParams)
+        // Always apply a non-empty UA. Setting httpUserAgent to "" after a
+        // custom override does not restore the Chromium default — use the
+        // snapshot captured at profile creation instead.
+        when: !!(root.profile && root.profileParams && root.profileManager)
         target: root.profile
         property: "httpUserAgent"
-        value: root.profileParams.userAgent
+        value: root.profileParams.userAgent || root.profileManager.defaultHttpUserAgent
     }
 
     function applyProfileScripts() {

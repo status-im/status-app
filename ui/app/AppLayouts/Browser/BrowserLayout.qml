@@ -662,17 +662,7 @@ StatusSectionLayout {
         onZoomOut: webViewContext.changeZoomCurrent(-0.1)
         onResetZoomFactor: webViewContext.resetZoomCurrent()
         onLaunchFindBar: _internal.showFindBar()
-        onToggleCompatibilityMode: function(checked) {
-            for (let i = 0; i < tabs.count; ++i){
-                webViewContext.getWebView(i).stop() // Stop all loading tabs
-            }
-
-            localAccountSensitiveSettings.compatibilityMode = checked;
-
-            for (let i = 0; i < tabs.count; ++i){
-                webViewContext.getWebView(i).reload() // Reload them with new user agent
-            }
-        }
+        onToggleCompatibilityMode: (checked) => webViewContext.setCompatibilityMode(checked)
         onLaunchBrowserSettings: {
             Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings);
         }
@@ -699,15 +689,7 @@ StatusSectionLayout {
         onForceReload: webViewContext.forceReloadCurrent()
         onClearSiteData: webViewContext.clearSiteDataCurrent()
         onClearBrowsingData: webViewContext.clearBrowsingDataCurrent()
-        onToggleCompatibilityMode: function(checked) {
-            for (let i = 0; i < tabs.count; ++i) {
-                webViewContext.getWebView(i).stop()
-            }
-            localAccountSensitiveSettings.compatibilityMode = checked
-            for (let i = 0; i < tabs.count; ++i) {
-                webViewContext.getWebView(i).reload()
-            }
-        }
+        onToggleCompatibilityMode: (checked) => webViewContext.setCompatibilityMode(checked)
 
         onGoIncognito: checked => root.applyIncognitoMode(checked)
         onSettingsRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings)

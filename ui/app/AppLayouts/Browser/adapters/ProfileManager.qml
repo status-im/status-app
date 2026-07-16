@@ -4,6 +4,9 @@ import QtWebEngine
 QtObject {
     id: root
     property var profiles: ({})
+    // Chromium default UA (same for all profiles in a Qt build). Snapshot before
+    // Binding override — httpUserAgent="" does not restore navigator.userAgent.
+    property string defaultHttpUserAgent: ""
 
     function _key(userUID, offTheRecord) {
         return userUID + "::" + (offTheRecord ? "otr" : "default")
@@ -50,6 +53,8 @@ QtObject {
                 profileParams.offTheRecord,
                 key)
             p = prototype.instance()
+            if (!root.defaultHttpUserAgent)
+                root.defaultHttpUserAgent = p.httpUserAgent
             root.profiles[key] = p
         }
 
