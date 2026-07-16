@@ -124,6 +124,9 @@ Item {
     // Clear browsing data (profile-wide cache, cookies, DOM storage), then reload.
     function clearBrowsingData() { console.warn("AbstractWebView: clearBrowsingData not implemented") }
 
+    // Run JS in the current page. Optional callback receives the result (WebEngine).
+    function runJavaScript(script, callback) { console.warn("AbstractWebView: runJavaScript not implemented") }
+
     function findText(text, flags) {}
     function showFindPanel() {}
     function hideFindPanel() {}

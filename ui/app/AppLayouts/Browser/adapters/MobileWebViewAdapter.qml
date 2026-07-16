@@ -121,6 +121,13 @@ AbstractWebView {
         backend.clearProfileData()
     }
 
+    function runJavaScript(script, callback) {
+        // Mobile backend has no result callback; fire-and-forget.
+        // Do not invent a completion value — callers must not rely on callback.
+        backend.runJavaScript(script)
+        void callback
+    }
+
     function findText(text, flags) {
         if (!text) {
             backend.stopFind()

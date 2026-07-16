@@ -66,6 +66,24 @@ StatusSectionLayout {
         webViewContext.reloadCurrent()
     }
 
+    // Drive the current tab from Storybook / automation (web content is not in AX).
+    function runJsOnCurrentTab(script, callback) {
+        const wv = _internal.currentWebView
+        if (!wv || typeof wv.runJavaScript !== "function")
+            return
+        if (typeof wv.ensureLoaded === "function")
+            wv.ensureLoaded()
+        wv.runJavaScript(script, callback)
+    }
+
+    function clearSiteDataOnCurrentTab() {
+        webViewContext.clearSiteDataCurrent()
+    }
+
+    function clearBrowsingDataOnCurrentTab() {
+        webViewContext.clearBrowsingDataCurrent()
+    }
+
     function applyIncognitoMode(checked) {
         webViewContext.setIncognitoCurrent(checked)
         if (!checked && root.connectorController)

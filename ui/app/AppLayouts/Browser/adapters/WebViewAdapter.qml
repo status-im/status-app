@@ -76,6 +76,13 @@ AbstractWebView {
         _clearBrowsingDataFallbackTimer.restart()
         BrowserProfileUtils.clearBrowsingData(root.profile)
     }
+
+    function runJavaScript(script, callback) {
+        if (callback === undefined)
+            webView.runJavaScript(script)
+        else
+            webView.runJavaScript(script, callback)
+    }
     function _finishClearBrowsingData() {
         if (!root.clearing)
             return
@@ -87,8 +94,12 @@ AbstractWebView {
         webView.runJavaScript(
             "(function(){ if (window.StatusSiteUtils) { window.StatusSiteUtils.clearSiteDataAndReload(); return true; } return false; })()",
             function(ok) {
-                if (!ok)
-                    webView.triggerWebAction(WebEngineView.ReloadAndBypassCache)
+                if (!ok) {
+                    // GET navigate — ReloadAndBypassCache can re-POST and re-Set-Cookie.
+                    const u = webView.url
+                    if (u && u.toString())
+                        webView.url = u
+                }
             }
         )
     }

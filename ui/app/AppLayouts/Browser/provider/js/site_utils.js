@@ -51,7 +51,10 @@
 
     async function clearSiteDataAndReload() {
         await clearSiteData();
-        location.reload();
+        // Use assign/replace (GET) instead of reload(): after a POST (e.g.
+        // setcookie.net form), reload() re-submits and can re-apply Set-Cookie.
+        const url = location.pathname + location.search + location.hash;
+        location.replace(url);
     }
 
     window.StatusSiteUtils = { clearSiteData, clearSiteDataAndReload };

@@ -106,6 +106,11 @@ AbstractWebView {
         if (loader.item)
             loader.item.clearBrowsingData()
     }
+    function runJavaScript(script, callback) {
+        ensureLoaded()
+        if (loader.item)
+            loader.item.runJavaScript(script, callback)
+    }
     function findText(text, flags){ if (loader.item) loader.item.findText(text, flags) }
     function showFindPanel()      { if (loader.item) loader.item.showFindPanel() }
     function hideFindPanel()      { if (loader.item) loader.item.hideFindPanel() }
