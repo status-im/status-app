@@ -46,6 +46,12 @@ T.ScrollBar {
         // forced on. Outside of that it renders nothing, so it need not exist.
         readonly property bool thumbActive:
             root.enabled && (root.hovered || root.active || root.policy === T.ScrollBar.AlwaysOn)
+
+        // Latch: once the thumb has been shown, keep it instantiated so its
+        // opacity can animate back to 0 (fade-out) and later interactions stay
+        // cheap. Instantiation happens the first time the thumb is needed.
+        property bool thumbShown: false
+        onThumbActiveChanged: if (thumbActive) thumbShown = true
     }
 
     // TODO: add this sizes to Theme
@@ -57,7 +63,7 @@ T.ScrollBar {
     }
 
     contentItem: Loader {
-        active: d.thumbActive
+        active: d.thumbShown
 
         sourceComponent: Rectangle {
             objectName: "scrollBarThumb"
