@@ -72,6 +72,8 @@ Control {
 
     // Native Rectangle gradient sweep — no Qt5Compat LinearGradient (which is an
     // extra ShaderEffectSource pass). Only the rounded OpacityMask pass remains.
+    // The sweep reads its geometry from `parent` (the Loader) so it needs no
+    // reference to outer-scope ids.
     Component {
         id: sweepComponent
 
@@ -80,7 +82,7 @@ Control {
             objectName: "shimmerSweep"
 
             width: 100
-            height: 2 * sweepLoader.height
+            height: 2 * sweep.parent.height
             x: -width
             y: -height / 4
             rotation: 20
@@ -99,14 +101,14 @@ Control {
                 loops: Animation.Infinite
                 running: true
                 from: -sweep.width
-                to: sweepLoader.width + sweep.width
+                to: sweep.parent.width + sweep.width
                 duration: 1000
             }
 
             // Restart the sweep when the placeholder is resized, matching the
             // original behaviour (avoids a stale sweep span for one cycle).
             Connections {
-                target: sweepLoader
+                target: sweep.parent
                 function onWidthChanged() { sweepAnimator.restart() }
             }
         }
