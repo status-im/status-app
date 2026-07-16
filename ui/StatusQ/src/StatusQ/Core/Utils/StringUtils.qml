@@ -28,4 +28,16 @@ QtObject {
     function shortcutToText(shortcut) {
         return Internal.StringUtils.shortcutToText(shortcut)
     }
+
+    // Expands the chat ASCII-emoticon slash-commands ("/shrug", "/tableflip") into their
+    // kaomoji, returning any other text unchanged.
+    function expandAsciiEmoticonShortcuts(text) {
+        if (text.startsWith("/shrug"))
+            return text.replace("/shrug", "") + " ¯\\\\\\_(ツ)\\_/¯"
+
+        if (text.startsWith("/tableflip"))
+            return text.replace("/tableflip", "") + " (╯°□°）╯︵ ┻━┻"
+
+        return text
+    }
 }

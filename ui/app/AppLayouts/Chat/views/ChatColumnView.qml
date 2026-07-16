@@ -252,7 +252,7 @@ Item {
                 return
 
             const messageId = editMessageId
-            const interpretedMessage = d.activeMessagesStore.interpretMessage(message)
+            const interpretedMessage = SQUtils.StringUtils.expandAsciiEmoticonShortcuts(message)
 
             d.setCurrentEditMessageOff()
             editMessageId = ""

@@ -270,23 +270,12 @@ QtObject {
         chatCommunitySectionModule.blockContact(pubKey)
     }
 
-    function interpretMessage(msg) {
-        if (msg.startsWith("/shrug")) {
-            return  msg.replace("/shrug", "") + " ¯\\\\\\_(ツ)\\_/¯"
-        }
-        if (msg.startsWith("/tableflip")) {
-            return msg.replace("/tableflip", "") + " (╯°□°）╯︵ ┻━┻"
-        }
-
-        return msg
-    }
-
     function cleanMessageText(text) {
         // The chat input (ChatTextArea) already provides plain text with literal newlines and
         // unicode emojis. The legacy HTML round-trip (StringUtils.plainText =
         // fromHtml().toPlainText()) collapsed those newlines to spaces, and Emoji.deparse
         // (<img> -> unicode) is a no-op now. Keep only the slash-command handling.
-        return interpretMessage(text)
+        return StatusQUtils.StringUtils.expandAsciiEmoticonShortcuts(text)
     }
 
     function sendMessage(chatId, text, replyMessageId, fileUrlsAndSources) {
