@@ -57,6 +57,7 @@ Control {
     onSelectableChanged: d.clearSelection()
     onBlocksChanged: d.clearSelection()
     onEditedChanged: d.clearSelection()
+    onSelectedTextChanged: if (selectedText) forceActiveFocus()
 
     // Renders one text or code region, instantiating exactly one child (via Loader): a Label
     // (not selectable) or a read-only TextEdit (selectable), plain or framed for code. Widths
