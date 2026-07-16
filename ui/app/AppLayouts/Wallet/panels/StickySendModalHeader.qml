@@ -106,6 +106,7 @@ Control {
     background: Item {
 
         Rectangle {
+            objectName: "blurBackdropRect"
             anchors.fill: parent
             anchors.leftMargin: radius
             anchors.rightMargin: radius
@@ -119,12 +120,46 @@ Control {
             }
 
             ShaderEffectSource {
+                id: blurBackdropSource
+                objectName: "blurBackdropSource"
+
                 sourceItem: root.blurSource
                 anchors.fill: parent
                 anchors.leftMargin: Theme.xlPadding - parent.radius
                 anchors.rightMargin: -Theme.xlPadding - parent.radius
                 sourceRect: Qt.rect(0, 0, width, height)
-                live: true
+
+                // Capture the frosted backdrop statically instead of every frame.
+                // With live:true the whole scene is re-blurred at 60fps whenever any
+                // animation runs; here we re-capture only when the content behind the
+                // header actually moves or changes (see refreshRequested wiring below).
+                live: false
+
+                // Emitted whenever the backdrop is re-captured; exposes the
+                // refresh-on-movement contract for testing.
+                signal refreshRequested()
+                function refreshBlur() {
+                    refreshRequested()
+                    scheduleUpdate()
+                }
+
+                // The content behind the header is the scrollable form (a Flickable);
+                // re-capture when it scrolls (user drag or programmatic reveal) or
+                // when it grows/shrinks as async data arrives.
+                Connections {
+                    target: root.blurSource
+                    ignoreUnknownSignals: true
+                    function onContentYChanged() { blurBackdropSource.refreshBlur() }
+                    function onContentHeightChanged() { blurBackdropSource.refreshBlur() }
+                    function onContentWidthChanged() { blurBackdropSource.refreshBlur() }
+                }
+
+                // A theme switch recolors the content behind the header without
+                // moving it; re-capture so the static backdrop is not left stale.
+                readonly property color themeProbe: foregroundRect.color
+                onThemeProbeChanged: refreshBlur()
+
+                Component.onCompleted: scheduleUpdate()
             }
         }
 
@@ -132,6 +167,7 @@ Control {
             anchors.fill: parent
             Rectangle {
                 id: foregroundRect
+                objectName: "sendHeaderForegroundRect"
                 anchors.fill: parent
                 color: root.implicitHeight > d.bottomMargin ? StatusColors.alphaColor(Theme.palette.baseColor3, 0.85) : StatusColors.transparent
                 radius: 8

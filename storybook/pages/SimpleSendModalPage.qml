@@ -21,6 +21,12 @@ import Storybook
 import Models
 import Mocks
 
+// Visual parity note: the sticky header and the footer keep their frosted-glass
+// backdrop (FastBlur over a ShaderEffectSource of the scrollable form). The blur
+// is now captured statically (live:false) and re-captured only when the content
+// behind it moves or changes, so the frosted look is unchanged while scrolling
+// the form (drag the list, or scroll to reveal the sticky header) but no longer
+// re-blurs every frame during unrelated animations.
 SplitView {
     id: root
 
