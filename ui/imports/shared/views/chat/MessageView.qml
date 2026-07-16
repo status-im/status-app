@@ -102,6 +102,8 @@ Loader {
 
     property string responseToMessageWithId: ""
     property string quotedMessageText: ""
+    // Raw (unparsed) quoted text, for the client-side reply renderer (mentions as "@0x…").
+    property string quotedMessageUnparsedText: ""
     property string quotedMessageFrom: ""
     property int quotedMessageContentType: Constants.messageContentType.messageType
     property int quotedMessageFromIterator: -1
@@ -1031,6 +1033,14 @@ Loader {
                             return qsTr("Unknown message. Trying to recover it")
                         return root.quotedMessageText
                     }
+                    unparsedText: {
+                        if (messageDeleted)
+                            return qsTr("Message deleted")
+                        if (!root.quotedMessageUnparsedText && !root.quotedMessageFrom)
+                            return qsTr("Unknown message. Trying to recover it")
+                        return root.quotedMessageUnparsedText
+                    }
+                    mentionsMap: root.mentionsMap
                     album: root.quotedMessageAlbumMessageImages
                     albumCount: root.quotedMessageAlbumImagesCount
                     messageDeleted: root.quotedMessageDeleted
