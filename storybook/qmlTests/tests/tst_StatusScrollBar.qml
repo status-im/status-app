@@ -43,6 +43,18 @@ Item {
         }
     }
 
+    // A standalone StatusScrollBar forced always-on: its thumb must be shown
+    // permanently, from the very first frame.
+    Component {
+        id: alwaysOnBar
+        StatusScrollBar {
+            width: 14
+            height: 200
+            size: 0.5
+            policy: ScrollBar.AlwaysOn
+        }
+    }
+
     TestCase {
         name: "StatusScrollBar"
         when: windowShown
@@ -110,6 +122,40 @@ Item {
             // ...and settle to fully transparent.
             tryCompare(findChild(bar, "scrollBarThumb"), "opacity", 0.0, 1000,
                        "thumb should fade out to transparent when the bar goes idle")
+        }
+
+        // --- Cycle 4: AlwaysOn policy shows the thumb immediately ---
+        function test_alwaysOn_thumb_present_and_opaque_at_instantiation() {
+            const bar = createTemporaryObject(alwaysOnBar, root)
+            verify(!!bar)
+
+            const thumb = findChild(bar, "scrollBarThumb")
+            verify(!!thumb, "AlwaysOn thumb must be materialized at instantiation")
+            tryCompare(thumb, "opacity", 1.0, 1000,
+                       "AlwaysOn thumb must be fully opaque")
+        }
+
+        // --- Cycle 5: resolveVisibility (AsNeeded) contract is preserved ---
+        // The bar's `visible` still flips on when content grows to overflow, yet
+        // the thumb stays lazy until the user actually interacts (parity with the
+        // released opacity-0-until-hover behaviour, now zero-cost).
+        function test_visible_tracks_overflow_while_thumb_stays_lazy() {
+            const view = createTemporaryObject(nonOverflowingScrollView, root)
+            verify(!!view)
+
+            const bar = view.ScrollBar.vertical
+            tryCompare(bar, "visible", false, 1000,
+                       "not visible while content fits")
+            verify(!findChild(bar, "scrollBarThumb"))
+
+            // Content grows past the viewport -> AsNeeded makes the bar visible.
+            view.contentHeight = 500
+            tryCompare(bar, "visible", true, 1000,
+                       "visible once content overflows")
+
+            // ...but nobody has scrolled yet, so the thumb is still not built.
+            verify(!findChild(bar, "scrollBarThumb"),
+                   "thumb stays lazy for a visible-but-untouched AsNeeded bar")
         }
     }
 }
