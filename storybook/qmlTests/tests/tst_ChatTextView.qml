@@ -18,6 +18,19 @@ Item {
         }
     }
 
+    // An editable control that grabs keyboard focus before the ChatTextView selection —
+    // mirrors the real chat where the composer holds focus. Without the ChatTextView taking
+    // focus on selection, this field would preempt the Ctrl+C copy shortcut.
+    TextEdit {
+        id: otherEditor
+        objectName: "otherEditor"
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        width: 200
+        height: 30
+        text: "editable field"
+    }
+
     SignalSpy {
         id: mentionSpy
         target: testCase.control
@@ -36,6 +49,9 @@ Item {
 
         property ChatTextView control: null
 
+        // The suite runs with `-platform offscreen` (storybook/CMakeLists.txt), whose clipboard is
+        // process-isolated (starts empty, never touches the real system clipboard), so the copy
+        // tests below don't clobber the user's clipboard and need no save/restore.
         function init() {
             control = createTemporaryObject(componentUnderTest, root)
             verify(control)
@@ -256,6 +272,40 @@ Item {
 
             control.copySelection()
             compare(ClipboardUtils.text, control.selectedText)
+        }
+
+        // Ctrl+C copies the selection even when another editable control held keyboard focus
+        // first. Selecting in the ChatTextView must move focus to it (onSelectedTextChanged:
+        // forceActiveFocus), so the previously-focused editor no longer preempts the window
+        // Copy shortcut.
+        function test_ctrlCCopiesWhenAnotherEditorHadFocus() {
+            control.selectable = true
+            control.blocks = [
+                { type: "text", html: "alpha" },
+                { type: "text", html: "beta" }
+            ]
+            tryVerify(() => control.implicitHeight > 0)
+
+            // Known, different clipboard value so a successful copy is unambiguous.
+            ClipboardUtils.setText("sentinel-not-copied")
+
+            // Another editable control takes keyboard focus first.
+            otherEditor.forceActiveFocus()
+            verify(otherEditor.activeFocus, "other editor did not take focus")
+
+            // Select across both blocks.
+            mousePress(control, 0, 3)
+            mouseMove(control, control.width - 4, control.implicitHeight - 4)
+            mouseRelease(control, control.width - 4, control.implicitHeight - 4)
+            verify(control.selectedText.length > 0, "nothing selected")
+
+            // Selecting moved focus off the other editor onto the ChatTextView.
+            verify(control.activeFocus, "ChatTextView did not take focus on selection")
+            verify(!otherEditor.activeFocus, "focus not moved away from the other editor")
+
+            // Ctrl+C copies the ChatTextView selection (not the other editor's content).
+            keySequence(StandardKey.Copy)
+            tryCompare(ClipboardUtils, "text", control.selectedText)
         }
 
         // ── link / mention click signals ─────────────────────────────────────────
