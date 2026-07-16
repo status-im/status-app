@@ -111,7 +111,7 @@ proc fromEvent*(T: type CommunitySignal, event: JsonNode): CommunitySignal =
 proc fromEvent*(T: type CuratedCommunityResolvedSignal, event: JsonNode): CuratedCommunityResolvedSignal =
   result = CuratedCommunityResolvedSignal()
   result.signalType = SignalType.CuratedCommunityResolved
-  result.communityId = event["event"]{"communityId"}.getStr()
+  result.communityId = event["event"]{"communityID"}.getStr()
   result.stored = event["event"]{"stored"}.getBool()
 
 proc fromEvent*(T: type CuratedCommunitiesRefreshFinishedSignal, event: JsonNode): CuratedCommunitiesRefreshFinishedSignal =
