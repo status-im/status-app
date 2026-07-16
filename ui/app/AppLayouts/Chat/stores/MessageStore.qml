@@ -174,17 +174,6 @@ QtObject {
         messageModule.editMessage(messageId, updatedMsg)
     }
 
-    function interpretMessage(msg) {
-        if (msg.startsWith("/shrug")) {
-            return msg.replace("/shrug", "") + " ¯\\\\\\_(ツ)\\_/¯"
-        }
-        if (msg.startsWith("/tableflip")) {
-            return msg.replace("/tableflip", "") + " (╯°□°）╯︵ ┻━┻"
-        }
-
-        return msg
-    }
-
     function fillGaps(messageId) {
         if(!messageModule)
             return

@@ -825,7 +825,7 @@ Loader {
 
                     root.unparsedText = message
 
-                    const interpretedMessage = root.messageStore.interpretMessage(message)
+                    const interpretedMessage = StatusQUtils.StringUtils.expandAsciiEmoticonShortcuts(message)
                     root.messageStore.setEditModeOff(root.messageId)
                     root.messageStore.editMessage(
                         root.messageId,

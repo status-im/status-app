@@ -150,7 +150,8 @@ unclosed fence here (no closing triple-tick)
     Component.onCompleted: {
         usersModel.initialize()
 
-        textArea.loadText("Mentions: @" + usersModel.get(0).pubKey +
+        textArea.loadText("/tableflip - adds ascii emoticon at the end, /shrug is also supported\n\n" +
+                          "Mentions: @" + usersModel.get(0).pubKey +
                           " and @0x00001 (everyone).\n\n"
                           + root.sampleBody, root.mentionsMap)
 
@@ -554,7 +555,9 @@ unclosed fence here (no closing triple-tick)
                             blocks: {
                                 textArea.text            // re-build on every edit
                                 textArea.fullLineHeightEmojis   // and when the emoji toggle changes
-                                return MarkdownUtils.toBlocks(textArea.textWithMentions(),
+                                // Expand chat slash-commands (e.g. /tableflip) as the real send path does.
+                                const text = StringUtils.expandAsciiEmoticonShortcuts(textArea.textWithMentions())
+                                return MarkdownUtils.toBlocks(text,
                                                               root.mentionsMap,
                                                               chatTextView.font,
                                                               textArea.formatUnclosedCodeFence,
