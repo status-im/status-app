@@ -47,11 +47,16 @@ T.ScrollBar {
         width: 0 // Needed to prevent a white background from showing on Windows
     }
 
-    contentItem: Rectangle {
-        color: root.Theme.palette.primaryColor2
-        opacity: enabled && (root.hovered || root.active || (root.policy === T.ScrollBar.AlwaysOn)) ? 1.0 : 0.0
-        radius: Math.min(width, height) / 2
+    contentItem: Loader {
+        active: false
 
-        Behavior on opacity { NumberAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
+        sourceComponent: Rectangle {
+            objectName: "scrollBarThumb"
+            color: root.Theme.palette.primaryColor2
+            opacity: enabled && (root.hovered || root.active || (root.policy === T.ScrollBar.AlwaysOn)) ? 1.0 : 0.0
+            radius: Math.min(width, height) / 2
+
+            Behavior on opacity { NumberAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
+        }
     }
 }
