@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils
 
 // Renders a single-line, statically, not selectable, formatted preview of chat
 // text from the HTML produced by MarkdownUtils.singleLineHtml (newlines -> spaces,
@@ -14,6 +15,10 @@ Control {
     // Body HTML as produced by MarkdownUtils.singleLineHtml(text, mentions, font). This component
     // only styles and renders it; it does not parse.
     property string html: ""
+
+    // When true, a small, dimmed "(edited)" marker is appended after the text.
+    property bool edited: false
+    property int editedMarkerFontSize: Theme.tertiaryTextFontSize
 
     // Colors applied by the internally-built CSS.
     property color textColor: Theme.palette.directColor1
@@ -48,7 +53,10 @@ Control {
                         + "; text-decoration: none }"
                         + " span.quote { color: " + root.quoteTextColor + " }"
                         + "</style>"
-            return style + root.html
+            const marker = root.edited
+                ? StringUtils.editedMarker(Theme.palette.baseColor1, root.editedMarkerFontSize)
+                : ""
+            return style + root.html + marker
         }
 
         // Right-edge fade ("dimming") when the single line overflows. Painted as a gradient that

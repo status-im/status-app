@@ -127,8 +127,8 @@ Item {
                             sourceComponent: ChatSingleLineTextView {
                                 objectName: "StatusMessage_replyDetails_textMessage"
                                 font.pixelSize: Theme.secondaryTextFontSize
-                                textColor: Theme.palette.baseColor1     // dimmed reply text
                                 fadeColor: Theme.palette.background      // surface behind the reply
+                                edited: root.replyDetails.isEdited
                                 html: MarkdownUtils.singleLineHtml(root.replyDetails.unparsedText,
                                                                    root.replyDetails.mentionsMap, font)
                             }

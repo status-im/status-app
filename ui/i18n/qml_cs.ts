@@ -16493,6 +16493,13 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>StringUtils</name>
+    <message>
+        <source>(edited)</source>
+        <translation type="unfinished">(upraveno)</translation>
+    </message>
+</context>
+<context>
     <name>SupportedTokenListsPanel</name>
     <message numerus="yes">
         <source>%n token(s) · Last updated %1</source>

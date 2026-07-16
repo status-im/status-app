@@ -243,26 +243,14 @@ Item {
             selectable: !root.isMobile
             font.pixelSize: root.isReply ? Theme.secondaryTextFontSize : Theme.primaryTextFontSize
 
-            blocks: {
-                const blocks = MarkdownUtils.toBlocks(
-                                 root.messageDetails.unparsedText,
-                                 root.messageDetails.mentionsMap,
-                                 chatTextView.font,
-                                 false /*formatUnclosedCodeFence*/,
-                                 true /*fullLineHeightEmojis*/,
-                                 Theme.primaryTextFontSize /*emojiSizeOffset*/)
-                if (root.isEdited && blocks.length > 0) {
-                    const editedSpan = ` <span style="color:${Theme.palette.baseColor1}">`
-                                     + qsTr("(edited)") + `</span>`
-                    const last = blocks[blocks.length - 1]
-
-                    if (last.type === "text")
-                        last.html = (last.html || "") + editedSpan
-                    else
-                        blocks.push({ type: "text", html: editedSpan })
-                }
-                return blocks
-            }
+            edited: root.isEdited
+            blocks: MarkdownUtils.toBlocks(
+                        root.messageDetails.unparsedText,
+                        root.messageDetails.mentionsMap,
+                        chatTextView.font,
+                        false /*formatUnclosedCodeFence*/,
+                        true /*fullLineHeightEmojis*/,
+                        Theme.primaryTextFontSize /*emojiSizeOffset*/)
 
             // Reuse the existing linkActivated contract: "//<pubkey>" opens the profile, a URL opens.
             onMentionClicked: (pubKey) => root.linkActivated("//" + pubKey)
