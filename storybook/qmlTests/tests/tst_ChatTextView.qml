@@ -165,6 +165,60 @@ Item {
             verify(control.selectedText.indexOf("second") >= 0, "second block not selected")
         }
 
+        // Double-click selects the word under the cursor (not the whole line).
+        function test_doubleClickSelectsWord() {
+            control.selectable = true
+            control.blocks = [{ type: "text", html: "hello world" }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            mouseClick(control, 2, 3)
+            mouseClick(control, 2, 3)
+
+            compare(control.selectedText, "hello")
+        }
+
+        // Triple-click selects the whole (logical) line — here the first line of a two-line text
+        // block, not the entire block ("aaabbb").
+        function test_tripleClickSelectsLine() {
+            control.selectable = true
+            control.blocks = [{ type: "text", html: "aaa<br/>bbb" }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            mouseClick(control, 2, 3)
+            mouseClick(control, 2, 3)
+            mouseClick(control, 2, 3)
+
+            compare(control.selectedText, "aaa")
+        }
+
+        // Triple-click on a single-line block selects the entire line.
+        function test_tripleClickSelectsFullSingleLine() {
+            control.selectable = true
+            control.blocks = [{ type: "text", html: "hello world foo" }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            mouseClick(control, 2, 3)
+            mouseClick(control, 2, 3)
+            mouseClick(control, 2, 3)
+
+            compare(control.selectedText, "hello world foo")
+        }
+
+        // Clicking in place cycles: click, word, line, then a fourth click deselects.
+        function test_fourthClickDeselects() {
+            control.selectable = true
+            control.blocks = [{ type: "text", html: "hello world" }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            mouseClick(control, 2, 3) // plain click
+            mouseClick(control, 2, 3) // word
+            verify(control.selectedText.length > 0, "second click should select a word")
+            mouseClick(control, 2, 3) // line
+            verify(control.selectedText.length > 0, "third click should select the line")
+            mouseClick(control, 2, 3) // deselect
+            compare(control.selectedText, "", "fourth click should deselect")
+        }
+
         // Loosing focus clears the selection.
         function test_clickingAnotherViewDeselectsPrevious() {
             const blocks = [

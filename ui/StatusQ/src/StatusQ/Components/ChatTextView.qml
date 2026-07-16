@@ -369,6 +369,35 @@ Control {
             }
             selectedText = parts.join("\n")
         }
+
+        // Selects the word under (x, y) using the editor's built-in word detection.
+        function selectWordAt(x, y) {
+            const hit = hitTest(x, y)
+            if (!hit)
+                return
+            hit.editor.cursorPosition = hit.pos
+            hit.editor.selectWord()
+            applySelection({ editor: hit.editor, pos: hit.editor.selectionStart },
+                           { editor: hit.editor, pos: hit.editor.selectionEnd })
+        }
+
+        // Selects the logical line under (x, y): the run bounded by line/paragraph separators
+        // (a text block may hold several lines joined with <br/>, which render as U+2028).
+        function selectLineAt(x, y) {
+            const hit = hitTest(x, y)
+            if (!hit)
+                return
+            const ed = hit.editor
+            const full = ed.getText(0, ed.length)
+            const seps = "\u2028\u2029\n"
+            let s = hit.pos
+            while (s > 0 && seps.indexOf(full.charAt(s - 1)) === -1)
+                --s
+            let e = hit.pos
+            while (e < full.length && seps.indexOf(full.charAt(e)) === -1)
+                ++e
+            applySelection({ editor: ed, pos: s }, { editor: ed, pos: e })
+        }
     }
 
     contentItem: ColumnLayout {
@@ -463,15 +492,44 @@ Control {
         property real pressY: 0
         property bool moved: false
 
+        // Multi-click tracking. Clicks in place cycle: 1 click, 2 word, 3 line, 4 deselect,
+        // then repeat. Reset when a press lands too late or too far.
+        property int clickCount: 0
+        property real lastPressTime: 0
+        readonly property int clickSlop: 4
+
         onPressed: (mouse) => {
             root.forceActiveFocus() // Grab focus (deselects other views)
+
+            const now = Date.now()
+            const near = Math.abs(mouse.x - pressX) <= clickSlop
+                      && Math.abs(mouse.y - pressY) <= clickSlop
+            clickCount = (now - lastPressTime <= Qt.styleHints.mouseDoubleClickInterval && near)
+                       ? clickCount + 1 : 1
+            lastPressTime = now
 
             pressX = mouse.x
             pressY = mouse.y
             moved = false
             d.collectEditors()
-            d.anchor = d.hitTest(mouse.x, mouse.y)
-            d.applySelection(d.anchor, d.anchor)
+
+            // 0 = plain click, 1 = word, 2 = line, 3 = deselect (then the cycle repeats).
+            const mode = (clickCount - 1) % 4
+            if (mode === 1) {
+                d.anchor = null           // discrete word selection, no drag-extend
+                d.selectWordAt(mouse.x, mouse.y)
+                moved = true              // suppress link activation on release
+            } else if (mode === 2) {
+                d.anchor = null
+                d.selectLineAt(mouse.x, mouse.y)
+                moved = true
+            } else if (mode === 3) {
+                d.clearSelection()
+                moved = true
+            } else {
+                d.anchor = d.hitTest(mouse.x, mouse.y)
+                d.applySelection(d.anchor, d.anchor)
+            }
         }
         onPositionChanged: (mouse) => {
             if (Math.abs(mouse.x - pressX) > 3 || Math.abs(mouse.y - pressY) > 3)
