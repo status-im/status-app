@@ -11,9 +11,20 @@ tree → confirm. The Status client itself never runs.
 
 ## Prerequisites (one-time)
 
-- Storybook built: `QMAKE=$HOME/Qt/<ver>/macos/bin/qmake make storybook-build`
-  — the `QMAKE` override matters: the ambient env often points at an
-  Android/iOS Qt kit and CMake will find the wrong Qt.
+- Storybook built: `make storybook-build`. The build (and
+  `storybook-agent.sh`) picks up whatever `qmake` is first on your `PATH`
+  (`which qmake`), so no path is hardcoded — a Homebrew Qt
+  (`/opt/homebrew/bin/qmake`), an official installer, or a `qmake6` symlink
+  all work as long as it resolves to a **desktop macOS Qt 6** kit.
+  - Only override when the `qmake` on `PATH` is the wrong kit (e.g. it
+    resolves to an Android/iOS Qt and CMake would find the wrong Qt). Point
+    `QMAKE` at the desktop kit's qmake for that one invocation:
+    `QMAKE=$(command -v qmake6 || command -v qmake) make storybook-build`,
+    or give the explicit path to your desktop kit's `bin/qmake`.
+  - Sanity-check the kit before building: `qmake -query QT_VERSION` and
+    `qmake -query QMAKE_XSPEC` (want a `macx-*` spec, not `android-*` /
+    `macx-ios-*`). The build tree lands in `storybook/build/Qt<version>/`,
+    keyed off that `QT_VERSION`.
 - Permissions: `scripts/storybook-agent.sh start` runs `tools/ax/ax preflight`
   automatically (and builds the CLI if needed) — it verifies Accessibility
   AND Screen Recording for the terminal, triggers the system grant prompts,
