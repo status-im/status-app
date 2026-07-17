@@ -43,6 +43,14 @@ proc completeBatch*(self: var PendingTokenFetch, keys: seq[string]) =
   for key in keys:
     self.inFlight.excl(key)
 
+proc drainInFlight*(self: var PendingTokenFetch) =
+  ## Release every in-flight key. For the failure path where a batch's own key
+  ## list is unknown (its envelope was undecodable): the batch cannot be
+  ## released by completeBatch, so drain everything rather than leave its keys
+  ## wedged as permanently in flight. Over-releasing a concurrently running
+  ## batch is benign — worst case one duplicate fetch of its keys.
+  self.inFlight.clear()
+
 proc missingFromBatch*(requestedKeys: seq[string], foundKeys: HashSet[string]): seq[string] =
   ## The requested keys the backend did not return — these become negative
   ## markers so they cost no further RPC until a refresh. Order follows the request.

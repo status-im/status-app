@@ -61,6 +61,16 @@ suite "typed_handoff registry":
   test "claim of an unknown handle yields nil":
     check claimHandoff[PilotPayload](999999.TaskHandle) == nil
 
+  test "claim as the wrong type yields nil (never raises)":
+    # Same never-raises contract as an unknown handle: a mismatched claim on the
+    # GUI thread must degrade to nil, not an ObjectConversionDefect. The parked
+    # object is popped and destroyed either way.
+    type UnrelatedPayload = ref object of RootObj
+    let h = parkHandoff(newPilot(3))
+    let got = claimHandoff[UnrelatedPayload](h)
+    check got.isNil
+    check pendingHandoffs() == 0
+
   test "many outstanding handoffs never cross-talk (claimed in reverse)":
     var handles: seq[TaskHandle]
     for i in 0 ..< 1000:

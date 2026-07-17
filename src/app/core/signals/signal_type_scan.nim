@@ -12,7 +12,7 @@
 import std/strutils
 import ./remote_signals/signal_type
 
-const kTypeToken = "\"type\":\""
+const TYPE_TOKEN = "\"type\":\""
 
 # Signal processing runs single-threaded on the Qt main thread, so a plain
 # module-level counter is sufficient (no threadvar / lock needed).
@@ -24,10 +24,10 @@ proc extractSignalType*(rawSignal: string): string =
   ## signal.Envelope), so the first occurrence is the envelope's, never a nested
   ## one. Signal type strings are plain identifiers (no JSON escapes). Returns
   ## "" when no type member is present.
-  let key = rawSignal.find(kTypeToken)
+  let key = rawSignal.find(TYPE_TOKEN)
   if key < 0:
     return ""
-  let start = key + kTypeToken.len
+  let start = key + TYPE_TOKEN.len
   let stop = rawSignal.find('"', start)
   if stop < 0:
     return ""
