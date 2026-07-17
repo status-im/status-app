@@ -62,6 +62,11 @@ Item {
                     root.requestMoveToAppMain()
                 }
             }
+            onAppShellReady: {
+                if (!root.biometricFlowPending) {
+                    Qt.callLater(() => root.requestMoveToAppMain())
+                }
+            }
             onAccountLoginError: function (error, wrongPassword) {
                 onboardingStore.loginRequestSent = false
 

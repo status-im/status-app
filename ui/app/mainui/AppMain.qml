@@ -75,8 +75,9 @@ Item {
     // Primary store container — all additional stores should be initialized under this root
     readonly property AppStores.RootStore rootStore: AppStores.RootStore {
         localBackupEnabled: appMain.featureFlagsStore.localBackupEnabled
+        mainReady: appMain.mainReady
         thirdpartyServicesEnabled: appMain.featureFlagsStore.privacyModeFeatureEnabled ?
-                                   appMain.privacyStore.thirdpartyServicesEnabled: true
+                                   appMain.privacyStore?.thirdpartyServicesEnabled ?? true : true
         onOpenUrl: (link) => Global.requestOpenLink(link)
         onOpenActivityCenter: () => {
             d.closeActivityCenterOnNextBack = false
@@ -98,20 +99,20 @@ Item {
 
     // Global cross-domain stores (just references from `rootStore`)
     readonly property AppStores.AccountSettingsStore accountSettingsStore: rootStore.accountSettingsStore
-    readonly property AppStores.ContactsStore contactsStore: rootStore.contactsStore
-    readonly property AppStores.ActivityCenterStore activityCenterStore: rootStore.activityCenterStore
+    readonly property var contactsStore: rootStore.contactsStore
+    readonly property var activityCenterStore: rootStore.activityCenterStore
     readonly property AppStores.AppSearchStore appSearchStore: rootStore.appSearchStore
 
     // Settings (just references from `rootStore`)
-    readonly property ProfileStores.AboutStore aboutStore: rootStore.profileSectionStore.aboutStore
-    readonly property ProfileStores.ProfileStore profileStore: rootStore.profileSectionStore.profileStore
-    readonly property ProfileStores.DevicesStore devicesStore: rootStore.profileSectionStore.devicesStore
-    readonly property ProfileStores.AdvancedStore advancedStore: rootStore.profileSectionStore.advancedStore
-    readonly property ProfileStores.PrivacyStore privacyStore: rootStore.profileSectionStore.privacyStore
-    readonly property ProfileStores.NotificationsStore notificationsStore: rootStore.profileSectionStore.notificationsStore
-    readonly property ProfileStores.KeycardNewStore keycardNewStore: rootStore.profileSectionStore.keycardNewStore
-    readonly property ProfileStores.WalletStore walletProfileStore: rootStore.profileSectionStore.walletStore
-    readonly property ProfileStores.EnsUsernamesStore ensUsernamesStore: rootStore.profileSectionStore.ensUsernamesStore
+    readonly property var aboutStore: rootStore.profileSectionStore?.aboutStore ?? null
+    readonly property var profileStore: rootStore.profileSectionStore?.profileStore ?? null
+    readonly property var devicesStore: rootStore.profileSectionStore?.devicesStore ?? null
+    readonly property var advancedStore: rootStore.profileSectionStore?.advancedStore ?? null
+    readonly property var privacyStore: rootStore.profileSectionStore?.privacyStore ?? null
+    readonly property var notificationsStore: rootStore.profileSectionStore?.notificationsStore ?? null
+    readonly property var keycardNewStore: rootStore.profileSectionStore?.keycardNewStore ?? null
+    readonly property var walletProfileStore: rootStore.profileSectionStore?.walletStore ?? null
+    readonly property var ensUsernamesStore: rootStore.profileSectionStore?.ensUsernamesStore ?? null
 
     // Messaging (just references from `rootStore`)
     readonly property MessagingStores.MessagingRootStore messagingRootStore: rootStore.messagingRootStore
@@ -126,13 +127,21 @@ Item {
 
     readonly property SharedStores.NetworksStore networksStore: SharedStores.NetworksStore {}
 
-    property ChatStores.RootStore rootChatStore: ChatStores.RootStore {
-        contactsStore: appMain.contactsStore
-        currencyStore: appMain.currencyStore
-        communityTokensStore: appMain.communityTokensStore
-        openCreateChat: createChatView.opened
-        networkConnectionStore: appMain.networkConnectionStore
+    readonly property var rootChatStore: rootChatStoreLoader.item
+
+    Loader {
+        id: rootChatStoreLoader
+        active: appMain.mainReady
+
+        sourceComponent: ChatStores.RootStore {
+            contactsStore: appMain.contactsStore
+            currencyStore: appMain.currencyStore
+            communityTokensStore: appMain.communityTokensStore
+            openCreateChat: createChatView.opened
+            networkConnectionStore: appMain.networkConnectionStore
+        }
     }
+
     property ChatStores.CreateChatPropertiesStore createChatPropertiesStore: ChatStores.CreateChatPropertiesStore {}
     property SharedStores.NetworkConnectionStore networkConnectionStore: SharedStores.NetworkConnectionStore {
         networksStore: appMain.networksStore
@@ -141,7 +150,13 @@ Item {
     property SharedStores.CommunityTokensStore communityTokensStore: SharedStores.CommunityTokensStore {
         currencyStore: appMain.currencyStore
     }
-    property CommunitiesStore communitiesStore: CommunitiesStore {}
+    readonly property var communitiesStore: communitiesStoreLoader.item
+
+    Loader {
+        id: communitiesStoreLoader
+        active: appMain.mainReady
+        sourceComponent: CommunitiesStore {}
+    }
     // Main wallet root store. It is currently a singleton, but should be refactored to be an instance
     // created only by AppStores.RootStore rootStore. Until then, access it through this single property.
     readonly property WalletStores.RootStore walletRootStore: WalletStores.RootStore
@@ -168,6 +183,7 @@ Item {
     required property Keychain keychain
 
     required property bool systemTrayIconAvailable
+    required property bool mainReady
 
     readonly property bool isPortraitMode: appMain.width < ThemeUtils.portraitBreakpoint.width
 
@@ -203,51 +219,68 @@ Item {
         }
     }
 
-    ContactDetails {
-        id: ownContactDetails
-        isCurrentUser: true
-        publicKey: appMain.profileStore.pubKey
-        compressedPubKey: appMain.profileStore.compressedPubKey
-        displayName: appMain.profileStore.displayName
-        ensName: appMain.profileStore.name
-        ensVerified: !!ensName && Utils.isValidEns(ensName)
-        preferredDisplayName: appMain.profileStore.preferredName
-        alias: appMain.profileStore.username
-        usesDefaultName: appMain.profileStore.usesDefaultName
-        icon: appMain.profileStore.icon
-        colorId: appMain.profileStore.colorId
-        onlineStatus: appMain.profileStore.currentUserStatus
-        thumbnailImage: appMain.profileStore.thumbnailImage
-        largeImage: appMain.profileStore.largeImage
-        bio: appMain.profileStore.bio
+    Loader {
+        id: contactInfrastructureLoader
+        active: appMain.mainReady && !!appMain.profileStore && !!appMain.contactsStore
+
+        sourceComponent: QtObject {
+            property var contactDetails: ContactDetails {
+                isCurrentUser: true
+                publicKey: appMain.profileStore.pubKey
+                compressedPubKey: appMain.profileStore.compressedPubKey
+                displayName: appMain.profileStore.displayName
+                ensName: appMain.profileStore.name
+                ensVerified: !!ensName && Utils.isValidEns(ensName)
+                preferredDisplayName: appMain.profileStore.preferredName
+                alias: appMain.profileStore.username
+                usesDefaultName: appMain.profileStore.usesDefaultName
+                icon: appMain.profileStore.icon
+                colorId: appMain.profileStore.colorId
+                onlineStatus: appMain.profileStore.currentUserStatus
+                thumbnailImage: appMain.profileStore.thumbnailImage
+                largeImage: appMain.profileStore.largeImage
+                bio: appMain.profileStore.bio
+            }
+
+            property var allContactsAdaptor: AllContactsAdaptor {
+                contactsModel: appMain.contactsStore.contactsModel
+                selfContactDetails: contactDetails
+            }
+
+            property var contactsAdaptor: ContactsModelAdaptor {
+                allContacts: appMain.contactsStore.contactsModel
+            }
+        }
     }
 
-    AllContactsAdaptor {
-        id: allContacsAdaptor
+    readonly property var ownContactDetails: contactInfrastructureLoader.item?.contactDetails ?? null
+    readonly property ContactDetails loadingContactDetails: ContactDetails {
+        publicKey: ""
+    }
+    readonly property var allContacsAdaptor: contactInfrastructureLoader.item?.allContactsAdaptor ?? null
+    readonly property var contactsModelAdaptor: contactInfrastructureLoader.item?.contactsAdaptor ?? null
 
-        contactsModel: appMain.contactsStore.contactsModel
-        selfContactDetails: ownContactDetails
+    Loader {
+        id: toastsManagerLoader
+        active: appMain.mainReady
+                && !!appMain.contactsStore
+                && !!appMain.rootChatStore
+                && !!appMain.profileStore
+                && !!appMain.devicesStore
+
+        sourceComponent: ToastsManager {
+            rootStore: appMain.rootStore
+            contactsStore: appMain.contactsStore
+            rootChatStore: appMain.rootChatStore
+            communityTokensStore: appMain.communityTokensStore
+            profileStore: appMain.profileStore
+            devicesStore: appMain.devicesStore
+
+            onSendRequested: popupRequestsHandler.openSend()
+        }
     }
 
-    ContactsModelAdaptor {
-        id: contactsModelAdaptor
-
-        allContacts: appMain.contactsStore.contactsModel
-    }
-
-    // Central UI point for managing app toasts:
-    ToastsManager {
-        id: toastsManager
-
-        rootStore: appMain.rootStore
-        contactsStore: appMain.contactsStore
-        rootChatStore: appMain.rootChatStore
-        communityTokensStore: appMain.communityTokensStore
-        profileStore: appMain.profileStore
-        devicesStore: appMain.devicesStore
-
-        onSendRequested: popupRequestsHandler.openSend()
-    }
+    readonly property var toastsManager: toastsManagerLoader.item
 
     Connections {
         target: rootStore
@@ -470,9 +503,10 @@ Item {
             }
 
             if (txType === Constants.SendType.StickersBuy) {
-                const idx = appMain.rootChatStore.stickersModuleInst.stickerPacks.findIndexById(packId, false)
+                const stickerPacks = appMain.rootChatStore?.stickersModuleInst?.stickerPacks
+                const idx = stickerPacks?.findIndexById(packId, false) ?? -1
                 if(idx >= 0) {
-                    const entry = SQUtils.ModelUtils.get(appMain.rootChatStore.stickersModuleInst.stickerPacks, idx)
+                    const entry = SQUtils.ModelUtils.get(stickerPacks, idx)
                     if (!!entry) {
                         stickersPackName = entry.name
                     }
@@ -961,7 +995,8 @@ Item {
                                                            activeSectionType === Constants.appSection.dApp
         readonly property bool isBrowserEnabled: appMain.featureFlagsStore.browserEnabled &&
                                                  localAccountSensitiveSettings.isBrowserEnabled
-        readonly property int syncingBadgeCount: appMain.devicesStore.totalDevicesCount - appMain.devicesStore.pairedDevicesCount
+        readonly property int syncingBadgeCount: (appMain.devicesStore?.totalDevicesCount ?? 0)
+                              - (appMain.devicesStore?.pairedDevicesCount ?? 0)
 
         function openHomePage() {
             appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.homePage)
@@ -969,7 +1004,8 @@ Item {
         }
 
         function maybeDisplayIntroduceYourselfPopup() {
-            if (!appMainLocalSettings.introduceYourselfPopupSeen && allContacsAdaptor.selfDisplayName === "") {
+            if (!appMainLocalSettings.introduceYourselfPopupSeen
+                    && allContacsAdaptor?.selfDisplayName === "") {
                 introduceYourselfPopupComponent.createObject(appMain).open()
                 return true
             }
@@ -1028,7 +1064,9 @@ Item {
 
     Settings {
         id: appMainLocalSettings
-        category: "AppMainLocalSettings_%1".arg(allContacsAdaptor.selfContactDetails.publicKey)
+        category: "AppMainLocalSettings_%1".arg(allContacsAdaptor?.selfContactDetails?.publicKey
+                                                  ?? appMain.profileStore?.pubKey
+                                                  ?? "")
         property var whitelistedUnfurledDomains: []
         property bool introduceYourselfPopupSeen
         property bool enableMessageBackupPopupSeen
@@ -1094,8 +1132,8 @@ Item {
         privacyStore: appMain.privacyStore
         messagingRootStore: appMain.messagingRootStore
 
-        allContactsModel: allContacsAdaptor.allContactsModel
-        mutualContactsModel: contactsModelAdaptor.mutualContacts
+        allContactsModel: allContacsAdaptor?.allContactsModel ?? null
+        mutualContactsModel: contactsModelAdaptor?.mutualContacts ?? null
 
         isDevBuild: !appMain.rootStore.isProduction
         emojiPopup: statusEmojiPopup.item
@@ -1141,7 +1179,17 @@ Item {
         notificationsStore: appMain.notificationsStore
 
         Component.onCompleted: {
-            Qt.callLater(() => popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup())
+            if (appMain.mainReady)
+                Qt.callLater(() => popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup())
+        }
+
+        Connections {
+            target: appMain
+
+            function onMainReadyChanged() {
+                if (appMain.mainReady)
+                    popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup()
+            }
         }
     }
 
@@ -1217,12 +1265,12 @@ Item {
                 appMain.rootStore.setNavToMsgDetailsFlag(true)
                 appMain.rootStore.setActiveSectionChat(appMain.profileStore.pubKey, subsection)
             } else if (sectionType === Constants.appSection.community && subsection !== "") {
-                appMain.communitiesStore.setActiveCommunity(subsection)
+                appMain.communitiesStore?.setActiveCommunity(subsection)
             }
         }
 
         function onSwitchToCommunity(communityId: string) {
-            appMain.communitiesStore.setActiveCommunity(communityId)
+            appMain.communitiesStore?.setActiveCommunity(communityId)
         }
 
         function onOpenAddEditSavedAddressesPopup(params) {
@@ -1260,7 +1308,8 @@ Item {
             switch (state)
             {
             case Constants.communityImported:
-                const community = appMain.communitiesStore.getCommunityDetailsAsJson(communityId)
+                const community = appMain.communitiesStore?.getCommunityDetailsAsJson(communityId)
+                                  ?? ({})
                 if(community.isControlNode) {
                     title = qsTr("This device is now the control node for the %1 Community").arg(community.name)
                     notificationType = Constants.ephemeralNotificationType.success
@@ -1334,8 +1383,8 @@ Item {
     }
 
     Connections {
-        target: appMain.notificationsStore.notificationsSettings
-        enabled: SQUtils.Utils.isIOS
+        target: appMain.mainReady ? appMain.notificationsStore?.notificationsSettings ?? null : null
+        enabled: SQUtils.Utils.isIOS && appMain.mainReady
 
         function onRemotePushNotificationsEnabledChanged() {
             if (!appMain.notificationsStore.notificationsSettings.remotePushNotificationsEnabled)
@@ -1348,8 +1397,8 @@ Item {
     }
 
     Connections {
-        target: appMain.notificationsStore
-        enabled: SQUtils.Utils.isIOS
+        target: appMain.mainReady ? appMain.notificationsStore ?? null : null
+        enabled: SQUtils.Utils.isIOS && appMain.mainReady
         function onNotificationsSettingsChanged() {
             if (!!appMain.notificationsStore.notificationsSettings)
                 appMain.notificationsStore.notificationsSettings.deviceToken = PushNotifications.token
@@ -1458,7 +1507,7 @@ Item {
 
     Loader {
         id: statusEmojiPopup
-        active: appMain.rootStore.sectionsLoaded
+        active: appMain.mainReady
         sourceComponent: StatusEmojiPopup {
             directParent: appMain.Window.window.contentItem
             height: 440
@@ -1469,12 +1518,12 @@ Item {
 
     Loader {
         id: statusStickersPopupLoader
-        active: appMain.rootStore.sectionsLoaded
+        active: appMain.mainReady
         sourceComponent: StatusStickersPopup {
             directParent: appMain.Window.contentItem
             height: 440
             store: appMain.rootChatStore
-            isWalletEnabled: appMain.walletProfileStore.isWalletEnabled
+            isWalletEnabled: appMain.walletProfileStore?.isWalletEnabled ?? false
             thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
 
             onBuyClicked: (packId, price) => popupRequestsHandler.buyStickerPack(packId, price)
@@ -1507,7 +1556,8 @@ Item {
 
                 isOnline: d.networkChecker.isOnline
                 testnetEnabled: appMain.networksStore.areTestNetworksEnabled
-                seedphraseBackedUp: appMain.privacyStore.mnemonicBackedUp || appMain.profileStore.userDeclinedBackupBanner
+                seedphraseBackedUp: appMain.privacyStore?.mnemonicBackedUp === true
+                                   || appMain.profileStore?.userDeclinedBackupBanner === true
 
                 onOpenTestnetPopupRequested: Global.openTestnetPopup()
                 onOpenBackUpSeedPopupRequested: popups.openBackUpSeedPopup()
@@ -1516,17 +1566,18 @@ Item {
 
             ModuleWarning {
                 Layout.fillWidth: true
-                readonly property int progress: appMain.communitiesStore.discordImportProgress
-                readonly property bool inProgress: (progress > 0 && progress < 100) || appMain.communitiesStore.discordImportInProgress
+                readonly property int progress: appMain.communitiesStore?.discordImportProgress ?? 0
+                readonly property bool inProgress: (progress > 0 && progress < 100)
+                                                   || (appMain.communitiesStore?.discordImportInProgress ?? false)
                 readonly property bool finished: progress >= 100
-                readonly property bool cancelled: appMain.communitiesStore.discordImportCancelled
-                readonly property bool stopped: appMain.communitiesStore.discordImportProgressStopped
-                readonly property int errors: appMain.communitiesStore.discordImportErrorsCount
-                readonly property int warnings: appMain.communitiesStore.discordImportWarningsCount
-                readonly property string communityId: appMain.communitiesStore.discordImportCommunityId
-                readonly property string communityName: appMain.communitiesStore.discordImportCommunityName
-                readonly property string channelId: appMain.communitiesStore.discordImportChannelId
-                readonly property string channelName: appMain.communitiesStore.discordImportChannelName
+                readonly property bool cancelled: appMain.communitiesStore?.discordImportCancelled ?? false
+                readonly property bool stopped: appMain.communitiesStore?.discordImportProgressStopped ?? false
+                readonly property int errors: appMain.communitiesStore?.discordImportErrorsCount ?? 0
+                readonly property int warnings: appMain.communitiesStore?.discordImportWarningsCount ?? 0
+                readonly property string communityId: appMain.communitiesStore?.discordImportCommunityId ?? ""
+                readonly property string communityName: appMain.communitiesStore?.discordImportCommunityName ?? ""
+                readonly property string channelId: appMain.communitiesStore?.discordImportChannelId ?? ""
+                readonly property string channelName: appMain.communitiesStore?.discordImportChannelName ?? ""
                 readonly property string channelOrCommunityName: channelName || communityName
                 delay: false
                 active: !cancelled && (inProgress || finished || stopped)
@@ -1564,7 +1615,7 @@ Item {
                     if (!!channelId)
                         rootStore.setActiveSectionChat(communityId, channelId)
                     else
-                        appMain.communitiesStore.setActiveCommunity(communityId)
+                        appMain.communitiesStore?.setActiveCommunity(communityId)
                 }
                 onCloseClicked: hide()
             }
@@ -1885,14 +1936,14 @@ Item {
                 Loader {
                     id: acPanelLoader
                     sourceComponent: ActivityCenterAdaptor {
-                        contactsModel: appMain.contactsStore.contactsModel
-                        userProfileName: appMain.profileStore.name
-                        notifications: appMain.activityCenterStore.activityCenterNotifications
+                        contactsModel: appMain.contactsStore?.contactsModel ?? null
+                        userProfileName: appMain.profileStore?.name ?? ""
+                        notifications: appMain.activityCenterStore?.activityCenterNotifications ?? null
                         getCommunityDetails: function(communityId) {
-                            return appMain.rootChatStore.getCommunityDetailsAsJson(communityId)
+                            return appMain.rootChatStore?.getCommunityDetailsAsJson(communityId) ?? ({})
                         }
                         getChatDetails: function(chatId) {
-                            return appMain.rootChatStore.getChatDetails(chatId)
+                            return appMain.rootChatStore?.getChatDetails(chatId) ?? ({})
                         }
                         onPopulateContactDetailsRequested: (contactId) => appMain.contactsStore.populateContactDetails(contactId)
                     }
@@ -1902,20 +1953,20 @@ Item {
 
                 backgroundColor: Theme.palette.statusAppLayout.backgroundColor
 
-                hasAdmin: appMain.activityCenterStore.adminCount > 0
-                hasReplies: appMain.activityCenterStore.repliesCount > 0
-                hasMentions: appMain.activityCenterStore.mentionsCount > 0
-                hasContactRequests: appMain.activityCenterStore.contactRequestsCount > 0
-                hasMembership: appMain.activityCenterStore.membershipCount > 0
-                hasSystem: appMain.activityCenterStore.systemCount > 0
-                hasNews: appMain.activityCenterStore.newsCount > 0
-                activeGroup: appMain.activityCenterStore.activeNotificationGroup
+                hasAdmin: (appMain.activityCenterStore?.adminCount ?? 0) > 0
+                hasReplies: (appMain.activityCenterStore?.repliesCount ?? 0) > 0
+                hasMentions: (appMain.activityCenterStore?.mentionsCount ?? 0) > 0
+                hasContactRequests: (appMain.activityCenterStore?.contactRequestsCount ?? 0) > 0
+                hasMembership: (appMain.activityCenterStore?.membershipCount ?? 0) > 0
+                hasSystem: (appMain.activityCenterStore?.systemCount ?? 0) > 0
+                hasNews: (appMain.activityCenterStore?.newsCount ?? 0) > 0
+                activeGroup: appMain.activityCenterStore?.activeNotificationGroup ?? ""
 
-                hasUnreadNotifications: appMain.activityCenterStore.unreadNotificationsCount > 0
-                readNotificationsStatus: appMain.activityCenterStore.activityCenterReadType
+                hasUnreadNotifications: (appMain.activityCenterStore?.unreadNotificationsCount ?? 0) > 0
+                readNotificationsStatus: appMain.activityCenterStore?.activityCenterReadType ?? 0
                 notificationsModel: adaptor?.model ?? null
-                newsSettingsStatus: appMain.notificationsStore.notificationsSettings.notifSettingStatusNews
-                newsEnabledViaRSS: appMain.privacyStore.isStatusNewsViaRSSEnabled
+                newsSettingsStatus: appMain.notificationsStore?.notificationsSettings?.notifSettingStatusNews ?? 0
+                newsEnabledViaRSS: appMain.privacyStore?.isStatusNewsViaRSSEnabled ?? false
 
                 onCloseRequested: mainLayoutItem.openACCenterPanel = false
                 onMarkAllAsReadRequested: appMain.activityCenterStore.markAllActivityCenterNotificationsRead()
@@ -2016,7 +2067,7 @@ Item {
 
             Shortcut {
                 enabled: mainLayoutItem.openACCenterPanel
-                sequence: StandardKey.Cancel
+                sequences: [StandardKey.Cancel]
                 onActivated: mainLayoutItem.openACCenterPanel = false
             }
 
@@ -2360,7 +2411,7 @@ Item {
                         }
                         createChatPropertiesStore: appMain.createChatPropertiesStore
 
-                        mutualContactsModel: contactsModelAdaptor.mutualContacts
+                        mutualContactsModel: contactsModelAdaptor?.mutualContacts ?? null
                         allContactsModel: appMain.contactsStore.contactsModel
 
                         emojiPopup: statusEmojiPopup.item
@@ -2391,19 +2442,22 @@ Item {
 
 
                 acVisible: mainLayoutItem.openACCenterPanel
-                acHasUnseenNotifications: appMain.activityCenterStore.hasUnseenNotifications
-                acUnreadNotificationsCount: appMain.activityCenterStore.unreadNotificationsCount
+                acHasUnseenNotifications: appMain.activityCenterStore?.hasUnseenNotifications ?? false
+                acUnreadNotificationsCount: appMain.activityCenterStore?.unreadNotificationsCount ?? 0
 
-                selfContactDetails: ownContactDetails
+                selfContactDetails: ownContactDetails ?? loadingContactDetails
                 getEmojiHashFn: appMain.utilsStore.getEmojiHash
-                getLinkToProfileFn: appMain.contactsStore.getLinkToProfile
+                getLinkToProfileFn: appMain.contactsStore?.getLinkToProfile
+                                    ?? function() { return "" }
 
                 communityPopupMenu: communityContextMenuComponent
 
                 profileSectionHasNotification: {
-                    if (contactsModelAdaptor.pendingReceivedRequestContacts.ModelCount.count > 0) // pending contact request
+                    if (contactsModelAdaptor?.pendingReceivedRequestContacts?.ModelCount.count > 0) // pending contact request
                         return true
-                    if (!appMain.privacyStore.mnemonicBackedUp && !appMain.profileStore.userDeclinedBackupBanner) // seedphrase not backed up (removed)
+                    if (appMain.mainReady
+                        && !appMain.privacyStore?.mnemonicBackedUp
+                        && !appMain.profileStore?.userDeclinedBackupBanner) // seedphrase not backed up (removed)
                         return true
                     if (d.syncingBadgeCount > 0) // sync entries
                         return true
@@ -2457,7 +2511,7 @@ Item {
             openHandler: function () {
                 // we cannot return QVariant if we pass another parameter in a function call
                 // that's why we're using it this way
-                communityContextMenu.chatCommunitySectionModule = appMain.rootChatStore.getCommunitySectionModule(model.id)
+                communityContextMenu.chatCommunitySectionModule = appMain.rootChatStore?.getCommunitySectionModule(model.id)
             }
 
             StatusAction {
@@ -2661,7 +2715,8 @@ Item {
             onLinkActivated: {
                 this.open = false
                 if(actionRequired) {
-                    toastsManager.doAction(model.actionType, model.actionData)
+                    if (toastsManager)
+                        toastsManager.doAction(model.actionType, model.actionData)
                     return
                 }
 
@@ -2974,7 +3029,8 @@ Item {
 
         // It seems some of the functionality of the dapp connector depends on the DAppsService
         active: {
-            return (featureFlagsStore.dappsEnabled || featureFlagsStore.connectorEnabled) && appMain.visible
+                return (featureFlagsStore.dappsEnabled || featureFlagsStore.connectorEnabled)
+                    && appMain.visible && appMain.mainReady
         }
 
         sourceComponent: DAppsService {

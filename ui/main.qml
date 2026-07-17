@@ -344,7 +344,7 @@ Window {
             applicationWindow.storeAppState() // noop on mobile
             if (SQUtils.Utils.isMobile) {
                 close.accepted = false
-                if (loader.item && loader.item.tryGoBack())
+                if (loader.item && loader.item.tryGoBack && loader.item.tryGoBack())
                     return
                 if (SQUtils.Utils.isAndroid)
                     MobileUI.backToHomeScreen()
@@ -488,7 +488,8 @@ Window {
                 NumberAnimation { duration: 120 }
             }
 
-            active: d.appMainTriggered && (typeof mainModule !== "undefined") && (mainModule?.mainLoaded ?? false)
+            active: d.appMainTriggered && (typeof mainModule !== "undefined")
+            mainReady: typeof mainModule !== "undefined" && (mainModule?.mainLoaded ?? false)
 
             featureFlagsStore: applicationWindow.featureFlagsStore
             languageStore: applicationWindow.languageStore
@@ -497,7 +498,6 @@ Window {
             utilsStore: applicationWindow.utilsStore
 
             onLoaded: {
-                Global.appIsReady = true
                 appMainFadeIn.running = true
                 startupOnboardingLoader.active = false
                 splashScreenLoader.active = false
@@ -506,7 +506,12 @@ Window {
                         && !!onboardingModule) {
                     Qt.callLater(() => onboardingModule.cleanupAfterMainTransition())
                 }
-                if (d.showSkippedBiometricFlow)
+                if (mainReady) {
+                    Global.appIsReady = true
+                    applicationWindow.appIsReady = true
+                    applicationWindow.storeAppState()
+                }
+                if (mainReady && d.showSkippedBiometricFlow)
                     loader.item.showEnableBiometricsFlow()
             }
 
@@ -515,6 +520,18 @@ Window {
                     console.error("Failed to load AppMain.qml")
                     Qt.exit(-1)
                 }
+            }
+        }
+
+        Connections {
+            target: typeof mainModule !== "undefined" ? mainModule : null
+
+            function onMainLoadedChanged() {
+                if (!mainModule.mainLoaded || startupOnboardingLoader.active)
+                    return
+                Global.appIsReady = true
+                applicationWindow.appIsReady = true
+                applicationWindow.storeAppState()
             }
         }
 

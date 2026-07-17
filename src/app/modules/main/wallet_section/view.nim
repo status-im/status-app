@@ -43,8 +43,15 @@ QtObject:
     result.activityController = activityController
     result.tmpActivityControllers = tmpActivityControllers
     result.collectibleDetailsController = collectibleDetailsController
-    result.wcController = newQVariant(wcController)
-    result.dappsConnectorController = newQVariant(dappsConnectorController)
+    if wcController.isNil:
+      result.wcController = newQVariant()
+    else:
+      result.wcController = newQVariant(wcController)
+    if dappsConnectorController.isNil:
+      result.dappsConnectorController = newQVariant()
+    else:
+      result.dappsConnectorController = newQVariant(dappsConnectorController)
+    result.totalCurrencyBalance = newCurrencyAmount()
 
     result.setup()
 
@@ -68,6 +75,8 @@ QtObject:
   proc totalCurrencyBalanceChanged*(self: View) {.signal.}
 
   proc getTotalCurrencyBalance(self: View): QVariant {.slot.} =
+    if self.totalCurrencyBalance.isNil:
+      self.totalCurrencyBalance = newCurrencyAmount()
     return newQVariant(self.totalCurrencyBalance)
 
   QtProperty[QVariant] totalCurrencyBalance:
@@ -124,21 +133,29 @@ QtObject:
     self.walletAccountRemoved(address)
 
   proc getActivityController(self: View): QVariant {.slot.} =
+    if self.activityController.isNil:
+      return newQVariant()
     return newQVariant(self.activityController)
   QtProperty[QVariant] activityController:
     read = getActivityController
 
   proc getCollectibleDetailsController(self: View): QVariant {.slot.} =
+    if self.collectibleDetailsController.isNil:
+      return newQVariant()
     return newQVariant(self.collectibleDetailsController)
   QtProperty[QVariant] collectibleDetailsController:
     read = getCollectibleDetailsController
 
   proc getTmpActivityController0(self: View): QVariant {.slot.} =
+    if self.tmpActivityControllers[0].isNil:
+      return newQVariant()
     return newQVariant(self.tmpActivityControllers[0])
   QtProperty[QVariant] tmpActivityController0:
     read = getTmpActivityController0
 
   proc getTmpActivityController1(self: View): QVariant {.slot.} =
+    if self.tmpActivityControllers[1].isNil:
+      return newQVariant()
     return newQVariant(self.tmpActivityControllers[1])
   QtProperty[QVariant] tmpActivityController1:
     read = getTmpActivityController1

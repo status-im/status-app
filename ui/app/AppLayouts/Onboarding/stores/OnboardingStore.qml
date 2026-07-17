@@ -7,6 +7,7 @@ import AppLayouts.Onboarding.enums
 QtObject {
     id: root
 
+    signal appShellReady()
     signal appLoaded()
     signal saveBiometricsRequested(string keyUid, string credential)
     signal deleteBiometricsRequested(string keyUid)
@@ -16,6 +17,7 @@ QtObject {
         readonly property var onboardingModuleInst: onboardingModule
 
         Component.onCompleted: {
+            d.onboardingModuleInst.appShellReady.connect(root.appShellReady)
             d.onboardingModuleInst.appLoaded.connect(root.appLoaded)
             d.onboardingModuleInst.accountLoginError.connect(root.accountLoginError)
             d.onboardingModuleInst.saveBiometricsRequested.connect(root.saveBiometricsRequested)

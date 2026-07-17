@@ -337,6 +337,7 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
 
 proc finishAppLoading2[T](self: Module[T]) =
   self.delegate.finishAppLoading()
+  self.view.appShellReady()
   self.delegate.appReady()
 
 method onAccountLoginError*[T](self: Module[T], error: string) =

@@ -28,6 +28,7 @@ QtObject:
 
   ### QtSignals ###
 
+  proc appShellReady*(self: View) {.signal.}
   proc appLoaded*(self: View) {.signal.}
   proc accountLoginError*(self: View, error: string, wrongPassword: bool) {.signal.}
   proc saveBiometricsRequested*(self: View, account: string, credential: string) {.signal.}

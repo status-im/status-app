@@ -17,6 +17,7 @@ Loader {
     required property bool systemTrayIconAvailable
 
     property SharedStores.UtilsStore utilsStore
+    property bool mainReady: false
 
     function loadSection() {
         if (!root.active)
@@ -30,6 +31,7 @@ Loader {
             keychain:               Qt.binding(() => root.keychain),
             utilsStore:             Qt.binding(() => root.utilsStore),
             systemTrayIconAvailable:Qt.binding(() => root.systemTrayIconAvailable),
+            mainReady:              Qt.binding(() => root.mainReady),
         })
     }
 
@@ -39,6 +41,8 @@ Loader {
             return
         }
     }
+
+    onMainReadyChanged: loadSection()
 
     Component.onCompleted: QmlCompiler.precompile(QmlCompiler.appMainUrl, false)
 }

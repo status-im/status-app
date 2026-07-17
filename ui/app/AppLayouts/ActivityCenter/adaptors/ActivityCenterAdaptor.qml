@@ -235,7 +235,7 @@ QtObject {
         // heavy delegate processing for entries that will never be shown.
         // Community membership decisions are kept so pending/final states remain visible.
         readonly property SortFilterProxyModel filteredNotifications: SortFilterProxyModel {
-            sourceModel: root.notifications
+            sourceModel: root.notifications ?? null
             filters: AnyOf {
                 ValueFilter {
                     roleName: "dismissed"

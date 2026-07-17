@@ -16,6 +16,7 @@ QtObject {
 
     required property Keychain keychain
     required property ThemePalette palette
+    property bool mainReady: false
 
     // Global properties that have to remain on `RootStore` (the module instances must be private properties and just used to initialize the
     // rest and specific stores
@@ -72,14 +73,29 @@ QtObject {
 
     // Here there should be all the ContextSpecificRootStore objects creation
     readonly property MessagingStores.MessagingRootStore messagingRootStore: MessagingStores.MessagingRootStore {}
-    readonly property ProfileStores.ProfileSectionStore profileSectionStore: ProfileStores.ProfileSectionStore {
-        localBackupEnabled: root.localBackupEnabled
-        palette: root.palette
+    readonly property var profileSectionStore: profileSectionStoreLoader.item
+    readonly property var contactsStore: contactsStoreLoader.item
+    readonly property var activityCenterStore: activityCenterStoreLoader.item
+
+    readonly property var profileSectionStoreLoader: Loader {
+        active: root.mainReady
+        sourceComponent: ProfileStores.ProfileSectionStore {
+            localBackupEnabled: root.localBackupEnabled
+            palette: root.palette
+        }
+    }
+
+    readonly property var contactsStoreLoader: Loader {
+        active: root.mainReady
+        sourceComponent: ContactsStore {}
+    }
+
+    readonly property var activityCenterStoreLoader: Loader {
+        active: root.mainReady
+        sourceComponent: ActivityCenterStore {}
     }
 
     readonly property AccountSettingsStore accountSettingsStore: AccountSettingsStore {}
-    readonly property ContactsStore contactsStore: ContactsStore {}
-    readonly property ActivityCenterStore activityCenterStore: ActivityCenterStore {}
 
     // readonly property ChatStores.RootStore rootChatStore: ChatStores.RootStore { ... }
     // readonly property SharedStores.NetworkConnectionStore networkConnectionStore: SharedStores.NetworkConnectionStore { ... }
