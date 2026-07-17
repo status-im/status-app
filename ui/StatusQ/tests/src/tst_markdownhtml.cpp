@@ -121,6 +121,67 @@ private slots:
         QCOMPARE(hs(text, m), "hi <a href=\"0xabc\" class=\"mention\">@alice</a>");
     }
 
+    // ── toPlainText: plain-text projection (accessibility) ──────────────────────
+
+    static QString pt(const QString& text,
+                      const QHash<int, QPair<QString, QString>>& mentions = {},
+                      const Options& opts = {})
+    {
+        return toPlainText(parse(text, opts), mentions);
+    }
+
+    void plain_stripsInlineFormatting()
+    {
+        QCOMPARE(pt("just text"), "just text");
+        QCOMPARE(pt("**b** *i* ~~s~~"), "b i s");
+        QCOMPARE(pt("`code`"), "code");
+    }
+
+    // Unlike the HTML renderers, plain text is not escaped — entities stay literal.
+    void plain_notEscaped() { QCOMPARE(pt("a<b>&c"), "a<b>&c"); }
+
+    // Newlines are preserved (not turned into <br/> or spaces).
+    void plain_newlinesPreserved() { QCOMPARE(pt("a\nb"), "a\nb"); }
+
+    // A fenced code block contributes its raw content, trimmed of surrounding blank lines.
+    void plain_codeBlock()
+    {
+        QCOMPARE(pt("```hi```"), "hi");
+        QCOMPARE(pt("```\nx\n```"), "x");
+    }
+
+    void plain_link()
+    {
+        QCOMPARE(pt("see https://status.im"), "see https://status.im");
+    }
+
+    // A quote renders as its plain content (no "> " marker, no formatting).
+    void plain_quote() { QCOMPARE(pt("> **bold** text"), "bold text"); }
+
+    // A mention renders as its resolved display name.
+    void plain_mention()
+    {
+        const QString text = "hi " + QString(QChar(0xFFFC));
+        const QHash<int, QPair<QString, QString>> m{ {3, {"@alice", "0xabc"}} };
+        QCOMPARE(pt(text, m), "hi @alice");
+    }
+
+    void plain_mentionWithoutMetadataFallsBack()
+    {
+        QCOMPARE(pt(QString(QChar(0xFFFC))), "@mention");
+    }
+
+    // A message spanning several blocks (text / fenced code / quote / text) flattens to plain
+    // text with formatting stripped and each block on its own line.
+    void plain_multiBlock()
+    {
+        const QString text = "before **bold**\n"
+                             "```\ncode line\n```\n"
+                             "> quoted `snippet`\n"
+                             "after";
+        QCOMPARE(pt(text), "before bold\ncode line\nquoted snippet\nafter");
+    }
+
     // ── toBlocks: split into decorated blocks ───────────────────────────────────
 
     static QVariantList blocks(const QString& text, const Options& opts = {})

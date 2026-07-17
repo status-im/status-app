@@ -41,4 +41,9 @@ public:
     Q_INVOKABLE QString singleLineHtml(const QString& text,
                                        const QVariantMap& mentions = {},
                                        const QFont& font = {}) const;
+
+    // Returns the plain text of `text` (formatting removed, mentions resolved to display names,
+    // code content inline, line breaks preserved) — e.g. for Accessible.name. Mentions are
+    // resolved from `mentions` as in toBlocks. See Markdown::toPlainText.
+    Q_INVOKABLE QString plainText(const QString& text, const QVariantMap& mentions = {}) const;
 };

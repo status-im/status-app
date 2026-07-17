@@ -227,6 +227,55 @@ QString collectRawText(const Node& node)
     return out;
 }
 
+QString renderPlain(const Node& node, const QHash<int, QPair<QString, QString>>& mentions);
+
+QString renderPlainChildren(const Node& node,
+                            const QHash<int, QPair<QString, QString>>& mentions)
+{
+    QString out;
+    for (const Node& c : node.children)
+        out += renderPlain(c, mentions);
+    return out;
+}
+
+// Plain-text projection of the AST: formatting delimiters dropped, mentions rendered as their
+// display name, inline/fenced code as their raw content, line breaks preserved. No HTML escaping.
+QString renderPlain(const Node& node, const QHash<int, QPair<QString, QString>>& mentions)
+{
+    switch (node.kind) {
+    case NodeKind::Delimiter:
+        return {};
+
+    case NodeKind::Text:
+        return node.literal;
+
+    case NodeKind::CodeSpan:
+        return collectRawText(node);
+
+    case NodeKind::CodeBlock: {
+        QString code = collectRawText(node);
+        while (code.startsWith(QLatin1Char('\n'))) code.remove(0, 1);
+        while (code.endsWith(QLatin1Char('\n')))   code.chop(1);
+        return code;
+    }
+
+    case NodeKind::Mention: {
+        const auto it = mentions.constFind(static_cast<int>(node.start));
+        return it != mentions.cend() ? it->first : QStringLiteral("@mention");
+    }
+
+    case NodeKind::Strong:
+    case NodeKind::Emphasis:
+    case NodeKind::Strikethrough:
+    case NodeKind::Link:
+    case NodeKind::QuoteBlock:
+    case NodeKind::Document:
+    case NodeKind::Paragraph:
+        return renderPlainChildren(node, mentions);
+    }
+    return {};
+}
+
 // Outer emphasis carried into a split block, so the surrounding text and the block's
 // own content keep the formatting they were wrapped in.
 enum EmphasisBits { kBold = 1 << 0, kItalic = 1 << 1, kStrike = 1 << 2 };
@@ -421,6 +470,11 @@ QString toSingleLineHtml(const Node& root, const QHash<int, QPair<QString, QStri
                          int emojiPx)
 {
     return renderSingleLine(root, mentions, emojiPx);
+}
+
+QString toPlainText(const Node& root, const QHash<int, QPair<QString, QString>>& mentions)
+{
+    return renderPlain(root, mentions);
 }
 
 QVariantList toBlocks(const Node& root,

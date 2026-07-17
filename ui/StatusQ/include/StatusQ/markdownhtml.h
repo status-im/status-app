@@ -34,6 +34,12 @@ QString toSingleLineHtml(const Node& root,
                          const QHash<int, QPair<QString, QString>>& mentions = {},
                          int emojiPx = 0);
 
+// Renders the document as plain text (no HTML): formatting delimiters dropped, mentions as their
+// display name, inline/fenced code as raw content, line breaks preserved. Intended for
+// accessibility text and other non-visual consumers.
+QString toPlainText(const Node& root,
+                    const QHash<int, QPair<QString, QString>>& mentions = {});
+
 // Splits the document into renderable blocks for decorated display (each rendered by its
 // own Label). Division points are code blocks and quote blocks; consecutive inline
 // content is grouped into one block. Returned items are maps:
