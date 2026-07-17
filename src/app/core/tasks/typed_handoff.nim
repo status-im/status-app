@@ -74,14 +74,15 @@ proc parkHandoff*[T](obj: sink T): TaskHandle {.gcsafe.} =
 proc claimHandoff*[T](handle: TaskHandle): T {.gcsafe.} =
   ## Retrieve and remove the object for `handle`, transferring exclusive
   ## ownership to the caller. Returns nil if the handle is unknown (already
-  ## claimed, or drained at shutdown before the slot ran).
+  ## claimed, or drained at shutdown before the slot ran) or if the parked
+  ## object is not a `T` — never raises; a mismatched claim destroys the object.
   var base: RootRef
   {.cast(gcsafe).}:
     withLock gLock:
       discard gTable.pop(handle, base)   # move out; entry removed
-  if base.isNil:
+  if base.isNil or not (base of T):
     return nil
-  result = T(base)                     # checked ref down-conversion
+  result = T(base)                     # down-conversion, guarded above
 
 proc drainHandoffs*() {.gcsafe.} =
   ## Destroy every still-parked object. Call on shutdown (from the thread that

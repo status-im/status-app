@@ -68,7 +68,6 @@ when defined(QT_MODEL_SPY):
 
 type
   ItemIdentifier*[T] = proc(item: T): string {.closure.}
-  ItemComparator*[T] = proc(a, b: T): bool {.closure.}
   RoleDetector*[T] = proc(oldItem, newItem: T): seq[int] {.closure.}
   UpdateItemCallback*[T] = proc(existing: T, updated: T) {.closure.}
 
@@ -90,15 +89,10 @@ type
   RemoveOp* = object
     index*: int
 
-  MoveOp* = object
-    fromIndex*: int
-    toIndex*: int
-
   SyncResult*[T] = object
     toInsert*: seq[InsertOp[T]]
     toRemove*: seq[RemoveOp]
     toUpdate*: seq[UpdateOp[T]]
-    toMove*: seq[MoveOp]
     hasChanges*: bool
 
 proc longestIncreasingSubseqIndices(values: openArray[int]): HashSet[int] =
@@ -641,9 +635,9 @@ proc reconcileByKey*[T, C](
   table = updated
 
 # Export main types and procs
-export ItemIdentifier, ItemComparator, RoleDetector
+export ItemIdentifier, RoleDetector
 export OnInsertCallback, OnUpdateCallback, OnRemoveCallback
-export UpdateOp, InsertOp, RemoveOp, MoveOp, SyncResult
+export UpdateOp, InsertOp, RemoveOp, SyncResult
 export syncModel, applySync, applySyncWithBulkOps, setItemsWithSync
 export groupConsecutiveRanges
 export modelSync, reconcileByKey

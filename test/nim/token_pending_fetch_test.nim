@@ -47,6 +47,16 @@ suite "pending token fetch — in-flight window":
     check p.enqueue("1-0xaaa") == true     # a fresh miss of the same key is allowed again
     check p.hasPending()
 
+  test "draining the in-flight set releases every key but leaves pending keys queued":
+    var p = initPendingTokenFetch()
+    discard p.enqueue("1-0xaaa")
+    discard p.takeBatch()                  # 1-0xaaa in flight
+    discard p.enqueue("10-0xbbb")          # queued for the NEXT batch
+    p.drainInFlight()                      # failure path: batch keys unknown
+    check p.enqueue("1-0xaaa") == true     # released -> may re-enqueue
+    check p.enqueue("10-0xbbb") == false   # still pending -> still dedups
+    check p.takeBatch().len == 2
+
 suite "pending token fetch — negative-marker feed":
   test "keys requested but not returned by a batch are the ones to mark missing":
     let requested = @["1-0xaaa", "1-0xbbb", "10-0xccc"]

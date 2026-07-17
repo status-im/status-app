@@ -6,7 +6,7 @@
 import sequtils
 
 type
-  SignalType* = enum
+  SpySignalKind* = enum
     BeginInsertRows
     EndInsertRows
     BeginRemoveRows
@@ -18,7 +18,7 @@ type
     EndMoveRows
   
   SignalCall* = object
-    case kind*: SignalType
+    case kind*: SpySignalKind
     of BeginInsertRows, BeginRemoveRows:
       first*: int
       last*: int
@@ -96,18 +96,9 @@ proc recordEndResetModel*() =
   if globalSpy != nil and globalSpy.enabled:
     globalSpy.calls.add(SignalCall(kind: EndResetModel))
 
-proc recordBeginMoveRows*(sourceFirst, sourceLast, destChild: int) =
-  if globalSpy != nil and globalSpy.enabled:
-    globalSpy.calls.add(SignalCall(
-      kind: BeginMoveRows,
-      sourceFirst: sourceFirst,
-      sourceLast: sourceLast,
-      destChild: destChild
-    ))
-
-proc recordEndMoveRows*() =
-  if globalSpy != nil and globalSpy.enabled:
-    globalSpy.calls.add(SignalCall(kind: EndMoveRows))
+# The BeginMoveRows/EndMoveRows kinds are kept (without recorders): model_sync
+# never emits moves — reorders degrade to remove+insert — and model tests filter
+# on these kinds to assert exactly that.
 
 # Query helpers
 proc countInserts*(self: QtModelSpy): int =

@@ -200,15 +200,19 @@ proc scheduleMissingTokenKeysFetch(self: Service) =
   self.missingTokenKeysFetchDebouncer.call()
 
 proc onAsyncFetchMissingTokensDone(self: Service, response: string) {.slot.} =
+  # Decode the envelope and release the batch's keys from the in-flight set
+  # regardless of outcome — an undecodable envelope must not leave its keys
+  # wedged as permanently in flight (they could never re-enqueue).
+  let (env, decodeError) = decodeAndCompleteBatch(self.pendingTokenFetch, response)
+  if decodeError.len > 0:
+    error "error decoding async fetch missing tokens response", msg = decodeError
+    return
+  if env.error.len > 0:
+    # Transient backend failure: leave the keys unmarked so a later lookup retries
+    # (async, off the GUI thread) rather than caching a false "missing".
+    error "async fetch missing tokens failed", errDescription = env.error
+    return
   try:
-    let env = Json.decode(response, FetchMissingTokensResponse, allowUnknownFields = true)
-    # Release the batch's keys from the in-flight set regardless of outcome.
-    self.pendingTokenFetch.completeBatch(env.requestedKeys)
-    if env.error.len > 0:
-      # Transient backend failure: leave the keys unmarked so a later lookup retries
-      # (async, off the GUI thread) rather than caching a false "missing".
-      error "async fetch missing tokens failed", errDescription = env.error
-      return
     # Index the returned tokens by their (lower-cased) key so each requested key is
     # cached under the exact string that was looked up. This preserves the old
     # getTokenByKey semantics (store under the requested key) even when the request
