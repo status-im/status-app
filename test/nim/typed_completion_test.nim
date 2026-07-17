@@ -100,6 +100,13 @@ suite "typed task completion (end-to-end bridge)":
     check r.order.len == 0                      # drained object never applied
     check r.nilCount == 1                       # slot ran, claim nil-safe
 
+  test "takeTyped returns nil on a malformed handle string (never raises)":
+    # ADR 0004 contract: takeTyped is nil-safe for unknown/claimed/drained AND
+    # malformed handles — the GUI-thread completion slot must never raise.
+    for garbage in ["", "not-a-number", "12abc", "-1", "18446744073709551616999"]:
+      let claimed = takeTyped[PilotResult](garbage)
+      check claimed.isNil
+
   test "finishTyped is a no-op once shutting down":
     # Kept last: markShuttingDown flips a process-global that later completions
     # would also observe.

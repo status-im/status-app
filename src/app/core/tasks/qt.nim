@@ -45,6 +45,11 @@ proc finishTyped*[T](arg: QObjectTaskArg, payload: sink T) =
 proc takeTyped*[T](response: string): T =
   ## Claim the object delivered by `finishTyped`. Call from the completion slot,
   ## passing the slot's string argument. Transfers exclusive ownership to the GUI
-  ## thread. Returns nil if the handoff was drained (shutdown) before the slot ran.
-  let handle = parseBiggestUInt(response).TaskHandle
+  ## thread. Returns nil if the handoff was drained (shutdown) before the slot
+  ## ran, or if `response` is not a valid handle — never raises.
+  var handle: TaskHandle
+  try:
+    handle = parseBiggestUInt(response).TaskHandle
+  except ValueError:
+    return nil
   claimHandoff[T](handle)
