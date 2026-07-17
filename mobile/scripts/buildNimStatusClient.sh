@@ -73,6 +73,7 @@ NIM_FLAGS=(
     -d:useMalloc
     -d:lto
     --opt:size
+    --passC:-fno-omit-frame-pointer
     --cc:clang
     --cpu:"$CARCH"
     --noMain:on
