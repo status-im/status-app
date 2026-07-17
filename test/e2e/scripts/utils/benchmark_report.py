@@ -26,7 +26,7 @@ class BenchmarkMetricReport:
 
 
 @dataclass
-class CommunityOpenSamples:
+class BenchmarkScenarioSamples:
     load_times: list[float] = field(default_factory=list)
     cpu_percents: list[float] = field(default_factory=list)
     ram_mb: list[float] = field(default_factory=list)
@@ -95,31 +95,55 @@ def attach_load_time_report(
     ])
 
 
-def attach_community_scenario_reports(tmp_path: Path, scenario: str, samples: CommunityOpenSamples) -> None:
-    subject = f'Status community {scenario}'
-    slug = scenario.replace(' ', '_')
-    attach_benchmark_metrics(tmp_path, [
-        BenchmarkMetricReport(
-            attachment_prefix=f'{subject} load times',
-            filename=f'status_community_{slug}_load_times.txt',
-            line_subject=f'{subject} load time',
-            unit='seconds',
-            values=samples.load_times,
-        ),
+def _resource_metric_reports(
+    subject: str,
+    slug: str,
+    samples: BenchmarkScenarioSamples,
+) -> list[BenchmarkMetricReport]:
+    return [
         BenchmarkMetricReport(
             attachment_prefix=f'{subject} CPU usage',
-            filename=f'status_community_{slug}_cpu_usage.txt',
+            filename=f'{slug}_cpu_usage.txt',
             line_subject=f'{subject} CPU usage',
             unit='percent',
             values=samples.cpu_percents,
         ),
         BenchmarkMetricReport(
             attachment_prefix=f'{subject} RAM usage',
-            filename=f'status_community_{slug}_ram_usage.txt',
+            filename=f'{slug}_ram_usage.txt',
             line_subject=f'{subject} RAM usage',
             unit='MB',
             values=samples.ram_mb,
         ),
+    ]
+
+
+def attach_resource_reports(
+    tmp_path: Path,
+    *,
+    subject: str,
+    slug: str,
+    samples: BenchmarkScenarioSamples,
+) -> None:
+    attach_benchmark_metrics(tmp_path, _resource_metric_reports(subject, slug, samples))
+
+
+def attach_scenario_reports(
+    tmp_path: Path,
+    *,
+    subject: str,
+    slug: str,
+    samples: BenchmarkScenarioSamples,
+) -> None:
+    attach_benchmark_metrics(tmp_path, [
+        BenchmarkMetricReport(
+            attachment_prefix=f'{subject} load times',
+            filename=f'{slug}_load_times.txt',
+            line_subject=f'{subject} load time',
+            unit='seconds',
+            values=samples.load_times,
+        ),
+        *_resource_metric_reports(subject, slug, samples),
     ])
 
 

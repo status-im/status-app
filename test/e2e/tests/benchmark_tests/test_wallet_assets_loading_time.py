@@ -1,5 +1,4 @@
 import logging
-import os
 import time
 
 import pytest
@@ -10,7 +9,14 @@ from allure_commons._allure import step
 import configs
 import driver
 from configs import get_platform
+from driver.aut import AUT
 from gui.screens.wallet import WalletScreen
+from scripts.utils.benchmark_report import (
+    BenchmarkScenarioSamples,
+    attach_resource_reports,
+    enable_benchmark_mode,
+    monitored_call,
+)
 from tests.benchmark_tests.benchmark_helpers import BENCHMARK_USER_PARAMS, WALLET_ASSETS_BENCHMARK_PARAMS
 
 LOG = logging.getLogger(__name__)
@@ -67,9 +73,16 @@ def record_assets_loading_time(
 @pytest.mark.skipif(get_platform() != "Windows", reason="Windows only test")
 @pytest.mark.benchmark
 def test_wallet_assets_loading_time(
-    main_screen, user_data, user_account, first_account_name, second_account_name, tmp_path
+    aut: AUT,
+    main_screen,
+    user_data,
+    user_account,
+    first_account_name,
+    second_account_name,
+    tmp_path,
 ):
-    os.environ["STATUS_RUNTIME_TEST_MODE"] = "True"
+    enable_benchmark_mode()
+    samples = BenchmarkScenarioSamples()
 
     with step("Open wallet main screen"):
         main_screen.left_panel.open_wallet()
@@ -81,7 +94,11 @@ def test_wallet_assets_loading_time(
 
     for i in range(5):
         with step(f"Iteration {i + 1}: Open {first_account_name} and record assets load time"):
-            t1 = record_assets_loading_time(wallet_left_panel, first_account_name)
+            t1, stats = monitored_call(
+                aut,
+                lambda: record_assets_loading_time(wallet_left_panel, first_account_name),
+            )
+            samples.record(t1, stats)
             firstaccount_times.append(t1)
             line = f"[{i + 1}/5] {first_account_name} assets load time: {t1:.3f} seconds"
             report_lines.append(line)
@@ -89,7 +106,11 @@ def test_wallet_assets_loading_time(
 
         if second_account_name:
             with step(f"Iteration {i + 1}: Open {second_account_name} and record assets load time"):
-                t2 = record_assets_loading_time(wallet_left_panel, second_account_name)
+                t2, stats = monitored_call(
+                    aut,
+                    lambda: record_assets_loading_time(wallet_left_panel, second_account_name),
+                )
+                samples.record(t2, stats)
                 secondaccount_times.append(t2)
                 line = f"[{i + 1}/5] {second_account_name} assets load time: {t2:.3f} seconds"
                 report_lines.append(line)
@@ -103,6 +124,15 @@ def test_wallet_assets_loading_time(
         report_lines.append(
             f"Average {second_account_name} assets load time over 5 runs: {avg_second:.3f} seconds"
         )
+    overall_average = (
+        sum(samples.load_times) / len(samples.load_times)
+        if samples.load_times
+        else 0.0
+    )
+    report_lines.append(
+        f"Average Wallet assets load time over {len(samples.load_times)} runs: "
+        f"{overall_average:.3f} seconds"
+    )
     report_text = "\n".join(report_lines)
     LOG.info(report_text)
 
@@ -120,3 +150,10 @@ def test_wallet_assets_loading_time(
             name="Wallet assets load times (file)",
             attachment_type=AttachmentType.TEXT,
         )
+
+    attach_resource_reports(
+        tmp_path,
+        subject='Wallet assets',
+        slug='wallet_assets',
+        samples=samples,
+    )
