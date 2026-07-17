@@ -21,6 +21,7 @@ import backend/tokens as status_go_tokens
 import dto/types as dto_types
 import items/types as items_types
 import token_lookup_cache
+import token_missing_fetch
 import token_pending_fetch
 import token_refresh_generation
 import token_apply_builder
