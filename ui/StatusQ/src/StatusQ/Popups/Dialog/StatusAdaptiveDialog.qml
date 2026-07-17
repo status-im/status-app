@@ -283,8 +283,10 @@ Dialog {
         contentComponent: root.contentComponent
         leftPadding: d.contentLeftPadding
         rightPadding: d.contentRightPadding
-        topPadding: d.contentTopPadding
-        bottomPadding: d.contentBottomPadding
+        topPadding: 0
+        bottomPadding: 0
+        flickableTopPadding: d.contentTopPadding
+        flickableBottomPadding: d.contentBottomPadding
     }
 
     // Footer contract:

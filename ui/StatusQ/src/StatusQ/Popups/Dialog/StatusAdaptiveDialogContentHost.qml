@@ -11,6 +11,8 @@ Control {
     id: root
 
     required property Component contentComponent
+    property real flickableTopPadding: 0
+    property real flickableBottomPadding: 0
 
     // Natural height requested by the loaded content before the dialog applies its max-height cap.
     readonly property real naturalHeight: d.loadedContentNaturalHeight
@@ -33,7 +35,10 @@ Control {
         readonly property real loadedContentImplicitHeight: loadedContentItem ? loadedContentItem["implicitHeight"] ?? 0 : 0
         readonly property real loadedContentHeight: contentFlickable ? contentFlickable.contentHeight : 0
         readonly property real loadedContentNaturalHeight: loadedContentItem ? Math.max(loadedContentImplicitHeight, contentIsFlickable ? loadedContentHeight : 0) : 0
-        readonly property bool contentOverflows: activeFlickable ? activeFlickable.contentHeight > activeFlickable.height : false
+        readonly property real activeContentExtent: activeFlickable ? activeFlickable.contentHeight
+                                                                      + activeFlickable.topMargin
+                                                                      + activeFlickable.bottomMargin : 0
+        readonly property bool contentOverflows: activeFlickable ? activeContentExtent > activeFlickable.height : false
 
         function resolveFlickable(item) {
             if (!item)
@@ -64,6 +69,8 @@ Control {
             clip: true
             contentWidth: width
             contentHeight: d.contentIsFlickable ? 0 : d.loadedContentNaturalHeight
+            topMargin: root.flickableTopPadding
+            bottomMargin: root.flickableBottomPadding
             flickableDirection: Flickable.VerticalFlick
             visible: !!d.loadedContentItem && !d.contentIsFlickable
             enabled: visible
@@ -90,13 +97,18 @@ Control {
                     flickable.boundsBehavior = Flickable.StopAtBounds;
                     flickable.flickableDirection = Flickable.VerticalFlick;
                     flickable.contentWidth = Qt.binding(() => contentViewport.width);
+                    flickable.topMargin = Qt.binding(() => root.flickableTopPadding);
+                    flickable.bottomMargin = Qt.binding(() => root.flickableBottomPadding);
                     flickable.interactive = Qt.binding(() => d.contentOverflows);
                     if (d.contentVerticalScrollBar)
                         d.contentVerticalScrollBar.policy = ScrollBar.AlwaysOff;
                 } else {
                     item.parent = scrollFlickable.contentItem;
                     item.width = Qt.binding(() => scrollFlickable.width);
-                    item.height = Qt.binding(() => Math.max(d.loadedContentImplicitHeight, scrollFlickable.height));
+                    item.height = Qt.binding(() => Math.max(d.loadedContentImplicitHeight,
+                                                            scrollFlickable.height
+                                                            - root.flickableTopPadding
+                                                            - root.flickableBottomPadding));
                 }
             }
         }
@@ -115,11 +127,12 @@ Control {
         position: d.activeFlickable ? d.activeFlickable.visibleArea.yPosition : 0
         size: d.activeFlickable ? d.activeFlickable.visibleArea.heightRatio : 1
         active: d.activeFlickable && d.activeFlickable.moving
-        visible: d.activeFlickable && resolveVisibility(policy, d.activeFlickable.height, d.activeFlickable.contentHeight)
+        visible: d.activeFlickable && resolveVisibility(policy, d.activeFlickable.height, d.activeContentExtent)
 
         onPositionChanged: {
             if (pressed && d.activeFlickable)
-                d.activeFlickable.contentY = position * Math.max(0, d.activeFlickable.contentHeight - d.activeFlickable.height);
+                d.activeFlickable.contentY = -d.activeFlickable.topMargin
+                                             + position * Math.max(0, d.activeContentExtent - d.activeFlickable.height);
         }
     }
 }

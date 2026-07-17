@@ -458,12 +458,21 @@ Item {
             const contentViewport = findChild(controlUnderTest, "statusAdaptiveDialogContentViewport");
             const scrollFlickable = findChild(controlUnderTest, "statusAdaptiveDialogScrollFlickable");
             const contentScrollBar = findChild(controlUnderTest, "statusAdaptiveDialogContentScrollBar");
+            const headerDivider = findChild(controlUnderTest, "statusAdaptiveDialogHeaderDivider");
+            const footerDivider = findChild(controlUnderTest, "statusAdaptiveDialogFooterDivider");
             verify(!!contentViewport);
             verify(!!scrollFlickable);
             verify(!!contentScrollBar);
+            verify(!!headerDivider);
+            verify(!!footerDivider);
             verify(scrollFlickable.visible);
             verify(scrollFlickable.enabled);
             verify(scrollFlickable.contentHeight > scrollFlickable.height);
+            compare(contentViewport.mapToItem(null, 0, 0).y,
+                    headerDivider.mapToItem(null, 0, headerDivider.height).y);
+            compare(contentViewport.mapToItem(null, 0, contentViewport.height).y,
+                    footerDivider.mapToItem(null, 0, 0).y);
+            compare(scrollFlickable.topMargin, Math.max(Theme.padding, 8));
             verify(contentScrollBar.x >= contentViewport.x + contentViewport.width);
         }
 
@@ -482,6 +491,7 @@ Item {
             compare(flickableContent.parent, contentViewport);
             compare(scrollFlickable.visible, false);
             verify(flickableContent.height <= contentViewport.height);
+            compare(flickableContent.topMargin, Math.max(Theme.padding, 8));
         }
 
     }
