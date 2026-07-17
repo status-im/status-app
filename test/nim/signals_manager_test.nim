@@ -55,3 +55,18 @@ suite "SignalsManager - unhandled signal-type skipping":
 
     check dispatchedCount == 1
     check unhandledSignalCount() == 1
+
+  test "a handled type in a whitespaced envelope still dispatches (scan-miss fallback)":
+    # The fast substring scan assumes status-go's compact `"type":"` byte token.
+    # If the marshaling format ever changes (e.g. a space after the colon), the
+    # scan misses — that must degrade to the full-parse path, not drop the signal.
+    let emitter = createEventEmitter()
+    var dispatched = false
+    emitter.on(SignalType.DiscoveryStarted.event) do(a: Args):
+      dispatched = true
+
+    let manager = newSignalsManager(emitter)
+    manager.processSignal("""{"type": "discovery.started", "event": {}}""")
+
+    check dispatched
+    check unhandledSignalCount() == 0
