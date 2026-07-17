@@ -20,6 +20,7 @@ StatusIconTabButton {
     required property int colorId
     required property int currentUserStatus
 
+    property bool loading: false
     property var getLinkToProfileFn: function(pubKey) { console.error("IMPLEMENT ME"); return "" }
     property var getEmojiHashFn: function(pubKey) { console.error("IMPLEMENT ME"); return "" }
 
@@ -28,7 +29,9 @@ StatusIconTabButton {
     signal setCurrentUserStatusRequested(int status)
 
     name: root.name
-    icon.source: root.iconSource
+    enabled: !root.loading
+    icon.name: root.loading ? "loading" : ""
+    icon.source: root.loading ? "" : root.iconSource
     implicitWidth: 32
     implicitHeight: 32
     identicon.asset.width: width
@@ -36,6 +39,9 @@ StatusIconTabButton {
     identicon.asset.useAcronymForLetterIdenticon: true
 
     identicon.asset.name: {
+        if (root.loading) {
+            return "loading"
+        }
         if (identicon.asset.isImage) {
             return icon.source
         }
@@ -50,7 +56,7 @@ StatusIconTabButton {
     identicon.asset.isLetterIdenticon: root.usesDefaultName ? false : icon.name !== "" && !identicon.asset.isImage
     identicon.asset.bgColor: root.usesDefaultName ? Utils.colorForPubkey(Theme.palette, root.pubKey) : "transparent"
 
-    identicon.badge.visible: true
+    identicon.badge.visible: !root.loading
     identicon.badge.border.width: 2
     identicon.badge.border.color: Theme.palette.statusAppNavBar.backgroundColor
     identicon.badge.height: 12
@@ -65,7 +71,10 @@ StatusIconTabButton {
         }
     }
 
-    onClicked: userStatusContextMenu.opened ? userStatusContextMenu.close() : userStatusContextMenu.open()
+    onClicked: {
+        if (!root.loading)
+            userStatusContextMenu.opened ? userStatusContextMenu.close() : userStatusContextMenu.open()
+    }
 
     UserStatusContextMenu {
         id: userStatusContextMenu

@@ -2494,6 +2494,7 @@ Item {
                     return false
                 }
                 thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
+                profileLoading: !appMain.mainReady
 
                 onActivityCenterRequested: function(shouldShow) {
                     d.closeActivityCenterOnNextBack = false

@@ -54,6 +54,7 @@ Control {
 
     required property bool profileSectionHasNotification
     required property bool thirdpartyServicesEnabled
+    property bool profileLoading: false
 
     // Set from AppMain: used on mobile so native overlay can dismiss the drawer over Browser WebView.
     property bool browserSectionActive: false
@@ -261,6 +262,7 @@ Control {
                     objectName: "statusProfileNavBarTabButton"
                     Layout.alignment: Qt.AlignHCenter
                     Layout.topMargin: root.spacing
+                    loading: root.profileLoading
                     name: root.selfContactDetails.displayName
                     pubKey: root.selfContactDetails.publicKey
                     compressedPubKey: root.selfContactDetails.compressedPubKey
