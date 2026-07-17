@@ -18,26 +18,23 @@ WALLET_BENCHMARK_PARAMS = [
     ),
 ]
 
-WALLET_ASSETS_BENCHMARK_PARAMS = [
+WALLET_ACCOUNT_BENCHMARK_PARAMS = [
     pytest.param(
         None,
         FRESH_USER_ACCOUNT,
         WalletNetworkSettings.STATUS_ACCOUNT_DEFAULT_NAME.value,
-        None,
         id='fresh_user',
     ),
     pytest.param(
         configs.testpath.TEST_USER_DATA / 'wallet_load',
         constants.user.wallet_load,
         'firstaccount',
-        'secondaccount',
         id='wallet_load_user',
     ),
     pytest.param(
         configs.testpath.TEST_USER_DATA / 'wallet_load_alex',
         constants.user.wallet_load_alex,
         'account1',
-        'account2',
         id='wallet_load_alex_user',
     ),
 ]

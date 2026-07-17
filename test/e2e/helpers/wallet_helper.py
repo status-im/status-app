@@ -28,8 +28,10 @@ def wait_for_wallet_balances_loaded(
 def wait_for_account_assets_loaded(
         wallet_account_view,
         timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+        open_tab: bool = True,
 ):
-    wallet_account_view.open_assets_tab()
+    if open_tab:
+        wallet_account_view.open_assets_tab()
     asset_item = wallet_account_view._asset_item  # pylint: disable=protected-access
 
     def assets_loaded():

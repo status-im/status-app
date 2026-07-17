@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, TypeVar
@@ -76,25 +77,6 @@ def enable_benchmark_mode() -> None:
     os.environ['STATUS_RUNTIME_TEST_MODE'] = 'True'  # to omit banners
 
 
-def attach_load_time_report(
-    tmp_path: Path,
-    *,
-    attachment_prefix: str,
-    line_subject: str,
-    filename: str,
-    load_times: list[float],
-) -> None:
-    attach_benchmark_metrics(tmp_path, [
-        BenchmarkMetricReport(
-            attachment_prefix=attachment_prefix,
-            filename=filename,
-            line_subject=line_subject,
-            unit='seconds',
-            values=load_times,
-        ),
-    ])
-
-
 def _resource_metric_reports(
     subject: str,
     slug: str,
@@ -152,3 +134,21 @@ def monitored_call(aut: AUT, action: Callable[[], T], interval_sec: float = 0.1)
     with ProcessMonitor(monitor_pid, interval_sec=interval_sec) as monitor:
         result = action()
     return result, monitor.stats()
+
+
+def monitored_timed_call(
+    aut: AUT,
+    action: Callable[[], T],
+    interval_sec: float = 0.1,
+) -> tuple[T, float, ProcessSampleStats]:
+    def timed_action() -> tuple[T, float]:
+        started_at = time.perf_counter()
+        result = action()
+        return result, time.perf_counter() - started_at
+
+    (result, load_time), stats = monitored_call(
+        aut,
+        timed_action,
+        interval_sec=interval_sec,
+    )
+    return result, load_time, stats

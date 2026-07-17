@@ -13,6 +13,7 @@ from gui.components.wallet.token_selector_popup import TokenSelectorPopup
 from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.text_edit import TextEdit
+from gui.elements.text_label import TextLabel
 from gui.objects_map import names
 
 
@@ -21,6 +22,7 @@ class SendPopup(QObject):
     def __init__(self):
         super().__init__(names.simpleSendModal)
         self.send_modal_header = QObject(names.sendModalHeader)
+        self.send_modal_title = TextLabel(names.sendModalTitle)
         self.send_modal_recipient_panel = QObject(names.sendModalRecipientPanel)
         self.send_modal_recipient_delegate = QObject(names.sendModalRecipientViewDelegate)
         self.send_modal_token_selector = Button(names.sendModalTokenSelector)

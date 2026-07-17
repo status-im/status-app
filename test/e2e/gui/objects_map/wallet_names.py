@@ -39,7 +39,9 @@ collectibles_cmbTokenOrder_SortOrderComboBox = {"container": mainWindow_RightTab
 rightSideWalletTabBar_StatusTabBar = {"container": mainWindow_RightTabView, "objectName": "rightSideWalletTabBar", "type": "StatusTabBar", "visible": True}
 rightSideWalletTabBar_Assets_StatusTabButton = {"checkable": True, "container": rightSideWalletTabBar_StatusTabBar, "objectName": "assetsTabButton", "text": "Assets", "type": "StatusTabButton", "visible": True}
 rightSideWalletTabBar_Collectibles_StatusTabButton = {"checkable": True, "container": rightSideWalletTabBar_StatusTabBar, "objectName": "collectiblesTabButton", "text": "Collectibles", "type": "StatusTabButton", "visible": True}
-rightSideWalletTabBar_Activity_StatusTabButton = {"checkable": True, "container": rightSideWalletTabBar_StatusTabBar, "objectName": "activityTabButton", "text": "Activity", "type": "StatusTabButton", "visible": True}
+rightSideWalletTabBar_Activity_StatusTabButton = {"checkable": True, "container": rightSideWalletTabBar_StatusTabBar, "objectName": "activityTabButton", "text": "History", "type": "StatusTabButton", "visible": True}
+collectibles_view = {"container": mainWindow_RightTabView, "type": "CollectiblesView", "unnamed": 1, "visible": True}
+activity_view = {"container": mainWindow_RightTabView, "objectName": "walletAccountTransactionList", "type": "StatusListView", "visible": True}
 
 """Wallet assets view"""
 assets_view = {"container": mainWindow_RightTabView, "objectName": "assetViewStatusListView", "type": "StatusListView", "visible": True}

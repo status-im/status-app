@@ -91,14 +91,33 @@ class WalletLeftPanel(QObject):
         existing_accounts_names = [account.name for account in account_items]
         if account_name in existing_accounts_names:
             self.wallet_account_item.real_name['title'] = account_name
+            last_error = None
             for _ in range(2):
                 self.wallet_account_item.click()
                 try:
-                    return WalletAccountView().wait_until_appears()
-                except Exception:
-                    pass  # Retry one more time
-                raise LookupError(f'Could not select {account_name}')
+                    account_view = WalletAccountView().wait_until_appears()
+                    assert driver.waitFor(
+                        lambda: account_view.name == account_name,
+                        configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+                    ), f'Wallet account view did not switch to {account_name}'
+                    return account_view
+                except Exception as error:
+                    last_error = error
+            raise LookupError(f'Could not select {account_name}') from last_error
         raise LookupError(f'{account_name} is not present in {account_items}')
+
+    @allure.step('Open all Wallet accounts')
+    def open_all_accounts(
+        self,
+        account_name: str,
+        timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+    ) -> 'WalletLeftPanel':
+        self.all_accounts_button.click()
+        assert driver.waitFor(
+            lambda: account_name in [account.name for account in self.accounts],
+            timeout_msec,
+        ), f'Wallet account list did not show {account_name}'
+        return self
 
     @allure.step('Open context menu from left wallet panel')
     def _open_context_menu(self) -> WalletAccountContextMenu:
@@ -244,6 +263,9 @@ class WalletAccountView(QObject):
         self._assets_combobox = List(wallet_names.cmbTokenOrder_SortOrderComboBox)
         self._assets_tab_button = Button(wallet_names.rightSideWalletTabBar_Assets_StatusTabButton)
         self._collectibles_tab_button = Button(wallet_names.rightSideWalletTabBar_Collectibles_StatusTabButton)
+        self._activity_tab_button = Button(wallet_names.rightSideWalletTabBar_Activity_StatusTabButton)
+        self._collectibles_view = QObject(wallet_names.collectibles_view)
+        self._activity_view = QObject(wallet_names.activity_view)
         self._asset_item_delegate = QObject(wallet_names.itemDelegate)
         self._asset_item = QObject(wallet_names.assets_viewTokenItem)
         self._arrow_icon = QObject(wallet_names.arrow_icon_StatusIcon)
@@ -272,33 +294,7 @@ class WalletAccountView(QObject):
     @allure.step('Open swap popup')
     def open_swap_popup(self) -> SwapPopup:
         self.footer_swap_button.click()
-        return SwapPopup()
-
-    @allure.step('Click Swap button and record load time until SwapPopup is visible')
-    def open_swap_popup_and_record_load_time(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        start_time = time.time()
-        self.footer_swap_button.click()
-        swap_popup = SwapPopup()
-        check_interval = 0.1  # Check every 100ms for better precision
-        timeout_sec = timeout_msec / 1000
-
-        while time.time() - start_time < timeout_sec:
-            try:
-                if swap_popup.is_visible:
-                    LOG.info('SwapPopup: is visible')
-                    break
-            except Exception as e:
-                LOG.debug("Exception during visibility check: %s", e)
-            time.sleep(check_interval)
-        else:
-            # Timeout reached
-            load_time = time.time() - start_time
-            LOG.error(f'SwapPopup is not visible within {timeout_msec} ms (waited {load_time:.3f} seconds)')
-            raise TimeoutError(f'SwapPopup is not visible within {timeout_msec} ms')
-
-        load_time = time.time() - start_time
-        LOG.info(f'SwapPopup loaded in {load_time:.3f} seconds')
-        return swap_popup, load_time
+        return SwapPopup().wait_until_appears()
 
     @allure.step('Open send popup')
     def open_send_popup(self) -> SendPopup:
@@ -316,13 +312,45 @@ class WalletAccountView(QObject):
         return ReceivePopup().wait_until_appears()
 
     @allure.step('Open assets tab')
-    def open_assets_tab(self):
+    def open_assets_tab(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
         self._assets_tab_button.click()
+        assert driver.waitFor(
+            lambda: self._assets_tab_button.is_checked,
+            timeout_msec,
+        ), 'Assets tab did not become selected'
+        AssetsView().wait_until_appears(timeout_msec)
         return self
 
     @allure.step('Open collectibles tab')
-    def open_collectibles_tab(self):
+    def open_collectibles_tab(
+        self,
+        timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        wait_until_loaded: bool = True,
+        loading_timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+    ):
         self._collectibles_tab_button.click()
+        assert driver.waitFor(
+            lambda: self._collectibles_tab_button.is_checked,
+            timeout_msec,
+        ), 'Collectibles tab did not become selected'
+        if not wait_until_loaded:
+            return self
+        self._collectibles_view.wait_until_appears(timeout_msec)
+        assert driver.waitFor(
+            lambda: not getattr(self._collectibles_view.object, 'isFetching', False)
+            and not getattr(self._collectibles_view.object, 'isUpdating', False),
+            loading_timeout_msec,
+        ), 'Collectibles tab did not finish loading'
+        return self
+
+    @allure.step('Open History tab')
+    def open_activity_tab(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+        self._activity_tab_button.click()
+        assert driver.waitFor(
+            lambda: self._activity_tab_button.is_checked,
+            timeout_msec,
+        ), 'History tab did not become selected'
+        self._activity_view.wait_until_appears(timeout_msec)
         return self
 
     @allure.step('Click filter button')

@@ -1064,6 +1064,8 @@ simpleSendModal = {"container": statusDesktop_mainWindow_overlay, "objectName": 
                    "visible": True}
 sendModalHeader = {"container": statusDesktop_mainWindow_overlay, "objectName": "sendModalHeader",
                    "type": "SendModalHeader", "visible": True}
+sendModalTitle = {"container": sendModalHeader, "objectName": "sendModalTitleText",
+                  "type": "StatusBaseText", "visible": True}
 sendModalRecipientPanel = {"container": statusDesktop_mainWindow_overlay, "objectName": "recipientsPanel",
                            "type": "RecipientSelectorPanel", "visible": True}
 sendModalRecipientViewDelegate = {"container": statusDesktop_mainWindow_overlay, "type": "RecipientViewDelegate", "unnamed": 1, "visible": True}

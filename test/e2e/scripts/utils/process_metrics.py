@@ -1,7 +1,6 @@
 import logging
 import os
 import threading
-import time
 from dataclasses import dataclass
 
 import psutil
@@ -79,7 +78,9 @@ class ProcessMonitor:
 
     def stats(self) -> ProcessSampleStats:
         if not self._cpu_samples:
-            return ProcessSampleStats(0.0, 0.0, 0.0, 0.0, 0)
+            raise RuntimeError(
+                f'No valid CPU/RAM samples collected for AUT process tree pid={self._pid}'
+            )
         return ProcessSampleStats(
             avg_cpu_percent=sum(self._cpu_samples) / len(self._cpu_samples),
             avg_ram_mb=sum(self._ram_samples) / len(self._ram_samples),
@@ -97,10 +98,10 @@ class ProcessMonitor:
             LOG.debug('AUT process tree unavailable for pid=%s', self._pid)
         return processes
 
-    def _sample_once(self) -> tuple[float, float]:
+    def _sample_once(self) -> tuple[float, float] | None:
         processes = self._iter_processes()
         if not processes:
-            return 0.0, 0.0
+            return None
 
         for proc in processes:
             try:
@@ -108,21 +109,30 @@ class ProcessMonitor:
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 continue
 
-        time.sleep(self._interval_sec)
+        if self._stop_event.wait(self._interval_sec):
+            return None
 
         cpu_percent = 0.0
         ram_total_bytes = 0
+        sampled_processes = 0
         for proc in processes:
             try:
                 cpu_percent += proc.cpu_percent(None)
                 ram_total_bytes += proc.memory_info().rss
+                sampled_processes += 1
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 continue
+        if sampled_processes == 0 or ram_total_bytes == 0:
+            return None
         cpu_count = psutil.cpu_count(logical=True) or 1
         return min(cpu_percent / cpu_count, 100.0), ram_total_bytes / (1024 * 1024)
 
     def _sample_loop(self) -> None:
         while not self._stop_event.is_set():
-            cpu, ram_mb = self._sample_once()
+            sample = self._sample_once()
+            if sample is None:
+                self._stop_event.wait(self._interval_sec)
+                continue
+            cpu, ram_mb = sample
             self._cpu_samples.append(cpu)
             self._ram_samples.append(ram_mb)
