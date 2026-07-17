@@ -5,60 +5,67 @@
 # (insertRows / removeRows / dataChanged).
 #
 # ----------------------------------------------------------------------------
-# Quick start (Pattern 1 - simple model owning its own data)
+# Public API — this is all a consumer needs
 # ----------------------------------------------------------------------------
 #
-#   proc setItems*(self: MyModel, newItems: seq[MyItem]) =
-#     setItemsWithSync(
-#       self,
-#       self.items,
-#       newItems,
-#       getId = proc(it: MyItem): string = it.id,
-#       getRoles = proc(o, n: MyItem): seq[int] =
-#         var roles: seq[int]
-#         if o.name != n.name: roles.add(ModelRole.Name.int)
-#         return roles,
-#       countChanged = proc() = self.countChanged(),
-#     )
+#   modelSync(model, container, newItems)          -- granular sync, one-liner
+#   reconcileByKey(table, items, create, update)   -- keyed nested child models
 #
-# `self.items` is a plain `seq[T]` field on the model. applySync mutates it in
-# lockstep with the begin*/end* signals it emits, so `rowCount()` and `data()`
-# (which read from `self.items`) always see consistent state.
+# `modelSync` collapses the whole sync into a single call. Declare two overloads
+# next to your item type; `modelSync` picks them up at instantiation via `mixin`,
+# the same way `hash` / `==` / `$` are resolved:
 #
-# ----------------------------------------------------------------------------
-# Pattern 4 (nested model with side effects on insert/update/remove)
-# ----------------------------------------------------------------------------
+#   proc syncKey(it: MyItem): string = it.key        # row identity (required)
+#   proc syncRoles(o, n: MyItem): seq[int] = ...      # changed role ints (optional)
 #
-#   setItemsWithSync(
-#     self, self.items, snapshot,
-#     getId    = ...,
-#     getRoles = ...,
-#     onInsert = proc(idx: int, item: T) =
-#       self.children.insert(newChildModel(...), idx),
-#     onUpdate = proc(idx: int, oldItem, newItem: T) =
-#       self.children[idx].update(oldItem.subItems, newItem.subItems),
-#     onRemove = proc(idx: int) =
-#       self.children.delete(idx),
-#   )
+# then, wherever the model receives fresh data:
 #
-# All three side-effect callbacks default to `nil`.
+#   self.modelSync(self.items, newItems)
+#
+# `self.items` is the model's own `seq[MyItem]` backing field; `modelSync` mutates
+# it in lockstep with the begin*/end* signals it emits, so `rowCount()` / `data()`
+# always read consistent state. `newItems` is moved in, not copied. The model's
+# `countChanged()` fires automatically when the type declares one. Omitting
+# `syncRoles` syncs the row SET only (insert/remove, no dataChanged).
+#
+# Nested / keyed child models (a per-row sub-model or QObject):
+#
+#   reconcileByKey(self.childrenByKey, newItems,
+#     create = proc(it: MyItem): ChildModel = newChildModel(it),
+#     update = proc(c: ChildModel, it: MyItem) = c.update(it))
+#   self.modelSync(self.items, newItems)
+#
+# Run `reconcileByKey` BEFORE `modelSync` so a freshly inserted row's `data()`
+# already sees its child. It keeps the `C` for a surviving key and drops removed
+# keys — this replaces the older per-row onInsert/onUpdate/onRemove callbacks.
 #
 # ----------------------------------------------------------------------------
 # Operation order and index semantics
 # ----------------------------------------------------------------------------
 #
-# applySync walks operations in this order:
+# The apply pass walks operations in this order:
 #   1. removes  (descending index order, so earlier removes don't shift the
 #                indices of later ones)
 #   2. updates  (with indices adjusted for the removes that just happened)
 #   3. inserts  (in ascending newIdx order)
 #
-# Callback indices are the row's position at the moment the callback fires:
-# post-removes-pre-inserts for onUpdate, and the final position for onInsert.
-#
 # Reorder handling: items whose id exists in both lists but at non-stable
 # positions (per LIS) are emitted as remove+insert pairs. There is no Qt
-# moveRows emission - reorders degrade to remove+insert.
+# moveRows emission.
+#
+# Whole-list fast paths: first load (empty -> N) and full clear (N -> empty) use
+# beginResetModel/endResetModel instead of walking the diff. (An append onto a
+# non-empty model runs the normal diff — there is no dedicated append fast path.)
+#
+# ----------------------------------------------------------------------------
+# Internals (exported for unit tests, NOT part of the consumer surface)
+# ----------------------------------------------------------------------------
+#
+# `setItemsWithSync` (the explicit-closure form `modelSync` delegates to),
+# `syncModel` (pure diff -> SyncResult), `applySync` / `applySyncWithBulkOps`
+# (the apply passes) and `groupConsecutiveRanges` are lower-level building blocks.
+# They carry the granular test coverage; new consumers should reach for
+# `modelSync` / `reconcileByKey` above, never these directly.
 
 import nimqml, tables, algorithm, sequtils, sets
 
@@ -491,17 +498,15 @@ proc setItemsWithSync*[T](
   onUpdate: OnUpdateCallback[T] = nil,
   onRemove: OnRemoveCallback = nil,
 ) =
-  ## Drop-in replacement for the begin/endResetModel pattern. See the file
-  ## header for usage.
-  ##
-  ## Pattern 5 (QObject-exposing models): pass `updateItem` to call setters on
-  ## the existing item; no dataChanged is emitted.
-  ##
-  ## Pattern 1-4 (multiple roles or value types): pass `getRoles` for ranged
-  ## dataChanged emissions.
-  ##
-  ## Pattern 4 (nested models): pass `onInsert` / `onUpdate` / `onRemove` to
-  ## keep a sibling `seq[NestedModel]` in sync with `items`.
+  ## Lower-level, explicit-closure form of the sync (a drop-in replacement for
+  ## the begin/endResetModel pattern). Prefer `modelSync` — see the file header;
+  ## this is the proc `modelSync` delegates to, kept exported for the unit tests
+  ## and for the rare model that needs a closure `modelSync` doesn't expose:
+  ##   - `updateItem`: for QObject-exposing rows, call setters on the existing
+  ##     item instead of emitting dataChanged.
+  ##   - `getRoles`: emit ranged dataChanged for the changed roles.
+  ##   - `onInsert` / `onUpdate` / `onRemove`: keep a sibling `seq[NestedModel]`
+  ##     in sync with `items` (the v3 API uses `reconcileByKey` for this instead).
 
   # Debug/test contract: input keys must be unique (repo `key` convention). A
   # duplicate would make the diff's id->index map last-wins and emit a spurious
@@ -565,24 +570,10 @@ proc setItemsWithSync*[T](
     if countChanged != nil and (syncResult.toInsert.len > 0 or syncResult.toRemove.len > 0):
       countChanged()
 
-# ----------------------------------------------------------------------------
-# v3 unified API
-# ----------------------------------------------------------------------------
-#
-# `modelSync` collapses the four-closure `setItemsWithSync` call into a one-liner.
-# Consumers define two overloads near their item type; `modelSync` resolves them
-# at instantiation via `mixin`, the same way `hash`/`==`/`$` are picked up:
-#
-#   proc syncKey(it: MyItem): string = it.key              # row identity
-#   proc syncRoles(o, n: MyItem): seq[int] = ...           # changed role ints
-#
-# then the whole sync at the call site is:
-#
-#   self.modelSync(self.items, newItems)
-#
-# The model's `countChanged()` signal is emitted automatically when the model
-# type declares one. The bulk-ops path (grouped inserts/removes, ranged
-# dataChanged) and the QT_MODEL_SPY instrumentation are always used.
+# `modelSync` is the primary consumer API — see the file header for the
+# `syncKey` / `syncRoles` protocol and usage. It collapses the four-closure
+# `setItemsWithSync` call into a one-liner and always uses the bulk-ops path
+# (grouped inserts/removes, ranged dataChanged) plus QT_MODEL_SPY instrumentation.
 
 proc modelSync*[M: QAbstractListModel, T](
     model: M, container: var seq[T], newItems: sink seq[T]) =
