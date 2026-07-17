@@ -259,14 +259,6 @@ QtObject {
                 `${msg}`
     }
 
-    function convertToSingleLine(text) {
-        return text.replace(/<br\s*\/>/gm, " ")
-    }
-
-    function stripHtmlTags(text) {
-        return text.replace(/<[^>]*>?/gm, '')
-    }
-
     function elideText(text, leftCharsCount, rightCharsCount = leftCharsCount) {
         return text.substr(0, leftCharsCount) + "…" + text.substr(text.length - rightCharsCount)
     }

@@ -402,7 +402,7 @@ Control {
         replyPanel.avatarImage = senderIcon
         replyPanel.avatarColor = senderColor
         replyPanel.messageText = contentType === Constants.messageContentType.stickerType
-                ? "" : StatusQUtils.Utils.stripHtmlTags(message)
+                ? "" : StatusQUtils.StringUtils.plainText(message)
 
         const imageCount = albumCount || (image ? 1 : 0)
         const paymentRequestCount = paymentRequests ? paymentRequests.ModelCount.count : 0
