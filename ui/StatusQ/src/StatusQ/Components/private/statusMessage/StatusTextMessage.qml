@@ -1,22 +1,18 @@
 import QtQuick
-import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
 
+import StatusQ
 import StatusQ.Components
 import StatusQ.Controls
-import StatusQ
-import StatusQ.Core
 import StatusQ.Core.Theme
-import StatusQ.Core.Utils
 
 Item {
     id: root
 
-    readonly property alias hoveredLink: chatTextLoader.hoveredLink
-    readonly property string selectedText:
-        chatTextLoader.item ? chatTextLoader.item.selectedText : ""
+    readonly property alias hoveredLink: chatTextView.hoveredLink
+    readonly property string selectedText: chatTextView.selectedText
 
-    property string highlightedLink: ""
+    property alias highlightedLink: chatTextView.highlightedLink
     property bool linkAddressAndEnsName
     property string disabledTooltipText
 
@@ -26,18 +22,15 @@ Item {
 
     property bool isMobile
 
-    property alias textField: chatTextLoader
+    property alias textField: chatTextView
 
     signal linkActivated(string link)
     signal contextMenuRequested(point pos)
 
-    implicitWidth: chatTextLoader.width
-    implicitHeight: chatTextLoader.height + d.showMoreHeight / 2
+    implicitHeight: chatTextView.height + d.showMoreHeight / 2
 
     QtObject {
         id: d
-        readonly property string hoveredLink: chatTextLoader.hoveredLink || root.highlightedLink
-
         property bool readMore: false
         readonly property int showMoreHeight: showMoreButtonLoader.visible ? showMoreButtonLoader.height : 0
         readonly property int maxHeight: 200
@@ -61,20 +54,40 @@ Item {
         }
     }
 
-    Loader {
-        id: chatTextLoader
+    // Client-side markdown render path (main desktop bubble): renders `unparsedText` via the
+    // StatusQ parser + ChatTextView, matching the editor. Quote bars, code frames and link-hover
+    // are drawn inside ChatTextView, so the legacy quote-bar overlay and StatusSyntaxHighlighter
+    // below stay inert on this path (both key off a textDocument, which ChatTextView doesn't expose).
+    ChatTextView {
+        id: chatTextView
+        objectName: "StatusTextMessage_chatText"
+        Accessible.role: Accessible.StaticText
+        Accessible.name: d.plainText
 
-        readonly property string hoveredLink: item?.hoveredLink ?? ""
         readonly property int effectiveHeight:
-            showMoreButtonLoader.active && !d.readMore ? d.maxHeight : item.implicitHeight
+            showMoreButtonLoader.active && !d.readMore ? d.maxHeight : implicitHeight
 
         height: effectiveHeight + d.showMoreHeight / 2
         anchors.left: parent.left
         anchors.right: parent.right
 
+        selectable: !root.isMobile
+        font.pixelSize: Theme.primaryTextFontSize
+
         opacity: !showMoreOpacityMask.active ? 1 : 0
 
-        sourceComponent: chatTextViewComp
+        edited: root.isEdited
+        blocks: MarkdownUtils.toBlocks(
+                    root.messageDetails.unparsedText,
+                    root.messageDetails.mentionsMap,
+                    chatTextView.font,
+                    false /*formatUnclosedCodeFence*/,
+                    true /*fullLineHeightEmojis*/,
+                    Theme.primaryTextFontSize /*emojiSizeOffset*/)
+
+        // Reuse the existing linkActivated contract: "//<pubkey>" opens the profile, a URL opens.
+        onMentionClicked: (pubKey) => root.linkActivated("//" + pubKey)
+        onLinkClicked: (url) => root.linkActivated(url)
 
         HoverHandler {
             id: hoverHandler
@@ -88,44 +101,15 @@ Item {
         }
     }
 
-    // Client-side markdown render path (main desktop bubble): renders `unparsedText` via the
-    // StatusQ parser + ChatTextView, matching the editor. Quote bars, code frames and link-hover
-    // are drawn inside ChatTextView, so the legacy quote-bar overlay and StatusSyntaxHighlighter
-    // below stay inert on this path (both key off a textDocument, which ChatTextView doesn't expose).
-    Component {
-        id: chatTextViewComp
-        ChatTextView {
-            id: chatTextView
-            objectName: "StatusTextMessage_chatText"
-            Accessible.role: Accessible.StaticText
-            Accessible.name: d.plainText
-            selectable: !root.isMobile
-            font.pixelSize: Theme.primaryTextFontSize
-
-            edited: root.isEdited
-            blocks: MarkdownUtils.toBlocks(
-                        root.messageDetails.unparsedText,
-                        root.messageDetails.mentionsMap,
-                        chatTextView.font,
-                        false /*formatUnclosedCodeFence*/,
-                        true /*fullLineHeightEmojis*/,
-                        Theme.primaryTextFontSize /*emojiSizeOffset*/)
-
-            // Reuse the existing linkActivated contract: "//<pubkey>" opens the profile, a URL opens.
-            onMentionClicked: (pubKey) => root.linkActivated("//" + pubKey)
-            onLinkClicked: (url) => root.linkActivated(url)
-        }
-    }
-
     // Vertical "show more" mask + button
     Loader {
         id: showMoreMaskGradient
-        anchors.fill: chatTextLoader
+        anchors.fill: chatTextView
         active: showMoreButtonLoader.active && !d.readMore
         visible: false
         sourceComponent: LinearGradient {
             start: Qt.point(0, 0)
-            end: Qt.point(0, chatTextLoader.height)
+            end: Qt.point(0, chatTextView.height)
             gradient: Gradient {
                 GradientStop { position: 0.0; color: "white" }
                 GradientStop { position: 0.85; color: "white" }
@@ -137,18 +121,18 @@ Item {
     Loader {
         id: showMoreOpacityMask
         active: showMoreButtonLoader.active && !d.readMore
-        anchors.fill: chatTextLoader
+        anchors.fill: chatTextView
         sourceComponent: OpacityMask {
-            source: chatTextLoader
+            source: chatTextView
             maskSource: showMoreMaskGradient
         }
     }
 
     Loader {
         id: showMoreButtonLoader
-        active: root.allowShowMore && chatTextLoader.item.implicitHeight > d.maxHeight
+        active: root.allowShowMore && chatTextView.implicitHeight > d.maxHeight
         visible: active
-        anchors.verticalCenter: chatTextLoader.bottom
+        anchors.verticalCenter: chatTextView.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         sourceComponent: StatusRoundButton {
             implicitWidth: 24
