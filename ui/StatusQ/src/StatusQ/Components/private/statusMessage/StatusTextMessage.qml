@@ -47,7 +47,10 @@ Item {
         // is otherwise invisible to screen readers and e2e. Expose the unstyled
         // text via Accessible.name on the text element instead.
         readonly property string plainText: {
-            const base = Utils.stripHtmlTags(root.messageDetails.messageText)
+            // Plain text of the same source ChatTextView renders (unparsedText), with mentions
+            // resolved to display names.
+            const base = MarkdownUtils.plainText(root.messageDetails.unparsedText,
+                                                 root.messageDetails.mentionsMap)
             // The "(edited)" indicator is only a visual HTML span in the rendered
             // text; append it here so it reaches Accessible.name too.
             return root.isEdited ? base + " " + qsTr("(edited)") : base

@@ -72,3 +72,13 @@ QString MarkdownUtils::singleLineHtml(const QString& text, const QVariantMap& me
     const int emojiPx = qRound(QFontMetricsF(font).height());
     return Markdown::toSingleLineHtml(root, mentionMap, emojiPx);
 }
+
+QString MarkdownUtils::plainText(const QString& text, const QVariantMap& mentions) const
+{
+    const Markdown::Node root = Markdown::parse(text, {});
+
+    QHash<int, QPair<QString, QString>> mentionMap;
+    collectTextMentions(root, mentions, mentionMap);
+
+    return Markdown::toPlainText(root, mentionMap);
+}
