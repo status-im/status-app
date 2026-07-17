@@ -1,5 +1,5 @@
 import app/modules/shared_models/model_utils
-import nimqml, tables, algorithm
+import nimqml, tables, algorithm, sequtils, sets
 
 import app_service/service/wallet_account/dto/asset_group_item
 import app/modules/shared/model_sync
@@ -89,6 +89,20 @@ QtObject:
     # exercised here.
     let newGroups = self.delegate.getGroupedAssetsList().sorted(
       proc(a, b: AssetGroupItem): int = cmp(a.key, b.key))
+    # Keep every BalancesModel this refresh removes alive on the stack until AFTER
+    # modelSync has emitted its remove signals. balancesByKey is a dropped child's
+    # SOLE ORC owner, and reconcileBalances (below) frees it synchronously the moment
+    # it drops the key — which is BEFORE modelSync announces the row removal. QML
+    # delegates still hold the raw BalancesModel* handed out via data(Balances) (a
+    # nimqml QVariant of a QObject does not keep the Nim ref alive), so freeing it
+    # first is a use-after-free during the delegate's own row teardown. This local
+    # seq outlives the whole proc, so ORC frees the dropped models only after the
+    # view has torn the rows down.
+    let survivingKeys = newGroups.mapIt(it.key).toHashSet
+    var retained {.used.}: seq[BalancesModel] = @[]
+    for key, bm in self.balancesByKey:
+      if key notin survivingKeys:
+        retained.add(bm)
     self.reconcileBalances(newGroups)
     self.modelSync(self.items, newGroups)
 

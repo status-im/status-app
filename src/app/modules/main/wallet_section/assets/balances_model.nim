@@ -24,6 +24,12 @@ QtObject:
     # delivers balance changes to the view without the parent resetting.
     items: seq[BalanceItem]
 
+  when defined(QT_MODEL_SPY):
+    # Test-only destruction hook: lets grouped_account_assets_model_test observe WHEN
+    # a dropped BalancesModel is ORC-freed relative to the parent's remove signals,
+    # proving the child outlives modelSync's beginRemoveRows (no use-after-free).
+    var onBalancesModelDeleted*: proc(self: BalancesModel) = nil
+
   proc setup(self: BalancesModel)
   proc delete(self: BalancesModel)
   proc newBalancesModel*(balances: seq[BalanceItem] = @[]): BalancesModel =
@@ -97,6 +103,9 @@ QtObject:
     self.QAbstractListModel.setup
 
   proc delete(self: BalancesModel) =
+    when defined(QT_MODEL_SPY):
+      if onBalancesModelDeleted != nil:
+        onBalancesModelDeleted(self)
     self.QAbstractListModel.delete
 
   # Test-only accessors (used by grouped_account_assets_model_test).

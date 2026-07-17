@@ -142,6 +142,38 @@ suite "grouped_account_assets_model - granular refresh, no reset":
     check spy.countInserts() == 0
     check spy.countRemoves() == 0
 
+  test "removed group's BalancesModel outlives the parent remove signal (no UAF)":
+    # The dropped child is balancesByKey's SOLE ORC owner. If reconcileBalances frees
+    # it before modelSync emits beginRemoveRows, QML delegates holding the raw
+    # BalancesModel* returned by data(Balances) deref freed memory during their own
+    # row teardown. Assert the child is destroyed only AFTER the remove signal fired.
+    # ORC-gated: destruction is deterministic only under --mm:orc (the production mm);
+    # under refc the finalizer runs non-deterministically so the ordering is moot.
+    when defined(gcOrc):
+      # b carries a sentinel balance (777) so the delete hook recognises it by VALUE
+      # without holding a ref (a captured ref — even via cast[int] — would keep it
+      # ORC-alive and mask the very free we want to observe).
+      gGroups = @[mkGroup("a", @[mkBalance("a-t", "acc", 100)]),
+                  mkGroup("b", @[mkBalance("b-t", "acc", 777)]),
+                  mkGroup("c", @[mkBalance("c-t", "acc", 100)])]
+      let m = newTestModel()
+      m.modelsUpdated()
+
+      var removesWhenBFreed = -1
+      onBalancesModelDeleted = proc(self: BalancesModel) =
+        if self.balanceCountForTest() > 0 and self.balanceAtForTest(0) == "777":
+          removesWhenBFreed = spy.countRemoves()
+
+      spy.clear()
+      gGroups = @[mkGroup("a", @[mkBalance("a-t", "acc", 100)]),
+                  mkGroup("c", @[mkBalance("c-t", "acc", 100)])]  # remove b
+      m.modelsUpdated()
+      onBalancesModelDeleted = nil
+
+      check spy.countRemoves() == 1
+      # b must be freed only AFTER the remove signal fired (== 1), never before (0).
+      check removesWhenBFreed == 1
+
   test "balance row added to a group: child insert on that group, no parent reset":
     gGroups = @[mkGroup("a", @[mkBalance("a-t1", "acc", 100)])]
     let m = newTestModel()
