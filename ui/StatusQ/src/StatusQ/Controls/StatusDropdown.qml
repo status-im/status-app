@@ -162,18 +162,4 @@ QC.Popup {
         enabled: root.opened
         onActivated: root.close()
     }
-
-    // workaround for https://bugreports.qt.io/browse/QTBUG-87804
-    Binding on margins {
-        id: workaroundBinding
-
-        when: false
-        restoreMode: Binding.RestoreBindingOrValue
-    }
-
-    onImplicitContentHeightChanged: {
-        workaroundBinding.value = root.margins + 1
-        workaroundBinding.when = true
-        workaroundBinding.when = false
-    }
 }
