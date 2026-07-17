@@ -276,10 +276,10 @@ private slots:
 
         for (int i = 0; i < 5; i++)
             source.updateCell(0, "enabledNetworkBalance", QString::number(100 + i));
-        QTest::qWait(1); // flush any batched updates
 
-        QCOMPARE(dataForKey(model(controller, "regularTokensModel"), "eth", "enabledNetworkBalance").toString(),
-                 QStringLiteral("104"));
+        // Poll for the batched update to land rather than a fixed 1ms sleep.
+        QTRY_COMPARE(dataForKey(model(controller, "regularTokensModel"), "eth", "enabledNetworkBalance").toString(),
+                     QStringLiteral("104"));
     }
 
     // --- New incremental behavior (fails before the fix, passes after) ---
@@ -298,10 +298,11 @@ private slots:
         QSignalSpy changedSpy(regular, &QAbstractItemModel::dataChanged);
 
         source.updateCell(0, "enabledNetworkBalance", QStringLiteral("42"));
-        QTest::qWait(1);
 
+        // Wait for the batched dataChanged to land (the co-occurring positive), then
+        // assert the negatives: a QTRY cannot prove "no reset happened".
+        QTRY_VERIFY(changedSpy.count() >= 1);
         QCOMPARE(resetSpy.count(), 0);
-        QVERIFY(changedSpy.count() >= 1);
         QCOMPARE(dataForKey(regular, "eth", "enabledNetworkBalance").toString(), QStringLiteral("42"));
         // untouched row keeps its value and the row set is unchanged
         QCOMPARE(keysOf(regular), (QStringList{"eth", "dai"}));
@@ -324,11 +325,13 @@ private slots:
         constexpr int M = 20;
         for (int i = 0; i < M; i++)
             source.updateCell(0, "enabledNetworkBalance", QString::number(i));
-        QTest::qWait(1); // let the batch flush
 
+        // Poll for the final value to land, THEN assert the negatives (exactly one
+        // coalesced dataChanged, no reset). Polling the count directly could pass at
+        // the first emit and miss a later increment if coalescing were broken.
+        QTRY_COMPARE(dataForKey(regular, "eth", "enabledNetworkBalance").toString(), QString::number(M - 1));
         QCOMPARE(resetSpy.count(), 0);
         QCOMPARE(changedSpy.count(), 1); // coalesced
-        QCOMPARE(dataForKey(regular, "eth", "enabledNetworkBalance").toString(), QString::number(M - 1));
     }
 
     // A data-only change to a regular token must not churn the community/hidden
@@ -347,8 +350,12 @@ private slots:
         QSignalSpy hiddenReset(hidden, &QAbstractItemModel::modelReset);
 
         source.updateCell(0, "enabledNetworkBalance", QStringLiteral("99"));
-        QTest::qWait(1);
 
+        // The change targets the regular "eth" token; wait for THAT to land (the
+        // co-occurring positive), then assert the community/hidden models were not
+        // touched. A QTRY on the spies could not prove they stay at zero.
+        QTRY_COMPARE(dataForKey(model(controller, "regularTokensModel"), "eth", "enabledNetworkBalance").toString(),
+                     QStringLiteral("99"));
         QCOMPARE(communityReset.count(), 0);
         QCOMPARE(communityChanged.count(), 0);
         QCOMPARE(hiddenReset.count(), 0);
@@ -369,9 +376,9 @@ private slots:
 
         // "cat" becomes a community token
         source.updateCells(1, {{"communityId", "community_1"}, {"communityName", "community_1"}});
-        QTest::qWait(1);
 
-        QCOMPARE(keysOf(model(controller, "regularTokensModel")), (QStringList{"eth"}));
+        // Poll for the repartition to complete (single reparse moves cat across).
+        QTRY_COMPARE(keysOf(model(controller, "regularTokensModel")), (QStringList{"eth"}));
         QCOMPARE(keysOf(model(controller, "communityTokensModel")), (QStringList{"cat"}));
     }
 };
