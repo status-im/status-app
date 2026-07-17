@@ -225,7 +225,15 @@ QtObject:
     let withTokens = groups.filterIt(it.tokens.len > 0)
     reconcileByKey(self.tokenMarketDetails, withTokens,
       create = proc(group: TokenGroupItem): MarketDetailsItem =
-        self.buildMarketDetailsItem(group, currencyFormat))
+        self.buildMarketDetailsItem(group, currencyFormat),
+      update = proc(existing: MarketDetailsItem, group: TokenGroupItem) =
+        # A surviving group can change its representative token (e.g. a previously
+        # unpriced token in the group gains a price). Only repoint when it actually
+        # changed, so the common stable refresh stays a genuine no-op (no churn).
+        let (tokenKey, tokenPrice) = self.priceForTokenGroup(group.tokens)
+        if existing.tokenKey != tokenKey:
+          existing.updateRepresentativeToken(tokenKey, tokenPrice,
+            self.marketValuesDelegate.getMarketValuesForToken(tokenKey)))
 
   proc syncRoles(oldItem, newItem: TokenGroupItem): seq[int] =
     ## Item-derived roles only (Name/Symbol/Decimals/LogoUri/Type/Tokens/CommunityId).

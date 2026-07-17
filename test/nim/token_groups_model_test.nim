@@ -10,6 +10,7 @@ import nimqml
 
 import app/modules/main/wallet_section/all_tokens/token_groups_model
 import app/modules/main/wallet_section/all_tokens/io_interface
+import app/modules/main/wallet_section/all_tokens/market_details_item
 import app/modules/shared/qt_model_spy
 import app_service/service/token/items/token_group
 
@@ -78,6 +79,42 @@ suite "token_groups_model - identity, reorder, stable-set":
     # market-values signal path must still find/update objects by key post-reorder
     m.tokensMarketValuesUpdated()
     check m.marketDetailsItemForKey("a") == mdA
+
+  test "surviving group whose representative token changes updates MarketDetailsItem.tokenKey":
+    # priceForTokenGroup picks the FIRST token with price>0 as the group's market
+    # representative. reconcileByKey keeps a survivor's MarketDetailsItem instance;
+    # if it does not refresh the stored representative tokenKey, tokensMarketValuesUpdated
+    # later fetches price/values for the STALE representative -> wrong market data on a
+    # surviving row. The tokenKey must follow the new representative.
+    let t1 = createTokenItem(TokenDto(chainId: 1, address: "0xt1", crossChainId: "g",
+      name: "g", symbol: "g", decimals: 18))
+    let t2 = createTokenItem(TokenDto(chainId: 1, address: "0xt2", crossChainId: "g",
+      name: "g", symbol: "g", decimals: 18))
+    proc mkTwoTokenGroup(): TokenGroupItem =
+      TokenGroupItem(key: "g", name: "g", symbol: "g", decimals: 18, logoUri: "",
+        tokens: @[t1, t2])
+
+    var prices = initTable[string, float64]()
+    prices[t1.key] = 0.0      # t1 unpriced -> representative is t2
+    prices[t2.key] = 5.0
+    proc mvSource(): TokenMarketValuesDataSource =
+      (
+        getMarketValuesForToken: proc(tokenKey: string): TokenMarketValuesItem = default(TokenMarketValuesItem),
+        getPriceForToken: proc(tokenKey: string): float64 = prices.getOrDefault(tokenKey, 0.0),
+        getCurrentCurrencyFormat: proc(): CurrencyFormatDto = default(CurrencyFormatDto),
+        getTokensMarketValuesLoading: proc(): bool = false,
+      )
+
+    gGroups = @[mkTwoTokenGroup()]
+    let m = newTokenGroupsModel(groupsDataSource(), mvSource())
+    m.modelsUpdated()
+    check m.marketDetailsItemForKey("g").tokenKey == t2.key   # first priced = t2
+
+    # t1 gains a price -> it becomes the representative for the SAME surviving key.
+    prices[t1.key] = 10.0
+    gGroups = @[mkTwoTokenGroup()]
+    m.modelsUpdated()
+    check m.marketDetailsItemForKey("g").tokenKey == t1.key   # rep must follow to t1
 
   test "reorder (hash-order change): reads back in target order, remove+insert, no move, no reset":
     gGroups = @[mkGroup("a"), mkGroup("b"), mkGroup("c"), mkGroup("d")]

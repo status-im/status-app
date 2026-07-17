@@ -122,6 +122,28 @@ QtObject:
     self.changePct24hourChanged()
     self.change24hourChanged()
 
+  proc updateRepresentativeToken*(self: MarketDetailsItem, tokenKey: string, tokenPrice: float64,
+      tokenMarketValues: TokenMarketValuesItem) =
+    ## The group's representative token (the first priced token in the group) changed
+    ## for a surviving group key: repoint tokenKey and refresh every derived figure so
+    ## the market-values signal path (which re-fetches by self.tokenKey) reads the new
+    ## token rather than the stale one. Currency format is untouched (its own updater).
+    self.tokenKey = tokenKey
+    self.tokenPrice = tokenPrice
+    self.tokenMarketValues = tokenMarketValues
+    self.currencyPriceItem = currencyAmountToItem(self.tokenPrice, self.currencyFormat)
+    self.marketCapItem = currencyAmountToItem(self.tokenMarketValues.marketCap, self.currencyFormat)
+    self.highDayItem = currencyAmountToItem(self.tokenMarketValues.highDay, self.currencyFormat)
+    self.lowDayItem = currencyAmountToItem(self.tokenMarketValues.lowDay, self.currencyFormat)
+    self.currencyPriceChanged()
+    self.marketCapChanged()
+    self.highDayChanged()
+    self.lowDayChanged()
+    self.changePctHourChanged()
+    self.changePctDayChanged()
+    self.changePct24hourChanged()
+    self.change24hourChanged()
+
   proc setup*(self: MarketDetailsItem) =
     self.QObject.setup
 
