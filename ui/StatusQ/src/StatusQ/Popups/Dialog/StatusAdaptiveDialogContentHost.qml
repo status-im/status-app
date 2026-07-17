@@ -115,7 +115,16 @@ Control {
     }
 
     StatusScrollBar {
+        id: contentScrollBar
+
         objectName: "statusAdaptiveDialogContentScrollBar"
+
+        function syncPositionFromFlickable() {
+            if (!pressed) {
+                const newPosition = d.activeFlickable ? d.activeFlickable.visibleArea.yPosition : 0;
+                position = isNaN(newPosition) ? 0 : newPosition;
+            }
+        }
 
         width: Math.max(root.rightPadding / 2, 8)
         anchors.top: contentViewport.top
@@ -124,15 +133,43 @@ Control {
         anchors.rightMargin: Math.max(0, (root.rightPadding - width) / 2)
         orientation: Qt.Vertical
         policy: ScrollBar.AsNeeded
-        position: d.activeFlickable ? d.activeFlickable.visibleArea.yPosition : 0
-        size: d.activeFlickable ? d.activeFlickable.visibleArea.heightRatio : 1
-        active: d.activeFlickable && d.activeFlickable.moving
-        visible: d.activeFlickable && resolveVisibility(policy, d.activeFlickable.height, d.activeContentExtent)
+        position: 0
+        size: d.activeFlickable && d.activeFlickable.visibleArea.heightRatio >= 0
+              ? d.activeFlickable.visibleArea.heightRatio : 1
+        active: !!d.activeFlickable && d.activeFlickable.moving
+        visible: !!d.activeFlickable && resolveVisibility(policy, d.activeFlickable.height, d.activeContentExtent)
 
+        Component.onCompleted: syncPositionFromFlickable()
+        onPressedChanged: syncPositionFromFlickable()
         onPositionChanged: {
             if (pressed && d.activeFlickable)
                 d.activeFlickable.contentY = -d.activeFlickable.topMargin
                                              + position * Math.max(0, d.activeContentExtent - d.activeFlickable.height);
+        }
+    }
+
+    Connections {
+        target: d
+
+        function onActiveFlickableChanged() {
+            contentScrollBar.syncPositionFromFlickable();
+        }
+    }
+
+    Connections {
+        target: d.activeFlickable
+        ignoreUnknownSignals: true
+
+        function onContentYChanged() {
+            contentScrollBar.syncPositionFromFlickable();
+        }
+
+        function onContentHeightChanged() {
+            contentScrollBar.syncPositionFromFlickable();
+        }
+
+        function onHeightChanged() {
+            contentScrollBar.syncPositionFromFlickable();
         }
     }
 }

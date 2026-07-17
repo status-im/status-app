@@ -476,6 +476,26 @@ Item {
             verify(contentScrollBar.x >= contentViewport.x + contentViewport.width);
         }
 
+        function test_content_scrollbar_drag_updates_content_position() {
+            controlUnderTest.destroy();
+            controlUnderTest = createTemporaryObject(tallRegularContentDialogComponent, testWindow.contentItem);
+            controlUnderTest.open();
+            tryCompare(controlUnderTest, "opened", true);
+
+            const scrollFlickable = findChild(controlUnderTest, "statusAdaptiveDialogScrollFlickable");
+            const contentScrollBar = findChild(controlUnderTest, "statusAdaptiveDialogContentScrollBar");
+            verify(!!scrollFlickable);
+            verify(!!contentScrollBar);
+            verify(contentScrollBar.visible);
+
+            const initialContentY = scrollFlickable.contentY;
+            mousePress(contentScrollBar, contentScrollBar.width / 2, 8);
+            mouseMove(contentScrollBar, contentScrollBar.width / 2, contentScrollBar.height / 2);
+            mouseRelease(contentScrollBar, contentScrollBar.width / 2, contentScrollBar.height / 2);
+
+            verify(scrollFlickable.contentY > initialContentY);
+        }
+
         function test_flickable_content_is_not_wrapped() {
             controlUnderTest.destroy();
             controlUnderTest = createTemporaryObject(flickableContentDialogComponent, testWindow.contentItem);
