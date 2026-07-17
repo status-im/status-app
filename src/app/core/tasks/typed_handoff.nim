@@ -13,7 +13,7 @@
 ##   exclusive ownership to the calling (receiving) thread; the object is
 ##   destroyed on the receiving thread when the returned ref goes out of scope.
 ##
-## Why this is safe under ORC (and refc):
+## Why this is safe under ORC/ARC (shared heap):
 ##   The object is only ever reachable from one place at a time — the producer's
 ##   local before `parkHandoff`, the registry table in between, the consumer's
 ##   local after `claimHandoff`. No two threads ever hold a reference at once, so

@@ -24,8 +24,10 @@
 #
 # `self.items` is the model's own `seq[MyItem]` backing field; `modelSync` mutates
 # it in lockstep with the begin*/end* signals it emits, so `rowCount()` / `data()`
-# always read consistent state. `newItems` is moved in, not copied. The model's
-# `countChanged()` fires automatically when the type declares one. Omitting
+# always read consistent state. `newItems` is consumed (sink) — the caller must
+# not reuse it after the call; its rows are copied into `container` as the diff
+# inserts them. The model's `countChanged()` fires automatically when the type
+# declares one. Omitting
 # `syncRoles` syncs the row SET only (insert/remove, no dataChanged).
 #
 # Nested / keyed child models (a per-row sub-model or QObject):
@@ -578,7 +580,8 @@ proc setItemsWithSync*[T](
 proc modelSync*[M: QAbstractListModel, T](
     model: M, container: var seq[T], newItems: sink seq[T]) =
   ## Unified granular sync. `container` becomes the new state in lockstep with the
-  ## begin/end signals `modelSync` emits; `newItems` is moved in, not copied.
+  ## begin/end signals `modelSync` emits; `newItems` is consumed (sink) — the caller
+  ## must not reuse it after the call; rows are copied into `container` as needed.
   ## Requires `syncKey(T): string` in scope; `syncRoles(T, T): seq[int]` optional
   ## (omit for identity-only rows). Emits `model.countChanged()` if it exists.
   mixin syncKey, syncRoles, countChanged
