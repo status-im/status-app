@@ -74,7 +74,7 @@ SplitView {
                 profileImage: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAlklEQVR4nOzW0QmDQBAG4SSkl7SUQlJGCrElq9F3QdjjVhh/5nv3cFhY9vUIYQiNITSG0BhCExPynn1gWf9bx498P7/
                               nzPcxEzGExhBdJGYihtAYQlO+tUZvqrPbqeudo5iJGEJjCE15a3VtodH3q2ImYgiNITTlTdG1nUZ5a92VITQxITFiJmIIjSE0htAYQrMHAAD//+wwFVpz+yqXAAAAAElFTkSuQmCC"
                 contentType: StatusMessage.ContentType.Text
-                message: "Hello, this is awesome! Feels like decentralized Discord! And it even supports HTML markup, like <b>bold</b>, <i>italics</i> or <u>underline</u>"
+                message: "Hello, this is awesome! Feels like decentralized Discord! And it even supports HTML markup, like **bold**, *italics* or ~~strikethrough~~"
                 isContact: true
                 isAReply: false
                 trustIndicator: StatusContactVerificationIcons.TrustedType.Verified
@@ -203,9 +203,10 @@ SplitView {
                 senderId: "zqdeadbeef"
                 senderDisplayName: "replicator.stateofus.eth"
                 contentType: StatusMessage.ContentType.Text
-                message: "Test message with a link https://github.com/. Hey annyah! 0x16437e05858c1a34f0ae63c9ca960d61a5583d5e
-                          this is my wallet address eth:opt:arb:0x16437e05858c1a34f0ae63c9ca960d61a5583d5e,
-                          0x75d5673fc25bb4993ea1218d9d415487c3656853"
+                message:
+`Test message with a link https://github.com/. Hey annyah! 0x16437e05858c1a34f0ae63c9ca960d61a5583d5e
+this is my wallet address eth:opt:arb:0x16437e05858c1a34f0ae63c9ca960d61a5583d5e,
+0x75d5673fc25bb4993ea1218d9d415487c3656853`
                 isContact: true
                 isAReply: true
                 trustIndicator: StatusContactVerificationIcons.TrustedType.None
@@ -241,7 +242,10 @@ SplitView {
                 senderId: "zq12345676767"
                 senderDisplayName: "Bob"
                 contentType: StatusMessage.ContentType.Text
-                message: "<blockquote>This is a block quoted text paragraph<br />from a verified contact</blockquote><br />Some other thext there"
+                message:
+`> This is a block quoted text paragraph
+> from a verified contact
+Some other thext there`
                 isContact: true
                 isAReply: false
                 trustIndicator: StatusContactVerificationIcons.TrustedType.Verified
@@ -253,12 +257,11 @@ SplitView {
                 senderId: "zq12345676767"
                 senderDisplayName: "Bob"
                 contentType: StatusMessage.ContentType.Text
-                message: `
-                    <blockquote>This is a block quoted text paragraph</blockquote>
-                    <br />Some other thext there<br />
-                    <blockquote>Another quoted text paragraph</blockquote>
-                    <br />Some other comment there
-                `
+                message:
+`> This is a block quoted text paragraph
+Some other thext there
+> Another quoted text paragraph
+Some other comment there`
                 isContact: true
                 isAReply: false
                 trustIndicator: StatusContactVerificationIcons.TrustedType.Verified
@@ -299,6 +302,9 @@ SplitView {
                     messageDetails {
                         readonly property bool isEnsVerified: model.senderDisplayName.endsWith(".eth")
                         messageText: model.message
+                        // StatusTextMessage renders the client-side path from unparsedText; the
+                        // sample text is plain, so feed it here too (otherwise no text shows).
+                        unparsedText: model.message
                         contentType: model.contentType
                         amISender: model.amISender
                         sender.id: isEnsVerified ? "" : model.senderId

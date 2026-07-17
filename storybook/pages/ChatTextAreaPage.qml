@@ -741,8 +741,10 @@ unclosed fence here (no closing triple-tick)
 
                 html: {
                     textArea.text // rebuild on every edit
-                    return MarkdownUtils.singleLineHtml(textArea.textWithMentions(),
-                                                        root.mentionsMap, font)
+                    return  StringUtils.expandAsciiEmoticonShortcuts(
+                                MarkdownUtils.singleLineHtml(
+                                    textArea.textWithMentions(),
+                                    root.mentionsMap, font))
                 }
             }
 
