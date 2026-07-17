@@ -2,6 +2,7 @@ import tables, json, options, tables, strutils, chronicles
 
 import constants
 import app_service/service/stickers/dto/stickers
+import app_service/common/utils # timestampToUnix (do not rely on the stickers dto's transitive include)
 
 include app_service/common/json_utils
 from app_service/common/types import StatusType
@@ -253,7 +254,9 @@ proc toSettingsDto*(jsonObj: JsonNode): SettingsDto =
   discard jsonObj.getProp(KEY_LAST_TOKENS_UPDATE, lastTokensUpdate)
   # timestampToUnix accepts the formats seen in the field and returns 0 without
   # raising on empty/unparseable input, so this stays off the exception path at wake.
-  result.lastTokensUpdate = timestampToUnix(lastTokensUpdate)
+  # Module-qualified: the stickers dto textually `include`s common/utils, so an
+  # unqualified call is ambiguous once we depend on utils explicitly (below).
+  result.lastTokensUpdate = utils.timestampToUnix(lastTokensUpdate)
 
   var urlUnfurlingMode: int
   discard jsonObj.getProp(KEY_URL_UNFURLING_MODE, urlUnfurlingMode)
