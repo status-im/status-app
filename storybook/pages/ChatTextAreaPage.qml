@@ -432,7 +432,7 @@ unclosed fence here (no closing triple-tick)
 
                     spacing: 4
 
-                    Text {
+                    Label {
                         Layout.fillWidth: true
                         font.bold: true
                         text: "Input:"
@@ -520,7 +520,7 @@ unclosed fence here (no closing triple-tick)
 
                     spacing: 4
 
-                    Text {
+                    Label {
                         Layout.fillWidth: true
                         font.bold: true
                         text: `Static HTML render (${selectableSwitch.checked ? "" : "not "}selectable):`
@@ -821,6 +821,12 @@ unclosed fence here (no closing triple-tick)
                 spacing: 16
                 Label { text: "entering emoji: " + textArea.enteringEmoji }
                 Label { text: "emoji filter: \"" + textArea.emojiFilter + "\"" }
+            }
+
+            Label {
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+                text: "hovered link (view): " + (chatTextView.hoveredLink || "—")
             }
 
             Row {

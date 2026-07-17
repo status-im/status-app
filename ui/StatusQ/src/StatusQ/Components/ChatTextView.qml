@@ -34,6 +34,9 @@ Control {
     // Combined selected text across all blocks ("" when nothing is selected).
     readonly property alias selectedText: d.selectedText
 
+    // The link under the pointer — a URL for links, a pub key for mentions; "" when none.
+    readonly property alias hoveredLink: d.hoveredLink
+
     // Emitted when the user clicks a mention pill (its pub key) or a link (its url) in the text.
     signal mentionClicked(string pubKey)
     signal linkClicked(string url)
@@ -92,6 +95,7 @@ Control {
                 text: `<style>${d.baseStyle}</style>` + d.spanWrap(content)
 
                 onLinkActivated: (link) => d.activateLink(link)
+                onHoveredLinkChanged: d.hoveredLink = hoveredLink
             }
         }
         Component {
@@ -130,6 +134,8 @@ Control {
                 font.pixelSize: root.font.pixelSize
 
                 text: effectiveStyle + d.spanWrap(content)
+
+                onHoveredLinkChanged: d.hoveredLink = hoveredLink
             }
         }
 
@@ -245,6 +251,11 @@ Control {
         property string selectedText: ""
         property var editors: []        // participant TextEdits, document order
         property var anchor: null       // { editor, pos }
+
+        // The link (url / mention pub key) under the pointer. Fed by the hovered block's
+        // onLinkHovered (Text/TextEdit already track this — it drives the link hover highlight);
+        // the hovered block sets the link on enter and "" on leave, last write wins.
+        property string hoveredLink: ""
 
         function clearSelection() {
             for (let i = 0; i < editors.length; ++i)
