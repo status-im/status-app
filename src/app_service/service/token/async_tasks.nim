@@ -10,10 +10,8 @@ type
   # asyncFetchAllTokenListsTask, asyncFetchAllTokenGroupsTask and
   # asyncBuildGroupsForChainTask, so none carries a string-envelope result type.
 
-  FetchMissingTokensResponse* = object
-    requestedKeys*: seq[string] # echoed back so the slot knows which keys were asked for
-    tokens*: seq[TokenDtoSafe]  # the subset the backend actually resolved
-    error*: string
+  # FetchMissingTokensResponse (the missing-tokens batch envelope) lives in
+  # token_missing_fetch so its decode+release step is unit-testable.
 
   TokensMarketValuesSlotResponse* = object
     tokenMarketValues*: JsonNode
