@@ -26,7 +26,7 @@ StatusDropdown {
     property bool selectionAllowed: true
     property bool multiSelection: false
     property bool showManageNetworksButton: false
-    property alias selection: scrollView.selection
+    property var selection: []
 
     property bool showNewChainIcon: false
     property bool showManageNetworksNotificationIcon: false
@@ -55,56 +55,73 @@ StatusDropdown {
         }
     }
 
-    contentItem: ColumnLayout {
+    contentItem: Loader {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.margins: 4
+        active: root.visible
+        sourceComponent: ColumnLayout {
+            NetworkSelectorView {
+                id: scrollView
+                Layout.fillWidth: true
 
-        NetworkSelectorView {
-            id: scrollView
-            Layout.fillWidth: true
+                model: root.flatNetworks
+                selection: root.selection
+                disableChainsWithNoCommunitiesSupport: root.disableChainsWithNoCommunitiesSupport
+                interactive: root.selectionAllowed
+                multiSelection: root.multiSelection
+                showIndicator: root.showSelectionIndicator
+                showNewChainIcon: root.showNewChainIcon
 
-            model: root.flatNetworks
-            disableChainsWithNoCommunitiesSupport: root.disableChainsWithNoCommunitiesSupport
-            interactive: root.selectionAllowed
-            multiSelection: root.multiSelection
-            showIndicator: root.showSelectionIndicator
-            showNewChainIcon: root.showNewChainIcon
-
-            onToggleNetwork: (chainId, index) => {
-                if (!root.multiSelection && root.closePolicy !== Popup.NoAutoClose)
-                    root.close()
-                root.toggleNetwork(chainId, index)
+                onToggleNetwork: (chainId, index) => {
+                    if (!root.multiSelection && root.closePolicy !== Popup.NoAutoClose)
+                        root.close()
+                    root.toggleNetwork(chainId, index)
+                }
+                onSelectionChanged: {
+                    if (root.selection !== selection) {
+                        root.selection = selection
+                    }
+                }
             }
-        }
 
-        StatusButton {
-            id: manageNetworksButton
-            visible: root.showManageNetworksButton
-            Layout.fillWidth: true
-            Layout.margins: 4
+            // down-sync for external writes while the popup is open
+            Connections {
+                target: root
+                function onSelectionChanged() {
+                    if (scrollView.selection !== root.selection)
+                        scrollView.selection = root.selection
+                }
+            }
 
-            icon.name: "settings"
-            text: qsTr("Manage networks")
-            isOutline: true
-            onClicked: root.manageNetworksClicked()
+            StatusButton {
+                id: manageNetworksButton
+                visible: root.showManageNetworksButton
+                Layout.fillWidth: true
+                Layout.margins: 4
 
-            Loader {
-                active: root.showManageNetworksNotificationIcon
-                anchors.verticalCenter: parent.top
-                anchors.verticalCenterOffset: 2
-                anchors.horizontalCenterOffset: -2
-                anchors.horizontalCenter: parent.right
-                sourceComponent: StatusRoundIcon {
-                    objectName: "manageNetworksNotificationIcon"
-                    asset.width: 10
-                    asset.height: 10
-                    asset.bgWidth: 15
-                    asset.bgColor: Theme.palette.background
-                    asset.bgHeight: 15
-                    asset.isImage: true
-                    asset.name: Assets.png("status-gradient-dot")
-                    asset.color: StatusColors.transparent
+                icon.name: "settings"
+                text: qsTr("Manage networks")
+                isOutline: true
+                onClicked: root.manageNetworksClicked()
+
+                Loader {
+                    active: root.showManageNetworksNotificationIcon
+                    anchors.verticalCenter: parent.top
+                    anchors.verticalCenterOffset: 2
+                    anchors.horizontalCenterOffset: -2
+                    anchors.horizontalCenter: parent.right
+                    sourceComponent: StatusRoundIcon {
+                        objectName: "manageNetworksNotificationIcon"
+                        asset.width: 10
+                        asset.height: 10
+                        asset.bgWidth: 15
+                        asset.bgColor: Theme.palette.background
+                        asset.bgHeight: 15
+                        asset.isImage: true
+                        asset.name: Assets.png("status-gradient-dot")
+                        asset.color: StatusColors.transparent
+                    }
                 }
             }
         }
