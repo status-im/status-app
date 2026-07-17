@@ -10,11 +10,12 @@ StatusIcon {
     width: 20
 
     RotationAnimator {
+        objectName: "spinnerAnimator"
         target: root
         from: 0
         to: 360
         duration: 1200
-        running: visible
+        running: root.visible
         loops: Animation.Infinite
     }
 }

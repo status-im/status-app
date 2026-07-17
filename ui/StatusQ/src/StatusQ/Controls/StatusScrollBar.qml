@@ -39,6 +39,21 @@ T.ScrollBar {
         }
     }
 
+    QtObject {
+        id: d
+
+        // The thumb is only opaque (visible) while the bar is interacted with or
+        // forced on. Outside of that it renders nothing, so it need not exist.
+        readonly property bool thumbActive:
+            root.enabled && (root.hovered || root.active || root.policy === T.ScrollBar.AlwaysOn)
+
+        // Latch: once the thumb has been shown, keep it instantiated so its
+        // opacity can animate back to 0 (fade-out) and later interactions stay
+        // cheap. Instantiation happens the first time the thumb is needed.
+        property bool thumbShown: false
+        onThumbActiveChanged: if (thumbActive) thumbShown = true
+    }
+
     // TODO: add this sizes to Theme
     implicitWidth: 14
     implicitHeight: 14
@@ -47,11 +62,16 @@ T.ScrollBar {
         width: 0 // Needed to prevent a white background from showing on Windows
     }
 
-    contentItem: Rectangle {
-        color: root.Theme.palette.primaryColor2
-        opacity: enabled && (root.hovered || root.active || (root.policy === T.ScrollBar.AlwaysOn)) ? 1.0 : 0.0
-        radius: Math.min(width, height) / 2
+    contentItem: Loader {
+        active: d.thumbShown
 
-        Behavior on opacity { NumberAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
+        sourceComponent: Rectangle {
+            objectName: "scrollBarThumb"
+            color: root.Theme.palette.primaryColor2
+            opacity: d.thumbActive ? 1.0 : 0.0
+            radius: Math.min(width, height) / 2
+
+            Behavior on opacity { NumberAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
+        }
     }
 }
