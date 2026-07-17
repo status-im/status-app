@@ -569,10 +569,16 @@ unclosed fence here (no closing triple-tick)
                             // Tracks the pointer so the click bubble can appear where you clicked.
                             HoverHandler { id: hoverHandler }
 
-                            // Example click handling: pop a bubble showing the clicked target.
-                            onMentionClicked: (pubKey) => root.showClickBubble(
-                                "Mention: @" + (root.mentionsMap[pubKey] || pubKey))
-                            onLinkClicked: (url) => root.showClickBubble("Link: " + url)
+                            // Example click handling: pop a bubble showing the clicked target and
+                            // highlight all occurrences of the clicked link (coexists with hover).
+                            onMentionClicked: (pubKey) => {
+                                root.showClickBubble("Mention: @" + (root.mentionsMap[pubKey] || pubKey))
+                                chatTextView.highlightedLink = pubKey
+                            }
+                            onLinkClicked: (url) => {
+                                root.showClickBubble("Link: " + url)
+                                chatTextView.highlightedLink = url
+                            }
 
                             Popup {
                                 id: clickBubble
@@ -827,6 +833,19 @@ unclosed fence here (no closing triple-tick)
                 Layout.fillWidth: true
                 elide: Text.ElideRight
                 text: "hovered link (view): " + (chatTextView.hoveredLink || "—")
+            }
+
+            Label {
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+                text: "highlighted link (view) - click link to highlight for 5s: "
+                      + (chatTextView.highlightedLink || "—")
+
+                Timer {
+                    running: chatTextView.highlightedLink
+                    interval: 5000
+                    onTriggered: chatTextView.highlightedLink = ""
+                }
             }
 
             Row {

@@ -31,6 +31,10 @@ Control {
     property bool edited: false
     property int editedMarkerFontSize: Theme.tertiaryTextFontSize
 
+    // When set, every link matching this href (across all blocks) gets the hover highlight.
+    // Independent of hover: a different link can be hovered and highlighted at the same time.
+    property string highlightedLink: ""
+
     // Combined selected text across all blocks ("" when nothing is selected).
     readonly property alias selectedText: d.selectedText
 
@@ -92,7 +96,7 @@ Control {
                 color: block.textColor
                 font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
-                text: `<style>${d.baseStyle}</style>` + d.spanWrap(content)
+                text: `<style>${d.styleFor(hoveredLink)}</style>` + d.spanWrap(content)
 
                 onLinkActivated: (link) => d.activateLink(link)
                 onHoveredLinkChanged: d.hoveredLink = hoveredLink
@@ -106,10 +110,7 @@ Control {
                 property bool selectionParticipant: true
                 property string hoveredLinkInternal
 
-                readonly property string style:
-                    d.baseStyle +
-                    " a[href=\"" + hoveredLink + "\"] { background-color: " +
-                    root.linkHoverColor + " }"
+                readonly property string style: d.styleFor(hoveredLink)
                 property string effectiveStyle
 
                 // keep selection if only style changes, otherwise selection is lost
@@ -242,6 +243,22 @@ Control {
             + ` a.mention { color: ${root.mentionTextColor}`
             + `; background-color: ${root.mentionBackgroundColor}`
             + `; text-decoration: none }`
+
+        function linkBg(href) {
+            return ` a[href="${href}"] { background-color: ${root.linkHoverColor} }`
+        }
+
+        // baseStyle plus a per-block hover-highlight rule and a document-wide highlightedLink rule.
+        // The two rules are independent, so a hovered link and the highlighted link can differ and
+        // both show at once.
+        function styleFor(hoveredLink) {
+            let s = baseStyle
+            if (hoveredLink)
+                s += linkBg(hoveredLink)
+            if (root.highlightedLink && root.highlightedLink !== hoveredLink)
+                s += linkBg(root.highlightedLink)
+            return s
+        }
 
         // prevent skipping whitespaces
         function spanWrap(content) {

@@ -89,6 +89,15 @@ Item {
             return false
         }
 
+        // Number of rendered Text/TextEdit items under `item` whose text contains `substr`.
+        function countRenders(item, substr) {
+            let n = (typeof item.text === "string" && item.text.indexOf(substr) >= 0) ? 1 : 0
+            const kids = item.children
+            for (let i = 0; i < kids.length; ++i)
+                n += countRenders(kids[i], substr)
+            return n
+        }
+
         // The "(edited)" marker is rendered only when `edited` is set (appended after the text).
         function test_editedMarkerRendered() {
             control.blocks = [
@@ -476,6 +485,54 @@ Item {
 
             mouseMove(control, 10, 5)
             tryCompare(control, "hoveredLink", "https://status.im")
+        }
+
+        // ── highlightedLink ──────────────────────────────────────────────────────
+
+        // Setting highlightedLink adds a background rule for that href; clearing removes it.
+        function test_highlightedLinkAddsRule() {
+            control.blocks = [{ type: "text", html: '<a href="https://status.im">https://status.im</a>' }]
+            tryVerify(() => control.implicitHeight > 0)
+            verify(!renders(control, 'a[href="https://status.im"]'), "rule present without highlight")
+
+            control.highlightedLink = "https://status.im"
+            tryVerify(() => renders(control, 'a[href="https://status.im"]'), 1000,
+                      "highlight rule not applied")
+
+            control.highlightedLink = ""
+            tryVerify(() => !renders(control, 'a[href="https://status.im"]'), 1000,
+                      "highlight rule not cleared")
+        }
+
+        // The highlight applies to every block containing the link (document-wide).
+        function test_highlightAppliesToAllBlocks() {
+            control.blocks = [
+                { type: "text", html: '<a href="https://status.im">one</a>' },
+                { type: "text", html: '<a href="https://status.im">two</a>' }
+            ]
+            tryVerify(() => control.implicitHeight > 0)
+
+            control.highlightedLink = "https://status.im"
+            tryVerify(() => countRenders(control, 'a[href="https://status.im"]') === 2, 1000,
+                      "highlight not applied to both blocks")
+        }
+
+        // A highlighted link and a different hovered link produce two independent style rules, so
+        // both are highlighted at once. Non-selectable so the source <style> is inspectable (a
+        // selectable TextEdit serializes its document, resolving the CSS to inline attributes);
+        // the shared styleFor is used by both renderers.
+        function test_highlightAndHoverCoexist() {
+            control.highlightedLink = "https://a.example"
+            control.blocks = [{ type: "text", html: '<a href="https://b.example">https://b.example</a>' }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            mouseMove(control, 10, 5)
+            tryCompare(control, "hoveredLink", "https://b.example")
+
+            // Both rules present in the rendered style at the same time.
+            tryVerify(() => renders(control, 'a[href="https://a.example"]'), 1000,
+                      "highlighted-link rule missing")
+            verify(renders(control, 'a[href="https://b.example"]'), "hovered-link rule missing")
         }
     }
 }
