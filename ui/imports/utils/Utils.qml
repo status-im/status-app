@@ -426,7 +426,7 @@ QtObject {
         case Constants.appSection.communitiesPortal:
             return qsTr("Discover Communities")
         case Constants.appSection.loadingSection:
-            return qsTr("Chat section loading...")
+            return qsTr("Messages are loading...")
         case Constants.appSection.swap:
             return qsTr("Swap")
         case Constants.appSection.market:

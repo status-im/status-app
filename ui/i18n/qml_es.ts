@@ -18231,10 +18231,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
         <translation>Descubrir comunidades</translation>
     </message>
     <message>
-        <source>Chat section loading...</source>
-        <translation>Cargando sección de chat...</translation>
-    </message>
-    <message>
         <source>Swap</source>
         <translation></translation>
     </message>
@@ -18364,6 +18360,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>LineaScan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Messages are loading...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

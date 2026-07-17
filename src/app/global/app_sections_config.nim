@@ -2,7 +2,7 @@ const CHAT_SECTION_NAME* = "Messages"
 const CHAT_SECTION_ICON* = "chat"
 
 const LOADING_SECTION_ID* = "loadingSection"
-const LOADING_SECTION_NAME* = "Chat section loading..."
+const LOADING_SECTION_NAME* = "Messages are loading..."
 const LOADING_SECTION_ICON* = "loading"
 
 const HOMEPAGE_SECTION_ID* = "homePage"

@@ -4,6 +4,7 @@ AppMainLoader 1.0 AppMainLoader.qml
 BrowserLoader 1.0 BrowserLoader.qml
 ChatLoader 1.0 ChatLoader.qml
 CommunitiesPortalLoader 1.0 CommunitiesPortalLoader.qml
+CommunitiesPortalLoading 1.0 CommunitiesPortalLoading.qml
 CommunityChatLoader 1.0 CommunityChatLoader.qml
 HandlersManagerLoader 1.0 HandlersManagerLoader.qml
 HomePageLoader 1.0 HomePageLoader.qml

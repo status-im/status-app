@@ -58,6 +58,10 @@ SQUtils.QObject {
             }
             ValueFilter {
                 roleName: "sectionType"
+                value: Constants.appSection.loadingSection
+            }
+            ValueFilter {
+                roleName: "sectionType"
                 value: Constants.appSection.browser
                 enabled: root.browserEnabled
             }
@@ -92,11 +96,6 @@ SQUtils.QObject {
         sourceModel: root.sectionsModel
         filters: [
             ValueFilter {
-                roleName: "sectionType"
-                value: Constants.appSection.loadingSection
-                inverted: true
-            },
-            ValueFilter {
                 roleName: "enabled"
                 value: true
                 enabled: root.showEnabledSectionsOnly
@@ -110,6 +109,7 @@ SQUtils.QObject {
                     Constants.appSection.wallet,
                     Constants.appSection.market,
                     Constants.appSection.swap,
+                    Constants.appSection.loadingSection,
                     Constants.appSection.chat,
                     Constants.appSection.browser,
                     Constants.appSection.communitiesPortal

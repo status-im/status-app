@@ -2174,7 +2174,8 @@ Item {
                         // to reset scroll, not send text input and etc during the
                         // sections switching
                         Binding on active {
-                            when: appView.currentIndex === Constants.appViewStackIndex.chat
+                            when: appMain.mainReady
+                                  && appView.currentIndex === Constants.appViewStackIndex.chat
                             value: true
                             restoreMode: Binding.RestoreNone
                         }
@@ -2206,7 +2207,8 @@ Item {
                     }
 
                     CommunitiesPortalLoader {
-                        active: appView.currentIndex === Constants.appViewStackIndex.communitiesPortal
+                        active: appMain.mainReady
+                                && appView.currentIndex === Constants.appViewStackIndex.communitiesPortal
                         rootStore: appMain.rootStore
                         communitiesStore: appMain.communitiesStore
                         leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
@@ -2345,7 +2347,8 @@ Item {
                             // to reset scroll, not send text input and etc during the
                             // sections switching
                             Binding on active {
-                                when: sectionId === appMain.rootStore.activeSectionId
+                                when: appMain.mainReady
+                                      && sectionId === appMain.rootStore.activeSectionId
                                 value: true
                                 restoreMode: Binding.RestoreNone
                             }
@@ -2381,6 +2384,33 @@ Item {
                             onOpenAppSearchRequested: appSearch.openSearchPopup()
                         }
                     }
+                }
+
+                Loader {
+                    id: sectionStartupLoading
+                    anchors.fill: parent
+                    z: 1
+                    active: !appMain.mainReady
+                            && (d.activeSectionType === Constants.appSection.chat
+                                || d.activeSectionType === Constants.appSection.community
+                                || d.activeSectionType === Constants.appSection.communitiesPortal)
+                    sourceComponent: d.activeSectionType === Constants.appSection.communitiesPortal
+                                     ? communitiesPortalLoading
+                                     : chatLayoutLoading
+                }
+
+                Component {
+                    id: chatLayoutLoading
+
+                    ChatLayoutLoading {
+                        showMembersPanel: appMain.accountSettingsStore.showUsersList
+                    }
+                }
+
+                Component {
+                    id: communitiesPortalLoading
+
+                    CommunitiesPortalLoading {}
                 }
 
                 Loader {

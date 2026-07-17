@@ -18146,10 +18146,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation>커뮤니티 탐색</translation>
     </message>
     <message>
-        <source>Chat section loading...</source>
-        <translation>채팅 섹션 불러오는 중...</translation>
-    </message>
-    <message>
         <source>Swap</source>
         <translation>스왑</translation>
     </message>
@@ -18284,6 +18280,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>LineaScan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Messages are loading...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

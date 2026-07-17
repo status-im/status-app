@@ -732,6 +732,24 @@ method load*[T](
     if activeSectionId == homePageSectionItem.id:
       activeSection = homePageSectionItem
 
+  # Keep the Messages position visible in the navigation until chat data creates
+  # the real personal chat section.
+  let loadingSectionItem = initSectionItem(
+    LOADING_SECTION_ID,
+    SectionType.LoadingSection,
+    LOADING_SECTION_NAME,
+    memberRole = MemberRole.Owner,
+    description = "",
+    image = "",
+    icon = LOADING_SECTION_ICON,
+    color = "",
+    hasNotification = false,
+    notificationsCount = 0,
+    active = false,
+    enabled = true,
+  )
+  self.view.model().addItem(loadingSectionItem)
+
   # Communities Portal Section
   let communitiesPortalSectionItem = initSectionItem(
     COMMUNITIESPORTAL_SECTION_ID,
@@ -922,6 +940,8 @@ method onChatsLoaded*[T](
   let myPubKey = singletonInstance.userProfile.getPubKey()
   var activeSection: SectionItem
   var activeSectionId = singletonInstance.localAccountSensitiveSettings.getActiveSection()
+
+  self.view.model().removeItem(LOADING_SECTION_ID)
 
   # Create personal chat section
   self.chatSectionModules[myPubKey] = chat_section_module.newModule(

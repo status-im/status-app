@@ -320,6 +320,7 @@ Control {
 
         tooltipText: Utils.translatedSectionName(model.sectionType)
         checked: model.active
+        enabled: model.sectionType !== Constants.appSection.loadingSection
         icon.name: model.icon
         icon.source: model.image
         text: model.icon.length > 0 ? "" : model.name
