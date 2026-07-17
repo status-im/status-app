@@ -440,5 +440,42 @@ Item {
             mouseRelease(control, control.width - 4, 5)
             compare(mentionSpy.count, 0)
         }
+
+        // ── hoveredLink ──────────────────────────────────────────────────────────
+
+        // hoveredLink reports the url under the pointer, and clears when the pointer moves off it.
+        function test_hoveredLinkOverLink() {
+            control.blocks = [
+                { type: "text", html: '<a href="https://status.im">https://status.im</a>' },
+                { type: "text", html: "no link here at all" }
+            ]
+            tryVerify(() => control.implicitHeight > 0)
+
+            mouseMove(control, 10, 5)
+            tryCompare(control, "hoveredLink", "https://status.im")
+
+            // Move onto the second (link-less) line: hoveredLink clears.
+            mouseMove(control, 10, control.implicitHeight - 3)
+            tryCompare(control, "hoveredLink", "")
+        }
+
+        // For a mention the exposed link is its pub key (the href).
+        function test_hoveredLinkOverMention() {
+            control.blocks = [{ type: "text", html: '<a href="0xabc" class="mention">@alice</a>' }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            mouseMove(control, 10, 5)
+            tryCompare(control, "hoveredLink", "0xabc")
+        }
+
+        // Works in selectable mode too (the selection overlay doesn't block hover resolution).
+        function test_hoveredLinkSelectable() {
+            control.selectable = true
+            control.blocks = [{ type: "text", html: '<a href="https://status.im">https://status.im</a>' }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            mouseMove(control, 10, 5)
+            tryCompare(control, "hoveredLink", "https://status.im")
+        }
     }
 }
