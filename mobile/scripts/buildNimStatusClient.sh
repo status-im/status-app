@@ -74,6 +74,7 @@ NIM_FLAGS=(
     -d:lto
     --opt:size
     --passC:-fno-omit-frame-pointer
+    --passL:-fno-omit-frame-pointer
     --cc:clang
     --cpu:"$CARCH"
     --noMain:on
