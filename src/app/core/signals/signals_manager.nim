@@ -29,7 +29,7 @@ QtObject:
 
   proc processSignal*(self: SignalsManager, statusSignal: string) =
     # Cheap triage before any JSON parsing: extract the envelope type
-    # by substring scan and drop payloads of types the desktop does not handle,
+    # by substring scan and drop payloads of types the app does not handle,
     # so a large unhandled event is never fully decoded on the Qt main thread.
     # Only a positively-identified unhandled type is dropped; a scan miss
     # (empty result, e.g. the marshaling format changed) falls through to the
