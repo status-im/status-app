@@ -111,7 +111,9 @@ def test_wallet_collectibles_tab_loading_time(
         _run_tab_benchmark(
             aut,
             tmp_path,
-            open_tab=wallet_account_view.open_collectibles_tab,
+            open_tab=lambda: wallet_account_view.open_collectibles_tab(
+                wait_until_loaded=False
+            ),
             leave_tab=wallet_account_view.open_assets_tab,
             subject='Wallet Collectibles tab',
             slug='wallet_collectibles_tab',
