@@ -657,6 +657,25 @@ Item {
             tryCompare(plain, "text", "A@aliceB")
         }
 
+        // Pasting over a selection replaces it in a single undo step: one Ctrl+Z restores the
+        // replaced text directly (the selection removal and the insertion share one edit block),
+        // with the caret left at the end of the restored text (not collapsed to its start).
+        function test_pasteOverSelection_singleUndoRestores() {
+            control.text = "abcde"
+            control.forceActiveFocus()
+            control.select(1, 3) // select "bc"
+            ClipboardUtils.setText("XY")
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+            tryCompare(control, "text", "aXYde")
+
+            keyClick(Qt.Key_Z, Qt.ControlModifier)
+            compare(control.text, "abcde")
+            // Caret restored to the end of the originally-selected text ("bc"), not collapsed to
+            // the document start.
+            compare(control.cursorPosition, 3)
+        }
+
         // ── hard character limit ────────────────────────────────────────────────
 
         function test_characterLimit_defaultsTo2000() {
