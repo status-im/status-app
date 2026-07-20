@@ -141,9 +141,8 @@ Dialog {
         readonly property real resolvedCenteredMaxHeight: root.maximumHeightOverride > 0 ? Math.min(root.maximumHeightOverride, windowHeight)
                                                                                          : windowHeight * centeredHeightRatio
 
-        // Width used by bottom sheets after applying the exceptional override, if any.
-        readonly property real resolvedBottomSheetWidth: root.maximumWidthOverride > 0 ? Math.min(root.maximumWidthOverride, windowWidth)
-                                                                                       : windowWidth
+        // Bottom sheets always span the full window width.
+        readonly property real resolvedBottomSheetWidth: windowWidth
         // Bottom sheets can use up to this fraction of the window height.
         readonly property real bottomSheetHeightRatio: 0.9
         // Height cap for bottom sheets. The ratio is applied to the usable height

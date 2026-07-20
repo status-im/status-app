@@ -111,7 +111,7 @@ SplitView {
             id: dialog
 
             // Presentation and behavior knobs.
-            maximumWidthOverride: customMaxWidth.checked ? maxWidthSlider.value : 0
+            maximumWidthOverride: customMaxWidth.checked && !d.dialogBottomSheet ? maxWidthSlider.value : 0
             maximumHeightOverride: heightCap.checked ? heightSlider.value : 0
             closeOnOverlayClick: closeOnOverlay.checked
             escapeKeyCloses: escapeCloses.checked
@@ -599,18 +599,19 @@ SplitView {
                 }
 
                 Label {
-                    text: "Max width override: " + (customMaxWidth.checked ? Math.round(maxWidthSlider.value) : "off")
+                    text: "Max width override: " + (customMaxWidth.checked && !d.dialogBottomSheet ? Math.round(maxWidthSlider.value) : "off")
                 }
 
                 CheckBox {
                     id: customMaxWidth
                     text: "Custom max width"
+                    enabled: !d.dialogBottomSheet
                 }
 
                 Slider {
                     id: maxWidthSlider
                     Layout.fillWidth: true
-                    enabled: customMaxWidth.checked
+                    enabled: customMaxWidth.checked && !d.dialogBottomSheet
                     from: 360
                     to: 720
                     stepSize: 20

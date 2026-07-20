@@ -448,6 +448,19 @@ Item {
             verify(controlUnderTest.y >= 0);
         }
 
+        function test_bottom_sheet_ignores_maximum_width_override() {
+            setTestWindowSize(d.mobileWindowWidth, d.mobileWindowHeight);
+            controlUnderTest.destroy();
+            controlUnderTest = createTemporaryObject(dialogComponent, testWindow.contentItem);
+
+            controlUnderTest.maximumWidthOverride = 240;
+            controlUnderTest.open();
+            tryCompare(controlUnderTest, "opened", true);
+
+            compare(controlUnderTest.width, d.mobileWindowWidth);
+            compare(controlUnderTest.x, 0);
+        }
+
         function test_safe_area_is_reserved_in_centered_mode() {
             controlUnderTest.open();
             tryCompare(controlUnderTest, "opened", true);
