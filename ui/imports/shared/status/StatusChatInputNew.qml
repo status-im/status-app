@@ -691,6 +691,8 @@ Control {
                         readonly property int basePadding: Theme.padding + 12
                         readonly property int extraHorizontalPadding: 12 // for the nav bar handle / scrollbar
 
+                        characterLimit: root.messageLimitHard
+
                         // When the text area is empty, we need to use padding because textMargin is ignored
                         // when calculating size. When not empty, textMargin is used because paddings are
                         // clipped by ScrollView.

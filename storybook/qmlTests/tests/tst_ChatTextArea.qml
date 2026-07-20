@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 
+import StatusQ
 import shared.status
 
 Item {
@@ -43,6 +44,12 @@ Item {
             required property int start
             required property int length
         }
+    }
+
+    SignalSpy {
+        id: limitSpy
+        target: testCase.control
+        signalName: "attemptToExceedHardLimit"
     }
 
     TestCase {
@@ -648,6 +655,116 @@ Item {
             plain.forceActiveFocus()
             plain.paste()
             tryCompare(plain, "text", "A@aliceB")
+        }
+
+        // ── hard character limit ────────────────────────────────────────────────
+
+        function test_characterLimit_defaultsTo2000() {
+            compare(control.characterLimit, 2000)
+        }
+
+        // Typing a character while the document is already at the limit is blocked before
+        // insertion (text unchanged) and reports the attempt.
+        function test_hardLimit_typingBlockedAtLimit() {
+            control.characterLimit = 5
+            control.text = "abcde"
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            limitSpy.clear()
+            keyClick(Qt.Key_A)
+
+            compare(control.text, "abcde")
+            compare(limitSpy.count, 1)
+        }
+
+        // Typing below the limit inserts normally and does not report an attempt.
+        function test_hardLimit_typingAllowedBelowLimit() {
+            control.characterLimit = 5
+            control.text = "abc"
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            limitSpy.clear()
+            keyClick(Qt.Key_D)
+
+            compare(control.text, "abcd")
+            compare(limitSpy.count, 0)
+        }
+
+        // Typing that replaces a selection is allowed even at the limit, because the net length
+        // does not grow.
+        function test_hardLimit_selectionReplaceAllowedAtLimit() {
+            control.characterLimit = 5
+            control.text = "abcde"
+            control.forceActiveFocus()
+            control.select(0, 2) // replacing 2 chars with 1 keeps length within the cap
+
+            limitSpy.clear()
+            keyClick(Qt.Key_X)
+
+            compare(control.text, "xcde")
+            compare(limitSpy.count, 0)
+        }
+
+        // A paste that would exceed the limit is rejected whole (nothing inserted) and reports
+        // the attempt.
+        function test_hardLimit_pasteRejectedWhenExceeding() {
+            control.characterLimit = 5
+            control.text = ""
+            control.forceActiveFocus()
+            ClipboardUtils.setText("abcdefgh") // 8 > 5
+
+            limitSpy.clear()
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            compare(control.text, "")
+            compare(limitSpy.count, 1)
+        }
+
+        // A paste that fits is inserted and does not report an attempt.
+        function test_hardLimit_pasteAllowedWhenFitting() {
+            control.characterLimit = 5
+            control.text = ""
+            control.forceActiveFocus()
+            ClipboardUtils.setText("ab")
+
+            limitSpy.clear()
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            tryCompare(control, "text", "ab")
+            compare(limitSpy.count, 0)
+        }
+
+        // Pasting over a selection fits when the replaced selection frees enough room, even
+        // though the clipboard text alone would push the document over the cap.
+        function test_hardLimit_pasteOverSelectionFits() {
+            control.characterLimit = 5
+            control.text = "abcde" // already at the limit
+            control.forceActiveFocus()
+            control.select(0, 3) // replacing "abc" frees room: 5 - 3 + 2 = 4 <= 5
+
+            ClipboardUtils.setText("XY")
+
+            limitSpy.clear()
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            tryCompare(control, "text", "XYde")
+            compare(limitSpy.count, 0)
+        }
+
+        // Safety net: content inserted programmatically (bypassing Keys.onPressed) is trimmed
+        // back to the limit by the onTextChanged backstop, and the attempt is reported.
+        function test_hardLimit_safetyNetTrimsOverflow() {
+            control.characterLimit = 5
+            control.text = ""
+
+            limitSpy.clear()
+            control.insert(0, "abcdefgh") // 8 chars, not a key event
+
+            compare(control.text, "abcde")
+            compare(control.length, 5)
+            compare(limitSpy.count, 1)
         }
     }
 }
