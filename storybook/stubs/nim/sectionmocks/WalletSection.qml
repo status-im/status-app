@@ -16,5 +16,7 @@ Item {
     }
     readonly property ListModel mixedcaseAddress: ListModel {}
 
+    signal displayAddAccountPopup
+    signal destroyAddAccountPopup
     signal walletAccountRemoved(string address)
 }

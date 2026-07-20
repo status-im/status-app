@@ -16,10 +16,6 @@ import shared
 import shared.panels
 import shared.controls
 import shared.popups
-import shared.popups.addaccount
-import shared.stores
-
-import AppLayouts.Wallet
 
 import "../controls"
 import "../popups"
@@ -29,14 +25,21 @@ Rectangle {
     id: root
     objectName: "walletLeftTab"
 
-    property NetworkConnectionStore networkConnectionStore
-    property var selectAllAccounts: function(){}
-    property var changeSelectedAccount: function(){}
-    property var selectSavedAddresses: function(){}
-    property var selectFollowingAddresses: function(){}
-    property var emojiPopup: null
+    required property LeftTabViewState viewState
 
-    property bool isKeycardEnabled: true
+    // Child -> parent: user actions that require store/backend handling.
+    signal addAccountPopupRequested()
+    signal addWatchOnlyAccountPopupRequested()
+    signal editAccountPopupRequested(string address)
+    signal watchAccountHiddenFromTotalBalanceUpdated(string address, bool hideFromTotalBalance)
+    signal accountDeletionRequested(string address, string password)
+    signal userAuthenticationRequested(string requestedBy)
+
+    // Child -> parent: navigation.
+    signal allAccountsSelected()
+    signal accountSelected(string address)
+    signal savedAddressesSelected()
+    signal followingAddressesSelected()
 
     color: Theme.palette.secondaryMenuBackground
 
@@ -52,21 +55,6 @@ Rectangle {
         readonly property string removeAccountIdentifier: "wallet-section-remove-account"
         readonly property real bottomSafeMargin: root.SafeArea.margins.bottom
         readonly property real footerHeight: footer.height + followingAddressesFooter.height
-    }
-
-    Loader {
-        id: addAccount
-        active: false
-
-        sourceComponent: AddAccountPopup {
-            isKeycardEnabled: root.isKeycardEnabled
-            store.emojiPopup: root.emojiPopup
-            store.addAccountModule: walletSection.addAccountModule
-        }
-
-        onLoaded: {
-            addAccount.item.open()
-        }
     }
 
     Loader {
@@ -89,17 +77,17 @@ Rectangle {
             }
 
             onAddNewAccountClicked: {
-                RootStore.runAddAccountPopup()
+                root.addAccountPopupRequested()
             }
 
             onAddWatchOnlyAccountClicked: {
-                RootStore.runAddWatchOnlyAccountPopup()
+                root.addWatchOnlyAccountPopupRequested()
             }
 
             onEditAccountClicked: {
                 if (!account)
                     return
-                RootStore.runEditAccountPopup(account.address)
+                root.editAccountPopupRequested(account.address)
             }
 
             onDeleteAccountClicked: {
@@ -118,7 +106,7 @@ Rectangle {
             onHideFromTotalBalanceClicked: function (hideFromTotalBalance) {
                 if (!account)
                     return
-                RootStore.updateWatchAccountHiddenFromTotalBalance(account.address, hideFromTotalBalance)
+                root.watchAccountHiddenFromTotalBalanceUpdated(account.address, hideFromTotalBalance)
             }
         }
     }
@@ -146,7 +134,7 @@ Rectangle {
 
             function doDeletion(password) {
                 close()
-                RootStore.deleteAccount(removeAccountConfirmation.accountAddress, password)
+                root.accountDeletionRequested(removeAccountConfirmation.accountAddress, password)
             }
 
             onClosed: {
@@ -159,7 +147,7 @@ Rectangle {
                     doDeletion("")
                     return
                 }
-                RootStore.authenticateLoggedInUser(d.removeAccountIdentifier)
+                root.userAuthenticationRequested(d.removeAccountIdentifier)
             }
 
             Connections {
@@ -177,17 +165,6 @@ Rectangle {
 
         onLoaded: {
             removeAccountConfirmation.item.open()
-        }
-    }
-
-    Connections {
-        target: walletSection
-
-        function onDisplayAddAccountPopup() {
-            addAccount.active = true
-        }
-        function onDestroyAddAccountPopup() {
-            addAccount.active = false
         }
     }
 
@@ -244,7 +221,7 @@ Rectangle {
                 icon.height: 24
                 color: hovered || highlighted ? Theme.palette.primaryColor3
                                               : "transparent"
-                onClicked: RootStore.runAddAccountPopup()
+                onClicked: root.addAccountPopupRequested()
             }
         }
 
@@ -294,7 +271,7 @@ Rectangle {
                     objectName: "walletAccountListItem"
                     readonly property bool itemLoaded: !model.assetsLoading // needed for e2e tests
                     width: ListView.view.width - Theme.padding * 2
-                    highlighted: RootStore.selectedAddress.toLowerCase() === model.address.toLowerCase()
+                    highlighted: viewState.selectedAddress.toLowerCase() === model.address.toLowerCase()
                     onHighlightedChanged: {
                         if (highlighted)
                             ListView.view.currentIndex = index
@@ -313,9 +290,9 @@ Rectangle {
                     statusListItemTitle.font.weight: Font.Medium
                     color: sensor.containsMouse || highlighted ? Theme.palette.baseColor3 : "transparent"
                     statusListItemSubTitle.loading: !!model.assetsLoading
-                    errorMode: networkConnectionStore.accountBalanceNotAvailable
+                    errorMode: viewState.accountBalanceNotAvailable
                     errorIcon.tooltip.maxWidth: 300
-                    errorIcon.tooltip.text: networkConnectionStore.accountBalanceNotAvailableText
+                    errorIcon.tooltip.text: viewState.accountBalanceNotAvailableText
                     onClicked: function(itemId, mouse) {
                         if (mouse.button === Qt.RightButton) {
                             walletAccountContextMenu.active = true
@@ -323,7 +300,7 @@ Rectangle {
                             walletAccountContextMenu.item.popup(this, mouse.x, mouse.y)
                             return
                         }
-                        changeSelectedAccount(model.address)
+                        root.accountSelected(model.address)
                     }
                     components: [
                         StatusIcon {
@@ -345,7 +322,7 @@ Rectangle {
                     id: header
                     verticalPadding: Theme.padding
                     horizontalPadding: Theme.padding
-                    highlighted: RootStore.showAllAccounts
+                    highlighted: viewState.showAllAccounts
                     objectName: "allAccountsBtn"
 
                     leftInset: Theme.padding
@@ -359,7 +336,7 @@ Rectangle {
                         implicitWidth: parent.ListView.view.width - Theme.padding * 2
                     }
 
-                    onClicked: root.selectAllAccounts()
+                    onClicked: root.allAccountsSelected()
 
                     contentItem: ColumnLayout {
                         spacing: 0
@@ -378,24 +355,26 @@ Rectangle {
                                 id: walletAmountValue
                                 objectName: "walletLeftListAmountValue"
                                 customColor: Theme.palette.textColor
-                                text: LocaleUtils.currencyAmountToLocaleString(RootStore.totalCurrencyBalance, {noSymbol: true})
+                                text: viewState.totalCurrencyBalance
+                                      ? LocaleUtils.currencyAmountToLocaleString(viewState.totalCurrencyBalance, {noSymbol: true})
+                                      : ""
                                 font.pixelSize: Theme.fontSize(22)
-                                loading: RootStore.balanceLoading
+                                loading: viewState.balanceLoading
                                 lineHeightMode: Text.FixedHeight
                                 lineHeight: 36
                                 verticalAlignment: Text.AlignVCenter
                             }
                             StatusTextWithLoadingState {
                                 customColor: Theme.palette.textColor
-                                text: RootStore.totalCurrencyBalance.symbol
+                                text: viewState.totalCurrencyBalance ? viewState.totalCurrencyBalance.symbol : ""
                                 font.pixelSize: Theme.additionalTextSize
-                                loading: RootStore.balanceLoading
+                                loading: viewState.balanceLoading
                                 font.weight: Font.Medium
                                 lineHeightMode: Text.FixedHeight
                                 lineHeight: 22
                                 verticalAlignment: Text.AlignBottom
                             }
-                            visible: !networkConnectionStore.accountBalanceNotAvailable
+                            visible: !viewState.accountBalanceNotAvailable
                         }
                         StatusFlatRoundButton {
                             id: errorIcon
@@ -405,15 +384,15 @@ Rectangle {
                             icon.height: 14
                             icon.name: "tiny/warning"
                             icon.color: Theme.palette.dangerColor1
-                            tooltip.text: networkConnectionStore.accountBalanceNotAvailableText
+                            tooltip.text: viewState.accountBalanceNotAvailableText
                             tooltip.maxWidth: 200
-                            visible: networkConnectionStore.accountBalanceNotAvailable
+                            visible: viewState.accountBalanceNotAvailable
                         }
                     }
                 }
 
                 model: SortFilterProxyModel {
-                    sourceModel: RootStore.accounts
+                    sourceModel: viewState.accountsModel
                     sorters: RoleSorter { roleName: "position"; sortOrder: Qt.AscendingOrder }
                 }
             }
@@ -457,7 +436,7 @@ Rectangle {
 
                 contentItem: StatusFlatButton {
                     objectName: "savedAddressesBtn"
-                    highlighted: RootStore.showSavedAddresses
+                    highlighted: viewState.showSavedAddresses
                     hoverColor: Theme.palette.backgroundHover
                     asset.bgColor: Theme.palette.primaryColor3
                     text: qsTr("Saved addresses")
@@ -469,7 +448,7 @@ Rectangle {
                     textColor: Theme.palette.directColor1
                     textFillWidth: true
                     spacing: walletAccountsListView.firstItem?.statusListItemTitleArea.anchors.leftMargin ?? Theme.padding
-                    onClicked: root.selectSavedAddresses()
+                    onClicked: root.savedAddressesSelected()
                 }
             }
 
@@ -488,7 +467,7 @@ Rectangle {
 
                 contentItem: StatusFlatButton {
                     objectName: "followingAddressesBtn"
-                    highlighted: RootStore.showFollowingAddresses
+                    highlighted: viewState.showFollowingAddresses
                     hoverColor: Theme.palette.backgroundHover
                     asset.bgColor: Theme.palette.primaryColor3
                     text: qsTr("Onchain friends")
@@ -500,7 +479,7 @@ Rectangle {
                     textColor: Theme.palette.directColor1
                     textFillWidth: true
                     spacing: walletAccountsListView.firstItem?.statusListItemTitleArea.anchors.leftMargin ?? Theme.padding
-                    onClicked: root.selectFollowingAddresses()
+                    onClicked: root.followingAddressesSelected()
                 }
             }
         }

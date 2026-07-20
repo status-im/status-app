@@ -14,15 +14,16 @@ import AppLayouts.Wallet
 
 import utils
 
-import "../../stores"
 import "../../controls"
 
 ColumnLayout {
     id: root
 
-    property WalletStore walletStore
+    required property var accountsModel
 
     signal goBack
+    signal moveAccountRequested(int from, int to)
+    signal moveAccountFinallyRequested(int from, int to)
 
     spacing: Theme.padding
 
@@ -35,6 +36,8 @@ ColumnLayout {
     }
 
     StatusBaseText {
+        objectName: "accountOrderRecommendation"
+
         Layout.fillWidth: true
         text: accountsList.count > 1? qsTr("Move your most frequently used accounts to the top of your wallet list") :
                                       qsTr("This account looks a little lonely. Add another account to enable re-ordering.")
@@ -43,10 +46,12 @@ ColumnLayout {
 
     StatusListView {
         id: accountsList
+        objectName: "accountOrderList"
+
         Layout.fillWidth: true
         Layout.preferredHeight: contentHeight
         interactive: false
-        model: walletStore.accounts
+        model: root.accountsModel
 
         displaced: Transition {
             NumberAnimation { properties: "x,y"; easing.type: Easing.OutQuad }
@@ -70,12 +75,14 @@ ColumnLayout {
                 if (d.indexMoveFrom === -1)
                     d.indexMoveFrom = from
                 d.indexMoveTo = to
-                root.walletStore.moveAccount(from, to)
+                root.moveAccountRequested(from, to)
                 drag.accept()
             }
 
             StatusDraggableListItem {
                 id: draggableDelegate
+                objectName: "accountOrderDelegate-%1".arg(index)
+
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width
@@ -100,7 +107,7 @@ ColumnLayout {
                     let to = d.indexMoveTo
                     d.indexMoveFrom = -1
                     d.indexMoveTo = -1
-                    root.walletStore.moveAccountFinally(from, to)
+                    root.moveAccountFinallyRequested(from, to)
                 }
             }
         }

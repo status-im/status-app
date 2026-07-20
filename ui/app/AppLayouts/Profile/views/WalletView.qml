@@ -344,7 +344,9 @@ SettingsContentBase {
             Layout.fillWidth: true
             Layout.leftMargin: Theme.padding
             Layout.rightMargin: Theme.padding
-            walletStore: root.walletStore
+            accountsModel: root.walletStore.accounts
+            onMoveAccountRequested: (from, to) => root.walletStore.moveAccount(from, to)
+            onMoveAccountFinallyRequested: (from, to) => root.walletStore.moveAccountFinally(from, to)
             onGoBack: priv.navigateToDetails(root.mainViewIndex)
         }
 

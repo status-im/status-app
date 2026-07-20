@@ -10,6 +10,7 @@ import StatusQ.Core.Theme
 
 import utils
 import shared.controls
+import shared.popups.addaccount
 import shared.popups.keypairimport
 
 import shared.stores as SharedStores
@@ -105,6 +106,14 @@ Item {
 
         function onDestroyKeypairImportPopup() {
             keypairImport.active = false
+        }
+
+        function onDisplayAddAccountPopup() {
+            addAccount.active = true
+        }
+
+        function onDestroyAddAccountPopup() {
+            addAccount.active = false
         }
     }
 
@@ -329,6 +338,19 @@ Item {
         }
     }
 
+    LeftTabViewState {
+        id: leftPanelState
+
+        accountsModel: root.walletRootStore.accounts
+        selectedAddress: root.walletRootStore.selectedAddress
+        showSavedAddresses: root.walletRootStore.showSavedAddresses
+        showFollowingAddresses: root.walletRootStore.showFollowingAddresses
+        totalCurrencyBalance: root.walletRootStore.totalCurrencyBalance
+        balanceLoading: root.walletRootStore.balanceLoading
+        accountBalanceNotAvailable: root.networkConnectionStore.accountBalanceNotAvailable
+        accountBalanceNotAvailableText: root.networkConnectionStore.accountBalanceNotAvailableText
+    }
+
     StatusSectionLayout {
         id: walletSectionLayout
         currentIndex: 1
@@ -351,23 +373,31 @@ Item {
         leftPanel: LeftTabView {
             id: leftTab
             anchors.fill: parent
-            emojiPopup: root.emojiPopup
-            networkConnectionStore: root.networkConnectionStore
-            isKeycardEnabled: root.isKeycardEnabled
+            viewState: leftPanelState
 
-            changeSelectedAccount: function(address) {
+            onAddAccountPopupRequested: root.walletRootStore.runAddAccountPopup()
+            onAddWatchOnlyAccountPopupRequested: root.walletRootStore.runAddWatchOnlyAccountPopup()
+            onEditAccountPopupRequested: address => root.walletRootStore.runEditAccountPopup(address)
+            onWatchAccountHiddenFromTotalBalanceUpdated: (address, hideFromTotalBalance) =>
+                root.walletRootStore.updateWatchAccountHiddenFromTotalBalance(address, hideFromTotalBalance)
+            onAccountDeletionRequested: (address, password) =>
+                root.walletRootStore.deleteAccount(address, password)
+            onUserAuthenticationRequested: requestedBy =>
+                root.walletRootStore.authenticateLoggedInUser(requestedBy)
+
+            onAccountSelected: address => {
                 walletSectionLayout.goToNextPanel()
                 d.displayAddress(address)
             }
-            selectAllAccounts: function() {
+            onAllAccountsSelected: {
                 walletSectionLayout.goToNextPanel()
                 d.displayAllAddresses()
             }
-            selectSavedAddresses: function() {
+            onSavedAddressesSelected: {
                 walletSectionLayout.goToNextPanel()
                 d.displaySavedAddresses()
             }
-            selectFollowingAddresses: function() {
+            onFollowingAddressesSelected: {
                 walletSectionLayout.goToNextPanel()
                 d.displayFollowingAddresses()
             }
@@ -473,6 +503,21 @@ Item {
 
         // Layout
         leftPanelWidthOverride: root.leftPanelWidthOverride
+    }
+
+    Loader {
+        id: addAccount
+        active: false
+
+        sourceComponent: AddAccountPopup {
+            isKeycardEnabled: root.isKeycardEnabled
+            store.emojiPopup: root.emojiPopup
+            store.addAccountModule: walletSection.addAccountModule
+        }
+
+        onLoaded: {
+            addAccount.item.open()
+        }
     }
 
     Loader {
