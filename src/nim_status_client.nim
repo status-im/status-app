@@ -233,6 +233,12 @@ proc mainProc() =
 
   ensureDirectories(DATADIR, TMPDIR, LOGDIR)
 
+  # Open the log file and set the log level before any subsystem starts logging.
+  # On iOS the stdout sink is disabled (no valid stdout FILE*), so logs go to the
+  # file sink only; opening it here guarantees every startup log has a valid sink
+  # instead of lazily opening a default path mid-init.
+  prepareLogging()
+
   let isExperimental = isExperimental()
   let resourcesPath = determineResourcePath()
   let openUri = determineOpenUri()
@@ -294,7 +300,6 @@ proc mainProc() =
   if not main_constants.IS_MACOS:
     app.icon(app.applicationDirPath & statusAppIconPath)
 
-  prepareLogging()
   statusq_installMessageHandler(logHandlerCallback)
 
   when defined(USE_QML_SERVER):
