@@ -43,6 +43,7 @@ struct LinkSpan {
     QString   url;
     qsizetype start;   // start of match in the scanned text
     qsizetype end;     // end of match (exclusive)
+    NodeKind  kind = NodeKind::Link; // Link for URLs, WalletLink for addresses/ENS names
 };
 
 struct QuoteGroup {
@@ -61,20 +62,25 @@ const QRegularExpression& kLinkRegex()
     return re;
 }
 
-QVector<LinkSpan> scanLinks(const QString& text, const Ranges& excludeRanges = {})
+// Wallet address: "0x" + exactly 40 hex chars. Rejects shorter/longer runs and non-hex.
+const QRegularExpression& kAddressRegex()
 {
-    QVector<LinkSpan> result;
-    auto it = kLinkRegex().globalMatch(text);
-    while (it.hasNext()) {
-        const auto m = it.next();
-        const qsizetype s = m.capturedStart(), e = m.capturedEnd();
-        bool excluded = false;
-        for (const auto& r : excludeRanges)
-            if (s < r.second && e > r.first) { excluded = true; break; }
-        if (!excluded)
-            result.append({m.captured(), s, e});
-    }
-    return result;
+    static const QRegularExpression re(
+        QStringLiteral(R"(\b0x[a-fA-F0-9]{40}\b)"),
+        QRegularExpression::CaseInsensitiveOption
+    );
+    return re;
+}
+
+// ENS name: one or more dot-separated labels ending in ".eth", not followed by another
+// label (so "bob.eth.invalid" and "invalid.ethaddress" are rejected).
+const QRegularExpression& kEnsRegex()
+{
+    static const QRegularExpression re(
+        QStringLiteral(R"(\b[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.eth\b(?!\.\w))"),
+        QRegularExpression::CaseInsensitiveOption
+    );
+    return re;
 }
 
 Ranges linkRangesOf(const QVector<LinkSpan>& links)
@@ -82,6 +88,46 @@ Ranges linkRangesOf(const QVector<LinkSpan>& links)
     Ranges result;
     for (const auto& l : links)
         result.append({l.start, l.end});
+    return result;
+}
+
+QVector<LinkSpan> scanLinks(const QString& text, const Ranges& excludeRanges = {})
+{
+    QVector<LinkSpan> result;
+
+    const auto notExcluded = [&](qsizetype s, qsizetype e, const Ranges& ranges) {
+        for (const auto& r : ranges)
+            if (s < r.second && e > r.first)
+                return false;
+        return true;
+    };
+
+    // URLs first — they win over addresses/ENS that would otherwise match inside a URL.
+    auto it = kLinkRegex().globalMatch(text);
+    while (it.hasNext()) {
+        const auto m = it.next();
+        const qsizetype s = m.capturedStart(), e = m.capturedEnd();
+        if (notExcluded(s, e, excludeRanges))
+            result.append({m.captured(), s, e, NodeKind::Link});
+    }
+
+    // Wallet addresses / ENS names → send-via-personal-chat links. Excluded from code/quote
+    // (excludeRanges) and from the URL ranges just collected, so an address inside a URL is
+    // not linkified twice.
+    Ranges used = excludeRanges;
+    used += linkRangesOf(result);
+    const auto scanWalletLinks = [&](const QRegularExpression& re) {
+        auto wit = re.globalMatch(text);
+        while (wit.hasNext()) {
+            const auto m = wit.next();
+            const qsizetype s = m.capturedStart(), e = m.capturedEnd();
+            if (notExcluded(s, e, used))
+                result.append({m.captured(), s, e, NodeKind::WalletLink});
+        }
+    };
+    scanWalletLinks(kAddressRegex());
+    scanWalletLinks(kEnsRegex());
+
     return result;
 }
 
@@ -621,7 +667,7 @@ Node materialize(const QString& full, int idx,
         return n;
     }
 
-    if (c.kind == NodeKind::Link) {
+    if (c.kind == NodeKind::Link || c.kind == NodeKind::WalletLink) {
         n.destination = c.destination;
         n.children.append(leaf(NodeKind::Text, full, c.oS, c.oE));
         return n;
@@ -706,7 +752,7 @@ QVector<Container> inlineContainers(const QString& full, qsizetype rs, qsizetype
     };
     auto addLinks = [&](const QVector<LinkSpan>& links, qsizetype off) {
         for (const LinkSpan& l : links)
-            conts.append({NodeKind::Link, l.start + off, l.end + off,
+            conts.append({l.kind, l.start + off, l.end + off,
                           l.start + off, l.end + off, l.url});
     };
     auto addEmph = [&](const QVector<EmphSpan>& spans, qsizetype off) {

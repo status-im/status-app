@@ -26,6 +26,8 @@ enum class NodeKind {
     Strikethrough,
     CodeSpan,       // inline `code`, content is not re-parsed
     Link,           // auto-detected URL
+    WalletLink,     // auto-detected wallet address / ENS name → send-via-personal-chat
+                    // link; `destination` holds the raw match (address or ENS name)
 
     // Leaves
     Text,           // literal content

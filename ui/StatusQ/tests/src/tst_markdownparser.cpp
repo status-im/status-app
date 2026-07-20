@@ -14,6 +14,15 @@ class TestMarkdownParser : public QObject
         return dump(parse(text, opts));
     }
 
+    // Counts WalletLink nodes (auto-detected wallet addresses / ENS names) in a subtree.
+    static int countWalletLinks(const Node& n)
+    {
+        int c = (n.kind == NodeKind::WalletLink) ? 1 : 0;
+        for (const auto& ch : n.children)
+            c += countWalletLinks(ch);
+        return c;
+    }
+
 private slots:
     void bold()
     {
@@ -673,6 +682,93 @@ Document [0,12)
         QVERIFY(!isOnlyEmoji(QString()));                          // empty
         QVERIFY(!isOnlyEmoji(QStringLiteral("   ")));              // whitespace only
         QVERIFY(!isOnlyEmoji(QStringLiteral("@0x1234")));          // mention-like text
+    }
+
+    // A bare wallet address and a bare ENS name each become a WalletLink node whose
+    // destination is the raw match (the "//send-via-personal-chat//" prefix is added by
+    // the HTML renderer, not stored in the AST) with a Text child covering the same range.
+    void walletLink()
+    {
+        auto address = R"(
+Document [0,42)
+  Paragraph [0,42)
+    WalletLink [0,42) "0x1234567890abcdef1234567890abcdef12345678"
+      Text [0,42) "0x1234567890abcdef1234567890abcdef12345678"
+)";
+        QCOMPARE(d("0x1234567890abcdef1234567890abcdef12345678"),
+                 QString::fromUtf8(address).trimmed());
+
+        auto ens = R"(
+Document [0,9)
+  Paragraph [0,9)
+    WalletLink [0,9) "alice.eth"
+      Text [0,9) "alice.eth"
+)";
+        QCOMPARE(d("alice.eth"),
+                 QString::fromUtf8(ens).trimmed());
+    }
+
+    // Detection matches the legacy behavior exercised by tst_StatusMessage's
+    // test_different_address_formats, plus cases proving addresses/ENS names are NOT
+    // detected inside inline code spans or fenced code blocks.
+    void walletLinkDetection_data()
+    {
+        QTest::addColumn<QString>("text");
+        QTest::addColumn<int>("expected");
+
+        // ── wallet addresses ──
+        QTest::newRow("addr valid")
+            << "0x1234567890abcdef1234567890abcdef12345678" << 1;
+        QTest::newRow("addr three")
+            << "0x1234567890abcdef1234567890abcdef12345678, "
+               "0x16437e05858c1a34f0ae63c9ca960d61a5583d5e, "
+               "0x75d5673fc25bb4993ea1218d9d415487c3656853" << 3;
+        QTest::newRow("addr mixed case")
+            << "0xAbCdEf1234567890abcdef1234567890AbCdEf12" << 1;
+        QTest::newRow("addr too short") << "0x123" << 0;
+        QTest::newRow("addr no 0x")     << "1234567890abcdef1234567890abcdef12345678" << 0;
+
+        // ── ENS names ──
+        QTest::newRow("ens stateofus")    << "qwerty.stateofus.eth" << 1;
+        QTest::newRow("ens alice")        << "alice.eth" << 1;
+        QTest::newRow("ens bob")          << "bob.eth" << 1;
+        QTest::newRow("ens subdomain")    << "sub.alice.eth" << 1;
+        QTest::newRow("ens bob sub")      << "bob.stateofus.eth" << 1;
+        QTest::newRow("ens multi sub")    << "ens.sub.sub.eth" << 1;
+        QTest::newRow("dns com")          << "example.com" << 0;
+        QTest::newRow("dns xyz")          << "another.example.xyz" << 0;
+        QTest::newRow("dns io")           << "my-site.io" << 0;
+        QTest::newRow("ens-like suffix")  << "invalid.ethaddress" << 0;
+        QTest::newRow("ens invalid tld")  << "bob.eth.invalid" << 0;
+
+        // ── mixed in sentences ──
+        QTest::newRow("sentence addr+ens")
+            << "My wallet is 0x1234567890abcdef1234567890abcdef12345678, and my ENS is alice.eth." << 2;
+        QTest::newRow("sentence ens+addr")
+            << "You can find me at bob.eth or contact me via 0xAbCdEf1234567890abcdef1234567890AbCdEf12." << 2;
+        QTest::newRow("sentence invalid addr valid ens")
+            << "Invalid address: 0x12345 and valid ENS: sub.alice.eth." << 1;
+        QTest::newRow("sentence dns + invalid addr")
+            << "Check 0x123GHIJKLMNOPQRSTUVWXYZ and visit example.com." << 0;
+        QTest::newRow("four mixed")
+            << "0x1234567890abcdef1234567890abcdef12345678, qwerty.stateofus.eth,  "
+               "0x16437e05858c1a34f0ae63c9ca960d61a5583d5e, 0x75d5673fc25bb4993ea1218d9d415487c3656853" << 4;
+
+        // ── not detected inside code (spans or blocks) ──
+        QTest::newRow("addr in code span") << "`0x1234567890abcdef1234567890abcdef12345678`" << 0;
+        QTest::newRow("ens in code span")  << "`alice.eth`" << 0;
+        QTest::newRow("addr in code block")
+            << "```\n0x1234567890abcdef1234567890abcdef12345678\n```" << 0;
+        QTest::newRow("addr code + plain")
+            << "`0x1234567890abcdef1234567890abcdef12345678` and "
+               "0x16437e05858c1a34f0ae63c9ca960d61a5583d5e" << 1;
+    }
+
+    void walletLinkDetection()
+    {
+        QFETCH(QString, text);
+        QFETCH(int, expected);
+        QCOMPARE(countWalletLinks(parse(text)), expected);
     }
 };
 

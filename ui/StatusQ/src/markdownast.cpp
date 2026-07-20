@@ -15,6 +15,7 @@ QString kindName(Markdown::NodeKind kind)
     case K::Strikethrough: return QStringLiteral("Strikethrough");
     case K::CodeSpan:      return QStringLiteral("CodeSpan");
     case K::Link:          return QStringLiteral("Link");
+    case K::WalletLink:    return QStringLiteral("WalletLink");
     case K::Text:          return QStringLiteral("Text");
     case K::Delimiter:     return QStringLiteral("Delimiter");
     case K::Mention:       return QStringLiteral("Mention");
@@ -49,7 +50,7 @@ void dumpNode(const Markdown::Node& node, int depth, bool withRanges, QString& o
 
     if (node.kind == K::Text || node.kind == K::Delimiter)
         out += QStringLiteral(" \"%1\"").arg(escapeLiteral(node.literal));
-    else if (node.kind == K::Link)
+    else if (node.kind == K::Link || node.kind == K::WalletLink)
         out += QStringLiteral(" \"%1\"").arg(escapeLiteral(node.destination));
     // Textual mentions carry the pub key; U+FFFC pill mentions have none (metadata lives in
     // the document char format), so only annotate when present.

@@ -337,12 +337,13 @@ Control {
             return -1
         }
 
-        // Routes an activated <a href> to the right intent: links carry a URL scheme, while
-        // mention hrefs are pub keys.
+        // Routes an activated <a href> to the right intent: URLs carry a scheme ("://") and
+        // wallet/ENS send links a "//" prefix (//send-via-personal-chat//…); both are links.
+        // Mention hrefs are bare pub keys, so they route as mentions.
         function activateLink(href) {
             if (!href)
                 return
-            if (href.indexOf("://") >= 0)
+            if (href.indexOf("://") >= 0 || href.startsWith("//"))
                 root.linkClicked(href)
             else
                 root.mentionClicked(href)

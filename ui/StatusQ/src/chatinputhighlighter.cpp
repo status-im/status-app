@@ -109,6 +109,8 @@ void flatten(const Node& node, unsigned int acc, QVector<unsigned int>& flags)
             flatten(c, acc | kStrikeThrough, flags);
         break;
     case NodeKind::Link:
+    case NodeKind::WalletLink:
+        // Wallet addresses / ENS names are colored like URL links in the composer.
         for (const Node& c : node.children)
             flatten(c, acc | kLink, flags);
         break;
