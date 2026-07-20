@@ -7,6 +7,10 @@ namespace {
 using Markdown::Node;
 using Markdown::NodeKind;
 
+// Prefix applied to a WalletLink's raw destination (address / ENS name) so that activating the
+// rendered <a> invokes the "send via personal chat" flow (see MessageView.onLinkActivated).
+const QString kSendViaChatPrefix = QStringLiteral("//send-via-personal-chat//");
+
 QString escape(const QString& s)
 {
     QString out;
@@ -121,6 +125,11 @@ QString renderNode(const Node& node,
         return QStringLiteral("<a href=\"%1\">%2</a>")
                 .arg(escape(node.destination), renderChildren(node, mentions, emojiPx));
 
+    case NodeKind::WalletLink:
+        return QStringLiteral("<a href=\"%1%2\">%3</a>")
+                .arg(kSendViaChatPrefix, escape(node.destination),
+                     renderChildren(node, mentions, emojiPx));
+
     case NodeKind::Mention: {
         const auto it = mentions.constFind(static_cast<int>(node.start));
         const QString name = it != mentions.cend() ? it->first  : QStringLiteral("@mention");
@@ -197,6 +206,11 @@ QString renderSingleLine(const Node& node,
         return QStringLiteral("<a href=\"%1\">%2</a>")
                 .arg(escape(node.destination), renderSingleLineChildren(node, mentions, emojiPx));
 
+    case NodeKind::WalletLink:
+        return QStringLiteral("<a href=\"%1%2\">%3</a>")
+                .arg(kSendViaChatPrefix, escape(node.destination),
+                     renderSingleLineChildren(node, mentions, emojiPx));
+
     case NodeKind::Mention: {
         const auto it = mentions.constFind(static_cast<int>(node.start));
         const QString name = it != mentions.cend() ? it->first  : QStringLiteral("@mention");
@@ -268,6 +282,7 @@ QString renderPlain(const Node& node, const QHash<int, QPair<QString, QString>>&
     case NodeKind::Emphasis:
     case NodeKind::Strikethrough:
     case NodeKind::Link:
+    case NodeKind::WalletLink:
     case NodeKind::QuoteBlock:
     case NodeKind::Document:
     case NodeKind::Paragraph:

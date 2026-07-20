@@ -46,6 +46,19 @@ private slots:
                  "see <a href=\"https://status.im\">https://status.im</a>");
     }
 
+    // Wallet addresses / ENS names render as links whose href carries the
+    // "//send-via-personal-chat//" prefix (added by the renderer); the visible text is the
+    // raw match. They are not detected inside code spans.
+    void walletLink()
+    {
+        QCOMPARE(h("0x1234567890abcdef1234567890abcdef12345678"),
+                 "<a href=\"//send-via-personal-chat//0x1234567890abcdef1234567890abcdef12345678\">"
+                 "0x1234567890abcdef1234567890abcdef12345678</a>");
+        QCOMPARE(h("send to alice.eth please"),
+                 "send to <a href=\"//send-via-personal-chat//alice.eth\">alice.eth</a> please");
+        QCOMPARE(h("`alice.eth`"), "<code>alice.eth</code>");
+    }
+
     // A mention renders as a regular link, name/href from the mentions map.
     void mention()
     {
@@ -121,6 +134,13 @@ private slots:
         QCOMPARE(hs(text, m), "hi <a href=\"0xabc\" class=\"mention\">@alice</a>");
     }
 
+    // Wallet/ENS links render the same way in the one-line preview.
+    void singleLine_walletLink()
+    {
+        QCOMPARE(hs("pay alice.eth"),
+                 "pay <a href=\"//send-via-personal-chat//alice.eth\">alice.eth</a>");
+    }
+
     // ── toPlainText: plain-text projection (accessibility) ──────────────────────
 
     static QString pt(const QString& text,
@@ -153,6 +173,14 @@ private slots:
     void plain_link()
     {
         QCOMPARE(pt("see https://status.im"), "see https://status.im");
+    }
+
+    // A wallet/ENS link projects to its raw address/name (no send-via prefix, no href).
+    void plain_walletLink()
+    {
+        QCOMPARE(pt("pay alice.eth now"), "pay alice.eth now");
+        QCOMPARE(pt("0x1234567890abcdef1234567890abcdef12345678"),
+                 "0x1234567890abcdef1234567890abcdef12345678");
     }
 
     // A quote renders as its plain content (no "> " marker, no formatting).
@@ -195,6 +223,16 @@ private slots:
         QCOMPARE(b.size(), 1);
         QCOMPARE(b[0].toMap()["type"].toString(), "text");
         QCOMPARE(b[0].toMap()["html"].toString(), "just <b>text</b>");
+    }
+
+    // A wallet/ENS link is inline, so it stays within its text block as a send-via link.
+    void blocks_walletLink()
+    {
+        const QVariantList b = blocks("pay alice.eth");
+        QCOMPARE(b.size(), 1);
+        QCOMPARE(b[0].toMap()["type"].toString(), "text");
+        QCOMPARE(b[0].toMap()["html"].toString(),
+                 "pay <a href=\"//send-via-personal-chat//alice.eth\">alice.eth</a>");
     }
 
     void blocks_splitAtCodeBlock()
