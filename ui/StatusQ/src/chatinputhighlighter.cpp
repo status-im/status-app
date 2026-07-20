@@ -520,28 +520,32 @@ void ChatInputHighlighter::pasteFromClipboard(int selectionStart, int selectionE
     if (!mime)
         return;
 
+    // Replacing the selection and inserting the pasted content must be one undo step, so keep the
+    // whole thing in a single edit block. Leave the selection *on the cursor* (instead of removing
+    // it up front) so the first insert replaces it as one selection-aware operation — this makes a
+    // single Ctrl+Z restore the replaced text with the caret back at its end, rather than two undo
+    // steps that collapse the caret to the document start.
     QTextCursor cursor(document());
     if (selectionStart != selectionEnd) {
         cursor.setPosition(selectionStart);
         cursor.setPosition(selectionEnd, QTextCursor::KeepAnchor);
-        cursor.removeSelectedText();
     } else {
         cursor.setPosition(cursorPosition);
     }
 
+    cursor.beginEditBlock();
     if (mime->hasFormat(QString::fromLatin1(kChatInputMimeType))) {
         QByteArray data = mime->data(QString::fromLatin1(kChatInputMimeType));
         QDataStream stream(&data, QIODevice::ReadOnly);
         stream.setVersion(QDataStream::Qt_6_0);
 
-        cursor.beginEditBlock();
         while (!stream.atEnd()) {
             quint8 type = 0;
             stream >> type;
             if (type == 0) {
                 QString text;
                 stream >> text;
-                cursor.insertText(text);
+                cursor.insertText(text); // replaces any remaining selection
             } else if (type == 1) {
                 QString name, pubKey;
                 stream >> name >> pubKey;
@@ -553,13 +557,17 @@ void ChatInputHighlighter::pasteFromClipboard(int selectionStart, int selectionE
                 fmt.setVerticalAlignment(QTextCharFormat::AlignBottom);
                 cursor.insertText(QString(QChar::ObjectReplacementCharacter), fmt);
             } else if (type == 2) {
+                // insertBlock() doesn't clear a selection; drop it explicitly if a leading
+                // paragraph separator is the first inserted token.
+                if (cursor.hasSelection())
+                    cursor.removeSelectedText();
                 cursor.insertBlock();
             }
         }
-        cursor.endEditBlock();
     } else if (mime->hasText()) {
         cursor.insertText(mime->text());
     }
+    cursor.endEditBlock();
 }
 
 QString ChatInputHighlighter::textWithMentions() const
