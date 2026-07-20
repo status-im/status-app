@@ -32,7 +32,7 @@ fi
 if [[ "$OS" == "ios" ]]; then
     PLATFORM_SPECIFIC=(--app:staticlib -d:ios --os:ios)
 else
-    PLATFORM_SPECIFIC=(--app:lib --os:android -d:android -d:androidNDK -d:chronicles_sinks=textlines[logcat],textlines[file,nocolors] \
+    PLATFORM_SPECIFIC=(--app:lib --os:android -d:android -d:androidNDK -d:lto -d:chronicles_sinks=textlines[logcat],textlines[file,nocolors] \
         --passL="-L$LIB_DIR" --passL="-lstatus_stub" --passL="-lStatusQ$LIB_SUFFIX" --passL="-lqrcodegen" --passL="-lssl_3" --passL="-lcrypto_3" --passL="-lstatus-keycard-qt" -d:taskpool)
 fi
 
@@ -71,7 +71,10 @@ APP_CONFIG_DEFINES=(
 NIM_FLAGS=(
     --mm:orc
     -d:useMalloc
-    -d:lto
+    # NOTE: -d:lto is intentionally NOT here. On the iOS --app:staticlib target,
+    # LTO bitcode in the .a is mis-optimized at Xcode's final link, miscompiling
+    # std/json %* JObject construction (CreateAccountRequest.toJson() -> empty {},
+    # breaking account creation). LTO is re-added for Android below, where it works.
     --opt:size
     --cc:clang
     --cpu:"$CARCH"
