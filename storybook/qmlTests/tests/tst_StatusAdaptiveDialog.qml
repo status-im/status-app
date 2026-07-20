@@ -245,6 +245,30 @@ Item {
             compare(popupLayer.popupObject.y, popupLayer.height - popupLayer.popupObject.height);
         }
 
+        function setDialogSafeArea(top, bottom, left, right) {
+            controlUnderTest.contentItem.SafeArea.additionalMargins.top = top;
+            controlUnderTest.contentItem.SafeArea.additionalMargins.bottom = bottom;
+            controlUnderTest.contentItem.SafeArea.additionalMargins.left = left;
+            controlUnderTest.contentItem.SafeArea.additionalMargins.right = right;
+        }
+
+        function verifyDialogSafeAreaLayout(top, bottom, left, right) {
+            const edgePadding = Math.max(Theme.padding, 8);
+            const header = findChild(controlUnderTest, "statusAdaptiveDialogHeader");
+            const footer = findChild(controlUnderTest, "statusAdaptiveDialogFooter");
+            verify(!!header);
+            verify(!!footer);
+
+            tryCompare(header, "x", edgePadding + left);
+            compare(header.y, edgePadding + top);
+            compare(header.width, controlUnderTest.width - 2 * edgePadding - left - right);
+
+            tryCompare(footer, "x", edgePadding + left);
+            compare(footer.width, controlUnderTest.width - 2 * edgePadding - left - right);
+            compare(footer.mapToItem(null, 0, footer.height).y,
+                    controlUnderTest.y + controlUnderTest.height - edgePadding - bottom);
+        }
+
         function test_centered_on_desktop() {
             controlUnderTest.open();
             tryCompare(controlUnderTest, "opened", true);
@@ -422,6 +446,25 @@ Item {
             compare(controlUnderTest.width, d.mobileWindowWidth);
             compare(controlUnderTest.x, 0);
             verify(controlUnderTest.y >= 0);
+        }
+
+        function test_safe_area_is_reserved_in_centered_mode() {
+            controlUnderTest.open();
+            tryCompare(controlUnderTest, "opened", true);
+
+            setDialogSafeArea(60, 60, 40, 30);
+            verifyDialogSafeAreaLayout(60, 60, 40, 30);
+        }
+
+        function test_safe_area_is_reserved_in_bottom_sheet_mode() {
+            setTestWindowSize(d.mobileWindowWidth, d.mobileWindowHeight);
+            controlUnderTest.destroy();
+            controlUnderTest = createTemporaryObject(adaptiveWidthDialogComponent, testWindow.contentItem);
+            controlUnderTest.open();
+            tryCompare(controlUnderTest, "opened", true);
+
+            setDialogSafeArea(60, 60, 40, 30);
+            verifyDialogSafeAreaLayout(60, 60, 40, 30);
         }
 
         function test_modal_can_be_overridden_from_outside() {

@@ -114,19 +114,16 @@ Dialog {
         readonly property bool bottomSheet: windowWidth <= ThemeUtils.portraitBreakpoint.width
                                             && windowHeight > windowWidth
 
-        // Safe-area insets for bottom-sheet mode, read from the Window so the values
-        // are stable physical constants rather than position-dependent computed values.
-        readonly property real headerSafeArea: bottomSheet
-            ? (root.contentItem.Window.window?.SafeArea.margins.top ?? 0) : 0
-        readonly property real footerSafeArea: bottomSheet
-            ? (root.contentItem.Window.window?.SafeArea.margins.bottom ?? 0) : 0
-        readonly property real leftSafeArea: bottomSheet
-            ? (root.contentItem.Window.window?.SafeArea.margins.left ?? 0) : 0
-        readonly property real rightSafeArea: bottomSheet
-            ? (root.contentItem.Window.window?.SafeArea.margins.right ?? 0) : 0
-        // Vertical padding owned by the content host. When the content is the last visible
-        // section in a bottom sheet, bottom padding also absorbs the home-indicator safe area.
-        readonly property real contentTopPadding: edgePadding
+        // Safe-area insets for the dialog surface. The dialog reads them from its
+        // content host so tests and hosted dialogs can override them locally
+        // without changing the whole window.
+        readonly property real headerSafeArea: root.contentItem.SafeArea.margins.top
+        readonly property real footerSafeArea: root.contentItem.SafeArea.margins.bottom
+        readonly property real leftSafeArea: root.contentItem.SafeArea.margins.left
+        readonly property real rightSafeArea: root.contentItem.SafeArea.margins.right
+        // Vertical padding owned by the content host. When content is the first or
+        // last visible section, it also absorbs the corresponding safe area.
+        readonly property real contentTopPadding: edgePadding + (hasHeader ? 0 : headerSafeArea)
         readonly property real contentBottomPadding: edgePadding + (hasFooterSection ? 0 : footerSafeArea)
         readonly property real contentLeftPadding: edgePadding + leftSafeArea
         readonly property real contentRightPadding: edgePadding + rightSafeArea
@@ -258,7 +255,7 @@ Dialog {
             id: headerToolbarItem
 
             Layout.fillWidth: true
-            Layout.topMargin: d.edgePadding
+            Layout.topMargin: d.edgePadding + d.headerSafeArea
             Layout.leftMargin: d.edgePadding + d.leftSafeArea
             Layout.rightMargin: d.edgePadding + d.rightSafeArea
             visible: d.hasHeader

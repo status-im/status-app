@@ -43,6 +43,15 @@ SplitView {
         readonly property bool headerHasCustomActions: headerActionsMode.currentValue === "custom"
                                                   || headerActionsMode.currentValue === "close-custom"
         readonly property real controlsSectionSpacing: Math.max(Theme.halfPadding, 8)
+        readonly property var safeArea: dialog.contentItem ? dialog.contentItem.SafeArea : null
+        readonly property real artificialTopSafeArea: topSafeAreaEnabled.checked ? topSafeAreaSlider.value : 0
+        readonly property real artificialBottomSafeArea: bottomSafeAreaEnabled.checked ? bottomSafeAreaSlider.value : 0
+        readonly property real artificialLeftSafeArea: leftSafeAreaEnabled.checked ? leftSafeAreaSlider.value : 0
+        readonly property real artificialRightSafeArea: rightSafeAreaEnabled.checked ? rightSafeAreaSlider.value : 0
+        readonly property bool showSafeAreaOverlay: artificialTopSafeArea > 0
+                                                 || artificialBottomSafeArea > 0
+                                                 || artificialLeftSafeArea > 0
+                                                 || artificialRightSafeArea > 0
 
         // Footer presets: each mode resolves to the models consumed by StatusAdaptiveDialog.
         readonly property var footerLeftModel: {
@@ -332,6 +341,115 @@ SplitView {
                 }
             }
         }
+
+        Loader {
+            active: !!d.safeArea
+            sourceComponent: Component {
+                Item {
+                    Binding {
+                        target: d.safeArea
+                        property: "additionalMargins.top"
+                        value: d.artificialTopSafeArea
+                    }
+
+                    Binding {
+                        target: d.safeArea
+                        property: "additionalMargins.bottom"
+                        value: d.artificialBottomSafeArea
+                    }
+
+                    Binding {
+                        target: d.safeArea
+                        property: "additionalMargins.left"
+                        value: d.artificialLeftSafeArea
+                    }
+
+                    Binding {
+                        target: d.safeArea
+                        property: "additionalMargins.right"
+                        value: d.artificialRightSafeArea
+                    }
+                }
+            }
+        }
+
+        Loader {
+            active: d.showSafeAreaOverlay && !!d.safeArea
+            sourceComponent: Component {
+                Item {
+                    parent: root.Overlay.overlay
+                    x: dialog.x
+                    y: dialog.y
+                    width: dialog.width
+                    height: dialog.height
+                    z: 100
+                    visible: dialog.opened
+                    enabled: false
+
+                    Rectangle {
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: d.safeArea.margins.top
+                        visible: height > 0
+                        color: "#44FF0000"
+                        border.color: "red"
+
+                        Label {
+                            anchors.centerIn: parent
+                            text: "Header Safe Area"
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        height: d.safeArea.margins.bottom
+                        visible: height > 0
+                        color: "#44FF0000"
+                        border.color: "red"
+
+                        Label {
+                            anchors.centerIn: parent
+                            text: "Footer Safe Area"
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                        anchors.left: parent.left
+                        width: d.safeArea.margins.left
+                        visible: width > 0
+                        color: "#4400AAFF"
+                        border.color: "#0077CC"
+
+                        Label {
+                            anchors.centerIn: parent
+                            rotation: -90
+                            text: "Left Safe Area"
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.top: parent.top
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        width: d.safeArea.margins.right
+                        visible: width > 0
+                        color: "#4400AAFF"
+                        border.color: "#0077CC"
+
+                        Label {
+                            anchors.centerIn: parent
+                            rotation: 90
+                            text: "Right Safe Area"
+                        }
+                    }
+                }
+            }
+        }
     }
 
     LogsAndControlsPanel {
@@ -340,197 +458,287 @@ SplitView {
 
         logsView.logText: logs.logText
 
-        ColumnLayout {
-            Layout.fillWidth: true
+        ScrollView {
+            id: controlsScrollView
 
-            Label {
-                text: "Header"
-                font.bold: true
-            }
+            anchors.fill: parent
+            clip: true
+            contentWidth: availableWidth
 
-            ComboBox {
-                id: headerMode
-                Layout.fillWidth: true
-                textRole: "text"
-                valueRole: "value"
-                model: [
-                    {
-                        text: "None",
-                        value: "none"
-                    },
-                    {
-                        text: "Title",
-                        value: "title"
-                    },
-                    {
-                        text: "Title + subtitle",
-                        value: "title-subtitle"
-                    },
-                    {
-                        text: "Image + title",
-                        value: "image-title"
-                    },
-                    {
-                        text: "Image + title + subtitle",
-                        value: "image-title-subtitle"
-                    }
-                ]
-                currentIndex: 2
-            }
+            ColumnLayout {
+                width: controlsScrollView.availableWidth
 
-            ComboBox {
-                id: headerActionsMode
-                Layout.fillWidth: true
-                textRole: "text"
-                valueRole: "value"
-                model: [
-                    {
-                        text: "Close",
-                        value: "close"
-                    },
-                    {
-                        text: "Info",
-                        value: "info"
-                    },
-                    {
-                        text: "Close + info",
-                        value: "both"
-                    },
-                    {
-                        text: "Custom",
-                        value: "custom"
-                    },
-                    {
-                        text: "Close + custom",
-                        value: "close-custom"
-                    },
-                    {
-                        text: "None",
-                        value: "none"
-                    }
-                ]
-            }
+                Label {
+                    text: "Header"
+                    font.bold: true
+                }
 
-            Label {
-                text: "Footer"
-                font.bold: true
-                Layout.topMargin: d.controlsSectionSpacing
-            }
+                ComboBox {
+                    id: headerMode
+                    Layout.fillWidth: true
+                    textRole: "text"
+                    valueRole: "value"
+                    model: [
+                        {
+                            text: "None",
+                            value: "none"
+                        },
+                        {
+                            text: "Title",
+                            value: "title"
+                        },
+                        {
+                            text: "Title + subtitle",
+                            value: "title-subtitle"
+                        },
+                        {
+                            text: "Image + title",
+                            value: "image-title"
+                        },
+                        {
+                            text: "Image + title + subtitle",
+                            value: "image-title-subtitle"
+                        }
+                    ]
+                    currentIndex: 2
+                }
 
-            ComboBox {
-                id: footerButtonsMode
-                Layout.fillWidth: true
-                textRole: "text"
-                valueRole: "value"
-                model: [
-                    { text: "Cancel + Done",    value: "cancel-done" },
-                    { text: "Back + Done",      value: "back-done" },
-                    { text: "Back only",        value: "back-only" },
-                    { text: "Info + Done",      value: "info-done" },
-                    { text: "Done only",        value: "done-only" },
-                    { text: "None",             value: "none" }
-                ]
-            }
+                ComboBox {
+                    id: headerActionsMode
+                    Layout.fillWidth: true
+                    textRole: "text"
+                    valueRole: "value"
+                    model: [
+                        {
+                            text: "Close",
+                            value: "close"
+                        },
+                        {
+                            text: "Info",
+                            value: "info"
+                        },
+                        {
+                            text: "Close + info",
+                            value: "both"
+                        },
+                        {
+                            text: "Custom",
+                            value: "custom"
+                        },
+                        {
+                            text: "Close + custom",
+                            value: "close-custom"
+                        },
+                        {
+                            text: "None",
+                            value: "none"
+                        }
+                    ]
+                }
 
-            ComboBox {
-                id: footerErrorsMode
-                Layout.fillWidth: true
-                textRole: "text"
-                valueRole: "value"
-                model: [
-                    { text: "No errors",           value: "none" },
-                    { text: "1 error",             value: "one" },
-                    { text: "2 errors (expandable)", value: "two" }
-                ]
-            }
+                Label {
+                    text: "Footer"
+                    font.bold: true
+                    Layout.topMargin: d.controlsSectionSpacing
+                }
 
-            Label {
-                text: "Content"
-                font.bold: true
-                Layout.topMargin: d.controlsSectionSpacing
-            }
+                ComboBox {
+                    id: footerButtonsMode
+                    Layout.fillWidth: true
+                    textRole: "text"
+                    valueRole: "value"
+                    model: [
+                        { text: "Cancel + Done",    value: "cancel-done" },
+                        { text: "Back + Done",      value: "back-done" },
+                        { text: "Back only",        value: "back-only" },
+                        { text: "Info + Done",      value: "info-done" },
+                        { text: "Done only",        value: "done-only" },
+                        { text: "None",             value: "none" }
+                    ]
+                }
 
-            ComboBox {
-                id: contentMode
-                Layout.fillWidth: true
-                textRole: "text"
-                valueRole: "value"
-                model: [
-                    {
-                        text: "Short content",
-                        value: "short"
-                    },
-                    {
-                        text: "Long content",
-                        value: "long"
-                    }
-                ]
-            }
+                ComboBox {
+                    id: footerErrorsMode
+                    Layout.fillWidth: true
+                    textRole: "text"
+                    valueRole: "value"
+                    model: [
+                        { text: "No errors",           value: "none" },
+                        { text: "1 error",             value: "one" },
+                        { text: "2 errors (expandable)", value: "two" }
+                    ]
+                }
 
-            Label {
-                text: "Sizing"
-                font.bold: true
-                Layout.topMargin: d.controlsSectionSpacing
-            }
+                Label {
+                    text: "Content"
+                    font.bold: true
+                    Layout.topMargin: d.controlsSectionSpacing
+                }
 
-            Label {
-                text: "Max width override: " + (customMaxWidth.checked ? Math.round(maxWidthSlider.value) : "off")
-            }
+                ComboBox {
+                    id: contentMode
+                    Layout.fillWidth: true
+                    textRole: "text"
+                    valueRole: "value"
+                    model: [
+                        {
+                            text: "Short content",
+                            value: "short"
+                        },
+                        {
+                            text: "Long content",
+                            value: "long"
+                        }
+                    ]
+                }
 
-            CheckBox {
-                id: customMaxWidth
-                text: "Custom max width"
-            }
+                Label {
+                    text: "Sizing"
+                    font.bold: true
+                    Layout.topMargin: d.controlsSectionSpacing
+                }
 
-            Slider {
-                id: maxWidthSlider
-                Layout.fillWidth: true
-                enabled: customMaxWidth.checked
-                from: 360
-                to: 720
-                stepSize: 20
-                value: 560
-            }
+                Label {
+                    text: "Max width override: " + (customMaxWidth.checked ? Math.round(maxWidthSlider.value) : "off")
+                }
 
-            CheckBox {
-                id: heightCap
-                text: "Custom height cap"
-            }
+                CheckBox {
+                    id: customMaxWidth
+                    text: "Custom max width"
+                }
 
-            Label {
-                text: "Height cap: " + Math.round(heightSlider.value)
-            }
+                Slider {
+                    id: maxWidthSlider
+                    Layout.fillWidth: true
+                    enabled: customMaxWidth.checked
+                    from: 360
+                    to: 720
+                    stepSize: 20
+                    value: 560
+                }
 
-            Slider {
-                id: heightSlider
-                Layout.fillWidth: true
-                enabled: heightCap.checked
-                from: 220
-                to: 640
-                stepSize: 20
-                value: 420
-            }
+                CheckBox {
+                    id: heightCap
+                    text: "Custom height cap"
+                }
 
-            Label {
-                text: "Mode: " + (d.dialogBottomSheet ? "bottom sheet" : "centered")
-            }
+                Label {
+                    text: "Height cap: " + Math.round(heightSlider.value)
+                }
 
-            Label {
-                text: "Behavior"
-                font.bold: true
-                Layout.topMargin: d.controlsSectionSpacing
-            }
+                Slider {
+                    id: heightSlider
+                    Layout.fillWidth: true
+                    enabled: heightCap.checked
+                    from: 220
+                    to: 640
+                    stepSize: 20
+                    value: 420
+                }
 
-            CheckBox {
-                id: closeOnOverlay
-                text: "Close on overlay click"
-                checked: true
-            }
+                Label {
+                    text: "Mode: " + (d.dialogBottomSheet ? "bottom sheet" : "centered")
+                }
 
-            CheckBox {
-                id: escapeCloses
-                text: "Escape closes"
-                checked: true
+                Label {
+                    text: "Behavior"
+                    font.bold: true
+                    Layout.topMargin: d.controlsSectionSpacing
+                }
+
+                CheckBox {
+                    id: closeOnOverlay
+                    text: "Close on overlay click"
+                    checked: true
+                }
+
+                CheckBox {
+                    id: escapeCloses
+                    text: "Escape closes"
+                    checked: true
+                }
+
+                Label {
+                    text: "Safe area"
+                    font.bold: true
+                    Layout.topMargin: d.controlsSectionSpacing
+                }
+
+                CheckBox {
+                    id: topSafeAreaEnabled
+                    text: "Top safe area"
+                }
+
+                Label {
+                    text: "Top: " + Math.round(topSafeAreaSlider.value)
+                }
+
+                Slider {
+                    id: topSafeAreaSlider
+                    Layout.fillWidth: true
+                    enabled: topSafeAreaEnabled.checked
+                    from: 0
+                    to: 160
+                    stepSize: 10
+                    value: 60
+                }
+
+                CheckBox {
+                    id: bottomSafeAreaEnabled
+                    text: "Bottom safe area"
+                }
+
+                Label {
+                    text: "Bottom: " + Math.round(bottomSafeAreaSlider.value)
+                }
+
+                Slider {
+                    id: bottomSafeAreaSlider
+                    Layout.fillWidth: true
+                    enabled: bottomSafeAreaEnabled.checked
+                    from: 0
+                    to: 160
+                    stepSize: 10
+                    value: 60
+                }
+
+                CheckBox {
+                    id: leftSafeAreaEnabled
+                    text: "Left safe area"
+                }
+
+                Label {
+                    text: "Left: " + Math.round(leftSafeAreaSlider.value)
+                }
+
+                Slider {
+                    id: leftSafeAreaSlider
+                    Layout.fillWidth: true
+                    enabled: leftSafeAreaEnabled.checked
+                    from: 0
+                    to: 120
+                    stepSize: 10
+                    value: 40
+                }
+
+                CheckBox {
+                    id: rightSafeAreaEnabled
+                    text: "Right safe area"
+                }
+
+                Label {
+                    text: "Right: " + Math.round(rightSafeAreaSlider.value)
+                }
+
+                Slider {
+                    id: rightSafeAreaSlider
+                    Layout.fillWidth: true
+                    enabled: rightSafeAreaEnabled.checked
+                    from: 0
+                    to: 120
+                    stepSize: 10
+                    value: 40
+                }
             }
         }
     }
