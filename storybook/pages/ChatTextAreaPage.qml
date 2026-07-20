@@ -460,6 +460,9 @@ unclosed fence here (no closing triple-tick)
                             codeBackground: Theme.palette.baseColor4
                             quoteBarVisible: quoteBarSwitch.checked
 
+                            characterLimit: limitSpinBox.value
+                            onAttemptToExceedHardLimit: limitInfo.hitCount++
+
                             // Mention/emoji-suggestions navigation is handled here (in the page),
                             // not inside ChatTextArea. These attached handlers coexist with
                             // the component's own Keys.onPressed and only act while a popup is
@@ -829,6 +832,30 @@ unclosed fence here (no closing triple-tick)
                 spacing: 16
                 Label { text: "entering emoji: " + textArea.enteringEmoji }
                 Label { text: "emoji filter: \"" + textArea.emojiFilter + "\"" }
+            }
+
+            Row {
+                id: limitInfo
+
+                property int hitCount: 0
+
+                spacing: 16
+                Label {
+                    text: "char limit:"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                SpinBox {
+                    id: limitSpinBox
+                    from: 1
+                    to: 10000
+                    value: 1200
+                    editable: true
+                }
+                Label {
+                    text: "length: " + textArea.length + ", exceed attempts: "
+                          + limitInfo.hitCount
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
 
             Label {

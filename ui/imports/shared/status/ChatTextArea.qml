@@ -26,6 +26,16 @@ StatusTextArea {
     // Background color needed for proper rendering of quote block's vertical line.
     property color backgroundColor: Theme.palette.background
 
+    // Hard cap on the document length (in characters; a mention pill counts as 1).
+    // Regular typing and paste that would exceed it are blocked before insertion.
+    // Any overflow that slips past them is trimmed by the onTextChanged
+    // backstop below. Every rejected attempt emits attemptToExceedHardLimit.
+    property int characterLimit: 2000
+
+    // Emitted whenever an insertion is prevented (or trimmed) because it would
+    // exceed characterLimit.
+    signal attemptToExceedHardLimit()
+
     readonly property alias linksModel: highlighter.linksModel
     readonly property alias mentionsModel: highlighter.mentionsModel
 
@@ -82,6 +92,20 @@ StatusTextArea {
             const snapped = highlighter.snapToQuoteContent(root.cursorPosition)
             if (snapped !== root.cursorPosition)
                 root.cursorPosition = snapped
+        }
+    }
+
+    onTextChanged: {
+        // Belt-and-suspenders backstop to the pre-emptive guards in Keys.onPressed. A few inputs
+        // can't be blocked before insertion: IME/preedit commits (they arrive via inputMethodEvent,
+        // not key events) and editor-driven inserts (e.g. the "> " quote continuation). If the
+        // document still ends up over the limit, trim the overflow from the tail and signal.
+        // Regular typing/paste never reach here — they are blocked before insertion above — so no
+        // insert-then-remove flicker for the common paths. Trimming the tail brings the length back
+        // to characterLimit in one step, so the re-entrant onTextChanged is a no-op.
+        if (root.length > root.characterLimit) {
+            root.remove(root.characterLimit, root.length)
+            root.attemptToExceedHardLimit()
         }
     }
 
@@ -258,6 +282,25 @@ StatusTextArea {
     }
 
     Keys.onPressed: (event) => {
+        // Hard character limit: block any keystroke that would grow the document past the limit,
+        // before the native insertion happens (no reactive removal). A "printable" key carries
+        // text and no command modifier; navigation/deletion keys and shortcuts (Copy/Cut/Paste/
+        // Undo/Redo, handled below) are not inserts. Typing that replaces a selection is allowed
+        // when the net length still fits.
+        const inserts = event.text.length > 0
+                && !(event.modifiers & (Qt.ControlModifier | Qt.MetaModifier | Qt.AltModifier))
+                && event.key !== Qt.Key_Backspace
+                && event.key !== Qt.Key_Delete
+                && event.key !== Qt.Key_Escape
+        if (inserts) {
+            const selLen = root.selectionEnd - root.selectionStart
+            if (root.length - selLen + 1 > root.characterLimit) {
+                event.accepted = true
+                root.attemptToExceedHardLimit()
+                return
+            }
+        }
+
         // Intercept the 3rd backtick typed right after "``" and perform
         // the "``" -> "```" replacement ourselves, as a single joinable
         // edit block (see TextDocumentUtils.handleTripleBacktick).
@@ -292,6 +335,14 @@ StatusTextArea {
         }
         if (event.matches(StandardKey.Paste)) {
             event.accepted = true
+            // Reject the whole paste when it would exceed the limit (nothing is inserted). The
+            // clipboard's plain text length is the character count; for an internal mention paste
+            // this slightly over-counts (names vs 1-char pills), erring toward stricter blocking.
+            const selLen = root.selectionEnd - root.selectionStart
+            if (root.length - selLen + ClipboardUtils.text.length > root.characterLimit) {
+                root.attemptToExceedHardLimit()
+                return
+            }
             highlighter.pasteFromClipboard(root.selectionStart, root.selectionEnd,
                                            root.cursorPosition)
             return
