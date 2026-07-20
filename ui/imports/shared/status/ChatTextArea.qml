@@ -85,6 +85,12 @@ StatusTextArea {
     wrapMode: TextEdit.Wrap
     background: null
 
+    // Emoji sizing is baked into per-character formats by the highlighter (from the document's
+    // default font). QSyntaxHighlighter only reruns on content changes, so a font change alone
+    // would leave the emoji sizes stale until the next edit — force a rehighlight here. By the
+    // time fontChanged fires, TextArea has already propagated the new font to the document.
+    onFontChanged: highlighter.rehighlight()
+
     // Keep the caret out of the "> " quote prefix so it feels atomic. Self-terminating:
     // re-firing with an already-snapped position is a no-op.
     onCursorPositionChanged: {
