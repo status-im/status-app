@@ -32,7 +32,7 @@ Control {
                                                         && loadedContentItem.statusAdaptiveDialogContentVerticalScrollBar
                                                         ? loadedContentItem.statusAdaptiveDialogContentVerticalScrollBar
                                                         : null
-        readonly property real loadedContentImplicitHeight: loadedContentItem ? loadedContentItem["implicitHeight"] ?? 0 : 0
+        readonly property real loadedContentImplicitHeight: loadedContentItem ? loadedContentItem.implicitHeight : 0
         readonly property real loadedContentHeight: contentFlickable ? contentFlickable.contentHeight : 0
         readonly property real loadedContentNaturalHeight: loadedContentItem ? Math.max(loadedContentImplicitHeight, contentIsFlickable ? loadedContentHeight : 0) : 0
         readonly property real activeContentExtent: activeFlickable ? activeFlickable.contentHeight
