@@ -455,8 +455,7 @@ unclosed fence here (no closing triple-tick)
                             }
 
                             textMargin: 10
-
-                            font.pixelSize: Theme.primaryTextFontSize
+                            font.pixelSize: fontSizeSlider.value
                             codeBackground: Theme.palette.baseColor4
                             quoteBarVisible: quoteBarSwitch.checked
 
@@ -732,7 +731,7 @@ unclosed fence here (no closing triple-tick)
             ChatSingleLineTextView {
                 Layout.fillWidth: true
 
-                font.pixelSize: Theme.secondaryTextFontSize
+                font.pixelSize: fontSizeSlider.value - 2
                 padding: 10
                 edited: editedSwitch.checked
 
@@ -854,6 +853,27 @@ unclosed fence here (no closing triple-tick)
                 Label {
                     text: "length: " + textArea.length + ", exceed attempts: "
                           + limitInfo.hitCount
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+
+            Row {
+                spacing: 16
+
+                Label {
+                    text: "font size:"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                Slider {
+                    id: fontSizeSlider
+                    anchors.verticalCenter: parent.verticalCenter
+                    from: 8
+                    to: 40
+                    stepSize: 1
+                    value: Theme.primaryTextFontSize
+                }
+                Label {
+                    text: fontSizeSlider.value + " px"
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
