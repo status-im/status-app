@@ -3,6 +3,7 @@ import QtTest
 
 import StatusQ
 import StatusQ.Components
+import StatusQ.Core.Utils
 
 Item {
     id: root
@@ -533,6 +534,47 @@ Item {
             tryVerify(() => renders(control, 'a[href="https://a.example"]'), 1000,
                       "highlighted-link rule missing")
             verify(renders(control, 'a[href="https://b.example"]'), "hovered-link rule missing")
+        }
+
+        // ── image emojis (Twemoji) via toBlocks(emojiBaseUrl) ─────────────────────
+
+        // 😎 is U+1F60E → twemoji file 1f60e.svg.
+        readonly property string emoji: "\u{1F60E}"
+
+        // With an emoji base url, toBlocks emits a Twemoji <img> and no raw emoji glyph.
+        function test_imageEmojis_rendersImage() {
+            control.blocks = MarkdownUtils.toBlocks(
+                        "A" + emoji + "B", ({}), control.font, false, true, 0, Emoji.base)
+            tryVerify(() => control.implicitHeight > 0)
+
+            verify(renders(control, "<img"), "expected an <img> for the emoji")
+            verify(renders(control, "1f60e.svg"), "expected the twemoji svg source")
+            verify(!renders(control, emoji), "raw emoji glyph should be absent in image mode")
+        }
+
+        // With an empty base url, toBlocks keeps font-based emoji (raw glyph in a font-size span).
+        function test_imageEmojis_fontModeKeepsGlyph() {
+            control.blocks = MarkdownUtils.toBlocks(
+                        "A" + emoji + "B", ({}), control.font, false, true, 0, "")
+            tryVerify(() => control.implicitHeight > 0)
+
+            verify(renders(control, emoji), "font mode keeps the raw emoji")
+            verify(!renders(control, "<img"), "font mode has no <img>")
+        }
+
+        // Copy parity: selecting an image emoji recovers its Unicode (not U+FFFC), matching font
+        // mode — so copy behaves the same in both modes.
+        function test_imageEmojis_copyRecoversUnicode() {
+            control.selectable = true
+            control.blocks = MarkdownUtils.toBlocks(
+                        "A" + emoji + "B", ({}), control.font, false, true, 0, Emoji.base)
+            tryVerify(() => control.implicitHeight > 0)
+
+            mousePress(control, 0, 3)
+            mouseMove(control, control.width - 4, control.implicitHeight - 4)
+            mouseRelease(control, control.width - 4, control.implicitHeight - 4)
+
+            compare(control.selectedText, "A" + emoji + "B")
         }
     }
 }

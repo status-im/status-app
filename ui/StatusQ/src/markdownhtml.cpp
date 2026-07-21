@@ -1,5 +1,8 @@
 #include "StatusQ/markdownhtml.h"
 
+#include <QFile>
+#include <QTextBoundaryFinder>
+#include <QUrl>
 #include <QVariantMap>
 
 namespace {
@@ -33,11 +36,86 @@ QString escapeInline(const QString& s)
     return out;
 }
 
-// Wraps each run of emoji code points in `s` (already HTML-escaped) in a font-size span, so
-// the rich-text view enlarges them to ~the line height like the editor. `emojiPx <= 0` leaves
-// the string unchanged; consecutive emoji code points (incl. ZWJ sequences) share one span.
-// Safe on escaped text: entities and <br/> are ASCII, never in the emoji code-point ranges.
-QString emojiWrap(const QString& s, int emojiPx)
+// A font-size span for one emoji run (font-based rendering).
+QString emojiFontSpan(const QString& emoji, int emojiPx)
+{
+    return QStringLiteral("<span style=\"font-size:%1px\">%2</span>").arg(emojiPx).arg(emoji);
+}
+
+// ── image-based emoji (Twemoji) — used when an emoji base url is supplied ────────
+
+// Local path a url resolves to for an existence check (filesystem or bundled qrc:).
+QString localPathForUrl(const QString& url)
+{
+    const QUrl u(url);
+    if (u.scheme() == QLatin1String("qrc"))
+        return QLatin1Char(':') + u.path();
+    if (u.isLocalFile())
+        return u.toLocalFile();
+    return url;
+}
+
+// Maps a single emoji (one grapheme cluster) to its Twemoji svg url under `base`, following
+// twemoji.js' rule (drop U+FE0F unless the cluster has a ZWJ; join code points as lowercase hex
+// with '-'). "" when no svg exists. Mirrors chatinputhighlighter.cpp's twemojiSvgUrl.
+QString twemojiSvgUrl(const QString& base, const QString& emoji)
+{
+    if (base.isEmpty())
+        return {};
+    const bool hasZwj = emoji.contains(QChar(0x200D));
+    QString name;
+    for (qsizetype i = 0; i < emoji.size();) {
+        const QChar c = emoji[i];
+        char32_t cp;
+        if (c.isHighSurrogate() && i + 1 < emoji.size() && emoji[i + 1].isLowSurrogate()) {
+            cp = QChar::surrogateToUcs4(c, emoji[i + 1]);
+            i += 2;
+        } else {
+            cp = c.unicode();
+            i += 1;
+        }
+        if (!hasZwj && cp == 0xFE0F)
+            continue;
+        if (!name.isEmpty())
+            name += QLatin1Char('-');
+        name += QString::number(cp, 16);
+    }
+    if (name.isEmpty())
+        return {};
+    const QString url = base + name + QStringLiteral(".svg");
+    if (!QFile::exists(localPathForUrl(url)))
+        return {};
+    return url;
+}
+
+// Renders an emoji run as Twemoji <img> tags: segmented per grapheme cluster so ZWJ sequences map
+// to their combined svg and adjacent emoji each get their own image. Clusters without a Twemoji svg
+// fall back to a font-size span.
+QString emojiImagesHtml(const QString& run, int emojiPx, const QString& emojiBaseUrl)
+{
+    QString out;
+    QTextBoundaryFinder bf(QTextBoundaryFinder::Grapheme, run);
+    int cs = 0;
+    for (int ce = bf.toNextBoundary(); ce >= 0; ce = bf.toNextBoundary()) {
+        if (ce > cs) {
+            const QString cluster = run.mid(cs, ce - cs);
+            const QString url = twemojiSvgUrl(emojiBaseUrl, cluster);
+            if (!url.isEmpty())
+                out += QStringLiteral("<img src=\"%1\" width=\"%2\" height=\"%2\""
+                                      " style=\"vertical-align:bottom\">").arg(url).arg(emojiPx);
+            else
+                out += emojiFontSpan(cluster, emojiPx);
+        }
+        cs = ce;
+    }
+    return out;
+}
+
+// Renders each run of emoji code points in `s` (already HTML-escaped). `emojiPx <= 0` leaves the
+// string unchanged. When `emojiBaseUrl` is empty, each run is wrapped in a font-size span so the
+// rich-text view enlarges them ~to the line height (font-based). When set, each emoji is emitted as
+// a Twemoji <img>. Safe on escaped text: entities and <br/> are ASCII, never in the emoji ranges.
+QString emojiWrap(const QString& s, int emojiPx, const QString& emojiBaseUrl)
 {
     if (emojiPx <= 0)
         return s;
@@ -60,8 +138,9 @@ QString emojiWrap(const QString& s, int emojiPx)
             const int start = i;
             do { i += units; }
             while (i < s.size() && Markdown::isEmojiCodePoint(codePointAt(i, units)));
-            out += QStringLiteral("<span style=\"font-size:%1px\">").arg(emojiPx)
-                 + s.mid(start, i - start) + QStringLiteral("</span>");
+            const QString run = s.mid(start, i - start);
+            out += emojiBaseUrl.isEmpty() ? emojiFontSpan(run, emojiPx)
+                                          : emojiImagesHtml(run, emojiPx, emojiBaseUrl);
         } else {
             out += s.mid(i, units);
             i += units;
@@ -86,7 +165,7 @@ QString collectCodeText(const Node& node)
 }
 
 QString renderChildren(const Node& node,
-                       const QHash<int, QPair<QString, QString>>& mentions, int emojiPx);
+                       const QHash<int, QPair<QString, QString>>& mentions, int emojiPx, const QString& emojiBaseUrl);
 
 // Inline code markup; `content` is already escaped.
 QString codeSpanHtml(const QString& content)
@@ -95,21 +174,21 @@ QString codeSpanHtml(const QString& content)
 }
 
 QString renderNode(const Node& node,
-                   const QHash<int, QPair<QString, QString>>& mentions, int emojiPx)
+                   const QHash<int, QPair<QString, QString>>& mentions, int emojiPx, const QString& emojiBaseUrl)
 {
     switch (node.kind) {
     case NodeKind::Delimiter:
         return {}; // formatting characters are never rendered
 
     case NodeKind::Text:
-        return emojiWrap(escapeInline(node.literal), emojiPx);
+        return emojiWrap(escapeInline(node.literal), emojiPx, emojiBaseUrl);
 
     case NodeKind::Strong:
-        return QStringLiteral("<b>%1</b>").arg(renderChildren(node, mentions, emojiPx));
+        return QStringLiteral("<b>%1</b>").arg(renderChildren(node, mentions, emojiPx, emojiBaseUrl));
     case NodeKind::Emphasis:
-        return QStringLiteral("<i>%1</i>").arg(renderChildren(node, mentions, emojiPx));
+        return QStringLiteral("<i>%1</i>").arg(renderChildren(node, mentions, emojiPx, emojiBaseUrl));
     case NodeKind::Strikethrough:
-        return QStringLiteral("<s>%1</s>").arg(renderChildren(node, mentions, emojiPx));
+        return QStringLiteral("<s>%1</s>").arg(renderChildren(node, mentions, emojiPx, emojiBaseUrl));
 
     case NodeKind::CodeSpan:
         return codeSpanHtml(collectCodeText(node));
@@ -119,16 +198,16 @@ QString renderNode(const Node& node,
 
     case NodeKind::QuoteBlock:
         return QStringLiteral("<blockquote>%1</blockquote>")
-                .arg(renderChildren(node, mentions, emojiPx));
+                .arg(renderChildren(node, mentions, emojiPx, emojiBaseUrl));
 
     case NodeKind::Link:
         return QStringLiteral("<a href=\"%1\">%2</a>")
-                .arg(escape(node.destination), renderChildren(node, mentions, emojiPx));
+                .arg(escape(node.destination), renderChildren(node, mentions, emojiPx, emojiBaseUrl));
 
     case NodeKind::WalletLink:
         return QStringLiteral("<a href=\"%1%2\">%3</a>")
                 .arg(kSendViaChatPrefix, escape(node.destination),
-                     renderChildren(node, mentions, emojiPx));
+                     renderChildren(node, mentions, emojiPx, emojiBaseUrl));
 
     case NodeKind::Mention: {
         const auto it = mentions.constFind(static_cast<int>(node.start));
@@ -141,29 +220,29 @@ QString renderNode(const Node& node,
 
     case NodeKind::Document:
     case NodeKind::Paragraph:
-        return renderChildren(node, mentions, emojiPx);
+        return renderChildren(node, mentions, emojiPx, emojiBaseUrl);
     }
     return {};
 }
 
 QString renderChildren(const Node& node,
-                       const QHash<int, QPair<QString, QString>>& mentions, int emojiPx)
+                       const QHash<int, QPair<QString, QString>>& mentions, int emojiPx, const QString& emojiBaseUrl)
 {
     QString out;
     for (const Node& c : node.children)
-        out += renderNode(c, mentions, emojiPx);
+        out += renderNode(c, mentions, emojiPx, emojiBaseUrl);
     return out;
 }
 
 QString renderSingleLine(const Node& node,
-                         const QHash<int, QPair<QString, QString>>& mentions, int emojiPx);
+                         const QHash<int, QPair<QString, QString>>& mentions, int emojiPx, const QString& emojiBaseUrl);
 
 QString renderSingleLineChildren(const Node& node,
-                                 const QHash<int, QPair<QString, QString>>& mentions, int emojiPx)
+                                 const QHash<int, QPair<QString, QString>>& mentions, int emojiPx, const QString& emojiBaseUrl)
 {
     QString out;
     for (const Node& c : node.children)
-        out += renderSingleLine(c, mentions, emojiPx);
+        out += renderSingleLine(c, mentions, emojiPx, emojiBaseUrl);
     return out;
 }
 
@@ -171,7 +250,7 @@ QString renderSingleLineChildren(const Node& node,
 // and quote blocks become "> "-prefixed classed spans (colored by the consumer's span.quote
 // rule). Inline formatting, links and mentions match renderNode. Used for compact previews.
 QString renderSingleLine(const Node& node,
-                         const QHash<int, QPair<QString, QString>>& mentions, int emojiPx)
+                         const QHash<int, QPair<QString, QString>>& mentions, int emojiPx, const QString& emojiBaseUrl)
 {
     switch (node.kind) {
     case NodeKind::Delimiter:
@@ -180,15 +259,15 @@ QString renderSingleLine(const Node& node,
     case NodeKind::Text: {
         QString t = escape(node.literal);
         t.replace(QLatin1Char('\n'), QLatin1Char(' '));
-        return emojiWrap(t, emojiPx);
+        return emojiWrap(t, emojiPx, emojiBaseUrl);
     }
 
     case NodeKind::Strong:
-        return QStringLiteral("<b>%1</b>").arg(renderSingleLineChildren(node, mentions, emojiPx));
+        return QStringLiteral("<b>%1</b>").arg(renderSingleLineChildren(node, mentions, emojiPx, emojiBaseUrl));
     case NodeKind::Emphasis:
-        return QStringLiteral("<i>%1</i>").arg(renderSingleLineChildren(node, mentions, emojiPx));
+        return QStringLiteral("<i>%1</i>").arg(renderSingleLineChildren(node, mentions, emojiPx, emojiBaseUrl));
     case NodeKind::Strikethrough:
-        return QStringLiteral("<s>%1</s>").arg(renderSingleLineChildren(node, mentions, emojiPx));
+        return QStringLiteral("<s>%1</s>").arg(renderSingleLineChildren(node, mentions, emojiPx, emojiBaseUrl));
 
     case NodeKind::CodeSpan:
     case NodeKind::CodeBlock: {
@@ -200,16 +279,16 @@ QString renderSingleLine(const Node& node,
 
     case NodeKind::QuoteBlock:
         return QStringLiteral("<span class=\"quote\">&gt; %1</span>")
-                .arg(renderSingleLineChildren(node, mentions, emojiPx));
+                .arg(renderSingleLineChildren(node, mentions, emojiPx, emojiBaseUrl));
 
     case NodeKind::Link:
         return QStringLiteral("<a href=\"%1\">%2</a>")
-                .arg(escape(node.destination), renderSingleLineChildren(node, mentions, emojiPx));
+                .arg(escape(node.destination), renderSingleLineChildren(node, mentions, emojiPx, emojiBaseUrl));
 
     case NodeKind::WalletLink:
         return QStringLiteral("<a href=\"%1%2\">%3</a>")
                 .arg(kSendViaChatPrefix, escape(node.destination),
-                     renderSingleLineChildren(node, mentions, emojiPx));
+                     renderSingleLineChildren(node, mentions, emojiPx, emojiBaseUrl));
 
     case NodeKind::Mention: {
         const auto it = mentions.constFind(static_cast<int>(node.start));
@@ -221,7 +300,7 @@ QString renderSingleLine(const Node& node,
 
     case NodeKind::Document:
     case NodeKind::Paragraph:
-        return renderSingleLineChildren(node, mentions, emojiPx);
+        return renderSingleLineChildren(node, mentions, emojiPx, emojiBaseUrl);
     }
     return {};
 }
@@ -377,7 +456,7 @@ void finalizeLine(BlockAcc& a)
 }
 
 void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
-          const QHash<int, QPair<QString, QString>>& mentions, int emojiPx)
+          const QHash<int, QPair<QString, QString>>& mentions, int emojiPx, const QString& emojiBaseUrl)
 {
     for (const Node& c : nodes) {
         switch (c.kind) {
@@ -389,7 +468,7 @@ void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
                 if (!parts[i].isEmpty()) {
                     // Wrap each piece in the active emphasis so content before/after an
                     // emphasis-with-block keeps the outer emphasis (not the inner one).
-                    a.cur += wrapEmphasis(emojiWrap(escape(parts[i]), emojiPx), emph);
+                    a.cur += wrapEmphasis(emojiWrap(escape(parts[i]), emojiPx, emojiBaseUrl), emph);
                     a.curStarted = true;
                 }
             }
@@ -421,7 +500,7 @@ void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
                 finalizeLine(a);
             flushTextBlock(a);
             BlockAcc inner;
-            walk(c.children, emph, inner, mentions, emojiPx);
+            walk(c.children, emph, inner, mentions, emojiPx, emojiBaseUrl);
             if (inner.curStarted)
                 finalizeLine(inner);
             flushTextBlock(inner);
@@ -440,10 +519,10 @@ void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
                 // boundary assembles correctly, carrying the emphasis on the pieces.
                 // Walking also routes a nested code span through the per-line CodeSpan
                 // case, keeping its background line-local.
-                walk(c.children, emph | emphasisBitFor(c.kind), a, mentions, emojiPx);
+                walk(c.children, emph | emphasisBitFor(c.kind), a, mentions, emojiPx, emojiBaseUrl);
             } else {
                 // inline emphasis (no block) — wrap in any active outer emphasis too
-                a.cur += wrapEmphasis(renderNode(c, mentions, emojiPx), emph);
+                a.cur += wrapEmphasis(renderNode(c, mentions, emojiPx, emojiBaseUrl), emph);
                 a.curStarted = true;
             }
             break;
@@ -464,7 +543,7 @@ void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
         }
 
         default: // Link, Mention — inline leaves
-            a.cur += wrapEmphasis(renderNode(c, mentions, emojiPx), emph);
+            a.cur += wrapEmphasis(renderNode(c, mentions, emojiPx, emojiBaseUrl), emph);
             a.curStarted = true;
             break;
         }
@@ -476,15 +555,15 @@ void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
 namespace Markdown {
 
 QString toHtml(const Node& root, const QHash<int, QPair<QString, QString>>& mentions,
-               int emojiPx)
+               int emojiPx, const QString& emojiBaseUrl)
 {
-    return renderNode(root, mentions, emojiPx);
+    return renderNode(root, mentions, emojiPx, emojiBaseUrl);
 }
 
 QString toSingleLineHtml(const Node& root, const QHash<int, QPair<QString, QString>>& mentions,
-                         int emojiPx)
+                         int emojiPx, const QString& emojiBaseUrl)
 {
-    return renderSingleLine(root, mentions, emojiPx);
+    return renderSingleLine(root, mentions, emojiPx, emojiBaseUrl);
 }
 
 QString toPlainText(const Node& root, const QHash<int, QPair<QString, QString>>& mentions)
@@ -493,7 +572,7 @@ QString toPlainText(const Node& root, const QHash<int, QPair<QString, QString>>&
 }
 
 QVariantList toBlocks(const Node& root,
-                      const QHash<int, QPair<QString, QString>>& mentions, int emojiPx)
+                      const QHash<int, QPair<QString, QString>>& mentions, int emojiPx, const QString& emojiBaseUrl)
 {
     // The document is Document > Paragraph > content; walk the paragraph's children.
     const QVector<Node>* content = &root.children;
@@ -502,7 +581,7 @@ QVariantList toBlocks(const Node& root,
         content = &root.children.first().children;
 
     BlockAcc a;
-    walk(*content, 0, a, mentions, emojiPx);
+    walk(*content, 0, a, mentions, emojiPx, emojiBaseUrl);
     if (a.curStarted)
         finalizeLine(a); // a trailing real line (incl. an empty delimiter/quoted line)
     flushTextBlock(a);

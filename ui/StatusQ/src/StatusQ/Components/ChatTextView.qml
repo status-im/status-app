@@ -392,7 +392,13 @@ Control {
 
             const parts = []
             for (let i = 0; i < editors.length; ++i) {
-                const s = editors[i].selectedText.split("\u2028").join("\n")
+                const e = editors[i]
+                let raw = e.selectedText
+                // An image emoji selects as U+FFFC; recover its Unicode from the underlying
+                // document so copy is identical to font mode. Only pay the cost when one is present.
+                if (raw.indexOf("\ufffc") >= 0)
+                    raw = TextDocumentUtils.selectionText(e.textDocument, e.selectionStart, e.selectionEnd)
+                const s = raw.split("\u2028").join("\n")
                 if (s.length > 0)
                     parts.push(s)
             }

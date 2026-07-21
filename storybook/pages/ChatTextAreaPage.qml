@@ -559,8 +559,8 @@ unclosed fence here (no closing triple-tick)
                             // Rendered from the editor's plain text (mentions as "@0x…"), not the
                             // text document — mentions are resolved via mentionsMap.
                             blocks: {
-                                textArea.text            // re-build on every edit
-                                textArea.fullLineHeightEmojis   // and when the emoji toggle changes
+                                textArea.text // re-build on every edit
+
                                 // Expand chat slash-commands (e.g. /tableflip) as the real send path does.
                                 const text = StringUtils.expandAsciiEmoticonShortcuts(textArea.textWithMentions())
                                 return MarkdownUtils.toBlocks(text,
@@ -568,7 +568,8 @@ unclosed fence here (no closing triple-tick)
                                                               chatTextView.font,
                                                               textArea.formatUnclosedCodeFence,
                                                               textArea.fullLineHeightEmojis,
-                                                              12 /* emoji enlargement for only-emojis message */)
+                                                              12 /* emoji enlargement for only-emojis message */,
+                                                              textArea.imageEmojis ? Emoji.base : "" /*emojiBaseUrl*/)
                             }
 
                             // Tracks the pointer so the click bubble can appear where you clicked.
@@ -749,7 +750,8 @@ unclosed fence here (no closing triple-tick)
                     return  StringUtils.expandAsciiEmoticonShortcuts(
                                 MarkdownUtils.singleLineHtml(
                                     textArea.textWithMentions(),
-                                    root.mentionsMap, font))
+                                    root.mentionsMap, font,
+                                    textArea.imageEmojis ? Emoji.base : ""))
                 }
             }
 

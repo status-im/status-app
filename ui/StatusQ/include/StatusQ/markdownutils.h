@@ -27,12 +27,15 @@ public:
     // used to size emojis to the line height when `fullLineHeightEmojis` is true and, for
     // emoji-only messages, to enlarge them by `emojiSizeOffset` pixels on top of that height
     // (0 disables the extra enlargement).
+    // When `emojiBaseUrl` is non-empty (e.g. Emoji.base), emoji are rendered as inline Twemoji
+    // `<img>` tags instead of font-based spans; empty keeps font-based emoji.
     Q_INVOKABLE QVariantList toBlocks(const QString& text,
                                       const QVariantMap& mentions = {},
                                       const QFont& font = {},
                                       bool formatUnclosedCodeFence = false,
                                       bool fullLineHeightEmojis = false,
-                                      int emojiSizeOffset = 0) const;
+                                      int emojiSizeOffset = 0,
+                                      const QString& emojiBaseUrl = {}) const;
 
     // Renders `text` as a single-line HTML fragment for compact previews (newlines → spaces,
     // quote blocks as "> "-prefixed classed spans, code fences as inline code spans). Mentions
@@ -40,7 +43,8 @@ public:
     // emoji-only enlargement is never applied here. See Markdown::toSingleLineHtml.
     Q_INVOKABLE QString singleLineHtml(const QString& text,
                                        const QVariantMap& mentions = {},
-                                       const QFont& font = {}) const;
+                                       const QFont& font = {},
+                                       const QString& emojiBaseUrl = {}) const;
 
     // Returns the plain text of `text` (formatting removed, mentions resolved to display names,
     // code content inline, line breaks preserved) — e.g. for Accessible.name. Mentions are
