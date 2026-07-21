@@ -1156,15 +1156,15 @@ Loader {
                 }
 
                 quickActions: [
-                    MessageReactionsRow {
-                        visible: {
-                            root.emojiReactionLimitReached
-                            return !root.emojiReactionLimitReached && !root.isViewMemberMessagesePopup
-                        }
-                        emojiModel: emojiPopup.fullModel
-                        onToggleReaction: hexcode => root.emojiReactionToggled(root.messageId, hexcode)
-                        onOpenEmojiPopup: (parent, mouse) => {
-                            d.addReactionClicked(parent, mouse)
+                    Loader {
+                        active: delegate.hovered && d.addReactionAllowed && !root.emojiReactionLimitReached
+                        visible: active
+                        sourceComponent: MessageReactionsRow {
+                            emojiModel: emojiPopup.fullModel
+                            onToggleReaction: hexcode => root.emojiReactionToggled(root.messageId, hexcode)
+                            onOpenEmojiPopup: (parent, mouse) => {
+                                                  d.addReactionClicked(parent, mouse)
+                                              }
                         }
                     },
                     Loader {

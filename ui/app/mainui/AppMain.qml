@@ -1029,8 +1029,6 @@ Item {
         property bool enablePushNotificationsFreshInstallSeen
         property bool enablePushNotificationsDontAskAgain
         property string enablePushNotificationsLastShownVersion
-        property var recentEmojis: []
-        property string skinColor // NB: must be a string for the twemoji lib to work; we don't want the `#` in the name
         property int theme: ThemeUtils.Style.System
         property int fontSize: {
             if (appMain.isPortraitMode) {
@@ -1457,11 +1455,8 @@ Item {
         sourceComponent: StatusEmojiPopup {
             directParent: appMain.Window.window.contentItem
             height: 440
-            recentEmojis: appMainLocalSettings.recentEmojis
-            skinColor: appMainLocalSettings.skinColor
+            userUID: allContacsAdaptor.selfContactDetails.publicKey
             emojiModel: SQUtils.Emoji.emojiModel
-            onSetSkinColorRequested: color => appMainLocalSettings.skinColor = color
-            onSetRecentEmojisRequested: recentEmojis => appMainLocalSettings.recentEmojis = recentEmojis
         }
     }
 
