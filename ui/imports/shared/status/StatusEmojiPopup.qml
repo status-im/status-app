@@ -26,15 +26,23 @@ StatusDropdown {
         sourceModel: root.emojiModel
 
         filters: [
-            AnyOf {
+            AllOf {
                 enabled: d.searchString !== ""
-                StatusQUtils.SearchFilter {
-                    roleName: "name"
-                    searchPhrase: d.searchString
+                AnyOf {
+                    StatusQUtils.SearchFilter {
+                        roleName: "name"
+                        searchPhrase: d.searchString
+                    }
+                    StatusQUtils.SearchFilter {
+                        roleName: "shortname"
+                        searchPhrase: d.searchString
+                    }
                 }
-                StatusQUtils.SearchFilter {
-                    roleName: "shortname"
-                    searchPhrase: d.searchString
+                // don't duplicate recents in the search results
+                ValueFilter {
+                    roleName: "category"
+                    value: root.emojiModel.recentCategoryName
+                    inverted: true
                 }
             },
             AnyOf {
