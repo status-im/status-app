@@ -4,7 +4,6 @@ from allure_commons._allure import step
 from configs import get_platform
 from driver.aut import AUT
 from gui.screens.wallet import WalletAccountView
-from helpers.wallet_helper import wait_for_account_assets_loaded
 from scripts.utils.benchmark_report import (
     BenchmarkScenarioSamples,
     attach_scenario_reports,
@@ -24,12 +23,6 @@ WALLET_BENCHMARK_USERS = pytest.mark.parametrize(
 def _wallet_account_view(main_screen) -> WalletAccountView:
     main_screen.left_panel.open_wallet()
     return WalletAccountView().wait_until_appears()
-
-
-def _open_assets_loaded(wallet_account_view: WalletAccountView) -> WalletAccountView:
-    wallet_account_view.open_assets_tab()
-    wait_for_account_assets_loaded(wallet_account_view, open_tab=False)
-    return wallet_account_view
 
 
 def _run_tab_benchmark(
@@ -86,7 +79,7 @@ def test_wallet_assets_tab_loading_time(
         _run_tab_benchmark(
             aut,
             tmp_path,
-            open_tab=lambda: _open_assets_loaded(wallet_account_view),
+            open_tab=wallet_account_view.open_assets_tab,
             leave_tab=lambda: wallet_account_view.open_collectibles_tab(
                 wait_until_loaded=False
             ),

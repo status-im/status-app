@@ -38,7 +38,11 @@ def wait_for_account_assets_loaded(
         items = driver.findAllObjects(asset_item.real_name)
         if not items:
             return False
-        return not any(getattr(item, 'balanceLoading', False) for item in items)
+        try:
+            return not any(getattr(item, 'balanceLoading', False) for item in items)
+        except (RuntimeError, AttributeError):
+            # Squish may briefly return destroyed/null asset delegates while the list rebuilds.
+            return False
 
     assert driver.waitFor(assets_loaded, timeout_msec), (
         'Account assets are still loading'
