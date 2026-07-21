@@ -21,9 +21,11 @@ namespace Markdown {
 // {displayName, href}. Mentions without an entry fall back to a generic link.
 // When `emojiPx > 0`, emoji runs in plain text are wrapped in a font-size span of that
 // pixel size (to enlarge them, like the editor); 0 leaves them at the base size.
+// When `emojiBaseUrl` is non-empty, emoji are instead emitted as Twemoji `<img>` tags
+// (`<emojiBaseUrl><codepoints>.svg`, sized to `emojiPx`); empty keeps font-based rendering.
 QString toHtml(const Node& root,
                const QHash<int, QPair<QString, QString>>& mentions = {},
-               int emojiPx = 0);
+               int emojiPx = 0, const QString& emojiBaseUrl = {});
 
 // Renders the document as a single-line HTML fragment for compact previews (e.g. the reply
 // preview): newlines collapse to spaces, a fenced code block is rendered like an inline code
@@ -32,7 +34,7 @@ QString toHtml(const Node& root,
 // toHtml (enlarges emoji runs when > 0).
 QString toSingleLineHtml(const Node& root,
                          const QHash<int, QPair<QString, QString>>& mentions = {},
-                         int emojiPx = 0);
+                         int emojiPx = 0, const QString& emojiBaseUrl = {});
 
 // Renders the document as plain text (no HTML): formatting delimiters dropped, mentions as their
 // display name, inline/fenced code as raw content, line breaks preserved. Intended for
@@ -50,6 +52,6 @@ QString toPlainText(const Node& root,
 // `emojiPx` behaves as in toHtml (enlarges emoji runs in text blocks when > 0).
 QVariantList toBlocks(const Node& root,
                       const QHash<int, QPair<QString, QString>>& mentions = {},
-                      int emojiPx = 0);
+                      int emojiPx = 0, const QString& emojiBaseUrl = {});
 
 } // namespace Markdown

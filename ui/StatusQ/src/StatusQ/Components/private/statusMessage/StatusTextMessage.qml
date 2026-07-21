@@ -5,6 +5,7 @@ import StatusQ
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils
 
 Item {
     id: root
@@ -83,7 +84,8 @@ Item {
                     chatTextView.font,
                     false /*formatUnclosedCodeFence*/,
                     true /*fullLineHeightEmojis*/,
-                    Theme.primaryTextFontSize /*emojiSizeOffset*/)
+                    Theme.primaryTextFontSize /*emojiSizeOffset*/,
+                    Emoji.base)
 
         // Reuse the existing linkActivated contract: "//<pubkey>" opens the profile, a URL opens.
         onMentionClicked: (pubKey) => root.linkActivated("//" + pubKey)

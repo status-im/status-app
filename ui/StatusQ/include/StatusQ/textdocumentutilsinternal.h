@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QString>
 #include <QVariantList>
 
 class QQuickTextDocument;
@@ -25,6 +26,11 @@ public:
     // in and the whole change undoes as one unit. No-op if "``" doesn't precede
     // `position`. The caller is expected to gate this on the actual keystroke.
     Q_INVOKABLE void handleTripleBacktick(QQuickTextDocument* document, int position);
+
+    // Returns the text of [start, end), converting any inline emoji image object back to its
+    // Unicode emoji (recovered from the Twemoji svg name), so copy is identical in font- and
+    // image-emoji modes. Non-image content is returned as-is.
+    Q_INVOKABLE QString selectionText(QQuickTextDocument* document, int start, int end) const;
 
     // Removes the characters in [start, end) as a single raw-cursor edit block.
     // Doing the deletion ourselves (instead of letting the text control delete the
