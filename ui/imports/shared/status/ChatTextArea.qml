@@ -4,6 +4,7 @@ import QtQuick.Controls
 import StatusQ
 import StatusQ.Controls
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils
 import StatusQ.Internal
 
 // Self-contained chat text input: a text area driving live, simplified-markdown
@@ -18,6 +19,8 @@ StatusTextArea {
 
     property alias formatUnclosedCodeFence: highlighter.formatUnclosedCodeFence
     property alias fullLineHeightEmojis: highlighter.fullLineHeightEmojis
+    // When true, emoji render as inline Twemoji images instead of via the OS emoji font.
+    property alias imageEmojis: highlighter.imageEmojis
     property alias codeBackground: highlighter.codeBackground
     property alias delimiterColor: highlighter.delimiterColor
     property alias linkColor: highlighter.linkColor
@@ -58,6 +61,15 @@ StatusTextArea {
 
     function insertMention(pos, name, pubKey) {
         highlighter.insertMention(pos, name, pubKey)
+    }
+    // Inserts `text` at `pos`, converting emoji directly to inline images in imageEmojis mode (no
+    // raw-Unicode flicker); a plain insert otherwise.
+    function insertTextWithEmojis(pos, text) {
+        highlighter.insertTextWithEmojis(pos, text)
+    }
+    // Number of separately-rendered inline emoji image objects currently in the input.
+    function emojiImageCount() {
+        return highlighter.emojiImageCount()
     }
     // Returns the content as plain text with mention pills as their "@"+pubKey wire form.
     // (Named to avoid shadowing TextArea's built-in getText(start, end).)
@@ -122,6 +134,9 @@ StatusTextArea {
         delimiterColor: Theme.palette.baseColor1
         linkColor: Theme.palette.primaryColor1
         quoteTextColor: Theme.palette.baseColor1
+        // Base url of the Twemoji svg assets, resolved by the Emoji singleton so it works in both
+        // filesystem and qrc deployments (needed by imageEmojis).
+        twemojiBaseUrl: Emoji.base
     }
 
     QtObject {

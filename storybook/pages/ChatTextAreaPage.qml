@@ -177,7 +177,9 @@ unclosed fence here (no closing triple-tick)
         const cursor = textArea.cursorPosition
         const at = cursor - textArea.emojiFilter.length - 1 // the ":"
         textArea.remove(at, cursor)
-        textArea.insert(at, Emoji.getEmojiCodepoint(unicode.split(".")[0]) + " ") // caret ends past the space
+        // insertTextWithEmojis converts the emoji directly to an inline image in imageEmojis mode
+        // (no raw-glyph flash); a plain insert in font mode. Caret ends past the space.
+        textArea.insertTextWithEmojis(at, Emoji.getEmojiCodepoint(unicode.split(".")[0]) + " ")
         d.emojiDismissed = false
     }
 
@@ -458,6 +460,7 @@ unclosed fence here (no closing triple-tick)
                             font.pixelSize: fontSizeSlider.value
                             codeBackground: Theme.palette.baseColor4
                             quoteBarVisible: quoteBarSwitch.checked
+                            imageEmojis: true
 
                             characterLimit: limitSpinBox.value
                             onAttemptToExceedHardLimit: limitInfo.hitCount++
@@ -781,6 +784,11 @@ unclosed fence here (no closing triple-tick)
                     text: "Full line height emojis"
                     checked: textArea.fullLineHeightEmojis
                     onToggled: textArea.fullLineHeightEmojis = checked
+                }
+                Switch {
+                    text: "Image emojis (Twemoji)"
+                    checked: textArea.imageEmojis
+                    onToggled: textArea.imageEmojis = checked
                 }
                 Switch {
                     id: flushOnEnterSwitch

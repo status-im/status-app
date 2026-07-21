@@ -785,5 +785,128 @@ Item {
             compare(control.length, 5)
             compare(limitSpy.count, 1)
         }
+
+        // ── image emojis (Twemoji) ──────────────────────────────────────────────
+
+        // 😎 is U+1F60E — a 2-unit surrogate pair in the document string.
+        readonly property string emoji: "\u{1F60E}"
+
+        // Default (font-based) mode leaves emoji as raw Unicode in the document.
+        function test_imageEmojis_defaultKeepsUnicode() {
+            compare(control.imageEmojis, false)
+            control.text = "A" + emoji + "B"
+            compare(control.length, 4) // A + 2 surrogate units + B
+            compare(control.textWithMentions(), "A" + emoji + "B")
+        }
+
+        // With image mode on, each emoji is replaced by a single inline image object (U+FFFC), and
+        // the original Unicode is recovered by textWithMentions().
+        function test_imageEmojis_convertsToImageObject() {
+            control.imageEmojis = true
+            control.text = "A" + emoji + "B"
+
+            tryCompare(control, "length", 3) // A + <image ORC> + B
+            compare(control.getText(1, 2).charCodeAt(0), 0xFFFC)
+            compare(control.textWithMentions(), "A" + emoji + "B")
+        }
+
+        // Toggling image mode back off restores the raw emoji text (synchronously in the setter).
+        function test_imageEmojis_toggleOffRestoresText() {
+            control.imageEmojis = true
+            control.text = "A" + emoji + "B"
+            tryCompare(control, "length", 3)
+
+            control.imageEmojis = false
+            compare(control.length, 4)
+            compare(control.textWithMentions(), "A" + emoji + "B")
+        }
+
+        // Copying an emoji image yields the Unicode emoji in the clipboard's external (plain-text)
+        // form, so pasting into another app gets a real emoji.
+        function test_imageEmojis_copyExternalPlainText() {
+            control.imageEmojis = true
+            control.text = emoji
+            tryCompare(control, "length", 1) // single image ORC
+
+            control.forceActiveFocus()
+            control.selectAll()
+            keyClick(Qt.Key_C, Qt.ControlModifier)
+
+            const plain = createTemporaryObject(plainTextEditComponent, root)
+            verify(plain)
+            plain.forceActiveFocus()
+            plain.paste()
+            tryCompare(plain, "text", emoji)
+        }
+
+        // Emoji images and mentions coexist: the emoji becomes an image object while the mention
+        // stays a mention (not counted among emoji images, nor emoji among mentions).
+        function test_imageEmojis_coexistsWithMention() {
+            control.imageEmojis = true
+            control.text = ""
+            control.insertMention(0, "@alice", "0xabc") // mention ORC at 0
+            control.insert(control.length, emoji)       // raw emoji appended → converts to image
+
+            tryCompare(control, "length", 2) // mention ORC + emoji image ORC
+            tryVerify(() => control.textWithMentions() === "@0xabc" + emoji)
+            tryCompare(mentionsRepeater, "count", 1)     // emoji image not counted as a mention
+        }
+
+        // insertTextWithEmojis inserts emoji as an image *synchronously* (no reactive queue), so the
+        // raw Unicode never lands in the document — length reflects the ORC immediately.
+        function test_imageEmojis_insertTextWithEmojisIsSynchronous() {
+            control.imageEmojis = true
+            control.text = ""
+
+            control.insertTextWithEmojis(0, emoji + " ")
+
+            // No tryCompare: the image is inserted in the same call, so length is already 2.
+            compare(control.length, 2) // emoji image ORC + space
+            compare(control.getText(0, 1).charCodeAt(0), 0xFFFC)
+            compare(control.textWithMentions(), emoji + " ")
+        }
+
+        // In font mode the same call inserts plain text (no conversion).
+        function test_imageEmojis_insertTextWithEmojisFontMode() {
+            compare(control.imageEmojis, false)
+            control.text = ""
+
+            control.insertTextWithEmojis(0, emoji + " ")
+
+            compare(control.length, 3) // 2 surrogate units + space
+            compare(control.textWithMentions(), emoji + " ")
+        }
+
+        // Pasting emoji in image mode inserts the image directly (synchronously), so there is no
+        // transient raw-Unicode length before the reactive conversion.
+        function test_imageEmojis_pasteInsertsImageSynchronously() {
+            control.imageEmojis = true
+            control.text = ""
+            control.forceActiveFocus()
+            ClipboardUtils.setText("a" + emoji + "b")
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            // Directly after paste (no event-loop turn): a + image ORC + b == 3, not the transient 4.
+            compare(control.length, 3)
+            compare(control.getText(1, 2).charCodeAt(0), 0xFFFC)
+            compare(control.textWithMentions(), "a" + emoji + "b")
+        }
+
+        // Two identical emoji placed back-to-back each become their own separately-rendered image
+        // object. Qt merges adjacent fragments with identical char formats, which would collapse
+        // them into a single (only-first-visible) image; a unique id per emoji keeps them apart.
+        // emojiImageCount() counts by fragment, so it is 2 only when they stay separate — without
+        // the unique id it would be 1 (this is the check that actually detects the bug).
+        function test_imageEmojis_adjacentIdenticalEmoji() {
+            control.imageEmojis = true
+            control.text = ""
+
+            control.insertTextWithEmojis(0, emoji + emoji)
+
+            compare(control.length, 2)            // two ORCs
+            compare(control.emojiImageCount(), 2) // ...kept as two distinct image fragments
+            compare(control.textWithMentions(), emoji + emoji)
+        }
     }
 }

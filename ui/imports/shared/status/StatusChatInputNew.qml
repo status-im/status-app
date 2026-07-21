@@ -120,7 +120,9 @@ Control {
             const cursor = messageInputField.cursorPosition
             const at = cursor - messageInputField.emojiFilter.length - 1 // the ":"
             messageInputField.remove(at, cursor)
-            messageInputField.insert(at, StatusQUtils.Emoji.getEmojiCodepoint(unicode.split(".")[0]) + " ")
+            // insertTextWithEmojis converts the emoji directly to an inline image in imageEmojis
+            // mode, so the raw glyph never flashes before the image appears.
+            messageInputField.insertTextWithEmojis(at, StatusQUtils.Emoji.getEmojiCodepoint(unicode.split(".")[0]) + " ")
         }
 
         // common popups are emoji, gif and stickers
@@ -750,6 +752,7 @@ Control {
                         readonly property int extraHorizontalPadding: 12 // for the nav bar handle / scrollbar
 
                         characterLimit: root.messageLimitHard
+                        imageEmojis: true
 
                         // When the text area is empty, we need to use padding because textMargin is ignored
                         // when calculating size. When not empty, textMargin is used because paddings are

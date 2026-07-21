@@ -69,6 +69,16 @@ class ChatInputHighlighter : public QSyntaxHighlighter
     Q_PROPERTY(bool fullLineHeightEmojis
                READ fullLineHeightEmojis WRITE setFullLineHeightEmojis
                NOTIFY fullLineHeightEmojisChanged)
+    // When true, emoji are rendered as inline Twemoji images (each emoji becomes a single
+    // embedded image object) instead of relying on the OS emoji font.
+    Q_PROPERTY(bool imageEmojis
+               READ imageEmojis WRITE setImageEmojis
+               NOTIFY imageEmojisChanged)
+    // Base url of the Twemoji svg assets (e.g. Emoji.base), resolved by QML so it works in both
+    // filesystem and qrc deployments. Required for imageEmojis; must end with '/'.
+    Q_PROPERTY(QString twemojiBaseUrl
+               READ twemojiBaseUrl WRITE setTwemojiBaseUrl
+               NOTIFY twemojiBaseUrlChanged)
     Q_PROPERTY(QAbstractListModel* linksModel READ linksModel CONSTANT)
     Q_PROPERTY(QAbstractListModel* mentionsModel READ mentionsModel CONSTANT)
 
@@ -96,12 +106,28 @@ public:
     bool fullLineHeightEmojis() const;
     void setFullLineHeightEmojis(bool enabled);
 
+    bool imageEmojis() const;
+    void setImageEmojis(bool enabled);
+
+    QString twemojiBaseUrl() const;
+    void setTwemojiBaseUrl(const QString& url);
+
     QAbstractListModel* linksModel() const;
     QAbstractListModel* mentionsModel() const;
 
     // Inserts a mention (an embedded object) carrying `name`/`pubKey` at `position`.
     Q_INVOKABLE void insertMention(int position, const QString& name,
                                    const QString& pubKey);
+
+    // Inserts `text` at `position`, converting its emoji directly to inline images when imageEmojis
+    // is on (so raw Unicode never lands in the document — avoids the reactive-conversion flicker).
+    // In font mode it is a plain text insert. Used by paste/suggestion insertion paths.
+    Q_INVOKABLE void insertTextWithEmojis(int position, const QString& text);
+
+    // Number of inline emoji image objects in the document, counted by fragment — i.e. the number
+    // of separately-rendered images. Adjacent identical emoji are kept in distinct fragments (via a
+    // unique id) so each is counted/rendered; without that they would merge into one.
+    Q_INVOKABLE int emojiImageCount() const;
 
     // Copies `[start, end)` to the clipboard in two forms: a custom MIME that rebuilds
     // mentions verbatim when pasted back into the editor, and plain text (each mention as
@@ -169,6 +195,8 @@ signals:
     void quoteTextColorChanged();
     void formatUnclosedCodeFenceChanged();
     void fullLineHeightEmojisChanged();
+    void imageEmojisChanged();
+    void twemojiBaseUrlChanged();
 
 protected:
     void highlightBlock(const QString& text) override;
@@ -184,6 +212,24 @@ private:
     // Replaces mention objects that fall inside a code span/block with their plain
     // name text. Runs queued (it edits the document), re-deriving from the AST.
     void demoteMentionsInCode();
+
+    // Image-emoji conversion (active only when m_imageEmojis). All edit the document.
+    // Replaces raw emoji runs with inline Twemoji image objects. `joinUndo` folds the edit
+    // into the triggering keystroke's undo step (reactive path), like demoteMentionsInCode;
+    // the toggle path uses its own step.
+    void convertEmojisToImages(bool joinUndo);
+    // Inserts `emoji` at `cursor` as an inline image when imageEmojis is on and a Twemoji svg
+    // exists; returns true on success, false otherwise (caller should insert the text instead).
+    bool insertEmojiObject(QTextCursor& cursor, const QString& emoji);
+    // Inserts `text` at `cursor`, replacing emoji clusters with inline images (imageEmojis on) or
+    // inserting it verbatim (font mode). Assumes the caller manages the edit block.
+    void insertEmojiAwareText(QTextCursor& cursor, const QString& text);
+    // Replaces emoji image objects back with their original Unicode text.
+    void convertImagesToEmojis();
+    // Rescales existing emoji image objects to the current line height (font-size change).x
+    void resizeEmojiImages();
+    // True when the document still contains raw (non-image) emoji code points.
+    bool hasRawEmojis() const;
 
     // Fence-aware set of quote-line block-start positions for the current document.
     QSet<int> quoteLineStarts() const;
@@ -204,7 +250,12 @@ private:
     QColor m_quoteTextColor{}; // invalid = no quote-text dimming unless set
     bool m_formatUnclosedCodeFence{false};
     bool m_fullLineHeightEmojis{true};
+    bool m_imageEmojis{false};
+    QString m_twemojiBaseUrl;         // base url of the Twemoji svg assets (set from QML)
+    int m_emojiImageLineHeight{0};   // line height the emoji images were last sized to
+    bool m_emojiUpdateQueued{false}; // dedupes queued convert/resize across per-block passes
     ChatInputLinksModel* m_linksModel{nullptr};
     ChatInputMentionsModel* m_mentionsModel{nullptr};
     int m_mentionCounter{0};
+    int m_emojiCounter{0}; // uniquifies emoji image formats so adjacent identical emoji don't merge
 };
