@@ -818,6 +818,7 @@ Control {
 
         StatusChatInputToolBar {
             id: toolBar
+            objectName: "statusChatInputToolBar"
 
             padding: Theme.smallPadding
 

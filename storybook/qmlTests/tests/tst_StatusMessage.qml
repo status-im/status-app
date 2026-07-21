@@ -1,7 +1,9 @@
 import QtQuick
 import QtTest
+import QtQml.Models
 
 import StatusQ.Components
+import shared.status
 
 Item {
     id: root
@@ -84,6 +86,151 @@ Item {
             var actualLinkCount = linkMatches ? linkMatches.length : 0
 
             compare(actualLinkCount, data.validAddressEnsCount, "TextEdit should contain a link %1".arg(data.messageText))
+        }
+    }
+
+    Component {
+        id: editInputComponent
+        StatusChatInputNew {
+            objectName: "editMessageInput"
+            width: parent.width
+            usersModel: ListModel {}
+            isEdit: true
+            imageFeaturesEnabled: false
+            stickersButtonVisible: false
+            paymentRequestButtonVisible: false
+        }
+    }
+
+    Component {
+        id: editModeComponentUnderTest
+        StatusMessage {
+            anchors.fill: parent
+            editMode: true
+            statusChatInput: editInputComponent
+            messageDetails {
+                messageText: "Hello world"
+                contentType: StatusMessage.ContentType.Text
+                amISender: true
+                sender.id: "zq123456790"
+                sender.displayName: "Alice"
+                sender.isContact: true
+                sender.trustIndicator: StatusContactVerificationIcons.TrustedType.None
+                sender.isEnsVerified: false
+                sender.profileImage {
+                    name: ""
+                    color: "red"
+                }
+            }
+            linkAddressAndEnsName: true
+            outgoingStatus: StatusMessage.OutgoingStatus.Sent
+            reactionsModel: ListModel {
+                ListElement {
+                    emoji: "1f600"
+                    didIReactWithThisEmoji: true
+                    numberOfReactions: 1
+                    jsonArrayOfUsersReactedWithThisEmoji: "[\"You\"]"
+                }
+            }
+        }
+    }
+
+    SignalSpy {
+        id: signalSpy
+
+        function setup(target, signalName) {
+            clear()
+            signalSpy.target = target
+            signalSpy.signalName = signalName
+        }
+    }
+
+    TestCase {
+        name: "StatusMessageEditMode"
+        when: windowShown
+
+        property StatusMessage controlUnderTest: null
+
+        function init() {
+            controlUnderTest = createTemporaryObject(editModeComponentUnderTest, root)
+            verify(!!controlUnderTest)
+            waitForRendering(controlUnderTest)
+        }
+
+        function cleanup() {
+            signalSpy.target = null
+            signalSpy.clear()
+            if (controlUnderTest)
+                controlUnderTest.destroy()
+            controlUnderTest = null
+        }
+
+        function test_editMode_showsEditInput() {
+            const editInput = findChild(controlUnderTest, "editMessageInput")
+            verify(!!editInput)
+
+            const statusTextMessage = findChild(controlUnderTest, "StatusMessage_textMessage")
+            // Text message loader is inactive in edit mode, so the delegate may not exist.
+            if (statusTextMessage)
+                verify(!statusTextMessage.visible)
+        }
+
+        function test_editMode_headerStillVisible() {
+            const displayName = findChild(controlUnderTest, "StatusMessageHeader_DisplayName")
+            verify(!!displayName)
+            verify(displayName.visible)
+            compare(displayName.text, "You")
+        }
+
+        function test_editMode_showsReactionsBelowEditor() {
+            const reactionsPanel = findChild(controlUnderTest, "statusMessageEmojiReactions")
+            verify(!!reactionsPanel)
+            verify(reactionsPanel.visible)
+        }
+
+        function test_editCompleted_unchangedTextOnAccept() {
+            const editInput = findChild(controlUnderTest, "editMessageInput")
+            const acceptButton = findChild(controlUnderTest, "statusChatInputEditAcceptButton")
+            verify(!!editInput)
+            verify(!!acceptButton)
+
+            editInput.parseMessage("Hello world")
+            waitForRendering(controlUnderTest)
+            verify(acceptButton.enabled)
+
+            signalSpy.setup(controlUnderTest, "editCompleted")
+            mouseClick(acceptButton)
+
+            compare(signalSpy.count, 1)
+            compare(signalSpy.signalArguments[0][0], editInput.getTextWithPublicKeys())
+        }
+
+        function test_editCompleted_onAccept() {
+            const editInput = findChild(controlUnderTest, "editMessageInput")
+            const acceptButton = findChild(controlUnderTest, "statusChatInputEditAcceptButton")
+            verify(!!editInput)
+            verify(!!acceptButton)
+
+            signalSpy.setup(controlUnderTest, "editCompleted")
+
+            const updatedText = "Updated message"
+            editInput.textInput.text = updatedText
+            waitForRendering(controlUnderTest)
+            const expectedText = editInput.getTextWithPublicKeys()
+            mouseClick(acceptButton)
+
+            compare(signalSpy.count, 1)
+            compare(signalSpy.signalArguments[0][0], expectedText)
+        }
+
+        function test_editCancelled_onCancel() {
+            const cancelButton = findChild(controlUnderTest, "statusChatInputEditCancelButton")
+            verify(!!cancelButton)
+
+            signalSpy.setup(controlUnderTest, "editCancelled")
+            mouseClick(cancelButton)
+
+            compare(signalSpy.count, 1)
         }
     }
 }

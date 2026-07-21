@@ -1,0 +1,325 @@
+import QtQuick
+import QtQuick.Controls
+import QtTest
+
+import shared.status
+
+Item {
+    id: root
+    width: 800
+    height: 400
+
+    Component {
+        id: gifPickerComponent
+
+        Popup {
+            objectName: "testGifPicker"
+            modal: false
+
+            required property var gifSelectedCallback
+            required property var closeCallback
+
+            width: 120
+            height: 60
+
+            Button {
+                objectName: "testGifPickerSelectButton"
+                anchors.centerIn: parent
+                text: "GIF"
+                onClicked: {
+                    gifSelectedCallback("https://example.com/test.gif")
+                    close()
+                }
+            }
+
+            onClosed: {
+                if (closeCallback)
+                    closeCallback()
+            }
+        }
+    }
+
+    Component {
+        id: editModeComponent
+        Item {
+            width: 700
+            height: 400
+
+            Popup {
+                id: emojiPopupStub
+                objectName: "emojiPopupStub"
+                modal: false
+                width: 80
+                height: 60
+
+                signal emojiSelected(string emoji, bool atCursor, string hexcode)
+
+                Button {
+                    objectName: "emojiPopupSelectButton"
+                    anchors.centerIn: parent
+                    text: "😀"
+                    onClicked: {
+                        emojiPopupStub.emojiSelected("😀 ", true, "1f600")
+                        emojiPopupStub.close()
+                    }
+                }
+            }
+
+            StatusChatInputNew {
+                id: editModeInput
+                objectName: "editModeInput"
+
+                width: parent.width
+                usersModel: ListModel {}
+                isEdit: true
+                imageFeaturesEnabled: false
+                stickersButtonVisible: false
+                paymentRequestButtonVisible: false
+                emojiPopup: emojiPopupStub
+
+                onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) => {
+                    const picker = gifPickerComponent.createObject(parent, {
+                        gifSelectedCallback: cbOnGifSelected,
+                        closeCallback: cbOnClose
+                    })
+                    picker.open()
+                }
+            }
+        }
+    }
+
+    SignalSpy {
+        id: signalSpy
+
+        function setup(target, signalName) {
+            clear()
+            signalSpy.target = target
+            signalSpy.signalName = signalName
+        }
+    }
+
+    TestCase {
+        name: "StatusChatInputNew"
+        when: windowShown
+
+        property Item wrapperUnderTest: null
+        property StatusChatInputNew controlUnderTest: null
+
+        function init() {
+            wrapperUnderTest = createTemporaryObject(editModeComponent, root)
+            controlUnderTest = findChild(wrapperUnderTest, "editModeInput")
+            verify(!!controlUnderTest)
+            waitForRendering(controlUnderTest)
+        }
+
+        function cleanup() {
+            signalSpy.target = null
+            signalSpy.clear()
+            if (wrapperUnderTest)
+                wrapperUnderTest.destroy()
+            wrapperUnderTest = null
+            controlUnderTest = null
+        }
+
+        function getToolBar() {
+            return findChild(controlUnderTest, "statusChatInputToolBar")
+        }
+
+        function getInputText() {
+            const input = controlUnderTest.textInput
+            return input.getText(0, input.length)
+        }
+
+        function openFormattingToolbar(toolBar) {
+            if (!toolBar.styleButton.checked)
+                mouseClick(toolBar.styleButton)
+            waitForRendering(controlUnderTest)
+            verify(toolBar.styleButton.checked)
+        }
+
+        function selectInputText(start, end) {
+            controlUnderTest.textInput.forceActiveFocus()
+            controlUnderTest.textInput.text = "hello"
+            waitForRendering(controlUnderTest)
+            controlUnderTest.textInput.select(start, end)
+        }
+
+        function appendContact(displayName) {
+            controlUnderTest.usersModel.append({
+                pubKey: "0x0" + displayName,
+                onlineStatus: 1,
+                isContact: true,
+                isVerified: true,
+                isAdmin: false,
+                isUntrustworthy: false,
+                displayName: displayName,
+                alias: displayName + "-alias",
+                localNickname: displayName + "-local-nickname",
+                ensName: displayName + ".stateofus.eth",
+                icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAlklEQVR4nOzW0QmDQBAG4SSkl7SUQlJGCrElq9F3QdjjVhh/5nv3cFhY9vUIYQiNITSG0BhCExPynn1gWf9bx498P7/nzPcxEzGExhBdJGYihtAYQlO+tUZvqrPbqeudo5iJGEJjCE15a3VtodH3q2ImYgiNITTlTdG1nUZ5a92VITQxITFiJmIIjSE0htAYQrMHAAD//+wwFVpz+yqXAAAAAElFTkSuQmCC",
+                colorId: 7
+            })
+        }
+
+        function test_editMode_toolbarButtons() {
+            const toolBar = getToolBar()
+            const acceptButton = findChild(controlUnderTest, "statusChatInputEditAcceptButton")
+            const cancelButton = findChild(controlUnderTest, "statusChatInputEditCancelButton")
+            const sendButton = findChild(controlUnderTest, "statusChatInputSendButton")
+
+            verify(!!toolBar)
+            verify(!!acceptButton)
+            verify(!!cancelButton)
+            verify(!!sendButton)
+
+            verify(toolBar.styleButton.visible)
+            verify(toolBar.mentionButton.visible)
+            verify(toolBar.emojiButton.visible)
+            verify(toolBar.gifButton.visible)
+            verify(acceptButton.visible)
+            verify(cancelButton.visible)
+
+            verify(!toolBar.imageButton.visible)
+            verify(!toolBar.stickersButton.visible)
+            verify(!toolBar.tokenButton.visible)
+            verify(!toolBar.cameraButton.visible)
+            verify(!sendButton.visible)
+        }
+
+        function test_editMode_styleButton_showsFormattingButtons() {
+            const toolBar = getToolBar()
+            verify(!!toolBar)
+            verify(!toolBar.styleButton.checked)
+
+            openFormattingToolbar(toolBar)
+
+            verify(toolBar.boldButton.visible)
+            verify(toolBar.italicButton.visible)
+            verify(toolBar.strikeThroughButton.visible)
+            verify(toolBar.quoteButton.visible)
+            verify(toolBar.codeButton.visible)
+        }
+
+        function test_editMode_formattingButtons_applyFormatting_data() {
+            return [
+                { tag: "bold", buttonName: "boldButton" },
+                { tag: "italic", buttonName: "italicButton" },
+                { tag: "strikethrough", buttonName: "strikeThroughButton" },
+                { tag: "code", buttonName: "codeButton" },
+                { tag: "quote", buttonName: "quoteButton", useQuote: true }
+            ]
+        }
+
+        function test_editMode_formattingButtons_applyFormatting(data) {
+            const toolBar = getToolBar()
+            verify(!!toolBar)
+
+            openFormattingToolbar(toolBar)
+
+            if (data.useQuote) {
+                controlUnderTest.textInput.forceActiveFocus()
+                controlUnderTest.textInput.text = "hello"
+                waitForRendering(controlUnderTest)
+                controlUnderTest.textInput.select(0, 5)
+            } else {
+                selectInputText(0, 5)
+            }
+
+            verify(controlUnderTest.textInput.selectedText.length > 0)
+
+            // Programmatic click keeps text selection; mouseClick moves focus to the toolbar.
+            toolBar[data.buttonName].click()
+            waitForRendering(controlUnderTest)
+
+            if (data.useQuote)
+                verify(controlUnderTest.getPlainText().includes("> "))
+            else
+                verify(toolBar[data.buttonName].checked)
+        }
+
+        function test_editMode_mentionButton_opensSuggestions() {
+            const toolBar = getToolBar()
+            verify(!!toolBar)
+
+            appendContact("JohnDoe")
+            waitForRendering(controlUnderTest)
+
+            mouseClick(toolBar.mentionButton)
+            waitForRendering(controlUnderTest)
+
+            const suggestionsBox = findChild(controlUnderTest, "suggestionsBox")
+            verify(!!suggestionsBox)
+            verify(suggestionsBox.visible)
+            verify(controlUnderTest.getPlainText().includes("@"))
+        }
+
+        function test_editMode_emojiButton_opensPopupAndSelectsEmoji() {
+            const toolBar = getToolBar()
+            verify(!!toolBar)
+
+            mouseClick(toolBar.emojiButton)
+            waitForRendering(controlUnderTest)
+
+            const emojiPopup = findChild(wrapperUnderTest, "emojiPopupStub")
+            verify(!!emojiPopup)
+            verify(emojiPopup.visible)
+
+            mouseClick(findChild(emojiPopup, "emojiPopupSelectButton"))
+            waitForRendering(controlUnderTest)
+
+            verify(controlUnderTest.getPlainText().includes("😀"))
+            verify(!emojiPopup.visible)
+        }
+
+        function test_editMode_gifSelection_doesNotSendMessage() {
+            const toolBar = getToolBar()
+            verify(!!toolBar)
+
+            mouseClick(toolBar.gifButton)
+            waitForRendering(controlUnderTest)
+
+            const picker = findChild(wrapperUnderTest, "testGifPicker")
+            verify(!!picker)
+
+            signalSpy.setup(controlUnderTest, "sendMessageRequested")
+            mouseClick(findChild(picker, "testGifPickerSelectButton"))
+            waitForRendering(controlUnderTest)
+
+            verify(controlUnderTest.getPlainText().includes("https://example.com/test.gif"))
+            compare(signalSpy.count, 0)
+        }
+
+        function test_editAccept_disabledWhenEmpty() {
+            const acceptButton = findChild(controlUnderTest, "statusChatInputEditAcceptButton")
+            verify(!!acceptButton)
+
+            // Rich-text input keeps a non-empty .text skeleton when visually empty;
+            // verify the initial edit state before any user input.
+            verify(controlUnderTest.getPlainText().trim().length === 0)
+            verify(!acceptButton.enabled)
+        }
+
+        function test_editAccept_emitsSignal() {
+            const acceptButton = findChild(controlUnderTest, "statusChatInputEditAcceptButton")
+            verify(!!acceptButton)
+
+            signalSpy.setup(controlUnderTest, "editAcceptRequested")
+
+            controlUnderTest.textInput.text = "hello"
+            waitForRendering(controlUnderTest)
+            mouseClick(acceptButton)
+
+            compare(signalSpy.count, 1)
+        }
+
+        function test_editCancel_emitsSignal() {
+            const cancelButton = findChild(controlUnderTest, "statusChatInputEditCancelButton")
+            verify(!!cancelButton)
+
+            signalSpy.setup(controlUnderTest, "editCancelRequested")
+            mouseClick(cancelButton)
+
+            compare(signalSpy.count, 1)
+        }
+    }
+}
