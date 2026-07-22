@@ -947,17 +947,28 @@ unclosed fence here (no closing triple-tick)
                 Label { text: "codeBlock: "     + node.codeBlock }
             }
 
-            // Formatting toggle buttons — their checked state reflects the formatting at the caret,
-            // read from nodeAt (via the `node` property). They are not checkable, so clicking does
-            // not toggle them (the checked binding stays intact). Applying formatting is wired later.
+            // Formatting buttons — their checked state reflects the formatting at the caret (read
+            // from nodeAt via the `node` property). Clicking a checked one removes that formatting
+            // via removeFormatting; a click while unchecked is a no-op (adding is wired later). They
+            // are not checkable, so the checked binding stays intact regardless of clicks.
             Row {
                 spacing: 8
 
-                Button { id: boldButton;          text: "Bold";          checked: node.bold }
-                Button { id: italicButton;        text: "Italic";        checked: node.italic }
-                Button { id: strikethroughButton; text: "Strikethrough"; checked: node.strikethrough }
-                Button { id: codeButton;          text: "Code";          checked: node.codeSpan || node.codeBlock }
-                Button { id: quoteButton;         text: "Quote";         checked: node.quote }
+                function removeFormatting(kind) {
+                    textArea.removeFormatting(textArea.cursorPosition, kind)
+                    textArea.forceActiveFocus()
+                }
+
+                Button { id: boldButton;          text: "Bold";          checked: node.bold
+                         onClicked: parent.removeFormatting("bold") }
+                Button { id: italicButton;        text: "Italic";        checked: node.italic
+                         onClicked: parent.removeFormatting("italic") }
+                Button { id: strikethroughButton; text: "Strikethrough"; checked: node.strikethrough
+                         onClicked: parent.removeFormatting("strikethrough") }
+                Button { id: codeButton;          text: "Code";          checked: node.codeSpan || node.codeBlock
+                         onClicked: parent.removeFormatting("code") }
+                Button { id: quoteButton;         text: "Quote";         checked: node.quote
+                         onClicked: parent.removeFormatting("quote") }
             }
         }
     }
