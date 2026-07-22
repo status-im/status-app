@@ -20,7 +20,7 @@ Item {
     /*!
        Color used by the ripple circle.
     */
-    property color color: "transparent"
+    property color color: StatusColors.transparent
 
     /*!
        Radius used by the clipping mask.

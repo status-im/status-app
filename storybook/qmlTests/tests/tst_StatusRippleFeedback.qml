@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 
+import StatusQ.Core.Theme
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Popups
@@ -105,6 +106,33 @@ Item {
 
             verifyRippleFeedback(controlUnderTest, "statusItemDelegateRipple", true, true)
             compare(controlUnderTest.scale, 1)
+        }
+
+        function test_highlightedItemDelegateDefaultColors() {
+            controlUnderTest = createTemporaryObject(itemDelegateComponent, root, { highlighted: true })
+            verify(!!controlUnderTest)
+
+            const textItem = controlUnderTest.contentItem.children[1]
+            const ripple = findChild(controlUnderTest, "statusItemDelegateRipple")
+            verify(!!textItem)
+            verify(!!ripple)
+            compare(textItem.color, Theme.palette.directColor1)
+            compare(ripple.color, Theme.palette.directColor1)
+        }
+
+        function test_highlightedItemDelegatePrimaryColors() {
+            controlUnderTest = createTemporaryObject(itemDelegateComponent, root, {
+                highlighted: true,
+                highlightColor: Theme.palette.primaryColor1
+            })
+            verify(!!controlUnderTest)
+
+            const textItem = controlUnderTest.contentItem.children[1]
+            const ripple = findChild(controlUnderTest, "statusItemDelegateRipple")
+            verify(!!textItem)
+            verify(!!ripple)
+            compare(textItem.color, StatusColors.white)
+            compare(ripple.color, StatusColors.white)
         }
 
         function test_listItemRipple() {

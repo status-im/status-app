@@ -213,6 +213,55 @@ Item {
             compare(signalSpy.count, data.spyCount)
         }
 
+        function test_nonEnabledAndNonInteractiveStates_data() {
+            return [
+                { tag: "disabled", enabled: false, interactive: true },
+                { tag: "non interactive", enabled: true, interactive: false },
+                { tag: "disabled and non interactive", enabled: false, interactive: false },
+            ]
+        }
+
+        function test_nonEnabledAndNonInteractiveStates(data) {
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {
+                                                        text: "Hello",
+                                                        "icon.name": "gif",
+                                                        "asset.emoji": "😀"
+                                                    })
+            verify(!!controlUnderTest)
+            controlUnderTest.enabled = data.enabled
+            controlUnderTest.interactive = data.interactive
+
+            const buttonBackground = findChild(controlUnderTest, "buttonBackground")
+            verify(!!buttonBackground)
+            verify(Qt.colorEqual(buttonBackground.color, controlUnderTest.disabledColor))
+
+            const buttonText = findChild(controlUnderTest, "buttonText")
+            verify(!!buttonText)
+            verify(Qt.colorEqual(buttonText.color, controlUnderTest.disabledTextColor))
+
+            const buttonEmoji = findChild(controlUnderTest, "buttonEmoji")
+            verify(!!buttonEmoji)
+            compare(buttonEmoji.opacity, 0.4)
+
+            const buttonRipple = findChild(controlUnderTest, "buttonRipple")
+            verify(!!buttonRipple)
+            verify(!buttonRipple.enabled)
+
+            mousePress(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+            compare(buttonBackground.scale, 1)
+            verify(!buttonRipple.visible)
+            mouseRelease(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+            compare(signalSpy.count, 0)
+
+            touchEvent(controlUnderTest)
+                    .press(0, controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+                    .release(0, controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+                    .commit()
+            compare(buttonBackground.scale, 1)
+            verify(!buttonRipple.visible)
+            compare(signalSpy.count, 0)
+        }
+
         function test_loadingIndicators() {
             controlUnderTest =
                     createTemporaryObject(componentUnderTest, root,
