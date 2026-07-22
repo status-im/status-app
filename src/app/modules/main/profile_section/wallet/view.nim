@@ -53,6 +53,17 @@ QtObject:
     read = getHasPairedDevices
     notify = hasPairedDevicesChanged
 
+  proc autoApplyKeypairMigrationsChanged*(self: View) {.signal.}
+  proc emitAutoApplyKeypairMigrationsChangedSignal*(self: View) =
+    self.autoApplyKeypairMigrationsChanged()
+  proc getAutoApplyKeypairMigrations(self: View): bool {.slot.} =
+    return self.delegate.getAutoApplyKeypairMigrations()
+  proc setAutoApplyKeypairMigrations*(self: View, value: bool) {.slot.} =
+    self.delegate.setAutoApplyKeypairMigrations(value)
+  QtProperty[bool] autoApplyKeypairMigrations:
+    read = getAutoApplyKeypairMigrations
+    notify = autoApplyKeypairMigrationsChanged
+
   proc getRpcStats(self: View): string {.slot.} =
     return self.delegate.getRpcStats()
   proc resetRpcStats(self: View) {.slot.} =

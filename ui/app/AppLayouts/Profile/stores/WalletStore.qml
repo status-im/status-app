@@ -14,6 +14,7 @@ QtObject {
 
     property var walletModule
     property var accountsModule: root.walletModule.accountsModule
+    readonly property bool autoApplyKeypairMigrations: root.walletModule ? root.walletModule.autoApplyKeypairMigrations : true
     property var collectibles: _jointCollectiblesBySymbolModel
 
     property var accountSensitiveSettings: Global.appIsReady? localAccountSensitiveSettings : null
@@ -158,5 +159,9 @@ QtObject {
 
     function resetRpcStats() {
         root.walletModule.resetRpcStats()
+    }
+
+    function setAutoApplyKeypairMigrations(enabled) {
+        root.walletModule.setAutoApplyKeypairMigrations(enabled)
     }
 }

@@ -49,7 +49,7 @@ proc newModule*(
 ): Module =
   result = Module()
   result.delegate = delegate
-  result.controller = controller.newController(result, events, walletAccountService, nodeService)
+  result.controller = controller.newController(result, events, walletAccountService, nodeService, settingsService)
   result.view = newView(result)
   result.viewVariant = newQVariant(result.view)
   result.events = events
@@ -133,3 +133,12 @@ method resetRpcStats*(self: Module) =
 
 method refetchTxHistory*(self: Module) =
   self.controller.refetchTxHistory()
+
+method getAutoApplyKeypairMigrations*(self: Module): bool =
+  return self.controller.getAutoApplyKeypairMigrations()
+
+method setAutoApplyKeypairMigrations*(self: Module, value: bool) =
+  self.controller.setAutoApplyKeypairMigrations(value)
+
+method onAutoApplyKeypairMigrationsUpdated*(self: Module) =
+  self.view.emitAutoApplyKeypairMigrationsChangedSignal()
