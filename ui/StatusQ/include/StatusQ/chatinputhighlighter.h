@@ -196,11 +196,23 @@ public:
     // when the caret is not enclosed by a matching delimiter run.
     Q_INVOKABLE QVariantMap delimitersAt(int position) const;
 
-    // Removes the delimiter run that delimitersAt(position) accounts for — the matching delimiter
-    // chars flanking the caret — leaving the caret between them (e.g. "**|**" → "|", "A *|*" →
-    // "A |"). A no-op when delimitersAt reports nothing. Single undo step; the caret is restored on
-    // undo, as with removeFormatting.
-    Q_INVOKABLE void removeDelimitersAt(int position);
+    // delimitersAt generalized to a selection ([selectionStart, selectionEnd), "|B|" marking bounds).
+    // First expands the context past every delimiter flanking the selection on both ends (so the
+    // selection's own edge delimiters merge with the outer ones — "B *|*D**E|" expands to "**D**E").
+    // Then returns {bold, italic, strikethrough, codeSpan, codeBlock, quote} for the formatting the
+    // outermost delimiter char at each end denotes (its inward run, both ends the same char): so
+    // "**|B|**" → bold, "***|B|***" → bold+italic, "**|B|*`*" → italic, "*|A`B`C|*" → italic (inner
+    // backticks don't count), "~`~|A|~*~" → none. `quote` is the exception: it is not about
+    // surrounding delimiters but true when every line the selection at least partially covers begins
+    // with "> " (e.g. "> A |B| C" and "> A | C\n> D |" → quote; "> A | B\nC|" → not, C's line isn't).
+    Q_INVOKABLE QVariantMap delimitersAtSelection(int selectionStart, int selectionEnd) const;
+
+    // Removes the delimiter chars for `kind` flanking the caret, using only the local text (mirrors
+    // delimitersAt). `kind` is one of "bold", "italic", "strikethrough", "codeSpan", "codeBlock" and
+    // is required to disambiguate stacked emphasis: on "***|***", "italic" strips one "*" each side
+    // (→ "**|**") while "bold" strips two (→ "*|*"); the non-stacking kinds strip the whole run. A
+    // no-op when `kind` is not present around the caret. Single undo step.
+    Q_INVOKABLE void removeDelimitersAt(int position, const QString& kind);
 
     // Quote-editing queries (for the "> " continuation / deletion UX). All operate on
     // the live document and a fence-aware set of quote-line block starts.

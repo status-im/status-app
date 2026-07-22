@@ -488,6 +488,11 @@ void collectQuotePrefixes(const Node& node, QVector<QPair<qsizetype, qsizetype>>
         collectQuotePrefixes(c, out);
 }
 
+bool isDelimiterChar(QChar c)
+{
+    return c == u'*' || c == u'~' || c == u'`';
+}
+
 // Local (no-AST) delimiter probe shared by delimitersAt / removeDelimitersAt. Returns the delimiter
 // char flanking `position` and the surrounding run length (the shorter of the left/right runs), or
 // {QChar(), 0} when the caret is not enclosed by a matching delimiter run.
@@ -497,8 +502,7 @@ std::pair<QChar, int> surroundingDelimiterRun(const QString& text, int position)
         return {QChar(), 0};
 
     const QChar ch = text.at(position - 1);
-    const bool isDelimiter = (ch == u'*' || ch == u'~' || ch == u'`');
-    if (!isDelimiter || text.at(position) != ch)
+    if (!isDelimiterChar(ch) || text.at(position) != ch)
         return {QChar(), 0};
 
     int left = 0;
@@ -550,6 +554,34 @@ int delimiterRemovalCount(QChar ch, int count, const QString& kind)
     if (kind == QLatin1String("codeSpan"))      return (ch == u'`' && count < 3)      ? count : 0;
     if (kind == QLatin1String("codeBlock"))     return (ch == u'`' && count >= 3)     ? count : 0;
     return 0;
+}
+
+// Whether every line the selection [selStart, selEnd) at least partially covers begins with "> ".
+// Lines are split on '\n'; a line's content range excludes the newline. Returns false when no line
+// is covered.
+bool selectionLinesAllQuoted(const QString& text, int selStart, int selEnd)
+{
+    const int len = text.length();
+    bool any = false;
+    int lineStart = 0;
+    for (int i = 0; i <= len; ++i) {
+        if (i < len && text.at(i) != u'\n')
+            continue;
+
+        const int lineEnd = i; // content end (the newline, or end of text)
+        const bool touched = (selStart == selEnd)
+            ? (selStart >= lineStart && selStart <= lineEnd)   // caret: the line it sits on
+            : (selStart < lineEnd && selEnd > lineStart);      // selection: any content overlap
+        if (touched) {
+            any = true;
+            const bool quoted = (lineEnd - lineStart) >= 2
+                && text.at(lineStart) == u'>' && text.at(lineStart + 1) == u' ';
+            if (!quoted)
+                return false;
+        }
+        lineStart = i + 1;
+    }
+    return any;
 }
 
 } // namespace
@@ -1750,6 +1782,79 @@ QVariantMap ChatInputHighlighter::delimitersAt(int position) const
 
     const auto [ch, count] = surroundingDelimiterRun(document()->toPlainText(), position);
     applyDelimiterFlags(ch, count, &out);
+    return out;
+}
+
+QVariantMap ChatInputHighlighter::delimitersAtSelection(int selectionStart, int selectionEnd) const
+{
+    QVariantMap out = {
+        {QStringLiteral("bold"),          false},
+        {QStringLiteral("italic"),        false},
+        {QStringLiteral("strikethrough"), false},
+        {QStringLiteral("codeSpan"),      false},
+        {QStringLiteral("codeBlock"),     false},
+        {QStringLiteral("quote"),         false}, // no surrounding delimiter denotes a quote
+    };
+    if (!document())
+        return out;
+
+    const QString text = document()->toPlainText();
+    const int len = text.length();
+    if (selectionStart > selectionEnd)
+        std::swap(selectionStart, selectionEnd);
+    selectionStart = qBound(0, selectionStart, len);
+    selectionEnd = qBound(0, selectionEnd, len);
+
+    // Quote is decided by the selected lines, not the delimiters, so compute it before any return.
+    out[QStringLiteral("quote")] = selectionLinesAllQuoted(text, selectionStart, selectionEnd);
+
+    // Expand the context past every delimiter char flanking the selection, on both ends.
+    int start = selectionStart;
+    while (start > 0 && isDelimiterChar(text.at(start - 1)))
+        --start;
+    int end = selectionEnd;
+    while (end < len && isDelimiterChar(text.at(end)))
+        ++end;
+    if (start >= end)
+        return out;
+
+    // The delimiter block flanking each end of the expanded context (interior delimiters, e.g. the
+    // backticks inside "*A`B`C*", are not part of either block and don't count).
+    int contentStart = start;
+    while (contentStart < end && isDelimiterChar(text.at(contentStart)))
+        ++contentStart;
+    int contentEnd = end;
+    while (contentEnd > start && isDelimiterChar(text.at(contentEnd - 1)))
+        --contentEnd;
+    // All-delimiter region (no content between): split it so the same chars aren't matched twice.
+    if (contentStart >= contentEnd)
+        contentStart = contentEnd = (start + end) / 2;
+
+    QString leftBlock  = text.mid(start, contentStart - start);
+    QString rightBlock = text.mid(contentEnd, end - contentEnd);
+
+    // Consume the delimiter tokens in priority order: each token present (as adjacent chars) in
+    // BOTH blocks sets its flag and is blanked out (replaced by neutral spaces, not removed) in each
+    // block, so what remains can still match a shorter token. Blanking rather than removing keeps
+    // positions fixed, so delimiters left on either side of a consumed token don't become adjacent
+    // and form a spurious token (e.g. "~**~" ⇒ bold only, not bold+strikethrough). Longer/compound
+    // tokens come first ("**" before "*", "```" before "`") so a bold pair isn't mistaken for two
+    // italics, nor a code fence for a code span. Position of a token within a block is irrelevant,
+    // so crossed layers ("~~**A~~**") are both reported.
+    const auto consume = [&](const QString& token, const QString& flag) {
+        const int li = leftBlock.indexOf(token);
+        const int ri = rightBlock.indexOf(token);
+        if (li >= 0 && ri >= 0) {
+            out[flag] = true;
+            leftBlock.replace(li, token.size(), QString(token.size(), u' '));
+            rightBlock.replace(ri, token.size(), QString(token.size(), u' '));
+        }
+    };
+    consume(QStringLiteral("**"),  QStringLiteral("bold"));
+    consume(QStringLiteral("*"),   QStringLiteral("italic"));
+    consume(QStringLiteral("```"), QStringLiteral("codeBlock"));
+    consume(QStringLiteral("`"),   QStringLiteral("codeSpan"));
+    consume(QStringLiteral("~~"),  QStringLiteral("strikethrough"));
     return out;
 }
 
