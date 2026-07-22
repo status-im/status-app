@@ -96,6 +96,9 @@ StatusTextArea {
     function removeFormatting(pos, kind) {
         highlighter.removeFormatting(pos, kind)
     }
+    function delimitersAt(pos) {
+        return highlighter.delimitersAt(pos)
+    }
     function inUnclosedCodeFence(pos) {
         return highlighter.inUnclosedCodeFence(pos)
     }

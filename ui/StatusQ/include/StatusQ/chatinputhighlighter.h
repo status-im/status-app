@@ -187,6 +187,15 @@ public:
     // strip is a single undo step and the editor caret follows the deletions automatically.
     Q_INVOKABLE void removeFormatting(int position, const QString& kind);
 
+    // Returns {bold, italic, strikethrough, codeSpan, codeBlock} booleans describing the formatting
+    // implied by the delimiter run that immediately surrounds `position`, using only the local text
+    // — no AST. The characters just before and after the caret must be the same delimiter char; its
+    // run length maps to flags: "*" → italic (odd length) / bold (>= 2), "~" → strikethrough (>= 2),
+    // "`" → codeSpan (1-2) / codeBlock (>= 3). E.g. "**|**" → bold, "***|***" → bold+italic, and
+    // "```code *|* code```" → italic (context-free, ignoring the enclosing code block). All false
+    // when the caret is not enclosed by a matching delimiter run.
+    Q_INVOKABLE QVariantMap delimitersAt(int position) const;
+
     // Quote-editing queries (for the "> " continuation / deletion UX). All operate on
     // the live document and a fence-aware set of quote-line block starts.
     Q_INVOKABLE bool isInQuoteBlock(int position) const;        // block at pos is a quote line
