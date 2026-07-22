@@ -173,6 +173,13 @@ public:
     // at `position` would receive (re-parses the block with a dummy char inserted)
     Q_INVOKABLE QVariantMap emphasisAtInsertion(int position) const;
 
+    // Returns {bold, italic, strikethrough, quote, codeSpan, codeBlock} booleans describing which
+    // formatting nodes contain the caret at `position`, derived from the cached AST (no reparse).
+    // Unlike emphasisAt (per-character render bits), a node's full range — delimiters included —
+    // counts as inside, using strict containment (node.start < position < node.end). So a caret
+    // next to a delimiter (e.g. `*italics|*`) still reports the surrounding emphasis.
+    Q_INVOKABLE QVariantMap nodeAt(int position) const;
+
     // Quote-editing queries (for the "> " continuation / deletion UX). All operate on
     // the live document and a fence-aware set of quote-line block starts.
     Q_INVOKABLE bool isInQuoteBlock(int position) const;        // block at pos is a quote line

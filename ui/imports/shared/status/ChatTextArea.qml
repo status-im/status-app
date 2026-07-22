@@ -90,6 +90,9 @@ StatusTextArea {
     function emphasisAtInsertion(pos) {
         return highlighter.emphasisAtInsertion(pos)
     }
+    function nodeAt(pos) {
+        return highlighter.nodeAt(pos)
+    }
     function inUnclosedCodeFence(pos) {
         return highlighter.inUnclosedCodeFence(pos)
     }

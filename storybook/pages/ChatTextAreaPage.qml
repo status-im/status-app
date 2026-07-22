@@ -126,6 +126,7 @@ unclosed fence here (no closing triple-tick)
 
     readonly property var emph: textArea.emphasisAt(textArea.cursorPosition)
     readonly property var vemph: textArea.emphasisAtInsertion(textArea.cursorPosition)
+    readonly property var node: textArea.nodeAt(textArea.cursorPosition)
 
     // A detectable uncompressed key: "0x" + 130 hex (what the parser's mention rule requires).
     function randomPubKey() {
@@ -933,6 +934,30 @@ unclosed fence here (no closing triple-tick)
                 Label { text: "bold: "          + vemph.bold }
                 Label { text: "italic: "        + vemph.italic }
                 Label { text: "strikethrough: " + vemph.strikethrough }
+            }
+            Row {
+                spacing: 16
+
+                Label { text: "node at:\t"}
+                Label { text: "bold: "          + node.bold }
+                Label { text: "italic: "        + node.italic }
+                Label { text: "strikethrough: " + node.strikethrough }
+                Label { text: "quote: "         + node.quote }
+                Label { text: "codeSpan: "      + node.codeSpan }
+                Label { text: "codeBlock: "     + node.codeBlock }
+            }
+
+            // Formatting toggle buttons — their checked state reflects the formatting at the caret,
+            // read from nodeAt (via the `node` property). They are not checkable, so clicking does
+            // not toggle them (the checked binding stays intact). Applying formatting is wired later.
+            Row {
+                spacing: 8
+
+                Button { id: boldButton;          text: "Bold";          checked: node.bold }
+                Button { id: italicButton;        text: "Italic";        checked: node.italic }
+                Button { id: strikethroughButton; text: "Strikethrough"; checked: node.strikethrough }
+                Button { id: codeButton;          text: "Code";          checked: node.codeSpan || node.codeBlock }
+                Button { id: quoteButton;         text: "Quote";         checked: node.quote }
             }
         }
     }

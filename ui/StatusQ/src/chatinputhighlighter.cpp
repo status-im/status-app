@@ -432,6 +432,26 @@ unsigned int emphasisBitsAt(const Node& node, qsizetype pos)
     return bits;
 }
 
+// Marks, in `out`, every formatting kind whose full range (delimiters included) strictly contains
+// `pos` (node.start < pos < node.end). Full recursion is safe: a child's range is a subrange of its
+// parent's, so a caret outside a node can't be strictly inside any of its children.
+void collectNodesAt(const Node& node, qsizetype pos, QVariantMap& out)
+{
+    if (pos > node.start && pos < node.end) {
+        switch (node.kind) {
+        case NodeKind::Strong:        out[QStringLiteral("bold")]          = true; break;
+        case NodeKind::Emphasis:      out[QStringLiteral("italic")]        = true; break;
+        case NodeKind::Strikethrough: out[QStringLiteral("strikethrough")] = true; break;
+        case NodeKind::QuoteBlock:    out[QStringLiteral("quote")]         = true; break;
+        case NodeKind::CodeSpan:      out[QStringLiteral("codeSpan")]      = true; break;
+        case NodeKind::CodeBlock:     out[QStringLiteral("codeBlock")]     = true; break;
+        default: break;
+        }
+    }
+    for (const Node& c : node.children)
+        collectNodesAt(c, pos, out);
+}
+
 } // namespace
 
 // ── ChatInputLinksModel ───────────────────────────────────────────────────────
@@ -1548,4 +1568,20 @@ QVariantMap ChatInputHighlighter::emphasisAt(int position) const
         {QStringLiteral("italic"),        bool(bits & kItalic)},
         {QStringLiteral("strikethrough"), bool(bits & kStrikeThrough)},
     };
+}
+
+QVariantMap ChatInputHighlighter::nodeAt(int position) const
+{
+    QVariantMap out = {
+        {QStringLiteral("bold"),          false},
+        {QStringLiteral("italic"),        false},
+        {QStringLiteral("strikethrough"), false},
+        {QStringLiteral("quote"),         false},
+        {QStringLiteral("codeSpan"),      false},
+        {QStringLiteral("codeBlock"),     false},
+    };
+    // Use the AST cached by highlightBlock — never reparse on a caret query.
+    if (m_astValid)
+        collectNodesAt(m_ast, position, out);
+    return out;
 }

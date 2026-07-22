@@ -908,5 +908,42 @@ Item {
             compare(control.emojiImageCount(), 2) // ...kept as two distinct image fragments
             compare(control.textWithMentions(), emoji + emoji)
         }
+
+        // ── nodeAt: AST-based caret formatting (delimiters belong to their node) ──────
+
+        // Each sample is the document text with "|" marking the caret; "flags" lists exactly the
+        // fields nodeAt must report as true there (every other field must be false). Because a
+        // node's full range includes its delimiters, a caret next to a marker still counts as
+        // inside — e.g. "*italics|*" is italic; only the outer boundaries ("|**bold**",
+        // "**bold**|") fall outside.
+        function test_nodeAt_data() {
+            return [
+                {tag: "italic incl. closing delimiter", text: "*italics|*",  flags: ["italic"]},
+                {tag: "before italic (boundary)",       text: "|*italics*",  flags: []},
+                {tag: "after italic (boundary)",        text: "*italics*|",  flags: []},
+                {tag: "bold, between opening markers",  text: "*|*bold**",   flags: ["bold"]},
+                {tag: "bold, after opening markers",    text: "**|bold**",   flags: ["bold"]},
+                {tag: "bold, between closing markers",  text: "**bold*|*",   flags: ["bold"]},
+                {tag: "before bold (boundary)",         text: "|**bold**",   flags: []},
+                {tag: "after bold (boundary)",          text: "**bold**|",   flags: []},
+                {tag: "code span nested in bold",       text: "**`code|`**", flags: ["bold", "codeSpan"]},
+                {tag: "bold but before code span",      text: "*|*`code`**", flags: ["bold"]},
+                {tag: "quote",                          text: "> qu|ote",    flags: ["quote"]},
+                {tag: "code block",                     text: "```\nco|de\n```", flags: ["codeBlock"]},
+                {tag: "plain text",                     text: "pl|ain",      flags: []},
+            ]
+        }
+
+        function test_nodeAt(data) {
+            const position = data.text.indexOf("|")
+            control.text = data.text.replace("|", "") // strip the marker; its index is the caret
+
+            const fields = ["bold", "italic", "strikethrough", "quote", "codeSpan", "codeBlock"]
+            const matches = () => fields.every(
+                f => control.nodeAt(position)[f] === (data.flags.indexOf(f) !== -1))
+
+            verify(matches(), "nodeAt(" + position + ") for \"" + data.text + "\""
+                   + " expected " + JSON.stringify(data.flags))
+        }
     }
 }
