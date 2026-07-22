@@ -512,8 +512,6 @@ StatusSectionLayout {
                 implicitHeight: parent.height
 
                 rootStore: root.globalStore
-                currencyStore: root.currencyStore
-                walletAssetsStore: root.walletAssetsStore
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.communitiesSettings)
                 contentWidth: d.contentWidth
                 communitiesList: root.profileStore.communitiesList
