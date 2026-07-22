@@ -207,13 +207,14 @@ Control {
         enabled: d.emojiPopupOpened
         target: emojiPopup
 
-        function onEmojiSelected(text: string, atCursor: bool) {
+        function onEmojiSelected(text: string, atCursor: bool, hexcode: string) {
             // commit any potential preedit text first
             InputMethod.commit()
 
-            messageInputField.insert(atCursor ? messageInputField.cursorPosition
-                                              : messageInputField.length, text)
-            messageInputField.forceActiveFocus();
+            const pos = atCursor ? messageInputField.cursorPosition : messageInputField.length
+            messageInputField.insertTextWithEmojis(
+                pos, StatusQUtils.Emoji.getEmojiCodepoint(hexcode.split(".")[0]) + " ")
+            messageInputField.forceActiveFocus()
         }
         function onClosed() {
             d.emojiPopupOpened = false
