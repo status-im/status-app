@@ -17,7 +17,7 @@ QtObject {
     }
 
     readonly property Connections signingModuleConnections: Connections {
-        target: d.mainModuleInst.signingModule ?? null
+        target: d.mainModuleInst?.signingModule ?? null
 
         function onKeycardSignSuccess(signature) {
             root.keycardSignSuccess(signature)
@@ -29,19 +29,19 @@ QtObject {
     }
 
     readonly property string keycardState: {
-        if (!d.mainModuleInst.signingModule)
+        if (!d.mainModuleInst?.signingModule)
             return ""
         return d.mainModuleInst.signingModule.keycardState
     }
 
     readonly property int remainingPinAttempts: {
-        if (!d.mainModuleInst.signingModule)
+        if (!d.mainModuleInst?.signingModule)
             return -1
         return d.mainModuleInst.signingModule.remainingPinAttempts
     }
 
     readonly property var keyPairForProcessing: {
-        if (!d.mainModuleInst.signingModule)
+        if (!d.mainModuleInst?.signingModule)
             return null
         return d.mainModuleInst.signingModule.keyPairForProcessing
     }

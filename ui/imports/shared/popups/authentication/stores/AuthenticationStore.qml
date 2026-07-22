@@ -18,7 +18,7 @@ QtObject {
     }
 
     readonly property Connections authModuleConnections: Connections {
-        target: d.mainModuleInst.authenticationModule ?? null
+        target: d.mainModuleInst?.authenticationModule ?? null
 
         function onKeycardAuthSuccess(encryptionPublicKey, chatPrivateKey) {
             root.keycardAuthSuccess(encryptionPublicKey, chatPrivateKey)
@@ -30,19 +30,19 @@ QtObject {
     }
 
     readonly property string keycardState: {
-        if (!d.mainModuleInst.authenticationModule)
+        if (!d.mainModuleInst?.authenticationModule)
             return ""
         return d.mainModuleInst.authenticationModule.keycardState
     }
 
     readonly property int remainingPinAttempts: {
-        if (!d.mainModuleInst.authenticationModule)
+        if (!d.mainModuleInst?.authenticationModule)
             return -1
         return d.mainModuleInst.authenticationModule.remainingPinAttempts
     }
 
     readonly property var keyPairForProcessing: {
-        if (!d.mainModuleInst.authenticationModule)
+        if (!d.mainModuleInst?.authenticationModule)
             return null
         return d.mainModuleInst.authenticationModule.keyPairForProcessing
     }

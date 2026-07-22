@@ -3,7 +3,7 @@ import QtQuick
 BaseKeycardManagementStore {
     id: root
 
-    backend: d.mainModuleInst.keycardManagementModule ?? null
+    backend: d.mainModuleInst?.keycardManagementModule ?? null
 
     readonly property bool ready: d.ready
 
