@@ -12991,19 +12991,19 @@ selhalo</translation>
 <context>
     <name>Popups</name>
     <message>
-        <source>Image saved to system gallery</source>
+        <source>Share addresses with %1&apos;s owner</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Share addresses with %1&apos;s owner</source>
-        <translation>Sdílet adresy s vlastníkem %1</translation>
-    </message>
-    <message>
         <source>Share addresses to rejoin %1</source>
-        <translation>Sdílet adresy pro opětovné připojení k %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Image saved to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Image saved to system gallery</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -13012,152 +13012,176 @@ selhalo</translation>
     </message>
     <message>
         <source>%1 removed from contacts and marked as untrusted</source>
-        <translation>%1 odstraněn z kontaktů a označen jako nedůvěryhodný</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 marked as trusted</source>
-        <translation>%1 označen jako důvěryhodný</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
-        <translation>%1 značka důvěry odstraněna, odstraněn z kontaktů a označen jako nedůvěryhodný</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 trust mark removed and marked as untrusted</source>
-        <translation>%1 značka důvěry odstraněna a označen jako nedůvěryhodný</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 trust mark removed and removed from contacts</source>
-        <translation>%1 značka důvěry odstraněna a odstraněn z kontaktů</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Contact request accepted</source>
-        <translation>Žádost o kontakt přijata</translation>
+        <translation type="unfinished">Žádost o kontakt přijata</translation>
     </message>
     <message>
         <source>Contact request ignored</source>
-        <translation>Žádost o kontakt ignorována</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Recovery phrase permanently removed from Status application storage</source>
-        <translation>Obnovovací fráze trvale odstraněna z úložiště aplikace Status</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You backed up your recovery phrase. Access it in Settings</source>
-        <translation>Zálohovali jste svou obnovovací frázi. Přístup k ní máte v Nastavení</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Profile Picture</source>
-        <translation>Profilový obrázek</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Make this my Profile Pic</source>
-        <translation>Nastavit jako můj profilový obrázek</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 marked as untrusted</source>
-        <translation>%1 označen jako nedůvěryhodný</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 unblocked</source>
-        <translation>%1 odblokován</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 blocked</source>
-        <translation>%1 zablokován</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Please choose a directory</source>
-        <translation>Vyberte prosím adresář</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure want to leave &apos;%1&apos;?</source>
-        <translation>Opravdu chcete opustit &apos;%1&apos;?</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
-        <translation>Pokud se budete chtít v budoucnu znovu stát členem, budete muset požádat o připojení. Pokud jste se ke komunitě připojili pomocí veřejného klíče, ujistěte se, že máte jeho kopii, než odejdete.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Zrušit</translation>
+        <translation type="unfinished">Zrušit</translation>
     </message>
     <message>
         <source>Leave %1</source>
-        <translation>Opustit %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Turn off testnet mode</source>
-        <translation>Vypnout režim testnet</translation>
+        <translation type="unfinished">Vypnout režim testnet</translation>
     </message>
     <message>
         <source>Turn on testnet mode</source>
-        <translation>Zapnout režim testnet</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure you want to turn off %1? All future transactions will be performed on live networks with real funds</source>
-        <translation>Opravdu chcete vypnout %1? Všechny budoucí transakce budou prováděny na živých sítích se skutečnými prostředky</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure you want to turn on %1? In this mode, all blockchain data displayed will come from testnets and all blockchain interactions will be with testnets. Testnet mode switches the entire app to using testnets only. Please switch this mode on only if you know exactly why you need to use it.</source>
-        <translation>Opravdu chcete zapnout %1? V tomto režimu budou všechna zobrazená blockchainová data pocházet z testnetů a všechny interakce s blockchainem budou probíhat s testnety. Režim testnet přepne celou aplikaci pouze na používání testnetů. Zapněte tento režim pouze v případě, že přesně víte, proč jej potřebujete použít.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Testnet mode turned on</source>
-        <translation>Režim testnet zapnut</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Testnet mode turned off</source>
-        <translation>Režim testnet vypnut</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Align with paired device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">Pokračovat</translation>
+    </message>
+    <message>
+        <source>Your profile has been migrated to Keycard on paired device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your profile has been migrated from Keycard to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In order to align on the login/signing method on this device, you need to complete the migration flow, clicking the &quot;Continue&quot; button below, or cancel this popup if you want to keep the current login/signing method.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you don&apos;t want to see this message again, go to Settings/Wallet and toggle off &quot;Automatically apply key pair migrations from paired device&quot;.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign transaction - update %1 smart contract</source>
-        <translation>Podepsat transakci - aktualizovat chytrý kontrakt %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 (%2) successfully hidden. You can toggle asset visibility via %3.</source>
-        <translation>%1 (%2) úspěšně skryto. Viditelnost aktiv můžete přepínat přes %3.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Settings</source>
         <comment>Go to Settings</comment>
-        <translation>Nastavení</translation>
+        <translation type="unfinished">Nastavení</translation>
     </message>
     <message>
         <source>Hide collectible</source>
-        <translation>Skrýt sběratelský předmět</translation>
+        <translation type="unfinished">Skrýt sběratelský předmět</translation>
     </message>
     <message>
         <source>Hide %1</source>
-        <translation>Skrýt %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure you want to hide %1? You will no longer see or be able to interact with this collectible anywhere inside Status.</source>
-        <translation>Opravdu chcete skrýt %1? Tento sběratelský předmět již nikde ve Statusu neuvidíte ani s ním nebudete moci interagovat.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 successfully hidden. You can toggle collectible visibility via %2.</source>
-        <translation>%1 úspěšně skryto. Viditelnost sběratelských předmětů můžete přepínat přes %2.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status Software Privacy Policy</source>
-        <translation>Zásady ochrany osobních údajů softwaru Status</translation>
+        <translation type="unfinished">Zásady ochrany osobních údajů softwaru Status</translation>
     </message>
     <message>
         <source>Status Software Terms of Use</source>
-        <translation>Podmínky použití softwaru Status</translation>
+        <translation type="unfinished">Podmínky použití softwaru Status</translation>
     </message>
     <message>
         <source>Sign out</source>
-        <translation>Odhlásit se</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation>Ujistěte se, že máte uložené heslo k účtu a obnovovací frázi. Bez nich se můžete uzamknout ze svého účtu a přijít o prostředky.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign out &amp; Quit</source>
-        <translation>Odhlásit se a ukončit</translation>
+        <translation type="unfinished">Odhlásit se a ukončit</translation>
     </message>
 </context>
 <context>

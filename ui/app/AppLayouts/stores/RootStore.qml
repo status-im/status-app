@@ -241,6 +241,10 @@ QtObject {
                 root.wcLinkActivated(url)
             }
 
+            function onProfileMigrationFlowRequested(migrateToKeycard) {
+                root.profileMigrationFlowRequested(migrateToKeycard)
+            }
+
             function onDisplayUserProfile(publicKey: string) {
                 root.displayUserProfile(publicKey)
             }
@@ -261,10 +265,23 @@ QtObject {
         internal.mainModuleInst.resolveENS(value, uuid)
     }
 
+    function profileMigrationFlowOpened() {
+        internal.mainModuleInst.profileMigrationFlowOpened()
+    }
+
+    function profileMigrationFlowClosed() {
+        internal.mainModuleInst.profileMigrationFlowClosed()
+    }
+
+    function checkProfileMigrationNeeded() {
+        internal.mainModuleInst.checkProfileMigrationNeeded()
+    }
+
     signal ensNameResolved(string resolvedPubKey, string resolvedAddress, string uuid)
     signal openUrl(string link)
     signal openActivityCenter()
     signal wcLinkActivated(string link)
+    signal profileMigrationFlowRequested(bool migrateToKeycard)
     signal displayUserProfile(string publicKey)
     signal showToastPairingFallbackCompleted()
     // End of Settings related stuff

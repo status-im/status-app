@@ -139,6 +139,9 @@ Loader {
     function openConfirmExternalLinkPopup(link, domain) {
         invoke(() => root.item.openConfirmExternalLinkPopup(link, domain))
     }
+    function openAlignWithPairedDevicePopup(migrateToKeycard) {
+        invoke(() => root.item.openAlignWithPairedDevicePopup(migrateToKeycard))
+    }
     function openBackUpSeedPopup() {
         invoke(() => root.item.openBackUpSeedPopup())
     }

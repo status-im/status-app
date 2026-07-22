@@ -68,6 +68,8 @@ Item {
         appMain.forceActiveFocus()
         // record only the initial value - no binding
         d.lastRecordedSectionId = appMain.rootStore.activeSectionId
+        // if a profile migration request emitted before AppMain existed, re-run the check now
+        appMain.rootStore.checkProfileMigrationNeeded()
     }
 
     // Primary store container — all additional stores should be initialized under this root
@@ -86,6 +88,10 @@ Item {
                 d.pairWalletConnectUri(wcUri)
             }
         }
+        onProfileMigrationFlowRequested: (migrateToKeycard) => {
+                                             appMain.rootStore.profileMigrationFlowOpened()
+                                             popups.openAlignWithPairedDevicePopup(migrateToKeycard)
+                                         }
         keychain: appMain.keychain
         palette: appMain.Theme.palette
     }
@@ -1166,6 +1172,13 @@ Item {
 
         function onActivateDeepLink(link: string) {
             appMain.rootStore.activateStatusDeepLink(link)
+        }
+
+        function onKeycardFlowDone(flow: string, keyUid: string, keycardUid: string, success: bool) {
+            if (flow === Constants.keycard.flow.moveProfileKeyPair ||
+                    flow === Constants.keycard.flow.stopUsingKeycardForProfile) {
+                appMain.rootStore.profileMigrationFlowClosed()
+            }
         }
 
         function onPlaySendMessageSound() {

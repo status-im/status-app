@@ -12915,10 +12915,6 @@ to load</source>
 <context>
     <name>Popups</name>
     <message>
-        <source>Image saved to system gallery</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Share addresses with %1&apos;s owner</source>
         <translation type="unfinished"></translation>
     </message>
@@ -12928,6 +12924,10 @@ to load</source>
     </message>
     <message>
         <source>Image saved to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Image saved to system gallery</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -13032,6 +13032,30 @@ to load</source>
     </message>
     <message>
         <source>Testnet mode turned off</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Align with paired device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your profile has been migrated to Keycard on paired device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your profile has been migrated from Keycard to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In order to align on the login/signing method on this device, you need to complete the migration flow, clicking the &quot;Continue&quot; button below, or cancel this popup if you want to keep the current login/signing method.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you don&apos;t want to see this message again, go to Settings/Wallet and toggle off &quot;Automatically apply key pair migrations from paired device&quot;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

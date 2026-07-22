@@ -12870,19 +12870,19 @@ to load</source>
 <context>
     <name>Popups</name>
     <message>
-        <source>Image saved to system gallery</source>
+        <source>Share addresses with %1&apos;s owner</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Share addresses with %1&apos;s owner</source>
-        <translation>%1의 소유자와 주소 공유</translation>
-    </message>
-    <message>
         <source>Share addresses to rejoin %1</source>
-        <translation>%1에 다시 참여하려면 주소를 공유하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Image saved to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Image saved to system gallery</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12891,152 +12891,176 @@ to load</source>
     </message>
     <message>
         <source>%1 removed from contacts and marked as untrusted</source>
-        <translation>%1 연락처에서 제거되고 신뢰하지 않는 대상으로 표시됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 marked as trusted</source>
-        <translation>%1 신뢰함으로 표시됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
-        <translation>%1 신뢰 마크 제거, 연락처에서 삭제되고 신뢰하지 않음으로 표시됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 trust mark removed and marked as untrusted</source>
-        <translation>%1 신뢰 표시가 제거되어, 신뢰하지 않음으로 표시됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 trust mark removed and removed from contacts</source>
-        <translation>%1 신뢰 마크가 제거되고 연락처에서 삭제됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Contact request accepted</source>
-        <translation>연락 요청이 승인됨</translation>
+        <translation type="unfinished">연락 요청이 승인됨</translation>
     </message>
     <message>
         <source>Contact request ignored</source>
-        <translation>연락 요청 무시됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Recovery phrase permanently removed from Status application storage</source>
-        <translation>복구 구문이 Status 애플리케이션 저장소에서 영구적으로 삭제되었습니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You backed up your recovery phrase. Access it in Settings</source>
-        <translation>복구 구문을 백업했어요. 설정에서 확인하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Profile Picture</source>
-        <translation>프로필 사진</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Make this my Profile Pic</source>
-        <translation>이걸 내 프로필 사진으로 설정</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 marked as untrusted</source>
-        <translation>%1 신뢰할 수 없음으로 표시됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 unblocked</source>
-        <translation>%1 차단 해제됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 blocked</source>
-        <translation>%1명이 차단됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Please choose a directory</source>
-        <translation>디렉터리를 선택하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure want to leave &apos;%1&apos;?</source>
-        <translation>정말로 &apos;%1&apos;에서 나가시겠어요?</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
-        <translation>앞으로 다시 멤버가 되고 싶다면 가입 요청을 해야 합니다. 퍼블릭 키로 커뮤니티에 합류했다면, 떠나기 전에 해당 키를 꼭 백업해 두세요.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>취소</translation>
+        <translation type="unfinished">취소</translation>
     </message>
     <message>
         <source>Leave %1</source>
-        <translation>%1 나가기</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Turn off testnet mode</source>
-        <translation>테스트넷 모드 끄기</translation>
+        <translation type="unfinished">Testnet 모드 끄기</translation>
     </message>
     <message>
         <source>Turn on testnet mode</source>
-        <translation>Testnet 모드 켜기</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure you want to turn off %1? All future transactions will be performed on live networks with real funds</source>
-        <translation>정말로 %1을(를) 끄시겠습니까? 앞으로의 모든 거래는 실제 자금이 오가는 라이브 네트워크에서 수행됩니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure you want to turn on %1? In this mode, all blockchain data displayed will come from testnets and all blockchain interactions will be with testnets. Testnet mode switches the entire app to using testnets only. Please switch this mode on only if you know exactly why you need to use it.</source>
-        <translation>정말로 %1을(를) 켜시겠습니까? 이 모드에서는 표시되는 모든 블록체인 데이터가 Testnet에서 오며, 모든 블록체인 상호작용도 Testnet과만 이루어집니다. Testnet 모드는 앱 전체를 Testnet만 사용하도록 전환합니다. 정확한 사용 이유를 알고 있을 때에만 이 모드를 켜세요.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Testnet mode turned on</source>
-        <translation>Testnet 모드가 켜졌습니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Testnet mode turned off</source>
-        <translation>Testnet 모드가 꺼졌습니다</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Align with paired device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">계속</translation>
+    </message>
+    <message>
+        <source>Your profile has been migrated to Keycard on paired device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your profile has been migrated from Keycard to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In order to align on the login/signing method on this device, you need to complete the migration flow, clicking the &quot;Continue&quot; button below, or cancel this popup if you want to keep the current login/signing method.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you don&apos;t want to see this message again, go to Settings/Wallet and toggle off &quot;Automatically apply key pair migrations from paired device&quot;.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign transaction - update %1 smart contract</source>
-        <translation>트랜잭션 서명 - %1 스마트 컨트랙트 업데이트</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 (%2) successfully hidden. You can toggle asset visibility via %3.</source>
-        <translation>%1(%2)가 성공적으로 숨겨졌습니다. 자산 표시 여부는 %3에서 전환할 수 있습니다.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Settings</source>
         <comment>Go to Settings</comment>
-        <translation>설정</translation>
+        <translation type="unfinished">설정</translation>
     </message>
     <message>
         <source>Hide collectible</source>
-        <translation>수집품 숨기기</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Hide %1</source>
-        <translation>%1 숨기기</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure you want to hide %1? You will no longer see or be able to interact with this collectible anywhere inside Status.</source>
-        <translation>정말 %1을(를) 숨길까요? 숨기면 Status 내 어디에서도 이 컬렉터블을 보거나 상호작용할 수 없습니다.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 successfully hidden. You can toggle collectible visibility via %2.</source>
-        <translation>%1이(가) 성공적으로 숨겨졌습니다. %2에서 수집품 표시/숨기기를 전환할 수 있습니다.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status Software Privacy Policy</source>
-        <translation>Status 소프트웨어 개인정보 처리방침</translation>
+        <translation type="unfinished">Status 소프트웨어 개인정보 처리방침</translation>
     </message>
     <message>
         <source>Status Software Terms of Use</source>
-        <translation>Status 소프트웨어 이용 약관</translation>
+        <translation type="unfinished">Status 소프트웨어 이용약관</translation>
     </message>
     <message>
         <source>Sign out</source>
-        <translation>로그아웃</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation>계정 비밀번호와 복구 구문을 안전하게 보관하세요. 둘 중 하나라도 없으면 계정에 접근하지 못하고 자금을 잃을 수 있습니다.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign out &amp; Quit</source>
-        <translation>로그아웃 및 종료</translation>
+        <translation type="unfinished">로그아웃 및 종료</translation>
     </message>
 </context>
 <context>
