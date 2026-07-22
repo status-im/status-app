@@ -1094,6 +1094,43 @@ Item {
                                         f + " for \"" + data.input + "\""))
         }
 
+        // ── removeDelimitersAtSelection: strip a kind across the selection ──────
+
+        // Counterpart to delimitersAtSelection: "|B|" marks the selection; the kind's share is
+        // stripped from the expanded outer ends (or, for "quote", the "> " of every selected line).
+        function test_removeDelimitersAtSelection_data() {
+            return [
+                {tag: "bold",                  input: "A **|B|**",     kind: "bold",          output: "A |B|"},
+                {tag: "italic from ***",       input: "***|B|***",     kind: "italic",        output: "**|B|**"},
+                {tag: "bold from ***",         input: "***|B|***",     kind: "bold",          output: "*|B|*"},
+                {tag: "strikethrough",         input: "~~|B|~~",       kind: "strikethrough", output: "|B|"},
+                {tag: "code span",             input: "`|B|`",         kind: "codeSpan",      output: "|B|"},
+                {tag: "code block",            input: "```|B|```",     kind: "codeBlock",     output: "|B|"},
+                {tag: "edge merges into **",   input: "**|B**|",       kind: "bold",          output: "|B|"},
+                // Entangled with other delimiters: only the "*" italic pair is removed, the tildes/
+                // bold stay put (blanked-not-removed keeps positions while locating the "*").
+                {tag: "italic among tildes",   input: "*~~|A|~*~",     kind: "italic",        output: "~~|A|~~"},
+                {tag: "italic past bold+tildes", input: "**~*|A|~~*~**", kind: "italic",      output: "**~|A|~~~**"},
+                {tag: "wrong kind (no-op)",    input: "**|B|**",       kind: "codeSpan",      output: "**|B|**"},
+                {tag: "no delimiters (no-op)", input: "x|B|y",         kind: "bold",          output: "x|B|y"},
+                {tag: "quote, single line",    input: "> A |B| C",     kind: "quote",         output: "A |B| C"},
+                {tag: "quote, both lines",     input: "> A |X\n> B|",  kind: "quote",         output: "A |X\nB|"},
+                {tag: "quote, only selected",  input: "> A |X\n> B|\n> C", kind: "quote",     output: "A |X\nB|\n> C"},
+            ]
+        }
+
+        function test_removeDelimitersAtSelection(data) {
+            const first = data.input.indexOf("|")
+            const second = data.input.indexOf("|", first + 1)
+            control.text = data.input.replace(/\|/g, "")
+            const selectionStart = first
+            const selectionEnd = second - 1
+
+            control.removeDelimitersAtSelection(selectionStart, selectionEnd, data.kind)
+
+            compare(control.text, data.output.replace(/\|/g, ""))
+        }
+
         // ── removeDelimitersAt: strip the delimiter chars a given kind accounts for ──────
 
         // Symmetrical to delimitersAt, but parametrized by kind so stacked emphasis is unambiguous:

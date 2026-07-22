@@ -207,6 +207,15 @@ public:
     // with "> " (e.g. "> A |B| C" and "> A | C\n> D |" → quote; "> A | B\nC|" → not, C's line isn't).
     Q_INVOKABLE QVariantMap delimitersAtSelection(int selectionStart, int selectionEnd) const;
 
+    // Removes the formatting `kind` accounts for across the selection — the counterpart to
+    // delimitersAtSelection. For a delimiter kind ("bold"/"italic"/"strikethrough"/"codeSpan"/
+    // "codeBlock") it strips that kind's share from the outermost run at each end of the expanded
+    // context ("**|B|**" + "bold" → "B", "***|B|***" + "italic" → "**B**"). For "quote" it strips the
+    // "> " prefix from every line the selection covers. A no-op when the kind is not present. Single
+    // undo step.
+    Q_INVOKABLE void removeDelimitersAtSelection(int selectionStart, int selectionEnd,
+                                                 const QString& kind);
+
     // Removes the delimiter chars for `kind` flanking the caret, using only the local text (mirrors
     // delimitersAt). `kind` is one of "bold", "italic", "strikethrough", "codeSpan", "codeBlock" and
     // is required to disambiguate stacked emphasis: on "***|***", "italic" strips one "*" each side
