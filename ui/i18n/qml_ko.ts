@@ -15913,17 +15913,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>StatusEditMessage</name>
-    <message>
-        <source>Cancel</source>
-        <translation>취소</translation>
-    </message>
-    <message>
-        <source>Save</source>
-        <translation>저장</translation>
-    </message>
-</context>
-<context>
     <name>StatusEmojiPopup</name>
     <message>
         <source>Search Results</source>
