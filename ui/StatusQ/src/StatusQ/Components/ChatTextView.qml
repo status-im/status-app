@@ -76,6 +76,9 @@ Control {
         id: block
 
         property string content
+        // For code blocks: a rich-text (Twemoji <img> in a <pre>) variant of `content`. When set,
+        // the code renderer uses RichText so image emojis show; empty keeps plain monospace text.
+        property string codeHtml
         property bool isCode: false
         property bool bold: false
         property bool italic: false
@@ -161,14 +164,14 @@ Control {
 
                     width: Math.min(implicitWidth, parent.width)
                     wrapMode: Text.Wrap
-                    textFormat: Text.PlainText
+                    textFormat: block.codeHtml !== "" ? Text.RichText : Text.PlainText
                     color: block.textColor
                     font.family: Fonts.codeFont.family
                     font.pixelSize: root.font.pixelSize
                     font.bold: block.bold
                     font.italic: block.italic
                     font.strikeout: block.strikethrough
-                    text: block.content
+                    text: block.codeHtml !== "" ? block.codeHtml : block.content
                 }
             }
         }
@@ -198,7 +201,7 @@ Control {
                     selectByMouse: false
                     persistentSelection: true
                     wrapMode: Text.Wrap
-                    textFormat: Text.PlainText
+                    textFormat: block.codeHtml !== "" ? Text.RichText : Text.PlainText
                     selectionColor: root.palette.highlight
                     color: block.textColor
                     font.family: Fonts.codeFont.family
@@ -206,7 +209,7 @@ Control {
                     font.bold: block.bold
                     font.italic: block.italic
                     font.strikeout: block.strikethrough
-                    text: block.content
+                    text: block.codeHtml !== "" ? block.codeHtml : block.content
                 }
             }
         }
@@ -462,6 +465,7 @@ Control {
                         isCode: blk.block.type === "code"
                         content: blk.block.type === "code" ? (blk.block.code || "")
                                                            : (blk.block.html || "")
+                        codeHtml: blk.block.type === "code" ? (blk.block.codeHtml || "") : ""
                         bold: !!blk.block.bold
                         italic: !!blk.block.italic
                         strikethrough: !!blk.block.strikethrough
@@ -499,6 +503,7 @@ Control {
                                     isCode: modelData.type === "code"
                                     content: modelData.type === "code" ? (modelData.code || "")
                                                                        : (modelData.html || "")
+                                    codeHtml: modelData.type === "code" ? (modelData.codeHtml || "") : ""
                                     bold: !!modelData.bold
                                     italic: !!modelData.italic
                                     strikethrough: !!modelData.strikethrough

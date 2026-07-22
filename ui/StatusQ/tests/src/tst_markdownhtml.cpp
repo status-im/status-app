@@ -530,7 +530,8 @@ private slots:
         QVERIFY(!blockHtml(b).contains("font-size"));
     }
 
-    // Emojis inside code keep the code's own size (never wrapped).
+    // Emojis inside code keep the code's own size (never font-enlarged, both in the inline <code>
+    // and the code block).
     void blocks_emojiNotWrappedInCode()
     {
         const QString grin = QString::fromUcs4(U"\U0001F600");
@@ -538,6 +539,42 @@ private slots:
         const QString html = blockHtml(b);
         QVERIFY(html.contains("<code"));
         QVERIFY2(!html.contains("font-size"), qPrintable(html));
+    }
+
+    static QVariantMap firstCodeBlock(const QVariantList& b)
+    {
+        for (const QVariant& v : b)
+            if (v.toMap()["type"].toString() == "code")
+                return v.toMap();
+        return {};
+    }
+
+    // A code block carries a rich-text `codeHtml` (<pre> with the emoji wrapped) only when image
+    // emoji are enabled and the block actually contains an emoji.
+    void blocks_codeBlockHtmlInImageMode()
+    {
+        const QString grin = QString::fromUcs4(U"\U0001F600");
+        const QVariantMap m = firstCodeBlock(
+            toBlocks(parse("```\n" + grin + "\n```"), {}, 18, QStringLiteral("qrc:/x/")));
+        QVERIFY(m.contains("codeHtml"));
+        QVERIFY(m["codeHtml"].toString().startsWith("<pre>"));
+        QCOMPARE(m["code"].toString(), grin); // raw content still present for copy/PlainText
+    }
+
+    // No image mode (empty base url) ⇒ no codeHtml; the block stays plain.
+    void blocks_codeBlockNoHtmlInFontMode()
+    {
+        const QString grin = QString::fromUcs4(U"\U0001F600");
+        const QVariantMap m = firstCodeBlock(toBlocks(parse("```\n" + grin + "\n```"), {}, 18));
+        QVERIFY(!m.contains("codeHtml"));
+    }
+
+    // Image mode but no emoji in the block ⇒ no codeHtml (stays PlainText, unchanged).
+    void blocks_codeBlockNoHtmlWithoutEmoji()
+    {
+        const QVariantMap m = firstCodeBlock(
+            toBlocks(parse("```\nx = 1\n```"), {}, 18, QStringLiteral("qrc:/x/")));
+        QVERIFY(!m.contains("codeHtml"));
     }
 };
 
