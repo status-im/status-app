@@ -4,6 +4,12 @@ import utils
 QtObject {
     id: root
 
+    enum ArchiveProtocolMode {
+        Disabled,
+        LogosStorage,
+        Torrent
+    }
+
     property var advancedModule
     property var walletModule
     property var networksModuleInst: networksModule
@@ -15,12 +21,23 @@ QtObject {
     property bool isDebugEnabled: advancedModule? advancedModule.isDebugEnabled : false
     property int logMaxBackups: advancedModule ? advancedModule.logMaxBackups : 1
     property bool isRuntimeLogLevelSet: advancedModule ? advancedModule.isRuntimeLogLevelSet: false
-    readonly property bool archiveProtocolEnabled: advancedModule ? advancedModule.archiveProtocolEnabled : false
+    readonly property int archiveProtocolMode: advancedModule ? advancedModule.archiveProtocolMode : AdvancedStore.ArchiveProtocolMode.Disabled
+    readonly property string archiveProtocolModeLabel: {
+        switch (root.archiveProtocolMode) {
+        case AdvancedStore.ArchiveProtocolMode.LogosStorage:
+            return qsTr("Logos Storage")
+        case AdvancedStore.ArchiveProtocolMode.Torrent:
+            return qsTr("Torrent")
+        default:
+            return qsTr("Disabled")
+        }
+    }
     readonly property bool ensCommunityPermissionsEnabled: localAccountSensitiveSettings.ensCommunityPermissionsEnabled
 
     property var customNetworksModel: advancedModule? advancedModule.customNetworksModel : []
 
     property bool isManageCommunityOnTestModeEnabled: false
+
     readonly property QtObject experimentalFeatures: QtObject {
         readonly property string browser: "browser"
         readonly property string communities: "communities"
@@ -104,23 +121,19 @@ QtObject {
         }
     }
 
-    function toggleArchiveProtocolEnabled() {
+    function setArchiveProtocolMode(mode) {
         if(!advancedModule)
             return
 
-        if (root.archiveProtocolEnabled) {
-            advancedModule.disableCommunityHistoryArchiveSupport()
-        } else {
-            advancedModule.enableCommunityHistoryArchiveSupport()
-        }
+        advancedModule.setCommunityHistoryArchiveProtocolMode(mode)
     }
 
     function enableArchiveProtocolProperty() {
         if(!advancedModule)
             return
 
-        if (!root.archiveProtocolEnabled) {
-            advancedModule.enableCommunityHistoryArchiveSupport()
+        if (root.archiveProtocolMode === AdvancedStore.ArchiveProtocolMode.Disabled) {
+            advancedModule.setCommunityHistoryArchiveProtocolMode(AdvancedStore.ArchiveProtocolMode.LogosStorage)
         }
     }
 

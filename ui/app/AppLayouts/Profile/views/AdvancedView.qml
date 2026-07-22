@@ -182,12 +182,11 @@ SettingsContentBase {
 
             StatusSettingsLineButton {
                 width: parent.width
-                text: qsTr("Archive Protocol Enabled")
+                text: qsTr("Archive Protocol")
                 visible: !SQUtils.Utils.isMobile
-                isSwitch: true
-                checked: root.advancedStore.archiveProtocolEnabled
+                currentValue: root.advancedStore.archiveProtocolModeLabel
                 onClicked: {
-                    root.advancedStore.toggleArchiveProtocolEnabled()
+                    archiveProtocolModeModal.open()
                 }
             }
 
@@ -481,6 +480,61 @@ SettingsContentBase {
             onVelocityChanged: value => root.advancedStore.setScrollVelocity(value)
             onDecelerationChanged: value => root.advancedStore.setScrollDeceleration(value)
             onCustomScrollingChanged: enabled => root.advancedStore.setCustomScrollingEnabled(enabled)
+        }
+
+        StatusDialog {
+            id: archiveProtocolModeModal
+
+            width: 400
+            modal: true
+            title: qsTr("Archive Protocol")
+
+            contentItem: ColumnLayout {
+                spacing: 2 * Constants.settingsSection.itemSpacing
+
+                ButtonGroup {
+                    id: archiveProtocolModeGroup
+                }
+
+                SettingsRadioButton {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Theme.padding
+                    Layout.rightMargin: Theme.padding
+                    label: qsTr("Disabled")
+                    group: archiveProtocolModeGroup
+                    checked: root.advancedStore.archiveProtocolMode === AdvancedStore.ArchiveProtocolMode.Disabled
+                    onClicked: {
+                        root.advancedStore.setArchiveProtocolMode(AdvancedStore.ArchiveProtocolMode.Disabled)
+                        archiveProtocolModeModal.close()
+                    }
+                }
+
+                SettingsRadioButton {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Theme.padding
+                    Layout.rightMargin: Theme.padding
+                    label: qsTr("Logos Storage")
+                    group: archiveProtocolModeGroup
+                    checked: root.advancedStore.archiveProtocolMode === AdvancedStore.ArchiveProtocolMode.LogosStorage
+                    onClicked: {
+                        root.advancedStore.setArchiveProtocolMode(AdvancedStore.ArchiveProtocolMode.LogosStorage)
+                        archiveProtocolModeModal.close()
+                    }
+                }
+
+                SettingsRadioButton {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Theme.padding
+                    Layout.rightMargin: Theme.padding
+                    label: qsTr("Torrent")
+                    group: archiveProtocolModeGroup
+                    checked: root.advancedStore.archiveProtocolMode === AdvancedStore.ArchiveProtocolMode.Torrent
+                    onClicked: {
+                        root.advancedStore.setArchiveProtocolMode(AdvancedStore.ArchiveProtocolMode.Torrent)
+                        archiveProtocolModeModal.close()
+                    }
+                }
+            }
         }
 
         RPCStatsModal {

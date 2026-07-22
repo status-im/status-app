@@ -20,8 +20,11 @@ proc getNodeConfig*(): RpcResponse[JsonNode] =
     raise newException(RpcException, e.msg)
 
 
-proc enableCommunityHistoryArchiveSupport*(): RpcResponse[JsonNode] =
+proc enableTorrentCommunityHistoryArchiveSupport*(): RpcResponse[JsonNode] =
   return core.callPrivateRPC("enableCommunityHistoryArchiveProtocol".prefix, %* [])
+
+proc enableLogosStorageCommunityHistoryArchiveSupport*(): RpcResponse[JsonNode] =
+  return core.callPrivateRPC("enableLogosStorageCommunityHistoryArchiveProtocol".prefix, %* [{}])
 
 proc disableCommunityHistoryArchiveSupport*(): RpcResponse[JsonNode] =
   return core.callPrivateRPC("disableCommunityHistoryArchiveProtocol".prefix, %* [])

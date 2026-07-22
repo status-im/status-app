@@ -1024,6 +1024,21 @@
     </message>
 </context>
 <context>
+    <name>AdvancedStore</name>
+    <message>
+        <source>Logos Storage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Torrent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>AdvancedView</name>
     <message>
         <source>This feature is experimental and is meant for testing purposes by core contributors and the community. It&apos;s not meant for real use and makes no claims of security or integrity of funds or data. Use at your own risk.</source>
@@ -1062,10 +1077,6 @@
         <translation>Web/dApp prohlížeč</translation>
     </message>
     <message>
-        <source>Archive Protocol Enabled</source>
-        <translation>Archivní protokol povolen</translation>
-    </message>
-    <message>
         <source>ENS Community Permissions Enabled</source>
         <translation>Oprávnění ENS komunity povolena</translation>
     </message>
@@ -1100,6 +1111,10 @@
     <message>
         <source>Debug</source>
         <translation>Ladění</translation>
+    </message>
+    <message>
+        <source>Archive Protocol</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Logos Messaging options</source>
@@ -1164,6 +1179,18 @@
     <message>
         <source>Change</source>
         <translation>Změnit</translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Logos Storage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Torrent</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Refetch transaction history</source>
@@ -6785,8 +6812,8 @@ key pair. Keycard will be required for signing</source>
         <translation>Povolení služby historie komunity zajišťuje, že každý člen může zobrazit kompletní historii zpráv pro všechny kanály, ke kterým má oprávnění. Bez této funkce bude historie zpráv omezena na posledních 30 dní. Váš počítač, který je řídicím uzlem pro komunitu, musí zůstat online, aby to fungovalo.</translation>
     </message>
     <message>
-        <source>This service operates using the Archive Protocol, which will be automatically enabled.</source>
-        <translation>Tato služba funguje pomocí protokolu Archive, který bude automaticky povolen.</translation>
+        <source>This service operates using the Archive Protocol, which will be automatically enabled using Logos Storage by default.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Read more</source>

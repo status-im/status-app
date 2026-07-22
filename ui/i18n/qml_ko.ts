@@ -1018,6 +1018,21 @@
     </message>
 </context>
 <context>
+    <name>AdvancedStore</name>
+    <message>
+        <source>Logos Storage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Torrent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>AdvancedView</name>
     <message>
         <source>This feature is experimental and is meant for testing purposes by core contributors and the community. It&apos;s not meant for real use and makes no claims of security or integrity of funds or data. Use at your own risk.</source>
@@ -1056,10 +1071,6 @@
         <translation>웹/dApp 브라우저</translation>
     </message>
     <message>
-        <source>Archive Protocol Enabled</source>
-        <translation>아카이브 프로토콜 활성화됨</translation>
-    </message>
-    <message>
         <source>ENS Community Permissions Enabled</source>
         <translation>ENS 커뮤니티 권한 활성화됨</translation>
     </message>
@@ -1094,6 +1105,10 @@
     <message>
         <source>Debug</source>
         <translation>디버그</translation>
+    </message>
+    <message>
+        <source>Archive Protocol</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Logos Messaging options</source>
@@ -1158,6 +1173,18 @@
     <message>
         <source>Change</source>
         <translation>변경</translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Logos Storage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Torrent</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Refetch transaction history</source>
@@ -6738,8 +6765,8 @@ key pair. Keycard will be required for signing</source>
         <translation>커뮤니티 히스토리 서비스 활성화 시, 권한이 있는 모든 채널의 전체 메시지 기록을 모든 구성원이 볼 수 있습니다. 이 기능을 켜지 않으면 메시지 기록은 최근 30일로 제한됩니다. 커뮤니티의 제어 Node 역할을 하는 사용자의 컴퓨터는 이 기능이 동작하도록 계속 온라인 상태여야 합니다.</translation>
     </message>
     <message>
-        <source>This service operates using the Archive Protocol, which will be automatically enabled.</source>
-        <translation>이 서비스는 Archive Protocol을 사용하여 운영되며, 자동으로 활성화됩니다.</translation>
+        <source>This service operates using the Archive Protocol, which will be automatically enabled using Logos Storage by default.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Read more</source>

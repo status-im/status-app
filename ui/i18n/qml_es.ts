@@ -1021,6 +1021,21 @@
     </message>
 </context>
 <context>
+    <name>AdvancedStore</name>
+    <message>
+        <source>Logos Storage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Torrent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>AdvancedView</name>
     <message>
         <source>This feature is experimental and is meant for testing purposes by core contributors and the community. It&apos;s not meant for real use and makes no claims of security or integrity of funds or data. Use at your own risk.</source>
@@ -1059,10 +1074,6 @@
         <translation>Navegador Web/dApp</translation>
     </message>
     <message>
-        <source>Archive Protocol Enabled</source>
-        <translation>Protocolo de archivo habilitado</translation>
-    </message>
-    <message>
         <source>ENS Community Permissions Enabled</source>
         <translation>Permisos de comunidad ENS habilitados</translation>
     </message>
@@ -1097,6 +1108,10 @@
     <message>
         <source>Debug</source>
         <translation>Depuración</translation>
+    </message>
+    <message>
+        <source>Archive Protocol</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Logos Messaging options</source>
@@ -1161,6 +1176,18 @@
     <message>
         <source>Change</source>
         <translation>Cambiar</translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Logos Storage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Torrent</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Refetch transaction history</source>
@@ -6762,8 +6789,8 @@ key pair. Keycard will be required for signing</source>
         <translation>Habilitar el Servicio de Historial de Comunidad garantiza que cada miembro pueda ver el historial completo de mensajes de todos los canales que tiene permiso para ver. Sin esta función, el historial de mensajes se limitará a los últimos 30 días. Tu computadora, que es el nodo de control de la comunidad, debe permanecer en línea para que esto funcione.</translation>
     </message>
     <message>
-        <source>This service operates using the Archive Protocol, which will be automatically enabled.</source>
-        <translation>Este servicio opera usando el Protocolo de Archivo, que se habilitará automáticamente.</translation>
+        <source>This service operates using the Archive Protocol, which will be automatically enabled using Logos Storage by default.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Read more</source>

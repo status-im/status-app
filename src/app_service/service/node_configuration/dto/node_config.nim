@@ -165,6 +165,9 @@ type
   TorrentConfig* = object
     Enabled*: bool
 
+  LogosStorageConfig* = object
+    Enabled*: bool
+
   Whisper* = object
     Min*: int
     Max*: int
@@ -219,6 +222,7 @@ type
     WakuConfig*: WakuConfig
     WakuV2Config*: Waku2Config
     TorrentConfig*: TorrentConfig
+    LogosStorageConfig*: LogosStorageConfig
     BridgeConfig*: BridgeConfig
     ShhextConfig*: ShhextConfig
     WalletConfig*: WalletConfig
@@ -317,6 +321,9 @@ proc toDatabaseConfig*(jsonObj: JsonNode): DatabaseConfig =
     result.PGConfig = toPGConfig(pgConfigObj)
 
 proc toTorrentConfig*(jsonObj: JsonNode): TorrentConfig =
+  discard jsonObj.getProp("Enabled", result.Enabled)
+
+proc toLogosStorageConfig*(jsonObj: JsonNode): LogosStorageConfig =
   discard jsonObj.getProp("Enabled", result.Enabled)
 
 proc toWaku2Config*(jsonObj: JsonNode): Waku2Config =
@@ -520,6 +527,10 @@ proc toNodeConfigDto*(jsonObj: JsonNode): NodeConfigDto =
   var torrentConfigObj: JsonNode
   if(jsonObj.getProp("TorrentConfig", torrentConfigObj)):
     result.TorrentConfig = toTorrentConfig(torrentConfigObj)
+
+  var logosStorageConfigObj: JsonNode
+  if(jsonObj.getProp("LogosStorageConfig", logosStorageConfigObj)):
+    result.LogosStorageConfig = toLogosStorageConfig(logosStorageConfigObj)
 
   var wakuV2ConfigObj: JsonNode
   if(jsonObj.getProp("WakuV2Config", wakuV2ConfigObj)):
