@@ -102,6 +102,9 @@ StatusTextArea {
     function delimitersAtSelection(start, end) {
         return highlighter.delimitersAtSelection(start, end)
     }
+    function removeDelimitersAtSelection(start, end, kind) {
+        highlighter.removeDelimitersAtSelection(start, end, kind)
+    }
     function removeDelimitersAt(pos, kind) {
         highlighter.removeDelimitersAt(pos, kind)
     }

@@ -1858,6 +1858,108 @@ QVariantMap ChatInputHighlighter::delimitersAtSelection(int selectionStart, int 
     return out;
 }
 
+void ChatInputHighlighter::removeDelimitersAtSelection(int selectionStart, int selectionEnd,
+                                                       const QString& kind)
+{
+    if (!document())
+        return;
+
+    const QString text = document()->toPlainText();
+    const int len = text.length();
+    if (selectionStart > selectionEnd)
+        std::swap(selectionStart, selectionEnd);
+    selectionStart = qBound(0, selectionStart, len);
+    selectionEnd = qBound(0, selectionEnd, len);
+
+    // Ranges to delete, gathered then removed highest-first in one edit block (single undo step).
+    QVector<QPair<int, int>> ranges;
+
+    if (kind == QLatin1String("quote")) {
+        // Strip the "> " prefix from every line the selection at least partially covers (mirrors
+        // the quote rule of delimitersAtSelection / selectionLinesAllQuoted).
+        int lineStart = 0;
+        for (int i = 0; i <= len; ++i) {
+            if (i < len && text.at(i) != u'\n')
+                continue;
+            const int lineEnd = i;
+            const bool touched = (selectionStart == selectionEnd)
+                ? (selectionStart >= lineStart && selectionStart <= lineEnd)
+                : (selectionStart < lineEnd && selectionEnd > lineStart);
+            if (touched && (lineEnd - lineStart) >= 2
+                    && text.at(lineStart) == u'>' && text.at(lineStart + 1) == u' ')
+                ranges.append({lineStart, lineStart + 2});
+            lineStart = i + 1;
+        }
+    } else {
+        // Mirror delimitersAtSelection: expand the flanking delimiter blocks, then walk the tokens
+        // in the same priority order, blanking each one found on both ends (so positions stay put
+        // and separated delimiters don't merge). But when the token for `kind` is reached, instead
+        // of blanking, remove exactly those matched delimiters from the document.
+        int start = selectionStart;
+        while (start > 0 && isDelimiterChar(text.at(start - 1)))
+            --start;
+        int end = selectionEnd;
+        while (end < len && isDelimiterChar(text.at(end)))
+            ++end;
+        if (start >= end)
+            return;
+
+        int contentStart = start;
+        while (contentStart < end && isDelimiterChar(text.at(contentStart)))
+            ++contentStart;
+        int contentEnd = end;
+        while (contentEnd > start && isDelimiterChar(text.at(contentEnd - 1)))
+            --contentEnd;
+        if (contentStart >= contentEnd)
+            contentStart = contentEnd = (start + end) / 2;
+
+        QString leftBlock  = text.mid(start, contentStart - start);
+        QString rightBlock = text.mid(contentEnd, end - contentEnd);
+
+        struct Token { QString str; QString kind; };
+        const Token tokens[] = {
+            { QStringLiteral("**"),  QStringLiteral("bold") },
+            { QStringLiteral("*"),   QStringLiteral("italic") },
+            { QStringLiteral("```"), QStringLiteral("codeBlock") },
+            { QStringLiteral("`"),   QStringLiteral("codeSpan") },
+            { QStringLiteral("~~"),  QStringLiteral("strikethrough") },
+        };
+        for (const Token& t : tokens) {
+            const int li = leftBlock.indexOf(t.str);
+            const int ri = rightBlock.indexOf(t.str);
+            const bool onBoth = li >= 0 && ri >= 0;
+            if (t.kind == kind) {
+                if (!onBoth)
+                    return; // the kind's delimiters aren't around the selection — nothing to remove
+                const int n = static_cast<int>(t.str.size());
+                ranges.append({start + li, start + li + n});
+                ranges.append({contentEnd + ri, contentEnd + ri + n});
+                break;
+            }
+            if (onBoth) {
+                leftBlock.replace(li, t.str.size(), QString(t.str.size(), u' '));
+                rightBlock.replace(ri, t.str.size(), QString(t.str.size(), u' '));
+            }
+        }
+    }
+
+    if (ranges.isEmpty())
+        return;
+
+    std::sort(ranges.begin(), ranges.end(),
+              [](const auto& a, const auto& b) { return a.first > b.first; });
+
+    QTextCursor cursor(document());
+    cursor.setPosition(qBound(0, selectionStart, document()->characterCount() - 1));
+    cursor.beginEditBlock();
+    for (const auto& r : std::as_const(ranges)) {
+        cursor.setPosition(r.first);
+        cursor.setPosition(r.second, QTextCursor::KeepAnchor);
+        cursor.removeSelectedText();
+    }
+    cursor.endEditBlock();
+}
+
 void ChatInputHighlighter::removeDelimitersAt(int position, const QString& kind)
 {
     if (!document())

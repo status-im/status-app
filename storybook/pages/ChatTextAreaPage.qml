@@ -981,38 +981,43 @@ unclosed fence here (no closing triple-tick)
             Row {
                 spacing: 8
 
-                // `byNode` decides which remover to use; nodeAt takes precedence over delimitersAt.
-                // removeFormatting takes the unified "code" kind; removeDelimitersAt needs the
-                // specific codeSpan/codeBlock, so the two kinds are passed separately.
-                function unformat(byNode, byDelimiters, formattingKind, delimiterKind) {
-                    if (byNode)
-                        textArea.removeFormatting(textArea.cursorPosition, formattingKind)
+                // With a selection, strip the formatting across the whole selection
+                // (removeDelimitersAtSelection). With just a caret: nodeAt takes precedence over
+                // delimitersAt — removeFormatting (unified "code" kind) vs removeDelimitersAt (needs
+                // the specific codeSpan/codeBlock). `selectionKind` is the kind for the selection path.
+                function unformat(selectionKind, byNode, byDelimiters, caretFormattingKind, caretDelimiterKind) {
+                    if (hasSelection)
+                        textArea.removeDelimitersAtSelection(textArea.selectionStart,
+                                                             textArea.selectionEnd, selectionKind)
+                    else if (byNode)
+                        textArea.removeFormatting(textArea.cursorPosition, caretFormattingKind)
                     else if (byDelimiters)
-                        textArea.removeDelimitersAt(textArea.cursorPosition, delimiterKind)
+                        textArea.removeDelimitersAt(textArea.cursorPosition, caretDelimiterKind)
                     textArea.forceActiveFocus()
                 }
 
                 Button { id: boldButton; text: "Bold"
                          checked: hasSelection ? sel.bold : (node.bold || delim.bold)
-                         onClicked: parent.unformat(node.bold, delim.bold, "bold", "bold") }
+                         onClicked: parent.unformat("bold", node.bold, delim.bold, "bold", "bold") }
                 Button { id: italicButton; text: "Italic"
                          checked: hasSelection ? sel.italic : (node.italic || delim.italic)
-                         onClicked: parent.unformat(node.italic, delim.italic, "italic", "italic") }
+                         onClicked: parent.unformat("italic", node.italic, delim.italic, "italic", "italic") }
                 Button { id: strikethroughButton; text: "Strikethrough"
                          checked: hasSelection ? sel.strikethrough
                                                : (node.strikethrough || delim.strikethrough)
-                         onClicked: parent.unformat(node.strikethrough, delim.strikethrough,
+                         onClicked: parent.unformat("strikethrough", node.strikethrough, delim.strikethrough,
                                                     "strikethrough", "strikethrough") }
                 Button { id: codeButton; text: "Code"
                          checked: hasSelection ? (sel.codeSpan || sel.codeBlock)
                                                : (node.codeSpan || node.codeBlock
                                                   || delim.codeSpan || delim.codeBlock)
-                         onClicked: parent.unformat(node.codeSpan || node.codeBlock,
+                         onClicked: parent.unformat(sel.codeBlock ? "codeBlock" : "codeSpan",
+                                                    node.codeSpan || node.codeBlock,
                                                     delim.codeSpan || delim.codeBlock,
                                                     "code", delim.codeBlock ? "codeBlock" : "codeSpan") }
                 Button { id: quoteButton; text: "Quote"
                          checked: hasSelection ? sel.quote : node.quote
-                         onClicked: parent.unformat(node.quote, false, "quote", "") }
+                         onClicked: parent.unformat("quote", node.quote, false, "quote", "quote") }
             }
         }
     }
