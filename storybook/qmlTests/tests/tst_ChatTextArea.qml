@@ -1001,5 +1001,40 @@ Item {
             compare(control.text, "**bold**")
             compare(control.cursorPosition, 4)
         }
+
+        // ── delimitersAt: formatting implied by the delimiter run around the caret ──────
+
+        // Purely local (no AST): the same delimiter char must flank the caret; its run length maps
+        // to flags. "code" is span for 1-2 backticks, block for 3+. Context is ignored, so a caret
+        // between "*"s inside a code fence still reports italic.
+        function test_delimitersAt_data() {
+            return [
+                {tag: "bold",                    input: "**|**",                 flags: ["bold"]},
+                {tag: "italic",                  input: "A *|*",                 flags: ["italic"]},
+                {tag: "bold + italic",           input: "***|***",               flags: ["bold", "italic"]},
+                {tag: "strikethrough",           input: "~~|~~",                 flags: ["strikethrough"]},
+                {tag: "strikethrough, 3 tildes",  input: "~~~|~~~",               flags: ["strikethrough"]},
+                {tag: "code span, 1 backtick",   input: "some `|`",              flags: ["codeSpan"]},
+                {tag: "code span, 2 backticks",  input: "``|``",                 flags: ["codeSpan"]},
+                {tag: "code block, 3 backticks", input: "some ```|```",          flags: ["codeBlock"]},
+                {tag: "local only, ignores ctx", input: "```code *|* code```",   flags: ["italic"]},
+                {tag: "asymmetric uses min run", input: "**|*",                  flags: ["italic"]},
+                {tag: "single tilde is nothing", input: "~|~",                   flags: []},
+                {tag: "mismatched delimiters",   input: "*|~",                   flags: []},
+                {tag: "not a delimiter",         input: "ab|cd",                 flags: []},
+                {tag: "at start (not enclosed)", input: "|**bold**",             flags: []},
+                {tag: "at end (not enclosed)",   input: "**bold**|",             flags: []},
+            ]
+        }
+
+        function test_delimitersAt(data) {
+            const position = data.input.indexOf("|")
+            control.text = data.input.replace("|", "")
+
+            const fields = ["bold", "italic", "strikethrough", "codeSpan", "codeBlock"]
+            const m = control.delimitersAt(position)
+            fields.forEach(f => compare(m[f], data.flags.indexOf(f) !== -1,
+                                        f + " for \"" + data.input + "\""))
+        }
     }
 }

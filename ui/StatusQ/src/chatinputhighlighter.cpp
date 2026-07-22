@@ -1671,3 +1671,50 @@ void ChatInputHighlighter::removeFormatting(int position, const QString& kind)
     }
     cursor.endEditBlock();
 }
+
+QVariantMap ChatInputHighlighter::delimitersAt(int position) const
+{
+    QVariantMap out = {
+        {QStringLiteral("bold"),          false},
+        {QStringLiteral("italic"),        false},
+        {QStringLiteral("strikethrough"), false},
+        {QStringLiteral("codeSpan"),      false},
+        {QStringLiteral("codeBlock"),     false},
+    };
+    if (!document())
+        return out;
+
+    const QString text = document()->toPlainText();
+    // Need a character on both sides to be "surrounded".
+    if (position <= 0 || position >= text.length())
+        return out;
+
+    const auto isDelimiter = [](QChar c) {
+        return c == u'*' || c == u'~' || c == u'`';
+    };
+
+    const QChar ch = text.at(position - 1);
+    if (!isDelimiter(ch) || text.at(position) != ch)
+        return out; // not flanked by the same delimiter char on both sides
+
+    int left = 0;
+    for (int i = position - 1; i >= 0 && text.at(i) == ch; --i)
+        ++left;
+    int right = 0;
+    for (int i = position; i < text.length() && text.at(i) == ch; ++i)
+        ++right;
+
+    // Surrounded by `count` delimiter chars on each side (the shorter run bounds it).
+    const int count = std::min(left, right);
+
+    if (ch == u'*') {
+        if (count % 2 == 1) out[QStringLiteral("italic")] = true; // 1, 3, ... include a single "*"
+        if (count >= 2)     out[QStringLiteral("bold")]   = true; // a "**" pair
+    } else if (ch == u'~') {
+        if (count >= 2)     out[QStringLiteral("strikethrough")] = true; // "~~"
+    } else { // backtick
+        if (count >= 3)     out[QStringLiteral("codeBlock")] = true; // "```"
+        else                out[QStringLiteral("codeSpan")]  = true; // "`" or "``"
+    }
+    return out;
+}
