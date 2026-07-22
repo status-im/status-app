@@ -42,6 +42,8 @@ rightSideWalletTabBar_Collectibles_StatusTabButton = {"checkable": True, "contai
 rightSideWalletTabBar_Activity_StatusTabButton = {"checkable": True, "container": rightSideWalletTabBar_StatusTabBar, "objectName": "activityTabButton", "text": "History", "type": "StatusTabButton", "visible": True}
 collectibles_view = {"container": mainWindow_RightTabView, "type": "CollectiblesView", "unnamed": 1, "visible": True}
 activity_view = {"container": mainWindow_RightTabView, "objectName": "walletAccountTransactionList", "type": "StatusListView", "visible": True}
+assets_tab_view = {"container": mainWindow_RightTabView, "type": "AssetsView", "unnamed": 1, "visible": True}
+history_tab_view = {"container": mainWindow_RightTabView, "type": "HistoryView", "unnamed": 1, "visible": True}
 
 """Wallet assets view"""
 assets_view = {"container": mainWindow_RightTabView, "objectName": "assetViewStatusListView", "type": "StatusListView", "visible": True}

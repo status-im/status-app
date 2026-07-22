@@ -24,6 +24,17 @@ def wait_for_wallet_balances_loaded(
     ), f'Wallet total balance is still loading, got: {balance.text!r}'
 
 
+def _asset_items_finished_loading(asset_item) -> bool:
+    items = driver.findAllObjects(asset_item.real_name)
+    if not items:
+        return False
+    try:
+        return not any(getattr(item, 'balanceLoading', False) for item in items)
+    except (RuntimeError, AttributeError):
+        # Squish may briefly return destroyed/null asset delegates while the list rebuilds.
+        return False
+
+
 @step('Wait for account assets to finish loading')
 def wait_for_account_assets_loaded(
         wallet_account_view,
@@ -31,22 +42,9 @@ def wait_for_account_assets_loaded(
         open_tab: bool = True,
 ):
     if open_tab:
-        wallet_account_view.open_assets_tab()
-    asset_item = wallet_account_view._asset_item  # pylint: disable=protected-access
-
-    def assets_loaded():
-        items = driver.findAllObjects(asset_item.real_name)
-        if not items:
-            return False
-        try:
-            return not any(getattr(item, 'balanceLoading', False) for item in items)
-        except (RuntimeError, AttributeError):
-            # Squish may briefly return destroyed/null asset delegates while the list rebuilds.
-            return False
-
-    assert driver.waitFor(assets_loaded, timeout_msec), (
-        'Account assets are still loading'
-    )
+        wallet_account_view.open_assets_tab(wait_until_loaded=True, loading_timeout_msec=timeout_msec)
+    else:
+        wallet_account_view.wait_for_assets_tab_content_loaded(timeout_msec)
 
 
 def authenticate_with_password(user_account):

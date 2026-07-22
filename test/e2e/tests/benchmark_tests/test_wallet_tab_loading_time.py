@@ -75,13 +75,13 @@ def test_wallet_assets_tab_loading_time(
 ):
     enable_benchmark_mode()
     wallet_account_view = _wallet_account_view(main_screen)
-    with step('Measure repeat Assets tab opening'):
+    with step('Measure repeat Assets tab opening until content is loaded'):
         _run_tab_benchmark(
             aut,
             tmp_path,
             open_tab=wallet_account_view.open_assets_tab,
             leave_tab=lambda: wallet_account_view.open_collectibles_tab(
-                wait_until_loaded=False
+                wait_until_loaded=False,
             ),
             subject='Wallet Assets tab',
             slug='wallet_assets_tab',
@@ -100,14 +100,12 @@ def test_wallet_collectibles_tab_loading_time(
 ):
     enable_benchmark_mode()
     wallet_account_view = _wallet_account_view(main_screen)
-    with step('Measure first and repeat Collectibles tab opening'):
+    with step('Measure first and repeat Collectibles tab opening until content is loaded'):
         _run_tab_benchmark(
             aut,
             tmp_path,
-            open_tab=lambda: wallet_account_view.open_collectibles_tab(
-                wait_until_loaded=False
-            ),
-            leave_tab=wallet_account_view.open_assets_tab,
+            open_tab=wallet_account_view.open_collectibles_tab,
+            leave_tab=lambda: wallet_account_view.open_assets_tab(wait_until_loaded=False),
             subject='Wallet Collectibles tab',
             slug='wallet_collectibles_tab',
             record_first_open=True,
@@ -126,12 +124,12 @@ def test_wallet_activity_tab_loading_time(
 ):
     enable_benchmark_mode()
     wallet_account_view = _wallet_account_view(main_screen)
-    with step('Measure first and repeat History tab opening'):
+    with step('Measure first and repeat History tab opening until content is loaded'):
         _run_tab_benchmark(
             aut,
             tmp_path,
             open_tab=wallet_account_view.open_activity_tab,
-            leave_tab=wallet_account_view.open_assets_tab,
+            leave_tab=lambda: wallet_account_view.open_assets_tab(wait_until_loaded=False),
             subject='Wallet History tab',
             slug='wallet_activity_tab',
             record_first_open=True,

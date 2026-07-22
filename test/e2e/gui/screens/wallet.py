@@ -27,6 +27,7 @@ from gui.elements.list import List
 from gui.elements.object import QObject
 from gui.elements.text_label import TextLabel
 from gui.objects_map import wallet_names, settings_names, names
+from helpers.wallet_helper import _asset_items_finished_loading
 
 LOG = logging.getLogger(__name__)
 
@@ -311,14 +312,76 @@ class WalletAccountView(QObject):
         self._receive_button.click()
         return ReceivePopup().wait_until_appears()
 
+    @allure.step('Wait for assets tab content to finish loading')
+    def wait_for_assets_tab_content_loaded(
+        self,
+        timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+    ):
+        assets_tab_view = QObject(wallet_names.assets_tab_view)
+
+        def assets_loaded():
+            if _asset_items_finished_loading(self._asset_item):
+                return True
+            if not assets_tab_view.is_visible:
+                return False
+            return not getattr(assets_tab_view.object, 'loading', True)
+
+        assert driver.waitFor(assets_loaded, timeout_msec), (
+            'Assets tab did not finish loading'
+        )
+        return self
+
+    @allure.step('Wait for collectibles tab content to finish loading')
+    def wait_for_collectibles_tab_content_loaded(
+        self,
+        timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        loading_timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+    ):
+        self._collectibles_view.wait_until_appears(timeout_msec)
+        assert driver.waitFor(
+            lambda: not getattr(self._collectibles_view.object, 'isFetching', False)
+            and not getattr(self._collectibles_view.object, 'isUpdating', False),
+            loading_timeout_msec,
+        ), 'Collectibles tab did not finish loading'
+        return self
+
+    @allure.step('Wait for History tab content to finish loading')
+    def wait_for_activity_tab_content_loaded(
+        self,
+        timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        loading_timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+    ):
+        self._activity_view.wait_until_appears(timeout_msec)
+        history_tab_view = QObject(wallet_names.history_tab_view)
+
+        def history_loaded():
+            if not history_tab_view.is_visible:
+                return False
+            activity_store = getattr(history_tab_view.object, 'activityStore', None)
+            if activity_store is None:
+                return False
+            return not getattr(activity_store, 'loadingHistoryTransactions', True)
+
+        assert driver.waitFor(history_loaded, loading_timeout_msec), (
+            'History tab did not finish loading'
+        )
+        return self
+
     @allure.step('Open assets tab')
-    def open_assets_tab(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+    def open_assets_tab(
+        self,
+        timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        wait_until_loaded: bool = True,
+        loading_timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+    ):
         self._assets_tab_button.click()
         assert driver.waitFor(
             lambda: self._assets_tab_button.is_checked,
             timeout_msec,
         ), 'Assets tab did not become selected'
         AssetsView().wait_until_appears(timeout_msec)
+        if wait_until_loaded:
+            self.wait_for_assets_tab_content_loaded(loading_timeout_msec)
         return self
 
     @allure.step('Open collectibles tab')
@@ -335,22 +398,25 @@ class WalletAccountView(QObject):
         ), 'Collectibles tab did not become selected'
         if not wait_until_loaded:
             return self
-        self._collectibles_view.wait_until_appears(timeout_msec)
-        assert driver.waitFor(
-            lambda: not getattr(self._collectibles_view.object, 'isFetching', False)
-            and not getattr(self._collectibles_view.object, 'isUpdating', False),
-            loading_timeout_msec,
-        ), 'Collectibles tab did not finish loading'
+        self.wait_for_collectibles_tab_content_loaded(timeout_msec, loading_timeout_msec)
         return self
 
     @allure.step('Open History tab')
-    def open_activity_tab(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+    def open_activity_tab(
+        self,
+        timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        wait_until_loaded: bool = True,
+        loading_timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+    ):
         self._activity_tab_button.click()
         assert driver.waitFor(
             lambda: self._activity_tab_button.is_checked,
             timeout_msec,
         ), 'History tab did not become selected'
-        self._activity_view.wait_until_appears(timeout_msec)
+        if wait_until_loaded:
+            self.wait_for_activity_tab_content_loaded(timeout_msec, loading_timeout_msec)
+        else:
+            self._activity_view.wait_until_appears(timeout_msec)
         return self
 
     @allure.step('Click filter button')
