@@ -327,6 +327,12 @@ method getKeycardManagementModule*(self: AccessInterface): QVariant {.base.} =
 method checkAndPerformProfileMigrationIfNeeded*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onProfileMigrationFlowOpened*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onProfileMigrationFlowClosed*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method onMyRequestAdded*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 

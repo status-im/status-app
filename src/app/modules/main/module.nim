@@ -145,6 +145,8 @@ type
     contactsLoaded: bool
     pendingSpectateRequest: SpectateRequest
     statusDeepLinkToActivate: string
+    pendingProfileMigrationCheck: bool
+    profileMigrationFlowInProgress: bool
 
 {.push warning[Deprecated]: off.}
 
@@ -1008,6 +1010,10 @@ method onChatsLoaded*[T](
 
   if self.statusDeepLinkToActivate != "":
     self.activateStatusDeepLink(self.statusDeepLinkToActivate)
+
+  if self.pendingProfileMigrationCheck:
+    self.pendingProfileMigrationCheck = false
+    self.checkAndPerformProfileMigrationIfNeeded()
 
 method onCommunityDataLoaded*[T](
   self: Module[T],
@@ -2048,12 +2054,24 @@ method checkAndPerformProfileMigrationIfNeeded*[T](self: Module[T]) =
     return
   if not migrationNeeded:
     return
+  if not self.chatsLoaded:
+    # delay the check for after the chats are loaded
+    self.pendingProfileMigrationCheck = true
+    return
+  if self.profileMigrationFlowInProgress:
+    return
   if profileKeypair.migratedToColdWallet():
     info "run stop using keycard flow for the profile, cause profile was migrated on paired device"
-    # TODO: send signal to qml to `runStopUsingKeycardForProfilePopup()`
+    self.view.profileMigrationFlowRequested(migrateToKeycard = false)
     return
   info "run migrate to a Keycard flow for the profile, cause profile was migrated on paired device"
-  # TODO: send signal to qml to `runStartUsingKeycardForProfilePopup()`
+  self.view.profileMigrationFlowRequested(migrateToKeycard = true)
+
+method onProfileMigrationFlowOpened*[T](self: Module[T]) =
+  self.profileMigrationFlowInProgress = true
+
+method onProfileMigrationFlowClosed*[T](self: Module[T]) =
+  self.profileMigrationFlowInProgress = false
 
 
 method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =

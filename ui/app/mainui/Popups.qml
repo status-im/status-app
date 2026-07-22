@@ -285,6 +285,10 @@ QtObject {
         })
     }
 
+    function openAlignWithPairedDevicePopup(migrateToKeycard) {
+        openPopup(alignWithPairedDevicePopupComponent, { migrateToKeycard })
+    }
+
     function openCommunityProfilePopup(store, community, communitySectionModule) {
         openPopup(communityProfilePopup, { store: store, community: community, communitySectionModule: communitySectionModule})
     }
@@ -1333,6 +1337,48 @@ QtObject {
                 destroyOnClose: true
                 onOpenExternalLink: (link) => root.openExternalLink(link)
                 onSaveDomainToUnfurledWhitelist: (domain) => root.saveDomainToUnfurledWhitelist(domain)
+            }
+        },
+
+        Component {
+            id: alignWithPairedDevicePopupComponent
+            ConfirmationDialog {
+                property bool migrateToKeycard
+                property bool continueToMigrationFlow: false
+
+                destroyOnClose: true
+                headerSettings.title: qsTr("Align with paired device")
+                showCancelButton: true
+                btnType: ""
+                cancelBtnType: ""
+                confirmButtonLabel: qsTr("Continue")
+                cancelButtonLabel: qsTr("Cancel")
+                confirmationText: "<b>%1</b><br/><br/>%2<br/><br/>%3"
+                    .arg(migrateToKeycard
+                         ? qsTr("Your profile has been migrated to Keycard on paired device")
+                         : qsTr("Your profile has been migrated from Keycard to Status"))
+                    .arg(qsTr("In order to align on the login/signing method on this device, you need to complete the migration flow, clicking the \"Continue\" button below, or cancel this popup if you want to keep the current login/signing method."))
+                    .arg(qsTr("If you don't want to see this message again, go to Settings/Wallet and toggle off \"Automatically apply key pair migrations from paired device\"."))
+
+                onConfirmButtonClicked: {
+                    continueToMigrationFlow = true
+                    close()
+                    root.openKeycardManagementPopup(
+                                migrateToKeycard
+                                ? Constants.keycard.flow.moveProfileKeyPair
+                                : Constants.keycard.flow.stopUsingKeycardForProfile,
+                                "",
+                                "",
+                                "",
+                                "[]",
+                                true /* useExistingKeycardWhenMigratingProfileToKeycard */)
+                }
+                onCancelButtonClicked: close()
+                onClosed: {
+                    if (!continueToMigrationFlow) {
+                        root.rootStore.profileMigrationFlowClosed()
+                    }
+                }
             }
         },
 

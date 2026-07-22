@@ -439,6 +439,17 @@ QtObject:
 
   proc wcLinkActivated*(self: View, url: string) {.signal.}
 
+  proc profileMigrationFlowRequested*(self: View, migrateToKeycard: bool) {.signal.}
+
+  proc profileMigrationFlowOpened*(self: View) {.slot.} =
+    self.delegate.onProfileMigrationFlowOpened()
+
+  proc profileMigrationFlowClosed*(self: View) {.slot.} =
+    self.delegate.onProfileMigrationFlowClosed()
+
+  proc checkProfileMigrationNeeded*(self: View) {.slot.} =
+    self.delegate.checkAndPerformProfileMigrationIfNeeded()
+
   proc loadMembersForSectionId*(self: View, communityId: string) {.slot.} =
     self.delegate.loadMembersForSectionId(communityId)
 
