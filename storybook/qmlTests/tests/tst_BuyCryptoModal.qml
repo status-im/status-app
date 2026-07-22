@@ -36,7 +36,7 @@ Item {
 
             buyProvidersModel: buyCryptoStore.providersModel
             isBuyProvidersModelLoading: buyCryptoStore.areProvidersLoading
-            currentCurrency: currencyStore.currentCurrency
+            formatCurrencyBalance: (amount) => currencyStore.formatCurrencyAmount(amount, currencyStore.currentCurrency)
             walletAccountsModel: WalletAccountsModel{}
             networksModel: NetworksModel.flatNetworks
             tokenGroupsModel: assetsStore.walletTokensStore.tokenGroupsModel

@@ -20,7 +20,8 @@ QtObject {
     readonly property var _tokenSelectorModule: !!walletSectionTokenSelector ? walletSectionTokenSelector : null
 
     /* Creates a terminal token-selector picker model for the given kind
-       (0=send, 1=swap, 2=buy). Returns { model, id }: the producer keeps the
+       (0=send, 1=swap, 2=buy, 3=swap-to/bridge receive — destination-chain
+       catalog). Returns { model, id }: the producer keeps the
        model updated with the owned source and the caller sets its per-modal
        params; the id must be passed to releaseTokenSelectorModel when the owning
        modal is destroyed so the model stops being tracked and can be freed. */

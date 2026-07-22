@@ -31,7 +31,8 @@ StatusStackModal {
     required property var groupedAccountAssetsModel
     required property var walletAccountsModel
     required property var networksModel
-    required property string currentCurrency
+    /** Formats a fiat balance for display; see SearchableAssetsPanel.formatCurrencyBalance. **/
+    required property var formatCurrencyBalance
 
     // Terminal token-selector picker model (buy/all-tokens, non-lazy), created and
     // released by the owner (Popups.qml) so it can be stubbed in isolation. The
@@ -203,7 +204,7 @@ StatusStackModal {
         SelectParamsForBuyCryptoPanel {
             objectName: "selectParamsPanel"
             assetsModel: d.buyCryptoAdaptor.filteredAssetsModel
-            formatCurrencyBalance: (amount) => LocaleUtils.currencyAmountToLocaleString({amount, symbol: root.currentCurrency})
+            formatCurrencyBalance: root.formatCurrencyBalance
             selectedProvider: d.selectedProviderEntry.item
             selectedTokenGroupKey: root.buyCryptoInputParamsForm.selectedTokenGroupKey
             selectedNetworkChainId: root.buyCryptoInputParamsForm.selectedNetworkChainId

@@ -403,7 +403,7 @@ RightTabBaseView {
 
                         onHideRequested: (key) => {
                                              const token = SQUtils.ModelUtils.getByKey(RootStore.walletAssetsStore.groupedAccountAssetsModel, "key", key)
-                                             Global.openConfirmHideAssetPopup(token.symbol, token.name, token.logoUri, !!token.communityId)
+                                             Global.openConfirmHideAssetPopup(token.symbol, token.name, token.logoUri || Constants.tokenIcon(token.symbol, false), !!token.communityId)
                                          }
                         onHideCommunityAssetsRequested:
                             (communityKey) => {

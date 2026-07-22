@@ -297,7 +297,7 @@ Control {
                 }
 
                 name: model.name
-                icon: model.logoUri
+                icon: model.logoUri || Constants.tokenIcon(model.symbol, false)
                 balance: root.formatBalance(model.balance, model.key)
                 balanceLoading: model.balanceLoading
                 marketBalance: root.formatFiat(model.marketBalance)

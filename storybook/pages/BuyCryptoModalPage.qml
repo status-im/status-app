@@ -99,7 +99,7 @@ SplitView {
             isBuyProvidersModelLoading: d.buyCryptoStore.areProvidersLoading
             walletAccountsModel: WalletAccountsModel{}
             networksModel: NetworksModel.flatNetworks
-            currentCurrency: d.currencyStore.currentCurrency
+            formatCurrencyBalance: (amount) => d.currencyStore.formatCurrencyAmount(amount, d.currencyStore.currentCurrency)
             tokenGroupsModel: d.assetsStore.walletTokensStore.tokenGroupsModel
             groupedAccountAssetsModel: d.assetsStore.groupedAccountAssetsModel
             buyCryptoInputParamsForm: d.buyCryptoInputParamsForm

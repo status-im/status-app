@@ -1524,7 +1524,7 @@ QtObject {
 
                 buyProvidersModel: root.buyCryptoStore.providersModel
                 isBuyProvidersModelLoading: root.buyCryptoStore.areProvidersLoading
-                currentCurrency: root.currencyStore.currentCurrency
+                formatCurrencyBalance: (amount) => root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency)
                 walletAccountsModel: root.rootStore.accounts
                 tokenGroupsModel: root.walletAssetsStore.walletTokensStore.tokenGroupsModel
                 groupedAccountAssetsModel: root.walletAssetsStore.groupedAccountAssetsModel
