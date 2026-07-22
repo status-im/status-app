@@ -5,14 +5,6 @@ import times, std/strformat, json
 #################################################
 
 type
-  # The heavy tasks build their finished structures on the worker and hand them
-  # over typed via finishTyped (see token_apply_builder): asyncRefreshTokensTask,
-  # asyncFetchAllTokenListsTask, asyncFetchAllTokenGroupsTask and
-  # asyncBuildGroupsForChainTask, so none carries a string-envelope result type.
-
-  # FetchMissingTokensResponse (the missing-tokens batch envelope) lives in
-  # token_missing_fetch so its decode+release step is unit-testable.
-
   TokensMarketValuesSlotResponse* = object
     tokenMarketValues*: JsonNode
     error*: string

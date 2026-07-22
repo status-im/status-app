@@ -31,10 +31,11 @@ proc takeBatch*(self: var PendingTokenFetch): seq[string] =
   ## Drain the pending keys into the in-flight set and return them as the batch to
   ## fetch. Draining is atomic from the GUI thread's view: after this the pending
   ## set is empty and the same keys will not be re-enqueued while in flight.
-  result = toSeq(self.pending)
-  for key in result:
+  let batch = toSeq(self.pending)
+  for key in batch:
     self.inFlight.incl(key)
   self.pending.clear()
+  return batch
 
 proc completeBatch*(self: var PendingTokenFetch, keys: seq[string]) =
   ## Release the keys of a finished batch from the in-flight set. After this a
@@ -54,6 +55,8 @@ proc drainInFlight*(self: var PendingTokenFetch) =
 proc missingFromBatch*(requestedKeys: seq[string], foundKeys: HashSet[string]): seq[string] =
   ## The requested keys the backend did not return — these become negative
   ## markers so they cost no further RPC until a refresh. Order follows the request.
+  var missing: seq[string]
   for key in requestedKeys:
     if key notin foundKeys:
-      result.add(key)
+      missing.add(key)
+  return missing

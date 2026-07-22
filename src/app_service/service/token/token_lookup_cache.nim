@@ -39,6 +39,7 @@ proc buildTokensByKey*(tokens: seq[TokenItem]): Table[string, TokenItem] =
   ## Build the replacement by-key lookup table aside so the caller can swap it in
   ## atomically. Never clear-then-fill the live table: that would expose a window
   ## where every lookup misses.
-  result = initTable[string, TokenItem](tokens.len)
+  var byKey = initTable[string, TokenItem](tokens.len)
   for token in tokens:
-    result[token.key] = token
+    byKey[token.key] = token
+  return byKey

@@ -23,11 +23,13 @@ proc decodeAndCompleteBatch*(fetch: var PendingTokenFetch, response: string):
   ## envelope itself was undecodable. The keys are released on EVERY outcome:
   ## a key left in flight can never re-enqueue, so it would wedge (stop
   ## resolving) for the rest of the session.
+  var decoded: tuple[env: FetchMissingTokensResponse, decodeError: string]
   try:
-    result.env = Json.decode(response, FetchMissingTokensResponse, allowUnknownFields = true)
-    fetch.completeBatch(result.env.requestedKeys)
+    decoded.env = Json.decode(response, FetchMissingTokensResponse, allowUnknownFields = true)
+    fetch.completeBatch(decoded.env.requestedKeys)
   except Exception as e:
     # The batch's own key list is unknown when its envelope is undecodable, so
     # drain the whole in-flight set (see drainInFlight for why that is safe).
     fetch.drainInFlight()
-    result.decodeError = e.msg
+    decoded.decodeError = e.msg
+  return decoded
