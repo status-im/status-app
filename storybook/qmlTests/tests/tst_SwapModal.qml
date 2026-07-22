@@ -410,8 +410,13 @@ Item {
             compare(root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId, 560048 /*Hoodi*/)
 
             // lets ensure that the selected one is correctly set
+            // popup content is created lazily on first open
+            mouseClick(networkComboBox)
+            verify(networkComboBox.control.popup.opened)
             const networkSelectorView = findChild(networkComboBox.control.popup.contentItem, "networkSelectorList")
             verify(!!networkSelectorView)
+            mouseClick(networkComboBox)
+            verify(!networkComboBox.control.popup.opened)
 
             for (let i=0; i<networkSelectorView.count; i++) {
                 // launch network selection popup

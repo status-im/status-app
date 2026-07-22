@@ -185,11 +185,11 @@ Item {
             verify(chainSelector, "Chain selector should be present")
             compare(chainSelector.selection.length, NetworksModel.flatNetworks.count)
 
-            // User should not be able to open the popup
+            // User should not be able to open the popup; its content stays
+            // unloaded since it is only created on first open
             mouseClick(chainSelector)
             waitForItemPolished(chainSelector)
-            const networkSelectorList = findChild(chainSelector, "networkSelectorList")
-            verify(networkSelectorList, "Network selector list should be present")
+            verify(!findChild(chainSelector, "networkSelectorList"))
             compare(chainSelector.selection.length, NetworksModel.flatNetworks.count)
             compare(dappModal.selectedChains.length, NetworksModel.flatNetworks.count)
             verify(!chainSelector.control.popup.opened)
@@ -242,11 +242,11 @@ Item {
             verify(chainSelector, "Chain selector should be present")
             compare(chainSelector.selection.length, NetworksModel.flatNetworks.count)
 
-            // User should not be able to open the popup
+            // User should not be able to open the popup; its content stays
+            // unloaded since it is only created on first open
             mouseClick(chainSelector)
             waitForItemPolished(chainSelector)
-            const networkSelectorList = findChild(chainSelector, "networkSelectorList")
-            verify(networkSelectorList, "Network selector list should be present")
+            verify(!findChild(chainSelector, "networkSelectorList"))
             compare(chainSelector.selection.length, NetworksModel.flatNetworks.count)
             compare(dappModal.selectedChains.length, NetworksModel.flatNetworks.count)
             verify(!chainSelector.control.popup.opened)

@@ -5,10 +5,12 @@ import Qt5Compat.GraphicalEffects
 
 import StatusQ
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Popups.Dialog
 
+import QtModelsToolkit
 import SortFilterProxyModel
 
 import utils
@@ -55,18 +57,73 @@ StatusDropdown {
         }
     }
 
+    // Keeps the single-selection invariant (exactly one selected network,
+    // defaulting to the first one) while the view below is not instantiated.
+    QtObject {
+        id: d
+
+        readonly property int networksCount: root.flatNetworks.ModelCount.count
+        onNetworksCountChanged: d.scheduleNormalize()
+
+        // always deferred (callLater dedupes) so in-progress consumer writes —
+        // e.g. a Binding element applying its initial selection — land first;
+        // normalizing synchronously would auto-default over them
+        function scheduleNormalize() {
+            Qt.callLater(d.normalizeSelection)
+        }
+
+        function normalizeSelection() {
+            let selection = root.selection
+
+            // an empty model (still loading or resetting) cannot validate the
+            // selection; keep it untouched until rows are available again
+            if (d.networksCount === 0)
+                return
+
+            if (!root.multiSelection) {
+                if (selection.length === 0)
+                    selection = [ModelUtils.get(root.flatNetworks, 0, "chainId")]
+                else if (selection.length > 1)
+                    selection = [selection[0]]
+            }
+
+            d.commitSelection(selection)
+        }
+
+        // in-place commit: swapping the array pointer would detach literal
+        // bindings installed on `selection` by the owner of this popup
+        function commitSelection(newSelection) {
+            if (JSON.stringify(root.selection) === JSON.stringify(newSelection))
+                return
+            root.selection.splice(0, root.selection.length, ...newSelection)
+            root.selectionChanged()
+        }
+    }
+
+    Connections {
+        target: root
+        function onSelectionChanged() { d.scheduleNormalize() }
+        function onMultiSelectionChanged() { d.scheduleNormalize() }
+    }
+
+    Component.onCompleted: d.scheduleNormalize()
+
     contentItem: Loader {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.margins: 4
         active: root.visible
+        onLoaded: active = true // latch: keep content alive across close/reopen
         sourceComponent: ColumnLayout {
             NetworkSelectorView {
                 id: scrollView
                 Layout.fillWidth: true
 
                 model: root.flatNetworks
-                selection: root.selection
+                // copy: the view mutates its selection array in place, so it
+                // must own a distinct instance; this binding survives those
+                // mutations and keeps the popup -> view direction live
+                selection: [...root.selection]
                 disableChainsWithNoCommunitiesSupport: root.disableChainsWithNoCommunitiesSupport
                 interactive: root.selectionAllowed
                 multiSelection: root.multiSelection
@@ -78,20 +135,7 @@ StatusDropdown {
                         root.close()
                     root.toggleNetwork(chainId, index)
                 }
-                onSelectionChanged: {
-                    if (root.selection !== selection) {
-                        root.selection = selection
-                    }
-                }
-            }
-
-            // down-sync for external writes while the popup is open
-            Connections {
-                target: root
-                function onSelectionChanged() {
-                    if (scrollView.selection !== root.selection)
-                        scrollView.selection = root.selection
-                }
+                onSelectionChanged: d.commitSelection(selection)
             }
 
             StatusButton {

@@ -341,7 +341,9 @@ Item {
 
                 mouseClick(delegate)
                 compare(toggleNetworkSpy.count, i + 1)
-                compare(selectionChangedSpy.count, i + 1)
+                // i == 0 re-clicks the auto-selected first chain: toggleNetwork
+                // fires but the selection content does not change
+                compare(selectionChangedSpy.count, i)
             }
         }
     }

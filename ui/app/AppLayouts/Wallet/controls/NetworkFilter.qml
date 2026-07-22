@@ -35,7 +35,7 @@ StatusComboBox {
     property bool showTitle: true
     property bool selectionAllowed: true
     property bool showManageNetworksButton: false
-    property alias selection: networkSelectorView.selection
+    property var selection: []
 
     property bool showNewChainIcon: false
     property bool showNotificationIcon: false
@@ -179,6 +179,11 @@ StatusComboBox {
         showNewChainIcon: root.showNewChainIcon
         showManageNetworksNotificationIcon: root.showManageNetworksNotificationIcon
 
+        // copy: the popup mutates its selection array in place, so it must
+        // own a distinct instance; this binding survives those mutations
+        selection: [...root.selection]
+        onSelectionChanged: d.commitSelection(selection)
+
         onToggleNetwork: (chainId, index) => root.toggleNetwork(chainId, index)
 
         onManageNetworksClicked: {
@@ -202,6 +207,15 @@ StatusComboBox {
         readonly property bool noneSelected: root.selection.length === 0
         readonly property bool oneSelected: root.selection.length === 1
         readonly property bool selectionUnavailable: d.networksCount <= 1 && d.oneSelected
+
+        // in-place commit: swapping the array pointer would detach literal
+        // bindings consumers install on `selection`
+        function commitSelection(newSelection) {
+            if (JSON.stringify(root.selection) === JSON.stringify(newSelection))
+                return
+            root.selection.splice(0, root.selection.length, ...newSelection)
+            root.selectionChanged()
+        }
 
         readonly property ModelEntry singleSelectionItem: ModelEntry {
             sourceModel: d.oneSelected ? root.flatNetworks : null

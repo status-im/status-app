@@ -95,7 +95,7 @@ StatusListView {
         readonly property bool allSelected: root.selection.length === d.networksCount
 
         function onToggled(initialState, chainId) {
-            let selection = root.selection
+            let selection = [...root.selection]
             if (initialState === Qt.Unchecked && initialState !== Qt.PartiallyChecked) {
                 if (!root.multiSelection)
                     selection = []
@@ -105,29 +105,37 @@ StatusListView {
                 selection = selection.filter((id) => id !== chainId)
             }
 
-            root.selection = [...selection]
+            d.commitSelection(selection)
         }
 
         function reprocessSelection() {
             let selection = root.selection
 
-            if (d.networksCount === 0) {
-                selection = []
-            } else {
-                if (!root.multiSelection) {
-                    // One and only one chain must be selected
-                    if (selection.length === 0) {
-                        selection = [ModelUtils.get(root.model, 0, "chainId")]
-                    } else if (selection.length > 1) {
-                        console.warn("Warning: Multi-selection is disabled, but multiple items are selected. Automatically selecting the first inserted item.")
-                        selection = [selection[0]]
-                    }
+            // an empty model (still loading or resetting) cannot validate the
+            // selection; keep it untouched until rows are available again
+            if (d.networksCount === 0)
+                return
+
+            if (!root.multiSelection) {
+                // One and only one chain must be selected
+                if (selection.length === 0) {
+                    selection = [ModelUtils.get(root.model, 0, "chainId")]
+                } else if (selection.length > 1) {
+                    console.warn("Warning: Multi-selection is disabled, but multiple items are selected. Automatically selecting the first inserted item.")
+                    selection = [selection[0]]
                 }
             }
 
-            if (root.selection !== selection) {
-                root.selection = selection
-            }
+            d.commitSelection(selection)
+        }
+
+        // in-place commit: swapping the array pointer would detach literal
+        // bindings installed on `selection` by the owner of this view
+        function commitSelection(newSelection) {
+            if (JSON.stringify(root.selection) === JSON.stringify(newSelection))
+                return
+            root.selection.splice(0, root.selection.length, ...newSelection)
+            root.selectionChanged()
         }
     }
 }
