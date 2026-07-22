@@ -128,6 +128,9 @@ unclosed fence here (no closing triple-tick)
     readonly property var vemph: textArea.emphasisAtInsertion(textArea.cursorPosition)
     readonly property var node: textArea.nodeAt(textArea.cursorPosition)
     readonly property var delim: textArea.delimitersAt(textArea.cursorPosition)
+    readonly property bool hasSelection: textArea.selectionStart !== textArea.selectionEnd
+    readonly property var sel: textArea.delimitersAtSelection(textArea.selectionStart,
+                                                              textArea.selectionEnd)
 
     // A detectable uncompressed key: "0x" + 130 hex (what the parser's mention rule requires).
     function randomPubKey() {
@@ -957,13 +960,24 @@ unclosed fence here (no closing triple-tick)
                 Label { text: "codeSpan: "      + delim.codeSpan }
                 Label { text: "codeBlock: "     + delim.codeBlock }
             }
+            Row {
+                spacing: 16
 
-            // Formatting buttons — their checked state reflects the formatting at the caret from
-            // either the parsed tree (nodeAt, via `node`) or the raw delimiters around the caret
-            // (delimitersAt, via `delim`). Clicking a checked one un-formats: if it was checked
-            // because of nodeAt it strips the AST node's delimiters (removeFormatting); otherwise it
-            // strips the local delimiter run (removeDelimitersAt). Adding is wired later. They are
-            // not checkable, so the checked binding stays intact regardless of clicks.
+                Label { text: "delimiters at selection:\t"}
+                Label { text: "bold: "          + sel.bold }
+                Label { text: "italic: "        + sel.italic }
+                Label { text: "strikethrough: " + sel.strikethrough }
+                Label { text: "codeSpan: "      + sel.codeSpan }
+                Label { text: "codeBlock: "     + sel.codeBlock }
+                Label { text: "quote: "         + sel.quote }
+            }
+
+            // Formatting buttons. With a selection, the checked state comes from delimitersAtSelection
+            // (via `sel`); with just a caret it comes from the parsed tree (nodeAt, via `node`) or the
+            // raw delimiters around the caret (delimitersAt, via `delim`). Clicking a checked one
+            // un-formats at the caret: if it was checked because of nodeAt it strips the AST node's
+            // delimiters (removeFormatting); otherwise it strips the local delimiter run
+            // (removeDelimitersAt). They are not checkable, so the checked binding stays intact.
             Row {
                 spacing: 8
 
@@ -979,22 +993,25 @@ unclosed fence here (no closing triple-tick)
                 }
 
                 Button { id: boldButton; text: "Bold"
-                         checked: node.bold || delim.bold
+                         checked: hasSelection ? sel.bold : (node.bold || delim.bold)
                          onClicked: parent.unformat(node.bold, delim.bold, "bold", "bold") }
                 Button { id: italicButton; text: "Italic"
-                         checked: node.italic || delim.italic
+                         checked: hasSelection ? sel.italic : (node.italic || delim.italic)
                          onClicked: parent.unformat(node.italic, delim.italic, "italic", "italic") }
                 Button { id: strikethroughButton; text: "Strikethrough"
-                         checked: node.strikethrough || delim.strikethrough
+                         checked: hasSelection ? sel.strikethrough
+                                               : (node.strikethrough || delim.strikethrough)
                          onClicked: parent.unformat(node.strikethrough, delim.strikethrough,
                                                     "strikethrough", "strikethrough") }
                 Button { id: codeButton; text: "Code"
-                         checked: node.codeSpan || node.codeBlock || delim.codeSpan || delim.codeBlock
+                         checked: hasSelection ? (sel.codeSpan || sel.codeBlock)
+                                               : (node.codeSpan || node.codeBlock
+                                                  || delim.codeSpan || delim.codeBlock)
                          onClicked: parent.unformat(node.codeSpan || node.codeBlock,
                                                     delim.codeSpan || delim.codeBlock,
                                                     "code", delim.codeBlock ? "codeBlock" : "codeSpan") }
                 Button { id: quoteButton; text: "Quote"
-                         checked: node.quote
+                         checked: hasSelection ? sel.quote : node.quote
                          onClicked: parent.unformat(node.quote, false, "quote", "") }
             }
         }

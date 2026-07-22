@@ -1037,6 +1037,63 @@ Item {
                                         f + " for \"" + data.input + "\""))
         }
 
+        // ── delimitersAtSelection: delimitersAt generalized to a selection ──────
+
+        // Two "|" mark the selection bounds. The context is expanded past every delimiter flanking
+        // the selection (so its own edge delimiters merge with the outer ones); the emitted flags
+        // are those the outermost delimiter char at each end denotes (its inward run, both ends the
+        // same char). Inner delimiters, or ones split off by non-delimiters, don't count.
+        function test_delimitersAtSelection_data() {
+            return [
+                {tag: "bold",                      input: "A **|B|**",  flags: ["bold"]},
+                {tag: "bold + italic",             input: "***|B|***",  flags: ["bold", "italic"]},
+                {tag: "italic (asymmetric run)",   input: "**|B|*`*",   flags: ["italic"]},
+                {tag: "italic, inner backticks",   input: "*|A`B`C|*",  flags: ["italic"]},
+                {tag: "none (mismatched ends)",    input: "~`~|A|~*~",  flags: []},
+                {tag: "strikethrough",             input: "~~|B|~~",    flags: ["strikethrough"]},
+                {tag: "code span",                 input: "`|B|`",      flags: ["codeSpan"]},
+                {tag: "code block",                input: "```|B|```",  flags: ["codeBlock"]},
+                // Nested layers: each matched delimiter run inward contributes its own flag.
+                {tag: "strikethrough wrapping bold", input: "~~**|A|**~~", flags: ["strikethrough", "bold"]},
+                {tag: "bold wrapping strikethrough", input: "**~~|A|~~**", flags: ["bold", "strikethrough"]},
+                {tag: "strike/bold/italic nested",   input: "~~***|A|***~~", flags: ["strikethrough", "bold", "italic"]},
+                // Crossed (not nested): the same char is matched on the other end regardless of
+                // position, so both flags are still reported.
+                {tag: "crossed strike/bold",         input: "~~**|A|~~**", flags: ["strikethrough", "bold"]},
+                {tag: "crossed bold/strike",         input: "**~~|A|**~~", flags: ["bold", "strikethrough"]},
+                // Lone leading "*" split off by a backtick isn't part of the "**" pair; "**"+"*" on
+                // each end still resolve to bold and italic.
+                {tag: "bold+italic across backtick",  input: "*`**|A|***", flags: ["bold", "italic"]},
+                // Consuming "**" must not make the two separated "~" adjacent: no "~~" on the left,
+                // so strikethrough is not reported — only bold.
+                {tag: "split tildes, bold only",      input: "~**~|A|~~**", flags: ["bold"]},
+                // Selection edges are just content; only the expanded outer ends decide the flags.
+                {tag: "inner delim, outer italic", input: "B *|~B|`*F", flags: ["italic"]},
+                {tag: "left edge merges, no right", input: "B *|*D**E|", flags: []},
+                {tag: "right edge merges into **",  input: "**|B**|",   flags: ["bold"]},
+                {tag: "no delimiters",             input: "x|B|y",      flags: []},
+                {tag: "only one side",             input: "**|B|",      flags: []},
+                // quote: true when every partially-selected line starts with "> ".
+                {tag: "quote, single line",        input: "> A |B| C",         flags: ["quote"]},
+                {tag: "quote, both lines quoted",  input: "> A | C\n> D |",    flags: ["quote"]},
+                {tag: "quote false, plain 2nd line", input: "> A | B\nC|",     flags: []},
+                {tag: "quote + bold",              input: "> **|B|**",         flags: ["bold", "quote"]},
+            ]
+        }
+
+        function test_delimitersAtSelection(data) {
+            const first = data.input.indexOf("|")
+            const second = data.input.indexOf("|", first + 1)
+            control.text = data.input.replace(/\|/g, "")
+            const selectionStart = first
+            const selectionEnd = second - 1 // removing the first "|" shifts the second left by one
+
+            const fields = ["bold", "italic", "strikethrough", "codeSpan", "codeBlock", "quote"]
+            const m = control.delimitersAtSelection(selectionStart, selectionEnd)
+            fields.forEach(f => compare(m[f], data.flags.indexOf(f) !== -1,
+                                        f + " for \"" + data.input + "\""))
+        }
+
         // ── removeDelimitersAt: strip the delimiter chars a given kind accounts for ──────
 
         // Symmetrical to delimitersAt, but parametrized by kind so stacked emphasis is unambiguous:

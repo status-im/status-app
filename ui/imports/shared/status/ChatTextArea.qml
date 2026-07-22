@@ -99,6 +99,9 @@ StatusTextArea {
     function delimitersAt(pos) {
         return highlighter.delimitersAt(pos)
     }
+    function delimitersAtSelection(start, end) {
+        return highlighter.delimitersAtSelection(start, end)
+    }
     function removeDelimitersAt(pos, kind) {
         highlighter.removeDelimitersAt(pos, kind)
     }
