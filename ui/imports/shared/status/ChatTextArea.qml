@@ -105,6 +105,13 @@ StatusTextArea {
     function removeDelimitersAtSelection(start, end, kind) {
         highlighter.removeDelimitersAtSelection(start, end, kind)
     }
+    function addFormatting(start, end, kind) {
+        const r = highlighter.addFormatting(start, end, kind)
+        if (r.selectionStart === r.selectionEnd)
+            cursorPosition = r.selectionStart
+        else
+            select(r.selectionStart, r.selectionEnd)
+    }
     function removeDelimitersAt(pos, kind) {
         highlighter.removeDelimitersAt(pos, kind)
     }
