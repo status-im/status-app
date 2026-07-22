@@ -27,6 +27,8 @@ StatusDialog {
 
     required property QtObject store // shared between onboarding and the main app parts
 
+    property bool useExistingKeycardWhenMigratingProfileToKeycard: false
+
     property var emojiPopup: null
 
     property var passwordStrengthScoreFunction: (password) => { console.error("passwordStrengthScoreFunction: IMPLEMENT ME") }
@@ -278,6 +280,12 @@ StatusDialog {
             d.currentStep = KeycardManagementPopup.FlowStep.Migrating
             d.processing = true
             Backpressure.setTimeout(this, 500, () => {
+                                        if (root.useExistingKeycardWhenMigratingProfileToKeycard) {
+                                            root.store.startMigratingProfileKeypairUsingExistingKeycard(d.authenticationPassword,
+                                                                                                     d.newPin,
+                                                                                                     d.seedPhrase)
+                                            return
+                                        }
                                         root.store.startMigratingProfileKeypairToKeycard(d.authenticationPassword,
                                                                                          d.newPin,
                                                                                          d.seedPhrase)
@@ -389,9 +397,11 @@ StatusDialog {
                 return
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair) {
-                d.currentStep = d.keycardHasOnlyPinSet
-                    ? KeycardManagementPopup.FlowStep.EnterPin
-                    : KeycardManagementPopup.FlowStep.EnterNewPin
+                const profileMigrationUsingExistingKeycard = root.flow === Constants.keycard.flow.moveProfileKeyPair
+                                                           && root.useExistingKeycardWhenMigratingProfileToKeycard
+                d.currentStep = (d.keycardHasOnlyPinSet || profileMigrationUsingExistingKeycard)
+                        ? KeycardManagementPopup.FlowStep.EnterPin
+                        : KeycardManagementPopup.FlowStep.EnterNewPin
                 return
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmKeyPair) {

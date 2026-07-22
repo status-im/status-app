@@ -162,6 +162,9 @@ QtObject:
   proc startMigratingProfileKeypairToKeycard*(self: View, password: string, pin: string, seedPhrase: string) {.slot.} =
     self.delegate.startMigratingProfileKeypairToKeycard(password, pin, seedPhrase)
 
+  proc startMigratingProfileKeypairUsingExistingKeycard*(self: View, password: string, pin: string, seedPhrase: string) {.slot.} =
+    self.delegate.startMigratingProfileKeypairUsingExistingKeycard(password, pin, seedPhrase)
+
   proc startAddingKeyPairToStatusFromKeycard*(self: View, pin: string, keyUid: string, metadataName: string,
       metadataAccounts: string) {.slot.} =
     self.delegate.startAddingKeyPairToStatusFromKeycard(pin, keyUid, metadataName, metadataAccounts)

@@ -235,11 +235,11 @@ QtObject {
         openPopup(signingPopupComponent, { reason: reason, keyUid: finalKeyUid, txHash: txHash, path: path, address: address })
     }
 
-    function openKeycardManagementPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson) {
+    function openKeycardManagementPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson, useExistingKeycardWhenMigratingProfileToKeycard = false) {
         let finalFlow = flow
         let finalKeyUid = keyUid
 
-        // if no keyUid is set, follow the flow, otherwise, validate and adjust params
+        // if keyUid is set validate and adjust the flow, or if not set try to set it based on flow, or if cannot be determined just follow the flow
         if (!!finalKeyUid) {
             switch(flow) {
             case Constants.keycard.flow.moveKeyPair:
@@ -263,6 +263,10 @@ QtObject {
                 }
                 break
             }
+        } else if (flow === Constants.keycard.flow.moveProfileKeyPair ||
+                   flow === Constants.keycard.flow.stopUsingKeycardForProfile) {
+            finalKeyUid = root.keycardManagementStore.userProfileKeyUid
+
         }
 
         if (finalFlow !== flow) {
@@ -276,7 +280,8 @@ QtObject {
             keyUid: finalKeyUid,
             keycardUid: keycardUid,
             cardMetadataName: cardMetadataName,
-            cardMetadataWalletAccountsJson: cardMetadataWalletAccountsJson
+            cardMetadataWalletAccountsJson: cardMetadataWalletAccountsJson,
+            useExistingKeycardWhenMigratingProfileToKeycard: useExistingKeycardWhenMigratingProfileToKeycard
         })
     }
 
