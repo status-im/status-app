@@ -169,10 +169,6 @@ public:
     // Returns {bold, italic, strikethrough} booleans for the given document position
     Q_INVOKABLE QVariantMap emphasisAt(int position) const;
 
-    // Returns {bold, italic, strikethrough} booleans for what a character inserted
-    // at `position` would receive (re-parses the block with a dummy char inserted)
-    Q_INVOKABLE QVariantMap emphasisAtInsertion(int position) const;
-
     // Returns {bold, italic, strikethrough, quote, codeSpan, codeBlock} booleans describing which
     // formatting nodes contain the caret at `position`, derived from the cached AST (no reparse).
     // Unlike emphasisAt (per-character render bits), a node's full range — delimiters included —
