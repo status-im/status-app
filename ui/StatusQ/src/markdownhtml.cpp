@@ -149,6 +149,34 @@ QString emojiWrap(const QString& s, int emojiPx, const QString& emojiBaseUrl)
     return out;
 }
 
+// Emoji handling for code content: only image-based emoji (never the font-size enlargement span, so
+// code keeps its own monospace size — see the font-mode "not wrapped in code" rule). A no-op unless
+// image emoji are enabled (emojiBaseUrl set). `escaped` must already be HTML-escaped.
+QString wrapCodeEmojis(const QString& escaped, int emojiPx, const QString& emojiBaseUrl)
+{
+    if (emojiBaseUrl.isEmpty() || emojiPx <= 0)
+        return escaped;
+    return emojiWrap(escaped, emojiPx, emojiBaseUrl); // image mode ⇒ <img> per run, no font-size span
+}
+
+// Whether `s` contains at least one emoji code point.
+bool containsEmoji(const QString& s)
+{
+    for (int i = 0; i < s.size();) {
+        char32_t cp;
+        if (s[i].isHighSurrogate() && i + 1 < s.size() && s[i + 1].isLowSurrogate()) {
+            cp = QChar::surrogateToUcs4(s[i], s[i + 1]);
+            i += 2;
+        } else {
+            cp = s[i].unicode();
+            i += 1;
+        }
+        if (Markdown::isEmojiCodePoint(cp))
+            return true;
+    }
+    return false;
+}
+
 // Concatenates the raw (escaped, newlines preserved) text of every Text descendant,
 // skipping delimiters — used for code spans/blocks where content is not re-formatted.
 QString collectCodeText(const Node& node)
@@ -191,10 +219,11 @@ QString renderNode(const Node& node,
         return QStringLiteral("<s>%1</s>").arg(renderChildren(node, mentions, emojiPx, emojiBaseUrl));
 
     case NodeKind::CodeSpan:
-        return codeSpanHtml(collectCodeText(node));
+        return codeSpanHtml(wrapCodeEmojis(collectCodeText(node), emojiPx, emojiBaseUrl));
     case NodeKind::CodeBlock:
         // Block element ⇒ its own paragraph (starts on a new line).
-        return QStringLiteral("<pre>%1</pre>").arg(collectCodeText(node));
+        return QStringLiteral("<pre>%1</pre>")
+                .arg(wrapCodeEmojis(collectCodeText(node), emojiPx, emojiBaseUrl));
 
     case NodeKind::QuoteBlock:
         return QStringLiteral("<blockquote>%1</blockquote>")
@@ -274,7 +303,7 @@ QString renderSingleLine(const Node& node,
         // A fenced code block is rendered like an inline code span on one line.
         QString c = collectCodeText(node);
         c.replace(QLatin1Char('\n'), QLatin1Char(' '));
-        return codeSpanHtml(c.trimmed());
+        return codeSpanHtml(wrapCodeEmojis(c.trimmed(), emojiPx, emojiBaseUrl));
     }
 
     case NodeKind::QuoteBlock:
@@ -485,11 +514,19 @@ void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
             QString code = collectRawText(c);
             while (code.startsWith(QLatin1Char('\n'))) code.remove(0, 1);
             while (code.endsWith(QLatin1Char('\n')))   code.chop(1);
-            a.blocks.append(QVariantMap{{QStringLiteral("type"), QStringLiteral("code")},
-                                        {QStringLiteral("code"), code},
-                                        {QStringLiteral("bold"), bool(emph & kBold)},
-                                        {QStringLiteral("italic"), bool(emph & kItalic)},
-                                        {QStringLiteral("strikethrough"), bool(emph & kStrike)}});
+            QVariantMap codeBlock{{QStringLiteral("type"), QStringLiteral("code")},
+                                  {QStringLiteral("code"), code},
+                                  {QStringLiteral("bold"), bool(emph & kBold)},
+                                  {QStringLiteral("italic"), bool(emph & kItalic)},
+                                  {QStringLiteral("strikethrough"), bool(emph & kStrike)}};
+            // In image-emoji mode, a block that actually contains an emoji also carries an HTML
+            // variant (Twemoji <img> in a <pre> that keeps the monospace + whitespace) so the view
+            // can render it as rich text. Plain code blocks omit it and stay PlainText, unchanged.
+            if (!emojiBaseUrl.isEmpty() && containsEmoji(code)) {
+                codeBlock[QStringLiteral("codeHtml")] =
+                    QStringLiteral("<pre>%1</pre>").arg(wrapCodeEmojis(escape(code), emojiPx, emojiBaseUrl));
+            }
+            a.blocks.append(codeBlock);
             a.cur.clear();
             a.curStarted = false;
             a.afterCode = true;
@@ -536,7 +573,8 @@ void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
                 if (i > 0)
                     finalizeLine(a); // a newline ends the current line
                 if (!parts[i].isEmpty())
-                    a.cur += wrapEmphasis(codeSpanHtml(parts[i]), emph);
+                    a.cur += wrapEmphasis(
+                        codeSpanHtml(wrapCodeEmojis(parts[i], emojiPx, emojiBaseUrl)), emph);
                 a.curStarted = true;
             }
             break;

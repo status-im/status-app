@@ -562,6 +562,31 @@ Item {
             verify(!renders(control, "<img"), "font mode has no <img>")
         }
 
+        // An emoji inside an inline code span is also rendered as a Twemoji <img> in image mode
+        // (the <code> content is routed through the same image wrapper), not left as a font glyph.
+        function test_imageEmojis_inCodeSpan() {
+            control.blocks = MarkdownUtils.toBlocks(
+                        "`" + emoji + "`", ({}), control.font, false, true, 0, Emoji.base)
+            tryVerify(() => control.implicitHeight > 0)
+
+            verify(renders(control, "<code"), "inline code span present")
+            verify(renders(control, "<img"), "emoji rendered as image inside the code span")
+            verify(renders(control, "1f60e.svg"), "twemoji svg source")
+            verify(!renders(control, emoji), "raw emoji glyph should be absent in image mode")
+        }
+
+        // An emoji inside a fenced code block is rendered as a Twemoji <img> in image mode: the
+        // block carries a `codeHtml` (<pre>) variant and the code renderer switches to RichText.
+        function test_imageEmojis_inCodeBlock() {
+            control.blocks = MarkdownUtils.toBlocks(
+                        "```\n" + emoji + "\n```", ({}), control.font, false, true, 0, Emoji.base)
+            tryVerify(() => control.implicitHeight > 0)
+
+            verify(renders(control, "<img"), "emoji rendered as image inside the code block")
+            verify(renders(control, "1f60e.svg"), "twemoji svg source")
+            verify(!renders(control, emoji), "raw emoji glyph should be absent in image mode")
+        }
+
         // Copy parity: selecting an image emoji recovers its Unicode (not U+FFFC), matching font
         // mode — so copy behaves the same in both modes.
         function test_imageEmojis_copyRecoversUnicode() {
