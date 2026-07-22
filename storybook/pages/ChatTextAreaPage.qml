@@ -124,8 +124,6 @@ unclosed fence here (no closing triple-tick)
         }
     ]
 
-    readonly property var emph: textArea.emphasisAt(textArea.cursorPosition)
-    readonly property var vemph: textArea.emphasisAtInsertion(textArea.cursorPosition)
     readonly property var node: textArea.nodeAt(textArea.cursorPosition)
     readonly property var delim: textArea.delimitersAt(textArea.cursorPosition)
     readonly property bool hasSelection: textArea.selectionStart !== textArea.selectionEnd
@@ -922,54 +920,6 @@ unclosed fence here (no closing triple-tick)
                           ? "selection: [" + textArea.selectionStart + ", " + textArea.selectionEnd + ")"
                           : "selection: none"
                 }
-            }
-
-            Row {
-                spacing: 16
-                Label { text: "emphasis at:\t"}
-                Label { text: "bold: "          + emph.bold }
-                Label { text: "italic: "        + emph.italic }
-                Label { text: "strikethrough: " + emph.strikethrough }
-            }
-            Row {
-                spacing: 16
-
-                Label { text: "emphasis at insertion:\t"}
-                Label { text: "bold: "          + vemph.bold }
-                Label { text: "italic: "        + vemph.italic }
-                Label { text: "strikethrough: " + vemph.strikethrough }
-            }
-            Row {
-                spacing: 16
-
-                Label { text: "node at:\t"}
-                Label { text: "bold: "          + node.bold }
-                Label { text: "italic: "        + node.italic }
-                Label { text: "strikethrough: " + node.strikethrough }
-                Label { text: "quote: "         + node.quote }
-                Label { text: "codeSpan: "      + node.codeSpan }
-                Label { text: "codeBlock: "     + node.codeBlock }
-            }
-            Row {
-                spacing: 16
-
-                Label { text: "delimiters at:\t"}
-                Label { text: "bold: "          + delim.bold }
-                Label { text: "italic: "        + delim.italic }
-                Label { text: "strikethrough: " + delim.strikethrough }
-                Label { text: "codeSpan: "      + delim.codeSpan }
-                Label { text: "codeBlock: "     + delim.codeBlock }
-            }
-            Row {
-                spacing: 16
-
-                Label { text: "delimiters at selection:\t"}
-                Label { text: "bold: "          + sel.bold }
-                Label { text: "italic: "        + sel.italic }
-                Label { text: "strikethrough: " + sel.strikethrough }
-                Label { text: "codeSpan: "      + sel.codeSpan }
-                Label { text: "codeBlock: "     + sel.codeBlock }
-                Label { text: "quote: "         + sel.quote }
             }
 
             // Formatting toggle buttons. The checked state reflects the formatting at the caret /

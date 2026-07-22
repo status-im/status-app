@@ -87,9 +87,6 @@ StatusTextArea {
     function emphasisAt(pos) {
         return highlighter.emphasisAt(pos)
     }
-    function emphasisAtInsertion(pos) {
-        return highlighter.emphasisAtInsertion(pos)
-    }
     function nodeAt(pos) {
         return highlighter.nodeAt(pos)
     }

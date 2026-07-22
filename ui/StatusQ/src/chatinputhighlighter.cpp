@@ -415,23 +415,6 @@ void collectQuoteBlocks(const Node& node, QVariantList& out)
         collectQuoteBlocks(c, out);
 }
 
-unsigned int emphasisBitsAt(const Node& node, qsizetype pos)
-{
-    unsigned int bits = 0u;
-    if (node.kind == NodeKind::Strong || node.kind == NodeKind::Emphasis
-            || node.kind == NodeKind::Strikethrough) {
-        const auto cr = contentRange(node);
-        if (pos >= cr.first && pos < cr.second) {
-            if (node.kind == NodeKind::Strong)        bits |= kBold;
-            else if (node.kind == NodeKind::Emphasis) bits |= kItalic;
-            else                                      bits |= kStrikeThrough;
-        }
-    }
-    for (const Node& c : node.children)
-        bits |= emphasisBitsAt(c, pos);
-    return bits;
-}
-
 // Marks, in `out`, every formatting kind whose full range (delimiters included) strictly contains
 // `pos` (node.start < pos < node.end). Full recursion is safe: a child's range is a subrange of its
 // parent's, so a caret outside a node can't be strictly inside any of its children.
@@ -1673,34 +1656,6 @@ void ChatInputHighlighter::demoteMentionsInCode()
         mc.insertText(name);
     }
     cursor.endEditBlock();
-}
-
-QVariantMap ChatInputHighlighter::emphasisAtInsertion(int position) const
-{
-    static const QVariantMap allFalse = {
-        {QStringLiteral("bold"),          false},
-        {QStringLiteral("italic"),        false},
-        {QStringLiteral("strikethrough"), false},
-    };
-
-    if (!document())
-        return allFalse;
-
-    QString fullText = document()->toPlainText();
-    if (position < 0 || position > static_cast<int>(fullText.length()))
-        return allFalse;
-
-    fullText.insert(position, QLatin1Char('a'));
-
-    const Node doc = Markdown::parse(
-        fullText, optionsFor(m_formatUnclosedCodeFence));
-    const unsigned int bits = emphasisBitsAt(doc, position);
-
-    return {
-        {QStringLiteral("bold"),          bool(bits & kBold)},
-        {QStringLiteral("italic"),        bool(bits & kItalic)},
-        {QStringLiteral("strikethrough"), bool(bits & kStrikeThrough)},
-    };
 }
 
 QVariantMap ChatInputHighlighter::emphasisAt(int position) const
