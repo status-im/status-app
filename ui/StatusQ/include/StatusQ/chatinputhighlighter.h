@@ -196,6 +196,12 @@ public:
     // when the caret is not enclosed by a matching delimiter run.
     Q_INVOKABLE QVariantMap delimitersAt(int position) const;
 
+    // Removes the delimiter run that delimitersAt(position) accounts for — the matching delimiter
+    // chars flanking the caret — leaving the caret between them (e.g. "**|**" → "|", "A *|*" →
+    // "A |"). A no-op when delimitersAt reports nothing. Single undo step; the caret is restored on
+    // undo, as with removeFormatting.
+    Q_INVOKABLE void removeDelimitersAt(int position);
+
     // Quote-editing queries (for the "> " continuation / deletion UX). All operate on
     // the live document and a fence-aware set of quote-line block starts.
     Q_INVOKABLE bool isInQuoteBlock(int position) const;        // block at pos is a quote line

@@ -1036,5 +1036,57 @@ Item {
             fields.forEach(f => compare(m[f], data.flags.indexOf(f) !== -1,
                                         f + " for \"" + data.input + "\""))
         }
+
+        // ── removeDelimitersAt: strip the delimiter chars a given kind accounts for ──────
+
+        // Symmetrical to delimitersAt, but parametrized by kind so stacked emphasis is unambiguous:
+        // from "***|***", italic strips one "*" each side, bold strips two. Non-stacking kinds strip
+        // the whole run. A no-op when the kind is not present around the caret.
+        function test_removeDelimitersAt_data() {
+            return [
+                {tag: "bold",                     input: "**|**",               kind: "bold",          output: "|"},
+                {tag: "italic",                   input: "A *|*",               kind: "italic",        output: "A |"},
+                {tag: "italic from ***",          input: "***|***",             kind: "italic",        output: "**|**"},
+                {tag: "bold from ***",            input: "***|***",             kind: "bold",          output: "*|*"},
+                {tag: "italic no-op on ** (even)", input: "**|**",              kind: "italic",        output: "**|**"},
+                {tag: "bold no-op on * (single)", input: "*|*",                 kind: "bold",          output: "*|*"},
+                {tag: "strikethrough",            input: "~~|~~",               kind: "strikethrough", output: "|"},
+                {tag: "strikethrough, 3 tildes",  input: "~~~|~~~",             kind: "strikethrough", output: "|"},
+                {tag: "code span, 1 backtick",    input: "some `|`",            kind: "codeSpan",      output: "some |"},
+                {tag: "code span, 2 backticks",   input: "``|``",               kind: "codeSpan",      output: "|"},
+                {tag: "code block, 3 backticks",  input: "some ```|```",        kind: "codeBlock",     output: "some |"},
+                {tag: "codeSpan no-op on ```",    input: "```|```",             kind: "codeSpan",      output: "```|```"},
+                {tag: "codeBlock no-op on `",     input: "`|`",                 kind: "codeBlock",     output: "`|`"},
+                {tag: "local only, ignores ctx",  input: "```code *|* code```", kind: "italic",        output: "```code | code```"},
+                {tag: "single tilde (no-op)",     input: "~|~",                 kind: "strikethrough", output: "~|~"},
+                {tag: "mismatched (no-op)",       input: "*|~",                 kind: "italic",        output: "*|~"},
+                {tag: "not a delimiter (no-op)",  input: "ab|cd",               kind: "bold",          output: "ab|cd"},
+                {tag: "at start (no-op)",         input: "|**bold**",           kind: "bold",          output: "|**bold**"},
+                {tag: "wrong kind (no-op)",       input: "**|**",               kind: "codeSpan",      output: "**|**"},
+            ]
+        }
+
+        function test_removeDelimitersAt(data) {
+            const position = data.input.indexOf("|")
+            control.text = data.input.replace("|", "")
+            control.cursorPosition = position
+
+            control.removeDelimitersAt(position, data.kind)
+
+            compare(control.text, data.output.replace("|", ""))
+            compare(control.cursorPosition, data.output.indexOf("|"))
+        }
+
+        // The strip is a single edit block: one undo restores the whole run at once.
+        function test_removeDelimitersAt_singleUndo() {
+            control.text = "x****y"
+            control.cursorPosition = 3 // enclosed by the "**" pair on each side
+
+            control.removeDelimitersAt(3, "bold")
+            compare(control.text, "xy")
+
+            control.undo()
+            compare(control.text, "x****y")
+        }
     }
 }

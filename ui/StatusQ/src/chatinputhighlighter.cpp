@@ -488,6 +488,70 @@ void collectQuotePrefixes(const Node& node, QVector<QPair<qsizetype, qsizetype>>
         collectQuotePrefixes(c, out);
 }
 
+// Local (no-AST) delimiter probe shared by delimitersAt / removeDelimitersAt. Returns the delimiter
+// char flanking `position` and the surrounding run length (the shorter of the left/right runs), or
+// {QChar(), 0} when the caret is not enclosed by a matching delimiter run.
+std::pair<QChar, int> surroundingDelimiterRun(const QString& text, int position)
+{
+    if (position <= 0 || position >= text.length())
+        return {QChar(), 0};
+
+    const QChar ch = text.at(position - 1);
+    const bool isDelimiter = (ch == u'*' || ch == u'~' || ch == u'`');
+    if (!isDelimiter || text.at(position) != ch)
+        return {QChar(), 0};
+
+    int left = 0;
+    for (int i = position - 1; i >= 0 && text.at(i) == ch; --i)
+        ++left;
+    int right = 0;
+    for (int i = position; i < text.length() && text.at(i) == ch; ++i)
+        ++right;
+
+    return {ch, std::min(left, right)};
+}
+
+// Single source of truth mapping a delimiter run of `ch`×`count` to formatting flags. When `out` is
+// non-null it sets the flags there; returns whether any flag applies (used to gate removal so a lone
+// "~" — which denotes nothing — is left alone).
+bool applyDelimiterFlags(QChar ch, int count, QVariantMap* out)
+{
+    bool any = false;
+    const auto set = [&](const char* key) {
+        any = true;
+        if (out)
+            (*out)[QLatin1String(key)] = true;
+    };
+    if (count > 0) {
+        if (ch == u'*') {
+            if (count % 2 == 1) set("italic"); // 1, 3, ... include a single "*"
+            if (count >= 2)     set("bold");   // a "**" pair
+        } else if (ch == u'~') {
+            if (count >= 2)     set("strikethrough"); // "~~"
+        } else if (ch == u'`') {
+            if (count >= 3)     set("codeBlock"); // "```"
+            else                set("codeSpan");  // "`" or "``"
+        }
+    }
+    return any;
+}
+
+// Number of `ch` delimiter chars to strip from each side of the caret to remove `kind`, or 0 when
+// `kind` is not present in the run (same presence rules as applyDelimiterFlags). Emphasis is the only
+// stacking case, so `kind` disambiguates it: from "***" italic strips one "*" (leaving "**" bold),
+// bold strips two (leaving "*" italic). The non-stacking kinds strip the whole run.
+int delimiterRemovalCount(QChar ch, int count, const QString& kind)
+{
+    if (count <= 0)
+        return 0;
+    if (kind == QLatin1String("italic"))        return (ch == u'*' && count % 2 == 1) ? 1 : 0;
+    if (kind == QLatin1String("bold"))          return (ch == u'*' && count >= 2)     ? 2 : 0;
+    if (kind == QLatin1String("strikethrough")) return (ch == u'~' && count >= 2)     ? count : 0;
+    if (kind == QLatin1String("codeSpan"))      return (ch == u'`' && count < 3)      ? count : 0;
+    if (kind == QLatin1String("codeBlock"))     return (ch == u'`' && count >= 3)     ? count : 0;
+    return 0;
+}
+
 } // namespace
 
 // ── ChatInputLinksModel ───────────────────────────────────────────────────────
@@ -1684,37 +1748,34 @@ QVariantMap ChatInputHighlighter::delimitersAt(int position) const
     if (!document())
         return out;
 
-    const QString text = document()->toPlainText();
-    // Need a character on both sides to be "surrounded".
-    if (position <= 0 || position >= text.length())
-        return out;
-
-    const auto isDelimiter = [](QChar c) {
-        return c == u'*' || c == u'~' || c == u'`';
-    };
-
-    const QChar ch = text.at(position - 1);
-    if (!isDelimiter(ch) || text.at(position) != ch)
-        return out; // not flanked by the same delimiter char on both sides
-
-    int left = 0;
-    for (int i = position - 1; i >= 0 && text.at(i) == ch; --i)
-        ++left;
-    int right = 0;
-    for (int i = position; i < text.length() && text.at(i) == ch; ++i)
-        ++right;
-
-    // Surrounded by `count` delimiter chars on each side (the shorter run bounds it).
-    const int count = std::min(left, right);
-
-    if (ch == u'*') {
-        if (count % 2 == 1) out[QStringLiteral("italic")] = true; // 1, 3, ... include a single "*"
-        if (count >= 2)     out[QStringLiteral("bold")]   = true; // a "**" pair
-    } else if (ch == u'~') {
-        if (count >= 2)     out[QStringLiteral("strikethrough")] = true; // "~~"
-    } else { // backtick
-        if (count >= 3)     out[QStringLiteral("codeBlock")] = true; // "```"
-        else                out[QStringLiteral("codeSpan")]  = true; // "`" or "``"
-    }
+    const auto [ch, count] = surroundingDelimiterRun(document()->toPlainText(), position);
+    applyDelimiterFlags(ch, count, &out);
     return out;
+}
+
+void ChatInputHighlighter::removeDelimitersAt(int position, const QString& kind)
+{
+    if (!document())
+        return;
+
+    const auto [ch, count] = surroundingDelimiterRun(document()->toPlainText(), position);
+    // How many delimiter chars `kind` accounts for on each side (0 ⇒ not present ⇒ no-op).
+    const int remove = delimiterRemovalCount(ch, count, kind);
+    if (remove <= 0)
+        return;
+
+    QTextCursor cursor(document());
+    // Anchor near the caret so undo keeps the cursor by the restored run instead of jumping to the
+    // document start (the caret sits between the two adjacent deletions, so — unlike removeFormatting
+    // — it can't be pinned to the exact original spot).
+    cursor.setPosition(qBound(0, position, document()->characterCount() - 1));
+    cursor.beginEditBlock();
+    // Delete the trailing run first (higher offsets) so the leading range stays valid.
+    cursor.setPosition(position);
+    cursor.setPosition(position + remove, QTextCursor::KeepAnchor);
+    cursor.removeSelectedText();
+    cursor.setPosition(position - remove);
+    cursor.setPosition(position, QTextCursor::KeepAnchor);
+    cursor.removeSelectedText();
+    cursor.endEditBlock();
 }
