@@ -180,6 +180,29 @@ Column {
 
     Separator {}
 
+    StatusListItem {
+        objectName: "autoApplyKeypairMigrationsItem"
+        title: qsTr("Automatically apply key pair migrations from paired devices")
+        subTitle: qsTr("When off, moving a key pair to or from a Keycard on a paired device won't change how this device logs in or signs. Turning it back on doesn't apply past changes.")
+        visible: root.walletStore.walletModule.hasPairedDevices
+        width: parent.width
+        bgColor: StatusColors.transparent
+        components: [
+            StatusSwitch {
+                objectName: "autoApplyKeypairMigrationsSwitch"
+                checked: root.walletStore.autoApplyKeypairMigrations
+                onToggled: {
+                    checked = Qt.binding(() => root.walletStore.autoApplyKeypairMigrations)
+                    root.walletStore.setAutoApplyKeypairMigrations(!root.walletStore.autoApplyKeypairMigrations)
+                }
+            }
+        ]
+    }
+
+    Separator {
+        visible: root.walletStore.walletModule.hasPairedDevices
+    }
+
     Spacer {
         visible: root.walletStore.walletModule.hasPairedDevices
         width: parent.width
