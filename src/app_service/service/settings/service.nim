@@ -31,6 +31,7 @@ const SIGNAL_BIO_UPDATED* = "bioUpdated"
 const SIGNAL_MNEMONIC_REMOVED* = "mnemonicRemoved"
 const SIGNAL_CURRENT_USER_STATUS_UPDATED* = "currentUserStatusUpdated"
 const SIGNAL_PROFILE_MIGRATION_NEEDED_UPDATED* = "profileMigrationNeededUpdated"
+const SIGNAL_AUTO_APPLY_KEYPAIR_MIGRATIONS_UPDATED* = "autoApplyKeypairMigrationsUpdated"
 const SIGNAL_URL_UNFURLING_MODE_UPDATED* = "urlUnfurlingModeUpdated"
 const SIGNAL_PINNED_MAILSERVER_CHANGED* = "pinnedMailserverChanged"
 const SIGNAL_AUTO_REFRESH_TOKENS_UPDATED* = "autoRefreshTokensUpdated"
@@ -107,6 +108,9 @@ QtObject:
     of PROFILE_MIGRATION_NEEDED:
       self.settings.profileMigrationNeeded = settingsField.value.getBool
       self.events.emit(SIGNAL_PROFILE_MIGRATION_NEEDED_UPDATED, SettingsBoolValueArgs(value: self.settings.profileMigrationNeeded))
+    of KEY_AUTO_APPLY_KEYPAIR_MIGRATIONS:
+      self.settings.autoApplyKeypairMigrations = settingsField.value.getBool
+      self.events.emit(SIGNAL_AUTO_APPLY_KEYPAIR_MIGRATIONS_UPDATED, SettingsBoolValueArgs(value: self.settings.autoApplyKeypairMigrations))
     of KEY_URL_UNFURLING_MODE:
       self.settings.urlUnfurlingMode = toUrlUnfurlingMode(settingsField.value.getInt)
       self.events.emit(SIGNAL_URL_UNFURLING_MODE_UPDATED, UrlUnfurlingModeArgs(value: self.settings.urlUnfurlingMode))
@@ -1099,6 +1103,16 @@ QtObject:
 
   proc getProfileMigrationNeeded*(self: Service): bool =
     self.settings.profileMigrationNeeded
+
+  proc getAutoApplyKeypairMigrations*(self: Service): bool =
+    self.settings.autoApplyKeypairMigrations
+
+  proc saveAutoApplyKeypairMigrations*(self: Service, value: bool): bool =
+    if(self.saveSetting(KEY_AUTO_APPLY_KEYPAIR_MIGRATIONS, value)):
+      self.settings.autoApplyKeypairMigrations = value
+      self.events.emit(SIGNAL_AUTO_APPLY_KEYPAIR_MIGRATIONS_UPDATED, SettingsBoolValueArgs(value: value))
+      return true
+    return false
 
   proc mnemonicWasShown*(self: Service) =
     let response = status_settings.mnemonicWasShown()

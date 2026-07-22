@@ -10363,6 +10363,14 @@ al cargar</translation>
         <translation>Importar pares de claves faltantes</translation>
     </message>
     <message>
+        <source>Automatically apply key pair migrations from paired devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>When off, moving a key pair to or from a Keycard on a paired device won&apos;t change how this device logs in or signs. Turning it back on doesn&apos;t apply past changes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Get Keycard</source>
         <translation type="unfinished">Obtener Keycard</translation>
     </message>

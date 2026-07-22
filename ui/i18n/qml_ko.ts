@@ -10315,6 +10315,14 @@ to load</source>
         <translation>누락된 키 쌍 가져오기</translation>
     </message>
     <message>
+        <source>Automatically apply key pair migrations from paired devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>When off, moving a key pair to or from a Keycard on a paired device won&apos;t change how this device logs in or signs. Turning it back on doesn&apos;t apply past changes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Get Keycard</source>
         <translation type="unfinished">Keycard 받기</translation>
     </message>
