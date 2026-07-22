@@ -216,6 +216,15 @@ public:
     Q_INVOKABLE void removeDelimitersAtSelection(int selectionStart, int selectionEnd,
                                                  const QString& kind);
 
+    // Adds the formatting `kind`. Selection and caret are handled uniformly (a caret is a zero-width
+    // selection): for a delimiter kind ("bold"/"italic"/"strikethrough"/"codeSpan"/"codeBlock") it
+    // wraps [selectionStart, selectionEnd) in that kind's delimiters (so a caret ends up between
+    // them, "A|B" + bold → "A**|**B"). "quote" is the exception: it adds a "> " prefix to every line
+    // the selection at least partially covers. Returns {selectionStart, selectionEnd} for where the
+    // editor should place the caret/selection afterwards (the wrapped content, shifted past the
+    // inserted delimiters). Single undo step.
+    Q_INVOKABLE QVariantMap addFormatting(int selectionStart, int selectionEnd, const QString& kind);
+
     // Removes the delimiter chars for `kind` flanking the caret, using only the local text (mirrors
     // delimitersAt). `kind` is one of "bold", "italic", "strikethrough", "codeSpan", "codeBlock" and
     // is required to disambiguate stacked emphasis: on "***|***", "italic" strips one "*" each side

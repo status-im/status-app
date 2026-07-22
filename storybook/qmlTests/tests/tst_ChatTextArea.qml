@@ -1131,6 +1131,57 @@ Item {
             compare(control.text, data.output.replace(/\|/g, ""))
         }
 
+        // ── addFormatting: wrap the selection / caret in a kind's delimiters ──────
+
+        // "|" marks the caret; "|X|" a selection. Delimiter kinds wrap the content (a caret ends up
+        // between them); "quote" adds a "> " prefix to every touched line. The output markers give
+        // both the resulting text and where the caret/selection should land.
+        function test_addFormatting_data() {
+            return [
+                {tag: "bold at caret",         input: "A|B",       kind: "bold",          output: "A**|**B"},
+                {tag: "italic at caret",       input: "|",         kind: "italic",        output: "*|*"},
+                {tag: "strikethrough at caret", input: "|",        kind: "strikethrough", output: "~~|~~"},
+                {tag: "codeSpan at caret",     input: "|",         kind: "codeSpan",      output: "`|`"},
+                {tag: "codeBlock at caret",    input: "|",         kind: "codeBlock",     output: "```|```"},
+                {tag: "bold wraps selection",  input: "A|BC|D",    kind: "bold",          output: "A**|BC|**D"},
+                {tag: "italic wraps selection", input: "|BC|",     kind: "italic",        output: "*|BC|*"},
+                {tag: "quote at caret",        input: "A|B",       kind: "quote",         output: "> A|B"},
+                {tag: "quote wraps selection", input: "A|B|C",     kind: "quote",         output: "> A|B|C"},
+                {tag: "quote multi-line",      input: "A|X\nB|Y",  kind: "quote",         output: "> A|X\n> B|Y"},
+            ]
+        }
+
+        function test_addFormatting(data) {
+            const inFirst = data.input.indexOf("|")
+            const inSecond = data.input.indexOf("|", inFirst + 1)
+            control.text = data.input.replace(/\|/g, "")
+            if (inSecond === -1)
+                control.cursorPosition = inFirst
+            else
+                control.select(inFirst, inSecond - 1)
+
+            control.addFormatting(control.selectionStart, control.selectionEnd, data.kind)
+
+            const outFirst = data.output.indexOf("|")
+            const outSecond = data.output.indexOf("|", outFirst + 1)
+            compare(control.text, data.output.replace(/\|/g, ""))
+            compare(control.selectionStart, outFirst)
+            compare(control.selectionEnd, outSecond === -1 ? outFirst : outSecond - 1)
+        }
+
+        // Adding is a single edit block: one undo restores the text and the caret position.
+        function test_addFormatting_singleUndo() {
+            control.text = "AB"
+            control.cursorPosition = 1
+
+            control.addFormatting(1, 1, "bold")
+            compare(control.text, "A****B")
+
+            control.undo()
+            compare(control.text, "AB")
+            compare(control.cursorPosition, 1)
+        }
+
         // ── removeDelimitersAt: strip the delimiter chars a given kind accounts for ──────
 
         // Symmetrical to delimitersAt, but parametrized by kind so stacked emphasis is unambiguous:

@@ -556,6 +556,18 @@ int delimiterRemovalCount(QChar ch, int count, const QString& kind)
     return 0;
 }
 
+// The delimiter string wrapped around content to add `kind`, or empty for an unknown / non-delimiter
+// kind (e.g. "quote", handled separately as a per-line prefix).
+QString delimiterStringForKind(const QString& kind)
+{
+    if (kind == QLatin1String("bold"))          return QStringLiteral("**");
+    if (kind == QLatin1String("italic"))        return QStringLiteral("*");
+    if (kind == QLatin1String("strikethrough")) return QStringLiteral("~~");
+    if (kind == QLatin1String("codeSpan"))      return QStringLiteral("`");
+    if (kind == QLatin1String("codeBlock"))     return QStringLiteral("```");
+    return {};
+}
+
 // Whether every line the selection [selStart, selEnd) at least partially covers begins with "> ".
 // Lines are split on '\n'; a line's content range excludes the newline. Returns false when no line
 // is covered.
@@ -1958,6 +1970,80 @@ void ChatInputHighlighter::removeDelimitersAtSelection(int selectionStart, int s
         cursor.removeSelectedText();
     }
     cursor.endEditBlock();
+}
+
+QVariantMap ChatInputHighlighter::addFormatting(int selectionStart, int selectionEnd,
+                                                const QString& kind)
+{
+    const QString text = document() ? document()->toPlainText() : QString();
+    const int len = text.length();
+    if (selectionStart > selectionEnd)
+        std::swap(selectionStart, selectionEnd);
+    selectionStart = qBound(0, selectionStart, len);
+    selectionEnd = qBound(0, selectionEnd, len);
+
+    // Returned selection: where the editor should place the caret/selection afterwards. Defaults to
+    // the (unchanged) input, so a no-op leaves the selection put.
+    int newStart = selectionStart;
+    int newEnd = selectionEnd;
+
+    if (!document())
+        return {{QStringLiteral("selectionStart"), newStart}, {QStringLiteral("selectionEnd"), newEnd}};
+
+    QTextCursor cursor(document());
+    // Anchor the block at the caret so undo restores the cursor there: an edit block records the
+    // cursor's position at beginEditBlock() time as its undo reposition target (a fresh cursor sits
+    // at 0, which is why undo otherwise jumps to the start).
+    cursor.setPosition(qBound(0, selectionStart, document()->characterCount() - 1));
+
+    if (kind == QLatin1String("quote")) {
+        // Add a "> " prefix to every line the selection at least partially covers (an empty
+        // selection is the single line the caret sits on).
+        QVector<int> lineStarts;
+        int lineStart = 0;
+        for (int i = 0; i <= len; ++i) {
+            if (i < len && text.at(i) != u'\n')
+                continue;
+            const int lineEnd = i;
+            const bool touched = (selectionStart == selectionEnd)
+                ? (selectionStart >= lineStart && selectionStart <= lineEnd)
+                : (selectionStart < lineEnd && selectionEnd > lineStart);
+            if (touched)
+                lineStarts.append(lineStart);
+            lineStart = i + 1;
+        }
+        if (!lineStarts.isEmpty()) {
+            // Each inserted prefix at or before an endpoint shifts it right by 2 (keeps the same
+            // content selected).
+            for (int p : std::as_const(lineStarts)) {
+                if (p <= selectionStart) newStart += 2;
+                if (p <= selectionEnd)   newEnd += 2;
+            }
+            std::sort(lineStarts.begin(), lineStarts.end(), std::greater<int>()); // insert high→low
+            cursor.beginEditBlock();
+            for (int p : std::as_const(lineStarts)) {
+                cursor.setPosition(p);
+                cursor.insertText(QStringLiteral("> "));
+            }
+            cursor.endEditBlock();
+        }
+    } else {
+        const QString delim = delimiterStringForKind(kind);
+        if (!delim.isEmpty()) {
+            cursor.beginEditBlock();
+            // Insert the closer first (higher offset) so selectionStart stays valid.
+            cursor.setPosition(selectionEnd);
+            cursor.insertText(delim);
+            cursor.setPosition(selectionStart);
+            cursor.insertText(delim);
+            cursor.endEditBlock();
+            // The wrapped content now sits between the delimiters, shifted by the opener's length.
+            newStart = selectionStart + delim.length();
+            newEnd = selectionEnd + delim.length();
+        }
+    }
+
+    return {{QStringLiteral("selectionStart"), newStart}, {QStringLiteral("selectionEnd"), newEnd}};
 }
 
 void ChatInputHighlighter::removeDelimitersAt(int position, const QString& kind)
