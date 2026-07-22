@@ -127,6 +127,7 @@ unclosed fence here (no closing triple-tick)
     readonly property var emph: textArea.emphasisAt(textArea.cursorPosition)
     readonly property var vemph: textArea.emphasisAtInsertion(textArea.cursorPosition)
     readonly property var node: textArea.nodeAt(textArea.cursorPosition)
+    readonly property var delim: textArea.delimitersAt(textArea.cursorPosition)
 
     // A detectable uncompressed key: "0x" + 130 hex (what the parser's mention rule requires).
     function randomPubKey() {
@@ -946,29 +947,55 @@ unclosed fence here (no closing triple-tick)
                 Label { text: "codeSpan: "      + node.codeSpan }
                 Label { text: "codeBlock: "     + node.codeBlock }
             }
+            Row {
+                spacing: 16
 
-            // Formatting buttons — their checked state reflects the formatting at the caret (read
-            // from nodeAt via the `node` property). Clicking a checked one removes that formatting
-            // via removeFormatting; a click while unchecked is a no-op (adding is wired later). They
-            // are not checkable, so the checked binding stays intact regardless of clicks.
+                Label { text: "delimiters at:\t"}
+                Label { text: "bold: "          + delim.bold }
+                Label { text: "italic: "        + delim.italic }
+                Label { text: "strikethrough: " + delim.strikethrough }
+                Label { text: "codeSpan: "      + delim.codeSpan }
+                Label { text: "codeBlock: "     + delim.codeBlock }
+            }
+
+            // Formatting buttons — their checked state reflects the formatting at the caret from
+            // either the parsed tree (nodeAt, via `node`) or the raw delimiters around the caret
+            // (delimitersAt, via `delim`). Clicking a checked one un-formats: if it was checked
+            // because of nodeAt it strips the AST node's delimiters (removeFormatting); otherwise it
+            // strips the local delimiter run (removeDelimitersAt). Adding is wired later. They are
+            // not checkable, so the checked binding stays intact regardless of clicks.
             Row {
                 spacing: 8
 
-                function removeFormatting(kind) {
-                    textArea.removeFormatting(textArea.cursorPosition, kind)
+                // `byNode` decides which remover to use; nodeAt takes precedence over delimitersAt.
+                // removeFormatting takes the unified "code" kind; removeDelimitersAt needs the
+                // specific codeSpan/codeBlock, so the two kinds are passed separately.
+                function unformat(byNode, byDelimiters, formattingKind, delimiterKind) {
+                    if (byNode)
+                        textArea.removeFormatting(textArea.cursorPosition, formattingKind)
+                    else if (byDelimiters)
+                        textArea.removeDelimitersAt(textArea.cursorPosition, delimiterKind)
                     textArea.forceActiveFocus()
                 }
 
-                Button { id: boldButton;          text: "Bold";          checked: node.bold
-                         onClicked: parent.removeFormatting("bold") }
-                Button { id: italicButton;        text: "Italic";        checked: node.italic
-                         onClicked: parent.removeFormatting("italic") }
-                Button { id: strikethroughButton; text: "Strikethrough"; checked: node.strikethrough
-                         onClicked: parent.removeFormatting("strikethrough") }
-                Button { id: codeButton;          text: "Code";          checked: node.codeSpan || node.codeBlock
-                         onClicked: parent.removeFormatting("code") }
-                Button { id: quoteButton;         text: "Quote";         checked: node.quote
-                         onClicked: parent.removeFormatting("quote") }
+                Button { id: boldButton; text: "Bold"
+                         checked: node.bold || delim.bold
+                         onClicked: parent.unformat(node.bold, delim.bold, "bold", "bold") }
+                Button { id: italicButton; text: "Italic"
+                         checked: node.italic || delim.italic
+                         onClicked: parent.unformat(node.italic, delim.italic, "italic", "italic") }
+                Button { id: strikethroughButton; text: "Strikethrough"
+                         checked: node.strikethrough || delim.strikethrough
+                         onClicked: parent.unformat(node.strikethrough, delim.strikethrough,
+                                                    "strikethrough", "strikethrough") }
+                Button { id: codeButton; text: "Code"
+                         checked: node.codeSpan || node.codeBlock || delim.codeSpan || delim.codeBlock
+                         onClicked: parent.unformat(node.codeSpan || node.codeBlock,
+                                                    delim.codeSpan || delim.codeBlock,
+                                                    "code", delim.codeBlock ? "codeBlock" : "codeSpan") }
+                Button { id: quoteButton; text: "Quote"
+                         checked: node.quote
+                         onClicked: parent.unformat(node.quote, false, "quote", "") }
             }
         }
     }
