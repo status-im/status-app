@@ -8,9 +8,9 @@ import sys
 import subprocess
 
 from tests import test_data
-from PIL import ImageGrab
 from configs.system import get_platform
 from fixtures.path import generate_test_info
+from scripts.utils.failure_screenshot import attach_failure_screenshot
 from scripts.utils.system_path import SystemPath
 
 # Root logging: pytest.ini uses -p no:logging, so we configure file + stderr here.
@@ -176,12 +176,5 @@ def pytest_exception_interact(node, call, report):
     node_dir: SystemPath = configs.testpath.RUN / test_path / test_name / test_params
     node_dir.mkdir(parents=True, exist_ok=True)
     screenshot = node_dir / f'screenshot_{shortuuid.ShortUUID().random(length=10)}.png'
-    try:
-        ImageGrab.grab(xdisplay=configs.system.DISPLAY if get_platform() == "Linux" else None).save(screenshot)
-        allure.attach(
-            name='Screenshot on fail',
-            body=screenshot.read_bytes(),
-            attachment_type=allure.attachment_type.PNG
-        )
-    except FileNotFoundError:
-        print("Screenshot was not generated or saved")
+    attach_failure_screenshot(screenshot)
+    test_data.aut_screenshot_attached = True
