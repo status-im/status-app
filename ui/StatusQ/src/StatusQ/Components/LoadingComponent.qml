@@ -89,9 +89,9 @@ Control {
 
             gradient: Gradient {
                 orientation: Gradient.Horizontal
-                GradientStop { position: 0.2; color: "transparent" }
+                GradientStop { position: 0.2; color: StatusColors.transparent }
                 GradientStop { position: 0.5; color: Theme.palette.statusLoadingHighlight2 }
-                GradientStop { position: 0.8; color: "transparent" }
+                GradientStop { position: 0.8; color: StatusColors.transparent }
             }
 
             XAnimator on x {

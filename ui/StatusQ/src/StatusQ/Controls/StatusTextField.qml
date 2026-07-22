@@ -34,7 +34,7 @@ TextField {
         id: hoverHandler
         enabled: root.enabled
         // Build the edit context menu on first hover (see contextMenuLoader).
-        onHoveredChanged: if (hovered && !Utils.isAndroid) contextMenuLoader.active = true
+        onHoveredChanged: if (hovered && !Utils.isMobile) contextMenuLoader.active = true
     }
 
     background: Rectangle {
@@ -71,11 +71,12 @@ TextField {
     // right-click or long-press, both always preceded by the pointer entering the
     // field or the field gaining focus. Building it eagerly per field is a
     // dominant instantiation cost (a full StatusMenu with materialised items),
-    // paid even when the field is never interacted with — and on Android it is not
-    // even attached (see below). So build it lazily on first interaction, never on
-    // Android. The menu is null until then; a right-click cannot happen before the
-    // triggering hover/focus, so the menu is always present by the time it opens.
-    onActiveFocusChanged: if (activeFocus && !Utils.isAndroid) contextMenuLoader.active = true
+    // paid even when the field is never interacted with — and on mobile it is not
+    // even attached (mobile uses the OS-native text menu). So build it lazily on
+    // first interaction, never on mobile. The menu is null until then; a right-click
+    // cannot happen before the triggering hover/focus, so the menu is always present
+    // by the time it opens.
+    onActiveFocusChanged: if (activeFocus && !Utils.isMobile) contextMenuLoader.active = true
 
     Loader {
         id: contextMenuLoader
