@@ -945,5 +945,61 @@ Item {
             verify(matches(), "nodeAt(" + position + ") for \"" + data.text + "\""
                    + " expected " + JSON.stringify(data.flags))
         }
+
+        // ── removeFormatting: strip the delimiters of the node around the caret ──────
+
+        // "input"/"output" embed the caret as "|". removeFormatting deletes the delimiters of the
+        // node of "kind" strictly containing the caret, keeping the content and the caret's place
+        // within it. It is a no-op when the caret is not inside such a node. "code" targets a code
+        // span or a code block, whichever is found.
+        function test_removeFormatting_data() {
+            return [
+                {tag: "caret in bold content",        input: "**bol|d**",     kind: "bold",   output: "bol|d"},
+                {tag: "caret after opening markers",  input: "**|bold**",     kind: "bold",   output: "|bold"},
+                {tag: "caret between opening markers", input: "*|*bold**",     kind: "bold",   output: "|bold"},
+                {tag: "caret outside bold (no-op)",   input: "|**bold**",     kind: "bold",   output: "|**bold**"},
+                {tag: "italics around code block",    input: "*```co|de```*", kind: "italic", output: "```co|de```"},
+                {tag: "code span",                    input: "`co|de`",       kind: "code",   output: "co|de"},
+                {tag: "code block",                   input: "```co|de```",   kind: "code",   output: "co|de"},
+                {tag: "single-line quote",            input: "> qu|ote",      kind: "quote",  output: "qu|ote"},
+                // Bold spanning quote lines nests the later "> " prefixes under the Strong node; all
+                // four prefixes must still be removed.
+                {tag: "multi-line quote with bold",
+                 input:  "> |quote\n> **\n> bold\n> **",
+                 kind:   "quote",
+                 output: "|quote\n**\nbold\n**"},
+                // A quoted code block holds the "> " prefixes as its own children; removing the code
+                // must strip only the ``` fences and keep every quote prefix.
+                {tag: "code block inside a quote",
+                 input:  "> A\n> ```\n> B|\n> ```",
+                 kind:   "code",
+                 output: "> A\n> \n> B|\n> "},
+            ]
+        }
+
+        function test_removeFormatting(data) {
+            const position = data.input.indexOf("|")
+            control.text = data.input.replace("|", "")
+            control.cursorPosition = position
+
+            control.removeFormatting(position, data.kind)
+
+            compare(control.text, data.output.replace("|", ""))
+            compare(control.cursorPosition, data.output.indexOf("|"))
+        }
+
+        // The whole strip is a single edit block, so one undo restores the original text exactly
+        // and puts the caret back where it was (not at the start of the document).
+        function test_removeFormatting_singleUndo() {
+            control.text = "**bold**"
+            control.cursorPosition = 4
+
+            control.removeFormatting(4, "bold")
+            compare(control.text, "bold")
+
+            control.undo()
+            compare(control.text, "**bold**")
+            compare(control.cursorPosition, 4)
+        }
     }
 }

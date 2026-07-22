@@ -93,6 +93,9 @@ StatusTextArea {
     function nodeAt(pos) {
         return highlighter.nodeAt(pos)
     }
+    function removeFormatting(pos, kind) {
+        highlighter.removeFormatting(pos, kind)
+    }
     function inUnclosedCodeFence(pos) {
         return highlighter.inUnclosedCodeFence(pos)
     }

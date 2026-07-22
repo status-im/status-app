@@ -180,6 +180,13 @@ public:
     // next to a delimiter (e.g. `*italics|*`) still reports the surrounding emphasis.
     Q_INVOKABLE QVariantMap nodeAt(int position) const;
 
+    // Removes the formatting `kind` around `position` by deleting the delimiters of the AST node of
+    // that kind strictly containing the caret (same containment rule as nodeAt), leaving the content
+    // intact. `kind` is one of "bold", "italic", "strikethrough", "quote", "code" (both a code span
+    // and a code block map to "code"). A no-op when the caret is not inside such a node. The whole
+    // strip is a single undo step and the editor caret follows the deletions automatically.
+    Q_INVOKABLE void removeFormatting(int position, const QString& kind);
+
     // Quote-editing queries (for the "> " continuation / deletion UX). All operate on
     // the live document and a fence-aware set of quote-line block starts.
     Q_INVOKABLE bool isInQuoteBlock(int position) const;        // block at pos is a quote line

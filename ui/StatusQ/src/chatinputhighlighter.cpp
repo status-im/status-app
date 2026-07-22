@@ -452,6 +452,42 @@ void collectNodesAt(const Node& node, qsizetype pos, QVariantMap& out)
         collectNodesAt(c, pos, out);
 }
 
+// Maps a removeFormatting() kind string to the AST node kinds it targets. "code" matches both a
+// code span and a code block. Returns an empty set for an unknown kind.
+QVector<NodeKind> nodeKindsForFormatting(const QString& kind)
+{
+    if (kind == QLatin1String("bold"))          return {NodeKind::Strong};
+    if (kind == QLatin1String("italic"))        return {NodeKind::Emphasis};
+    if (kind == QLatin1String("strikethrough")) return {NodeKind::Strikethrough};
+    if (kind == QLatin1String("quote"))         return {NodeKind::QuoteBlock};
+    if (kind == QLatin1String("code"))          return {NodeKind::CodeSpan, NodeKind::CodeBlock};
+    return {};
+}
+
+// Returns the innermost node whose kind is in `kinds` and whose full range strictly contains `pos`
+// (start < pos < end), or nullptr. Recurses into children first so the deepest match wins.
+const Node* findDeepestNode(const Node& node, qsizetype pos, const QVector<NodeKind>& kinds)
+{
+    for (const Node& c : node.children) {
+        if (const Node* hit = findDeepestNode(c, pos, kinds))
+            return hit;
+    }
+    if (pos > node.start && pos < node.end && kinds.contains(node.kind))
+        return &node;
+    return nullptr;
+}
+
+// Appends the ranges of every "> " quote-prefix Delimiter in the subtree. Emphasis spanning several
+// quote lines nests the later prefixes under an inline node, so they must be gathered recursively —
+// not just from the QuoteBlock's direct children. Prefixes are the only delimiters starting with '>'.
+void collectQuotePrefixes(const Node& node, QVector<QPair<qsizetype, qsizetype>>& out)
+{
+    if (node.kind == NodeKind::Delimiter && node.literal.startsWith(QLatin1Char('>')))
+        out.append({node.start, node.end});
+    for (const Node& c : node.children)
+        collectQuotePrefixes(c, out);
+}
+
 } // namespace
 
 // ── ChatInputLinksModel ───────────────────────────────────────────────────────
@@ -1584,4 +1620,54 @@ QVariantMap ChatInputHighlighter::nodeAt(int position) const
     if (m_astValid)
         collectNodesAt(m_ast, position, out);
     return out;
+}
+
+void ChatInputHighlighter::removeFormatting(int position, const QString& kind)
+{
+    if (!document())
+        return;
+
+    const QVector<NodeKind> kinds = nodeKindsForFormatting(kind);
+    if (kinds.isEmpty())
+        return;
+
+    // A one-shot action (not a hot caret query): use astForQuery() so the tree always matches the
+    // current text, reparsing only when the cache is stale.
+    const Node* node = findDeepestNode(astForQuery(), position, kinds);
+    if (!node)
+        return; // caret not strictly inside such a node — nothing to remove
+
+    QVector<QPair<qsizetype, qsizetype>> ranges;
+    if (node->kind == NodeKind::QuoteBlock) {
+        // A quote block owns every "> " prefix in its range, including those an inline span pushed
+        // deeper into the tree — gather them all.
+        collectQuotePrefixes(*node, ranges);
+    } else {
+        // An inline node's delimiters are its own opener/closer (direct Delimiter children); nested
+        // nodes keep their formatting. A quoted code block also holds the enclosing "> " prefixes as
+        // children — those belong to the quote, not the code, so they must be kept.
+        for (const Node& c : node->children) {
+            if (c.kind == NodeKind::Delimiter && !c.literal.startsWith(QLatin1Char('>')))
+                ranges.append({c.start, c.end});
+        }
+    }
+    if (ranges.isEmpty())
+        return;
+
+    // Delete highest offset first so earlier ranges stay valid; one edit block ⇒ single undo step.
+    std::sort(ranges.begin(), ranges.end(),
+              [](const auto& a, const auto& b) { return a.first > b.first; });
+
+    QTextCursor cursor(document());
+    // Anchor the block at the caret so undo restores the cursor there: an edit block records the
+    // cursor's position at beginEditBlock() time as its undo reposition target (a fresh cursor sits
+    // at 0, which is why undo otherwise jumps to the start).
+    cursor.setPosition(qBound(0, position, document()->characterCount() - 1));
+    cursor.beginEditBlock();
+    for (const auto& r : std::as_const(ranges)) {
+        cursor.setPosition(static_cast<int>(r.first));
+        cursor.setPosition(static_cast<int>(r.second), QTextCursor::KeepAnchor);
+        cursor.removeSelectedText();
+    }
+    cursor.endEditBlock();
 }
