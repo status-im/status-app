@@ -172,6 +172,14 @@ BaseKeycardManagementStore {
         backend.startMigratingProfileKeypairToKeycard(password, pin, seedPhrase)
     }
 
+    function startMigratingProfileKeypairUsingExistingKeycard(password, pin, seedPhrase) {
+        if (!backend) {
+            console.error("keycard management module was not created")
+            return
+        }
+        backend.startMigratingProfileKeypairUsingExistingKeycard(password, pin, seedPhrase)
+    }
+
     function startAddingKeyPairToStatusFromKeycard(pin, keyUid, metadataName, metadataAccounts) {
         if (!backend) {
             console.error("keycard management module was not created")

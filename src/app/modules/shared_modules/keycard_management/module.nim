@@ -30,6 +30,8 @@ type FlowType {.pure.} = enum
                                         # if the key pair is not already addded to the app, the flow adds it
   MigratingNonProfileKeypairToKeycard = "MigratingNonProfileKeypairToKeycard" # migrates a non-profile keypair to the keycard (only if the keypair is not already migrated)
   MigratingProfileKeypairToKeycard = "MigratingProfileKeypairToKeycard" # migrates a profile keypair to the keycard (only if the keypair is not already migrated)
+  MigratingProfileKeypairUsingExistingKeycard = "MigratingProfileKeypairUsingExistingKeycard" # aligns with a paired device which already migrated the profile keypair to a keycard,
+                                                                                              # migrates the profile keypair by using the existing keycard instead of loading the seed onto an empty one
   AddingKeyPairFromKeycard = "AddingKeyPairFromKeycard" # adds a new key pair from the keycard to the app (only if the key pair is not already added)
   StoppingKeycardForKeyPair = "StoppingKeycardForKeyPair" # stops using a Keycard for a non-profile key pair by moving it back into the app
   StoppingKeycardForProfileKeyPair = "StoppingKeycardForProfileKeyPair" # stops using a Keycard for the profile key pair by moving it back into the app
@@ -209,6 +211,8 @@ proc emitError[T](self: Module[T], err: string) =
     self.view.keycardMoveKeyPairError(err)
   elif self.tmpFlowType == FlowType.MigratingProfileKeypairToKeycard:
     self.view.keycardMoveProfileKeyPairError(err)
+  elif self.tmpFlowType == FlowType.MigratingProfileKeypairUsingExistingKeycard:
+    self.view.keycardMoveProfileKeyPairError(err)
   elif self.tmpFlowType == FlowType.AddingKeyPairFromKeycard:
     self.view.keycardAddKeyPairError(err)
   elif self.tmpFlowType == FlowType.StoppingKeycardForKeyPair:
@@ -276,8 +280,20 @@ method startMigratingProfileKeypairToKeycard*[T](self: Module[T], password: stri
   let metadataAccounts = self.getKeyPairAccountPathsJsonForKeyUid(keyUid)
   self.startLoadSeedPhrase(pin, seedPhrase, metadataName, metadataAccounts)
 
+method startMigratingProfileKeypairUsingExistingKeycard*[T](self: Module[T], password: string, pin: string, seedPhrase: string) =
+  self.tmpFlowType = FlowType.MigratingProfileKeypairUsingExistingKeycard
+  self.tmpPassword = password
+  self.tmpSeedPhrase = seedPhrase
+  let keyUid = self.controller.getKeyUidForSeedPhrase(seedPhrase)
+  if keyUid != singletonInstance.userProfile.getKeyUid():
+    self.emitError("provided seed phrase doesn't match the profile key pair")
+    return
+  self.tmpKeyUid = keyUid
+  self.controller.startAsyncLogin(keyUid, pin, xPubPath = "")
+
 method onConvertingProfileKeypairFinished*[T](self: Module[T], success: bool) =
-  if self.tmpFlowType == FlowType.MigratingProfileKeypairToKeycard:
+  if self.tmpFlowType == FlowType.MigratingProfileKeypairToKeycard or
+      self.tmpFlowType == FlowType.MigratingProfileKeypairUsingExistingKeycard:
     if not success:
       self.emitError("failed to convert profile keypair to keycard")
       return
@@ -438,6 +454,25 @@ method startAsyncLogin*[T](self: Module[T], keyUid, pin: string, generateXPub: b
   self.controller.startAsyncLogin(keyUid, pin, xPubPath, extendedResponse = true) # extendedResponse is true to get the full recover keys set (master address, walletRootAddress, eip1581Address...)
 
 method onKeycardAsyncLoginFinished*[T](self: Module[T], exportedKeys: KeycardExportedKeysDto, error: string) =
+  if self.tmpFlowType == FlowType.MigratingProfileKeypairUsingExistingKeycard:
+    if error.len > 0:
+      self.emitError("keycard login error: " & error)
+      return
+    if self.view.getKeyUid() != self.tmpKeyUid:
+      self.emitError("the keycard doesn't hold the profile key pair")
+      return
+    self.view.keycardInteractionSuccessfullyCompleted()
+    # from here on this is the same as the MigratingProfileKeypairToKeycard handeld in `onKeycardLoadSeedPhraseFinished`,
+    # just without loading the seed onto the card
+    let acc = self.controller.createAccountFromMnemonic(self.tmpSeedPhrase, includeEncryption = true)
+    let newPassword = acc.derivedAccounts.encryption.publicKey
+    if newPassword.len == 0:
+      self.emitError("failed to derive encryption public key from seed phrase")
+      return
+    self.controller.setStoreToKeychainValueNotNow()
+    let keycardUid = self.view.getKeycardUid()
+    self.controller.convertRegularProfileKeypairToKeycard(keycardUid, self.tmpPassword, newPassword)
+    return
   if self.tmpFlowType != FlowType.AsyncLogin:
     return
   if error.len > 0:
