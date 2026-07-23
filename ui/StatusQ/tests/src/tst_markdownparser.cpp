@@ -225,6 +225,73 @@ Document [0,21)
                  expected.trimmed());
     }
 
+    // Explicit [label](url): the label becomes a Text child, the url the destination, and the
+    // brackets / parenthesized url are Delimiter children (rendered live, skipped when static).
+    void explicitLink()
+    {
+        // moc mis-parses "//" inside a raw string literal as a comment, so "//" is
+        // substituted via %1. A custom raw-string delimiter is used because a node literal
+        // ends in ')', which would otherwise close the default R"(...)" early at )".
+        auto expected = QString(R"DUMP(
+Document [0,28)
+  Paragraph [0,28)
+    Link [0,28) "https:%1google.com"
+      Delimiter [0,1) "["
+      Text [1,7) "google"
+      Delimiter [7,28) "](https:%1google.com)"
+)DUMP").arg(QStringLiteral("//"));
+        QCOMPARE(d("[google](https://google.com)"), expected.trimmed());
+    }
+
+    // Formatting inside the label is ignored: the '*' stay literal in a single Text child.
+    void explicitLinkLabelFormattingIgnored()
+    {
+        auto expected = QString(R"DUMP(
+Document [0,29)
+  Paragraph [0,29)
+    Link [0,29) "https:%1google.com"
+      Delimiter [0,1) "["
+      Text [1,8) "*label*"
+      Delimiter [8,29) "](https:%1google.com)"
+)DUMP").arg(QStringLiteral("//"));
+        QCOMPARE(d("[*label*](https://google.com)"), expected.trimmed());
+    }
+
+    // The whole [label](url) still obeys outer formatting: **[label](url)** is bold.
+    void explicitLinkInsideBold()
+    {
+        auto expected = QString(R"DUMP(
+Document [0,32)
+  Paragraph [0,32)
+    Strong [0,32)
+      Delimiter [0,2) "**"
+      Link [2,30) "https:%1google.com"
+        Delimiter [2,3) "["
+        Text [3,9) "google"
+        Delimiter [9,30) "](https:%1google.com)"
+      Delimiter [30,32) "**"
+)DUMP").arg(QStringLiteral("//"));
+        QCOMPARE(d("**[google](https://google.com)**"), expected.trimmed());
+    }
+
+    // A non-http(s) target is not a link: the whole thing stays literal text.
+    void explicitLinkRejectsNonUrl()
+    {
+        auto expected = R"DUMP(
+Document [0,8)
+  Paragraph [0,8)
+    Text [0,8) "[a](foo)"
+)DUMP";
+        QCOMPARE(d("[a](foo)"), QString::fromUtf8(expected).trimmed());
+    }
+
+    // The url inside an explicit link is not additionally auto-linkified (single Link node).
+    void explicitLinkNoDoubleLink()
+    {
+        const QString dump = d("[google](https://google.com)");
+        QCOMPARE(dump.count(QStringLiteral("Link [")), 1);
+    }
+
     void quoteBlock()
     {
         // Quote blocks are part of the paragraph's inline run, hence wrapped in a

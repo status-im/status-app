@@ -25,7 +25,9 @@ enum class NodeKind {
     Emphasis,       // italic
     Strikethrough,
     CodeSpan,       // inline `code`, content is not re-parsed
-    Link,           // auto-detected URL
+    Link,           // auto-detected URL, or an explicit [label](url) link. Auto links hold a
+                    // single Text child (= the URL); explicit links hold '[' / label / '](url)'
+                    // as Delimiter + Text + Delimiter children. `destination` is the URL in both.
     WalletLink,     // auto-detected wallet address / ENS name → send-via-personal-chat
                     // link; `destination` holds the raw match (address or ENS name)
 

@@ -41,8 +41,10 @@ struct EmphSpan {
 
 struct LinkSpan {
     QString   url;
-    qsizetype start;   // start of match in the scanned text
-    qsizetype end;     // end of match (exclusive)
+    qsizetype start;       // start of match in the scanned text
+    qsizetype end;         // end of match (exclusive)
+    qsizetype labelStart;  // label (display text) start; == start for auto-detected links
+    qsizetype labelEnd;    // label (display text) end;   == end   for auto-detected links
     NodeKind  kind = NodeKind::Link; // Link for URLs, WalletLink for addresses/ENS names
 };
 
@@ -91,6 +93,49 @@ Ranges linkRangesOf(const QVector<LinkSpan>& links)
     return result;
 }
 
+// Locates the "[label](" prefix of an explicit link. The label allows any run without brackets or
+// newlines (formatting inside it is ignored by the parser). Capture group 1 is the label.
+const QRegularExpression& kExplicitLinkLabelRegex()
+{
+    static const QRegularExpression re(QStringLiteral(R"(\[([^\[\]\n]*)\]\()"));
+    return re;
+}
+
+// Explicit markdown links: "[label](url)". The label is the display text; the url must satisfy the
+// same http(s) rule as auto-detected links (kLinkRegex), so "[a](foo)" stays literal text. Each
+// span covers the whole "[label](url)" with the label range carried separately (labelStart/End) so
+// the AST can show the label while linking to the url.
+QVector<LinkSpan> scanExplicitLinks(const QString& text)
+{
+    QVector<LinkSpan> result;
+    qsizetype consumedUntil = 0; // avoid overlapping matches inside an accepted link
+    auto it = kExplicitLinkLabelRegex().globalMatch(text);
+    while (it.hasNext()) {
+        const auto m = it.next();
+        if (m.capturedStart() < consumedUntil)
+            continue;
+        const qsizetype labelStart = m.capturedStart(1);
+        const qsizetype labelEnd   = m.capturedEnd(1);
+        const qsizetype urlStart   = m.capturedEnd(); // just past '('
+
+        // The url must match the standard link rule, anchored at urlStart, and be immediately
+        // followed by ')'.
+        const auto um = kLinkRegex().match(text, urlStart, QRegularExpression::NormalMatch,
+                                           QRegularExpression::AnchoredMatchOption);
+        if (!um.hasMatch() || um.capturedStart() != urlStart)
+            continue;
+        const qsizetype urlEnd = um.capturedEnd();
+        if (urlEnd >= text.length() || text[urlEnd] != QLatin1Char(')'))
+            continue;
+
+        const qsizetype start = m.capturedStart(); // '['
+        const qsizetype end   = urlEnd + 1;        // just past ')'
+        result.append({um.captured(), start, end, labelStart, labelEnd, NodeKind::Link});
+        consumedUntil = end;
+    }
+    return result;
+}
+
 QVector<LinkSpan> scanLinks(const QString& text, const Ranges& excludeRanges = {})
 {
     QVector<LinkSpan> result;
@@ -102,19 +147,28 @@ QVector<LinkSpan> scanLinks(const QString& text, const Ranges& excludeRanges = {
         return true;
     };
 
-    // URLs first — they win over addresses/ENS that would otherwise match inside a URL.
+    // Explicit [label](url) links first — they take precedence; their whole span is excluded from
+    // the auto URL / wallet / ENS scans below so the inner url isn't linkified twice.
+    for (const LinkSpan& l : scanExplicitLinks(text))
+        if (notExcluded(l.start, l.end, excludeRanges))
+            result.append(l);
+
+    // Auto-detected URLs — excluded from code/quote (excludeRanges) and from the explicit-link
+    // spans just collected. They win over addresses/ENS that would otherwise match inside a URL.
+    Ranges used = excludeRanges;
+    used += linkRangesOf(result);
     auto it = kLinkRegex().globalMatch(text);
     while (it.hasNext()) {
         const auto m = it.next();
         const qsizetype s = m.capturedStart(), e = m.capturedEnd();
-        if (notExcluded(s, e, excludeRanges))
-            result.append({m.captured(), s, e, NodeKind::Link});
+        if (notExcluded(s, e, used))
+            result.append({m.captured(), s, e, s, e, NodeKind::Link});
     }
 
-    // Wallet addresses / ENS names → send-via-personal-chat links. Excluded from code/quote
-    // (excludeRanges) and from the URL ranges just collected, so an address inside a URL is
-    // not linkified twice.
-    Ranges used = excludeRanges;
+    // Wallet addresses / ENS names → send-via-personal-chat links. Excluded from code/quote, from
+    // explicit links, and from the URL ranges collected above, so an address inside a URL or an
+    // explicit link is not linkified twice.
+    used = excludeRanges;
     used += linkRangesOf(result);
     const auto scanWalletLinks = [&](const QRegularExpression& re) {
         auto wit = re.globalMatch(text);
@@ -122,7 +176,7 @@ QVector<LinkSpan> scanLinks(const QString& text, const Ranges& excludeRanges = {
             const auto m = wit.next();
             const qsizetype s = m.capturedStart(), e = m.capturedEnd();
             if (notExcluded(s, e, used))
-                result.append({m.captured(), s, e, NodeKind::WalletLink});
+                result.append({m.captured(), s, e, s, e, NodeKind::WalletLink});
         }
     };
     scanWalletLinks(kAddressRegex());
@@ -669,7 +723,19 @@ Node materialize(const QString& full, int idx,
 
     if (c.kind == NodeKind::Link || c.kind == NodeKind::WalletLink) {
         n.destination = c.destination;
-        n.children.append(leaf(NodeKind::Text, full, c.oS, c.oE));
+        if (c.cS == c.oS && c.cE == c.oE) {
+            // Auto-detected link (content == outer): a single Text child = the whole match.
+            n.children.append(leaf(NodeKind::Text, full, c.oS, c.oE));
+        } else {
+            // Explicit [label](url): '[' delimiter, the raw label (excluded from scanning, so no
+            // nested formatting), then the '](url)' delimiter. Static renderers skip delimiters,
+            // yielding <a href="url">label</a>; the editor dims them.
+            if (c.cS > c.oS)
+                n.children.append(leaf(NodeKind::Delimiter, full, c.oS, c.cS));
+            n.children.append(buildInlineChildren(full, c.cS, c.cE, tree.childrenOf[idx], conts, tree));
+            if (c.oE > c.cE)
+                n.children.append(leaf(NodeKind::Delimiter, full, c.cE, c.oE));
+        }
         return n;
     }
 
@@ -751,9 +817,11 @@ QVector<Container> inlineContainers(const QString& full, qsizetype rs, qsizetype
         }
     };
     auto addLinks = [&](const QVector<LinkSpan>& links, qsizetype off) {
+        // content range = label; for auto-detected links label == whole match. materialize()
+        // uses content ⊂ outer to tell an explicit [label](url) from an auto-detected URL.
         for (const LinkSpan& l : links)
             conts.append({l.kind, l.start + off, l.end + off,
-                          l.start + off, l.end + off, l.url});
+                          l.labelStart + off, l.labelEnd + off, l.url});
     };
     auto addEmph = [&](const QVector<EmphSpan>& spans, qsizetype off) {
         for (const EmphSpan& s : spans)

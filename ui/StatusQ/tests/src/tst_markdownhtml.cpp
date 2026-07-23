@@ -46,6 +46,27 @@ private slots:
                  "see <a href=\"https://status.im\">https://status.im</a>");
     }
 
+    // Explicit [label](url): href is the url, the visible text is the label.
+    void explicitLink()
+    {
+        QCOMPARE(h("[google](https://google.com)"),
+                 "<a href=\"https://google.com\">google</a>");
+    }
+
+    // Formatting inside the label is ignored — the '*' render literally (escaped, not emphasis).
+    void explicitLinkLabelFormattingIgnored()
+    {
+        QCOMPARE(h("[*label*](https://google.com)"),
+                 "<a href=\"https://google.com\">*label*</a>");
+    }
+
+    // The whole link still obeys outer formatting: **[label](url)** is bold.
+    void explicitLinkInsideBold()
+    {
+        QCOMPARE(h("**[google](https://google.com)**"),
+                 "<b><a href=\"https://google.com\">google</a></b>");
+    }
+
     // Wallet addresses / ENS names render as links whose href carries the
     // "//send-via-personal-chat//" prefix (added by the renderer); the visible text is the
     // raw match. They are not detected inside code spans.
@@ -128,6 +149,8 @@ private slots:
         QCOMPARE(hs("**b** *i* ~~s~~"), "<b>b</b> <i>i</i> <s>s</s>");
         QCOMPARE(hs("see https://status.im"),
                  "see <a href=\"https://status.im\">https://status.im</a>");
+        QCOMPARE(hs("[google](https://google.com)"),
+                 "<a href=\"https://google.com\">google</a>");
 
         const QString text = "hi " + QString(QChar(0xFFFC));
         const QHash<int, QPair<QString, QString>> m{ {3, {"@alice", "0xabc"}} };
@@ -173,6 +196,13 @@ private slots:
     void plain_link()
     {
         QCOMPARE(pt("see https://status.im"), "see https://status.im");
+    }
+
+    // An explicit link projects to its visible label (the url delimiters are dropped).
+    void plain_explicitLink()
+    {
+        QCOMPARE(pt("[google](https://google.com)"), "google");
+        QCOMPARE(pt("say [google](https://google.com) ok"), "say google ok");
     }
 
     // A wallet/ENS link projects to its raw address/name (no send-via prefix, no href).

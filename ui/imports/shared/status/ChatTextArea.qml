@@ -153,9 +153,9 @@ StatusTextArea {
         id: highlighter
 
         quickTextDocument: root.textDocument
-        delimiterColor: Theme.palette.baseColor1
-        linkColor: Theme.palette.primaryColor1
-        quoteTextColor: Theme.palette.baseColor1
+        delimiterColor: root.Theme.palette.baseColor1
+        linkColor: root.Theme.palette.primaryColor1
+        quoteTextColor: root.Theme.palette.baseColor1
         // Base url of the Twemoji svg assets, resolved by the Emoji singleton so it works in both
         // filesystem and qrc deployments (needed by imageEmojis).
         twemojiBaseUrl: Emoji.base
@@ -289,7 +289,7 @@ StatusTextArea {
             height: lastRect.y + lastRect.height - startRect.y
 
             backgroundColor: root.backgroundColor
-            barColor: Theme.palette.baseColor1
+            barColor: root.Theme.palette.baseColor1
         }
     }
 

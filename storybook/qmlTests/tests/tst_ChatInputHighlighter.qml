@@ -562,6 +562,43 @@ TestCase {
         verify(!hasItalic, "*b* inside URL must not produce italic span")
     }
 
+    // ── explicit [label](url) links ───────────────────────────────────────────
+
+    function test_explicitLink_basic() {
+        // The whole "[label](url)" is one link; its target (text) is the url, not the label.
+        const text = "[google](https://status.im)"
+        const links = highlighter.parseLinks(text)
+        compare(links.length, 1)
+        compare(links[0].start, 0)
+        compare(links[0].length, text.length)
+        compare(links[0].text, "https://status.im")
+    }
+
+    function test_explicitLink_nonUrlRejected() {
+        // A non-http(s) target is not a link.
+        compare(highlighter.parseLinks("[a](foo)").length, 0)
+    }
+
+    function test_explicitLink_bold() {
+        // Outer bold delimiters still wrap the whole explicit link.
+        const text = "**[google](https://status.im)**"
+        compare(highlighter.parseLinks(text).length, 1)
+        const spans = highlighter.parseFormats(text)
+        let hasBold = false
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].bold) hasBold = true
+        verify(hasBold, "expected bold span around explicit link")
+    }
+
+    function test_explicitLink_labelFormattingIgnored() {
+        // '*' inside the label must not create emphasis spans.
+        const spans = highlighter.parseFormats("[*label*](https://status.im)")
+        for (let i = 0; i < spans.length; i++) {
+            verify(!spans[i].italic, "label '*' must not produce italic")
+            verify(!spans[i].bold, "label must not produce bold")
+        }
+    }
+
     // ── unclosed code fence ───────────────────────────────────────────────────
 
     function test_openFence_closedUnaffected() {
