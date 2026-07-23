@@ -43,6 +43,9 @@ proc init*(self: Controller) =
     let args = KeycardExportedPublicKeysArgs(e)
     self.delegate.onKeycardExportPublicKeysFinished(args.exportedPublicKeys, args.error)
 
+proc passwordProvided*(self: Controller, keyUid: string, password: string) =
+  self.events.emit(SIGNAL_PASSWORD_PROVIDED, AuthenticationArgs(keyUid: keyUid, password: password))
+
 proc verifyPassword*(self: Controller, password: string): bool =
   return self.accountsService.verifyPassword(password)
 

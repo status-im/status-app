@@ -8048,7 +8048,7 @@ Opravdu to chcete udělat?</translation>
     <name>GetSyncCodeDesktopInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation>Ujistěte se, že jsou obě zařízení ve stejné síti</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -8146,7 +8146,7 @@ Opravdu to chcete udělat?</translation>
     <name>GetSyncCodeMobileInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation>Ujistěte se, že jsou obě zařízení ve stejné síti</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -16951,7 +16951,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Ensure both devices are on the same local network</source>
-        <translation>Ujistěte se, že jsou obě zařízení ve stejné místní síti</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Continue</source>

@@ -21,6 +21,9 @@ QtObject:
     result.keycardState = ""
     result.remainingPinAttempts = 0
 
+  proc passwordProvided*(self: View, keyUid: string, password: string) {.slot.} =
+    self.delegate.passwordProvided(keyUid, password)
+
   proc verifyPassword*(self: View, password: string): bool {.slot.} =
     return self.delegate.verifyPassword(password)
 

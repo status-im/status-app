@@ -8019,7 +8019,7 @@ Are you sure you want to do this?</source>
     <name>GetSyncCodeDesktopInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation>Asegúrate de que ambos dispositivos estén en la misma red</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -8117,7 +8117,7 @@ Are you sure you want to do this?</source>
     <name>GetSyncCodeMobileInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation>Asegúrate de que ambos dispositivos estén en la misma red</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -16875,7 +16875,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Ensure both devices are on the same local network</source>
-        <translation>Asegúrate de que ambos dispositivos estén en la misma red local</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Continue</source>

@@ -69,6 +69,14 @@ QtObject {
         return d.mainModuleInst.signingModule.isKeypairMigratedToColdWallet(keyUid)
     }
 
+    function passwordProvided(keyUid, password) {
+        if (!d.mainModuleInst.signingModule) {
+            console.error("signing module was not created")
+            return
+        }
+        d.mainModuleInst.signingModule.passwordProvided(keyUid, password)
+    }
+
     function verifyPassword(password) {
         if (!d.mainModuleInst.signingModule) {
             console.error("signing module was not created")
