@@ -27,7 +27,10 @@ from gui.elements.list import List
 from gui.elements.object import QObject
 from gui.elements.text_label import TextLabel
 from gui.objects_map import wallet_names, settings_names, names
-from helpers.wallet_helper import _asset_items_finished_loading
+from helpers.wallet_helper import (
+    _asset_items_finished_loading,
+    is_activity_tab_content_loaded,
+)
 
 LOG = logging.getLogger(__name__)
 
@@ -350,26 +353,10 @@ class WalletAccountView(QObject):
         self,
         timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
     ):
-        def activity_tab_content_loaded():
-            if not self._activity_view.is_visible:
-                return False
-
-            transaction_list = self._activity_view.object
-            if getattr(transaction_list, 'count', 0) > 0:
-                return True
-
-            if not driver.object.exists(wallet_names.history_tab_view):
-                return False
-
-            history_view = driver.waitForObject(wallet_names.history_tab_view, 200)
-            activity_store = getattr(history_view, 'activityStore', None)
-            if activity_store is None:
-                return False
-            return not getattr(activity_store, 'loadingHistoryTransactions', True)
-
-        assert driver.waitFor(activity_tab_content_loaded, timeout_msec), (
-            'History tab did not finish loading'
-        )
+        assert driver.waitFor(
+            lambda: is_activity_tab_content_loaded(self._activity_view),
+            timeout_msec,
+        ), 'History tab did not finish loading'
         return self
 
     @allure.step('Open assets tab')

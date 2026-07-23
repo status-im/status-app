@@ -3,6 +3,7 @@ from allure_commons._allure import step
 import configs
 import driver
 from configs import WALLET_SEED
+from gui.objects_map import wallet_names
 from constants import ReturningUser
 from constants.wallet import WalletNetworkSettings
 from gui.components.authenticate_popup import AuthenticatePopup
@@ -33,6 +34,61 @@ def _asset_items_finished_loading(asset_item) -> bool:
     except (RuntimeError, AttributeError):
         # Squish may briefly return destroyed/null asset delegates while the list rebuilds.
         return False
+
+
+def _activity_store_from_transaction_list(transaction_list):
+    current = transaction_list
+    for _ in range(32):
+        if current is None:
+            return None
+        activity_store = getattr(current, 'activityStore', None)
+        if activity_store is not None:
+            return activity_store
+        current = getattr(current, 'parent', None)
+    return None
+
+
+def _activity_empty_state_visible() -> bool:
+    for item in driver.findAllObjects(wallet_names.activity_empty_state):
+        if getattr(item, 'visible', False):
+            return True
+    return False
+
+
+def _is_activity_history_loading(activity_store) -> bool:
+    if activity_store is None:
+        return True
+    loading = getattr(activity_store, 'loadingHistoryTransactions', None)
+    if loading is not None:
+        return bool(loading)
+    wallet_section = getattr(activity_store, 'walletSectionInst', None)
+    if wallet_section is None:
+        return True
+    controller = getattr(wallet_section, 'activityController', None)
+    if controller is None:
+        return True
+    status = getattr(controller, 'status', None)
+    if status is None:
+        return True
+    return bool(getattr(status, 'loadingData', True))
+
+
+def is_activity_tab_content_loaded(activity_view) -> bool:
+    if not activity_view.is_visible:
+        return False
+
+    transaction_list = activity_view.object
+    if getattr(transaction_list, 'count', 0) > 0:
+        return True
+
+    if _activity_empty_state_visible():
+        return True
+
+    activity_store = _activity_store_from_transaction_list(transaction_list)
+    if activity_store is not None:
+        return not _is_activity_history_loading(activity_store)
+
+    return False
 
 
 @step('Wait for account assets to finish loading')
