@@ -263,6 +263,10 @@ QtObject:
   proc emitCommunityFetchFailedSignal*(self: View, communityId: string, requestId: int, errorMsg: string) =
     self.communityFetchFailed(communityId, requestId, errorMsg)
 
+  proc communityFetchCancelled*(self: View, communityId: string, requestId: int) {.signal.}
+  proc emitCommunityFetchCancelledSignal*(self: View, communityId: string, requestId: int) =
+    self.communityFetchCancelled(communityId, requestId)
+
   proc onlineStatusChanged(self: View, connected: bool) {.signal.}
 
   proc isConnected*(self: View): bool {.slot.} =
@@ -357,6 +361,11 @@ QtObject:
   proc activateStatusDeepLink*(self: View, statusDeepLink: string) {.slot.} =
     self.delegate.activateStatusDeepLink(statusDeepLink)
 
+  proc cancelPendingCommunityFetch*(self: View) {.slot.} =
+    self.delegate.cancelPendingCommunityFetch()
+
+  proc timeoutPendingCommunityFetch*(self: View) {.slot.} =
+    self.delegate.timeoutPendingCommunityFetch()
 
   proc windowActivated*(self: View) {.slot.} =
     self.delegate.windowActivated()

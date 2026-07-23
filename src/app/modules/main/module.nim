@@ -100,6 +100,7 @@ const DEEP_LINK_NAV_CHATS = "chats"
 const ACTIVITY_CENTER_ALL_GROUP = activity_center_notification_dto.ActivityCenterGroup.All.int
 const ACTIVITY_CENTER_CONTACT_REQUESTS_GROUP = activity_center_notification_dto.ActivityCenterGroup.ContactRequests.int
 const COMMUNITY_FETCH_TIMEOUT_SECONDS = 60
+const COMMUNITY_FETCH_TIMEOUT_ERROR = "Community fetch timed out"
 
 type
   SpectateRequest = object
@@ -175,6 +176,35 @@ proc clearPendingCommunityFetch[T](self: Module[T]) =
 
 proc clearPendingSpectateRequest[T](self: Module[T]) =
   self.pendingSpectateRequest = SpectateRequest()
+
+proc restorePreviousSectionAfterCommunityFetch[T](self: Module[T], previousSectionId: string) =
+  if previousSectionId.len == 0 or previousSectionId == self.controller.getActiveSectionId():
+    return
+
+  let item = self.view.model().getItemById(previousSectionId)
+  if item.isEmpty():
+    warn "Unable to restore previous section after community fetch", previousSectionId
+    return
+
+  self.setActiveSection(item)
+
+proc finishPendingCommunityFetch[T](self: Module[T], timedOut: bool) =
+  if not self.pendingCommunityFetch.active:
+    return
+
+  let communityId = self.pendingCommunityFetch.communityId
+  let previousSectionId = self.pendingCommunityFetch.previousSectionId
+  let requestId = self.pendingCommunityFetch.requestId
+
+  self.clearPendingCommunityFetch()
+  self.clearPendingSpectateRequest()
+
+  if timedOut:
+    self.view.emitCommunityFetchFailedSignal(communityId, requestId, COMMUNITY_FETCH_TIMEOUT_ERROR)
+  else:
+    self.view.emitCommunityFetchCancelledSignal(communityId, requestId)
+
+  self.restorePreviousSectionAfterCommunityFetch(previousSectionId)
 
 proc startPendingCommunityFetch[T](self: Module[T], communityId: string, channelUuid: string) =
   inc self.nextCommunityFetchRequestId
@@ -1468,6 +1498,12 @@ method communityInfoRequestFailed*[T](self: Module[T], communityId: string, erro
   self.clearPendingCommunityFetch()
   self.clearPendingSpectateRequest()
   self.view.emitCommunityFetchFailedSignal(communityId, requestId, errorMsg)
+
+method cancelPendingCommunityFetch*[T](self: Module[T]) =
+  self.finishPendingCommunityFetch(timedOut = false)
+
+method timeoutPendingCommunityFetch*[T](self: Module[T]) =
+  self.finishPendingCommunityFetch(timedOut = true)
 
 method resolveENS*[T](self: Module[T], ensName: string, uuid: string, reason: string = "") =
   if ensName.len == 0:
