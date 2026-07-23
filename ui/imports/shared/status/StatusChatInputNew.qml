@@ -796,7 +796,7 @@ Control {
             Theme.padding: Theme.defaultPadding
             Theme.fontSizeOffset: ThemeUtils.fontSizeOffsetM
 
-            styleButtonVisible: false
+            styleButtonVisible: true
 
             // On iOS, backspace temporarily creates a selection (selectionStart != selectionEnd)
             // around the character being removed. The binding is configured as delayed to avoid
