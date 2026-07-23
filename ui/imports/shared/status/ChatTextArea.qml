@@ -161,8 +161,42 @@ StatusTextArea {
         twemojiBaseUrl: Emoji.base
     }
 
+    // Mobile quote-block continuation. The OSK new-line button commits "\n" via
+    // inputMethodEvent, bypassing Keys.onPressed entirely. We intercept here —
+    // before the TextArea inserts anything — and apply the same logic as the
+    // desktop Shift+Enter handler: continue with "\n> " or exit on double-empty.
+    InputMethodEventFilter {
+        target: root
+        onInputMethodEventReceived: (imeEvent) => {
+            if (imeEvent.commitString === "\n" && d.continueQuoteBlock())
+                imeEvent.accept()
+        }
+    }
+
     QtObject {
         id: d
+
+        // Quote-block continuation shared by the desktop key handler (Enter/Shift+Enter) and the
+        // mobile IME handler (OSK new-line). When the caret is inside a quote block, start a new
+        // "> " line — or, on two consecutive empty quote lines, drop them to exit the quote.
+        // Returns true when it handled the caret (so the caller should consume its event), false
+        // when the caret isn't in a quote block.
+        function continueQuoteBlock() {
+            if (!highlighter.isInQuoteBlock(root.cursorPosition))
+                return false
+            const prevPos = highlighter.endOfPreviousBlock(root.cursorPosition)
+            if (prevPos !== root.cursorPosition
+                    && highlighter.isEmptyQuoteBlock(root.cursorPosition)
+                    && highlighter.isEmptyQuoteBlock(prevPos)) {
+                // Two consecutive empty quote lines — drop them to exit the quote.
+                // prevPos sits at offset 2 of the previous empty line, so prevPos - 2
+                // is that line's start.
+                root.remove(prevPos - 2, root.cursorPosition)
+            } else {
+                root.insert(root.cursorPosition, "\n> ")
+            }
+            return true
+        }
 
         // {entering, filter} for the mention being typed at the caret. Recomputed on text
         // or caret changes; isInsideCode reuses the highlighter's cached AST.
@@ -402,19 +436,8 @@ StatusTextArea {
         const noSelection = root.selectionStart === root.selectionEnd
 
         if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
-                && highlighter.isInQuoteBlock(root.cursorPosition)) {
+                && d.continueQuoteBlock()) {
             event.accepted = true
-            const prevPos = highlighter.endOfPreviousBlock(root.cursorPosition)
-            if (prevPos !== root.cursorPosition
-                    && highlighter.isEmptyQuoteBlock(root.cursorPosition)
-                    && highlighter.isEmptyQuoteBlock(prevPos)) {
-                // Two consecutive empty quote lines — drop them to exit the quote.
-                // prevPos sits at offset 2 of the previous empty line, so prevPos - 2
-                // is that line's start.
-                root.remove(prevPos - 2, root.cursorPosition)
-            } else {
-                root.insert(root.cursorPosition, "\n> ")
-            }
             return
         }
 
