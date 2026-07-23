@@ -292,6 +292,9 @@ method cancelPendingCommunityFetch*(self: AccessInterface) {.base.} =
 method timeoutPendingCommunityFetch*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method retryCommunityFetch*(self: AccessInterface, communityId: string, channelUuid: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method resolveENS*(self: AccessInterface, ensName: string, uuid: string, reason: string = "") {.base.} =
   raise newException(ValueError, "No implementation available")
 

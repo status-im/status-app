@@ -255,9 +255,9 @@ QtObject:
     timeoutSeconds: int) =
     self.communityFetchStarted(communityId, channelUuid, requestId, timeoutSeconds)
 
-  proc communityFetchSucceeded*(self: View, communityId: string, requestId: int) {.signal.}
-  proc emitCommunityFetchSucceededSignal*(self: View, communityId: string, requestId: int) =
-    self.communityFetchSucceeded(communityId, requestId)
+  proc communityFetchCompleted*(self: View, communityId: string, requestId: int) {.signal.}
+  proc emitCommunityFetchCompletedSignal*(self: View, communityId: string, requestId: int) =
+    self.communityFetchCompleted(communityId, requestId)
 
   proc communityFetchFailed*(self: View, communityId: string, requestId: int, errorMsg: string) {.signal.}
   proc emitCommunityFetchFailedSignal*(self: View, communityId: string, requestId: int, errorMsg: string) =
@@ -366,6 +366,9 @@ QtObject:
 
   proc timeoutPendingCommunityFetch*(self: View) {.slot.} =
     self.delegate.timeoutPendingCommunityFetch()
+
+  proc retryCommunityFetch*(self: View, communityId: string, channelUuid: string) {.slot.} =
+    self.delegate.retryCommunityFetch(communityId, channelUuid)
 
   proc windowActivated*(self: View) {.slot.} =
     self.delegate.windowActivated()

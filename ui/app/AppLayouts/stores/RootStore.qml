@@ -67,6 +67,7 @@ QtObject {
         // TEMPORARY: Internal flags used to trigger navigation into messaging lists or details.
         property bool forceNavToMsgDetails: false
         property bool forceNavToMsgList: false
+
     }
 
     // Here there should be all the ContextSpecificRootStore objects creation

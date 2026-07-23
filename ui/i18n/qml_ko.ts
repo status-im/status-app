@@ -3576,6 +3576,29 @@ file format</source>
     </message>
 </context>
 <context>
+    <name>CommunityFetchPopup</name>
+    <message>
+        <source>%1s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to fetch the community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We&apos;re fetching community...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>It may be offline, or Status couldn&apos;t reach it</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished">다시 시도</translation>
+    </message>
+</context>
+<context>
     <name>CommunityInfoPanel</name>
     <message>
         <source>%1 Owner token</source>

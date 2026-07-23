@@ -100,7 +100,7 @@ const DEEP_LINK_NAV_CHATS = "chats"
 const ACTIVITY_CENTER_ALL_GROUP = activity_center_notification_dto.ActivityCenterGroup.All.int
 const ACTIVITY_CENTER_CONTACT_REQUESTS_GROUP = activity_center_notification_dto.ActivityCenterGroup.ContactRequests.int
 const COMMUNITY_FETCH_TIMEOUT_SECONDS = 60
-const COMMUNITY_FETCH_TIMEOUT_ERROR = "Community fetch timed out"
+const COMMUNITY_FETCH_TIMEOUT_ERROR = "It may be offline, or Status couldn't reach it"
 
 type
   SpectateRequest = object
@@ -1485,7 +1485,7 @@ method communityDataImported*[T](self: Module[T], community: CommunityDto) =
   if self.hasPendingCommunityFetch(community.id):
     let requestId = self.pendingCommunityFetch.requestId
     self.clearPendingCommunityFetch()
-    self.view.emitCommunityFetchSucceededSignal(community.id, requestId)
+    self.view.emitCommunityFetchCompletedSignal(community.id, requestId)
 
   if community.id == self.pendingSpectateRequest.communityId:
     discard self.communitiesModule.spectateCommunity(community.id)
@@ -1504,6 +1504,12 @@ method cancelPendingCommunityFetch*[T](self: Module[T]) =
 
 method timeoutPendingCommunityFetch*[T](self: Module[T]) =
   self.finishPendingCommunityFetch(timedOut = true)
+
+method retryCommunityFetch*[T](self: Module[T], communityId: string, channelUuid: string) =
+  if communityId.len == 0:
+    return
+
+  self.startPendingCommunityFetch(communityId, channelUuid = channelUuid)
 
 method resolveENS*[T](self: Module[T], ensName: string, uuid: string, reason: string = "") =
   if ensName.len == 0:
@@ -2025,10 +2031,6 @@ method onStatusUrlRequested*[T](self: Module[T], action: StatusUrlAction, commun
     of StatusUrlAction.OpenCommunity:
       let item = self.view.model().getItemById(communityId)
       if item.isEmpty():
-        if self.controller.getCommunityById(communityId).id != "":
-          self.controller.spectateCommunity(communityId)
-          return
-        # request community info and then spectate
         self.startPendingCommunityFetch(communityId, channelUuid = "")
         return
 
@@ -2195,11 +2197,12 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
       url="", userId="")
     return
   if urlData.community.communityId != "":
-    self.onStatusUrlRequested(StatusUrlAction.OpenCommunity, urlData.community.communityId, channelId="", url="", userId="")
+    self.onStatusUrlRequested(StatusUrlAction.OpenCommunity, urlData.community.communityId, channelId="",
+      url="", userId="")
     return
   if urlData.contact.publicKey != "":
     self.onStatusUrlRequested(StatusUrlAction.DisplayUserProfile, communityId="", channelId="", url="",
-      urlData.contact.publicKey)
+      userId = urlData.contact.publicKey)
     return
 
 method onDeactivateChatLoader*[T](self: Module[T], sectionId: string, chatId: string) =

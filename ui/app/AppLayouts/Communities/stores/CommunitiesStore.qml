@@ -39,9 +39,34 @@ QtObject {
 
     property string communityTags: communitiesModuleInst.tags
 
+    // State used by the global deep-link loading overlay while a missing community
+    // is being fetched from the network.
+    readonly property int communityFetchStateIdle: 0
+    readonly property int communityFetchStateFetching: 1
+    readonly property int communityFetchStateFailed: 2
+    readonly property int communityFetchState: d.communityFetchState
+    readonly property bool communityFetchInProgress: d.communityFetchInProgress
+    readonly property bool communityFetchFailed: d.communityFetchFailed
+    readonly property string communityFetchId: d.communityFetchId
+    readonly property string communityFetchChannelUuid: d.communityFetchChannelUuid
+    // Guards against stale backend signals from previous fetch attempts.
+    readonly property int communityFetchRequestId: d.communityFetchRequestId
+    // Backend-provided timeout shown by the countdown UI.
+    readonly property int communityFetchTimeoutSeconds: d.communityFetchTimeoutSeconds
+    readonly property string communityFetchErrorMessage: d.communityFetchErrorMessage
+
     readonly property QtObject _d: QtObject {
         id: d
         readonly property var profileSectionModuleInst: profileSectionModule
+
+        property int communityFetchState: root.communityFetchStateIdle
+        readonly property bool communityFetchInProgress: communityFetchState === root.communityFetchStateFetching
+        readonly property bool communityFetchFailed: communityFetchState === root.communityFetchStateFailed
+        property string communityFetchId: ""
+        property string communityFetchChannelUuid: ""
+        property int communityFetchRequestId: -1
+        property int communityFetchTimeoutSeconds: 0
+        property string communityFetchErrorMessage: ""
     }
     readonly property var communitiesProfileModule: d.profileSectionModuleInst.communitiesModule // TODO: Must be private or directly removed (no direct access to modules externally)
 
@@ -103,6 +128,37 @@ QtObject {
         if (importing)
             root.mainModuleInst.setCommunityIdToSpectate(communityPubKey)
         root.communitiesModuleInst.requestCommunityInfo(communityPubKey, importing)
+    }
+
+    function cancelPendingCommunityFetch() {
+        if(!root.mainModuleInst)
+            return
+        root.mainModuleInst.cancelPendingCommunityFetch()
+    }
+
+    function timeoutPendingCommunityFetch() {
+        if(!root.mainModuleInst)
+            return
+        root.mainModuleInst.timeoutPendingCommunityFetch()
+    }
+
+    function retryCommunityFetch() {
+        if(!root.mainModuleInst || !d.communityFetchId)
+            return
+        root.mainModuleInst.retryCommunityFetch(d.communityFetchId, d.communityFetchChannelUuid)
+    }
+
+    function clearCommunityFetchState() {
+        d.communityFetchState = root.communityFetchStateIdle
+        d.communityFetchErrorMessage = ""
+        d.communityFetchId = ""
+        d.communityFetchChannelUuid = ""
+        d.communityFetchRequestId = -1
+        d.communityFetchTimeoutSeconds = 0
+    }
+
+    function clearCommunityFetchFailure() {
+        root.clearCommunityFetchState()
     }
 
     property var communitiesList: communitiesModuleInst.model
@@ -254,6 +310,39 @@ QtObject {
 
         function onCommunityInfoRequestCompleted(communityId, erorrMsg) {
             root.communityInfoRequestCompleted(communityId, erorrMsg)
+        }
+    }
+
+    readonly property Connections mainModuleConnections: Connections {
+        target: root.mainModuleInst
+
+        function onCommunityFetchStarted(communityId, channelUuid, requestId, timeoutSeconds) {
+            d.communityFetchState = root.communityFetchStateFetching
+            d.communityFetchId = communityId
+            d.communityFetchChannelUuid = channelUuid
+            d.communityFetchRequestId = requestId
+            d.communityFetchTimeoutSeconds = timeoutSeconds
+            d.communityFetchErrorMessage = ""
+        }
+
+        function onCommunityFetchCompleted(communityId, requestId) {
+            if (requestId !== d.communityFetchRequestId)
+                return
+            root.clearCommunityFetchState()
+        }
+
+        function onCommunityFetchFailed(communityId, requestId, errorMsg) {
+            if (requestId !== d.communityFetchRequestId)
+                return
+            d.communityFetchState = root.communityFetchStateFailed
+            d.communityFetchId = communityId
+            d.communityFetchErrorMessage = errorMsg
+        }
+
+        function onCommunityFetchCancelled(communityId, requestId) {
+            if (requestId !== d.communityFetchRequestId)
+                return
+            root.clearCommunityFetchState()
         }
     }
 }
