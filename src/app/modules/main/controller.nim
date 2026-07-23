@@ -255,6 +255,10 @@ proc init*(self: Controller) =
     let args = CommunityArgs(e)
     self.delegate.communityDataImported(args.community)
 
+  self.events.on(SIGNAL_COMMUNITY_LOAD_DATA_FAILED) do(e: Args):
+    let args = CommunityArgs(e)
+    self.delegate.communityInfoRequestFailed(args.communityId, args.error)
+
   self.events.on(SIGNAL_COMMUNITY_LEFT) do(e:Args):
     let args = CommunityIdArgs(e)
     self.delegate.communityLeft(args.communityId)

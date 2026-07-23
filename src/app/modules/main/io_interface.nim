@@ -283,6 +283,9 @@ method isEnsVerified*(self: AccessInterface, publicKey: string): bool {.base.} =
 method communityDataImported*(self: AccessInterface, community: CommunityDto) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method communityInfoRequestFailed*(self: AccessInterface, communityId: string, errorMsg: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method resolveENS*(self: AccessInterface, ensName: string, uuid: string, reason: string = "") {.base.} =
   raise newException(ValueError, "No implementation available")
 

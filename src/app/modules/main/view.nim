@@ -249,6 +249,20 @@ QtObject:
   proc emitOpenCommunityMembershipRequestsViewSignal*(self: View, sectionId: string) =
     self.openCommunityMembershipRequestsView(sectionId)
 
+  proc communityFetchStarted*(self: View, communityId: string, channelUuid: string, requestId: int,
+    timeoutSeconds: int) {.signal.}
+  proc emitCommunityFetchStartedSignal*(self: View, communityId: string, channelUuid: string, requestId: int,
+    timeoutSeconds: int) =
+    self.communityFetchStarted(communityId, channelUuid, requestId, timeoutSeconds)
+
+  proc communityFetchSucceeded*(self: View, communityId: string, requestId: int) {.signal.}
+  proc emitCommunityFetchSucceededSignal*(self: View, communityId: string, requestId: int) =
+    self.communityFetchSucceeded(communityId, requestId)
+
+  proc communityFetchFailed*(self: View, communityId: string, requestId: int, errorMsg: string) {.signal.}
+  proc emitCommunityFetchFailedSignal*(self: View, communityId: string, requestId: int, errorMsg: string) =
+    self.communityFetchFailed(communityId, requestId, errorMsg)
+
   proc onlineStatusChanged(self: View, connected: bool) {.signal.}
 
   proc isConnected*(self: View): bool {.slot.} =
