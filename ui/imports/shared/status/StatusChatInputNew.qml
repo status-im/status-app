@@ -114,6 +114,36 @@ Control {
         property bool emojiPopupOpened: false
         property bool stickersPopupOpened: false
 
+        // ── formatting state driving the toolbar bold/italic/strike/quote/code buttons ──
+        // The formatting at the caret (from the parsed AST and from the raw delimiters around it)
+        // and across the current selection. The toolbar buttons reflect these and toggle them.
+        readonly property var caretNode: messageInputField.nodeAt(messageInputField.cursorPosition)
+        readonly property var caretDelim: messageInputField.delimitersAt(messageInputField.cursorPosition)
+        readonly property bool hasSelection: messageInputField.selectionStart !== messageInputField.selectionEnd
+        readonly property var selDelim: messageInputField.delimitersAtSelection(
+                                            messageInputField.selectionStart, messageInputField.selectionEnd)
+
+        // Adds `kind` formatting around the selection (or caret).
+        function addFormatting(kind) {
+            messageInputField.addFormatting(messageInputField.selectionStart,
+                                            messageInputField.selectionEnd, kind)
+            messageInputField.forceActiveFocus()
+        }
+
+        // Removes the active formatting: across the selection, or — with just a caret — from the AST
+        // node (removeFormatting) or the local delimiter run (removeDelimitersAt). `caretKind` is the
+        // specific kind to strip at the caret; nodeAt takes precedence over delimitersAt.
+        function removeActiveFormatting(selectionKind, byNode, byDelimiters, caretKind) {
+            if (hasSelection)
+                messageInputField.removeDelimitersAtSelection(messageInputField.selectionStart,
+                                                              messageInputField.selectionEnd, selectionKind)
+            else if (byNode)
+                messageInputField.removeFormatting(messageInputField.cursorPosition, caretKind)
+            else if (byDelimiters)
+                messageInputField.removeDelimitersAt(messageInputField.cursorPosition, caretKind)
+            messageInputField.forceActiveFocus()
+        }
+
         // Replaces the ":filter" shortcode being typed with the selected emoji char + a space.
         // `unicode` is the twemoji code-point file name (e.g. "1f600.svg").
         function insertEmoji(unicode) {
@@ -869,9 +899,48 @@ Control {
 
             Layout.fillWidth: true
 
-            // Formatting toolbar (bold/italic/strike/quote/code) is intentionally left unwired for
-            // now — the buttons stay visible (showFormatting unchanged) but do nothing until the
-            // markdown formatting helpers are wired into ChatTextArea in a later step.
+            // Formatting toolbar (bold/italic/strike/quote/code). Each button reflects the formatting
+            // at the caret / across the selection (via `d`) and toggles it on click. The ChatIcon is
+            // checkable by default, which would break the `checked` binding on click, so it is turned
+            // off and `checked` is driven from the query instead.
+            boldButton.checkable: false
+            boldButton.checked: d.hasSelection ? d.selDelim.bold
+                                               : (d.caretNode.bold || d.caretDelim.bold)
+            boldButton.onClicked: boldButton.checked
+                ? d.removeActiveFormatting("bold", d.caretNode.bold, d.caretDelim.bold, "bold")
+                : d.addFormatting("bold")
+
+            italicButton.checkable: false
+            italicButton.checked: d.hasSelection ? d.selDelim.italic
+                                                 : (d.caretNode.italic || d.caretDelim.italic)
+            italicButton.onClicked: italicButton.checked
+                ? d.removeActiveFormatting("italic", d.caretNode.italic, d.caretDelim.italic, "italic")
+                : d.addFormatting("italic")
+
+            strikeThroughButton.checkable: false
+            strikeThroughButton.checked: d.hasSelection ? d.selDelim.strikethrough
+                                                        : (d.caretNode.strikethrough || d.caretDelim.strikethrough)
+            strikeThroughButton.onClicked: strikeThroughButton.checked
+                ? d.removeActiveFormatting("strikethrough", d.caretNode.strikethrough,
+                                           d.caretDelim.strikethrough, "strikethrough")
+                : d.addFormatting("strikethrough")
+
+            quoteButton.checkable: false
+            quoteButton.checked: d.hasSelection ? d.selDelim.quote : d.caretNode.quote
+            quoteButton.onClicked: quoteButton.checked
+                ? d.removeActiveFormatting("quote", d.caretNode.quote, false, "quote")
+                : d.addFormatting("quote")
+
+            codeButton.checkable: false
+            codeButton.checked: d.hasSelection ? (d.selDelim.codeSpan || d.selDelim.codeBlock)
+                                               : (d.caretNode.codeSpan || d.caretNode.codeBlock
+                                                  || d.caretDelim.codeSpan || d.caretDelim.codeBlock)
+            codeButton.onClicked: codeButton.checked
+                ? d.removeActiveFormatting(d.selDelim.codeBlock ? "codeBlock" : "codeSpan",
+                                           d.caretNode.codeSpan || d.caretNode.codeBlock,
+                                           d.caretDelim.codeSpan || d.caretDelim.codeBlock,
+                                           (d.caretNode.codeBlock || d.caretDelim.codeBlock) ? "codeBlock" : "codeSpan")
+                : d.addFormatting("codeSpan")
 
             stickersButton.checked: d.stickersPopupOpened
             stickersButton.visible: root.stickersButtonVisible
