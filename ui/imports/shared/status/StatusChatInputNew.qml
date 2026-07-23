@@ -853,7 +853,7 @@ Control {
             Theme.padding: Theme.defaultPadding
             Theme.fontSizeOffset: ThemeUtils.fontSizeOffsetM
 
-            styleButtonVisible: root.isEdit
+            styleButtonVisible: true
             editActionsVisible: false
 
             // On iOS, backspace temporarily creates a selection (selectionStart != selectionEnd)
