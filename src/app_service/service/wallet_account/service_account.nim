@@ -824,6 +824,7 @@ proc handleKeypair(self: Service, keypair: KeypairDto) =
     localKp.name = keypair.name
     localKp.lastUsedDerivationIndex = keypair.lastUsedDerivationIndex
     localKp.syncedFrom = keypair.syncedFrom
+    localKp.coldWalletType = keypair.coldWalletType
     # - first remove removed accounts from the UI
     let addresses = localKp.accounts.map(a => a.address)
     for address in addresses:
