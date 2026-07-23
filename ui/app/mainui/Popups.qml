@@ -727,6 +727,7 @@ QtObject {
                 store: root.authenticationStore
                 keychain: root.keychain
                 onAuthenticationSuccess: function(reason, password, pin, keyUid, chatPrivateKey) {
+                    root.authenticationStore.passwordProvided(keyUid, password)
                     Global.authenticationResult(reason, password, pin, keyUid, chatPrivateKey)
                 }
 
@@ -744,6 +745,11 @@ QtObject {
 
                 store: root.signingStore
                 keychain: root.keychain
+
+                onPasswordProvided: function(password) {
+                    // in case of signing tx via keycard no password (enc pub key)
+                    root.signingStore.passwordProvided(signPopup.keyUid, password)
+                }
 
                 onSigningSuccess: function(signature) {
                     signPopup.resultSignature = signature

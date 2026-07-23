@@ -204,8 +204,7 @@ proc init*(self: Service) =
 
   self.events.on(SIGNAL_PASSWORD_PROVIDED) do(e: Args):
     let args = AuthenticationArgs(e)
-    self.cleanKeystoreFiles(args.password)
-    self.importPartiallyOperableAccounts(args.keyUid, args.password)
+    self.onPasswordProvided(args.keyUid, args.password)
 
   let addresses = self.getWalletAddresses()
   self.buildAllTokens(addresses, forceRefresh = true)
@@ -485,6 +484,20 @@ proc cleanKeystoreFiles(self: Service, password: string) =
       error "status-go error", procName="cleanKeystoreFiles", errCode=response.error.code, errDesription=response.error.message
   except Exception as e:
     error "error: ", procName="makeSeedPhraseKeypairFullyOperable", errName=e.name, errDesription=e.msg
+
+proc onPasswordProvided(self: Service, keyUid: string, password: string) =
+  ## Whenever user provides a password/pin we need to make all partially operable accounts (if any exists) a fully operable.
+  if password.isEmptyOrWhitespace:
+    return
+  let kp = self.getKeypairByKeyUid(keyUid)
+  if kp.isNil:
+    return
+  if kp.keyUid != singletonInstance.userProfile.getKeyUid() and kp.migratedToColdWallet:
+    return
+  # if provided keyUid matches the profile key pair or if doesn't match it's not migrated to cold wallet, then we can use
+  # password (or pub enc key) for updating the keystore files
+  self.cleanKeystoreFiles(password)
+  self.makePartiallyOperableAccoutsFullyOperable(password, not singletonInstance.userProfile.getMigratedToColdWallet())
 
 proc onNonProfileColdWalletKeypairMigratedToApp*(self: Service, response: string) {.slot.} =
   var data = KeycardArgs(
@@ -853,12 +866,6 @@ proc areTestNetworksEnabled*(self: Service): bool =
 
 proc hasPairedDevices*(self: Service): bool =
   return hasPairedDevices()
-
-proc importPartiallyOperableAccounts(self: Service, keyUid: string, password: string) =
-  ## Whenever user provides a password/pin we need to make all partially operable accounts (if any exists) a fully operable.
-  if  keyUid != singletonInstance.userProfile.getKeyUid():
-    return
-  self.makePartiallyOperableAccoutsFullyOperable(password, not singletonInstance.userProfile.getMigratedToColdWallet())
 
 proc addressWasShown*(self: Service, address: string) =
   try:

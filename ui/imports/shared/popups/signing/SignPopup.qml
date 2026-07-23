@@ -17,6 +17,7 @@ PopupBase {
 
     required property SigningStore store
 
+    signal passwordProvided(string password)
     signal signingSuccess(string signature)
 
     purpose: PopupBase.Purpose.Signing
@@ -46,6 +47,8 @@ PopupBase {
         const success = root.store.verifyPassword(password)
         if (!success)
             return false
+
+        root.passwordProvided(password) // only here, in case of signing tx via keycard no password (enc pub key)
 
         const signature = root.store.signMessage(root.address, password, root.txHash)
         if (signature === "")

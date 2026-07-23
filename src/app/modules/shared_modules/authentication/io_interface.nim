@@ -12,6 +12,9 @@ method delete*(self: AccessInterface) {.base.} =
 method getModuleAsVariant*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method passwordProvided*(self: AccessInterface, keyUid: string, password: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method verifyPassword*(self: AccessInterface, password: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 

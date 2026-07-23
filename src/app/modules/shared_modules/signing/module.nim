@@ -48,6 +48,9 @@ method delete*[T](self: Module[T]) =
 method getModuleAsVariant*[T](self: Module[T]): QVariant =
   return self.viewVariant
 
+method passwordProvided*[T](self: Module[T], keyUid: string, password: string) =
+  self.controller.passwordProvided(keyUid, password)
+
 method verifyPassword*[T](self: Module[T], password: string): bool =
   return self.controller.verifyPassword(password)
 

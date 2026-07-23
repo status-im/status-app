@@ -8026,7 +8026,7 @@ Are you sure you want to do this?</source>
     <name>GetSyncCodeDesktopInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation>두 기기가 같은 네트워크에 있는지 확인하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -8124,7 +8124,7 @@ Are you sure you want to do this?</source>
     <name>GetSyncCodeMobileInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation>두 기기가 같은 네트워크에 연결되어 있는지 확인하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -16851,7 +16851,7 @@ to load</source>
     </message>
     <message>
         <source>Ensure both devices are on the same local network</source>
-        <translation>두 기기가 동일한 로컬 네트워크에 있는지 확인하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Continue</source>
