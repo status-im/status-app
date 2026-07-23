@@ -117,6 +117,7 @@ ColumnLayout {
 
     ShapeRectangle {
         id: noTxs
+        objectName: "walletAccountActivityEmptyState"
         Layout.fillWidth: true
         Layout.preferredHeight: 42
         Layout.topMargin: !nonArchivalNodeError.visible? root.firstItemOffset : 0
