@@ -2229,22 +2229,12 @@ Item {
                         isProduction: appMain.rootStore.isProduction
                         systemTrayIconAvailable: appMain.systemTrayIconAvailable
                         theme: appMainLocalSettings.theme
-                        fontSize: appMainLocalSettings.fontSize
-                        paddingFactor: appMainLocalSettings.paddingFactor
                         whitelistedDomainsModel: appMainLocalSettings.whitelistedUnfurledDomains
                         leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
 
                         onThemeChangeRequested: (theme) => {
                             appMainLocalSettings.theme = theme
                             ThemeUtils.setTheme(appMain.Window.window, theme)
-                        }
-                        onFontSizeChangeRequested: (fontSize) => {
-                            appMainLocalSettings.fontSize = fontSize
-                            ThemeUtils.setFontSize(appMain.Window.window, fontSize)
-                        }
-                        onPaddingFactorChangeRequested: (paddingFactor) => {
-                            appMainLocalSettings.paddingFactor = paddingFactor
-                            ThemeUtils.setPaddingFactor(appMain.Window.window, paddingFactor)
                         }
                         onRemoveWhitelistedDomainRequested: (index) => {
                             // in order to notify changes in this model, we need to re assign to this model

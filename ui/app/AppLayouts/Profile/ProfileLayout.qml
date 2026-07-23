@@ -87,8 +87,6 @@ StatusSectionLayout {
     property var dismissedReceivedRequestContactsModel
 
     required property int theme // ThemeUtils.Style.xxx
-    required property int fontSize // ThemeUtils.FontSize.xxx
-    required property int paddingFactor // ThemeUtils.PaddingFactor.xxx
 
     required property var whitelistedDomainsModel
  
@@ -98,8 +96,6 @@ StatusSectionLayout {
     signal releaseUsernameRequested(string ensName, string senderAddress, int chainId)
 
     signal themeChangeRequested(int theme)
-    signal fontSizeChangeRequested(int fontSize)
-    signal paddingFactorChangeRequested(int paddingFactor)
     signal leaveCommunityRequest(string communityId)
     signal setCommunityMutedRequest(string communityId, int mutedType)
     signal inviteFriends(var communityData)

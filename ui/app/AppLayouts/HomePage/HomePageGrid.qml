@@ -73,7 +73,7 @@ Control {
             objectName: "homePageGridView"
 
             readonly property int delegateCountPerRow: Math.min(Math.trunc(parent.width / (root.delegateWidth + root.spacing)),
-                                                                root.model.ModelCount.count) // for small models where count < delegateCountPerRow
+                                                                root.model?.ModelCount.count ?? 0) // for small models where count < delegateCountPerRow
 
             height: parent.height
             width: delegateCountPerRow * cellWidth

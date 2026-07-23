@@ -21,7 +21,7 @@ HomePageGridItem {
     background: Rectangle {
         color: hovered ? Qt.lighter(Theme.palette.baseColor4, 1.5) : Theme.palette.baseColor4
         Behavior on color { ColorAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
-        radius: Theme.padding
+        radius: Theme.defaultPadding
 
         opacity: pressed || down ? ThemeUtils.pressedOpacity : enabled ? 1 : ThemeUtils.disabledOpacity
         Behavior on opacity { NumberAnimation { duration: ThemeUtils.AnimationDuration.Fast } }

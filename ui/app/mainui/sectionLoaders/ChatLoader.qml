@@ -119,8 +119,8 @@ Loader {
             emojiPopup:                     Qt.binding(() => root.emojiPopupLoader.item),
             stickersPopup:                  Qt.binding(() => root.stickersPopupLoader.item),
             sendViaPersonalChatEnabled:     Qt.binding(() => root.featureFlagsStore.sendViaPersonalChatEnabled),
-            disabledTooltipText:            Qt.binding(() => !root.networkConnectionStore.sendBuyBridgeEnabled
-                                                   ? root.networkConnectionStore.sendBuyBridgeToolTipText : ""),
+            disabledTooltipText:            Qt.binding(() => !root.networkConnectionStore.walletReadyForTransactionsEnabled
+                                                   ? root.networkConnectionStore.walletReadyForTransactionsToolTipText : ""),
             messageLinkSharingEnabled:      Qt.binding(() => root.featureFlagsStore.messageLinkSharingEnabled),
             paymentRequestFeatureEnabled:   Qt.binding(() => root.featureFlagsStore.paymentRequestEnabled),
             extraLeftPadding:               Qt.binding(() => root.isPortraitMode ? SQUtils.Utils.swipeIndicatorWidth : 0),

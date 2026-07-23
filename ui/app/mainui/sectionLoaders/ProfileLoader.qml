@@ -56,8 +56,6 @@ Loader {
     required property bool isProduction
     required property bool systemTrayIconAvailable
     required property int theme
-    required property int fontSize
-    required property int paddingFactor
     required property var whitelistedDomainsModel
 
     property int settingsSubsection: -1
@@ -90,8 +88,6 @@ Loader {
 
     // Signals re-emitted so AppMain can mutate appMainLocalSettings / Theme outside the loader
     signal themeChangeRequested(int theme)
-    signal fontSizeChangeRequested(int fontSize)
-    signal paddingFactorChangeRequested(int paddingFactor)
     signal removeWhitelistedDomainRequested(int index)
 
     asynchronous: false
@@ -146,8 +142,6 @@ Loader {
             privacyModeFeatureEnabled:              Qt.binding(() => root.featureFlagsStore.privacyModeFeatureEnabled),
             minimizeOnCloseOptionVisible:           Qt.binding(() => root.systemTrayIconAvailable),
             theme:                                  Qt.binding(() => root.theme),
-            fontSize:                               Qt.binding(() => root.fontSize),
-            paddingFactor:                          Qt.binding(() => root.paddingFactor),
             whitelistedDomainsModel:                Qt.binding(() => root.whitelistedDomainsModel),
             leftPanelWidthOverride:                 Qt.binding(() => root.leftPanelWidthOverride),
             settingsSubsection:                     Qt.binding(() => root.settingsSubsection),
@@ -180,8 +174,6 @@ Loader {
             root.popupHandler.releaseUsername(ensName, senderAddress, chainId)
         }
         function onThemeChangeRequested(theme) { root.themeChangeRequested(theme) }
-        function onFontSizeChangeRequested(fontSize) { root.fontSizeChangeRequested(fontSize) }
-        function onPaddingFactorChangeRequested(paddingFactor) { root.paddingFactorChangeRequested(paddingFactor) }
         function onLeaveCommunityRequest(communityId) {
             root.communitiesStore.leaveCommunity(communityId)
         }
