@@ -46,8 +46,6 @@ assets_tab_view = {"container": mainWindow_RightTabView, "type": "AssetsView", "
 activity_empty_state = {
     "container": mainWindow_RightTabView,
     "objectName": "walletAccountActivityEmptyState",
-    "type": "ShapeRectangle",
-    "visible": True,
 }
 
 """Wallet assets view"""
