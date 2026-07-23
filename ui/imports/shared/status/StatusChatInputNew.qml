@@ -829,11 +829,13 @@ Control {
                             clip: true
 
                             selectionStartRect: {
+                                messageInputField.text
                                 messageInputField.font
                                 messageInputField.positionToRectangle(
                                             messageInputField.selectionStart)
                             }
                             selectionEndRect: {
+                                messageInputField.text
                                 messageInputField.font
                                 messageInputField.positionToRectangle(
                                             messageInputField.selectionEnd)
