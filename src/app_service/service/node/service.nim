@@ -44,6 +44,10 @@ QtObject:
     self.events.on(SignalType.ConnectionStatusChange.event) do(e: Args):
       self.setConnected(ConnectionStatusChangeSignal(e).isOnline)
 
+    # Seed connectivity from backend state in case first signal was emitted
+    # before this service subscribed.
+    self.setConnected(status_node.getConnectionStatus())
+
   proc isConnected*(self: Service): bool = self.connected
 
   proc getRpcStats*(self: Service): string =
