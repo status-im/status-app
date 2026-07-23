@@ -25,7 +25,7 @@ SettingsContentBase {
 
     QtObject {
         id: d
-        readonly property bool portraitMode: root.width <= root.contentWidth
+        readonly property bool portraitMode: root.width <= ThemeUtils.portraitBreakpoint.width
 
         property bool dirty
 
@@ -86,40 +86,22 @@ SettingsContentBase {
         RowLayout {
             Layout.fillWidth: true
 
-            StatusImageRadioButton {
-                Layout.fillWidth: true
-                image.source: d.portraitMode ? Assets.svgImg("appearance-light-small") : Assets.svgImg("appearance-light")
+            ModeRadioButton {
+                mode: ThemeUtils.Style.Light
+                imageSource: d.portraitMode ? Assets.svgImg("appearance-light-small") : Assets.svgImg("appearance-light")
                 text: qsTr("Light")
-                checked: root.theme === ThemeUtils.Style.Light
-                onToggled: {
-                    if (checked) {
-                        root.themeChangeRequested(ThemeUtils.Style.Light)
-                    }
-                }
             }
 
-            StatusImageRadioButton {
-                Layout.fillWidth: true
-                image.source: d.portraitMode ? Assets.svgImg("appearance-system-small") : Assets.svgImg("appearance-system")
+            ModeRadioButton {
+                mode: ThemeUtils.Style.System
+                imageSource: d.portraitMode ? Assets.svgImg("appearance-system-small") : Assets.svgImg("appearance-system")
                 text: qsTr("System")
-                checked: root.theme === ThemeUtils.Style.System
-                onToggled: {
-                    if (checked) {
-                        root.themeChangeRequested(ThemeUtils.Style.System)
-                    }
-                }
             }
 
-            StatusImageRadioButton {
-                Layout.fillWidth: true
-                image.source: d.portraitMode ? Assets.svgImg("appearance-dark-small") : Assets.svgImg("appearance-dark")
+            ModeRadioButton {
+                mode: ThemeUtils.Style.Dark
+                imageSource: d.portraitMode ? Assets.svgImg("appearance-dark-small") : Assets.svgImg("appearance-dark")
                 text: qsTr("Dark")
-                checked: root.theme === ThemeUtils.Style.Dark
-                onToggled: {
-                    if (checked) {
-                        root.themeChangeRequested(ThemeUtils.Style.Dark)
-                    }
-                }
             }
         }
 
@@ -194,6 +176,7 @@ SettingsContentBase {
 
         RowLayout {
             Layout.fillWidth: true
+            Layout.leftMargin: Theme.bigPadding // in order not to collide with the sidebar
             spacing: Theme.bigPadding
             StatusSlider {
                 Layout.fillWidth: true
@@ -215,6 +198,18 @@ SettingsContentBase {
                     id: textMetrics
                     text: "999%"
                 }
+            }
+        }
+    }
+
+    component ModeRadioButton: StatusImageRadioButton {
+        property int mode
+        checked: root.theme === mode
+        Layout.fillWidth: true
+        imageSize: d.portraitMode ? Qt.size(99, 48) : Qt.size(176, 48)
+        onToggled: {
+            if (checked) {
+                root.themeChangeRequested(mode)
             }
         }
     }

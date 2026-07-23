@@ -10,7 +10,8 @@ import utils
 RadioButton {
     id: root
 
-    property alias image: img
+    property url imageSource
+    property size imageSize
 
     padding: Theme.halfPadding
     spacing: Theme.halfPadding
@@ -20,25 +21,32 @@ RadioButton {
     font.pixelSize: Theme.fontSize(13)
     font.weight: checked ? Font.DemiBold : Font.Medium
 
-    background: Rectangle {
-        radius: Theme.radius
-        color: checked ? Theme.palette.secondaryBackground :
-                         (hovered ? Theme.palette.backgroundHover : StatusColors.transparent)
-        border.width: 2
-        border.color: checked ? Theme.palette.primaryColor1 : StatusColors.transparent
-    }
+    background: null
 
     contentItem: ColumnLayout {
         id: layout
         spacing: root.spacing
 
-        Image {
-            id: img
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            fillMode: Image.PreserveAspectFit
-            mipmap: true
-            antialiasing: true
+        Rectangle {
+            Layout.preferredWidth: img.implicitWidth
+            Layout.preferredHeight: img.implicitHeight
+            Layout.alignment: Qt.AlignHCenter
+
+            radius: 8
+            color: StatusColors.transparent
+            border.width: 2
+            border.color: checked ? Theme.palette.primaryColor1 : hovered ? Theme.palette.primaryColor2
+                                                                          : StatusColors.transparent
+
+            Image {
+                id: img
+                anchors.fill: parent
+                anchors.margins: 4
+                mipmap: true
+                antialiasing: true
+                source: root.imageSource
+                sourceSize: root.imageSize
+            }
         }
 
         StatusBaseText {

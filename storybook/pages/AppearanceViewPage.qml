@@ -18,7 +18,7 @@ Item {
     AppearanceView {
         anchors.fill: parent
         anchors.topMargin: 80
-        contentWidth: Math.min(650, root.width)
+        contentWidth: root.width * 4 / 5
 
         theme: ThemeUtils.Style.System
         onThemeChangeRequested: function(theme) {
