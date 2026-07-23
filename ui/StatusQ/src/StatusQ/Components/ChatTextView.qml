@@ -55,8 +55,9 @@ Control {
     property color quoteBarColor: Theme.palette.baseColor1
     property color quoteTextColor: Theme.palette.baseColor1
     property color linkColor: Theme.palette.primaryColor1
-    property color mentionTextColor: Theme.palette.mentionColor1
-    property color mentionBackgroundColor: Theme.palette.mentionColor4
+    // Match the ChatTextArea input mention pill (ChatTextAreaMentionPill).
+    property color mentionTextColor: Theme.palette.primaryColor1
+    property color mentionBackgroundColor: Theme.palette.baseColor2
     property color linkHoverColor: Theme.palette.primaryColor3
 
     // Copies the current cross-block selection to the clipboard.
