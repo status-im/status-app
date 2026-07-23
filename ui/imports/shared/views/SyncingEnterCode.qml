@@ -22,6 +22,7 @@ ColumnLayout {
 
     property var validateConnectionString: function(stringValue) { return false }
 
+    property bool proceedWithContineButton: true
     readonly property bool syncViaQr: !switchTabBar.currentIndex
 
     signal displayInstructions()
@@ -100,6 +101,12 @@ ColumnLayout {
                         validate: root.validateConnectionString
                     }
                 ]
+
+                input.onValidChanged: {
+                    if (root.proceedWithContineButton || !input.valid)
+                        return
+                    root.proceed(syncCode.text)
+                }
             }
             StatusBaseText {
                 Layout.fillWidth: true
@@ -112,6 +119,7 @@ ColumnLayout {
                 objectName: "continue_StatusButton"
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: Theme.padding
+                visible: root.proceedWithContineButton
                 text: qsTr("Continue")
                 enabled: syncCode.input.valid
                 onClicked: root.proceed(syncCode.text)
