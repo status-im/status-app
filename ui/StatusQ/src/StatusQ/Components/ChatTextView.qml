@@ -35,6 +35,10 @@ Control {
     // Independent of hover: a different link can be hovered and highlighted at the same time.
     property string highlightedLink: ""
 
+    // Fixed line height (px) applied to the rendered text lines. Code blocks keep their
+    // own monospace spacing and are unaffected.
+    property int lineHeight: 22
+
     // Combined selected text across all blocks ("" when nothing is selected).
     readonly property alias selectedText: d.selectedText
 
@@ -99,7 +103,7 @@ Control {
                 color: block.textColor
                 font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
-                text: `<style>${d.styleFor(hoveredLink)}</style>` + d.spanWrap(content)
+                text: `<style>${d.styleFor(hoveredLink)}</style>` + d.wrapContent(content)
 
                 onLinkActivated: (link) => d.activateLink(link)
                 onHoveredLinkChanged: d.hoveredLink = hoveredLink
@@ -137,7 +141,7 @@ Control {
                 font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
 
-                text: effectiveStyle + d.spanWrap(content)
+                text: effectiveStyle + d.wrapContent(content)
 
                 onHoveredLinkChanged: d.hoveredLink = hoveredLink
             }
@@ -246,6 +250,10 @@ Control {
             + ` a.mention { color: ${root.mentionTextColor}`
             + `; background-color: ${root.mentionBackgroundColor}`
             + `; text-decoration: none }`
+            // Fixed line height on the content paragraph. Qt's rich text honors `line-height` from a
+            // <style> rule (not from an inline style), matching the legacy `p { line-height }`;
+            // margin:0 keeps inter-block spacing owned by the layout.
+            + ` p { margin: 0; line-height: ${root.lineHeight}px }`
 
         function linkBg(href) {
             return ` a[href="${href}"] { background-color: ${root.linkHoverColor} }`
@@ -263,9 +271,11 @@ Control {
             return s
         }
 
-        // prevent skipping whitespaces
-        function spanWrap(content) {
-            return `<span style=white-space:pre-wrap>${content}</span>`
+        // Wrap the content in a block-level paragraph so the `p { line-height }` style rule applies
+        // (Qt's rich text honors line-height on block elements, not inline spans). white-space is
+        // kept inline (preserves runs of spaces); margin/line-height come from the baseStyle rule.
+        function wrapContent(content) {
+            return `<p style="white-space: pre-wrap">${content}</p>`
         }
 
         property string selectedText: ""

@@ -115,6 +115,16 @@ Item {
             tryVerify(() => !renders(control, "(edited)"), 1000, "marker not removed")
         }
 
+        // The exposed lineHeight (px) is applied as a paragraph line-height style rule (mirrors the
+        // legacy renderer's `p { line-height: 22px }`); overriding it updates the rule.
+        function test_lineHeight_override() {
+            control.blocks = [{ type: "text", html: "a<br/>b" }]
+            tryVerify(() => renders(control, "line-height: 22px"))
+
+            control.lineHeight = 30
+            tryVerify(() => renders(control, "line-height: 30px"))
+        }
+
         // When the last block isn't text (code/quote), the marker is still rendered (as its own
         // trailing text block).
         function test_editedMarkerAfterNonTextBlock() {
