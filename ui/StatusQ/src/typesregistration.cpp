@@ -18,6 +18,7 @@
 #include "StatusQ/statuscolors.h"
 #include "StatusQ/statusemojimodel.h"
 #include "StatusQ/chatinputhighlighter.h"
+#include "StatusQ/inputmethodeventfilter.h"
 #include "StatusQ/statussyntaxhighlighter.h"
 #include "StatusQ/stringutilsinternal.h"
 #include "StatusQ/systemutilsinternal.h"
@@ -65,6 +66,10 @@ extern "C" void statusq_linkAccessibilityCrashFilter();
 
 void registerStatusQTypes() {
     qmlRegisterType<ChatInputHighlighter>("StatusQ", 0, 1, "ChatInputHighlighter");
+    qmlRegisterType<InputMethodEventFilter>("StatusQ", 0, 1, "InputMethodEventFilter");
+    qmlRegisterUncreatableType<InputMethodEvent>(
+                "StatusQ", 0, 1, "InputMethodEvent",
+                QStringLiteral("InputMethodEvent is created by InputMethodEventFilter"));
     qmlRegisterType<StatusSyntaxHighlighter>("StatusQ", 0, 1, "StatusSyntaxHighlighter");
     qmlRegisterType<RXValidator>("StatusQ", 0, 1, "RXValidator");
 
