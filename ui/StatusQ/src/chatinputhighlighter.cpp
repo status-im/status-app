@@ -435,27 +435,28 @@ void collectNodesAt(const Node& node, qsizetype pos, QVariantMap& out)
         collectNodesAt(c, pos, out);
 }
 
-// Maps a removeFormatting() kind string to the AST node kinds it targets. "code" matches both a
-// code span and a code block. Returns an empty set for an unknown kind.
-QVector<NodeKind> nodeKindsForFormatting(const QString& kind)
+// Maps a removeFormatting() kind string to its AST node kind, into `out`. Returns false for an
+// unknown kind.
+bool nodeKindForFormatting(const QString& kind, NodeKind& out)
 {
-    if (kind == QLatin1String("bold"))          return {NodeKind::Strong};
-    if (kind == QLatin1String("italic"))        return {NodeKind::Emphasis};
-    if (kind == QLatin1String("strikethrough")) return {NodeKind::Strikethrough};
-    if (kind == QLatin1String("quote"))         return {NodeKind::QuoteBlock};
-    if (kind == QLatin1String("code"))          return {NodeKind::CodeSpan, NodeKind::CodeBlock};
-    return {};
+    if (kind == QLatin1String("bold"))          { out = NodeKind::Strong;        return true; }
+    if (kind == QLatin1String("italic"))        { out = NodeKind::Emphasis;      return true; }
+    if (kind == QLatin1String("strikethrough")) { out = NodeKind::Strikethrough; return true; }
+    if (kind == QLatin1String("quote"))         { out = NodeKind::QuoteBlock;    return true; }
+    if (kind == QLatin1String("codeSpan"))      { out = NodeKind::CodeSpan;      return true; }
+    if (kind == QLatin1String("codeBlock"))     { out = NodeKind::CodeBlock;     return true; }
+    return false;
 }
 
-// Returns the innermost node whose kind is in `kinds` and whose full range strictly contains `pos`
-// (start < pos < end), or nullptr. Recurses into children first so the deepest match wins.
-const Node* findDeepestNode(const Node& node, qsizetype pos, const QVector<NodeKind>& kinds)
+// Returns the innermost node of `kind` whose full range strictly contains `pos` (start < pos < end),
+// or nullptr. Recurses into children first so the deepest match wins.
+const Node* findDeepestNode(const Node& node, qsizetype pos, NodeKind kind)
 {
     for (const Node& c : node.children) {
-        if (const Node* hit = findDeepestNode(c, pos, kinds))
+        if (const Node* hit = findDeepestNode(c, pos, kind))
             return hit;
     }
-    if (pos > node.start && pos < node.end && kinds.contains(node.kind))
+    if (pos > node.start && pos < node.end && node.kind == kind)
         return &node;
     return nullptr;
 }
@@ -1690,13 +1691,13 @@ void ChatInputHighlighter::removeFormatting(int position, const QString& kind)
     if (!document())
         return;
 
-    const QVector<NodeKind> kinds = nodeKindsForFormatting(kind);
-    if (kinds.isEmpty())
+    NodeKind targetKind;
+    if (!nodeKindForFormatting(kind, targetKind))
         return;
 
     // A one-shot action (not a hot caret query): use astForQuery() so the tree always matches the
     // current text, reparsing only when the cache is stale.
-    const Node* node = findDeepestNode(astForQuery(), position, kinds);
+    const Node* node = findDeepestNode(astForQuery(), position, targetKind);
     if (!node)
         return; // caret not strictly inside such a node — nothing to remove
 

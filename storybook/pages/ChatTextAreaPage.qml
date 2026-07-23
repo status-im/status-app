@@ -936,31 +936,30 @@ unclosed fence here (no closing triple-tick)
                     textArea.forceActiveFocus()
                 }
 
-                function removeFormatting(selectionKind, byNode, byDelimiters,
-                                          caretFormattingKind, caretDelimiterKind) {
+                function removeFormatting(selectionKind, byNode, byDelimiters, caretKind) {
                     if (hasSelection)
                         textArea.removeDelimitersAtSelection(textArea.selectionStart,
                                                              textArea.selectionEnd, selectionKind)
                     else if (byNode)
-                        textArea.removeFormatting(textArea.cursorPosition, caretFormattingKind)
+                        textArea.removeFormatting(textArea.cursorPosition, caretKind)
                     else if (byDelimiters)
-                        textArea.removeDelimitersAt(textArea.cursorPosition, caretDelimiterKind)
+                        textArea.removeDelimitersAt(textArea.cursorPosition, caretKind)
                     textArea.forceActiveFocus()
                 }
 
                 Button { id: boldButton; text: "Bold"
                          checked: hasSelection ? sel.bold : (node.bold || delim.bold)
-                         onClicked: checked ? parent.removeFormatting("bold", node.bold, delim.bold, "bold", "bold")
+                         onClicked: checked ? parent.removeFormatting("bold", node.bold, delim.bold, "bold")
                                             : parent.addFormatting("bold") }
                 Button { id: italicButton; text: "Italic"
                          checked: hasSelection ? sel.italic : (node.italic || delim.italic)
-                         onClicked: checked ? parent.removeFormatting("italic", node.italic, delim.italic, "italic", "italic")
+                         onClicked: checked ? parent.removeFormatting("italic", node.italic, delim.italic, "italic")
                                             : parent.addFormatting("italic") }
                 Button { id: strikethroughButton; text: "Strikethrough"
                          checked: hasSelection ? sel.strikethrough
                                                : (node.strikethrough || delim.strikethrough)
                          onClicked: checked ? parent.removeFormatting("strikethrough", node.strikethrough,
-                                                                      delim.strikethrough, "strikethrough", "strikethrough")
+                                                                      delim.strikethrough, "strikethrough")
                                             : parent.addFormatting("strikethrough") }
                 Button { id: codeButton; text: "Code"
                          checked: hasSelection ? (sel.codeSpan || sel.codeBlock)
@@ -969,11 +968,11 @@ unclosed fence here (no closing triple-tick)
                          onClicked: checked ? parent.removeFormatting(sel.codeBlock ? "codeBlock" : "codeSpan",
                                                                       node.codeSpan || node.codeBlock,
                                                                       delim.codeSpan || delim.codeBlock,
-                                                                      "code", delim.codeBlock ? "codeBlock" : "codeSpan")
+                                                                      (node.codeBlock || delim.codeBlock) ? "codeBlock" : "codeSpan")
                                             : parent.addFormatting("codeSpan") }
                 Button { id: quoteButton; text: "Quote"
                          checked: hasSelection ? sel.quote : node.quote
-                         onClicked: checked ? parent.removeFormatting("quote", node.quote, false, "quote", "quote")
+                         onClicked: checked ? parent.removeFormatting("quote", node.quote, false, "quote")
                                             : parent.addFormatting("quote") }
             }
         }
