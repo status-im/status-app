@@ -415,12 +415,34 @@ void collectQuoteBlocks(const Node& node, QVariantList& out)
         collectQuoteBlocks(c, out);
 }
 
-// Marks, in `out`, every formatting kind whose full range (delimiters included) strictly contains
-// `pos` (node.start < pos < node.end). Full recursion is safe: a child's range is a subrange of its
-// parent's, so a caret outside a node can't be strictly inside any of its children.
-void collectNodesAt(const Node& node, qsizetype pos, QVariantMap& out)
+// True when a caret at `pos` counts as inside `node`'s full range (delimiters included). Inline
+// nodes are strictly containing (node.start < pos < node.end), so a caret just after a closer
+// (e.g. "**bold**|") falls outside.
+//
+// A block-level QuoteBlock additionally includes the caret at `node.end` when the quote ends
+// *mid-line* (its last char isn't '\n') — i.e. the final quote line with no trailing newline, whose
+// end-of-content caret coincides with node.end. Otherwise the caret at the end of such a line
+// (e.g. end of input for "> quote") would wrongly fall outside the quote. When node.end sits right
+// after a '\n' (a following line, or the empty line after a trailing newline) it stays exclusive.
+bool nodeContainsCaret(const Node& node, qsizetype pos, const QString& text)
 {
-    if (pos > node.start && pos < node.end) {
+    if (pos <= node.start || pos > node.end)
+        return false;
+    if (pos < node.end)
+        return true;
+    // pos == node.end: inside only for a quote block that ends mid-line.
+    return node.kind == NodeKind::QuoteBlock
+            && node.end > node.start
+            && node.end <= text.size()
+            && text[node.end - 1] != QLatin1Char('\n');
+}
+
+// Marks, in `out`, every formatting kind whose range contains `pos` (see nodeContainsCaret). Full
+// recursion is safe: a child's range is a subrange of its parent's, so a caret outside a node can't
+// be inside any of its children.
+void collectNodesAt(const Node& node, qsizetype pos, const QString& text, QVariantMap& out)
+{
+    if (nodeContainsCaret(node, pos, text)) {
         switch (node.kind) {
         case NodeKind::Strong:        out[QStringLiteral("bold")]          = true; break;
         case NodeKind::Emphasis:      out[QStringLiteral("italic")]        = true; break;
@@ -432,7 +454,7 @@ void collectNodesAt(const Node& node, qsizetype pos, QVariantMap& out)
         }
     }
     for (const Node& c : node.children)
-        collectNodesAt(c, pos, out);
+        collectNodesAt(c, pos, text, out);
 }
 
 // Maps a removeFormatting() kind string to its AST node kind, into `out`. Returns false for an
@@ -448,15 +470,16 @@ bool nodeKindForFormatting(const QString& kind, NodeKind& out)
     return false;
 }
 
-// Returns the innermost node of `kind` whose full range strictly contains `pos` (start < pos < end),
-// or nullptr. Recurses into children first so the deepest match wins.
-const Node* findDeepestNode(const Node& node, qsizetype pos, NodeKind kind)
+// Returns the innermost node of `kind` whose range contains `pos` (see nodeContainsCaret — same
+// containment rule as collectNodesAt, including the block end-of-line inclusivity), or nullptr.
+// Recurses into children first so the deepest match wins.
+const Node* findDeepestNode(const Node& node, qsizetype pos, const QString& text, NodeKind kind)
 {
     for (const Node& c : node.children) {
-        if (const Node* hit = findDeepestNode(c, pos, kind))
+        if (const Node* hit = findDeepestNode(c, pos, text, kind))
             return hit;
     }
-    if (pos > node.start && pos < node.end && node.kind == kind)
+    if (node.kind == kind && nodeContainsCaret(node, pos, text))
         return &node;
     return nullptr;
 }
@@ -1680,9 +1703,10 @@ QVariantMap ChatInputHighlighter::nodeAt(int position) const
         {QStringLiteral("codeSpan"),      false},
         {QStringLiteral("codeBlock"),     false},
     };
-    // Use the AST cached by highlightBlock — never reparse on a caret query.
+    // Use the AST cached by highlightBlock — never reparse on a caret query. m_astText is the text
+    // that AST was built from, so it stays in sync with m_ast.
     if (m_astValid)
-        collectNodesAt(m_ast, position, out);
+        collectNodesAt(m_ast, position, m_astText, out);
     return out;
 }
 
@@ -1696,8 +1720,9 @@ void ChatInputHighlighter::removeFormatting(int position, const QString& kind)
         return;
 
     // A one-shot action (not a hot caret query): use astForQuery() so the tree always matches the
-    // current text, reparsing only when the cache is stale.
-    const Node* node = findDeepestNode(astForQuery(), position, targetKind);
+    // current text, reparsing only when the cache is stale. m_astText is kept in sync with it.
+    const Node& ast = astForQuery();
+    const Node* node = findDeepestNode(ast, position, m_astText, targetKind);
     if (!node)
         return; // caret not strictly inside such a node — nothing to remove
 

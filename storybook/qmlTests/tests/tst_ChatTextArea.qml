@@ -929,6 +929,8 @@ Item {
                 {tag: "code span nested in bold",       text: "**`code|`**", flags: ["bold", "codeSpan"]},
                 {tag: "bold but before code span",      text: "*|*`code`**", flags: ["bold"]},
                 {tag: "quote",                          text: "> qu|ote",    flags: ["quote"]},
+                {tag: "quote end of line",              text: "> quote|\n",    flags: ["quote"]},
+                {tag: "quote end of input",             text: "> quote|",    flags: ["quote"]},
                 {tag: "code block",                     text: "```\nco|de\n```", flags: ["codeBlock"]},
                 {tag: "plain text",                     text: "pl|ain",      flags: []},
             ]
@@ -954,14 +956,15 @@ Item {
         // node kind ("codeSpan"/"codeBlock", not a unified "code").
         function test_removeFormatting_data() {
             return [
-                {tag: "caret in bold content",        input: "**bol|d**",     kind: "bold",     output: "bol|d"},
-                {tag: "caret after opening markers",  input: "**|bold**",     kind: "bold",     output: "|bold"},
-                {tag: "caret between opening markers", input: "*|*bold**",     kind: "bold",     output: "|bold"},
-                {tag: "caret outside bold (no-op)",   input: "|**bold**",     kind: "bold",     output: "|**bold**"},
-                {tag: "italics around code block",    input: "*```co|de```*", kind: "italic",   output: "```co|de```"},
-                {tag: "code span",                    input: "`co|de`",       kind: "codeSpan", output: "co|de"},
-                {tag: "code block",                   input: "```co|de```",   kind: "codeBlock", output: "co|de"},
-                {tag: "single-line quote",            input: "> qu|ote",      kind: "quote",    output: "qu|ote"},
+                {tag: "caret in bold content",          input: "**bol|d**",     kind: "bold",     output: "bol|d"},
+                {tag: "caret after opening markers",    input: "**|bold**",     kind: "bold",     output: "|bold"},
+                {tag: "caret between opening markers",  input: "*|*bold**",     kind: "bold",     output: "|bold"},
+                {tag: "caret outside bold (no-op)",     input: "|**bold**",     kind: "bold",     output: "|**bold**"},
+                {tag: "italics around code block",      input: "*```co|de```*", kind: "italic",   output: "```co|de```"},
+                {tag: "code span",                      input: "`co|de`",       kind: "codeSpan", output: "co|de"},
+                {tag: "code block",                     input: "```co|de```",   kind: "codeBlock", output: "co|de"},
+                {tag: "single-line quote",              input: "> qu|ote",      kind: "quote",    output: "qu|ote"},
+                {tag: "single-line quote end of input", input: "> quote|",      kind: "quote",    output: "quote|"},
                 // Bold spanning quote lines nests the later "> " prefixes under the Strong node; all
                 // four prefixes must still be removed.
                 {tag: "multi-line quote with bold",
