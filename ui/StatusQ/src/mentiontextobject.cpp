@@ -10,16 +10,8 @@ MentionTextObject::MentionTextObject(QObject* parent)
 
 QSizeF MentionTextObject::mentionSize(const QFont& baseFont, const QString& text)
 {
-    QFont targetFont = baseFont;
-    constexpr int offset = 2;
-
-    if (baseFont.pixelSize() != -1)
-        targetFont.setPixelSize(baseFont.pixelSize() - offset);
-    else
-        targetFont.setPointSizeF(baseFont.pointSizeF() - offset);
-
-    return QSizeF(QFontMetricsF(targetFont).horizontalAdvance(text) + 4,
-                  QFontMetricsF(baseFont).height());
+    const QFontMetricsF fm(baseFont);
+    return QSizeF(fm.horizontalAdvance(text) + 4, fm.height());
 }
 
 QSizeF MentionTextObject::intrinsicSize(QTextDocument* doc, int,

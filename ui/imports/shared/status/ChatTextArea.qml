@@ -300,6 +300,8 @@ StatusTextArea {
         delegate: ChatTextAreaMentionPill {
             readonly property int position: model.position
 
+            selected: root.selectionStart <= position && position < root.selectionEnd
+
             readonly property rect _r: {
                 root.leftPadding; root.topPadding // recompute on layout change
                 root.contentHeight; root.width
@@ -310,17 +312,17 @@ StatusTextArea {
                     Math.min(position + 1, root.length)).x - _r.x
 
             x: _r.x
-            y: _r.y + 1
+            y: _r.y
 
             // Math.min so a mention occupying the whole line doesn't overflow
             width: Math.min(mentionWidth, root.width - x)
-            height: _r.height - 2
+            height: _r.height
 
             name: model.name
             pubKey: model.pubKey
 
             font.family: root.font.family
-            font.pixelSize: root.font.pixelSize - 2
+            font.pixelSize: root.font.pixelSize
         }
     }
 
