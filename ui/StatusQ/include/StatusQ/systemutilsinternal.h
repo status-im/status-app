@@ -91,5 +91,7 @@ private:
     bool m_androidKeyboardVisible = false;
     int m_iosKeyboardHeight = 0;
     bool m_iosKeyboardVisible = false;
+#ifdef Q_OS_IOS
     QTimer* m_iosKeyboardPollTimer = nullptr;
+#endif
 };

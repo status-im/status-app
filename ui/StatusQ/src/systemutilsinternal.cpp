@@ -676,19 +676,40 @@ void SystemUtilsInternal::startShakeDetection()
 
 qreal SystemUtilsInternal::nativeDpr(QQuickWindow *window) const
 {
-    if (!window)
+#ifdef Q_OS_ANDROID
+    Q_UNUSED(window);
+    // Access standard Android context and get display metrics density
+    QJniObject activity = QNativeInterface::QAndroidApplication::context();
+    if (activity.isValid()) {
+        QJniObject resources = activity.callObjectMethod("getResources", "()Landroid/content/res/Resources;");
+        if (resources.isValid()) {
+            QJniObject metrics = resources.callObjectMethod("getDisplayMetrics", "()Landroid/util/DisplayMetrics;");
+            if (metrics.isValid()) {
+                return metrics.getField<float>("density");
+            }
+        }
+    }
+    return 1.0f;
+#else
+    if (!window) {
+        qWarning() << Q_FUNC_INFO << "invalid window, returning scaling of 1.0";
         return 1.0;
+    }
 
     auto screen = window->screen();
-    if (!screen)
+    if (!screen) {
+        qWarning() << Q_FUNC_INFO << "invalid window's screen, returning scaling of 1.0";
         return 1.0;
+    }
 
     if (auto platformScreen = screen->handle()) {
         return platformScreen->devicePixelRatio();
     }
 
     // Fallback to standard API if platform handle isn't available
+    qWarning() << Q_FUNC_INFO << "invalid native platform screen";
     return screen->devicePixelRatio();
+#endif
 }
 
 #ifdef Q_OS_IOS

@@ -118,13 +118,13 @@ SettingsContentBase {
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 480
+            Layout.preferredHeight: 380
             radius: Theme.radius
             color: Theme.palette.baseColor5
 
             StatusCommunityCard {
                 id: preview
-                width: (parent.width / 2) - Theme.padding
+                width: (parent.width / 1.5) - Theme.padding
                 anchors.centerIn: parent
 
                 scale: slider.value/d.nativeWindowDpr
@@ -181,8 +181,8 @@ SettingsContentBase {
             StatusSlider {
                 Layout.fillWidth: true
                 id: slider
-                from: d.nativeWindowDpr/2 // half of the baseline
-                to: d.nativeWindowDpr*2 // twice the baseline
+                from: d.nativeWindowDpr*.75 // 3/4 of the baseline
+                to: d.nativeWindowDpr*1.5 // 1.5x the baseline
                 value: d.windowDpr
                 stepSize: 0.05 // steps of 5%
                 snapMode: Slider.SnapAlways

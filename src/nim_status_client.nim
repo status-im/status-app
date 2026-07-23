@@ -196,7 +196,7 @@ proc enableHDPI(uiScaleFilePath: string) =
 
     try:
       var scale = parseFloat(scaleStr)
-      scale = clamp(scale, 0.5, 2.0)
+      scale = clamp(scale, 0.75, 1.5)
       echo "[Debug] Setting custom UI scale to ", scale
       putEnv(scaleEnvVar, formatFloat(scale, ffDecimal, precision = 2))
 
