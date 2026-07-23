@@ -208,36 +208,35 @@ Column {
         width: parent.width
     }
 
-    // TODO uncomment when mobile has implemented the QR code import
-    // Rectangle {
-    //     visible: root.walletStore.walletModule.hasPairedDevices &&
-    //              !d.allNonProfileKeypairsMigratedToAColdWallet
-    //     height: 102
-    //     width: parent.width
-    //     color: StatusColors.transparent
-    //     radius: 8
-    //     border.width: 1
-    //     border.color: Theme.palette.baseColor5
+    Rectangle {
+        visible: root.walletStore.walletModule.hasPairedDevices &&
+                 !d.allNonProfileKeypairsMigratedToAColdWallet
+        height: 102
+        width: parent.width
+        color: StatusColors.transparent
+        radius: 8
+        border.width: 1
+        border.color: Theme.palette.baseColor5
 
-    //     Column {
-    //         anchors.fill: parent
-    //         padding: 16
-    //         spacing: 8
+        Column {
+            anchors.fill: parent
+            padding: 16
+            spacing: 8
 
-    //         StatusBaseText {
-    //             text: qsTr("Import key pairs from this device to your other synced devices")
-    //             font.pixelSize: Theme.primaryTextFontSize
-    //         }
+            StatusBaseText {
+                text: qsTr("Import key pairs from this device to your other synced devices")
+                font.pixelSize: Theme.primaryTextFontSize
+            }
 
-    //         StatusButton {
-    //             text: qsTr("Show encrypted QR of key pairs on device")
-    //             icon.name: "qr"
-    //             onClicked: {
-    //                 root.walletStore.runKeypairImportPopup("", Constants.keypairImportPopup.mode.exportKeypairQr)
-    //             }
-    //         }
-    //     }
-    // }
+            StatusButton {
+                text: qsTr("Show encrypted QR of key pairs on device")
+                icon.name: "qr"
+                onClicked: {
+                    root.walletStore.runKeypairImportPopup("", Constants.keypairImportPopup.mode.exportKeypairQr)
+                }
+            }
+        }
+    }
 
     Rectangle {
         visible: root.walletStore.walletModule.hasPairedDevices &&
