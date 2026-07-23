@@ -10,6 +10,7 @@ import StatusQ.Popups
 import StatusQ.Popups.Dialog
 
 import utils
+import shared.status
 import shared.views.chat
 import shared.stores as SharedStores
 
@@ -26,6 +27,14 @@ StatusDialog {
     property string memberPubKey: ""
     property string displayName: ""
     property bool joined
+
+    // Resolves mention pub keys to display names for the client-side renderer, mirroring
+    // ChatMessagesView. Fed by the community's full member list; without it, "@0x…" mentions
+    // render as raw keys.
+    readonly property MentionResolver mentionResolver: MentionResolver {
+        sourceModel: root.chatCommunitySectionModule?.membersModel ?? null
+        nameRole: "preferredDisplayName"
+    }
 
 
     width: 800
@@ -82,6 +91,8 @@ StatusDialog {
                     senderTrustStatus: model.senderTrustStatus
                     amISender: model.amISender
                     messageText: model.messageText
+                    unparsedText: model.unparsedText
+                    mentionsMap: root.mentionResolver.map
                     messageImage: model.messageImage
                     messageTimestamp: model.timestamp
                     messageOutgoingStatus: model.outgoingStatus

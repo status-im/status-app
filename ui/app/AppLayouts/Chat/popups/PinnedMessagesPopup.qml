@@ -11,6 +11,7 @@ import StatusQ.Popups
 import StatusQ.Popups.Dialog
 
 import utils
+import shared.status
 import shared.views.chat
 import shared.stores as SharedStores
 
@@ -29,6 +30,14 @@ StatusDialog {
     property bool joined
 
     property bool isPinActionAvailable: true
+
+    // Resolves mention pub keys to display names for the client-side renderer, mirroring
+    // ChatMessagesView. Fed by the active chat's users model (via the shared UsersStore);
+    // without it, "@0x…" mentions render as raw keys.
+    readonly property MentionResolver mentionResolver: MentionResolver {
+        sourceModel: root.store?.usersStore.usersModel ?? null
+        nameRole: "preferredDisplayName"
+    }
 
     // Unfurling related data:
     property bool gifUnfurlingEnabled
@@ -105,6 +114,8 @@ StatusDialog {
                     senderTrustStatus: model.senderTrustStatus
                     amISender: model.amISender
                     messageText: model.messageText
+                    unparsedText: model.unparsedText
+                    mentionsMap: root.mentionResolver.map
                     messageImage: model.messageImage
                     messageTimestamp: model.timestamp
                     messageOutgoingStatus: model.outgoingStatus
