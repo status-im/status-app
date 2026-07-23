@@ -30,9 +30,4 @@ Rectangle {
         color: root.textColor
         elide: Text.ElideRight
     }
-
-    ToolTip.visible: hover.hovered
-    ToolTip.text: "pub key: " + pubKey
-
-    HoverHandler { id: hover }
 }
