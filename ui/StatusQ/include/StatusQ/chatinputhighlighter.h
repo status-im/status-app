@@ -178,9 +178,9 @@ public:
 
     // Removes the formatting `kind` around `position` by deleting the delimiters of the AST node of
     // that kind strictly containing the caret (same containment rule as nodeAt), leaving the content
-    // intact. `kind` is one of "bold", "italic", "strikethrough", "quote", "code" (both a code span
-    // and a code block map to "code"). A no-op when the caret is not inside such a node. The whole
-    // strip is a single undo step and the editor caret follows the deletions automatically.
+    // intact. `kind` is one of "bold", "italic", "strikethrough", "quote", "codeSpan", "codeBlock".
+    // A no-op when the caret is not inside such a node. The whole strip is a single undo step and the
+    // editor caret follows the deletions automatically.
     Q_INVOKABLE void removeFormatting(int position, const QString& kind);
 
     // Returns {bold, italic, strikethrough, codeSpan, codeBlock} booleans describing the formatting
