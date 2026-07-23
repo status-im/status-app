@@ -14705,6 +14705,10 @@ al cargar</translation>
         <source>Any ETH address</source>
         <translation>Cualquier dirección ETH</translation>
     </message>
+    <message>
+        <source>key pair requires import to use on this device</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SelectParamsForBuyCryptoPanel</name>
