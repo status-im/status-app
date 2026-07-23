@@ -65,7 +65,7 @@ method load*[T](self: Module[T], keyUid: string, mode: ImportKeypairModuleMode) 
       self.view.getSelectedKeypair().setName(keypair.name)
     if mode == ImportKeypairModuleMode.ExportKeypairQr:
       self.view.setCurrentState(newExportKeypairState(nil))
-      self.controller.authenticateLoggedInUser()
+      self.delegate.onKeypairImportModuleLoaded()
       return
     elif mode == ImportKeypairModuleMode.ImportViaQr:
       self.view.setCurrentState(newImportQrState(nil))

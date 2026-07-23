@@ -7658,6 +7658,14 @@ Please add it and try again.</source>
 <context>
     <name>ExportKeypair</name>
     <message>
+        <source>Authenticate to create a QR code</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authenticate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Encrypted key pairs code</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10336,6 +10344,14 @@ to load</source>
     </message>
     <message>
         <source>Saved Addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import key pairs from this device to your other synced devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show encrypted QR of key pairs on device</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
