@@ -348,21 +348,26 @@ class WalletAccountView(QObject):
     @allure.step('Wait for History tab content to finish loading')
     def wait_for_activity_tab_content_loaded(
         self,
-        timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
-        loading_timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+        timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
     ):
-        self._activity_view.wait_until_appears(timeout_msec)
-        history_tab_view = QObject(wallet_names.history_tab_view)
-
-        def history_loaded():
-            if not history_tab_view.is_visible:
+        def activity_tab_content_loaded():
+            if not self._activity_view.is_visible:
                 return False
-            activity_store = getattr(history_tab_view.object, 'activityStore', None)
+
+            transaction_list = self._activity_view.object
+            if getattr(transaction_list, 'count', 0) > 0:
+                return True
+
+            if not driver.object.exists(wallet_names.history_tab_view):
+                return False
+
+            history_view = driver.waitForObject(wallet_names.history_tab_view, 200)
+            activity_store = getattr(history_view, 'activityStore', None)
             if activity_store is None:
                 return False
             return not getattr(activity_store, 'loadingHistoryTransactions', True)
 
-        assert driver.waitFor(history_loaded, loading_timeout_msec), (
+        assert driver.waitFor(activity_tab_content_loaded, timeout_msec), (
             'History tab did not finish loading'
         )
         return self
@@ -414,7 +419,7 @@ class WalletAccountView(QObject):
             timeout_msec,
         ), 'History tab did not become selected'
         if wait_until_loaded:
-            self.wait_for_activity_tab_content_loaded(timeout_msec, loading_timeout_msec)
+            self.wait_for_activity_tab_content_loaded(loading_timeout_msec)
         else:
             self._activity_view.wait_until_appears(timeout_msec)
         return self
