@@ -14734,6 +14734,10 @@ selhalo</translation>
         <source>Any ETH address</source>
         <translation>Jakákoli ETH adresa</translation>
     </message>
+    <message>
+        <source>key pair requires import to use on this device</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SelectParamsForBuyCryptoPanel</name>

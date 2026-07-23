@@ -14607,6 +14607,10 @@ to load</source>
         <source>Any ETH address</source>
         <translation>모든 ETH 주소</translation>
     </message>
+    <message>
+        <source>key pair requires import to use on this device</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SelectParamsForBuyCryptoPanel</name>
