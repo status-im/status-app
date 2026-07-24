@@ -51,6 +51,9 @@ bool UrlUtils::isValidImageUrl(const QUrl &url) const
 
     const auto mimeType = m_mimeDb.mimeTypeForFile(filePath, QMimeDatabase::MatchContent).name();
 
+    qWarning() << Q_FUNC_INFO << "!!! IMAGE MIMETYPE:" << url << mimeType;
+    qWarning() << Q_FUNC_INFO << "!!! VALID MIMETYPES:" << m_validImageMimeTypes;
+
     return m_validImageMimeTypes.contains(mimeType);
 }
 
