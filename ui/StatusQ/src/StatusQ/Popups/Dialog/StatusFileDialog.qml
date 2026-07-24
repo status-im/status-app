@@ -21,7 +21,7 @@ QObject {
     property alias currentFolder: dlg.currentFolder
     property alias visible: dlg.visible
 
-    property string picturesShortcut: Utils.isIOS ? "assets-library://" :
+    readonly property string picturesShortcut: Utils.isIOS ? "assets-library://" :
                             d.standardPictureLocations.length > 1 ? d.standardPictureLocations[1] // [0] is writable, don't need it here, we have StatusSaveFileDialog for that
                                                                   : d.standardPictureLocations.length > 0 ? d.standardPictureLocations[0]
                                                                                                           : ""

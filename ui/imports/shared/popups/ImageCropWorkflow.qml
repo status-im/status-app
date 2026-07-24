@@ -40,7 +40,8 @@ Item {
         id: fileDialog
 
         title: root.imageFileDialogTitle
-        currentFolder: root.userSelectedImage ? imageCropper.source.substr(0, imageCropper.source.lastIndexOf("/")) : fileDialog.picturesShortcut
+        currentFolder: imageCropper.source.toString() !== "" ? imageCropper.source.toString().substr(0, imageCropper.source.toString().lastIndexOf("/"))
+                                                             : fileDialog.picturesShortcut
         usePhotoLibrary: true
         nameFilters: [qsTr("Supported image formats (%1)").arg(UrlUtils.validImageNameFilters)]
         onAccepted: {
@@ -66,7 +67,7 @@ Item {
         contentItem: ColumnLayout {
             StatusBaseText {
                 Layout.fillWidth: true
-                wrapMode: Text.WordWrap
+                wrapMode: Text.Wrap
                 text: qsTr("Format of the image you chose is not supported. Most probably you picked a file that is invalid, corrupted or has a wrong file extension. The requested file was: %1").arg(errorDialog.fileOpened)
             }
             StatusBaseText {
