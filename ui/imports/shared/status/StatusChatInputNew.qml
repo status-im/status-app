@@ -839,6 +839,24 @@ Control {
                             onActivated: toolBar.emojiButton.click()
                         }
 
+                        // Formatting shortcuts: click the toolbar button so the action stays
+                        // identical (IME commit + the same add/remove toggle) with no duplicated logic.
+                        Shortcut {
+                            enabled: messageInputField.activeFocus
+                            sequence: StandardKey.Bold
+                            onActivated: toolBar.boldButton.click()
+                        }
+                        Shortcut {
+                            enabled: messageInputField.activeFocus
+                            sequence: StandardKey.Italic
+                            onActivated: toolBar.italicButton.click()
+                        }
+                        Shortcut {
+                            enabled: messageInputField.activeFocus
+                            sequences: ["Ctrl+Shift+S"]
+                            onActivated: toolBar.strikeThroughButton.click()
+                        }
+
                         StatusChatInputSelectionMarker {
                             anchors.fill: parent
                             clip: true
