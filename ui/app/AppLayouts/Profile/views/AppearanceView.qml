@@ -43,17 +43,16 @@ SettingsContentBase {
             }
         }
 
-        readonly property string resultFactor: slider.value !== d.nativeWindowDpr ? Number(slider.value/d.nativeWindowDpr)
-                                                                                  : ""
+        readonly property string resultFactor: slider.value !== 1 ? slider.value : ""
+
+        property real prevValue
 
         function resetToDefaults() {
-            slider.value = d.nativeWindowDpr
+            slider.value = 1
         }
 
         function reset() {
-            slider.value = d.windowDpr
-            if (slider.value === d.nativeWindowDpr)
-                defaultsToggle.checked = Qt.binding(() => slider.value === d.nativeWindowDpr)
+            slider.value = d.prevValue
             d.dirty = false
         }
     }
@@ -69,6 +68,7 @@ SettingsContentBase {
     onResetChangesClicked: d.reset()
     onSaveChangesClicked: {
         if (SQUtils.StringUtils.writeTextFile(root.uiScaleFile, d.resultFactor)) {
+            d.prevValue = slider.value
             d.dirty = false
             root.restartRequested()
         } else {
@@ -76,6 +76,8 @@ SettingsContentBase {
             d.reset()
         }
     }
+
+    Component.onCompleted: d.prevValue = slider.value
 
     content: ColumnLayout {
         width: root.contentWidth - 2 * Theme.padding
@@ -127,7 +129,7 @@ SettingsContentBase {
                 width: (parent.width / 1.5) - Theme.padding
                 anchors.centerIn: parent
 
-                scale: slider.value/d.nativeWindowDpr
+                scale: slider.value
                 transformOrigin: Item.Center
 
                 communityId: "community_id"
@@ -161,7 +163,7 @@ SettingsContentBase {
             id: defaultsToggle
             text: qsTr("Follow display zoom")
             leftSide: false
-            checked: slider.value === d.nativeWindowDpr
+            checked: slider.value === 1
             onToggled: {
                 if(checked)
                     d.resetToDefaults()
@@ -181,9 +183,9 @@ SettingsContentBase {
             StatusSlider {
                 Layout.fillWidth: true
                 id: slider
-                from: d.nativeWindowDpr*.75 // 3/4 of the baseline
-                to: d.nativeWindowDpr*1.5 // 1.5x the baseline
-                value: d.windowDpr
+                from: 0.75 // 3/4 of the baseline
+                to: 1.5 // 1.5x the baseline
+                value: d.windowDpr/d.nativeWindowDpr
                 stepSize: 0.05 // steps of 5%
                 snapMode: Slider.SnapAlways
                 onMoved: d.dirty = true
