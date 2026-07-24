@@ -1185,6 +1185,50 @@ Item {
             compare(control.cursorPosition, 1)
         }
 
+        // ── replaceFormatting: swap a kind's delimiters for another (code span → block) ──────
+
+        // "|" marks the caret; "|X|" a selection. replaceFormatting swaps the delimiters of the
+        // fromKind element around the caret for toKind's, keeping the content (which ends up
+        // selected). A no-op when the fromKind formatting isn't present.
+        function test_replaceFormatting_data() {
+            return [
+                {tag: "span to block, caret",     input: "`co|de`",  from: "codeSpan", to: "codeBlock", output: "```|code|```"},
+                {tag: "span to block, selection", input: "`|code|`", from: "codeSpan", to: "codeBlock", output: "```|code|```"},
+                {tag: "empty span to block",      input: "`|`",      from: "codeSpan", to: "codeBlock", output: "```|```"},
+                {tag: "no-op when absent",        input: "ab|",      from: "codeSpan", to: "codeBlock", output: "ab|"},
+            ]
+        }
+
+        function test_replaceFormatting(data) {
+            const inFirst = data.input.indexOf("|")
+            const inSecond = data.input.indexOf("|", inFirst + 1)
+            control.text = data.input.replace(/\|/g, "")
+            if (inSecond === -1)
+                control.cursorPosition = inFirst
+            else
+                control.select(inFirst, inSecond - 1)
+
+            control.replaceFormatting(control.cursorPosition, data.from, data.to)
+
+            const outFirst = data.output.indexOf("|")
+            const outSecond = data.output.indexOf("|", outFirst + 1)
+            compare(control.text, data.output.replace(/\|/g, ""))
+            compare(control.selectionStart, outFirst)
+            compare(control.selectionEnd, outSecond === -1 ? outFirst : outSecond - 1)
+        }
+
+        // Replacing is a single edit block: one undo restores the original text.
+        function test_replaceFormatting_singleUndo() {
+            control.text = "`code`"
+            control.cursorPosition = 3
+
+            control.replaceFormatting(3, "codeSpan", "codeBlock")
+            compare(control.text, "```code```")
+
+            control.undo()
+            compare(control.text, "`code`")
+        }
+
         // ── removeDelimitersAt: strip the delimiter chars a given kind accounts for ──────
 
         // Symmetrical to delimitersAt, but parametrized by kind so stacked emphasis is unambiguous:

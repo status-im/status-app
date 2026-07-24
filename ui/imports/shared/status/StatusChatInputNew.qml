@@ -123,10 +123,25 @@ Control {
         readonly property var selDelim: messageInputField.delimitersAtSelection(
                                             messageInputField.selectionStart, messageInputField.selectionEnd)
 
+        // Code state driving the tri-state code button (none → span → block → none). At the caret it
+        // comes from the AST node or the raw delimiter run; across a selection from selDelim.
+        readonly property bool hasCodeSpan: hasSelection
+                ? selDelim.codeSpan
+                : (caretNode.codeSpan || caretDelim.codeSpan)
+        readonly property bool hasCodeBlock: hasSelection
+                ? selDelim.codeBlock
+                : (caretNode.codeBlock || caretDelim.codeBlock)
+
         // Adds `kind` formatting around the selection (or caret).
         function addFormatting(kind) {
             messageInputField.addFormatting(messageInputField.selectionStart,
                                             messageInputField.selectionEnd, kind)
+            messageInputField.forceActiveFocus()
+        }
+
+        // Swaps the `fromKind` formatting around the caret for `toKind` (e.g. code span → code block).
+        function replaceFormatting(fromKind, toKind) {
+            messageInputField.replaceFormatting(messageInputField.cursorPosition, fromKind, toKind)
             messageInputField.forceActiveFocus()
         }
 
@@ -933,16 +948,19 @@ Control {
                 ? d.removeActiveFormatting("quote", d.caretNode.quote, false, "quote")
                 : d.addFormatting("quote")
 
+            // Tri-state code button: an empty caret/selection inserts a code span; a code span is
+            // upgraded to a code block; a code block is removed.
             codeButton.checkable: false
-            codeButton.checked: d.hasSelection ? (d.selDelim.codeSpan || d.selDelim.codeBlock)
-                                               : (d.caretNode.codeSpan || d.caretNode.codeBlock
-                                                  || d.caretDelim.codeSpan || d.caretDelim.codeBlock)
-            codeButton.onClicked: codeButton.checked
-                ? d.removeActiveFormatting(d.selDelim.codeBlock ? "codeBlock" : "codeSpan",
-                                           d.caretNode.codeSpan || d.caretNode.codeBlock,
-                                           d.caretDelim.codeSpan || d.caretDelim.codeBlock,
-                                           (d.caretNode.codeBlock || d.caretDelim.codeBlock) ? "codeBlock" : "codeSpan")
-                : d.addFormatting("codeSpan")
+            codeButton.checked: d.hasCodeSpan || d.hasCodeBlock
+            codeButton.onClicked: {
+                if (d.hasCodeBlock)
+                    d.removeActiveFormatting("codeBlock", d.caretNode.codeBlock,
+                                             d.caretDelim.codeBlock, "codeBlock")
+                else if (d.hasCodeSpan)
+                    d.replaceFormatting("codeSpan", "codeBlock")
+                else
+                    d.addFormatting("codeSpan")
+            }
 
             stickersButton.checked: d.stickersPopupOpened
             stickersButton.visible: root.stickersButtonVisible
