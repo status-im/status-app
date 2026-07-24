@@ -12,6 +12,17 @@ function Install-Scoop {
     }
 }
 
+# Throw error on native command failure, which is not the default behavior.
+# $PSNativeCommandUseErrorActionPreference works only in PowerShell 7.4.
+function run {
+    $cmd = $args[0]
+    $cmdArgs = @($args | Select-Object -Skip 1)
+    & $cmd @cmdArgs
+    if ($LASTEXITCODE -ne 0) {
+        throw "ERROR: Exit code $LASTEXITCODE for command: '$cmd $cmdArgs'"
+    }
+}
+
 # Install Protobuf tool necessary to generate status-go files.
 function Install-Protobuf-Go {
     $ProtocGenVersion = "v1.34.1"
@@ -24,7 +35,7 @@ function Install-Protobuf-Go {
         throw "SHA256 hash does not match for $ProtocGenZIP !"
     }
     New-Item "$env:USERPROFILE\go\bin" -ItemType Directory -ea 0
-    7z x -o="$env:USERPROFILE\go\bin" -y "$env:USERPROFILE\$ProtocGenZIP"
+    run 7z x "-o$env:USERPROFILE\go\bin" -y "$env:USERPROFILE\$ProtocGenZIP"
 }
 
 function Scoop-Install([string]$package, [string]$version) {
@@ -33,10 +44,10 @@ function Scoop-Install([string]$package, [string]$version) {
 
     if (Test-Path "C:\ProgramData\scoop\apps\$appName\$version") {
         Write-Host "Already installed: $fullName"
-        scoop list $appName
+        run scoop list $appName
     } else {
         Write-Host "Installing: $fullName"
-        scoop install --global "$fullName"
+        run scoop install --global "$fullName"
     }
 }
 
@@ -44,16 +55,16 @@ function Scoop-Install([string]$package, [string]$version) {
 function Install-Dependencies {
     Write-Host "Installing dependencies..."
     if (!(scoop bucket list | Where { $_.Name -eq "extras" })) {
-        scoop bucket add extras
+        run scoop bucket add extras
     }
     if (!(scoop bucket list | Where { $_.Name -eq "status" })) {
-        scoop bucket add status https://github.com/status-im/infra-scoop-bucket.git
+        run scoop bucket add status "https://github.com/status-im/infra-scoop-bucket.git"
     }
-    scoop update
+    run scoop update
     # Trying to 'hold' git breaks due to how hosts are bootstrapped.
-    scoop install --global git 7zip innounp dos2unix findutils wget rcedit
+    run scoop install --global git 7zip innounp dos2unix findutils wget rcedit
     # Old versions can cause weird Scoop install errors.
-    scoop update --global 7zip innounp
+    run scoop update --global 7zip innounp
     # WARNING: Remember to update PATH in ci/Jenkinsfile.windows.
     Scoop-Install 'status/go'            '1.24.7'
     Scoop-Install 'status/nim'           '2.2.6'
@@ -77,12 +88,26 @@ function Install-MSYS2-Packages {
 
 function Install-Qt-SDK {
     Write-Host "Installing Qt $QtVersion SDK..."
-    pip install aqtinstall
-    aqt install-qt -O "C:\Qt" windows desktop $QtVersion win64_msvc2022_64 -m all
+    run pip install aqtinstall
+    run aqt install-qt -O "C:\Qt" windows desktop $QtVersion win64_msvc2022_64 -m all
 }
 
 # Install Microsoft Visual C++ Build Tools 17.13.35
 function Install-VC-BuildTools {
+    $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+    $buildToolsPath = if (Test-Path $vswhere) {
+        & $vswhere `
+            -products Microsoft.VisualStudio.Product.BuildTools `
+            -latest `
+            -requires Microsoft.VisualStudio.Workload.VCTools `
+            -property installationPath
+    }
+    # Installer fails with exit code 1 if Build Tools already present.
+    if ($buildToolsPath) {
+        Write-Host "Visual Studio Build Tools already installed."
+        Return
+    }
+
     $VCBuildToolsUrl = "https://aka.ms/vs/17/release/vs_BuildTools.exe"
     $VCBuildToolsExe = "$HOME\Downloads\vs_BuildTools.exe"
 
@@ -103,7 +128,10 @@ function Install-VC-BuildTools {
         "--add", "Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Win81",
         "--add", "Microsoft.VisualStudio.ComponentGroup.UWP.VC.v141.BuildTools"
     )
-    Start-Process -Wait -PassThru -FilePath $VCBuildToolsExe -ArgumentList $VCBuildToolsArgs
+    $process = Start-Process -Wait -PassThru -FilePath $VCBuildToolsExe -ArgumentList $VCBuildToolsArgs
+    if ($process.ExitCode -ne 0) {
+        throw "ERROR: Build tools installation failed wit exit code: $($process.ExitCode)"
+    }
 }
 
 function Show-Success-Message {
