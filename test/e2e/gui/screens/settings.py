@@ -8,12 +8,12 @@ from gui.objects_map import settings_names
 from gui.screens.settings_advanced import AdvancedSettingsView
 from gui.screens.settings_communities import CommunitiesSettingsView
 from gui.screens.settings_ens_usernames import ENSSettingsView
-from gui.screens.settings_keycard import KeycardSettingsView
 from gui.screens.settings_messaging import MessagingSettingsView
 from gui.screens.settings_profile import ProfileSettingsView
 from gui.screens.settings_syncing import SyncingSettingsView
 from gui.screens.settings_wallet import WalletSettingsView
 from gui.screens.settings_password import ChangePasswordView
+from gui.screens.keycard_settings import KeycardSettingsView
 from gui.components.settings.sign_out_popup import SignOutPopup
 
 from scripts.utils.decorators import retry_settings
@@ -73,11 +73,6 @@ class SettingsLeftPanel(QObject):
     def open_sign_out_and_quit(self) -> 'SignOutPopup':
         return SignOutPopup().wait_until_appears()
 
-    @allure.step('Open keycard settings')
-    @retry_settings(KeycardSettingsView, '14-MenuItem')
-    def open_keycard_settings(self) -> 'KeycardSettingsView':
-        return KeycardSettingsView().wait_until_appears()
-
     @allure.step('Open ENS usernames settings')
     @retry_settings(ENSSettingsView, '3-MenuItem')
     def open_ens_usernames_settings(self) -> 'ENSSettingsView':
@@ -87,6 +82,11 @@ class SettingsLeftPanel(QObject):
     @retry_settings(AdvancedSettingsView, '11-MenuItem')
     def open_advanced_settings(self) -> 'AdvancedSettingsView':
         return AdvancedSettingsView().wait_until_appears()
+
+    @allure.step('Open keycard settings')
+    @retry_settings(KeycardSettingsView, '14-MenuItem')
+    def open_keycard_settings(self) -> 'KeycardSettingsView':
+        return KeycardSettingsView().wait_until_appears()
 
 
 class SettingsScreen(QObject):

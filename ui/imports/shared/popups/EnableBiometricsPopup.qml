@@ -10,6 +10,8 @@ import StatusQ.Components
 StatusDialog {
     id: root
 
+    objectName: "EnableBiometricsPopup"
+
     property string errorText
     property bool loading
 

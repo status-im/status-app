@@ -111,3 +111,8 @@ def random_emoji_with_unicode() -> tuple:
 def random_wallet_account_color():
     color = random.choice(WalletAccountColors.wallet_account_colors())
     return color.lower()
+
+
+def keycard_card_id(prefix: str = 'test-card') -> str:
+    suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    return f'{prefix}-{suffix}'

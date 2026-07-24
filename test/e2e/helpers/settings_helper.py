@@ -5,7 +5,9 @@ Reduces code duplication across test files.
 import logging
 import time
 import allure
-from gui.components.settings.keycard_popup import KeycardPopup
+from gui.elements.button import Button
+from gui.elements.object import QObject
+from gui.objects_map import keycard_names, names
 from gui.screens.settings_wallet import NetworkWalletSettings
 
 LOG = logging.getLogger(__name__)
@@ -101,9 +103,9 @@ def verify_toast_notification(main_window, expected_message):
 def skip_pcsc_error_popup_if_visible():
     time.sleep(0.1)
 
-    pcsc_error_popup = KeycardPopup()
-    if pcsc_error_popup.is_visible:
-        pcsc_error_popup.close_button.click()
+    popup = QObject(keycard_names.keycardManagementPopup)
+    if popup.is_visible:
+        Button(names.headerCloseButton_StatusFlatRoundButton).click()
         time.sleep(0.1)
 
 

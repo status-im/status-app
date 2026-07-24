@@ -14,7 +14,6 @@ startupLanguageSelector = {"container": statusDesktop_mainWindow, "type": "Statu
 # Sign in view
 enterRecoveryPhraseButton = {"container": startupOnboardingLayout, "objectName": "btnWithSeedphrase", "type": "StatusButton", "visible": True}
 logInBySyncingButton = {"container": startupOnboardingLayout, "objectName": "btnBySyncing", "type": "ListItemButton", "visible": True}
-logInWithKeycardButton = {"container": startupOnboardingLayout, "objectName": "btnWithKeycard", "type": "ListItemButton", "visible": True}
 
 onboardingLayout = {"container": statusDesktop_mainWindow, "objectName": "OnboardingLayout", "type": "ContentItem", "visible": True}
 
@@ -23,7 +22,20 @@ onboardingFrame = {"container": onboardingLayout, "type": "OnboardingFrame", "un
 buttonFrame = {"container": onboardingLayout, "id": "buttonFrame", "type": "OnboardingButtonFrame", "unnamed": 1, "visible": True}
 startFreshLetsGoButton = {"container": onboardingFrame, "objectName": "btnCreateWithPassword", "type": "StatusButton", "visible": True}
 useRecoveryPhraseButton = {"container": buttonFrame, "objectName": "btnCreateWithSeedPhrase", "type": "ListItemButton", "visible": True}
-useEmptyKeycardButton = {"container": statusDesktop_mainWindow, "objectName": "btnCreateWithEmptyKeycard", "type": "ListItemButton", "visible": True}
+createProfileWithKeycardButton = {"container": statusDesktop_mainWindow, "objectName": "btnCreateWithEmptyKeycard", "type": "ListItemButton", "visible": True}
+
+# Keycard details page (onboarding)
+mainWindow_keycardDetailsPage = {"container": statusDesktop_mainWindow, "objectName": "keycardDetailsPage",
+                                 "type": "KeycardDetailsPage", "visible": True}
+keycardDetailsTitle = {"container": mainWindow_keycardDetailsPage, "objectName": "keycardDetailsTitle",
+                       "type": "StatusBaseText", "visible": True}
+onboardingKeycardDetailsImportNewKeypair = {"container": mainWindow_keycardDetailsPage,
+                                            "objectName": "keycardDetailsImportNewKeypair", "type": "StatusListItem",
+                                            "visible": True}
+
+# Log in view
+loginWithKeycardButton = {"container": statusDesktop_mainWindow, "objectName": "btnWithKeycard", "type": "ListItemButton",
+                          "visible": True}
 
 # Log in by syncing dialog
 statusDialog = {"container": statusDesktop_mainWindow_overlay, "objectName": "StatusDialog", "type": "PopupItem", "visible": True}
@@ -105,12 +117,6 @@ synced_StatusBaseText = {"container": statusDesktop_mainWindow, "type": "StatusB
 doneButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "syncAnewDeviceNextButton", "type": "StatusButton", "visible": True}
 mainWindow_Sign_in_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow, "text": "Sign in", "type": "StatusButton", "unnamed": 1, "visible": True}
 sync_text_item = {"container": statusDesktop_mainWindow, "type": "StatusBaseText", "unnamed": 1, "visible": True}
-
-# Keycard Init View
-mainWindow_KeycardInitView = {"container": statusDesktop_mainWindow, "type": "KeycardInitView", "unnamed": 1,
-                              "visible": True}
-mainWindow_Plug_in_Keycard_reader_StatusBaseText = {"container": mainWindow_KeycardInitView, "type": "StatusBaseText",
-                                                    "unnamed": 1, "visible": True}
 
 # Your Profile View
 mainWindow_InsertDetailsView = {"container": statusDesktop_mainWindow, "objectName": "onboardingInsertDetailsView", "type": "InsertDetailsView", "visible": True}

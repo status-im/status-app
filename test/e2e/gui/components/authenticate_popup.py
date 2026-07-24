@@ -13,7 +13,7 @@ class AuthenticatePopup(QObject):
         super().__init__(names.authenticatePopup)
         self._password_text_edit = TextEdit(names.authenticate_keycardPasswordInput)
         self._authenticate_button = Button(names.authenticate_StatusButton)
-        self._primary_button = Button(names.sharedPopup_Primary_Button)
+        self._primary_button = Button(names.authenticate_StatusButton)
         self._close_button = Button(names.headerCloseButton_StatusFlatRoundButton)
 
     @allure.step('Wait until appears {0}')

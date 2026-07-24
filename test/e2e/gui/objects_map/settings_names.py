@@ -70,18 +70,6 @@ contactsTabBar_Blocked_StatusTabButton = {"container": mainWindow_ContactsView, 
 unblock_user_StatusMenuItem = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "unblock_StatusItem", "type": "StatusMenuItem", "visible": True}
 block_user_StatusMenuItem = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "blockUser_StatusItem", "type": "StatusMenuItem", "visible": True}
 
-# Keycard Settings View
-mainWindow_KeycardView = {"container": statusDesktop_mainWindow, "objectName": "settings_KeycardView", "type": "KeycardViewNew", "visible": True}
-get_keycard_StatusButton = {"container": mainWindow_KeycardView, "objectName": "settings_Keycard_MainView_GetKeycardButton", "type": "StatusButton", "visible": True}
-read_keycard_StatusButton = {"container": mainWindow_KeycardView, "objectName": "settings_Keycard_ReadKeycardButton", "type": "StatusButton", "visible": True}
-keycard_main_view_description_StatusBaseText = {"container": mainWindow_KeycardView, "objectName": "settings_Keycard_MainView_Description", "type": "StatusBaseText", "visible": True}
-setupFromExistingKeycardAccount_StatusListItem = {"container": settingsContentBase_ScrollView, "objectName": "setupFromExistingKeycardAccount", "type": "StatusListItem", "visible": True}
-createNewKeycardAccount_StatusListItem = {"container": settingsContentBase_ScrollView, "objectName": "createNewKeycardAccount", "type": "StatusListItem", "visible": True}
-importRestoreKeycard_StatusListItem = {"container": settingsContentBase_ScrollView, "objectName": "importRestoreKeycard", "type": "StatusListItem", "visible": True}
-importFromKeycard_StatusListItem = {"container": settingsContentBase_ScrollView, "objectName": "importFromKeycard", "type": "StatusListItem", "visible": True}
-checkWhatsNewKeycard_StatusListItem = {"container": settingsContentBase_ScrollView, "objectName": "checkWhatsNewKeycard", "type": "StatusListItem", "visible": True}
-factoryResetKeycard_StatusListItem = {"container": settingsContentBase_ScrollView, "objectName": "factoryResetKeycard", "type": "StatusListItem", "visible": True}
-
 # Wallet Settings View
 mainWindow_WalletView = {"container": statusDesktop_mainWindow, "id": "walletView", "type": "Loader", "unnamed": 1, "visible": True}
 settingsWallet_View = {"container": statusDesktop_mainWindow, "type": "WalletView", "unnamed": 1, "visible": True}

@@ -37,6 +37,7 @@ LOG.info('Logging to stderr and %s (level=%s)', configs.PYTEST_LOG, _log_level_n
 
 pytest_plugins = [
     'fixtures.aut',
+    'fixtures.keycard',
     'fixtures.path',
     'fixtures.squish',
 ]
@@ -132,7 +133,6 @@ def setup_function_scope(
         caplog,
         generate_test_data,
         application_logs,
-        launch_keycard_controller
 ):
     # FIXME: broken due to KeyError: <_pytest.stash.StashKey object at 0x7fd1ba6d78c0>
     # caplog.set_level(configs.LOG_LEVEL)

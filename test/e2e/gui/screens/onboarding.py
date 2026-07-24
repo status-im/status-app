@@ -21,6 +21,7 @@ from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.text_edit import TextEdit
 from gui.elements.text_label import TextLabel
+from gui.components.keycard.management_popup import KeycardManagementPopup
 from gui.objects_map import onboarding_names
 from scripts.tools.image import Image
 from scripts.utils.system_path import SystemPath
@@ -47,10 +48,14 @@ class OnboardingWelcomeToStatusView(QObject):
         self.create_profile_button.click()
         return CreateYourProfileViewOnboarding().wait_until_appears()
 
+    @allure.step('Open Log in page')
+    def open_login_page(self) -> 'OnboardingLogIn':
+        self.log_in_button.click()
+        return OnboardingLogIn().wait_until_appears()
+
     @allure.step('Open Sign by syncing form')
     def sync_existing_user(self) -> 'OnboardingSyncCodeView':
-        self.log_in_button.click()
-        OnboardingLogIn().wait_until_appears().log_in_by_syncing_button.click()
+        self.open_login_page().log_in_by_syncing_button.click()
         LogInBySyncingDialog().wait_until_appears().complete()
         return OnboardingSyncCodeView().wait_until_appears()
 
@@ -60,7 +65,12 @@ class CreateYourProfileViewOnboarding(OnboardingWelcomeToStatusView):
         super().__init__()
         self.lets_go_button = Button(onboarding_names.startFreshLetsGoButton)
         self.use_a_recovery_phrase_button = Button(onboarding_names.useRecoveryPhraseButton)
-        self.use_an_empty_keycard_button = Button(onboarding_names.useEmptyKeycardButton)
+        self.use_keycard_button = Button(onboarding_names.createProfileWithKeycardButton)
+
+    @allure.step('Wait until Create profile page appears')
+    def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+        self.lets_go_button.wait_until_appears(timeout_msec)
+        return self
 
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
         self.lets_go_button.wait_until_appears(timeout_msec)
@@ -74,13 +84,29 @@ class CreateYourProfileViewOnboarding(OnboardingWelcomeToStatusView):
         self.use_a_recovery_phrase_button.click()
         return OnboardingImportSeedPhraseView()
 
+    @allure.step('Open create profile with keycard flow')
+    def open_create_profile_with_keycard(self) -> KeycardManagementPopup:
+        self.use_keycard_button.click()
+        return KeycardManagementPopup().wait_until_appears()
 
-class OnboardingLogIn(OnboardingWelcomeToStatusView):
+
+class OnboardingLogIn(QObject):
+
     def __init__(self):
-        super().__init__()
+        super().__init__(onboarding_names.startupOnboardingLayout)
         self.enter_recovery_phrase_button = Button(onboarding_names.enterRecoveryPhraseButton)
         self.log_in_by_syncing_button = Button(onboarding_names.logInBySyncingButton)
-        self.log_in_with_keycard_button = Button(onboarding_names.logInWithKeycardButton)
+        self.use_keycard_button = Button(onboarding_names.loginWithKeycardButton)
+
+    @allure.step('Wait until Log in page appears')
+    def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+        self.use_keycard_button.wait_until_appears(timeout_msec)
+        return self
+
+    @allure.step('Open login with keycard flow')
+    def open_login_with_keycard(self) -> KeycardManagementPopup:
+        self.use_keycard_button.click()
+        return KeycardManagementPopup()
 
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
         self.enter_recovery_phrase_button.wait_until_appears(timeout_msec)
@@ -282,17 +308,6 @@ class SeedPhraseInputView(OnboardingView):
     def import_seed_phrase(self):
         self._import_button.click()
         return YourProfileView().wait_until_appears()
-
-
-class KeycardInitView(OnboardingView):
-
-    def __init__(self):
-        super().__init__(onboarding_names.mainWindow_KeycardInitView)
-        self._message = TextLabel(onboarding_names.mainWindow_Plug_in_Keycard_reader_StatusBaseText)
-
-    @property
-    def message(self) -> str:
-        return self._message.text
 
 
 class YourProfileView(OnboardingView):

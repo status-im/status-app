@@ -11,16 +11,6 @@ _EXPECTED_SEED_VERIFY_FIELDS = 4
 
 
 def _seed_cell_object_name(cell) -> str:
-    name = getattr(cell, 'objectName', None)
-    if name:
-        return str(name)
-    try:
-        return str(cell['objectName'])
-    except (TypeError, KeyError, AttributeError):
-        return ''
-
-
-def _seed_cell_object_name(cell) -> str:
     """Squish remote objects expose objectName as an attribute."""
     name = getattr(cell, 'objectName', None)
     if name:
@@ -32,11 +22,11 @@ def _seed_cell_object_name(cell) -> str:
 
 
 class ConfirmRecoveryPhrase(QObject):
-    def __init__(self):
+    def __init__(self, continue_button_real_name=None):
         super().__init__(names.confirmRecoveryPhraseModal)
 
         self.seed_input = QObject(names.seedInput)
-        self.continue_button = Button(names.continueButton)
+        self.continue_button = Button(continue_button_real_name or names.continueButton)
 
     def _wait_for_seed_verify_inputs(self, timeout_msec: int = None) -> list:
         if timeout_msec is None:

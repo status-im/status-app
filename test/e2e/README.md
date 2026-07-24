@@ -155,6 +155,25 @@ macOS e2e runs **locally only** (Linux and Windows run in Jenkins). You need a D
 4. Download DMG, copy `Status.app` (e.g. `~/Downloads/Status.app`)
 5. `AUT_PATH = "/Users/you/Downloads/Status.app"` in `configs/_local.py`
 
+### Keycard e2e (`@pytest.mark.keycard`)
+
+Needs a build with simulated keycard (`USE_SIMULATED_KEYCARD=true`). Set `AUT_PATH` in `configs/_local.py`, then:
+
+```bash
+cd test/e2e && source .venv/bin/activate
+pytest -m keycard -v
+```
+
+**1. Dev build** — from repo root:
+
+```bash
+USE_SIMULATED_KEYCARD=true make -j12
+```
+
+`AUT_PATH` → `…/status-app/bin/nim_status_client` (or the platform equivalent under `bin/`).
+
+**2. Packaged build** (`Status.app` / AppImage / exe) — CI **Build with Parameters** → enable `USE_SIMULATED_KEYCARD` (on macOS also Squish entitlements as [above](#getting-a-mac-build-from-ci)). `AUT_PATH` → the packaged app.
+
 ---
 
 ## Logs
@@ -201,6 +220,7 @@ pytest --markers        # list all marks
 ```
 
 - `critical` — important desktop PR checks
+- `keycard` — simulated keycard tests (`USE_SIMULATED_KEYCARD=true` build)
 - `skip` — skipped tests (usually with a ticket)
 - `timeout(...)` — hanging-test guard (`pytest-timeout`)
 

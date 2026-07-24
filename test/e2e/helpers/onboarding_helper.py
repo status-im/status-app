@@ -1,15 +1,20 @@
 import allure
 
-import configs
-from configs.timeouts import APP_LOAD_TIMEOUT_MSEC
+from configs.timeouts import APP_LOAD_TIMEOUT_MSEC, UI_LOAD_TIMEOUT_MSEC
 from gui.components.education_popup import EducationPopup
-
+from gui.components.enable_biometrics_popup import EnableBiometricsPopup
 from gui.components.splash_screen import SplashScreen
 from gui.screens.onboarding import OnboardingWelcomeToStatusView
 
 
 def open_create_profile_view():
     return OnboardingWelcomeToStatusView().wait_until_appears().open_create_your_profile_view()
+
+
+@allure.step('Wait until user is logged in')
+def wait_until_logged_in(main_window):
+    SplashScreen().wait_until_appears().wait_until_hidden(APP_LOAD_TIMEOUT_MSEC)
+    main_window.left_panel.messages_button.wait_until_appears(APP_LOAD_TIMEOUT_MSEC)
 
 
 def import_seed_and_log_in(create_your_profile_view, seed_phrase, user_account):
@@ -20,8 +25,9 @@ def import_seed_and_log_in(create_your_profile_view, seed_phrase, user_account):
     splash_screen = SplashScreen().wait_until_appears()
     splash_screen.wait_until_hidden(APP_LOAD_TIMEOUT_MSEC)
 
+
 @allure.step('Skip Education popup if visible')
-def skip_education_popup_if_visible(attempts = 4):
+def skip_education_popup_if_visible(attempts=4):
     education_popup = EducationPopup()
     if not education_popup.is_visible:
         return
@@ -36,3 +42,10 @@ def skip_education_popup_if_visible(attempts = 4):
             else:
                 raise Exception(f"Failed to close education popup after {attempts} attempts: {e}")
 
+
+@allure.step('Skip Enable biometrics popup if visible')
+def skip_biometrics_popup_if_visible(timeout_msec: int = UI_LOAD_TIMEOUT_MSEC):
+    try:
+        EnableBiometricsPopup().skip(timeout_msec)
+    except TimeoutError:
+        return

@@ -1,5 +1,4 @@
 import logging
-import os
 
 LOG_LEVEL = logging.DEBUG
 DEV_BUILD = False
@@ -22,4 +21,3 @@ DEV_BUILD = False
 # AUT_PATH = "/Users/you/status-app/bin/nim_status_client"
 
 AUT_PATH = "path to the application (.app or .AppImage)"
-os.environ['STATUS_RUNTIME_USE_MOCKED_KEYCARD'] = 'False'

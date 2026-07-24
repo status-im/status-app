@@ -1,7 +1,6 @@
 import squish
 
 from constants.wallet import *
-from gui.screens.settings_keycard import KeycardSettingsView
 from gui.screens.settings_wallet import *
 from gui.components.emoji_popup import EmojiPopup
 from gui.components.authenticate_popup import AuthenticatePopup
@@ -34,7 +33,6 @@ class AccountPopup(QObject):
         self._watched_address_origin_item = QObject(names.mainWallet_AddEditAccountPopup_OriginOptionWatchOnlyAcc)
         self._new_master_key_origin_item = QObject(names.mainWallet_AddEditAccountPopup_OriginOptionNewMasterKey)
         self._existing_origin_item = QObject(names.addAccountPopup_OriginOption_StatusListItem)
-        self._use_keycard_button = QObject(names.mainWallet_AddEditAccountPopup_MasterKey_GoToKeycardSettingsOption)
         # derivation
         self._address_text_edit = TextEdit(names.mainWallet_AddEditAccountPopup_AccountWatchOnlyAddress)
         self._add_save_account_confirmation_button = Button(names.mainWallet_AddEditAccountPopup_PrimaryButton)
@@ -161,13 +159,6 @@ class AccountPopup(QObject):
         else:
             self._derivation_path_text_edit.type_text(str(index))
         return self
-
-    @allure.step('Click continue in keycard settings')
-    def continue_in_keycard_settings(self):
-        self._origin_combobox.click()
-        self.click_new_master_key()
-        self._use_keycard_button.click()
-        return KeycardSettingsView().wait_until_appears(), 'Keycard settings view was not opened'
 
     @allure.step('Click confirmation (add account / save changes) button')
     def save_changes(self):

@@ -24,8 +24,6 @@ splashScreen = {"container": statusDesktop_mainWindow, "objectName": "splashScre
                 "visible": True}
 mainWindow_LoadingAnimation = {"container": statusDesktop_mainWindow, "objectName": "loadingAnimation",
                                "type": "LoadingAnimation", "visible": True}
-keycardPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "KeycardPopup", "type": "PopupItem", "visible": True}
-keycardPopupCloseButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "headerCloseButton", "type": "StatusFlatRoundButton", "visible": True}
 primaryNavSidebar = {"container": statusDesktop_mainWindow, "objectName": "primaryNavSideBarControl", "type": "Control", "visible": True}
 
 # Common names
@@ -36,6 +34,13 @@ mainWindow_Save_changes_StatusButton = {"container": statusDesktop_mainWindow,
                                         "visible": True}
 closeCrossPopupButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "headerActionsCloseButton",
                          "type": "StatusFlatRoundButton", "visible": True}
+
+# Enable biometrics popup (post-login)
+enableBiometricsPopup = {"container": statusDesktop_mainWindow_overlay,
+                         "objectName": "EnableBiometricsPopup", "type": "PopupItem", "visible": True}
+enableBiometricsMaybeLaterButton = {"container": statusDesktop_mainWindow_overlay,
+                                    "objectName": "btnDontEnableBiometrics",
+                                    "type": "StatusButton", "visible": True}
 
 # Main left panel (Chat, wallet, swaps, communities portal and settings buttons container)
 mainWindow_scrollView_StatusScrollView = {"container": statusDesktop_mainWindow, "id": "scrollView",
@@ -627,15 +632,6 @@ headerCloseButton_StatusFlatRoundButton = {"container": statusDesktop_mainWindow
                                            "objectName": "headerCloseButton", "type": "StatusFlatRoundButton",
                                            "visible": True}
 
-# Shared Popup
-sharedPopup_Popup_Content = {"container": statusDesktop_mainWindow, "objectName": "KeycardSharedPopupContent",
-                             "type": "Item"}
-sharedPopup_Password_Input = {"container": sharedPopup_Popup_Content, "objectName": "keycardPasswordInput",
-                              "type": "TextField"}
-sharedPopup_Primary_Button = {"container": statusDesktop_mainWindow_overlay,
-                              "objectName": "keycardPopupBaseSubmitButton",
-                              "type": "StatusButton", "visible": True, "enabled": True}
-
 # Wallet Account Popup
 mainWallet_AddEditAccountPopup_derivationPath = {"container": statusDesktop_mainWindow, "objectName": RegularExpression(
     "AddAccountPopup-PreDefinedDerivationPath*"), "type": "StatusListItem", "visible": True}
@@ -962,64 +958,9 @@ close_chat_StatusButton = {"checkable": False, "container": statusDesktop_mainWi
                            "objectName": "deleteChatConfirmationDialogDeleteButton", "text": "Close chat",
                            "type": "StatusButton", "visible": True}
 
-# Create Keycard account with new seed phrase popup
+# Popup cancel button (shared across multiple popups)
 cancel_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "id": "cancelButton",
                        "type": "StatusButton", "visible": True}
-image_KeycardImage = {"container": statusDesktop_mainWindow_overlay, "id": "image", "type": "KeycardImage",
-                      "unnamed": 1, "visible": True}
-img_Image = {"container": statusDesktop_mainWindow_overlay, "id": "img", "type": "Image", "unnamed": 1, "visible": True}
-headerTitle = {"container": statusDesktop_mainWindow_overlay, "objectName": "headerTitle", "type": "StatusBaseText",
-               "visible": True}
-o_KeycardInit = {"container": statusDesktop_mainWindow_overlay, "type": "KeycardInit", "unnamed": 1, "visible": True}
-keycard_reader_instruction_text = {"container": statusDesktop_mainWindow_overlay, "type": "StatusBaseText",
-                                   "visible": True}
-pinInputField_StatusPinInput = {"container": statusDesktop_mainWindow_overlay, "id": "pinInputField",
-                                "type": "StatusPinInput", "unnamed": 1, "visible": True}
-inputText_TextInput = {"container": statusDesktop_mainWindow_overlay, "id": "inputText", "type": "TextInput",
-                       "unnamed": 1, "visible": False}
-nextStatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "objectName": "PrimaryButton",
-                    "type": "StatusButton", "visible": True}
-revealSeedPhraseButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
-                          "objectName": "AddAccountPopup-RevealSeedPhrase", "type": "StatusButton", "visible": True}
-seedPhraseWordAtIndex_Placeholder = {"container": statusDesktop_mainWindow_overlay,
-                                     "objectName": "SeedPhraseWordAtIndex-%WORD-INDEX%",
-                                     "type": "StatusSeedPhraseInput", "visible": True}
-word0_StatusInput = {"container": statusDesktop_mainWindow_overlay, "id": "word0", "type": "StatusInput", "unnamed": 1,
-                     "visible": True}
-word1_StatusInput = {"container": statusDesktop_mainWindow_overlay, "id": "word1", "type": "StatusInput", "unnamed": 1,
-                     "visible": True}
-word2_StatusInput = {"container": statusDesktop_mainWindow_overlay, "id": "word2", "type": "StatusInput", "unnamed": 1,
-                     "visible": True}
-o_KeyPairItem = {"container": statusDesktop_mainWindow_overlay, "type": "KeyPairItem", "unnamed": 1, "visible": True}
-o_KeyPairUnknownItem = {"container": statusDesktop_mainWindow_overlay, "type": "KeyPairUnknownItem", "unnamed": 1,
-                        "visible": True}
-o_StatusListItemTag = {"container": statusDesktop_mainWindow_overlay, "type": "StatusListItemTag", "unnamed": 1,
-                       "visible": True}
-radioButton_StatusRadioButton = {"checkable": True, "container": statusDesktop_mainWindow_overlay, "id": "radioButton",
-                                 "type": "StatusRadioButton", "unnamed": 1, "visible": True}
-statusSeedPhraseInputField_TextEdit = {"container": statusDesktop_mainWindow_overlay,
-                                       "objectName": "enterSeedPhraseInputField", "type": "TextField", "visible": True}
-switchTabBar_StatusSwitchTabBar = {"container": statusDesktop_mainWindow_overlay,
-                                   "objectName": "enterSeedPhraseSwitchBar", "type": "StatusSwitchTabBar",
-                                   "visible": True}
-switchTabBar_12_words_StatusSwitchTabButton = {"checkable": True, "container": switchTabBar_StatusSwitchTabBar,
-                                               "objectName": "12SeedButton", "type": "StatusSwitchTabButton",
-                                               "visible": True}
-switchTabBar_18_words_StatusSwitchTabButton = {"checkable": True, "container": switchTabBar_StatusSwitchTabBar,
-                                               "objectName": "18SeedButton", "type": "StatusSwitchTabButton",
-                                               "visible": True}
-switchTabBar_24_words_StatusSwitchTabButton = {"checkable": True, "container": switchTabBar_StatusSwitchTabBar,
-                                               "objectName": "24SeedButton", "type": "StatusSwitchTabButton",
-                                               "visible": True}
-i_understand_the_key_pair_on_this_Keycard_will_be_deleted_StatusCheckBox = {"checkable": True,
-                                                                            "container": statusDesktop_mainWindow_overlay,
-                                                                            "id": "confirmation",
-                                                                            "type": "StatusCheckBox", "visible": True}
-statusSmartIdenticonLetter_StatusLetterIdenticon = {"container": statusDesktop_mainWindow_overlay,
-                                                    "objectName": "statusSmartIdenticonLetter",
-                                                    "type": "StatusLetterIdenticon", "visible": True}
-secondary_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "id": "secondaryButton",
-                          "type": "StatusButton", "unnamed": 1, "visible": True}
 
 # Send Popup
 o_StatusTabBar = {"container": statusDesktop_mainWindow_overlay, "type": "StatusTabBar", "unnamed": 1, "visible": True}
@@ -1282,69 +1223,6 @@ savedAddressesArea_SavedAddresses = {"container": mainWindow_SavedAddressesView,
                                      "type": "SavedAddresses", "visible": True}
 savedAddresses_area = {"container": mainWindow_SavedAddressesView_2, "objectName": "savedAddressesArea",
                        "type": "SavedAddresses", "visible": True}
-
-# MOCKED KEYCARD CONTROLLER NAMES
-
-QQuickApplicationWindow = {"type": "QQuickApplicationWindow", "unnamed": 1, "visible": True}
-mocked_Keycard_Lib_Controller_Overlay = {"container": QQuickApplicationWindow, "type": "Overlay", "unnamed": 1,
-                                         "visible": True}
-
-plugin_Reader_StatusButton = {"checkable": False, "container": QQuickApplicationWindow,
-                              "objectName": "pluginReaderButton", "type": "StatusButton", "visible": True}
-unplug_Reader_StatusButton = {"checkable": False, "container": QQuickApplicationWindow,
-                              "objectName": "unplugReaderButton", "type": "StatusButton", "visible": True}
-insert_Keycard_1_StatusButton = {"checkable": False, "container": QQuickApplicationWindow,
-                                 "objectName": "insertKeycard1Button", "type": "StatusButton", "visible": True}
-insert_Keycard_2_StatusButton = {"checkable": False, "container": QQuickApplicationWindow,
-                                 "objectName": "insertKeycard2Button", "type": "StatusButton", "visible": True}
-remove_Keycard_StatusButton = {"checkable": False, "container": QQuickApplicationWindow,
-                               "objectName": "removeKeycardButton", "type": "StatusButton", "visible": True}
-set_initial_reader_state_StatusButton = {"checkable": False, "container": QQuickApplicationWindow,
-                                         "id": "selectReaderStateButton", "type": "StatusButton", "visible": True}
-keycardSettingsTab = {"container": QQuickApplicationWindow, "type": "KeycardSettingsTab", "visible": True}
-set_initial_keycard_state_StatusButton = {"checkable": False, "container": keycardSettingsTab,
-                                          "id": "selectKeycardsStateButton", "type": "StatusButton", "visible": True}
-register_Keycard_StatusButton = {"checkable": False, "container": keycardSettingsTab,
-                                 "objectName": "registerKeycardButton", "type": "StatusButton", "visible": True}
-
-not_Status_Keycard_StatusMenuItem = {"checkable": False, "container": mocked_Keycard_Lib_Controller_Overlay,
-                                     "enabled": True, "objectName": "notStatusKeycardAction", "type": "StatusMenuItem",
-                                     "visible": True}
-empty_Keycard_StatusMenuItem = {"checkable": False, "container": mocked_Keycard_Lib_Controller_Overlay, "enabled": True,
-                                "objectName": "emptyKeycardAction", "text": "Empty Keycard", "type": "StatusMenuItem",
-                                "visible": True}
-max_Pairing_Slots_Reached_StatusMenuItem = {"checkable": False, "container": mocked_Keycard_Lib_Controller_Overlay,
-                                            "enabled": True, "objectName": "maxPairingSlotsReachedAction",
-                                            "type": "StatusMenuItem", "visible": True}
-max_PIN_Retries_Reached_StatusMenuItem = {"checkable": False, "container": mocked_Keycard_Lib_Controller_Overlay,
-                                          "enabled": True, "objectName": "maxPINRetriesReachedAction",
-                                          "type": "StatusMenuItem", "visible": True}
-max_PUK_Retries_Reached_StatusMenuItem = {"checkable": False, "container": mocked_Keycard_Lib_Controller_Overlay,
-                                          "enabled": True, "objectName": "maxPUKRetriesReachedAction",
-                                          "type": "StatusMenuItem", "visible": True}
-keycard_With_Mnemonic_Only_StatusMenuItem = {"checkable": False, "container": mocked_Keycard_Lib_Controller_Overlay,
-                                             "enabled": True, "objectName": "keycardWithMnemonicOnlyAction",
-                                             "type": "StatusMenuItem", "visible": True}
-keycard_With_Mnemonic_Metadata_StatusMenuItem = {"checkable": False, "container": mocked_Keycard_Lib_Controller_Overlay,
-                                                 "enabled": True, "objectName": "keycardWithMnemonicAndMedatadaAction",
-                                                 "type": "StatusMenuItem", "visible": True}
-custom_Keycard_StatusMenuItem = {"checkable": False, "container": mocked_Keycard_Lib_Controller_Overlay,
-                                 "enabled": True, "objectName": "customKeycardAction", "type": "StatusMenuItem",
-                                 "visible": True}
-
-reader_Unplugged_StatusMenuItem = {"checkable": False, "container": mocked_Keycard_Lib_Controller_Overlay,
-                                   "enabled": True, "objectName": "readerStateReaderUnpluggedAction",
-                                   "type": "StatusMenuItem", "visible": True}
-keycard_Not_Inserted_StatusMenuItem = {"checkable": False, "container": mocked_Keycard_Lib_Controller_Overlay,
-                                       "enabled": True, "objectName": "readerStateKeycardNotInsertedAction",
-                                       "type": "StatusMenuItem", "visible": True}
-keycard_Inserted_StatusMenuItem = {"checkable": False, "container": mocked_Keycard_Lib_Controller_Overlay,
-                                   "enabled": True, "objectName": "readerStateKeycardInsertedAction",
-                                   "type": "StatusMenuItem", "visible": True}
-
-keycard_edit_TextEdit = {"container": keycardSettingsTab, "id": "edit", "type": "TextEdit", "unnamed": 1,
-                         "visible": True}
-keycardFlickable = {"container": keycardSettingsTab, "type": "Flickable", "unnamed": 1, "visible": True}
 
 """Market tab names"""
 
