@@ -1761,6 +1761,73 @@ void ChatInputHighlighter::removeFormatting(int position, const QString& kind)
     cursor.endEditBlock();
 }
 
+QVariantMap ChatInputHighlighter::replaceFormatting(int position, const QString& fromKind,
+                                                    const QString& toKind)
+{
+    // Swaps the delimiters of the `fromKind` element around `position` for `toKind`'s (e.g. a code
+    // span's single backticks → a code block's triple backticks), keeping the content, as one edit
+    // block. Returns the resulting content selection (empty ⇒ a caret) so the editor can restore it.
+    QVariantMap result = {{QStringLiteral("selectionStart"), position},
+                          {QStringLiteral("selectionEnd"),   position}};
+
+    const QString toDelim = delimiterStringForKind(toKind);
+    NodeKind targetKind;
+    if (!document() || toDelim.isEmpty() || !nodeKindForFormatting(fromKind, targetKind))
+        return result;
+
+    // The two delimiter ranges to replace, plus the content range between them (reported back).
+    QVector<QPair<int, int>> delims;
+    int openerLen = 0;
+    int contentStart = position;
+    int contentEnd = position;
+
+    const Node& ast = astForQuery();
+    if (const Node* node = findDeepestNode(ast, position, m_astText, targetKind)) {
+        // Inline code node: its opener/closer are its non-quote Delimiter children.
+        for (const Node& c : node->children) {
+            if (c.kind == NodeKind::Delimiter && !c.literal.startsWith(QLatin1Char('>')))
+                delims.append({static_cast<int>(c.start), static_cast<int>(c.end)});
+        }
+        if (delims.size() < 2)
+            return result;
+        std::sort(delims.begin(), delims.end());
+        openerLen    = delims.first().second - delims.first().first;
+        contentStart = delims.first().second; // end of opener
+        contentEnd   = delims.last().first;   // start of closer
+    } else {
+        // No AST node (e.g. an empty "`|`" span just added): swap the delimiter run flanking the
+        // caret. delimiterRemovalCount gives how many chars `fromKind` occupies on each side.
+        const auto [ch, count] = surroundingDelimiterRun(document()->toPlainText(), position);
+        openerLen = delimiterRemovalCount(ch, count, fromKind);
+        if (openerLen <= 0)
+            return result;
+        delims.append({position - openerLen, position});
+        delims.append({position, position + openerLen});
+        contentStart = contentEnd = position; // empty content, caret between
+    }
+
+    // Content shifts by the opener's length change; the closer sits past the content, so replacing
+    // it doesn't move the reported selection.
+    const int shift = toDelim.length() - openerLen;
+
+    // Replace highest-offset range first so the earlier one stays valid; single undo step.
+    std::sort(delims.begin(), delims.end(),
+              [](const auto& a, const auto& b) { return a.first > b.first; });
+    QTextCursor cursor(document());
+    cursor.setPosition(qBound(0, position, document()->characterCount() - 1));
+    cursor.beginEditBlock();
+    for (const auto& r : std::as_const(delims)) {
+        cursor.setPosition(r.first);
+        cursor.setPosition(r.second, QTextCursor::KeepAnchor);
+        cursor.insertText(toDelim); // replaces the selected delimiter run
+    }
+    cursor.endEditBlock();
+
+    result[QStringLiteral("selectionStart")] = contentStart + shift;
+    result[QStringLiteral("selectionEnd")]   = contentEnd + shift;
+    return result;
+}
+
 QVariantMap ChatInputHighlighter::delimitersAt(int position) const
 {
     QVariantMap out = {

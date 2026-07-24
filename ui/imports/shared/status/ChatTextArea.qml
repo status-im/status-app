@@ -93,6 +93,13 @@ StatusTextArea {
     function removeFormatting(pos, kind) {
         highlighter.removeFormatting(pos, kind)
     }
+    function replaceFormatting(pos, fromKind, toKind) {
+        const r = highlighter.replaceFormatting(pos, fromKind, toKind)
+        if (r.selectionStart === r.selectionEnd)
+            cursorPosition = r.selectionStart
+        else
+            select(r.selectionStart, r.selectionEnd)
+    }
     function delimitersAt(pos) {
         return highlighter.delimitersAt(pos)
     }

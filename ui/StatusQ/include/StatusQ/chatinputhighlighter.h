@@ -183,6 +183,15 @@ public:
     // editor caret follows the deletions automatically.
     Q_INVOKABLE void removeFormatting(int position, const QString& kind);
 
+    // Swaps the delimiters of the `fromKind` element around `position` for `toKind`'s, keeping the
+    // content (e.g. a code span's single backticks → a code block's triple backticks). Finds the
+    // `fromKind` AST node containing the caret (like removeFormatting) and, failing that, falls back
+    // to the raw delimiter run flanking the caret (so a just-added empty "`|`" span still upgrades).
+    // One undo step. Returns {selectionStart, selectionEnd} for the resulting content (equal ⇒ a
+    // caret) so the editor can restore the selection; a no-op returns the input position unchanged.
+    Q_INVOKABLE QVariantMap replaceFormatting(int position, const QString& fromKind,
+                                              const QString& toKind);
+
     // Returns {bold, italic, strikethrough, codeSpan, codeBlock} booleans describing the formatting
     // implied by the delimiter run that immediately surrounds `position`, using only the local text
     // — no AST. The characters just before and after the caret must be the same delimiter char; its

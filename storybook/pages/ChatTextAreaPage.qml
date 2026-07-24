@@ -947,6 +947,11 @@ unclosed fence here (no closing triple-tick)
                     textArea.forceActiveFocus()
                 }
 
+                function replaceFormatting(fromKind, toKind) {
+                    textArea.replaceFormatting(textArea.cursorPosition, fromKind, toKind)
+                    textArea.forceActiveFocus()
+                }
+
                 Button { id: boldButton; text: "Bold"
                          checked: hasSelection ? sel.bold : (node.bold || delim.bold)
                          onClicked: checked ? parent.removeFormatting("bold", node.bold, delim.bold, "bold")
@@ -961,15 +966,23 @@ unclosed fence here (no closing triple-tick)
                          onClicked: checked ? parent.removeFormatting("strikethrough", node.strikethrough,
                                                                       delim.strikethrough, "strikethrough")
                                             : parent.addFormatting("strikethrough") }
+                // Tri-state: empty caret/selection inserts a code span; a code span is upgraded to a
+                // code block; a code block is removed.
                 Button { id: codeButton; text: "Code"
-                         checked: hasSelection ? (sel.codeSpan || sel.codeBlock)
-                                               : (node.codeSpan || node.codeBlock
-                                                  || delim.codeSpan || delim.codeBlock)
-                         onClicked: checked ? parent.removeFormatting(sel.codeBlock ? "codeBlock" : "codeSpan",
-                                                                      node.codeSpan || node.codeBlock,
-                                                                      delim.codeSpan || delim.codeBlock,
-                                                                      (node.codeBlock || delim.codeBlock) ? "codeBlock" : "codeSpan")
-                                            : parent.addFormatting("codeSpan") }
+                         readonly property bool hasCodeSpan: hasSelection ? sel.codeSpan
+                                                                          : (node.codeSpan || delim.codeSpan)
+                         readonly property bool hasCodeBlock: hasSelection ? sel.codeBlock
+                                                                           : (node.codeBlock || delim.codeBlock)
+                         checked: hasCodeSpan || hasCodeBlock
+                         onClicked: {
+                             if (hasCodeBlock)
+                                 parent.removeFormatting("codeBlock", node.codeBlock,
+                                                         delim.codeBlock, "codeBlock")
+                             else if (hasCodeSpan)
+                                 parent.replaceFormatting("codeSpan", "codeBlock")
+                             else
+                                 parent.addFormatting("codeSpan")
+                         } }
                 Button { id: quoteButton; text: "Quote"
                          checked: hasSelection ? sel.quote : node.quote
                          onClicked: checked ? parent.removeFormatting("quote", node.quote, false, "quote")
