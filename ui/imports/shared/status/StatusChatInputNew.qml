@@ -916,6 +916,11 @@ Control {
 
             Layout.fillWidth: true
 
+            function onFormattingCommon() {
+                InputMethod.commit()
+                InputMethod.show()
+            }
+
             // Formatting toolbar (bold/italic/strike/quote/code). Each button reflects the formatting
             // at the caret / across the selection (via `d`) and toggles it on click. The ChatIcon is
             // checkable by default, which would break the `checked` binding on click, so it is turned
@@ -923,36 +928,58 @@ Control {
             boldButton.checkable: false
             boldButton.checked: d.hasSelection ? d.selDelim.bold
                                                : (d.caretNode.bold || d.caretDelim.bold)
-            boldButton.onClicked: boldButton.checked
-                ? d.removeActiveFormatting("bold", d.caretNode.bold, d.caretDelim.bold, "bold")
-                : d.addFormatting("bold")
+            boldButton.onClicked: {
+                onFormattingCommon()
+
+                if (boldButton.checked)
+                    d.removeActiveFormatting("bold", d.caretNode.bold, d.caretDelim.bold, "bold")
+                else
+                    d.addFormatting("bold")
+            }
 
             italicButton.checkable: false
             italicButton.checked: d.hasSelection ? d.selDelim.italic
                                                  : (d.caretNode.italic || d.caretDelim.italic)
-            italicButton.onClicked: italicButton.checked
-                ? d.removeActiveFormatting("italic", d.caretNode.italic, d.caretDelim.italic, "italic")
-                : d.addFormatting("italic")
+            italicButton.onClicked: {
+                onFormattingCommon()
+
+                if (italicButton.checked)
+                    d.removeActiveFormatting("italic", d.caretNode.italic, d.caretDelim.italic, "italic")
+                else
+                    d.addFormatting("italic")
+            }
 
             strikeThroughButton.checkable: false
             strikeThroughButton.checked: d.hasSelection ? d.selDelim.strikethrough
                                                         : (d.caretNode.strikethrough || d.caretDelim.strikethrough)
-            strikeThroughButton.onClicked: strikeThroughButton.checked
-                ? d.removeActiveFormatting("strikethrough", d.caretNode.strikethrough,
-                                           d.caretDelim.strikethrough, "strikethrough")
-                : d.addFormatting("strikethrough")
+            strikeThroughButton.onClicked: {
+                onFormattingCommon()
+
+                if (strikeThroughButton.checked)
+                    d.removeActiveFormatting("strikethrough", d.caretNode.strikethrough,
+                                             d.caretDelim.strikethrough, "strikethrough")
+                else
+                    d.addFormatting("strikethrough")
+            }
 
             quoteButton.checkable: false
             quoteButton.checked: d.hasSelection ? d.selDelim.quote : d.caretNode.quote
-            quoteButton.onClicked: quoteButton.checked
-                ? d.removeActiveFormatting("quote", d.caretNode.quote, false, "quote")
-                : d.addFormatting("quote")
+            quoteButton.onClicked: {
+                onFormattingCommon()
+
+                if (quoteButton.checked)
+                    d.removeActiveFormatting("quote", d.caretNode.quote, false, "quote")
+                else
+                    d.addFormatting("quote")
+            }
 
             // Tri-state code button: an empty caret/selection inserts a code span; a code span is
             // upgraded to a code block; a code block is removed.
             codeButton.checkable: false
             codeButton.checked: d.hasCodeSpan || d.hasCodeBlock
             codeButton.onClicked: {
+                onFormattingCommon()
+
                 if (d.hasCodeBlock)
                     d.removeActiveFormatting("codeBlock", d.caretNode.codeBlock,
                                              d.caretDelim.codeBlock, "codeBlock")
