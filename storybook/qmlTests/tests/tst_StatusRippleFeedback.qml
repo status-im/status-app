@@ -96,8 +96,16 @@ Item {
             controlUnderTest = createTemporaryObject(comboBoxComponent, root)
             verify(!!controlUnderTest)
 
-            verifyRippleFeedback(controlUnderTest.control, "statusComboBoxRipple", false, false)
+            verifyRippleFeedback(controlUnderTest.control, "statusComboBoxRipple", true, false)
             compare(controlUnderTest.control.scale, 1)
+
+            controlUnderTest.destroy()
+            controlUnderTest = createTemporaryObject(comboBoxComponent, root, {
+                rippleOrigin: StatusRipple.RippleOrigin.Center
+            })
+            verify(!!controlUnderTest)
+
+            verifyRippleFeedback(controlUnderTest.control, "statusComboBoxRipple", false, false)
         }
 
         function test_itemDelegateRipple() {
@@ -106,6 +114,14 @@ Item {
 
             verifyRippleFeedback(controlUnderTest, "statusItemDelegateRipple", true, true)
             compare(controlUnderTest.scale, 1)
+
+            controlUnderTest.destroy()
+            controlUnderTest = createTemporaryObject(itemDelegateComponent, root, {
+                rippleOrigin: StatusRipple.RippleOrigin.Center
+            })
+            verify(!!controlUnderTest)
+
+            verifyRippleFeedback(controlUnderTest, "statusItemDelegateRipple", false, true)
         }
 
         function test_highlightedItemDelegateDefaultColors() {
@@ -141,6 +157,14 @@ Item {
 
             verifyRippleFeedback(controlUnderTest, "statusListItemRipple", true, true)
             compare(controlUnderTest.scale, 1)
+
+            controlUnderTest.destroy()
+            controlUnderTest = createTemporaryObject(listItemComponent, root, {
+                rippleOrigin: StatusRipple.RippleOrigin.Center
+            })
+            verify(!!controlUnderTest)
+
+            verifyRippleFeedback(controlUnderTest, "statusListItemRipple", false, true)
         }
 
         function test_menuItemRipple() {
@@ -149,6 +173,14 @@ Item {
 
             verifyRippleFeedback(controlUnderTest, "statusMenuItemRipple", true, true)
             compare(controlUnderTest.scale, 1)
+
+            controlUnderTest.destroy()
+            controlUnderTest = createTemporaryObject(menuItemComponent, root, {
+                rippleOrigin: StatusRipple.RippleOrigin.Center
+            })
+            verify(!!controlUnderTest)
+
+            verifyRippleFeedback(controlUnderTest, "statusMenuItemRipple", false, true)
         }
     }
 }

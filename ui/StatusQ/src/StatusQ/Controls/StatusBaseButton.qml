@@ -54,11 +54,11 @@ AbstractButton {
     property bool rippleEnabled: true
 
     /*!
-       Controls where the ripple starts from. Use \c StatusRipple.RippleOrigin.Center
-       for a centered ripple or \c StatusRipple.RippleOrigin.Pointer to start from
-       the press position.
+       Controls where the ripple starts from. Use \c StatusRipple.RippleOrigin.Pointer
+       to start from the press position or \c StatusRipple.RippleOrigin.Center
+       for a centered ripple.
     */
-    property int rippleOrigin: StatusRipple.RippleOrigin.Center
+    property int rippleOrigin: StatusRipple.RippleOrigin.Pointer
 
     /*!
        Color used by the ripple animation.

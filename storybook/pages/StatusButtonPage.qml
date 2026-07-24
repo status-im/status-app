@@ -364,12 +364,12 @@ SplitView {
                         id: ctrlRippleFollowPointer
                         ButtonGroup.group: rippleOriginButtonGroup
                         text: "Follow pointer"
+                        checked: true
                     }
                     RadioButton {
                         id: ctrlRippleCentered
                         ButtonGroup.group: rippleOriginButtonGroup
                         text: "Centered"
-                        checked: true
                     }
                 }
                 CheckBox {

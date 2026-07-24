@@ -28,11 +28,11 @@ Item {
     property int radius: 0
 
     /*!
-       Controls where the ripple starts from. Use \c RippleOrigin.Center for a
-       centered ripple or \c RippleOrigin.Pointer to start from the coordinates
-       passed to \c press.
+       Controls where the ripple starts from. Use \c RippleOrigin.Pointer to
+       start from the coordinates passed to \c press or \c RippleOrigin.Center
+       for a centered ripple.
     */
-    property int origin: StatusRipple.RippleOrigin.Center
+    property int origin: StatusRipple.RippleOrigin.Pointer
 
     /*!
        Duration of the expansion animation.

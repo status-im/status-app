@@ -21,6 +21,7 @@ MenuItem {
     property bool visibleOnDisabled: d.isStatusAction ? action.visibleOnDisabled : false
 
     property bool visualizeShortcuts
+    property int rippleOrigin: StatusRipple.RippleOrigin.Pointer
 
     font.pixelSize: d.fontSettings ? d.fontSettings.pixelSize : d.defaultFontSettings.pixelSize
 
@@ -187,7 +188,7 @@ MenuItem {
                   : d.isStatusSuccessAction ? Theme.palette.successColor1
                                             : Theme.palette.directColor1
             radius: parent.radius
-            origin: StatusRipple.RippleOrigin.Pointer
+            origin: root.rippleOrigin
         }
     }
 

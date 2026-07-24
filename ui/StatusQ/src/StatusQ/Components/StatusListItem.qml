@@ -43,6 +43,7 @@ Rectangle {
     property bool loading: false
     property bool loadingSubTitle: loading
     property bool errorMode: false
+    property int rippleOrigin: StatusRipple.RippleOrigin.Pointer
 
     property StatusAssetSettings asset: StatusAssetSettings {
         height: isImage ? 40 : 20
@@ -140,7 +141,7 @@ Rectangle {
         color: root.type === StatusListItem.Type.Danger ? Theme.palette.dangerColor1
                                                         : Theme.palette.directColor1
         radius: root.radius
-        origin: StatusRipple.RippleOrigin.Pointer
+        origin: root.rippleOrigin
     }
 
     QtObject {

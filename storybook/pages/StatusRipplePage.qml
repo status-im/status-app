@@ -92,6 +92,7 @@ SplitView {
                         Layout.preferredWidth: 280
                         label: "StatusComboBox"
                         model: ["One", "Two", "Three"]
+                        rippleOrigin: d.effectiveRippleOrigin
                     }
                 }
             }
@@ -114,6 +115,7 @@ SplitView {
                         icon.name: "info"
                         icon.color: Theme.palette.primaryColor1
                         highlighted: ctrlHighlighted.checked
+                        rippleOrigin: d.effectiveRippleOrigin
                         onClicked: logs.logEvent("StatusItemDelegate clicked")
                     }
 
@@ -125,6 +127,7 @@ SplitView {
 
                     StatusMenu {
                         id: menu
+                        rippleOrigin: d.effectiveRippleOrigin
 
                         StatusAction {
                             text: "Menu option"
@@ -159,6 +162,7 @@ SplitView {
                         subTitle: "Primary list option"
                         asset.name: "info"
                         highlighted: ctrlHighlighted.checked
+                        rippleOrigin: d.effectiveRippleOrigin
                         onClicked: logs.logEvent("StatusListItem clicked")
                     }
 
@@ -169,6 +173,7 @@ SplitView {
                         type: StatusListItem.Type.Danger
                         asset.name: "warning"
                         highlighted: ctrlHighlighted.checked
+                        rippleOrigin: d.effectiveRippleOrigin
                         onClicked: logs.logEvent("Danger StatusListItem clicked")
                     }
                 }

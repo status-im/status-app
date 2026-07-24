@@ -8,6 +8,7 @@ import Qt5Compat.GraphicalEffects
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
+import StatusQ.Controls
 import StatusQ.Popups
 
 /*!
@@ -41,6 +42,7 @@ Menu {
     readonly property color defaultIconColor: Theme.palette.primaryColor1
 
     property int type: StatusAction.Type.Normal
+    property int rippleOrigin: StatusRipple.RippleOrigin.Pointer
 
     property StatusAssetSettings assetSettings: StatusAssetSettings {
         width: 18
@@ -99,6 +101,7 @@ Menu {
         visible: root.hideDisabledItems && !visibleOnDisabled ? enabled : true
         height: visible ? implicitHeight : 0
         visualizeShortcuts: root.visualizeShortcuts
+        rippleOrigin: root.rippleOrigin
     }
 
     contentItem: StatusScrollView {

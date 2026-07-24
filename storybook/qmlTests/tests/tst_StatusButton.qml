@@ -50,7 +50,7 @@ Item {
             verify(!controlUnderTest.isRoundIcon)
             verify(controlUnderTest.rippleEnabled)
             verify(controlUnderTest.scaleOnPressEnabled)
-            compare(controlUnderTest.rippleOrigin, StatusRipple.RippleOrigin.Center)
+            compare(controlUnderTest.rippleOrigin, StatusRipple.RippleOrigin.Pointer)
         }
 
         function test_text() {
@@ -324,19 +324,21 @@ Item {
             compare(buttonBackground.scale, 1)
             compare(controlUnderTest.contentItem.scale, 1)
 
-            mousePress(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+            const pressX = controlUnderTest.width / 4
+            const pressY = controlUnderTest.height * 3 / 4
+            mousePress(controlUnderTest, pressX, pressY)
             tryVerify(() => buttonRipple.visible)
             tryCompare(buttonBackground, "scale", controlUnderTest.pressedScale)
             compare(controlUnderTest.contentItem.scale, 1)
             verify(buttonRipple.rippleRadius >= 0)
+            verify(Math.abs(buttonRipple.pressX - pressX) <= coordinateTolerance)
+            verify(Math.abs(buttonRipple.pressY - pressY) <= coordinateTolerance)
 
-            mouseRelease(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+            mouseRelease(controlUnderTest, pressX, pressY)
             tryCompare(buttonRipple, "visible", false)
             tryCompare(buttonBackground, "scale", 1)
             compare(buttonRipple.rippleRadius, 0)
 
-            const pressX = controlUnderTest.width / 4
-            const pressY = controlUnderTest.height * 3 / 4
             controlUnderTest.rippleOrigin = StatusRipple.RippleOrigin.Pointer
             compare(buttonRipple.origin, StatusRipple.RippleOrigin.Pointer)
             mousePress(controlUnderTest, pressX, pressY)

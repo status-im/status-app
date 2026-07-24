@@ -12,6 +12,7 @@ ItemDelegate {
     property int radius: 0
     property int cursorShape: Qt.PointingHandCursor
     property color highlightColor: Theme.palette.statusMenu.hoverBackgroundColor
+    property int rippleOrigin: StatusRipple.RippleOrigin.Pointer
 
     padding: Theme.halfPadding
     spacing: Theme.halfPadding
@@ -71,7 +72,7 @@ ItemDelegate {
             enabled: root.enabled
             color: d.contentColor
             radius: parent.radius
-            origin: StatusRipple.RippleOrigin.Pointer
+            origin: root.rippleOrigin
         }
     }
 

@@ -34,6 +34,7 @@ Item {
 
     property int size: StatusComboBox.Size.Large
     property int type: StatusComboBox.Type.Primary
+    property int rippleOrigin: StatusRipple.RippleOrigin.Pointer
 
     readonly property Component defaultBackgroundComponent: Rectangle {
         color: root.type === StatusComboBox.Type.Secondary ? "transparent" : Theme.palette.baseColor2
@@ -68,6 +69,7 @@ Item {
             color: root.type === StatusComboBox.Type.Secondary ? Theme.palette.baseColor1
                                                                : Theme.palette.directColor1
             radius: parent.radius
+            origin: root.rippleOrigin
         }
 
         function pressRipple(x, y) {
