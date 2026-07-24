@@ -92,6 +92,7 @@ StatusTextArea {
     }
     function removeFormatting(pos, kind) {
         highlighter.removeFormatting(pos, kind)
+        d.ensureCursorRectanglePosition()
     }
     function replaceFormatting(pos, fromKind, toKind) {
         const r = highlighter.replaceFormatting(pos, fromKind, toKind)
@@ -108,6 +109,7 @@ StatusTextArea {
     }
     function removeDelimitersAtSelection(start, end, kind) {
         highlighter.removeDelimitersAtSelection(start, end, kind)
+        d.ensureCursorRectanglePosition()
     }
     function addFormatting(start, end, kind) {
         const r = highlighter.addFormatting(start, end, kind)
@@ -118,6 +120,7 @@ StatusTextArea {
     }
     function removeDelimitersAt(pos, kind) {
         highlighter.removeDelimitersAt(pos, kind)
+        d.ensureCursorRectanglePosition()
     }
     function inUnclosedCodeFence(pos) {
         return highlighter.inUnclosedCodeFence(pos)
@@ -280,6 +283,19 @@ StatusTextArea {
 
             return { entering: true, filter: filter }
         }
+
+        // Triggers repainting the caret at the right place after an out-of-band
+        // document edit (paste, or removing formatting). The highlighter mutates
+        // the document and re-applies char formats as part of the same change —
+        // notably bold, which makes glyphs of different width (like wider for bold).
+        // The editor computes the cursor rectangle against the layout as it was
+        // BEFORE that re-formatting, so the caret is painted at the wrong x —
+        // where the same index would sit in normal-weight text — even though
+        // `cursorPosition` (the index) is already correct. Simply calling select
+        // passing current selection updates the visual caret position.
+        function ensureCursorRectanglePosition() {
+            root.select(root.selectionStart, root.selectionEnd)
+        }
     }
 
     TextMetrics {
@@ -431,6 +447,7 @@ StatusTextArea {
             }
             highlighter.pasteFromClipboard(root.selectionStart, root.selectionEnd,
                                            root.cursorPosition)
+            d.ensureCursorRectanglePosition()
             return
         }
 
