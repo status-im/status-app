@@ -114,13 +114,14 @@ Dialog {
         readonly property bool bottomSheet: windowWidth <= ThemeUtils.portraitBreakpoint.width
                                             && windowHeight > windowWidth
 
-        // Safe-area insets for the dialog surface. The dialog reads them from its
-        // content host so tests and hosted dialogs can override them locally
-        // without changing the whole window.
-        readonly property real headerSafeArea: root.contentItem.SafeArea.margins.top
-        readonly property real footerSafeArea: root.contentItem.SafeArea.margins.bottom
-        readonly property real leftSafeArea: root.contentItem.SafeArea.margins.left
-        readonly property real rightSafeArea: root.contentItem.SafeArea.margins.right
+        // Use the overlay item because Android applies keyboard/safe-area
+        // adjustments there. Centered dialogs use these values only as outer
+        // bounds; bottom sheets use bottom/horizontal values as internal padding.
+        readonly property var surfaceSafeArea: root.parent ? root.parent.SafeArea : root.contentItem.SafeArea
+        readonly property real headerSafeArea: 0
+        readonly property real footerSafeArea: bottomSheet ? surfaceSafeArea.margins.bottom : 0
+        readonly property real leftSafeArea: bottomSheet ? surfaceSafeArea.margins.left : 0
+        readonly property real rightSafeArea: bottomSheet ? surfaceSafeArea.margins.right : 0
         // Vertical padding owned by the content host. When content is the first or
         // last visible section, it also absorbs the corresponding safe area.
         readonly property real contentTopPadding: edgePadding + (hasHeader ? 0 : headerSafeArea)
@@ -135,11 +136,13 @@ Dialog {
         // Total horizontal space reserved around centered dialogs.
         readonly property real centeredHorizontalMargin: 2 * Theme.bigPadding
         // Width used by centered dialogs after applying margins and the exceptional override, if any.
+        readonly property real resolvedCenteredAvailableWidth: windowWidth - surfaceSafeArea.margins.left - surfaceSafeArea.margins.right
+        readonly property real resolvedCenteredAvailableHeight: windowHeight - surfaceSafeArea.margins.top - surfaceSafeArea.margins.bottom
         readonly property real resolvedCenteredWidth: Math.min(root.maximumWidthOverride > 0 ? root.maximumWidthOverride : centeredMaxWidth,
-                                                               Math.max(root.implicitWidth, windowWidth - centeredHorizontalMargin))
+                                                               Math.max(root.implicitWidth, resolvedCenteredAvailableWidth - centeredHorizontalMargin))
         // Height cap used by centered dialogs after applying the exceptional override, if any.
-        readonly property real resolvedCenteredMaxHeight: root.maximumHeightOverride > 0 ? Math.min(root.maximumHeightOverride, windowHeight)
-                                                                                         : windowHeight * centeredHeightRatio
+        readonly property real resolvedCenteredMaxHeight: root.maximumHeightOverride > 0 ? Math.min(root.maximumHeightOverride, resolvedCenteredAvailableHeight)
+                                                                                         : resolvedCenteredAvailableHeight * centeredHeightRatio
 
         // Bottom sheets always span the full window width.
         readonly property real resolvedBottomSheetWidth: windowWidth
@@ -151,7 +154,7 @@ Dialog {
         // added back so the home-indicator padding does not reduce the content area.
         readonly property real resolvedBottomSheetMaxHeight: (root.maximumHeightOverride > 0
             ? Math.min(root.maximumHeightOverride, windowHeight)
-            : (windowHeight - headerSafeArea) * bottomSheetHeightRatio) + footerSafeArea
+            : (windowHeight - surfaceSafeArea.margins.top) * bottomSheetHeightRatio) + footerSafeArea
 
         // Height ratio selected by the active presentation mode. Reused by internal
         // popup hosting so nested surfaces follow the same cap as their parent mode.
@@ -169,7 +172,7 @@ Dialog {
         readonly property real resolvedY: hostSurface
             ? hostSurface.height - root.height
             : bottomSheet ? windowHeight - root.height
-                          : (windowHeight - root.height) / 2
+                          : surfaceSafeArea.margins.top + (resolvedCenteredAvailableHeight - root.height) / 2
     }
 
     parent: Overlay.overlay
@@ -192,7 +195,7 @@ Dialog {
     height: Math.min(d.naturalHeight, d.resolvedMaxHeight)
 
     x: d.hostSurface ? 0
-                     : d.bottomSheet ? 0 : (d.windowWidth - root.width) / 2
+                     : d.bottomSheet ? 0 : d.surfaceSafeArea.margins.left + (d.resolvedCenteredAvailableWidth - root.width) / 2
 
     enter: Transition {
         id: enterTransition

@@ -27,7 +27,8 @@ SplitView {
 
         // Derived state used by the controls below to keep the dialog bindings compact.
         readonly property bool longContent: contentMode.currentValue === "long"
-        readonly property bool dialogBottomSheet: dialog.width === root.width && dialog.y > root.height / 2
+        readonly property var window: root.Window.window
+        readonly property bool dialogBottomSheet: !!window && dialog.width === window.width && dialog.y > window.height / 2
 
         // Header presets: title/subtitle/image/action combinations can be mixed independently.
         readonly property bool headerHasTitle: headerMode.currentValue !== "none"
@@ -43,7 +44,7 @@ SplitView {
         readonly property bool headerHasCustomActions: headerActionsMode.currentValue === "custom"
                                                   || headerActionsMode.currentValue === "close-custom"
         readonly property real controlsSectionSpacing: Math.max(Theme.halfPadding, 8)
-        readonly property var safeArea: dialog.contentItem ? dialog.contentItem.SafeArea : null
+        readonly property var safeArea: root.Overlay.overlay ? root.Overlay.overlay.SafeArea : null
         readonly property real artificialTopSafeArea: topSafeAreaEnabled.checked ? topSafeAreaSlider.value : 0
         readonly property real artificialBottomSafeArea: bottomSafeAreaEnabled.checked ? bottomSafeAreaSlider.value : 0
         readonly property real artificialLeftSafeArea: leftSafeAreaEnabled.checked ? leftSafeAreaSlider.value : 0
@@ -378,10 +379,7 @@ SplitView {
             sourceComponent: Component {
                 Item {
                     parent: root.Overlay.overlay
-                    x: dialog.x
-                    y: dialog.y
-                    width: dialog.width
-                    height: dialog.height
+                    anchors.fill: parent
                     z: 100
                     visible: dialog.opened
                     enabled: false

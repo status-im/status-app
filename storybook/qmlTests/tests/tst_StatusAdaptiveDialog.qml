@@ -202,6 +202,7 @@ Item {
                 controlUnderTest.destroy();
                 controlUnderTest = null;
             }
+            setDialogSafeArea(0, 0, 0, 0);
             root.width = d.desktopWindowWidth;
             root.height = d.desktopWindowHeight;
             setTestWindowSize(d.desktopWindowWidth, d.desktopWindowHeight);
@@ -246,10 +247,10 @@ Item {
         }
 
         function setDialogSafeArea(top, bottom, left, right) {
-            controlUnderTest.contentItem.SafeArea.additionalMargins.top = top;
-            controlUnderTest.contentItem.SafeArea.additionalMargins.bottom = bottom;
-            controlUnderTest.contentItem.SafeArea.additionalMargins.left = left;
-            controlUnderTest.contentItem.SafeArea.additionalMargins.right = right;
+            testWindow.contentItem.Overlay.overlay.SafeArea.additionalMargins.top = top;
+            testWindow.contentItem.Overlay.overlay.SafeArea.additionalMargins.bottom = bottom;
+            testWindow.contentItem.Overlay.overlay.SafeArea.additionalMargins.left = left;
+            testWindow.contentItem.Overlay.overlay.SafeArea.additionalMargins.right = right;
         }
 
         function verifyDialogSafeAreaLayout(top, bottom, left, right) {
@@ -466,7 +467,9 @@ Item {
             tryCompare(controlUnderTest, "opened", true);
 
             setDialogSafeArea(60, 60, 40, 30);
-            verifyDialogSafeAreaLayout(60, 60, 40, 30);
+            verifyDialogSafeAreaLayout(0, 0, 0, 0);
+            compare(controlUnderTest.x, 40 + (testWindow.width - 40 - 30 - controlUnderTest.width) / 2);
+            compare(controlUnderTest.y, 60 + (testWindow.height - 60 - 60 - controlUnderTest.height) / 2);
         }
 
         function test_safe_area_is_reserved_in_bottom_sheet_mode() {
@@ -477,7 +480,7 @@ Item {
             tryCompare(controlUnderTest, "opened", true);
 
             setDialogSafeArea(60, 60, 40, 30);
-            verifyDialogSafeAreaLayout(60, 60, 40, 30);
+            verifyDialogSafeAreaLayout(0, 60, 40, 30);
         }
 
         function test_modal_can_be_overridden_from_outside() {
