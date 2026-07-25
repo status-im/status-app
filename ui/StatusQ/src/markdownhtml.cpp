@@ -229,6 +229,19 @@ QString renderNode(const Node& node,
         return QStringLiteral("<blockquote>%1</blockquote>")
                 .arg(renderChildren(node, mentions, emojiPx, emojiBaseUrl));
 
+    case NodeKind::ListBlock:
+        return QStringLiteral("<ul>%1</ul>")
+                .arg(renderChildren(node, mentions, emojiPx, emojiBaseUrl));
+    case NodeKind::ListItem: {
+        // The "- " / "  " prefixes are delimiters (stripped above). Continuation-line
+        // breaks (interior "\n") become <br/>; the item's trailing line break is dropped.
+        QString inner = renderChildren(node, mentions, emojiPx, emojiBaseUrl);
+        inner.replace(QLatin1Char('\n'), QStringLiteral("<br/>"));
+        while (inner.endsWith(QStringLiteral("<br/>")))
+            inner.chop(5);
+        return QStringLiteral("<li>%1</li>").arg(inner);
+    }
+
     case NodeKind::Link:
         return QStringLiteral("<a href=\"%1\">%2</a>")
                 .arg(escape(node.destination), renderChildren(node, mentions, emojiPx, emojiBaseUrl));
@@ -309,6 +322,12 @@ QString renderSingleLine(const Node& node,
     case NodeKind::QuoteBlock:
         return QStringLiteral("<span class=\"quote\">&gt; %1</span>")
                 .arg(renderSingleLineChildren(node, mentions, emojiPx, emojiBaseUrl));
+
+    case NodeKind::ListBlock:
+    case NodeKind::ListItem:
+        // Compact preview: items' inline content only (markers stripped, newlines already
+        // collapsed to spaces by the Text case), so a list stays on one line.
+        return renderSingleLineChildren(node, mentions, emojiPx, emojiBaseUrl);
 
     case NodeKind::Link:
         return QStringLiteral("<a href=\"%1\">%2</a>")
@@ -392,6 +411,8 @@ QString renderPlain(const Node& node, const QHash<int, QPair<QString, QString>>&
     case NodeKind::Link:
     case NodeKind::WalletLink:
     case NodeKind::QuoteBlock:
+    case NodeKind::ListBlock:
+    case NodeKind::ListItem:
     case NodeKind::Document:
     case NodeKind::Paragraph:
         return renderPlainChildren(node, mentions);
@@ -543,6 +564,20 @@ void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
             flushTextBlock(inner);
             a.blocks.append(QVariantMap{{QStringLiteral("type"), QStringLiteral("quote")},
                                         {QStringLiteral("blocks"), inner.blocks}});
+            a.cur.clear();
+            a.curStarted = false;
+            a.afterCode = false;
+            break;
+        }
+        case NodeKind::ListBlock: {
+            // A list holds only inline content (code/quote blocks break it), so the whole
+            // "<ul>…</ul>" renders natively inside its own RichText text block.
+            if (!a.cur.isEmpty())
+                finalizeLine(a);
+            flushTextBlock(a);
+            a.blocks.append(QVariantMap{{QStringLiteral("type"), QStringLiteral("text")},
+                                        {QStringLiteral("html"),
+                                         renderNode(c, mentions, emojiPx, emojiBaseUrl)}});
             a.cur.clear();
             a.curStarted = false;
             a.afterCode = false;

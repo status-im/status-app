@@ -311,6 +311,17 @@ Document [0,15)
                  QString::fromUtf8(expected).trimmed());
     }
 
+    // A quote prefix may use a non-breaking space (U+00A0) — the editor's stored form so the '>'
+    // can't wrap away from its first word — as well as a regular space. Both are detected as a quote.
+    void quoteBlockNbspPrefix()
+    {
+        const QString dump = d(QStringLiteral(">\u00A0text")); // '>' + NBSP + "text" (6 chars)
+        QVERIFY(dump.contains(QLatin1String("QuoteBlock [0,6)")));
+        QVERIFY(dump.contains(QLatin1String("Text [2,6) \"text\"")));
+        // '>' with no following space/NBSP is not a quote.
+        QVERIFY(!d(QStringLiteral(">text")).contains(QLatin1String("QuoteBlock")));
+    }
+
     void quotedEmphasis()
     {
         // A multi-line emphasis inside a quote nests the "> " prefixes as delimiters.
@@ -388,6 +399,135 @@ Document [0,11)
 )";
         QCOMPARE(d(QString(input).trimmed()),
                  QString::fromUtf8(expected).trimmed());
+    }
+
+    void listSingleItem()
+    {
+        auto expected = R"(
+Document [0,6)
+  Paragraph [0,6)
+    ListBlock [0,6)
+      ListItem [0,6)
+        Delimiter [0,2) "- "
+        Text [2,6) "item"
+)";
+        QCOMPARE(d("- item"), QString::fromUtf8(expected).trimmed());
+    }
+
+    void listMultipleItems()
+    {
+        // Consecutive "- " lines form one ListBlock with an item each.
+        auto expected = R"(
+Document [0,7)
+  Paragraph [0,7)
+    ListBlock [0,7)
+      ListItem [0,4)
+        Delimiter [0,2) "- "
+        Text [2,4) "a\n"
+      ListItem [4,7)
+        Delimiter [4,6) "- "
+        Text [6,7) "b"
+)";
+        QCOMPARE(d("- a\n- b"), QString::fromUtf8(expected).trimmed());
+    }
+
+    void listContinuationLine()
+    {
+        // A following "  " line extends the current item; the "  " prefix is a Delimiter.
+        auto expected = R"(
+Document [0,7)
+  Paragraph [0,7)
+    ListBlock [0,7)
+      ListItem [0,7)
+        Delimiter [0,2) "- "
+        Text [2,4) "a\n"
+        Delimiter [4,6) "  "
+        Text [6,7) "b"
+)";
+        QCOMPARE(d("- a\n  b"), QString::fromUtf8(expected).trimmed());
+    }
+
+    void listItemInlineFormatting()
+    {
+        // Any inline formatting is allowed within an item.
+        auto expected = R"(
+Document [0,7)
+  Paragraph [0,7)
+    ListBlock [0,7)
+      ListItem [0,7)
+        Delimiter [0,2) "- "
+        Strong [2,7)
+          Delimiter [2,4) "**"
+          Text [4,5) "b"
+          Delimiter [5,7) "**"
+)";
+        QCOMPARE(d("- **b**"), QString::fromUtf8(expected).trimmed());
+    }
+
+    void listItemsEmphasisIsolation()
+    {
+        // A "**" opened in one item must not pair with a "**" in another item: both stay
+        // plain Text (no Strong), so formatting never crosses item boundaries.
+        auto expected = R"(
+Document [0,11)
+  Paragraph [0,11)
+    ListBlock [0,11)
+      ListItem [0,6)
+        Delimiter [0,2) "- "
+        Text [2,6) "**a\n"
+      ListItem [6,11)
+        Delimiter [6,8) "- "
+        Text [8,11) "b**"
+)";
+        QCOMPARE(d("- **a\n- b**"), QString::fromUtf8(expected).trimmed());
+    }
+
+    void listEmphasisIsolatedFromParagraph()
+    {
+        // A "**" before a list has no closer outside the list (the list region is excluded
+        // from paragraph emphasis), so it stays plain text — no cross-interaction.
+        const QString dump = d("**x\n- y**");
+        QVERIFY(!dump.contains(QLatin1String("Strong")));
+        QVERIFY(dump.contains(QLatin1String("ListBlock")));
+    }
+
+    void listBrokenByParagraph()
+    {
+        // A plain (non-marker, non-continuation) line ends the list.
+        auto expected = R"(
+Document [0,5)
+  Paragraph [0,5)
+    ListBlock [0,4)
+      ListItem [0,4)
+        Delimiter [0,2) "- "
+        Text [2,4) "a\n"
+    Text [4,5) "b"
+)";
+        QCOMPARE(d("- a\nb"), QString::fromUtf8(expected).trimmed());
+    }
+
+    void listBrokenByCodeBlock()
+    {
+        // A code fence ends the list; the fence is its own CodeBlock, not part of the list.
+        const QString dump = d("- a\n```\nx\n```");
+        QVERIFY(dump.contains(QLatin1String("ListBlock [0,4)")));
+        QVERIFY(dump.contains(QLatin1String("CodeBlock")));
+    }
+
+    void listMarkerInsideCodeFenceIsNotAList()
+    {
+        // A "- " line inside a standalone code fence is code content, not a list.
+        const QString dump = d("```\n- a\n```");
+        QVERIFY(!dump.contains(QLatin1String("ListBlock")));
+        QVERIFY(dump.contains(QLatin1String("CodeBlock")));
+    }
+
+    void listMarkerInsideQuoteIsNotAList()
+    {
+        // Lists don't nest inside quotes: "> - a" is a quote whose content is plain "- a".
+        const QString dump = d("> - a");
+        QVERIFY(!dump.contains(QLatin1String("ListBlock")));
+        QVERIFY(dump.contains(QLatin1String("QuoteBlock")));
     }
 
     void plainText()

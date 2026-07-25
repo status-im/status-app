@@ -102,6 +102,22 @@ private slots:
                  "<blockquote><b>bold</b> text</blockquote>");
     }
 
+    void listBlock()
+    {
+        QCOMPARE(h("- a\n- b"), "<ul><li>a</li><li>b</li></ul>");
+    }
+
+    void listItemInlineFormatting()
+    {
+        QCOMPARE(h("- **b**"), "<ul><li><b>b</b></li></ul>");
+    }
+
+    // A continuation line's break is kept as a <br/> inside the <li>.
+    void listItemContinuation()
+    {
+        QCOMPARE(h("- a\n  b"), "<ul><li>a<br/>b</li></ul>");
+    }
+
     // Newlines become <br/> in inline text...
     void newlineBecomesBr() { QCOMPARE(h("a\nb"), "a<br/>b"); }
 
@@ -164,6 +180,13 @@ private slots:
                  "pay <a href=\"//send-via-personal-chat//alice.eth\">alice.eth</a>");
     }
 
+    // A list collapses to its items' inline content on one line (markers stripped).
+    void singleLine_list()
+    {
+        QCOMPARE(hs("- a\n- b"), "a b");
+        QCOMPARE(hs("- **b**"), "<b>b</b>");
+    }
+
     // ── toPlainText: plain-text projection (accessibility) ──────────────────────
 
     static QString pt(const QString& text,
@@ -197,6 +220,9 @@ private slots:
     {
         QCOMPARE(pt("see https://status.im"), "see https://status.im");
     }
+
+    // A list projects to its items' content, markers dropped, newlines preserved.
+    void plain_list() { QCOMPARE(pt("- a\n- b"), "a\nb"); }
 
     // An explicit link projects to its visible label (the url delimiters are dropped).
     void plain_explicitLink()
@@ -274,6 +300,15 @@ private slots:
         QCOMPARE(b[1].toMap()["type"].toString(), "code");
         QCOMPARE(b[1].toMap()["code"].toString(), "x"); // raw, surrounding newlines trimmed
         QCOMPARE(b[2].toMap()["type"].toString(), "text");
+    }
+
+    // A list is emitted as its own text block holding the <ul>…</ul> HTML.
+    void blocks_list()
+    {
+        const QVariantList b = blocks("- a\n- **b**");
+        QCOMPARE(b.size(), 1);
+        QCOMPARE(b[0].toMap()["type"].toString(), "text");
+        QCOMPARE(b[0].toMap()["html"].toString(), "<ul><li>a</li><li><b>b</b></li></ul>");
     }
 
     void blocks_quoteWithText()

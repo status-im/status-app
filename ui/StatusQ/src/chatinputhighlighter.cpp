@@ -192,6 +192,21 @@ void flatten(const Node& node, unsigned int acc, QVector<unsigned int>& flags)
         for (const Node& c : node.children)
             flatten(c, acc | kQuote, flags);
         break;
+    case NodeKind::ListBlock:
+        for (const Node& c : node.children)
+            flatten(c, acc, flags);
+        break;
+    case NodeKind::ListItem:
+        // The "- " / "  " prefixes are the item's direct Delimiter children; render them as
+        // plain text (acc, not kDelimiter) so the markers show as-is in the editor. Inline
+        // formatting inside the item is flattened normally, keeping its usual highlighting.
+        for (const Node& c : node.children) {
+            if (c.kind == NodeKind::Delimiter)
+                stamp(flags, c.start, c.end, acc);
+            else
+                flatten(c, acc, flags);
+        }
+        break;
     case NodeKind::Strong:
         for (const Node& c : node.children)
             flatten(c, acc | kBold, flags);
@@ -415,6 +430,27 @@ void collectQuoteBlocks(const Node& node, QVariantList& out)
         collectQuoteBlocks(c, out);
 }
 
+void collectListBlocks(const Node& node, QVariantList& out)
+{
+    if (node.kind == NodeKind::ListBlock) {
+        QVariantMap m;
+        m[QStringLiteral("start")] = node.start;
+        m[QStringLiteral("end")]   = node.end;
+        out.append(m);
+    }
+    for (const Node& c : node.children)
+        collectListBlocks(c, out);
+}
+
+// Collects the [start, end) range of every ListItem in the tree.
+void collectListItems(const Node& node, QVector<QPair<qsizetype, qsizetype>>& out)
+{
+    if (node.kind == NodeKind::ListItem)
+        out.append({node.start, node.end});
+    for (const Node& c : node.children)
+        collectListItems(c, out);
+}
+
 // True when a caret at `pos` counts as inside `node`'s full range (delimiters included). Inline
 // nodes are strictly containing (node.start < pos < node.end), so a caret just after a closer
 // (e.g. "**bold**|") falls outside.
@@ -575,6 +611,30 @@ QString delimiterStringForKind(const QString& kind)
     return {};
 }
 
+// A quote-line prefix's whitespace is a regular space on the wire but a non-breaking space (U+00A0)
+// in the editor document, so a long unbroken quoted word can't leave the '>' alone on the first
+// wrapped line. Detection accepts either; the serialize/load boundaries convert between the forms.
+constexpr char16_t kQuoteNbsp = 0x00A0;
+inline bool isQuotePrefixSpace(QChar c)
+{
+    return c == QLatin1Char(' ') || c == QChar(kQuoteNbsp);
+}
+
+// Converts each line-leading "> " (regular space) to '>' + NBSP — the editor's stored form.
+QString toEditorQuotePrefixes(QString s)
+{
+    const int n = s.size();
+    int i = 0;
+    while (i < n) {
+        if ((i == 0 || s.at(i - 1) == u'\n') && i + 1 < n
+                && s.at(i) == u'>' && s.at(i + 1) == QLatin1Char(' '))
+            s[i + 1] = QChar(kQuoteNbsp);
+        while (i < n && s.at(i) != u'\n') ++i; // to end of the line
+        if (i < n) ++i;                        // past the newline
+    }
+    return s;
+}
+
 // Whether every line the selection [selStart, selEnd) at least partially covers begins with "> ".
 // Lines are split on '\n'; a line's content range excludes the newline. Returns false when no line
 // is covered.
@@ -594,7 +654,7 @@ bool selectionLinesAllQuoted(const QString& text, int selStart, int selEnd)
         if (touched) {
             any = true;
             const bool quoted = (lineEnd - lineStart) >= 2
-                && text.at(lineStart) == u'>' && text.at(lineStart + 1) == u' ';
+                && text.at(lineStart) == u'>' && isQuotePrefixSpace(text.at(lineStart + 1));
             if (!quoted)
                 return false;
         }
@@ -739,11 +799,13 @@ void ChatInputHighlighter::copySelectionToClipboard(int start, int end) const
     QString plainText;
     QString accum;
 
-    // Emit any pending run of plain characters (tag 0) into both representations.
+    // Emit any pending run of plain characters (tag 0) into both representations. The internal MIME
+    // keeps the editor's non-breaking quote-prefix space (so editor→editor paste round-trips it); the
+    // external plaintext normalizes it to a regular space.
     const auto flushAccum = [&]() {
         if (!accum.isEmpty()) {
             stream << quint8(0) << accum;
-            plainText += accum;
+            plainText += QString(accum).replace(QChar(kQuoteNbsp), QLatin1Char(' '));
             accum.clear();
         }
     };
@@ -836,7 +898,9 @@ void ChatInputHighlighter::pasteFromClipboard(int selectionStart, int selectionE
             }
         }
     } else if (mime->hasText()) {
-        insertEmojiAwareText(cursor, mime->text());
+        // External text: give quote-prefix spaces the editor's non-breaking form so pasted long
+        // unbroken quoted words wrap from the first line too.
+        insertEmojiAwareText(cursor, toEditorQuotePrefixes(mime->text()));
     }
     cursor.endEditBlock();
 }
@@ -862,6 +926,8 @@ QString ChatInputHighlighter::textWithMentions() const
             out += QLatin1Char('@') + fmt.property(MentionTextObject::PubKeyProperty).toString();
         else if (isEmojiImage(fmt))
             out += fmt.property(kEmojiUnicodeProperty).toString();
+        else if (ch == QString(QChar(kQuoteNbsp)))
+            out += QLatin1Char(' '); // editor's non-breaking quote-prefix space → regular space
         else
             out += ch;
     }
@@ -895,10 +961,13 @@ void ChatInputHighlighter::setTextWithMentions(const QString& text, const QVaria
         }
     };
 
+    // Store quote prefixes with a NBSP (positions match `text` 1:1, so the mention spans stay valid).
+    const QString editorText = toEditorQuotePrefixes(text);
+
     int pos = 0;
     for (const TextMentionSpan& span : std::as_const(spans)) {
         if (span.start > pos)
-            insertPlain(text.mid(pos, span.start - pos));
+            insertPlain(editorText.mid(pos, span.start - pos));
 
         QString name = names.value(span.pubKey).toString();
         if (name.isEmpty())
@@ -914,8 +983,8 @@ void ChatInputHighlighter::setTextWithMentions(const QString& text, const QVaria
         cursor.insertText(QString(QChar::ObjectReplacementCharacter), fmt);
         pos = span.end;
     }
-    if (pos < text.size())
-        insertPlain(text.mid(pos));
+    if (pos < editorText.size())
+        insertPlain(editorText.mid(pos));
 
     cursor.endEditBlock();
 }
@@ -1400,6 +1469,70 @@ QVariantList ChatInputHighlighter::parseQuoteBlocks(const QString& text) const
     return result;
 }
 
+QVariantList ChatInputHighlighter::parseListBlocks(const QString& text) const
+{
+    QVariantList result;
+    const Node doc = Markdown::parse(
+        text, optionsFor(m_formatUnclosedCodeFence));
+    collectListBlocks(doc, result);
+    return result;
+}
+
+// Returns the ListItem whose line block at `position` belongs to it, or nullptr. Uses the
+// caret's line start (block position) so the caret at either end of a line still resolves to
+// the item that line belongs to (marker or continuation line).
+static bool listItemAt(const QTextDocument* doc, const QString& text, bool formatUnclosedFence,
+                       int position, QPair<qsizetype, qsizetype>& itemOut)
+{
+    const QTextBlock block = doc->findBlock(position);
+    if (!block.isValid())
+        return false;
+    const qsizetype lineStart = block.position();
+    QVector<QPair<qsizetype, qsizetype>> items;
+    collectListItems(Markdown::parse(text, optionsFor(formatUnclosedFence)), items);
+    for (const auto& r : items) {
+        if (lineStart >= r.first && lineStart < r.second) {
+            itemOut = r;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ChatInputHighlighter::isInListItem(int position) const
+{
+    if (!document())
+        return false;
+    QPair<qsizetype, qsizetype> item;
+    return listItemAt(document(), document()->toPlainText(),
+                      m_formatUnclosedCodeFence, position, item);
+}
+
+bool ChatInputHighlighter::isEmptyListItem(int position) const
+{
+    if (!document())
+        return false;
+    const QTextBlock block = document()->findBlock(position);
+    if (!block.isValid())
+        return false;
+    QPair<qsizetype, qsizetype> item;
+    if (!listItemAt(document(), document()->toPlainText(),
+                    m_formatUnclosedCodeFence, position, item))
+        return false;
+    // Empty ⇒ the item is a single "- " marker line with no content after the marker.
+    const QString t = block.text();
+    return static_cast<qsizetype>(block.position()) == item.first
+            && t.size() == 2 && t.at(0) == u'-' && isQuotePrefixSpace(t.at(1));
+}
+
+int ChatInputHighlighter::listItemMarkerStart(int position) const
+{
+    if (!document())
+        return position;
+    const QTextBlock block = document()->findBlock(position);
+    return block.isValid() ? static_cast<int>(block.position()) : position;
+}
+
 QSet<int> ChatInputHighlighter::quoteLineStarts() const
 {
     if (!document())
@@ -1407,6 +1540,17 @@ QSet<int> ChatInputHighlighter::quoteLineStarts() const
     const QString text = document()->toPlainText();
     return collectQuoteLineStarts(
         Markdown::parse(text, optionsFor(m_formatUnclosedCodeFence)), text);
+}
+
+bool ChatInputHighlighter::atQuotePrefixSpaceInsertion(int position) const
+{
+    if (!document())
+        return false;
+    const QTextBlock block = document()->findBlock(position);
+    if (!block.isValid() || position != block.position() + 1)
+        return false; // caret must sit right after the line's first char
+    const QString t = block.text();
+    return !t.isEmpty() && t.at(0) == u'>';
 }
 
 bool ChatInputHighlighter::isInQuoteBlock(int position) const
@@ -1433,9 +1577,11 @@ bool ChatInputHighlighter::isEmptyQuoteBlock(int position) const
     if (!document())
         return false;
     const QTextBlock block = document()->findBlock(position);
-    return block.isValid()
-            && quoteLineStarts().contains(static_cast<int>(block.position()))
-            && block.text() == QStringLiteral("> ");
+    if (!block.isValid()
+            || !quoteLineStarts().contains(static_cast<int>(block.position())))
+        return false;
+    const QString t = block.text();
+    return t.size() == 2 && t.at(0) == u'>' && isQuotePrefixSpace(t.at(1));
 }
 
 bool ChatInputHighlighter::isLineEndBeforeQuoteBlock(int position) const
@@ -1946,7 +2092,7 @@ void ChatInputHighlighter::removeDelimitersAtSelection(int selectionStart, int s
                 ? (selectionStart >= lineStart && selectionStart <= lineEnd)
                 : (selectionStart < lineEnd && selectionEnd > lineStart);
             if (touched && (lineEnd - lineStart) >= 2
-                    && text.at(lineStart) == u'>' && text.at(lineStart + 1) == u' ')
+                    && text.at(lineStart) == u'>' && isQuotePrefixSpace(text.at(lineStart + 1)))
                 ranges.append({lineStart, lineStart + 2});
             lineStart = i + 1;
         }
@@ -2071,7 +2217,7 @@ QVariantMap ChatInputHighlighter::addFormatting(int selectionStart, int selectio
             cursor.beginEditBlock();
             for (int p : std::as_const(lineStarts)) {
                 cursor.setPosition(p);
-                cursor.insertText(QStringLiteral("> "));
+                cursor.insertText(QStringLiteral(">") + QChar(kQuoteNbsp)); // NBSP: non-breaking prefix
             }
             cursor.endEditBlock();
         }

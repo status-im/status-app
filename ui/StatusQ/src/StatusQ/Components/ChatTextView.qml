@@ -255,6 +255,10 @@ Control {
             // <style> rule (not from an inline style), matching the legacy `p { line-height }`;
             // margin:0 keeps inter-block spacing owned by the layout.
             + ` p { margin: 0; line-height: ${root.lineHeight}px }`
+            // Tighten the unordered-list indent: Qt's default `<ul>` indent is large. `-qt-list-indent: 0`
+            // drops the list-level indent step and `margin-left` sets it explicitly. One em keeps the
+            // indent small while leaving room for the bullet (a smaller margin clips it).
+            + ` ul { -qt-list-indent: 0; margin-left: ${root.font.pixelSize * 2}px }`
 
         function linkBg(href) {
             return ` a[href="${href}"] { background-color: ${root.linkHoverColor} }`

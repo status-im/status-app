@@ -7,7 +7,8 @@
 // by the chat input. The tree is the single source of truth: consumers walk it
 // to apply live syntax highlighting, to emit static formatted text, etc.
 //
-// Formatting characters (** , *, ~~, `, ```, "> ", fence info strings) are kept
+// Formatting characters (** , *, ~~, `, ```, "> ", "- ", list continuation "  ",
+// fence info strings) are kept
 // as first-class Delimiter leaf nodes so a consumer can decide to render them
 // (live input highlighting) or to skip them (static text rendering).
 namespace Markdown {
@@ -19,6 +20,8 @@ enum class NodeKind {
     Paragraph,
     QuoteBlock,
     CodeBlock,      // fenced (```), content is not re-parsed
+    ListBlock,      // a maximal run of consecutive unordered-list items ("- ")
+    ListItem,       // one list item; its own emphasis-isolated inline region
 
     // Inline formatting containers
     Strong,         // bold
