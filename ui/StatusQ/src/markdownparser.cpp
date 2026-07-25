@@ -503,6 +503,32 @@ qsizetype findOpenCodeFence(const QString& text)
     return -1;
 }
 
+// A quote-line prefix is '>' followed by a space or a non-breaking space (U+00A0). The editor stores
+// the prefix with a NBSP so the '>' never breaks away from its first word when a long unbroken run
+// wraps; the wire form uses a regular space. Both are accepted (both are one char, so the 2-char
+// prefix offsets elsewhere are unaffected).
+inline bool isQuotePrefixSpace(QChar c)
+{
+    return c == QLatin1Char(' ') || c == QChar(0x00A0);
+}
+inline bool startsWithQuotePrefix(const QString& line)
+{
+    return line.size() >= 2 && line.at(0) == QLatin1Char('>') && isQuotePrefixSpace(line.at(1));
+}
+
+// An unordered-list item marker is '-' followed by a space (or NBSP, tolerated like the quote
+// prefix). Both the marker and a continuation prefix are exactly 2 chars, so the fixed prefix
+// offsets used elsewhere stay valid.
+inline bool startsWithListMarker(const QString& line)
+{
+    return line.size() >= 2 && line.at(0) == QLatin1Char('-') && isQuotePrefixSpace(line.at(1));
+}
+// A continuation line of the current item begins with two spaces (NBSP tolerated).
+inline bool startsWithListContinuation(const QString& line)
+{
+    return line.size() >= 2 && isQuotePrefixSpace(line.at(0)) && isQuotePrefixSpace(line.at(1));
+}
+
 // Finds maximal runs of consecutive "> " lines, with a line-based, fence-aware
 // state machine so the quote/fence containment rules hold:
 //   - lines inside a *standalone* code fence (one opened on a non-"> " line) are
@@ -534,7 +560,7 @@ QVector<QuoteGroup> scanQuoteGroups(const QString& text, bool formatUnclosedFenc
         if (i < n) ++i;
 
         const QString line = text.mid(lineStart, lineEnd - lineStart);
-        const bool isQuote = line.startsWith(QStringLiteral("> "));
+        const bool isQuote = startsWithQuotePrefix(line);
         const CodeState stateAtStart = state;
 
         if (state == NoCode) {
@@ -599,6 +625,110 @@ Ranges quoteGroupPrefixRanges(const QString& text, const QuoteGroup& g)
     return result;
 }
 
+// ── Unordered lists ────────────────────────────────────────────────────────────
+// A list group is a maximal run of consecutive lines making up single-level unordered
+// list items. Structurally identical to a quote group (absolute [start, end) over the
+// lines it spans).
+using ListGroup = QuoteGroup;
+
+// Finds maximal runs of unordered-list lines. A run starts at a "- " marker line; it is
+// extended by another "- " marker (a new item) or a "  " continuation line (more of the
+// current item). Any other line — blank, "> ", plain text, or one that opens a code fence —
+// ends the run before that line, so a code block or quote block breaks the list.
+//
+// Fence-aware like scanQuoteGroups: a "- " line inside a *standalone* code fence is code,
+// not a marker. `formatUnclosedFence` decides whether an unclosed standalone opener counts
+// as a real (list-suppressing) code block, matching the quote scanner's rule.
+QVector<ListGroup> scanListGroups(const QString& text, bool formatUnclosedFence)
+{
+    enum CodeState { NoCode, InCodeStandalone };
+
+    static const QString fence = QStringLiteral("```");
+
+    QVector<ListGroup> groups;
+    qsizetype i = 0;
+    const qsizetype n = text.length();
+    qsizetype groupStart = -1;
+    CodeState state = NoCode;
+
+    while (i < n) {
+        const qsizetype lineStart = i;
+        while (i < n && text[i] != QLatin1Char('\n')) ++i;
+        const qsizetype lineEnd = i;
+        if (i < n) ++i;
+
+        const QString line = text.mid(lineStart, lineEnd - lineStart);
+        const CodeState stateAtStart = state;
+
+        // Track standalone code fences so their inner "- " lines aren't taken as markers,
+        // and so a fence opening on a following line ends the list.
+        bool opensFence = false;
+        if (state == NoCode) {
+            const qsizetype openPos = line.indexOf(fence);
+            if (openPos >= 0 && line.indexOf(fence, openPos + 3) < 0) {
+                const bool closesLater = text.indexOf(fence, i) >= 0;
+                if (closesLater || formatUnclosedFence) {
+                    state = InCodeStandalone;
+                    opensFence = true;
+                }
+            }
+        } else { // InCodeStandalone
+            if (line.indexOf(fence) >= 0)
+                state = NoCode;
+        }
+
+        const bool inCode = stateAtStart == InCodeStandalone || opensFence;
+        const bool isMarker = !inCode && startsWithListMarker(line);
+        const bool isContinuation = !inCode && groupStart >= 0 && startsWithListContinuation(line);
+
+        if (isMarker) {
+            if (groupStart < 0) groupStart = lineStart;
+        } else if (isContinuation) {
+            // extend the open group
+        } else if (groupStart >= 0) {
+            groups.append({groupStart, lineStart});
+            groupStart = -1;
+        }
+    }
+    if (groupStart >= 0)
+        groups.append({groupStart, n});
+
+    return groups;
+}
+
+// Splits a list group into its item ranges: each "- " marker line opens an item, and
+// following "  " continuation lines extend it.
+QVector<ListGroup> listGroupItemRanges(const QString& text, const ListGroup& g)
+{
+    QVector<ListGroup> items;
+    qsizetype i = g.start;
+    while (i < g.end) {
+        const qsizetype lineStart = i;
+        while (i < g.end && text[i] != QLatin1Char('\n')) ++i;
+        if (i < g.end) ++i;
+        const QString line = text.mid(lineStart, i - lineStart);
+        if (startsWithListMarker(line))
+            items.append({lineStart, i});          // new item
+        else if (!items.isEmpty())
+            items.last().end = i;                  // continuation of the current item
+    }
+    return items;
+}
+
+// Returns the 2-char prefix ranges of an item: its leading "- " plus each continuation
+// line's "  " (analogous to quoteGroupPrefixRanges).
+Ranges listItemPrefixRanges(const QString& text, const ListGroup& item)
+{
+    Ranges result;
+    qsizetype i = item.start;
+    while (i < item.end) {
+        result.append({i, i + 2});
+        while (i < item.end && text[i] != QLatin1Char('\n')) ++i;
+        if (i < item.end) ++i;
+    }
+    return result;
+}
+
 // ── AST assembly ──────────────────────────────────────────────────────────────
 
 // A flat, properly-nested interval describing an inline construct, later
@@ -620,10 +750,13 @@ NodeKind kindFromBits(unsigned int bits)
     return NodeKind::Emphasis;
 }
 
-// Forward declaration — inlineContainers builds nested quote blocks eagerly,
-// and makeQuoteBlock in turn calls inlineContainers (with quote detection off).
+// Forward declarations — inlineContainers builds nested quote/list blocks eagerly,
+// and makeQuoteBlock / makeListBlock in turn call inlineContainers (with quote and
+// list detection off, since neither nests).
 Node makeQuoteBlock(const QString& full, const QuoteGroup& g, bool detectLinks,
                     bool formatUnclosedFence);
+Node makeListBlock(const QString& full, const ListGroup& g, bool detectLinks,
+                   bool formatUnclosedFence);
 
 Node leaf(NodeKind kind, const QString& full, qsizetype s, qsizetype e)
 {
@@ -711,7 +844,7 @@ Node materialize(const QString& full, int idx,
     n.start = c.oS;
     n.end = c.oE;
 
-    if (c.kind == NodeKind::QuoteBlock) {
+    if (c.kind == NodeKind::QuoteBlock || c.kind == NodeKind::ListBlock) {
         n.children = c.built; // children built eagerly when the container was emitted
         return n;
     }
@@ -788,16 +921,18 @@ QVector<Node> buildInline(const QString& full, qsizetype rs, qsizetype re,
     return buildInlineChildren(full, rs, re, tree.roots, conts, tree);
 }
 
-// Computes the inline containers (emphasis, code spans/blocks, quote blocks,
-// links) for a region [rs, re), in absolute coordinates. `prefixExcludes` are
+// Computes the inline containers (emphasis, code spans/blocks, quote blocks, list
+// blocks, links) for a region [rs, re), in absolute coordinates. `prefixExcludes` are
 // absolute ranges (e.g. quote "> " prefixes) excluded from emphasis/link scanning.
 // When `detectQuotes` is true, quote groups in the region become nested QuoteBlock
 // containers (built eagerly) and are excluded from emphasis — so emphasis spans
 // across them. It is false while parsing a quote's own content (no nested quotes).
-// Emphasis/code/quotes/links may span multiple lines within the region.
+// `detectLists` does the same for unordered-list groups; it is false inside quotes and
+// inside a list item's own content, so each item is its own emphasis-isolated region.
+// Emphasis/code/quotes/lists/links may span multiple lines within the region.
 QVector<Container> inlineContainers(const QString& full, qsizetype rs, qsizetype re,
                                     const Ranges& prefixExcludes,
-                                    bool detectLinks, bool detectQuotes,
+                                    bool detectLinks, bool detectQuotes, bool detectLists,
                                     bool formatUnclosedFence)
 {
     const QString region = full.mid(rs, re - rs);
@@ -852,9 +987,28 @@ QVector<Container> inlineContainers(const QString& full, qsizetype rs, qsizetype
         }
     }
 
-    // Code fences/spans are scanned per "gap" (region minus quote ranges) so a
-    // fence never pairs across a quote boundary. An unclosed fence (when enabled)
-    // is bounded by the gap end. Quote ranges come back sorted from scanQuoteGroups.
+    // List groups (region-relative), each built eagerly as a nested ListBlock. A "- " line
+    // is never also a "> " line, so quote and list ranges are disjoint.
+    Ranges listRanges;
+    if (detectLists) {
+        for (const ListGroup& g : scanListGroups(region, formatUnclosedFence)) {
+            Node lb = makeListBlock(full, {rs + g.start, rs + g.end}, detectLinks,
+                                    formatUnclosedFence);
+            conts.append({NodeKind::ListBlock, rs + g.start, rs + g.end,
+                          rs + g.start, rs + g.end, {}, lb.children});
+            listRanges.append({g.start, g.end});
+        }
+    }
+
+    // Block ranges (quotes ∪ lists), sorted, so code fences are scanned only in the gaps
+    // between them and never pair across a quote or a list boundary.
+    Ranges blockRanges = quoteRanges;
+    blockRanges += listRanges;
+    std::sort(blockRanges.begin(), blockRanges.end());
+
+    // Code fences/spans are scanned per "gap" (region minus block ranges) so a
+    // fence never pairs across a quote/list boundary. An unclosed fence (when enabled)
+    // is bounded by the gap end.
     Ranges codeRanges;
     qsizetype cursor = 0;
     auto scanGap = [&](qsizetype gs, qsizetype ge) {
@@ -874,15 +1028,16 @@ QVector<Container> inlineContainers(const QString& full, qsizetype rs, qsizetype
             }
         }
     };
-    for (const auto& q : quoteRanges) {
-        scanGap(cursor, q.first);
-        cursor = q.second;
+    for (const auto& b : blockRanges) {
+        scanGap(cursor, b.first);
+        cursor = b.second;
     }
     scanGap(cursor, regionLen);
 
     Ranges exclude = codeRanges;
     exclude += prefixRegion;
     exclude += quoteRanges;
+    exclude += listRanges;
     const QVector<LinkSpan> links = detectLinks ? scanLinks(region, exclude)
                                                 : QVector<LinkSpan>{};
 
@@ -913,15 +1068,53 @@ Node makeQuoteBlock(const QString& full, const QuoteGroup& g, bool detectLinks,
     n.end = g.end;
 
     const Ranges prefixes = quoteGroupPrefixRanges(full, g);
-    // detectQuotes=false: a quote's own content is not re-scanned for nested quotes.
+    // detectQuotes/detectLists=false: a quote's own content is not re-scanned for nested
+    // quotes, and a "- " line inside a quote stays plain text (lists don't nest in quotes).
     QVector<Container> conts = inlineContainers(full, g.start, g.end, prefixes,
                                                 detectLinks, /*detectQuotes=*/false,
-                                                formatUnclosedFence);
+                                                /*detectLists=*/false, formatUnclosedFence);
     // "> " prefixes are first-class Delimiter nodes.
     for (const auto& p : prefixes)
         conts.append({NodeKind::Delimiter, p.first, p.second, p.first, p.second, {}});
 
     n.children = buildInline(full, g.start, g.end, conts);
+    return n;
+}
+
+// One list item — its own emphasis-isolated inline region. The "- " marker and each
+// continuation-line "  " prefix become Delimiter children; the rest is scanned with quotes
+// and lists off so a delimiter opened here can only close within this same item.
+Node makeListItem(const QString& full, const ListGroup& item, bool detectLinks,
+                  bool formatUnclosedFence)
+{
+    Node n;
+    n.kind = NodeKind::ListItem;
+    n.start = item.start;
+    n.end = item.end;
+
+    const Ranges prefixes = listItemPrefixRanges(full, item);
+    QVector<Container> conts = inlineContainers(full, item.start, item.end, prefixes,
+                                                detectLinks, /*detectQuotes=*/false,
+                                                /*detectLists=*/false, formatUnclosedFence);
+    // "- " / "  " prefixes are first-class Delimiter nodes (direct children of the item).
+    for (const auto& p : prefixes)
+        conts.append({NodeKind::Delimiter, p.first, p.second, p.first, p.second, {}});
+
+    n.children = buildInline(full, item.start, item.end, conts);
+    return n;
+}
+
+Node makeListBlock(const QString& full, const ListGroup& g, bool detectLinks,
+                   bool formatUnclosedFence)
+{
+    Node n;
+    n.kind = NodeKind::ListBlock;
+    n.start = g.start;
+    n.end = g.end;
+
+    for (const ListGroup& item : listGroupItemRanges(full, g))
+        n.children.append(makeListItem(full, item, detectLinks, formatUnclosedFence));
+
     return n;
 }
 
@@ -933,7 +1126,8 @@ Node makeParagraph(const QString& full, qsizetype s, qsizetype e, bool detectLin
     n.start = s;
     n.end = e;
     QVector<Container> conts = inlineContainers(full, s, e, {}, detectLinks,
-                                                /*detectQuotes=*/true, formatUnclosedFence);
+                                                /*detectQuotes=*/true, /*detectLists=*/true,
+                                                formatUnclosedFence);
     n.children = buildInline(full, s, e, conts);
     return n;
 }

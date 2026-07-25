@@ -163,6 +163,9 @@ public:
     // Returns [{start, end}, ...] for each quote group — for unit tests
     Q_INVOKABLE QVariantList parseQuoteBlocks(const QString& text) const;
 
+    // Returns [{start, end}, ...] for each unordered-list block — for unit tests
+    Q_INVOKABLE QVariantList parseListBlocks(const QString& text) const;
+
     // Returns true when `position` falls inside an unclosed ``` region in the document
     Q_INVOKABLE bool inUnclosedCodeFence(int position) const;
 
@@ -239,6 +242,11 @@ public:
 
     // Quote-editing queries (for the "> " continuation / deletion UX). All operate on
     // the live document and a fence-aware set of quote-line block starts.
+    // True when `position` is right after a line-leading '>' (block start + 1, first char '>'), i.e.
+    // the caret where typing a space starts a quote. The editor inserts a non-breaking space there
+    // instead of a regular one so the '>' can't wrap away from its first word.
+    Q_INVOKABLE bool atQuotePrefixSpaceInsertion(int position) const;
+
     Q_INVOKABLE bool isInQuoteBlock(int position) const;        // block at pos is a quote line
     Q_INVOKABLE bool isQuoteContentStart(int position) const;   // pos == "> " end of a quote line
     Q_INVOKABLE bool isEmptyQuoteBlock(int position) const;     // quote line whose text is "> "
@@ -246,6 +254,11 @@ public:
     Q_INVOKABLE bool isBlockEmpty(int position) const;          // block at pos has empty text
     Q_INVOKABLE int  endOfPreviousBlock(int position) const;    // last position of the previous block
     Q_INVOKABLE int  snapToQuoteContent(int position) const;    // move pos out of the "> " prefix
+
+    // Unordered-list continuation UX (Enter behavior), AST-driven off the live document.
+    Q_INVOKABLE bool isInListItem(int position) const;          // pos's line belongs to a list item
+    Q_INVOKABLE bool isEmptyListItem(int position) const;       // list item is a lone "- " marker
+    Q_INVOKABLE int  listItemMarkerStart(int position) const;   // start of pos's line (the "- " marker)
 
     // Walks the cached AST for the node containing `position` and returns whether it falls
     // inside a code span or code block. Reuses the parsed tree (no reparse on caret moves).

@@ -443,6 +443,60 @@ Item {
             compare(control.text, "> A\n")
         }
 
+        // The quote prefix's space is stored as a non-breaking space (U+00A0), so a long unbroken
+        // quoted word can't leave the '>' alone on the first wrapped line: the first content char
+        // sits on the same visual line as the '>'. (Regular-space prefix would push it to line 2.)
+        function test_quoteNbspPrefixWrapsFromFirstLine() {
+            control.text = ">\u00A0" + "x".repeat(200) // editor's NBSP-prefixed form, wider than the control
+            control.forceActiveFocus()
+
+            verify(control.lineCount > 1, "the long quoted word should wrap to multiple lines")
+            // '>' at 0, prefix space at 1, first content char at 2 — all on the first line.
+            compare(control.positionToRectangle(2).y, control.positionToRectangle(0).y)
+        }
+
+        // The editor's non-breaking prefix space is normalized back to a regular space on the wire.
+        function test_quoteNbspSerializesToSpace() {
+            control.text = ">\u00A0hi"
+            compare(control.textWithMentions(), "> hi")
+        }
+
+        // \u2500\u2500 unordered-list continuation \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+
+        // Enter at the end of a list item starts a new "- " item.
+        function test_listEnterContinues() {
+            control.text = "- a"
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            keyClick(Qt.Key_Return)
+
+            compare(control.text, "- a\n- ")
+            compare(control.cursorPosition, control.length)
+        }
+
+        // Enter on an empty "- " marker drops it, exiting the list.
+        function test_listEnterOnEmptyExits() {
+            control.text = "- a\n- "
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            keyClick(Qt.Key_Return)
+
+            compare(control.text, "- a\n")
+        }
+
+        // Shift+Enter is not a list continuation: it inserts a plain newline.
+        function test_listShiftEnterInsertsPlainNewline() {
+            control.text = "- a"
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            keyClick(Qt.Key_Return, Qt.ShiftModifier)
+
+            compare(control.text, "- a\n")
+        }
+
         // A single Backspace at the start of quote content removes the whole "> "
         // prefix (not the space then the ">" separately).
         function test_quoteBackspaceRemovesPrefix() {

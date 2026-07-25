@@ -178,7 +178,8 @@ StatusTextArea {
     InputMethodEventFilter {
         target: root
         onInputMethodEventReceived: (imeEvent) => {
-            if (imeEvent.commitString === "\n" && d.continueQuoteBlock())
+            if (imeEvent.commitString === "\n"
+                    && (d.continueQuoteBlock() || d.continueListBlock()))
                 imeEvent.accept()
         }
     }
@@ -203,7 +204,25 @@ StatusTextArea {
                 // is that line's start.
                 root.remove(prevPos - 2, root.cursorPosition)
             } else {
-                root.insert(root.cursorPosition, "\n> ")
+                // U+00A0 (NBSP) prefix space: keeps the '>' glued to its first word so a long
+                // unbroken quoted word wraps from the first line (serialized back to a plain space).
+                root.insert(root.cursorPosition, "\n>\u00A0")
+            }
+            return true
+        }
+
+        // Unordered-list continuation shared by the desktop key handler and the mobile IME
+        // handler. Inside a list item, Enter starts a new "- " item; on an empty "- " marker it
+        // drops the marker to exit the list. Returns true when it handled the caret.
+        function continueListBlock() {
+            if (!highlighter.isInListItem(root.cursorPosition))
+                return false
+            if (highlighter.isEmptyListItem(root.cursorPosition)) {
+                // Empty marker line ("- "): remove it to exit the list.
+                const start = highlighter.listItemMarkerStart(root.cursorPosition)
+                root.remove(start, root.cursorPosition)
+            } else {
+                root.insert(root.cursorPosition, "\n- ")
             }
             return true
         }
@@ -417,6 +436,17 @@ StatusTextArea {
             return
         }
 
+        // Typing a space right after a line-leading ">" starts a quote. Store the prefix space as a
+        // non-breaking space (U+00A0) so the ">" can't wrap away from its first word when a long
+        // unbroken quoted word exceeds the line width (serialized back to a plain space on send).
+        if (event.text === " "
+                && root.selectionStart === root.selectionEnd
+                && highlighter.atQuotePrefixSpaceInsertion(root.cursorPosition)) {
+            event.accepted = true
+            root.insert(root.cursorPosition, "\u00A0")
+            return
+        }
+
         // Custom copy/paste so mentions survive round-trips inside the editor (via a private
         // clipboard MIME) and collapse to their name text when pasted into other apps.
         if (event.matches(StandardKey.Copy)
@@ -461,6 +491,12 @@ StatusTextArea {
 
         if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
                 && d.continueQuoteBlock()) {
+            event.accepted = true
+            return
+        }
+
+        if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+                && noShift && noSelection && d.continueListBlock()) {
             event.accepted = true
             return
         }

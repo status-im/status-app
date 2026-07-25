@@ -10,6 +10,8 @@ QString kindName(Markdown::NodeKind kind)
     case K::Paragraph:     return QStringLiteral("Paragraph");
     case K::QuoteBlock:    return QStringLiteral("QuoteBlock");
     case K::CodeBlock:     return QStringLiteral("CodeBlock");
+    case K::ListBlock:     return QStringLiteral("ListBlock");
+    case K::ListItem:      return QStringLiteral("ListItem");
     case K::Strong:        return QStringLiteral("Strong");
     case K::Emphasis:      return QStringLiteral("Emphasis");
     case K::Strikethrough: return QStringLiteral("Strikethrough");

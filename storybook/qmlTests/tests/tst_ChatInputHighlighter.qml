@@ -822,4 +822,35 @@ TestCase {
 
         compare(highlighter.parseFormats(text).length, 0)
     }
+
+    // ── unordered lists ─────────────────────────────────────────────────────
+
+    function test_list_singleGroup() {
+        const text = "- a\n- b"
+        const groups = highlighter.parseListBlocks(text)
+        compare(groups.length, 1)
+        compare(groups[0].start, 0)
+        compare(groups[0].end, text.length)
+    }
+
+    // Inline formatting inside an item is still recognized (only the markers are plain).
+    function test_list_boldInsideItem() {
+        const spans = highlighter.parseFormats("- **b**")
+        compare(spans.length, 1)
+        compare(spans[0].bold, true)
+    }
+
+    // A "**" opened in one item does not pair with a "**" in another item.
+    function test_list_noEmphasisAcrossItems() {
+        compare(highlighter.parseFormats("- **a\n- b**").length, 0)
+    }
+
+    // A "- " line inside a standalone code fence is not a list.
+    function test_list_insideCodeFence_notList() {
+        compare(highlighter.parseListBlocks("```\n- a\n```").length, 0)
+    }
+
+    function test_list_emptyString_noGroups() {
+        compare(highlighter.parseListBlocks("").length, 0)
+    }
 }
