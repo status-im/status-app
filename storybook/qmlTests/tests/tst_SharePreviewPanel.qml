@@ -1,6 +1,8 @@
 import QtQuick
 import QtTest
 
+import StatusQ.Core.Utils as SQUtils
+
 import mainui
 
 Item {
@@ -9,10 +11,15 @@ Item {
     width: 500
     height: 600
 
-    // Self-contained 1x1 PNG standing in for the cached file paths the share
+    // Self-contained 1x1 PNGs standing in for the cached file paths the share
     // intake delivers (no filesystem dependency, no Image load warnings).
-    readonly property string sampleImage:
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+    // Distinct pixels because the chat input deduplicates identical entries.
+    readonly property string redImage:
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC"
+    readonly property string greenImage:
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg+M8AAAICAQB7CYF4AAAAAElFTkSuQmCC"
+    readonly property string blueImage:
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYPgPAAEDAQAIicLsAAAAAElFTkSuQmCC"
 
     Component {
         id: testComponent
@@ -49,8 +56,8 @@ Item {
             cancelRequestedSpy.clear()
         }
 
-        function createPreview() {
-            const preview = createTemporaryObject(testComponent, root)
+        function createPreview(properties = {}) {
+            const preview = createTemporaryObject(testComponent, root, properties)
             sendRequestedSpy.target = preview
             backRequestedSpy.target = preview
             cancelRequestedSpy.target = preview
@@ -58,35 +65,57 @@ Item {
             return preview
         }
 
+        // The chat input emits rich text; compare via its plain-text form,
+        // like the send pipeline does.
+        function plainText(text) {
+            return SQUtils.StringUtils.plainText(text)
+        }
+
+        function test_prefillsChatInputWithSharedText() {
+            const preview = createPreview()
+            const chatInput = findChild(preview, "statusChatInput")
+            verify(chatInput)
+
+            compare(chatInput.getPlainText(),
+                    "Look at this https://example.com/article")
+        }
+
         function test_sendEmitsEditedText() {
             const preview = createPreview()
-            const textArea = findChild(preview, "sharePreviewTextArea")
-            const sendButton = findChild(preview, "sharePreviewSendButton")
-            verify(textArea)
+            const chatInput = findChild(preview, "statusChatInput")
+            const sendButton = findChild(preview, "statusChatInputSendButton")
+            verify(chatInput)
             verify(sendButton)
-
-            compare(textArea.text, "Look at this https://example.com/article")
             verify(sendButton.enabled)
 
-            textArea.text = "Edited before sending"
+            chatInput.setText("Edited before sending")
             mouseClick(sendButton)
 
             compare(sendRequestedSpy.count, 1)
-            compare(sendRequestedSpy.signalArguments[0][0], "Edited before sending")
+            compare(plainText(sendRequestedSpy.signalArguments[0][0]),
+                    "Edited before sending")
+            compare(sendRequestedSpy.signalArguments[0][1].length, 0)
         }
 
-        function test_sendDisabledOnBlankText() {
+        function test_sendNotEmittedOnBlankText() {
             const preview = createPreview()
-            const textArea = findChild(preview, "sharePreviewTextArea")
-            const sendButton = findChild(preview, "sharePreviewSendButton")
-            verify(textArea)
+            const chatInput = findChild(preview, "statusChatInput")
+            const sendButton = findChild(preview, "statusChatInputSendButton")
+            verify(chatInput)
             verify(sendButton)
 
-            textArea.text = "   "
-            verify(!sendButton.enabled)
-
+            chatInput.setText("   ")
             mouseClick(sendButton)
+
             compare(sendRequestedSpy.count, 0)
+        }
+
+        function test_sendDisabledOnEmptyInput() {
+            const preview = createPreview({ text: "" })
+            const sendButton = findChild(preview, "statusChatInputSendButton")
+            verify(sendButton)
+
+            verify(!sendButton.enabled)
         }
 
         function test_backEmitsIntent() {
@@ -111,60 +140,115 @@ Item {
             compare(sendRequestedSpy.count, 0)
         }
 
-        function test_thumbnailsHiddenForTextShare() {
-            const preview = createPreview()
-            const thumbnails = findChild(preview, "sharePreviewThumbnailsList")
-            verify(thumbnails)
+        function test_sharedImagesAttachedToInput() {
+            const preview = createPreview({
+                imagePaths: [root.redImage, root.greenImage, root.blueImage]
+            })
+            const chatInput = findChild(preview, "statusChatInput")
+            verify(chatInput)
 
-            compare(thumbnails.count, 0)
-            verify(!thumbnails.visible)
+            compare(chatInput.fileUrlsAndSources.length, 3)
+            verify(chatInput.isImage)
         }
 
-        function test_thumbnailShownPerSharedImage() {
+        function test_noImagesAttachedForTextShare() {
             const preview = createPreview()
-            const thumbnails = findChild(preview, "sharePreviewThumbnailsList")
-            verify(thumbnails)
+            const chatInput = findChild(preview, "statusChatInput")
+            verify(chatInput)
 
-            preview.imagePaths = [root.sampleImage, root.sampleImage, root.sampleImage]
-            waitForRendering(preview)
-
-            compare(thumbnails.count, 3)
-            verify(thumbnails.visible)
-            const thumbnail = findChild(thumbnails, "sharePreviewThumbnail")
-            verify(thumbnail)
-            tryCompare(thumbnail, "status", Image.Ready)
+            compare(chatInput.fileUrlsAndSources.length, 0)
+            verify(!chatInput.isImage)
         }
 
         function test_sendEnabledWithImagesAndBlankCaption() {
-            const preview = createPreview()
-            const textArea = findChild(preview, "sharePreviewTextArea")
-            const sendButton = findChild(preview, "sharePreviewSendButton")
-            verify(textArea)
+            const preview = createPreview({
+                text: "",
+                imagePaths: [root.redImage]
+            })
+            const chatInput = findChild(preview, "statusChatInput")
+            const sendButton = findChild(preview, "statusChatInputSendButton")
+            verify(chatInput)
             verify(sendButton)
-
-            preview.imagePaths = [root.sampleImage]
-            textArea.text = ""
             verify(sendButton.enabled)
 
             mouseClick(sendButton)
 
             compare(sendRequestedSpy.count, 1)
-            compare(sendRequestedSpy.signalArguments[0][0], "")
+            compare(plainText(sendRequestedSpy.signalArguments[0][0]).trim(), "")
+            compare(sendRequestedSpy.signalArguments[0][1].length, 1)
+            compare(sendRequestedSpy.signalArguments[0][1][0], root.redImage)
         }
 
         function test_sendWithImagesEmitsEditedCaption() {
-            const preview = createPreview()
-            const textArea = findChild(preview, "sharePreviewTextArea")
-            const sendButton = findChild(preview, "sharePreviewSendButton")
-            verify(textArea)
+            const preview = createPreview({
+                imagePaths: [root.redImage, root.greenImage]
+            })
+            const chatInput = findChild(preview, "statusChatInput")
+            const sendButton = findChild(preview, "statusChatInputSendButton")
+            verify(chatInput)
             verify(sendButton)
 
-            preview.imagePaths = [root.sampleImage, root.sampleImage]
-            textArea.text = "Gallery caption"
+            chatInput.setText("Gallery caption")
             mouseClick(sendButton)
 
             compare(sendRequestedSpy.count, 1)
-            compare(sendRequestedSpy.signalArguments[0][0], "Gallery caption")
+            compare(plainText(sendRequestedSpy.signalArguments[0][0]),
+                    "Gallery caption")
+            compare(sendRequestedSpy.signalArguments[0][1].length, 2)
+        }
+
+        function test_sendCarriesOnlyRemainingImagesAfterRemoval() {
+            const preview = createPreview({
+                imagePaths: [root.redImage, root.greenImage]
+            })
+            const chatInput = findChild(preview, "statusChatInput")
+            const sendButton = findChild(preview, "statusChatInputSendButton")
+            verify(chatInput)
+            verify(sendButton)
+            compare(chatInput.fileUrlsAndSources.length, 2)
+
+            // Mirrors what the input's per-image close button does; the click
+            // handling itself belongs to StatusChatInputNew's own tests.
+            const urls = [...chatInput.fileUrlsAndSources]
+            urls.splice(0, 1)
+            chatInput.fileUrlsAndSources = urls
+
+            mouseClick(sendButton)
+
+            compare(sendRequestedSpy.count, 1)
+            compare(sendRequestedSpy.signalArguments[0][1].length, 1)
+            compare(sendRequestedSpy.signalArguments[0][1][0], root.greenImage)
+        }
+
+        function test_hostPropertyWritesReapplySharedPayload() {
+            const preview = createPreview()
+            const chatInput = findChild(preview, "statusChatInput")
+            verify(chatInput)
+
+            preview.text = "Replacement share"
+            preview.imagePaths = [root.blueImage]
+
+            compare(chatInput.getPlainText(), "Replacement share")
+            compare(chatInput.fileUrlsAndSources.length, 1)
+        }
+
+        function test_resetReappliesUnchangedSharedPayload() {
+            const preview = createPreview({
+                imagePaths: [root.redImage]
+            })
+            const chatInput = findChild(preview, "statusChatInput")
+            verify(chatInput)
+
+            // The user edits the text and detaches the image, then a new share
+            // with the identical payload restarts the flow (last-wins).
+            chatInput.setText("Edited by the user")
+            chatInput.fileUrlsAndSources = []
+
+            preview.reset()
+
+            compare(chatInput.getPlainText(),
+                    "Look at this https://example.com/article")
+            compare(chatInput.fileUrlsAndSources.length, 1)
         }
     }
 }
