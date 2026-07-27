@@ -722,7 +722,7 @@ StatusStackModal {
                         },
                         StatusRegularExpressionValidator {
                             regularExpression: Constants.regularExpressions.alphanumericalExpanded
-                            errorMessage: Constants.errorMessages.alphanumericalExpandedRegExp
+                            errorMessage: qsTr("Only letters, numbers, underscores, periods and hyphens allowed")
                         }
                     ]
                 }

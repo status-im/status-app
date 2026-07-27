@@ -4637,6 +4637,10 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Only letters, numbers, underscores, periods and hyphens allowed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Channel colour</source>
         <translation type="unfinished"></translation>
     </message>
