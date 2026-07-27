@@ -30,7 +30,7 @@ if(MSVC)
   add_definitions(/MP)
 endif()
 
-find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
+find_package(QT 6.11 NAMES Qt6 REQUIRED COMPONENTS Core)
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
         Core CorePrivate Qml Gui GuiPrivate Quick QuickControls2 WebChannel Svg Network REQUIRED)
@@ -449,7 +449,7 @@ if(MONITORING)
     target_include_directories(StatusQ PRIVATE ${MONITORING_INCLUDE_PATH})
     target_compile_definitions(StatusQ PRIVATE MONITORING
         MONITORING_QML_ENTRY_POINT="${MONITORING_QML_ENTRY_POINT}")
-    find_package(Qt6 COMPONENTS QmlPrivate REQUIRED)
+    find_package(Qt6 6.11 COMPONENTS QmlPrivate REQUIRED)
     target_link_libraries(StatusQ PRIVATE Qt::QmlPrivate)
 endif()
 

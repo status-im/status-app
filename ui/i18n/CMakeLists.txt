@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.19)
 
 project(status-app-i18n) # dummy project to silence warnings, TBD at the toplevel
 
-find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
-find_package(Qt6 REQUIRED COMPONENTS LinguistTools)
+find_package(QT 6.11 NAMES Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 6.11 REQUIRED COMPONENTS LinguistTools)
 
 #qt6_standard_project_setup(I18N_TRANSLATED_LANGUAGES cs ko)
 

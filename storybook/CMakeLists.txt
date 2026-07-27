@@ -32,7 +32,7 @@ if (APPLE)
     set(MACOS_VERSION_MIN_FLAGS -mmacosx-version-min=14.0)
 endif()
 
-find_package(QT NAMES Qt5 Qt6 REQUIRED COMPONENTS Core)
+find_package(QT 6.11 NAMES Qt6 REQUIRED COMPONENTS Core)
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Quick QuickControls2 Test
     QuickTest Qml WebView REQUIRED)
