@@ -134,6 +134,7 @@ OnboardingPage {
                 spacing: Theme.padding
 
                 StatusBaseText {
+                    objectName: "keycardDetailsTitle"
                     Layout.fillWidth: true
                     text: stateInfo.detailsTitle
                     font.pixelSize: Theme.fontSize(22)
@@ -188,6 +189,7 @@ OnboardingPage {
                 }
 
                 StatusSectionHeadline {
+                    objectName: "keycardDetailsWhatYouCanDo"
                     Layout.fillWidth: true
                     Layout.topMargin: Theme.padding
                     text: qsTr("What you can do:")
@@ -195,6 +197,7 @@ OnboardingPage {
 
                 StatusListItem {
                     Layout.fillWidth: true
+                    objectName: "keycardDetailsImportNewKeypair"
                     visible: stateInfo.isEmpty
                              || stateInfo.onlyPinSet
                     title: qsTr("Import a new key pair to Keycard and create new profile")
@@ -209,6 +212,7 @@ OnboardingPage {
                 }
 
                 StatusListItem {
+                    objectName: "keycardDetailsImportSeedPhrase"
                     Layout.fillWidth: true
                     visible: stateInfo.isEmpty
                              || stateInfo.onlyPinSet

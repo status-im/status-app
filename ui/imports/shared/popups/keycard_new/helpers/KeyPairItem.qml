@@ -51,6 +51,7 @@ Rectangle {
 
         StatusListItem {
             id: keypairInfo
+            objectName: "keyPairItemInfo"
             Layout.fillWidth: true
             Layout.preferredWidth: parent.width
             color: StatusColors.transparent

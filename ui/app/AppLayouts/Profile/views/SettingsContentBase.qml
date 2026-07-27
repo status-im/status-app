@@ -97,6 +97,7 @@ FocusScope {
 
             StatusBaseText {
                 id: sectionTitleText
+                objectName: "settingsContentBaseSectionTitle"
                 Layout.fillWidth: !root.stickTitleRowComponentLoader
                 text: root.sectionTitle
                 font.weight: Font.Bold

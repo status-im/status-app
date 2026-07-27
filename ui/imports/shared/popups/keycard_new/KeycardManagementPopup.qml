@@ -19,6 +19,8 @@ import "stores"
 StatusDialog {
     id: root
 
+    objectName: "keycardManagementPopup"
+
     required property string flow
     required property string keycardUid
     required property string keyUid
@@ -1112,6 +1114,7 @@ StatusDialog {
             }
 
             StatusButton {
+                objectName: "keycardManagementUnknownPinButton"
                 visible: root.flow === Constants.keycard.flow.readKeycard
                          && contentLoader.status === Loader.Ready
                          && contentLoader.sourceComponent === enterPinComponent
@@ -1121,6 +1124,7 @@ StatusDialog {
             }
 
             StatusButton {
+                objectName: "keycardManagementContinueButton"
                 visible: d.currentStep === KeycardManagementPopup.FlowStep.OnboardingMixedFlowSuccess
                          && (root.flow === Constants.keycard.flow.onboardingLoginWithKeycard
                              || root.flow === Constants.keycard.flow.onboardingImportNewKeyPair
@@ -1135,6 +1139,7 @@ StatusDialog {
             }
 
             StatusButton {
+                objectName: "keycardManagementFactoryResetButton"
                 visible: root.flow === Constants.keycard.flow.factoryReset
                          && contentLoader.status === Loader.Ready
                          && contentLoader.sourceComponent === factoryResetConfirmationComponent
@@ -1163,6 +1168,7 @@ StatusDialog {
             }
 
             StatusButton {
+                objectName: "keycardManagementNextButton"
                 visible: contentLoader.item
                          && ((root.flow === Constants.keycard.flow.importSeedPhrase
                               && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin

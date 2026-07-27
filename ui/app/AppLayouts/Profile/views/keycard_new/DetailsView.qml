@@ -214,6 +214,7 @@ ColumnLayout {
     }
 
     StatusListItem {
+        objectName: "keycardDetailsMoveProfileKeypair"
         Layout.fillWidth: true
         visible: !d.isProfileKeyPairUsingKeycard
                  && (d.isEmpty
@@ -232,6 +233,7 @@ ColumnLayout {
     }
 
     StatusListItem {
+        objectName: "keycardDetailsMoveWalletKeypair"
         Layout.fillWidth: true
         visible: !d.allNonProfileKeyPairsMigrated
                  && (d.isEmpty
@@ -250,6 +252,7 @@ ColumnLayout {
     }
 
     StatusListItem {
+        objectName: "keycardDetailsImportNewKeypair"
         Layout.fillWidth: true
         visible: d.isEmpty
                  || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && !d.noKnownAndNoAvailablePairingSlots
@@ -271,6 +274,7 @@ ColumnLayout {
     }
 
     StatusListItem {
+        objectName: "keycardDetailsImportSeedPhrase"
         Layout.fillWidth: true
         visible: d.isEmpty
                  || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && !d.noKnownAndNoAvailablePairingSlots
@@ -288,6 +292,7 @@ ColumnLayout {
     }
 
     StatusListItem {
+        objectName: "keycardDetailsUnblockRecovery"
         Layout.fillWidth: true
         visible: d.isBlockedPIN
                  || d.isBlockedPUK
@@ -305,6 +310,7 @@ ColumnLayout {
     }
 
     StatusListItem {
+        objectName: "keycardDetailsUnblockPuk"
         Layout.fillWidth: true
         visible: d.isBlockedPIN
                  && !d.isBlockedPUK
@@ -322,6 +328,7 @@ ColumnLayout {
     }
 
     StatusListItem {
+        objectName: "keycardDetailsAddKeypairToStatus"
         Layout.fillWidth: true
         visible: d.hasKeyPair
                  && !d.isBlockedPIN
@@ -346,6 +353,7 @@ ColumnLayout {
     }
 
     StatusListItem {
+        objectName: "keycardDetailsChangePin"
         Layout.fillWidth: true
         visible: (d.hasKeyPair
                   || d.onlyPinSet)
@@ -406,6 +414,7 @@ ColumnLayout {
     }
 
     StatusListItem {
+        objectName: "keycardDetailsFactoryReset"
         Layout.fillWidth: true
         visible: d.hasKeyPair
                  || d.onlyPinSet

@@ -89,6 +89,7 @@ Control {
 
         StatusPinInput {
             id: pinInputField
+            objectName: "keycardManagementPinInput"
             Layout.fillWidth: true
             Layout.maximumWidth: implicitWidth
             Layout.alignment: Qt.AlignHCenter

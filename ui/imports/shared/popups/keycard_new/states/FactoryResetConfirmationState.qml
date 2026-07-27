@@ -40,6 +40,7 @@ Control {
 
         StatusCheckBox {
             id: confirmation
+            objectName: "keycardFactoryResetConfirmCheckbox"
             Layout.alignment: Qt.AlignCenter
             Layout.maximumWidth: parent.width
             spacing: Theme.smallPadding

@@ -73,6 +73,7 @@ Control {
         StatusPinInput {
             id: pinInputField
             visible: !root.authorizeMode
+            objectName: "keycardAuthPinInput"
             Layout.fillWidth: true
             Layout.maximumWidth: implicitWidth
             Layout.alignment: Qt.AlignHCenter
