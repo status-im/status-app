@@ -1,8 +1,8 @@
 #include "StatusQ/lifecycleutils.h"
 
 #ifdef Q_OS_ANDROID
+#include <QCoreApplication>
 #include <QJniObject>
-#include <QtCore/qnativeinterface.h>
 
 extern "C" Q_DECL_EXPORT void statusq_stopBackgroundService()
 {
