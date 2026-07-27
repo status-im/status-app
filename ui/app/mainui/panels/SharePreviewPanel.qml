@@ -129,7 +129,6 @@ Control {
             id: chatInput
 
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignBottom
 
             emojiPopup: root.emojiPopup
             stickersPopup: root.stickersPopup
@@ -143,7 +142,7 @@ Control {
                 // Images alone are sendable (empty caption); text shares need
                 // text. The toolbar send button enables on whitespace too, so
                 // guard here.
-                const imagePaths = [...chatInput.fileUrlsAndSources].map(
+                const imagePaths = chatInput.fileUrlsAndSources.map(
                                      url => d.toImagePath(url))
                 if (chatInput.getPlainText().trim() === "" && imagePaths.length === 0)
                     return
