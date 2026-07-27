@@ -219,6 +219,14 @@ suite "mergePopularWithOwned — all-tokens / search path":
       @[], showCommunityAssets = false)
     check merged.findItem("DAI").marketPrice == 0.99
 
+  test "non-owned popular token carries its own decimals":
+    # The amount input reads `decimals` to scale what the user types; a 6-decimal
+    # token defaulting to 0 (and then to QML's 18 fallback) sends a wrong magnitude.
+    let merged = mergePopularWithOwned(
+      @[PopularGroup(key: "USDC", name: "USDC", symbol: "USDC", decimals: 6)],
+      @[], showCommunityAssets = false)
+    check merged.findItem("USDC").decimals == 6
+
   test "community popular token dropped unless showCommunityAssets":
     let p = @[popular("CT", communityId = "comm1")]
     check mergePopularWithOwned(p, @[], showCommunityAssets = false).len == 0

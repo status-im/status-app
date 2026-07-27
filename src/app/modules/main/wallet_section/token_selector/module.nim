@@ -121,8 +121,8 @@ proc toPopularGroups(self: Module, groups: seq[TokenGroupItem]): seq[PopularGrou
     for t in g.tokens:
       tokenRefs.add((key: t.key, chainId: t.chainId))
     result.add(PopularGroup(key: g.key, name: g.name, symbol: g.symbol,
-      logoUri: g.logoUri, communityId: communityId, marketPrice: self.priceForGroup(g),
-      tokens: tokenRefs))
+      logoUri: g.logoUri, communityId: communityId, decimals: g.decimals,
+      marketPrice: self.priceForGroup(g), tokens: tokenRefs))
 
 method createModelForKind*(self: Module, kind: int): tuple[id: int, model: TokenSelectorModel] =
   let atm = self.allTokensModule

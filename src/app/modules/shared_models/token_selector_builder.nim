@@ -36,6 +36,7 @@ type
     symbol*: string
     logoUri*: string
     communityId*: string
+    decimals*: int
     marketPrice*: float
     tokens*: seq[tuple[key: string, chainId: int]]
 
@@ -120,7 +121,7 @@ proc mergePopularWithOwned*(popular: seq[PopularGroup],
       continue
     var item = TokenSelectorItem(
       key: p.key, name: p.name, symbol: p.symbol, logoUri: p.logoUri,
-      communityId: p.communityId, marketPrice: p.marketPrice,
+      communityId: p.communityId, decimals: p.decimals, marketPrice: p.marketPrice,
       tokens: p.tokens.mapIt(TokenSelectorTokenRef(key: it.key, chainId: it.chainId)))
     if ownedByKey.hasKey(p.key):
       let o = ownedByKey[p.key]
