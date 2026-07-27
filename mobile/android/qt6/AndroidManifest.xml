@@ -46,10 +46,12 @@
         android:allowBackup="true"
         android:hasFragileUserData="true"
         android:fullBackupOnly="false">
+        <!-- singleTask: share/view intents land in the caller's task, where singleTop
+             would spawn a second activity Qt cannot re-init against (dead screen). -->
         <activity
             android:name="app.status.mobile.StatusQtActivity"
             android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|mcc|mnc|density"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:resizeableActivity="true"
             android:windowSoftInputMode="adjustNothing"
             android:exported="true">
