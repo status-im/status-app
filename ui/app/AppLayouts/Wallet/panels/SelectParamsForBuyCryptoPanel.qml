@@ -23,7 +23,7 @@ ColumnLayout {
     required property var filteredFlatNetworksModel
 
     /** Forwarded to AssetSelectorCompact; see SearchableAssetsPanel.formatCurrencyBalance. **/
-    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : String(amount))
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : Number(amount).toLocaleCurrencyString(Qt.locale()))
 
     signal networkSelected(int chainId)
     signal tokenSelected(string tokenGroupKey)

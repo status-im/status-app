@@ -14,8 +14,6 @@ import utils
 import AppLayouts.Wallet.popups.buy
 import AppLayouts.Wallet.stores
 
-import shared.stores
-
 import Models
 import Mocks
 
@@ -36,7 +34,6 @@ Item {
 
             buyProvidersModel: buyCryptoStore.providersModel
             isBuyProvidersModelLoading: buyCryptoStore.areProvidersLoading
-            formatCurrencyBalance: (amount) => currencyStore.formatCurrencyAmount(amount, currencyStore.currentCurrency)
             walletAccountsModel: WalletAccountsModel{}
             networksModel: NetworksModel.flatNetworks
             tokenGroupsModel: assetsStore.walletTokensStore.tokenGroupsModel
@@ -74,7 +71,6 @@ Item {
             }
 
             // Temporary assignments to make tests run independently
-            readonly property var currencyStore: CurrenciesStore {}
             readonly property var buyCryptoStore: BuyCryptoStore {
                 readonly property var providersModel: OnRampProvidersModel{}
                 property bool areProvidersLoading

@@ -32,7 +32,7 @@ StatusStackModal {
     required property var walletAccountsModel
     required property var networksModel
     /** Formats a fiat balance for display; see SearchableAssetsPanel.formatCurrencyBalance. **/
-    required property var formatCurrencyBalance
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : Number(amount).toLocaleCurrencyString(Qt.locale()))
 
     // Terminal token-selector picker model (buy/all-tokens, non-lazy), created and
     // released by the owner (Popups.qml) so it can be stubbed in isolation. The

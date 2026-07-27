@@ -11,8 +11,6 @@ import AppLayouts.Wallet.adaptors
 
 import utils
 
-import shared.stores
-
 import Storybook
 import Models
 import Mocks
@@ -53,7 +51,6 @@ SplitView {
             }
         }
 
-        readonly property var currencyStore: CurrenciesStore {}
         readonly property var assetsStore: WalletAssetsStoreMock {
             id: thisWalletAssetStore
             walletTokensStore: TokensStoreMock {
@@ -99,7 +96,6 @@ SplitView {
             isBuyProvidersModelLoading: d.buyCryptoStore.areProvidersLoading
             walletAccountsModel: WalletAccountsModel{}
             networksModel: NetworksModel.flatNetworks
-            formatCurrencyBalance: (amount) => d.currencyStore.formatCurrencyAmount(amount, d.currencyStore.currentCurrency)
             tokenGroupsModel: d.assetsStore.walletTokensStore.tokenGroupsModel
             groupedAccountAssetsModel: d.assetsStore.groupedAccountAssetsModel
             buyCryptoInputParamsForm: d.buyCryptoInputParamsForm

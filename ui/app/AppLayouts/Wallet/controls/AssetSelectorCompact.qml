@@ -17,7 +17,7 @@ Control {
     readonly property bool isSelected: button.selected
 
     /** Forwarded to SearchableAssetsPanel; see its formatCurrencyBalance. **/
-    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : String(amount))
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : Number(amount).toLocaleCurrencyString(Qt.locale()))
 
     signal selected(string key)
 

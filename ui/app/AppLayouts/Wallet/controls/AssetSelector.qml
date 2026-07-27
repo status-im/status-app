@@ -20,7 +20,7 @@ Control {
     property bool isLoadingMore: false
 
     /** Forwarded to SearchableAssetsPanel; see its formatCurrencyBalance. **/
-    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : String(amount))
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : Number(amount).toLocaleCurrencyString(Qt.locale()))
 
     readonly property bool isSelected: button.selected
 

@@ -26,7 +26,7 @@ Control {
     required property var assetsModel
 
     /** Forwarded to the inner SendModalHeader. **/
-    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : String(amount))
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : Number(amount).toLocaleCurrencyString(Qt.locale()))
     /**
     Expected model structure:
     - groupName: group name (from collection or community name)

@@ -26,7 +26,7 @@ Control {
     property bool showSectionName: true
 
     /** Forwarded to SearchableAssetsPanel; see its formatCurrencyBalance. **/
-    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : String(amount))
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : Number(amount).toLocaleCurrencyString(Qt.locale()))
 
     signal assetSelected(string key)
     signal collectionSelected(string key)

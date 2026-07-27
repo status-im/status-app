@@ -30,7 +30,7 @@ RowLayout {
     required property var assetsModel
 
     /** Formats the numeric currencyBalance role for the asset list rows. **/
-    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : String(amount))
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : Number(amount).toLocaleCurrencyString(Qt.locale()))
     /**
     Expected model structure:
     - groupName: group name (from collection or community name)

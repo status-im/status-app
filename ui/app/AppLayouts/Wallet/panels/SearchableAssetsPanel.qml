@@ -46,9 +46,9 @@ Control {
     property bool showSectionName: true
 
     // Formats the numeric `currencyBalance` role into the localized fiat string
-    // shown per row. Sites inject a currency-aware formatter; the default just
-    // stringifies (used by isolated storybook pages).
-    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : String(amount))
+    // shown per row. Sites inject a formatter aware of the user-selected display
+    // currency; the default falls back to the system locale's currency.
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : Number(amount).toLocaleCurrencyString(Qt.locale()))
 
     // Lazy loading properties
     property bool hasMoreItems: false
