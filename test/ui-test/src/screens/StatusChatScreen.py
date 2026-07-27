@@ -55,8 +55,8 @@ class ChatComponents(Enum):
     CHAT_LIST = "chatList_ListView"
     MORE_OPTIONS_BUTTON = "chatView_ChatToolbarMoreOptionsButton"
     CLEAR_HISTORY_MENUITEM = "clearHistoryMenuItem"
-    EDIT_MESSAGE_INPUT = "chatView_editMessageInputComponent"
-    EDIT_MESSAGE_TEXTAREA = "chatView_editMessageInputTextArea"
+    EDIT_COMPOSER_INPUT = "chatView_editComposerInputComponent"
+    EDIT_COMPOSER_TEXTAREA = "chatView_editComposerTextArea"
 
     EDIT_NAME_AND_IMAGE_MENUITEM = "editNameAndImageMenuItem"
     LEAVE_CHAT_MENUITEM = "leaveChatMenuItem"
@@ -221,9 +221,9 @@ class StatusChatScreen:
         verify(not is_null(found_edit_button), "Edit button found")
         move_mouse_over_object(found_edit_button)
         click_obj(found_edit_button)
-        wait_for_object_and_type(ChatComponents.EDIT_MESSAGE_TEXTAREA.value, "<Ctrl+a>")
-        type_text(ChatComponents.EDIT_MESSAGE_TEXTAREA.value, message)
-        press_enter(ChatComponents.EDIT_MESSAGE_TEXTAREA.value)
+        wait_for_object_and_type(ChatComponents.EDIT_COMPOSER_TEXTAREA.value, "<Ctrl+a>")
+        type_text(ChatComponents.EDIT_COMPOSER_TEXTAREA.value, message)
+        press_enter(ChatComponents.EDIT_COMPOSER_TEXTAREA.value)
         
     def switch_to_chat(self, chatName: str):
         chat_lists = get_obj(ChatComponents.CHAT_LIST.value)

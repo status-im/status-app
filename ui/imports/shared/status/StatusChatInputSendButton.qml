@@ -8,6 +8,7 @@ Control {
     id: root
 
     property string limitText
+    property string iconName: "send"
     property alias interactive: mouseArea.enabled
 
     signal clicked
@@ -132,7 +133,7 @@ Control {
 
                 anchors.centerIn: parent
 
-                icon: "send"
+                icon: root.iconName
                 color: Theme.palette.baseColor3
             }
 

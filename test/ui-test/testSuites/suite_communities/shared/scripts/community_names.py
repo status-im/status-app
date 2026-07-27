@@ -38,8 +38,8 @@ communitySettings_KickModal_Kick_Button = {"container": statusDesktop_mainWindow
 # Chat components
 chatView_TogglePinMessageButton = {"container": chatView_log, "objectName": "MessageView_toggleMessagePin", "type": "StatusFlatRoundButton", "visible": True}
 chatView_ReplyToMessageButton = {"container": chatView_log, "objectName": "replyToMessageButton", "type": "StatusFlatRoundButton", "visible": True}
-chatView_editMessageInputComponent = {"container": statusDesktop_mainWindow, "objectName": "editMessageInput", "type": "StatusChatInput", "visible": True}
-chatView_editMessageInputTextArea = {"container": chatView_editMessageInputComponent, "objectName": "messageInputField", "type": "TextArea", "visible": True}
+chatView_editComposerInputComponent = {"container": statusDesktop_mainWindow, "objectName": "statusChatInput", "type": "StatusChatInputNew", "visible": True}
+chatView_editComposerTextArea = {"container": chatView_editComposerInputComponent, "objectName": "messageInputField", "type": "TextArea", "visible": True}
 clearHistoryMenuItem = {"container": statusDesktop_mainWindow_overlay, "objectName": "clearHistoryMenuItem", "type": "StatusMenuItem", "visible": True}
 chatView_unfurledImageComponent_linkImage = {"container": chatView_log, "objectName": "LinksMessageView_unfurledImageComponent_linkImage", "type": "StatusChatImageLoader",  "visible": True}
 emojiSuggestions_first_inputListRectangle ={"container": statusDesktop_mainWindow_overlay, "objectName": "inputListRectangle_0", "type": "Rectangle"}

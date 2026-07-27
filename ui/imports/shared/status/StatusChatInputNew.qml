@@ -38,7 +38,6 @@ Control {
     signal imageClicked(var image)
     signal linkClicked(string link)
     signal editCancelRequested()
-    signal editAcceptRequested()
 
     property var usersModel
     property bool usersModelIncludeAtEveryone: true
@@ -340,6 +339,7 @@ Control {
       */
     function tryFinalizeMessage() {
         const messageLength = messageInputField.length
+        const wasEdit = root.isEdit
 
         if (checkTextInsert())
             return
@@ -352,7 +352,8 @@ Control {
 
         messageInputField.convertInlineEmojis()
         root.sendMessageRequested()
-        root.hideExtendedArea()
+        if (!wasEdit)
+            root.hideExtendedArea()
     }
 
     // exposed because tests use it
@@ -600,7 +601,7 @@ Control {
 
             width: parent.width
             height: 1
-            visible: !root.isEdit
+            visible: true
             border.color: Theme.palette.directColor7
             color: StatusColors.transparent
         }
@@ -673,6 +674,47 @@ Control {
             ColumnLayout {
                 id: inputLayout
 
+                RowLayout {
+                    id: editModeTag
+                    objectName: "statusChatInputEditModeTag"
+
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Theme.padding
+                    Layout.rightMargin: Theme.padding
+                    Layout.topMargin: Theme.halfPadding
+
+                    spacing: Theme.halfPadding
+                    visible: root.isEdit
+
+                    StatusIcon {
+                        Layout.preferredWidth: 16
+                        Layout.preferredHeight: 16
+                        icon: "edit_pencil"
+                        color: Theme.palette.directColor5
+                    }
+
+                    StatusBaseText {
+                        text: qsTr("Edit")
+                        color: Theme.palette.textColor
+                        font.pixelSize: Theme.tertiaryTextFontSize
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
+                    StatusQ.StatusFlatRoundButton {
+                        objectName: "statusChatInputEditCloseButton"
+                        Layout.preferredWidth: 24
+                        Layout.preferredHeight: 24
+                        icon.name: "close"
+                        icon.width: 18
+                        icon.height: 18
+                        type: StatusQ.StatusFlatRoundButton.Type.Primary
+                        onClicked: root.editCancelRequested()
+                    }
+                }
+
                 ChatInputLinksPreviewArea {
                     id: linkPreviewArea
 
@@ -729,20 +771,21 @@ Control {
                         Keys.forwardTo: [keyEventsFilter]
 
                         readonly property int basePadding: Theme.padding + 12
+                        readonly property int effectiveTextMargin: root.isEdit ? Theme.padding : basePadding
                         readonly property int extraHorizontalPadding: 12 // for the nav bar handle / scrollbar
 
                         // When the text area is empty, we need to use padding because textMargin is ignored
                         // when calculating size. When not empty, textMargin is used because paddings are
                         // clipped by ScrollView.
                         padding: 0
-                        leftPadding: (length ? -basePadding + Theme.halfPadding : Theme.halfPadding)
+                        leftPadding: (length ? -effectiveTextMargin + Theme.halfPadding : Theme.halfPadding)
                                      + extraHorizontalPadding
-                        rightPadding: (length ? -basePadding + Theme.halfPadding : Theme.halfPadding)
+                        rightPadding: (length ? -effectiveTextMargin + Theme.halfPadding : Theme.halfPadding)
                                       + extraHorizontalPadding
                         topPadding: length ? 0 : basePadding
                         bottomPadding: (length ? 0 : basePadding) - Theme.padding
 
-                        textMargin: length ? basePadding : 0
+                        textMargin: length ? effectiveTextMargin : 0
 
                         onLineCountChanged: {
                             const flickable = inputScrollView.contentItem
@@ -826,8 +869,7 @@ Control {
             Theme.fontSizeOffset: ThemeUtils.fontSizeOffsetM
 
             styleButtonVisible: root.isEdit
-            editActionsVisible: root.isEdit
-            editAcceptButtonEnabled: messageInputField.text.trim().length > 0
+            editActionsVisible: false
 
             // On iOS, backspace temporarily creates a selection (selectionStart != selectionEnd)
             // around the character being removed. The binding is configured as delayed to avoid
@@ -840,9 +882,7 @@ Control {
 
             cameraButton.visible: false
 
-            sendButtonVisible: !root.isEdit
-            onEditCancelClicked: root.editCancelRequested()
-            onEditAcceptClicked: root.editAcceptRequested()
+            sendButtonVisible: true
             imageButton.visible: root.imageFeaturesEnabled
             imageButton.checked: imageDialog.visible
             imageButton.onClicked: {
@@ -856,6 +896,7 @@ Control {
             sendButton.limitText: messageInputField.length >= root.messageLimit - root.messageLimitSoft
                                   ? (root.messageLimit - messageInputField.length).toString()
                                   : ""
+            sendButton.iconName: root.isEdit ? "checkmark" : "send"
 
             sendButton.onClicked: {
                 InputMethod.commit()
@@ -943,6 +984,11 @@ Control {
 
                 const onGifSelectedCb = url => {
                     messageInputField.text += "\n" + url
+                    if (root.isEdit) {
+                        messageInputField.forceActiveFocus()
+                        return
+                    }
+
                     root.sendMessageRequested()
                     root.isReply = false
                     messageInputField.forceActiveFocus()

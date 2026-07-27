@@ -149,9 +149,115 @@ Item {
         readonly property string linkPreviewDisabledNotification: qsTr("Link previews will never be shown. You can manage link previews in %1.").arg(linkPreviewBeginAnchor + qsTr("Settings", "Go to settings page") + linkPreviewEndAnchor)
         readonly property string linkPreviewEnabledForMessageNotification: qsTr("Link previews will be shown for this message. You can manage link previews in %1.").arg(linkPreviewBeginAnchor + qsTr("Settings", "Go to settings page") + linkPreviewEndAnchor)
 
+        property string editMessageId
+        property string editOriginalInputText
+        property string preEditInputText
+        property string preEditReplyMessageId
+        property var preEditFileUrlsAndSources: []
+
         function getChatContentModule(chatId) {
             root.parentModule.prepareChatContentModuleForChatId(chatId)
             return root.parentModule.getChatContentModule()
+        }
+
+        function seedTextForEdit(unparsedText, renderedText) {
+            const systemMentions = ({ "0x00001": "@everyone" })
+            let seed = unparsedText
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/\n/g, "<br/>")
+            const userMentions = renderedText.match(/<a href="\/\/0x[0-9a-fA-F]+"[^>]*class="mention"[^>]*>@[^<]*<\/a>/g) || []
+            let userMentionIndex = 0
+            return seed.replace(/@0x[0-9a-fA-F]+/g, function(token) {
+                const key = token.substring(1)
+                if (systemMentions[key] !== undefined)
+                    return systemMentions[key]
+                return userMentionIndex < userMentions.length ? userMentions[userMentionIndex++] : token
+            })
+        }
+
+        function setCurrentEditMessageOff() {
+            if (!editMessageId)
+                return
+
+            d.activeMessagesStore.setEditModeOff(editMessageId)
+        }
+
+        function startEditMessage(messageId, unparsedText, renderedText) {
+            if (!messageId)
+                return
+
+            if (editMessageId && editMessageId !== messageId)
+                d.activeMessagesStore.setEditModeOff(editMessageId)
+
+            if (!editMessageId) {
+                preEditInputText = chatInput.textInput.text
+                preEditReplyMessageId = chatInput.replyMessageId
+                preEditFileUrlsAndSources = [...chatInput.fileUrlsAndSources]
+            }
+
+            editMessageId = messageId
+            chatInput.isEdit = true
+            chatInput.resetReplyArea()
+            chatInput.resetImageArea()
+            chatInput.parseMessage(seedTextForEdit(unparsedText, renderedText))
+            editOriginalInputText = chatInput.textInput.text
+            chatInput.forceInputActiveFocus()
+            Qt.callLater(() => d.activeMessagesStore.jumpToMessage(messageId))
+        }
+
+        function restorePreEditInput() {
+            chatInput.setText(preEditInputText)
+            chatInput.replyMessageId = preEditReplyMessageId
+
+            if (preEditReplyMessageId)
+                d.showReplyArea(preEditReplyMessageId)
+            else
+                chatInput.resetReplyArea()
+
+            chatInput.resetImageArea()
+            chatInput.validateImagesAndShowImageArea(preEditFileUrlsAndSources || [])
+        }
+
+        function cancelEditMessage(restoreDraft = true) {
+            d.setCurrentEditMessageOff()
+            editMessageId = ""
+            editOriginalInputText = ""
+            chatInput.isEdit = false
+
+            if (restoreDraft)
+                d.restorePreEditInput()
+            else
+                chatInput.clear()
+
+            chatInput.forceInputActiveFocus()
+        }
+
+        function completeEditMessage() {
+            if (!editMessageId)
+                return
+
+            const newMessageText = chatInput.getTextWithPublicKeys()
+
+            if (editOriginalInputText === newMessageText) {
+                d.cancelEditMessage()
+                return
+            }
+
+            const message = SQUtils.StringUtils.plainText(SQUtils.Emoji.deparse(newMessageText))
+
+            if (message.length <= 0)
+                return
+
+            const messageId = editMessageId
+            const interpretedMessage = d.activeMessagesStore.interpretMessage(message)
+
+            d.setCurrentEditMessageOff()
+            editMessageId = ""
+            editOriginalInputText = ""
+            chatInput.isEdit = false
+            d.activeMessagesStore.editMessage(messageId, interpretedMessage)
+            d.restorePreEditInput()
+            chatInput.forceInputActiveFocus()
         }
 
         function showReplyArea(messageId) {
@@ -237,6 +343,10 @@ Item {
             if (!d.activeChatContentModule) {
                 return
             }
+            editMessageId = ""
+            editOriginalInputText = ""
+            chatInput.isEdit = false
+
             let preservedText = ""
             preservedText = d.activeChatContentModule.inputAreaModule.preservedProperties.text
 
@@ -351,6 +461,9 @@ Item {
                         onShowReplyArea: (messageId) => {
                                             d.showReplyArea(messageId)
                                         }
+                        onEditMessageRequested: (messageId, unparsedText, renderedText) => {
+                            d.startEditMessage(messageId, unparsedText, renderedText)
+                        }
                         onForceInputFocus: {
                             chatInput.forceInputActiveFocus()
                         }
@@ -456,16 +569,19 @@ Item {
                     stickersPopup: root.stickersPopup
                     areTestNetworksEnabled: root.areTestNetworksEnabled
                     paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
+                    imageFeaturesEnabled: !isEdit
+                    stickersButtonVisible: !isEdit
+                    paymentRequestButtonVisible: !isEdit && !areTestNetworksEnabled && paymentRequestFeatureEnabled
 
                     textInput.onTextChanged: {
-                        if (!!d.activeChatContentModule && textInput.text !== d.activeChatContentModule.inputAreaModule.preservedProperties.text) {
+                        if (!chatInput.isEdit && !!d.activeChatContentModule && textInput.text !== d.activeChatContentModule.inputAreaModule.preservedProperties.text) {
                             d.activeChatContentModule.inputAreaModule.preservedProperties.text = textInput.text
                             d.updateLinkPreviews()
                         }
                     }
 
                     onFileUrlsAndSourcesChanged: {
-                        if (!!d.activeChatContentModule)
+                        if (!chatInput.isEdit && !!d.activeChatContentModule)
                             d.activeChatContentModule.inputAreaModule.preservedProperties.fileUrlsAndSourcesJson = JSON.stringify(chatInput.fileUrlsAndSources)
                     }
 
@@ -483,13 +599,18 @@ Item {
 
                         replyMessageId = ""
 
-                        if (!!d.activeChatContentModule)
+                        if (!chatInput.isEdit && !!d.activeChatContentModule)
                             d.activeChatContentModule.inputAreaModule.preservedProperties.replyMessageId = ""
                     }
 
                     onSendMessageRequested: {
                         if (!d.activeChatContentModule) {
                             console.debug("error on sending message - chat content module is not set")
+                            return
+                        }
+
+                        if (chatInput.isEdit) {
+                            d.completeEditMessage()
                             return
                         }
 
@@ -510,6 +631,9 @@ Item {
 
                     onEditRequested: {
                         d.activeMessagesStore.setEditModeOnLastMessage(root.myPublicKey)
+                    }
+                    onEditCancelRequested: {
+                        d.cancelEditMessage()
                     }
 
                     onLinkPreviewReloaded: (link) => d.activeChatContentModule.inputAreaModule.reloadLinkPreview(link)

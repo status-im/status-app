@@ -15746,6 +15746,10 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Edit</source>
+        <translation type="unfinished">Editar</translation>
+    </message>
+    <message>
         <source>Multiple payment requests</source>
         <translation type="unfinished"></translation>
     </message>

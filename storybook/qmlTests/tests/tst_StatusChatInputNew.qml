@@ -165,25 +165,32 @@ Item {
             const toolBar = getToolBar()
             const acceptButton = findChild(controlUnderTest, "statusChatInputEditAcceptButton")
             const cancelButton = findChild(controlUnderTest, "statusChatInputEditCancelButton")
+            const closeButton = findChild(controlUnderTest, "statusChatInputEditCloseButton")
             const sendButton = findChild(controlUnderTest, "statusChatInputSendButton")
+            const editModeTag = findChild(controlUnderTest, "statusChatInputEditModeTag")
 
             verify(!!toolBar)
             verify(!!acceptButton)
             verify(!!cancelButton)
+            verify(!!closeButton)
             verify(!!sendButton)
+            verify(!!editModeTag)
 
             verify(toolBar.styleButton.visible)
             verify(toolBar.mentionButton.visible)
             verify(toolBar.emojiButton.visible)
             verify(toolBar.gifButton.visible)
-            verify(acceptButton.visible)
-            verify(cancelButton.visible)
+            verify(!acceptButton.visible)
+            verify(!cancelButton.visible)
+            verify(closeButton.visible)
+            verify(editModeTag.visible)
 
             verify(!toolBar.imageButton.visible)
             verify(!toolBar.stickersButton.visible)
             verify(!toolBar.tokenButton.visible)
             verify(!toolBar.cameraButton.visible)
-            verify(!sendButton.visible)
+            verify(sendButton.visible)
+            compare(toolBar.sendButton.iconName, "checkmark")
         }
 
         function test_editMode_styleButton_showsFormattingButtons() {
@@ -289,31 +296,21 @@ Item {
             compare(signalSpy.count, 0)
         }
 
-        function test_editAccept_disabledWhenEmpty() {
-            const acceptButton = findChild(controlUnderTest, "statusChatInputEditAcceptButton")
-            verify(!!acceptButton)
+        function test_editMode_sendButton_emitsSendMessageRequested() {
+            const sendButton = findChild(controlUnderTest, "statusChatInputSendButton")
+            verify(!!sendButton)
 
-            // Rich-text input keeps a non-empty .text skeleton when visually empty;
-            // verify the initial edit state before any user input.
-            verify(controlUnderTest.getPlainText().trim().length === 0)
-            verify(!acceptButton.enabled)
-        }
-
-        function test_editAccept_emitsSignal() {
-            const acceptButton = findChild(controlUnderTest, "statusChatInputEditAcceptButton")
-            verify(!!acceptButton)
-
-            signalSpy.setup(controlUnderTest, "editAcceptRequested")
+            signalSpy.setup(controlUnderTest, "sendMessageRequested")
 
             controlUnderTest.textInput.text = "hello"
             waitForRendering(controlUnderTest)
-            mouseClick(acceptButton)
+            mouseClick(sendButton)
 
             compare(signalSpy.count, 1)
         }
 
         function test_editCancel_emitsSignal() {
-            const cancelButton = findChild(controlUnderTest, "statusChatInputEditCancelButton")
+            const cancelButton = findChild(controlUnderTest, "statusChatInputEditCloseButton")
             verify(!!cancelButton)
 
             signalSpy.setup(controlUnderTest, "editCancelRequested")

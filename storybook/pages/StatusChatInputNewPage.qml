@@ -185,7 +185,6 @@ SplitView {
                                        root.openGifTestPopup(params, cbOnGifSelected, cbOnClose)
                                    }
             onEditCancelRequested: logs.logEvent("StatusChatInput::editCancelRequested")
-            onEditAcceptRequested: logs.logEvent("StatusChatInput::editAcceptRequested", ["MessageWithPk"], [chatInput.getTextWithPublicKeys()])
         }
     }
 

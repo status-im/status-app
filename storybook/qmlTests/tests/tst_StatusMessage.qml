@@ -90,24 +90,10 @@ Item {
     }
 
     Component {
-        id: editInputComponent
-        StatusChatInputNew {
-            objectName: "editMessageInput"
-            width: parent.width
-            usersModel: ListModel {}
-            isEdit: true
-            imageFeaturesEnabled: false
-            stickersButtonVisible: false
-            paymentRequestButtonVisible: false
-        }
-    }
-
-    Component {
         id: editModeComponentUnderTest
         StatusMessage {
             anchors.fill: parent
             editMode: true
-            statusChatInput: editInputComponent
             messageDetails {
                 messageText: "Hello world"
                 contentType: StatusMessage.ContentType.Text
@@ -165,14 +151,10 @@ Item {
             controlUnderTest = null
         }
 
-        function test_editMode_showsEditInput() {
-            const editInput = findChild(controlUnderTest, "editMessageInput")
-            verify(!!editInput)
-
+        function test_editMode_highlightsMessageAndKeepsTextVisible() {
             const statusTextMessage = findChild(controlUnderTest, "StatusMessage_textMessage")
-            // Text message loader is inactive in edit mode, so the delegate may not exist.
-            if (statusTextMessage)
-                verify(!statusTextMessage.visible)
+            verify(!!statusTextMessage)
+            verify(statusTextMessage.visible)
         }
 
         function test_editMode_headerStillVisible() {
@@ -188,49 +170,5 @@ Item {
             verify(reactionsPanel.visible)
         }
 
-        function test_editCompleted_unchangedTextOnAccept() {
-            const editInput = findChild(controlUnderTest, "editMessageInput")
-            const acceptButton = findChild(controlUnderTest, "statusChatInputEditAcceptButton")
-            verify(!!editInput)
-            verify(!!acceptButton)
-
-            editInput.parseMessage("Hello world")
-            waitForRendering(controlUnderTest)
-            verify(acceptButton.enabled)
-
-            signalSpy.setup(controlUnderTest, "editCompleted")
-            mouseClick(acceptButton)
-
-            compare(signalSpy.count, 1)
-            compare(signalSpy.signalArguments[0][0], editInput.getTextWithPublicKeys())
-        }
-
-        function test_editCompleted_onAccept() {
-            const editInput = findChild(controlUnderTest, "editMessageInput")
-            const acceptButton = findChild(controlUnderTest, "statusChatInputEditAcceptButton")
-            verify(!!editInput)
-            verify(!!acceptButton)
-
-            signalSpy.setup(controlUnderTest, "editCompleted")
-
-            const updatedText = "Updated message"
-            editInput.textInput.text = updatedText
-            waitForRendering(controlUnderTest)
-            const expectedText = editInput.getTextWithPublicKeys()
-            mouseClick(acceptButton)
-
-            compare(signalSpy.count, 1)
-            compare(signalSpy.signalArguments[0][0], expectedText)
-        }
-
-        function test_editCancelled_onCancel() {
-            const cancelButton = findChild(controlUnderTest, "statusChatInputEditCancelButton")
-            verify(!!cancelButton)
-
-            signalSpy.setup(controlUnderTest, "editCancelled")
-            mouseClick(cancelButton)
-
-            compare(signalSpy.count, 1)
-        }
     }
 }
