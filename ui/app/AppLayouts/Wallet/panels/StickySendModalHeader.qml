@@ -129,10 +129,6 @@ Control {
                 anchors.rightMargin: -Theme.xlPadding - parent.radius
                 sourceRect: Qt.rect(0, 0, width, height)
 
-                // Capture the frosted backdrop statically instead of every frame.
-                // With live:true the whole scene is re-blurred at 60fps whenever any
-                // animation runs; here we re-capture only when the content behind the
-                // header actually moves or changes (see refreshRequested wiring below).
                 live: false
 
                 // Emitted whenever the backdrop is re-captured; exposes the
@@ -143,9 +139,6 @@ Control {
                     scheduleUpdate()
                 }
 
-                // The content behind the header is the scrollable form (a Flickable);
-                // re-capture when it scrolls (user drag or programmatic reveal) or
-                // when it grows/shrinks as async data arrives.
                 Connections {
                     target: root.blurSource
                     ignoreUnknownSignals: true

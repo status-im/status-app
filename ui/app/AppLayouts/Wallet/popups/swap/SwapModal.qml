@@ -40,9 +40,6 @@ StatusDialog {
 
     Component.onDestruction: {
         const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
-        // Only release the pickers that were actually created (they are built
-        // lazily post-open; a modal opened and destroyed before the deferred
-        // setup runs may have none, and a plain swap never builds the bridge one).
         if (d.payTokenSelector)
             store.releaseTokenSelectorModel(d.payTokenSelector.id)
         if (d.receiveTokenSelector)
@@ -61,36 +58,15 @@ StatusDialog {
 
         readonly property string mandatoryKeysSeparator: "$$"
 
-        // Guards the double rebuildGroupsForChain per open (Component.onCompleted +
-        // the chain-changed handler both fire for the same chain): skip the redundant
-        // harvest + async fetch when the chain hasn't changed. One guard per side
-        // (source pay chain / destination bridge chain).
         property int lastRequestedChainId: -1
         property int lastRequestedChainIdTo: -1
 
-        // One terminal picker model per side ({ model, id }); released on modal
-        // destruction so the producer stops tracking them (avoids a per-open leak).
-        // The receive side has two: the source-chain picker (plain swap) and the
-        // destination-chain picker (bridge), switched by isSameChainSwap below.
-        //
-        // Created LAZILY, off the synchronous createObject path: creating + seeding
-        // these blocks the GUI thread proportionally to the catalog size, so it is
-        // deferred to just after the modal has opened (createPickers, driven from
-        // onOpened). The destination-chain (bridge) picker is created only when a
-        // bridge is actually selected. The panel bindings tolerate a null model
-        // until then; the picker popup can only be tapped once the modal is open.
         property var payTokenSelector: null
         property var receiveTokenSelector: null
         property var receiveTokenSelectorTo: null
 
-        // Guards lazy bridge-picker creation: stays false until createPickers has
-        // run (post-open) so the isBridge binding settling during construction
-        // (a transient true→false toggle as its dependencies resolve) does not
-        // eagerly build the bridge picker back onto the create path.
         property bool pickersInitialized: false
 
-        // Builds the pay + same-chain-receive pickers (once) and, for a bridge, the
-        // destination picker. Idempotent, so a close+reopen reuses the models.
         function createPickers() {
             const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
             if (!d.payTokenSelector) {
@@ -104,9 +80,6 @@ StatusDialog {
             receivePanel.reset()
         }
 
-        // The bridge (destination-chain) picker is only needed when bridging; build
-        // it the first time bridge mode is entered (incl. a pre-filled bridge open,
-        // whose toNetworkChainId is set by the deferred handler setup after onOpened).
         function ensureBridgePicker() {
             if (!d.receiveTokenSelectorTo)
                 d.receiveTokenSelectorTo = root.swapAdaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(3)
@@ -158,9 +131,6 @@ StatusDialog {
         readonly property bool isSameChainSwap: root.swapInputParamsForm.selectedNetworkChainId === root.swapInputParamsForm.toNetworkChainId
         readonly property bool isBridge: root.swapInputParamsForm.toNetworkChainId !== -1 && !isSameChainSwap
         onIsBridgeChanged: {
-            // Lazily build the destination-chain picker the first time a bridge is
-            // entered — but only after the pickers have been initialized post-open,
-            // so the binding settling during construction can't build it eagerly.
             if (isBridge && d.pickersInitialized)
                 d.ensureBridgePicker()
         }
@@ -269,9 +239,6 @@ StatusDialog {
     }
 
     Component.onCompleted: {
-        // The pickers are created post-open (see d.createPickers); the panel resets
-        // that clear their search move there too. The catalog harvest below is
-        // independent of the picker models and stays on the create path.
         d.rebuildGroupsForChain(root.swapInputParamsForm.selectedNetworkChainId)
         if (d.isBridge)
             d.rebuildGroupsForChain(root.swapInputParamsForm.toNetworkChainId, true)
