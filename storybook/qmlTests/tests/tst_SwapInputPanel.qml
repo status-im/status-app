@@ -158,6 +158,25 @@ Item {
             compare(fresh.popularSectionName, qsTr("Popular assets"))
         }
 
+        // The picker model is created lazily after the modal opens, so the panel
+        // lives with a null model for a while — and both of these paths can still
+        // fire in that window (the keyword arrives through a debounce, and the
+        // selector clears its search when the popup closes).
+        function test_searchAndLoadMoreAreSafeWithoutAModel() {
+            failOnWarning(/TypeError/)
+
+            controlUnderTest = createTemporaryObject(componentUnderTest, root,
+                                                     {tokenSelectorModel: null})
+            verify(!!controlUnderTest)
+
+            const holdingSelector = findChild(controlUnderTest, "holdingSelector")
+            verify(!!holdingSelector)
+
+            holdingSelector.search("eth")
+            holdingSelector.search("")
+            holdingSelector.loadMoreRequested()
+        }
+
         function test_selectedHoldingWithoutLogoFallsBackToTheSymbolIcon() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root,
                                                      {groupKey: noLogoGroupKey})

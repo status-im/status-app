@@ -370,10 +370,14 @@ Control {
                 formatCurrencyBalance: (amount) => root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency)
 
                 onSearch: function(keyword) {
-                    root.tokenSelectorModel.search(keyword)
+                    if (root.tokenSelectorModel)
+                        root.tokenSelectorModel.search(keyword)
                 }
 
-                onLoadMoreRequested: root.tokenSelectorModel.fetchMore()
+                onLoadMoreRequested: {
+                    if (root.tokenSelectorModel)
+                        root.tokenSelectorModel.fetchMore()
+                }
 
                 onSelected: function(key) {
                     // Token existance checked with plainTokensBySymbolModel
