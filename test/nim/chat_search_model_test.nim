@@ -5,12 +5,13 @@ import nimqml
 import app/modules/main/app_search/io_interface
 import app/modules/main/app_search/models/[chat_search_item, chat_search_model]
 
+# Overridden because the base method raises; the model requests a lazy build
+# on first rowCount, but these tests populate items via setItems directly.
 type
   StubDelegate = ref object of io_interface.AccessInterface
-    buildRequested: bool
 
 method buildChatSearchModel(self: StubDelegate) =
-  self.buildRequested = true
+  discard
 
 proc createTestItem(chatId: string, lastMessageTimestamp: int,
     lastOwnMessageTimestamp: int, canPost: bool = true): ChatSearchItem =
@@ -26,8 +27,8 @@ proc createTestItem(chatId: string, lastMessageTimestamp: int,
     chatType = 1,
     lastMessageText = "",
     lastMessageTimestamp = lastMessageTimestamp,
-    canPost = canPost,
     lastOwnMessageTimestamp = lastOwnMessageTimestamp,
+    canPost = canPost,
   )
 
 proc roleForName(model: chat_search_model.Model, name: string): int =
