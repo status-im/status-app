@@ -31,6 +31,7 @@ proc createTestItem(chatId: string): ChatSearchItem =
     chatType = 1,
     lastMessageText = "",
     lastMessageTimestamp = 1,
+    lastOwnMessageTimestamp = 1,
     canPost = true,
   )
 
