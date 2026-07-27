@@ -79,12 +79,19 @@ StatusDialogFooter {
                     function onContentYChanged() { blurBackdropSource.refreshBlur() }
                     function onContentHeightChanged() { blurBackdropSource.refreshBlur() }
                     function onContentWidthChanged() { blurBackdropSource.refreshBlur() }
+                    function onWidthChanged() { blurBackdropSource.refreshBlur() }
+                    function onHeightChanged() { blurBackdropSource.refreshBlur() }
                 }
+
+                // With live == false Qt marks a sourceRect/size change dirty but
+                // never re-renders it, so the stale capture gets stretched over the
+                // new geometry; ask for a fresh one explicitly.
+                onSourceRectChanged: refreshBlur()
+                onWidthChanged: refreshBlur()
+                onHeightChanged: refreshBlur()
 
                 readonly property color themeProbe: root.color
                 onThemeProbeChanged: refreshBlur()
-
-                Component.onCompleted: scheduleUpdate()
             }
         }
 

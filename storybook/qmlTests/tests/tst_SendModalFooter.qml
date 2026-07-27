@@ -235,6 +235,59 @@ Item {
             compare(blurRefreshSpy.count, before + 1, "content width change re-captures the backdrop")
         }
 
+        // The captured region is bound to the scroll view's geometry by the owner
+        // (SimpleSendModal), which only settles after the first layout pass. A
+        // static capture taken against the stale rect squeezes the whole scroll
+        // content into the footer strip.
+        function test_blur_refreshesOnSourceRectChange() {
+            controlUnderTest.blurSource = fakeContent
+            const src = findChild(controlUnderTest, "blurBackdropSource")
+            verify(!!src)
+
+            blurRefreshSpy.target = src
+            const before = blurRefreshSpy.count
+
+            controlUnderTest.blurSourceRect = Qt.rect(0, 120, 500, 90)
+            verify(blurRefreshSpy.count > before,
+                   "captured region change re-captures the backdrop")
+        }
+
+        // The footer itself resizes (error tags appearing, window resize); the
+        // static capture would otherwise be stretched over the new size.
+        function test_blur_refreshesOnFooterResize() {
+            controlUnderTest.blurSource = fakeContent
+            const src = findChild(controlUnderTest, "blurBackdropSource")
+            verify(!!src)
+
+            blurRefreshSpy.target = src
+
+            let before = blurRefreshSpy.count
+            controlUnderTest.width = controlUnderTest.width + 40
+            verify(blurRefreshSpy.count > before, "width change re-captures the backdrop")
+
+            before = blurRefreshSpy.count
+            controlUnderTest.height = controlUnderTest.height + 30
+            verify(blurRefreshSpy.count > before, "height change re-captures the backdrop")
+        }
+
+        // The content behind the footer can be resized without scrolling (window
+        // resize); what falls inside the captured region changes with it.
+        function test_blur_refreshesOnSourceItemResize() {
+            controlUnderTest.blurSource = fakeContent
+            const src = findChild(controlUnderTest, "blurBackdropSource")
+            verify(!!src)
+
+            blurRefreshSpy.target = src
+
+            let before = blurRefreshSpy.count
+            fakeContent.width += 25
+            verify(blurRefreshSpy.count > before, "source width change re-captures the backdrop")
+
+            before = blurRefreshSpy.count
+            fakeContent.height += 25
+            verify(blurRefreshSpy.count > before, "source height change re-captures the backdrop")
+        }
+
         // A theme switch recolors the content behind the footer without moving it;
         // the static backdrop must re-capture so it does not show stale colors.
         function test_blur_refreshesOnThemeChange() {

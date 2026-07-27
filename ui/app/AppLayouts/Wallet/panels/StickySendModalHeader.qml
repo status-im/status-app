@@ -145,14 +145,21 @@ Control {
                     function onContentYChanged() { blurBackdropSource.refreshBlur() }
                     function onContentHeightChanged() { blurBackdropSource.refreshBlur() }
                     function onContentWidthChanged() { blurBackdropSource.refreshBlur() }
+                    function onWidthChanged() { blurBackdropSource.refreshBlur() }
+                    function onHeightChanged() { blurBackdropSource.refreshBlur() }
                 }
+
+                // With live == false Qt marks a sourceRect/size change dirty but
+                // never re-renders it, so the capture taken while the header
+                // animates 0 -> N gets stretched; ask for a fresh one explicitly.
+                onSourceRectChanged: refreshBlur()
+                onWidthChanged: refreshBlur()
+                onHeightChanged: refreshBlur()
 
                 // A theme switch recolors the content behind the header without
                 // moving it; re-capture so the static backdrop is not left stale.
                 readonly property color themeProbe: foregroundRect.color
                 onThemeProbeChanged: refreshBlur()
-
-                Component.onCompleted: scheduleUpdate()
             }
         }
 

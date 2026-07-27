@@ -98,6 +98,43 @@ Item {
             compare(blurRefreshSpy.count, before + 1, "content width change re-captures the backdrop")
         }
 
+        // The header animates its height 0 -> N when it is revealed, so the
+        // captured region (bound to the header size) grows over 350ms; a capture
+        // taken at the old size is stretched over the new one.
+        function test_blur_refreshesOnHeaderResize() {
+            controlUnderTest.blurSource = fakeContent
+            const src = findChild(controlUnderTest, "blurBackdropSource")
+            verify(!!src)
+
+            blurRefreshSpy.target = src
+
+            let before = blurRefreshSpy.count
+            controlUnderTest.height = controlUnderTest.height + 30
+            verify(blurRefreshSpy.count > before, "height change re-captures the backdrop")
+
+            before = blurRefreshSpy.count
+            controlUnderTest.width = controlUnderTest.width + 40
+            verify(blurRefreshSpy.count > before, "width change re-captures the backdrop")
+        }
+
+        // The content behind the header can be resized without scrolling (window
+        // resize); what falls inside the captured region changes with it.
+        function test_blur_refreshesOnSourceItemResize() {
+            controlUnderTest.blurSource = fakeContent
+            const src = findChild(controlUnderTest, "blurBackdropSource")
+            verify(!!src)
+
+            blurRefreshSpy.target = src
+
+            let before = blurRefreshSpy.count
+            fakeContent.width += 25
+            verify(blurRefreshSpy.count > before, "source width change re-captures the backdrop")
+
+            before = blurRefreshSpy.count
+            fakeContent.height += 25
+            verify(blurRefreshSpy.count > before, "source height change re-captures the backdrop")
+        }
+
         // A theme switch recolors the content behind the header without moving it;
         // the static backdrop must re-capture so it does not show stale colors.
         function test_blur_refreshesOnThemeChange() {
