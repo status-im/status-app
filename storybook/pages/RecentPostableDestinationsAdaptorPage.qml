@@ -21,6 +21,7 @@ SplitView {
                 sectionId: "personal-section",
                 sectionName: "Chat",
                 lastMessageTimestamp: 400,
+                lastOwnMessageTimestamp: 400,
                 canPost: true
             },
             {
@@ -33,6 +34,7 @@ SplitView {
                 sectionId: "personal-section",
                 sectionName: "Chat",
                 lastMessageTimestamp: 900,
+                lastOwnMessageTimestamp: 100,
                 canPost: true
             },
             {
@@ -45,6 +47,7 @@ SplitView {
                 sectionId: "community-1",
                 sectionName: "CryptoKitties",
                 lastMessageTimestamp: 1000,
+                lastOwnMessageTimestamp: 0,
                 canPost: false
             },
             {
@@ -57,6 +60,7 @@ SplitView {
                 sectionId: "community-1",
                 sectionName: "CryptoKitties",
                 lastMessageTimestamp: 700,
+                lastOwnMessageTimestamp: 0,
                 canPost: true
             }
         ]
@@ -79,8 +83,9 @@ SplitView {
             spacing: 4
 
             delegate: Label {
-                text: "%1 (%2) — lastMessageTimestamp: %3".arg(model.name)
-                        .arg(model.sectionName).arg(model.lastMessageTimestamp)
+                text: "%1 (%2) — own: %3, any: %4".arg(model.name)
+                        .arg(model.sectionName).arg(model.lastOwnMessageTimestamp)
+                        .arg(model.lastMessageTimestamp)
             }
         }
     }
@@ -96,8 +101,12 @@ SplitView {
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
                 text: "Source rows (toggle post rights, bump recency); the left "
-                      + "pane shows the adaptor output: postable only, most "
-                      + "recent first."
+                      + "pane shows the adaptor output: postable only, chats "
+                      + "the user sent to first (by own-send recency), then "
+                      + "never-sent-to ones by any-message recency. 'Send' "
+                      + "bumps both recency roles like a real send; 'Receive' "
+                      + "bumps only any-message recency and must not promote "
+                      + "the row above sent-to chats."
             }
 
             Repeater {
@@ -113,7 +122,16 @@ SplitView {
                     }
 
                     Button {
-                        text: "Bump"
+                        text: "Send"
+                        onClicked: {
+                            const bumped = model.lastMessageTimestamp + 1000
+                            destinationsModel.setProperty(index, "lastMessageTimestamp", bumped)
+                            destinationsModel.setProperty(index, "lastOwnMessageTimestamp", bumped)
+                        }
+                    }
+
+                    Button {
+                        text: "Receive"
                         onClicked: destinationsModel.setProperty(index, "lastMessageTimestamp",
                                                                  model.lastMessageTimestamp + 1000)
                     }
