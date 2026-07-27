@@ -377,7 +377,6 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
       else:
         self.controller.getMessagesParsedPlainText(chat.lastMessage, []),
     lastMessageTimestamp = chat.timestamp.int,
-    canPost = chat.canPost,
     # Own-send recency survives restarts by deriving from the persisted last
     # message; when someone else posted last, the live bump on sending success
     # (updateLastMessage) is the only source, so it starts unset.
@@ -386,6 +385,7 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
         chat.timestamp.int
       else:
         0,
+    canPost = chat.canPost,
   )
 
 method buildChatSearchModel*(self: Module) =
