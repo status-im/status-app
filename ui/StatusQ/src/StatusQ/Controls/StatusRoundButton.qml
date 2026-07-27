@@ -64,6 +64,9 @@ Rectangle {
     }
 
     property bool loading: false
+    property bool rippleEnabled: true
+    property int rippleOrigin: StatusRipple.RippleOrigin.Pointer
+    property color rippleColor: d.iconColor
 
     property alias hovered: sensor.containsMouse
     property alias hoverEnabled: sensor.hoverEnabled
@@ -153,6 +156,16 @@ Rectangle {
         return backgroundSettings.disabledColor
     }
 
+    StatusRipple {
+        id: ripple
+        objectName: "buttonRipple"
+        anchors.fill: parent
+        enabled: root.rippleEnabled && root.enabled && !root.loading
+        color: root.rippleColor
+        radius: root.radius
+        origin: root.rippleOrigin
+    }
+
     StatusMouseArea {
         id: sensor
 
@@ -185,8 +198,16 @@ Rectangle {
         } // Loader
 
         onClicked: mouse => root.clicked(mouse)
-        onPressed: mouse => root.pressed(mouse)
-        onReleased: mouse => root.released(mouse)
+        onPressed: mouse => {
+            if (ripple.enabled)
+                ripple.press(mouse.x, mouse.y)
+            root.pressed(mouse)
+        }
+        onReleased: mouse => {
+            ripple.release()
+            root.released(mouse)
+        }
+        onCanceled: ripple.release()
         onPressAndHold: mouse => root.pressAndHold(mouse)
     } // Sensor
 } // Rectangle

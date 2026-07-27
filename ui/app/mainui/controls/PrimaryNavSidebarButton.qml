@@ -17,6 +17,9 @@ ToolButton {
     property bool showBadgeGradient
     property bool thirdpartyServicesEnabled
     property real bgRadius: width/2
+    property bool rippleEnabled: true
+    property int rippleOrigin: StatusRipple.RippleOrigin.Pointer
+    property color rippleColor: root.icon.color
 
     // mainly for testing
     readonly property bool badgeVisible: identicon.badge.visible
@@ -67,37 +70,50 @@ ToolButton {
         radius: root.bgRadius
     }
 
-    contentItem: StatusSmartIdenticon {
-        id: identicon
-        asset.width: root.icon.width
-        asset.height: root.icon.height
-        loading: root.icon.name === "loading"
-        asset.isImage: loading || root.icon.source.toString() !== ""
-        asset.name: asset.isImage ? root.icon.source : root.icon.name
-        name: root.text
-        asset.isLetterIdenticon: name !== "" && !asset.isImage
-        asset.letterSize: Theme.secondaryAdditionalTextSize
-        asset.charactersLen: 1
-        asset.useAcronymForLetterIdenticon: false
-        asset.color: root.icon.color
+    contentItem: Item {
+        StatusRipple {
+            id: ripple
+            objectName: "primaryNavSidebarButtonRipple"
+            anchors.fill: parent
+            enabled: root.rippleEnabled && root.enabled
+            color: root.rippleColor
+            radius: root.bgRadius
+            origin: root.rippleOrigin
+        }
 
-        StatusNewItemGradient { id: newGradient }
+        StatusSmartIdenticon {
+            id: identicon
+            anchors.fill: parent
+            asset.width: root.icon.width
+            asset.height: root.icon.height
+            loading: root.icon.name === "loading"
+            asset.isImage: loading || root.icon.source.toString() !== ""
+            asset.name: asset.isImage ? root.icon.source : root.icon.name
+            name: root.text
+            asset.isLetterIdenticon: name !== "" && !asset.isImage
+            asset.letterSize: Theme.secondaryAdditionalTextSize
+            asset.charactersLen: 1
+            asset.useAcronymForLetterIdenticon: false
+            asset.color: root.icon.color
 
-        badge {
-            width: root.badgeCount ? badge.implicitWidth : 16 - badge.border.width // bigger dot
-            height: root.badgeCount ? badge.implicitHeight : 16 - badge.border.width
-            border.width: 2
-            border.color: Theme.palette.statusAppNavBar.backgroundColor
-            anchors.bottom: undefined // override StatusBadge
-            anchors.bottomMargin: 0 // override StatusBadge
-            anchors.right: identicon.right
-            anchors.rightMargin: badge.value ? -16 : -8
-            anchors.top: identicon.top
-            anchors.topMargin: badge.value ? -10 : -8
+            StatusNewItemGradient { id: newGradient }
 
-            visible: root.showBadge
-            value: root.badgeCount
-            gradient: root.showBadgeGradient ? newGradient : undefined // gradient has precedence over a simple color
+            badge {
+                width: root.badgeCount ? badge.implicitWidth : 16 - badge.border.width // bigger dot
+                height: root.badgeCount ? badge.implicitHeight : 16 - badge.border.width
+                border.width: 2
+                border.color: Theme.palette.statusAppNavBar.backgroundColor
+                anchors.bottom: undefined // override StatusBadge
+                anchors.bottomMargin: 0 // override StatusBadge
+                anchors.right: identicon.right
+                anchors.rightMargin: badge.value ? -16 : -8
+                anchors.top: identicon.top
+                anchors.topMargin: badge.value ? -10 : -8
+
+                visible: root.showBadge
+                value: root.badgeCount
+                gradient: root.showBadgeGradient ? newGradient : undefined // gradient has precedence over a simple color
+            }
         }
     }
 
@@ -114,6 +130,27 @@ ToolButton {
     HoverHandler {
         id: hoverHandler
         cursorShape: hovered && root.hoverEnabled ? Qt.PointingHandCursor : undefined
+    }
+
+    TapHandler {
+        enabled: ripple.enabled
+        acceptedButtons: Qt.LeftButton
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen | PointerDevice.TouchPad | PointerDevice.Stylus
+        gesturePolicy: TapHandler.DragThreshold
+
+        onPressedChanged: {
+            if (pressed) {
+                const ripplePoint = root.mapToItem(ripple, point.position.x, point.position.y)
+                ripple.press(ripplePoint.x, ripplePoint.y)
+            } else {
+                ripple.release()
+            }
+        }
+    }
+
+    onPressedChanged: {
+        if (!pressed)
+            ripple.release()
     }
 
     // open the context menu at "x" where the tooltip opens, and top of the button (0)

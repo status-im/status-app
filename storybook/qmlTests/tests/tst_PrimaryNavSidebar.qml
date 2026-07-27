@@ -147,6 +147,31 @@ Item {
             compare(activityCenterSpy.signalArguments[0][0], true)
         }
 
+        function test_activity_center_button_ripple() {
+            const acButton = findChild(controlUnderTest, "Activity Center-navbar")
+            verify(!!acButton)
+            waitForRendering(acButton)
+
+            const ripple = findChild(acButton, "primaryNavSidebarButtonRipple")
+            verify(!!ripple)
+            verify(ripple.enabled)
+            verify(!ripple.visible)
+
+            const pressX = acButton.width / 2
+            const pressY = acButton.height / 2
+            const ripplePoint = acButton.mapToItem(ripple, pressX, pressY)
+
+            mousePress(acButton, pressX, pressY)
+            tryVerify(() => ripple.visible)
+            verify(ripple.pressed)
+            verify(Math.abs(ripple.pressX - ripplePoint.x) <= 1)
+            verify(Math.abs(ripple.pressY - ripplePoint.y) <= 1)
+
+            mouseRelease(acButton, pressX, pressY)
+            tryCompare(ripple, "visible", false)
+            verify(!ripple.pressed)
+        }
+
         function test_regular_section_buttons_exist() {
             // Check for Messages button
             const messagesBtn = findChild(controlUnderTest, "Messages-navbar")

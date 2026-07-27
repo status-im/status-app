@@ -8,6 +8,8 @@ import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Popups
 
+import mainui
+
 import Storybook
 
 SplitView {
@@ -71,6 +73,53 @@ SplitView {
                             rippleOrigin: d.effectiveRippleOrigin
                             scaleOnPressEnabled: false
                             onClicked: logs.logEvent("StatusFlatButton clicked")
+                        }
+                    }
+                }
+            }
+
+            Pane {
+                Layout.fillWidth: true
+
+                ColumnLayout {
+                    width: parent.width
+                    spacing: Theme.padding
+
+                    Label {
+                        text: "Round and navigation buttons"
+                        font.bold: true
+                    }
+
+                    RowLayout {
+                        spacing: Theme.padding
+
+                        StatusRoundButton {
+                            icon.name: "close"
+                            rippleEnabled: ctrlRipple.checked
+                            rippleOrigin: d.effectiveRippleOrigin
+                            highlighted: ctrlHighlighted.checked
+                            onClicked: logs.logEvent("StatusRoundButton clicked")
+                        }
+
+                        StatusRoundButton {
+                            type: StatusRoundButton.Type.Quaternary
+                            icon.name: "delete"
+                            rippleEnabled: ctrlRipple.checked
+                            rippleOrigin: d.effectiveRippleOrigin
+                            highlighted: ctrlHighlighted.checked
+                            onClicked: logs.logEvent("Danger StatusRoundButton clicked")
+                        }
+
+                        PrimaryNavSidebarButton {
+                            tooltipText: "Activity Center"
+                            icon.name: "notification"
+                            checkable: true
+                            checked: ctrlHighlighted.checked
+                            highlighted: ctrlHighlighted.checked
+                            rippleEnabled: ctrlRipple.checked
+                            rippleOrigin: d.effectiveRippleOrigin
+                            thirdpartyServicesEnabled: true
+                            onClicked: logs.logEvent("PrimaryNavSidebarButton clicked")
                         }
                     }
                 }

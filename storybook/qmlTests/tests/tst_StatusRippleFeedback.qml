@@ -58,6 +58,17 @@ Item {
         }
     }
 
+    Component {
+        id: roundButtonComponent
+
+        StatusRoundButton {
+            property int clickCount: 0
+
+            icon.name: "close"
+            onClicked: clickCount++
+        }
+    }
+
     property Item controlUnderTest: null
 
     TestCase {
@@ -181,6 +192,29 @@ Item {
             verify(!!controlUnderTest)
 
             verifyRippleFeedback(controlUnderTest, "statusMenuItemRipple", false, true)
+        }
+
+        function test_roundButtonRipple() {
+            controlUnderTest = createTemporaryObject(roundButtonComponent, root)
+            verify(!!controlUnderTest)
+
+            verifyRippleFeedback(controlUnderTest, "buttonRipple", true, true)
+
+            controlUnderTest.destroy()
+            controlUnderTest = createTemporaryObject(roundButtonComponent, root, {
+                rippleOrigin: StatusRipple.RippleOrigin.Center
+            })
+            verify(!!controlUnderTest)
+
+            verifyRippleFeedback(controlUnderTest, "buttonRipple", false, true)
+
+            const ripple = findChild(controlUnderTest, "buttonRipple")
+            verify(!!ripple)
+            controlUnderTest.rippleEnabled = false
+            verify(!ripple.enabled)
+            mousePress(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+            verify(!ripple.visible)
+            mouseRelease(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
         }
     }
 }
