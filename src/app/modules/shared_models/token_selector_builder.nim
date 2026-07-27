@@ -140,15 +140,18 @@ proc buildDisplayItems*(
   ## Single entry point the terminal model calls to (re)derive its display rows.
   ## Selects the path the retired TokenSelectorViewAdaptor branched on:
   ##   - a search is active  -> merge the backend search rows with the owned balances;
-  ##     Owned mode (send) then keeps only the rows the user actually owns
-  ##     (the adaptor's `UndefinedFilter currentBalance` when !showAllTokens).
+  ##     Owned mode (send) then narrows to the rows already in the owned list
+  ##     (the adaptor's `UndefinedFilter currentBalance` when !showAllTokens —
+  ##     membership, not a non-zero balance, so showZeroBalanceForDefaultTokens
+  ##     rows stay searchable).
   ##   - AllTokens (swap/buy) -> merge the lazily-loaded popular list with owned.
   ##   - Owned (send), no search -> just the owned tokens.
   let owned = buildTokenSelectorItems(ownedGroups, networks, params)
   if searchActive:
     let merged = mergePopularWithOwned(searchGroups, owned, params.showCommunityAssets)
     if mode == TokenSelectorMode.Owned:
-      return merged.filterIt(it.hasBalance)
+      let ownedKeys = owned.mapIt(it.key).toHashSet
+      return merged.filterIt(it.key in ownedKeys)
     return merged
   if mode == TokenSelectorMode.AllTokens:
     return mergePopularWithOwned(popularGroups, owned, params.showCommunityAssets)

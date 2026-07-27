@@ -264,6 +264,21 @@ suite "buildDisplayItems — path selection":
       searchGroups = @[popular("ETH"), popular("DAI")])   # DAI not owned -> dropped
     check items.mapIt(it.key) == @["ETH"]
 
+  test "Owned mode + search keeps an owned token sitting at zero balance":
+    # showZeroBalanceForDefaultTokens is what puts ETH/SNT/DAI in the send picker
+    # at zero; searching must narrow that visible list, not filter it by balance.
+    let params = TokenSelectorParams(accountAddress: "", enabledChainIds: @[],
+      showZeroBalanceForDefaultTokens: true, showCommunityAssets: false)
+    let owned = @[group("SNT", balances = @[bal("0xA", 1, "0")])]
+    let noSearch = buildDisplayItems(owned, networks, params,
+      TokenSelectorMode.Owned, searchActive = false, popularGroups = @[], searchGroups = @[])
+    check noSearch.mapIt(it.key) == @["SNT"]        # visible without a search
+
+    let searched = buildDisplayItems(owned, networks, params,
+      TokenSelectorMode.Owned, searchActive = true, popularGroups = @[],
+      searchGroups = @[popular("SNT"), popular("DAI")])
+    check searched.mapIt(it.key) == @["SNT"]        # still visible; DAI unowned -> dropped
+
   test "AllTokens mode + search: results shown even when not owned":
     let items = buildDisplayItems(ownedGroups, networks, noFilterParams(),
       TokenSelectorMode.AllTokens, searchActive = true, popularGroups = @[],
