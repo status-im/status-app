@@ -2990,6 +2990,14 @@ Item {
             closePolicy: Popup.NoAutoClose
             padding: Theme.padding
 
+            background: StatusDialogBackground {
+                radius: appMain.isPortraitMode ? 0 : Theme.radius
+            }
+
+            Overlay.modal: Rectangle {
+                color: Theme.palette.backdropColor
+            }
+
             onClosed: shareFlowLoader.active = false
 
             function restart() {
