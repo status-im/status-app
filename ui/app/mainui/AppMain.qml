@@ -1146,12 +1146,22 @@ Item {
         // Send the shared content to the picked destination and land in that
         // chat. The cached image copies are NOT released here — the image-send
         // task consumes the files asynchronously and releases them once done.
+        // Activation must come BEFORE the send: it synchronously builds and
+        // loads the destination chat content module (community sections build
+        // their chats lazily on first activation), so the send finds the input
+        // area module and the destination's message model is already
+        // subscribed for the local echo — the sent message shows up in the
+        // chat view the moment the send is accepted, like an in-chat send.
         function completeShareFlow(sectionId: string, chatId: string, text: string) {
             const imagePaths = shareFlowLoader.sharedImagePaths
             shareFlowLoader.sharedImagePaths = []
             shareFlowLoader.item.close()
-            appMain.rootChatStore.sendMessageToChat(sectionId, chatId, text, imagePaths)
             rootStore.setActiveSectionChat(sectionId, chatId)
+            if (!appMain.rootChatStore.sendMessageToChat(sectionId, chatId, text, imagePaths)) {
+                // Nothing was sent, so the image-send task will never release
+                // the cached copies — release them here instead.
+                rootStore.releaseShareIntakeFiles(imagePaths)
+            }
         }
 
         // Cache lifecycle: drop the flow's cached shared-image copies (cancel
