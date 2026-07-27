@@ -13,16 +13,18 @@ QtObject:
     got: string
     count: int
 
+  proc delete(self: Receiver)
+
+  proc newReceiver(): Receiver =
+    new(result, delete)
+    result.QObject.setup
+
   proc delete(self: Receiver) =
     self.QObject.delete
 
   proc onSig*(self: Receiver, signal: string) {.slot.} =
     self.got = signal
     inc self.count
-
-  proc newReceiver(): Receiver =
-    new(result, delete)
-    result.QObject.setup
 
 discard QCoreApplication.create()  # one app for the whole suite
 

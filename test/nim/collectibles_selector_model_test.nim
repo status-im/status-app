@@ -202,7 +202,7 @@ suite "CollectiblesSelectorModel - granular updates":
     # derefs freed memory while tearing its own row down. The parent's row count at
     # the moment of the free tells us which side of modelSync we are on.
     # ORC-gated: free order is deterministic only under --mm:orc (the production
-    # mm). Run via `make nim-test-run-orc/...`; the refc suite reports it skipped.
+    # mm, which the test suite also builds with); reports skipped under refc.
     when defined(gcOrc):
       let m = newCollectiblesSelectorModel()
       m.setParams(params("0xA"))

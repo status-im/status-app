@@ -4,12 +4,14 @@ import nimqml
 QtObject:
   type Emitter = ref object of QObject
 
-  proc delete(self: Emitter) =
-    self.QObject.delete
+  proc delete(self: Emitter)
 
   proc newEmitter(): Emitter =
     new(result, delete)
     result.QObject.setup
+
+  proc delete(self: Emitter) =
+    self.QObject.delete
 
   proc ping*(self: Emitter, msg: string) {.signal.}
 
@@ -18,12 +20,14 @@ QtObject:
     count: int
     last: string
 
-  proc delete(self: Receiver) =
-    self.QObject.delete
+  proc delete(self: Receiver)
 
   proc newReceiver(): Receiver =
     new(result, delete)
     result.QObject.setup
+
+  proc delete(self: Receiver) =
+    self.QObject.delete
 
   proc onPing*(self: Receiver, msg: string) {.slot.} =
     inc self.count
@@ -39,8 +43,7 @@ QtObject:
     receivedCount: int
     receivedMsg: string
 
-  proc delete(self: SelfWired) =
-    self.QObject.delete
+  proc delete(self: SelfWired)
 
   proc onExternalPing*(self: SelfWired, msg: string) {.slot.} =
     inc self.receivedCount
@@ -53,6 +56,9 @@ QtObject:
     # Method-form connect inside a QtObject constructor — the pattern used across
     # notifications_manager, keycard_popup/view, etc. after the seaqt migration.
     discard QObject.connect(source, ping, result, onExternalPing)
+
+  proc delete(self: SelfWired) =
+    self.QObject.delete
 
 suite "nimqml QObject.connect (seaqt-backed)":
   test "method-arg connect with AutoConnection delivers synchronously":

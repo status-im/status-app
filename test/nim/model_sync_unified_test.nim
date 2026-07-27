@@ -29,11 +29,14 @@ QtObject:
   type LeafModel = ref object of QAbstractListModel
     items: seq[Leaf]
 
-  proc setup(self: LeafModel) = self.QAbstractListModel.setup
-  proc delete(self: LeafModel) = self.QAbstractListModel.delete
+  proc setup(self: LeafModel)
+  proc delete(self: LeafModel)
   proc newLeafModel(): LeafModel =
     new(result, delete)
     result.setup
+
+  proc setup(self: LeafModel) = self.QAbstractListModel.setup
+  proc delete(self: LeafModel) = self.QAbstractListModel.delete
 
   proc countChanged(self: LeafModel) {.signal.}
   method rowCount(self: LeafModel, index: QModelIndex = nil): int = self.items.len
@@ -80,12 +83,14 @@ proc syncRoles(o, n: Group): seq[int] =
 QtObject:
   type SubModel = ref object of QAbstractListModel
     items: seq[Sub]
-  proc setup(self: SubModel) = self.QAbstractListModel.setup
-  proc delete(self: SubModel) = self.QAbstractListModel.delete
+  proc setup(self: SubModel)
+  proc delete(self: SubModel)
   proc newSubModel(subs: seq[Sub]): SubModel =
     new(result, delete)
     result.setup
     result.items = subs
+  proc setup(self: SubModel) = self.QAbstractListModel.setup
+  proc delete(self: SubModel) = self.QAbstractListModel.delete
   proc countChanged(self: SubModel) {.signal.}
   method rowCount(self: SubModel, index: QModelIndex = nil): int = self.items.len
   method roleNames(self: SubModel): Table[int, string] = {0: "id", 1: "bal"}.toTable
@@ -102,12 +107,14 @@ QtObject:
   type GroupModel = ref object of QAbstractListModel
     items: seq[Group]
     childByKey: Table[string, SubModel]
-  proc setup(self: GroupModel) = self.QAbstractListModel.setup
-  proc delete(self: GroupModel) = self.QAbstractListModel.delete
+  proc setup(self: GroupModel)
+  proc delete(self: GroupModel)
   proc newGroupModel(): GroupModel =
     new(result, delete)
     result.setup
     result.childByKey = initTable[string, SubModel]()
+  proc setup(self: GroupModel) = self.QAbstractListModel.setup
+  proc delete(self: GroupModel) = self.QAbstractListModel.delete
   proc countChanged(self: GroupModel) {.signal.}
   method rowCount(self: GroupModel, index: QModelIndex = nil): int = self.items.len
   method roleNames(self: GroupModel): Table[int, string] =
@@ -141,12 +148,14 @@ QtObject:
 QtObject:
   type Detail = ref object of QObject
     key: string
-  proc delete(self: Detail) = self.QObject.delete
-  proc setup(self: Detail) = self.QObject.setup
+  proc delete(self: Detail)
+  proc setup(self: Detail)
   proc newDetail(key: string): Detail =
     new(result, delete)
     result.setup
     result.key = key
+  proc delete(self: Detail) = self.QObject.delete
+  proc setup(self: Detail) = self.QObject.setup
 
 suite "model_sync v3 unified API":
   setup:

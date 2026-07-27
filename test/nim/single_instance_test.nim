@@ -16,16 +16,18 @@ QtObject:
     received: string
     count: int
 
+  proc delete(self: Catcher)
+
+  proc newCatcher(): Catcher =
+    new(result, delete)
+    result.QObject.setup
+
   proc delete(self: Catcher) =
     self.QObject.delete
 
   proc onEvent*(self: Catcher, eventStr: string) {.slot.} =
     self.received = eventStr
     inc self.count
-
-  proc newCatcher(): Catcher =
-    new(result, delete)
-    result.QObject.setup
 
 discard QCoreApplication.create()  # one app for the whole suite
 

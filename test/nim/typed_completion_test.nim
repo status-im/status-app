@@ -36,6 +36,12 @@ QtObject:
     order: seq[int]
     nilCount: int
 
+  proc delete(self: Receiver)
+
+  proc newReceiver(): Receiver =
+    new(result, delete)
+    result.QObject.setup
+
   proc delete(self: Receiver) =
     self.QObject.delete
 
@@ -47,10 +53,6 @@ QtObject:
     self.lastLabel = r.label
     self.lastItemsLen = r.items.len
     self.order.add r.seqNo
-
-  proc newReceiver(): Receiver =
-    new(result, delete)
-    result.QObject.setup
 
 discard QCoreApplication.create()   # one app for the whole suite
 

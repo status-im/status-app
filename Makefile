@@ -39,7 +39,6 @@ GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 	run-macos \
 	run-windows \
 	tests-nim-linux \
-	tests-nim-orc \
 	status-go \
 	status-keycard-qt \
 	statusq-sanity-checker \
@@ -1084,33 +1083,15 @@ nim-test-run/test/nim/grouped_account_assets_model_test.nim: NIM_PARAMS += -d:QT
 ifneq ($(mkspecs),win32)
 nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
+# --mm:orc matches the production build (Makefile app targets); it also makes a
+# dropped child QObject's free ORDER relative to its parent's remove signal
+# deterministic, so the `when defined(gcOrc)` use-after-free regressions
+# actually execute here instead of compiling to a skip.
 nim-test-run/%: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN)
 	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" $(ENV_SCRIPT) \
-	nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:refc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
+	nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
 
-# ORC re-run of the nested-model tests. The app builds --mm:orc, and a dropped
-# child QObject's free ORDER relative to the parent's remove signal is
-# deterministic only there — so the use-after-free regressions are written
-# `when defined(gcOrc)` and compile to nothing in the refc run above. Separate
-# nimcache/outdir so the two memory models don't share artifacts.
-NIM_ORC_TEST_FILES := \
-	test/nim/grouped_account_assets_model_test.nim \
-	test/nim/token_selector_model_test.nim \
-	test/nim/collectibles_selector_model_test.nim
-NIM_ORC_TESTS := $(foreach test_file,$(NIM_ORC_TEST_FILES),nim-test-run-orc/$(test_file))
-
-ifneq ($(mkspecs),win32)
-nim-test-run-orc/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
-endif
-nim-test-run-orc/%: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN)
-	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" $(ENV_SCRIPT) \
-	nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc -d:QT_MODEL_SPY \
-	--nimcache:nimcache/orc/$$projectName --outdir:./bin/orc \
-	--passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run-orc/,,$@)
-
-tests-nim-orc: $(NIM_ORC_TESTS)
-
-tests-nim-linux: $(NIM_TESTS) $(NIM_ORC_TESTS)
+tests-nim-linux: $(NIM_TESTS)
 
 define qmkq
 $(shell $(QMAKE) -query $(1))

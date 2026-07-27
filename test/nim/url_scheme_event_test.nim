@@ -14,16 +14,18 @@ QtObject:
     got: string
     count: int
 
+  proc delete(self: Receiver)
+
+  proc newReceiver(): Receiver =
+    new(result, delete)
+    result.QObject.setup
+
   proc delete(self: Receiver) =
     self.QObject.delete
 
   proc onUrl*(self: Receiver, url: string) {.slot.} =
     self.got = url
     inc self.count
-
-  proc newReceiver(): Receiver =
-    new(result, delete)
-    result.QObject.setup
 
 discard QCoreApplication.create()  # one app for the whole suite
 

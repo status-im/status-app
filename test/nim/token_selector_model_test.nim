@@ -226,8 +226,7 @@ suite "TokenSelectorModel - nested balances submodel":
     # freed memory while tearing its own row down. Assert the child is destroyed
     # only AFTER the remove signal fired.
     # ORC-gated: free order is deterministic only under --mm:orc (the production
-    # mm). Run via `make nim-test-run-orc/test/nim/token_selector_model_test.nim`;
-    # the refc suite reports this as skipped.
+    # mm, which the test suite also builds with); reports skipped under refc.
     when defined(gcOrc):
       let m = newTokenSelectorModel()
       # b's chip carries a sentinel raw balance so the delete hook recognises it by

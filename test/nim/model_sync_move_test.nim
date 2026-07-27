@@ -20,11 +20,14 @@ QtObject:
   type TModel = ref object of QAbstractListModel
     items: seq[TItem]
 
-  proc setup(self: TModel) = self.QAbstractListModel.setup
-  proc delete(self: TModel) = self.QAbstractListModel.delete
+  proc setup(self: TModel)
+  proc delete(self: TModel)
   proc newTModel(): TModel =
     new(result, delete)
     result.setup
+
+  proc setup(self: TModel) = self.QAbstractListModel.setup
+  proc delete(self: TModel) = self.QAbstractListModel.delete
 
   method rowCount(self: TModel, index: QModelIndex = nil): int =
     self.items.len
