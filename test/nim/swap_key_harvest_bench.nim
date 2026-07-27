@@ -54,14 +54,17 @@ QtObject:
   type OwnedAssetsModel = ref object of QAbstractListModel
     keys: seq[string]
 
-  proc delete(self: OwnedAssetsModel) = self.QAbstractListModel.delete
-  proc setup(self: OwnedAssetsModel) = self.QAbstractListModel.setup
+  proc delete(self: OwnedAssetsModel)
+  proc setup(self: OwnedAssetsModel)
   proc newOwnedAssetsModel(n: int): OwnedAssetsModel =
     new(result, delete)
     result.setup
     result.keys = newSeqOfCap[string](n)
     for i in 0 ..< n:
       result.keys.add("grp_" & $i)
+
+  proc delete(self: OwnedAssetsModel) = self.QAbstractListModel.delete
+  proc setup(self: OwnedAssetsModel) = self.QAbstractListModel.setup
 
   method rowCount(self: OwnedAssetsModel, index: QModelIndex = nil): int = self.keys.len
 
@@ -97,10 +100,12 @@ QtObject:
     lenByMode: array[2, int]
     resultCount: int
 
-  proc delete(self: Bench) = self.QObject.delete
+  proc delete(self: Bench)
   proc newBench(): Bench =
     new(result, delete)
     result.QObject.setup
+
+  proc delete(self: Bench) = self.QObject.delete
 
   proc requestHarvest(self: Bench) {.signal.}
 

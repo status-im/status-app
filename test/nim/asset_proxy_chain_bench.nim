@@ -56,12 +56,14 @@ QtObject:
     rows: seq[Row]
     finished: bool
 
-  proc delete(self: Bench) =
-    self.QObject.delete
+  proc delete(self: Bench)
 
   proc newBench(): Bench =
     new(result, delete)
     result.QObject.setup
+
+  proc delete(self: Bench) =
+    self.QObject.delete
 
   proc nowNs(self: Bench): float {.slot.} =
     (getMonoTime() - MonoTime()).inNanoseconds.float

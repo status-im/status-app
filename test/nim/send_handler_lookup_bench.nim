@@ -48,12 +48,15 @@ QtObject:
   type TokenGroupsModel = ref object of QAbstractListModel
     n: int
 
-  proc delete(self: TokenGroupsModel) = self.QAbstractListModel.delete
-  proc setup(self: TokenGroupsModel) = self.QAbstractListModel.setup
+  proc delete(self: TokenGroupsModel)
+  proc setup(self: TokenGroupsModel)
   proc newTokenGroupsModel(n: int): TokenGroupsModel =
     new(result, delete)
     result.setup
     result.n = n
+
+  proc delete(self: TokenGroupsModel) = self.QAbstractListModel.delete
+  proc setup(self: TokenGroupsModel) = self.QAbstractListModel.setup
 
   method rowCount(self: TokenGroupsModel, index: QModelIndex = nil): int = self.n
 

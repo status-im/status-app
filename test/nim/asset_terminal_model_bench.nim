@@ -50,12 +50,14 @@ QtObject:
     cDelegatesCreated: int
     cDelegatesDestroyed: int
 
-  proc delete(self: Bench) =
-    self.QObject.delete
+  proc delete(self: Bench)
 
   proc newBench(): Bench =
     new(result, delete)
     result.QObject.setup
+
+  proc delete(self: Bench) =
+    self.QObject.delete
 
   proc requestRelayout(self: Bench) {.signal.}
 
