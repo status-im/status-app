@@ -77,6 +77,7 @@ StatusSectionLayout {
 
     property bool isKeycardEnabled: true
     property bool isBrowserEnabled: true
+    required property bool messageLinkSharingFeatureEnabled
     required property bool privacyModeFeatureEnabled
     required property bool minimizeOnCloseOptionVisible
 
@@ -467,6 +468,7 @@ StatusSectionLayout {
                 walletStore: root.walletStore
                 isFleetSelectionEnabled: fleetSelectionEnabled
                 isBrowserEnabled: root.isBrowserEnabled
+                messageLinkSharingFeatureEnabled: root.messageLinkSharingFeatureEnabled
                 minimizeOnCloseOptionVisible: root.minimizeOnCloseOptionVisible
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.advanced)
                 contentWidth: d.contentWidth

@@ -33,6 +33,7 @@ QtObject {
         }
     }
     readonly property bool ensCommunityPermissionsEnabled: localAccountSensitiveSettings.ensCommunityPermissionsEnabled
+    readonly property bool copyMessageLinksEnabled: localAccountSensitiveSettings.copyMessageLinksEnabled
 
     property var customNetworksModel: advancedModule? advancedModule.customNetworksModel : []
 
@@ -139,6 +140,10 @@ QtObject {
 
     function toggleEnsCommunityPermissionsEnabled() {
         localAccountSensitiveSettings.ensCommunityPermissionsEnabled = !root.ensCommunityPermissionsEnabled
+    }
+
+    function toggleCopyMessageLinksEnabled() {
+        localAccountSensitiveSettings.copyMessageLinksEnabled = !root.copyMessageLinksEnabled
     }
 
     function toggleManageCommunityOnTestnet() {

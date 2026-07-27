@@ -38,6 +38,7 @@ SettingsContentBase {
 
     property bool isFleetSelectionEnabled
     property bool isBrowserEnabled: true
+    property bool messageLinkSharingFeatureEnabled: false
     property bool minimizeOnCloseOptionVisible
     property bool refetchTxHistoryClicked: false
     onVisibleChanged: {
@@ -197,6 +198,17 @@ SettingsContentBase {
                 checked: root.advancedStore.ensCommunityPermissionsEnabled
                 onClicked: {
                     root.advancedStore.toggleEnsCommunityPermissionsEnabled()
+                }
+            }
+
+            StatusSettingsLineButton {
+                width: parent.width
+                visible: root.messageLinkSharingFeatureEnabled
+                text: qsTr("Enable Copying Message Links")
+                isSwitch: true
+                checked: root.advancedStore.copyMessageLinksEnabled
+                onClicked: {
+                    root.advancedStore.toggleCopyMessageLinksEnabled()
                 }
             }
 

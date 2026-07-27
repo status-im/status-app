@@ -70,6 +70,8 @@ const LSS_KEY_USER_DECLINED_BACKUP_BANNER* = "userDeclinedBackupBanner"
 const DEFAULT_USER_DECLINED_BACKUP_BANNER = false
 const LSS_KEY_GIF_UNFURLING_ENABLED* = "gifUnfurlingEnabled"
 const DEFAULT_GIF_UNFURLING_ENABLED* = false
+const LSS_KEY_COPY_MESSAGE_LINKS_ENABLED* = "copyMessageLinksEnabled"
+const DEFAULT_COPY_MESSAGE_LINKS_ENABLED* = false
 const LS_KEY_LOCAL_BACKUP_CHOSEN_PATH* = "localBackupChosenPath"
 
 logScope:
@@ -539,6 +541,18 @@ QtObject:
     write = setGifUnfurlingEnabled
     notify = gifUnfurlingEnabledChanged
 
+  proc copyMessageLinksEnabledChanged*(self: LocalAccountSensitiveSettings) {.signal.}
+  proc getCopyMessageLinksEnabled*(self: LocalAccountSensitiveSettings): bool {.slot.} =
+    getSettingsProp[bool](self, LSS_KEY_COPY_MESSAGE_LINKS_ENABLED, newQVariant(DEFAULT_COPY_MESSAGE_LINKS_ENABLED))
+  proc setCopyMessageLinksEnabled*(self: LocalAccountSensitiveSettings, value: bool) {.slot.} =
+    setSettingsProp(self, LSS_KEY_COPY_MESSAGE_LINKS_ENABLED, newQVariant(value)):
+      self.copyMessageLinksEnabledChanged()
+
+  QtProperty[bool] copyMessageLinksEnabled:
+    read = getCopyMessageLinksEnabled
+    write = setCopyMessageLinksEnabled
+    notify = copyMessageLinksEnabledChanged
+
   proc localBackupChosenPathChanged*(self: LocalAccountSensitiveSettings) {.signal.}
 
   proc getLocalBackupChosenPathSetting*(self: LocalAccountSensitiveSettings): string =
@@ -607,6 +621,7 @@ QtObject:
       of LSS_KEY_STICKERS_ENS_ROPSTEN: self.stickersEnsRopstenChanged()
       of LSS_KEY_USER_DECLINED_BACKUP_BANNER: self.userDeclinedBackupBannerChanged()
       of LSS_KEY_GIF_UNFURLING_ENABLED: self.gifUnfurlingEnabledChanged()
+      of LSS_KEY_COPY_MESSAGE_LINKS_ENABLED: self.copyMessageLinksEnabledChanged()
 
   proc setup(self: LocalAccountSensitiveSettings) =
     self.QObject.setup

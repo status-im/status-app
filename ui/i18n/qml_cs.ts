@@ -1081,6 +1081,10 @@
         <translation>Oprávnění ENS komunity povolena</translation>
     </message>
     <message>
+        <source>Enable Copying Message Links</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>The account will be logged out. When you login again, the selected mode will be enabled</source>
         <translation>Účet bude odhlášen. Po opětovném přihlášení bude vybraný režim povolen</translation>
     </message>

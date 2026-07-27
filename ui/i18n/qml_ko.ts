@@ -1075,6 +1075,10 @@
         <translation>ENS 커뮤니티 권한 활성화됨</translation>
     </message>
     <message>
+        <source>Enable Copying Message Links</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>The account will be logged out. When you login again, the selected mode will be enabled</source>
         <translation>계정이 로그아웃됩니다. 다시 로그인하면 선택한 모드가 활성화됩니다</translation>
     </message>

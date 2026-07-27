@@ -121,7 +121,8 @@ Loader {
             sendViaPersonalChatEnabled:     Qt.binding(() => root.featureFlagsStore.sendViaPersonalChatEnabled),
             disabledTooltipText:            Qt.binding(() => !root.networkConnectionStore.walletReadyForTransactionsEnabled
                                                    ? root.networkConnectionStore.walletReadyForTransactionsToolTipText : ""),
-            messageLinkSharingEnabled:      Qt.binding(() => root.featureFlagsStore.messageLinkSharingEnabled),
+            messageLinkSharingEnabled:      Qt.binding(() => root.featureFlagsStore.messageLinkSharingEnabled
+                                                   && root.advancedStore.copyMessageLinksEnabled),
             paymentRequestFeatureEnabled:   Qt.binding(() => root.featureFlagsStore.paymentRequestEnabled),
             extraLeftPadding:               Qt.binding(() => root.isPortraitMode ? SQUtils.Utils.swipeIndicatorWidth : 0),
             mutualContactsModel:            Qt.binding(() => root.contactsAdaptor.mutualContacts),

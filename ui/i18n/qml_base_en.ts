@@ -1078,6 +1078,10 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Enable Copying Message Links</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>The account will be logged out. When you login again, the selected mode will be enabled</source>
         <translation type="unfinished"></translation>
     </message>

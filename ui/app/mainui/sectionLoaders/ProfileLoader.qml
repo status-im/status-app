@@ -139,6 +139,7 @@ Loader {
             dismissedReceivedRequestContactsModel:  Qt.binding(() => root.contactsAdaptor.dimissedReceivedRequestContacts),
             isKeycardEnabled:                       Qt.binding(() => root.featureFlagsStore.keycardEnabled),
             isBrowserEnabled:                       Qt.binding(() => root.featureFlagsStore.browserEnabled),
+            messageLinkSharingFeatureEnabled:       Qt.binding(() => root.featureFlagsStore.messageLinkSharingEnabled),
             privacyModeFeatureEnabled:              Qt.binding(() => root.featureFlagsStore.privacyModeFeatureEnabled),
             minimizeOnCloseOptionVisible:           Qt.binding(() => root.systemTrayIconAvailable),
             theme:                                  Qt.binding(() => root.theme),

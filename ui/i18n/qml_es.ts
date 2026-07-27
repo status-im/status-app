@@ -1078,6 +1078,10 @@
         <translation>Permisos de comunidad ENS habilitados</translation>
     </message>
     <message>
+        <source>Enable Copying Message Links</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>The account will be logged out. When you login again, the selected mode will be enabled</source>
         <translation>La cuenta se cerrará sesión. Cuando vuelvas a iniciar sesión, el modo seleccionado estará habilitado</translation>
     </message>
