@@ -26,7 +26,12 @@ TokensStore {
     property int _tokenSelectorIdCounter: 0
     readonly property Component _tokenSelectorModelMockComponent: Component { TokenSelectorModelMock {} }
 
+    // The kind of every picker handed out, in order, so tests can assert which
+    // pickers a consumer builds and when. Tests reset it to [] to scope a window.
+    property var createdKinds: []
+
     function createTokenSelectorModel(kind) {
+        root.createdKinds = root.createdKinds.concat([kind])
         // Mirror the producer's per-kind source: swap (1) uses the source-chain
         // groups, bridge receive (3) uses the destination-chain groups, send (0) /
         // buy (2) use the full groups. If a caller pre-seeded tokenSelectorStubData,

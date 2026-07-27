@@ -43,7 +43,14 @@ ListModel {
     property string ownedSectionName: ""
     property string popularSectionName: ""
 
-    function search(keyword) { root.searchString = keyword }
+    // Counted because the real model's search() also re-seeds the backend list,
+    // so "was it called" is observable behaviour even for the empty keyword.
+    property int searchCallCount: 0
+
+    function search(keyword) {
+        root.searchCallCount++
+        root.searchString = keyword
+    }
     function fetchMore() {}
     function setSectionNames(owned, popular) {
         root.ownedSectionName = owned

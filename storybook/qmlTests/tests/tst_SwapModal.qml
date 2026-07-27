@@ -2037,5 +2037,50 @@ Item {
             tryCompare(sellItem, "text", "1 ETH ≈ ")
             tryCompare(quoteItem, "text", "1 STT ")
         }
+
+        // The handler destroys the modal and then resets the form, and the reset
+        // clears the source chain before the destination one — a transient bridge
+        // state. Building the destination picker for it (an expensive terminal
+        // model) only to throw it away is pure waste on every plain-swap close.
+        function test_noBridgePickerIsBuiltWhileClosing() {
+            const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+
+            launchAndVerfyModal()
+            compare(root.swapFormData.selectedNetworkChainId,
+                    root.swapFormData.toNetworkChainId, "plain same-chain swap")
+
+            store.createdKinds = []
+
+            controlUnderTest.close()
+            verify(!controlUnderTest.opened)
+            // same order as SwapModalHandler.onClosed
+            root.swapFormData.resetFormData()
+
+            compare(store.createdKinds.indexOf(3), -1,
+                    "no destination picker built during teardown, got kinds: "
+                    + JSON.stringify(store.createdKinds))
+        }
+
+        // A destination picker built lazily (the user switches the receive chain
+        // after the modal is open) must be seeded like the ones createPickers
+        // builds, otherwise it starts on whatever the producer's last search was.
+        function test_lazyBridgePickerIsSeeded() {
+            const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+
+            launchAndVerfyModal()
+
+            const receivePanel = findChild(controlUnderTest, "receivePanel")
+            verify(!!receivePanel)
+
+            store.createdKinds = []
+            root.swapFormData.toNetworkChainId = 10 // != source chain => bridge
+
+            compare(store.createdKinds.indexOf(3), 0, "destination picker built")
+            const bridgeModel = receivePanel.tokenSelectorModel
+            verify(!!bridgeModel, "the receive panel is switched to it")
+            compare(bridgeModel.searchCallCount, 1, "and it is seeded")
+
+            closeAndVerfyModal()
+        }
     }
 }

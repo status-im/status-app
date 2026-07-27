@@ -81,8 +81,11 @@ StatusDialog {
         }
 
         function ensureBridgePicker() {
-            if (!d.receiveTokenSelectorTo)
-                d.receiveTokenSelectorTo = root.swapAdaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(3)
+            if (d.receiveTokenSelectorTo)
+                return
+            d.receiveTokenSelectorTo = root.swapAdaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(3)
+            // seed it like createPickers seeds the source-chain ones
+            receivePanel.reset()
         }
 
         property var debounceFetchSuggestedRoutes: Backpressure.debounce(root, 1000, function() {
@@ -131,7 +134,10 @@ StatusDialog {
         readonly property bool isSameChainSwap: root.swapInputParamsForm.selectedNetworkChainId === root.swapInputParamsForm.toNetworkChainId
         readonly property bool isBridge: root.swapInputParamsForm.toNetworkChainId !== -1 && !isSameChainSwap
         onIsBridgeChanged: {
-            if (isBridge && d.pickersInitialized)
+            // `opened` also excludes teardown: the handler resets the form one
+            // field at a time, which flickers through a bridge state that would
+            // otherwise build a picker for the modal being destroyed.
+            if (isBridge && d.pickersInitialized && root.opened)
                 d.ensureBridgePicker()
         }
 
