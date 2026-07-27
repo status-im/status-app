@@ -2716,6 +2716,14 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Koupit přes %1</translation>
     </message>
     <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">Vaše aktiva na %1</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">Populární aktiva</translation>
+    </message>
+    <message>
         <source>Ways to buy %1 for %2</source>
         <translation>Způsoby nákupu %1 za %2</translation>
     </message>
@@ -14807,6 +14815,14 @@ selhalo</translation>
         <source>Token that you&apos;re trying to send is not supported.</source>
         <translation>Token, který se snažíte odeslat, není podporovaný.</translation>
     </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">Vaše aktiva na %1</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">Populární aktiva</translation>
+    </message>
 </context>
 <context>
     <name>SendModalHeader</name>
@@ -16577,6 +16593,14 @@ selhalo</translation>
         <source>Receive</source>
         <translation>Přijmout</translation>
     </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">Vaše aktiva na %1</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">Populární aktiva</translation>
+    </message>
 </context>
 <context>
     <name>SwapModal</name>
@@ -17518,17 +17542,6 @@ Tuto akci nelze vzít zpět.</translation>
     <message>
         <source>Collectibles</source>
         <translation>Sbírky</translation>
-    </message>
-</context>
-<context>
-    <name>TokenSelectorViewAdaptor</name>
-    <message>
-        <source>Popular assets</source>
-        <translation>Populární aktiva</translation>
-    </message>
-    <message>
-        <source>Your assets on %1</source>
-        <translation>Vaše aktiva na %1</translation>
     </message>
 </context>
 <context>

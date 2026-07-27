@@ -2699,6 +2699,14 @@ Do you wish to override the security check and continue?</source>
         <translation>%1 통해 구매</translation>
     </message>
     <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">%1의 자산</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">인기 자산</translation>
+    </message>
+    <message>
         <source>Ways to buy %1 for %2</source>
         <translation>%2로 %1 구매하는 방법</translation>
     </message>
@@ -14680,6 +14688,14 @@ to load</source>
         <source>Token that you&apos;re trying to send is not supported.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">%1의 자산</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">인기 자산</translation>
+    </message>
 </context>
 <context>
     <name>SendModalHeader</name>
@@ -16426,6 +16442,14 @@ to load</source>
         <source>Receive</source>
         <translation>받기</translation>
     </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">%1의 자산</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">인기 자산</translation>
+    </message>
 </context>
 <context>
     <name>SwapModal</name>
@@ -17364,17 +17388,6 @@ This action cannot be undone.</source>
     <message>
         <source>Collectibles</source>
         <translation>수집품</translation>
-    </message>
-</context>
-<context>
-    <name>TokenSelectorViewAdaptor</name>
-    <message>
-        <source>Popular assets</source>
-        <translation>인기 자산</translation>
-    </message>
-    <message>
-        <source>Your assets on %1</source>
-        <translation>%1의 자산</translation>
     </message>
 </context>
 <context>
