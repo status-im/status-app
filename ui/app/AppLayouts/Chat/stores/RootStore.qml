@@ -316,8 +316,18 @@ QtObject {
                                              "itemId", chatId)
         const sectionModule = isPersonalSectionChat ? root.mainModuleInst.getChatSectionModule()
                                                     : getCommunitySectionModule(sectionId)
+        if (!sectionModule) {
+            console.warn("sendMessageToChat: no section module for section", sectionId)
+            return false
+        }
         sectionModule.prepareChatContentModuleForChatId(chatId)
         const chatContentModule = sectionModule.getChatContentModule()
+        if (!chatContentModule) {
+            // The section's chat content modules are built on its first
+            // activation — activate the destination before sending.
+            console.warn("sendMessageToChat: no chat content module for chat", chatId)
+            return false
+        }
 
         const textMsg = cleanMessageText(text)
 
@@ -333,12 +343,11 @@ QtObject {
         if (textMsg.trim() === "")
             return false
 
-        chatContentModule.inputAreaModule.sendMessage(
+        return chatContentModule.inputAreaModule.sendMessage(
                     textMsg,
                     "",
                     Utils.isOnlyEmoji(textMsg) ? Constants.messageContentType.emojiType
                                                : Constants.messageContentType.messageType)
-        return true
     }
 
     function openCloseCreateChatView() {
