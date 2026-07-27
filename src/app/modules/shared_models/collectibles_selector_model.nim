@@ -69,10 +69,12 @@ QtObject:
     read = getCount
     notify = countChanged
 
+  proc filteredFlatModelChanged(self: CollectiblesSelectorModel) {.signal.}
   proc getFilteredFlatModel(self: CollectiblesSelectorModel): QVariant {.slot.} =
     newQVariant(self.flatModel)
   QtProperty[QVariant] filteredFlatModel:
     read = getFilteredFlatModel
+    notify = filteredFlatModelChanged
 
   method rowCount(self: CollectiblesSelectorModel, index: QModelIndex = nil): int =
     return self.groups.len

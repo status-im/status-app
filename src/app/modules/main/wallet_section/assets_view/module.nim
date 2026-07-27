@@ -40,6 +40,7 @@ proc newModule*(
   result.moduleLoaded = false
 
 method delete*(self: Module) =
+  self.controller.delete
   self.viewVariant.delete
   self.view.delete
 

@@ -46,8 +46,15 @@ The concrete terminal models are `AssetsAdaptorModel` (wallet assets list) and
 `TokenSelectorAdaptor` (the shared send/swap/buy picker; grouping, chain filter,
 search, and sort all in Nim). They are named by transformation per the QML
 architecture guide, injected via context property behind the store layer, and
-formatting stays in QML (financial values reach the delegate as big-integer
-strings and are rendered there).
+formatting stays in QML.
+
+Numeric roles the delegates only display (balances, fiat values, prices) are
+exposed as `float`, converted from wei once in the Nim builder. This is
+deliberate: it is exactly the precision the retired QML chain had, where
+`AmountsArithmetic.toNumber` collapsed the big integer to a JS `Number` before
+the delegate ever saw it. Roles that feed a transaction rather than a label
+still travel as big-integer strings (`rawBalance` on the balance chips), so
+nothing that gets signed goes through a `float`.
 
 The service→model hand-off is a **COW snapshot container** (`CowSeq`):
 
@@ -123,3 +130,10 @@ static models**, where emission amplification never triggers because the model
 does not churn. Do not rewrite a static view into a Nim terminal model on the
 strength of this decision alone; the terminal-model cost (a bespoke Nim model
 per view) is only repaid by update-hot traffic.
+
+One consumer still layers QML proxies above a terminal model: `BuyCryptoModal`
+feeds the picker model through `BuyCryptoModalAdaptor`
+(`SortFilterProxyModel` + `FastExpressionFilter`) to narrow the list to the
+selected provider's supported assets. That is accepted — the buy modal is a cold
+path whose filter input changes only on an explicit provider pick, so the
+emission amplification this ADR exists to avoid never triggers there.

@@ -10,18 +10,18 @@ Control {
 
     /**
     Expected model structure:
-    - tokensKey: unique string ID of the token (asset); e.g. "ETH" or contract address
+    - key: unique string ID of the token group; e.g. "ETH" or contract address
     - name: user visible token name (e.g. "Ethereum")
     - symbol: user visible token symbol (e.g. "ETH")
+    - logoUri: string
     - decimals: number of decimal places
-    - communityId:optional; ID of the community this token belongs to, if any
-    - marketDetails: object containing props like `currencyPrice` for the computed values below
-    - balances: submodel[ chainId:int, account:string, balance:BigIntString, iconUrl:string ]
+    - cryptoPrice: current price of one token in the user's fiat currency
     - currentBalance: amount of tokens
     - currencyBalance: e.g. `1000.42` in user's fiat currency
-    - currencyBalanceAsString: e.g. "1 000,42 CZK" formatted as a string according to the user's locale
-    - balanceAsString: `1.42` formatted as e.g. "1,42" in user's locale
-    - iconSource: string
+    - sectionName: title of the section this row belongs to (owned / popular)
+    - balances: submodel[ chainId:int, iconUrl:string, chainName:string,
+                          balance:real, rawBalance:string ]
+    - tokens: submodel[ key:string, chainId:int ]
     **/
     required property var assetsModel
 
