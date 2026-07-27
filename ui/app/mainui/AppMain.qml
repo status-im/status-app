@@ -1144,23 +1144,34 @@ Item {
         }
 
         // Send the shared content to the picked destination and land in that
-        // chat. The cached image copies are NOT released here — the image-send
-        // task consumes the files asynchronously and releases them once done.
+        // chat. imagePaths is the attachment list as it left the preview's
+        // chat input — the user can detach shared images there (and attach
+        // new ones); detached cached copies are released right away since no
+        // send will ever consume them. The sent files' cached copies are NOT
+        // released here — the image-send task consumes them asynchronously
+        // and releases them once done.
         // Activation must come BEFORE the send: it synchronously builds and
         // loads the destination chat content module (community sections build
         // their chats lazily on first activation), so the send finds the input
         // area module and the destination's message model is already
         // subscribed for the local echo — the sent message shows up in the
         // chat view the moment the send is accepted, like an in-chat send.
-        function completeShareFlow(sectionId: string, chatId: string, text: string) {
-            const imagePaths = shareFlowLoader.sharedImagePaths
+        function completeShareFlow(sectionId: string, chatId: string, text: string, imagePaths) {
+            const removedCached = shareFlowLoader.sharedImagePaths.filter(
+                                    path => !imagePaths.includes(path))
+            const keptCached = shareFlowLoader.sharedImagePaths.filter(
+                                 path => imagePaths.includes(path))
             shareFlowLoader.sharedImagePaths = []
+            if (removedCached.length > 0)
+                rootStore.releaseShareIntakeFiles(removedCached)
             shareFlowLoader.item.close()
             rootStore.setActiveSectionChat(sectionId, chatId)
             if (!appMain.rootChatStore.sendMessageToChat(sectionId, chatId, text, imagePaths)) {
                 // Nothing was sent, so the image-send task will never release
-                // the cached copies — release them here instead.
-                rootStore.releaseShareIntakeFiles(imagePaths)
+                // the cached copies — release them here instead. Guarded to
+                // the intake's own copies; user-attached files are not ours.
+                if (keptCached.length > 0)
+                    rootStore.releaseShareIntakeFiles(keptCached)
             }
         }
 
@@ -2997,7 +3008,9 @@ Item {
 
             function restart() {
                 shareFlowSteps.currentIndex = 0
-                sharePreviewPanel.text = shareFlowLoader.sharedText
+                // Re-push the shared payload into the preview's chat input
+                // even when it is identical to the replaced share's
+                sharePreviewPanel.reset()
                 applyPreselectedDestination()
             }
 
@@ -3043,9 +3056,12 @@ Item {
 
                     text: shareFlowLoader.sharedText
                     imagePaths: shareFlowLoader.sharedImagePaths
+                    emojiPopup: statusEmojiPopup.item
+                    stickersPopup: statusStickersPopupLoader.item
 
-                    onSendRequested: (text) => d.completeShareFlow(destinationSectionId,
-                                                                   destinationChatId, text)
+                    onSendRequested: (text, imagePaths) =>
+                        d.completeShareFlow(destinationSectionId,
+                                            destinationChatId, text, imagePaths)
                     onBackRequested: shareFlowSteps.currentIndex = 0
                     onCancelRequested: d.cancelShareFlow()
                 }
