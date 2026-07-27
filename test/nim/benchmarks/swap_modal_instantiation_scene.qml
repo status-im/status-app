@@ -1,7 +1,8 @@
 // Real-instantiation scene for the SWAP modal. Loads the ACTUAL SwapModal QML
 // tree + its real SwapModalAdaptor under an offscreen engine, and times:
-//   - createObject of the whole modal (the structural instantiation cost, which
-//     includes creating the 3 terminal token-selector picker models in `d`),
+//   - createObject of the whole modal (the structural instantiation cost; the
+//     terminal token-selector picker models in `d` are NOT part of it — SwapModal
+//     builds them lazily just after onOpened),
 //   - open() -> `opened` (or a documented drain proxy when the offscreen enter
 //     transition can't complete),
 //   - the deferred handler setup() block (the "configure" cost), and
@@ -210,7 +211,7 @@ Window {
         const obj = modalComp.createObject(root)
         const t1 = bench.nowMs()
         if (!obj) {
-            bench.reportCreate(-1, 0, modalComp.errorString())
+            bench.reportCreate(-1, 0, 0, modalComp.errorString())
             return
         }
         root._modal = obj
