@@ -222,7 +222,7 @@ Install **Qt 6.11.0** using the [Qt Online Installer](https://download.qt.io/off
 
 ### Linux (Alternative)
 
-You can use any newer 6.9.x version available in your system's package manager.
+You can use any newer 6.11.x version available in your system's package manager.
 
 #### Ubuntu
 
@@ -322,7 +322,6 @@ The following environment variables can be used to customize the build:
 
 - INCLUDE_DEBUG_SYMBOLS (0,1) - Configure nim to include the debug symbols for desktop platforms.
 - KDF_ITERATIONS (number) - Configure the KDF_ITERATIONS to use for the DB encryption
-- KEYCARD_QT_SOURCE_DIR (path) - Point the build system to a local keycard-qt folder. Defaults to a new clone of the latest master in the `status-keycard-qt` build folder.
 - MONITORING (true,false) - Enable/disable qml monitoring tools. The monitoring tools provide a suite of qml introspection tools to debug data transformations. Defaults to `false`
 - NIM_SDS_SOURCE_DIR (path) - Point the build system to a local nim-sds folder. Defaults to `$(GIT_ROOT)/../nim-sds`
 - PRODUCTION_PARAMETERS (string) - Configure the production arguments for nim compilation. Defaults to `-d:production`
