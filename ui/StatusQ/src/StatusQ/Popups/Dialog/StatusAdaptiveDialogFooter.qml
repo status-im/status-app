@@ -32,6 +32,7 @@ Control {
 
     visible: !!leftButtons || !!rightButtons
     padding: 0
+    spacing: Theme.defaultHalfPadding
 
     background: StatusDialogBackground {
         color: root.color
@@ -42,7 +43,7 @@ Control {
     }
 
     contentItem: RowLayout {
-        spacing: Theme.defaultHalfPadding
+        spacing: root.spacing
 
         Repeater {
             model: root.leftButtons

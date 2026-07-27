@@ -118,13 +118,12 @@ Dialog {
         // adjustments there. Centered dialogs use these values only as outer
         // bounds; bottom sheets use bottom/horizontal values as internal padding.
         readonly property var surfaceSafeArea: root.parent ? root.parent.SafeArea : root.contentItem.SafeArea
-        readonly property real headerSafeArea: 0
         readonly property real footerSafeArea: bottomSheet ? surfaceSafeArea.margins.bottom : 0
         readonly property real leftSafeArea: bottomSheet ? surfaceSafeArea.margins.left : 0
         readonly property real rightSafeArea: bottomSheet ? surfaceSafeArea.margins.right : 0
         // Vertical padding owned by the content host. When content is the first or
         // last visible section, it also absorbs the corresponding safe area.
-        readonly property real contentTopPadding: edgePadding + (hasHeader ? 0 : headerSafeArea)
+        readonly property real contentTopPadding: edgePadding
         readonly property real contentBottomPadding: edgePadding + (hasFooterSection ? 0 : footerSafeArea)
         readonly property real contentLeftPadding: edgePadding + leftSafeArea
         readonly property real contentRightPadding: edgePadding + rightSafeArea
@@ -134,7 +133,7 @@ Dialog {
         // Centered dialogs can use up to this fraction of the window height.
         readonly property real centeredHeightRatio: 0.8
         // Total horizontal space reserved around centered dialogs.
-        readonly property real centeredHorizontalMargin: 2 * Theme.bigPadding
+        readonly property real centeredHorizontalMargin: 2 * root.Theme.bigPadding
         // Width used by centered dialogs after applying margins and the exceptional override, if any.
         readonly property real resolvedCenteredAvailableWidth: windowWidth - surfaceSafeArea.margins.left - surfaceSafeArea.margins.right
         readonly property real resolvedCenteredAvailableHeight: windowHeight - surfaceSafeArea.margins.top - surfaceSafeArea.margins.bottom
@@ -183,7 +182,6 @@ Dialog {
     topPadding: 0
     bottomPadding: 0
     spacing: 0
-    // TODO: Verify if bottom sheets still need the legacy -1 margin adjustment.
     margins: d.bottomSheet ? -1 : 0
     closePolicy: (root.escapeKeyCloses ? Popup.CloseOnEscape : Popup.NoAutoClose)
                  | (root.closeOnOverlayClick ? Popup.CloseOnPressOutside : Popup.NoAutoClose)
@@ -257,7 +255,7 @@ Dialog {
             id: headerToolbarItem
 
             Layout.fillWidth: true
-            Layout.topMargin: d.edgePadding + d.headerSafeArea
+            Layout.topMargin: d.edgePadding
             Layout.leftMargin: d.edgePadding + d.leftSafeArea
             Layout.rightMargin: d.edgePadding + d.rightSafeArea
             visible: d.hasHeader

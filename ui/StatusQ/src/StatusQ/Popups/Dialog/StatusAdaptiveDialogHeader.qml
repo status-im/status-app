@@ -33,6 +33,7 @@ Control {
 
     visible: !!headline.title || !!headline.subtitle
     padding: 0
+    spacing: Theme.halfPadding
 
     background: StatusDialogBackground {
         color: root.color
@@ -45,14 +46,14 @@ Control {
     contentItem: RowLayout {
         id: layout
 
-        spacing: Theme.halfPadding
+        spacing: root.spacing
 
         Item {
             id: leftComponentHost
 
             Layout.fillHeight: true
             Layout.preferredWidth: visible ? leftComponentLoader.implicitWidth : 0
-            Layout.rightMargin: visible ? Math.max(Theme.padding, 8) - layout.spacing : 0
+            Layout.rightMargin: visible ? Math.max(Theme.padding, 8) - root.spacing : 0
             visible: leftComponentLoader.sourceComponent
 
             Loader {

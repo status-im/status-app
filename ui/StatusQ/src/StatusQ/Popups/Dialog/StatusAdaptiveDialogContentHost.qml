@@ -18,7 +18,6 @@ Control {
     readonly property real naturalHeight: d.loadedContentNaturalHeight
 
     objectName: "statusAdaptiveDialogContentHost"
-    clip: true
     padding: 0
 
     QtObject {
@@ -66,7 +65,6 @@ Control {
             objectName: "statusAdaptiveDialogScrollFlickable"
             anchors.fill: parent
             boundsBehavior: Flickable.StopAtBounds
-            clip: true
             contentWidth: width
             contentHeight: d.contentIsFlickable ? 0 : d.loadedContentNaturalHeight
             topMargin: root.flickableTopPadding
