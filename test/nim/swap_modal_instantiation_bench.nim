@@ -185,7 +185,16 @@ when isMainModule:
   if sizesEnv.len > 0:
     sizes = @[]
     for s in sizesEnv.split(','):
-      if s.strip().len > 0: sizes.add(parseInt(s.strip()))
+      let entry = s.strip()
+      if entry.len == 0: continue
+      try:
+        sizes.add(parseInt(entry))
+      except ValueError:
+        echo &"ERROR: SWAP_BENCH_SIZES entry is not an integer: '{entry}'"
+        quit(1)
+    if sizes.len == 0:
+      echo "ERROR: SWAP_BENCH_SIZES is set but contains no size"
+      quit(1)
   const openTimeoutMs = 2500.0
 
   # Opens the modal and waits for `opened` (or drains to timeout), returning the
@@ -301,8 +310,11 @@ when isMainModule:
       if r.size == size and r.scenario == scenario: return r
     doAssert false, &"missing row {scenario} @{size}"
 
+  # Assert on the largest size actually swept (the sweep is env-overridable).
+  let biggest = sizes[^1]
+
   # The full modal must actually instantiate (the whole point of this bench).
-  let full = rowFor(10000, "create")
+  let full = rowFor(biggest, "create")
   doAssert full.error.len == 0,
     &"SwapModal failed to instantiate offscreen: {full.error}"
   doAssert full.wallMs > 0.0,
@@ -313,7 +325,7 @@ when isMainModule:
     &"expected 0 pickers built during create (deferred), got models={full.models}"
   # A plain (same-chain) swap open builds exactly the two source-chain pickers and
   # NO bridge (kind 3) picker — the eager 3rd picker on plain swaps is gone.
-  let ready = rowFor(10000, "time_to_pickers_ready")
+  let ready = rowFor(biggest, "time_to_pickers_ready")
   doAssert ready.models == 2 and ready.kind3 == 0,
     &"expected 2 pickers built post-open incl 0 kind3, got models={ready.models} kind3={ready.kind3}"
 
