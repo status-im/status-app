@@ -1157,10 +1157,9 @@ Item {
         // subscribed for the local echo — the sent message shows up in the
         // chat view the moment the send is accepted, like an in-chat send.
         function completeShareFlow(sectionId: string, chatId: string, text: string, imagePaths) {
-            const removedCached = shareFlowLoader.sharedImagePaths.filter(
-                                    path => !imagePaths.includes(path))
-            const keptCached = shareFlowLoader.sharedImagePaths.filter(
-                                 path => imagePaths.includes(path))
+            const cachedPaths = shareFlowLoader.sharedImagePaths
+            const removedCached = cachedPaths.filter(path => !imagePaths.includes(path))
+            const keptCached = cachedPaths.filter(path => imagePaths.includes(path))
             shareFlowLoader.sharedImagePaths = []
             if (removedCached.length > 0)
                 rootStore.releaseShareIntakeFiles(removedCached)
