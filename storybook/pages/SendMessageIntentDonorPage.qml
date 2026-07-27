@@ -24,6 +24,7 @@ SplitView {
                 sectionId: "personal-section",
                 sectionName: "Chat",
                 lastMessageTimestamp: 400,
+                lastOwnMessageTimestamp: 0,
                 canPost: true
             },
             {
@@ -36,6 +37,7 @@ SplitView {
                 sectionId: "personal-section",
                 sectionName: "Chat",
                 lastMessageTimestamp: 900,
+                lastOwnMessageTimestamp: 0,
                 canPost: true
             },
             {
@@ -48,6 +50,7 @@ SplitView {
                 sectionId: "community-1",
                 sectionName: "CryptoKitties",
                 lastMessageTimestamp: 1000,
+                lastOwnMessageTimestamp: 0,
                 canPost: false
             },
             {
@@ -60,6 +63,7 @@ SplitView {
                 sectionId: "community-1",
                 sectionName: "CryptoKitties",
                 lastMessageTimestamp: 700,
+                lastOwnMessageTimestamp: 0,
                 canPost: true
             },
             {
@@ -72,6 +76,7 @@ SplitView {
                 sectionId: "personal-section",
                 sectionName: "Chat",
                 lastMessageTimestamp: 300,
+                lastOwnMessageTimestamp: 0,
                 canPost: true
             }
         ]

@@ -22,6 +22,7 @@ SplitView {
                 sectionId: "personal-section",
                 sectionName: "Chat",
                 lastMessageTimestamp: 400,
+                lastOwnMessageTimestamp: 0,
                 canPost: true
             },
             {
@@ -34,6 +35,7 @@ SplitView {
                 sectionId: "personal-section",
                 sectionName: "Chat",
                 lastMessageTimestamp: 900,
+                lastOwnMessageTimestamp: 0,
                 canPost: true
             },
             {
@@ -46,6 +48,7 @@ SplitView {
                 sectionId: "community-1",
                 sectionName: "CryptoKitties",
                 lastMessageTimestamp: 1000,
+                lastOwnMessageTimestamp: 0,
                 canPost: false
             },
             {
@@ -58,6 +61,7 @@ SplitView {
                 sectionId: "community-1",
                 sectionName: "CryptoKitties",
                 lastMessageTimestamp: 700,
+                lastOwnMessageTimestamp: 0,
                 canPost: true
             },
             {
@@ -70,6 +74,7 @@ SplitView {
                 sectionId: "personal-section",
                 sectionName: "Chat",
                 lastMessageTimestamp: 300,
+                lastOwnMessageTimestamp: 0,
                 canPost: true
             },
             {
@@ -82,6 +87,7 @@ SplitView {
                 sectionId: "personal-section",
                 sectionName: "Chat",
                 lastMessageTimestamp: 200,
+                lastOwnMessageTimestamp: 0,
                 canPost: true
             }
         ]
@@ -159,9 +165,12 @@ SplitView {
                     }
 
                     Button {
-                        text: "Bump"
-                        onClicked: destinationsModel.setProperty(index, "lastMessageTimestamp",
-                                                                 model.lastMessageTimestamp + 1000)
+                        text: "Send"
+                        onClicked: {
+                            const bumped = model.lastMessageTimestamp + 1000
+                            destinationsModel.setProperty(index, "lastMessageTimestamp", bumped)
+                            destinationsModel.setProperty(index, "lastOwnMessageTimestamp", bumped)
+                        }
                     }
                 }
             }

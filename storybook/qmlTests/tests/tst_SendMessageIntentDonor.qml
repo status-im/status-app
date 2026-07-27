@@ -39,6 +39,7 @@ Item {
                     sectionId: "personal-section",
                     sectionName: "Chat",
                     lastMessageTimestamp: 500,
+                    lastOwnMessageTimestamp: 0,
                     canPost: true
                 },
                 {
@@ -51,6 +52,7 @@ Item {
                     sectionId: "personal-section",
                     sectionName: "Chat",
                     lastMessageTimestamp: 900,
+                    lastOwnMessageTimestamp: 0,
                     canPost: true
                 },
                 {
@@ -63,6 +65,7 @@ Item {
                     sectionId: "community-1",
                     sectionName: "CryptoKitties",
                     lastMessageTimestamp: 1000,
+                    lastOwnMessageTimestamp: 0,
                     canPost: false
                 }
             ]

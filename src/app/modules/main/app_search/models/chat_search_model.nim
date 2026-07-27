@@ -16,6 +16,7 @@ type
     ChatType
     LastMessageText
     LastMessageTimestamp
+    LastOwnMessageTimestamp
     CanPost
 
 QtObject:
@@ -67,13 +68,13 @@ QtObject:
       return
     self.removeItemByIndex(index)
 
-  method rowCount(self: Model, index: QModelIndex = nil): int =
+  method rowCount*(self: Model, index: QModelIndex = nil): int =
     if not self.built:
       self.delegate.buildChatSearchModel()
       self.built = true
     return self.items.len
 
-  method roleNames(self: Model): Table[int, string] =
+  method roleNames*(self: Model): Table[int, string] =
     {
       ModelRole.ChatId.int:"chatId",
       ModelRole.Name.int:"name",
@@ -86,10 +87,11 @@ QtObject:
       ModelRole.ChatType.int:"chatType",
       ModelRole.LastMessageText.int:"lastMessageText",
       ModelRole.LastMessageTimestamp.int:"lastMessageTimestamp",
+      ModelRole.LastOwnMessageTimestamp.int:"lastOwnMessageTimestamp",
       ModelRole.CanPost.int:"canPost",
     }.toTable
 
-  method data(self: Model, index: QModelIndex, role: int): QVariant =
+  method data*(self: Model, index: QModelIndex, role: int): QVariant =
     guardModelData(index, self.items.len, role, ModelRole)
 
     let item = self.items[index.row]
@@ -119,6 +121,8 @@ QtObject:
         result = newQVariant(item.lastMessageText)
       of ModelRole.LastMessageTimestamp:
         result = newQVariant(item.lastMessageTimestamp)
+      of ModelRole.LastOwnMessageTimestamp:
+        result = newQVariant(item.lastOwnMessageTimestamp)
       of ModelRole.CanPost:
         result = newQVariant(item.canPost)
 
@@ -140,6 +144,10 @@ QtObject:
   proc updateLastMessageTimestampOnChatItem*(self:Model, chatId: string, lastMessageTimestamp: int) =
     updateItemRolesAndNotify self.getItemIndexById(chatId):
       updateRole(lastMessageTimestamp)
+
+  proc updateLastOwnMessageTimestampOnChatItem*(self:Model, chatId: string, lastOwnMessageTimestamp: int) =
+    updateItemRolesAndNotify self.getItemIndexById(chatId):
+      updateRole(lastOwnMessageTimestamp)
 
   proc updateCanPostOnChatItem*(self:Model, chatId: string, canPost: bool) =
     updateItemRolesAndNotify self.getItemIndexById(chatId):

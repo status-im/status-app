@@ -41,6 +41,7 @@ Item {
                     sectionId: "personal-section",
                     sectionName: "Chat",
                     lastMessageTimestamp: 500,
+                    lastOwnMessageTimestamp: 0,
                     canPost: true
                 },
                 {
@@ -53,6 +54,7 @@ Item {
                     sectionId: "personal-section",
                     sectionName: "Chat",
                     lastMessageTimestamp: 900,
+                    lastOwnMessageTimestamp: 0,
                     canPost: true
                 },
                 {
@@ -65,6 +67,7 @@ Item {
                     sectionId: "community-1",
                     sectionName: "CryptoKitties",
                     lastMessageTimestamp: 1000,
+                    lastOwnMessageTimestamp: 0,
                     canPost: false
                 },
                 {
@@ -77,6 +80,7 @@ Item {
                     sectionId: "community-1",
                     sectionName: "CryptoKitties",
                     lastMessageTimestamp: 700,
+                    lastOwnMessageTimestamp: 0,
                     canPost: true
                 },
                 {
@@ -89,6 +93,7 @@ Item {
                     sectionId: "personal-section",
                     sectionName: "Chat",
                     lastMessageTimestamp: 300,
+                    lastOwnMessageTimestamp: 0,
                     canPost: true
                 },
                 {
@@ -101,6 +106,7 @@ Item {
                     sectionId: "personal-section",
                     sectionName: "Chat",
                     lastMessageTimestamp: 200,
+                    lastOwnMessageTimestamp: 0,
                     canPost: true
                 }
             ]
@@ -156,9 +162,11 @@ Item {
             const { sourceModel, spy } = createPublisher()
             tryCompare(spy, "count", 1)
 
-            // Carol (least recent, not in the top 4) gets a successful send:
-            // she must enter the published set at the top.
+            // Carol (least recent, not in the top 4) gets a successful send
+            // (bumps both recency roles): she must enter the published set at
+            // the top.
             sourceModel.setProperty(5, "lastMessageTimestamp", 2000)
+            sourceModel.setProperty(5, "lastOwnMessageTimestamp", 2000)
 
             tryCompare(spy, "count", 2)
             const payload = lastPayload(spy)
