@@ -3148,19 +3148,6 @@ Item {
         onActivated: appMain.tryGoBack()
     }
 
-    CommunityFetchPopup {
-        id: communityFetchPopup
-
-        state: appMain.communitiesStore.communityFetchState
-        timeoutSeconds: appMain.communitiesStore.communityFetchTimeoutSeconds
-        errorMessage: appMain.communitiesStore.communityFetchErrorMessage
-
-        onCancelRequested: appMain.communitiesStore.cancelPendingCommunityFetch()
-        onTimeoutRequested: appMain.communitiesStore.timeoutPendingCommunityFetch()
-        onDismissFailedRequested: appMain.communitiesStore.clearCommunityFetchFailure()
-        onRetryRequested: appMain.communitiesStore.retryCommunityFetch()
-    }
-
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.BackButton

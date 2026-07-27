@@ -15,6 +15,12 @@ QtObject {
         readonly property int appEncryptionProcess: 3
     }
 
+    enum CommunityFetchState {
+        Idle,
+        Fetching,
+        Failed
+    }
+
     readonly property QtObject chains: QtObject {
         readonly property int mainnetChainId: 1
         readonly property int sepoliaChainId: 11155111

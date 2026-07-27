@@ -1,6 +1,7 @@
 AlertPopup 1.0 AlertPopup.qml
 BurnTokensPopup 1.0 BurnTokensPopup.qml
 CommunityProfilePopup 1.0 CommunityProfilePopup.qml
+CommunityFetchPopup 1.0 CommunityFetchPopup.qml
 CommunityRulesPopup 1.0 CommunityRulesPopup.qml
 CreateCategoryPopup 1.0 CreateCategoryPopup.qml
 CreateChannelPopup 1.0 CreateChannelPopup.qml

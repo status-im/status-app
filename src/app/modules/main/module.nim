@@ -99,20 +99,11 @@ const DEEP_LINK_NAV_CONTACT_REQUESTS = "contact-requests"
 const DEEP_LINK_NAV_CHATS = "chats"
 const ACTIVITY_CENTER_ALL_GROUP = activity_center_notification_dto.ActivityCenterGroup.All.int
 const ACTIVITY_CENTER_CONTACT_REQUESTS_GROUP = activity_center_notification_dto.ActivityCenterGroup.ContactRequests.int
-const COMMUNITY_FETCH_TIMEOUT_SECONDS = 60
-const COMMUNITY_FETCH_TIMEOUT_ERROR = "It may be offline, or Status couldn't reach it"
 
 type
   SpectateRequest = object
     communityId*: string
     channelUuid*: string
-
-  PendingCommunityFetch = object
-    communityId*: string
-    channelUuid*: string
-    previousSectionId*: string
-    requestId*: int
-    active*: bool
 
   Module*[T: io_interface.DelegateInterface] = ref object of io_interface.AccessInterface
     delegate: T
@@ -153,8 +144,6 @@ type
     communityDataLoaded: bool
     contactsLoaded: bool
     pendingSpectateRequest: SpectateRequest
-    pendingCommunityFetch: PendingCommunityFetch
-    nextCommunityFetchRequestId: int
     statusDeepLinkToActivate: string
     pendingProfileMigrationCheck: bool
     profileMigrationFlowInProgress: bool
@@ -168,60 +157,8 @@ proc checkIfWeHaveNotifications[T](self: Module[T])
 proc createMemberItem[T](self: Module[T], memberId: string, requestId: string, state: MembershipRequestState, role: MemberRole, airdropAddress: string = ""): MemberItem
 proc getAllCommunityMemberItems[T](self: Module[T], community: CommunityDto): seq[MemberItem]
 
-proc hasPendingCommunityFetch[T](self: Module[T], communityId: string): bool =
-  self.pendingCommunityFetch.active and self.pendingCommunityFetch.communityId == communityId
-
-proc clearPendingCommunityFetch[T](self: Module[T]) =
-  self.pendingCommunityFetch = PendingCommunityFetch()
-
 proc clearPendingSpectateRequest[T](self: Module[T]) =
   self.pendingSpectateRequest = SpectateRequest()
-
-proc restorePreviousSectionAfterCommunityFetch[T](self: Module[T], previousSectionId: string) =
-  if previousSectionId.len == 0 or previousSectionId == self.controller.getActiveSectionId():
-    return
-
-  let item = self.view.model().getItemById(previousSectionId)
-  if item.isEmpty():
-    warn "Unable to restore previous section after community fetch", previousSectionId
-    return
-
-  self.setActiveSection(item)
-
-proc finishPendingCommunityFetch[T](self: Module[T], timedOut: bool) =
-  if not self.pendingCommunityFetch.active:
-    return
-
-  let communityId = self.pendingCommunityFetch.communityId
-  let previousSectionId = self.pendingCommunityFetch.previousSectionId
-  let requestId = self.pendingCommunityFetch.requestId
-
-  self.clearPendingCommunityFetch()
-  self.clearPendingSpectateRequest()
-
-  if timedOut:
-    self.view.emitCommunityFetchFailedSignal(communityId, requestId, COMMUNITY_FETCH_TIMEOUT_ERROR)
-  else:
-    self.view.emitCommunityFetchCancelledSignal(communityId, requestId)
-
-  self.restorePreviousSectionAfterCommunityFetch(previousSectionId)
-
-proc startPendingCommunityFetch[T](self: Module[T], communityId: string, channelUuid: string) =
-  inc self.nextCommunityFetchRequestId
-  self.pendingCommunityFetch = PendingCommunityFetch(
-    communityId: communityId,
-    channelUuid: channelUuid,
-    previousSectionId: self.controller.getActiveSectionId(),
-    requestId: self.nextCommunityFetchRequestId,
-    active: true,
-  )
-  self.pendingSpectateRequest = SpectateRequest(
-    communityId: communityId,
-    channelUuid: channelUuid,
-  )
-  self.view.emitCommunityFetchStartedSignal(communityId, channelUuid, self.pendingCommunityFetch.requestId,
-    COMMUNITY_FETCH_TIMEOUT_SECONDS)
-  self.communitiesModule.requestCommunityInfo(communityId, importing = false)
 
 
 proc newModule*[T](
@@ -1248,9 +1185,9 @@ method emitMessagingNetworkDisconnected*[T](self: Module[T]) =
 method isMessagingNetworkConnected*[T](self: Module[T]): bool =
   self.controller.isMessagingNetworkConnected()
 
-method setCommunityIdToSpectate*[T](self: Module[T], communityId: string) =
+method setCommunityIdToSpectate*[T](self: Module[T], communityId: string, channelUuid: string = "") =
   self.pendingSpectateRequest.communityId = communityId
-  self.pendingSpectateRequest.channelUuid = ""
+  self.pendingSpectateRequest.channelUuid = channelUuid
 
 method getActiveSectionId*[T](self: Module[T]): string =
   return self.controller.getActiveSectionId()
@@ -1482,34 +1419,13 @@ method isEnsVerified*[T](self: Module[T], publicKey: string): bool =
   return self.controller.getContact(publicKey).ensVerified
 
 method communityDataImported*[T](self: Module[T], community: CommunityDto) =
-  if self.hasPendingCommunityFetch(community.id):
-    let requestId = self.pendingCommunityFetch.requestId
-    self.clearPendingCommunityFetch()
-    self.view.emitCommunityFetchCompletedSignal(community.id, requestId)
-
   if community.id == self.pendingSpectateRequest.communityId:
     discard self.communitiesModule.spectateCommunity(community.id)
 
 method communityInfoRequestFailed*[T](self: Module[T], communityId: string, errorMsg: string) =
-  if not self.hasPendingCommunityFetch(communityId):
-    return
-
-  let requestId = self.pendingCommunityFetch.requestId
-  self.clearPendingCommunityFetch()
-  self.clearPendingSpectateRequest()
-  self.view.emitCommunityFetchFailedSignal(communityId, requestId, errorMsg)
-
-method cancelPendingCommunityFetch*[T](self: Module[T]) =
-  self.finishPendingCommunityFetch(timedOut = false)
-
-method timeoutPendingCommunityFetch*[T](self: Module[T]) =
-  self.finishPendingCommunityFetch(timedOut = true)
-
-method retryCommunityFetch*[T](self: Module[T], communityId: string, channelUuid: string) =
-  if communityId.len == 0:
-    return
-
-  self.startPendingCommunityFetch(communityId, channelUuid = channelUuid)
+  discard errorMsg
+  if communityId == self.pendingSpectateRequest.communityId:
+    self.clearPendingSpectateRequest()
 
 method resolveENS*[T](self: Module[T], ensName: string, uuid: string, reason: string = "") =
   if ensName.len == 0:
@@ -2031,7 +1947,10 @@ method onStatusUrlRequested*[T](self: Module[T], action: StatusUrlAction, commun
     of StatusUrlAction.OpenCommunity:
       let item = self.view.model().getItemById(communityId)
       if item.isEmpty():
-        self.startPendingCommunityFetch(communityId, channelUuid = "")
+        if self.controller.getCommunityById(communityId).id != "":
+          self.controller.spectateCommunity(communityId)
+          return
+        self.communitiesModule.startPendingCommunityFetch(communityId, channelUuid = "")
         return
 
       self.controller.switchTo(communityId, "", "")
@@ -2041,7 +1960,10 @@ method onStatusUrlRequested*[T](self: Module[T], action: StatusUrlAction, commun
       let item = self.view.model().getItemById(communityId)
 
       if item.isEmpty():
-        self.startPendingCommunityFetch(communityId, channelUuid = channelId)
+        if self.controller.getCommunityById(communityId).id != "":
+          self.controller.spectateCommunity(communityId)
+          return
+        self.communitiesModule.startPendingCommunityFetch(communityId, channelUuid = channelId)
         return
 
       self.controller.switchTo(communityId, chatId, "")

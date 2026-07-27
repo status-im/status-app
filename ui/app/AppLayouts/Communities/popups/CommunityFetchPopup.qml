@@ -8,15 +8,13 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Popups.Dialog
 
+import utils
+
 StatusDialog {
     id: root
 
-    readonly property int stateIdle: 0
-    readonly property int stateFetching: 1
-    readonly property int stateFailed: 2
-    property int state: stateIdle
+    property int state: Constants.CommunityFetchState.Idle
     property int timeoutSeconds: 60
-    property string errorMessage
 
     signal cancelRequested()
     signal timeoutRequested()
@@ -27,9 +25,8 @@ StatusDialog {
         id: d
 
         property int secondsLeft: root.timeoutSeconds
-        readonly property bool fetching: root.state === root.stateFetching
-        readonly property bool failed: root.state === root.stateFailed
-        readonly property bool shouldBeOpen: root.state !== root.stateIdle
+        readonly property bool fetching: root.state === Constants.CommunityFetchState.Fetching
+        readonly property bool failed: root.state === Constants.CommunityFetchState.Failed
         readonly property bool loading: fetching && !failed
         readonly property int minDialogWidth: 316
         readonly property int maxDialogWidth: 360
@@ -66,13 +63,28 @@ StatusDialog {
     focus: true
     closePolicy: Popup.NoAutoClose
     standardButtons: Dialog.NoButton
-    // Keep the header action available without showing a title or divider.
-    title: " "
-    showHeaderDivider: false
     topPadding: d.desiredTopPadding
     bottomPadding: d.desiredBottomPadding
-    visible: d.shouldBeOpen
     closeHandler: d.closeOrCancel
+
+    header: Item {
+        implicitHeight: Theme.xlPadding + closeButton.height
+
+        StatusFlatRoundButton {
+            id: closeButton
+
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.topMargin: Theme.defaultPadding
+            anchors.rightMargin: Theme.defaultPadding
+            type: StatusFlatRoundButton.Type.Secondary
+            icon.name: "close"
+            icon.color: Theme.palette.directColor1
+            icon.width: 24
+            icon.height: 24
+            onClicked: root.closeHandler()
+        }
+    }
 
     onStateChanged: {
         if (d.fetching)
@@ -99,7 +111,7 @@ StatusDialog {
     }
 
     Shortcut {
-        enabled: root.visible
+        enabled: root.opened
         sequences: [StandardKey.Cancel]
         onActivated: d.closeOrCancel()
     }
@@ -178,9 +190,7 @@ StatusDialog {
         StatusBaseText {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
-            text: d.failed
-                  ? (root.errorMessage || qsTr("It may be offline, or Status couldn't reach it"))
-                  : ""
+            text: d.failed ? qsTr("It may be offline, or Status couldn't reach it") : ""
             wrapMode: Text.WordWrap
             font.pixelSize: Theme.additionalTextSize
             font.weight: Font.Light

@@ -286,15 +286,6 @@ method communityDataImported*(self: AccessInterface, community: CommunityDto) {.
 method communityInfoRequestFailed*(self: AccessInterface, communityId: string, errorMsg: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method cancelPendingCommunityFetch*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method timeoutPendingCommunityFetch*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method retryCommunityFetch*(self: AccessInterface, communityId: string, channelUuid: string) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method resolveENS*(self: AccessInterface, ensName: string, uuid: string, reason: string = "") {.base.} =
   raise newException(ValueError, "No implementation available")
 
@@ -351,7 +342,7 @@ method onMyRequestAdded*(self: AccessInterface) {.base.} =
 method activateStatusDeepLink*(self: AccessInterface, statusDeepLink: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method setCommunityIdToSpectate*(self: AccessInterface, commnityId: string) {.base.} =
+method setCommunityIdToSpectate*(self: AccessInterface, commnityId: string, channelUuid: string = "") {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onCommunityTokenDeploymentStored*(self: AccessInterface, communityToken: CommunityTokenDto, error: string) {.base.} =

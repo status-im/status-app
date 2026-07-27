@@ -2,24 +2,29 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-import mainui
+import AppLayouts.Communities.popups
+import utils
 
 Item {
     id: root
 
-    readonly property int stateIdle: 0
-    readonly property int stateFetching: 1
-    readonly property int stateFailed: 2
-    property int popupState: stateIdle
+    property int popupState: Constants.CommunityFetchState.Idle
     property int scenario: 0
 
     readonly property string idleText: "Choose a scenario"
-    readonly property string stateText: popupState === stateFailed ? "Failed" :
-                                        popupState === stateFetching ? "Fetching" :
+    readonly property string stateText: popupState === Constants.CommunityFetchState.Failed ? "Failed" :
+                                        popupState === Constants.CommunityFetchState.Fetching ? "Fetching" :
                                                                        idleText
 
+    onPopupStateChanged: {
+        if (popupState === Constants.CommunityFetchState.Idle)
+            popup.close()
+        else
+            popup.open()
+    }
+
     function reset() {
-        popupState = stateIdle
+        popupState = Constants.CommunityFetchState.Idle
         scenario = 0
         scenarioTimer.stop()
     }
@@ -27,13 +32,13 @@ Item {
     function start(newScenario) {
         reset()
         scenario = newScenario
-        popupState = stateFetching
+        popupState = Constants.CommunityFetchState.Fetching
         if (scenario === 1 || scenario === 2)
             scenarioTimer.start()
     }
 
     function fail() {
-        popupState = stateFailed
+        popupState = Constants.CommunityFetchState.Failed
         scenarioTimer.stop()
     }
 
@@ -125,7 +130,6 @@ Item {
 
         state: root.popupState
         timeoutSeconds: 60
-        errorMessage: "It may be offline, or Status couldn't reach it"
 
         onCancelRequested: root.reset()
         onDismissFailedRequested: root.reset()

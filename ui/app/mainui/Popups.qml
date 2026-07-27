@@ -111,6 +111,28 @@ QtObject {
         }
     }
 
+    readonly property var communityFetchPopup: CommunityFetchPopup {
+        parent: root.popupParent
+        state: root.communitiesStore.communityFetchState
+        timeoutSeconds: root.communitiesStore.communityFetchTimeoutSeconds
+
+        onCancelRequested: root.communitiesStore.cancelPendingCommunityFetch()
+        onTimeoutRequested: root.communitiesStore.timeoutPendingCommunityFetch()
+        onDismissFailedRequested: root.communitiesStore.clearCommunityFetchFailure()
+        onRetryRequested: root.communitiesStore.retryCommunityFetch()
+    }
+
+    readonly property Connections communityFetchConnections: Connections {
+        target: root.communitiesStore
+
+        function onCommunityFetchStateChanged() {
+            if (root.communitiesStore.communityFetchState === Constants.CommunityFetchState.Idle)
+                root.communityFetchPopup.close()
+            else
+                root.communityFetchPopup.open()
+        }
+    }
+
     property var activePopupComponents: []
 
     property var sharedContactModelEntryLoader: Loader {

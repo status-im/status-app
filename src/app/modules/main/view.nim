@@ -249,24 +249,6 @@ QtObject:
   proc emitOpenCommunityMembershipRequestsViewSignal*(self: View, sectionId: string) =
     self.openCommunityMembershipRequestsView(sectionId)
 
-  proc communityFetchStarted*(self: View, communityId: string, channelUuid: string, requestId: int,
-    timeoutSeconds: int) {.signal.}
-  proc emitCommunityFetchStartedSignal*(self: View, communityId: string, channelUuid: string, requestId: int,
-    timeoutSeconds: int) =
-    self.communityFetchStarted(communityId, channelUuid, requestId, timeoutSeconds)
-
-  proc communityFetchCompleted*(self: View, communityId: string, requestId: int) {.signal.}
-  proc emitCommunityFetchCompletedSignal*(self: View, communityId: string, requestId: int) =
-    self.communityFetchCompleted(communityId, requestId)
-
-  proc communityFetchFailed*(self: View, communityId: string, requestId: int, errorMsg: string) {.signal.}
-  proc emitCommunityFetchFailedSignal*(self: View, communityId: string, requestId: int, errorMsg: string) =
-    self.communityFetchFailed(communityId, requestId, errorMsg)
-
-  proc communityFetchCancelled*(self: View, communityId: string, requestId: int) {.signal.}
-  proc emitCommunityFetchCancelledSignal*(self: View, communityId: string, requestId: int) =
-    self.communityFetchCancelled(communityId, requestId)
-
   proc onlineStatusChanged(self: View, connected: bool) {.signal.}
 
   proc isConnected*(self: View): bool {.slot.} =
@@ -360,15 +342,6 @@ QtObject:
 
   proc activateStatusDeepLink*(self: View, statusDeepLink: string) {.slot.} =
     self.delegate.activateStatusDeepLink(statusDeepLink)
-
-  proc cancelPendingCommunityFetch*(self: View) {.slot.} =
-    self.delegate.cancelPendingCommunityFetch()
-
-  proc timeoutPendingCommunityFetch*(self: View) {.slot.} =
-    self.delegate.timeoutPendingCommunityFetch()
-
-  proc retryCommunityFetch*(self: View, communityId: string, channelUuid: string) {.slot.} =
-    self.delegate.retryCommunityFetch(communityId, channelUuid)
 
   proc windowActivated*(self: View) {.slot.} =
     self.delegate.windowActivated()
