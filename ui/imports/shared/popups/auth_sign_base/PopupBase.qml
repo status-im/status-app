@@ -42,6 +42,10 @@ StatusDialog {
                                             root.keyUid
                                           : root.userProfileKeyUid
 
+    property bool externalAuthorization: false // when set, the credential is not collected here, instead an "Authorize" buutton is shown, emitting authorizeRequested signal
+
+    signal authorizeRequested()
+
     // buttons
     required property string btnActionName
     required property string btnPasswordActionAndUpdateName
@@ -74,6 +78,10 @@ StatusDialog {
 
                 if (!root.useKeycard) {
                     return enterPasswordComponent
+                }
+
+                if (root.externalAuthorization) {
+                    return enterPinComponent
                 }
 
                 if (d.verifying) {
@@ -188,6 +196,7 @@ StatusDialog {
         id: d
 
         readonly property bool usingBiometrics: root.keychain.available
+                                                && !root.externalAuthorization // the authentication popup runs its own biometrics
                                                 && root.useKeyUid === root.userProfileKeyUid
                                                 && keychain.hasCredential(root.useKeyUid) === Keychain.StatusSuccess
 
@@ -403,7 +412,9 @@ StatusDialog {
             remainingAttempts: d.processedRemainingPinAttempts
             submitOnPinComplete: !d.credentialMismatchAfterBiometrics
             keyPairForProcessing: root.keyPairForProcessing
+            authorizeMode: root.externalAuthorization
             onAccepted: d.performKeycardActionInternal(pin)
+            onAuthorizeRequested: root.authorizeRequested()
         }
     }
 }

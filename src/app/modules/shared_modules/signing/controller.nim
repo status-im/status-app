@@ -63,9 +63,12 @@ proc passwordProvided*(self: Controller, keyUid: string, password: string) =
 proc verifyPassword*(self: Controller, password: string): bool =
   return self.accountsService.verifyPassword(password)
 
-proc signMessage*(self: Controller, address: string, password: string, txHash: string): tuple[res: string, err: string] =
-  let hashedPassword = common_utils.hashPassword(password)
-  return self.transactionService.signMessage(address, hashedPassword, txHash)
+proc signMessage*(self: Controller, address: string, password: string, txHash: string,
+  doPasswordHashing: bool = true): tuple[res: string, err: string] =
+  var finalPassword = password
+  if doPasswordHashing:
+    finalPassword = common_utils.hashPassword(password)
+  return self.transactionService.signMessage(address, finalPassword, txHash)
 
 proc startKeycardSigning*(self: Controller, keyUid: string, pin: string, txHash: string, path: string) =
   self.keycardServiceV2.asyncSign(keyUid, pin, txHash, path)

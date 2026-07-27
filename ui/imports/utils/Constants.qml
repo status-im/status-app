@@ -451,6 +451,7 @@ QtObject {
         readonly property string addAccount: "add-account"
         readonly property string importKeypair: "import-keypair"
         readonly property string syncDevice: "sync-device"
+        readonly property string signing: "signing"
     }
 
     readonly property QtObject signingReason: QtObject {

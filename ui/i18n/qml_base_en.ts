@@ -7285,6 +7285,19 @@ Please add it and try again.</source>
 <context>
     <name>EnterPin</name>
     <message>
+        <source>Authorization required</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This key pair is not stored on your Keycard. Authorize with your profile
+to sign using the keys stored on this device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authorize</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>PIN incorrect</source>
         <translation type="unfinished"></translation>
     </message>
@@ -15366,6 +15379,10 @@ to load</source>
     </message>
     <message>
         <source>Update PIN &amp; sign</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to sign with the authorized credentials</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
