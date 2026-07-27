@@ -14,6 +14,8 @@ import AppLayouts.Wallet
 
 import shared.stores
 
+import utils
+
 import QtModelsToolkit
 
 import Storybook
@@ -27,6 +29,8 @@ Item {
 
     property string ethGroupKey: "eth-native"
     property string sttGroupKey: "status-test-token"
+    // a group the mock source gives no logoUri for
+    property string noLogoGroupKey: "11155420-0x6b175474e89094c44da98b954eedeac495271e0f"
 
     QtObject {
         id: d
@@ -152,6 +156,25 @@ Item {
 
             tryCompare(fresh, "ownedSectionName", expectedOwned)
             compare(fresh.popularSectionName, qsTr("Popular assets"))
+        }
+
+        function test_selectedHoldingWithoutLogoFallsBackToTheSymbolIcon() {
+            controlUnderTest = createTemporaryObject(componentUnderTest, root,
+                                                     {groupKey: noLogoGroupKey})
+            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            verify(!!controlUnderTest)
+
+            const entry = ModelUtils.getByKey(controlUnderTest.tokenSelectorModel,
+                                              "key", noLogoGroupKey)
+            verify(!!entry)
+            compare(entry.logoUri, "") // nothing to render without a fallback
+
+            const tokenSelectorButton = findChild(controlUnderTest, "tokenSelectorButton")
+            verify(!!tokenSelectorButton)
+            tryCompare(tokenSelectorButton, "name", entry.symbol)
+            verify(tokenSelectorButton.icon != "")
+            // same icon the picker's own selection path sets for this row
+            compare(String(tokenSelectorButton.icon), Constants.tokenIcon(entry.symbol))
         }
 
         function test_setTokenKeyAndAmounts_data() {

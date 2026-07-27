@@ -172,7 +172,9 @@ Control {
 
                 d.selectedHoldingTokenKey = SQUtils.ModelUtils.get(selectedHolding.item.tokens, 0, "key")
 
-                holdingSelector.setSelection(selectedHolding.item.symbol, selectedHolding.item.logoUri, selectedHolding.item.key)
+                holdingSelector.setSelection(selectedHolding.item.symbol,
+                                             selectedHolding.item.logoUri || Constants.tokenIcon(selectedHolding.item.symbol),
+                                             selectedHolding.item.key)
                 return
             }
             // The terminal model swaps its rows to the search results while searching,
