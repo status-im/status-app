@@ -195,6 +195,38 @@ suite "CollectiblesSelectorModel - granular updates":
     check spy.countRemoves() >= 1
     check m.subitemsModelForKey("collS") == sharedSub # identity preserved
 
+  test "removed group's subitems submodel outlives the parent remove (no UAF)":
+    # subitemsByKey is the dropped child's SOLE ORC owner, and a nimqml QVariant of
+    # a QObject keeps only the raw C++ pointer. If reconcileByKey frees the child
+    # before modelSync removes the parent row, the delegate bound to data(Subitems)
+    # derefs freed memory while tearing its own row down. The parent's row count at
+    # the moment of the free tells us which side of modelSync we are on.
+    # ORC-gated: free order is deterministic only under --mm:orc (the production
+    # mm). Run via `make nim-test-run-orc/...`; the refc suite reports it skipped.
+    when defined(gcOrc):
+      let m = newCollectiblesSelectorModel()
+      m.setParams(params("0xA"))
+      m.setSource(@[
+        item("keep", collectionUid = "collS", ownership = @[own("0xA", 1), own("0xB", 1)]),
+        item("sentinel777", collectionUid = "collA", ownership = @[own("0xA", 1)]),
+      ], networks)
+      check m.groupKeysInOrder() == @["collA", "collS"]
+
+      # Recognise the doomed child by a sentinel VALUE — capturing a ref (even via
+      # cast[int]) would keep it ORC-alive and mask the very free we want to observe.
+      var groupsWhenFreed = -1
+      onCollectiblesSelectorSubitemsModelDeleted = proc(sm: CollectiblesSelectorSubitemsModel) =
+        if sm.keysInOrder() == @["sentinel777"]:
+          groupsWhenFreed = m.getCount()
+
+      m.setAccountKey("0xB")   # collA drops out
+      onCollectiblesSelectorSubitemsModelDeleted = nil
+
+      check m.groupKeysInOrder() == @["collS"]
+      check groupsWhenFreed == 1  # row already removed; 2 would mean freed too early
+    else:
+      skip()
+
   test "batch append: new groups insert, existing untouched, no reset":
     let m = newCollectiblesSelectorModel()
     m.setParams(params("0xA"))

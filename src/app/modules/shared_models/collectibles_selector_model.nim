@@ -1,4 +1,4 @@
-import nimqml, tables
+import nimqml, tables, sets, sequtils
 
 import app/modules/shared_models/model_utils
 import app/modules/shared/model_sync
@@ -117,6 +117,18 @@ QtObject:
     # dataChanged for the Subitems role here.
 
   proc setGroups(self: CollectiblesSelectorModel, newGroups: seq[CollectibleGroup]) =
+    # Keep every subitems model this refresh drops alive on the stack until AFTER
+    # modelSync has emitted its remove signals. subitemsByKey is a dropped child's
+    # SOLE ORC owner and reconcileByKey frees it the moment it drops the key —
+    # before the row removal is announced. QML delegates still hold the raw pointer
+    # handed out by data(Subitems) (a nimqml QVariant of a QObject does not keep the
+    # Nim ref alive), so freeing first is a use-after-free during the delegate's own
+    # teardown. This local outlives the whole proc.
+    let survivingKeys = newGroups.mapIt(it.groupKey).toHashSet
+    var retained {.used.}: seq[CollectiblesSelectorSubitemsModel] = @[]
+    for key, sm in self.subitemsByKey:
+      if key notin survivingKeys:
+        retained.add(sm)
     # Reconcile the per-key nested subitems models BEFORE modelSync announces
     # inserts, so data(Subitems) is populated for a newly inserted group within
     # this same call. The update closure recurses into the surviving child model.

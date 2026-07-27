@@ -1,4 +1,4 @@
-import nimqml, tables, algorithm, sequtils, strutils
+import nimqml, tables, sets, algorithm, sequtils, strutils
 
 import app/modules/shared_models/model_utils
 import app/modules/shared/model_sync
@@ -157,6 +157,22 @@ QtObject:
   proc setSourceItems*(self: TokenSelectorModel, items: seq[TokenSelectorItem]) =
     var display = items
     display.sort(compareItems)
+    # Keep every submodel this refresh drops alive on the stack until AFTER
+    # modelSync has emitted its remove signals. balancesByKey/tokensByKey are a
+    # dropped child's SOLE ORC owner and reconcileByKey frees it the moment it
+    # drops the key — before the row removal is announced. QML delegates still
+    # hold the raw pointer handed out by data() (a nimqml QVariant of a QObject
+    # does not keep the Nim ref alive), so freeing first is a use-after-free
+    # during the delegate's own teardown. These locals outlive the whole proc.
+    let survivingKeys = display.mapIt(it.key).toHashSet
+    var retainedBalances {.used.}: seq[TokenSelectorBalancesModel] = @[]
+    var retainedTokens {.used.}: seq[TokenSelectorTokensModel] = @[]
+    for key, bm in self.balancesByKey:
+      if key notin survivingKeys:
+        retainedBalances.add(bm)
+    for key, tm in self.tokensByKey:
+      if key notin survivingKeys:
+        retainedTokens.add(tm)
     # Reconcile the per-key nested balances + tokens models BEFORE modelSync
     # announces inserts, so data(Balances)/data(Tokens) is populated for a newly
     # inserted row within this same call. Each update closure recurses into the

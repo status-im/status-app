@@ -26,6 +26,11 @@ QtObject:
     TokenSelectorBalancesModel* = ref object of QAbstractListModel
       items: seq[TokenSelectorChip]
 
+  when defined(QT_MODEL_SPY):
+    # Test-only destruction hook: lets token_selector_model_test observe WHEN a
+    # dropped submodel is ORC-freed relative to the parent's remove signals.
+    var onTokenSelectorBalancesModelDeleted*: proc(self: TokenSelectorBalancesModel) = nil
+
   proc setup(self: TokenSelectorBalancesModel)
   proc delete(self: TokenSelectorBalancesModel)
   proc newTokenSelectorBalancesModel*(chips: seq[TokenSelectorChip] = @[]): TokenSelectorBalancesModel =
@@ -77,6 +82,9 @@ QtObject:
     self.QAbstractListModel.setup
 
   proc delete(self: TokenSelectorBalancesModel) =
+    when defined(QT_MODEL_SPY):
+      if onTokenSelectorBalancesModelDeleted != nil:
+        onTokenSelectorBalancesModelDeleted(self)
     self.QAbstractListModel.delete
 
   when defined(testing) or defined(QT_MODEL_SPY):

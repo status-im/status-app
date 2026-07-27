@@ -24,6 +24,11 @@ QtObject:
     CollectiblesSelectorSubitemsModel* = ref object of QAbstractListModel
       items: seq[CollectibleSubItem]
 
+  when defined(QT_MODEL_SPY):
+    # Test-only destruction hook: lets collectibles_selector_model_test observe WHEN
+    # a dropped submodel is ORC-freed relative to the parent's remove signals.
+    var onCollectiblesSelectorSubitemsModelDeleted*: proc(self: CollectiblesSelectorSubitemsModel) = nil
+
   proc setup(self: CollectiblesSelectorSubitemsModel)
   proc delete(self: CollectiblesSelectorSubitemsModel)
   proc newCollectiblesSelectorSubitemsModel*(
@@ -76,6 +81,9 @@ QtObject:
     self.QAbstractListModel.setup
 
   proc delete(self: CollectiblesSelectorSubitemsModel) =
+    when defined(QT_MODEL_SPY):
+      if onCollectiblesSelectorSubitemsModelDeleted != nil:
+        onCollectiblesSelectorSubitemsModelDeleted(self)
     self.QAbstractListModel.delete
 
   when defined(testing) or defined(QT_MODEL_SPY):

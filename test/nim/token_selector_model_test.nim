@@ -23,8 +23,10 @@ proc dataChangedRows(spy: QtModelSpy): int =
 proc layoutChanges(spy: QtModelSpy): int =
   spy.calls.filterIt(it.kind == BeginMoveRows).len
 
-proc chip(chainId: int, balance: float, iconUrl = "", chainName = ""): TokenSelectorChip =
-  TokenSelectorChip(chainId: chainId, balance: balance, iconUrl: iconUrl, chainName: chainName)
+proc chip(chainId: int, balance: float, iconUrl = "", chainName = "",
+    rawBalance = ""): TokenSelectorChip =
+  TokenSelectorChip(chainId: chainId, balance: balance, iconUrl: iconUrl,
+    chainName: chainName, rawBalance: rawBalance)
 
 proc mkItem(key: string, name = "", symbol = "", currencyBalance = 0.0,
     currentBalance = 0.0, hasBalance = true, logoUri = "",
@@ -216,6 +218,37 @@ suite "TokenSelectorModel - nested balances submodel":
       if i > 0:
         check m.balancesModelForKey("k" & $(i-1) & "a") == nil
     check m.keysInOrder().len == 2
+
+  test "removed row's balances submodel outlives the parent remove signal (no UAF)":
+    # balancesByKey is the dropped child's SOLE ORC owner, and a nimqml QVariant of
+    # a QObject keeps only the raw C++ pointer. If reconcileByKey frees the child
+    # before modelSync emits beginRemoveRows, the delegate's inner ListView derefs
+    # freed memory while tearing its own row down. Assert the child is destroyed
+    # only AFTER the remove signal fired.
+    # ORC-gated: free order is deterministic only under --mm:orc (the production
+    # mm). Run via `make nim-test-run-orc/test/nim/token_selector_model_test.nim`;
+    # the refc suite reports this as skipped.
+    when defined(gcOrc):
+      let m = newTokenSelectorModel()
+      # b's chip carries a sentinel raw balance so the delete hook recognises it by
+      # VALUE — capturing a ref (even via cast[int]) would keep it ORC-alive and
+      # mask the very free we want to observe.
+      m.setSourceItems(@[mkItem("a", chips = @[chip(1, 1.0, rawBalance = "1")]),
+                         mkItem("b", chips = @[chip(1, 2.0, rawBalance = "777")])])
+
+      var removesWhenBFreed = -1
+      onTokenSelectorBalancesModelDeleted = proc(bm: TokenSelectorBalancesModel) =
+        if bm.rawBalancesInOrder() == @["777"]:
+          removesWhenBFreed = spy.countRemoves()
+
+      spy.clear()
+      m.setSourceItems(@[mkItem("a", chips = @[chip(1, 1.0, rawBalance = "1")])])
+      onTokenSelectorBalancesModelDeleted = nil
+
+      check spy.countRemoves() == 1
+      check removesWhenBFreed == 1  # freed after the remove, never at 0
+    else:
+      skip()
 
   test "chip balance change travels through the nested model as a dataChanged":
     let m = newTokenSelectorModel()
