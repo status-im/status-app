@@ -14,7 +14,7 @@ type
     lastOwnMessageTimestamp: int
     canPost: bool
 
-proc initItem*(chatId, name, color: string, colorId: int, icon, sectionId, sectionName, emoji: string, chatType: int, lastMessageText: string, lastMessageTimestamp: int, canPost: bool, lastOwnMessageTimestamp: int = 0): ChatSearchItem =
+proc initItem*(chatId, name, color: string, colorId: int, icon, sectionId, sectionName, emoji: string, chatType: int, lastMessageText: string, lastMessageTimestamp: int, lastOwnMessageTimestamp: int, canPost: bool): ChatSearchItem =
   result = ChatSearchItem()
   result.chatId = chatId
   result.name = name
