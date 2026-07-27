@@ -123,6 +123,37 @@ Item {
             verify(controlUnderTest.valueValid)
         }
 
+        function test_sectionNamesPushedToASwappedInModel() {
+            // SwapModal rebinds the receive panel between the swap and swap-to
+            // picker models whenever the same-chain check flips (it depends on BOTH
+            // chain ids), so a chain change on the PAY side can hand this panel a
+            // model instance that never got its section titles — blank headers.
+            const activeNetworks = d.adaptor.networksStore.activeNetworks
+            verify(activeNetworks.count > 0)
+            const chainId = ModelUtils.get(activeNetworks, 0, "chainId")
+            const chainName = ModelUtils.get(activeNetworks, 0, "chainName")
+            verify(!!chainName)
+
+            const store = d.adaptor.walletAssetsStore.walletTokensStore
+            const initial = store.createTokenSelectorModel(1).model
+            controlUnderTest = createTemporaryObject(componentUnderTest, root,
+                                                     {tokenSelectorModel: initial,
+                                                      selectedNetworkChainId: chainId})
+            verify(!!controlUnderTest)
+
+            const expectedOwned = qsTr("Your assets on %1").arg(chainName)
+            tryCompare(initial, "ownedSectionName", expectedOwned)
+
+            const fresh = store.createTokenSelectorModel(3).model
+            verify(!!fresh)
+            compare(fresh.ownedSectionName, "")
+
+            controlUnderTest.tokenSelectorModel = fresh
+
+            tryCompare(fresh, "ownedSectionName", expectedOwned)
+            compare(fresh.popularSectionName, qsTr("Popular assets"))
+        }
+
         function test_setTokenKeyAndAmounts_data() {
             return [
                 { tag: "1.42", tokenAmount: "1.42", valid: true },

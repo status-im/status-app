@@ -33,6 +33,10 @@ Control {
     // token-selector producer. Its per-modal params are driven by the bindings
     // below; owned/popular/search rows are fed by the producer.
     required property var tokenSelectorModel
+    // SwapModal rebinds this between the swap and swap-to models when the
+    // same-chain check flips, so the titles must follow the instance, not just
+    // this panel's chain.
+    onTokenSelectorModelChanged: root.updateSectionNames()
 
     property int selectedNetworkChainId: -1
     onSelectedNetworkChainIdChanged: {

@@ -37,9 +37,18 @@ ListModel {
     // its rows are mapped to terminal roles and rebuilt when it changes.
     property var sourceModel: null
 
+    // Section titles are translated in QML and pushed down; recorded here so tests
+    // can assert the panel pushed them (the real model keeps them internal and
+    // surfaces them through the per-row sectionName role).
+    property string ownedSectionName: ""
+    property string popularSectionName: ""
+
     function search(keyword) { root.searchString = keyword }
     function fetchMore() {}
-    function setSectionNames(owned, popular) {}
+    function setSectionNames(owned, popular) {
+        root.ownedSectionName = owned
+        root.popularSectionName = popular
+    }
 
     // A large synthetic owned balance so mapped rows behave as owned tokens with
     // headroom for the preset amounts the swap tests exercise. The real
