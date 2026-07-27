@@ -1,5 +1,6 @@
 import chronicles
 import io_interface
+import uuids
 
 import app/core/eventemitter
 import app_service/service/accounts/service as accounts_service
@@ -14,6 +15,7 @@ type
   Controller* = ref object of RootObj
     delegate: io_interface.AccessInterface
     events: EventEmitter
+    connectionIds: seq[UUID]
     accountsService: accounts_service.Service
     walletAccountService: wallet_account_service.Service
     keycardServiceV2: keycard_serviceV2.Service
@@ -27,21 +29,28 @@ proc newController*(delegate: io_interface.AccessInterface,
   result = Controller()
   result.delegate = delegate
   result.events = events
+  result.connectionIds = @[]
   result.accountsService = accountsService
   result.walletAccountService = walletAccountService
   result.keycardServiceV2 = keycardServiceV2
 
+proc disconnectAll(self: Controller) =
+  for id in self.connectionIds:
+    self.events.disconnect(id)
+
 proc delete*(self: Controller) =
-  discard
+  self.disconnectAll()
 
 proc init*(self: Controller) =
-  self.events.on(SIGNAL_KEYCARD_STATE_UPDATED) do(e: Args):
+  var handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_STATE_UPDATED) do(e: Args):
     let args = KeycardEventArg(e)
     self.delegate.onKeycardStateUpdated(args.keycardEvent)
+  self.connectionIds.add(handlerId)
 
-  self.events.on(SIGNAL_KEYCARD_EXPORT_PUBLIC_KEYS_FINISHED) do(e: Args):
+  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_EXPORT_PUBLIC_KEYS_FINISHED) do(e: Args):
     let args = KeycardExportedPublicKeysArgs(e)
     self.delegate.onKeycardExportPublicKeysFinished(args.exportedPublicKeys, args.error)
+  self.connectionIds.add(handlerId)
 
 proc passwordProvided*(self: Controller, keyUid: string, password: string) =
   self.events.emit(SIGNAL_PASSWORD_PROVIDED, AuthenticationArgs(keyUid: keyUid, password: password))
