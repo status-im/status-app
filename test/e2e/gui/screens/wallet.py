@@ -300,7 +300,7 @@ class WalletAccountView(QObject):
 
     @allure.step('Open assets list')
     def open_assets_view(self):
-        self._assets_tab_button.click()
+        self.open_assets_tab(wait_until_loaded=True)
         return AssetsView().wait_until_appears()
 
     @allure.step('Wait until appears {0}')

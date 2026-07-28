@@ -73,18 +73,33 @@ class WalletTokenSymbols(Enum):
     ETH = 'ETH'
     DAI = 'DAI'
 
+    @property
+    def title(self) -> str:
+        return _WALLET_TOKEN_TITLES[self]
+
+    @classmethod
+    def from_title(cls, title: str) -> 'WalletTokenSymbols':
+        for member in cls:
+            if member.title == title:
+                return member
+        raise ValueError(f'Unknown wallet token title: {title!r}')
+
     @classmethod
     def random_asset_details_symbol(cls) -> str:
         return random.choice([member.value for member in cls])
 
 
-WALLET_ACCOUNT_EXPECTED_ASSET_TITLES = frozenset({
-    'USDS',
-    'USDC (EVM)',
-    'Status',
-    'Ethereum',
-    'DAI',
-})
+_WALLET_TOKEN_TITLES = {
+    WalletTokenSymbols.USDS: 'USDS',
+    WalletTokenSymbols.USDC: 'USDC (EVM)',
+    WalletTokenSymbols.SNT: 'Status',
+    WalletTokenSymbols.ETH: 'Ethereum',
+    WalletTokenSymbols.DAI: 'DAI',
+}
+
+WALLET_ACCOUNT_EXPECTED_ASSET_TITLES = frozenset(token.title for token in WalletTokenSymbols)
+
+ASSET_DETAILS_INVALID_VALUES = frozenset({'', 'Dummy', 'N/A'})
 
 
 class DerivationPathValue(Enum):
