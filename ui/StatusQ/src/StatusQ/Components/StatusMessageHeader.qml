@@ -160,7 +160,7 @@ Item {
         Loader {
             id: deliveryStatusLoader
             Layout.alignment: Qt.AlignVCenter
-            active: root.outgoingStatus !== StatusMessage.OutgoingStatus.Unknown
+            active: root.amISender && root.outgoingStatus !== StatusMessage.OutgoingStatus.Unknown
             sourceComponent: RowLayout {
                 spacing: 0
                 StatusIcon {
