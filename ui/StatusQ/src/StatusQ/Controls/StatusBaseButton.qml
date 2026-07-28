@@ -211,23 +211,7 @@ AbstractButton {
             color: root.rippleColor
             radius: root.radius
             origin: root.rippleOrigin
-        }
-    }
-
-    TapHandler {
-        id: pressFeedbackHandler
-        enabled: ripple.enabled
-        acceptedButtons: Qt.LeftButton
-        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen | PointerDevice.TouchPad | PointerDevice.Stylus
-        gesturePolicy: TapHandler.DragThreshold
-
-        onPressedChanged: {
-            if (pressed) {
-                const ripplePoint = root.mapToItem(ripple, point.position.x, point.position.y)
-                ripple.press(ripplePoint.x, ripplePoint.y)
-            } else {
-                ripple.release()
-            }
+            button: root
         }
     }
 

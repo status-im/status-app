@@ -35,6 +35,11 @@ Item {
     property int origin: StatusRipple.RippleOrigin.Pointer
 
     /*!
+       Optional button that drives this ripple from its press/release signals.
+    */
+    property var button: null
+
+    /*!
        Duration of the expansion animation.
     */
     property int expandDuration: ThemeUtils.AnimationDuration.Fast
@@ -95,6 +100,26 @@ Item {
         d.pressed = false
         if (!expandAnimation.running)
             collapseAnimation.restart()
+    }
+
+    Connections {
+        target: root.button
+
+        function onPressed() {
+            if (!root.enabled)
+                return
+
+            const ripplePoint = root.button.mapToItem(root, root.button.pressX, root.button.pressY)
+            root.press(ripplePoint.x, ripplePoint.y)
+        }
+
+        function onReleased() {
+            root.release()
+        }
+
+        function onCanceled() {
+            root.release()
+        }
     }
 
     QtObject {

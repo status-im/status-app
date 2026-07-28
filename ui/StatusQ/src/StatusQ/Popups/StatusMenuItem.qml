@@ -189,21 +189,7 @@ MenuItem {
                                             : Theme.palette.directColor1
             radius: parent.radius
             origin: root.rippleOrigin
-        }
-    }
-
-    TapHandler {
-        enabled: menuItemRipple.enabled
-        acceptedButtons: Qt.LeftButton
-        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen | PointerDevice.TouchPad | PointerDevice.Stylus
-
-        onPressedChanged: {
-            if (pressed) {
-                const ripplePoint = root.mapToItem(menuItemRipple, point.position.x, point.position.y)
-                menuItemRipple.press(ripplePoint.x, ripplePoint.y)
-            } else {
-                menuItemRipple.release()
-            }
+            button: root
         }
     }
 
