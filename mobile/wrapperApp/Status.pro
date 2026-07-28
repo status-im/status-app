@@ -127,7 +127,8 @@ ios {
             -framework UIKit \
             -framework PhotosUI \
             -framework Foundation \
-            -framework UserNotifications
+            -framework UserNotifications \
+            -framework Intents
 
     # Base libraries (always included)
     LIBS += -L$$PWD/../lib/$$LIB_PREFIX -lnim_status_client -lstatusq -lMobileWebView -lstatus -lsds -lssl_3 -lcrypto_3 -lSCodes -lZXing -lresolv -lqrcodegen
