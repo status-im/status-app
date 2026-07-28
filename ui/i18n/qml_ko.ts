@@ -18261,6 +18261,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation>BaseScan</translation>
     </message>
     <message>
+        <source>Robinhood Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>BscScan</source>
         <translation>BscScan</translation>
     </message>

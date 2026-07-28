@@ -18377,6 +18377,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <source>BlastScan</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Robinhood Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ViewProfileMenuItem</name>

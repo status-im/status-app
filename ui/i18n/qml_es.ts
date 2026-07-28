@@ -18342,6 +18342,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
         <translation>BaseScan</translation>
     </message>
     <message>
+        <source>Robinhood Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>BscScan</source>
         <translation>BscScan</translation>
     </message>
