@@ -2643,8 +2643,8 @@ Do you wish to override the security check and continue?</source>
 <context>
     <name>BrowserTabView</name>
     <message>
-        <source>Downloads Page</source>
-        <translation>다운로드 페이지</translation>
+        <source>Downloads</source>
+        <translation type="unfinished">다운로드</translation>
     </message>
 </context>
 <context>

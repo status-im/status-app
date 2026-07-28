@@ -2658,8 +2658,8 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
 <context>
     <name>BrowserTabView</name>
     <message>
-        <source>Downloads Page</source>
-        <translation>Stránka stahování</translation>
+        <source>Downloads</source>
+        <translation type="unfinished">Stažené soubory</translation>
     </message>
 </context>
 <context>

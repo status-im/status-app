@@ -41,7 +41,7 @@ FocusScope {
     }
 
     function createDownloadTab() {
-        var newTabButton = tabButtonComponent.createObject(tabBar, {tabTitle: qsTr("Downloads Page")})
+        var newTabButton = tabButtonComponent.createObject(tabBar, {tabTitle: qsTr("Downloads")})
         tabBar.addItem(newTabButton);
     }
 
@@ -123,7 +123,6 @@ FocusScope {
         height: d.tabHeight
         BrowserHeaderButton {
             anchors.fill: parent
-            anchors.margins: 4
             radius: Theme.radius
             icon.name: "add"
             incognitoMode: root.currentTabIncognito
@@ -140,8 +139,9 @@ FocusScope {
             id: tabButton
             property bool isStartPage: false
 
-            readonly property bool incognito: root.fnGetWebView(tabButton.TabBar.index)?.offTheRecord ?? false
             readonly property var webView: root.fnGetWebView(tabButton.TabBar.index)
+            readonly property bool incognito: webView?.offTheRecord ?? false
+            readonly property bool isDownloadView: webView?.isDownloadView ?? false
 
             readonly property string tabTitle: SQUtils.StringUtils.escapeHtml(
                 root.savedSessionContext.displayTitle(webView, isStartPage)
@@ -151,7 +151,7 @@ FocusScope {
             anchors.top: parent ? parent.top : undefined
             anchors.bottom: parent ? parent.bottom : undefined
             leftPadding: 12
-            rightPadding: 4
+            rightPadding: 0
             verticalPadding: 0
 
             background: Rectangle {
@@ -169,13 +169,13 @@ FocusScope {
             }
 
             contentItem: RowLayout {
-                spacing: 0
+                spacing: Theme.halfPadding
                 StatusIcon {
                     Layout.preferredWidth: d.iconSize
                     Layout.preferredHeight: d.iconSize
                     readonly property string favicon: {
-                        const icon = root.savedSessionContext.displayIcon(webView)
-                        return determineFaviconURL(icon) || ""
+                        const icon = root.savedSessionContext.displayIcon(tabButton.webView)
+                        return root.determineFaviconURL(icon) || ""
                     }
                     sourceSize: Qt.size(width, height)
                     icon: favicon || "globe"
@@ -185,13 +185,11 @@ FocusScope {
                     id: loadingIndicator
                     Layout.preferredWidth: d.iconSize
                     Layout.preferredHeight: d.iconSize
-                    visible: root.fnGetWebView(tabButton.TabBar.index)?.loading ?? false
+                    visible: tabButton.webView?.loading ?? false
                 }
 
                 StatusBaseText {
                     Layout.fillWidth: true
-                    Layout.maximumWidth: Math.ceil(implicitWidth - (closeButton.visible ? closeButton.width : 0))
-                    Layout.leftMargin: Theme.halfPadding
                     Layout.rightMargin: 2
                     elide: Qt.ElideRight
                     font.pixelSize: Theme.fontSize(14)
@@ -199,15 +197,18 @@ FocusScope {
                 }
 
                 StatusFlatButton {
-                    id: closeButton
-                    Layout.preferredWidth: visible ? implicitWidth : 0
                     Layout.alignment: Qt.AlignTrailing
                     icon.name: "close"
                     icon.color: hovered ? Theme.palette.directColor1 : Theme.palette.baseColor1
                     radius: width/2
-                    opacity: root.isMobile || tabButton.hovered ? 1 : 0
-                    visible: opacity > 0
+                    opacity: root.isMobile || tabButton.hovered || tabButton.isDownloadView ? 1 : 0
                     onClicked: root.removeView(tabButton.TabBar.index)
+                }
+
+                Rectangle {
+                    Layout.preferredWidth: 1
+                    Layout.preferredHeight: d.tabHeight
+                    color: tabButton.checked ? StatusColors.transparent : Theme.palette.indirectColor4
                 }
             }
 

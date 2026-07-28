@@ -2651,8 +2651,8 @@ Do you wish to override the security check and continue?</source>
 <context>
     <name>BrowserTabView</name>
     <message>
-        <source>Downloads Page</source>
-        <translation>Página de descargas</translation>
+        <source>Downloads</source>
+        <translation type="unfinished">Descargas</translation>
     </message>
 </context>
 <context>
