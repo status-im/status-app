@@ -3,6 +3,8 @@ import QtTest
 
 import StatusQ.Core.Utils as SQUtils
 
+import utils
+
 import mainui
 
 Item {
@@ -208,7 +210,7 @@ Item {
             compare(chatInput.fileUrlsAndSources.length, 2)
 
             // Mirrors what the input's per-image close button does; the click
-            // handling itself belongs to StatusChatInputNew's own tests.
+            // handling itself belongs to StatusChatInput's own tests.
             const urls = [...chatInput.fileUrlsAndSources]
             urls.splice(0, 1)
             chatInput.fileUrlsAndSources = urls
@@ -230,6 +232,69 @@ Item {
 
             compare(chatInput.getPlainText(), "Replacement share")
             compare(chatInput.fileUrlsAndSources.length, 1)
+        }
+
+        function test_headerShowsDestinationIdentity() {
+            const preview = createPreview({
+                destinationName: "design",
+                destinationColor: "#ff0000",
+                destinationEmoji: "⚽",
+                destinationChatType: Constants.chatType.communityChat,
+                destinationSectionName: "Design DAO"
+            })
+            const infoButton = findChild(preview, "sharePreviewChatInfoButton")
+            verify(infoButton)
+
+            compare(infoButton.title, "design")
+            compare(infoButton.subTitle, "Design DAO")
+            compare(infoButton.asset.color.toString(), "#ff0000")
+            compare(infoButton.asset.emoji, "⚽")
+        }
+
+        function test_headerHidesSectionSubtitleForNonCommunityChat() {
+            const preview = createPreview({
+                destinationName: "Alice",
+                destinationChatType: Constants.chatType.oneToOne,
+                destinationSectionName: "Messages"
+            })
+            const infoButton = findChild(preview, "sharePreviewChatInfoButton")
+            verify(infoButton)
+
+            compare(infoButton.subTitle, "")
+        }
+
+        function test_inputFillsHeightBelowHeader() {
+            const preview = createPreview()
+            const chatInput = findChild(preview, "statusChatInput")
+            verify(chatInput)
+
+            // The input reaches the panel's bottom (no dead spacer above a
+            // bottom-anchored input)...
+            const inputBottom = chatInput.mapToItem(preview, 0,
+                                                    chatInput.height).y
+            fuzzyCompare(inputBottom, preview.height, 1)
+
+            // ...and stretches over the whole space below the header instead
+            // of keeping its compact in-chat height
+            verify(chatInput.height > preview.height / 2)
+        }
+
+        function test_inputAutoFocusedWhenShown() {
+            const preview = createPreview()
+            const chatInput = findChild(preview, "statusChatInput")
+            verify(chatInput)
+
+            tryVerify(() => chatInput.textInput.activeFocus)
+
+            // Leaving and re-entering the preview step (the share flow hosts
+            // the panel in a StackLayout, which toggles visibility) focuses
+            // the input again — even after another step's control took the
+            // focus in between, like the picker's search box does
+            preview.visible = false
+            root.forceActiveFocus()
+            verify(!chatInput.textInput.activeFocus)
+            preview.visible = true
+            tryVerify(() => chatInput.textInput.activeFocus)
         }
 
         function test_resetReappliesUnchangedSharedPayload() {

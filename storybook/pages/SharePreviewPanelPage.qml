@@ -4,6 +4,8 @@ import QtQuick.Layouts
 
 import Storybook
 
+import utils
+
 import mainui
 
 SplitView {
@@ -32,6 +34,12 @@ SplitView {
             height: 500
 
             destinationName: destinationNameField.text
+            destinationColor: destinationColorField.text
+            destinationEmoji: destinationEmojiField.text
+            destinationChatType: communityChannelCheckBox.checked
+                                 ? Constants.chatType.communityChat
+                                 : Constants.chatType.oneToOne
+            destinationSectionName: destinationSectionNameField.text
             text: "Look at this https://example.com/article"
             imagePaths: root.sampleImages.slice(0, imageCountSpinBox.value)
 
@@ -56,6 +64,32 @@ SplitView {
             TextField {
                 id: destinationNameField
                 text: "Design crew"
+            }
+            Label {
+                text: "Destination color"
+            }
+            TextField {
+                id: destinationColorField
+                text: "#7CDA00"
+            }
+            Label {
+                text: "Destination emoji"
+            }
+            TextField {
+                id: destinationEmojiField
+                text: ""
+            }
+            CheckBox {
+                id: communityChannelCheckBox
+                text: "Community channel"
+                checked: true
+            }
+            Label {
+                text: "Section name"
+            }
+            TextField {
+                id: destinationSectionNameField
+                text: "Design DAO"
             }
             Label {
                 text: "Shared images"

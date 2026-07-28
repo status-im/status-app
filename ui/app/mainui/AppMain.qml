@@ -2980,25 +2980,24 @@ Item {
         property var sharedImagePaths: []
         property string preselectedDestinationChatId
 
-        sourceComponent: Popup {
+        sourceComponent: StatusDialog {
             id: shareFlowPopup
 
-            parent: appMain
-            x: (appMain.width - width) / 2
-            y: (appMain.height - height) / 2
-            width: appMain.isPortraitMode ? appMain.width : 480
-            height: appMain.isPortraitMode ? appMain.height
-                                           : Math.min(640, appMain.height - 2 * Theme.bigPadding)
-            modal: true
+            // Portrait/mobile: the dialog's own bottom-sheet handling makes
+            // it fullscreen; otherwise ~480x640 centered (the content's
+            // implicit height, capped by the dialog to 80% of the window).
+            width: 480
+            fullScreenSheet: true
             closePolicy: Popup.NoAutoClose
-            padding: Theme.padding
+            standardButtons: Dialog.NoButton
 
-            background: StatusDialogBackground {
-                radius: appMain.isPortraitMode ? 0 : Theme.radius
-            }
-
-            Overlay.modal: Rectangle {
-                color: Theme.palette.backdropColor
+            // The steps carry their own header row (back/identity/close), so
+            // the fullscreen sheet is header-less — keep that row out of the
+            // notch/status-bar area (StatusDialog only safe-area-pads the
+            // bottom).
+            Binding on topPadding {
+                when: shareFlowPopup.bottomSheet
+                value: shareFlowPopup.padding + shareFlowPopup.parent.SafeArea.margins.top
             }
 
             Component.onCompleted: applyPreselectedDestination()
@@ -3017,7 +3016,13 @@ Item {
             // on the preview with it pre-selected. Falls back to the picker
             // when the chat is no longer among the postable destinations.
             function applyPreselectedDestination() {
-                const chatId = shareFlowLoader.preselectedDestinationChatId
+                showPreviewFor(shareFlowLoader.preselectedDestinationChatId)
+            }
+
+            // Land the flow on the preview step, passing the destination
+            // row's identity (avatar/name/section) into the panel so its
+            // header can render chat-header-style.
+            function showPreviewFor(chatId) {
                 if (chatId === "")
                     return
                 const destination = SQUtils.ModelUtils.getByKey(
@@ -3027,23 +3032,27 @@ Item {
                 sharePreviewPanel.destinationSectionId = destination.sectionId
                 sharePreviewPanel.destinationChatId = destination.chatId
                 sharePreviewPanel.destinationName = destination.name
+                sharePreviewPanel.destinationColor = destination.color
+                sharePreviewPanel.destinationColorId = destination.colorId
+                sharePreviewPanel.destinationIcon = destination.icon
+                sharePreviewPanel.destinationEmoji = destination.emoji
+                sharePreviewPanel.destinationChatType = destination.chatType
+                sharePreviewPanel.destinationSectionName = destination.sectionName
                 shareFlowSteps.currentIndex = 1
             }
 
-            StackLayout {
+            contentItem: StackLayout {
                 id: shareFlowSteps
-                anchors.fill: parent
+
+                implicitHeight: 640 - shareFlowPopup.topPadding
+                                - shareFlowPopup.bottomPadding
                 currentIndex: 0
 
                 ShareDestinationPickerPanel {
                     model: shareDestinationsAdaptor.model
 
-                    onDestinationPicked: (sectionId, chatId, name) => {
-                        sharePreviewPanel.destinationSectionId = sectionId
-                        sharePreviewPanel.destinationChatId = chatId
-                        sharePreviewPanel.destinationName = name
-                        shareFlowSteps.currentIndex = 1
-                    }
+                    onDestinationPicked: (sectionId, chatId, name) =>
+                        shareFlowPopup.showPreviewFor(chatId)
                     onCancelRequested: d.cancelShareFlow()
                 }
 
