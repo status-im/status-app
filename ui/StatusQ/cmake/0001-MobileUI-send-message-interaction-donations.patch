@@ -179,14 +179,21 @@ diff --git a/MobileUI_ios.mm b/MobileUI_ios.mm
 index 3d62f2e..ed5a9b4 100644
 --- a/MobileUI_ios.mm
 +++ b/MobileUI_ios.mm
-@@ -425,3 +425,61 @@ float MobileUI::getSmartScaleFactor(float baseWidth, float baseDpi, float baseSc
+@@ -425,3 +425,68 @@ float MobileUI::getSmartScaleFactor(float baseWidth, float baseDpi, float baseSc
  }
  
  /* ************************************************************************** */
 +
 +/* ************************************************************************** */
 +
-+#include <Intents/Intents.h>
++// Targeted imports, NOT the <Intents/Intents.h> umbrella: the umbrella pulls
++// in headers (e.g. INActivateCarSignalIntentResponse.h) that use C++ keywords
++// as member names and fail to compile in Objective-C++.
++#import <Intents/INIntent.h>
++#import <Intents/INSpeakableString.h>
++#import <Intents/INSendMessageIntent.h>
++#import <Intents/INImage.h>
++#import <Intents/INInteraction.h>
 +
 +void MobileUIPrivate::donateSendMessageInteraction(const QString& conversationId,
 +                                                   const QString& displayName,
