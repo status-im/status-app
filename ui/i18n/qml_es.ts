@@ -16107,13 +16107,6 @@ al cargar</translation>
     </message>
 </context>
 <context>
-    <name>StatusImageSelector</name>
-    <message>
-        <source>Supported image formats (%1)</source>
-        <translation>Formatos de imagen compatibles (%1)</translation>
-    </message>
-</context>
-<context>
     <name>StatusIntValidator</name>
     <message>
         <source>Please enter a valid numeric value.</source>

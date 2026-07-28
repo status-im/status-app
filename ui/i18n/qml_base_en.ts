@@ -16092,13 +16092,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>StatusImageSelector</name>
-    <message>
-        <source>Supported image formats (%1)</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>StatusIntValidator</name>
     <message>
         <source>Please enter a valid numeric value.</source>

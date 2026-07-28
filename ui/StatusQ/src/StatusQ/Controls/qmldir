@@ -27,7 +27,6 @@ StatusIconSwitch 0.1 StatusIconSwitch.qml
 StatusIconTabButton 0.1 StatusIconTabButton.qml
 StatusIconTextButton 0.1 StatusIconTextButton.qml
 StatusImageCrop 0.1 StatusImageCrop.qml
-StatusImageSelector 0.1 StatusImageSelector.qml
 StatusInput 0.1 StatusInput.qml
 StatusItemDelegate 0.1 StatusItemDelegate.qml
 StatusItemPicker 0.1 StatusItemPicker.qml

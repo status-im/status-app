@@ -115,7 +115,6 @@
         <file>StatusQ/Controls/StatusIconTabButton.qml</file>
         <file>StatusQ/Controls/StatusIconTextButton.qml</file>
         <file>StatusQ/Controls/StatusImageCrop.qml</file>
-        <file>StatusQ/Controls/StatusImageSelector.qml</file>
         <file>StatusQ/Controls/StatusInput.qml</file>
         <file>StatusQ/Controls/StatusItemDelegate.qml</file>
         <file>StatusQ/Controls/StatusItemPicker.qml</file>

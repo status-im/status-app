@@ -16036,13 +16036,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>StatusImageSelector</name>
-    <message>
-        <source>Supported image formats (%1)</source>
-        <translation>지원되는 이미지 형식(%1)</translation>
-    </message>
-</context>
-<context>
     <name>StatusIntValidator</name>
     <message>
         <source>Please enter a valid numeric value.</source>
