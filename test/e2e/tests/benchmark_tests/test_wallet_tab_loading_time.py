@@ -79,7 +79,7 @@ def test_wallet_assets_tab_loading_time(
 ):
     enable_benchmark_mode()
     wallet_account_view = _wallet_account_view(main_screen)
-    with step('Measure repeat Assets tab opening until content is loaded'):
+    with step('Measure first and repeat Assets tab opening until content is loaded'):
         _run_tab_benchmark(
             aut,
             tmp_path,
@@ -91,6 +91,7 @@ def test_wallet_assets_tab_loading_time(
             ),
             subject='Wallet Assets tab',
             slug='wallet_assets_tab',
+            record_first_open=True,
         )
 
 
