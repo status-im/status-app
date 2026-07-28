@@ -5,11 +5,12 @@ This repository contains the build system for Status Mobile, supporting both iOS
 Cross-compilation is currently supported on MacOs and Linux. Windows is not supported. The dev setup runs well on WSL with Windows emulator.
 
 ## Table of Contents
-- [Quick Start Guide (Container Builds) - Android](#quick-start-guide-container-builds)
-- [Developer Setup Guide](DEV_SETUP.md)
-- [Build System Documentation](DEV_SETUP.md#build-system-documentation)
-- [Troubleshooting](TROUBLESHOOTING.md)
-- [Contributing](CONTRIBUTING.md)
+- [Status Mobile Build System](#status-mobile-build-system)
+  - [Table of Contents](#table-of-contents)
+  - [Quick Start Guide (Container Builds)](#quick-start-guide-container-builds)
+    - [Prerequisites](#prerequisites)
+    - [Quick setup - android](#quick-setup---android)
+    - [What Happens Behind the Scenes](#what-happens-behind-the-scenes)
 
 ## Quick Start Guide (Container Builds)
 
@@ -71,3 +72,5 @@ make -f mobile/ContainerBuilds.mk run
 - All required tools and dependencies (Qt 6.11.0, Android SDK/NDK, Go, Nim) are provided by the container
 - The container runs on linux/amd64 platform for consistency, even on ARM macOS machines
 - The built APK/AAB is available in the `mobile/bin/android/qt6/` directory
+
+just testing if this commit passes the tests
