@@ -336,11 +336,14 @@ class WalletAccountView(QObject):
         assets_tab_view = QObject(wallet_names.assets_tab_view)
 
         def assets_loaded():
-            if _asset_items_finished_loading(self._asset_item):
-                return True
             if not assets_tab_view.is_visible:
                 return False
-            return not getattr(assets_tab_view.object, 'loading', True)
+            if getattr(assets_tab_view.object, 'loading', True):
+                return False
+            items = driver.findAllObjects(self._asset_item.real_name)
+            if not items:
+                return False
+            return _asset_items_finished_loading(self._asset_item)
 
         _wait_until(assets_loaded, timeout_msec, 'Assets tab did not finish loading')
         return self

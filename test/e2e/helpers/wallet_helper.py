@@ -160,13 +160,14 @@ def authenticate_with_password(user_account):
     auth_popup.wait_until_hidden()
 
 
+@step('Open wallet and send modal after balances are loaded')
 def open_send_modal_for_account(main_window, account_name):
+    timeout_msec = configs.timeouts.WALLET_TRANSACTION_SYNC_TIMEOUT_MSEC
     wallet = main_window.left_panel.open_wallet()
-    wait_for_wallet_balances_loaded(wallet.left_panel)
+    wait_for_wallet_balances_loaded(wallet.left_panel, timeout_msec=timeout_msec)
     wallet_account = wallet.left_panel.select_account(account_name)
-    wait_for_account_assets_loaded(wallet_account)
-    send_popup = wallet_account.open_send_popup()
-    return send_popup
+    wait_for_account_assets_loaded(wallet_account, timeout_msec=timeout_msec)
+    return wallet_account.open_send_popup()
 
 
 def wallet_send_returning_user():
@@ -185,7 +186,7 @@ def wallet_send_import_and_open_send_modal(main_window, user_account):
     with step('Set testnet mode'):
         enable_testnet_mode(main_window)
 
-    with step('Open wallet send popup'):
+    with step('Open wallet send popup after balances are loaded'):
         return open_send_modal_for_account(
             main_window, account_name=WalletNetworkSettings.STATUS_ACCOUNT_DEFAULT_NAME.value)
 

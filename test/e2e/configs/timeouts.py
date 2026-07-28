@@ -7,6 +7,8 @@ PROCESS_TIMEOUT_SEC = 10
 PROCESS_TIMEOUT_SEC_WINDOWS = 20  # Longer timeout for slow first startup on Windows VMs
 APP_LOAD_TIMEOUT_MSEC = 60000
 WALLET_SYNC_TIMEOUT_MSEC = APP_LOAD_TIMEOUT_MSEC
+# Wallet balance sync after import/testnet toggle can exceed the default wallet sync timeout.
+WALLET_TRANSACTION_SYNC_TIMEOUT_MSEC = 120_000
 ROUTES_TIMEOUT_MSEC = 30000
 MESSAGING_TIMEOUT_SEC = 60
 FEES_TIMEOUT_MSEC = 10000
