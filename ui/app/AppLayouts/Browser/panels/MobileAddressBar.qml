@@ -39,8 +39,7 @@ Control {
 
     implicitHeight: 48
 
-    leftPadding: 12
-    rightPadding: 4
+    horizontalPadding: 4
     verticalPadding: 2
 
     background: Rectangle {
@@ -115,20 +114,6 @@ Control {
             tooltip.text: qsTr("Wallet")
             tooltip.orientation: StatusToolTip.Orientation.Bottom
             onClicked: root.requestWalletMenu()
-        }
-
-        StatusFlatButton {
-            Layout.fillHeight: true
-            Layout.preferredWidth: height
-            visible: addressBar.cursorVisible
-            type: StatusBaseButton.Type.Primary
-            tooltip.text: qsTr("Close")
-            tooltip.orientation: StatusToolTip.Orientation.Bottom
-            icon.name: "close"
-            icon.width: 28
-            icon.height: 28
-            isRoundIcon: true
-            onClicked: root.deactivateAddressBar()
         }
     }
 }

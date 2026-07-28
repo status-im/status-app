@@ -25,9 +25,8 @@ StatusTextField {
         color: root.bgColor
         radius: Theme.radius
     }
-    verticalAlignment: TextInput.AlignVCenter
     leftPadding: showFavicon ? Theme.halfPadding + favicon.width + favicon.anchors.leftMargin
-                             : Theme.padding
+                             : Theme.smallPadding
     rightPadding: clearButton.width
     placeholderText: qsTr("Search or enter address")
     color: root.incognitoMode ? Theme.palette.privacyColors.tertiary : Theme.palette.textColor
@@ -40,7 +39,7 @@ StatusTextField {
         if (activeFocus) {
             selectAll()
         } else {
-            if (text === "") // restore the old URL
+            if (text !== root.url.toString() && root.url.toString() !== "") // restore the old (non empty) URL
                 text = Qt.binding(() => root.url)
         }
     }
@@ -51,7 +50,7 @@ StatusTextField {
         height: parent.height*.6
         width: height
         anchors.left: parent.left
-        anchors.leftMargin: height/2
+        anchors.leftMargin: height/3
         anchors.verticalCenter: parent.verticalCenter
         image.sourceSize: Qt.size(width, height)
         image.source: {
