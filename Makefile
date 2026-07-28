@@ -38,7 +38,9 @@ GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 	run-linux \
 	run-macos \
 	run-windows \
+	tests-nim \
 	tests-nim-linux \
+	benches-nim \
 	status-go \
 	status-keycard-qt \
 	statusq-sanity-checker \
@@ -1052,87 +1054,7 @@ run-windows: compile_windows_resources nim_status_client
 	echo -e "\033[92mRunning:\033[39m bin/nim_status_client.exe"
 	cd bin && ./nim_status_client.exe $(ARGS)
 
-NIM_TEST_FILES := $(wildcard test/nim/*.nim)
-NIM_TESTS := $(foreach test_file,$(NIM_TEST_FILES),nim-test-run/$(test_file))
-
-nim-test-run/test/nim/signal_handler_test.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
-nim-test-run/test/nim/signal_handler_test.nim: | statusq
-
-nim-test-run/test/nim/url_scheme_event_test.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
-nim-test-run/test/nim/url_scheme_event_test.nim: | statusq
-
-# typed_completion_test drives finishTyped -> signal_handler -> statusq_invoke_method_queued,
-# so it needs the StatusQ library linked (like signal_handler_test above).
-nim-test-run/test/nim/typed_completion_test.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
-nim-test-run/test/nim/typed_completion_test.nim: | statusq
-
-# asset_proxy_chain_bench stands up the real StatusQ/SFPM proxy chain in an
-# offscreen QML engine, so it links StatusQ and needs the installed QML modules.
-nim-test-run/test/nim/asset_proxy_chain_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
-nim-test-run/test/nim/asset_proxy_chain_bench.nim: | statusq
-
-# swap_key_harvest_bench drives the real QtMT.ModelQuery (registerStatusQTypes) in an
-# offscreen QML engine, so it links StatusQ.
-nim-test-run/test/nim/swap_key_harvest_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
-nim-test-run/test/nim/swap_key_harvest_bench.nim: | statusq
-
-# send_modal_instantiation_bench loads the real SimpleSendModal QML tree, and
-# send_handler_lookup_bench drives the real ModelUtils/ModelQuery -- both link StatusQ.
-nim-test-run/test/nim/send_modal_instantiation_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
-nim-test-run/test/nim/send_modal_instantiation_bench.nim: | statusq
-
-# swap_modal_instantiation_bench loads the real SwapModal QML tree + SwapModalAdaptor
-# (inline real-store subclasses, no storybook engine) -- links StatusQ.
-nim-test-run/test/nim/swap_modal_instantiation_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
-nim-test-run/test/nim/swap_modal_instantiation_bench.nim: | statusq
-
-nim-test-run/test/nim/send_handler_lookup_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
-nim-test-run/test/nim/send_handler_lookup_bench.nim: | statusq
-
-# send_handler_adaptors_bench builds the real CollectiblesSelectionAdaptor /
-# WalletAccountsSelectorAdaptor / RecipientViewAdaptor proxy chains offscreen -- links StatusQ.
-nim-test-run/test/nim/send_handler_adaptors_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
-nim-test-run/test/nim/send_handler_adaptors_bench.nim: | statusq
-
-# collectibles_selector_bench drives the real CollectiblesSelectionAdaptor proxy
-# chain through two offscreen ListViews (RED baseline) -- links StatusQ.
-nim-test-run/test/nim/collectibles_selector_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
-nim-test-run/test/nim/collectibles_selector_bench.nim: | statusq
-
-# collectibles_selector_model_bench measures the GREEN terminal model directly
-# (context-injected, no proxies above it) -- links StatusQ for the offscreen engine.
-nim-test-run/test/nim/collectibles_selector_model_bench.nim: NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
-nim-test-run/test/nim/collectibles_selector_model_bench.nim: | statusq
-
-# Model-spy tests call inspection accessors gated behind
-# `when defined(testing) or defined(QT_MODEL_SPY)` or assert on the granular
-# signals model_sync records only under QT_MODEL_SPY. The define is applied
-# per-file, NOT globally, so the timing benches keep measuring uninstrumented
-# models.
-nim-test-run/test/nim/assets_adaptor_model_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
-nim-test-run/test/nim/token_selector_model_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
-nim-test-run/test/nim/collectibles_selector_model_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
-nim-test-run/test/nim/token_selector_producer_view_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
-nim-test-run/test/nim/model_sync_move_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
-nim-test-run/test/nim/model_sync_unified_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
-nim-test-run/test/nim/token_groups_model_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
-nim-test-run/test/nim/grouped_account_assets_model_test.nim: NIM_PARAMS += -d:QT_MODEL_SPY
-# Exception among benches: its GREEN gates assert structural propagation shape
-# (bounded inserts, zero resets) via the spy counters.
-nim-test-run/test/nim/token_selector_model_bench.nim: NIM_PARAMS += -d:QT_MODEL_SPY
-
-ifneq ($(mkspecs),win32)
-nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
-endif
-# --mm:orc matches the production build (Makefile app targets); it also makes a
-# dropped child QObject's free ORDER relative to its parent's remove signal
-# deterministic, so the `when defined(gcOrc)` use-after-free regressions
-# actually execute here instead of compiling to a skip.
-nim-test-run/%: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN)
-	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" $(ENV_SCRIPT) \
-	nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
-
-tests-nim-linux: $(NIM_TESTS)
+include makefiles/nim-tests.mk
 
 define qmkq
 $(shell $(QMAKE) -query $(1))
