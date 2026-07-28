@@ -39,7 +39,9 @@ QString StringUtilsInternal::readTextFile(const QString& filePath) const
 
 bool StringUtilsInternal::writeTextFile(const QString &filePath, const QString& data) const
 {
+#ifdef QT_DEBUG
     qDebug() << "!!! WRITING TO FILE:" << filePath << "; data:" << data;
+#endif
 
     auto maybeFileUrl = QUrl::fromUserInput(filePath);
     if (!maybeFileUrl.isLocalFile()) {

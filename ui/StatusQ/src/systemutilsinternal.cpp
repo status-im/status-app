@@ -551,8 +551,10 @@ void SystemUtilsInternal::iosShareFiles(const QVariantList& fileUrls) const
     }
     if (paths.isEmpty())
         return;
+#ifdef QT_DEBUG
     qInfo() << "[iOS Share] SystemUtilsInternal::iosShareFiles paths=" << paths.size()
             << " sample=" << (paths.size() > 0 ? paths.first() : QString());
+#endif
     ::presentIOSShareSheetForFilePaths(paths);
 #else
     Q_UNUSED(fileUrls);
@@ -574,8 +576,10 @@ void SystemUtilsInternal::iosSharePaths(const QStringList& filePaths) const
     }
     if (paths.isEmpty())
         return;
+#ifdef QT_DEBUG
     qInfo() << "[iOS Share] SystemUtilsInternal::iosSharePaths paths=" << paths.size()
             << " sample=" << (paths.size() > 0 ? paths.first() : QString());
+#endif
     ::presentIOSShareSheetForFilePaths(paths);
 #else
     Q_UNUSED(filePaths);
@@ -718,7 +722,9 @@ static void iosShakeDetected()
     if (!s_systemUtilsInternal)
         return;
     QMetaObject::invokeMethod(s_systemUtilsInternal, []() {
+#ifdef QT_DEBUG
         qInfo() << "[iOS Shake] SystemUtilsInternal: shakeDetected signal emitted";
+#endif
         emit s_systemUtilsInternal->shakeDetected();
     }, Qt::QueuedConnection);
 }
@@ -746,7 +752,9 @@ static void jni_nativeShakeDetected(JNIEnv*, jclass)
     if (!s_systemUtilsInternal)
         return;
     QMetaObject::invokeMethod(s_systemUtilsInternal, []() {
+#ifdef QT_DEBUG
         qInfo() << "[Android Shake] SystemUtilsInternal: shakeDetected signal emitted";
+#endif
         emit s_systemUtilsInternal->shakeDetected();
     }, Qt::QueuedConnection);
 }
