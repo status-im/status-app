@@ -18,7 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          # head SHA, not head_ref: fork branches don't exist in this repo,
+          # but their commits are fetchable by SHA via the PR ref network
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           submodules: false
 
