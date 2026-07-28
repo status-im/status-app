@@ -436,7 +436,8 @@ StatusDialog {
                     d.startOnboardingLoginWithKeycard()
                     return
                 }
-                if (root.flow === Constants.keycard.flow.importNewKeyPair) {
+                if (root.flow === Constants.keycard.flow.importNewKeyPair
+                    || root.flow === Constants.keycard.flow.onboardingImportNewKeyPair) {
                     d.seedPhrase = root.store.generateMnemonic()
                     d.currentStep = KeycardManagementPopup.FlowStep.DisplaySeedPhrase
                     return
@@ -1627,6 +1628,8 @@ StatusDialog {
                     return
                 case Constants.keycard.flow.importSeedPhrase:
                 case Constants.keycard.flow.importNewKeyPair:
+                case Constants.keycard.flow.onboardingImportNewKeyPair:
+                case Constants.keycard.flow.onboardingImportSeedPhrase:
                 case Constants.keycard.flow.moveKeyPair:
                 case Constants.keycard.flow.moveProfileKeyPair:
                 case Constants.keycard.flow.addKeyPairToStatus:
