@@ -10,7 +10,11 @@ from scripts.utils.benchmark_report import (
     enable_benchmark_mode,
     monitored_timed_call,
 )
-from tests.benchmark_tests.benchmark_helpers import BENCHMARK_USER_PARAMS, WALLET_BENCHMARK_PARAMS
+from tests.benchmark_tests.benchmark_helpers import (
+    BENCHMARK_TAB_LOAD_TIMEOUT_MSEC,
+    BENCHMARK_USER_PARAMS,
+    WALLET_BENCHMARK_PARAMS,
+)
 
 ITERATIONS = 5
 WALLET_BENCHMARK_USERS = pytest.mark.parametrize(
@@ -79,7 +83,9 @@ def test_wallet_assets_tab_loading_time(
         _run_tab_benchmark(
             aut,
             tmp_path,
-            open_tab=wallet_account_view.open_assets_tab,
+            open_tab=lambda: wallet_account_view.open_assets_tab(
+                loading_timeout_msec=BENCHMARK_TAB_LOAD_TIMEOUT_MSEC,
+            ),
             leave_tab=lambda: wallet_account_view.open_collectibles_tab(
                 wait_until_loaded=False,
             ),
@@ -104,7 +110,9 @@ def test_wallet_collectibles_tab_loading_time(
         _run_tab_benchmark(
             aut,
             tmp_path,
-            open_tab=wallet_account_view.open_collectibles_tab,
+            open_tab=lambda: wallet_account_view.open_collectibles_tab(
+                loading_timeout_msec=BENCHMARK_TAB_LOAD_TIMEOUT_MSEC,
+            ),
             leave_tab=lambda: wallet_account_view.open_assets_tab(wait_until_loaded=False),
             subject='Wallet Collectibles tab',
             slug='wallet_collectibles_tab',
@@ -128,7 +136,9 @@ def test_wallet_activity_tab_loading_time(
         _run_tab_benchmark(
             aut,
             tmp_path,
-            open_tab=wallet_account_view.open_activity_tab,
+            open_tab=lambda: wallet_account_view.open_activity_tab(
+                loading_timeout_msec=BENCHMARK_TAB_LOAD_TIMEOUT_MSEC,
+            ),
             leave_tab=lambda: wallet_account_view.open_assets_tab(wait_until_loaded=False),
             subject='Wallet History tab',
             slug='wallet_activity_tab',

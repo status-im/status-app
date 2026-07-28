@@ -9,6 +9,9 @@ from fixtures.aut import FRESH_USER_ACCOUNT
 
 BENCHMARK_USER_PARAMS = dict(indirect=['user_data', 'user_account'])
 
+# No cap — benchmark measures actual tab content load time.
+BENCHMARK_TAB_LOAD_TIMEOUT_MSEC = None
+
 WALLET_BENCHMARK_PARAMS = [
     pytest.param(None, FRESH_USER_ACCOUNT, id='fresh_user'),
     pytest.param(configs.testpath.TEST_USER_DATA / 'wallet_load', constants.user.wallet_load, id='wallet_load_user'),

@@ -35,6 +35,19 @@ from helpers.wallet_helper import (
 LOG = logging.getLogger(__name__)
 
 
+def _wait_until(
+    condition: typing.Callable[[], bool],
+    timeout_msec: int | None,
+    error_message: str,
+    check_interval: float = 0.1,
+) -> None:
+    if timeout_msec is None:
+        while not condition():
+            time.sleep(check_interval)
+        return
+    assert driver.waitFor(condition, timeout_msec), error_message
+
+
 class WalletScreen(QObject):
 
     def __init__(self):
@@ -318,7 +331,7 @@ class WalletAccountView(QObject):
     @allure.step('Wait for assets tab content to finish loading')
     def wait_for_assets_tab_content_loaded(
         self,
-        timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+        timeout_msec: int | None = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
     ):
         assets_tab_view = QObject(wallet_names.assets_tab_view)
 
@@ -329,34 +342,34 @@ class WalletAccountView(QObject):
                 return False
             return not getattr(assets_tab_view.object, 'loading', True)
 
-        assert driver.waitFor(assets_loaded, timeout_msec), (
-            'Assets tab did not finish loading'
-        )
+        _wait_until(assets_loaded, timeout_msec, 'Assets tab did not finish loading')
         return self
 
     @allure.step('Wait for collectibles tab content to finish loading')
     def wait_for_collectibles_tab_content_loaded(
         self,
         timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
-        loading_timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+        loading_timeout_msec: int | None = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
     ):
         self._collectibles_view.wait_until_appears(timeout_msec)
-        assert driver.waitFor(
+        _wait_until(
             lambda: not getattr(self._collectibles_view.object, 'isFetching', False)
             and not getattr(self._collectibles_view.object, 'isUpdating', False),
             loading_timeout_msec,
-        ), 'Collectibles tab did not finish loading'
+            'Collectibles tab did not finish loading',
+        )
         return self
 
     @allure.step('Wait for History tab content to finish loading')
     def wait_for_activity_tab_content_loaded(
         self,
-        timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+        timeout_msec: int | None = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
     ):
-        assert driver.waitFor(
+        _wait_until(
             lambda: is_activity_tab_content_loaded(self._activity_view),
             timeout_msec,
-        ), 'History tab did not finish loading'
+            'History tab did not finish loading',
+        )
         return self
 
     @allure.step('Open assets tab')
@@ -364,7 +377,7 @@ class WalletAccountView(QObject):
         self,
         timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         wait_until_loaded: bool = True,
-        loading_timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+        loading_timeout_msec: int | None = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
     ):
         self._assets_tab_button.click()
         assert driver.waitFor(
@@ -381,7 +394,7 @@ class WalletAccountView(QObject):
         self,
         timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         wait_until_loaded: bool = True,
-        loading_timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+        loading_timeout_msec: int | None = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
     ):
         self._collectibles_tab_button.click()
         assert driver.waitFor(
@@ -398,7 +411,7 @@ class WalletAccountView(QObject):
         self,
         timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         wait_until_loaded: bool = True,
-        loading_timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+        loading_timeout_msec: int | None = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
     ):
         self._activity_tab_button.click()
         assert driver.waitFor(
