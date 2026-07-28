@@ -33,7 +33,11 @@ jobs:
 
       - name: Fetch relevant status-go branches
         run: |
-          git submodule update --init vendor/status-go
+          # pin the submodule URL so a PR-modified .gitmodules cannot point
+          # the policy check at a non-upstream remote
+          git submodule init vendor/status-go
+          git config submodule.vendor/status-go.url https://github.com/status-im/status-go.git
+          git submodule update vendor/status-go
           cd vendor/status-go
           if ! git fetch origin 'release/*:refs/remotes/origin/release/*' 2>/dev/null; then
             echo "[WARN] No release/* branches found."
@@ -120,7 +124,11 @@ jobs:
         with:
           submodules: false
       - name: Init vendored status-go (the shipped pin)
-        run: git submodule update --init vendor/status-go
+        run: |
+          # same URL pinning as above: never fetch a PR-supplied remote
+          git submodule init vendor/status-go
+          git config submodule.vendor/status-go.url https://github.com/status-im/status-go.git
+          git submodule update vendor/status-go
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
