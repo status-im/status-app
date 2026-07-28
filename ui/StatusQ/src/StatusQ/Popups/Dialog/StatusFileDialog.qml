@@ -63,6 +63,10 @@ QObject {
             if (!file)
                 return ""
 
+            if (!Utils.isMobile) // no need to do anything, just return the URL from the FileDialog as-is
+                return file
+
+            // on Android, this copies the virtual file to a physical TMP file, and returns path to it
             let resolvedLocalFile = UrlUtils.convertUrlToLocalPath(file)
             // This will reserve the access to the file for the duration of the app
             if (Utils.isIOS && !root.usePhotoLibrary && !MobileUI.startAccessingPath(resolvedLocalFile)) {
