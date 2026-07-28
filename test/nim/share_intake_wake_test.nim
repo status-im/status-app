@@ -86,6 +86,21 @@ suite "share_intake_wake":
     check slot.take() == ""
     check sharedTexts == @["shared from the extension"]
 
+  test "variant-scheme wake url delivers the slot share payload":
+    # Co-installed variants (issue #48): each iOS variant wakes itself through
+    # its own bundle-id-derived scheme; the host recognizes the wake by its
+    # share-intake authority, whatever the variant scheme.
+    manager.appReady()
+    slot.write("""{"type":"share","text":"woken through the variant scheme"}""")
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr,
+      "app.status.mobile.pr://share-intake".cstring)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    check not fileExists(slot.filePath())
+    check slot.take() == ""
+    check sharedTexts == @["woken through the variant scheme"]
+
   test "wake url before appReady buffers the slot share until appReady (login-first)":
     # Logged-out share: the extension wakes the host, the host consumes the
     # slot immediately (file cleared), but the seam holds the share until

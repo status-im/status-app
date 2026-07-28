@@ -139,20 +139,29 @@ if [[ "${OS}" == "android" ]]; then
   echo "Build succeeded:$BUILT"
 
 else
-  # Generate Info.plist based on FLAG_KEYCARD_ENABLED
-  echo "Generating Info.plist (FLAG_KEYCARD_ENABLED=${FLAG_KEYCARD_ENABLED})..."
+  # Generate Info.plist from the template. Marker blocks are XML comments in
+  # the template; deleting only the marker lines uncomments a block, deleting
+  # the whole range drops it. Markers may be indented; match by substring
+  # (not anchors).
+  echo "Generating Info.plist (FLAG_KEYCARD_ENABLED=${FLAG_KEYCARD_ENABLED}, BUILD_VARIANT=${BUILD_VARIANT})..."
+  PLIST_SED=()
   if [[ "${FLAG_KEYCARD_ENABLED}" == "1" ]]; then
-    # Enable NFC/Keycard support - uncomment NFC sections
-    # Markers may be indented; match by substring (not anchors).
-    sed -e '/KEYCARD_NFC_START/d' \
-        -e '/KEYCARD_NFC_END/d' \
-        "$CWD/../ios/Info.plist.template" > "$BUILD_DIR/Info.plist"
+    # Enable NFC/Keycard support
+    PLIST_SED+=(-e '/KEYCARD_NFC_START/d' -e '/KEYCARD_NFC_END/d')
   else
-    # Disable NFC/Keycard support - remove NFC sections entirely
-    # Markers may be indented; match by substring (not anchors).
-    sed '/KEYCARD_NFC_START/,/KEYCARD_NFC_END/d' \
-        "$CWD/../ios/Info.plist.template" > "$BUILD_DIR/Info.plist"
+    # Disable NFC/Keycard support
+    PLIST_SED+=(-e '/KEYCARD_NFC_START/,/KEYCARD_NFC_END/d')
   fi
+  if [[ "${BUILD_VARIANT}" == "release" ]]; then
+    # Only the release variant claims the public status-app:// scheme; a
+    # co-installed PR/debug build must not steal public deep links. The
+    # variant-unique PRODUCT_BUNDLE_IDENTIFIER wake scheme is unconditional
+    # in the template (issue #48).
+    PLIST_SED+=(-e '/RELEASE_URL_SCHEME_START/d' -e '/RELEASE_URL_SCHEME_END/d')
+  else
+    PLIST_SED+=(-e '/RELEASE_URL_SCHEME_START/,/RELEASE_URL_SCHEME_END/d')
+  fi
+  sed "${PLIST_SED[@]}" "$CWD/../ios/Info.plist.template" > "$BUILD_DIR/Info.plist"
 
   XCODE_FLAGS=(-configuration Release -sdk "$SDK" -arch "$ARCH" CURRENT_PROJECT_VERSION="$BUILD_VERSION")
   if [[ "${QMAKE_EXTRA_CONFIG:-}" == "fastlane" ]]; then

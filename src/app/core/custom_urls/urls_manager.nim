@@ -8,7 +8,7 @@ import ../intake/share_intake_cache
 
 import ../../global/app_signals
 
-export ShareIntakeWakeUrl
+export ShareIntakeWakeUrl, isShareIntakeWakeUrl
 
 logScope:
   topics = "urls-manager"
@@ -85,9 +85,11 @@ QtObject:
       result = StatusExternalLink & result
 
   proc onUrlActivated*(self: UrlsManager, urlRaw: string) {.slot.} =
-    if urlRaw.strip().startsWith(ShareIntakeWakeUrl):
+    if isShareIntakeWakeUrl(urlRaw):
       # Wake ping from the share extension — not a routable deep link; the
       # actual payload travels through the App Group pending intake slot.
+      # Scheme-agnostic match: on iOS the wake scheme is variant-unique
+      # (the app's bundle id), so co-installed variants can't hijack it.
       self.consumePendingIntake()
       return
 
