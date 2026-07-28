@@ -420,8 +420,15 @@ RightTabBaseView {
                                                      Constants.walletSettingsSubsection.manageAssets)
                         onAssetClicked: (key) => {
                             const tokenGroup = SQUtils.ModelUtils.getByKey(RootStore.walletAssetsStore.groupedAccountAssetsModel, "key", key)
+                            const listAsset = SQUtils.ModelUtils.getByKey(RootStore.walletAssetsStore.assetsModel, "key", key)
 
-                            assetDetailView.tokenGroup = tokenGroup
+                            assetDetailView.tokenGroup = listAsset ? Object.assign({}, tokenGroup, {
+                                balance: listAsset.balance,
+                                balanceLoading: listAsset.balanceLoading,
+                                marketPrice: listAsset.marketPrice,
+                                balanceText: LocaleUtils.currencyAmountToLocaleString(
+                                    RootStore.currencyStore.getCurrencyAmount(listAsset.balance, key)),
+                            }) : tokenGroup
                             RootStore.setCurrentViewedHolding(tokenGroup.key, Constants.TokenType.ERC20, tokenGroup.communityId ?? "")
                             stack.currentIndex = 2
                         }
