@@ -77,7 +77,24 @@
             <string>status.im.customurl</string>
             <key>CFBundleURLSchemes</key>
             <array>
+                <!-- Variant-unique wake scheme: the bundle id doubles as a URL
+                     scheme (RFC 3986 allows ALPHA/DIGIT/+/-/.). The share
+                     extension wakes its own host through it, so co-installed
+                     variants (Status / Status PR) can't hijack each other's
+                     wake — iOS keeps one global handler per scheme (issue
+                     #48). Handler registered at runtime in
+                     ui/StatusQ/src/urlschemeevent.cpp; the extension derives
+                     the same scheme from its bundle id
+                     (shareExtension/ShareViewController.m). -->
+                <string>${PRODUCT_BUNDLE_IDENTIFIER}</string>
+                <!-- Public status-app scheme: claimed ONLY by the release
+                     variant so a co-installed PR/debug build can't steal
+                     public deep links. buildApp.sh uncomments this block for
+                     release and drops it otherwise (same marker mechanism as
+                     KEYCARD_NFC above/below). -->
+                <!-- RELEASE_URL_SCHEME_START
                 <string>status-app</string>
+                RELEASE_URL_SCHEME_END -->
             </array>
         </dict>
     </array>

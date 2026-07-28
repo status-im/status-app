@@ -41,8 +41,33 @@ static NSString *const kPendingIntakeFileName = @"share.json";
 // ShareIntakeCacheDirName in src/app/core/intake/share_intake_cache.nim (the
 // host-side cache lifecycle only owns files inside a dir of this name).
 static NSString *const kShareIntakeCacheDirName = @"share-intake";
-// Must match ShareIntakeWakeUrl in src/app/core/intake/pending_intake_slot.nim.
-static NSString *const kWakeUrl = @"status-app://share-intake";
+// Authority of the wake ping. Must match ShareIntakeWakeHost in
+// src/app/core/intake/pending_intake_slot.nim — the host recognizes a wake by
+// this authority, whatever the scheme.
+static NSString *const kWakeHost = @"share-intake";
+
+// The wake URL's scheme is the HOST app's bundle id — variant-unique, so a
+// co-installed variant (Status / Status PR) can't hijack the wake; iOS keeps
+// ONE global handler per URL scheme, which is why the shared status-app
+// scheme couldn't be used (fork issue #48). Each variant registers its bundle
+// id as a scheme (mobile/ios/Info.plist.template) and this extension's bundle
+// id is forced to `<host>.ShareExtension` (buildShareExtension.sh), so
+// stripping the last component recovers the host's — one derivation, nothing
+// to keep in sync at build time.
+static NSString *WakeUrlString(void)
+{
+    NSString *extensionBundleId = NSBundle.mainBundle.bundleIdentifier;
+    if (extensionBundleId.length == 0) {
+        // Can't happen for a real signed extension; degrade to the legacy
+        // shared scheme rather than an unparseable nil-scheme URL.
+        return [NSString stringWithFormat:@"status-app://%@", kWakeHost];
+    }
+    NSRange lastDot = [extensionBundleId rangeOfString:@"." options:NSBackwardsSearch];
+    NSString *hostBundleId = lastDot.location != NSNotFound
+        ? [extensionBundleId substringToIndex:lastDot.location]
+        : extensionBundleId;
+    return [NSString stringWithFormat:@"%@://%@", hostBundleId, kWakeHost];
+}
 
 // Attachment types accepted (matches the activation rule in Info.plist:
 // text, at most one web URL, and images up to the in-app send limit).
@@ -354,7 +379,7 @@ static NSString *const kTypePlainText = @"public.plain-text";
 // working the share degrades to slot-only delivery (next manual app open).
 - (void)wakeHostApp
 {
-    NSURL *url = [NSURL URLWithString:kWakeUrl];
+    NSURL *url = [NSURL URLWithString:WakeUrlString()];
     UIResponder *responder = self;
     while (responder != nil) {
         // Modern UIKit routes app-extension opens through the 3-argument
