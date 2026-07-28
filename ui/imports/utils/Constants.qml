@@ -48,6 +48,8 @@ QtObject {
         readonly property int scrollSepoliaChainId: 534351
         readonly property int blastMainnetChainId: 81457
         readonly property int blastSepoliaChainId: 168587773
+        readonly property int robinhoodMainnetChainId: 4663
+        readonly property int robinhoodTestnetChainId: 46630
         readonly property int hoodiChainId: 560048
         readonly property int binanceSmartChainMainnetChainId: 56
         readonly property int binanceSmartChainTestnetChainId: 97
@@ -60,7 +62,8 @@ QtObject {
             chains.zkSyncMainnetChainId,
             chains.soneiumMainnetChainId,
             chains.scrollMainnetChainId,
-            chains.blastMainnetChainId
+            chains.blastMainnetChainId,
+            chains.robinhoodMainnetChainId
         ]
     }
 
@@ -842,6 +845,7 @@ QtObject {
         readonly property string soneium: "soneium"
         readonly property string scroll: "scroll"
         readonly property string blast: "blast"
+        readonly property string robinhood: "rhc"
         readonly property string binanceSmartChain: "bsc"
     }
 
@@ -873,6 +877,8 @@ QtObject {
         readonly property string sepoliaScroll: "Scroll Sepolia"
         readonly property string blast: "Blast"
         readonly property string sepoliaBlast: "Blast Sepolia"
+        readonly property string robinhood: "Robinhood"
+        readonly property string testnetRobinhood: "Robinhood Testnet"
         readonly property string binanceSmartChain: "BNB Smart Chain"
         readonly property string testnetBinanceSmartChain: "BNB Smart Chain Testnet"
     }
@@ -891,6 +897,7 @@ QtObject {
         readonly property string soneium: "https://soneium.blockscout.com"
         readonly property string scroll: "https://scrollscan.com"
         readonly property string blast: "https://blastscan.io"
+        readonly property string robinhood: "https://robinhoodchain.blockscout.com"
         readonly property string binanceSmartChain: "https://bscscan.com"
         readonly property string hoodiEtherscan: "https://hoodi.etherscan.io"
         readonly property string sepoliaEtherscan: "https://sepolia.etherscan.io"
@@ -906,6 +913,7 @@ QtObject {
         readonly property string minatoSoneium: "https://soneium-minato.blockscout.com"
         readonly property string sepoliaScroll: "https://sepolia.scrollscan.com"
         readonly property string sepoliaBlast: "https://sepolia.blastscan.io"
+        readonly property string testnetRobinhood: "https://explorer.testnet.chain.robinhood.com"
         readonly property string testnetBinanceSmartChain: "https://testnet.bscscan.com"
         readonly property string addressPath: "address"
         readonly property string txPath: "tx"
@@ -928,6 +936,7 @@ QtObject {
         readonly property string soneium: "soneium"
         readonly property string scroll: "scroll" // opensea does not support scroll yet
         readonly property string blast: "blast"
+        readonly property string robinhood: "robinhood" // opensea does not support robinhood chain yet
         readonly property string binanceSmartChain: "binance-smart-chain" // testnet not supported
         readonly property string hoodiEthereum: "hoodi" // testnet not supported
         readonly property string sepoliaEthereum: "sepolia" // testnet not supported

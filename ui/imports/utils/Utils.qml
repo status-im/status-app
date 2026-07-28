@@ -699,6 +699,11 @@ QtObject {
             if (testnetMode) {
                 link = Constants.networkExplorerLinks.sepoliaBlast
             }
+        } else if (networkShortName === Constants.networkShortChainNames.robinhood) {
+            link = Constants.networkExplorerLinks.robinhood
+            if (testnetMode) {
+                link = Constants.networkExplorerLinks.testnetRobinhood
+            }
         } else if (networkShortName === Constants.networkShortChainNames.binanceSmartChain) {
             link = Constants.networkExplorerLinks.binanceSmartChain
             if (testnetMode) {
@@ -765,6 +770,9 @@ QtObject {
         if (networkShortName === Constants.networkShortChainNames.blast) {
             return qsTr("BlastScan")
         }
+        if (networkShortName === Constants.networkShortChainNames.robinhood) {
+            return qsTr("Robinhood Explorer")
+        }
         if (networkShortName === Constants.networkShortChainNames.binanceSmartChain) {
             return qsTr("BscScan")
         }
@@ -814,6 +822,9 @@ QtObject {
             case Constants.chains.blastMainnetChainId:
             case Constants.chains.blastSepoliaChainId:
                 return Constants.networkShortChainNames.blast
+            case Constants.chains.robinhoodMainnetChainId:
+            case Constants.chains.robinhoodTestnetChainId:
+                return Constants.networkShortChainNames.robinhood
             case Constants.chains.binanceSmartChainMainnetChainId:
             case Constants.chains.binanceSmartChainTestnetChainId:
                 return Constants.networkShortChainNames.binanceSmartChain
@@ -878,6 +889,10 @@ QtObject {
                 return Constants.networkNames.blast
             case Constants.chains.blastSepoliaChainId:
                 return Constants.networkNames.sepoliaBlast
+            case Constants.chains.robinhoodMainnetChainId:
+                return Constants.networkNames.robinhood
+            case Constants.chains.robinhoodTestnetChainId:
+                return Constants.networkNames.testnetRobinhood
             case Constants.chains.binanceSmartChainMainnetChainId:
                 return Constants.networkNames.binanceSmartChain
             case Constants.chains.binanceSmartChainTestnetChainId:
@@ -901,6 +916,7 @@ QtObject {
             case Constants.chains.soneiumMainnetChainId:
             case Constants.chains.scrollMainnetChainId:
             case Constants.chains.blastMainnetChainId:
+            case Constants.chains.robinhoodMainnetChainId:
             case Constants.chains.binanceSmartChainMainnetChainId:
                 return false
         }
