@@ -8,19 +8,29 @@ import StatusQ.Core.Theme
 
 import shared.status
 
+import utils
+
 /**
   * Preview step of the share flow: hosts the real chat input
-  * (StatusChatInputNew) pre-filled with the shared text, with the shared
+  * (StatusChatInput) pre-filled with the shared text, with the shared
   * images attached to the input's image area — removable per image, exactly
   * like the in-chat attach flow. Send goes through the input's own send
-  * affordance. Takes data in (destination name, initial text, image paths)
-  * and emits intent signals out — no store access.
+  * affordance. Takes data in (destination identity, initial text, image
+  * paths) and emits intent signals out — no store access.
   */
 Control {
     id: root
 
-    /* Display name of the picked destination */
+    /* Identity of the picked destination, shown chat-header-style (avatar +
+       name + community name for channels); values come straight from the
+       destination picker model's roles */
     property string destinationName
+    property string destinationColor
+    property int destinationColorId
+    property string destinationIcon
+    property string destinationEmoji
+    property int destinationChatType: Constants.chatType.unknown
+    property string destinationSectionName
 
     /* The shared text (or image caption); pushed into the chat input, where
        the user edits it. Edits do not write back here. */
@@ -57,10 +67,26 @@ Control {
             d.attachSharedImages()
     }
 
-    Component.onCompleted: reset()
+    // Bring the software keyboard up without an extra tap whenever the
+    // preview becomes the visible step: the share flow's StackLayout toggles
+    // visibility on step changes, while the hosting dialog enables its
+    // content only once its enter transition finished (StatusDialog's
+    // `enabled: opened`) — focus grabs are no-ops until then.
+    onVisibleChanged: d.focusInputIfShown()
+    onEnabledChanged: d.focusInputIfShown()
+
+    Component.onCompleted: {
+        reset()
+        d.focusInputIfShown()
+    }
 
     QtObject {
         id: d
+
+        function focusInputIfShown() {
+            if (root.visible && root.enabled)
+                chatInput.forceInputActiveFocus()
+        }
 
         // Nim hands over plain absolute file paths; the input's image area
         // needs URLs. Already-formed URLs (file:, data:, qrc:, image:) pass
@@ -104,12 +130,29 @@ Control {
                 onClicked: root.backRequested()
             }
 
-            StatusBaseText {
+            // Read-only destination identity, rendered the way the chat
+            // header does (same component), minus its menu/action affordances
+            StatusChatInfoButton {
+                objectName: "sharePreviewChatInfoButton"
                 Layout.fillWidth: true
-                text: qsTr("Share to %1").arg(root.destinationName)
-                font.pixelSize: Theme.primaryTextFontSize
-                font.weight: Font.DemiBold
-                elide: Text.ElideRight
+                title: root.destinationName
+                subTitle: {
+                    if (root.destinationChatType === Constants.chatType.communityChat)
+                        return root.destinationSectionName
+                    return ""
+                }
+                type: root.destinationChatType
+                asset.name: root.destinationIcon
+                asset.isImage: root.destinationIcon !== ""
+                asset.isLetterIdenticon: root.destinationIcon === ""
+                asset.color: {
+                    if (root.destinationColor)
+                        return root.destinationColor
+                    return Utils.colorForColorId(Theme.palette, root.destinationColorId)
+                }
+                asset.emoji: root.destinationEmoji
+                asset.emojiSize: "24x24"
+                hoverEnabled: false
             }
 
             StatusFlatRoundButton {
@@ -120,16 +163,13 @@ Control {
             }
         }
 
-        Item {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-        }
-
-        StatusChatInputNew {
+        StatusChatInput {
             id: chatInput
 
             Layout.fillWidth: true
+            Layout.fillHeight: true
 
+            fillAvailableHeight: true
             emojiPopup: root.emojiPopup
             stickersPopup: root.stickersPopup
             chatInputPlaceholder: qsTr("Message")
