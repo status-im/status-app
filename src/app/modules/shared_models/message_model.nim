@@ -81,6 +81,7 @@ QtObject:
     Model* = ref object of QAbstractListModel
       items*: seq[Item]
       firstUnseenMessageId: string
+      pendingOutgoingStatuses: Table[string, string]
 
   proc delete(self: Model)
   proc setup(self: Model)
@@ -89,6 +90,7 @@ QtObject:
     new(result, delete)
     result.setup
     result.firstUnseenMessageId = ""
+    result.pendingOutgoingStatuses = initTable[string, string]()
 
   proc delete(self: Model) =
     self.QAbstractListModel.delete
@@ -433,11 +435,37 @@ QtObject:
     let existingItems = toHashSet(self.items.map(x => x.id))
     return items.filter(item => not existingItems.contains(item.id))
 
+  proc shouldUpdateOutgoingStatus(currentStatus, nextStatus: string): bool =
+    if currentStatus == PARSED_TEXT_OUTGOING_STATUS_DELIVERED or
+        currentStatus == PARSED_TEXT_OUTGOING_STATUS_EXPIRED:
+      return false
+    if currentStatus == PARSED_TEXT_OUTGOING_STATUS_SENT:
+      return nextStatus == PARSED_TEXT_OUTGOING_STATUS_DELIVERED or
+        nextStatus == PARSED_TEXT_OUTGOING_STATUS_EXPIRED
+    return currentStatus != nextStatus
+
+  proc applyPendingOutgoingStatuses(self: Model, items: var seq[Item]) =
+    for item in items.mitems:
+      var bestPending = ""
+      if self.pendingOutgoingStatuses.hasKey(item.id):
+        bestPending = self.pendingOutgoingStatuses[item.id]
+        self.pendingOutgoingStatuses.del(item.id)
+      if item.albumId != "":
+        for mid in item.albumMessageIds:
+          if self.pendingOutgoingStatuses.hasKey(mid):
+            let pending = self.pendingOutgoingStatuses[mid]
+            if shouldUpdateOutgoingStatus(bestPending, pending):
+              bestPending = pending
+            self.pendingOutgoingStatuses.del(mid)
+      if bestPending.len > 0 and shouldUpdateOutgoingStatus(item.outgoingStatus, bestPending):
+        item.outgoingStatus = bestPending
+
   proc insertItemsBasedOnClock*(self: Model, items: seq[Item]) =
     # remove existing items and sort by most recent
     let sortCmp = proc(lhs, rhs: Item): int =
       return if isGreaterThan(lhs, rhs): -1 else: 1
-    let newItems = sorted(self.filterExistingItems(items), sortCmp)
+    var newItems = sorted(self.filterExistingItems(items), sortCmp)
+    self.applyPendingOutgoingStatuses(newItems)
 
     # bulk insert algorithm, "two-pointer" technique
     var currentIdx = 0
@@ -527,10 +555,18 @@ QtObject:
     return self.items[ind]
 
   proc setOutgoingStatus(self: Model, messageId: string, status: string) =
-    updateItemRolesAndNotify self.findIndexForMessageId(messageId):
-      if self.items[ind].outgoingStatus == PARSED_TEXT_OUTGOING_STATUS_DELIVERED:
-        return
-      updateRoleWithValue(outgoingStatus, status)
+    let ind = self.findIndexForMessageId(messageId)
+    if(ind == -1):
+      let pendingStatus = self.pendingOutgoingStatuses.getOrDefault(messageId)
+      if shouldUpdateOutgoingStatus(pendingStatus, status):
+        self.pendingOutgoingStatuses[messageId] = status
+      return
+    if not shouldUpdateOutgoingStatus(self.items[ind].outgoingStatus, status):
+      return
+    self.items[ind].outgoingStatus = status
+    let index = self.createIndex(ind, 0, nil)
+    defer: index.delete
+    self.dataChanged(index, index, @[ModelRole.OutgoingStatus.int])
 
   proc itemSending*(self: Model, messageId: string) =
     self.setOutgoingStatus(messageId, PARSED_TEXT_OUTGOING_STATUS_SENDING)

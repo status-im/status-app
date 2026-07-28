@@ -46,6 +46,20 @@ suite "empty model":
   test "initial size":
     require(model.rowCount() == 0)
 
+suite "outgoing status ordering":
+  test "applies an early sent signal when the message is inserted":
+    let model = newModel()
+    model.itemSent(message1.id)
+    model.insertItemBasedOnClock(message1)
+    check(model.getItemWithMessageId(message1.id).outgoingStatus == PARSED_TEXT_OUTGOING_STATUS_SENT)
+
+  test "keeps the highest early outgoing status":
+    let model = newModel()
+    model.itemSent(message1.id)
+    model.itemDelivered(message1.id)
+    model.insertItemBasedOnClock(message1)
+    check(model.getItemWithMessageId(message1.id).outgoingStatus == PARSED_TEXT_OUTGOING_STATUS_DELIVERED)
+
 # newest messages should be first, break ties by message id
 suite "inserting new messages":
   setup:
