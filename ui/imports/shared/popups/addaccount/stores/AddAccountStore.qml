@@ -45,19 +45,10 @@ BasePopupStore {
 
     readonly property var derivationPathRegEx: /^(m\/44'\/)([0-9|'|\/](?!\/'))*$/
     property string selectedRootPath: Constants.addAccountPopup.predefinedPaths.ethereum
-    readonly property var roots: {
-        // Cold wallet key pairs derive from the stored xpub, so no Custom and Ethereum Ledger Live options
-        // TODO: once regular key pairs switch to derive from xpub, Custom and Ethereum Ledger Live options
-        // will be completely removed.
-        if (!!root.selectedOrigin && root.selectedOrigin.migratedToColdWallet) {
-            return [Constants.addAccountPopup.predefinedPaths.ethereum,
-                    Constants.addAccountPopup.predefinedPaths.ethereumLedger]
-        }
-        return [Constants.addAccountPopup.predefinedPaths.custom,
-                Constants.addAccountPopup.predefinedPaths.ethereum,
-                Constants.addAccountPopup.predefinedPaths.ethereumLedger,
-                Constants.addAccountPopup.predefinedPaths.ethereumLedgerLive]
-    }
+    // All key pairs derive new accounts from the stored xpub (extended public key at m/44'/60'/0')
+    // and only non-hardened paths under it can be derived that way, so no Custom and Ethereum and Ledger Live options
+    readonly property var roots: [Constants.addAccountPopup.predefinedPaths.ethereum,
+        Constants.addAccountPopup.predefinedPaths.ethereumLedger]
 
     readonly property bool isWatchOnlyImport: root.selectedOrigin.pairType === Constants.addAccountPopup.keyPairType.unknown &&
                                             root.selectedOrigin.keyUid === Constants.appTranslatableConstants.addAccountLabelOptionAddWatchOnlyAcc

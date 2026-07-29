@@ -340,6 +340,10 @@ QtObject:
   proc emitAuthenticationRequested*(self: View, keyUid: string) =
     self.authenticationRequested(keyUid)
 
+  proc xpubMissingForSelectedOrigin*(self: View, keypairName: string) {.signal.}
+  proc emitXPubMissingForSelectedOrigin*(self: View, keypairName: string) =
+    self.xpubMissingForSelectedOrigin(keypairName)
+
   proc authenticationCompleted*(self: View, password: string, pin: string, keyUid: string) {.slot.} =
     self.delegate.onUserAuthenticated(pin, password, keyUid)
 

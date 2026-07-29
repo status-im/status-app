@@ -57,7 +57,8 @@ Column {
 
             icon.name: Utils.resolveAuthSignIcon(root.store.selectedOrigin.keyUid,
                                                  root.store.selectedOrigin.migratedToColdWallet,
-                                                 Constants.AuthSignPurpose.AddAccountCustomPath
+                                                 Constants.AuthSignPurpose.AddAccountCustomPath,
+                                                 root.store.selectedOrigin.derivesFromXpub
                                                  )
 
             onClicked: {

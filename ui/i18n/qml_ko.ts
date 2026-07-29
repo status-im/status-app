@@ -702,6 +702,18 @@
         <translation>새 계정 추가</translation>
     </message>
     <message>
+        <source>Re-import the %1 key pair to add accounts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Adding accounts to the &lt;b&gt;%1&lt;/b&gt; key pair isn&apos;t possible due to recent improvements in how key pairs are stored. Please remove this key pair from the app and import it again from your Keycard — after that you&apos;ll be able to add accounts to it. Your keys are safe: removing the key pair from the app doesn&apos;t affect the Keycard, and importing it back takes only a moment.&lt;br/&gt;&lt;br/&gt;• Go to Settings → Wallet → click the three dots on the &lt;b&gt;%1&lt;/b&gt; key pair → Remove key pair and derived accounts&lt;br/&gt;• Go to Settings → Keycard → Read Keycard → Add key pair to Status wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">닫기</translation>
+    </message>
+    <message>
         <source>Removing saved address</source>
         <translation>저장된 주소 제거 중</translation>
     </message>

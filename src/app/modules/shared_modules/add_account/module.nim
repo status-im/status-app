@@ -45,6 +45,7 @@ type
     controller: Controller
     authenticationReason: AuthenticationReason
     fetchingAddressesIsInProgress: bool
+    addAccountRequested: bool
 
 ## Forward declaration
 proc doAddAccount[T](self: Module[T])
@@ -64,6 +65,7 @@ proc newModule*[T](delegate: T,
     savedAddressService)
   result.authenticationReason = AuthenticationReason.AddingAccount
   result.fetchingAddressesIsInProgress = false
+  result.addAccountRequested = false
 
 {.push warning[Deprecated]: off.}
 
@@ -74,6 +76,7 @@ method delete*[T](self: Module[T]) =
 
 method loadForAddingAccount*[T](self: Module[T], addingWatchOnlyAccount: bool) =
   self.controller.init()
+  self.addAccountRequested = false
   self.view.setEditMode(false)
   self.view.setCurrentState(newMainState(nil))
 
@@ -252,11 +255,15 @@ proc isKeyPairAlreadyAdded[T](self: Module[T], keyUid: string): bool =
   let keypair = self.controller.getKeypairByKeyUid(keyUid)
   return not keypair.isNil
 
+proc canDeriveFromXpub[T](self: Module[T], keyUid: string): bool =
+  let keypair = self.controller.getKeypairByKeyUid(keyUid)
+  return not keypair.isNil and keypair.extendedPublicKey.len > 0
+
 proc getNumOfAddressesToGenerate[T](self: Module[T]): int =
   let selectedOrigin = self.view.getSelectedOrigin()
   return self.controller.getNumOfAddressesToGenerateForKeypair(selectedOrigin.getKeyUid())
 
-proc fetchDerivedAddressesFromColdWalletKeypair[T](self: Module[T], keyUid: string, paths: seq[string]) =
+proc fetchDerivedAddressesFromXpub[T](self: Module[T], keyUid: string, paths: seq[string]) =
   let keypair = self.controller.getKeypairByKeyUid(keyUid)
   if keypair.isNil or keypair.extendedPublicKey.len == 0:
     self.onDerivedAddressesFetched(@[], "cannot resolve the extended public key for the selected keypair")
@@ -308,8 +315,8 @@ proc fetchAddressForDerivationPath[T](self: Module[T]) =
       if not self.isKeyPairAlreadyAdded(selectedOrigin.getKeyUid()):
         self.controller.fetchAddressesFromNotImportedSeedPhrase(self.controller.getSeedPhrase(), paths)
         return
-      if selectedOrigin.getMigratedToColdWallet():
-        self.fetchDerivedAddressesFromColdWalletKeypair(selectedOrigin.getKeyUid(), paths)
+      if self.canDeriveFromXpub(selectedOrigin.getKeyUid()):
+        self.fetchDerivedAddressesFromXpub(selectedOrigin.getKeyUid(), paths)
         return
       let doPasswordHashing = not singletonInstance.userProfile.getMigratedToColdWallet()
       self.controller.fetchDerivedAddresses(selectedOrigin.getDerivedFrom(), paths, doPasswordHashing)
@@ -319,9 +326,18 @@ proc fetchAddressForDerivationPath[T](self: Module[T]) =
 proc authenticateSelectedOrigin[T](self: Module[T], reason: AuthenticationReason) =
   let selectedOrigin = self.view.getSelectedOrigin()
   self.authenticationReason = reason
-  if selectedOrigin.getMigratedToColdWallet():
+  if selectedOrigin.getMigratedToColdWallet() and not self.canDeriveFromXpub(selectedOrigin.getKeyUid()):
+    # Old cold wallet migrated keypairs may have no xpub stored and they certainly have no keystore files, so no way to create xpub
+    # There are 2 possible solutions:
+    # - Re-import the keypair from the card - which the popup displayed by emitting xpubMissingForSelectedOrigin signal suggests
+    # - Build and run a dedicated flow to export xpub from the card and stores it to db
+    self.view.emitXPubMissingForSelectedOrigin(selectedOrigin.getName())
+    return
+  if self.canDeriveFromXpub(selectedOrigin.getKeyUid()):
     self.controller.setAuthenticatedKeyUid(selectedOrigin.getKeyUid())
     self.view.setActionAuthenticated(true)
+    if reason == AuthenticationReason.AddingAccount:
+      self.addAccountRequested = true
     self.fetchAddressForDerivationPath()
     return
   self.view.emitAuthenticationRequested("")
@@ -338,6 +354,7 @@ method onUserAuthenticated*[T](self: Module[T], pin: string, password: string, k
     if selectedOrigin.getPairType() == KeyPairType.PrivateKeyImport.int:
       self.doAddAccount() # we're sure that we need to add an account from priv key from here, cause derivation is not possible for imported priv key
       return
+    self.addAccountRequested = true
     self.fetchAddressForDerivationPath()
     return
   if self.authenticationReason == AuthenticationReason.EditingDerivationPath:
@@ -354,9 +371,11 @@ proc isAuthenticationNeededForSelectedOrigin[T](self: Module[T]): bool =
       return false
   if selectedOrigin.getKeyUid() == self.controller.getAuthenticatedKeyUid():
     return false
+  if self.canDeriveFromXpub(selectedOrigin.getKeyUid()):
+    return false
   if not selectedOrigin.getMigratedToColdWallet() and
     self.controller.getAuthenticatedKeyUid() == singletonInstance.userProfile.getKeyUid() and
-    self.controller.getPassword().len > 0: # need this condition because cold wallet migrated profile does derive from xpub, without password
+    self.controller.getPassword().len > 0: # need this condition because a keypair deriving from xpub authenticates without a password
     return false
   return true
 
@@ -478,7 +497,8 @@ method onDerivedAddressesFetched*[T](self: Module[T], derivedAddresses: seq[Deri
   if error.len > 0:
     error "fetching derived addresses error", err=error
     self.fetchingAddressesIsInProgress = false
-    if self.authenticationReason == AuthenticationReason.AddingAccount:
+    if self.addAccountRequested:
+      self.addAccountRequested = false
       self.view.setDisablePopup(false)
     return
 
@@ -488,12 +508,14 @@ method onDerivedAddressesFetched*[T](self: Module[T], derivedAddresses: seq[Deri
       error "received derived addresses reffer to profile or seed imported origin, but that's not the selected origin"
       return
   self.setDerivedAddresses(derivedAddresses)
-  if self.authenticationReason == AuthenticationReason.AddingAccount:
+  if self.addAccountRequested:
+    self.addAccountRequested = false
     self.doAddAccount()
 
 method onAddressesFromNotImportedMnemonicFetched*[T](self: Module[T], derivations: Table[string, DerivedAccountDetails], error: string) =
   if error.len > 0:
     error "fetching derived addresses from not imported mnemonic error", err=error
+    self.addAccountRequested = false
     return
   let selectedOrigin = self.view.getSelectedOrigin()
   if selectedOrigin.getPairType() != KeyPairType.SeedImport.int:
@@ -509,7 +531,8 @@ method onAddressesFromNotImportedMnemonicFetched*[T](self: Module[T], derivation
       alreadyCreated: false)
     )
   self.setDerivedAddresses(derivedAddresses)
-  if self.authenticationReason == AuthenticationReason.AddingAccount:
+  if self.addAccountRequested:
+    self.addAccountRequested = false
     self.doAddAccount()
 
 
@@ -582,7 +605,7 @@ proc doAddAccount[T](self: Module[T]) =
     publicKey = selectedAddrItem.getPublicKey()
     rootWalletMasterKey = selectedOrigin.getDerivedFrom()
     keyUid = selectedOrigin.getKeyUid()
-    createKeystoreFile = not selectedOrigin.getMigratedToColdWallet()
+    createKeystoreFile = not self.canDeriveFromXpub(selectedOrigin.getKeyUid())
     doPasswordHashing = not singletonInstance.userProfile.getMigratedToColdWallet()
     hideFromTotalBalance = false
 
