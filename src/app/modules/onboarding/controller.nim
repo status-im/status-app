@@ -12,6 +12,7 @@ import app_service/service/devices/service as devices_service
 import app_service/service/keycardV2/service as keycard_serviceV2
 import app_service/common/utils
 import app_service/common/types
+import app_service/common/account_constants
 from app_service/service/keycardV2/dto import KeycardExportedKeysDto
 from app_service/service/chat/service import SIGNAL_CHATS_LOADING_FAILED
 
@@ -113,7 +114,7 @@ proc init*(self: Controller) =
   self.connectionIds.add(handlerId)
 
 proc loginKeycard*(self: Controller, keyUid: string, pin: string) =
-  self.keycardServiceV2.asyncLogin(keyUid, pin)
+  self.keycardServiceV2.asyncLogin(keyUid, pin, xPubPath = account_constants.PATH_WALLET_XPUB)
 
 proc getPasswordStrengthScore*(self: Controller, password, userName: string): int =
   return self.generalService.getPasswordStrengthScore(password, userName)
@@ -195,6 +196,7 @@ proc login*(
     privateWhisperKey: string = "",
     mnemonic: string = "",
     keycardReplacement: bool = false,
+    walletXPub: string = "",
   ) =
   var passwordHash, chatPrivateKey = ""
 
@@ -209,6 +211,7 @@ proc login*(
     passwordHash,
     chatPrivateKey,
     mnemonic,
+    walletXPub,
   )
 
 proc getKeypairByKeyUidFromDb*(self: Controller, keyUid: string): wallet_account_service.KeypairDto =
