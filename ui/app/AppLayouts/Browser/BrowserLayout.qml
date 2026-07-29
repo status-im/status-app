@@ -173,8 +173,6 @@ StatusSectionLayout {
         readonly property Item currentWebView: webViewContext.currentWebView
         readonly property bool currentTabIncognito: currentWebView?.offTheRecord ?? false
         readonly property bool currentTabLoading: currentWebView?.loading ?? false
-        readonly property bool currentTabIsDownloads: webStackView.children[tabs.currentIndex]?.isDownloadView ?? false
-
         property real lastScrollPos: 0
         property bool scrolledUp: true
 
@@ -197,6 +195,9 @@ StatusSectionLayout {
                 findBar.visible = true
                 findBar.forceActiveFocus()
             }
+            // Mobile: Find XOR Download Pill strip (browser-downloads-ux 05).
+            if (root.isMobile)
+                downloadsContext.setFindUiActive(true)
         }
 
         function hideFindBar() {
@@ -206,11 +207,18 @@ StatusSectionLayout {
                 findBar.visible = false
                 findBar.focus = false
             }
+            // QML FindBar syncs via onVisibleChanged; native panel has no dismiss
+            // signal, so clear Find XOR here when we dismiss it ourselves.
+            if (root.isMobile && hasNativeFindPanel)
+                downloadsContext.setFindUiActive(false)
         }
 
-        function addNewDownloadTab() {
-            webViewContext.createDownloadTab(tabs.count !== 0 ? currentWebView.profileParams : browserConfig.defaultProfileParams);
-            tabs.activateTab(tabs.count - 1)
+        function openDownloadsOverview() {
+            onOpenTabsBookmarksOverviewRequested(TabsBookmarksOverviewModal.Mode.Downloads)
+        }
+
+        function syncDownloadStripVisibility() {
+            downloadsContext.syncStripVisibility()
         }
 
         function addNewTab(url, initialTitle, activate) {
@@ -257,7 +265,15 @@ StatusSectionLayout {
                 }
             }
 
-            tabsBookmarksOverviewComp.createObject(root, {tabsModel, currentTabIndex: tabs.currentIndex, initialMode: mode}).open()
+            downloadsContext.refreshMissingFiles()
+            tabsBookmarksOverviewComp.createObject(root, {
+                                                       tabsModel,
+                                                       currentTabIndex: tabs.currentIndex,
+                                                       initialMode: mode,
+                                                       downloadsModel: root.downloadsStore.downloadsListNewestFirst(),
+                                                       statusTextFn: (record) => root.downloadsStore.statusText(record),
+                                                       elideFileNameFn: (name, maxChars) => root.downloadsStore.elideFileName(name, maxChars)
+                                                   }).open()
         }
 
         function openFavoriteModal(editMode = false, url = "", name = "") {
@@ -276,6 +292,9 @@ StatusSectionLayout {
 
         onCurrentWebViewChanged: {
             findBar.reset()
+            // MobileWebView has no native-find dismiss signal; clear Find XOR on tab change.
+            if (root.isMobile)
+                downloadsContext.setFindUiActive(false)
             _internal.resetScroll()
         }
     }
@@ -304,10 +323,21 @@ StatusSectionLayout {
     BrowserDownloadsContext {
         id: downloadsContext
         downloadsStore: root.downloadsStore
-        tabsModel: tabs
         getWebViewFn: (index) => webViewContext.getWebView(index)
+        getTabsCountFn: () => tabs.count
         removeViewFn: (index) => webViewContext.removeView(index)
         setFooterVisibleFn: (visible) => root.showFooter = visible
+        hideFindUiFn: () => _internal.hideFindBar()
+        openUrlFn: (url) => root.openUrlInNewTab(url)
+        supportsPdfFn: () => !!(_internal.currentWebView && _internal.currentWebView.supportsPdfViewer)
+    }
+
+    Connections {
+        target: Qt.application
+        function onStateChanged() {
+            if (Qt.application.state === Qt.ApplicationActive)
+                downloadsContext.refreshMissingFiles()
+        }
     }
 
     BrowserWebViewContext {
@@ -432,10 +462,7 @@ StatusSectionLayout {
                     root.bookmarksStore.deleteBookmark(url)
                 }
                 function onRequestLaunchInBrowser(url) {
-                    if (_internal.currentTabIsDownloads)
-                        root.openUrlInNewTab(url)
-                    else
-                        _internal.onRequestLaunchInBrowser(url)
+                    _internal.onRequestLaunchInBrowser(url)
                 }
                 function onRequestWalletMenu() {
                     dialogsContext.openWalletMenu(browserWalletMenu)
@@ -455,9 +482,6 @@ StatusSectionLayout {
                 function onGoIncognito(checked) {
                     root.applyIncognitoMode(checked)
                 }
-                function onRequestDownloadsView() {
-                    _internal.addNewDownloadTab()
-                }
                 function onGoBackOrForwardRequested(offset) {
                     webViewContext.goBackOrForwardCurrent(offset)
                 }
@@ -476,7 +500,6 @@ StatusSectionLayout {
                 currentTabIncognito: _internal.currentTabIncognito
                 currentTabIsBookmark: favoritesContext.currentTabIsBookmark
                 currentTabLoading: _internal.currentTabLoading
-                currentTabIsDownloads: _internal.currentTabIsDownloads
                 browserDappsModel: browserDappsProvider.model
                 historyModel: _internal.currentWebView?.history?.items ?? null
             }
@@ -493,7 +516,6 @@ StatusSectionLayout {
                 currentTabIncognito: _internal.currentTabIncognito
                 currentTabIsBookmark: favoritesContext.currentTabIsBookmark
                 currentTabLoading: _internal.currentTabLoading
-                currentTabIsDownloads: _internal.currentTabIsDownloads
                 browserDappsModel: browserDappsProvider.model
                 historyModel: _internal.currentWebView?.history?.items ?? null
             }
@@ -507,7 +529,7 @@ StatusSectionLayout {
             sourceComponent: FavoritesBar {
                 currentTabIncognito: _internal.currentTabIncognito
                 bookmarkModel: root.bookmarksStore.bookmarksModel
-                onSetAsCurrentWebUrl: url => _internal.currentTabIsDownloads ? root.openUrlInNewTab(url) : webViewContext.setCurrentWebUrl(url)
+                onSetAsCurrentWebUrl: url => webViewContext.setCurrentWebUrl(url)
                 onOpenInNewTab: url => root.openUrlInNewTab(url)
                 onAddBookmarkRequested: _internal.openFavoriteModal()
                 onFavMenuRequested: (parent, pos, url, name) => _internal.openFavoriteMenu(parent, pos, url, name)
@@ -517,8 +539,9 @@ StatusSectionLayout {
 
     footer: Loader {
         id: footerLoader
-        // Desktop: download bar in the window footer. Mobile uses the strip under the address bar.
-        sourceComponent: !root.isMobile ? downloadBar : null
+        // Desktop: same Download Pill strip as mobile, at the bottom (browser-downloads-ux 04).
+        // Mobile hosts the strip under the address bar instead.
+        sourceComponent: !root.isMobile ? downloadPillStrip : null
     }
 
     centerPanel: ColumnLayout {
@@ -540,10 +563,7 @@ StatusSectionLayout {
             onRequestReloadPage: webViewContext.reloadCurrent()
             onRequestStopLoadingPage: webViewContext.stopCurrent()
             onRequestLaunchInBrowser: url => {
-                                          if (_internal.currentTabIsDownloads)
-                                              root.openUrlInNewTab(url)
-                                          else
-                                              _internal.onRequestLaunchInBrowser(url)
+                                          _internal.onRequestLaunchInBrowser(url)
                                           deactivateAddressBar()
                                       }
             onRequestOpenDapp: url => _internal.onRequestOpenDapp(url)
@@ -558,7 +578,7 @@ StatusSectionLayout {
             Layout.fillWidth: true
             Layout.preferredHeight: active && item ? item.implicitHeight : 0
             active: root.isMobile && root.showFooter
-            sourceComponent: downloadBar
+            sourceComponent: downloadPillStrip
         }
 
         FindBar {
@@ -580,7 +600,14 @@ StatusSectionLayout {
                 else if (!visible)
                     _internal.showFindBar()
             }
-            onVisibleChanged: if (!visible) webViewContext.findTextCurrent("") // reset the highlight
+            onVisibleChanged: {
+                if (!visible)
+                    webViewContext.findTextCurrent("") // reset the highlight
+                // QML FindBar path (Android / desktop): keep Find XOR in sync when
+                // the bar is dismissed without going through hideFindBar().
+                if (root.isMobile && !_internal.hasNativeFindPanel)
+                    downloadsContext.setFindUiActive(visible)
+            }
         }
 
         StackLayout {
@@ -591,7 +618,7 @@ StatusSectionLayout {
             visible: !overlayLoader.active
         }
 
-        // Overlay for DownloadView and EmptyWebPage
+        // Overlay for EmptyWebPage (no URL). Downloads List lives in Open tabs only.
         Loader {
             Layout.fillHeight: true
             Layout.fillWidth: true
@@ -599,10 +626,8 @@ StatusSectionLayout {
 
             readonly property int contentMode: webViewContext.currentContentMode
             visible: active
-            active: contentMode !== BrowserWebViewContext.ContentMode.WebContent
-            sourceComponent: contentMode === BrowserWebViewContext.ContentMode.DownloadContent
-                             ? downloadViewComponent
-                             : emptyPageComponent
+            active: contentMode === BrowserWebViewContext.ContentMode.EmptyContent
+            sourceComponent: emptyPageComponent
         }
     }
 
@@ -637,17 +662,6 @@ StatusSectionLayout {
             onNextTabRequested: tabs.activateNextTab()
             onPreviousTabRequested: tabs.activatePreviousTab()
             onRemoveViewRequested: webViewContext.removeView(tabs.currentIndex || 0)
-        }
-    }
-
-    Component {
-        id: downloadViewComponent
-        DownloadView {
-            downloadsModel: root.downloadsStore.downloadModel
-            downloadsMenu: downloadMenuInst
-            onOpenDownloadClicked: function(downloadComplete, index) {
-                downloadsContext.openDownloadFromList(downloadComplete, index)
-            }
         }
     }
 
@@ -728,7 +742,7 @@ StatusSectionLayout {
             root.downloadsStore.clearDownloadHistory()
         }
         onAddNewTab: _internal.addNewEmptyTab()
-        onAddNewDownloadTab: _internal.addNewDownloadTab()
+        onOpenDownloads: _internal.openDownloadsOverview()
         onGoIncognito: (checked) => root.applyIncognitoMode(checked)
         onZoomIn: webViewContext.changeZoomCurrent(0.1)
         onZoomOut: webViewContext.changeZoomCurrent(-0.1)
@@ -823,6 +837,32 @@ StatusSectionLayout {
             onEditBookmarkRequested: (url, name) => _internal.openFavoriteModal(true, url, name)
             onDeleteBookmarkRequested: url => root.bookmarksStore.deleteBookmark(url)
             onBookmarkClicked: url => root.openUrlInNewTab(url)
+
+            onDownloadClicked: function (listIndex) {
+                const list = root.downloadsStore.downloadsListNewestFirst()
+                const record = list[listIndex]
+                if (!record)
+                    return
+                const modelIndex = root.downloadsStore.downloadModel.indexOf(record)
+                if (modelIndex < 0)
+                    return
+                const complete = record.state === AbstractWebView.DownloadState.DownloadCompleted
+                downloadsContext.openDownloadFromList(complete, modelIndex)
+            }
+            onDownloadOptionsClicked: function (listIndex, anchor, xVal) {
+                const list = root.downloadsStore.downloadsListNewestFirst()
+                const record = list[listIndex]
+                if (!record)
+                    return
+                const modelIndex = root.downloadsStore.downloadModel.indexOf(record)
+                if (modelIndex < 0)
+                    return
+                downloadsContext.populateRecordMenu(downloadListMenuInst, record, modelIndex)
+                downloadListMenuInst.parent = anchor
+                downloadListMenuInst.x = xVal
+                downloadListMenuInst.y = anchor.height
+                downloadListMenuInst.open()
+            }
         }
     }
 
@@ -863,9 +903,29 @@ StatusSectionLayout {
         }
     }
 
-    DownloadMenu {
-        id: downloadMenuInst
-        downloadsStore: root.downloadsStore
+    DownloadRecordMenu {
+        id: downloadListMenuInst
+        onShowInFolderRequested: index => root.downloadsStore.openDirectory(index)
+        onShareFileRequested: index => downloadsContext.shareFileRecord(root.downloadsStore.getDownload(index))
+        onShareUrlRequested: index => downloadsContext.shareUrlRecord(root.downloadsStore.getDownload(index))
+        onOpenInBrowserRequested: index => downloadsContext.openInBrowserRecord(root.downloadsStore.getDownload(index))
+        onRetryRequested: index => downloadsContext.retryRecord(root.downloadsStore.getDownload(index))
+    }
+
+    DownloadRecordMenu {
+        id: downloadPillMenuInst
+        onDismissRequested: function (index) {
+            root.downloadsStore.dismissFromStrip(index)
+            _internal.syncDownloadStripVisibility()
+        }
+        onShowInFolderRequested: index => {
+            root.downloadsStore.openDirectoryForRecord(
+                        root.downloadsStore.getStripDownload(index))
+        }
+        onShareFileRequested: index => downloadsContext.shareFileRecord(root.downloadsStore.getStripDownload(index))
+        onShareUrlRequested: index => downloadsContext.shareUrlRecord(root.downloadsStore.getStripDownload(index))
+        onOpenInBrowserRequested: index => downloadsContext.openInBrowserRecord(root.downloadsStore.getStripDownload(index))
+        onRetryRequested: index => downloadsContext.retryRecord(root.downloadsStore.getStripDownload(index))
     }
 
     Component {
@@ -915,15 +975,28 @@ StatusSectionLayout {
     }
 
     Component {
-        id: downloadBar
-        DownloadBar {
-            downloadsModel: root.downloadsStore.downloadModel
-            downloadsMenu: downloadMenuInst
-            onOpenDownloadClicked: function (downloadComplete, index) {
-                downloadsContext.openDownloadFromList(downloadComplete, index)
+        id: downloadPillStrip
+        DownloadPillStrip {
+            downloadsModel: root.downloadsStore.downloadStripModel
+            elideFileNameFn: (name, maxChars) => root.downloadsStore.elideFileName(name, maxChars)
+            onOpenDownloadClicked: function (index) {
+                downloadsContext.handlePillClicked(index)
             }
-            onAddNewDownloadTab: _internal.addNewDownloadTab()
-            onClose: root.showFooter = false
+            onOptionsClicked: function (index, anchor, xVal) {
+                const record = root.downloadsStore.getStripDownload(index)
+                downloadsContext.populateRecordMenu(downloadPillMenuInst, record, index, { showDismiss: true })
+                downloadPillMenuInst.parent = anchor
+                downloadPillMenuInst.x = xVal
+                // Mobile strip is under the address bar → menu below.
+                // Desktop strip is the window footer → menu above.
+                downloadPillMenuInst.y = root.isMobile ? anchor.height : -downloadPillMenuInst.height
+                downloadPillMenuInst.open()
+            }
+            onClose: {
+                // Hide strip only — in-progress pills stay in the session model.
+                // Reappears when the next download starts (setFooterVisibleFn).
+                root.showFooter = false
+            }
         }
     }
 }

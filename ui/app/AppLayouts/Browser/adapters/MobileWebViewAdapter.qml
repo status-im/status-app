@@ -29,6 +29,8 @@ AbstractWebView {
     hasNativeFindPanel: backend.hasNativeFindPanel
     clearSiteDataSupported: backend.clearSiteDataSupported
     clearing: backend.clearing
+    // System Android / WK WebView do not render PDF in-page.
+    supportsPdfViewer: false
 
     MobileWebViewBackend {
         id: backend
@@ -87,6 +89,14 @@ AbstractWebView {
 
     function loadUrl(newUrl) {
         backend.loadUrl(newUrl)
+    }
+
+    /// Host-side Retry (ADR 0006): re-issue via Backend downloadUrl on this profile.
+    function downloadUrl(url, suggestedFileName) {
+        if (backend.downloadUrl)
+            backend.downloadUrl(url, suggestedFileName || "")
+        else
+            console.warn("MobileWebViewAdapter: backend.downloadUrl unavailable")
     }
 
     function goBack() {

@@ -13,7 +13,8 @@ Item {
     required property ProfileParams profileParams
     required property bool devToolsEnabled
     required property bool enableJsLogs
-    required property bool isDownloadView
+    // Kept for session restore compatibility; Downloads Page Tab is gone (UX 03).
+    property bool isDownloadView: false
 
     readonly property bool offTheRecord: profileParams.offTheRecord
 
@@ -45,6 +46,9 @@ Item {
     // Whether "clear current site data" is available on this platform/backend.
     // Desktop: always true (JS path). Mobile: reflects native capability.
     property bool clearSiteDataSupported: false
+
+    // Whether the Backend can render PDF in-page (desktop WebEngine setting; typically false on Android WebView).
+    property bool supportsPdfViewer: false
 
     // Mobile-only: pauses native webview updates (no-op on desktop)
     property bool freeze: false
@@ -137,4 +141,10 @@ Item {
     function detachView() {}
 
     function triggerWebAction(action) { console.warn("AbstractWebView: triggerWebAction not implemented") }
+
+    /// Host-side re-issue of a Download (Retry). MobileWebView: backend.downloadUrl;
+    /// WebEngine: best-effort navigation that re-triggers downloadRequested for attachments.
+    function downloadUrl(url, suggestedFileName) {
+        console.warn("AbstractWebView: downloadUrl not implemented")
+    }
 }

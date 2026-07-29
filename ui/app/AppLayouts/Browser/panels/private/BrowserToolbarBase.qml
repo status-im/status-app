@@ -12,7 +12,6 @@ Control {
     required property bool isMobile
 
     required property bool currentTabIncognito
-    required property bool currentTabIsDownloads
 
     required property bool canGoBack
     required property bool canGoForward
@@ -39,7 +38,6 @@ Control {
     signal requestWalletMenu()
     signal openSettingMenu(var target, point pos)
     signal goIncognito(bool checked)
-    signal requestDownloadsView()
 
     signal goBackOrForwardRequested(int offset)
 

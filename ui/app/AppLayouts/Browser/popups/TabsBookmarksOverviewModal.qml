@@ -16,12 +16,15 @@ import shared.controls
 
 import SortFilterProxyModel
 
+import AppLayouts.Browser.panels
+
 StatusDialog {
     id: root
 
     enum Mode {
         OpenTabs,
-        Bookmarks
+        Bookmarks,
+        Downloads
     }
     property int initialMode: TabsBookmarksOverviewModal.Mode.OpenTabs
 
@@ -42,7 +45,15 @@ StatusDialog {
     signal deleteBookmarkRequested(string url)
     signal bookmarkClicked(string url)
 
-    title: mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs ? qsTr("Open tabs") : qsTr("Bookmarks")
+    // downloads (issue 05)
+    property var downloadsModel: []
+    property var statusTextFn: null
+    property var elideFileNameFn: null
+
+    signal downloadClicked(int listIndex)
+    signal downloadOptionsClicked(int listIndex, Item anchor, real xVal)
+
+    title: d.titleText
     destroyOnClose: true
     fillHeightOnBottomSheet: true
     width: 560
@@ -53,6 +64,14 @@ StatusDialog {
 
     QtObject {
         id: d
+
+        readonly property string titleText: {
+            if (mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.Bookmarks)
+                return qsTr("Bookmarks")
+            if (mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.Downloads)
+                return qsTr("Downloads")
+            return qsTr("Open tabs")
+        }
 
         // Tabs Overview
         readonly property int cardWidth: 162
@@ -78,7 +97,7 @@ StatusDialog {
             filters: SQUtils.SearchFilter {
                 roleName: "title"
                 searchPhrase: searchField.text
-                enabled: searchField.visible
+                enabled: searchField.visible && mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs
             }
         }
 
@@ -89,7 +108,7 @@ StatusDialog {
                 SQUtils.SearchFilter {
                     roleName: "name"
                     searchPhrase: searchField.text
-                    enabled: searchField.visible
+                    enabled: searchField.visible && mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.Bookmarks
                 },
                 ValueFilter {
                     roleName: "url"
@@ -107,7 +126,7 @@ StatusDialog {
             id: searchField
 
             Layout.fillWidth: true
-            visible: searchButton.checked
+            visible: searchButton.checked && mainTabBar.currentIndex !== TabsBookmarksOverviewModal.Mode.Downloads
             onVisibleChanged: clear()
 
             placeholderText: mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs ? qsTr("Search in open tabs")
@@ -280,6 +299,17 @@ StatusDialog {
                     }
                 }
             }
+
+            DownloadsListView {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Math.min(root.availableHeight, 400)
+                Layout.fillHeight: true
+                downloadsModel: root.downloadsModel
+                statusTextFn: root.statusTextFn
+                elideFileNameFn: root.elideFileNameFn
+                onOpenDownloadClicked: listIndex => root.downloadClicked(listIndex)
+                onOptionsClicked: (listIndex, anchor, xVal) => root.downloadOptionsClicked(listIndex, anchor, xVal)
+            }
         }
     }
 
@@ -304,6 +334,9 @@ StatusDialog {
                 CustomSwitchButton {
                     icon.name: "bookmark"
                 }
+                CustomSwitchButton {
+                    icon.name: "download"
+                }
             }
         }
         rightButtons: ObjectModel {
@@ -313,6 +346,7 @@ StatusDialog {
                 icon.width: d.iconSize
                 icon.height: d.iconSize
                 checkable: true
+                visible: mainTabBar.currentIndex !== TabsBookmarksOverviewModal.Mode.Downloads
                 tooltip.text: qsTr("Search")
                 onToggled: searchField.focus = checked
             }
@@ -320,6 +354,7 @@ StatusDialog {
                 icon.name: "add"
                 icon.width: d.iconSize
                 icon.height: d.iconSize
+                visible: mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs
                 tooltip.text: qsTr("Add")
                 onClicked: {
                     root.addTabRequested()

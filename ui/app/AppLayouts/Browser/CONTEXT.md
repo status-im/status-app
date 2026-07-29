@@ -30,10 +30,6 @@ capabilities are.
 The set of open Tabs, their order, and the active Tab, persisted so the browser
 reopens where the user left it. Opt-in; independent of Download History.
 
-### Downloads Page
-A Tab that shows the Downloads List instead of a web page. Desktop only.
-_Avoid_: downloads tab, download view.
-
 ## Downloads
 
 ### Download Record
@@ -50,8 +46,11 @@ _Avoid_: downloads log, saved downloads.
 
 ### Downloads List
 The full, scrollable view of Download Records, newest first, with the per-Record
-actions (open, show in folder, share, retry, pause/resume, cancel).
-_Avoid_: downloads panel, downloads modal.
+actions (open, show in folder, share, retry, pause/resume, cancel). Lives as the
+third section of the Open tabs overview on both Desktop and Mobile — never as its
+own Tab.
+_Avoid_: downloads panel, downloads modal, Downloads Page, downloads tab,
+download view.
 
 ### Download Pill
 The compact strip entry shown while a download is worth surfacing in-line: file

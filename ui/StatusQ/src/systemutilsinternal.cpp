@@ -2,6 +2,7 @@
 
 #include <QDesktopServices>
 #include <QGuiApplication>
+#include <QUrl>
 #include <QMimeDatabase>
 #include <QDir>
 #include <QFileInfo>
@@ -151,6 +152,51 @@ bool SystemUtilsInternal::ensureDirectory(const QString &path) const
     if (dir.exists())
         return true;
     return dir.mkpath(QStringLiteral("."));
+}
+
+void SystemUtilsInternal::showInFolder(const QString &path) const
+{
+#ifdef Q_OS_IOS
+    Q_UNUSED(path);
+    // Show in folder is hidden on iOS (no folder UI to open).
+    return;
+#elif defined(Q_OS_ANDROID)
+    Q_UNUSED(path);
+    QJniObject::callStaticMethod<void>(
+        "app/status/mobile/StatusQtActivity",
+        "openDownloadsUi",
+        "()V"
+    );
+#else
+    if (path.isEmpty())
+        return;
+
+    QString localPath = path;
+    if (localPath.startsWith(QLatin1String("file://")))
+        localPath = QUrl(localPath).toLocalFile();
+
+    const QFileInfo info(localPath);
+    if (!info.exists()) {
+        qWarning() << "showInFolder: path does not exist:" << localPath;
+        return;
+    }
+
+#if defined(Q_OS_MACOS)
+    // Reveal and select the file in Finder.
+    const QString target = info.isFile() ? info.absoluteFilePath() : info.absolutePath();
+    QProcess::startDetached(QStringLiteral("open"), {QStringLiteral("-R"), target});
+#elif defined(Q_OS_WIN)
+    // Reveal and select the file in Explorer (/select,<path> must be one arg).
+    const QString native = QDir::toNativeSeparators(
+        info.isFile() ? info.absoluteFilePath() : info.absolutePath());
+    QProcess::startDetached(QStringLiteral("explorer.exe"),
+                            {QStringLiteral("/select,%1").arg(native)});
+#else
+    // Linux and others: open the containing directory.
+    const QString dir = info.isDir() ? info.absoluteFilePath() : info.absolutePath();
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir));
+#endif
+#endif
 }
 
 void SystemUtilsInternal::restartApplication() const

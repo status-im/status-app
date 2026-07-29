@@ -40,11 +40,6 @@ FocusScope {
         }
     }
 
-    function createDownloadTab() {
-        var newTabButton = tabButtonComponent.createObject(tabBar, {tabTitle: qsTr("Downloads")})
-        tabBar.addItem(newTabButton);
-    }
-
     function removeTab(index) {
         tabBar.takeItem(index).destroy()
     }

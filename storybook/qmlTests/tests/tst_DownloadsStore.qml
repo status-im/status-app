@@ -32,6 +32,7 @@ Item {
             property int state: AbstractWebView.DownloadState.DownloadRequested
             property bool isPaused: false
             property bool isInline: false
+            property bool offTheRecord: false
             property string errorString: ""
             property string destinationPath: downloadDirectory + "/" + downloadFileName
             property bool accepted: false
@@ -124,7 +125,9 @@ Item {
         function createStore() {
             const component = Qt.createComponent(root.downloadsStoreUrl)
             verify(component.status === Component.Ready, component.errorString())
-            return createTemporaryObject(component, root)
+            const store = createTemporaryObject(component, root)
+            store.ensureDirectoryFn = function(path) { return true }
+            return store
         }
 
         function test_createRecord_fromLiveDownload() {
@@ -399,7 +402,333 @@ Item {
 
             store.clearDownloadHistory()
             compare(store.downloadModel.length, 0)
+            compare(store.downloadStripModel.length, 0)
             compare(JSON.parse(store.preferencesStore.getDownloadHistoryRaw() || "[]").length, 0)
+        }
+
+        // --- Download Pill strip (session-only; issue 03) ---
+
+        function test_strip_addDownload_appearsInStrip() {
+            const store = createStore()
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            const record = store.addDownload(live)
+
+            verify(Array.isArray(store.downloadStripModel))
+            compare(store.downloadStripModel.length, 1)
+            compare(store.downloadStripModel[0], record)
+            compare(store.getStripDownload(0), record)
+        }
+
+        function test_strip_restoreHistory_doesNotPopulateStrip() {
+            const prefs = createTemporaryObject(fakePreferencesComponent, root)
+            prefs.setDownloadHistoryRaw(JSON.stringify([{
+                url: "https://example.com/old.bin",
+                fileName: "old.bin",
+                downloadDirectory: "/tmp/status-downloads",
+                mimeType: "application/octet-stream",
+                isInline: false,
+                startTime: new Date().toISOString(),
+                state: AbstractWebView.DownloadState.DownloadCompleted,
+                totalBytes: 10,
+                errorString: ""
+            }]))
+
+            const store = createStore()
+            store.preferencesStore = prefs
+            store.pathExistsFn = function(path) { return false }
+            store.restoreDownloadHistory()
+
+            compare(store.downloadModel.length, 1)
+            compare(store.downloadStripModel.length, 0)
+        }
+
+        function test_strip_dismissFromStrip_removesOnlyFromStrip() {
+            const store = createStore()
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            const record = store.addDownload(live)
+            live.complete()
+
+            compare(store.downloadStripModel.length, 1)
+            store.dismissFromStrip(0)
+
+            compare(store.downloadStripModel.length, 0)
+            compare(store.downloadModel.length, 1)
+            compare(store.getDownload(0), record)
+        }
+
+        function test_strip_dismissRecord_byIdentity() {
+            const store = createStore()
+            const live1 = createTemporaryObject(fakeDownloadComponent, root)
+            live1.downloadFileName = "a.pdf"
+            const live2 = createTemporaryObject(fakeDownloadComponent, root)
+            live2.downloadFileName = "b.pdf"
+            const a = store.addDownload(live1)
+            const b = store.addDownload(live2)
+
+            store.dismissRecordFromStrip(a)
+
+            compare(store.downloadStripModel.length, 1)
+            compare(store.downloadStripModel[0], b)
+            compare(store.downloadModel.length, 2)
+        }
+
+        // --- Downloads List policy (issue 05): Missing File, retry, open, share ---
+
+        function test_downloadsList_newestFirst() {
+            const store = createStore()
+            const live1 = createTemporaryObject(fakeDownloadComponent, root)
+            live1.downloadFileName = "old.bin"
+            const live2 = createTemporaryObject(fakeDownloadComponent, root)
+            live2.downloadFileName = "new.bin"
+            store.addDownload(live1)
+            store.addDownload(live2)
+
+            const list = store.downloadsListNewestFirst()
+            compare(list.length, 2)
+            compare(list[0].fileName, "new.bin")
+            compare(list[1].fileName, "old.bin")
+            // Underlying History order unchanged (oldest first for cap eviction).
+            compare(store.downloadModel[0].fileName, "old.bin")
+        }
+
+        function test_missingFile_lazyProbe_setsFlagOnCompleted() {
+            const store = createStore()
+            store.pathExistsFn = function(path) {
+                return path !== "/tmp/downloads/gone.pdf"
+            }
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.downloadFileName = "gone.pdf"
+            live.downloadDirectory = "/tmp/downloads"
+            const record = store.addDownload(live)
+            live.complete()
+
+            compare(record.missingFile, false)
+            store.refreshMissingFiles()
+            compare(record.missingFile, true)
+        }
+
+        function test_missingFile_notFlaggedWhileInProgress() {
+            const store = createStore()
+            store.pathExistsFn = function(path) { return false }
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            const record = store.addDownload(live)
+            live.advance(10)
+
+            store.refreshMissingFiles()
+            compare(record.missingFile, false)
+        }
+
+        function test_retryEligibility_menuAndTap_rules() {
+            const store = createStore()
+
+            const interrupted = createTemporaryObject(fakeDownloadComponent, root)
+            const interruptedRec = store.addDownload(interrupted)
+            interruptedRec.state = AbstractWebView.DownloadState.DownloadInterrupted
+            interruptedRec.isInline = false
+
+            const cancelled = createTemporaryObject(fakeDownloadComponent, root)
+            const cancelledRec = store.addDownload(cancelled)
+            cancelledRec.state = AbstractWebView.DownloadState.DownloadCancelled
+            cancelledRec.isInline = false
+
+            const inlineInterrupted = createTemporaryObject(fakeDownloadComponent, root)
+            const inlineRec = store.addDownload(inlineInterrupted)
+            inlineRec.state = AbstractWebView.DownloadState.DownloadInterrupted
+            inlineRec.isInline = true
+
+            const completed = createTemporaryObject(fakeDownloadComponent, root)
+            const completedRec = store.addDownload(completed)
+            completed.complete()
+
+            verify(store.canRetryFromMenu(interruptedRec))
+            verify(store.canRetryFromTap(interruptedRec))
+            verify(store.canRetryFromMenu(cancelledRec))
+            verify(!store.canRetryFromTap(cancelledRec))
+            verify(!store.canRetryFromMenu(inlineRec))
+            verify(!store.canRetryFromTap(inlineRec))
+            verify(!store.canRetryFromMenu(completedRec))
+            verify(!store.canRetryFromTap(completedRec))
+        }
+
+        function test_canOpenInBrowser_allowlist_andPdfGate() {
+            const store = createStore()
+
+            const png = createTemporaryObject(fakeDownloadComponent, root)
+            png.mimeType = "image/png"
+            png.downloadFileName = "a.png"
+            const pngRec = store.addDownload(png)
+            png.complete()
+
+            const pdf = createTemporaryObject(fakeDownloadComponent, root)
+            pdf.mimeType = "application/pdf"
+            pdf.downloadFileName = "a.pdf"
+            const pdfRec = store.addDownload(pdf)
+            pdf.complete()
+
+            const bin = createTemporaryObject(fakeDownloadComponent, root)
+            bin.mimeType = "application/octet-stream"
+            bin.downloadFileName = "a.bin"
+            const binRec = store.addDownload(bin)
+            bin.complete()
+
+            verify(store.canOpenInBrowser(pngRec, false))
+            verify(!store.canOpenInBrowser(pdfRec, false))
+            verify(store.canOpenInBrowser(pdfRec, true))
+            verify(!store.canOpenInBrowser(binRec, true))
+            pngRec.missingFile = true
+            verify(!store.canOpenInBrowser(pngRec, false))
+        }
+
+        function test_canShareFile_requiresCompletedPresentFile() {
+            const store = createStore()
+            store.pathExistsFn = function(path) { return true }
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            const record = store.addDownload(live)
+            live.complete()
+            store.refreshMissingFiles()
+
+            verify(store.canShareFile(record))
+            record.missingFile = true
+            verify(!store.canShareFile(record))
+        }
+
+        function test_shareFile_invokesSharePathsFn() {
+            const store = createStore()
+            store.preferShareSheet = true
+            let shared = []
+            store.sharePathsFn = function(paths) { shared = paths.slice() }
+            store.pathExistsFn = function(path) { return true }
+
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.downloadDirectory = "/tmp/downloads"
+            live.downloadFileName = "report.pdf"
+            const record = store.addDownload(live)
+            live.complete()
+            store.refreshMissingFiles()
+
+            verify(store.shareFile(record))
+            compare(shared.length, 1)
+            compare(shared[0], "/tmp/downloads/report.pdf")
+        }
+
+        function test_shareFile_desktop_copiesPath() {
+            const store = createStore()
+            store.preferShareSheet = false
+            let copied = ""
+            let shared = []
+            store.copyTextFn = function(text) { copied = text }
+            store.sharePathsFn = function(paths) { shared = paths.slice() }
+            store.pathExistsFn = function(path) { return true }
+
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.downloadDirectory = "/tmp/downloads"
+            live.downloadFileName = "report.pdf"
+            const record = store.addDownload(live)
+            live.complete()
+            store.refreshMissingFiles()
+
+            verify(store.shareFile(record))
+            compare(copied, "/tmp/downloads/report.pdf")
+            compare(shared.length, 0)
+        }
+
+        function test_shareUrl_mobile_usesShareText_desktop_copies() {
+            const store = createStore()
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.url = "https://example.com/report.pdf"
+            const record = store.addDownload(live)
+
+            store.preferShareSheet = true
+            let sharedText = ""
+            store.shareTextFn = function(text) { sharedText = text }
+            verify(store.shareUrl(record))
+            compare(sharedText, "https://example.com/report.pdf")
+
+            store.preferShareSheet = false
+            let copied = ""
+            store.copyTextFn = function(text) { copied = text }
+            verify(store.shareUrl(record))
+            compare(copied, "https://example.com/report.pdf")
+        }
+
+        function test_canShowInFolder_desktopAndroid_notIos() {
+            const store = createStore()
+            store.pathExistsFn = function(path) { return true }
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            const record = store.addDownload(live)
+            live.complete()
+            store.refreshMissingFiles()
+
+            store.showInFolderSupported = true
+            verify(store.canShowInFolder(record))
+            store.showInFolderSupported = false
+            verify(!store.canShowInFolder(record))
+            store.showInFolderSupported = true
+            record.missingFile = true
+            verify(!store.canShowInFolder(record))
+        }
+
+        function test_openDirectoryForRecord_callsShowInFolderFn_withTargetPath() {
+            const store = createStore()
+            store.pathExistsFn = function(path) { return true }
+            store.showInFolderSupported = true
+            let shownPath = ""
+            store.showInFolderFn = function(path) { shownPath = path }
+
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            const record = store.addDownload(live)
+            live.complete()
+            store.refreshMissingFiles()
+
+            store.openDirectoryForRecord(record)
+            compare(shownPath, record.targetPath)
+
+            // iOS / unsupported: no-op
+            shownPath = "unchanged"
+            store.showInFolderSupported = false
+            store.openDirectoryForRecord(record)
+            compare(shownPath, "unchanged")
+        }
+
+        function test_canShowInFolder_incognitoCompleted_stillAllowed() {
+            // ADR 0006: Incognito Records stay session-only and are not registered
+            // with the Android Downloads UI, but Show in folder remains available
+            // for the on-disk file (Desktop reveal / Android Downloads app).
+            const store = createStore()
+            store.pathExistsFn = function(path) { return true }
+            store.showInFolderSupported = true
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.offTheRecord = true
+            const record = store.addDownload(live)
+            live.complete()
+            store.refreshMissingFiles()
+            verify(!!record.offTheRecord)
+            verify(store.canShowInFolder(record))
+        }
+
+        function test_sourceUrl_forShareCopy() {
+            const store = createStore()
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.url = "https://example.com/report.pdf"
+            const record = store.addDownload(live)
+
+            compare(store.sourceUrlString(record), "https://example.com/report.pdf")
+            verify(store.canShareUrl(record))
+            record.missingFile = true
+            verify(store.canShareUrl(record)) // URL actions remain for Missing File
+        }
+
+        function test_statusText_coversMissingAndInterrupted() {
+            const store = createStore()
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            const record = store.addDownload(live)
+            live.complete()
+            record.missingFile = true
+            compare(store.statusText(record), "Missing file")
+
+            record.missingFile = false
+            record.state = AbstractWebView.DownloadState.DownloadInterrupted
+            compare(store.statusText(record), "Interrupted — tap to retry")
         }
     }
 }

@@ -3,6 +3,7 @@ import QtQuick
 
 import StatusQ
 import StatusQ.Core
+import StatusQ.Core.Utils as SQUtils
 
 import utils
 
@@ -22,6 +23,9 @@ QtObject {
     // Array of DownloadRecord; reassigned on change so ListView refreshes.
     property var downloadModel: []
 
+    // Session-only Download Pill strip. Never restored from Download History (ADR 0006 / issue 03).
+    property var downloadStripModel: []
+
     // Browser preferences (same mechanism as Tab Session). Optional in unit tests.
     property var preferencesStore: null
 
@@ -39,6 +43,37 @@ QtObject {
         return SystemUtils.fileExists(path)
     }
 
+    // Directory create; injectable so Storybook/unit tests need not stub SystemUtils.
+    property var ensureDirectoryFn: function(path) {
+        return SystemUtils.ensureDirectory(path)
+    }
+
+    // Mobile share sheet for files; production uses SystemUtils.sharePaths, tests inject a fake.
+    property var sharePathsFn: function(paths) {
+        SystemUtils.sharePaths(paths)
+    }
+
+    // Mobile share sheet for text/URL; production uses ShareUtils.shareText.
+    property var shareTextFn: function(text) {
+        ShareUtils.shareText(text)
+    }
+
+    // Desktop Copy file / Copy URL; production uses ClipboardUtils.
+    property var copyTextFn: function(text) {
+        ClipboardUtils.setText(text)
+    }
+
+    // Mobile → share sheet; desktop → copy. Injectable for QML tests.
+    property bool preferShareSheet: SQUtils.Utils.isMobile
+
+    // Show in folder: Desktop + Android; hidden on iOS (ADR 0006 / UX 02 / UX 06).
+    property bool showInFolderSupported: !SQUtils.Utils.isIOS
+
+    // Desktop reveals file; Android opens system Downloads UI. Injectable for QML tests.
+    property var showInFolderFn: function(path) {
+        SystemUtils.showInFolder(path)
+    }
+
     readonly property url _downloadRecordUrl: Qt.resolvedUrl("DownloadRecord.qml")
 
     readonly property Timer _historySaveTimer: Timer {
@@ -51,6 +86,12 @@ QtObject {
         if (index < 0 || index >= downloadModel.length)
             return null
         return downloadModel[index]
+    }
+
+    function getStripDownload(index) {
+        if (index < 0 || index >= downloadStripModel.length)
+            return null
+        return downloadStripModel[index]
     }
 
     function addDownload(download) {
@@ -71,30 +112,237 @@ QtObject {
             root.scheduleSaveDownloadHistory()
         })
         downloadModel = downloadModel.concat([record])
+        downloadStripModel = downloadStripModel.concat([record])
         root.enforceHistoryCap()
         root.scheduleSaveDownloadHistory()
         return record
     }
 
-    function openFile(index) {
-        const record = getDownload(index)
+    /// Remove a Record from the Download Pill strip only (History / downloadModel unchanged).
+    function dismissFromStrip(index) {
+        if (index < 0 || index >= downloadStripModel.length)
+            return
+        const next = downloadStripModel.slice()
+        next.splice(index, 1)
+        downloadStripModel = next
+    }
+
+    function dismissRecordFromStrip(record) {
         if (!record)
+            return
+        for (let i = 0; i < downloadStripModel.length; ++i) {
+            if (downloadStripModel[i] === record) {
+                dismissFromStrip(i)
+                return
+            }
+        }
+    }
+
+    function clearDownloadStrip() {
+        downloadStripModel = []
+    }
+
+    function openFile(index) {
+        openRecord(getDownload(index))
+    }
+
+    function openRecord(record) {
+        if (!record || record.missingFile)
             return
         Qt.openUrlExternally(UrlUtils.urlFromUserInput(record.targetPath))
     }
 
     function openDirectory(index) {
-        const record = getDownload(index)
-        if (!record)
+        openDirectoryForRecord(getDownload(index))
+    }
+
+    function openDirectoryForRecord(record) {
+        if (!record || !canShowInFolder(record))
             return
-        Qt.openUrlExternally(UrlUtils.urlFromUserInput(record.downloadDirectory))
+        // Prefer the file path so desktop can reveal/select it; Android opens
+        // the system Downloads UI and ignores the path (UX 06).
+        const path = record.targetPath || record.downloadDirectory
+        if (!path)
+            return
+        root.showInFolderFn(path)
+    }
+
+    /// Newest Download Records first for the Downloads List UI (History stays oldest-first).
+    function downloadsListNewestFirst() {
+        const list = []
+        for (let i = downloadModel.length - 1; i >= 0; --i)
+            list.push(downloadModel[i])
+        return list
+    }
+
+    /// Lazy Missing File probe for Completed Records (list shown / app foreground).
+    function refreshMissingFiles() {
+        for (let i = 0; i < downloadModel.length; ++i) {
+            const record = downloadModel[i]
+            if (!record)
+                continue
+            if (record.state !== AbstractWebView.DownloadState.DownloadCompleted) {
+                record.missingFile = false
+                continue
+            }
+            const path = record.targetPath
+            record.missingFile = !(path && root.pathExistsFn && root.pathExistsFn(path))
+        }
+    }
+
+    function canRetryFromMenu(record) {
+        if (!record || record.isInline)
+            return false
+        return record.state === AbstractWebView.DownloadState.DownloadInterrupted
+            || record.state === AbstractWebView.DownloadState.DownloadCancelled
+    }
+
+    function canRetryFromTap(record) {
+        if (!record || record.isInline)
+            return false
+        return record.state === AbstractWebView.DownloadState.DownloadInterrupted
+    }
+
+    function canShareFile(record) {
+        if (!record || record.missingFile)
+            return false
+        return record.state === AbstractWebView.DownloadState.DownloadCompleted
+            && !!record.targetPath
+    }
+
+    function canShowInFolder(record) {
+        if (!root.showInFolderSupported || !record || record.missingFile)
+            return false
+        return record.state === AbstractWebView.DownloadState.DownloadCompleted
+            && !!record.targetPath
+    }
+
+    function canShareUrl(record) {
+        return !!record && sourceUrlString(record).length > 0
+    }
+
+    function sourceUrlString(record) {
+        if (!record || record.url === undefined || record.url === null)
+            return ""
+        return String(record.url)
+    }
+
+    /// Open-in-Browser allowlist: images, plain text, HTML; PDF only when Backend supports it.
+    function canOpenInBrowser(record, supportsPdf) {
+        if (!record || record.missingFile)
+            return false
+        if (record.state !== AbstractWebView.DownloadState.DownloadCompleted)
+            return false
+
+        const mime = String(record.mimeType || "").toLowerCase()
+        const name = String(record.fileName || "").toLowerCase()
+
+        if (mime.startsWith("image/") || /\.(png|jpe?g|gif|webp|bmp|svg)$/.test(name))
+            return true
+        if (mime === "text/plain" || mime === "text/html" || mime === "application/xhtml+xml"
+                || /\.(txt|html?|xhtml)$/.test(name))
+            return true
+        if (mime === "application/pdf" || name.endsWith(".pdf"))
+            return !!supportsPdf
+        return false
+    }
+
+    /// Mobile: system share sheet. Desktop: copy the Download Target path.
+    function shareFile(record) {
+        if (!canShareFile(record))
+            return false
+        const path = record.targetPath
+        if (root.preferShareSheet) {
+            if (root.sharePathsFn)
+                root.sharePathsFn([path])
+        } else if (root.copyTextFn) {
+            root.copyTextFn(path)
+        }
+        return true
+    }
+
+    /// Mobile: system share sheet. Desktop: copy the source URL.
+    function shareUrl(record) {
+        const url = sourceUrlString(record)
+        if (!url)
+            return false
+        if (root.preferShareSheet) {
+            if (root.shareTextFn)
+                root.shareTextFn(url)
+        } else if (root.copyTextFn) {
+            root.copyTextFn(url)
+        }
+        return true
+    }
+
+    /// Middle-elide the base name, then keep the extension (pill + list).
+    function elideFileName(fileName, maxLength) {
+        if (!fileName)
+            return ""
+        const s = String(fileName)
+        const limit = Number(maxLength)
+        if (!(limit > 0) || s.length <= limit)
+            return s
+
+        const lastDot = s.lastIndexOf(".")
+        if (lastDot <= 0) {
+            if (limit <= 1)
+                return "…"
+            return s.substring(0, limit - 1) + "…"
+        }
+
+        const ext = s.substring(lastDot)
+        const base = s.substring(0, lastDot)
+        const budget = limit - ext.length
+        if (budget <= 1) {
+            if (ext.length >= limit)
+                return s.substring(0, Math.max(0, limit - 1)) + "…"
+            return "…" + ext
+        }
+        if (base.length <= budget)
+            return base + ext
+
+        const keep = budget - 1
+        const head = Math.ceil(keep / 2)
+        const tail = Math.floor(keep / 2)
+        return base.substring(0, head) + "…" + base.substring(base.length - tail) + ext
+    }
+
+    /// Shared subtitle for Downloads List / Download Pill.
+    function statusText(record) {
+        if (!record)
+            return ""
+        if (record.missingFile)
+            return qsTr("Missing file")
+        const state = record.state
+        if (state === AbstractWebView.DownloadState.DownloadCompleted)
+            return qsTr("Completed")
+        if (state === AbstractWebView.DownloadState.DownloadCancelled)
+            return qsTr("Canceled")
+        if (state === AbstractWebView.DownloadState.DownloadInterrupted)
+            return qsTr("Interrupted — tap to retry")
+        if (state === AbstractWebView.DownloadState.DownloadPaused || record.isPaused)
+            return qsTr("Paused")
+        if (state === AbstractWebView.DownloadState.DownloadInProgress
+                || state === AbstractWebView.DownloadState.DownloadRequested) {
+            const received = record.receivedBytes ?? 0
+            const total = record.totalBytes ?? 0
+            if (total > 0) {
+                return "%1/%2"
+                    .arg(Qt.locale().formattedDataSize(received, 2, Locale.DataSizeTraditionalFormat))
+                    .arg(Qt.locale().formattedDataSize(total, 2, Locale.DataSizeTraditionalFormat))
+            }
+            return Qt.locale().formattedDataSize(received, 2, Locale.DataSizeTraditionalFormat)
+        }
+        return ""
     }
 
     /// Sanitize a suggested file name and resolve a free Download Target under downloadsDirectory.
     /// Collisions with existing files or in-session Records get "(1)", "(2)", … suffixes.
     function resolveDownloadTarget(suggestedFileName) {
         const dir = root.downloadsDirectory.replace(/[/\\]+$/, "")
-        SystemUtils.ensureDirectory(dir)
+        if (root.ensureDirectoryFn)
+            root.ensureDirectoryFn(dir)
 
         let name = String(suggestedFileName || "").trim()
         if (!name)
@@ -217,6 +465,7 @@ QtObject {
     /// Clear Download History Records only — files on disk are left alone (ADR 0006).
     function clearDownloadHistory() {
         downloadModel = []
+        downloadStripModel = []
         if (preferencesStore && preferencesStore.clearDownloadHistoryRaw)
             preferencesStore.clearDownloadHistoryRaw()
         else if (preferencesStore && preferencesStore.setDownloadHistoryRaw)

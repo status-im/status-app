@@ -17,7 +17,7 @@ StatusMenu {
     visualizeShortcuts: true
 
     signal addNewTab()
-    signal addNewDownloadTab()
+    signal openDownloads()
     signal goIncognito(bool checked)
     signal zoomIn()
     signal zoomOut()
@@ -108,7 +108,7 @@ StatusMenu {
         text: qsTr("Downloads")
         icon.name: "downloads"
         shortcut: "Ctrl+D"
-        onTriggered: addNewDownloadTab()
+        onTriggered: openDownloads()
     }
 
     StatusAction {

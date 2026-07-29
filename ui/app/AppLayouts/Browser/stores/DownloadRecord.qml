@@ -18,6 +18,8 @@ QtObject {
     property string errorString: ""
     // Incognito Downloads stay session-visible but never enter Download History.
     property bool offTheRecord: false
+    // Lazily probed when the Downloads List is shown (or app returns to foreground).
+    property bool missingFile: false
 
     property int state: AbstractWebView.DownloadState.DownloadRequested
     property int receivedBytes: 0

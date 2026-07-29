@@ -68,7 +68,6 @@ AbstractWebView {
             webChannel:                    Qt.binding(() => root.webChannel),
             enableJsLogs:                  Qt.binding(() => root.enableJsLogs),
             localAccountSensitiveSettings: Qt.binding(() => root.localAccountSensitiveSettings),
-            isDownloadView:                Qt.binding(() => root.isDownloadView),
             devToolsEnabled:               Qt.binding(() => root.devToolsEnabled),
             freeze:                        Qt.binding(() => root.freeze),
         }

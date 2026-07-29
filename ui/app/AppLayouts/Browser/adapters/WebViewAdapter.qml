@@ -38,6 +38,9 @@ AbstractWebView {
     hasNativeFindPanel: false
     // Cookies (incl. HttpOnly) via BrowserProfileUtils; DOM storage via site_utils.js.
     clearSiteDataSupported: true
+    supportsPdfViewer: root.localAccountSensitiveSettings
+                       ? !!root.localAccountSensitiveSettings.pdfViewerEnabled
+                       : false
 
     // Override functions
     function loadUrl(newUrl) { webView.url = newUrl }
@@ -47,6 +50,14 @@ AbstractWebView {
     function reload() { webView.reload() }
     function stop() { webView.stop() }
     function forceReload() { webView.triggerWebAction(WebEngineView.ReloadAndBypassCache) }
+
+    /// Host-side Retry: WebEngine QML has no page.download(); navigate so
+    /// attachment/non-renderable responses re-emit downloadRequested.
+    /// Prefer MobileWebViewAdapter.downloadUrl → backend.downloadUrl when available.
+    function downloadUrl(url, suggestedFileName) {
+        void suggestedFileName
+        loadUrl(url)
+    }
 
     // Native per-site cookies, then site_utils.js for current-origin DOM + reload.
     function clearSiteData() {

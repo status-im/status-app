@@ -47,7 +47,6 @@ QtObject {
 
     enum ContentMode {
         WebContent = 0,
-        DownloadContent,
         EmptyContent
     }
 
@@ -55,8 +54,6 @@ QtObject {
     readonly property int currentContentMode: {
         if (!currentWebView)
             return BrowserWebViewContext.ContentMode.EmptyContent
-        if (currentWebView.isDownloadView)
-            return BrowserWebViewContext.ContentMode.DownloadContent
         if (!currentWebView.url?.toString())
             return BrowserWebViewContext.ContentMode.EmptyContent
         return BrowserWebViewContext.ContentMode.WebContent
@@ -76,8 +73,7 @@ QtObject {
         focusOnNewTab = focusOnNewTab && !createAsStartPage
 
         var webview = webViewAdapterComponent.createObject(hostStackLayout, {
-            profileParams: profileParams,
-            isDownloadView: false
+            profileParams: profileParams
         })
         if (!webview) {
             console.error("[Browser] Failed to create webview")
@@ -100,22 +96,6 @@ QtObject {
         if ((focusOnNewTab || createAsStartPage) && webview.url.toString() && typeof webview.ensureLoaded === "function")
             webview.ensureLoaded()
 
-        return webview
-    }
-
-    function createDownloadTab(profileParams) {
-        var webview = webViewAdapterComponent.createObject(hostStackLayout, {
-            profileParams: profileParams,
-            isDownloadView: true
-        })
-        if (!webview) {
-            console.error("[Browser] Failed to create download webview")
-            return null
-        }
-
-        tabsModel.createDownloadTab()
-        webview.uid = SQUtils.Utils.uuid()
-        webview.ensureLoaded()
         return webview
     }
 
