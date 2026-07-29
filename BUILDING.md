@@ -14,7 +14,7 @@ If you're looking for instructions to build Status Mobile instead, go [here](/mo
       - [Install Chocolatey](#install-chocolatey)
       - [Install Required Packages](#install-required-packages)
       - [Install Microsoft Visual C++ Build Tools](#install-microsoft-visual-c-build-tools)
-      - [Install Go 1.24](#install-go-124)
+      - [Install Go 1.26](#install-go-126)
       - [Install Nim 2.2.x](#install-nim-22x)
       - [Install protobuf](#install-protobuf)
     - [Linux](#linux)
@@ -71,9 +71,9 @@ choco install make cmake mingw wget
 
 You can install them from the [Microsoft website](https://visualstudio.microsoft.com/visual-cpp-build-tools/) or run the `Install-VC-BuildTools` from the setup script `scripts/windows_build_setup.ps1`.
 
-#### Install Go 1.24
+#### Install Go 1.26
 
-Download and install Go 1.24 from the [official website](https://go.dev/dl/).
+Download and install Go 1.26 from the [official website](https://go.dev/dl/).
 
 #### Install Nim 2.2.x
 
@@ -101,7 +101,7 @@ sudo apt update
 sudo apt install libpcsclite-dev build-essential mesa-common-dev libglu1-mesa-dev libssl-dev cmake jq libxcb-xinerama0 protobuf-compiler
 ```
 
-Install **Go 1.24**:
+Install **Go 1.26**:
 
 Download and install from the [official website](https://go.dev/dl/).
 
@@ -146,7 +146,7 @@ Install [Homebrew](https://brew.sh/) if not already installed.
 #### Install Required Packages
 
 ```bash
-brew install cmake pkg-config go@1.24 qt protobuf 
+brew install cmake pkg-config go qt protobuf 
 ```
 
 Install additional packages if you are planning to build DMG
