@@ -13,8 +13,9 @@ QtObject {
         if (!download)
             return
 
-        downloadsStore.addDownload(download)
-        download.accept()
+        // Create a Download Record, accept into a host-chosen Download Target, show the strip.
+        const record = downloadsStore.addDownload(download)
+        downloadsStore.acceptLiveDownload(download, record)
         setFooterVisibleFn(true)
 
         // Close tabs that were opened only to trigger a download.

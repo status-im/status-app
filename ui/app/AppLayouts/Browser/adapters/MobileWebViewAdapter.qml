@@ -65,6 +65,10 @@ AbstractWebView {
 
         // clearSiteData reloads natively (cache-bypass); clearProfileData does not.
         function onClearProfileDataCompleted() { backend.reload() }
+
+        function onDownloadRequested(download) {
+            root.downloadRequested(download)
+        }
     }
 
     function rebuildHistoryModel() {

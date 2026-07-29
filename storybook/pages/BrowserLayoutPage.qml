@@ -87,12 +87,49 @@ SplitView {
         bookmarksStore: BrowserStores.BookmarksStore {}
         browserPreferencesStore: BrowserStores.BrowserPreferencesStore { id: browserPrefsStore }
         downloadsStore: BrowserStores.DownloadsStore {
-            property ListModel downloadModel : ListModel {
-                property var downloads: []
-            }
+            // Stub is empty; provide the real Download Records API for Storybook.
+            property var downloadModel: []
+            property string downloadsDirectory: "/tmp/status-storybook-downloads"
+            property var pathExistsFn: function(path) { return false }
+            readonly property url _downloadRecordUrl: Qt.resolvedUrl(
+                "../../../ui/app/AppLayouts/Browser/stores/DownloadRecord.qml")
             function getDownload(index) {
-                return downloadModel.downloads[index]
+                if (index < 0 || index >= downloadModel.length)
+                    return null
+                return downloadModel[index]
             }
+            function addDownload(download) {
+                const component = Qt.createComponent(_downloadRecordUrl)
+                if (component.status !== Component.Ready)
+                    return null
+                const record = component.createObject(this)
+                record.attach(download)
+                downloadModel = downloadModel.concat([record])
+                return record
+            }
+            function resolveDownloadTarget(suggestedFileName) {
+                const name = suggestedFileName || "download.bin"
+                return downloadsDirectory + "/" + name
+            }
+            function acceptLiveDownload(download, record) {
+                const target = resolveDownloadTarget(
+                    download.suggestedFileName || download.downloadFileName || "download.bin")
+                const slash = target.lastIndexOf("/")
+                if (record) {
+                    record.downloadDirectory = target.substring(0, slash)
+                    record.fileName = target.substring(slash + 1)
+                }
+                if (download.downloadDirectory !== undefined) {
+                    download.downloadDirectory = target.substring(0, slash)
+                    download.downloadFileName = target.substring(slash + 1)
+                    download.accept()
+                } else {
+                    download.accept(target)
+                }
+                return target
+            }
+            function openFile(index) {}
+            function openDirectory(index) {}
         }
         browserRootStore: BrowserStores.BrowserRootStore {
             property var urlENSDictionary: ({})

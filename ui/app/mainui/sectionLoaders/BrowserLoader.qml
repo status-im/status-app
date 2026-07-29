@@ -82,6 +82,8 @@ Loader {
         const downloadsStore = downloadsStoreComp.createObject(d.storeParent)
         const browserRootStore = browserRootStoreComp.createObject(d.storeParent)
         const browserPreferencesStore = browserPreferencesStoreComp.createObject(d.storeParent)
+        downloadsStore.preferencesStore = browserPreferencesStore
+        downloadsStore.restoreDownloadHistory()
 
         setSource(d.targetUrl, {
             isMobile:                   SQUtils.Utils.isMobile,

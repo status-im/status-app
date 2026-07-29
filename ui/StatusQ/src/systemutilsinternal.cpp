@@ -4,6 +4,7 @@
 #include <QGuiApplication>
 #include <QMimeDatabase>
 #include <QDir>
+#include <QFileInfo>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QSslError>
@@ -135,6 +136,21 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
 
 QString SystemUtilsInternal::qtRuntimeVersion() const {
     return qVersion();
+}
+
+bool SystemUtilsInternal::fileExists(const QString &path) const
+{
+    return !path.isEmpty() && QFileInfo::exists(path) && QFileInfo(path).isFile();
+}
+
+bool SystemUtilsInternal::ensureDirectory(const QString &path) const
+{
+    if (path.isEmpty())
+        return false;
+    QDir dir(path);
+    if (dir.exists())
+        return true;
+    return dir.mkpath(QStringLiteral("."));
 }
 
 void SystemUtilsInternal::restartApplication() const

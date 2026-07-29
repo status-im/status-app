@@ -1,0 +1,149 @@
+import QtQuick
+
+import AppLayouts.Browser.adapters
+
+/**
+ * Host-owned Download Record (see Browser CONTEXT / ADR 0006).
+ * A live Backend Download may attach for progress; the Record survives after it is gone.
+ */
+QtObject {
+    id: root
+
+    property url url
+    property string fileName: ""
+    property string downloadDirectory: ""
+    property string mimeType: ""
+    property bool isInline: false
+    property var startTime: new Date()
+    property string errorString: ""
+    // Incognito Downloads stay session-visible but never enter Download History.
+    property bool offTheRecord: false
+
+    property int state: AbstractWebView.DownloadState.DownloadRequested
+    property int receivedBytes: 0
+    property int totalBytes: -1
+    property bool isPaused: false
+
+    // Transient Backend download (WebEngineDownloadRequest / MobileWebViewDownload). May become null.
+    property var liveDownload: null
+
+    signal terminalReached()
+
+    readonly property string targetPath: {
+        if (!root.downloadDirectory)
+            return root.fileName
+        if (root.downloadDirectory.endsWith("/") || root.downloadDirectory.endsWith("\\"))
+            return root.downloadDirectory + root.fileName
+        return root.downloadDirectory + "/" + root.fileName
+    }
+
+    readonly property bool isTerminal: {
+        return root.state === AbstractWebView.DownloadState.DownloadCompleted
+            || root.state === AbstractWebView.DownloadState.DownloadCancelled
+            || root.state === AbstractWebView.DownloadState.DownloadInterrupted
+    }
+
+    onStateChanged: {
+        if (root.isTerminal)
+            root.terminalReached()
+    }
+
+    readonly property Connections _liveBindings: Connections {
+        target: root.liveDownload
+        enabled: !!root.liveDownload
+
+        function onStateChanged() { root.syncFromLive() }
+        function onReceivedBytesChanged() { root.syncFromLive() }
+        function onTotalBytesChanged() { root.syncFromLive() }
+        function onIsPausedChanged() { root.syncFromLive() }
+        function onDownloadDirectoryChanged() { root.syncFromLive() }
+        function onDownloadFileNameChanged() { root.syncFromLive() }
+        function onDestinationPathChanged() { root.syncFromLive() }
+    }
+
+    onLiveDownloadChanged: {
+        if (!root.liveDownload)
+            return
+        root.syncFromLive()
+    }
+
+    function attach(download) {
+        if (!download)
+            return
+        root.liveDownload = download
+        root.syncFromLive()
+    }
+
+    function detach() {
+        root.liveDownload = null
+    }
+
+    function syncFromLive() {
+        const d = root.liveDownload
+        if (!d)
+            return
+
+        if (d.url !== undefined && d.url.toString() !== "")
+            root.url = d.url
+
+        const name = d.downloadFileName || d.suggestedFileName || ""
+        if (name)
+            root.fileName = name
+
+        if (d.downloadDirectory)
+            root.downloadDirectory = d.downloadDirectory
+        else if (d.destinationPath) {
+            const path = String(d.destinationPath)
+            const slash = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"))
+            if (slash >= 0) {
+                root.downloadDirectory = path.substring(0, slash)
+                if (!root.fileName)
+                    root.fileName = path.substring(slash + 1)
+            }
+        }
+
+        if (d.mimeType !== undefined && d.mimeType !== "")
+            root.mimeType = d.mimeType
+        if (d.isInline !== undefined)
+            root.isInline = !!d.isInline
+        if (d.errorString !== undefined)
+            root.errorString = d.errorString || ""
+
+        if (d.receivedBytes !== undefined)
+            root.receivedBytes = d.receivedBytes
+        if (d.totalBytes !== undefined)
+            root.totalBytes = d.totalBytes
+
+        // Normalize to AbstractWebView seam: WebEngine keeps InProgress while paused;
+        // expose DownloadPaused = 5 when isPaused is set.
+        if (d.isPaused)
+            root.state = AbstractWebView.DownloadState.DownloadPaused
+        else if (d.state !== undefined)
+            root.state = d.state
+
+        root.isPaused = root.state === AbstractWebView.DownloadState.DownloadPaused
+            || !!(d.isPaused)
+    }
+
+    function pause() {
+        if (root.liveDownload && root.liveDownload.pause)
+            root.liveDownload.pause()
+    }
+
+    function resume() {
+        if (root.liveDownload && root.liveDownload.resume)
+            root.liveDownload.resume()
+    }
+
+    function cancel() {
+        if (root.liveDownload && root.liveDownload.cancel) {
+            root.liveDownload.cancel()
+            return
+        }
+        // Live object already gone: keep the Record actionable for the session.
+        if (!root.isTerminal) {
+            root.isPaused = false
+            root.state = AbstractWebView.DownloadState.DownloadCancelled
+        }
+    }
+}

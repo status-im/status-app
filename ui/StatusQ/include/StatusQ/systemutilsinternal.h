@@ -23,6 +23,9 @@ public:
     Q_INVOKABLE void restartApplication(bool killBackend) const;
     Q_INVOKABLE void openAppSettings();
 
+    Q_INVOKABLE bool fileExists(const QString &path) const;
+    Q_INVOKABLE bool ensureDirectory(const QString &path) const;
+
     Q_INVOKABLE void downloadImageByUrl(const QUrl& url, const QString& path);
     Q_INVOKABLE void synthetizeRightClick(QQuickItem* item, qreal x, qreal y, Qt::KeyboardModifiers modifiers) const;
     Q_INVOKABLE Qt::KeyboardModifiers queryKeyboardModifiers();

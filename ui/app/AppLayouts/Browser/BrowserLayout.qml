@@ -82,6 +82,7 @@ StatusSectionLayout {
 
     function clearBrowsingDataOnCurrentTab() {
         webViewContext.clearBrowsingDataCurrent()
+        root.downloadsStore.clearDownloadHistory()
     }
 
     function applyIncognitoMode(checked) {
@@ -516,6 +517,7 @@ StatusSectionLayout {
 
     footer: Loader {
         id: footerLoader
+        // Desktop: download bar in the window footer. Mobile uses the strip under the address bar.
         sourceComponent: !root.isMobile ? downloadBar : null
     }
 
@@ -547,6 +549,16 @@ StatusSectionLayout {
             onRequestOpenDapp: url => _internal.onRequestOpenDapp(url)
             onRequestDisconnectDapp: dappUrl => webViewContext.disconnectDapp(dappUrl)
             onRequestWalletMenu: dialogsContext.openWalletMenu(browserWalletMenu)
+        }
+
+        // Mobile Download Pill strip under the address bar (session-only; not History).
+        // Lives in the column so page content shrinks instead of being covered.
+        Loader {
+            id: mobileDownloadStripLoader
+            Layout.fillWidth: true
+            Layout.preferredHeight: active && item ? item.implicitHeight : 0
+            active: root.isMobile && root.showFooter
+            sourceComponent: downloadBar
         }
 
         FindBar {
@@ -711,7 +723,10 @@ StatusSectionLayout {
         clearSiteDataSupported: _internal.currentWebView?.clearSiteDataSupported ?? true
         onForceReload: webViewContext.forceReloadCurrent()
         onClearSiteData: webViewContext.clearSiteDataCurrent()
-        onClearBrowsingData: webViewContext.clearBrowsingDataCurrent()
+        onClearBrowsingData: {
+            webViewContext.clearBrowsingDataCurrent()
+            root.downloadsStore.clearDownloadHistory()
+        }
         onAddNewTab: _internal.addNewEmptyTab()
         onAddNewDownloadTab: _internal.addNewDownloadTab()
         onGoIncognito: (checked) => root.applyIncognitoMode(checked)
@@ -745,7 +760,10 @@ StatusSectionLayout {
         compatibilityMode: localAccountSensitiveSettings.compatibilityMode
         onForceReload: webViewContext.forceReloadCurrent()
         onClearSiteData: webViewContext.clearSiteDataCurrent()
-        onClearBrowsingData: webViewContext.clearBrowsingDataCurrent()
+        onClearBrowsingData: {
+            webViewContext.clearBrowsingDataCurrent()
+            root.downloadsStore.clearDownloadHistory()
+        }
         onToggleCompatibilityMode: (checked) => webViewContext.setCompatibilityMode(checked)
 
         onGoIncognito: checked => root.applyIncognitoMode(checked)

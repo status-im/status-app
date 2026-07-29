@@ -73,13 +73,15 @@ Item {
     }
 
     // === Download States (constants for cross-platform compatibility) ===
-    // These map to WebEngineDownloadRequest.DownloadState enum on desktop
+    // WebEngine-shaped numbering (0–4); Paused = 5 matches MobileWebViewDownload.
+    // Both adapters map Backend downloads into this seam — UI never branches on Backend.
     enum DownloadState {
         DownloadRequested = 0,
         DownloadInProgress = 1,
         DownloadCompleted = 2,
         DownloadCancelled = 3,
-        DownloadInterrupted = 4
+        DownloadInterrupted = 4,
+        DownloadPaused = 5
     }
 
     // === JavaScript Dialog Types (constants for cross-platform compatibility) ===

@@ -41,12 +41,13 @@ Rectangle {
             delegate: DownloadElement {
                 id: downloadElement
 
-                readonly property var downloadItem: downloadsModel.downloads[index]
+                // Download Record (JS-array model); not a live Backend object.
+                readonly property var downloadItem: modelData
 
                 isPaused: downloadItem?.isPaused ?? false
                 isCanceled: downloadItem?.state === AbstractWebView.DownloadState.DownloadCancelled ?? false
                 downloadComplete: downloadItem?.state === AbstractWebView.DownloadState.DownloadCompleted ?? false
-                primaryText: downloadItem?.downloadFileName ?? ""
+                primaryText: downloadItem?.fileName ?? ""
                 downloadText: {
                     if (isCanceled) {
                         return qsTr("Cancelled")

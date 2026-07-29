@@ -12,6 +12,7 @@ StatusMenu {
     required property BrowserStores.DownloadsStore downloadsStore
 
     property int index: -1
+    // Download Record from DownloadsStore (live Backend object may already be gone).
     property var download: root.downloadsStore.getDownload(index)
 
     readonly property bool downloadCancelled: download?.state === AbstractWebView.DownloadState.DownloadCancelled ?? false

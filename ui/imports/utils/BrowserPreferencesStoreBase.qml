@@ -90,4 +90,19 @@ QtObject {
         snapshotsCache = nextCache
         purge(BrowserPreferenceKeys.snapshotsCategory, list)
     }
+
+    function getDownloadHistoryRaw() {
+        return get(BrowserPreferenceKeys.downloadsHistoryCategory,
+                   BrowserPreferenceKeys.keyDownloadRecords)
+    }
+
+    function setDownloadHistoryRaw(raw) {
+        put(BrowserPreferenceKeys.downloadsHistoryCategory,
+            BrowserPreferenceKeys.keyDownloadRecords,
+            raw || "[]")
+    }
+
+    function clearDownloadHistoryRaw() {
+        setDownloadHistoryRaw("[]")
+    }
 }
