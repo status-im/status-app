@@ -100,7 +100,8 @@ Dialog {
 
         readonly property bool hasHeader: !!root.title || !!root.subtitle
         readonly property bool hasContent: !!root.contentComponent
-        readonly property bool hasFooter: !!root.footerLeftButtons || !!root.footerRightButtons
+        readonly property bool hasStandardButtons: root.standardButtons !== Dialog.NoButton
+        readonly property bool hasFooter: !!root.footerLeftButtons || !!root.footerRightButtons || hasStandardButtons
         readonly property bool hasErrorTags: !!root.errorTags
         // Footer section is visible when either action buttons or error tags are present.
         // The bottom safe area is applied to whichever visible section sits at the sheet bottom.
@@ -329,6 +330,12 @@ Dialog {
 
             leftButtons: root.footerLeftButtons
             rightButtons: root.footerRightButtons
+            standardButtons: root.standardButtons
+            onAccepted: root.accept()
+            onRejected: root.reject()
+            onApplied: root.applied()
+            onReset: root.reset()
+            onHelpRequested: root.helpRequested()
         }
     }
 

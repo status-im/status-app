@@ -72,6 +72,9 @@ SplitView {
                 default:            return null
             }
         }
+        readonly property int standardButtons: footerButtonsMode.currentValue === "standard-ok-cancel"
+                                               ? Dialog.Cancel | Dialog.Ok
+                                               : Dialog.NoButton
         readonly property var footerErrorTagsModel: {
             switch (footerErrorsMode.currentValue) {
                 case "one": return errorTagsOneModel
@@ -137,9 +140,19 @@ SplitView {
             }
 
             // Footer API: left/right action groups and optional error tags.
+            standardButtons: d.standardButtons
             footerLeftButtons: d.footerLeftModel
             footerRightButtons: d.footerRightButtonsModel
             errorTags: d.footerErrorTagsModel
+
+            onAccepted: {
+                logs.logEvent("StatusAdaptiveDialog::accepted")
+                close()
+            }
+            onRejected: {
+                logs.logEvent("StatusAdaptiveDialog::rejected")
+                close()
+            }
         }
 
         // Extra header action used by the "custom" header action modes.
@@ -551,6 +564,7 @@ SplitView {
                         { text: "Back only",        value: "back-only" },
                         { text: "Info + Done",      value: "info-done" },
                         { text: "Done only",        value: "done-only" },
+                        { text: "Standard OK + Cancel", value: "standard-ok-cancel" },
                         { text: "None",             value: "none" }
                     ]
                 }

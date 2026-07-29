@@ -57,6 +57,44 @@ Item {
     }
 
     Component {
+        id: standardButtonsDialogComponent
+
+        StatusAdaptiveDialog {
+            objectName: "standardButtonsDialog"
+            title: "Standard buttons dialog"
+            maximumWidthOverride: 420
+            standardButtons: Dialog.Cancel | Dialog.Ok
+            contentComponent: Component {
+                Item {
+                    implicitHeight: 80
+                }
+            }
+        }
+    }
+
+    Component {
+        id: explicitFooterWithStandardButtonsDialogComponent
+
+        StatusAdaptiveDialog {
+            objectName: "explicitFooterWithStandardButtonsDialog"
+            title: "Explicit footer dialog"
+            maximumWidthOverride: 420
+            standardButtons: Dialog.Ok
+            contentComponent: Component {
+                Item {
+                    implicitHeight: 80
+                }
+            }
+            footerRightButtons: ObjectModel {
+                StatusButton {
+                    objectName: "customFooterButton"
+                    text: "Custom"
+                }
+            }
+        }
+    }
+
+    Component {
         id: adaptiveWidthDialogComponent
 
         StatusAdaptiveDialog {
@@ -270,6 +308,31 @@ Item {
                     controlUnderTest.y + controlUnderTest.height - edgePadding - bottom);
         }
 
+        function createAndOpenDialog(component) {
+            if (controlUnderTest)
+                controlUnderTest.destroy();
+
+            controlUnderTest = createTemporaryObject(component, testWindow.contentItem);
+            controlUnderTest.open();
+            tryCompare(controlUnderTest, "opened", true);
+            return controlUnderTest;
+        }
+
+        function standardButton(button) {
+            const toolbar = findChild(controlUnderTest, "statusAdaptiveDialogFooter");
+            verify(!!toolbar);
+            const buttonBox = findChild(toolbar, "statusAdaptiveDialogStandardButtonBox");
+            verify(!!buttonBox);
+            return buttonBox.standardButton(button);
+        }
+
+        function signalSpy(signalName) {
+            return createTemporaryObject(signalSpyComponent, testWindow.contentItem, {
+                "target": controlUnderTest,
+                "signalName": signalName
+            });
+        }
+
         function test_centered_on_desktop() {
             controlUnderTest.open();
             tryCompare(controlUnderTest, "opened", true);
@@ -317,6 +380,53 @@ Item {
             tryCompare(divider, "visible", true);
             compare(divider.height, 1);
             compare(divider.width, controlUnderTest.width);
+        }
+
+        function test_standard_buttons_are_rendered_in_adaptive_footer() {
+            createAndOpenDialog(standardButtonsDialogComponent);
+
+            const cancelButton = standardButton(Dialog.Cancel);
+            const okButton = standardButton(Dialog.Ok);
+            verify(!!cancelButton);
+            verify(!!okButton);
+            tryCompare(cancelButton, "visible", true);
+            tryCompare(okButton, "visible", true);
+            compare(cancelButton.text, "Cancel");
+            compare(okButton.text, "OK");
+        }
+
+        function test_standard_ok_button_accepts_dialog() {
+            createAndOpenDialog(standardButtonsDialogComponent);
+            const acceptedSpy = signalSpy("accepted");
+
+            mouseClick(standardButton(Dialog.Ok));
+            compare(acceptedSpy.count, 1);
+            tryCompare(controlUnderTest, "opened", false);
+        }
+
+        function test_standard_cancel_button_rejects_dialog() {
+            createAndOpenDialog(standardButtonsDialogComponent);
+            const rejectedSpy = signalSpy("rejected");
+
+            mouseClick(standardButton(Dialog.Cancel));
+            compare(rejectedSpy.count, 1);
+            tryCompare(controlUnderTest, "opened", false);
+        }
+
+        function test_explicit_footer_buttons_take_precedence_over_standard_buttons() {
+            createAndOpenDialog(explicitFooterWithStandardButtonsDialogComponent);
+
+            const toolbar = findChild(controlUnderTest, "statusAdaptiveDialogFooter");
+            const customButton = findChild(toolbar, "customFooterButton");
+            verify(!!toolbar);
+            verify(!!customButton);
+            tryCompare(customButton, "visible", true);
+            compare(customButton.text, "Custom");
+            const standardButtonBoxLoader = findChild(toolbar, "statusAdaptiveDialogStandardButtonBoxLoader");
+            verify(!!standardButtonBoxLoader);
+            tryCompare(standardButtonBoxLoader, "active", false);
+            tryCompare(standardButtonBoxLoader, "visible", false);
+            verify(!findChild(toolbar, "statusAdaptiveDialogStandardButtonBox"));
         }
 
         function test_internal_popup_opens_in_parent_overlay_and_closes_from_overlay() {
