@@ -203,7 +203,11 @@ QtObject {
     function currentChatContentModule() {
         // When we decide to have the same struct as it's on the backend we will remove this function.
         // So far this is a way to deal with refactored backend from the current qml structure.
-        chatCommunitySectionModule.prepareChatContentModuleForChatId(chatCommunitySectionModule.activeItem.id)
+        const activeItem = chatCommunitySectionModule.activeItem
+        if (!activeItem || !activeItem.id)
+            return null
+
+        chatCommunitySectionModule.prepareChatContentModuleForChatId(activeItem.id)
         return chatCommunitySectionModule.getChatContentModule()
     }
 
@@ -633,7 +637,7 @@ QtObject {
             } else if (d.activeChatType === Constants.chatType.privateGroupChat) {
                 return d.amIMember
             } else if (d.activeChatType === Constants.chatType.communityChat) {
-                return currentChatContentModule().chatDetails.canPost
+                return currentChatContentModule()?.chatDetails?.canPost || false
             }
 
             return true

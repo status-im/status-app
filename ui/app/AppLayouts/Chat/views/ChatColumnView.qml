@@ -156,6 +156,9 @@ Item {
         property var preEditFileUrlsAndSources: []
 
         function getChatContentModule(chatId) {
+            if (!root.parentModule || !chatId)
+                return null
+
             root.parentModule.prepareChatContentModuleForChatId(chatId)
             return root.parentModule.getChatContentModule()
         }

@@ -125,6 +125,7 @@ Loader {
                                                    && root.advancedStore.copyMessageLinksEnabled),
             paymentRequestFeatureEnabled:   Qt.binding(() => root.featureFlagsStore.paymentRequestEnabled),
             extraLeftPadding:               Qt.binding(() => root.isPortraitMode ? SQUtils.Utils.swipeIndicatorWidth : 0),
+            isPortraitMode:                 Qt.binding(() => root.isPortraitMode),
             mutualContactsModel:            Qt.binding(() => root.contactsAdaptor.mutualContacts),
             gifUnfurlingEnabled:            Qt.binding(() => root.sharedRootStore.gifUnfurlingEnabled),
             neverAskAboutUnfurlingAgain:    Qt.binding(() => root.sharedRootStore.neverAskAboutUnfurlingAgain),

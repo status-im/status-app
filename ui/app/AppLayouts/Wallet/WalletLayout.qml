@@ -417,7 +417,7 @@ Item {
             }
         }
         headerBackground: AccountHeaderGradient {
-            width: parent.width
+            width: parent ? parent.width : 0
             overview: RootStore.overview
         }
 
@@ -434,7 +434,7 @@ Item {
             readonly property bool isOwnerCommunityCollectible: isCommunityCollectible ? (walletStore.currentViewedCollectible.communityPrivilegesLevel === Constants.TokenPrivilegesLevel.Owner) : false
 
             visible: anyActionAvailable
-            width: parent.width
+            width: parent ? parent.width : 0
             height: visible ? implicitHeight: 0
             walletStore: RootStore
             transactionStore: root.transactionStore

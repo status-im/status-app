@@ -86,6 +86,7 @@ StatusSectionLayout {
     property bool paymentRequestFeatureEnabled
 
     property int extraLeftPadding: 0
+    property bool isPortraitMode: false
 
     // Subsection back history keyed by the active chat/channel id.
     subsectionHistory: SubsectionNavigationHistory {
@@ -140,6 +141,19 @@ StatusSectionLayout {
     // Internal triggers for navigating between messaging panels
     property bool navToMsgDetails: false
     property bool navToMsgList: false
+
+    QtObject {
+        id: d
+
+        readonly property bool shouldLoadCenterPanel: !root.isPortraitMode ||
+                                                      centerPanelRequested ||
+                                                      root.currentIndex !== StatusSectionLayout.LeftPanel
+        property bool centerPanelRequested: false
+
+        function requestCenterPanel() {
+            centerPanelRequested = true
+        }
+    }
 
     // Users related signals
     signal groupMembersUpdateRequested(string membersPubKeysList)
@@ -218,9 +232,12 @@ StatusSectionLayout {
     }
 
     centerPanel: Loader {
+        id: centerPanelLoader
         anchors.fill: parent
+        active: d.shouldLoadCenterPanel
         sourceComponent: (root.allChannelsAreHiddenBecauseNotPermitted || root.contentLocked) ?
                              joinCommunityCenterPanelComponent : chatColumnViewComponent
+        onLoaded: d.requestCenterPanel()
     }
 
     showRightPanel: {
@@ -234,6 +251,7 @@ StatusSectionLayout {
 
     onNavToMsgDetailsChanged: {
         if (root.navToMsgDetails) {
+            d.requestCenterPanel()
             root.currentIndex = StatusSectionLayout.CentralPanel
             root.navToMsgDetailsRequested(false)
         }
@@ -303,9 +321,15 @@ StatusSectionLayout {
         //
         // NOTE: It only affects behavior in portrait mode
         if(root.navToMsgDetails) {
+            d.requestCenterPanel()
             root.currentIndex = StatusSectionLayout.CentralPanel
             root.navToMsgDetailsRequested(false)
         }
+    }
+
+    onCurrentIndexChanged: {
+        if (root.currentIndex !== StatusSectionLayout.LeftPanel)
+            d.requestCenterPanel()
     }
 
     Component {
@@ -446,7 +470,10 @@ StatusSectionLayout {
                     headerContentLoader.item.addRemoveGroupMember()
                 }
             }
-            onChatItemClicked: (id) => root.goToNextPanel()
+            onChatItemClicked: (id) => {
+                d.requestCenterPanel()
+                root.goToNextPanel()
+            }
         }
     }
 
@@ -468,7 +495,10 @@ StatusSectionLayout {
             onInfoButtonClicked: root.communityInfoButtonClicked()
             onManageButtonClicked: root.communityManageButtonClicked()
             onFinaliseOwnershipClicked: root.finaliseOwnershipClicked()
-            onChatItemClicked: (id) => root.goToNextPanel()
+            onChatItemClicked: (id) => {
+                d.requestCenterPanel()
+                root.goToNextPanel()
+            }
             onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.myPublicKey)
 
             // Permissions Related requests:
@@ -503,8 +533,10 @@ StatusSectionLayout {
 
     onShowUsersListChanged: {
         Qt.callLater(() => {
-            if (root.showUsersList)
+            if (root.showUsersList) {
+                d.requestCenterPanel()
                 goToNextPanel()
+            }
         })
     }
 
