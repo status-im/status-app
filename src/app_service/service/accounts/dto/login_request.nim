@@ -16,6 +16,7 @@ type
     wakuV2Nameserver*: string
     bandwidthStatsEnabled*: bool
     keycardWhisperPrivateKey*: string
+    walletXPub*: string
     mnemonic*: string
     walletSecretsConfig*: WalletSecretsConfig
     walletConfig*: WalletConfig
@@ -31,6 +32,7 @@ proc toJson*(self: LoginAccountRequest): JsonNode =
     "wakuV2Nameserver": self.wakuV2Nameserver,
     "bandwidthStatsEnabled": self.bandwidthStatsEnabled,
     "keycardWhisperPrivateKey": self.keycardWhisperPrivateKey,
+    "walletXPub": self.walletXPub,
     "mnemonic": self.mnemonic,
     "apiConfig": self.apiConfig,
     "walletConnectProjectID": self.walletConnectProjectID,

@@ -399,6 +399,7 @@ method onKeycardExportLoginKeysSuccess*[T](self: Module[T], exportedKeys: Keycar
     keycard = true,
     publicEncryptionKey = exportedKeys.encryptionKey.publicKey,
     privateWhisperKey = exportedKeys.whisperKey.privateKey,
+    walletXPub = exportedKeys.extendedPublicKey.xpub,
   )
 
 method onKeycardAccountConverted*[T](self: Module[T], success: bool) =
