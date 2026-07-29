@@ -1695,10 +1695,6 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Import komunity &apos;%1&apos; byl zrušen</translation>
     </message>
     <message>
-        <source>Cannot connect to the Logos Messaging network. Messaging may not work. Retrying automatically.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>CoinGecko connection successful</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1821,6 +1817,14 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     <message>
         <source>POKT &amp; Infura down for %1. %1 token balances cannot be retrieved.</source>
         <translation>POKT &amp; Infura mimo provoz pro %1. Zůstatky tokenů %1 nelze načíst.</translation>
+    </message>
+    <message>
+        <source>Not Connected to Logos network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>How to fix</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Retrying connection to POKT Network (grove.city).</source>
@@ -10450,6 +10454,57 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>LogosNetworkView</name>
+    <message>
+        <source>Messages are sent via the Logos Messaging Network, comprised of peer-to-peer user nodes that users collectively power simply by running Status Desktop, making Status decentralized, resilient, and censorship resistant. %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Learn More</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connected Logos network peers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Checking peer connection...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n peer(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation type="unfinished">Obnovit</translation>
+    </message>
+    <message>
+        <source>Unable to refresh Logos network peers: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>How to fix Logos network connection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If Status has no connected Logos peers, check below</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If your country has strong censorship rules, Status may be unable to access the bootnodes required to find peers on the network. Try connecting to a VPN.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If your network connection is poor, try switching to a better internet connection or disconnecting your VPN if one is currently connected.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Main</name>
     <message>
         <source>Account name</source>
@@ -15151,6 +15206,10 @@ selhalo</translation>
     <message>
         <source>Connection problems can happen.&lt;br&gt;If they do, please use the Enter a Recovery Phrase feature instead.</source>
         <translation>Mohou nastat problémy s připojením.&lt;br&gt;Pokud k nim dojde, použijte místo toho funkci Zadat obnovovací frázi.</translation>
+    </message>
+    <message>
+        <source>Logos network</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Messaging</source>

@@ -420,6 +420,16 @@
     </message>
 </context>
 <context>
+    <name>LogosNetworkView</name>
+    <message numerus="yes">
+        <source>%n peer(s)</source>
+        <translation>
+            <numerusform>%n peer</numerusform>
+            <numerusform>%n peers</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>Main</name>
     <message numerus="yes">
         <source>Account name must be at least %n character(s)</source>

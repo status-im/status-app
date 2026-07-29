@@ -47,6 +47,12 @@ proc adminPeers*(): RpcResponse[JsonNode] =
   let payload = %* []
   result = core.callPrivateRPC("admin_peers", payload)
 
+proc wakuPeerCount*(): int =
+  let response = core.callPrivateRPC("peers".prefix)
+  if response.result.kind != JObject:
+    raise newException(RpcException, "unexpected wakuext_peers response")
+  return response.result.len
+
 proc getPasswordStrengthScore*(password: string, userInputs: seq[string]): RpcResponse[JsonNode] =
   let params = %* {"password": password, "userInputs": userInputs}
   try:

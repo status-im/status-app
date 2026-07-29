@@ -44,6 +44,10 @@ QtObject {
         localBackupEnabled: root.localBackupEnabled
     }
 
+    property LogosNetworkStore logosNetworkStore: LogosNetworkStore {
+        logosNetworkModule: d.profileSectionModuleInst.logosNetworkModule
+    }
+
     property PrivacyStore privacyStore: PrivacyStore {
         privacyModule: d.profileSectionModuleInst.privacyModule
     }

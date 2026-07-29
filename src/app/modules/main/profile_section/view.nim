@@ -42,6 +42,11 @@ QtObject:
   QtProperty[QVariant] syncModule:
     read = getSyncModule
 
+  proc getLogosNetworkModule(self: View): QVariant {.slot.} =
+    return self.delegate.getLogosNetworkModule()
+  QtProperty[QVariant] logosNetworkModule:
+    read = getLogosNetworkModule
+
   proc getNotificationsModule(self: View): QVariant {.slot.} =
     return self.delegate.getNotificationsModule()
   QtProperty[QVariant] notificationsModule:
@@ -77,4 +82,3 @@ QtObject:
 
   proc delete*(self: View) =
     self.QObject.delete
-

@@ -29,6 +29,7 @@ import ./about/module as about_module
 import ./advanced/module as advanced_module
 import ./devices/module as devices_module
 import ./sync/module as sync_module
+import ./logos_network/module as logos_network_module
 import ./notifications/module as notifications_module
 import ./ens_usernames/module as ens_usernames_module
 import ./communities/module as communities_module
@@ -52,6 +53,7 @@ type
     advancedModule: advanced_module.AccessInterface
     devicesModule: devices_module.AccessInterface
     syncModule: sync_module.AccessInterface
+    logosNetworkModule: logos_network_module.AccessInterface
     notificationsModule: notifications_module.AccessInterface
     ensUsernamesModule: ens_usernames_module.AccessInterface
     communitiesModule: communities_module.AccessInterface
@@ -97,6 +99,7 @@ proc newModule*(delegate: delegate_interface.AccessInterface,
   result.devicesModule = devices_module.newModule(result, events, settingsService, devicesService)
   result.syncModule = sync_module.newModule(result, events, settingsService, nodeConfigurationService,
     generalService, devicesService)
+  result.logosNetworkModule = logos_network_module.newModule(result, generalService)
   result.notificationsModule = notifications_module.newModule(result, events, settingsService, chatService,
     contactsService, communityService)
   result.ensUsernamesModule = ens_usernames_module.newModule(
@@ -119,6 +122,7 @@ method delete*(self: Module) =
   self.advancedModule.delete
   self.devicesModule.delete
   self.syncModule.delete
+  self.logosNetworkModule.delete
   self.communitiesModule.delete
   self.keycardNewModule.delete
 
@@ -135,6 +139,7 @@ method load*(self: Module) =
   self.advancedModule.load()
   self.devicesModule.load()
   self.syncModule.load()
+  self.logosNetworkModule.load()
   self.notificationsModule.load()
   self.ensUsernamesModule.load()
   self.communitiesModule.load()
@@ -164,6 +169,9 @@ proc checkIfModuleDidLoad(self: Module) =
     return
 
   if(not self.syncModule.isLoaded()):
+    return
+
+  if(not self.logosNetworkModule.isLoaded()):
     return
 
   if(not self.notificationsModule.isLoaded()):
@@ -225,6 +233,12 @@ method syncModuleDidLoad*(self: Module) =
 
 method getSyncModule*(self: Module): QVariant =
   self.syncModule.getModuleAsVariant()
+
+method logosNetworkModuleDidLoad*(self: Module) =
+  self.checkIfModuleDidLoad()
+
+method getLogosNetworkModule*(self: Module): QVariant =
+  self.logosNetworkModule.getModuleAsVariant()
 
 method notificationsModuleDidLoad*(self: Module) =
   self.checkIfModuleDidLoad()

@@ -101,6 +101,12 @@ SortFilterProxyModel {
             isExperimental: false
         },
         {
+            subsection: Constants.settingsSubsection.logosNetworkSettings,
+            text: qsTr("Logos network"),
+            icon: "network",
+            isExperimental: false
+        },
+        {
             subsection: Constants.settingsSubsection.messaging,
             text: qsTr("Messaging"),
             icon: "chat",

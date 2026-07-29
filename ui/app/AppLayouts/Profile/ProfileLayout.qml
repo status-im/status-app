@@ -58,6 +58,7 @@ StatusSectionLayout {
     required property ProfileStores.NotificationsStore notificationsStore
     required property ProfileStores.LanguageStore languageStore
     required property ProfileStores.KeycardNewStore keycardNewStore
+    required property ProfileStores.LogosNetworkStore logosNetworkStore
     required property ProfileStores.WalletStore walletStore
     required property ProfileStores.EnsUsernamesStore ensUsernamesStore
     required property ProfileStores.AboutStore aboutStore
@@ -637,6 +638,18 @@ StatusSectionLayout {
                 onBackupMessagesEnabledToggled: enabled => root.devicesStore.setMessagesBackupEnabled(enabled)
                 onPerformLocalBackupRequested: root.devicesStore.performLocalBackup()
                 onImportLocalBackupFileRequested: selectedFile => root.devicesStore.importLocalBackupFile(selectedFile)
+            }
+        }
+
+        Loader {
+            active: false
+            sourceComponent: LogosNetworkView {
+                implicitWidth: parent.width
+                implicitHeight: parent.height
+                contentWidth: d.contentWidth
+                sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.logosNetworkSettings)
+                logosNetworkStore: root.logosNetworkStore
+                pollingActive: profileContainer.currentIndex === Constants.settingsSubsection.logosNetworkSettings
             }
         }
     }

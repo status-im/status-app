@@ -113,6 +113,7 @@ Item {
     readonly property var keycardNewStore: rootStore.profileSectionStore?.keycardNewStore ?? null
     readonly property var walletProfileStore: rootStore.profileSectionStore?.walletStore ?? null
     readonly property var ensUsernamesStore: rootStore.profileSectionStore?.ensUsernamesStore ?? null
+    readonly property ProfileStores.LogosNetworkStore logosNetworkStore: rootStore.profileSectionStore.logosNetworkStore
 
     // Messaging (just references from `rootStore`)
     readonly property MessagingStores.MessagingRootStore messagingRootStore: rootStore.messagingRootStore
@@ -307,13 +308,11 @@ Item {
         function onMessagingNetworkConnected() {
             d.messagingNetworkDisconnected = false
             d.doShowMessagingBanner = false
-            d.messagingNetworkBannerDismissed = false
         }
 
         function onMessagingNetworkDisconnected() {
             d.messagingNetworkDisconnected = true
             d.doShowMessagingBanner = false
-            d.messagingNetworkBannerDismissed = false
         }
 
         function onActiveSectionChanged() {
@@ -912,10 +911,8 @@ Item {
 
         property bool messagingNetworkDisconnected: !appMain.rootStore.isMessagingNetworkConnected
         property bool doShowMessagingBanner: false
-        property bool messagingNetworkBannerDismissed: false
         readonly property bool canShowMessagingBanner: d.messagingNetworkDisconnected
                                                         && d.isMessagingRelatedSectionType
-                                                        && !d.messagingNetworkBannerDismissed
                                                         && d.networkChecker.isOnline
 
         // True while the back-handler is navigating; suppresses recording the
@@ -1644,12 +1641,12 @@ Item {
                 active: d.doShowMessagingBanner && d.canShowMessagingBanner
                 delay: false
                 type: ModuleWarning.Warning
-                text: qsTr("Cannot connect to the Logos Messaging network. Messaging may not work. Retrying automatically.")
-                onCloseClicked: {
-                    d.doShowMessagingBanner = false
-                    d.messagingNetworkBannerDismissed = true
-                }
+                text: qsTr("Not Connected to Logos network")
+                buttonText: qsTr("How to fix")
+                closeBtnVisible: false
                 Layout.fillWidth: true
+                onClicked: Global.changeAppSectionBySectionType(Constants.appSection.profile,
+                                                                Constants.settingsSubsection.logosNetworkSettings)
             }
 
             ConnectionWarnings {
@@ -2280,6 +2277,7 @@ Item {
                         notificationsStore: appMain.notificationsStore
                         languageStore: appMain.languageStore
                         keycardNewStore: appMain.keycardNewStore
+                        logosNetworkStore: appMain.logosNetworkStore
                         walletProfileStore: appMain.walletProfileStore
                         ensUsernamesStore: appMain.ensUsernamesStore
                         tokensStore: appMain.tokensStore

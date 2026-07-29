@@ -73,6 +73,9 @@ QtObject:
   proc logout*(self: Service) =
     discard status_general.logout()
 
+  proc getWakuPeerCount*(self: Service): int =
+    return status_general.wakuPeerCount()
+
   proc getPasswordStrengthScore*(self: Service, password, userName: string): int =
     try:
       let response = status_general.getPasswordStrengthScore(password, @[userName])
@@ -127,4 +130,3 @@ QtObject:
 
   proc delete*(self: Service) =
     self.QObject.delete
-
