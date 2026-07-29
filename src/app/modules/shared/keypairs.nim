@@ -26,6 +26,7 @@ proc buildKeypairItem*(keypair: KeypairDto, areTestNetworksEnabled: bool): KeyPa
     derivedFrom = keypair.derivedFrom,
     lastUsedDerivationIndex = keypair.lastUsedDerivationIndex,
     migratedToColdWallet = keypair.migratedToColdWallet(),
+    derivesFromXpub = keypair.extendedPublicKey.len > 0,
     syncedFrom = keypair.syncedFrom)
 
   if keypair.keypairType == KeypairTypeProfile:

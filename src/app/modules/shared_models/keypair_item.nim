@@ -24,6 +24,7 @@ QtObject:
     derivedFrom: string
     lastUsedDerivationIndex: int
     migratedToColdWallet: bool
+    derivesFromXpub: bool
     operability: string
     syncedFrom: string
     accounts: KeyPairAccountModel
@@ -41,6 +42,7 @@ QtObject:
       derivedFrom: string,
       lastUsedDerivationIndex: int,
       migratedToColdWallet: bool,
+      derivesFromXpub: bool,
       syncedFrom: string,
       ownershipVerified: bool
       )
@@ -55,11 +57,12 @@ QtObject:
     derivedFrom = "",
     lastUsedDerivationIndex = 0,
     migratedToColdWallet = false,
+    derivesFromXpub = false,
     syncedFrom = "",
     ownershipVerified = false): KeyPairItem =
     new(result, delete)
     result.setup(keyUid, pubKey, locked, name, image, icon, pairType, derivedFrom, lastUsedDerivationIndex,
-      migratedToColdWallet, syncedFrom, ownershipVerified)
+      migratedToColdWallet, derivesFromXpub, syncedFrom, ownershipVerified)
 
   proc `$`*(self: KeyPairItem): string =
     result = fmt"""KeyPairItem[
@@ -73,6 +76,7 @@ QtObject:
       derivedFrom: {self.derivedFrom},
       lastUsedDerivationIndex: {self.lastUsedDerivationIndex},
       migratedToColdWallet: {self.migratedToColdWallet},
+      derivesFromXpub: {self.derivesFromXpub},
       operability: {self.operability},
       syncedFrom: {self.syncedFrom},
       ownershipVerified: {$self.ownershipVerified}
@@ -192,6 +196,17 @@ QtObject:
     write = setMigratedToColdWallet
     notify = migratedToColdWalletChanged
 
+  proc derivesFromXpubChanged*(self: KeyPairItem) {.signal.}
+  proc getDerivesFromXpub*(self: KeyPairItem): bool {.slot.} =
+    return self.derivesFromXpub
+  proc setDerivesFromXpub*(self: KeyPairItem, value: bool) {.slot.} =
+    self.derivesFromXpub = value
+    self.derivesFromXpubChanged()
+  QtProperty[bool] derivesFromXpub:
+    read = getDerivesFromXpub
+    write = setDerivesFromXpub
+    notify = derivesFromXpubChanged
+
   proc operabilityChanged*(self: KeyPairItem) {.signal.}
   proc getOperability*(self: KeyPairItem): string {.slot.} =
     let items = self.accounts.getItems()
@@ -286,6 +301,7 @@ QtObject:
     self.setPairType(item.getPairType())
     self.setDerivedFrom(item.getDerivedFrom())
     self.setMigratedToColdWallet(item.getMigratedToColdWallet())
+    self.setDerivesFromXpub(item.getDerivesFromXpub())
     self.setLastUsedDerivationIndex(item.getLastUsedDerivationIndex())
     self.setAccounts(item.getAccountsModel().getItems())
     self.setOwnershipVerified(item.getOwnershipVerified())
@@ -305,6 +321,7 @@ QtObject:
       derivedFrom: string,
       lastUsedDerivationIndex: int,
       migratedToColdWallet: bool,
+      derivesFromXpub: bool,
       syncedFrom: string,
       ownershipVerified: bool
       ) =
@@ -319,6 +336,7 @@ QtObject:
       self.derivedFrom = derivedFrom
       self.lastUsedDerivationIndex = lastUsedDerivationIndex
       self.migratedToColdWallet = migratedToColdWallet
+      self.derivesFromXpub = derivesFromXpub
       self.syncedFrom = syncedFrom
       self.ownershipVerified = ownershipVerified
       self.accounts = newKeyPairAccountModel()

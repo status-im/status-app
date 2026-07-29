@@ -1175,7 +1175,7 @@ QtObject {
     property var userProfileInst: typeof userProfile !== "undefined" ? userProfile : null
 
     // Returns icon for the passed keyUid and migratedToColdWallet params of the key pair being processed and authSignPurpose
-    function resolveAuthSignIcon(keyUid, migratedToColdWallet, authSignPurpose) {
+    function resolveAuthSignIcon(keyUid, migratedToColdWallet, authSignPurpose, derivesFromXpub = false) {
         const profile = userProfileInst
 
         if (!profile) {
@@ -1183,10 +1183,10 @@ QtObject {
             return ""
         }
 
-        // Cold wallet keypairs derive from the stored xpub, so no authentication is required
+        // Keypairs with a stored xpub derive new accounts from it, so no authentication is required
         if (authSignPurpose === Constants.AuthSignPurpose.AddAccount ||
                 authSignPurpose === Constants.AuthSignPurpose.AddAccountCustomPath) {
-            if (migratedToColdWallet) {
+            if (derivesFromXpub) {
                 return ""
             }
         }

@@ -45,6 +45,9 @@ StatusModal {
         function onConfirmSavedAddressRemoval(name, address) {
             Global.openPopup(confirmSavedAddressRemoval, {address: address, name: name})
         }
+        function onXpubMissingForSelectedOrigin(keypairName) {
+            Global.openPopup(reImportKeypairDialog, {keypairName: keypairName})
+        }
     }
 
     StatusScrollView {
@@ -184,6 +187,22 @@ StatusModal {
         }
 
         Component {
+            id: reImportKeypairDialog
+
+            ConfirmationDialog {
+
+                property string keypairName
+
+                headerSettings.title: qsTr("Re-import the %1 key pair to add accounts").arg(keypairName)
+                confirmationText: qsTr("Adding accounts to the <b>%1</b> key pair isn't possible due to recent improvements in how key pairs are stored. Please remove this key pair from the app and import it again from your Keycard — after that you'll be able to add accounts to it. Your keys are safe: removing the key pair from the app doesn't affect the Keycard, and importing it back takes only a moment.<br/><br/>• Go to Settings → Wallet → click the three dots on the <b>%1</b> key pair → Remove key pair and derived accounts<br/>• Go to Settings → Keycard → Read Keycard → Add key pair to Status wallet").arg(keypairName)
+                showCancelButton: false
+                confirmButtonLabel: qsTr("Close")
+
+                onConfirmButtonClicked: close()
+            }
+        }
+
+        Component {
             id: confirmSavedAddressRemoval
 
             ConfirmationDialog {
@@ -304,7 +323,8 @@ StatusModal {
 
                 return Utils.resolveAuthSignIcon(root.store.selectedOrigin.keyUid,
                                                  root.store.selectedOrigin.migratedToColdWallet,
-                                                 Constants.AuthSignPurpose.AddAccount
+                                                 Constants.AuthSignPurpose.AddAccount,
+                                                 root.store.selectedOrigin.derivesFromXpub
                                                  )
             }
 
