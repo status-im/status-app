@@ -326,9 +326,9 @@ Window {
         repeat: false
         onTriggered: {
             const chains = 5
-            runSize(100, chains)
-            runSize(1000, chains)
-            runSize(5000, chains)
+            const sizes = benchQuick ? [100] : [100, 1000, 5000]
+            for (const size of sizes)
+                runSize(size, chains)
             bench.done()
         }
     }

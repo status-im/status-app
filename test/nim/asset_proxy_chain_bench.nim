@@ -34,6 +34,7 @@ import os, times, strformat
 import nimqml
 from seaqt/qcoreapplication import QCoreApplication, processEvents
 import std/monotimes
+import benchmarks/perf_gate
 
 {.compile: "bench_statusq_register.cpp".}
 proc bench_registerStatusQTypes() {.importc.}
@@ -106,6 +107,11 @@ when isMainModule:
   let engine = newQQmlApplicationEngine()
   engine.addImportPath(getCurrentDir() / "ui" / "StatusQ" / "src")
   engine.setRootContextProperty("bench", benchVariant)
+  # The RED-baseline amplification is O(N^2): all_prices_change@1000 alone runs
+  # ~12 minutes on CI, @5000 effectively never finishes. The scene skips the
+  # large sizes in quick mode; the structural asserts hold at any size.
+  let quickVariant = newQVariant(benchQuick())
+  engine.setRootContextProperty("benchQuick", quickVariant)
 
   let sceneFile = getCurrentDir() / "test" / "nim" / "benchmarks" / "asset_proxy_chain_scene.qml"
   engine.loadData(readFile(sceneFile))
