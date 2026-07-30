@@ -80,29 +80,15 @@ settingsContentBaseScrollView_accountOrderItem_StatusListItem = {"container": se
 settingsContentBaseScrollView_savedAddressesItem_StatusListItem = {"container": settingsContentBase_ScrollView, "objectName": "savedAddressesItem", "type": "StatusListItem", "visible": True}
 settingsContentBaseScrollView_StatusListItem = {"container": settingsContentBase_ScrollView, "type": "StatusListItem", "unnamed": 1, "visible": True}
 settings_Wallet_NetworksView_TestNet_Toggle = {"container": statusDesktop_mainWindow, "objectName": "testnetModeSwitch", "type": "StatusSwitch"}
-settings_Wallet_NetworksView_TestNet_Toggle_Title = {"container": settingsContentBase_ScrollView, "objectName": "statusListItemSubTitle", "type": "StatusTextWithLoadingState", "visible": True}
 settings_Wallet_SavedAddresses_AddAddressButton = {"container": statusDesktop_mainWindow, "objectName": "addNewSavedAddressButton", "type": "StatusButton", "visible": True}
 settings_Wallet_SavedAddress_ItemDelegate ={"container": settingsContentBase_ScrollView, "objectName": RegularExpression("savedAddressView_Delegate*"), "type": "SavedAddressesDelegate", "visible": True}
 savedAddressItemKebabButton = {"container": statusDesktop_mainWindow, "objectName": RegularExpression("savedAddressView_Delegate_menuButton*"), "type": "StatusRoundButton", "visible": True}
-settingsContentBaseScrollView_Goerli_testnet_active_StatusBaseText = {"container": settingsContentBase_ScrollView, "type": "StatusBaseText", "unnamed": 1, "visible": True}
 settingsContentBaseScrollView_accountsList_StatusListView = {"container": settingsContentBase_ScrollView, "id": "accountsList", "type": "StatusListView", "unnamed": 1, "visible": True}
 settingsContentBaseScrollView_draggableDelegate_StatusDraggableListItem = {"checkable": False, "container": settingsContentBase_ScrollView, "id": "draggableDelegate", "type": "StatusDraggableListItem", "unnamed": 1, "visible": True}
 settingsContentBaseScrollView_accountOrderView_AccountOrderView = {"container": settingsContentBase_ScrollView, "id": "accountOrderView", "type": "AccountOrderView", "unnamed": 1, "visible": True}
 settingsContentBaseScrollView_StatusBaseText = {"container": settingsContentBase_ScrollView, "type": "StatusBaseText", "unnamed": 1, "visible": True}
 mainWindow_StatusToolBar = {"container": statusDesktop_mainWindow, "objectName": "statusToolBar", "type": "StatusToolBar", "visible": True}
 main_toolBar_back_button = {"container": mainWindow_StatusToolBar, "objectName": "toolBarBackButton", "type": "StatusFlatButton", "visible": True}
-settingsContentBaseScrollView_WalletNetworkDelegate_template = {"container": settingsContentBase_ScrollView, "objectName": "walletNetworkDelegate_Mainnet_1", "type": "WalletNetworkDelegate", "visible": True}
-networkItemEditTemplate = { "container": settingsContentBase_ScrollView, "objectName": RegularExpression("editNetwork_*"), "type": "StatusFlatButton", "visible": True}
-networkItemToggle = {"checkable": True, "container": settingsContentBase_ScrollView, "objectName": RegularExpression("isActiveSwitch_*"), 'type': 'StatusSwitch', 'visible': True}
-
-networkSettingsNetworks_Mainnet = {"container": settingsContentBase_ScrollView, "objectName": "walletNetworkDelegate_Mainnet_1", "type": "WalletNetworkDelegate", "visible": True}
-networkSettingsNetworks_Mainnet_Goerli = {"container": settingsContentBase_ScrollView, "objectName": "walletNetworkDelegate_Mainnet_5", "type": "WalletNetworkDelegate", "visible": True}
-networkSettingsNetworks_Optimism = {"container": settingsContentBase_ScrollView, "objectName": "walletNetworkDelegate_Optimism_10", "type": "WalletNetworkDelegate", "visible": True}
-networkSettingsNetworks_Optimism_Goerli = {"container": settingsContentBase_ScrollView, "objectName": "walletNetworkDelegate_Optimism_420", "type": "WalletNetworkDelegate", "visible": True}
-networkSettingsNetworks_Arbitrum = {"container": settingsContentBase_ScrollView, "objectName": "walletNetworkDelegate_Arbitrum_42161", "type": "WalletNetworkDelegate", "visible": True}
-networkSettingsNetworks_Arbitrum_Goerli = {"container": settingsContentBase_ScrollView, "objectName": "walletNetworkDelegate_Arbitrum_421613", "type": "WalletNetworkDelegate", "visible": True}
-networkSettingsNetworks_Mainnet_Goerli_sensor = {"container": networkSettingsNetworks_Mainnet_Goerli, "objectName": "walletNetworkDelegate_Mainnet_5_sensor", "id": "sensor", "type": "MouseArea", "unnamed": 1, "visible": True}
-networkSettingsNetowrks_Mainnet_Testlabel = {"container": networkSettingsNetworks_Mainnet_Goerli_sensor, "objectName": "testnetLabel_Mainnet", "type": "StatusBaseText", "visible": True}
 settingsWalletAccountDelegate_Status_account = {"container": settingsContentBase_ScrollView, "objectName": "Status account", "type": "WalletAccountDelegate", "visible": True}
 settingsWalletAccountDelegate = {"container": settingsContentBase_ScrollView, "index": 0, "objectName": RegularExpression("*"), "type": "WalletAccountDelegate", "visible": True}
 settingsWalletKeyPairDelegate = {"container": settingsContentBase_ScrollView, "objectName": "walletKeyPairDelegate", "type": "StatusListItem", "visible": True}
@@ -124,23 +110,6 @@ walletAccountViewOrigin = {"container": settingsContentBase_ScrollView, "objectN
 walletAccountViewDerivationPath = {"container": settingsContentBase_ScrollView, "objectName": "DerivationPath_ListItem", "type": "WalletAccountDetailsListItem"}
 walletAccountViewStored = {"container": settingsContentBase_ScrollView, "objectName": "Stored_ListItem", "type": "WalletAccountDetailsListItem"}
 walletAccountViewPreferredNetworks = {"container": settingsContentBase_ScrollView, "objectName": "PreferredNetworks_ListItem", "type": "StatusListItem"}
-
-# Wallet edit network view
-settingsContentBaseScrollView_editPreviwTabBar_StatusTabBar = {"container": statusDesktop_mainWindow, "objectName": "editPreviwTabBar", "type": "StatusTabBar"}
-editNetworkLiveButton = {"container": settingsContentBaseScrollView_editPreviwTabBar_StatusTabBar, "objectName": "editNetworkLiveButton", "type": "StatusTabButton"}
-editNetworkTestButton = {"container": settingsContentBaseScrollView_editPreviwTabBar_StatusTabBar, "objectName": "editNetworkTestButton", "type": "StatusTabButton"}
-editNetworkNameInput = {"container": statusDesktop_mainWindow, "objectName": "editNetworkNameInput", "type": "TextEdit"}
-editNetworkShortNameInput = {"container": statusDesktop_mainWindow, "objectName": "editNetworkShortNameInput", "type": "TextEdit"}
-editNetworkChainIdInput = {"container": statusDesktop_mainWindow, "objectName": "editNetworkChainIdInput", "type": "TextEdit"}
-editNetworkSymbolInput = {"container": statusDesktop_mainWindow, "objectName": "editNetworkSymbolInput", "type": "TextEdit"}
-editNetworkMainRpcInput = {"container": statusDesktop_mainWindow, "objectName": "editNetworkMainRpcInput", "type": "TextEdit", "visible": True}
-editNetworkFailoverRpcUrlInput = {"container": statusDesktop_mainWindow, "objectName": "editNetworkFailoverRpcUrlInput", "type": "TextEdit", "visible": True}
-editNetworkExplorerInput = {"container": statusDesktop_mainWindow, "objectName": "editNetworkExplorerInput", "type": "TextEdit"}
-editNetworkAknowledgmentCheckbox = {"container": statusDesktop_mainWindow, "objectName": "editNetworkAknowledgmentCheckbox", "type": "StatusCheckBox", "visible": True}
-editNetworkRevertButton = {"container": statusDesktop_mainWindow, "objectName": "editNetworkRevertButton", "type": "StatusButton", "visible": True}
-editNetworkSaveButton = {"container": statusDesktop_mainWindow, "objectName": "editNetworkSaveButton", "type": "StatusButton", "visible": True}
-mainRpcUrlInputObject = {"container": settingsContentBase_ScrollView, "objectName": "mainRpcInputObject", "type": "StatusInput", "visible": True}
-failoverRpcUrlInputObject = {"container": settingsContentBase_ScrollView, "objectName": "failoverRpcUrlInputObject", "type": "StatusInput", "visible": True}
 
 # Profile View
 mainWindow_MyProfileView = {"container": statusDesktop_mainWindow, "type": "MyProfileView", "unnamed": 1, "visible": True}

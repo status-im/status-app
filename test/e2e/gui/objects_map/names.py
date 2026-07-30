@@ -840,11 +840,6 @@ removeConfirmationAgreementCheckBox = {"container": statusDesktop_mainWindow_ove
 removeConfirmationConfirmButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
                                    "objectName": "RemoveAccountPopup-ConfirmButton", "type": "StatusButton"}
 
-# Deactivate network popup
-deactivateNetworkPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "DeactivateNetworkPopup",
-                          "type": "PopupItem", "visible": True}
-deactivateNetworkPopupDisableButton = {"container": statusDesktop_mainWindow_overlay, "text": RegularExpression("Disable*"), "type": "StatusButton", "unnamed": 1, "visible": True}
-
 # Testnet mode popup
 testnetAlert = {"container": statusDesktop_mainWindow_overlay, "objectName": "AlertPopup", "type": "PopupItem",
                 "visible": True}
