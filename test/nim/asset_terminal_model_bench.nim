@@ -22,6 +22,7 @@ from seaqt/qcoreapplication import QCoreApplication, processEvents
 import std/monotimes
 
 import app/modules/shared_models/assets_adaptor_model
+import benchmarks/perf_gate
 
 type Row = object
   size: int
@@ -227,9 +228,8 @@ when isMainModule:
     # restore descending sort for the next size
     model.sortBy("marketBalance", 1)
 
-  runSize(100)
-  runSize(1000)
-  runSize(5000)
+  for size in benchSizes([100, 1000, 5000], [100]):
+    runSize(size)
 
   let table = formatTable(bench.rows)
   echo "\n===== terminal-model propagation (GREEN) ====="

@@ -33,6 +33,7 @@ import os, times, strformat
 import nimqml
 from seaqt/qcoreapplication import QCoreApplication, processEvents
 import std/monotimes
+import benchmarks/perf_gate
 
 {.compile: "bench_statusq_register.cpp".}
 proc bench_registerStatusQTypes() {.importc.}
@@ -127,7 +128,7 @@ proc formatTable(rows: seq[Row]): string =
     result.add(&"{r.size}\t{r.scenario}\t{r.wallMs:.4f}\t{r.maxStallMs:.4f}\t{r.resetsG}\t{r.resetsF}\t{r.insertsG}\t{r.insertsF}\t{r.dcRowsG}\t{r.dcRowsF}\t{r.delCreatedG}\t{r.delDestroyedG}\t{r.delCreatedF}\t{r.delDestroyedF}\t{r.countFlat}\t{r.countGrouped}\t{r.error}\n")
 
 const scenarioNames = ["build", "account_switch", "chain_filter", "append_50", "balance_update"]
-const sizes = [200, 1000, 3000]
+let sizes = benchSizes([200, 1000, 3000], [3000])
 
 when isMainModule:
   putEnv("QT_QPA_PLATFORM", "offscreen")

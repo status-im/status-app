@@ -11,3 +11,11 @@ template perfAssert*(cond: untyped, msg: string) =
     doAssert cond, msg
   elif not (cond):
     echo "PERF GATE SKIPPED (BENCH_ASSERTS=0): ", msg
+
+# BENCH_QUICK=1 (set by the CI target) trims size sweeps to the assert-relevant
+# sizes: gates that pin a size keep it, structural gates keep the smallest.
+proc benchQuick*(): bool =
+  getEnv("BENCH_QUICK", "0").toLowerAscii() in ["1", "true", "on"]
+
+proc benchSizes*(full, quick: openArray[int]): seq[int] =
+  if benchQuick(): @quick else: @full

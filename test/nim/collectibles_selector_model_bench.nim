@@ -22,6 +22,7 @@ from seaqt/qcoreapplication import QCoreApplication, processEvents
 import std/monotimes
 
 import app/modules/shared_models/collectibles_selector_model
+import benchmarks/perf_gate
 
 type Row = object
   size: int
@@ -148,7 +149,7 @@ proc formatTable(rows: seq[Row]): string =
   for r in rows:
     result.add(&"{r.size}\t{r.scenario}\t{r.wallMs:.4f}\t{r.maxStallMs:.4f}\t{r.resetsG}\t{r.resetsF}\t{r.insertsG}\t{r.insertsF}\t{r.dcRowsG}\t{r.dcRowsF}\t{r.delCreatedG}\t{r.delDestroyedG}\t{r.delCreatedF}\t{r.delDestroyedF}\t{r.countFlat}\t{r.countGrouped}\n")
 
-const sizes = [200, 1000, 3000]
+let sizes = benchSizes([200, 1000, 3000], [200])
 
 when isMainModule:
   putEnv("QT_QPA_PLATFORM", "offscreen")

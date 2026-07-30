@@ -124,7 +124,7 @@ proc formatTable(rows: seq[Row]): string =
   for r in rows:
     result.add(&"{r.size}\t{r.scenario}\t{r.ms:.4f}\t{r.joinedLen}\n")
 
-const sizes = [500, 2000, 5000]
+let sizes = benchSizes([500, 2000, 5000], [5000])
 
 when isMainModule:
   let modeEnv = getEnv("HARVEST_MODE")

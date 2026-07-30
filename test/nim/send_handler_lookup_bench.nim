@@ -109,7 +109,7 @@ proc formatTable(rows: seq[Row]): string =
   for r in rows:
     result.add(&"{r.size}\t{r.scenario}\t{r.ms:.4f}\n")
 
-const sizes = [500, 2000, 5000]
+let sizes = benchSizes([500, 2000, 5000], [5000])
 const lookups = ["getByKey_norole", "getByKey_role", "get_loop_allroles",
   "getFirstModelEntryIf", "modelToFlatArray"]
 

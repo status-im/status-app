@@ -39,6 +39,7 @@ import app/modules/shared_models/token_selector_model
 import app/modules/shared_models/token_selector_builder
 import app/modules/shared_models/assets_aggregator
 import app/modules/shared/qt_model_spy
+import benchmarks/perf_gate
 
 type Row = object
   size: int
@@ -194,9 +195,8 @@ when isMainModule:
     # 5) page append: grow the popular list by one page (bounded insert).
     measure("page_append", proc() = m.fetchMore())
 
-  runSize(100)
-  runSize(1000)
-  runSize(5000)
+  for size in benchSizes([100, 1000, 5000], [100]):
+    runSize(size)
 
   let table = formatTable(rows)
   echo "\n===== token-picker terminal-model propagation (GREEN) ====="

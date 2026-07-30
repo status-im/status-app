@@ -37,6 +37,7 @@ import nimqml
 from seaqt/qcoreapplication import QCoreApplication, processEvents
 import std/monotimes
 import std/strutils
+import benchmarks/perf_gate
 
 # Optional QML profiling: build with `-d:qmldebug` (port via -d:qmlDebugPort:NNNNN)
 # to start the TCP debug/profiler server and BLOCK until `qmlprofiler --attach`
@@ -180,7 +181,7 @@ when isMainModule:
   var rows: seq[Row] = @[]
   # Default sweep; override with SWAP_BENCH_SIZES=10000 (comma-separated) to pin a
   # single size for a profiled run. Not a committed hardcode — env-driven.
-  var sizes = @[100, 1000, 5000, 10000]
+  var sizes = benchSizes([100, 1000, 5000, 10000], [1000])
   let sizesEnv = getEnv("SWAP_BENCH_SIZES", "")
   if sizesEnv.len > 0:
     sizes = @[]

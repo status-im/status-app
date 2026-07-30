@@ -300,9 +300,8 @@ when isMainModule:
     measure("open_string_envelope", buildOffWindow = false)
     measure("open_typed_handoff", buildOffWindow = true)
 
-  runSize(2000)
-  runSize(5000)
-  runSize(10000)
+  for size in benchSizes([2000, 5000, 10000], [10000]):
+    runSize(size)
 
   let table = formatTable(rows)
   echo "\n===== SwapModal open: GUI-thread stall by completion regime ====="

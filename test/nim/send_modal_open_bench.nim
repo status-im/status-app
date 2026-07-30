@@ -293,11 +293,8 @@ when isMainModule:
       stderr.writeLine(&"[bench] size={size} dropdown_open maxStall={rows[^1].maxStallMs:.2f}ms over32={rows[^1].over32} delegates={rows[^1].delegatesCreated} chips={rows[^1].chipsCreated}")
       stderr.flushFile()
 
-  runSize(50)
-  runSize(200)
-  runSize(500)
-  runSize(1000)
-  runSize(2000)
+  for size in benchSizes([50, 200, 500, 1000, 2000], [200]):
+    runSize(size)
 
   let table = formatTable(rows)
   echo "\n===== SimpleSendModal open: GUI-thread cost of the send picker seed ====="
