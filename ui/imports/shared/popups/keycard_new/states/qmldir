@@ -6,7 +6,6 @@ EnterSeedPhraseState 1.0 EnterSeedPhraseState.qml
 EnterKeyPairNameState 1.0 EnterKeyPairNameState.qml
 ManageKeyPairAccountsState 1.0 ManageKeyPairAccountsState.qml
 SeedPhraseDisplayState 1.0 SeedPhraseDisplayState.qml
-ConfirmSeedPhraseWordsState 1.0 ConfirmSeedPhraseWordsState.qml
 SelectKeyPairState 1.0 SelectKeyPairState.qml
 InsertEmptyKeycardState 1.0 InsertEmptyKeycardState.qml
 ConfirmKeyPairForStopUsingState 1.0 ConfirmKeyPairForStopUsingState.qml

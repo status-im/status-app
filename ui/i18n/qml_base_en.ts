@@ -3987,25 +3987,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     </message>
 </context>
 <context>
-    <name>ConfirmSeedPhraseWordsState</name>
-    <message>
-        <source>Confirm recovery phrase words</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Word #%1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enter word</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This word doesn&apos;t match</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>ConfirmationDialog</name>
     <message>
         <source>Confirm</source>

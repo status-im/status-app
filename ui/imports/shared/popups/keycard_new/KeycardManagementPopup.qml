@@ -10,6 +10,7 @@ import StatusQ.Popups.Dialog
 
 import utils
 
+import AppLayouts.Onboarding.pages
 import shared.popups.auth_sign_base 1.0
 
 import "states"
@@ -1227,7 +1228,7 @@ StatusDialog {
                              || (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin && d.pinMismatch)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase && contentLoader.item.seedPhraseValid)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.DisplaySeedPhrase && contentLoader.item.seedPhraseRevealed)
-                             || (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords && contentLoader.item.allEntriesValid)
+                             || (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords && contentLoader.item.allValid)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.EnterKeyPairName && contentLoader.item.nameValid)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts && contentLoader.item.allAccountsValid)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair
@@ -1791,8 +1792,10 @@ StatusDialog {
 
     Component {
         id: confirmSeedPhraseWordsComponent
-        ConfirmSeedPhraseWordsState {
-            seedPhrase: d.seedPhrase
+        BackupSeedphraseVerify {
+            mnemonic: d.seedPhrase
+            countToVerify: 4
+            popupMode: true
         }
     }
 

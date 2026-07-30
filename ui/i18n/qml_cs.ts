@@ -4005,25 +4005,6 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     </message>
 </context>
 <context>
-    <name>ConfirmSeedPhraseWordsState</name>
-    <message>
-        <source>Confirm recovery phrase words</source>
-        <translation type="unfinished">Potvrdit slova obnovovací fráze</translation>
-    </message>
-    <message>
-        <source>Word #%1</source>
-        <translation type="unfinished">Slovo #%1</translation>
-    </message>
-    <message>
-        <source>Enter word</source>
-        <translation type="unfinished">Zadat slovo</translation>
-    </message>
-    <message>
-        <source>This word doesn&apos;t match</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>ConfirmationDialog</name>
     <message>
         <source>Confirm</source>

@@ -3992,25 +3992,6 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     </message>
 </context>
 <context>
-    <name>ConfirmSeedPhraseWordsState</name>
-    <message>
-        <source>Confirm recovery phrase words</source>
-        <translation type="unfinished">Confirma las palabras de la frase de recuperación</translation>
-    </message>
-    <message>
-        <source>Word #%1</source>
-        <translation type="unfinished">Palabra #%1</translation>
-    </message>
-    <message>
-        <source>Enter word</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This word doesn&apos;t match</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>ConfirmationDialog</name>
     <message>
         <source>Confirm</source>
