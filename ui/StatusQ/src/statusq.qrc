@@ -4,6 +4,7 @@
         <file>StatusQ/Components/ChatTextView.qml</file>
         <file>StatusQ/Components/LoadingComponent.qml</file>
         <file>StatusQ/Components/LoadingErrorComponent.qml</file>
+        <file>StatusQ/Components/CountdownProgressIndicator.qml</file>
         <file>StatusQ/Components/StatusAnimatedImage.qml</file>
         <file>StatusQ/Components/StatusBadge.qml</file>
         <file>StatusQ/Components/StatusBetaTag.qml</file>

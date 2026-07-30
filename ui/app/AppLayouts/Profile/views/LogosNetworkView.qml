@@ -2,52 +2,67 @@ import QtQuick
 import QtQuick.Layouts
 
 import StatusQ
+import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
 
 import utils
-import AppLayouts.Profile.stores as ProfileStores
+import shared.panels
 
 SettingsContentBase {
     id: root
 
-    required property ProfileStores.LogosNetworkStore logosNetworkStore
+    property int peerCount: -1
+    property bool peerCountLoading: false
+    property string peerCountError: ""
     property bool pollingActive: false
+
+    signal refreshPeerCountRequested()
 
     QtObject {
         id: d
 
         readonly property string logosMessagingDocsUrl: "https://docs.logos.co/messaging"
+        readonly property int spacing: Theme.bigPadding
+        readonly property int peerCountRefreshIntervalSeconds: 15
+        property int peerCountRefreshSecondsLeft: 0 // To trigger a fetch on start
+
+        function resetPeerCountRefreshCountdown() {
+            peerCountRefreshSecondsLeft = peerCountRefreshIntervalSeconds
+        }
 
         function refreshPeerCount() {
-            root.logosNetworkStore.refreshPeerCount()
-        }
-    }
-
-    onPollingActiveChanged: {
-        if (root.pollingActive) {
-            d.refreshPeerCount()
+            root.refreshPeerCountRequested()
+            resetPeerCountRefreshCountdown()
         }
     }
 
     Timer {
-        interval: 15000
+        interval: 1000
         running: root.pollingActive
+        triggeredOnStart: true
         repeat: true
-        onTriggered: d.refreshPeerCount()
+        onTriggered: {
+            d.peerCountRefreshSecondsLeft = Math.max(0, d.peerCountRefreshSecondsLeft - 1)
+            if (d.peerCountRefreshSecondsLeft === 0) {
+                d.refreshPeerCount()
+            }
+        }
     }
 
     ColumnLayout {
         width: root.contentWidth
-        spacing: Theme.padding
+        spacing: d.spacing
 
         StatusBaseText {
             Layout.fillWidth: true
             Layout.leftMargin: Theme.padding
+            Layout.rightMargin: Theme.padding
             wrapMode: Text.Wrap
-            text: qsTr("Messages are sent via the Logos Messaging Network, comprised of peer-to-peer user nodes that users collectively power simply by running Status Desktop, making Status decentralized, resilient, and censorship resistant. %1")
-                  .arg(Utils.getStyledLink(qsTr("Learn More"),
+            color: Theme.palette.baseColor1
+            text: qsTr("Messages are sent via the Logos Messaging Network, a peer-to-peer network powered collectively by users running Status Desktop, making Status decentralized, resilient, and censorship-resistant. %1")
+                  .arg(Utils.getStyledLink(qsTr("Learn more"),
                                            d.logosMessagingDocsUrl,
                                            hoveredLink,
                                            Theme.palette.isDark ? Theme.palette.directColor1 : Theme.palette.primaryColor1,
@@ -56,33 +71,85 @@ SettingsContentBase {
             onLinkActivated: (link) => Global.requestOpenLink(link)
         }
 
-        Separator { Layout.fillWidth: true }
+        Separator {
+            Layout.fillWidth: true
+            Layout.topMargin: 4
+        }
 
         StatusBaseText {
             Layout.fillWidth: true
-            Layout.leftMargin: Theme.padding
             wrapMode: Text.Wrap
             text: qsTr("Connected Logos network peers")
-            font.bold: true
+            color: Theme.palette.baseColor1
         }
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: Theme.padding
-            Layout.rightMargin: Theme.padding
-            spacing: Theme.padding
+            spacing: Theme.bigPadding
 
-            StatusBaseText {
-                Layout.fillWidth: true
-                color: Theme.palette.baseColor1
-                text: root.logosNetworkStore.peerCountLoading || root.logosNetworkStore.peerCount < 0 ?
-                          qsTr("Checking peer connection...") :
-                          qsTr("%n peer(s)", "", root.logosNetworkStore.peerCount)
+            Rectangle {
+                Layout.preferredWidth: 40
+                Layout.preferredHeight: 40
+                Layout.alignment: Qt.AlignVCenter
+                radius: width / 2
+                color: Theme.palette.primaryColor3
+
+                StatusBaseText {
+                    anchors.centerIn: parent
+                    text: root.peerCountLoading || root.peerCount < 0 ?
+                              "..." :
+                              root.peerCount
+                    font.bold: true
+                }
             }
 
-            StatusButton {
-                text: qsTr("Refresh")
-                loading: root.logosNetworkStore.peerCountLoading
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignVCenter
+                spacing: 2
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    text: root.peerCount === 1 ? qsTr("Peer") : qsTr("Peers")
+                    color: Theme.palette.directColor1
+                    font.pixelSize: Theme.primaryTextFontSize
+                }
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    text: root.peerCountLoading || root.peerCount < 0 ?
+                              qsTr("Checking peer connection...") :
+                              qsTr("Connected")
+                    color: Theme.palette.baseColor1
+                    font.pixelSize: Theme.secondaryTextFontSize
+                }
+            }
+
+            CountdownProgressIndicator {
+                visible: root.pollingActive && !root.peerCountLoading
+                Layout.preferredWidth: 36
+                Layout.preferredHeight: 36
+                Layout.alignment: Qt.AlignVCenter
+                indicatorSize: 36
+                strokeWidth: 2
+                running: root.pollingActive
+                timeoutSeconds: d.peerCountRefreshIntervalSeconds
+                secondsLeft: d.peerCountRefreshSecondsLeft
+            }
+
+            StatusRoundButton {
+                Layout.preferredWidth: 40
+                Layout.preferredHeight: 40
+                Layout.alignment: Qt.AlignVCenter
+                objectName: "refreshLogosNetworkPeersButton"
+                icon.name: "refresh"
+                icon.width: 25
+                icon.height: 25
+                type: StatusFlatRoundButton.Type.Primary
+                radius: 10
+                highlighted: true
+                loading: root.peerCountLoading
+                Accessible.name: qsTr("Refresh Logos network peers")
                 onClicked: d.refreshPeerCount()
             }
         }
@@ -91,54 +158,82 @@ SettingsContentBase {
             Layout.fillWidth: true
             Layout.leftMargin: Theme.padding
             Layout.rightMargin: Theme.padding
-            visible: !!root.logosNetworkStore.peerCountError
+            visible: !!root.peerCountError
             wrapMode: Text.WordWrap
             color: Theme.palette.dangerColor1
-            text: qsTr("Unable to refresh Logos network peers: %1").arg(root.logosNetworkStore.peerCountError)
+            text: qsTr("Unable to refresh Logos network peers: %1").arg(root.peerCountError)
         }
 
         Separator {
             Layout.fillWidth: true
-            Layout.topMargin: Theme.padding
         }
 
-        StatusBaseText {
+        Rectangle {
             Layout.fillWidth: true
-            Layout.leftMargin: Theme.padding
-            wrapMode: Text.Wrap
-            text: qsTr("How to fix Logos network connection")
-            font.bold: true
-        }
+            implicitHeight: fixLayout.implicitHeight + d.spacing * 2.5
+            radius: 16
+            color: Theme.palette.primaryColor3
 
-        StatusBaseText {
-            Layout.fillWidth: true
-            Layout.leftMargin: Theme.padding
-            Layout.rightMargin: Theme.padding
-            wrapMode: Text.Wrap
-            text: qsTr("If Status has no connected Logos peers, check below")
-        }
+            ColumnLayout {
+                id: fixLayout
+                anchors.fill: parent
+                anchors.leftMargin: d.spacing
+                anchors.rightMargin: d.spacing
+                anchors.topMargin: Theme.padding
+                spacing: Theme.padding
 
-        StatusBaseText {
-            Layout.fillWidth: true
-            Layout.leftMargin: Theme.padding
-            Layout.rightMargin: Theme.padding
-            wrapMode: Text.Wrap
-            color: Theme.palette.baseColor1
-            text: qsTr("If your country has strong censorship rules, Status may be unable to access the bootnodes required to find peers on the network. Try connecting to a VPN.")
-        }
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    wrapMode: Text.Wrap
+                    text: qsTr("How to fix Logos network connection")
+                    color: Theme.palette.directColor1
+                    font.bold: true
+                }
 
-        StatusBaseText {
-            Layout.fillWidth: true
-            Layout.leftMargin: Theme.padding
-            Layout.rightMargin: Theme.padding
-            wrapMode: Text.Wrap
-            color: Theme.palette.baseColor1
-            text: qsTr("If your network connection is poor, try switching to a better internet connection or disconnecting your VPN if one is currently connected.")
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    wrapMode: Text.Wrap
+                    text: qsTr("If Status has no connected Logos peers, check:")
+                    color: Theme.palette.baseColor1
+                }
+
+                TroubleshootingRow {
+                    Layout.fillWidth: true
+                    iconName: "globe"
+                    description: qsTr("Some networks may block access to the Logos network. %1").arg("<b>" + qsTr("Try using a VPN") + "</b>")
+                }
+
+                TroubleshootingRow {
+                    Layout.fillWidth: true
+                    iconName: "compassActive"
+                    description: qsTr("Current internet connection may be unstable. %1").arg("<b>" + qsTr("Try another network or disconnect your VPN") + "</b>")
+                }
+            }
         }
     }
 
-    component Separator: Rectangle {
-        implicitHeight: 1
-        color: Theme.palette.separator
+    component TroubleshootingRow: RowLayout {
+        id: troubleshootingRow
+
+        property string iconName
+        property string description
+
+        spacing: Theme.padding
+
+        StatusIcon {
+            Layout.preferredWidth: 20
+            Layout.preferredHeight: 20
+            Layout.alignment: Qt.AlignTop
+            icon: troubleshootingRow.iconName
+            color: Theme.palette.directColor1
+        }
+
+        StatusBaseText {
+            Layout.fillWidth: true
+            text: troubleshootingRow.description
+            textFormat: Text.RichText
+            wrapMode: Text.WordWrap
+            color: Theme.palette.baseColor1
+        }
     }
 }

@@ -647,9 +647,12 @@ StatusSectionLayout {
                 implicitWidth: parent.width
                 implicitHeight: parent.height
                 contentWidth: d.contentWidth
-                sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.logosNetworkSettings)
-                logosNetworkStore: root.logosNetworkStore
+                sectionTitle: qsTr("Logos Network")
+                peerCount: root.logosNetworkStore.peerCount
+                peerCountLoading: root.logosNetworkStore.peerCountLoading
+                peerCountError: root.logosNetworkStore.peerCountError
                 pollingActive: profileContainer.currentIndex === Constants.settingsSubsection.logosNetworkSettings
+                onRefreshPeerCountRequested: root.logosNetworkStore.refreshPeerCount()
             }
         }
     }

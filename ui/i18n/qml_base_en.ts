@@ -3610,10 +3610,6 @@ file format</source>
 <context>
     <name>CommunityFetchPopup</name>
     <message>
-        <source>%1s</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Unable to fetch the community</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4484,6 +4480,13 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     </message>
     <message>
         <source>Expires on: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>CountdownProgressIndicator</name>
+    <message>
+        <source>%1s</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -10396,11 +10399,11 @@ to load</source>
 <context>
     <name>LogosNetworkView</name>
     <message>
-        <source>Messages are sent via the Logos Messaging Network, comprised of peer-to-peer user nodes that users collectively power simply by running Status Desktop, making Status decentralized, resilient, and censorship resistant. %1</source>
+        <source>Messages are sent via the Logos Messaging Network, a peer-to-peer network powered collectively by users running Status Desktop, making Status decentralized, resilient, and censorship-resistant. %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Learn More</source>
+        <source>Learn more</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10408,18 +10411,23 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Peers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Peer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Checking peer connection...</source>
         <translation type="unfinished"></translation>
     </message>
-    <message numerus="yes">
-        <source>%n peer(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
+    <message>
+        <source>Connected</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Refresh</source>
+        <source>Refresh Logos network peers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10427,19 +10435,27 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>If Status has no connected Logos peers, check:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Some networks may block access to the Logos network. %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try using a VPN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Current internet connection may be unstable. %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try another network or disconnect your VPN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>How to fix Logos network connection</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>If Status has no connected Logos peers, check below</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>If your country has strong censorship rules, Status may be unable to access the bootnodes required to find peers on the network. Try connecting to a VPN.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>If your network connection is poor, try switching to a better internet connection or disconnecting your VPN if one is currently connected.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -13531,6 +13547,10 @@ to load</source>
     <name>ProfileLayout</name>
     <message>
         <source>Contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Logos Network</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

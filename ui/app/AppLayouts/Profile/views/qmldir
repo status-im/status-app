@@ -6,6 +6,7 @@ ChangePasswordView 1.0 ChangePasswordView.qml
 CommunitiesView 1.0 CommunitiesView.qml
 ContactsView 1.0 ContactsView.qml
 LanguageView 1.0 LanguageView.qml
+LogosNetworkView 1.0 LogosNetworkView.qml
 NotificationsView 1.0 NotificationsView.qml
 PrivacyAndSecurityView 1.0 PrivacyAndSecurityView.qml
 SyncingView 1.0 SyncingView.qml

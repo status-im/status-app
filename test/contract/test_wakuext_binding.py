@@ -106,6 +106,8 @@ _MENTION_ALLOWLIST: dict[str, int] = {
     # class doc comment names wakuext_sendChatMessage; the file's actual call
     # sites are clean literals and are checked
     "mobile/android/qt6/src/app/status/mobile/ipc/NotificationReplyReceiver.java": 1,
+    # error text names wakuext_peers; the actual call is checked via .prefix
+    "src/app_service/service/general/service.nim": 1,
 }
 
 # These floors detect parser rot; they are not coverage targets. Set at ~80%

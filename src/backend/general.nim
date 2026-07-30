@@ -43,15 +43,8 @@ proc logout*(): RpcResponse[JsonNode] =
     error "error logging out", methodName = "logout", exception=e.msg
     raise newException(RpcException, e.msg)
 
-proc adminPeers*(): RpcResponse[JsonNode] =
-  let payload = %* []
-  result = core.callPrivateRPC("admin_peers", payload)
-
-proc wakuPeerCount*(): int =
-  let response = core.callPrivateRPC("peers".prefix)
-  if response.result.kind != JObject:
-    raise newException(RpcException, "unexpected wakuext_peers response")
-  return response.result.len
+proc wakuPeerCount*(): RpcResponse[JsonNode] =
+  return core.callPrivateRPC("peers".prefix)
 
 proc getPasswordStrengthScore*(password: string, userInputs: seq[string]): RpcResponse[JsonNode] =
   let params = %* {"password": password, "userInputs": userInputs}
@@ -65,7 +58,7 @@ proc getPasswordStrengthScore*(password: string, userInputs: seq[string]): RpcRe
 proc importLocalBackupFile*(filePath: string): RpcResponse[JsonNode] =
   let request = %* {"filePath": filePath}
   let response = status_go.loadLocalBackup($(request))
-  result = Json.decode(response, RpcResponse[JsonNode])
+  return Json.decode(response, RpcResponse[JsonNode])
 
 proc hashMessageForSigning*(message: string): string =
   try:

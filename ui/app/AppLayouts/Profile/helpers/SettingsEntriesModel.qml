@@ -103,7 +103,7 @@ SortFilterProxyModel {
         {
             subsection: Constants.settingsSubsection.logosNetworkSettings,
             text: qsTr("Logos network"),
-            icon: "network",
+            icon: "logos",
             isExperimental: false
         },
         {

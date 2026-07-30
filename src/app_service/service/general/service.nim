@@ -74,7 +74,14 @@ QtObject:
     discard status_general.logout()
 
   proc getWakuPeerCount*(self: Service): int =
-    return status_general.wakuPeerCount()
+    try:
+      let response = status_general.wakuPeerCount()
+      if response.result.kind != JObject:
+        raise newException(RpcException, "unexpected wakuext_peers response")
+      return response.result.len
+    except Exception as e:
+      error "error: ", procName="getWakuPeerCount", errName = e.name, errDesription = e.msg
+      return -1
 
   proc getPasswordStrengthScore*(self: Service, password, userName: string): int =
     try:

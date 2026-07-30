@@ -49,6 +49,7 @@ StatusListView {
         title: model.text
         Accessible.name: Utils.formatAccessibleName(title, objectName)
         asset.name: model.icon
+        asset.height: model.icon === "logos" ? 20 : 24 // The Logos icon is very thin and looks too tall
         selected: root.currenctSubsection === model.subsection
         badge.value: model.badgeCount
 
