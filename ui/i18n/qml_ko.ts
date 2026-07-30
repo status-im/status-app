@@ -14755,6 +14755,10 @@ to load</source>
         <translation>여기에 채팅 키를 입력하세요</translation>
     </message>
     <message>
+        <source>Cannot send a contact request to oneself</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>This user is blocked. Unblock to send a contact request.</source>
         <translation type="unfinished"></translation>
     </message>

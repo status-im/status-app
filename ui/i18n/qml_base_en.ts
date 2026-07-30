@@ -14803,6 +14803,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Cannot send a contact request to oneself</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>This user is blocked. Unblock to send a contact request.</source>
         <translation type="unfinished"></translation>
     </message>

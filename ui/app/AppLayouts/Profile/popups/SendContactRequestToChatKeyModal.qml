@@ -90,6 +90,8 @@ StatusDialog {
                    || d.lookedUpContact.contactRequestState === Constants.ContactRequestState.Sent
                    || d.lookedUpContact.isBlocked === true
         }
+        readonly property bool isOwnKey: d.resolvedFullPubKey === root.contactsStore.myPublicKey ||
+                                         d.resolvedPubKey === root.contactsStore.myCompressedPublicKey
 
         property var lookupContact: Backpressure.debounce(root, 400, function (value) {
             root.contactsStore.resolveENS(value)
@@ -146,8 +148,8 @@ StatusDialog {
             anchors.verticalCenter: parent.verticalCenter
             StatusIcon {
                 anchors.fill: parent
-                icon: d.validChatKey? "checkmark-circle" : "close-circle"
-                color: d.validChatKey? Theme.palette.successColor1 : Theme.palette.dangerColor1
+                icon: d.validChatKey && !d.isOwnKey ? "checkmark-circle" : "close-circle"
+                color: d.validChatKey && !d.isOwnKey? Theme.palette.successColor1 : Theme.palette.dangerColor1
             }
         }
     }
@@ -192,27 +194,26 @@ StatusDialog {
                     d.textChanged(text)
                 }
             }
-        }
-
-        StatusBaseText {
-            visible: d.contactRequestAlreadySent
-            Layout.fillWidth: true
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.Wrap
-            text: {
-                if (d.lookedUpContact?.isBlocked) {
-                    return qsTr("This user is blocked. Unblock to send a contact request.")
-                }
-                switch (d.lookedUpContact?.contactRequestState) {
+            errorMessageCmp {
+                visible: d.contactRequestAlreadySent || d.isOwnKey
+                horizontalAlignment: Text.AlignHCenter
+                font.pixelSize: Theme.fontSize(13)
+                text: {
+                    if (d.isOwnKey)
+                        return qsTr("Cannot send a contact request to oneself")
+                    if (d.lookedUpContact?.isBlocked) {
+                        return qsTr("This user is blocked. Unblock to send a contact request.")
+                    }
+                    switch (d.lookedUpContact?.contactRequestState) {
                     case Constants.ContactRequestState.Sent:
                         return qsTr("You already sent a contact request.")
                     case Constants.ContactRequestState.Mutual:
                         return qsTr("You are already contacts.")
                     default:
                         return ""
+                    }
                 }
             }
-            color: Theme.palette.dangerColor1
         }
 
         StatusInput {
@@ -242,7 +243,7 @@ StatusDialog {
 
         rightButtons: ObjectModel {
             StatusButton {
-                enabled: d.validChatKey && messageInput.valid && !d.contactRequestAlreadySent
+                enabled: d.validChatKey && messageInput.valid && !d.contactRequestAlreadySent && !d.isOwnKey
                 objectName: "SendContactRequestModal_Send_Button"
                 text: qsTr("Send Contact Request")
                 onClicked: {

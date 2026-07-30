@@ -92,7 +92,7 @@ QObject {
         ]
     }
 
-    readonly property var dimissedReceivedRequestContacts: SortFilterProxyModel {
+    readonly property var dismissedReceivedRequestContacts: SortFilterProxyModel {
         sourceModel: root.allContacts ?? null
 
         filters: [

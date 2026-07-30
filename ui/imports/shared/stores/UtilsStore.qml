@@ -13,12 +13,12 @@ QtObject {
 
     function isChatKey(value) {
         return (Utils.startsWith0x(value) && Utils.isHex(value) && value.length === 132)
-                || d.globalUtilsInst.isCompressedPubKey(value)
+                || isCompressedPubKey(value)
     }
 
     function isCommunityPublicKey(value) {
         return (Utils.startsWith0x(value) && Utils.isHex(value) && value.length === Constants.communityIdLength)
-                || d.globalUtilsInst.isCompressedPubKey(value)
+                || isCompressedPubKey(value)
     }
 
     function isCompressedPubKey(pubKey) {

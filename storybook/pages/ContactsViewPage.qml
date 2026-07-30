@@ -19,6 +19,9 @@ Item {
         contentWidth: 560
 
         contactsStore: AppLayoutStores.ContactsStore {
+            readonly property string myPublicKey: "0xdeadbeef"
+            readonly property string myCompressedPublicKey: "zx3shdeadbeef"
+
             function joinPrivateChat(pubKey) {
                 console.info("ContactsStore::joinPrivateChat", pubKey)
             }
@@ -29,7 +32,13 @@ Item {
                 console.info("ContactsStore::dismissContactRequest", pubKey, contactRequestId)
             }
 
-            function resolveENS(value) {}
+            function resolveENS(value) {
+                console.info("ContactsStore::resolveENS", value)
+                if (value.startsWith("0x") || value.startsWith("zx3sh"))
+                    resolvedENS(value, "", "")
+                else
+                    resolvedENS("", "", "")
+            }
 
             signal resolvedENS(string resolvedPubKey, string resolvedAddress,
                                string uuid)
@@ -43,12 +52,18 @@ Item {
                             ["👨🏻‍🍼", "🏃🏿‍♂️", "🌇", "🤶🏿", "🏮","🤷🏻‍♂️", "🤦🏻",
                              "📣", "🤎", "👷🏽", "😺", "🥞", "🔃", "🧝🏽‍♂️"])
             }
+            function isCompressedPubKey(key) {
+                return !!key && key.startsWith("zx3sh")
+            }
+            function getDecompressedPk(value) {
+                return "0x" + value
+            }
         }
 
         mutualContactsModel: adaptor.mutualContacts
         blockedContactsModel: adaptor.blockedContacts
         pendingContactsModel: adaptor.pendingContacts
-        dismissedReceivedRequestContactsModel: adaptor.dismissedReceivedRequestContactsModel
+        dismissedReceivedRequestContactsModel: adaptor.dismissedReceivedRequestContacts
         pendingReceivedContactsCount: adaptor.pendingReceivedRequestContacts.count
     }
 

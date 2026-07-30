@@ -217,13 +217,13 @@ SettingsContentBase {
     }
 
     component ContactsList: ContactsListPanel {
-        onProfilePopupRequested: Global.openProfilePopup(publicKey)
-        onContextMenuRequested: root.openContextMenu(model, publicKey)
+        onProfilePopupRequested: publicKey => Global.openProfilePopup(publicKey)
+        onContextMenuRequested: publicKey => root.openContextMenu(model, publicKey)
 
-        onSendMessageRequested: root.contactsStore.joinPrivateChat(publicKey)
-        onAcceptContactRequested: root.contactsStore.acceptContactRequest(publicKey, "")
-        onRejectContactRequested: root.contactsStore.dismissContactRequest(publicKey, "")
-        onRejectionRemoved: root.contactsStore.acceptContactRequest(publicKey, "")
+        onSendMessageRequested: publicKey => root.contactsStore.joinPrivateChat(publicKey)
+        onAcceptContactRequested: publicKey => root.contactsStore.acceptContactRequest(publicKey, "")
+        onRejectContactRequested: publicKey => root.contactsStore.dismissContactRequest(publicKey, "")
+        onRejectionRemoved: publicKey => root.contactsStore.acceptContactRequest(publicKey, "")
     }
 
     component SectionComponent: Rectangle {

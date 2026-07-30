@@ -33,6 +33,7 @@ QtObject {
     }
 
     readonly property string myPublicKey: userProfile.pubKey
+    readonly property string myCompressedPublicKey: userProfile.compressedPubKey
 
     // contactsModel holds all available contacts
     readonly property var contactsModel: d.contactsModuleInst.contactsModel

@@ -136,7 +136,7 @@ Loader {
             blockedContactsModel:                   Qt.binding(() => root.contactsAdaptor.blockedContacts),
             pendingContactsModel:                   Qt.binding(() => root.contactsAdaptor.pendingContacts),
             pendingReceivedContactsCount:           Qt.binding(() => root.contactsAdaptor.pendingReceivedRequestContacts.count),
-            dismissedReceivedRequestContactsModel:  Qt.binding(() => root.contactsAdaptor.dimissedReceivedRequestContacts),
+            dismissedReceivedRequestContactsModel:  Qt.binding(() => root.contactsAdaptor.dismissedReceivedRequestContacts),
             isKeycardEnabled:                       Qt.binding(() => root.featureFlagsStore.keycardEnabled),
             isBrowserEnabled:                       Qt.binding(() => root.featureFlagsStore.browserEnabled),
             messageLinkSharingFeatureEnabled:       Qt.binding(() => root.featureFlagsStore.messageLinkSharingEnabled),
