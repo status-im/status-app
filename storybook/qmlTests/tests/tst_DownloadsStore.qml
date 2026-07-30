@@ -118,6 +118,16 @@ Item {
         }
     }
 
+    Component {
+        id: fakeViewComponent
+        QtObject {
+            property bool offTheRecord: false
+            property bool retained: false
+            property bool htmlPageLoaded: false
+            property string title: ""
+        }
+    }
+
     TestCase {
         name: "DownloadsStore"
         when: windowShown
@@ -729,6 +739,91 @@ Item {
             record.missingFile = false
             record.state = AbstractWebView.DownloadState.DownloadInterrupted
             compare(store.statusText(record), "Interrupted — tap to retry")
+        }
+
+        // ADR 0006 §6 / issue 06 — Retained View ownership seam
+        function test_viewHasNonTerminalDownloads_tracksOriginatingView() {
+            const store = createStore()
+            const viewA = createTemporaryObject(fakeViewComponent, root)
+            const viewB = createTemporaryObject(fakeViewComponent, root)
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+
+            verify(!store.viewHasNonTerminalDownloads(viewA))
+
+            const record = store.addDownload(live, viewA)
+            compare(record.originatingView, viewA)
+            verify(store.viewHasNonTerminalDownloads(viewA))
+            verify(!store.viewHasNonTerminalDownloads(viewB))
+            verify(!store.viewHasNonTerminalDownloads(null))
+
+            live.complete()
+            verify(!store.viewHasNonTerminalDownloads(viewA))
+        }
+
+        function test_viewDownloadsCleared_emitsWhenLastNonTerminalEnds() {
+            const store = createStore()
+            const view = createTemporaryObject(fakeViewComponent, root)
+            const live1 = createTemporaryObject(fakeDownloadComponent, root)
+            const live2 = createTemporaryObject(fakeDownloadComponent, root)
+            live2.downloadFileName = "other.bin"
+            live2.suggestedFileName = "other.bin"
+            live2.destinationPath = "/tmp/downloads/other.bin"
+
+            let clearedCount = 0
+            let clearedView = null
+            store.viewDownloadsCleared.connect(function(v) {
+                clearedCount += 1
+                clearedView = v
+            })
+
+            const r1 = store.addDownload(live1, view)
+            const r2 = store.addDownload(live2, view)
+            verify(store.viewHasNonTerminalDownloads(view))
+
+            live1.complete()
+            compare(clearedCount, 0)
+            verify(store.viewHasNonTerminalDownloads(view))
+
+            live2.complete()
+            compare(clearedCount, 1)
+            compare(clearedView, view)
+            verify(!store.viewHasNonTerminalDownloads(view))
+            verify(r1.isTerminal && r2.isTerminal)
+        }
+
+        function test_addDownload_stampsOffTheRecord_fromHostView() {
+            const store = createStore()
+            const view = createTemporaryObject(fakeViewComponent, root)
+            view.offTheRecord = true
+            const live = createTemporaryObject(fakeMobileDownloadComponent, root)
+            // Mobile download has no offTheRecord / view — host view is the source of truth.
+            const record = store.addDownload(live, view)
+            verify(record.offTheRecord)
+            compare(record.originatingView, view)
+        }
+
+        function test_viewDownloadsCleared_notEmittedForUnrelatedView() {
+            const store = createStore()
+            const viewA = createTemporaryObject(fakeViewComponent, root)
+            const viewB = createTemporaryObject(fakeViewComponent, root)
+            const liveA = createTemporaryObject(fakeDownloadComponent, root)
+            const liveB = createTemporaryObject(fakeDownloadComponent, root)
+            liveB.downloadFileName = "b.bin"
+            liveB.suggestedFileName = "b.bin"
+            liveB.destinationPath = "/tmp/downloads/b.bin"
+
+            let clearedViews = []
+            store.viewDownloadsCleared.connect(function(v) {
+                clearedViews.push(v)
+            })
+
+            store.addDownload(liveA, viewA)
+            store.addDownload(liveB, viewB)
+            liveA.complete()
+
+            compare(clearedViews.length, 1)
+            compare(clearedViews[0], viewA)
+            verify(store.viewHasNonTerminalDownloads(viewB))
         }
     }
 }

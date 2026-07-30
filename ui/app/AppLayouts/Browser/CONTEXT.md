@@ -13,7 +13,8 @@ glossary and are not repeated here. See [CONTEXT-MAP.md](../../../../CONTEXT-MAP
 
 ### Tab
 One entry in the tab strip, backed by exactly one Web View for its lifetime.
-Closing a Tab destroys its Web View unless the view is Retained.
+Closing a Tab destroys its Web View unless the view is Retained, and never
+cancels that view's Downloads.
 
 ### Web View
 The surface that loads and renders one page and owns that page's navigation
@@ -40,7 +41,8 @@ built from.
 _Avoid_: download item, download entry, download model.
 
 ### Download History
-The persisted set of Download Records, restored on launch and capped in size.
+The persisted set of Download Records, restored on launch and capped in size,
+oldest evicted first and never a Record whose Download is still non-terminal.
 Holds Records only — never file bytes, and never Records from Incognito Tabs.
 _Avoid_: downloads log, saved downloads.
 
@@ -55,13 +57,19 @@ download view.
 ### Download Pill
 The compact strip entry shown while a download is worth surfacing in-line: file
 name, progress or terminal status, one primary action, and a menu. Lives for the
-browsing session only and is never restored from Download History.
+browsing session only, is never restored from Download History, and never
+outlives its Record's place in the Downloads List.
 _Avoid_: download chip, download tab, download bar item.
 
 ### Retained View
 A Web View kept alive, hidden and frozen, after its Tab is gone, because it still
 owns a non-terminal Download. Destroyed once every Download it owns reaches a
-terminal state.
+terminal state. Exists only when destroying the Web View would abort those
+Downloads — today that is the Mobile Backend; a Backend that keeps Downloads
+alive after view destruction does not create Retained Views. Incognito Tabs are
+retained on the same terms: retention keeps a transfer the user asked for alive
+and persists nothing. A Retained View is not part of the Tab set and never takes
+on new Downloads — it only finishes the ones it already owns.
 _Avoid_: zombie tab, orphan view, background tab.
 
 ### Missing File

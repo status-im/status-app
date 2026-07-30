@@ -357,7 +357,7 @@ StatusSectionLayout {
         bookmarksStore: root.bookmarksStore
         downloadsStore: root.downloadsStore
         determineRealURLFn: (url) => root.browserRootStore.determineRealURL(url)
-        downloadRequestHandler: (download) => downloadsContext.handleDownloadRequest(download)
+        downloadRequestHandler: (download, hostView) => downloadsContext.handleDownloadRequest(download, hostView)
         sslErrorHandler: (error) => {
                              error.defer()
                              sslDialog.enqueue(error)

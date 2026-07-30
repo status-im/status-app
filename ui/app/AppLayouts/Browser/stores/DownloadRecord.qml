@@ -29,6 +29,10 @@ QtObject {
     // Transient Backend download (WebEngineDownloadRequest / MobileWebViewDownload). May become null.
     property var liveDownload: null
 
+    // Host Web View that started this Download (LazyWebViewAdapter). Used for
+    // Retained View ownership (ADR 0006 §6); never persisted.
+    property var originatingView: null
+
     signal terminalReached()
 
     readonly property string targetPath: {
@@ -39,14 +43,17 @@ QtObject {
         return root.downloadDirectory + "/" + root.fileName
     }
 
-    readonly property bool isTerminal: {
-        return root.state === AbstractWebView.DownloadState.DownloadCompleted
-            || root.state === AbstractWebView.DownloadState.DownloadCancelled
-            || root.state === AbstractWebView.DownloadState.DownloadInterrupted
+    readonly property bool isTerminal: root.isTerminalState(root.state)
+
+    /// Prefer this over `isTerminal` inside onStateChanged — the binding can lag.
+    function isTerminalState(state) {
+        return state === AbstractWebView.DownloadState.DownloadCompleted
+            || state === AbstractWebView.DownloadState.DownloadCancelled
+            || state === AbstractWebView.DownloadState.DownloadInterrupted
     }
 
     onStateChanged: {
-        if (root.isTerminal)
+        if (root.isTerminalState(root.state))
             root.terminalReached()
     }
 

@@ -10,6 +10,7 @@ import StatusQ.Core.Utils as SQUtils
 import utils
 
 import AppLayouts.Browser
+import AppLayouts.Browser.adapters
 import AppLayouts.Browser.stores as BrowserStores
 import AppLayouts.Browser.webview
 import AppLayouts.Wallet.stores
@@ -98,15 +99,42 @@ SplitView {
                     return null
                 return downloadModel[index]
             }
-            function addDownload(download) {
+            function addDownload(download, hostView) {
                 const component = Qt.createComponent(_downloadRecordUrl)
                 if (component.status !== Component.Ready)
                     return null
                 const record = component.createObject(this)
                 record.attach(download)
+                if (hostView)
+                    record.originatingView = hostView
+                else if (download && download.view)
+                    record.originatingView = download.view
+                if (hostView && hostView.offTheRecord !== undefined)
+                    record.offTheRecord = !!hostView.offTheRecord
+                record.terminalReached.connect(() => {
+                    if (!viewHasNonTerminalDownloads(record.originatingView))
+                        viewDownloadsCleared(record.originatingView)
+                })
                 downloadModel = downloadModel.concat([record])
                 return record
             }
+            function viewHasNonTerminalDownloads(view) {
+                if (!view)
+                    return false
+                for (let i = 0; i < downloadModel.length; ++i) {
+                    const record = downloadModel[i]
+                    if (!record || record.originatingView !== view)
+                        continue
+                    if (record.isTerminalState) {
+                        if (!record.isTerminalState(record.state))
+                            return true
+                    } else if (!record.isTerminal) {
+                        return true
+                    }
+                }
+                return false
+            }
+            signal viewDownloadsCleared(var view)
             function resolveDownloadTarget(suggestedFileName) {
                 const name = suggestedFileName || "download.bin"
                 return downloadsDirectory + "/" + name

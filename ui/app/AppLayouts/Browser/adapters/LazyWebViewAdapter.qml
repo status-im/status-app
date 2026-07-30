@@ -131,6 +131,15 @@ AbstractWebView {
             loader.item.detachView()
     }
 
+    /// Host-side Retry — ensure the Backend is loaded, then forward.
+    function downloadUrl(url, suggestedFileName) {
+        ensureLoaded()
+        if (loader.item && loader.item.downloadUrl)
+            loader.item.downloadUrl(url, suggestedFileName || "")
+        else
+            console.warn("LazyWebViewAdapter: downloadUrl unavailable")
+    }
+
     onUrlChanged: {
         if (loader.item && loader.item.url !== url)
             loader.item.url = url

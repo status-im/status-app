@@ -76,6 +76,10 @@ QtObject {
 
     readonly property url _downloadRecordUrl: Qt.resolvedUrl("DownloadRecord.qml")
 
+    /// Emitted when a host Web View no longer owns any non-terminal Downloads.
+    /// BrowserWebViewContext destroys Retained Views on this signal (ADR 0006 §6).
+    signal viewDownloadsCleared(var view)
+
     readonly property Timer _historySaveTimer: Timer {
         interval: Math.max(0, root.historySaveDebounceMs)
         repeat: false
@@ -94,7 +98,9 @@ QtObject {
         return downloadStripModel[index]
     }
 
-    function addDownload(download) {
+    /// hostView is the host Web View (LazyWebViewAdapter) that owns this Download.
+    /// Required for Retained View ownership; Backend download.view is unreliable on mobile.
+    function addDownload(download, hostView) {
         const component = Qt.createComponent(_downloadRecordUrl)
         if (component.status !== Component.Ready) {
             console.error("DownloadsStore: failed to load DownloadRecord:", component.errorString())
@@ -102,7 +108,14 @@ QtObject {
         }
         const record = component.createObject(root)
         record.attach(download)
-        if (download) {
+        if (hostView)
+            record.originatingView = hostView
+        else if (download && download.view)
+            record.originatingView = download.view
+
+        if (hostView && hostView.offTheRecord !== undefined)
+            record.offTheRecord = !!hostView.offTheRecord
+        else if (download) {
             if (download.offTheRecord !== undefined)
                 record.offTheRecord = !!download.offTheRecord
             else if (download.view && download.view.offTheRecord !== undefined)
@@ -110,12 +123,40 @@ QtObject {
         }
         record.terminalReached.connect(function() {
             root.scheduleSaveDownloadHistory()
+            root._maybeEmitViewDownloadsCleared(record.originatingView)
         })
         downloadModel = downloadModel.concat([record])
         downloadStripModel = downloadStripModel.concat([record])
         root.enforceHistoryCap()
         root.scheduleSaveDownloadHistory()
         return record
+    }
+
+    /// True while any Download Record for this host Web View is still non-terminal.
+    function viewHasNonTerminalDownloads(view) {
+        if (!view)
+            return false
+        for (let i = 0; i < downloadModel.length; ++i) {
+            const record = downloadModel[i]
+            if (!record || record.originatingView !== view)
+                continue
+            // Read state via isTerminalState — isTerminal can lag behind
+            // onStateChanged when called from a terminalReached handler.
+            if (record.isTerminalState) {
+                if (!record.isTerminalState(record.state))
+                    return true
+            } else if (!record.isTerminal) {
+                return true
+            }
+        }
+        return false
+    }
+
+    function _maybeEmitViewDownloadsCleared(view) {
+        if (!view)
+            return
+        if (!root.viewHasNonTerminalDownloads(view))
+            root.viewDownloadsCleared(view)
     }
 
     /// Remove a Record from the Download Pill strip only (History / downloadModel unchanged).

@@ -5,6 +5,9 @@
 Accepted
 
 - **Date**: 2026-07-29
+- **Amended**: 2026-07-30 — §6 (no close-confirmation; retention ownership and
+  bounds), §7 (profile match is mandatory), §8 (unreportable state must not gate
+  UI)
 - **Owners**: Status Desktop (browser)
 
 ## Context
@@ -86,8 +89,30 @@ library's Download object is a transient attachment to it.**
    whose bytes live in the originating Backend and cannot be re-issued elsewhere.
    This matters most for the download-only Tab (`target=_blank` onto an
    attachment), which the browser closes *itself* — there is no user to prompt.
-   A user-initiated close of a Tab with an active Download asks for confirmation,
-   and confirming cancels the Download.
+
+   **Closing a Tab never cancels a Download** — user-initiated or not. An earlier
+   draft asked for confirmation on user close and cancelled on confirm; that was
+   dropped, because the Download Pill and the Downloads List already offer Cancel
+   for every non-terminal Download, so the dialog asks a question the user can
+   answer better, later, and with more context. Cancelling stays an explicit act
+   on the download, never a side effect of tidying up tabs.
+
+   Retention rules:
+   - **One owner.** The component that creates Web Views destroys them
+     (`BrowserWebViewContext`), retained or not. `DownloadsStore` answers "does
+     this view still own non-terminal Downloads?" and signals when that becomes
+     false; only a Download Record ever attaches to a live Download object.
+   - **Retained Views take no new work.** A Retained View is not part of the Tab
+     set and is never chosen as the Backend for a new Download or a retry —
+     otherwise its retention could be extended indefinitely and "destroyed once
+     its Downloads are terminal" would stop being a reachable state.
+   - **Incognito Tabs are retained on the same terms.** The privacy boundary is
+     persistence (§4), not aborting a transfer the user explicitly asked for;
+     retention writes nothing.
+   - **No timeout and no cap.** Retention ends only when the Downloads it holds
+     reach a terminal state. A host-side timeout would report a live transfer as
+     dead; a stalled transfer is the Backend's to interrupt, and the user's to
+     cancel from the Pill.
 
 7. **Retry is a host-side re-issue**, not the library's `retry()`: the Record's
    URL is downloaded again via `downloadUrl(url, fileName)` on a Backend with a
@@ -96,6 +121,13 @@ library's Download object is a transient attachment to it.**
    cancelled must not restart it. Inline Downloads get no retry at all; their
    payload is not reproducible from a URL.
 
+   **The profile match is mandatory, never best-effort.** Re-issuing an Incognito
+   Record on a Standard Backend would give the new Record standard mode, and so
+   persist an Incognito source URL into Download History and — on Android —
+   register the file with the system Downloads UI, which the library refuses for
+   Incognito precisely to keep those URLs out. If no Backend with a matching mode
+   exists, retry is unavailable rather than downgraded.
+
 8. **Platform reach is reported, not assumed.** "Show in folder" exists on
    Android only (via the system downloads view; the library registers completed
    Standard-mode files with MediaStore) and is hidden on iOS, which has no folder
@@ -103,6 +135,12 @@ library's Download object is a transient attachment to it.**
    (`SystemUtilsInternal.sharePaths`). "Open in Browser" is gated on the Backend's
    ability to render the file's type: images, plain text and HTML everywhere, PDF
    only where the Backend renders PDF — the system Android WebView does not.
+
+   The corollary: **state the Backend cannot report must not gate UI.** The seam
+   can open and close the native find panel but is never told when the user
+   dismisses it, so "Find is open" is not a fact the host owns. Opening Find
+   therefore hides the Download Pill strip once, as an action, instead of latching
+   it hidden until some unrelated event happens to clear the flag.
 
 9. **Clear browsing data clears Records, not files.** Downloaded files are the
    user's; the browsing trace is ours to erase.
@@ -123,7 +161,10 @@ library's Download object is a transient attachment to it.**
 
 - **Retained Views are a real cost.** A hidden native WebView can outlive its Tab,
   and its lifetime is now driven by download state. Leaks here are invisible to the
-  user, so ownership has to stay in one place.
+  user, so ownership has to stay in one place. With no cap and no timeout, several
+  attachments opened in a row can leave several hidden native views alive at once;
+  that ceiling is set by user behaviour and by how quickly the Backend interrupts a
+  stalled transfer, not by us.
 - **Host-side retry loses the library's resume path.** A re-issued download starts
   from zero rather than reusing WKDownload resume data or an HTTP `Range` request.
   A follow-up upstream would fix the root cause: keep a terminal Download alive

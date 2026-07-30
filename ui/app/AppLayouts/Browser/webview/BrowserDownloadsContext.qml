@@ -58,11 +58,13 @@ QtObject {
             setFooterVisibleFn(false)
     }
 
-    function handleDownloadRequest(download) {
+    /// hostView is the host Web View (LazyWebViewAdapter) that raised the request.
+    /// Prefer it over Backend download.view (missing on mobile; wrong identity on desktop).
+    function handleDownloadRequest(download, hostView) {
         if (!download)
             return
 
-        const record = downloadsStore.addDownload(download)
+        const record = downloadsStore.addDownload(download, hostView)
         downloadsStore.acceptLiveDownload(download, record)
 
         // New download dismisses Find and shows the strip (Find XOR).
@@ -71,13 +73,16 @@ QtObject {
         root.findUiActive = false
         setFooterVisibleFn(true)
 
-        if (!download.view)
+        // Download-only Tab (target=_blank attachment): leave the strip via removeView,
+        // which retains the Web View on mobile while Downloads are non-terminal.
+        const view = hostView || (record ? record.originatingView : null) || download.view
+        if (!view)
             return
 
         const count = getTabsCountFn()
         for (var i = 0; i < count; ++i) {
             var tab = getWebViewFn(i)
-            if (tab === download.view && !tab.htmlPageLoaded && tab.title === "") {
+            if (tab === view && !tab.htmlPageLoaded && tab.title === "") {
                 removeViewFn(i)
                 break
             }
@@ -189,21 +194,22 @@ QtObject {
         return null
     }
 
+    /// Retry Backend must match the Record profile (ADR 0006 §7) and must be a
+    /// live Tab Web View — never a Retained View (ADR 0006 §6).
     function _webViewForRetry(record) {
         const count = getTabsCountFn ? getTabsCountFn() : 0
         const wantOtr = !!record.offTheRecord
-        let fallback = null
         for (let i = 0; i < count; ++i) {
             const tab = getWebViewFn(i)
             if (!tab || !tab.downloadUrl)
                 continue
-            if (fallback === null)
-                fallback = tab
+            if (tab.retained)
+                continue
             const otr = tab.offTheRecord !== undefined ? !!tab.offTheRecord
                         : (tab.profileParams ? !!tab.profileParams.offTheRecord : false)
             if (otr === wantOtr)
                 return tab
         }
-        return fallback
+        return null
     }
 }

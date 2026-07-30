@@ -50,6 +50,10 @@ QtObject {
         EmptyContent
     }
 
+    // Retained Views: host Web Views kept alive (hidden + frozen) after Tab close
+    // while they still own non-terminal Downloads. Not part of the Tab set.
+    property var _retainedViews: []
+
     readonly property Item currentWebView: tabsModel.currentIndex < tabsModel.count ? (getCurrentWebView() ?? null) : null
     readonly property int currentContentMode: {
         if (!currentWebView)
@@ -250,12 +254,65 @@ QtObject {
         tabsModel.removeTab(index)
         if (!view)
             return
+
+        // Mobile Backend aborts Downloads when the Web View is destroyed.
+        // Retain (hide + freeze) until DownloadsStore reports the view is clear.
+        // Desktop WebEngine keeps transfers alive after view destruction — no retain.
+        // Closing never cancels a Download (ADR 0006 §6).
+        const shouldRetain = root.isMobile
+            && !!downloadsStore
+            && typeof downloadsStore.viewHasNonTerminalDownloads === "function"
+            && downloadsStore.viewHasNonTerminalDownloads(view)
+
+        if (shouldRetain) {
+            view.retained = true
+            view.focus = false
+            // Reparent out of the StackLayout so children stay 1:1 with tabs.
+            // visible/freeze follow `retained` bindings on the adapter.
+            // Do not detachView()/stop() — that would abort the transfer.
+            view.parent = null
+            _retainedViews = _retainedViews.concat([view])
+            return
+        }
+
+        root._destroyWebView(view)
+    }
+
+    function _destroyWebView(view) {
+        if (!view)
+            return
         view.visible = false
         view.enabled = false
         view.focus = false
-        view.detachView()
+        if (typeof view.detachView === "function")
+            view.detachView()
         view.parent = null
         view.destroy()
+    }
+
+    function _destroyRetainedView(view) {
+        if (!view)
+            return
+        const next = []
+        let found = false
+        for (let i = 0; i < _retainedViews.length; ++i) {
+            if (_retainedViews[i] === view)
+                found = true
+            else
+                next.push(_retainedViews[i])
+        }
+        if (!found)
+            return
+        _retainedViews = next
+        root._destroyWebView(view)
+    }
+
+    readonly property Connections _retainedDownloadsConnections: Connections {
+        target: root.downloadsStore
+        ignoreUnknownSignals: true
+        function onViewDownloadsCleared(view) {
+            root._destroyRetainedView(view)
+        }
     }
 
     readonly property var webViewAdapterComponent: Component {
@@ -265,10 +322,12 @@ QtObject {
             // On mobile, only the active tab must be visible; native WKWebView
             // subviews share the same UIKit window and ignore QML z-order,
             // so StackLayout alone cannot hide inactive tabs reliably.
-            visible: root.isMobile ? StackLayout.isCurrentItem : true
+            // Retained Views stay hidden regardless of StackLayout current item.
+            visible: retained ? false
+                     : (root.isMobile ? StackLayout.isCurrentItem : true)
             enabled: visible
-            // Freeze native webview while QML popup is shown
-            freeze: root.isMobile && root.hasPopups
+            // Freeze while a QML popup is shown, or while Retained for Downloads.
+            freeze: root.isMobile && (root.hasPopups || retained)
 
             readonly property ConnectorBridge bridge: ConnectorBridge {
                 connectorController: root.dappsEnabled ? root.connectorController : null
@@ -295,7 +354,15 @@ QtObject {
                 var tab = root.createEmptyTab(profileParams, false, makeCurrent, requestedUrl)
                 callback(tab)
             }
-            onDownloadRequested: (download) => root.downloadRequestHandler(download)
+            onDownloadRequested: (download) => {
+                // Retained Views finish only the Downloads they already own (ADR 0006 §6).
+                if (lazyView.retained) {
+                    if (download && download.cancel)
+                        download.cancel()
+                    return
+                }
+                root.downloadRequestHandler(download, lazyView)
+            }
             onCertificateError: (error) => root.sslErrorHandler(error)
             onJavaScriptDialogRequested: (request) => root.jsDialogHandler(request)
             onFindTextFinished: (result) => root.findTextFinishedHandler(result)

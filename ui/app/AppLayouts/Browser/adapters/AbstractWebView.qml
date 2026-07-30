@@ -53,6 +53,10 @@ Item {
     // Mobile-only: pauses native webview updates (no-op on desktop)
     property bool freeze: false
 
+    // Tab strip gone but Web View kept alive for non-terminal Downloads (ADR 0006 §6).
+    // Retained Views take no new Downloads or retries.
+    property bool retained: false
+
     readonly property int devToolsHeight: 400
 
     readonly property int findBackward: 1
