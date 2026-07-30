@@ -36,6 +36,7 @@ RenameGroupPopup 1.0 RenameGroupPopup.qml
 ReviewContactRequestPopup 1.0 ReviewContactRequestPopup.qml
 SendContactRequestModal 1.0 SendContactRequestModal.qml
 SettingsDirtyToastMessage 1.0 SettingsDirtyToastMessage.qml
+TestnetModePopup 1.0 TestnetModePopup.qml
 UnblockContactConfirmationDialog 1.0 UnblockContactConfirmationDialog.qml
 UserStatusContextMenu 1.0 UserStatusContextMenu.qml
 ThirdpartyServicesPopup 1.0 ThirdpartyServicesPopup.qml

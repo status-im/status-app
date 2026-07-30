@@ -8,8 +8,6 @@ import Storybook
 
 import Models
 
-import StatusQ.Core
-import StatusQ.Core.Theme
 import StatusQ.Core.Utils
 
 import utils
@@ -17,26 +15,50 @@ import utils
 SplitView {
     Logs { id: logs }
 
-
     QtObject {
         id: d
 
+        property var rpcProviders: ListModel {
+            Component.onCompleted: append([
+                {
+                    chainId: NetworksModel.mainnetChainId,
+                    name: "User Mainnet #1",
+                    url: "https://mainnet.mynode.io/1/",
+                    isEnabled: true,
+                    providerType: Constants.rpcProviderTypes.user
+                },
+                {
+                    chainId: NetworksModel.mainnetChainId,
+                    name: "User Mainnet #2",
+                    url: "https://mainnet.mynode.io/2/",
+                    isEnabled: true,
+                    providerType: Constants.rpcProviderTypes.user
+                }
+            ])
+        }
+
         property var timer: Timer {
-            interval: 1000
+            interval: 400
             onTriggered: {
-                let state  = checkbox.checked ? EditNetworkForm.Verified: EditNetworkForm.InvalidURL
-                networkModule.urlVerified(networkModule.url, state)
+                networkModule.chainIdFetchedForUrl(
+                    networkModule.url,
+                    NetworksModel.mainnetChainId,
+                    checkbox.checked,
+                    networkModule.isMainUrl
+                )
             }
         }
     }
 
     property var networkModule: QtObject {
         id: networkModule
-        signal urlVerified(string url, int status)
+        signal chainIdFetchedForUrl(string url, int chainId, bool success, bool isMainUrl)
         property string url
+        property bool isMainUrl
 
         function evaluateRpcEndPoint(url, isMainUrl) {
             networkModule.url = url
+            networkModule.isMainUrl = isMainUrl
             d.timer.restart()
         }
     }
@@ -50,11 +72,14 @@ SplitView {
             SplitView.fillHeight: true
             EditNetworkView {
                 width: 560
-                network: ModelUtils.get(NetworksModel.flatNetworks, 0)
+                network: ModelUtils.getByKey(NetworksModel.flatNetworks, "chainId", NetworksModel.mainnetChainId)
                 rpcProviders: d.rpcProviders
-                onEvaluateRpcEndPoint: networkModule.evaluateRpcEndPoint(url)
                 networksModule: networkModule
-                onUpdateNetworkValues: console.error(String("Updated network with chainId %1 with new main rpc url = %2 and faalback rpc =%3").arg(chainId).arg(newMainRpcInput).arg(newFailoverRpcUrl))
+                networkRPCChanged: ({})
+                onEvaluateRpcEndPoint: networkModule.evaluateRpcEndPoint(url, isMainUrl)
+                onUpdateNetworkValues: logs.logEvent("EditNetworkView::updateNetworkValues",
+                                                     ["chainId", "mainRpc", "failoverRpc"],
+                                                     [chainId, newMainRpcInput, newFailoverRpcUrl])
             }
         }
 
@@ -68,7 +93,7 @@ SplitView {
 
             CheckBox {
                 id: checkbox
-                text: "valid url"
+                text: "RPC fetch succeeds"
                 checked: true
             }
         }

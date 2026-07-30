@@ -1224,24 +1224,9 @@ QtObject {
 
         Component {
             id: testnetModal
-            AlertPopup {
-                width: 521
-                readonly property string mainTitle: root.networksStore.areTestNetworksEnabled ? qsTr("Turn off testnet mode") : qsTr("Turn on testnet mode")
-                title: mainTitle
-                alertLabel.textFormat: Text.RichText
-                alertText: root.networksStore.areTestNetworksEnabled ?
-                               qsTr("Are you sure you want to turn off %1? All future transactions will be performed on live networks with real funds").arg("<html><span style='font-weight: 500;'>testnet mode</span></html>") :
-                               qsTr("Are you sure you want to turn on %1? In this mode, all blockchain data displayed will come from testnets and all blockchain interactions will be with testnets. Testnet mode switches the entire app to using testnets only. Please switch this mode on only if you know exactly why you need to use it.").arg("<html><span style='font-weight: 500;'>testnet mode</span></html>")
-                acceptBtnText: mainTitle
-                acceptBtnType: root.networksStore.areTestNetworksEnabled ? StatusBaseButton.Type.Normal : StatusBaseButton.Type.Warning
-                asset.name: "settings"
-                asset.color: Theme.palette.warningColor1
-                asset.bgColor: Theme.palette.warningColor3
-                onAcceptClicked: {
-                    root.networksStore.toggleTestNetworksEnabled()
-                    Global.displayToastMessage(root.networksStore.areTestNetworksEnabled ? qsTr("Testnet mode turned on") : qsTr("Testnet mode turned off") , "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
-                }
-                onCancelClicked: close()
+            TestnetModePopup {
+                areTestNetworksEnabled: root.networksStore.areTestNetworksEnabled
+                onToggleTestnetRequested: root.networksStore.toggleTestNetworksEnabled()
             }
         },
 
