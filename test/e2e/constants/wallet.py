@@ -69,7 +69,7 @@ class WalletAddress(Enum):
 class WalletTokenSymbols(Enum):
     USDS = 'USDS'
     USDC = 'USDC'
-    SNT = 'SNT'
+    SNT = 'STT'
     ETH = 'ETH'
     DAI = 'DAI'
 
