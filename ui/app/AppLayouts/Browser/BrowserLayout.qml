@@ -181,6 +181,15 @@ StatusSectionLayout {
             _internal.scrolledUp = true
         }
 
+        /// Open a Download Record menu right-aligned with the ⋮ it was invoked from.
+        /// x/y stay bound: the menu's width is 0 until its content is first laid out.
+        function anchorRecordMenu(menu, anchor, above) {
+            menu.parent = anchor
+            menu.x = Qt.binding(() => anchor.width - menu.width)
+            menu.y = Qt.binding(() => above ? -menu.height : anchor.height)
+            menu.open()
+        }
+
         property Component jsDialogComponent: JSDialogWindow {}
 
         readonly property bool currentTabSupportsFindInPage: currentWebView?.supportsFindInPage ?? false
@@ -270,7 +279,8 @@ StatusSectionLayout {
                                                        tabsModel,
                                                        currentTabIndex: tabs.currentIndex,
                                                        initialMode: mode,
-                                                       downloadsModel: root.downloadsStore.downloadsListNewestFirst(),
+                                                       // Live binding — snapshot would miss Retry / new Downloads while open.
+                                                       downloadsModel: Qt.binding(() => root.downloadsStore.downloadsListModel),
                                                        statusTextFn: (record) => root.downloadsStore.statusText(record),
                                                        elideFileNameFn: (name, maxChars) => root.downloadsStore.elideFileName(name, maxChars)
                                                    }).open()
@@ -301,6 +311,8 @@ StatusSectionLayout {
 
     invertedLayout: height > width
     showFooter: false
+    // Download Pill strip sits flush against the web content, like the mobile one.
+    footerSpacing: 0
     headerPadding: 0
     backgroundColor: Theme.palette.statusAppNavBar.backgroundColor
 
@@ -849,7 +861,7 @@ StatusSectionLayout {
                 const complete = record.state === AbstractWebView.DownloadState.DownloadCompleted
                 downloadsContext.openDownloadFromList(complete, modelIndex)
             }
-            onDownloadOptionsClicked: function (listIndex, anchor, xVal) {
+            onDownloadOptionsClicked: function (listIndex, anchor) {
                 const list = root.downloadsStore.downloadsListNewestFirst()
                 const record = list[listIndex]
                 if (!record)
@@ -858,10 +870,7 @@ StatusSectionLayout {
                 if (modelIndex < 0)
                     return
                 downloadsContext.populateRecordMenu(downloadListMenuInst, record, modelIndex)
-                downloadListMenuInst.parent = anchor
-                downloadListMenuInst.x = xVal
-                downloadListMenuInst.y = anchor.height
-                downloadListMenuInst.open()
+                _internal.anchorRecordMenu(downloadListMenuInst, anchor, false)
             }
         }
     }
@@ -979,18 +988,16 @@ StatusSectionLayout {
         DownloadPillStrip {
             downloadsModel: root.downloadsStore.downloadStripModel
             elideFileNameFn: (name, maxChars) => root.downloadsStore.elideFileName(name, maxChars)
+            statusTextFn: (record) => root.downloadsStore.statusText(record)
             onOpenDownloadClicked: function (index) {
                 downloadsContext.handlePillClicked(index)
             }
-            onOptionsClicked: function (index, anchor, xVal) {
+            onOptionsClicked: function (index, anchor) {
                 const record = root.downloadsStore.getStripDownload(index)
                 downloadsContext.populateRecordMenu(downloadPillMenuInst, record, index, { showDismiss: true })
-                downloadPillMenuInst.parent = anchor
-                downloadPillMenuInst.x = xVal
                 // Mobile strip is under the address bar → menu below.
                 // Desktop strip is the window footer → menu above.
-                downloadPillMenuInst.y = root.isMobile ? anchor.height : -downloadPillMenuInst.height
-                downloadPillMenuInst.open()
+                _internal.anchorRecordMenu(downloadPillMenuInst, anchor, !root.isMobile)
             }
             onClose: {
                 // Hide strip only — in-progress pills stay in the session model.

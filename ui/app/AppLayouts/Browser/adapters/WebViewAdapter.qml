@@ -51,12 +51,14 @@ AbstractWebView {
     function stop() { webView.stop() }
     function forceReload() { webView.triggerWebAction(WebEngineView.ReloadAndBypassCache) }
 
-    /// Host-side Retry: WebEngine QML has no page.download(); navigate so
-    /// attachment/non-renderable responses re-emit downloadRequested.
-    /// Prefer MobileWebViewAdapter.downloadUrl → backend.downloadUrl when available.
+    /// Host-side Retry: force Download via BrowserProfileUtils (QWebEnginePage::download).
+    /// Navigating renderable media (video/audio) would play in the tab instead.
     function downloadUrl(url, suggestedFileName) {
-        void suggestedFileName
-        loadUrl(url)
+        if (!root.profile) {
+            console.warn("WebViewAdapter: downloadUrl requires a profile")
+            return
+        }
+        BrowserProfileUtils.downloadUrl(root.profile, webView, url, suggestedFileName || "")
     }
 
     // Native per-site cookies, then site_utils.js for current-origin DOM + reload.
@@ -265,6 +267,16 @@ AbstractWebView {
                 return
             // For viewless downloads, only visible adapter forwards to avoid fan-out.
             if (!download?.view && !root.visible)
+                return
+            root.downloadRequested(download)
+        }
+    }
+
+    // Retry downloads start on a helper Core profile (not this Quick profile).
+    Connections {
+        target: BrowserProfileUtils
+        function onDownloadRequested(webEngineView, download) {
+            if (webEngineView !== webView)
                 return
             root.downloadRequested(download)
         }

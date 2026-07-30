@@ -2497,10 +2497,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Open Tabs view</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2670,13 +2666,6 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Zoom</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>BrowserTabView</name>
-    <message>
-        <source>Downloads</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6182,44 +6171,6 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
-    <name>DownloadBar</name>
-    <message>
-        <source>Cancelled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Paused</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Show All</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>DownloadMenu</name>
-    <message>
-        <source>Open</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Show in folder</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Pause</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Resume</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>DownloadPage</name>
     <message>
         <source>Thanks for using Status</source>
@@ -6239,17 +6190,71 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
-    <name>DownloadView</name>
+    <name>DownloadRecordMenu</name>
     <message>
-        <source>Cancelled</source>
+        <source>Share file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Paused</source>
+        <source>Copy file path</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Share URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Resume</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open in Browser</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show in folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Dismiss</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>DownloadsListView</name>
     <message>
         <source>Downloaded files will appear here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>DownloadsStore</name>
+    <message>
+        <source>Missing file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Canceled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Interrupted</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -17164,6 +17169,10 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

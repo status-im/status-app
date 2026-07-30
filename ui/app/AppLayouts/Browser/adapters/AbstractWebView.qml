@@ -147,7 +147,7 @@ Item {
     function triggerWebAction(action) { console.warn("AbstractWebView: triggerWebAction not implemented") }
 
     /// Host-side re-issue of a Download (Retry). MobileWebView: backend.downloadUrl;
-    /// WebEngine: best-effort navigation that re-triggers downloadRequested for attachments.
+    /// WebEngine: BrowserProfileUtils → QWebEnginePage::download (not navigate).
     function downloadUrl(url, suggestedFileName) {
         console.warn("AbstractWebView: downloadUrl not implemented")
     }

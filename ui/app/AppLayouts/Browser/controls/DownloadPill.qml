@@ -9,7 +9,7 @@ import AppLayouts.Browser.adapters
 
 /**
  * Compact Download Pill (Browser CONTEXT / Figma File download).
- * Left: Pause | Resume | file | cancel icon. Right: Cancel | ⋮ | none.
+ * Left: Pause | Play | file | downloads. Right: downloads-cancel | more-v | none.
  */
 Rectangle {
     id: root
@@ -27,8 +27,8 @@ Rectangle {
     // Optional: DownloadsStore.elideFileName for middle-elide + extension.
     property var elideFileNameFn: null
 
-    // When true, pill stretches to the strip width (single download).
-    property bool fillWidth: false
+    // Optional: DownloadsStore.statusText — single wording for strip and list.
+    property var statusTextFn: null
 
     readonly property int primaryAction: {
         if (!download)
@@ -54,37 +54,44 @@ Rectangle {
     readonly property bool optionsButtonVisible: primaryAction === DownloadPill.PrimaryAction.File
             || primaryAction === DownloadPill.PrimaryAction.None
 
+    /// Figma File download: only non-terminal Records get the white card; finished
+    /// ones blend into the strip background.
+    readonly property bool highlighted: primaryAction === DownloadPill.PrimaryAction.Pause
+            || primaryAction === DownloadPill.PrimaryAction.Resume
+
     readonly property string fileNameText: {
         const name = download?.fileName ?? ""
-        if (!name || !elideFileNameFn || !fileNameLabel.width)
+        if (!name)
+            return ""
+        if (!elideFileNameFn || fileNameLabel.width <= 0)
             return name
-        const avg = Math.max(1, fileNameMetrics.advanceWidth("x"))
-        const maxChars = Math.max(4, Math.floor(fileNameLabel.width / avg))
-        return elideFileNameFn(name, maxChars)
+        // Fit by measured width (char-budget from "x" under-elides and paints into Cancel).
+        if (fileNameMetrics.advanceWidth(name) <= fileNameLabel.width)
+            return name
+        let lo = 4
+        let hi = name.length
+        let best = elideFileNameFn(name, lo)
+        while (lo <= hi) {
+            const mid = Math.floor((lo + hi) / 2)
+            const candidate = elideFileNameFn(name, mid)
+            if (fileNameMetrics.advanceWidth(candidate) <= fileNameLabel.width) {
+                best = candidate
+                lo = mid + 1
+            } else {
+                hi = mid - 1
+            }
+        }
+        return best
     }
 
     readonly property string statusText: {
-        if (!download)
+        if (!download || !statusTextFn)
             return ""
-        const state = download.state
-        if (state === AbstractWebView.DownloadState.DownloadCancelled)
-            return qsTr("Canceled")
-        if (state === AbstractWebView.DownloadState.DownloadCompleted)
-            return ""
-        if (state === AbstractWebView.DownloadState.DownloadInterrupted)
-            return qsTr("Interrupted")
-        // InProgress and Paused: show received/total (Figma). Resume icon carries paused state.
-        const received = download.receivedBytes ?? 0
-        const total = download.totalBytes ?? 0
-        if (total > 0) {
-            return "%1/%2"
-                .arg(Qt.locale().formattedDataSize(received, 2, Locale.DataSizeTraditionalFormat))
-                .arg(Qt.locale().formattedDataSize(total, 2, Locale.DataSizeTraditionalFormat))
-        }
-        return Qt.locale().formattedDataSize(received, 2, Locale.DataSizeTraditionalFormat)
+        return statusTextFn(download) || ""
     }
 
-    signal optionsButtonClicked(real xVal)
+    /// anchor is the ⋮ button itself — the menu right-aligns under (or over) it.
+    signal optionsButtonClicked(Item anchor)
     signal primaryActionTriggered()
     signal cancelTriggered()
     signal itemClicked()
@@ -92,13 +99,13 @@ Rectangle {
     objectName: "downloadPill"
 
     implicitHeight: 44
-    implicitWidth: fillWidth ? width : 236
+    implicitWidth: 227
     height: implicitHeight
-    radius: Theme.radius
-    color: Theme.palette.baseColor2
+    color: root.highlighted ? Theme.palette.background : Theme.palette.baseColor2
     clip: true
 
-    TextMetrics {
+    // FontMetrics.advanceWidth(text) is a method; TextMetrics.advanceWidth is a property.
+    FontMetrics {
         id: fileNameMetrics
         font: fileNameLabel.font
     }
@@ -129,15 +136,16 @@ Rectangle {
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: Theme.halfPadding
+        // Figma File download: 12px inset, 8px between Play/text and text/Cancel.
+        anchors.leftMargin: 12
         anchors.rightMargin: Theme.halfPadding
         spacing: Theme.halfPadding
 
         StatusFlatRoundButton {
             id: primaryBtn
             objectName: "downloadPillPrimaryButton"
-            Layout.preferredWidth: 32
-            Layout.preferredHeight: 32
+            Layout.preferredWidth: 24
+            Layout.preferredHeight: 24
             Layout.alignment: Qt.AlignVCenter
 
             visible: root.primaryAction === DownloadPill.PrimaryAction.Pause
@@ -155,38 +163,62 @@ Rectangle {
             visible: root.primaryAction === DownloadPill.PrimaryAction.File
                      || root.primaryAction === DownloadPill.PrimaryAction.Cancelled
                      || root.primaryAction === DownloadPill.PrimaryAction.None
-            icon: root.primaryAction === DownloadPill.PrimaryAction.Cancelled ? "block-icon" : "file"
+            icon: root.primaryAction === DownloadPill.PrimaryAction.Cancelled ? "downloads" : "file"
             color: root.primaryAction === DownloadPill.PrimaryAction.Cancelled
-                   ? Theme.palette.dangerColor1
+                   ? Theme.palette.baseColor1
                    : Theme.palette.directColor1
             opacity: root.primaryAction === DownloadPill.PrimaryAction.None ? 0.5 : 1
         }
 
-        ColumnLayout {
+        Item {
             Layout.fillWidth: true
+            Layout.minimumWidth: 0
+            Layout.preferredHeight: textColumn.implicitHeight
             Layout.alignment: Qt.AlignVCenter
-            spacing: 0
+            clip: true
 
-            StatusBaseText {
-                id: fileNameLabel
-                Layout.fillWidth: true
-                text: root.fileNameText
-                elide: Text.ElideNone
-                maximumLineCount: 1
-                font.pixelSize: Theme.additionalTextSize
-                color: Theme.palette.directColor1
+            ColumnLayout {
+                id: textColumn
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 0
+
+                StatusBaseText {
+                    id: fileNameLabel
+                    Layout.fillWidth: true
+                    text: root.fileNameText
+                    elide: Text.ElideNone
+                    maximumLineCount: 1
+                    font.pixelSize: Theme.additionalTextSize
+                    color: Theme.palette.directColor1
+                }
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    visible: root.statusText.length > 0
+                    text: root.statusText
+                    elide: Text.ElideRight
+                    maximumLineCount: 1
+                    font.pixelSize: Theme.tertiaryTextFontSize
+                    color: root.primaryAction === DownloadPill.PrimaryAction.Cancelled
+                           ? Theme.palette.dangerColor1
+                           : Theme.palette.baseColor1
+                }
             }
 
-            StatusBaseText {
-                Layout.fillWidth: true
-                visible: root.statusText.length > 0
-                text: root.statusText
-                elide: Text.ElideRight
-                maximumLineCount: 1
-                font.pixelSize: Theme.tertiaryTextFontSize
-                color: root.primaryAction === DownloadPill.PrimaryAction.Cancelled
-                       ? Theme.palette.dangerColor1
-                       : Theme.palette.baseColor1
+            // Figma "Fade": soft edge so filename never meets Cancel.
+            Rectangle {
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.right: parent.right
+                width: 24
+                visible: fileNameLabel.contentWidth > fileNameLabel.width - width
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop { position: 0.0; color: "transparent" }
+                    GradientStop { position: 1.0; color: root.color }
+                }
             }
         }
 
@@ -197,7 +229,7 @@ Rectangle {
             Layout.preferredHeight: 32
             Layout.alignment: Qt.AlignVCenter
             visible: root.cancelButtonVisible
-            icon.name: "block-icon"
+            icon.name: "downloads-cancel"
             type: StatusFlatRoundButton.Type.Tertiary
             onClicked: root.triggerCancel()
         }
@@ -209,9 +241,9 @@ Rectangle {
             Layout.preferredHeight: 32
             Layout.alignment: Qt.AlignVCenter
             visible: root.optionsButtonVisible
-            icon.name: "more"
+            icon.name: "more-v"
             type: StatusFlatRoundButton.Type.Tertiary
-            onClicked: root.optionsButtonClicked(optionsBtn.x)
+            onClicked: root.optionsButtonClicked(optionsBtn)
         }
     }
 }

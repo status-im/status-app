@@ -2505,10 +2505,6 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation type="unfinished">Peněženka</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation type="unfinished">Stažené soubory</translation>
-    </message>
-    <message>
         <source>Open Tabs view</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2680,13 +2676,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <message>
         <source>Zoom</source>
         <translation>Lupa</translation>
-    </message>
-</context>
-<context>
-    <name>BrowserTabView</name>
-    <message>
-        <source>Downloads</source>
-        <translation type="unfinished">Stažené soubory</translation>
     </message>
 </context>
 <context>
@@ -6214,44 +6203,6 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
-    <name>DownloadBar</name>
-    <message>
-        <source>Cancelled</source>
-        <translation>Zrušeno</translation>
-    </message>
-    <message>
-        <source>Paused</source>
-        <translation>Pozastaveno</translation>
-    </message>
-    <message>
-        <source>Show All</source>
-        <translation>Zobrazit vše</translation>
-    </message>
-</context>
-<context>
-    <name>DownloadMenu</name>
-    <message>
-        <source>Open</source>
-        <translation>Otevřít</translation>
-    </message>
-    <message>
-        <source>Show in folder</source>
-        <translation>Zobrazit ve složce</translation>
-    </message>
-    <message>
-        <source>Pause</source>
-        <translation>Pozastavit</translation>
-    </message>
-    <message>
-        <source>Resume</source>
-        <translation>Obnovit</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Zrušit</translation>
-    </message>
-</context>
-<context>
     <name>DownloadPage</name>
     <message>
         <source>Thanks for using Status</source>
@@ -6271,18 +6222,72 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
-    <name>DownloadView</name>
+    <name>DownloadRecordMenu</name>
     <message>
-        <source>Cancelled</source>
-        <translation>Zrušeno</translation>
+        <source>Share file</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Paused</source>
-        <translation>Pozastaveno</translation>
+        <source>Copy file path</source>
+        <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Share URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation type="unfinished">Pozastavit</translation>
+    </message>
+    <message>
+        <source>Resume</source>
+        <translation type="unfinished">Obnovit</translation>
+    </message>
+    <message>
+        <source>Open in Browser</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show in folder</source>
+        <translation type="unfinished">Zobrazit ve složce</translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished">Zkusit znovu</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Zrušit</translation>
+    </message>
+    <message>
+        <source>Dismiss</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>DownloadsListView</name>
     <message>
         <source>Downloaded files will appear here.</source>
-        <translation>Stažené soubory se zobrazí zde.</translation>
+        <translation type="unfinished">Stažené soubory se zobrazí zde.</translation>
+    </message>
+</context>
+<context>
+    <name>DownloadsStore</name>
+    <message>
+        <source>Missing file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Canceled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Interrupted</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -17257,6 +17262,10 @@ Tuto akci nelze vzít zpět.</translation>
     <message>
         <source>Bookmarks</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished">Stažené soubory</translation>
     </message>
     <message>
         <source>Search in open tabs</source>

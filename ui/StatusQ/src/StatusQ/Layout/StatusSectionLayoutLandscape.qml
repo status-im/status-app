@@ -110,6 +110,13 @@ Control {
     property bool showFooter: true
 
     /*!
+        \qmlproperty real StatusSectionLayout::footerSpacing
+        This property sets the gap between the center panel and the footer.
+        Default value is Theme.halfPadding.
+    */
+    property real footerSpacing: Theme.halfPadding
+
+    /*!
         \qmlproperty real StatusSectionLayout::headerPadding
         This property sets the padding for the header component
         Default value is Theme.halfPadding.
@@ -224,7 +231,7 @@ Control {
                     width: parent.width
                     anchors.top: statusToolBar.bottom
                     anchors.bottom: footerSlot.top
-                    anchors.bottomMargin: footerSlot.visible ? Theme.halfPadding : 0
+                    anchors.bottomMargin: footerSlot.visible ? root.footerSpacing : 0
                     target: root.centerPanel
                 }
 

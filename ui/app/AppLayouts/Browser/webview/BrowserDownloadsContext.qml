@@ -10,7 +10,8 @@ import AppLayouts.Browser.stores as BrowserStores
 /**
  * Orchestrates Download Requests and list/pill actions (ADR 0006 / issue 05).
  * Retry is a host-side re-issue via Backend downloadUrl on a matching profile —
- * not library retry() (live object is usually already gone).
+ * not library retry() (live object is usually already gone). The next matching
+ * downloadRequested reattaches onto the same Record (no duplicate History row).
  */
 QtObject {
     id: root
@@ -26,6 +27,9 @@ QtObject {
 
     // True while Find in page (QML bar or native panel) is open on mobile.
     property bool findUiActive: false
+
+    // Record waiting for the Retry downloadRequested; cleared on match or superseded.
+    property var pendingRetryRecord: null
 
     property var openUrlFn: function(url) {
         console.warn("BrowserDownloadsContext: openUrlFn not set")
@@ -64,7 +68,15 @@ QtObject {
         if (!download)
             return
 
-        const record = downloadsStore.addDownload(download, hostView)
+        let record = null
+        const pending = root.pendingRetryRecord
+        if (pending && root._urlsMatch(pending.url, download.url)
+                && downloadsStore.reattachForRetry) {
+            root.pendingRetryRecord = null
+            record = downloadsStore.reattachForRetry(pending, download, hostView)
+        } else {
+            record = downloadsStore.addDownload(download, hostView)
+        }
         downloadsStore.acceptLiveDownload(download, record)
 
         // New download dismisses Find and shows the strip (Find XOR).
@@ -99,12 +111,8 @@ QtObject {
             return
         }
 
-        if (downloadComplete) {
-            downloadsStore.refreshMissingFiles()
-            if (record.missingFile)
-                return
-            downloadsStore.openFile(index)
-        }
+        if (downloadComplete)
+            openCompletedRecord(record)
     }
 
     function handlePillClicked(index) {
@@ -118,12 +126,24 @@ QtObject {
         }
 
         if (record.state === AbstractWebView.DownloadState.DownloadCompleted) {
-            if (!record.missingFile)
-                downloadsStore.openRecord(record)
+            openCompletedRecord(record)
             downloadsStore.dismissRecordFromStrip(record)
             if (downloadsStore.downloadStripModel.length === 0)
                 setFooterVisibleFn(false)
         }
+    }
+
+    /// Prefer our browser when the type is renderable; otherwise hand off to the OS.
+    /// Missing File blocks both routes (ADR 0006 §8 / polish 05).
+    function openCompletedRecord(record) {
+        if (!record)
+            return false
+        if (openInBrowserRecord(record))
+            return true
+        if (record.missingFile)
+            return false
+        downloadsStore.openRecord(record)
+        return true
     }
 
     function shareFileRecord(record) {
@@ -158,8 +178,15 @@ QtObject {
             console.warn("BrowserDownloadsContext: no Backend available for retry")
             return false
         }
+        root.pendingRetryRecord = record
         webView.downloadUrl(url, record.fileName || "")
         return true
+    }
+
+    function _urlsMatch(a, b) {
+        const left = String(a || "")
+        const right = String(b || "")
+        return left.length > 0 && left === right
     }
 
     function refreshMissingFiles() {

@@ -16,7 +16,7 @@ StatusMenu {
     property var record: null
     property int index: -1
 
-    // Mobile: Share file / Share URL. Desktop: Copy file / Copy URL.
+    // Mobile: Share file / Share URL. Desktop: Copy file path / Copy URL.
     property bool useShareLabels: SQUtils.Utils.isMobile
 
     property bool canShareFile: false
@@ -46,7 +46,7 @@ StatusMenu {
             || isPaused
     }
 
-    readonly property string shareFileLabel: useShareLabels ? qsTr("Share file") : qsTr("Copy file")
+    readonly property string shareFileLabel: useShareLabels ? qsTr("Share file") : qsTr("Copy file path")
     readonly property string shareUrlLabel: useShareLabels ? qsTr("Share URL") : qsTr("Copy URL")
     readonly property string shareFileIcon: useShareLabels
             ? (SQUtils.Utils.isIOS ? "share-ios" : "share-android")
@@ -110,9 +110,7 @@ StatusMenu {
     StatusAction {
         enabled: isActiveTransfer
         type: StatusAction.Type.Danger
-        icon.name: "block-icon"
-        icon.width: 13
-        icon.height: 13
+        icon.name: "downloads-cancel"
         text: qsTr("Cancel")
         onTriggered: root.record.cancel()
     }

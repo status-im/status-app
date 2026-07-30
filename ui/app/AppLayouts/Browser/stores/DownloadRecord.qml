@@ -60,6 +60,8 @@ QtObject {
     readonly property Connections _liveBindings: Connections {
         target: root.liveDownload
         enabled: !!root.liveDownload
+        // WebEngine vs mobile Backend expose different path properties.
+        ignoreUnknownSignals: true
 
         function onStateChanged() { root.syncFromLive() }
         function onReceivedBytesChanged() { root.syncFromLive() }
@@ -123,6 +125,14 @@ QtObject {
         if (d.totalBytes !== undefined)
             root.totalBytes = d.totalBytes
 
+        // Terminal Backend state always wins. WebEngine can leave isPaused true
+        // after cancel(); preferring pause would stick the Record on Resume forever.
+        if (d.state !== undefined && root.isTerminalState(d.state)) {
+            root.state = d.state
+            root.isPaused = false
+            return
+        }
+
         // Normalize to AbstractWebView seam: WebEngine keeps InProgress while paused;
         // expose DownloadPaused = 5 when isPaused is set.
         if (d.isPaused)
@@ -147,6 +157,13 @@ QtObject {
     function cancel() {
         if (root.liveDownload && root.liveDownload.cancel) {
             root.liveDownload.cancel()
+            root.syncFromLive()
+            // If the Backend has not flipped state yet (or left isPaused set),
+            // force Cancelled so UI cannot stay on Resume + 0 bytes.
+            if (!root.isTerminalState(root.state)) {
+                root.isPaused = false
+                root.state = AbstractWebView.DownloadState.DownloadCancelled
+            }
             return
         }
         // Live object already gone: keep the Record actionable for the session.

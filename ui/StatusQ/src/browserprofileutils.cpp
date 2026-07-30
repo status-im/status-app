@@ -2,6 +2,9 @@
 
 #include <QtWebEngineQuick/qquickwebengineprofile.h>
 #include <QtWebEngineCore/QWebEngineCookieStore>
+#include <QtWebEngineCore/QWebEngineDownloadRequest>
+#include <QtWebEngineCore/QWebEnginePage>
+#include <QtWebEngineCore/QWebEngineProfile>
 
 #include <QNetworkCookie>
 #include <QPointer>
@@ -180,6 +183,18 @@ struct BrowserProfileUtils::TrackedStore
     QMetaObject::Connection destroyedConn;
 };
 
+// QML WebEngineView has no page.download(); a Core QWebEnginePage on an OTR
+// helper profile forces downloadRequested for Retry (renderable media would
+// otherwise navigate/play). Helper does not share the tab's live cookies.
+struct BrowserProfileUtils::DownloadHelper
+{
+    QPointer<QQuickWebEngineProfile> quickProfile;
+    QWebEngineProfile *coreProfile = nullptr;
+    QWebEnginePage *page = nullptr;
+    QMetaObject::Connection downloadConn;
+    QMetaObject::Connection destroyedConn;
+};
+
 BrowserProfileUtils::BrowserProfileUtils(QObject *parent)
     : QObject(parent)
 {
@@ -195,6 +210,17 @@ BrowserProfileUtils::~BrowserProfileUtils()
         delete tracked;
     }
     m_tracked.clear();
+
+    for (DownloadHelper *helper : std::as_const(m_downloadHelpers)) {
+        if (helper->downloadConn)
+            disconnect(helper->downloadConn);
+        if (helper->destroyedConn)
+            disconnect(helper->destroyedConn);
+        delete helper->page;
+        delete helper->coreProfile;
+        delete helper;
+    }
+    m_downloadHelpers.clear();
 }
 
 BrowserProfileUtils::TrackedStore *BrowserProfileUtils::trackedStoreFor(QObject *profile) const
@@ -305,4 +331,77 @@ void BrowserProfileUtils::clearSiteData(QObject *profile, const QUrl &siteUrl,
         std::move(callback),
         this);
     op->start();
+}
+
+BrowserProfileUtils::DownloadHelper *BrowserProfileUtils::helperFor(QObject *profile)
+{
+    auto *quickProfile = qobject_cast<QQuickWebEngineProfile *>(profile);
+    if (!quickProfile)
+        return nullptr;
+
+    const quintptr key = reinterpret_cast<quintptr>(quickProfile);
+    if (DownloadHelper *existing = m_downloadHelpers.value(key, nullptr))
+        return existing;
+
+    auto *helper = new DownloadHelper;
+    helper->quickProfile = quickProfile;
+
+    // Always OTR: a named Core profile with the same storageName as the Quick
+    // profile risks opening the same on-disk cookie DB twice. Public API cannot
+    // attach a QWebEnginePage to the Quick profile's ProfileAdapter, so Retry
+    // downloads do not see the tab's live cookies (OK for public CDN media;
+    // authenticated Retry may need a revisit).
+    helper->coreProfile = new QWebEngineProfile(this);
+    helper->page = new QWebEnginePage(helper->coreProfile, this);
+
+    helper->downloadConn = connect(
+        helper->coreProfile,
+        &QWebEngineProfile::downloadRequested,
+        this,
+        [this](QWebEngineDownloadRequest *download) {
+            QObject *view = m_pendingView.data();
+            m_pendingView.clear();
+            if (!download)
+                return;
+            emit downloadRequested(view, download);
+        });
+
+    helper->destroyedConn = connect(
+        quickProfile,
+        &QObject::destroyed,
+        this,
+        [this, key]() {
+            DownloadHelper *gone = m_downloadHelpers.take(key);
+            if (!gone)
+                return;
+            if (gone->downloadConn)
+                disconnect(gone->downloadConn);
+            if (gone->destroyedConn)
+                disconnect(gone->destroyedConn);
+            delete gone->page;
+            delete gone->coreProfile;
+            delete gone;
+        });
+
+    m_downloadHelpers.insert(key, helper);
+    return helper;
+}
+
+void BrowserProfileUtils::downloadUrl(QObject *profile, QObject *webEngineView,
+                                      const QUrl &url,
+                                      const QString &suggestedFileName)
+{
+    if (!url.isValid()) {
+        qWarning("BrowserProfileUtils::downloadUrl: invalid url");
+        return;
+    }
+
+    DownloadHelper *helper = helperFor(profile);
+    if (!helper || !helper->page) {
+        qWarning("BrowserProfileUtils::downloadUrl: expected a WebEngineProfile");
+        return;
+    }
+
+    m_pendingView = webEngineView;
+    helper->page->download(url, suggestedFileName);
 }

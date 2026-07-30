@@ -26,6 +26,16 @@ QtObject {
     // Session-only Download Pill strip. Never restored from Download History (ADR 0006 / issue 03).
     property var downloadStripModel: []
 
+    /// Newest-first list for the Downloads overview. Recomputes when downloadModel
+    /// changes so an open TabsBookmarksOverviewModal stays live (not a createObject snapshot).
+    readonly property var downloadsListModel: {
+        const src = downloadModel
+        const list = []
+        for (let i = src.length - 1; i >= 0; --i)
+            list.push(src[i])
+        return list
+    }
+
     // Browser preferences (same mechanism as Tab Session). Optional in unit tests.
     property var preferencesStore: null
 
@@ -58,7 +68,7 @@ QtObject {
         ShareUtils.shareText(text)
     }
 
-    // Desktop Copy file / Copy URL; production uses ClipboardUtils.
+    // Desktop Copy file path / Copy URL; production uses ClipboardUtils.
     property var copyTextFn: function(text) {
         ClipboardUtils.setText(text)
     }
@@ -126,9 +136,48 @@ QtObject {
             root._maybeEmitViewDownloadsCleared(record.originatingView)
         })
         downloadModel = downloadModel.concat([record])
-        downloadStripModel = downloadStripModel.concat([record])
+        // Newest pills first — strip shifts existing items right (animated in the view).
+        downloadStripModel = [record].concat(downloadStripModel)
         root.enforceHistoryCap()
         root.scheduleSaveDownloadHistory()
+        return record
+    }
+
+    /// Retry: re-bind a new live Backend Download onto an existing Interrupted/Cancelled
+    /// Record so History / overview keep one identity (no duplicate Cancelled + InProgress).
+    function reattachForRetry(record, download, hostView) {
+        if (!record || !download)
+            return null
+
+        record.errorString = ""
+        record.missingFile = false
+        record.startTime = new Date()
+        record.receivedBytes = 0
+        record.isPaused = false
+        record.state = AbstractWebView.DownloadState.DownloadRequested
+
+        if (hostView)
+            record.originatingView = hostView
+        else if (download.view)
+            record.originatingView = download.view
+
+        if (hostView && hostView.offTheRecord !== undefined)
+            record.offTheRecord = !!hostView.offTheRecord
+
+        record.attach(download)
+
+        // Newest in History (oldest-first array → append).
+        const rest = []
+        for (let i = 0; i < downloadModel.length; ++i) {
+            if (downloadModel[i] !== record)
+                rest.push(downloadModel[i])
+        }
+        downloadModel = rest.concat([record])
+
+        // Front of the session strip.
+        dismissRecordFromStrip(record)
+        downloadStripModel = [record].concat(downloadStripModel)
+
         return record
     }
 
@@ -209,11 +258,9 @@ QtObject {
     }
 
     /// Newest Download Records first for the Downloads List UI (History stays oldest-first).
+    /// Prefer `downloadsListModel` for bindings; this remains for one-shot lookups.
     function downloadsListNewestFirst() {
-        const list = []
-        for (let i = downloadModel.length - 1; i >= 0; --i)
-            list.push(downloadModel[i])
-        return list
+        return downloadsListModel
     }
 
     /// Lazy Missing File probe for Completed Records (list shown / app foreground).
@@ -268,7 +315,9 @@ QtObject {
         return String(record.url)
     }
 
-    /// Open-in-Browser allowlist: images, plain text, HTML; PDF only when Backend supports it.
+    /// Open-in-Browser allowlist: types our Backends render (ADR 0006 §8).
+    /// Images, plain text, HTML; PDF when Backend supports it;
+    /// MP3/WAV/M4A/AAC/MP4/WebM (Chromium/WebEngine plays WebM). Ogg/Matroska stay OS.
     function canOpenInBrowser(record, supportsPdf) {
         if (!record || record.missingFile)
             return false
@@ -285,6 +334,18 @@ QtObject {
             return true
         if (mime === "application/pdf" || name.endsWith(".pdf"))
             return !!supportsPdf
+        if (mime === "audio/mpeg" || mime === "audio/mp3" || name.endsWith(".mp3"))
+            return true
+        if (mime === "audio/wav" || mime === "audio/x-wav" || mime === "audio/wave"
+                || name.endsWith(".wav"))
+            return true
+        if (mime === "audio/mp4" || mime === "audio/aac" || mime === "audio/x-m4a"
+                || /\.(m4a|aac)$/.test(name))
+            return true
+        if (mime === "video/mp4" || name.endsWith(".mp4"))
+            return true
+        if (mime === "video/webm" || name.endsWith(".webm"))
+            return true
         return false
     }
 
@@ -349,7 +410,7 @@ QtObject {
         return base.substring(0, head) + "…" + base.substring(base.length - tail) + ext
     }
 
-    /// Shared subtitle for Downloads List / Download Pill.
+    /// Shared subtitle for Downloads List / Download Pill (one wording per state).
     function statusText(record) {
         if (!record)
             return ""
@@ -357,19 +418,20 @@ QtObject {
             return qsTr("Missing file")
         const state = record.state
         if (state === AbstractWebView.DownloadState.DownloadCompleted)
-            return qsTr("Completed")
+            return ""
         if (state === AbstractWebView.DownloadState.DownloadCancelled)
             return qsTr("Canceled")
         if (state === AbstractWebView.DownloadState.DownloadInterrupted)
-            return qsTr("Interrupted — tap to retry")
-        if (state === AbstractWebView.DownloadState.DownloadPaused || record.isPaused)
-            return qsTr("Paused")
+            return qsTr("Interrupted")
+        // InProgress, Requested, and Paused: received/total. Resume control carries paused.
         if (state === AbstractWebView.DownloadState.DownloadInProgress
-                || state === AbstractWebView.DownloadState.DownloadRequested) {
+                || state === AbstractWebView.DownloadState.DownloadRequested
+                || state === AbstractWebView.DownloadState.DownloadPaused
+                || record.isPaused) {
             const received = record.receivedBytes ?? 0
             const total = record.totalBytes ?? 0
             if (total > 0) {
-                return "%1/%2"
+                return "%1 / %2"
                     .arg(Qt.locale().formattedDataSize(received, 2, Locale.DataSizeTraditionalFormat))
                     .arg(Qt.locale().formattedDataSize(total, 2, Locale.DataSizeTraditionalFormat))
             }

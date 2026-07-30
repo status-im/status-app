@@ -3,7 +3,12 @@
 #include <QHash>
 #include <QJSValue>
 #include <QObject>
+#include <QPointer>
 #include <QUrl>
+
+class QWebEngineDownloadRequest;
+class QWebEnginePage;
+class QWebEngineProfile;
 
 // Desktop-only helper exposing WebEngineProfile clearing that the QML
 // WebEngineProfile type does not expose (cookie store). Registered only when
@@ -43,11 +48,31 @@ public:
     Q_INVOKABLE void clearSiteData(QObject *profile, const QUrl &siteUrl,
                                    QJSValue callback = {});
 
+    // Force a Download via QWebEnginePage::download (QML WebEngineView has no
+    // page.download). Used for Retry — navigating renderable media (video/audio)
+    // would play in the tab instead of downloading. `webEngineView` is the
+    // initiating view so the matching adapter can forward downloadRequested.
+    // `profile` must be the view's QML WebEngineProfile.
+    Q_INVOKABLE void downloadUrl(QObject *profile, QObject *webEngineView,
+                                 const QUrl &url,
+                                 const QString &suggestedFileName = {});
+
+signals:
+    // Emitted for downloads started by downloadUrl(). `webEngineView` is the
+    // initiator passed to downloadUrl; `download` is a QWebEngineDownloadRequest.
+    void downloadRequested(QObject *webEngineView, QObject *download);
+
 private:
     struct TrackedStore;
+    struct DownloadHelper;
 
     TrackedStore *trackedStoreFor(QObject *profile) const;
+    DownloadHelper *helperFor(QObject *profile);
 
     // Keyed by cookie store pointer; owned.
     QHash<quintptr, TrackedStore *> m_tracked;
+    // Keyed by Quick profile pointer; owned helpers (page + core profile).
+    QHash<quintptr, DownloadHelper *> m_downloadHelpers;
+
+    QPointer<QObject> m_pendingView;
 };

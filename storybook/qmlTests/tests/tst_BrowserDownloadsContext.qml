@@ -25,38 +25,108 @@ Item {
         BrowserStores.DownloadsStore {
             property var downloadModel: []
             property var downloadStripModel: []
+            property int openRecordCalls: 0
+            property var lastOpenedRecord: null
+            property int dismissCalls: 0
 
             function addDownload(download, hostView) {
                 const record = {
                     url: download ? download.url : "",
                     fileName: download ? (download.downloadFileName || download.suggestedFileName || "") : "",
+                    mimeType: download ? (download.mimeType || "") : "",
                     state: download ? download.state : 0,
                     originatingView: hostView || (download ? download.view : null),
                     offTheRecord: !!(hostView && hostView.offTheRecord),
                     isInline: false,
                     missingFile: false,
-                    targetPath: "",
-                    isTerminal: false
+                    targetPath: download && download.targetPath
+                                ? download.targetPath
+                                : "/tmp/downloads/" + (download ? (download.downloadFileName || "file.bin") : "file.bin"),
+                    isTerminal: false,
+                    liveDownload: download || null
                 }
                 downloadModel = downloadModel.concat([record])
-                downloadStripModel = downloadStripModel.concat([record])
+                downloadStripModel = [record].concat(downloadStripModel)
+                return record
+            }
+            function reattachForRetry(record, download, hostView) {
+                if (!record || !download)
+                    return null
+                record.url = download.url
+                record.fileName = download.downloadFileName || download.suggestedFileName || record.fileName
+                record.mimeType = download.mimeType || record.mimeType
+                record.state = download.state
+                record.missingFile = false
+                record.errorString = ""
+                record.liveDownload = download
+                record.originatingView = hostView || download.view || record.originatingView
+                const rest = []
+                for (let i = 0; i < downloadModel.length; ++i) {
+                    if (downloadModel[i] !== record)
+                        rest.push(downloadModel[i])
+                }
+                downloadModel = rest.concat([record])
+                dismissRecordFromStrip(record)
+                downloadStripModel = [record].concat(downloadStripModel)
                 return record
             }
             function acceptLiveDownload(download, record) {}
             function clearDownloadStrip() { downloadStripModel = [] }
+            function getDownload(index) {
+                if (index < 0 || index >= downloadModel.length)
+                    return null
+                return downloadModel[index]
+            }
             function getStripDownload(index) {
                 if (index < 0 || index >= downloadStripModel.length)
                     return null
                 return downloadStripModel[index]
             }
             function canRetryFromMenu(record) {
-                return !!record && record.state === AbstractWebView.DownloadState.DownloadInterrupted
+                if (!record || record.isInline)
+                    return false
+                return record.state === AbstractWebView.DownloadState.DownloadInterrupted
+                    || record.state === AbstractWebView.DownloadState.DownloadCancelled
             }
             function canRetryFromTap(record) {
-                return canRetryFromMenu(record)
+                if (!record || record.isInline)
+                    return false
+                return record.state === AbstractWebView.DownloadState.DownloadInterrupted
             }
             function sourceUrlString(record) {
                 return record && record.url ? String(record.url) : ""
+            }
+            function refreshMissingFiles() {}
+            function canOpenInBrowser(record, supportsPdf) {
+                if (!record || record.missingFile)
+                    return false
+                if (record.state !== AbstractWebView.DownloadState.DownloadCompleted)
+                    return false
+                const name = String(record.fileName || "").toLowerCase()
+                const mime = String(record.mimeType || "").toLowerCase()
+                if (mime.startsWith("image/") || name.endsWith(".png") || name.endsWith(".mp3")
+                        || name.endsWith(".mp4") || name.endsWith(".webm") || name.endsWith(".html")
+                        || mime === "video/webm")
+                    return true
+                if ((mime === "application/pdf" || name.endsWith(".pdf")) && supportsPdf)
+                    return true
+                return false
+            }
+            function openRecord(record) {
+                openRecordCalls += 1
+                lastOpenedRecord = record
+            }
+            function openFile(index) {
+                openRecord(getDownload(index))
+            }
+            function dismissRecordFromStrip(record) {
+                dismissCalls += 1
+                const next = []
+                for (let i = 0; i < downloadStripModel.length; ++i) {
+                    if (downloadStripModel[i] !== record)
+                        next.push(downloadStripModel[i])
+                }
+                downloadStripModel = next
             }
         }
     }
@@ -68,6 +138,8 @@ Item {
             property url url: "https://example.com/report.pdf"
             property string downloadFileName: "report.pdf"
             property string suggestedFileName: downloadFileName
+            property string mimeType: "application/pdf"
+            property string targetPath: ""
             property int state: AbstractWebView.DownloadState.DownloadRequested
             property var view: null
         }
@@ -101,6 +173,8 @@ Item {
         property int findHiddenCount: 0
         property var tabs: []
         property var removedIndexes: []
+        property var openedUrls: []
+        property bool supportsPdf: false
 
         function createStore() {
             return createTemporaryObject(mockStoreComponent, root)
@@ -111,6 +185,8 @@ Item {
             findHiddenCount = 0
             tabs = []
             removedIndexes = []
+            openedUrls = []
+            supportsPdf = false
             const component = Qt.createComponent(root.downloadsContextUrl)
             verify(component.status === Component.Ready, component.errorString())
             return createTemporaryObject(component, root, {
@@ -119,7 +195,9 @@ Item {
                 getTabsCountFn: function() { return tabs.length },
                 removeViewFn: function(index) { removedIndexes.push(index) },
                 setFooterVisibleFn: function(visible) { footerVisible = visible },
-                hideFindUiFn: function() { findHiddenCount += 1 }
+                hideFindUiFn: function() { findHiddenCount += 1 },
+                openUrlFn: function(url) { openedUrls.push(String(url)) },
+                supportsPdfFn: function() { return supportsPdf }
             })
         }
 
@@ -246,6 +324,141 @@ Item {
 
             verify(!ctx.retryRecord(record))
             compare(retainedTab.downloadUrlCalls, 0)
+        }
+
+        function test_retry_reattachesSameRecord_noDuplicate() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const tab = createTemporaryObject(fakeTabComponent, root)
+            tabs = [tab]
+
+            const cancelledLive = createTemporaryObject(fakeDownloadComponent, root)
+            cancelledLive.url = "https://example.com/clip.webm"
+            cancelledLive.downloadFileName = "clip.webm"
+            cancelledLive.state = AbstractWebView.DownloadState.DownloadCancelled
+            const record = store.addDownload(cancelledLive, tab)
+            record.state = AbstractWebView.DownloadState.DownloadCancelled
+            compare(store.downloadModel.length, 1)
+
+            verify(ctx.retryRecord(record))
+            compare(tab.downloadUrlCalls, 1)
+            compare(ctx.pendingRetryRecord, record)
+
+            const retryLive = createTemporaryObject(fakeDownloadComponent, root)
+            retryLive.url = "https://example.com/clip.webm"
+            retryLive.downloadFileName = "clip.webm"
+            retryLive.state = AbstractWebView.DownloadState.DownloadInProgress
+            ctx.handleDownloadRequest(retryLive, tab)
+
+            compare(store.downloadModel.length, 1)
+            compare(store.downloadModel[0], record)
+            compare(record.liveDownload, retryLive)
+            compare(record.state, AbstractWebView.DownloadState.DownloadInProgress)
+            verify(!ctx.pendingRetryRecord)
+            compare(store.downloadStripModel.length, 1)
+            compare(store.downloadStripModel[0], record)
+        }
+
+        function test_openCompleted_prefersBrowser_forRenderableType() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const record = {
+                fileName: "track.mp3",
+                mimeType: "audio/mpeg",
+                state: AbstractWebView.DownloadState.DownloadCompleted,
+                missingFile: false,
+                targetPath: "/tmp/downloads/track.mp3"
+            }
+
+            verify(ctx.openCompletedRecord(record))
+            compare(openedUrls.length, 1)
+            verify(openedUrls[0].indexOf("track.mp3") >= 0)
+            compare(store.openRecordCalls, 0)
+        }
+
+        function test_openCompleted_fallsBackToOs_forNonRenderableType() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const record = {
+                fileName: "clip.mkv",
+                mimeType: "video/x-matroska",
+                state: AbstractWebView.DownloadState.DownloadCompleted,
+                missingFile: false,
+                targetPath: "/tmp/downloads/clip.mkv"
+            }
+
+            verify(ctx.openCompletedRecord(record))
+            compare(openedUrls.length, 0)
+            compare(store.openRecordCalls, 1)
+            compare(store.lastOpenedRecord, record)
+        }
+
+        function test_openCompleted_prefersBrowser_forWebm() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const record = {
+                fileName: "clip.webm",
+                mimeType: "video/webm",
+                state: AbstractWebView.DownloadState.DownloadCompleted,
+                missingFile: false,
+                targetPath: "/tmp/downloads/clip.webm"
+            }
+
+            verify(ctx.openCompletedRecord(record))
+            compare(openedUrls.length, 1)
+            verify(openedUrls[0].indexOf("clip.webm") >= 0)
+            compare(store.openRecordCalls, 0)
+        }
+
+        function test_openCompleted_missingFile_blocksBothRoutes() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const record = {
+                fileName: "gone.mp3",
+                mimeType: "audio/mpeg",
+                state: AbstractWebView.DownloadState.DownloadCompleted,
+                missingFile: true,
+                targetPath: "/tmp/downloads/gone.mp3"
+            }
+
+            verify(!ctx.openCompletedRecord(record))
+            compare(openedUrls.length, 0)
+            compare(store.openRecordCalls, 0)
+        }
+
+        function test_pillClick_completed_opensThenDismisses() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.downloadFileName = "photo.png"
+            live.mimeType = "image/png"
+            live.state = AbstractWebView.DownloadState.DownloadCompleted
+            const record = store.addDownload(live)
+            record.state = AbstractWebView.DownloadState.DownloadCompleted
+            record.fileName = "photo.png"
+            record.mimeType = "image/png"
+
+            ctx.handlePillClicked(0)
+            compare(openedUrls.length, 1)
+            compare(store.dismissCalls, 1)
+            compare(store.downloadStripModel.length, 0)
+        }
+
+        function test_listClick_completed_opensSameAsPill() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.downloadFileName = "archive.bin"
+            live.mimeType = "application/octet-stream"
+            const record = store.addDownload(live)
+            record.state = AbstractWebView.DownloadState.DownloadCompleted
+            record.fileName = "archive.bin"
+            record.mimeType = "application/octet-stream"
+
+            ctx.openDownloadFromList(true, 0)
+            compare(openedUrls.length, 0)
+            compare(store.openRecordCalls, 1)
+            compare(store.lastOpenedRecord, record)
         }
     }
 }

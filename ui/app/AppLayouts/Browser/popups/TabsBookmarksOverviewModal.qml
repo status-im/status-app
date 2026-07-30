@@ -51,7 +51,7 @@ StatusDialog {
     property var elideFileNameFn: null
 
     signal downloadClicked(int listIndex)
-    signal downloadOptionsClicked(int listIndex, Item anchor, real xVal)
+    signal downloadOptionsClicked(int listIndex, Item anchor)
 
     title: d.titleText
     destroyOnClose: true
@@ -308,7 +308,7 @@ StatusDialog {
                 statusTextFn: root.statusTextFn
                 elideFileNameFn: root.elideFileNameFn
                 onOpenDownloadClicked: listIndex => root.downloadClicked(listIndex)
-                onOptionsClicked: (listIndex, anchor, xVal) => root.downloadOptionsClicked(listIndex, anchor, xVal)
+                onOptionsClicked: (listIndex, anchor) => root.downloadOptionsClicked(listIndex, anchor)
             }
         }
     }

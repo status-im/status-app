@@ -73,7 +73,8 @@ Item {
             })
 
             const texts = actionTexts(menu)
-            verify(texts.indexOf(qsTr("Copy file")) >= 0)
+            verify(texts.indexOf(qsTr("Copy file path")) >= 0)
+            verify(texts.indexOf(qsTr("Copy file")) < 0)
             verify(texts.indexOf(qsTr("Copy URL")) >= 0)
             verify(texts.indexOf(qsTr("Open in Browser")) >= 0)
             verify(texts.indexOf(qsTr("Show in folder")) >= 0)

@@ -36,10 +36,13 @@ Item {
             property string errorString: ""
             property string destinationPath: downloadDirectory + "/" + downloadFileName
             property bool accepted: false
+            // When true, cancel() leaves isPaused set — WebEngine can do this.
+            property bool leavePausedOnCancel: false
 
             function accept() { accepted = true }
             function cancel() {
-                isPaused = false
+                if (!leavePausedOnCancel)
+                    isPaused = false
                 state = AbstractWebView.DownloadState.DownloadCancelled
             }
             function pause() {
@@ -209,6 +212,22 @@ Item {
 
             record.cancel()
             compare(record.state, AbstractWebView.DownloadState.DownloadCancelled)
+        }
+
+        function test_cancel_whilePaused_clearsResumeUi() {
+            const store = createStore()
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.leavePausedOnCancel = true
+            const record = store.addDownload(live)
+
+            live.advance(100)
+            record.pause()
+            compare(record.state, AbstractWebView.DownloadState.DownloadPaused)
+            compare(record.isPaused, true)
+
+            record.cancel()
+            compare(record.state, AbstractWebView.DownloadState.DownloadCancelled)
+            compare(record.isPaused, false)
         }
 
         function test_cancel_afterLiveDestroyed_updatesRecord() {
@@ -429,6 +448,21 @@ Item {
             compare(store.getStripDownload(0), record)
         }
 
+        function test_strip_newDownload_prependsNewestFirst() {
+            const store = createStore()
+            const live1 = createTemporaryObject(fakeDownloadComponent, root)
+            live1.downloadFileName = "older.pdf"
+            const live2 = createTemporaryObject(fakeDownloadComponent, root)
+            live2.downloadFileName = "newer.pdf"
+            const older = store.addDownload(live1)
+            const newer = store.addDownload(live2)
+
+            compare(store.downloadStripModel.length, 2)
+            compare(store.downloadStripModel[0], newer)
+            compare(store.downloadStripModel[1], older)
+            compare(store.getStripDownload(0), newer)
+        }
+
         function test_strip_restoreHistory_doesNotPopulateStrip() {
             const prefs = createTemporaryObject(fakePreferencesComponent, root)
             prefs.setDownloadHistoryRaw(JSON.stringify([{
@@ -474,6 +508,9 @@ Item {
             live2.downloadFileName = "b.pdf"
             const a = store.addDownload(live1)
             const b = store.addDownload(live2)
+            // Strip is newest-first: [b, a]
+            compare(store.downloadStripModel[0], b)
+            compare(store.downloadStripModel[1], a)
 
             store.dismissRecordFromStrip(a)
 
@@ -483,6 +520,38 @@ Item {
         }
 
         // --- Downloads List policy (issue 05): Missing File, retry, open, share ---
+
+        function test_reattachForRetry_keepsIdentity_andMovesNewest() {
+            const store = createStore()
+            const otherLive = createTemporaryObject(fakeDownloadComponent, root)
+            otherLive.downloadFileName = "other.bin"
+            otherLive.url = "https://example.com/other.bin"
+            const other = store.addDownload(otherLive)
+
+            const cancelledLive = createTemporaryObject(fakeDownloadComponent, root)
+            cancelledLive.downloadFileName = "clip.webm"
+            cancelledLive.url = "https://example.com/clip.webm"
+            const record = store.addDownload(cancelledLive)
+            cancelledLive.cancel()
+            compare(record.state, AbstractWebView.DownloadState.DownloadCancelled)
+            compare(store.downloadModel.length, 2)
+
+            const retryLive = createTemporaryObject(fakeDownloadComponent, root)
+            retryLive.downloadFileName = "clip.webm"
+            retryLive.url = "https://example.com/clip.webm"
+            retryLive.state = AbstractWebView.DownloadState.DownloadInProgress
+            const reused = store.reattachForRetry(record, retryLive, null)
+            store.acceptLiveDownload(retryLive, reused)
+
+            compare(reused, record)
+            compare(store.downloadModel.length, 2)
+            compare(store.downloadModel[0], other)
+            compare(store.downloadModel[1], record)
+            compare(store.downloadStripModel[0], record)
+            compare(record.liveDownload, retryLive)
+            compare(record.state, AbstractWebView.DownloadState.DownloadInProgress)
+            compare(store.downloadsListModel[0], record)
+        }
 
         function test_downloadsList_newestFirst() {
             const store = createStore()
@@ -494,6 +563,7 @@ Item {
             store.addDownload(live2)
 
             const list = store.downloadsListNewestFirst()
+            compare(list, store.downloadsListModel)
             compare(list.length, 2)
             compare(list[0].fileName, "new.bin")
             compare(list[1].fileName, "old.bin")
@@ -587,6 +657,31 @@ Item {
             verify(!store.canOpenInBrowser(binRec, true))
             pngRec.missingFile = true
             verify(!store.canOpenInBrowser(pngRec, false))
+        }
+
+        function test_canOpenInBrowser_mediaAllowlist_andExclusions() {
+            const store = createStore()
+
+            function completed(mime, name) {
+                const live = createTemporaryObject(fakeDownloadComponent, root)
+                live.mimeType = mime
+                live.downloadFileName = name
+                live.suggestedFileName = name
+                const rec = store.addDownload(live)
+                live.complete()
+                return rec
+            }
+
+            verify(store.canOpenInBrowser(completed("audio/mpeg", "a.mp3"), false))
+            verify(store.canOpenInBrowser(completed("audio/wav", "a.wav"), false))
+            verify(store.canOpenInBrowser(completed("audio/mp4", "a.m4a"), false))
+            verify(store.canOpenInBrowser(completed("audio/aac", "a.aac"), false))
+            verify(store.canOpenInBrowser(completed("video/mp4", "a.mp4"), false))
+            verify(store.canOpenInBrowser(completed("video/webm", "a.webm"), false))
+
+            // Containers our Backends do not reliably render stay off the allowlist.
+            verify(!store.canOpenInBrowser(completed("audio/ogg", "a.ogg"), true))
+            verify(!store.canOpenInBrowser(completed("video/x-matroska", "a.mkv"), true))
         }
 
         function test_canShareFile_requiresCompletedPresentFile() {
@@ -728,17 +823,50 @@ Item {
             verify(store.canShareUrl(record)) // URL actions remain for Missing File
         }
 
-        function test_statusText_coversMissingAndInterrupted() {
+        function test_statusText_oneWordingPerState() {
             const store = createStore()
             const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.receivedBytes = 400
+            live.totalBytes = 1000
             const record = store.addDownload(live)
+
+            verify(store.statusText(record).indexOf("/") >= 0)
+
+            live.pause()
+            verify(store.statusText(record).indexOf("/") >= 0)
+            verify(store.statusText(record).indexOf("Paused") < 0)
+
             live.complete()
+            compare(store.statusText(record), "")
+
             record.missingFile = true
             compare(store.statusText(record), "Missing file")
 
             record.missingFile = false
             record.state = AbstractWebView.DownloadState.DownloadInterrupted
-            compare(store.statusText(record), "Interrupted — tap to retry")
+            compare(store.statusText(record), "Interrupted")
+
+            record.state = AbstractWebView.DownloadState.DownloadCancelled
+            compare(store.statusText(record), "Canceled")
+        }
+
+        function test_shareFile_desktop_copiesBareFilesystemPath() {
+            const store = createStore()
+            store.preferShareSheet = false
+            let copied = ""
+            store.copyTextFn = function(text) { copied = text }
+            store.pathExistsFn = function(path) { return true }
+
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.downloadDirectory = "/tmp/downloads"
+            live.downloadFileName = "song.mp3"
+            const record = store.addDownload(live)
+            live.complete()
+            store.refreshMissingFiles()
+
+            verify(store.shareFile(record))
+            compare(copied, "/tmp/downloads/song.mp3")
+            verify(!copied.startsWith("file:"))
         }
 
         // ADR 0006 §6 / issue 06 — Retained View ownership seam

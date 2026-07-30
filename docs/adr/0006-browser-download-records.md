@@ -7,7 +7,8 @@ Accepted
 - **Date**: 2026-07-29
 - **Amended**: 2026-07-30 — §6 (no close-confirmation; retention ownership and
   bounds), §7 (profile match is mandatory), §8 (unreportable state must not gate
-  UI)
+  UI; allowlist limited to uniformly-rendered media; opening prefers our browser
+  and falls back to the OS; desktop copies a file path)
 - **Owners**: Status Desktop (browser)
 
 ## Context
@@ -135,6 +136,24 @@ library's Download object is a transient attachment to it.**
    (`SystemUtilsInternal.sharePaths`). "Open in Browser" is gated on the Backend's
    ability to render the file's type: images, plain text and HTML everywhere, PDF
    only where the Backend renders PDF — the system Android WebView does not.
+
+   **The allowlist admits formats our Backends render.** Audio and video qualify
+   to the extent support is reliable in Chromium/WebEngine — MP3, WAV, M4A/AAC,
+   MP4/H.264 and WebM are in; Ogg and Matroska stay out (platform media stack).
+   A format left out is not a dead end: it opens in the OS instead.
+
+   **Opening a finished Download prefers our own browser, and hands off when it
+   cannot render.** Tapping a Completed Record — from the Downloads List or its
+   Pill — loads it in a Tab when the type is on the allowlist, and otherwise asks
+   the OS to open it. The fallback is what makes the allowlist affordable: keeping
+   it narrow costs the user nothing, so there is never a reason to widen it by
+   guessing.
+
+   **The desktop file action copies a path, and says so.** Where mobile shares the
+   file itself through the system sheet, desktop has no file to hand anywhere — it
+   can only name the file's location. The action is therefore "Copy file path" and
+   yields the plain filesystem path, which the address bar already resolves to a
+   local file, so the copied text works both in our browser and in a terminal.
 
    The corollary: **state the Backend cannot report must not gate UI.** The seam
    can open and close the native find panel but is never told when the user

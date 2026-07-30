@@ -10,7 +10,8 @@ import AppLayouts.Browser.controls
 /**
  * Download Pill strip (session-only — never fed from Download History).
  * Mobile: under the address bar. Desktop: window footer (replaces DownloadBar).
- * One pill → full width; multiple → min 128 / max 236 (same rules as tabs).
+ * Newest pills insert at the left; existing pills animate right. Fixed width;
+ * overflow scrolls horizontally.
  */
 Rectangle {
     id: root
@@ -18,38 +19,98 @@ Rectangle {
     property var downloadsModel: []
     // Optional: DownloadsStore.elideFileName — middle-elide base, keep extension.
     property var elideFileNameFn: null
+    // Optional: DownloadsStore.statusText — one wording for strip and list.
+    property var statusTextFn: null
 
-    readonly property int minPillWidth: 128
-    readonly property int maxPillWidth: 236
+    readonly property int pillWidth: 227
 
     signal openDownloadClicked(int index)
-    signal optionsClicked(int index, Item anchor, real xVal)
+    /// anchor is the pill's ⋮ button — the menu right-aligns under (or over) it.
+    signal optionsClicked(int index, Item anchor)
     signal close()
 
-    color: Theme.palette.background
-    implicitHeight: 52
-    border.width: 1
-    border.color: Theme.palette.border
+    // Figma File download: pills sit flush on a tinted strip, no card gaps, no border.
+    color: Theme.palette.baseColor2
+    implicitHeight: 44
 
-    readonly property int _count: Array.isArray(downloadsModel) ? downloadsModel.length : 0
-    readonly property bool _single: _count === 1
+    onDownloadsModelChanged: d.syncFromDownloadsModel()
+    Component.onCompleted: d.syncFromDownloadsModel()
 
-    function pillWidthForCount(availableWidth, count) {
-        if (count <= 0)
-            return 0
-        if (count === 1)
-            return availableWidth
-        const spacing = Theme.smallPadding
-        const totalSpacing = spacing * Math.max(0, count - 1)
-        const raw = (availableWidth - totalSpacing) / count
-        return Math.min(maxPillWidth, Math.max(minPillWidth, raw))
+    QtObject {
+        id: d
+
+        readonly property int shiftDurationMs: 220
+
+        /// Mirrors DownloadPill.highlighted for a neighbour the delegate can't reach.
+        /// Index-based and bounds-checked — delegates outlive removals from the model.
+        function isHighlightedAt(index) {
+            if (index < 0 || index >= stripListModel.count)
+                return false
+            const record = stripListModel.get(index).record
+            return !!record && !record.isTerminal
+        }
+
+        /// Mirror the JS-array store model into a ListModel so insert(0) emits
+        /// rowsInserted + layout change — ListView can then run displaced animation.
+        /// Full array reassignment alone would reset the view with no shift.
+        function syncFromDownloadsModel() {
+            const next = root.downloadsModel || []
+            const nextLen = next.length
+
+            if (nextLen === 0) {
+                stripListModel.clear()
+                return
+            }
+
+            // Prepend of one Record: new item at [0], previous strip is the tail.
+            if (stripListModel.count > 0 && nextLen === stripListModel.count + 1) {
+                let matches = true
+                for (let i = 0; i < stripListModel.count; ++i) {
+                    if (stripListModel.get(i).record !== next[i + 1]) {
+                        matches = false
+                        break
+                    }
+                }
+                if (matches) {
+                    stripListModel.insert(0, { record: next[0] })
+                    listView.positionViewAtBeginning()
+                    return
+                }
+            }
+
+            // Single removal (dismiss / clear one pill).
+            if (nextLen === stripListModel.count - 1 && stripListModel.count > 0) {
+                for (let i = 0; i < stripListModel.count; ++i) {
+                    const rec = stripListModel.get(i).record
+                    let found = false
+                    for (let j = 0; j < nextLen; ++j) {
+                        if (next[j] === rec) {
+                            found = true
+                            break
+                        }
+                    }
+                    if (!found) {
+                        stripListModel.remove(i)
+                        return
+                    }
+                }
+            }
+
+            // Fallback: rebuild without animation (initial bind / unexpected reorder).
+            stripListModel.clear()
+            for (let i = 0; i < nextLen; ++i)
+                stripListModel.append({ record: next[i] })
+            listView.positionViewAtBeginning()
+        }
+    }
+
+    ListModel {
+        id: stripListModel
     }
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: Theme.smallPadding
-        anchors.rightMargin: Theme.halfPadding
-        spacing: Theme.smallPadding
+        spacing: 0
 
         ListView {
             id: listView
@@ -59,43 +120,72 @@ Rectangle {
             Layout.fillHeight: true
             orientation: ListView.Horizontal
             clip: true
-            spacing: Theme.smallPadding
+            spacing: 0
             boundsBehavior: Flickable.StopAtBounds
-            model: root.downloadsModel
+            model: stripListModel
+
+            add: Transition {
+                NumberAnimation {
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: d.shiftDurationMs
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            displaced: Transition {
+                NumberAnimation {
+                    property: "x"
+                    duration: d.shiftDurationMs
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            removeDisplaced: Transition {
+                NumberAnimation {
+                    property: "x"
+                    duration: d.shiftDurationMs
+                    easing.type: Easing.OutCubic
+                }
+            }
 
             delegate: DownloadPill {
                 id: pill
 
-                readonly property var downloadItem: modelData
-                readonly property int pillIndex: index
+                required property var record
+                required property int index
 
-                download: downloadItem
+                download: record
                 elideFileNameFn: root.elideFileNameFn
-                fillWidth: root._single
-                width: {
-                    const available = Math.max(0, listView.width)
-                    if (root._single)
-                        return available
-                    return root.pillWidthForCount(available, root._count)
-                }
-                anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+                statusTextFn: root.statusTextFn
+                width: root.pillWidth
+                height: ListView.view.height
 
-                onItemClicked: root.openDownloadClicked(pillIndex)
-                onOptionsButtonClicked: function (xVal) {
-                    root.optionsClicked(pillIndex, pill, xVal)
+                onItemClicked: root.openDownloadClicked(index)
+                onOptionsButtonClicked: function (anchor) {
+                    root.optionsClicked(index, anchor)
+                }
+
+                // Figma divider: only between two blended (terminal) pills — a
+                // highlighted neighbour already separates them with its own card.
+                Rectangle {
+                    width: 1
+                    height: 16
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: Theme.palette.baseColor1
+                    visible: pill.index > 0 && !pill.highlighted
+                             && !d.isHighlightedAt(pill.index - 1)
                 }
             }
-
-            onCountChanged: positionViewAtEnd()
-            Component.onCompleted: positionViewAtEnd()
         }
 
         StatusFlatRoundButton {
             id: closeBtn
             objectName: "downloadPillStripClose"
-            Layout.preferredWidth: 32
-            Layout.preferredHeight: 32
-            Layout.alignment: Qt.AlignVCenter
+            Layout.preferredWidth: 48
+            Layout.fillHeight: true
             icon.name: "close"
             type: StatusFlatRoundButton.Type.Quaternary
             onClicked: root.close()
