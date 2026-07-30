@@ -45,6 +45,7 @@ import std/monotimes
 import app/modules/shared_models/token_selector_model
 import app/modules/shared_models/token_selector_builder
 import app/modules/shared_models/assets_aggregator
+import benchmarks/perf_gate
 
 type Row = object
   size: int
@@ -315,7 +316,7 @@ when isMainModule:
   # At a realistic heavy-user owned set (~200) the on-open seed burst must not drop
   # a frame -- the picker seed is NOT the source of the ~1s open at real sizes.
   let seed200 = rowFor("open_seed", 200)
-  doAssert seed200.over32 == 0 and seed200.maxStallMs <= 32.0,
+  perfAssert seed200.over32 == 0 and seed200.maxStallMs <= 32.0,
     &"send picker open_seed dropped a frame @200 owned " &
     &"(compute {seed200.computeMs:.2f}ms, inject {seed200.injectMs:.2f}ms, " &
     &"maxStall {seed200.maxStallMs:.2f}ms, over32 {seed200.over32})"

@@ -60,6 +60,9 @@ tests-nim: $(NIM_TESTS)
 benches-nim: $(NIM_BENCHES)
 
 # CI target (ci/Jenkinsfile.tests-nim). Deliberately runs the benchmarks too:
-# their setup code and GREEN-gate assertions only stay honest if CI keeps
-# building and executing them.
+# their setup code and structural GREEN-gate assertions only stay honest if CI
+# keeps building and executing them. Wall-clock perf gates flake on the shared
+# executors, so BENCH_ASSERTS=0 downgrades them to report-only (see
+# test/nim/benchmarks/perf_gate.nim).
+tests-nim-linux: export BENCH_ASSERTS := 0
 tests-nim-linux: tests-nim benches-nim

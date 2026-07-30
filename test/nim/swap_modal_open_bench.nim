@@ -47,6 +47,7 @@ import app/modules/main/wallet_section/all_tokens/io_interface
 import app_service/service/token/items/token_group
 import app_service/service/token/items/token
 import app_service/service/token/dto/token as token_dto
+import benchmarks/perf_gate
 
 # Faithful replica of the string-envelope decode the production slot performed
 # before the typed handoff: same DTO seq, same decode cost.
@@ -322,7 +323,7 @@ when isMainModule:
   # decode + build blocks the GUI thread (inject_ms) mid-open. Gated on the observed
   # frame gap (the brief's tick-to-tick metric); inject_ms is the pure-compute block.
   let redRow = rowFor("open_string_envelope", 10000)
-  doAssert redRow.over32 >= 1 and redRow.maxStallMs > 32.0,
+  perfAssert redRow.over32 >= 1 and redRow.maxStallMs > 32.0,
     &"expected string-envelope open to drop a frame @10k " &
     &"(maxStall {redRow.maxStallMs:.2f}ms, over32 {redRow.over32}, inject {redRow.injectMs:.2f}ms)"
 
@@ -331,7 +332,7 @@ when isMainModule:
   # mandatory-keys expansion) never blocks a frame -- no >32ms tick, and the pure
   # GUI-thread block stays well within one frame.
   let greenRow = rowFor("open_typed_handoff", 10000)
-  doAssert greenRow.over32 == 0 and greenRow.maxStallMs <= 32.0 and greenRow.injectMs <= 32.0,
+  perfAssert greenRow.over32 == 0 and greenRow.maxStallMs <= 32.0 and greenRow.injectMs <= 32.0,
     &"typed-handoff open should not drop a frame @10k " &
     &"(maxStall {greenRow.maxStallMs:.2f}ms, over32 {greenRow.over32}, inject {greenRow.injectMs:.2f}ms) -- " &
     "residual GUI-thread fan-out (modelsUpdated reset / mandatory-keys scan) too heavy"

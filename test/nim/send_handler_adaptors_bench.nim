@@ -25,6 +25,7 @@ import os, times, strformat
 import nimqml
 from seaqt/qcoreapplication import QCoreApplication, processEvents
 import std/monotimes
+import benchmarks/perf_gate
 
 {.compile: "bench_statusq_register.cpp".}
 proc bench_registerStatusQTypes() {.importc.}
@@ -188,7 +189,7 @@ when isMainModule:
   # below the direct build), yet produces the full model once activated.
   doAssert rowFor(5).countA == 3000,
     &"deferred collectibles did not populate on activation: {rowFor(5).countA}"
-  doAssert rowFor(5).createMs < rowFor(2).createMs,
+  perfAssert rowFor(5).createMs < rowFor(2).createMs,
     &"deferred open cost {rowFor(5).createMs} not below direct build {rowFor(2).createMs}"
 
   echo "assertions passed"

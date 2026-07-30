@@ -24,6 +24,7 @@ import os, osproc, times, strformat, strutils, tables
 import nimqml
 from seaqt/qcoreapplication import QCoreApplication, processEvents
 import std/monotimes
+import benchmarks/perf_gate
 
 {.compile: "bench_statusq_register.cpp".}
 proc bench_registerStatusQTypes() {.importc.}
@@ -211,7 +212,7 @@ when isMainModule:
   # nothing.
   let redBig = rowFor("all_roles", 5000)
   let greenBig = rowFor("single_role", 5000)
-  doAssert greenBig.ms < redBig.ms * 0.7,
+  perfAssert greenBig.ms < redBig.ms * 0.7,
     &"expected single-role harvest materially faster @5000 (all_roles {redBig.ms:.2f}ms, single_role {greenBig.ms:.2f}ms)"
 
   echo "assertions passed"

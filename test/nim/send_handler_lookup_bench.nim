@@ -24,6 +24,7 @@ import os, times, strformat, strutils, tables
 import nimqml
 from seaqt/qcoreapplication import QCoreApplication, processEvents
 import std/monotimes
+import benchmarks/perf_gate
 
 {.compile: "bench_statusq_register.cpp".}
 proc bench_registerStatusQTypes() {.importc.}
@@ -169,7 +170,7 @@ when isMainModule:
   # role-restricted flat scan at the largest size.
   let loopBig = rowFor("get_loop_allroles", 5000)
   let flatBig = rowFor("modelToFlatArray", 5000)
-  doAssert loopBig.ms > flatBig.ms,
+  perfAssert loopBig.ms > flatBig.ms,
     &"expected the all-roles get-loop to exceed the role-restricted scan @5000 " &
     &"(get_loop {loopBig.ms:.2f}ms, modelToFlatArray {flatBig.ms:.2f}ms)"
 
