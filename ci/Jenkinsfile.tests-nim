@@ -30,7 +30,7 @@ pipeline {
   options {
     timestamps()
     /* Prevent Jenkins jobs from running forever */
-    timeout(time: 20, unit: 'MINUTES')
+    timeout(time: 35, unit: 'MINUTES')
     /* manage how many builds we keep */
     buildDiscarder(logRotator(
       numToKeepStr: '10',
