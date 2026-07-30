@@ -1,6 +1,6 @@
 import strutils, stint, chronicles, algorithm
 
-import app_service/common/[conversion, wallet_constants]
+import app_service/common/conversion
 
 import ./dto, ./dtoV2
 
@@ -8,6 +8,18 @@ proc sortAsc[T](t1, t2: T): int =
   if (t1.fromNetwork.chainId > t2.fromNetwork.chainId): return 1
   elif (t1.fromNetwork.chainId < t2.fromNetwork.chainId): return -1
   else: return 0
+
+proc estimatedTimeFlagFromSeconds(seconds: int): int =
+  if seconds <= 0:
+    return 0 # Unknown
+  elif seconds < 60:
+    return 1 # LessThanOneMin
+  elif seconds < 180:
+    return 2 # LessThanThreeMins
+  elif seconds <= 300:
+    return 3 # LessThanFiveMins
+  else:
+    return 4 # MoreThanFiveMins
 
 proc convertToOldRoute*(route: seq[TransactionPathDtoV2]): seq[TransactionPathDto] =
   const
@@ -62,12 +74,9 @@ proc convertToOldRoute*(route: seq[TransactionPathDtoV2]): seq[TransactionPathDt
       trPath.amountInLocked = p.amountInLocked
       trPath.gasAmount = p.txGasAmount
 
-      if p.processorName == wallet_constants.PROCESSOR_NAME_SWAP_PARASWAP:
-        trPath.estimatedTime = p.txEstimatedTime + p.approvalEstimatedTime
-      elif p.processorName == wallet_constants.PROCESSOR_NAME_BRIDGE_HOP:
-        trPath.estimatedTime = p.txEstimatedTime + 1
-      else:
-        trPath.estimatedTime = p.txEstimatedTime
+      # The approval and main tx run sequentially, so sum their (seconds) estimates before bucketing.
+      # approvalEstimatedTime is 0 when no approval is needed.
+      trPath.estimatedTime = estimatedTimeFlagFromSeconds(p.txEstimatedTime + p.approvalEstimatedTime)
 
       value = conversion.wei2Eth(p.suggestedLevelsForMaxFeesPerGas.medium,  decimals = ethDecimals)
       trPath.approvalGasFees = parseFloat(value) * float64(p.approvalGasAmount)

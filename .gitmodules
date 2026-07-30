@@ -102,10 +102,6 @@
 [submodule "vendor/nim-taskpools"]
 	path = vendor/nim-taskpools
 	url = https://github.com/status-im/nim-taskpools.git
-[submodule "vendor/DOtherSide"]
-	path = vendor/DOtherSide
-	url = https://github.com/status-im/dotherside.git
-
 [submodule "mobile/vendors/openssl"]
 	path = mobile/vendors/openssl
 	url = https://github.com/openssl/openssl
@@ -124,7 +120,7 @@
 [submodule "vendor/nim-seaqt"]
 	path = vendor/nim-seaqt
 	url = https://github.com/seaqt/nim-seaqt.git
-	branch = qt-6.4
+	branch = qt-6.8
 [submodule "vendor/nimqml-seaqt"]
 	path = vendor/nimqml-seaqt
 	url = https://github.com/seaqt/nimqml-seaqt.git

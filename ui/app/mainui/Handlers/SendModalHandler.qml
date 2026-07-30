@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 
 import QtModelsToolkit
-import SortFilterProxyModel
 
 import StatusQ
 import StatusQ.Core
@@ -350,10 +349,12 @@ QtObject {
             id: simpleSendModal
 
             accountsModel: handler.accountsSelectorAdaptor.processedWalletAccounts
-            assetsModel: handler.assetsSelectorViewAdaptor.outputAssetsModel
+            assetsModel: handler.assetsSelectorModel
             groupedAccountAssetsModel: root.groupedAccountAssetsModel
-            flatCollectiblesModel: handler.collectiblesSelectionAdaptor.filteredFlatModel
-            collectiblesModel: handler.collectiblesSelectionAdaptor.model
+            flatCollectiblesModel: handler.collectiblesSelectorModel
+                                   ? handler.collectiblesSelectorModel.filteredFlatModel
+                                   : null
+            collectiblesModel: handler.collectiblesSelectorModel
             networksModel: root.filteredFlatNetworksModel
             recipientsModel: handler.recipientViewAdaptor.recipientsModel
             recipientsFilterModel: handler.recipientViewAdaptor.recipientsFilterModel
@@ -459,15 +460,15 @@ QtObject {
             }
 
             onSearchInAssets: (keyword) => {
-                if (handler.assetsSelectorViewAdaptor.searchString === "" && keyword !== "") {
+                if (handler.assetsSelectorModel.searchString === "" && keyword !== "") {
                     // Request searchable assets
                     WalletStores.RootStore.tokensStore.buildGroupsForChain(simpleSendModal.selectedChainId)
                 }
-                handler.assetsSelectorViewAdaptor.search(keyword)
+                handler.assetsSelectorModel.search(keyword)
             }
 
             onFetchMoreAssets: {
-                handler.assetsSelectorViewAdaptor.loadMoreItems()
+                handler.assetsSelectorModel.fetchMore()
             }
 
             ModelEntry {
@@ -589,32 +590,85 @@ QtObject {
                     fnFormatCurrencyAmountFromBigInt: root.fnFormatCurrencyAmountFromBigInt
                 }
 
-                readonly property var assetsSelectorViewAdaptor: TokenSelectorViewAdaptor {
-                    assetsModel: root.groupedAccountAssetsModel
-                    flatNetworksModel: root.flatNetworksModel
+                // Terminal picker model (send/owned) as { model, id }. The producer
+                // keeps it fed with the owned source; the per-modal params are driven
+                // below. This handler lives inside SimpleSendModal (destroyed on close),
+                // so the model is released on destruction to stop the producer tracking
+                // it (avoids a per-open leak, like the swap/buy modals).
+                readonly property var assetsSelector: WalletStores.RootStore.tokensStore.createTokenSelectorModel(0)
+                readonly property var assetsSelectorModel: handler.assetsSelector.model
 
-                    currentCurrency: root.currentCurrency
-                    showCommunityAssets: root.showCommunityAssetsInSend
-                    showZeroBalanceForDefaultTokens: true
+                // Terminal collectibles picker model as { model, id }. Replaces the
+                // O(collectibles) CollectiblesSelectionAdaptor proxy chain; the Nim
+                // model derives both the grouped and the flat views in ~2ms, so it is
+                // built eagerly with the assets selector (no modal-open deferral).
+                // Released on destruction to stop the producer tracking it.
+                readonly property var collectiblesSelector: root.walletCollectiblesStore.createCollectiblesSelectorModel()
+                readonly property var collectiblesSelectorModel: handler.collectiblesSelector.model
 
-                    accountAddress: simpleSendModal.selectedAccountAddress
-                    enabledChainIds: [simpleSendModal.selectedChainId]
-                    searchResultModel: root.searchResultModel
+                Component.onDestruction: {
+                    WalletStores.RootStore.tokensStore.releaseTokenSelectorModel(handler.assetsSelector.id)
+                    root.walletCollectiblesStore.releaseCollectiblesSelectorModel(handler.collectiblesSelector.id)
                 }
 
-                readonly property var collectiblesSelectionAdaptor: CollectiblesSelectionAdaptor {
-                    accountKey: simpleSendModal.selectedAccountAddress
-                    enabledChainIds: [simpleSendModal.selectedChainId]
+                readonly property Binding _sendAccountBinding: Binding {
+                    target: handler.assetsSelectorModel
+                    property: "accountAddress"
+                    value: simpleSendModal.selectedAccountAddress
+                    restoreMode: Binding.RestoreNone
+                }
+                readonly property Binding _sendChainBinding: Binding {
+                    target: handler.assetsSelectorModel
+                    property: "enabledChainId"
+                    value: simpleSendModal.selectedChainId
+                    restoreMode: Binding.RestoreNone
+                }
+                readonly property Binding _sendShowCommunityBinding: Binding {
+                    target: handler.assetsSelectorModel
+                    property: "showCommunityAssets"
+                    value: root.showCommunityAssetsInSend
+                    restoreMode: Binding.RestoreNone
+                }
+                readonly property Binding _sendShowZeroBinding: Binding {
+                    target: handler.assetsSelectorModel
+                    property: "showZeroBalanceForDefaultTokens"
+                    value: true
+                    restoreMode: Binding.RestoreNone
+                }
+                readonly property Connections _sendSectionSync: Connections {
+                    target: simpleSendModal
+                    function onSelectedChainIdChanged() { handler.updateSendSectionNames() }
+                }
+                function updateSendSectionNames() {
+                    if (!handler.assetsSelectorModel)
+                        return
+                    const chainName = SQUtils.ModelUtils.getByKey(
+                        root.flatNetworksModel, "chainId", simpleSendModal.selectedChainId, "chainName") || ""
+                    handler.assetsSelectorModel.setSectionNames(
+                        qsTr("Your assets on %1").arg(chainName), qsTr("Popular assets"))
+                }
+                Component.onCompleted: handler.updateSendSectionNames()
 
-                    networksModel: root.filteredFlatNetworksModel
-                    collectiblesModel: SortFilterProxyModel {
-                        sourceModel: root.collectiblesBySymbolModel
-                        filters: ValueFilter {
-                            roleName: "soulbound"
-                            value: false
-                        }
-                    }
-                    filterCommunityOwnerAndMasterTokens: !simpleSendModal.transferOwnership
+                // Per-modal params for the collectibles picker model. Mirror the
+                // retired adaptor's inputs (soulbound collectibles are dropped in the
+                // Nim producer; networks are joined there too).
+                readonly property Binding _collectiblesAccountBinding: Binding {
+                    target: handler.collectiblesSelectorModel
+                    property: "accountKey"
+                    value: simpleSendModal.selectedAccountAddress
+                    restoreMode: Binding.RestoreNone
+                }
+                readonly property Binding _collectiblesChainBinding: Binding {
+                    target: handler.collectiblesSelectorModel
+                    property: "enabledChainId"
+                    value: simpleSendModal.selectedChainId
+                    restoreMode: Binding.RestoreNone
+                }
+                readonly property Binding _collectiblesFilterBinding: Binding {
+                    target: handler.collectiblesSelectorModel
+                    property: "filterCommunityOwnerAndMasterTokens"
+                    value: !simpleSendModal.transferOwnership
+                    restoreMode: Binding.RestoreNone
                 }
 
                 readonly property var totalFeesAggregator: FunctionAggregator {

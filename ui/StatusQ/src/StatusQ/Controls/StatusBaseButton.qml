@@ -47,6 +47,35 @@ AbstractButton {
     property bool loadingWithText // loading indicator instead of icon, mutually exclusive with `loading`
     property bool interactive: true
 
+    /*!
+       Enables the press ripple animation. The ripple expands on press, stays open
+       while the button is held, and collapses on release.
+    */
+    property bool rippleEnabled: true
+
+    /*!
+       Controls where the ripple starts from. Use \c StatusRipple.RippleOrigin.Center
+       for a centered ripple or \c StatusRipple.RippleOrigin.Pointer to start from
+       the press position.
+    */
+    property int rippleOrigin: StatusRipple.RippleOrigin.Center
+
+    /*!
+       Color used by the ripple animation.
+    */
+    property color rippleColor: d.textColor
+
+    /*!
+       Enables the background scale-down animation while the button is pressed.
+       The content item is not scaled.
+    */
+    property bool scaleOnPressEnabled: true
+
+    /*!
+       Scale applied to the button background while pressed.
+    */
+    property real pressedScale: d.defaultPressedScale
+
     property color normalColor
     property color hoverColor
     property color disabledColor
@@ -71,6 +100,8 @@ AbstractButton {
     QtObject {
         id: d
 
+        readonly property real defaultPressedScale: 0.92
+
         readonly property color textColor: {
             if (!root.interactive || !root.enabled)
                 return root.disabledTextColor
@@ -80,6 +111,9 @@ AbstractButton {
         }
 
         readonly property bool iconOnly: root.display === AbstractButton.IconOnly || root.text === ""
+        readonly property bool pressFeedbackActive: root.pressed && root.enabled && root.interactive
+                                                 && !root.loading && !root.loadingWithText
+                                                 && root.scaleOnPressEnabled
         readonly property int iconSize: {
             switch(root.size) {
             case StatusBaseButton.Size.XSmall:
@@ -151,14 +185,55 @@ AbstractButton {
     }
 
     background: Rectangle {
+        objectName: "buttonBackground"
         radius: root.radius
         border.color: root.borderColor
         border.width: root.borderWidth
+        scale: d.pressFeedbackActive ? root.pressedScale : 1
         color: {
             if ((!root.enabled || !root.interactive) && !root.checked)
                 return disabledColor
             return !root.loading && !root.loadingWithText && (pointerHoverHandler.hovered || root.highlighted || root.checked) ? hoverColor : normalColor
         }
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: ThemeUtils.AnimationDuration.Default
+                easing.type: Easing.OutQuad
+            }
+        }
+
+        StatusRipple {
+            id: ripple
+            objectName: "buttonRipple"
+            anchors.fill: parent
+            enabled: root.rippleEnabled && root.enabled && root.interactive && !root.loading && !root.loadingWithText
+            color: root.rippleColor
+            radius: root.radius
+            origin: root.rippleOrigin
+        }
+    }
+
+    TapHandler {
+        id: pressFeedbackHandler
+        enabled: ripple.enabled
+        acceptedButtons: Qt.LeftButton
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen | PointerDevice.TouchPad | PointerDevice.Stylus
+        gesturePolicy: TapHandler.DragThreshold
+
+        onPressedChanged: {
+            if (pressed) {
+                const ripplePoint = root.mapToItem(ripple, point.position.x, point.position.y)
+                ripple.press(ripplePoint.x, ripplePoint.y)
+            } else {
+                ripple.release()
+            }
+        }
+    }
+
+    onPressedChanged: {
+        if (!pressed)
+            ripple.release()
     }
 
     contentItem: Item {

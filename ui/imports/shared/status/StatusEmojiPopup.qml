@@ -1,3 +1,4 @@
+import QtCore
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -18,23 +19,30 @@ import SortFilterProxyModel
 StatusDropdown {
     id: root
 
+    required property string userUID
     required property StatusEmojiModel emojiModel
-    required property var recentEmojis
-    required property string skinColor
 
     readonly property var fullModel: SortFilterProxyModel {
         sourceModel: root.emojiModel
 
         filters: [
-            AnyOf {
+            AllOf {
                 enabled: d.searchString !== ""
-                StatusQUtils.SearchFilter {
-                    roleName: "name"
-                    searchPhrase: d.searchString
+                AnyOf {
+                    StatusQUtils.SearchFilter {
+                        roleName: "name"
+                        searchPhrase: d.searchString
+                    }
+                    StatusQUtils.SearchFilter {
+                        roleName: "shortname"
+                        searchPhrase: d.searchString
+                    }
                 }
-                StatusQUtils.SearchFilter {
-                    roleName: "shortname"
-                    searchPhrase: d.searchString
+                // don't duplicate recents in the search results
+                ValueFilter {
+                    roleName: "category"
+                    value: root.emojiModel.recentCategoryName
+                    inverted: true
                 }
             },
             AnyOf {
@@ -46,7 +54,7 @@ StatusDropdown {
                     roleName: "skinColor"
                     value: root.emojiModel.baseSkinColorName
                 }
-                enabled: root.skinColor === ""
+                enabled: settings.skinColor === ""
             },
             AnyOf {
                 ValueFilter {
@@ -55,9 +63,9 @@ StatusDropdown {
                 }
                 ValueFilter {
                     roleName: "skinColor"
-                    value: root.skinColor
+                    value: settings.skinColor
                 }
-                enabled: root.skinColor !== ""
+                enabled: settings.skinColor !== ""
             }
         ]
 
@@ -70,8 +78,6 @@ StatusDropdown {
     property string emojiSize: ""
 
     signal emojiSelected(string emoji, bool atCursor, string hexcode)
-    signal setSkinColorRequested(string skinColor)
-    signal setRecentEmojisRequested(var recentEmojis)
 
     width: 370
     padding: 0
@@ -92,18 +98,20 @@ StatusDropdown {
         root.close()
     }
 
-    onRecentEmojisChanged: root.emojiModel.recentEmojis = root.recentEmojis || []
+    function clearSettings() {
+        root.emojiModel.recentEmojis = []
+        settings.skinColor = ""
+        settings.sync()
+    }
 
     onOpened: {
         if (!StatusQUtils.Utils.isMobile)
             searchBox.forceActiveFocus()
+        emojiGrid.currentIndex = 0
         emojiGrid.positionViewAtBeginning()
     }
 
     onClosed: {
-        const recent = root.emojiModel.recentEmojis
-        if (recent.length)
-            root.setRecentEmojisRequested(recent)
         searchBox.clear()
         root.emojiSize = ""
         skinToneEmoji.expandSkinColorOptions = false
@@ -116,6 +124,18 @@ StatusDropdown {
         readonly property int headerMargin: 8
         readonly property int imageWidth: 32
         readonly property int imageMargin: 6
+    }
+
+    Settings {
+        id: settings
+        category: "AppMainLocalSettings_%1".arg(root.userUID)
+        property string skinColor  // NB: must be a string for the twemoji lib to work; we don't want the `#` in the name
+    }
+
+    Binding {
+        target: root.emojiModel
+        property: "userUID"
+        value: root.userUID
     }
 
     contentItem: ColumnLayout {
@@ -135,6 +155,8 @@ StatusDropdown {
                 anchors.left: parent.left
                 anchors.leftMargin: d.headerMargin
                 height: 36
+                KeyNavigation.tab: emojiGrid
+                KeyNavigation.down: emojiGrid
             }
 
             Row {
@@ -162,7 +184,7 @@ StatusDropdown {
                             cursorShape: Qt.PointingHandCursor
                             anchors.fill: parent
                             onClicked: {
-                                root.setSkinColorRequested((index === 5) ? "" : modelData.split("-")[1]);
+                                settings.skinColor = index === 5 ? "" : modelData.split("-")[1]
                                 skinToneEmoji.expandSkinColorOptions = false;
                             }
                         }
@@ -178,7 +200,7 @@ StatusDropdown {
                 anchors.rightMargin: d.headerMargin
                 visible: !skinToneEmoji.expandSkinColorOptions
                 // Hand emoji 🖐️ to which we append the skin color selected by the user
-                emojiId: "1f590" + ((root.skinColor !== "" && visible) ? ("-" + root.skinColor) : "")
+                emojiId: "1f590" + ((settings.skinColor !== "" && visible) ? ("-" + settings.skinColor) : "")
                 StatusMouseArea {
                     cursorShape: Qt.PointingHandCursor
                     anchors.fill: parent
@@ -198,7 +220,7 @@ StatusDropdown {
             color: Theme.palette.secondaryText
             font.pixelSize: Theme.additionalTextSize
             text: d.searchString ? (root.fullModel.count ? qsTr("Search Results") : qsTr("No results found"))
-                                          : emojiGrid.currentCategory
+                                 : emojiGrid.currentCategory
             font.capitalization: Font.AllUppercase
         }
 
@@ -224,26 +246,36 @@ StatusDropdown {
                 policy: ScrollBar.AsNeeded
             }
 
-            delegate: Item {
+            delegate: ItemDelegate {
                 readonly property string category: model.category
+
+                required property int index
+                required property var model
 
                 width: emojiGrid.cellWidth
                 height: emojiGrid.cellHeight
-
-                StatusEmoji {
+                padding: d.imageMargin
+                highlighted: emojiGrid.activeFocus && index === emojiGrid.currentIndex
+                background: Rectangle {
+                    radius: Theme.radius
+                    color: hovered ? Theme.palette.backgroundHover : StatusColors.transparent
+                    border.width: 1
+                    border.color: visualFocus || highlighted ? Theme.palette.primaryColor1 : StatusColors.transparent
+                }
+                contentItem: StatusEmoji {
                     objectName: "statusEmoji_" + model.shortname.replace(/:/g, "")
                     Accessible.role: Accessible.StaticText
                     Accessible.name: model.emoji
-                    anchors.centerIn: parent
-                    width: d.imageWidth
-                    height: d.imageWidth
                     emojiId: model.unicode
-
-                    StatusMouseArea {
-                        cursorShape: Qt.PointingHandCursor
-                        anchors.fill: parent
-                        onClicked: root.addEmoji(model.unicode)
-                    }
+                }
+                onClicked: root.addEmoji(model.unicode)
+                HoverHandler {
+                    cursorShape: hovered ? Qt.PointingHandCursor : undefined
+                }
+                StatusToolTip {
+                    text: model.shortname
+                    visible: hovered && !!text
+                    y: -height
                 }
             }
         }

@@ -54,7 +54,7 @@ SplitView {
                     filters: ValueFilter {
                         id: keyFilter
 
-                        roleName: "key"
+                        roleName: "id"
                         value : uniswapBtn.checked ? "uniswap" : "status"
                     }
                 }
@@ -63,23 +63,22 @@ SplitView {
                     id: delegate
 
                     required property string name
-                    required property string image
+                    required property string logoUri
                     required property string source
                     required property string version
-                    required property double updatedAt
+                    required property double timestamp
 
                     readonly property TokenListPopup popup: TokenListPopup {
-                        parent: root
-
+                        parent: root.Overlay.overlay
                         visible: true
                         modal: false
                         closePolicy: Popup.NoAutoClose
 
                         title: qsTr("%1 Token List").arg(delegate.name)
-                        sourceImage: delegate.image
+                        sourceImage: delegate.logoUri
                         sourceUrl: delegate.source
                         sourceVersion: delegate.version
-                        updatedAt: delegate.updatedAt
+                        updatedAt: delegate.timestamp
 
                         tokensListModel: SortFilterProxyModel {
                             sourceModel: root.tokensProxyModel

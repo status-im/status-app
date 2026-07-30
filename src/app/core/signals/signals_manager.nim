@@ -1,5 +1,6 @@
 import nimqml, json, strutils, chronicles
 import ../eventemitter
+import ./signal_type_scan
 
 include types
 
@@ -26,7 +27,19 @@ QtObject:
     result.setup()
     result.events = events
 
-  proc processSignal(self: SignalsManager, statusSignal: string) =
+  proc processSignal*(self: SignalsManager, statusSignal: string) =
+    # Cheap triage before any JSON parsing: extract the envelope type
+    # by substring scan and drop payloads of types the app does not handle,
+    # so a large unhandled event is never fully decoded on the Qt main thread.
+    # Only a positively-identified unhandled type is dropped; a scan miss
+    # (empty result, e.g. the marshaling format changed) falls through to the
+    # full-parse path below so handled signals are never silently lost.
+    let signalType = extractSignalType(statusSignal)
+    if signalType.len > 0 and not isKnownSignalType(signalType):
+      noteUnhandledSignal()
+      debug "Skipping unhandled signal type", signalType, bytes = statusSignal.len
+      return
+
     var jsonSignal: JsonNode
     try:
       jsonSignal = statusSignal.parseJson
@@ -83,14 +96,13 @@ QtObject:
         SignalType.NodeStopped,
         SignalType.NodeLogin:
           NodeSignal.fromEvent(signalType, jsonSignal)
-      of SignalType.PeerStats: PeerStatsSignal.fromEvent(jsonSignal)
+      of SignalType.ConnectionStatusChange: ConnectionStatusChangeSignal.fromEvent(jsonSignal)
       of SignalType.DiscoverySummary: DiscoverySummarySignal.fromEvent(jsonSignal)
       of SignalType.CommunityFound: CommunitySignal.fromEvent(jsonSignal)
       of SignalType.CuratedCommunitiesUpdated: CuratedCommunitiesSignal.fromEvent(jsonSignal)
       of SignalType.HistoryRequestCompleted: HistoryRequestCompletedSignal.fromEvent(jsonSignal)
       of SignalType.HistoryRequestStarted: HistoryRequestStartedSignal.fromEvent(jsonSignal)
       of SignalType.MailserverAvailable: MailserverAvailableSignal.fromEvent(jsonSignal)
-      of SignalType.MailserverChanged: MailserverChangedSignal.fromEvent(jsonSignal)
       of SignalType.MailserverNotWorking: MailserverNotWorkingSignal.fromEvent(jsonSignal)
       of SignalType.HistoryArchivesProtocolEnabled: HistoryArchivesSignal.historyArchivesProtocolEnabledFromEvent(jsonSignal)
       of SignalType.HistoryArchivesProtocolDisabled: HistoryArchivesSignal.historyArchivesProtocolDisabledFromEvent(jsonSignal)

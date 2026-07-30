@@ -3,10 +3,7 @@ import time
 
 import allure
 import logging
-import cv2
-import numpy as np
 import squish
-from PIL import ImageGrab
 
 import configs
 import driver
@@ -16,8 +13,8 @@ from datetime import datetime
 from configs.system import get_platform
 from driver import context
 from driver.server import SquishServer
-from gui.objects_map.names import statusDesktop_mainWindow
 from scripts.utils import system_path, local_system
+from scripts.utils.failure_screenshot import attach_failure_screenshot
 from scripts.utils.system_path import SystemPath
 from scripts.utils.wait_for_port import wait_for_port
 import psutil
@@ -55,21 +52,9 @@ class AUT:
         if exc_type:
             try:
                 self.attach()
-                driver.waitForObjectExists(statusDesktop_mainWindow).setVisible(True)
                 configs.testpath.TEST.mkdir(parents=True, exist_ok=True)
                 screenshot = configs.testpath.TEST / f'{self.aut_id}.png'
-
-                rect = driver.object.globalBounds(driver.waitForObject(statusDesktop_mainWindow))
-                img = ImageGrab.grab(
-                    bbox=(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height),
-                    xdisplay=configs.system.DISPLAY if get_platform() == "Linux" else None)
-                view = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
-                cv2.imwrite(str(screenshot), view)
-
-                allure.attach(
-                    name=f'Screenshot on fail: {self.aut_id}',
-                    body=screenshot.read_bytes(),
-                    attachment_type=allure.attachment_type.PNG)
+                attach_failure_screenshot(screenshot, f'Screenshot on fail: {self.aut_id}')
                 test_data.aut_screenshot_attached = True
             except Exception as err:
                 LOG.error(err)

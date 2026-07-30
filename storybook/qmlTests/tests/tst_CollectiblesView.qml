@@ -5,6 +5,8 @@ import QtTest
 import StatusQ.Models
 
 import AppLayouts.Wallet.views
+import AppLayouts.Wallet.panels
+import AppLayouts.Wallet.controls
 import Models
 import utils
 import QtModelsToolkit
@@ -135,6 +137,25 @@ Item {
         category: "CollectiblesViewTest"
     }
 
+    QtObject {
+        id: customOrderSettingsStore
+        property var jsonData: null
+        function setValue(_key, value) { jsonData = value }
+        function value(_key, defaultValue) { return jsonData !== null ? jsonData : defaultValue }
+    }
+
+    QtObject {
+        id: walletSettingsStore
+        property var collectiblesViewCustomOrderApplyTimestamp: 0
+    }
+
+    QtObject {
+        id: collectiblesSortSettingsStore
+        property int currentSortValue: SortOrderComboBox.TokenOrderDateAdded
+        property var sortOrderUpdateTimestamp: 0
+        property int currentSortOrder: Qt.AscendingOrder
+    }
+
     Component {
         id: collectiblesViewComponent
         CollectiblesView {
@@ -162,6 +183,86 @@ Item {
                     loadingFinished(settingsStore.value(settingsKey, null))
                 }
                 onRequestClearSettings: settingsStore.setValue(settingsKey, null)
+            }
+        }
+    }
+
+    ManageTokensController {
+        id: customOrderController
+        sourceModel: renamedModel
+        settingsKey: "CollectiblesViewCustomOrderTest"
+        serializeAsCollectibles: true
+
+        onRequestSaveSettings: (jsonData) => {
+            savingStarted()
+            customOrderSettingsStore.setValue(settingsKey, jsonData)
+            savingFinished()
+        }
+        onRequestLoadSettings: {
+            loadingStarted()
+            loadingFinished(customOrderSettingsStore.value(settingsKey, null))
+        }
+        onRequestClearSettings: customOrderSettingsStore.setValue(settingsKey, null)
+    }
+
+    QtObject {
+        id: flowState
+        // settings | manageTokens | wallet
+        property string screen: "settings"
+    }
+
+    Component {
+        id: customOrderingHarnessComponent
+        Item {
+            width: root.width
+            height: root.height
+
+            property alias collectiblesView: collectiblesView
+            property alias managePanel: managePanel
+
+            CollectiblesView {
+                id: collectiblesView
+                anchors.fill: parent
+                filterVisible: true
+                customOrderAvailable: customOrderController.hasSettings
+                ownedAccountsModel: WalletAccountsModel {}
+                activeNetworks: NetworksModel.flatNetworks
+                addressFilters: root.testAccount
+                networkFilters: "1"
+                unsupportedChainIds: []
+                controller: customOrderController
+                onManageTokensRequested: flowState.screen = "manageTokens"
+
+                function refreshSortSettings() {
+                    let value = SortOrderComboBox.TokenOrderDateAdded
+                    let order = collectiblesSortSettingsStore.currentSortOrder
+                    if (walletSettingsStore.collectiblesViewCustomOrderApplyTimestamp > collectiblesSortSettingsStore.sortOrderUpdateTimestamp
+                            && customOrderAvailable) {
+                        value = SortOrderComboBox.TokenOrderCustom
+                        order = Qt.AscendingOrder
+                    } else {
+                        value = collectiblesSortSettingsStore.currentSortValue
+                    }
+                    sortByValue(value)
+                    setSortOrder(order)
+                }
+
+                Component.onCompleted: refreshSortSettings()
+
+                Connections {
+                    target: walletSettingsStore
+                    function onCollectiblesViewCustomOrderApplyTimestampChanged() {
+                        collectiblesView.refreshSortSettings()
+                    }
+                }
+            }
+
+            ManageCollectiblesPanel {
+                id: managePanel
+                z: 1
+                anchors.fill: parent
+                visible: flowState.screen === "manageTokens"
+                controller: customOrderController
             }
         }
     }
@@ -257,6 +358,154 @@ Item {
         function test_sortByUi_asc_desc(data) {
             verifySortByUi(data.optionText, data.communityAsc, data.communityDesc,
                            data.regularAsc, data.regularDesc)
+        }
+    }
+
+    TestCase {
+        name: "CollectiblesViewCustomOrdering"
+        when: windowShown
+
+        property Item harness: null
+
+        function init() {
+            flowState.screen = "settings"
+            customOrderController.requestClearSettings()
+            customOrderSettingsStore.setValue("CollectiblesViewCustomOrderTest", null)
+            walletSettingsStore.collectiblesViewCustomOrderApplyTimestamp = 0
+            collectiblesSortSettingsStore.currentSortValue = SortOrderComboBox.TokenOrderDateAdded
+            collectiblesSortSettingsStore.sortOrderUpdateTimestamp = 0
+            collectiblesSortSettingsStore.currentSortOrder = Qt.AscendingOrder
+            harness = createTemporaryObject(customOrderingHarnessComponent, root)
+            waitForRendering(harness)
+        }
+
+        function cleanup() {
+            flowState.screen = "settings"
+            if (harness)
+                harness.destroy()
+            harness = null
+            customOrderController.requestClearSettings()
+            customOrderSettingsStore.setValue("CollectiblesViewCustomOrderTest", null)
+            walletSettingsStore.collectiblesViewCustomOrderApplyTimestamp = 0
+            collectiblesSortSettingsStore.currentSortValue = SortOrderComboBox.TokenOrderDateAdded
+            collectiblesSortSettingsStore.sortOrderUpdateTimestamp = 0
+            collectiblesSortSettingsStore.currentSortOrder = Qt.AscendingOrder
+        }
+
+        function getView(screen) {
+            tryVerify(() => flowState.screen === screen)
+            if (screen === "manageTokens")
+                return harness.managePanel
+            verify(!!findChild(harness.collectiblesView, "cmbTokenOrder"))
+            return harness.collectiblesView
+        }
+
+        function getSortComboBox(collectiblesView) {
+            const comboBox = findChild(collectiblesView, "cmbTokenOrder")
+            verify(!!comboBox)
+            return comboBox
+        }
+
+        function openSortPopup(comboBox) {
+            mouseClick(comboBox)
+            tryVerify(() => comboBox.popup.opened)
+            waitForRendering(comboBox.popup.contentItem)
+        }
+
+        function clickSortMenuItem(comboBox, optionText) {
+            let index = -1
+            tryVerify(() => {
+                for (let i = 0; i < comboBox.count; ++i) {
+                    if (comboBox.textAt(i) === optionText) {
+                        index = i
+                        return true
+                    }
+                }
+                return false
+            })
+            verify(index !== -1, "Sort option not found: " + optionText)
+
+            openSortPopup(comboBox)
+
+            const listView = findChild(comboBox.popup.contentItem, "sortOrderListView")
+            const delegate = listView.itemAtIndex(index)
+            mouseClick(delegate, delegate.width / 2, delegate.height / 2)
+
+            tryVerify(() => !comboBox.popup.opened)
+            waitForRendering(harness)
+        }
+
+        function verifyCustomOrderApplied(collectiblesView, gridObjectName, expectedTitles) {
+            const grid = findChild(collectiblesView, gridObjectName)
+            verify(!!grid)
+            waitForRendering(grid)
+            tryVerify(() => {
+                if (getSortComboBox(collectiblesView).displayText !== "Custom order")
+                    return false
+                if (grid.count !== expectedTitles.length)
+                    return false
+                for (let i = 0; i < expectedTitles.length; ++i) {
+                    const item = grid.itemAtIndex(i)
+                    if (!item || item.title !== expectedTitles[i])
+                        return false
+                }
+                return true
+            })
+        }
+
+        function applyCustomOrderToWallet() {
+            // WalletView.onSaveChangesClicked — timestamp only, no explicit refresh
+            walletSettingsStore.collectiblesViewCustomOrderApplyTimestamp = new Date().getTime()
+            flowState.screen = "wallet"
+            waitForRendering(harness)
+            waitForRendering(harness.collectiblesView)
+            return harness.collectiblesView
+        }
+
+        function test_customOrdering_fullFlow() {
+            const collectiblesView = getView("settings")
+            clickSortMenuItem(getSortComboBox(collectiblesView), "Create custom order →")
+            tryVerify(() => flowState.screen === "manageTokens")
+
+            const managePanel = getView("manageTokens")
+            const lvOther = findChild(managePanel, "otherTokensListView")
+            verify(!!lvOther)
+            tryCompare(lvOther, "count", 2)
+
+            const delegate0 = findChild(lvOther, "manageTokensDelegate-0")
+            verify(!!delegate0)
+            compare(delegate0.title, "Reg Charlie")
+            waitForRendering(delegate0)
+            mouseDrag(delegate0, delegate0.width / 2, delegate0.height / 2, 0, delegate0.height)
+
+            verify(managePanel.dirty)
+            managePanel.saveSettings(false /* update */)
+            verify(!managePanel.dirty)
+            verify(customOrderController.hasSettings)
+
+            flowState.screen = "wallet"
+            waitForRendering(harness)
+
+            clickSortMenuItem(getSortComboBox(getView("wallet")), "Edit custom order →")
+            tryVerify(() => flowState.screen === "manageTokens")
+
+            const managePanelEdit = getView("manageTokens")
+            const lvOtherEdit = findChild(managePanelEdit, "otherTokensListView")
+            verify(!!lvOtherEdit)
+            const charlieDelegate = findChild(lvOtherEdit, "manageTokensDelegate-1")
+            verify(!!charlieDelegate)
+            compare(charlieDelegate.title, "Reg Charlie")
+            waitForRendering(charlieDelegate)
+            mouseDrag(charlieDelegate, charlieDelegate.width / 2, charlieDelegate.height / 2,
+                      0, -charlieDelegate.height)
+
+            managePanelEdit.saveSettings(true /* update */)
+            verify(!managePanelEdit.dirty)
+            waitForRendering(harness)
+
+            const walletCollectiblesView = applyCustomOrderToWallet()
+            verifyCustomOrderApplied(walletCollectiblesView, "regularCollectiblesView",
+                                    ["Reg Charlie", "Reg Delta"])
         }
     }
 }

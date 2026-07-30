@@ -79,6 +79,10 @@ method startMigratingProfileKeypairToKeycard*(self: AccessInterface, password: s
     seedPhrase: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method startMigratingProfileKeypairUsingExistingKeycard*(self: AccessInterface, password: string, pin: string,
+    seedPhrase: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method onConvertingProfileKeypairFinished*(self: AccessInterface, success: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 

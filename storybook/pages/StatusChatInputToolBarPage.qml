@@ -19,11 +19,16 @@ Item {
         id: chatToolbar
 
         sendButtonVisible: sendButtonVisibleCheckBox.checked
+        editActionsVisible: editActionsVisibleCheckBox.checked
+        editAcceptButtonEnabled: editAcceptEnabledCheckBox.checked
         showFormatting: showFormattingCheckBox.checked
         styleButtonVisible: styleButtonVisibleCheckBox.checked
 
         sendButton.enabled: enabledCheckBox.checked
         sendButton.limitText: limitSlider.value > 0 ? limitSlider.value.toString() : ""
+
+        onEditCancelClicked: console.log("StatusChatInputToolBar::editCancelClicked")
+        onEditAcceptClicked: console.log("StatusChatInputToolBar::editAcceptClicked")
 
         width: widthSlider.value || undefined
 
@@ -54,6 +59,20 @@ Item {
             id: sendButtonVisibleCheckBox
 
             text: "send button visible"
+            checked: true
+        }
+
+        CheckBox {
+            id: editActionsVisibleCheckBox
+
+            text: "edit actions visible"
+            checked: false
+        }
+
+        CheckBox {
+            id: editAcceptEnabledCheckBox
+
+            text: "edit accept enabled"
             checked: true
         }
 

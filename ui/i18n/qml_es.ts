@@ -55,12 +55,16 @@
         <translation>Ayuda de Status</translation>
     </message>
     <message>
-        <source>Status desktop’s GitHub Repositories</source>
-        <translation>Repositorios de GitHub de Status desktop</translation>
+        <source>status-app</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>status-desktop</source>
-        <translation>status-desktop</translation>
+        <source>logos-delivery-go</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status App&apos;s GitHub Repositories</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>status-go</source>
@@ -69,10 +73,6 @@
     <message>
         <source>StatusQ</source>
         <translation>StatusQ</translation>
-    </message>
-    <message>
-        <source>go-waku</source>
-        <translation>go-waku</translation>
     </message>
     <message>
         <source>Legal &amp; Privacy Documents</source>
@@ -1021,6 +1021,21 @@
     </message>
 </context>
 <context>
+    <name>AdvancedStore</name>
+    <message>
+        <source>Logos Storage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Torrent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>AdvancedView</name>
     <message>
         <source>This feature is experimental and is meant for testing purposes by core contributors and the community. It&apos;s not meant for real use and makes no claims of security or integrity of funds or data. Use at your own risk.</source>
@@ -1059,16 +1074,12 @@
         <translation>Navegador Web/dApp</translation>
     </message>
     <message>
-        <source>Archive Protocol Enabled</source>
-        <translation>Protocolo de archivo habilitado</translation>
-    </message>
-    <message>
         <source>ENS Community Permissions Enabled</source>
         <translation>Permisos de comunidad ENS habilitados</translation>
     </message>
     <message>
-        <source>WakuV2 options</source>
-        <translation>Opciones de WakuV2</translation>
+        <source>Enable Copying Message Links</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>The account will be logged out. When you login again, the selected mode will be enabled</source>
@@ -1091,10 +1102,6 @@
         <translation>Modo de retransmisión</translation>
     </message>
     <message>
-        <source>History nodes</source>
-        <translation>Nodos de historial</translation>
-    </message>
-    <message>
         <source>Developer features</source>
         <translation>Funciones para desarrolladores</translation>
     </message>
@@ -1105,6 +1112,14 @@
     <message>
         <source>Debug</source>
         <translation>Depuración</translation>
+    </message>
+    <message>
+        <source>Archive Protocol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Logos Messaging options</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>The value is overridden with runtime options</source>
@@ -1165,6 +1180,18 @@
     <message>
         <source>Change</source>
         <translation>Cambiar</translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Logos Storage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Torrent</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Refetch transaction history</source>
@@ -1650,6 +1677,10 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <translation>Importación de la comunidad &apos;%1&apos; cancelada</translation>
     </message>
     <message>
+        <source>Cannot connect to the Logos Messaging network. Messaging may not work. Retrying automatically.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>CoinGecko connection successful</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1875,42 +1906,6 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
 <context>
     <name>AppearanceView</name>
     <message>
-        <source>Blockchains will drop search costs, causing a kind of decomposition that allows you to have markets of entities that are horizontally segregated and vertically segregated.</source>
-        <translation>Las blockchains reducirán los costos de búsqueda, causando una especie de descomposición que permite tener mercados de entidades que están segregadas horizontalmente y verticalmente.</translation>
-    </message>
-    <message>
-        <source>Text size</source>
-        <translation>Tamaño del texto</translation>
-    </message>
-    <message>
-        <source>XS</source>
-        <translation>XS</translation>
-    </message>
-    <message>
-        <source>S</source>
-        <translation>S</translation>
-    </message>
-    <message>
-        <source>M</source>
-        <translation>M</translation>
-    </message>
-    <message>
-        <source>L</source>
-        <translation>L</translation>
-    </message>
-    <message>
-        <source>XL</source>
-        <translation>XL</translation>
-    </message>
-    <message>
-        <source>XXL</source>
-        <translation>XXL</translation>
-    </message>
-    <message>
-        <source>XXS</source>
-        <translation>XXS</translation>
-    </message>
-    <message>
         <source>Mode</source>
         <translation>Modo</translation>
     </message>
@@ -1923,16 +1918,36 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <translation>Oscuro</translation>
     </message>
     <message>
+        <source>Interface zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scale the app interface and text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation type="unfinished">Unirse</translation>
+    </message>
+    <message>
+        <source>Follow display zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Apply your system settings defaults values</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart to apply</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status to apply the new interface zoom level</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>System</source>
         <translation>Sistema</translation>
-    </message>
-    <message>
-        <source>Layout Spacing</source>
-        <translation>Factor de espaciado</translation>
-    </message>
-    <message>
-        <source>Adjust how compact or spacious the layout looks</source>
-        <translation>Ajusta qué tan compacto o espacioso se ve el diseño</translation>
     </message>
 </context>
 <context>
@@ -2605,6 +2620,10 @@ Do you wish to override the security check and continue?</source>
         <translation>Herramientas de desarrollo</translation>
     </message>
     <message>
+        <source>Force reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Clear site data</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2613,15 +2632,15 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clearing cache...</source>
+        <source>Clearing browsing data...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clear cache</source>
+        <source>Clear browsing data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clears cached files, cookies, and history for the entire browser. Browsing is paused until it is done.</source>
+        <source>Clears the cache and cookies for the entire browser. Browsing is paused until it is done.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2718,6 +2737,14 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Buy via %1</source>
         <translation>Comprar vía %1</translation>
+    </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">Tus activos en %1</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">Activos populares</translation>
     </message>
     <message>
         <source>Ways to buy %1 for %2</source>
@@ -3565,6 +3592,29 @@ no compatible</translation>
     </message>
 </context>
 <context>
+    <name>CommunityFetchPopup</name>
+    <message>
+        <source>%1s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to fetch the community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We&apos;re fetching community...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>It may be offline, or Status couldn&apos;t reach it</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished">Reintentar</translation>
+    </message>
+</context>
+<context>
     <name>CommunityInfoPanel</name>
     <message>
         <source>%1 Owner token</source>
@@ -4207,7 +4257,7 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
         <translation type="unfinished">Buscar</translation>
     </message>
     <message>
-        <source>Search chats...</source>
+        <source>Search contacts and groups...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4617,6 +4667,10 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     <message>
         <source>channel name</source>
         <translation>nombre del canal</translation>
+    </message>
+    <message>
+        <source>Only letters, numbers, underscores, periods and hyphens allowed</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Channel colour</source>
@@ -5720,24 +5774,12 @@ key pair. Keycard will be required for signing</source>
         <translation>Status messenger es el mensajero completamente descentralizado más seguro del mundo</translation>
     </message>
     <message>
-        <source>Full metadata privacy means it’s impossible to tell who you are talking to by surveilling your internet traffic</source>
-        <translation>La privacidad completa de metadatos significa que es imposible saber con quién estás hablando mediante la vigilancia de tu tráfico de internet</translation>
-    </message>
-    <message>
         <source>Status is truly private - none of your personal details (or any other information) are sent to us</source>
         <translation>Status es verdaderamente privado: ninguno de tus datos personales (ni ninguna otra información) se nos envía</translation>
     </message>
     <message>
         <source>Messages sent using Status are end to end encrypted and can only be opened by the recipient</source>
         <translation>Los mensajes enviados usando Status están cifrados de extremo a extremo y solo pueden ser abiertos por el destinatario</translation>
-    </message>
-    <message>
-        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF’s original Whisper protocol</source>
-        <translation>Status usa el protocolo de mensajería p2p gossip Waku, una evolución del protocolo Whisper original de la EF</translation>
-    </message>
-    <message>
-        <source>Status is home to crypto’s leading multi-chain self-custodial wallet</source>
-        <translation>Status alberga la billetera de autocustodia multi-cadena líder en crypto</translation>
     </message>
     <message>
         <source>Status removes intermediaries to keep your messages private and your assets secure</source>
@@ -5756,14 +5798,6 @@ key pair. Keycard will be required for signing</source>
         <translation>El token de Status Network (SNT) es un token de utilidad modular que impulsa la red de Status</translation>
     </message>
     <message>
-        <source>Your cryptographic key pair encrypts all of your messages which can only be unlocked by the intended recipient</source>
-        <translation>Tu par de claves criptográficas cifra todos tus mensajes que solo pueden ser desbloqueados por el destinatario previsto</translation>
-    </message>
-    <message>
-        <source>Status’ Web3 browser requires all DApps to ask permission before connecting to your wallet</source>
-        <translation>El navegador Web3 de Status requiere que todas las DApps soliciten permiso antes de conectarse a tu billetera</translation>
-    </message>
-    <message>
         <source>Your non-custodial wallet gives you full control over your funds without the use of a server</source>
         <translation>Tu billetera no custodial te da control total sobre tus fondos sin el uso de un servidor</translation>
     </message>
@@ -5772,8 +5806,28 @@ key pair. Keycard will be required for signing</source>
         <translation>Status es descentralizado y sin servidores: chatea, transacciona y navega sin vigilancia ni censura</translation>
     </message>
     <message>
-        <source>Status is open source software that lets you use with p2p networks. Status itself doesn’t provide any services</source>
-        <translation>Status es software de código abierto que te permite usar redes p2p. Status en sí no proporciona ningún servicio</translation>
+        <source>Full metadata privacy means it&apos;s impossible to tell who you are talking to by surveilling your internet traffic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status is home to crypto&apos;s leading multi-chain self-custodial wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your cryptographic key pairs encrypt all of your messages which can only be unlocked by the intended recipient</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Web3 browser requires all DApps to ask permission before connecting to your wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status is open source software that lets you interact with p2p networks. Status itself doesn&apos;t provide any services</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status is a way to access p2p networks that are permissionlessly created and run by individuals around the world</source>
@@ -5804,8 +5858,36 @@ key pair. Keycard will be required for signing</source>
         <translation>Status se rige por el principio de diseño criptoeconómico de resistencia a la censura</translation>
     </message>
     <message>
-        <source>Status is a public good licensed under the MIT open source license, for anyone to share, modify and benefit from</source>
-        <translation>Status es un bien público licenciado bajo la licencia de código abierto MIT, para que cualquiera pueda compartir, modificar y beneficiarse</translation>
+        <source>Status is a public good licensed under the MPL-2.0 open source license, for anyone to share, modify and benefit from</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The only continent that doesn&apos;t (yet!) have any Status core contributors is Antarctica</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We are the 5th most active crypto project on GitHub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Many other messengers with e2e encryption don&apos;t have metadata privacy!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Help to translate Status into your native language. See https://status.app/translations for more info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status has a multi-chain wallet which will allow quick and easy multi-chain txns.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Nimbus team is collaborating with the Ethereum Foundation to create the Portal Network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Portal Network client (Fluffy) will let Status users interact with Ethereum in a fully decentralised way</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status supports free communication without the approval or oversight of big tech</source>
@@ -5824,20 +5906,8 @@ key pair. Keycard will be required for signing</source>
         <translation>Status es completamente de código abierto y está hecho por colaboradores de todo el mundo</translation>
     </message>
     <message>
-        <source>Status is a globally distributed team of 150+ specialist core contributors</source>
-        <translation>Status es un equipo distribuido globalmente de más de 150 colaboradores principales especialistas</translation>
-    </message>
-    <message>
         <source>Our team of core contributors work remotely from over 50+ countries spread across 6 continents</source>
         <translation>Nuestro equipo de colaboradores principales trabaja de forma remota desde más de 50 países distribuidos en 6 continentes</translation>
-    </message>
-    <message>
-        <source>The only continent that doesn’t (yet!) have any Status core contributors is Antarctica</source>
-        <translation>El único continente que (¡aún!) no tiene colaboradores principales de Status es la Antártida</translation>
-    </message>
-    <message>
-        <source>We are the 5th most active crypto project on github</source>
-        <translation>Somos el 5º proyecto de cripto más activo en GitHub</translation>
     </message>
     <message>
         <source>We are dedicated to transitioning our governance model to being decentralised and autonomous</source>
@@ -5864,48 +5934,12 @@ key pair. Keycard will be required for signing</source>
         <translation>Tu compañía móvil y el gobierno pueden ver el contenido de todos tus mensajes SMS privados</translation>
     </message>
     <message>
-        <source>Many other messengers with e2e encryption don’t have metadata privacy!</source>
-        <translation>¡Muchos otros mensajeros con cifrado e2e no tienen privacidad de metadatos!</translation>
-    </message>
-    <message>
-        <source>Help to translate Status into your native language see https://translate.status.im/ for more info</source>
-        <translation>Ayuda a traducir Status a tu idioma nativo, visita https://translate.status.im/ para más información</translation>
-    </message>
-    <message>
         <source>By using Keycard, you can ensure your funds are safe even if your phone is stolen</source>
         <translation>Al usar Keycard, puedes asegurar que tus fondos estén seguros incluso si te roban el teléfono</translation>
     </message>
     <message>
         <source>You can enhance security by using Keycard + PIN entry as two-factor authentication</source>
         <translation>Puedes mejorar la seguridad usando Keycard + entrada de PIN como autenticación de dos factores</translation>
-    </message>
-    <message>
-        <source>Status is currently working on a multi-chain wallet which will allow quick and easy multi-chain txns.</source>
-        <translation>Status está trabajando actualmente en una billetera multi-cadena que permitirá transacciones multi-cadena rápidas y fáciles.</translation>
-    </message>
-    <message>
-        <source>The new Status mobile app is being actively developed and is earmarked for release in 2023</source>
-        <translation>La nueva aplicación móvil de Status está siendo desarrollada activamente y está prevista para su lanzamiento en 2023</translation>
-    </message>
-    <message>
-        <source>The all new Status desktop app is being actively developed and is earmarked for release in 2023</source>
-        <translation>La nueva aplicación de escritorio de Status está siendo desarrollada activamente y está prevista para su lanzamiento en 2023</translation>
-    </message>
-    <message>
-        <source>Status also builds the Nimbus Ethereum consensus, execution and light clients</source>
-        <translation>Status también construye los clientes de consenso, ejecución y ligero de Nimbus Ethereum</translation>
-    </message>
-    <message>
-        <source>Status’s Nimbus team is collaborating with the Ethereum Foundation to create the Portal Network</source>
-        <translation>El equipo Nimbus de Status está colaborando con la Ethereum Foundation para crear la Portal Network</translation>
-    </message>
-    <message>
-        <source>Status’s Portal Network client (Fluffy) will let Status users interact with Ethereum in a fully decenteralised way</source>
-        <translation>El cliente Portal Network de Status (Fluffy) permitirá a los usuarios de Status interactuar con Ethereum de una manera completamente descentralizada</translation>
-    </message>
-    <message>
-        <source>We are currently working on a tool to let you import an existing Telegram or Discord group into Status</source>
-        <translation>Actualmente estamos trabajando en una herramienta para permitirte importar un grupo existente de Telegram o Discord a Status</translation>
     </message>
 </context>
 <context>
@@ -6786,8 +6820,8 @@ key pair. Keycard will be required for signing</source>
         <translation>Habilitar el Servicio de Historial de Comunidad garantiza que cada miembro pueda ver el historial completo de mensajes de todos los canales que tiene permiso para ver. Sin esta función, el historial de mensajes se limitará a los últimos 30 días. Tu computadora, que es el nodo de control de la comunidad, debe permanecer en línea para que esto funcione.</translation>
     </message>
     <message>
-        <source>This service operates using the Archive Protocol, which will be automatically enabled.</source>
-        <translation>Este servicio opera usando el Protocolo de Archivo, que se habilitará automáticamente.</translation>
+        <source>This service operates using the Archive Protocol, which will be automatically enabled using Logos Storage by default.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Read more</source>
@@ -7294,6 +7328,19 @@ Por favor, agrégala e intenta de nuevo.</translation>
 <context>
     <name>EnterPin</name>
     <message>
+        <source>Authorization required</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This key pair is not stored on your Keycard. Authorize with your profile
+to sign using the keys stored on this device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authorize</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>PIN incorrect</source>
         <translation type="unfinished">PIN incorrecto</translation>
     </message>
@@ -7666,6 +7713,14 @@ Por favor, agrégala e intenta de nuevo.</translation>
 </context>
 <context>
     <name>ExportKeypair</name>
+    <message>
+        <source>Authenticate to create a QR code</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authenticate</source>
+        <translation type="unfinished">Autenticar</translation>
+    </message>
     <message>
         <source>Encrypted key pairs code</source>
         <translation>Código cifrado de pares de claves</translation>
@@ -8043,7 +8098,7 @@ Are you sure you want to do this?</source>
     <name>GetSyncCodeDesktopInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation>Asegúrate de que ambos dispositivos estén en la misma red</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -8141,7 +8196,7 @@ Are you sure you want to do this?</source>
     <name>GetSyncCodeMobileInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation>Asegúrate de que ambos dispositivos estén en la misma red</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -9935,8 +9990,8 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>Una vez habilitado, los enlaces publicados en el chat pueden compartir tus metadatos con sus propietarios</translation>
     </message>
     <message>
-        <source>Enable in Settings</source>
-        <translation>Habilitar en Configuración</translation>
+        <source>Always Enable</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Don&apos;t ask me again</source>
@@ -10348,6 +10403,14 @@ al cargar</translation>
         <source>Saved Addresses</source>
         <translation>Direcciones guardadas</translation>
     </message>
+    <message>
+        <source>Import key pairs from this device to your other synced devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show encrypted QR of key pairs on device</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>%n key pair(s) require import to use on this device</source>
         <translation>
@@ -10358,6 +10421,14 @@ al cargar</translation>
     <message>
         <source>Import missing key pairs</source>
         <translation>Importar pares de claves faltantes</translation>
+    </message>
+    <message>
+        <source>Automatically apply key pair migrations from paired devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>When off, moving a key pair to or from a Keycard on a paired device won&apos;t change how this device logs in or signs. Turning it back on doesn&apos;t apply past changes.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Get Keycard</source>
@@ -10927,12 +10998,20 @@ al cargar</translation>
         <translation>Editar mensaje</translation>
     </message>
     <message>
+        <source>Copy</source>
+        <translation type="unfinished">Copiar</translation>
+    </message>
+    <message>
         <source>Copy message</source>
         <translation>Copiar mensaje</translation>
     </message>
     <message>
         <source>Copy Message Id</source>
         <translation>Copiar ID del mensaje</translation>
+    </message>
+    <message>
+        <source>Copy link to message</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Unpin</source>
@@ -11359,6 +11438,26 @@ al cargar</translation>
     <message>
         <source>Zoom Fit</source>
         <translation type="unfinished">Ajustar zoom</translation>
+    </message>
+    <message>
+        <source>Compatibility mode</source>
+        <translation type="unfinished">Modo de compatibilidad</translation>
+    </message>
+    <message>
+        <source>Force reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear site data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clearing browsing data...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear browsing data</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Settings</source>
@@ -12891,13 +12990,12 @@ al cargar</translation>
 <context>
     <name>Popups</name>
     <message>
-        <source>Settings</source>
-        <comment>Go to Settings</comment>
-        <translation>Ajustes</translation>
+        <source>Share addresses with %1&apos;s owner</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Share addresses with %1&apos;s owner</source>
-        <translation>Compartir direcciones con el propietario de %1</translation>
+        <source>Share addresses to rejoin %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Image saved to %1</source>
@@ -12908,156 +13006,181 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Share addresses to rejoin %1</source>
-        <translation>Compartir direcciones para volver a unirse a %1</translation>
-    </message>
-    <message>
         <source>Failed to save image</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 removed from contacts and marked as untrusted</source>
-        <translation>%1 eliminado de contactos y marcado como no confiable</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 marked as trusted</source>
-        <translation>%1 marcado como confiable</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
-        <translation>Marca de confianza de %1 eliminada, eliminado de contactos y marcado como no confiable</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 trust mark removed and marked as untrusted</source>
-        <translation>Marca de confianza de %1 eliminada y marcado como no confiable</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 trust mark removed and removed from contacts</source>
-        <translation>Marca de confianza de %1 eliminada y eliminado de contactos</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Contact request accepted</source>
-        <translation>Solicitud de contacto aceptada</translation>
+        <translation type="unfinished">Solicitud de contacto aceptada</translation>
     </message>
     <message>
         <source>Contact request ignored</source>
-        <translation>Solicitud de contacto ignorada</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Recovery phrase permanently removed from Status application storage</source>
-        <translation>Frase de recuperación eliminada permanentemente del almacenamiento de la aplicación Status</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You backed up your recovery phrase. Access it in Settings</source>
-        <translation>Hiciste una copia de seguridad de tu frase de recuperación. Accede a ella en Ajustes</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Profile Picture</source>
-        <translation>Foto de perfil</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Make this my Profile Pic</source>
-        <translation>Hacer esta mi foto de perfil</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 marked as untrusted</source>
-        <translation>%1 marcado como no confiable</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 unblocked</source>
-        <translation>%1 desbloqueado</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 blocked</source>
-        <translation>%1 bloqueado</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Please choose a directory</source>
-        <translation>Por favor elige un directorio</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure want to leave &apos;%1&apos;?</source>
-        <translation>¿Estás seguro de que quieres dejar &apos;%1&apos;?</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
-        <translation>Necesitarás solicitar unirte si quieres volver a ser miembro en el futuro. Si te uniste a la Comunidad mediante clave pública, asegúrate de tener una copia antes de irte.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Cancelar</translation>
+        <translation type="unfinished">Cancelar</translation>
     </message>
     <message>
         <source>Leave %1</source>
-        <translation>Dejar %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Turn off testnet mode</source>
-        <translation>Desactivar modo testnet</translation>
+        <translation type="unfinished">Desactivar modo testnet</translation>
     </message>
     <message>
         <source>Turn on testnet mode</source>
-        <translation>Activar modo testnet</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure you want to turn off %1? All future transactions will be performed on live networks with real funds</source>
-        <translation>¿Estás seguro de que quieres desactivar %1? Todas las transacciones futuras se realizarán en redes en vivo con fondos reales</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure you want to turn on %1? In this mode, all blockchain data displayed will come from testnets and all blockchain interactions will be with testnets. Testnet mode switches the entire app to using testnets only. Please switch this mode on only if you know exactly why you need to use it.</source>
-        <translation>¿Estás seguro de que quieres activar %1? En este modo, todos los datos de blockchain mostrados provendrán de testnets y todas las interacciones de blockchain serán con testnets. El modo testnet cambia toda la aplicación para usar solo testnets. Por favor activa este modo solo si sabes exactamente por qué necesitas usarlo.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Testnet mode turned on</source>
-        <translation>Modo testnet activado</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Testnet mode turned off</source>
-        <translation>Modo testnet desactivado</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Align with paired device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">Continuar</translation>
+    </message>
+    <message>
+        <source>Your profile has been migrated to Keycard on paired device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your profile has been migrated from Keycard to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In order to align on the login/signing method on this device, you need to complete the migration flow, clicking the &quot;Continue&quot; button below, or cancel this popup if you want to keep the current login/signing method.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you don&apos;t want to see this message again, go to Settings/Wallet and toggle off &quot;Automatically apply key pair migrations from paired device&quot;.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign transaction - update %1 smart contract</source>
-        <translation>Firmar transacción - actualizar contrato inteligente %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 (%2) successfully hidden. You can toggle asset visibility via %3.</source>
-        <translation>%1 (%2) ocultado exitosamente. Puedes alternar la visibilidad del activo mediante %3.</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <comment>Go to Settings</comment>
+        <translation type="unfinished">Ajustes</translation>
     </message>
     <message>
         <source>Hide collectible</source>
-        <translation>Ocultar coleccionable</translation>
+        <translation type="unfinished">Ocultar coleccionable</translation>
     </message>
     <message>
         <source>Hide %1</source>
-        <translation>Ocultar %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure you want to hide %1? You will no longer see or be able to interact with this collectible anywhere inside Status.</source>
-        <translation>¿Estás seguro de que quieres ocultar %1? Ya no verás ni podrás interactuar con este coleccionable en ningún lugar dentro de Status.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 successfully hidden. You can toggle collectible visibility via %2.</source>
-        <translation>%1 ocultado exitosamente. Puedes alternar la visibilidad del coleccionable mediante %2.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status Software Privacy Policy</source>
-        <translation>Política de Privacidad del Software Status</translation>
+        <translation type="unfinished">Política de Privacidad del Software Status</translation>
     </message>
     <message>
         <source>Status Software Terms of Use</source>
-        <translation>Términos de Uso del Software Status</translation>
+        <translation type="unfinished">Términos de Uso del Software Status</translation>
     </message>
     <message>
         <source>Sign out</source>
-        <translation>Cerrar sesión</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation>Asegúrate de tener almacenada tu contraseña de cuenta y frase de recuperación. Sin ellas puedes quedar bloqueado de tu cuenta y perder fondos.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign out &amp; Quit</source>
-        <translation></translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -14626,6 +14749,10 @@ al cargar</translation>
         <source>Any ETH address</source>
         <translation>Cualquier dirección ETH</translation>
     </message>
+    <message>
+        <source>key pair requires import to use on this device</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SelectParamsForBuyCryptoPanel</name>
@@ -14746,6 +14873,14 @@ al cargar</translation>
     <message>
         <source>Token that you&apos;re trying to send is not supported.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">Tus activos en %1</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">Activos populares</translation>
     </message>
 </context>
 <context>
@@ -15292,6 +15427,10 @@ al cargar</translation>
         <source>Update PIN &amp; sign</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Failed to sign with the authorized credentials</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SignTransactionModalBase</name>
@@ -15655,6 +15794,10 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Edit</source>
+        <translation type="unfinished">Editar</translation>
+    </message>
+    <message>
         <source>Multiple payment requests</source>
         <translation type="unfinished"></translation>
     </message>
@@ -15893,17 +16036,6 @@ al cargar</translation>
     </message>
 </context>
 <context>
-    <name>StatusEditMessage</name>
-    <message>
-        <source>Cancel</source>
-        <translation>Cancelar</translation>
-    </message>
-    <message>
-        <source>Save</source>
-        <translation>Guardar</translation>
-    </message>
-</context>
-<context>
     <name>StatusEmojiPopup</name>
     <message>
         <source>Search Results</source>
@@ -15972,13 +16104,6 @@ al cargar</translation>
     <message>
         <source>Close</source>
         <translation type="unfinished">Cerrar</translation>
-    </message>
-</context>
-<context>
-    <name>StatusImageSelector</name>
-    <message>
-        <source>Supported image formats (%1)</source>
-        <translation>Formatos de imagen compatibles (%1)</translation>
     </message>
 </context>
 <context>
@@ -16505,16 +16630,20 @@ al cargar</translation>
         <source>Receive</source>
         <translation>Recibir</translation>
     </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">Tus activos en %1</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">Activos populares</translation>
+    </message>
 </context>
 <context>
     <name>SwapModal</name>
     <message>
         <source>Swap</source>
         <translation></translation>
-    </message>
-    <message>
-        <source>On:</source>
-        <translation>En:</translation>
     </message>
     <message>
         <source>Add assets</source>
@@ -16831,7 +16960,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Ensure both devices are on the same local network</source>
-        <translation>Asegúrate de que ambos dispositivos estén en la misma red local</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Continue</source>
@@ -17448,17 +17577,6 @@ This action cannot be undone.</source>
     <message>
         <source>Collectibles</source>
         <translation>Coleccionables</translation>
-    </message>
-</context>
-<context>
-    <name>TokenSelectorViewAdaptor</name>
-    <message>
-        <source>Popular assets</source>
-        <translation>Activos populares</translation>
-    </message>
-    <message>
-        <source>Your assets on %1</source>
-        <translation>Tus activos en %1</translation>
     </message>
 </context>
 <context>

@@ -22,6 +22,7 @@ Item {
             name: "Ether"
             symbol: "ETH"
             currencyBalanceAsString: "42.02 USD"
+
             iconSource: ""
             isAutoHovered: false
             width: 250
@@ -37,11 +38,13 @@ Item {
         id: balancesModel
 
         ListElement {
-            balanceAsString: "1234.50"
+            balance: 1234.50
+
             iconUrl: "network/ethereum"
         }
         ListElement {
-            balanceAsString: "33.52"
+            balance: 33.52
+
             iconUrl: "network/arbitrum"
         }
     }
@@ -123,7 +126,9 @@ Item {
             control.balancesListInteractive = false
             compare(list.interactive, false)
 
-            const subBalanceText1 = TestUtils.findTextItem(control, "1234.50")
+            // The chip formats the numeric balance at the UI layer (2 decimals,
+            // no symbol), so 1234.50 renders with a thousands separator.
+            const subBalanceText1 = TestUtils.findTextItem(control, "1,234.50")
             const subBalanceText2 = TestUtils.findTextItem(control, "33.52")
 
             verify(subBalanceText1)

@@ -1,5 +1,5 @@
 import
-  std/[os, json, strformat, strutils, times],
+  std/[os, json, math, strformat, strutils, times],
   nimqml,
   chronicles,
   nimcrypto/keccak,
@@ -9,10 +9,19 @@ import status_go
 import app/core/main
 import constants as main_constants
 import statusq_bridge
-import dotherside_ext
+import app/core/signal_handler
+import app/core/custom_urls/url_scheme_event
+import app/global/single_instance
+
+import seaqt/qguiapplication
+import seaqt/qsslconfiguration
+import seaqt/qsslcertificate
+import seaqt/QtCore/gen_qnamespace
+
+when defined(qmldebug):
+  import seaqt/qqmldebuggingenabler
 
 import app/global/global_singleton
-import app/global/local_app_settings
 import app/global/app_lifecycle
 import app/boot/app_controller
 
@@ -167,6 +176,34 @@ proc logHandlerCallback(messageType: cint, message: cstring, category: cstring, 
     else:
       warn "qt message of unknown type", messageType = int(messageType)
 
+proc enableHDPI(uiScaleFilePath: string) =
+  const scaleEnvVar = "QT_SCALE_FACTOR"
+
+  # Equivalent to qEnvironmentVariableIsSet
+  if getEnv(scaleEnvVar) != "":
+    echo "[Warning] ", scaleEnvVar, " already set, will NOT enable custom Status scaling"
+    return
+
+  QGuiApplication.setHighDpiScaleFactorRoundingPolicy(HighDpiScaleFactorRoundingPolicyEnum.PassThrough)
+
+  if fileExists(uiScaleFilePath):
+    # Reads the file and strips any trailing/leading whitespace (like newlines)
+    let scaleStr = readFile(uiScaleFilePath).strip()
+
+    if scaleStr.len == 0:
+      echo "[Debug] Resetting UI scale factor back to OS defaults"
+      return
+
+    try:
+      var scale = parseFloat(scaleStr)
+      scale = clamp(scale, 0.75, 1.5)
+      echo "[Debug] Setting custom UI scale to ", scale
+      putEnv(scaleEnvVar, formatFloat(scale, ffDecimal, precision = 2))
+
+    except ValueError:
+      warn "Error parsing 'ui-scale' file contents, not a float"
+      discard
+
 proc mainProc() =
 
   when defined(macosx) and defined(arm64):
@@ -195,32 +232,67 @@ proc mainProc() =
 
   ensureDirectories(DATADIR, TMPDIR, LOGDIR)
 
+  # Open the log file and set the log level before any subsystem starts logging.
+  # On iOS the stdout sink is disabled (no valid stdout FILE*), so logs go to the
+  # file sink only; opening it here guarantees every startup log has a valid sink
+  # instead of lazily opening a default path mid-init.
+  prepareLogging()
+
   let isExperimental = isExperimental()
   let resourcesPath = determineResourcePath()
   let openUri = determineOpenUri()
   let statusAppIconPath = determineStatusAppIconPath()
 
   let statusFoundation = newStatusFoundation()
-  let uiScaleFilePath = joinPath(DATADIR, "ui-scale")
-  # Required by the WalletConnectSDK view right after creating the QGuiApplication instance
-  initializeWebView()
-  enableHDPI(uiScaleFilePath)
-  tryEnableThreadedRenderer()
 
+  # Required by the WalletConnectSDK view right after creating the QGuiApplication instance
+  statusq_initializeWebEngine()
+
+  # Enable HDPI (replaces dos_qguiapplication_enable_hdpi)
+  let uiScaleFilePath = joinPath(DATADIR, "ui-scale")
+  enableHDPI(uiScaleFilePath)
+
+  # Enable threaded renderer (replaces dos_qguiapplication_try_enable_threaded_renderer)
+  putEnv("QSG_RENDER_LOOP", "threaded")
+
+  # Install self-signed certificate (replaces dos_add_self_signed_certificate)
   let imageCert = imageServerTLSCert()
-  installSelfSignedCertificate(imageCert)
+  block:
+    var defaultConfig = QSslConfiguration.defaultConfiguration()
+    var certList = defaultConfig.caCertificates()
+    # fromData with no format arg defaults to QSsl::Pem (same as the original dos_add_self_signed_certificate)
+    var newCerts = QSslCertificate.fromData(
+      imageCert.toOpenArrayByte(0, imageCert.len - 1))
+    for c in newCerts.mitems:
+      certList.add(move(c))
+    var sysCerts = QSslConfiguration.systemCaCertificates()
+    for c in sysCerts.mitems:
+      certList.add(move(c))
+    defaultConfig.setCaCertificates(certList)
+    QSslConfiguration.setDefaultConfiguration(defaultConfig)
+
+  # static qApp setup
+  QCoreApplication.setApplicationName("Status Desktop")
+  QCoreApplication.setOrganizationName("Status")
+  QCoreApplication.setOrganizationDomain("status.app")
+  QCoreApplication.setApplicationVersion(APP_VERSION)
+  QGuiApplication.setDesktopFileName("nim-status")
 
   let app = newQGuiApplication()
   singletonInstance.setApplication(app)
 
+  when defined(qmldebug):
+    const qmlDebugPort {.intdefine: "qmlDebugPort".} = 49152
+    discard QQmlDebuggingEnabler.startTcpDebugServer(qmlDebugPort.cint,
+      QQmlDebuggingEnablerStartModeEnum.WaitForClient)
+
   let singleInstance = newSingleInstance(($keccak256.digest(DATADIR))[0..31], openUri)
-  let urlSchemeEvent = newStatusUrlSchemeEventObject()
+  let urlSchemeEvent = newUrlSchemeEvent()
   urlSchemeEvent.setInstance()
   # init url manager before app controller
   statusFoundation.initUrlSchemeManager(urlSchemeEvent, singleInstance, openUri)
 
   let appController = newAppController(statusFoundation)
-  let networkAccessFactory = newQNetworkAccessManagerFactory(TMPDIR & "netcache")
 
   let isProductionQVariant = newQVariant(if defined(production): true else: false)
   let isExperimentalQVariant = newQVariant(isExperimental)
@@ -231,8 +303,7 @@ proc mainProc() =
   if not main_constants.IS_MACOS:
     app.icon(app.applicationDirPath & statusAppIconPath)
 
-  prepareLogging()
-  installMessageHandler(logHandlerCallback)
+  statusq_installMessageHandler(logHandlerCallback)
 
   when defined(USE_QML_SERVER):
     echo "Setting remote import path: ", remoteImportPath
@@ -242,7 +313,7 @@ proc mainProc() =
     singletonInstance.engine.addImportPath("qrc:/./imports")
     singletonInstance.engine.addImportPath("qrc:/./app");
 
-  singletonInstance.engine.setNetworkAccessManagerFactory(networkAccessFactory)
+  statusq_setupNetworkAccessManagerFactory(singletonInstance.engine.vptr, (TMPDIR & "netcache").cstring)
   singletonInstance.engine.setRootContextProperty("uiScaleFilePath", newQVariant(uiScaleFilePath))
   singletonInstance.engine.setRootContextProperty("singleInstance", newQVariant(singleInstance))
   singletonInstance.engine.setRootContextProperty("isExperimental", isExperimentalQVariant)
@@ -259,6 +330,10 @@ proc mainProc() =
 
   statusq_registerQmlTypes()
 
+  when defined(monitoring):
+    statusq_registerMonitoringType()
+    statusq_initializeMonitoring(singletonInstance.engine.vptr)
+
   app.installEventFilter(urlSchemeEvent)
 
   defer:
@@ -269,7 +344,6 @@ proc mainProc() =
     isProductionQVariant.delete()
     isExperimentalQVariant.delete()
     signalsManagerQVariant.delete()
-    networkAccessFactory.delete()
     appController.delete()
     statusFoundation.delete()
     singleInstance.delete()

@@ -15,6 +15,8 @@
 #include <QMetaObject>
 #include <QPointer>
 #include <mutex>
+#include <QQuickWindow>
+#include <qpa/qplatformscreen.h>
 
 #ifdef Q_OS_ANDROID
 #include <QFile>
@@ -549,8 +551,10 @@ void SystemUtilsInternal::iosShareFiles(const QVariantList& fileUrls) const
     }
     if (paths.isEmpty())
         return;
+#ifdef QT_DEBUG
     qInfo() << "[iOS Share] SystemUtilsInternal::iosShareFiles paths=" << paths.size()
             << " sample=" << (paths.size() > 0 ? paths.first() : QString());
+#endif
     ::presentIOSShareSheetForFilePaths(paths);
 #else
     Q_UNUSED(fileUrls);
@@ -572,8 +576,10 @@ void SystemUtilsInternal::iosSharePaths(const QStringList& filePaths) const
     }
     if (paths.isEmpty())
         return;
+#ifdef QT_DEBUG
     qInfo() << "[iOS Share] SystemUtilsInternal::iosSharePaths paths=" << paths.size()
             << " sample=" << (paths.size() > 0 ? paths.first() : QString());
+#endif
     ::presentIOSShareSheetForFilePaths(paths);
 #else
     Q_UNUSED(filePaths);
@@ -672,7 +678,43 @@ void SystemUtilsInternal::startShakeDetection()
 #endif
 }
 
-#include "systemutilsinternal.moc"
+qreal SystemUtilsInternal::nativeDpr(QQuickWindow *window) const
+{
+#ifdef Q_OS_ANDROID
+    Q_UNUSED(window);
+    // Access standard Android context and get display metrics density
+    QJniObject activity = QNativeInterface::QAndroidApplication::context();
+    if (activity.isValid()) {
+        QJniObject resources = activity.callObjectMethod("getResources", "()Landroid/content/res/Resources;");
+        if (resources.isValid()) {
+            QJniObject metrics = resources.callObjectMethod("getDisplayMetrics", "()Landroid/util/DisplayMetrics;");
+            if (metrics.isValid()) {
+                return metrics.getField<float>("density");
+            }
+        }
+    }
+    return 1.0f;
+#else
+    if (!window) {
+        qWarning() << Q_FUNC_INFO << "invalid window, returning scaling of 1.0";
+        return 1.0;
+    }
+
+    auto screen = window->screen();
+    if (!screen) {
+        qWarning() << Q_FUNC_INFO << "invalid window's screen, returning scaling of 1.0";
+        return 1.0;
+    }
+
+    if (auto platformScreen = screen->handle()) {
+        return platformScreen->devicePixelRatio();
+    }
+
+    // Fallback to standard API if platform handle isn't available
+    qWarning() << Q_FUNC_INFO << "invalid native platform screen";
+    return screen->devicePixelRatio();
+#endif
+}
 
 #ifdef Q_OS_IOS
 static void iosShakeDetected()
@@ -680,7 +722,9 @@ static void iosShakeDetected()
     if (!s_systemUtilsInternal)
         return;
     QMetaObject::invokeMethod(s_systemUtilsInternal, []() {
+#ifdef QT_DEBUG
         qInfo() << "[iOS Shake] SystemUtilsInternal: shakeDetected signal emitted";
+#endif
         emit s_systemUtilsInternal->shakeDetected();
     }, Qt::QueuedConnection);
 }
@@ -708,8 +752,12 @@ static void jni_nativeShakeDetected(JNIEnv*, jclass)
     if (!s_systemUtilsInternal)
         return;
     QMetaObject::invokeMethod(s_systemUtilsInternal, []() {
+#ifdef QT_DEBUG
         qInfo() << "[Android Shake] SystemUtilsInternal: shakeDetected signal emitted";
+#endif
         emit s_systemUtilsInternal->shakeDetected();
     }, Qt::QueuedConnection);
 }
 #endif
+
+#include "systemutilsinternal.moc"

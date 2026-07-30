@@ -12,6 +12,7 @@ QObject {
 
     // input model
     required property var sourceModel
+    property bool usersModelIncludeAtEveryone: true
 
     // name used for filtering
     property string filter: ""
@@ -34,6 +35,20 @@ QObject {
         }
     }
 
+    SourceModel {
+        id: everyoneSourceModel
+        model: ListModel {
+            ListElement {
+                pubKey: "0x00001"
+                preferredDisplayName: "everyone"
+                icon: ""
+                colorId: 0
+                usesDefaultName: false
+            }
+        }
+        markerRoleValue: "everyone_model"
+    }
+
     ConcatModel {
         id: concatModel
 
@@ -41,21 +56,14 @@ QObject {
             SourceModel {
                 model: root.sourceModel
                 markerRoleValue: "filtered_model"
-            },
-            SourceModel {
-                model: ListModel {
-                    ListElement {
-                        pubKey: "0x00001"
-                        preferredDisplayName: "everyone"
-                        icon: ""
-                        colorId: 0
-                        usesDefaultName: false
-                    }
-                }
-                markerRoleValue: "everyone_model"
             }
         ]
         markerRoleName: "which_model"
         expectedRoles: ["pubKey", "preferredDisplayName"]
+        Component.onCompleted: {
+            if (root.usersModelIncludeAtEveryone) {
+                sources.push(everyoneSourceModel)
+            }
+        }
     }
 }

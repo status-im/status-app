@@ -50,6 +50,7 @@ Window {
         homePageEnabled: featureFlags ? featureFlags.homePageEnabled : false
         localBackupEnabled: featureFlags ? featureFlags.localBackupEnabled : false
         privacyModeFeatureEnabled: featureFlags ? featureFlags.privacyModeFeatureEnabled : false
+        messageLinkSharingEnabled: featureFlags ? featureFlags.messageLinkSharingEnabled : false
         buyEnabled: featureFlags ? featureFlags.buyEnabled : false
     }
 
@@ -92,12 +93,7 @@ Window {
     objectName: "mainWindow"
     color: Theme.palette.background
     title: {
-        // Set application settings
-        Qt.application.name = "Status Desktop"
         Qt.application.displayName = d.macOSWindowed ? "" : qsTr("Status Desktop")
-        Qt.application.organization = "Status"
-        Qt.application.domain = "status.im"
-        Qt.application.version = aboutModule.getCurrentVersion()
         return Qt.application.displayName
     }
 
@@ -346,14 +342,15 @@ Window {
         function onClosing(close) {
             // save the geometry just before closing
             applicationWindow.storeAppState() // noop on mobile
-            // on mobile, we minimize to background (no tray icon or quitOnClose setting)
             if (SQUtils.Utils.isMobile) {
                 close.accepted = false
+                if (loader.item && loader.item.tryGoBack())
+                    return
                 if (SQUtils.Utils.isAndroid)
                     MobileUI.backToHomeScreen()
                 else
                     applicationWindow.showMinimized()
-            // In case not logged in or loading, quit app
+                return
             } else if (!loader.item) {
                 close.accepted = true
             }

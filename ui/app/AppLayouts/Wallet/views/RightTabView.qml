@@ -303,51 +303,32 @@ RightTabBaseView {
                     id: assetsView
 
                     AssetsView {
-                        AssetsViewAdaptor {
-                            id: assetsViewAdaptor
+                        id: walletAssetsView
 
-                            accounts: RootStore.addressFilters
-                            chains: root.networksStore.networkFilters
-
-                            marketValueThreshold:
-                                RootStore.tokensStore.displayAssetsBelowBalance
-                                ? RootStore.tokensStore.getDisplayAssetsBelowBalanceThresholdDisplayAmount()
-                                : 0
-
-                            Connections {
-                                target: RootStore.tokensStore
-
-                                function displayAssetsBelowBalanceThresholdChanged() {
-                                    assetsViewAdaptor.marketValueThresholdChanged()
-                                }
-                            }
-
-                            tokensModel: RootStore.walletAssetsStore.groupedAccountAssetsModel
-
-                            formatBalance: (balance, key) => {
-                                return LocaleUtils.currencyAmountToLocaleString(
-                                                   RootStore.currencyStore.getCurrencyAmount(balance, key))
-                            }
-
-                            chainsError: (chains) => {
-                                if (!root.networkConnectionStore)
-                                    return ""
-                                return root.networkConnectionStore.getBlockchainNetworkDownText(chains)
-                            }
+                        formatBalance: (balance, key) => {
+                            return LocaleUtils.currencyAmountToLocaleString(
+                                               RootStore.currencyStore.getCurrencyAmount(balance, key))
                         }
+
+                        chainsError: (chains) => {
+                            if (!root.networkConnectionStore)
+                                return ""
+                            return root.networkConnectionStore.getBlockchainNetworkDownText(chains)
+                        }
+
+                        onSortRequested: (roleName, order) => RootStore.walletAssetsStore.sortAssets(roleName, order)
 
                         function refreshSortSettings() {
                             settings.category = settingsCategoryName
                             walletSettings.sync()
                             settings.sync()
-                            let value = SortOrderComboBox.TokenOrderBalance
                             if (walletSettings.assetsViewCustomOrderApplyTimestamp > settings.sortOrderUpdateTimestamp && customOrderAvailable) {
-                                value = SortOrderComboBox.TokenOrderCustom
+                                sortByValue(SortOrderComboBox.TokenOrderCustom)
+                                setSortOrder(Qt.AscendingOrder) // same as SortOrderComboBox.onActivated for Custom order
                             } else {
-                                value = settings.currentSortValue
+                                sortByValue(settings.currentSortValue)
+                                setSortOrder(settings.currentSortOrder)
                             }
-                            sortByValue(value)
-                            setSortOrder(settings.currentSortOrder)
                         }
 
                         function saveSortSettings() {
@@ -373,6 +354,7 @@ RightTabBaseView {
                             id: walletSettings
                             category: "walletSettings-" + root.contactsStore.myPublicKey
                             property var assetsViewCustomOrderApplyTimestamp
+                            onAssetsViewCustomOrderApplyTimestampChanged: walletAssetsView.refreshSortSettings()
                         }
 
                         readonly property var settings: Settings { /* https://bugreports.qt.io/browse/QTBUG-135039 */
@@ -385,7 +367,7 @@ RightTabBaseView {
                         loading: RootStore.overview.balanceLoading
                         sorterVisible: filterButton.checked
                         customOrderAvailable: RootStore.walletAssetsStore.assetsController.hasSettings
-                        model: assetsViewAdaptor.model
+                        model: RootStore.walletAssetsStore.assetsModel
                         bannerComponent: buyReceiveBannerComponent
 
                         marketDataError: !!root.networkConnectionStore
@@ -420,15 +402,15 @@ RightTabBaseView {
                         onCommunityClicked: Global.switchToCommunity(communityKey)
 
                         onHideRequested: (key) => {
-                                             const token = SQUtils.ModelUtils.getByKey(model, "key", key)
-                                             Global.openConfirmHideAssetPopup(token.symbol, token.name, token.icon, !!token.communityId)
+                                             const token = SQUtils.ModelUtils.getByKey(RootStore.walletAssetsStore.groupedAccountAssetsModel, "key", key)
+                                             Global.openConfirmHideAssetPopup(token.symbol, token.name, token.logoUri || Constants.tokenIcon(token.symbol, false), !!token.communityId)
                                          }
                         onHideCommunityAssetsRequested:
                             (communityKey) => {
-                                const community = SQUtils.ModelUtils.getByKey(model, "communityId", communityKey)
+                                const community = SQUtils.ModelUtils.getByKey(RootStore.walletAssetsStore.groupedAccountAssetsModel, "communityId", communityKey)
                                 confirmHideCommunityAssetsPopup.createObject(root, {
                                                                                  name: community.communityName,
-                                                                                 icon: community.communityIcon,
+                                                                                 icon: community.communityImage,
                                                                                  communityId: communityKey }
                                                                              ).open()
                             }
@@ -437,9 +419,16 @@ RightTabBaseView {
                                                      Constants.settingsSubsection.wallet,
                                                      Constants.walletSettingsSubsection.manageAssets)
                         onAssetClicked: (key) => {
-                            const tokenGroup = SQUtils.ModelUtils.getByKey(model, "key", key)
+                            const tokenGroup = SQUtils.ModelUtils.getByKey(RootStore.walletAssetsStore.groupedAccountAssetsModel, "key", key)
+                            const listAsset = SQUtils.ModelUtils.getByKey(RootStore.walletAssetsStore.assetsModel, "key", key)
 
-                            assetDetailView.tokenGroup = tokenGroup
+                            assetDetailView.tokenGroup = listAsset ? Object.assign({}, tokenGroup, {
+                                balance: listAsset.balance,
+                                balanceLoading: listAsset.balanceLoading,
+                                marketPrice: listAsset.marketPrice,
+                                balanceText: LocaleUtils.currencyAmountToLocaleString(
+                                    RootStore.currencyStore.getCurrencyAmount(listAsset.balance, key)),
+                            }) : tokenGroup
                             RootStore.setCurrentViewedHolding(tokenGroup.key, Constants.TokenType.ERC20, tokenGroup.communityId ?? "")
                             stack.currentIndex = 2
                         }
@@ -454,14 +443,13 @@ RightTabBaseView {
                             settings.category = settingsCategoryName
                             walletSettings.sync()
                             settings.sync()
-                            let value = SortOrderComboBox.TokenOrderBalance
                             if (walletSettings.collectiblesViewCustomOrderApplyTimestamp > settings.sortOrderUpdateTimestamp && customOrderAvailable) {
-                                value = SortOrderComboBox.TokenOrderCustom
+                                sortByValue(SortOrderComboBox.TokenOrderCustom)
+                                setSortOrder(Qt.AscendingOrder) // same as SortOrderComboBox.onActivated for Custom order
                             } else {
-                                value = settings.currentSortValue
+                                sortByValue(settings.currentSortValue)
+                                setSortOrder(settings.currentSortOrder)
                             }
-                            sortByValue(value)
-                            setSortOrder(settings.currentSortOrder)
                         }
 
                         function saveSortSettings() {
@@ -479,6 +467,13 @@ RightTabBaseView {
 
                         Component.onCompleted: refreshSortSettings()
                         Component.onDestruction: saveSortSettings()
+
+                        Connections {
+                            target: walletSettings
+                            function onCollectiblesViewCustomOrderApplyTimestampChanged() {
+                                collView.refreshSortSettings()
+                            }
+                        }
 
                         readonly property var settings: Settings { /* https://bugreports.qt.io/browse/QTBUG-135039 */
                             id: settings

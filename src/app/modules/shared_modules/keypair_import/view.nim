@@ -1,5 +1,4 @@
 import nimqml
-import dotherside_ext
 import io_interface
 import internal/[state, state_wrapper]
 import app/modules/shared_models/[keypair_model, derived_address_model]
@@ -21,6 +20,21 @@ QtObject:
       connectionStringError: string
 
   proc delete*(self: View)
+
+  # Slots wired by newView's QObject.connect calls below; the connect macro
+  # introspects each slot via getImpl, so they must be defined before newView.
+  proc onBackActionClicked*(self: View) {.slot.} =
+    self.delegate.onBackActionClicked()
+
+  proc onCancelActionClicked*(self: View) {.slot.} =
+    self.delegate.onCancelActionClicked()
+
+  proc onPrimaryActionClicked*(self: View) {.slot.} =
+    self.delegate.onPrimaryActionClicked()
+
+  proc onSecondaryActionClicked*(self: View) {.slot.} =
+    self.delegate.onSecondaryActionClicked()
+
   proc newView*(delegate: io_interface.AccessInterface): View =
     new(result, delete)
     result.QObject.setup
@@ -33,10 +47,10 @@ QtObject:
     result.privateKeyAccAddressVariant = newQVariant(result.privateKeyAccAddress)
     result.enteredPrivateKeyMatchTheKeypair = false
 
-    signalConnect(result.currentState, "backActionClicked()", result, "onBackActionClicked()", 2)
-    signalConnect(result.currentState, "cancelActionClicked()", result, "onCancelActionClicked()", 2)
-    signalConnect(result.currentState, "primaryActionClicked()", result, "onPrimaryActionClicked()", 2)
-    signalConnect(result.currentState, "secondaryActionClicked()", result, "onSecondaryActionClicked()", 2)
+    discard QObject.connect(result.currentState, backActionClicked, result, onBackActionClicked, ConnectionType.QueuedConnection)
+    discard QObject.connect(result.currentState, cancelActionClicked, result, onCancelActionClicked, ConnectionType.QueuedConnection)
+    discard QObject.connect(result.currentState, primaryActionClicked, result, onPrimaryActionClicked, ConnectionType.QueuedConnection)
+    discard QObject.connect(result.currentState, secondaryActionClicked, result, onSecondaryActionClicked, ConnectionType.QueuedConnection)
 
   proc currentStateObj*(self: View): State =
     return self.currentState.getStateObj()
@@ -47,18 +61,6 @@ QtObject:
     return self.currentStateVariant
   QtProperty[QVariant] currentState:
     read = getCurrentState
-
-  proc onBackActionClicked*(self: View) {.slot.} =
-    self.delegate.onBackActionClicked()
-
-  proc onCancelActionClicked*(self: View) {.slot.} =
-    self.delegate.onCancelActionClicked()
-
-  proc onPrimaryActionClicked*(self: View) {.slot.} =
-    self.delegate.onPrimaryActionClicked()
-
-  proc onSecondaryActionClicked*(self: View) {.slot.} =
-    self.delegate.onSecondaryActionClicked()
 
   proc authenticationRequested*(self: View, keyUid: string) {.signal.}
   proc emitAuthenticationRequested*(self: View, keyUid: string) =

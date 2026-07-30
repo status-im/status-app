@@ -1,5 +1,5 @@
 import tables, nimqml, sequtils, sugar, stint, strutils, chronicles
-import dotherside_ext
+import app/global/html_utils
 
 import ./io_interface, ./view, ./controller, ./network_route_item, ./transaction_routes, ./suggested_route_item, ./suggested_route_model, ./gas_estimate_item, ./gas_fees_item, ./network_route_model
 import ../io_interface as delegate_interface
@@ -68,8 +68,12 @@ method delete*(self: Module) =
 
 proc clearTmpData(self: Module, keepUuid = false) =
   if keepUuid:
+    # Read the field into a local before reassigning: building the new object directly from
+    # self.tmpSendTransactionDetails.uuid while assigning back to self.tmpSendTransactionDetails
+    # hits an ARC/ORC sink-move that zeroes the source first, silently dropping the "kept" value.
+    let uuid = self.tmpSendTransactionDetails.uuid
     self.tmpSendTransactionDetails = TmpSendTransactionDetails(
-      uuid: self.tmpSendTransactionDetails.uuid
+      uuid: uuid
     )
     return
   self.tmpSendTransactionDetails = TmpSendTransactionDetails()
@@ -384,7 +388,7 @@ method splitAndFormatAddressPrefix*(self: Module, text : string, updateInStore: 
   var chainFound = false
   var editedText = ""
 
-  for word in plainText(text).split(':'):
+  for word in html_utils.plain_text(text).split(':'):
     if word.startsWith("0x"):
       editedText = editedText & word
     else:

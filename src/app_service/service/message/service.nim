@@ -1,5 +1,5 @@
 import nimqml, tables, json, regex, sequtils, std/strformat, strutils, chronicles, times, oids, uuids
-import dotherside_ext
+import ../../common/utils as common_utils
 
 import ../../../app/core/tasks/[qt, threadpool]
 import ../../../app/core/signals/types
@@ -570,6 +570,12 @@ QtObject:
 
         token = tokenFound
         break
+
+    if token.isNil:
+      # Defensive: the native anchor above resolves synchronously (getTokenByChainAddress
+      # synthesizes native tokens), so this should not happen; guard the deref anyway in
+      # case neither the native nor a contract token is available (nil-first).
+      return ("", message.transactionParameters.value)
 
     let tokenStr = $(Json.encode(token))
     var weiStr = service_conversion.wei2Eth(message.transactionParameters.value, token.decimals)
@@ -1229,7 +1235,7 @@ QtObject:
 
 # See render-inline in status-mobile/src/status_im/ui/screens/chat/message/message.cljs
 proc renderInline(self: Service, parsedText: ParsedText, communityChats: openArray[ChatDto]): string =
-  let value = escape_html(parsedText.literal)
+  let value = common_utils.escape_html(parsedText.literal)
     .multiReplace(("\r\n", "<br/>"))
     .multiReplace(("\n", "<br/>"))
     .multiReplace(("  ", "&nbsp;&nbsp;"))
@@ -1284,11 +1290,11 @@ proc getRenderedText*(self: Service, parsedTextArray: seq[ParsedText], community
       of PARSED_TEXT_TYPE_BLOCKQUOTE:
         # strip trailing whitespace so a trailing newline doesn't become a
         # trailing <br/> (which would add an empty line to the quote block)
-        let quoted = escape_html(parsedText.literal.strip(leading = false))
+        let quoted = common_utils.escape_html(parsedText.literal.strip(leading = false))
           .multiReplace(("\r\n", "<br/>"), ("\n", "<br/>"))
         result = result & "<blockquote>" & quoted & "</blockquote>"
       of PARSED_TEXT_TYPE_CODEBLOCK:
-        result = result & "<code>" & escape_html(parsedText.literal) & "</code>"
+        result = result & "<code>" & common_utils.escape_html(parsedText.literal) & "</code>"
     result = result.strip()
 
 # Parses the message and returns the plain text representation of it.

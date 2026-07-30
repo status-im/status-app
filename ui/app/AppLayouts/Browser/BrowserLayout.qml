@@ -66,6 +66,24 @@ StatusSectionLayout {
         webViewContext.reloadCurrent()
     }
 
+    // Drive the current tab from Storybook / automation (web content is not in AX).
+    function runJsOnCurrentTab(script, callback) {
+        const wv = _internal.currentWebView
+        if (!wv || typeof wv.runJavaScript !== "function")
+            return
+        if (typeof wv.ensureLoaded === "function")
+            wv.ensureLoaded()
+        wv.runJavaScript(script, callback)
+    }
+
+    function clearSiteDataOnCurrentTab() {
+        webViewContext.clearSiteDataCurrent()
+    }
+
+    function clearBrowsingDataOnCurrentTab() {
+        webViewContext.clearBrowsingDataCurrent()
+    }
+
     function applyIncognitoMode(checked) {
         webViewContext.setIncognitoCurrent(checked)
         if (!checked && root.connectorController)
@@ -75,9 +93,47 @@ StatusSectionLayout {
     function saveBrowserSession() {
         savedSessionContext.saveSession()
     }
+    // Innermost Back tier: the current tab's web history. StatusSectionLayout
+    // tries this before the view tier and the tab (subsection) tier.
+    contentHistory: QtObject {
+        readonly property bool canGoBack: _internal.currentWebView?.canGoBack ?? false
+
+        function tryGoBack() {
+            if (!canGoBack)
+                return false
+            webViewContext.goBackCurrent()
+            return true
+        }
+    }
+
+    // Subsection back history: each tab keyed by the webview's stable `uid`
+    // (indices shift when tabs close).
+    subsectionHistory: SQUtils.SubsectionNavigationHistory {
+        id: tabHistory
+        currentKey: _internal.currentWebView ? _internal.currentWebView.uid : ""
+        validateFn: (uid) => {
+            for (let i = 0; i < tabs.count; i++) {
+                const wv = webViewContext.getWebView(i)
+                if (wv && wv.uid === uid)
+                    return true
+            }
+            return false
+        }
+        onNavigateRequested: (uid) => {
+            for (let i = 0; i < tabs.count; i++) {
+                const wv = webViewContext.getWebView(i)
+                if (wv && wv.uid === uid) {
+                    tabs.activateTab(i)
+                    return
+                }
+            }
+        }
+    }
 
     Component.onCompleted: {
         savedSessionContext.restoreSession()
+        // Session-restore tab churn must not be treated as user navigation.
+        tabHistory.clear()
     }
 
     Component.onDestruction: {
@@ -558,6 +614,7 @@ StatusSectionLayout {
         active: root.visible
         sourceComponent: BrowserShortcutActions {
             currentWebView: _internal.currentWebView
+            isMobile: SQUtils.Utils.isMobile
             onActivateAddressBar: browserToolbarLoader.activateAddressBar()
             onHideFindBar: _internal.hideFindBar()
             onFindNextRequested: findBar.findNext()
@@ -650,6 +707,11 @@ StatusSectionLayout {
         incognitoMode: _internal.currentTabIncognito
         zoomFactor: _internal.currentWebView?.zoomFactor ?? 1
         browserSettings: localAccountSensitiveSettings
+        clearingBrowsingData: _internal.currentWebView?.clearing ?? false
+        clearSiteDataSupported: _internal.currentWebView?.clearSiteDataSupported ?? true
+        onForceReload: webViewContext.forceReloadCurrent()
+        onClearSiteData: webViewContext.clearSiteDataCurrent()
+        onClearBrowsingData: webViewContext.clearBrowsingDataCurrent()
         onAddNewTab: _internal.addNewEmptyTab()
         onAddNewDownloadTab: _internal.addNewDownloadTab()
         onGoIncognito: (checked) => root.applyIncognitoMode(checked)
@@ -657,17 +719,7 @@ StatusSectionLayout {
         onZoomOut: webViewContext.changeZoomCurrent(-0.1)
         onResetZoomFactor: webViewContext.resetZoomCurrent()
         onLaunchFindBar: _internal.showFindBar()
-        onToggleCompatibilityMode: function(checked) {
-            for (let i = 0; i < tabs.count; ++i){
-                webViewContext.getWebView(i).stop() // Stop all loading tabs
-            }
-
-            localAccountSensitiveSettings.compatibilityMode = checked;
-
-            for (let i = 0; i < tabs.count; ++i){
-                webViewContext.getWebView(i).reload() // Reload them with new user agent
-            }
-        }
+        onToggleCompatibilityMode: (checked) => webViewContext.setCompatibilityMode(checked)
         onLaunchBrowserSettings: {
             Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings);
         }
@@ -687,6 +739,14 @@ StatusSectionLayout {
 
         supportsFind: _internal.currentTabSupportsFindInPage
         onLaunchFindBar: _internal.showFindBar()
+
+        clearSiteDataSupported: _internal.currentWebView?.clearSiteDataSupported ?? false
+        clearing: _internal.currentWebView?.clearing ?? false
+        compatibilityMode: localAccountSensitiveSettings.compatibilityMode
+        onForceReload: webViewContext.forceReloadCurrent()
+        onClearSiteData: webViewContext.clearSiteDataCurrent()
+        onClearBrowsingData: webViewContext.clearBrowsingDataCurrent()
+        onToggleCompatibilityMode: (checked) => webViewContext.setCompatibilityMode(checked)
 
         onGoIncognito: checked => root.applyIncognitoMode(checked)
         onSettingsRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings)

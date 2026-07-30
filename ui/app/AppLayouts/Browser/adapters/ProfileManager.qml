@@ -1,9 +1,14 @@
 import QtQuick
 import QtWebEngine
 
+import StatusQ.Internal
+
 QtObject {
     id: root
     property var profiles: ({})
+    // Chromium default UA (same for all profiles in a Qt build). Snapshot before
+    // Binding override — httpUserAgent="" does not restore navigator.userAgent.
+    property string defaultHttpUserAgent: ""
 
     function _key(userUID, offTheRecord) {
         return userUID + "::" + (offTheRecord ? "otr" : "default")
@@ -50,6 +55,11 @@ QtObject {
                 profileParams.offTheRecord,
                 key)
             p = prototype.instance()
+            // Live cookie index for per-site clear (Qt 6 loadAllCookies is a no-op
+            // for re-emitting existing cookies — see BrowserProfileUtils).
+            BrowserProfileUtils.trackProfile(p)
+            if (!root.defaultHttpUserAgent)
+                root.defaultHttpUserAgent = p.httpUserAgent
             root.profiles[key] = p
         }
 

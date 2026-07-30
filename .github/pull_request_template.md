@@ -12,6 +12,21 @@
 My PR is consistent with this document: [QML Architecture Guidelines](/guidelines/QML_ARCHITECTURE_GUIDE.md)
 - [ ] I have updated the necessary documentation if needed (eg: updated BUILDING.md if I updated dependencies)
 
+### Copilot review guidance
+
+When asking GitHub Copilot to review this PR, include:
+
+- https://github.com/TheQtCompanyRnD/agent-skills/tree/main/skills/qt-qml
+- https://github.com/TheQtCompanyRnD/agent-skills/tree/main/skills/qt-qml-review
+- https://github.com/TheQtCompanyRnD/agent-skills/tree/main/skills/qt-ui-design
+- https://github.com/TheQtCompanyRnD/agent-skills/tree/main/skills/qt-cpp-review
+
+Also ask Copilot to align feedback with repository architecture boundaries:
+
+- QML/StatusQ: presentation and interaction
+- Nim (`src/`): orchestration, signals, module wiring
+- `vendor/status-go`: backend logic, persistence, protocol, notifications
+
 ### Screencapture of the functionality
 
 <!-- Gif/Video or screenshot that demonstrates the functionality, especially important if it's a bug fix. -->

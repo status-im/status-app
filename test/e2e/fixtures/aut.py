@@ -13,6 +13,9 @@ from scripts.utils.system_path import SystemPath
 
 LOG = logging.getLogger(__name__)
 
+# Parametrize sentinel: fresh benchmark runs need a new RandomUser, not None.
+FRESH_USER_ACCOUNT = object()
+
 
 @pytest.fixture
 def options(request):
@@ -52,9 +55,12 @@ def application_logs():
 @pytest.fixture
 def user_data(request) -> system_path.SystemPath:
     if hasattr(request, 'param'):
+        if request.param is None:
+            return None
         fp = request.param
         assert fp.is_dir()
         return fp
+    return None
 
 
 @pytest.fixture
@@ -86,11 +92,11 @@ def main_window(aut: AUT, user_data):
 @pytest.fixture
 def user_account(request) -> UserAccount:
     if hasattr(request, 'param'):
-        user_account = request.param
-        assert isinstance(user_account, UserAccount)
-    else:
-        user_account = constants.user.RandomUser()
-    yield user_account
+        if request.param is FRESH_USER_ACCOUNT or request.param is None:
+            return constants.user.RandomUser()
+        assert isinstance(request.param, UserAccount)
+        return request.param
+    return constants.user.RandomUser()
 
 
 @pytest.fixture

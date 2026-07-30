@@ -21,10 +21,16 @@ if hostOS == "macosx":
   switch("passL", "-lstdc++")
   # DYLD_LIBRARY_PATH doesn't always work when running/packaging so set rpath
   # note: macdeployqt rewrites rpath appropriately when building the .app bundle
-  switch("passL", "-rpath" & " " & getEnv("QT_LIBDIR"))
-  switch("passL", "-rpath" & " " & getEnv("STATUSGO_LIBDIR"))
-  switch("passL", "-rpath" & " " & getEnv("STATUSKEYCARD_QT_LIBDIR"))
-  switch("passL", "-rpath" & " " & getEnv("STATUSQ_INSTALL_PATH") & "/StatusQ")
+  # Guard against empty env vars: an empty value would emit a bare "-rpath " (no
+  # path), which the linker mis-parses — it consumes the next -rpath flag as its
+  # argument and leaves a real path dangling as an input file
+  # ("ld: file cannot be mmap()ed"). Only emit the flag when the dir is non-empty.
+  for rpathDir in [getEnv("QT_LIBDIR"), getEnv("STATUSGO_LIBDIR"), getEnv("STATUSKEYCARD_QT_LIBDIR")]:
+    if rpathDir.len > 0:
+      switch("passL", "-rpath " & rpathDir)
+  let statusqInstallPath = getEnv("STATUSQ_INSTALL_PATH")
+  if statusqInstallPath.len > 0:
+    switch("passL", "-rpath " & statusqInstallPath & "/StatusQ")
   # statically link these libs
   switch("passL", "bottles/openssl@3/lib/libcrypto.a")
   switch("passL", "bottles/openssl@3/lib/libssl.a")

@@ -1,7 +1,8 @@
-import tables, json, options, tables, strutils, times, chronicles
+import tables, json, options, tables, strutils, chronicles
 
 import constants
 import app_service/service/stickers/dto/stickers
+import app_service/common/utils # timestampToUnix (do not rely on the stickers dto's transitive include)
 
 include app_service/common/json_utils
 from app_service/common/types import StatusType
@@ -55,6 +56,7 @@ const KEY_DISPLAY_ASSETS_BELOW_BALANCE_THRESHOLD* = "display-assets-below-balanc
 const KEY_COLLECTIBLE_GROUP_BY_COMMUNITY* = "collectible-group-by-community?"
 const KEY_COLLECTIBLE_GROUP_BY_COLLECTION* = "collectible-group-by-collection?"
 const PROFILE_MIGRATION_NEEDED* = "profile-migration-needed"
+const KEY_AUTO_APPLY_KEYPAIR_MIGRATIONS* = "auto-apply-keypair-migrations"
 const KEY_URL_UNFURLING_MODE* = "url-unfurling-mode"
 const KEY_AUTO_REFRESH_TOKENS* = "auto-refresh-tokens-enabled"
 const KEY_LAST_TOKENS_UPDATE* = "last-tokens-update"
@@ -173,6 +175,7 @@ type
     notificationsVolume*: int
     notificationsMessagePreview*: int
     profileMigrationNeeded*: bool
+    autoApplyKeypairMigrations*: bool
     tokenGroupByCommunity*: bool
     showCommunityAssetWhenSendingTokens*: bool
     displayAssetsBelowBalance*: bool
@@ -244,6 +247,7 @@ proc toSettingsDto*(jsonObj: JsonNode): SettingsDto =
   discard jsonObj.getProp(KEY_COLLECTIBLE_GROUP_BY_COMMUNITY, result.collectibleGroupByCommunity)
   discard jsonObj.getProp(KEY_COLLECTIBLE_GROUP_BY_COLLECTION, result.collectibleGroupByCollection)
   discard jsonObj.getProp(PROFILE_MIGRATION_NEEDED, result.profileMigrationNeeded)
+  discard jsonObj.getProp(KEY_AUTO_APPLY_KEYPAIR_MIGRATIONS, result.autoApplyKeypairMigrations)
   discard jsonObj.getProp(KEY_AUTO_REFRESH_TOKENS, result.autoRefreshTokens)
   discard jsonObj.getProp(KEY_BACKUP_PATH, result.backupPath)
   discard jsonObj.getProp(KEY_MESSAGES_BACKUP_ENABLED, result.messagesBackupEnabled)
@@ -251,12 +255,11 @@ proc toSettingsDto*(jsonObj: JsonNode): SettingsDto =
 
   var lastTokensUpdate: string
   discard jsonObj.getProp(KEY_LAST_TOKENS_UPDATE, lastTokensUpdate)
-  if lastTokensUpdate == "":
-    try:
-      let dateTime = parse(lastTokensUpdate, DATE_TIME_FORMAT_2)
-      result.lastTokensUpdate = dateTime.toTime().toUnix()
-    except Exception as e:
-      warn "failed to parse lastTokensUpdate: ", data=lastTokensUpdate, errName = e.name, errDesription = e.msg
+  # timestampToUnix accepts the formats seen in the field and returns 0 without
+  # raising on empty/unparseable input, so this stays off the exception path at wake.
+  # Module-qualified: the stickers dto textually `include`s common/utils, so an
+  # unqualified call is ambiguous once we depend on utils explicitly (below).
+  result.lastTokensUpdate = utils.timestampToUnix(lastTokensUpdate)
 
   var urlUnfurlingMode: int
   discard jsonObj.getProp(KEY_URL_UNFURLING_MODE, urlUnfurlingMode)

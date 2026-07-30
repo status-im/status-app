@@ -10,3 +10,6 @@ proc delete*(self: ExportKeypairState) =
 
 method executePrePrimaryStateCommand*(self: ExportKeypairState, controller: Controller) =
   controller.closeKeypairImportPopup()
+
+method executePreSecondaryStateCommand*(self: ExportKeypairState, controller: Controller) =
+  controller.authenticateLoggedInUser()

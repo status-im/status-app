@@ -52,11 +52,12 @@ StatusSectionLayout {
 
     QtObject {
         id: d
-        readonly property bool isNarrowView: root.width < root.height
+        readonly property bool isNarrowView: root.width < ThemeUtils.portraitBreakpoint.width
     }
 
     centerPanel: Item {
         anchors.fill: parent
+        anchors.topMargin: Theme.defaultBigPadding * 2
 
         MouseArea { // eat every event behind the control
             anchors.fill: parent
@@ -67,10 +68,6 @@ StatusSectionLayout {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.topMargin: Theme.defaultBigPadding * 2
-            anchors.bottomMargin: Theme.smallPadding * 2
-            anchors.leftMargin: Theme.defaultSmallPadding * 2
-            anchors.rightMargin: Theme.defaultSmallPadding * 2
             spacing: Theme.defaultPadding
 
             Rectangle {
@@ -86,6 +83,8 @@ StatusSectionLayout {
                     id: searchField
                     objectName: "homeSearchField"
                     anchors.fill: parent
+                    anchors.leftMargin: Theme.defaultSmallPadding * 2
+                    anchors.rightMargin: Theme.defaultSmallPadding * 2
 
                     font.pixelSize: d.isNarrowView ? Theme.fontSize(23) : Theme.fontSize(27)
 
@@ -113,7 +112,7 @@ StatusSectionLayout {
                 model: root.homePageEntriesModel
                 delegateWidth: d.isNarrowView ? 120 : 160
                 delegateHeight: d.isNarrowView ? 135 : 160
-                spacing: d.isNarrowView ? Theme.defaultHalfPadding : Theme.defaultPadding
+                spacing: d.isNarrowView ? 6 : Theme.defaultSmallPadding
 
                 onItemActivated: function(key, sectionType, itemId) {
                     root.itemActivated(key, sectionType, itemId)

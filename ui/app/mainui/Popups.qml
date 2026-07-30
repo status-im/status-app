@@ -111,6 +111,28 @@ QtObject {
         }
     }
 
+    readonly property var communityFetchPopup: CommunityFetchPopup {
+        parent: root.popupParent
+        state: root.communitiesStore.communityFetchState
+        timeoutSeconds: root.communitiesStore.communityFetchTimeoutSeconds
+
+        onCancelRequested: root.communitiesStore.cancelPendingCommunityFetch()
+        onTimeoutRequested: root.communitiesStore.timeoutPendingCommunityFetch()
+        onDismissFailedRequested: root.communitiesStore.clearCommunityFetchFailure()
+        onRetryRequested: root.communitiesStore.retryCommunityFetch()
+    }
+
+    readonly property Connections communityFetchConnections: Connections {
+        target: root.communitiesStore
+
+        function onCommunityFetchStateChanged() {
+            if (root.communitiesStore.communityFetchState === Constants.CommunityFetchState.Idle)
+                root.communityFetchPopup.close()
+            else
+                root.communityFetchPopup.open()
+        }
+    }
+
     property var activePopupComponents: []
 
     property var sharedContactModelEntryLoader: Loader {
@@ -235,11 +257,11 @@ QtObject {
         openPopup(signingPopupComponent, { reason: reason, keyUid: finalKeyUid, txHash: txHash, path: path, address: address })
     }
 
-    function openKeycardManagementPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson) {
+    function openKeycardManagementPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson, useExistingKeycardWhenMigratingProfileToKeycard = false) {
         let finalFlow = flow
         let finalKeyUid = keyUid
 
-        // if no keyUid is set, follow the flow, otherwise, validate and adjust params
+        // if keyUid is set validate and adjust the flow, or if not set try to set it based on flow, or if cannot be determined just follow the flow
         if (!!finalKeyUid) {
             switch(flow) {
             case Constants.keycard.flow.moveKeyPair:
@@ -263,6 +285,10 @@ QtObject {
                 }
                 break
             }
+        } else if (flow === Constants.keycard.flow.moveProfileKeyPair ||
+                   flow === Constants.keycard.flow.stopUsingKeycardForProfile) {
+            finalKeyUid = root.keycardManagementStore.userProfileKeyUid
+
         }
 
         if (finalFlow !== flow) {
@@ -276,8 +302,13 @@ QtObject {
             keyUid: finalKeyUid,
             keycardUid: keycardUid,
             cardMetadataName: cardMetadataName,
-            cardMetadataWalletAccountsJson: cardMetadataWalletAccountsJson
+            cardMetadataWalletAccountsJson: cardMetadataWalletAccountsJson,
+            useExistingKeycardWhenMigratingProfileToKeycard: useExistingKeycardWhenMigratingProfileToKeycard
         })
+    }
+
+    function openAlignWithPairedDevicePopup(migrateToKeycard) {
+        openPopup(alignWithPairedDevicePopupComponent, { migrateToKeycard })
     }
 
     function openCommunityProfilePopup(store, community, communitySectionModule) {
@@ -355,7 +386,8 @@ QtObject {
             messageStore: messageStore,
             pinnedMessagesModel: pinnedMessagesModel,
             messageToPin: messageToPin,
-            chatId: chatId
+            chatId: chatId,
+            isPinActionAvailable: store && store.oneToOneChatContact ? store.oneToOneChatContact.isContact : true
         })
     }
 
@@ -717,6 +749,7 @@ QtObject {
                 store: root.authenticationStore
                 keychain: root.keychain
                 onAuthenticationSuccess: function(reason, password, pin, keyUid, chatPrivateKey) {
+                    root.authenticationStore.passwordProvided(keyUid, password)
                     Global.authenticationResult(reason, password, pin, keyUid, chatPrivateKey)
                 }
 
@@ -734,6 +767,11 @@ QtObject {
 
                 store: root.signingStore
                 keychain: root.keychain
+
+                onPasswordProvided: function(password) {
+                    // in case of signing tx via keycard no password (enc pub key)
+                    root.signingStore.passwordProvided(signPopup.keyUid, password)
+                }
 
                 onSigningSuccess: function(signature) {
                     signPopup.resultSignature = signature
@@ -894,7 +932,10 @@ QtObject {
                 onClosed: destroy()
 
                 // Unfurling related requests:
-                onSetNeverAskAboutUnfurlingAgain: root.sharedRootStore.setNeverAskAboutUnfurlingAgain(neverAskAgain)
+                onSetNeverAskAboutUnfurlingAgain: neverAskAgain => root.sharedRootStore.setNeverAskAboutUnfurlingAgain(neverAskAgain)
+                onPinMessageRequested: messageId => messageStore.pinMessage(messageId)
+                onUnpinMessageRequested: messageId => messageStore.unpinMessage(messageId)
+                onJumpToMessageRequested: messageId => messageStore.messageModule.jumpToMessage(messageId)
             }
         },
 
@@ -1327,6 +1368,48 @@ QtObject {
             }
         },
 
+        Component {
+            id: alignWithPairedDevicePopupComponent
+            ConfirmationDialog {
+                property bool migrateToKeycard
+                property bool continueToMigrationFlow: false
+
+                destroyOnClose: true
+                headerSettings.title: qsTr("Align with paired device")
+                showCancelButton: true
+                btnType: ""
+                cancelBtnType: ""
+                confirmButtonLabel: qsTr("Continue")
+                cancelButtonLabel: qsTr("Cancel")
+                confirmationText: "<b>%1</b><br/><br/>%2<br/><br/>%3"
+                    .arg(migrateToKeycard
+                         ? qsTr("Your profile has been migrated to Keycard on paired device")
+                         : qsTr("Your profile has been migrated from Keycard to Status"))
+                    .arg(qsTr("In order to align on the login/signing method on this device, you need to complete the migration flow, clicking the \"Continue\" button below, or cancel this popup if you want to keep the current login/signing method."))
+                    .arg(qsTr("If you don't want to see this message again, go to Settings/Wallet and toggle off \"Automatically apply key pair migrations from paired device\"."))
+
+                onConfirmButtonClicked: {
+                    continueToMigrationFlow = true
+                    close()
+                    root.openKeycardManagementPopup(
+                                migrateToKeycard
+                                ? Constants.keycard.flow.moveProfileKeyPair
+                                : Constants.keycard.flow.stopUsingKeycardForProfile,
+                                "",
+                                "",
+                                "",
+                                "[]",
+                                true /* useExistingKeycardWhenMigratingProfileToKeycard */)
+                }
+                onCancelButtonClicked: close()
+                onClosed: {
+                    if (!continueToMigrationFlow) {
+                        root.rootStore.profileMigrationFlowClosed()
+                    }
+                }
+            }
+        },
+
         // Components related to transfer community ownership flow:
         Component {
             id: finaliseOwnershipPopup
@@ -1514,18 +1597,24 @@ QtObject {
         Component {
             id: buyCryptoModal
             BuyCryptoModal {
+                // Own the buy picker model's lifecycle here: created for this modal
+                // instance and released when it is destroyed (avoids a per-open leak).
+                readonly property var _tokenSelector: WalletStores.RootStore.tokensStore.createTokenSelectorModel(2)
+
                 buyProvidersModel: root.buyCryptoStore.providersModel
                 isBuyProvidersModelLoading: root.buyCryptoStore.areProvidersLoading
-                currentCurrency: root.currencyStore.currentCurrency
+                formatCurrencyBalance: (amount) => root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency)
                 walletAccountsModel: root.rootStore.accounts
                 tokenGroupsModel: root.walletAssetsStore.walletTokensStore.tokenGroupsModel
                 groupedAccountAssetsModel: root.walletAssetsStore.groupedAccountAssetsModel
                 networksModel: root.networksStore.activeNetworks
+                tokenSelectorModel: _tokenSelector.model
                 Component.onCompleted: {
                     fetchProviders.connect(root.buyCryptoStore.fetchProviders)
                     fetchProviderUrl.connect(root.buyCryptoStore.fetchProviderUrl)
                     root.buyCryptoStore.providerUrlReady.connect(providerUrlReady)
                 }
+                Component.onDestruction: WalletStores.RootStore.tokensStore.releaseTokenSelectorModel(_tokenSelector.id)
                 onClosed: destroy()
             }
         },

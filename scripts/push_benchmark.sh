@@ -38,13 +38,21 @@ echo -e "${GRN}Installing dependencies${RST}"
 ${PYTHON_CMD} -m  pip install --upgrade pip
 ${PYTHON_CMD} -m  pip install -r requirements.txt
 
+echo -e "${GRN}Collecting Windows system info${RST}"
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/collect_machine_info.ps1 -OutputPath machine_info.json \
+  || echo -e "${YLW}Warning: failed to collect system info — continuing without it${RST}"
+
+machine_info_args=()
+[[ -s machine_info.json ]] && machine_info_args=(--machine-info machine_info.json)
+
 echo -e "${GRN}Updating data in repo${RST}"
-${PYTHON_CMD} scripts/benchmark.py --config ./scripts/tests_config.toml parse ../test/e2e/allure-report/ --data-dir ./data --commit-hash "${commit_sha}" --date "${date_time}"
+${PYTHON_CMD} scripts/benchmark.py --config ./scripts/tests_config.toml parse ../test/e2e/allure-report/ --data-dir ./data --commit-hash "${commit_sha}" --date "${date_time}" "${machine_info_args[@]}"
 
 echo -e "${GRN}Generating new visualizations from data${RST}"
 ${PYTHON_CMD} scripts/benchmark.py --config ./scripts/tests_config.toml graphs
 
 echo -e "${GRN}Committing changes${RST}"
+rm -f machine_info.json
 git add .
 git commit -m "Add benchmark results for commit ${commit_sha}"
 

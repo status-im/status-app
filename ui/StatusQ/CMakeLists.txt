@@ -30,10 +30,10 @@ if(MSVC)
   add_definitions(/MP)
 endif()
 
-find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
+find_package(QT 6.11 NAMES Qt6 REQUIRED COMPONENTS Core)
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
-        Core CorePrivate Qml Gui Quick QuickControls2 WebChannel Svg REQUIRED)
+        Core CorePrivate Qml Gui GuiPrivate Quick QuickControls2 WebChannel Svg Network REQUIRED)
 
 # --- QML test hooks flag and TestConfig generation ---
 option(STATUSQ_TESTMODE "Enable QML test hooks (TestConfig.testMode)" OFF)
@@ -158,6 +158,7 @@ add_library(StatusQ ${LIB_TYPE}
         ${STATUSQ_QRC_COMPILED}
         ${STATUSQ_TESTCONFIG_RCC}
         include/StatusQ/audioutils.h
+        include/StatusQ/chatinputhighlighter.h
         include/StatusQ/clipboardutils.h
         include/StatusQ/constantrole.h
         include/StatusQ/fastexpressionfilter.h
@@ -167,6 +168,13 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/genericvalidator.h
         include/StatusQ/imageencoderutils.h
         include/StatusQ/keychain.h
+        include/StatusQ/markdownast.h
+        include/StatusQ/markdownhtml.h
+        include/StatusQ/markdownparser.h
+        include/StatusQ/markdownutils.h
+        include/StatusQ/mentiontextobject.h
+        include/StatusQ/osnotification.h
+        include/StatusQ/urlschemeevent.h
         include/StatusQ/NativeSwipeHandlerItem.h
         include/StatusQ/NativeIndicatorItem.h
         include/StatusQ/localnetworkpermission.h
@@ -189,6 +197,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/urlutils.h
         include/StatusQ/statuslayoutstate.h
         src/audioutils.cpp
+        src/chatinputhighlighter.cpp
         src/clipboardutils.cpp
         src/constantrole.cpp
         src/externc.cpp
@@ -199,8 +208,15 @@ add_library(StatusQ ${LIB_TYPE}
         src/genericvalidator.cpp
         src/imageencoderutils.cpp
         src/keychain.cpp
+        src/osnotification.cpp
+        src/urlschemeevent.cpp
         src/localnetworkpermission.cpp
         src/localnetworkpermission_backend.h
+        src/markdownast.cpp
+        src/markdownhtml.cpp
+        src/markdownparser.cpp
+        src/markdownutils.cpp
+        src/mentiontextobject.cpp
         src/networkchecker.cpp
         src/oneoffilter.cpp
         src/permissionutilsinternal.cpp
@@ -242,6 +258,7 @@ add_library(StatusQ ${LIB_TYPE}
         )
 
 target_compile_features(StatusQ PRIVATE cxx_std_17)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::GuiPrivate)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     find_library(AppKit AppKit)
@@ -251,11 +268,14 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_link_libraries(${PROJECT_NAME} PRIVATE ${AppKit} ${Foundation} ${Security} ${LocalAuthentication})
     find_library(WebKit WebKit)
     find_library(QuartzCore QuartzCore)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${AppKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${QuartzCore})
+    find_library(UserNotifications UserNotifications)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${AppKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${QuartzCore} ${UserNotifications})
     qt_import_plugins(${PROJECT_NAME} INCLUDE Qt6::QDarwinCameraPermissionPlugin)
     target_sources(StatusQ PRIVATE
         src/shareutils_other.cpp
         src/keychain_apple.mm
+        src/osnotification_apple.mm
+        src/accessibility_crash_filter.mm
         src/StatusQ/Controls/NativeSwipeHandlerItem_macos.mm
         src/StatusQ/Controls/NativeIndicatorItem_macos.mm
     )
@@ -274,6 +294,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
         src/ios_utils.mm
         src/shareutils_ios.mm
         src/keychain_apple.mm
+        src/accessibility_crash_filter.mm
         src/StatusQ/Controls/NativeSwipeHandlerItem_ios.mm
         src/StatusQ/Controls/NativeIndicatorItem_ios.mm
         src/localnetworkpermission_ios.mm
@@ -294,6 +315,11 @@ else ()
     )
 endif ()
 
+# Shell_NotifyIcon (OSNotification Windows leg) requires shell32 and user32.
+if(WIN32)
+    target_link_libraries(StatusQ PRIVATE shell32 user32)
+endif()
+
 include(FetchContent)
 set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER)
 
@@ -302,7 +328,7 @@ if(IOS OR ANDROID OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
       MobileWebView
 
       GIT_REPOSITORY https://github.com/status-im/mobilewebview.git
-      GIT_TAG b1917e84037ccae2acce76a5f4f60e989a8310f5
+      GIT_TAG 92a4c62212702048715c69a85c82fd87fab47666
       SOURCE_SUBDIR mobilewebview
     )
     FetchContent_MakeAvailable(MobileWebView)
@@ -326,7 +352,7 @@ FetchContent_Declare(
   QtModelsToolkit
 
   GIT_REPOSITORY https://github.com/status-im/QtModelsToolkit.git
-  GIT_TAG b249dc22be1e1e728acce90065f943d7db3636e5
+  GIT_TAG d8b0542011425496b917b8b1e26ad568116d49ce
 )
 
 FetchContent_MakeAvailable(QtModelsToolkit)
@@ -372,11 +398,24 @@ target_link_libraries(StatusQ PRIVATE
         Qt::QuickControls2
         Qt::WebChannel
         Qt::Svg
+        Qt::Network
         SortFilterProxyModel
         QtModelsToolkit
         MobileUI
         SCodes
         )
+
+if(NOT (IOS OR ANDROID))
+    find_package(Qt${QT_VERSION_MAJOR} COMPONENTS WebEngineQuick QUIET)
+    if(TARGET Qt::WebEngineQuick)
+        target_sources(StatusQ PRIVATE
+            include/StatusQ/browserprofileutils.h
+            src/browserprofileutils.cpp
+        )
+        target_link_libraries(StatusQ PRIVATE Qt::WebEngineQuick)
+        target_compile_definitions(StatusQ PRIVATE STATUSQ_HAS_QTWEBENGINE=1)
+    endif()
+endif()
 
 if(TARGET SCodes)
     set_target_properties(SCodes PROPERTIES
@@ -401,6 +440,18 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 target_include_directories(StatusQ PUBLIC include)
+
+option(MONITORING "Build the QML monitoring/introspection tools" OFF)
+set(MONITORING_QML_ENTRY_POINT "" CACHE STRING "QML file that starts the monitoring tool UI")
+if(MONITORING)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/../MonitoringSources.cmake)
+    target_sources(StatusQ PRIVATE ${MONITORING_SOURCES} ${MONITORING_HEADERS})
+    target_include_directories(StatusQ PRIVATE ${MONITORING_INCLUDE_PATH})
+    target_compile_definitions(StatusQ PRIVATE MONITORING
+        MONITORING_QML_ENTRY_POINT="${MONITORING_QML_ENTRY_POINT}")
+    find_package(Qt6 6.11 COMPONENTS QmlPrivate REQUIRED)
+    target_link_libraries(StatusQ PRIVATE Qt::QmlPrivate)
+endif()
 
 install(TARGETS StatusQ
         RUNTIME DESTINATION StatusQ

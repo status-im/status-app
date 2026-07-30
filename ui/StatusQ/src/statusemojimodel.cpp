@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QJsonObject>
+#include <QSettings>
 
 #include <array>
 #include <algorithm>
@@ -27,6 +28,8 @@ const auto skinColors = std::array<const char*, 5>{"1f3fb", "1f3fc", "1f3fd", "1
 constexpr auto MAX_EMOJI_NUMBER = 36;
 
 constexpr auto kRecentCategoryName = "recent"_L1;
+
+constexpr auto kRecentEmojisSettingsEntry = "recentEmojis"_L1;
 }
 
 StatusEmojiModel::StatusEmojiModel(QObject *parent)
@@ -206,6 +209,8 @@ void StatusEmojiModel::addRecentEmoji(const QString &hexcode)
 
 void StatusEmojiModel::cleanAndResizeRecentEmojis()
 {
+    if (m_recentEmojis.isEmpty())
+        return;
     m_recentEmojis.removeDuplicates();
     if (m_recentEmojis.size() > MAX_EMOJI_NUMBER) {
         while (m_recentEmojis.size() > MAX_EMOJI_NUMBER)
@@ -252,4 +257,41 @@ QString StatusEmojiModel::recentCategoryName() const
 QString StatusEmojiModel::baseSkinColorName() const
 {
     return kBaseColor;
+}
+
+QString StatusEmojiModel::userUID() const
+{
+    return m_userUID;
+}
+
+void StatusEmojiModel::setUserUID(const QString &newUserUID)
+{
+    if (m_userUID == newUserUID)
+        return;
+    m_userUID = newUserUID;
+    emit userUIDChanged();
+
+    loadRecentEmojis();
+    connect(this, &StatusEmojiModel::recentEmojisChanged, this, &StatusEmojiModel::saveRecentEmojis);
+}
+
+QString StatusEmojiModel::settingsGroup() const
+{
+    return QStringLiteral("AppMainLocalSettings_%1").arg(m_userUID);
+}
+
+void StatusEmojiModel::saveRecentEmojis()
+{
+    QSettings settings;
+    settings.beginGroup(settingsGroup());
+    settings.setValue(kRecentEmojisSettingsEntry, m_recentEmojis);
+    settings.endGroup();
+}
+
+void StatusEmojiModel::loadRecentEmojis()
+{
+    QSettings settings;
+    settings.beginGroup(settingsGroup());
+    setRecentEmojis(settings.value(kRecentEmojisSettingsEntry).toStringList());
+    settings.endGroup();
 }

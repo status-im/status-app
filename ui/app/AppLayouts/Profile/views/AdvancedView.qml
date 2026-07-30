@@ -38,6 +38,7 @@ SettingsContentBase {
 
     property bool isFleetSelectionEnabled
     property bool isBrowserEnabled: true
+    property bool messageLinkSharingFeatureEnabled: false
     property bool minimizeOnCloseOptionVisible
     property bool refetchTxHistoryClicked: false
     onVisibleChanged: {
@@ -182,12 +183,11 @@ SettingsContentBase {
 
             StatusSettingsLineButton {
                 width: parent.width
-                text: qsTr("Archive Protocol Enabled")
+                text: qsTr("Archive Protocol")
                 visible: !SQUtils.Utils.isMobile
-                isSwitch: true
-                checked: root.advancedStore.archiveProtocolEnabled
+                currentValue: root.advancedStore.archiveProtocolModeLabel
                 onClicked: {
-                    root.advancedStore.toggleArchiveProtocolEnabled()
+                    archiveProtocolModeModal.open()
                 }
             }
 
@@ -201,6 +201,17 @@ SettingsContentBase {
                 }
             }
 
+            StatusSettingsLineButton {
+                width: parent.width
+                visible: root.messageLinkSharingFeatureEnabled
+                text: qsTr("Enable Copying Message Links")
+                isSwitch: true
+                checked: root.advancedStore.copyMessageLinksEnabled
+                onClicked: {
+                    root.advancedStore.toggleCopyMessageLinksEnabled()
+                }
+            }
+
             Separator {
                 width: parent.width
             }
@@ -210,12 +221,13 @@ SettingsContentBase {
                 anchors.right: parent.right
                 anchors.leftMargin: Theme.padding
                 anchors.rightMargin: Theme.padding
-                text: qsTr("WakuV2 options")
+                text: qsTr("Logos Messaging options")
                 topPadding: Theme.bigPadding
                 bottomPadding: Theme.padding
             }
 
             Row {
+                bottomPadding: Theme.padding
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.leftMargin: Theme.padding
@@ -278,21 +290,8 @@ SettingsContentBase {
                 }
             }
 
-            // SYNC WAKU SECTION
-
-            StatusListItem {
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.leftMargin: Theme.padding
-                anchors.rightMargin: Theme.padding
-                title: qsTr("History nodes")
-                label: root.messagingSettingsStore.activeMailserverId || "---"
-                components: [
-                    StatusIcon {
-                        icon: "next"
-                        color: Theme.palette.baseColor1
-                    }
-                ]
+            Separator {
+                width: parent.width
             }
 
             StatusSectionHeadline {
@@ -303,10 +302,6 @@ SettingsContentBase {
                 text: qsTr("Developer features")
                 topPadding: Theme.bigPadding
                 bottomPadding: Theme.padding
-            }
-
-            Separator {
-                width: parent.width
             }
 
             StatusSettingsLineButton {
@@ -497,6 +492,61 @@ SettingsContentBase {
             onVelocityChanged: value => root.advancedStore.setScrollVelocity(value)
             onDecelerationChanged: value => root.advancedStore.setScrollDeceleration(value)
             onCustomScrollingChanged: enabled => root.advancedStore.setCustomScrollingEnabled(enabled)
+        }
+
+        StatusDialog {
+            id: archiveProtocolModeModal
+
+            width: 400
+            modal: true
+            title: qsTr("Archive Protocol")
+
+            contentItem: ColumnLayout {
+                spacing: 2 * Constants.settingsSection.itemSpacing
+
+                ButtonGroup {
+                    id: archiveProtocolModeGroup
+                }
+
+                SettingsRadioButton {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Theme.padding
+                    Layout.rightMargin: Theme.padding
+                    label: qsTr("Disabled")
+                    group: archiveProtocolModeGroup
+                    checked: root.advancedStore.archiveProtocolMode === AdvancedStore.ArchiveProtocolMode.Disabled
+                    onClicked: {
+                        root.advancedStore.setArchiveProtocolMode(AdvancedStore.ArchiveProtocolMode.Disabled)
+                        archiveProtocolModeModal.close()
+                    }
+                }
+
+                SettingsRadioButton {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Theme.padding
+                    Layout.rightMargin: Theme.padding
+                    label: qsTr("Logos Storage")
+                    group: archiveProtocolModeGroup
+                    checked: root.advancedStore.archiveProtocolMode === AdvancedStore.ArchiveProtocolMode.LogosStorage
+                    onClicked: {
+                        root.advancedStore.setArchiveProtocolMode(AdvancedStore.ArchiveProtocolMode.LogosStorage)
+                        archiveProtocolModeModal.close()
+                    }
+                }
+
+                SettingsRadioButton {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Theme.padding
+                    Layout.rightMargin: Theme.padding
+                    label: qsTr("Torrent")
+                    group: archiveProtocolModeGroup
+                    checked: root.advancedStore.archiveProtocolMode === AdvancedStore.ArchiveProtocolMode.Torrent
+                    onClicked: {
+                        root.advancedStore.setArchiveProtocolMode(AdvancedStore.ArchiveProtocolMode.Torrent)
+                        archiveProtocolModeModal.close()
+                    }
+                }
+            }
         }
 
         RPCStatsModal {

@@ -641,9 +641,9 @@ class MessageQuickActions(QObject):
         self._delete_button = Button(
             messaging_names.chatMessageViewDelegate_chatDeleteMessageButton_StatusFlatRoundButton)
         self._reply_button = Button(messaging_names.chatMessageViewDelegate_reply_icon_StatusIcon)
-        self._edit_message_field = TextEdit(messaging_names.edit_inputScrollView_messageInputField_TextArea)
         self._reply_panel = QObject(messaging_names.mainWindow_replyPanel_StatusChatInputReplyPanel)
-        self._save_text_button = Button(messaging_names.chatMessageViewDelegate_Save_StatusButton)
+        self._edit_message_input = QObject(messaging_names.mainWindow_statusChatInput_StatusChatInput)
+        self._edit_message_field = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
         self._message_input_area = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
         self._send_message_button = Button(messaging_names.mainWindow_statusChatInputSendButton)
 
@@ -658,8 +658,9 @@ class MessageQuickActions(QObject):
     @allure.step('Edit message and save changes')
     def edit_message(self, text: str):
         self._edit_button.click()
+        self._edit_message_input.wait_until_appears()
         self._edit_message_field.set_text_property(text)
-        self._save_text_button.click()
+        self._send_message_button.wait_until_enabled().click()
 
     @allure.step('Delete message')
     def delete_message(self):

@@ -77,6 +77,7 @@ StatusSectionLayout {
 
     property bool isKeycardEnabled: true
     property bool isBrowserEnabled: true
+    required property bool messageLinkSharingFeatureEnabled
     required property bool privacyModeFeatureEnabled
     required property bool minimizeOnCloseOptionVisible
 
@@ -87,8 +88,6 @@ StatusSectionLayout {
     property var dismissedReceivedRequestContactsModel
 
     required property int theme // ThemeUtils.Style.xxx
-    required property int fontSize // ThemeUtils.FontSize.xxx
-    required property int paddingFactor // ThemeUtils.PaddingFactor.xxx
 
     required property var whitelistedDomainsModel
  
@@ -98,8 +97,6 @@ StatusSectionLayout {
     signal releaseUsernameRequested(string ensName, string senderAddress, int chainId)
 
     signal themeChangeRequested(int theme)
-    signal fontSizeChangeRequested(int fontSize)
-    signal paddingFactorChangeRequested(int paddingFactor)
     signal leaveCommunityRequest(string communityId)
     signal setCommunityMutedRequest(string communityId, int mutedType)
     signal inviteFriends(var communityData)
@@ -171,6 +168,13 @@ StatusSectionLayout {
 
         syncingBadgeCount: root.devicesStore.totalDevicesCount - root.devicesStore.pairedDevicesCount
         messagingBadgeCount: root.pendingReceivedContactsCount
+    }
+
+    // Subsection back history keyed by the settingsSubsection enum.
+    subsectionHistory: SQUtils.SubsectionNavigationHistory {
+        currentKey: root.settingsSubsection
+        validateFn: (key) => SQUtils.ModelUtils.indexOf(settingsEntriesModel, "subsection", parseInt(key)) >= 0
+        onNavigateRequested: (key) => root.settingsSubsection = parseInt(key)
     }
 
     leftPanel: SettingsLeftTabView {
@@ -372,11 +376,9 @@ StatusSectionLayout {
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.appearance)
                 contentWidth: d.contentWidth
                 theme: root.theme
-                fontSize: root.fontSize
-                paddingFactor: root.paddingFactor
+                uiScaleFile: uiScaleFilePath
                 onThemeChangeRequested: (theme) => root.themeChangeRequested(theme)
-                onFontSizeChangeRequested: (fontSize) => root.fontSizeChangeRequested(fontSize)
-                onPaddingFactorChangeRequested: (paddingFactor) => root.paddingFactorChangeRequested(paddingFactor)
+                onRestartRequested: Qt.callLater(() => SystemUtils.restartApplication())
             }
         }
 
@@ -466,6 +468,7 @@ StatusSectionLayout {
                 walletStore: root.walletStore
                 isFleetSelectionEnabled: fleetSelectionEnabled
                 isBrowserEnabled: root.isBrowserEnabled
+                messageLinkSharingFeatureEnabled: root.messageLinkSharingFeatureEnabled
                 minimizeOnCloseOptionVisible: root.minimizeOnCloseOptionVisible
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.advanced)
                 contentWidth: d.contentWidth
@@ -507,8 +510,6 @@ StatusSectionLayout {
                 implicitHeight: parent.height
 
                 rootStore: root.globalStore
-                currencyStore: root.currencyStore
-                walletAssetsStore: root.walletAssetsStore
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.communitiesSettings)
                 contentWidth: d.contentWidth
                 communitiesList: root.profileStore.communitiesList

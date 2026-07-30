@@ -2,35 +2,23 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
 import StatusQ.Controls
 
 import utils
-import shared
-import shared.panels
-import shared.status
-import shared.popups
-import shared.stores
 
 import SortFilterProxyModel
+import QtModelsToolkit
 
-import "../panels"
-import AppLayouts.Communities.popups
-import AppLayouts.Communities.panels
-import AppLayouts.Profile.stores
-import AppLayouts.Wallet.stores as WalletStore
-import AppLayouts.Chat.stores as ChatStore
+import AppLayouts.Profile.panels
 import AppLayouts.stores as AppLayoutsStores
 
 SettingsContentBase {
     id: root
 
     property AppLayoutsStores.RootStore rootStore
-    required property WalletStore.WalletAssetsStore walletAssetsStore
-    required property CurrenciesStore currencyStore
 
     property var communitiesList
     property var fnIsMyCommunityRequestPending: function(communityId) {}
@@ -39,8 +27,6 @@ SettingsContentBase {
     signal setCommunityMutedRequest(string communityId, int mutedType)
     signal inviteFriends(var communityData)
     signal cancelPendingRequestRequested(string communityId)
-
-    clip: true
 
     titleRowComponentLoader.sourceComponent: StatusButton {
         text: qsTr("Import community")
@@ -56,7 +42,7 @@ SettingsContentBase {
         ColumnLayout {
             id: noCommunitiesLayout
             anchors.fill: parent
-            visible: !root.communitiesList.count
+            visible: root.communitiesList.ModelCount.empty
             Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
 
             Image {
@@ -154,12 +140,15 @@ SettingsContentBase {
 
             Panel {
                 id: panelMembers
-                filters: FastExpressionFilter {
-                    readonly property int ownerRole: Constants.memberRole.owner
-                    readonly property int adminRole: Constants.memberRole.admin
-                    readonly property int tokenMasterRole: Constants.memberRole.tokenMaster
-                    expression: model.joined && model.memberRole !== ownerRole && model.memberRole !== adminRole && model.memberRole !== tokenMasterRole
-                    expectedRoles: ["joined", "memberRole"]
+                filters: AllOf {
+                    ValueFilter {
+                        roleName: "joined"
+                        value: true
+                    }
+                    ValueFilter {
+                        roleName: "memberRole"
+                        value: Constants.memberRole.none
+                    }
                 }
             }
 
@@ -170,9 +159,15 @@ SettingsContentBase {
 
             Panel {
                 id: panelPendingRequests
-                filters: FastExpressionFilter {
-                    expression: model.spectated && !model.joined
-                    expectedRoles: ["joined", "spectated"]
+                filters: AllOf {
+                    ValueFilter {
+                        roleName: "spectated"
+                        value: true
+                    }
+                    ValueFilter {
+                        roleName: "joined"
+                        value: false
+                    }
                 }
             }
         }
@@ -190,7 +185,7 @@ SettingsContentBase {
         property var filters
 
         width: parent.width
-        rootStore: root.rootStore
+        compactMode: root.contentWidth < 560
         fnIsMyCommunityRequestPending: root.fnIsMyCommunityRequestPending
 
         model: SortFilterProxyModel {
@@ -202,21 +197,21 @@ SettingsContentBase {
             root.leaveCommunityRequest(communityId)
         }
 
-        onLeaveCommunityClicked: communityId => {
+        onLeaveCommunityClicked: (community, communityId, outroMessage) => {
             Global.leaveCommunityRequested(community, communityId, outroMessage)
         }
 
-        onSetCommunityMutedClicked: communityId => {
+        onSetCommunityMutedClicked: (communityId, mutedType) => {
             root.setCommunityMutedRequest(communityId, mutedType)
         }
 
         onSetActiveCommunityClicked: communityId => {
-            rootStore.setActiveCommunity(communityId)
+            root.rootStore.setActiveCommunity(communityId)
         }
 
         onInviteFriends: communityData => root.inviteFriends(communityData)
 
-        onShowCommunityMembershipSetupDialog: (communityId, name, introMessage, imageSrc, accessType) =>{
+        onShowCommunityMembershipSetupDialog: (communityId, name, introMessage, imageSrc, accessType) => {
             Global.communityIntroPopupRequested(communityId, name, introMessage, imageSrc, root.fnIsMyCommunityRequestPending(communityId))
         }
         onCancelMembershipRequest: communityId => {

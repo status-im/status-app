@@ -3,6 +3,7 @@ import QtQml
 import QtWebEngine
 
 import StatusQ.Core.Theme
+import StatusQ.Internal
 
 import AppLayouts.Browser.views
 
@@ -35,6 +36,8 @@ AbstractWebView {
     supportsIncognito: true
     supportsHistory: true
     hasNativeFindPanel: false
+    // Cookies (incl. HttpOnly) via BrowserProfileUtils; DOM storage via site_utils.js.
+    clearSiteDataSupported: true
 
     // Override functions
     function loadUrl(newUrl) { webView.url = newUrl }
@@ -43,6 +46,58 @@ AbstractWebView {
     function goBackOrForward(offset) { webView.goBackOrForward(offset) }
     function reload() { webView.reload() }
     function stop() { webView.stop() }
+    function forceReload() { webView.triggerWebAction(WebEngineView.ReloadAndBypassCache) }
+
+    // Native per-site cookies, then site_utils.js for current-origin DOM + reload.
+    function clearSiteData() {
+        if (root.clearing || !root.profile)
+            return
+        const site = webView.url
+        if (!site.toString())
+            return
+        root.clearing = true
+        BrowserProfileUtils.clearSiteData(root.profile, site, function() {
+            root.clearing = false
+            // Skip wipe/reload if the user navigated away during clear.
+            if (String(webView.url) === String(site))
+                root._wipeDomAndReload(site)
+        })
+    }
+
+    // Profile-wide cookies + HTTP cache, then current-origin DOM via site_utils.js.
+    function clearBrowsingData() {
+        if (root.clearing || !root.profile)
+            return
+        const site = webView.url
+        root.clearing = true
+        BrowserProfileUtils.clearBrowsingData(root.profile, function() {
+            root.clearing = false
+            if (String(webView.url) === String(site))
+                root._wipeDomAndReload(site)
+        })
+    }
+
+    function runJavaScript(script, callback) {
+        if (callback === undefined)
+            webView.runJavaScript(script)
+        else
+            webView.runJavaScript(script, callback)
+    }
+
+    function _wipeDomAndReload(site) {
+        webView.runJavaScript(
+            "(function(){ if (window.StatusSiteUtils) { window.StatusSiteUtils.clearSiteDataAndReload(); return true; } return false; })()",
+            function(ok) {
+                if (String(webView.url) !== String(site))
+                    return
+                if (!ok) {
+                    // GET navigate — ReloadAndBypassCache can re-POST and re-Set-Cookie.
+                    if (site && site.toString())
+                        webView.url = site
+                }
+            }
+        )
+    }
     function findText(text, flags) { webView.findText(text, flags) }
     function changeZoomFactor(factor) { webView.zoomFactor = factor }
     function acceptAsNewWindow(request) { request.openIn(webView) }
@@ -218,10 +273,13 @@ AbstractWebView {
     }
 
     Binding {
-        when: !!(root.profile && root.profileParams && root.profileParams.userAgent)
+        // Always apply a non-empty UA. Setting httpUserAgent to "" after a
+        // custom override does not restore the Chromium default — use the
+        // snapshot captured at profile creation instead.
+        when: !!(root.profile && root.profileParams && root.profileManager)
         target: root.profile
         property: "httpUserAgent"
-        value: root.profileParams.userAgent
+        value: root.profileParams.userAgent || root.profileManager.defaultHttpUserAgent
     }
 
     function applyProfileScripts() {
@@ -230,6 +288,10 @@ AbstractWebView {
         root.profile.userScripts.collection = root.profileManager.scriptListForParams(root.profileParams)
     }
 
+    // Qt does not emit *Changed for the initial property value — only for later
+    // changes. Without onCompleted, userScripts (site_utils, dapp injectors) are
+    // never installed when profile is already set at construction time.
+    Component.onCompleted: applyProfileScripts()
     onProfileChanged: applyProfileScripts()
 
     Connections {

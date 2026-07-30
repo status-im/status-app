@@ -155,19 +155,13 @@ proc init*(self: Controller) =
       self.networksService,
     )
 
-  self.events.on(SIGNAL_ACTIVE_MAILSERVER_CHANGED) do(e:Args):
-    let args = ActiveMailserverChangedArgs(e)
-    if args.nodeAddress == "":
-      return
-    self.delegate.emitMailserverWorking()
-    echo "ACTIVE MAILSERVER CHANGED: ", repr(e)
-    # We need to take some actions here. This is the only place where "activeMailserverChanged" signal should be handled.
-    # Do the following, if we really need that.
-    # requestAllHistoricMessagesResult
-    # requestMissingCommunityInfos
-
   self.events.on(SIGNAL_MAILSERVER_NOT_WORKING) do(e: Args):
     self.delegate.emitMailserverNotWorking()
+  self.events.on(node_service.SIGNAL_MESSAGING_NETWORK_CONNECTED) do(e: Args):
+    self.delegate.emitMessagingNetworkConnected()
+
+  self.events.on(node_service.SIGNAL_MESSAGING_NETWORK_DISCONNECTED) do(e: Args):
+    self.delegate.emitMessagingNetworkDisconnected()
 
   self.events.on(SIGNAL_COMMUNITY_JOINED) do(e:Args):
     let args = CommunityArgs(e)
@@ -261,6 +255,10 @@ proc init*(self: Controller) =
     let args = CommunityArgs(e)
     self.delegate.communityDataImported(args.community)
 
+  self.events.on(SIGNAL_COMMUNITY_LOAD_DATA_FAILED) do(e: Args):
+    let args = CommunityArgs(e)
+    self.delegate.communityInfoRequestFailed(args.communityId, args.error)
+
   self.events.on(SIGNAL_COMMUNITY_LEFT) do(e:Args):
     let args = CommunityIdArgs(e)
     self.delegate.communityLeft(args.communityId)
@@ -292,7 +290,7 @@ proc init*(self: Controller) =
     self.delegate.activeSectionSet(self.activeSectionId)
 
     if args.chatId != "":
-      self.delegate.openSectionChatAndMessage(args.sectionId, args.chatId, args.messageId)
+      discard self.delegate.openSectionChatAndMessage(args.sectionId, args.chatId, args.messageId)
 
   self.events.on(SIGNAL_STATUS_URL_ACTIVATED) do(e: Args):
     var args = StatusUrlArgs(e)
@@ -325,12 +323,6 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_NEW_REQUEST_TO_JOIN_COMMUNITY_ACCEPTED) do(e: Args):
     var args = CommunityRequestArgs(e)
     self.delegate.communityMemberRevealedAccountsAdded(args.communityRequest)
-
-  self.events.on(SIGNAL_NETWORK_CONNECTED) do(e: Args):
-    self.delegate.onNetworkConnected()
-
-  self.events.on(SIGNAL_NETWORK_DISCONNECTED) do(e: Args):
-    self.delegate.onNetworkDisconnected()
 
   self.events.on(SIGNAL_CURRENT_USER_STATUS_UPDATED) do (e: Args):
     var args = CurrentUserStatusArgs(e)
@@ -475,9 +467,6 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_LOGGEDIN_USER_NAME_CHANGED) do(e: Args):
     self.delegate.contactUpdated(singletonInstance.userProfile.getPubKey())
 
-proc isConnected*(self: Controller): bool =
-  return self.nodeService.isConnected()
-
 proc getActiveSectionId*(self: Controller): string =
   result = self.activeSectionId
 
@@ -584,6 +573,9 @@ proc stopTokenHoldersManagement*(self: Controller) =
 
 proc connectionChange*(self: Controller, connectionType: string, isExpensive: bool) =
   self.generalService.connectionChange(connectionType, isExpensive)
+
+proc isMessagingNetworkConnected*(self: Controller): bool =
+  self.nodeService.isConnected()
 
 proc logout*(self: Controller) =
   self.generalService.logout()

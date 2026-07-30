@@ -42,6 +42,7 @@ StatusDialogFooter {
 
     background: Item {
         Rectangle {
+            objectName: "blurBackdropRect"
             anchors.fill: parent
             anchors.leftMargin: radius
             anchors.rightMargin: radius
@@ -55,12 +56,42 @@ StatusDialogFooter {
             }
 
             ShaderEffectSource {
+                id: blurBackdropSource
+                objectName: "blurBackdropSource"
+
                 sourceItem: root.blurSource
                 anchors.fill: parent
                 anchors.leftMargin: Theme.xlPadding - parent.radius
                 anchors.rightMargin: -Theme.xlPadding - parent.radius
                 sourceRect: root.blurSourceRect
-                live: true
+
+                live: false
+
+                signal refreshRequested()
+                function refreshBlur() {
+                    refreshRequested()
+                    scheduleUpdate()
+                }
+
+                Connections {
+                    target: root.blurSource
+                    ignoreUnknownSignals: true
+                    function onContentYChanged() { blurBackdropSource.refreshBlur() }
+                    function onContentHeightChanged() { blurBackdropSource.refreshBlur() }
+                    function onContentWidthChanged() { blurBackdropSource.refreshBlur() }
+                    function onWidthChanged() { blurBackdropSource.refreshBlur() }
+                    function onHeightChanged() { blurBackdropSource.refreshBlur() }
+                }
+
+                // With live == false Qt marks a sourceRect/size change dirty but
+                // never re-renders it, so the stale capture gets stretched over the
+                // new geometry; ask for a fresh one explicitly.
+                onSourceRectChanged: refreshBlur()
+                onWidthChanged: refreshBlur()
+                onHeightChanged: refreshBlur()
+
+                readonly property color themeProbe: root.color
+                onThemeProbeChanged: refreshBlur()
             }
         }
 

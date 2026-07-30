@@ -563,6 +563,33 @@ QtObject:
   proc requestCommunityInfo*(self: View, communityId: string, importing: bool) {.slot.} =
     self.delegate.requestCommunityInfo(communityId, importing)
 
+  proc cancelPendingCommunityFetch*(self: View) {.slot.} =
+    self.delegate.cancelPendingCommunityFetch()
+
+  proc timeoutPendingCommunityFetch*(self: View) {.slot.} =
+    self.delegate.timeoutPendingCommunityFetch()
+
+  proc retryCommunityFetch*(self: View, communityId: string, channelUuid: string) {.slot.} =
+    self.delegate.retryCommunityFetch(communityId, channelUuid)
+
+  proc communityFetchStarted*(self: View, communityId: string, channelUuid: string, requestId: int,
+    timeoutSeconds: int) {.signal.}
+  proc emitCommunityFetchStartedSignal*(self: View, communityId: string, channelUuid: string, requestId: int,
+    timeoutSeconds: int) =
+    self.communityFetchStarted(communityId, channelUuid, requestId, timeoutSeconds)
+
+  proc communityFetchCompleted*(self: View, communityId: string, requestId: int) {.signal.}
+  proc emitCommunityFetchCompletedSignal*(self: View, communityId: string, requestId: int) =
+    self.communityFetchCompleted(communityId, requestId)
+
+  proc communityFetchFailed*(self: View, communityId: string, requestId: int) {.signal.}
+  proc emitCommunityFetchFailedSignal*(self: View, communityId: string, requestId: int) =
+    self.communityFetchFailed(communityId, requestId)
+
+  proc communityFetchCancelled*(self: View, communityId: string, requestId: int) {.signal.}
+  proc emitCommunityFetchCancelledSignal*(self: View, communityId: string, requestId: int) =
+    self.communityFetchCancelled(communityId, requestId)
+
   proc getCommunityDetails*(self: View, communityId: string): string {.slot.} =
     let communityItem = self.model.getItemById(communityId)
     if (communityItem.id == ""):
@@ -850,4 +877,3 @@ QtObject:
 
   proc delete*(self: View) =
     self.QObject.delete
-

@@ -44,6 +44,7 @@ SplitView {
                 amIChatAdmin: ctrlChatAdmin.checked
                 canPin: true
                 pinnedMessage: ctrlPinned.checked
+                selectedText: ctrlSelectedText.checked ? "Dolor ipsum sit amet" : ""
 
                 onPinMessage: logs.logEvent(`onPinMessage: ${messageContextMenuView.messageId}`)
                 onUnpinMessage: logs.logEvent(`onUnpinMessage: ${messageContextMenuView.messageId}`)
@@ -92,6 +93,12 @@ SplitView {
             CheckBox {
                 id: ctrlPinned
                 text: "Pinned message?"
+            }
+
+            CheckBox {
+                id: ctrlSelectedText
+                text: "Selected text?"
+                checked: true
             }
         }
     }

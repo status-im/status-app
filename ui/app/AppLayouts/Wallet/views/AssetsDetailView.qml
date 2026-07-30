@@ -145,7 +145,7 @@ Item {
         decimals: tokenGroup && tokenGroup.decimals ? tokenGroup.decimals : 4
         balances: tokenGroup && tokenGroup.balances ? tokenGroup.balances: null
         networksModel: d.enabledNetworksModel
-        isLoading: d.marketDetailsLoading
+        isLoading: d.marketDetailsLoading || !!(tokenGroup && tokenGroup.balanceLoading)
         address: root.address
         errorTooltipText: tokenGroup && tokenGroup.balances ? networkConnectionStore.getBlockchainNetworkDownTextForToken(tokenGroup.balances): ""
         formatBalance: function(balance){

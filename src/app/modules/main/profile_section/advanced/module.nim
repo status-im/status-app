@@ -97,16 +97,14 @@ method onNimbusProxyToggled*(self: Module) =
 method isRuntimeLogLevelSet*(self: Module): bool =
   return constants.runtimeLogLevelSet()
 
-method isCommunityHistoryArchiveSupportEnabled*(self: Module): bool =
-  return self.controller.isCommunityHistoryArchiveSupportEnabled()
+method getCommunityHistoryArchiveProtocolMode*(self: Module): int =
+  return self.controller.getCommunityHistoryArchiveProtocolMode()
 
-method enableCommunityHistoryArchiveSupport*(self: Module) =
-  if self.controller.enableCommunityHistoryArchiveSupport():
-    self.view.archiveProtocolEnabledChanged()
-
-method disableCommunityHistoryArchiveSupport*(self: Module) =
-  if self.controller.disableCommunityHistoryArchiveSupport():
-    self.view.archiveProtocolEnabledChanged()
+method setCommunityHistoryArchiveProtocolMode*(self: Module, mode: int): bool =
+  let updated = self.controller.setCommunityHistoryArchiveProtocolMode(mode)
+  if updated:
+    self.view.archiveProtocolModeChanged()
+  return updated
 
 method toggleWalletSection*(self: Module) =
   self.controller.toggleWalletSection()

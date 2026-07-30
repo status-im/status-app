@@ -178,5 +178,6 @@ Rectangle {
     StatusToolTip {
         id: statusToolTip
         visible: !!text && root.hovered
+        offset: -(x + width/2 - root.width/2)
     } // Tooltip
 } // Rectangle

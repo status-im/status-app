@@ -69,6 +69,7 @@ StackLayout {
     property bool showUsersList
 
     property bool sendViaPersonalChatEnabled
+    property bool messageLinkSharingEnabled
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -164,6 +165,26 @@ StackLayout {
 
     function switchToCommunitySettingsSubsection(subsection: int, subsectionItem: int) {
         d.openCommunitySettingsSubsection(subsection, subsectionItem)
+    }
+
+    // --- Back-navigation contract, forwarded to the inner ChatView
+    function tryGoBack() {
+        // On the community settings sub-page, Back returns to the chat content.
+        if (root.currentIndex === d.settingsPageIndex) {
+            root.currentIndex = 0
+            return true
+        }
+        const view = mainViewLoader.item
+        if (view && typeof view.tryGoBack === "function")
+            return view.tryGoBack()
+        return false
+    }
+
+    readonly property bool canGoBack: {
+        if (root.currentIndex === d.settingsPageIndex)
+            return true
+        const view = mainViewLoader.item
+        return !!view && view.canGoBack === true
     }
 
     QtObject {
@@ -265,6 +286,7 @@ StackLayout {
                              root.sectionItemModel.memberRole === Constants.memberRole.tokenMaster
             hasViewOnlyPermissions: root.communityPermissionsStore.viewOnlyPermissionsModel.count > 0
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
+            messageLinkSharingEnabled: root.messageLinkSharingEnabled
             disabledTooltipText: root.disabledTooltipText
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
             extraLeftPadding: root.extraLeftPadding

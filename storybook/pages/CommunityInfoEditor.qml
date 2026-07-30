@@ -18,7 +18,7 @@ ColumnLayout {
     property color color: "orchid"
     property url image: Assets.png("tokens/UNI")
     property bool colorVisible: false
-    property url banner: ctrlCommunityBanner.checked ? Assets.png("settings/communities@2x") : ""
+    property url banner: ctrlCommunityBanner.checked ? Assets.png("settings/communities") : ""
     property bool adminControlsEnabled: true
 
     ColumnLayout {

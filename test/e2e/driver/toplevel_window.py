@@ -2,12 +2,17 @@ import squish
 import toplevelwindow
 
 import configs
+from configs.system import get_platform
+
+
+def _toplevel(object_name):
+    return toplevelwindow.ToplevelWindow.byName(object_name)
 
 
 def maximize(object_name):
     def _maximize() -> bool:
         try:
-            window = toplevelwindow.ToplevelWindow.byName(object_name).window
+            window = _toplevel(object_name).window
             squish.setWindowState(window, squish.WindowState.Maximize)
             return True
         except RuntimeError:
@@ -19,7 +24,7 @@ def maximize(object_name):
 def minimize(object_name):
     def _minimize() -> bool:
         try:
-            window = toplevelwindow.ToplevelWindow.byName(object_name).window
+            window = _toplevel(object_name).window
             squish.setWindowState(window, squish.WindowState.Minimize)
             return True
         except RuntimeError:
@@ -31,7 +36,17 @@ def minimize(object_name):
 def set_focus(object_name):
     def _set_focus() -> bool:
         try:
-            toplevelwindow.ToplevelWindow.byName(object_name).setFocus()
+            top = _toplevel(object_name)
+        except RuntimeError:
+            return False
+        try:
+            top.setFocus()
+            return True
+        except RuntimeError:
+            if get_platform() != 'Darwin':
+                return False
+        try:
+            top.setForeground()
             return True
         except RuntimeError:
             return False
@@ -42,7 +57,7 @@ def set_focus(object_name):
 def on_top_level(object_name):
     def _on_top() -> bool:
         try:
-            toplevelwindow.ToplevelWindow.byName(object_name).setForeground()
+            _toplevel(object_name).setForeground()
             return True
         except RuntimeError:
             return False

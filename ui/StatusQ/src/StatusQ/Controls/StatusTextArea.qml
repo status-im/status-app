@@ -112,6 +112,6 @@ TextArea {
 
     onNoSelectionChanged: {
         if (noSelection && activeFocus)
-            deselect()
+            Qt.callLater(deselect)
     }
 }

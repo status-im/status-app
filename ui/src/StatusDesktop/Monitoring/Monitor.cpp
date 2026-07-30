@@ -7,11 +7,14 @@
 #include <QQuickItem>
 #include <QQuickWindow>
 #include <QSet>
+#include <QtQml/private/qqmlcontext_p.h>
+#include <QtQml/private/qqmlcontextdata_p.h>
 
 void Monitor::initialize(QQmlApplicationEngine* engine)
 {
+    m_engine = engine;
     QObject::connect(engine, &QQmlApplicationEngine::objectCreated, this,
-                     [engine](QObject *obj, const QUrl &objUrl) {
+                     [this, engine](QObject *obj, const QUrl &objUrl) {
         if (!obj) {
             qWarning() << "Error while loading QML:" << objUrl << "."
                        << "Monitor initialization failed.";
@@ -23,6 +26,7 @@ void Monitor::initialize(QQmlApplicationEngine* engine)
                           + QStringLiteral(MONITORING_QML_ENTRY_POINT), window);
 
         cmp.create(qmlContext(window));
+        refreshContextProperties();
 
         if (cmp.isError()) {
             qWarning() << "Failed to instantiate monitoring utilities:";
@@ -36,9 +40,18 @@ ContextPropertiesModel* Monitor::contexPropertiesModel()
     return &m_contexPropertiesModel;
 }
 
-void Monitor::addContextPropertyName(const QString &contextPropertyName)
+void Monitor::refreshContextProperties()
 {
-    m_contexPropertiesModel.addContextProperty(contextPropertyName);
+    if (!m_engine) return;
+    QQmlContext* ctx = m_engine->rootContext();
+    if (!ctx) return;
+    QQmlContextPrivate* cp = QQmlContextPrivate::get(ctx);
+    QQmlRefPointer<QQmlContextData> data = QQmlContextData::get(ctx);
+    if (!cp || !data) return;
+    const int numIds = data->numIdValues();     // 0 for the root context
+    const int n = cp->numPropertyValues();
+    for (int i = 0; i < n; ++i)
+        m_contexPropertiesModel.addContextProperty(data->propertyName(i + numIds));
 }
 
 bool Monitor::isModel(const QVariant &obj) const

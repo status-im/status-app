@@ -11,6 +11,7 @@ from .add_edit_account_modal import AddEditAccountModal
 from .keycard_auth_modal import KeycardAuthenticationModal
 from .receive_modal import ReceiveModal
 from .remove_account_modal import RemoveAccountConfirmationModal
+from .send_modal import SimpleSendModal
 
 
 class WalletLeftPanel(BasePage):
@@ -158,6 +159,49 @@ class WalletLeftPanel(BasePage):
         self.logger.error("Receive modal did not appear after clicking receive button")
         return None
 
+    def open_send_modal(self, timeout: int | None = 10) -> SimpleSendModal | None:
+        """Open the send modal from the wallet footer.
+
+        Like Receive, the Send button is only rendered when a specific
+        account is selected, and it can sit below the fold reporting zero
+        bounds until painted — scroll to it before tapping.
+        """
+        fallback = self.locators.content_desc_contains(
+            "[tid:walletFooterSendButton]"
+        )
+
+        # The button is known to report bounds [0,0][0,0] until the account
+        # view paints — require a painted element before tapping.
+        button = self.wait_for_painted(self.locators.FOOTER_SEND, timeout=5)
+        if button is None:
+            self.logger.debug("Send button not painted; scrolling to find it")
+            self.scroll_to_element(
+                self.locators.FOOTER_SEND, max_swipes=3, timeout=2,
+            )
+            button = (
+                self.wait_for_painted(self.locators.FOOTER_SEND, timeout=5)
+                or self.wait_for_painted(fallback, timeout=3)
+            )
+        if button is None:
+            self.logger.error(
+                "Send footer button absent or never painted (zero bounds)"
+            )
+            return None
+
+        if not self.try_click(
+            self.locators.FOOTER_SEND,
+            fallback_locators=[fallback],
+            timeout=timeout,
+        ):
+            self.logger.error("Failed to click send button in wallet footer")
+            return None
+
+        modal = SimpleSendModal(self.driver)
+        if modal.is_displayed(timeout=15):
+            return modal
+        self.logger.error("Send modal did not appear after clicking send button")
+        return None
+
     def open_add_account_popup(self) -> AddEditAccountModal | None:
         try:
             self.safe_click(self.locators.ADD_ACCOUNT_BUTTON, timeout=5)
@@ -197,6 +241,42 @@ class WalletLeftPanel(BasePage):
             return False
 
         return True
+
+    def click_account_row(self, index: int = 0) -> bool:
+        """Click an account row only once it reports non-zero bounds.
+
+        Unpainted rows sit in the a11y tree at [0,0][0,0] and a click on
+        them lands at the screen origin. Scroll/retry once, then fail.
+        """
+        for attempt in range(2):
+            rows = self.account_rows()
+            if len(rows) > index:
+                try:
+                    rect = rows[index].rect
+                except Exception:
+                    rect = {}
+                if rect.get("width", 0) > 0 and rect.get("height", 0) > 0:
+                    # Gesture first: native click silently no-ops on QML nodes
+                    # exposing clickable="false".
+                    if self.gestures.element_tap(rows[index]):
+                        return True
+                    try:
+                        rows[index].click()
+                        return True
+                    except Exception as exc:
+                        self.logger.debug("Account row click failed: %s", exc)
+            if attempt == 0:
+                self.logger.debug(
+                    "Account row %d missing or unpainted; scrolling once", index
+                )
+                self.scroll_to_element(
+                    self.locators.ACCOUNT_ROW_ANY, max_swipes=2, timeout=2,
+                )
+        self.logger.error(
+            "Account row %d never painted (zero bounds) — cannot select account",
+            index,
+        )
+        return False
 
     def account_rows(self) -> list[WebElement]:
         try:

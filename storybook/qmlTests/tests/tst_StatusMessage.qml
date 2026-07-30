@@ -1,7 +1,9 @@
 import QtQuick
 import QtTest
+import QtQml.Models
 
 import StatusQ.Components
+import shared.status
 
 Item {
     id: root
@@ -85,5 +87,88 @@ Item {
 
             compare(actualLinkCount, data.validAddressEnsCount, "TextEdit should contain a link %1".arg(data.messageText))
         }
+    }
+
+    Component {
+        id: editModeComponentUnderTest
+        StatusMessage {
+            anchors.fill: parent
+            editMode: true
+            messageDetails {
+                messageText: "Hello world"
+                contentType: StatusMessage.ContentType.Text
+                amISender: true
+                sender.id: "zq123456790"
+                sender.displayName: "Alice"
+                sender.isContact: true
+                sender.trustIndicator: StatusContactVerificationIcons.TrustedType.None
+                sender.isEnsVerified: false
+                sender.profileImage {
+                    name: ""
+                    color: "red"
+                }
+            }
+            linkAddressAndEnsName: true
+            outgoingStatus: StatusMessage.OutgoingStatus.Sent
+            reactionsModel: ListModel {
+                ListElement {
+                    emoji: "1f600"
+                    didIReactWithThisEmoji: true
+                    numberOfReactions: 1
+                    jsonArrayOfUsersReactedWithThisEmoji: "[\"You\"]"
+                }
+            }
+        }
+    }
+
+    SignalSpy {
+        id: signalSpy
+
+        function setup(target, signalName) {
+            clear()
+            signalSpy.target = target
+            signalSpy.signalName = signalName
+        }
+    }
+
+    TestCase {
+        name: "StatusMessageEditMode"
+        when: windowShown
+
+        property StatusMessage controlUnderTest: null
+
+        function init() {
+            controlUnderTest = createTemporaryObject(editModeComponentUnderTest, root)
+            verify(!!controlUnderTest)
+            waitForRendering(controlUnderTest)
+        }
+
+        function cleanup() {
+            signalSpy.target = null
+            signalSpy.clear()
+            if (controlUnderTest)
+                controlUnderTest.destroy()
+            controlUnderTest = null
+        }
+
+        function test_editMode_highlightsMessageAndKeepsTextVisible() {
+            const statusTextMessage = findChild(controlUnderTest, "StatusMessage_textMessage")
+            verify(!!statusTextMessage)
+            verify(statusTextMessage.visible)
+        }
+
+        function test_editMode_headerStillVisible() {
+            const displayName = findChild(controlUnderTest, "StatusMessageHeader_DisplayName")
+            verify(!!displayName)
+            verify(displayName.visible)
+            compare(displayName.text, "You")
+        }
+
+        function test_editMode_showsReactionsBelowEditor() {
+            const reactionsPanel = findChild(controlUnderTest, "statusMessageEmojiReactions")
+            verify(!!reactionsPanel)
+            verify(reactionsPanel.visible)
+        }
+
     }
 }

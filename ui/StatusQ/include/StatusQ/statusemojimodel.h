@@ -6,6 +6,8 @@
 class StatusEmojiModel : public QAbstractListModel
 {
     Q_OBJECT
+
+    Q_PROPERTY(QString userUID READ userUID WRITE setUserUID NOTIFY userUIDChanged FINAL)
     Q_PROPERTY(QJsonArray emojiJson READ emojiJson WRITE setEmojiJson NOTIFY emojiJsonChanged
                    REQUIRED FINAL)
     Q_PROPERTY(QStringList categories READ categories CONSTANT FINAL)
@@ -43,6 +45,7 @@ public:
 signals:
     void emojiJsonChanged();
     void recentEmojisChanged();
+    void userUIDChanged();
 
 private:
     QJsonArray emojiJson() const;
@@ -62,4 +65,12 @@ private:
 
     QString recentCategoryName() const;
     QString baseSkinColorName() const;
+
+    QString userUID() const;
+    void setUserUID(const QString &newUserUID);
+    QString m_userUID;
+
+    QString settingsGroup() const;
+    void saveRecentEmojis();
+    void loadRecentEmojis();
 };

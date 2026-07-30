@@ -55,12 +55,16 @@
         <translation>Nápověda Status</translation>
     </message>
     <message>
-        <source>Status desktop’s GitHub Repositories</source>
-        <translation>GitHub repozitáře Status desktop</translation>
+        <source>status-app</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>status-desktop</source>
-        <translation>status-desktop</translation>
+        <source>logos-delivery-go</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status App&apos;s GitHub Repositories</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>status-go</source>
@@ -69,10 +73,6 @@
     <message>
         <source>StatusQ</source>
         <translation>StatusQ</translation>
-    </message>
-    <message>
-        <source>go-waku</source>
-        <translation>go-waku</translation>
     </message>
     <message>
         <source>Legal &amp; Privacy Documents</source>
@@ -1024,6 +1024,21 @@
     </message>
 </context>
 <context>
+    <name>AdvancedStore</name>
+    <message>
+        <source>Logos Storage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Torrent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>AdvancedView</name>
     <message>
         <source>This feature is experimental and is meant for testing purposes by core contributors and the community. It&apos;s not meant for real use and makes no claims of security or integrity of funds or data. Use at your own risk.</source>
@@ -1062,16 +1077,12 @@
         <translation>Web/dApp prohlížeč</translation>
     </message>
     <message>
-        <source>Archive Protocol Enabled</source>
-        <translation>Archivní protokol povolen</translation>
-    </message>
-    <message>
         <source>ENS Community Permissions Enabled</source>
         <translation>Oprávnění ENS komunity povolena</translation>
     </message>
     <message>
-        <source>WakuV2 options</source>
-        <translation>Možnosti WakuV2</translation>
+        <source>Enable Copying Message Links</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>The account will be logged out. When you login again, the selected mode will be enabled</source>
@@ -1094,10 +1105,6 @@
         <translation>Režim Relay</translation>
     </message>
     <message>
-        <source>History nodes</source>
-        <translation>Historické uzly</translation>
-    </message>
-    <message>
         <source>Developer features</source>
         <translation>Vývojářské funkce</translation>
     </message>
@@ -1108,6 +1115,14 @@
     <message>
         <source>Debug</source>
         <translation>Ladění</translation>
+    </message>
+    <message>
+        <source>Archive Protocol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Logos Messaging options</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>The value is overridden with runtime options</source>
@@ -1168,6 +1183,18 @@
     <message>
         <source>Change</source>
         <translation>Změnit</translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Logos Storage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Torrent</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Refetch transaction history</source>
@@ -1656,6 +1683,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Import komunity &apos;%1&apos; byl zrušen</translation>
     </message>
     <message>
+        <source>Cannot connect to the Logos Messaging network. Messaging may not work. Retrying automatically.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>CoinGecko connection successful</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1882,44 +1913,8 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
 <context>
     <name>AppearanceView</name>
     <message>
-        <source>Blockchains will drop search costs, causing a kind of decomposition that allows you to have markets of entities that are horizontally segregated and vertically segregated.</source>
-        <translation>Blockchainy sníží náklady na vyhledávání, což způsobí druh rozkladu, který vám umožní mít trhy entit, které jsou horizontálně a vertikálně segregované.</translation>
-    </message>
-    <message>
-        <source>Text size</source>
-        <translation>Velikost textu</translation>
-    </message>
-    <message>
-        <source>XS</source>
-        <translation>XS</translation>
-    </message>
-    <message>
-        <source>S</source>
-        <translation>S</translation>
-    </message>
-    <message>
-        <source>M</source>
-        <translation>M</translation>
-    </message>
-    <message>
-        <source>L</source>
-        <translation>L</translation>
-    </message>
-    <message>
-        <source>XL</source>
-        <translation>XL</translation>
-    </message>
-    <message>
-        <source>XXL</source>
-        <translation>XXL</translation>
-    </message>
-    <message>
         <source>Mode</source>
         <translation>Režim</translation>
-    </message>
-    <message>
-        <source>XXS</source>
-        <translation>XXS</translation>
     </message>
     <message>
         <source>Light</source>
@@ -1930,16 +1925,36 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Tmavý</translation>
     </message>
     <message>
+        <source>Interface zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scale the app interface and text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation type="unfinished">Připojit se</translation>
+    </message>
+    <message>
+        <source>Follow display zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Apply your system settings defaults values</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart to apply</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status to apply the new interface zoom level</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>System</source>
         <translation>Systém</translation>
-    </message>
-    <message>
-        <source>Layout Spacing</source>
-        <translation>Rozestupy rozložení</translation>
-    </message>
-    <message>
-        <source>Adjust how compact or spacious the layout looks</source>
-        <translation>Upravte, jak kompaktně nebo prostorně rozložení vypadá</translation>
     </message>
 </context>
 <context>
@@ -2608,6 +2623,10 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Vývojářské nástroje</translation>
     </message>
     <message>
+        <source>Force reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Clear site data</source>
         <translation>Vyčistit data stránky</translation>
     </message>
@@ -2616,16 +2635,16 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Použijte k obnovení aktuální stránky, pokud se nenačítá nebo nefunfuje správně.</translation>
     </message>
     <message>
-        <source>Clearing cache...</source>
-        <translation>Čistí se cache...</translation>
+        <source>Clearing browsing data...</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clear cache</source>
-        <translation>Vyčistit cache</translation>
+        <source>Clear browsing data</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clears cached files, cookies, and history for the entire browser. Browsing is paused until it is done.</source>
-        <translation>Vyčistí soubory, cookies a historii celého prohlížeče. Prohlížení je pozastaveno, dokud není hotovo.</translation>
+        <source>Clears the cache and cookies for the entire browser. Browsing is paused until it is done.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Settings</source>
@@ -2726,6 +2745,14 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <message>
         <source>Buy via %1</source>
         <translation>Koupit přes %1</translation>
+    </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">Vaše aktiva na %1</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">Populární aktiva</translation>
     </message>
     <message>
         <source>Ways to buy %1 for %2</source>
@@ -3576,6 +3603,29 @@ formát souboru</translation>
     </message>
 </context>
 <context>
+    <name>CommunityFetchPopup</name>
+    <message>
+        <source>%1s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to fetch the community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We&apos;re fetching community...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>It may be offline, or Status couldn&apos;t reach it</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished">Zkusit znovu</translation>
+    </message>
+</context>
+<context>
     <name>CommunityInfoPanel</name>
     <message>
         <source>%1 Owner token</source>
@@ -4221,7 +4271,7 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
         <translation type="unfinished">Hledat</translation>
     </message>
     <message>
-        <source>Search chats...</source>
+        <source>Search contacts and groups...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4634,6 +4684,10 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     <message>
         <source>channel name</source>
         <translation>název kanálu</translation>
+    </message>
+    <message>
+        <source>Only letters, numbers, underscores, periods and hyphens allowed</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Channel colour</source>
@@ -5737,24 +5791,12 @@ key pair. Keycard will be required for signing</source>
         <translation>Status messenger je nejbezpečnější plně decentralizovaný messenger na světě</translation>
     </message>
     <message>
-        <source>Full metadata privacy means it’s impossible to tell who you are talking to by surveilling your internet traffic</source>
-        <translation>Úplné soukromí metadat znamená, že sledováním vašeho internetového provozu nelze zjistit, s kým komunikujete</translation>
-    </message>
-    <message>
         <source>Status is truly private - none of your personal details (or any other information) are sent to us</source>
         <translation>Status je skutečně soukromý – neposílají se nám žádné vaše osobní údaje (ani žádné jiné informace)</translation>
     </message>
     <message>
         <source>Messages sent using Status are end to end encrypted and can only be opened by the recipient</source>
         <translation>Zprávy odeslané pomocí Statusu jsou šifrovány metodou end-to-end a může je otevřít pouze příjemce</translation>
-    </message>
-    <message>
-        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF’s original Whisper protocol</source>
-        <translation>Status používá p2p gossip protokol pro zasílání zpráv Waku – evoluci původního protokolu Whisper od EF</translation>
-    </message>
-    <message>
-        <source>Status is home to crypto’s leading multi-chain self-custodial wallet</source>
-        <translation>Status je domovem přední multi-chain self-custodial peněženky v kryptosvětě</translation>
     </message>
     <message>
         <source>Status removes intermediaries to keep your messages private and your assets secure</source>
@@ -5773,14 +5815,6 @@ key pair. Keycard will be required for signing</source>
         <translation>Token sítě Status (SNT) je modulární užitkový token, který pohání síť Status</translation>
     </message>
     <message>
-        <source>Your cryptographic key pair encrypts all of your messages which can only be unlocked by the intended recipient</source>
-        <translation>Váš kryptografický pár klíčů šifruje všechny vaše zprávy, které může odemknout pouze zamýšlený příjemce</translation>
-    </message>
-    <message>
-        <source>Status’ Web3 browser requires all DApps to ask permission before connecting to your wallet</source>
-        <translation>Web3 prohlížeč Statusu vyžaduje, aby všechny DApps před připojením k vaší peněžence požádaly o povolení</translation>
-    </message>
-    <message>
         <source>Your non-custodial wallet gives you full control over your funds without the use of a server</source>
         <translation>Vaše non-custodial peněženka vám dává plnou kontrolu nad vašimi prostředky bez použití serveru</translation>
     </message>
@@ -5789,8 +5823,28 @@ key pair. Keycard will be required for signing</source>
         <translation>Status je decentralizovaný a bez serverů – chatujte, provádějte transakce a prohlížejte bez sledování a cenzury</translation>
     </message>
     <message>
-        <source>Status is open source software that lets you use with p2p networks. Status itself doesn’t provide any services</source>
-        <translation>Status je open source software, který vám umožňuje používat p2p sítě. Status sám o sobě neposkytuje žádné služby</translation>
+        <source>Full metadata privacy means it&apos;s impossible to tell who you are talking to by surveilling your internet traffic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status is home to crypto&apos;s leading multi-chain self-custodial wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your cryptographic key pairs encrypt all of your messages which can only be unlocked by the intended recipient</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Web3 browser requires all DApps to ask permission before connecting to your wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status is open source software that lets you interact with p2p networks. Status itself doesn&apos;t provide any services</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status is a way to access p2p networks that are permissionlessly created and run by individuals around the world</source>
@@ -5821,8 +5875,36 @@ key pair. Keycard will be required for signing</source>
         <translation>Status se řídí kryptoekonomickým principem odolnosti vůči cenzuře</translation>
     </message>
     <message>
-        <source>Status is a public good licensed under the MIT open source license, for anyone to share, modify and benefit from</source>
-        <translation>Status je veřejný statek licencovaný pod open source licencí MIT, aby jej mohl kdokoli sdílet, upravovat a těžit z něj</translation>
+        <source>Status is a public good licensed under the MPL-2.0 open source license, for anyone to share, modify and benefit from</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The only continent that doesn&apos;t (yet!) have any Status core contributors is Antarctica</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We are the 5th most active crypto project on GitHub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Many other messengers with e2e encryption don&apos;t have metadata privacy!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Help to translate Status into your native language. See https://status.app/translations for more info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status has a multi-chain wallet which will allow quick and easy multi-chain txns.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Nimbus team is collaborating with the Ethereum Foundation to create the Portal Network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Portal Network client (Fluffy) will let Status users interact with Ethereum in a fully decentralised way</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status supports free communication without the approval or oversight of big tech</source>
@@ -5841,20 +5923,8 @@ key pair. Keycard will be required for signing</source>
         <translation>Status je zcela open source a je tvořen přispěvateli z celého světa</translation>
     </message>
     <message>
-        <source>Status is a globally distributed team of 150+ specialist core contributors</source>
-        <translation>Status je globálně distribuovaný tým více než 150 specializovaných hlavních přispěvatelů</translation>
-    </message>
-    <message>
         <source>Our team of core contributors work remotely from over 50+ countries spread across 6 continents</source>
         <translation>Náš tým hlavních přispěvatelů pracuje na dálku z více než 50 zemí na 6 kontinentech</translation>
-    </message>
-    <message>
-        <source>The only continent that doesn’t (yet!) have any Status core contributors is Antarctica</source>
-        <translation>Jediný kontinent, který (zatím!) nemá žádné hlavní přispěvatele Statusu, je Antarktida</translation>
-    </message>
-    <message>
-        <source>We are the 5th most active crypto project on github</source>
-        <translation>Jsme 5. nejaktivnější krypto projekt na GitHubu</translation>
     </message>
     <message>
         <source>We are dedicated to transitioning our governance model to being decentralised and autonomous</source>
@@ -5881,48 +5951,12 @@ key pair. Keycard will be required for signing</source>
         <translation>Váš mobilní operátor a vláda mohou vidět obsah všech vašich soukromých SMS zpráv</translation>
     </message>
     <message>
-        <source>Many other messengers with e2e encryption don’t have metadata privacy!</source>
-        <translation>Mnoho jiných messengerů s e2e šifrováním nemá soukromí metadat!</translation>
-    </message>
-    <message>
-        <source>Help to translate Status into your native language see https://translate.status.im/ for more info</source>
-        <translation>Pomozte přeložit Status do svého rodného jazyka, více informací na https://translate.status.im/</translation>
-    </message>
-    <message>
         <source>By using Keycard, you can ensure your funds are safe even if your phone is stolen</source>
         <translation>Použitím Keycard můžete zajistit, že vaše prostředky budou v bezpečí, i když vám ukradnou telefon</translation>
     </message>
     <message>
         <source>You can enhance security by using Keycard + PIN entry as two-factor authentication</source>
         <translation>Bezpečnost můžete zvýšit použitím Keycard + zadání PINu jako dvoufaktorové autentizace</translation>
-    </message>
-    <message>
-        <source>Status is currently working on a multi-chain wallet which will allow quick and easy multi-chain txns.</source>
-        <translation>Status v současné době pracuje na multi-chain peněžence, která umožní rychlé a snadné transakce napříč řetězci.</translation>
-    </message>
-    <message>
-        <source>The new Status mobile app is being actively developed and is earmarked for release in 2023</source>
-        <translation>Nová mobilní aplikace Status je aktivně vyvíjena a její vydání je naplánováno na rok 2023</translation>
-    </message>
-    <message>
-        <source>The all new Status desktop app is being actively developed and is earmarked for release in 2023</source>
-        <translation>Zcela nová desktopová aplikace Status je aktivně vyvíjena a její vydání je naplánováno na rok 2023</translation>
-    </message>
-    <message>
-        <source>Status also builds the Nimbus Ethereum consensus, execution and light clients</source>
-        <translation>Status také vyvíjí Nimbus Ethereum consensus, execution a light klienty</translation>
-    </message>
-    <message>
-        <source>Status’s Nimbus team is collaborating with the Ethereum Foundation to create the Portal Network</source>
-        <translation>Tým Nimbus ve Statusu spolupracuje s Ethereum Foundation na vytvoření sítě Portal Network</translation>
-    </message>
-    <message>
-        <source>Status’s Portal Network client (Fluffy) will let Status users interact with Ethereum in a fully decenteralised way</source>
-        <translation>Klient Portal Network od Statusu (Fluffy) umožní uživatelům Statusu interagovat s Ethereem plně decentralizovaným způsobem</translation>
-    </message>
-    <message>
-        <source>We are currently working on a tool to let you import an existing Telegram or Discord group into Status</source>
-        <translation>V současné době pracujeme na nástroji, který vám umožní importovat existující skupinu z Telegramu nebo Discordu do Statusu</translation>
     </message>
 </context>
 <context>
@@ -6809,8 +6843,8 @@ key pair. Keycard will be required for signing</source>
         <translation>Povolení služby historie komunity zajišťuje, že každý člen může zobrazit kompletní historii zpráv pro všechny kanály, ke kterým má oprávnění. Bez této funkce bude historie zpráv omezena na posledních 30 dní. Váš počítač, který je řídicím uzlem pro komunitu, musí zůstat online, aby to fungovalo.</translation>
     </message>
     <message>
-        <source>This service operates using the Archive Protocol, which will be automatically enabled.</source>
-        <translation>Tato služba funguje pomocí protokolu Archive, který bude automaticky povolen.</translation>
+        <source>This service operates using the Archive Protocol, which will be automatically enabled using Logos Storage by default.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Read more</source>
@@ -7318,6 +7352,19 @@ Prosím přidejte jej a zkuste to znovu.</translation>
 <context>
     <name>EnterPin</name>
     <message>
+        <source>Authorization required</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This key pair is not stored on your Keycard. Authorize with your profile
+to sign using the keys stored on this device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authorize</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>PIN incorrect</source>
         <translation type="unfinished">Nesprávný PIN</translation>
     </message>
@@ -7694,6 +7741,14 @@ Prosím přidejte jej a zkuste to znovu.</translation>
 </context>
 <context>
     <name>ExportKeypair</name>
+    <message>
+        <source>Authenticate to create a QR code</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authenticate</source>
+        <translation type="unfinished">Ověřit</translation>
+    </message>
     <message>
         <source>Encrypted key pairs code</source>
         <translation>Kód šifrovaných párů klíčů</translation>
@@ -8072,7 +8127,7 @@ Opravdu to chcete udělat?</translation>
     <name>GetSyncCodeDesktopInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation>Ujistěte se, že jsou obě zařízení ve stejné síti</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -8170,7 +8225,7 @@ Opravdu to chcete udělat?</translation>
     <name>GetSyncCodeMobileInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation>Ujistěte se, že jsou obě zařízení ve stejné síti</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -8295,11 +8350,11 @@ Opravdu to chcete udělat?</translation>
     <name>HandlersManager</name>
     <message>
         <source>Info</source>
-        <translation>Info</translation>
+        <translation type="unfinished">Info</translation>
     </message>
     <message>
         <source>Swap is not available in the testnet mode.</source>
-        <translation>Směna není k dispozici v režimu testnet.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Push notifications enabled</source>
@@ -9974,8 +10029,8 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>Po povolení mohou odkazy zveřejněné v chatu sdílet vaše metadata s jejich vlastníky</translation>
     </message>
     <message>
-        <source>Enable in Settings</source>
-        <translation>Povolit v Nastavení</translation>
+        <source>Always Enable</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Don&apos;t ask me again</source>
@@ -10396,6 +10451,14 @@ selhalo</translation>
         <source>Saved Addresses</source>
         <translation>Uložené adresy</translation>
     </message>
+    <message>
+        <source>Import key pairs from this device to your other synced devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show encrypted QR of key pairs on device</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>%n key pair(s) require import to use on this device</source>
         <translation>
@@ -10407,6 +10470,14 @@ selhalo</translation>
     <message>
         <source>Import missing key pairs</source>
         <translation>Importovat chybějící páry klíčů</translation>
+    </message>
+    <message>
+        <source>Automatically apply key pair migrations from paired devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>When off, moving a key pair to or from a Keycard on a paired device won&apos;t change how this device logs in or signs. Turning it back on doesn&apos;t apply past changes.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Get Keycard</source>
@@ -10979,12 +11050,20 @@ selhalo</translation>
         <translation>Upravit zprávu</translation>
     </message>
     <message>
+        <source>Copy</source>
+        <translation type="unfinished">Kopírovat</translation>
+    </message>
+    <message>
         <source>Copy message</source>
         <translation>Kopírovar zprávu</translation>
     </message>
     <message>
         <source>Copy Message Id</source>
         <translation>Kopírovat ID zprávy</translation>
+    </message>
+    <message>
+        <source>Copy link to message</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Unpin</source>
@@ -11413,6 +11492,26 @@ selhalo</translation>
     <message>
         <source>Zoom Fit</source>
         <translation type="unfinished">Přizpůsobit velikost</translation>
+    </message>
+    <message>
+        <source>Compatibility mode</source>
+        <translation type="unfinished">Režim kompatibility</translation>
+    </message>
+    <message>
+        <source>Force reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear site data</source>
+        <translation type="unfinished">Vyčistit data stránky</translation>
+    </message>
+    <message>
+        <source>Clearing browsing data...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear browsing data</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Settings</source>
@@ -12952,19 +13051,19 @@ selhalo</translation>
 <context>
     <name>Popups</name>
     <message>
-        <source>Image saved to system gallery</source>
+        <source>Share addresses with %1&apos;s owner</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Share addresses with %1&apos;s owner</source>
-        <translation>Sdílet adresy s vlastníkem %1</translation>
-    </message>
-    <message>
         <source>Share addresses to rejoin %1</source>
-        <translation>Sdílet adresy pro opětovné připojení k %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Image saved to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Image saved to system gallery</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12973,152 +13072,176 @@ selhalo</translation>
     </message>
     <message>
         <source>%1 removed from contacts and marked as untrusted</source>
-        <translation>%1 odstraněn z kontaktů a označen jako nedůvěryhodný</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 marked as trusted</source>
-        <translation>%1 označen jako důvěryhodný</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
-        <translation>%1 značka důvěry odstraněna, odstraněn z kontaktů a označen jako nedůvěryhodný</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 trust mark removed and marked as untrusted</source>
-        <translation>%1 značka důvěry odstraněna a označen jako nedůvěryhodný</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 trust mark removed and removed from contacts</source>
-        <translation>%1 značka důvěry odstraněna a odstraněn z kontaktů</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Contact request accepted</source>
-        <translation>Žádost o kontakt přijata</translation>
+        <translation type="unfinished">Žádost o kontakt přijata</translation>
     </message>
     <message>
         <source>Contact request ignored</source>
-        <translation>Žádost o kontakt ignorována</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Recovery phrase permanently removed from Status application storage</source>
-        <translation>Obnovovací fráze trvale odstraněna z úložiště aplikace Status</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You backed up your recovery phrase. Access it in Settings</source>
-        <translation>Zálohovali jste svou obnovovací frázi. Přístup k ní máte v Nastavení</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Profile Picture</source>
-        <translation>Profilový obrázek</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Make this my Profile Pic</source>
-        <translation>Nastavit jako můj profilový obrázek</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 marked as untrusted</source>
-        <translation>%1 označen jako nedůvěryhodný</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 unblocked</source>
-        <translation>%1 odblokován</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 blocked</source>
-        <translation>%1 zablokován</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Please choose a directory</source>
-        <translation>Vyberte prosím adresář</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure want to leave &apos;%1&apos;?</source>
-        <translation>Opravdu chcete opustit &apos;%1&apos;?</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
-        <translation>Pokud se budete chtít v budoucnu znovu stát členem, budete muset požádat o připojení. Pokud jste se ke komunitě připojili pomocí veřejného klíče, ujistěte se, že máte jeho kopii, než odejdete.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Zrušit</translation>
+        <translation type="unfinished">Zrušit</translation>
     </message>
     <message>
         <source>Leave %1</source>
-        <translation>Opustit %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Turn off testnet mode</source>
-        <translation>Vypnout režim testnet</translation>
+        <translation type="unfinished">Vypnout režim testnet</translation>
     </message>
     <message>
         <source>Turn on testnet mode</source>
-        <translation>Zapnout režim testnet</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure you want to turn off %1? All future transactions will be performed on live networks with real funds</source>
-        <translation>Opravdu chcete vypnout %1? Všechny budoucí transakce budou prováděny na živých sítích se skutečnými prostředky</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure you want to turn on %1? In this mode, all blockchain data displayed will come from testnets and all blockchain interactions will be with testnets. Testnet mode switches the entire app to using testnets only. Please switch this mode on only if you know exactly why you need to use it.</source>
-        <translation>Opravdu chcete zapnout %1? V tomto režimu budou všechna zobrazená blockchainová data pocházet z testnetů a všechny interakce s blockchainem budou probíhat s testnety. Režim testnet přepne celou aplikaci pouze na používání testnetů. Zapněte tento režim pouze v případě, že přesně víte, proč jej potřebujete použít.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Testnet mode turned on</source>
-        <translation>Režim testnet zapnut</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Testnet mode turned off</source>
-        <translation>Režim testnet vypnut</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Align with paired device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">Pokračovat</translation>
+    </message>
+    <message>
+        <source>Your profile has been migrated to Keycard on paired device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your profile has been migrated from Keycard to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In order to align on the login/signing method on this device, you need to complete the migration flow, clicking the &quot;Continue&quot; button below, or cancel this popup if you want to keep the current login/signing method.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you don&apos;t want to see this message again, go to Settings/Wallet and toggle off &quot;Automatically apply key pair migrations from paired device&quot;.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign transaction - update %1 smart contract</source>
-        <translation>Podepsat transakci - aktualizovat chytrý kontrakt %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 (%2) successfully hidden. You can toggle asset visibility via %3.</source>
-        <translation>%1 (%2) úspěšně skryto. Viditelnost aktiv můžete přepínat přes %3.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Settings</source>
         <comment>Go to Settings</comment>
-        <translation>Nastavení</translation>
+        <translation type="unfinished">Nastavení</translation>
     </message>
     <message>
         <source>Hide collectible</source>
-        <translation>Skrýt sběratelský předmět</translation>
+        <translation type="unfinished">Skrýt sběratelský předmět</translation>
     </message>
     <message>
         <source>Hide %1</source>
-        <translation>Skrýt %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure you want to hide %1? You will no longer see or be able to interact with this collectible anywhere inside Status.</source>
-        <translation>Opravdu chcete skrýt %1? Tento sběratelský předmět již nikde ve Statusu neuvidíte ani s ním nebudete moci interagovat.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 successfully hidden. You can toggle collectible visibility via %2.</source>
-        <translation>%1 úspěšně skryto. Viditelnost sběratelských předmětů můžete přepínat přes %2.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status Software Privacy Policy</source>
-        <translation>Zásady ochrany osobních údajů softwaru Status</translation>
+        <translation type="unfinished">Zásady ochrany osobních údajů softwaru Status</translation>
     </message>
     <message>
         <source>Status Software Terms of Use</source>
-        <translation>Podmínky použití softwaru Status</translation>
+        <translation type="unfinished">Podmínky použití softwaru Status</translation>
     </message>
     <message>
         <source>Sign out</source>
-        <translation>Odhlásit se</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation>Ujistěte se, že máte uložené heslo k účtu a obnovovací frázi. Bez nich se můžete uzamknout ze svého účtu a přijít o prostředky.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign out &amp; Quit</source>
-        <translation>Odhlásit se a ukončit</translation>
+        <translation type="unfinished">Odhlásit se a ukončit</translation>
     </message>
 </context>
 <context>
@@ -14690,6 +14813,10 @@ selhalo</translation>
         <source>Any ETH address</source>
         <translation>Jakákoli ETH adresa</translation>
     </message>
+    <message>
+        <source>key pair requires import to use on this device</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SelectParamsForBuyCryptoPanel</name>
@@ -14810,6 +14937,14 @@ selhalo</translation>
     <message>
         <source>Token that you&apos;re trying to send is not supported.</source>
         <translation>Token, který se snažíte odeslat, není podporovaný.</translation>
+    </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">Vaše aktiva na %1</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">Populární aktiva</translation>
     </message>
 </context>
 <context>
@@ -15360,6 +15495,10 @@ selhalo</translation>
         <source>Update PIN &amp; sign</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Failed to sign with the authorized credentials</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SignTransactionModalBase</name>
@@ -15727,6 +15866,10 @@ selhalo</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Edit</source>
+        <translation type="unfinished">Upravit</translation>
+    </message>
+    <message>
         <source>Multiple payment requests</source>
         <translation type="unfinished"></translation>
     </message>
@@ -15965,17 +16108,6 @@ selhalo</translation>
     </message>
 </context>
 <context>
-    <name>StatusEditMessage</name>
-    <message>
-        <source>Cancel</source>
-        <translation>Zrušit</translation>
-    </message>
-    <message>
-        <source>Save</source>
-        <translation>Uložit</translation>
-    </message>
-</context>
-<context>
     <name>StatusEmojiPopup</name>
     <message>
         <source>Search Results</source>
@@ -16044,13 +16176,6 @@ selhalo</translation>
     <message>
         <source>Close</source>
         <translation type="unfinished">Zavřít</translation>
-    </message>
-</context>
-<context>
-    <name>StatusImageSelector</name>
-    <message>
-        <source>Supported image formats (%1)</source>
-        <translation>Podporované formáty obrázků (%1)</translation>
     </message>
 </context>
 <context>
@@ -16581,16 +16706,20 @@ selhalo</translation>
         <source>Receive</source>
         <translation>Přijmout</translation>
     </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">Vaše aktiva na %1</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">Populární aktiva</translation>
+    </message>
 </context>
 <context>
     <name>SwapModal</name>
     <message>
         <source>Swap</source>
         <translation>Směnit</translation>
-    </message>
-    <message>
-        <source>On:</source>
-        <translation>Na:</translation>
     </message>
     <message>
         <source>Add assets</source>
@@ -16907,7 +17036,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Ensure both devices are on the same local network</source>
-        <translation>Ujistěte se, že jsou obě zařízení ve stejné místní síti</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Continue</source>
@@ -17526,17 +17655,6 @@ Tuto akci nelze vzít zpět.</translation>
     <message>
         <source>Collectibles</source>
         <translation>Sbírky</translation>
-    </message>
-</context>
-<context>
-    <name>TokenSelectorViewAdaptor</name>
-    <message>
-        <source>Popular assets</source>
-        <translation>Populární aktiva</translation>
-    </message>
-    <message>
-        <source>Your assets on %1</source>
-        <translation>Vaše aktiva na %1</translation>
     </message>
 </context>
 <context>

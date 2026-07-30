@@ -1039,6 +1039,14 @@ QtObject {
                     "approvalContractAddress": Constants.swap.paraswapV6_2ContractAddress,
                     "swapContractAddress": Constants.swap.paraswapV6_2ContractAddress,
                 }
+            case Constants.swap.lifiContractAddress:
+                return {
+                    "icon": Assets.png("swap/%1".arg(Constants.swap.lifiIcon)),
+                    "url": Constants.swap.lifiUrl,
+                    "name": Constants.swap.lifiName,
+                    "approvalContractAddress": Constants.swap.lifiContractAddress,
+                    "swapContractAddress": Constants.swap.lifiContractAddress,
+                }
         }
         return undefined
     }

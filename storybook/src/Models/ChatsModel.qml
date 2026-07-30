@@ -14,6 +14,7 @@ ListModel {
         isCategory: true
         categoryOpened: true
         muted: false
+        lastMessageText: ""
     }
     ListElement {
         itemId: "id1"
@@ -47,6 +48,7 @@ ListModel {
         isCategory: true
         categoryOpened: false
         muted: false
+        lastMessageText: ""
     }
     ListElement {
         itemId: "id3"

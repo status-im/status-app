@@ -106,11 +106,12 @@ proc toggleBrowserSection*(self: Controller) =
 proc toggleCommunitySection*(self: Controller) =
   self.events.emit(TOGGLE_SECTION, ToggleSectionArgs(sectionType: SectionType.Community))
 
-proc isCommunityHistoryArchiveSupportEnabled*(self: Controller): bool =
-  self.nodeConfigurationService.isCommunityHistoryArchiveSupportEnabled()
+proc getCommunityHistoryArchiveProtocolMode*(self: Controller): int =
+  self.nodeConfigurationService.getCommunityHistoryArchiveProtocolMode().int
 
-proc enableCommunityHistoryArchiveSupport*(self: Controller): bool =
-  self.nodeConfigurationService.enableCommunityHistoryArchiveSupport()
-
-proc disableCommunityHistoryArchiveSupport*(self: Controller): bool =
-  self.nodeConfigurationService.disableCommunityHistoryArchiveSupport()
+proc setCommunityHistoryArchiveProtocolMode*(self: Controller, mode: int): bool =
+  if mode < node_configuration_service.ArchiveProtocolMode.low.int or mode > node_configuration_service.ArchiveProtocolMode.high.int:
+     error "invalid archive protocol mode", mode = mode
+     return false
+  let archiveProtocolMode = node_configuration_service.ArchiveProtocolMode(mode)
+  self.nodeConfigurationService.setCommunityHistoryArchiveProtocolMode(archiveProtocolMode)

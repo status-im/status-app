@@ -9,7 +9,7 @@ import AppLayouts.Wallet.popups.buy
 import AppLayouts.Wallet.stores
 import AppLayouts.Wallet.adaptors
 
-import shared.stores
+import utils
 
 import Storybook
 import Models
@@ -51,7 +51,6 @@ SplitView {
             }
         }
 
-        readonly property var currencyStore: CurrenciesStore {}
         readonly property var assetsStore: WalletAssetsStoreMock {
             id: thisWalletAssetStore
             walletTokensStore: TokensStoreMock {
@@ -97,10 +96,27 @@ SplitView {
             isBuyProvidersModelLoading: d.buyCryptoStore.areProvidersLoading
             walletAccountsModel: WalletAccountsModel{}
             networksModel: NetworksModel.flatNetworks
-            currentCurrency: d.currencyStore.currentCurrency
             tokenGroupsModel: d.assetsStore.walletTokensStore.tokenGroupsModel
             groupedAccountAssetsModel: d.assetsStore.groupedAccountAssetsModel
             buyCryptoInputParamsForm: d.buyCryptoInputParamsForm
+            tokenSelectorModel: TokenSelectorModelMock {
+                sourceData: [
+                    {
+                        key: "ETH", name: "Ether", symbol: "ETH",
+                        logoUri: Constants.tokenIcon("ETH"), decimals: 18,
+                        currencyBalance: 4276.86, cryptoPrice: 3500.0, sectionName: "Popular assets",
+                        balances: [ { chainId: 1, iconUrl: "network/ethereum", chainName: "Mainnet", balance: 1.22, rawBalance: "1220000000000000000" } ],
+                        tokens: [ { key: "ETH", chainId: 1 } ]
+                    },
+                    {
+                        key: "DAI", name: "Dai Stablecoin", symbol: "DAI",
+                        logoUri: Constants.tokenIcon("DAI"), decimals: 18,
+                        currencyBalance: 45.92, cryptoPrice: 1.0, sectionName: "Popular assets",
+                        balances: [ { chainId: 1, iconUrl: "network/ethereum", chainName: "Mainnet", balance: 45.0, rawBalance: "45000000000000000000" } ],
+                        tokens: [ { key: "DAI", chainId: 1 } ]
+                    }
+                ]
+            }
             Component.onCompleted: {
                 fetchProviders.connect(d.buyCryptoStore.fetchProviders)
                 fetchProviderUrl.connect(d.buyCryptoStore.fetchProviderUrl)

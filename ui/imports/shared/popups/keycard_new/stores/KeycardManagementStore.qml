@@ -3,7 +3,7 @@ import QtQuick
 BaseKeycardManagementStore {
     id: root
 
-    backend: d.mainModuleInst.keycardManagementModule ?? null
+    backend: d.mainModuleInst?.keycardManagementModule ?? null
 
     readonly property bool ready: d.ready
 
@@ -170,6 +170,14 @@ BaseKeycardManagementStore {
             return
         }
         backend.startMigratingProfileKeypairToKeycard(password, pin, seedPhrase)
+    }
+
+    function startMigratingProfileKeypairUsingExistingKeycard(password, pin, seedPhrase) {
+        if (!backend) {
+            console.error("keycard management module was not created")
+            return
+        }
+        backend.startMigratingProfileKeypairUsingExistingKeycard(password, pin, seedPhrase)
     }
 
     function startAddingKeyPairToStatusFromKeycard(pin, keyUid, metadataName, metadataAccounts) {

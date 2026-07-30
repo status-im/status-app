@@ -59,13 +59,7 @@ method getDevicesModule*(self: AccessInterface): QVariant {.base.} =
 method syncModuleDidLoad*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method wakuModuleDidLoad*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method getSyncModule*(self: AccessInterface): QVariant {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method getWakuModule*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method notificationsModuleDidLoad*(self: AccessInterface) {.base.} =

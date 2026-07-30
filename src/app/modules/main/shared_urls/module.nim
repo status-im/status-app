@@ -63,3 +63,9 @@ method parseCommunityChannelSharedUrl*(self: Module, url: string): string =
 method parseContactSharedUrl*(self: Module, url: string): string =
   let contactData = self.controller.parseContactSharedUrl(url)
   return $contactData
+
+method createMessageUrl*(self: Module, chatId: string, messageId: string): string =
+  return self.controller.createMessageUrl(chatId, messageId)
+
+method parseMessageUrl*(self: Module, url: string): MessageUrlDataDto =
+  return self.controller.parseMessageUrl(url)

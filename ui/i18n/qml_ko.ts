@@ -55,12 +55,16 @@
         <translation>Status 도움말</translation>
     </message>
     <message>
-        <source>Status desktop’s GitHub Repositories</source>
-        <translation>Status 데스크톱의 GitHub 저장소</translation>
+        <source>status-app</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>status-desktop</source>
-        <translation>status-desktop</translation>
+        <source>logos-delivery-go</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status App&apos;s GitHub Repositories</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>status-go</source>
@@ -69,10 +73,6 @@
     <message>
         <source>StatusQ</source>
         <translation>StatusQ</translation>
-    </message>
-    <message>
-        <source>go-waku</source>
-        <translation>go-waku</translation>
     </message>
     <message>
         <source>Legal &amp; Privacy Documents</source>
@@ -1018,6 +1018,21 @@
     </message>
 </context>
 <context>
+    <name>AdvancedStore</name>
+    <message>
+        <source>Logos Storage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Torrent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>AdvancedView</name>
     <message>
         <source>This feature is experimental and is meant for testing purposes by core contributors and the community. It&apos;s not meant for real use and makes no claims of security or integrity of funds or data. Use at your own risk.</source>
@@ -1056,16 +1071,12 @@
         <translation>웹/dApp 브라우저</translation>
     </message>
     <message>
-        <source>Archive Protocol Enabled</source>
-        <translation>아카이브 프로토콜 활성화됨</translation>
-    </message>
-    <message>
         <source>ENS Community Permissions Enabled</source>
         <translation>ENS 커뮤니티 권한 활성화됨</translation>
     </message>
     <message>
-        <source>WakuV2 options</source>
-        <translation>WakuV2 옵션</translation>
+        <source>Enable Copying Message Links</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>The account will be logged out. When you login again, the selected mode will be enabled</source>
@@ -1088,10 +1099,6 @@
         <translation>릴레이 모드</translation>
     </message>
     <message>
-        <source>History nodes</source>
-        <translation>히스토리 노드</translation>
-    </message>
-    <message>
         <source>Developer features</source>
         <translation>개발자 기능</translation>
     </message>
@@ -1102,6 +1109,14 @@
     <message>
         <source>Debug</source>
         <translation>디버그</translation>
+    </message>
+    <message>
+        <source>Archive Protocol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Logos Messaging options</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>The value is overridden with runtime options</source>
@@ -1162,6 +1177,18 @@
     <message>
         <source>Change</source>
         <translation>변경</translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Logos Storage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Torrent</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Refetch transaction history</source>
@@ -1639,6 +1666,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>커뮤니티 &apos;%1&apos; 가져오기가 취소되었습니다</translation>
     </message>
     <message>
+        <source>Cannot connect to the Logos Messaging network. Messaging may not work. Retrying automatically.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>CoinGecko connection successful</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1867,38 +1898,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
 <context>
     <name>AppearanceView</name>
     <message>
-        <source>Blockchains will drop search costs, causing a kind of decomposition that allows you to have markets of entities that are horizontally segregated and vertically segregated.</source>
-        <translation>블록체인은 탐색 비용을 낮춰, 수평적으로도 수직적으로도 분리된 엔터티들의 시장이 생겨나는 일종의 분해를 촉발합니다.</translation>
-    </message>
-    <message>
-        <source>Text size</source>
-        <translation>텍스트 크기</translation>
-    </message>
-    <message>
-        <source>XS</source>
-        <translation>XS</translation>
-    </message>
-    <message>
-        <source>S</source>
-        <translation>S</translation>
-    </message>
-    <message>
-        <source>M</source>
-        <translation>M</translation>
-    </message>
-    <message>
-        <source>L</source>
-        <translation>L</translation>
-    </message>
-    <message>
-        <source>XL</source>
-        <translation>XL</translation>
-    </message>
-    <message>
-        <source>XXL</source>
-        <translation>XXL</translation>
-    </message>
-    <message>
         <source>Mode</source>
         <translation>모드</translation>
     </message>
@@ -1911,20 +1910,36 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>다크</translation>
     </message>
     <message>
+        <source>Interface zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scale the app interface and text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation type="unfinished">참여</translation>
+    </message>
+    <message>
+        <source>Follow display zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Apply your system settings defaults values</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart to apply</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status to apply the new interface zoom level</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>System</source>
         <translation>시스템</translation>
-    </message>
-    <message>
-        <source>XXS</source>
-        <translation>XXS</translation>
-    </message>
-    <message>
-        <source>Layout Spacing</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Adjust how compact or spacious the layout looks</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2589,6 +2604,10 @@ Do you wish to override the security check and continue?</source>
         <translation>개발자 도구</translation>
     </message>
     <message>
+        <source>Force reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Clear site data</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2597,15 +2616,15 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clearing cache...</source>
+        <source>Clearing browsing data...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clear cache</source>
+        <source>Clear browsing data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clears cached files, cookies, and history for the entire browser. Browsing is paused until it is done.</source>
+        <source>Clears the cache and cookies for the entire browser. Browsing is paused until it is done.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2709,6 +2728,14 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Buy via %1</source>
         <translation>%1 통해 구매</translation>
+    </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">%1의 자산</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">인기 자산</translation>
     </message>
     <message>
         <source>Ways to buy %1 for %2</source>
@@ -3553,6 +3580,29 @@ file format</source>
     </message>
 </context>
 <context>
+    <name>CommunityFetchPopup</name>
+    <message>
+        <source>%1s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to fetch the community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We&apos;re fetching community...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>It may be offline, or Status couldn&apos;t reach it</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished">다시 시도</translation>
+    </message>
+</context>
+<context>
     <name>CommunityInfoPanel</name>
     <message>
         <source>%1 Owner token</source>
@@ -4192,7 +4242,7 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <translation type="unfinished">검색</translation>
     </message>
     <message>
-        <source>Search chats...</source>
+        <source>Search contacts and groups...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4599,6 +4649,10 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     <message>
         <source>channel name</source>
         <translation>채널 이름</translation>
+    </message>
+    <message>
+        <source>Only letters, numbers, underscores, periods and hyphens allowed</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Channel colour</source>
@@ -5702,24 +5756,12 @@ key pair. Keycard will be required for signing</source>
         <translation>Status 메신저는 세계에서 가장 안전한 완전 탈중앙화 메신저입니다</translation>
     </message>
     <message>
-        <source>Full metadata privacy means it’s impossible to tell who you are talking to by surveilling your internet traffic</source>
-        <translation>메타데이터 프라이버시가 완전해야, 인터넷 트래픽을 감시해도 누구와 대화하는지 알 수 없습니다</translation>
-    </message>
-    <message>
         <source>Status is truly private - none of your personal details (or any other information) are sent to us</source>
         <translation>Status는 진정한 프라이버시를 제공합니다 - 당신의 개인 정보(또는 그 밖의 어떤 정보도)도 우리에게 전송되지 않습니다</translation>
     </message>
     <message>
         <source>Messages sent using Status are end to end encrypted and can only be opened by the recipient</source>
         <translation>Status로 보내는 메시지는 종단 간 암호화되며, 수신자만 열 수 있습니다</translation>
-    </message>
-    <message>
-        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF’s original Whisper protocol</source>
-        <translation>Status는 Waku p2p 가십 메시징 프로토콜을 사용합니다 — EF의 오리지널 Whisper 프로토콜을 발전시킨 것입니다</translation>
-    </message>
-    <message>
-        <source>Status is home to crypto’s leading multi-chain self-custodial wallet</source>
-        <translation>Status는 크립토 업계 선도적 멀티체인 자기보관 지갑의 집입니다</translation>
     </message>
     <message>
         <source>Status removes intermediaries to keep your messages private and your assets secure</source>
@@ -5738,14 +5780,6 @@ key pair. Keycard will be required for signing</source>
         <translation>Status Network token (SNT)는 Status 네트워크를 구동하는 모듈형 유틸리티 토큰입니다</translation>
     </message>
     <message>
-        <source>Your cryptographic key pair encrypts all of your messages which can only be unlocked by the intended recipient</source>
-        <translation>당신의 암호화 키 쌍은 모든 메시지를 암호화하며, 의도된 수신자만 이를 해독할 수 있습니다</translation>
-    </message>
-    <message>
-        <source>Status’ Web3 browser requires all DApps to ask permission before connecting to your wallet</source>
-        <translation>Status의 Web3 브라우저는 모든 DApps가 지갑에 연결하기 전에 반드시 권한을 요청하도록 합니다</translation>
-    </message>
-    <message>
         <source>Your non-custodial wallet gives you full control over your funds without the use of a server</source>
         <translation>서버 없이 자금에 대한 완전한 통제권을 주는 비수탁형 지갑</translation>
     </message>
@@ -5754,8 +5788,28 @@ key pair. Keycard will be required for signing</source>
         <translation>Status는 탈중앙화되고 서버가 없습니다 - 감시와 검열 없이 채팅하고, 결제하고, 탐색하세요</translation>
     </message>
     <message>
-        <source>Status is open source software that lets you use with p2p networks. Status itself doesn’t provide any services</source>
-        <translation>Status는 p2p 네트워크를 사용할 수 있게 해주는 오픈 소스 소프트웨어입니다. Status 자체는 어떤 서비스도 제공하지 않습니다</translation>
+        <source>Full metadata privacy means it&apos;s impossible to tell who you are talking to by surveilling your internet traffic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status is home to crypto&apos;s leading multi-chain self-custodial wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your cryptographic key pairs encrypt all of your messages which can only be unlocked by the intended recipient</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Web3 browser requires all DApps to ask permission before connecting to your wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status is open source software that lets you interact with p2p networks. Status itself doesn&apos;t provide any services</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status is a way to access p2p networks that are permissionlessly created and run by individuals around the world</source>
@@ -5786,8 +5840,36 @@ key pair. Keycard will be required for signing</source>
         <translation>Status는 검열 저항이라는 암호경제 설계 원칙을 따릅니다</translation>
     </message>
     <message>
-        <source>Status is a public good licensed under the MIT open source license, for anyone to share, modify and benefit from</source>
-        <translation>Status는 누구나 공유하고, 수정하고, 혜택을 누릴 수 있도록 MIT 오픈 소스 라이선스 하에 배포되는 퍼블릭 굿입니다</translation>
+        <source>Status is a public good licensed under the MPL-2.0 open source license, for anyone to share, modify and benefit from</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The only continent that doesn&apos;t (yet!) have any Status core contributors is Antarctica</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We are the 5th most active crypto project on GitHub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Many other messengers with e2e encryption don&apos;t have metadata privacy!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Help to translate Status into your native language. See https://status.app/translations for more info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status has a multi-chain wallet which will allow quick and easy multi-chain txns.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Nimbus team is collaborating with the Ethereum Foundation to create the Portal Network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Portal Network client (Fluffy) will let Status users interact with Ethereum in a fully decentralised way</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status supports free communication without the approval or oversight of big tech</source>
@@ -5806,20 +5888,8 @@ key pair. Keycard will be required for signing</source>
         <translation>Status는 완전히 오픈 소스이며 전 세계 기여자들이 함께 만듭니다</translation>
     </message>
     <message>
-        <source>Status is a globally distributed team of 150+ specialist core contributors</source>
-        <translation>Status는 전 세계에 분산된 150명+ 전문 코어 기여자로 이루어진 팀입니다</translation>
-    </message>
-    <message>
         <source>Our team of core contributors work remotely from over 50+ countries spread across 6 continents</source>
         <translation>우리 핵심 기여자 팀은 6개 대륙, 50개국 이상에서 원격으로 함께 일하고 있어요</translation>
-    </message>
-    <message>
-        <source>The only continent that doesn’t (yet!) have any Status core contributors is Antarctica</source>
-        <translation>Status 핵심 기여자가 (아직!) 한 명도 없는 유일한 대륙은 남극이에요</translation>
-    </message>
-    <message>
-        <source>We are the 5th most active crypto project on github</source>
-        <translation>우리는 GitHub에서 다섯 번째로 활발한 크립토 프로젝트입니다</translation>
     </message>
     <message>
         <source>We are dedicated to transitioning our governance model to being decentralised and autonomous</source>
@@ -5846,48 +5916,12 @@ key pair. Keycard will be required for signing</source>
         <translation>당신의 통신사와 정부는 당신의 모든 비공개 SMS 메시지 내용에 접근할 수 있습니다</translation>
     </message>
     <message>
-        <source>Many other messengers with e2e encryption don’t have metadata privacy!</source>
-        <translation>e2e 암호화를 쓰는 다른 메신저들도 메타데이터 프라이버시는 없는 경우가 많아요!</translation>
-    </message>
-    <message>
-        <source>Help to translate Status into your native language see https://translate.status.im/ for more info</source>
-        <translation>당신의 언어로 Status 번역에 참여하세요. 자세한 내용은 https://translate.status.im/ 에서 확인하세요</translation>
-    </message>
-    <message>
         <source>By using Keycard, you can ensure your funds are safe even if your phone is stolen</source>
         <translation>Keycard를 사용하면 휴대폰이 도난당해도 자금을 안전하게 보호할 수 있습니다</translation>
     </message>
     <message>
         <source>You can enhance security by using Keycard + PIN entry as two-factor authentication</source>
         <translation>Keycard + PIN 입력을 이중 인증으로 사용하면 보안을 강화할 수 있습니다</translation>
-    </message>
-    <message>
-        <source>Status is currently working on a multi-chain wallet which will allow quick and easy multi-chain txns.</source>
-        <translation>Status는 현재 빠르고 간편한 멀티체인 트랜잭션을 지원하는 멀티체인 지갑을 개발 중입니다.</translation>
-    </message>
-    <message>
-        <source>The new Status mobile app is being actively developed and is earmarked for release in 2023</source>
-        <translation>새로운 Status 모바일 앱은 활발히 개발 중이며 2023년에 출시될 예정입니다</translation>
-    </message>
-    <message>
-        <source>The all new Status desktop app is being actively developed and is earmarked for release in 2023</source>
-        <translation>완전히 새로워진 Status 데스크톱 앱은 현재 활발히 개발 중이며, 2023년 출시를 목표로 합니다</translation>
-    </message>
-    <message>
-        <source>Status also builds the Nimbus Ethereum consensus, execution and light clients</source>
-        <translation>Status는 Ethereum 합의, 실행, 라이트 클라이언트인 Nimbus도 함께 구축합니다</translation>
-    </message>
-    <message>
-        <source>Status’s Nimbus team is collaborating with the Ethereum Foundation to create the Portal Network</source>
-        <translation>Status의 Nimbus 팀은 Ethereum Foundation과 협력해 Portal Network를 만들고 있습니다</translation>
-    </message>
-    <message>
-        <source>Status’s Portal Network client (Fluffy) will let Status users interact with Ethereum in a fully decenteralised way</source>
-        <translation>Status의 Portal Network 클라이언트(Fluffy)를 통해 Status 사용자는 완전히 탈중앙화된 방식으로 Ethereum과 상호작용할 수 있게 됩니다</translation>
-    </message>
-    <message>
-        <source>We are currently working on a tool to let you import an existing Telegram or Discord group into Status</source>
-        <translation>현재 기존 Telegram 또는 Discord 그룹을 Status로 가져올 수 있는 도구를 개발 중입니다</translation>
     </message>
 </context>
 <context>
@@ -6762,8 +6796,8 @@ key pair. Keycard will be required for signing</source>
         <translation>커뮤니티 히스토리 서비스 활성화 시, 권한이 있는 모든 채널의 전체 메시지 기록을 모든 구성원이 볼 수 있습니다. 이 기능을 켜지 않으면 메시지 기록은 최근 30일로 제한됩니다. 커뮤니티의 제어 Node 역할을 하는 사용자의 컴퓨터는 이 기능이 동작하도록 계속 온라인 상태여야 합니다.</translation>
     </message>
     <message>
-        <source>This service operates using the Archive Protocol, which will be automatically enabled.</source>
-        <translation>이 서비스는 Archive Protocol을 사용하여 운영되며, 자동으로 활성화됩니다.</translation>
+        <source>This service operates using the Archive Protocol, which will be automatically enabled using Logos Storage by default.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Read more</source>
@@ -7269,6 +7303,19 @@ Please add it and try again.</source>
 <context>
     <name>EnterPin</name>
     <message>
+        <source>Authorization required</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This key pair is not stored on your Keycard. Authorize with your profile
+to sign using the keys stored on this device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authorize</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>PIN incorrect</source>
         <translation type="unfinished">PIN이 올바르지 않습니다</translation>
     </message>
@@ -7637,6 +7684,14 @@ Please add it and try again.</source>
 </context>
 <context>
     <name>ExportKeypair</name>
+    <message>
+        <source>Authenticate to create a QR code</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authenticate</source>
+        <translation type="unfinished">인증</translation>
+    </message>
     <message>
         <source>Encrypted key pairs code</source>
         <translation>암호화된 키 페어 코드</translation>
@@ -8015,7 +8070,7 @@ Are you sure you want to do this?</source>
     <name>GetSyncCodeDesktopInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation>두 기기가 같은 네트워크에 있는지 확인하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -8113,7 +8168,7 @@ Are you sure you want to do this?</source>
     <name>GetSyncCodeMobileInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation>두 기기가 같은 네트워크에 연결되어 있는지 확인하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -9897,8 +9952,8 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>활성화하면, 채팅에 올린 링크가 해당 사이트/소유자에게 메타데이터를 공유할 수 있습니다</translation>
     </message>
     <message>
-        <source>Enable in Settings</source>
-        <translation>설정에서 사용 설정</translation>
+        <source>Always Enable</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Don&apos;t ask me again</source>
@@ -10301,6 +10356,14 @@ to load</source>
         <source>Saved Addresses</source>
         <translation>저장된 주소</translation>
     </message>
+    <message>
+        <source>Import key pairs from this device to your other synced devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show encrypted QR of key pairs on device</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>%n key pair(s) require import to use on this device</source>
         <translation>
@@ -10310,6 +10373,14 @@ to load</source>
     <message>
         <source>Import missing key pairs</source>
         <translation>누락된 키 쌍 가져오기</translation>
+    </message>
+    <message>
+        <source>Automatically apply key pair migrations from paired devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>When off, moving a key pair to or from a Keycard on a paired device won&apos;t change how this device logs in or signs. Turning it back on doesn&apos;t apply past changes.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Get Keycard</source>
@@ -10876,12 +10947,20 @@ to load</source>
         <translation>메시지 편집</translation>
     </message>
     <message>
+        <source>Copy</source>
+        <translation type="unfinished">클립보드로 복사</translation>
+    </message>
+    <message>
         <source>Copy message</source>
         <translation>메시지 복사</translation>
     </message>
     <message>
         <source>Copy Message Id</source>
         <translation>메시지 ID 복사</translation>
+    </message>
+    <message>
+        <source>Copy link to message</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Unpin</source>
@@ -11306,6 +11385,26 @@ to load</source>
     <message>
         <source>Zoom Fit</source>
         <translation type="unfinished">맞춤 확대</translation>
+    </message>
+    <message>
+        <source>Compatibility mode</source>
+        <translation type="unfinished">호환 모드</translation>
+    </message>
+    <message>
+        <source>Force reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear site data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clearing browsing data...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear browsing data</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Settings</source>
@@ -12831,19 +12930,19 @@ to load</source>
 <context>
     <name>Popups</name>
     <message>
-        <source>Image saved to system gallery</source>
+        <source>Share addresses with %1&apos;s owner</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Share addresses with %1&apos;s owner</source>
-        <translation>%1의 소유자와 주소 공유</translation>
-    </message>
-    <message>
         <source>Share addresses to rejoin %1</source>
-        <translation>%1에 다시 참여하려면 주소를 공유하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Image saved to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Image saved to system gallery</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12852,152 +12951,176 @@ to load</source>
     </message>
     <message>
         <source>%1 removed from contacts and marked as untrusted</source>
-        <translation>%1 연락처에서 제거되고 신뢰하지 않는 대상으로 표시됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 marked as trusted</source>
-        <translation>%1 신뢰함으로 표시됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
-        <translation>%1 신뢰 마크 제거, 연락처에서 삭제되고 신뢰하지 않음으로 표시됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 trust mark removed and marked as untrusted</source>
-        <translation>%1 신뢰 표시가 제거되어, 신뢰하지 않음으로 표시됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 trust mark removed and removed from contacts</source>
-        <translation>%1 신뢰 마크가 제거되고 연락처에서 삭제됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Contact request accepted</source>
-        <translation>연락 요청이 승인됨</translation>
+        <translation type="unfinished">연락 요청이 승인됨</translation>
     </message>
     <message>
         <source>Contact request ignored</source>
-        <translation>연락 요청 무시됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Recovery phrase permanently removed from Status application storage</source>
-        <translation>복구 구문이 Status 애플리케이션 저장소에서 영구적으로 삭제되었습니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You backed up your recovery phrase. Access it in Settings</source>
-        <translation>복구 구문을 백업했어요. 설정에서 확인하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Profile Picture</source>
-        <translation>프로필 사진</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Make this my Profile Pic</source>
-        <translation>이걸 내 프로필 사진으로 설정</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 marked as untrusted</source>
-        <translation>%1 신뢰할 수 없음으로 표시됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 unblocked</source>
-        <translation>%1 차단 해제됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 blocked</source>
-        <translation>%1명이 차단됨</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Please choose a directory</source>
-        <translation>디렉터리를 선택하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure want to leave &apos;%1&apos;?</source>
-        <translation>정말로 &apos;%1&apos;에서 나가시겠어요?</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
-        <translation>앞으로 다시 멤버가 되고 싶다면 가입 요청을 해야 합니다. 퍼블릭 키로 커뮤니티에 합류했다면, 떠나기 전에 해당 키를 꼭 백업해 두세요.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>취소</translation>
+        <translation type="unfinished">취소</translation>
     </message>
     <message>
         <source>Leave %1</source>
-        <translation>%1 나가기</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Turn off testnet mode</source>
-        <translation>테스트넷 모드 끄기</translation>
+        <translation type="unfinished">Testnet 모드 끄기</translation>
     </message>
     <message>
         <source>Turn on testnet mode</source>
-        <translation>Testnet 모드 켜기</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure you want to turn off %1? All future transactions will be performed on live networks with real funds</source>
-        <translation>정말로 %1을(를) 끄시겠습니까? 앞으로의 모든 거래는 실제 자금이 오가는 라이브 네트워크에서 수행됩니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure you want to turn on %1? In this mode, all blockchain data displayed will come from testnets and all blockchain interactions will be with testnets. Testnet mode switches the entire app to using testnets only. Please switch this mode on only if you know exactly why you need to use it.</source>
-        <translation>정말로 %1을(를) 켜시겠습니까? 이 모드에서는 표시되는 모든 블록체인 데이터가 Testnet에서 오며, 모든 블록체인 상호작용도 Testnet과만 이루어집니다. Testnet 모드는 앱 전체를 Testnet만 사용하도록 전환합니다. 정확한 사용 이유를 알고 있을 때에만 이 모드를 켜세요.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Testnet mode turned on</source>
-        <translation>Testnet 모드가 켜졌습니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Testnet mode turned off</source>
-        <translation>Testnet 모드가 꺼졌습니다</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Align with paired device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">계속</translation>
+    </message>
+    <message>
+        <source>Your profile has been migrated to Keycard on paired device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your profile has been migrated from Keycard to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In order to align on the login/signing method on this device, you need to complete the migration flow, clicking the &quot;Continue&quot; button below, or cancel this popup if you want to keep the current login/signing method.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you don&apos;t want to see this message again, go to Settings/Wallet and toggle off &quot;Automatically apply key pair migrations from paired device&quot;.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign transaction - update %1 smart contract</source>
-        <translation>트랜잭션 서명 - %1 스마트 컨트랙트 업데이트</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 (%2) successfully hidden. You can toggle asset visibility via %3.</source>
-        <translation>%1(%2)가 성공적으로 숨겨졌습니다. 자산 표시 여부는 %3에서 전환할 수 있습니다.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Settings</source>
         <comment>Go to Settings</comment>
-        <translation>설정</translation>
+        <translation type="unfinished">설정</translation>
     </message>
     <message>
         <source>Hide collectible</source>
-        <translation>수집품 숨기기</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Hide %1</source>
-        <translation>%1 숨기기</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Are you sure you want to hide %1? You will no longer see or be able to interact with this collectible anywhere inside Status.</source>
-        <translation>정말 %1을(를) 숨길까요? 숨기면 Status 내 어디에서도 이 컬렉터블을 보거나 상호작용할 수 없습니다.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 successfully hidden. You can toggle collectible visibility via %2.</source>
-        <translation>%1이(가) 성공적으로 숨겨졌습니다. %2에서 수집품 표시/숨기기를 전환할 수 있습니다.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status Software Privacy Policy</source>
-        <translation>Status 소프트웨어 개인정보 처리방침</translation>
+        <translation type="unfinished">Status 소프트웨어 개인정보 처리방침</translation>
     </message>
     <message>
         <source>Status Software Terms of Use</source>
-        <translation>Status 소프트웨어 이용 약관</translation>
+        <translation type="unfinished">Status 소프트웨어 이용약관</translation>
     </message>
     <message>
         <source>Sign out</source>
-        <translation>로그아웃</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation>계정 비밀번호와 복구 구문을 안전하게 보관하세요. 둘 중 하나라도 없으면 계정에 접근하지 못하고 자금을 잃을 수 있습니다.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign out &amp; Quit</source>
-        <translation>로그아웃 및 종료</translation>
+        <translation type="unfinished">로그아웃 및 종료</translation>
     </message>
 </context>
 <context>
@@ -14563,6 +14686,10 @@ to load</source>
         <source>Any ETH address</source>
         <translation>모든 ETH 주소</translation>
     </message>
+    <message>
+        <source>key pair requires import to use on this device</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SelectParamsForBuyCryptoPanel</name>
@@ -14683,6 +14810,14 @@ to load</source>
     <message>
         <source>Token that you&apos;re trying to send is not supported.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">%1의 자산</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">인기 자산</translation>
     </message>
 </context>
 <context>
@@ -15225,6 +15360,10 @@ to load</source>
         <source>Update PIN &amp; sign</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Failed to sign with the authorized credentials</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SignTransactionModalBase</name>
@@ -15584,6 +15723,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Edit</source>
+        <translation type="unfinished">편집</translation>
+    </message>
+    <message>
         <source>Multiple payment requests</source>
         <translation type="unfinished"></translation>
     </message>
@@ -15822,17 +15965,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>StatusEditMessage</name>
-    <message>
-        <source>Cancel</source>
-        <translation>취소</translation>
-    </message>
-    <message>
-        <source>Save</source>
-        <translation>저장</translation>
-    </message>
-</context>
-<context>
     <name>StatusEmojiPopup</name>
     <message>
         <source>Search Results</source>
@@ -15901,13 +16033,6 @@ to load</source>
     <message>
         <source>Close</source>
         <translation type="unfinished">닫기</translation>
-    </message>
-</context>
-<context>
-    <name>StatusImageSelector</name>
-    <message>
-        <source>Supported image formats (%1)</source>
-        <translation>지원되는 이미지 형식(%1)</translation>
     </message>
 </context>
 <context>
@@ -16430,16 +16555,20 @@ to load</source>
         <source>Receive</source>
         <translation>받기</translation>
     </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">%1의 자산</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">인기 자산</translation>
+    </message>
 </context>
 <context>
     <name>SwapModal</name>
     <message>
         <source>Swap</source>
         <translation>스왑</translation>
-    </message>
-    <message>
-        <source>On:</source>
-        <translation>켜짐:</translation>
     </message>
     <message>
         <source>Add assets</source>
@@ -16756,7 +16885,7 @@ to load</source>
     </message>
     <message>
         <source>Ensure both devices are on the same local network</source>
-        <translation>두 기기가 동일한 로컬 네트워크에 있는지 확인하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Continue</source>
@@ -17372,17 +17501,6 @@ This action cannot be undone.</source>
     <message>
         <source>Collectibles</source>
         <translation>수집품</translation>
-    </message>
-</context>
-<context>
-    <name>TokenSelectorViewAdaptor</name>
-    <message>
-        <source>Popular assets</source>
-        <translation>인기 자산</translation>
-    </message>
-    <message>
-        <source>Your assets on %1</source>
-        <translation>%1의 자산</translation>
     </message>
 </context>
 <context>

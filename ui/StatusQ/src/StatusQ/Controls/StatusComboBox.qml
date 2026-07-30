@@ -60,6 +60,24 @@ Item {
             return "transparent"
         }
 
+        StatusRipple {
+            id: comboBoxRipple
+            objectName: "statusComboBoxRipple"
+            anchors.fill: parent
+            enabled: comboBox.enabled
+            color: root.type === StatusComboBox.Type.Secondary ? Theme.palette.baseColor1
+                                                               : Theme.palette.directColor1
+            radius: parent.radius
+        }
+
+        function pressRipple(x, y) {
+            comboBoxRipple.press(x, y)
+        }
+
+        function releaseRipple() {
+            comboBoxRipple.release()
+        }
+
         HoverHandler {
             cursorShape: root.enabled ? Qt.PointingHandCursor : undefined
         }
@@ -111,7 +129,23 @@ Item {
             spacing: 16
 
             background: Loader {
+                id: comboBoxBackground
                 sourceComponent: root.defaultBackgroundComponent
+            }
+
+            TapHandler {
+                enabled: comboBox.enabled && !!comboBoxBackground.item
+                acceptedButtons: Qt.LeftButton
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen | PointerDevice.TouchPad | PointerDevice.Stylus
+
+                onPressedChanged: {
+                    if (pressed) {
+                        const ripplePoint = comboBox.mapToItem(comboBoxBackground.item, point.position.x, point.position.y)
+                        comboBoxBackground.item.pressRipple(ripplePoint.x, ripplePoint.y)
+                    } else {
+                        comboBoxBackground.item.releaseRipple()
+                    }
+                }
             }
 
             contentItem: StatusBaseText {

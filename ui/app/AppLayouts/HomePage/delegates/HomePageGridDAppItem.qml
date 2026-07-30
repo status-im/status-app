@@ -53,7 +53,7 @@ HomePageGridItem {
         width: root.availableWidth
         text: root.itemId
         color: Theme.palette.baseColor1
-        font.pixelSize: Theme.tertiaryTextFontSize
+        font.pixelSize: Theme.fontSize(12)
         font.weight: Font.Medium
         elide: Text.ElideRight
 

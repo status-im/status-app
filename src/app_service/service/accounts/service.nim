@@ -30,6 +30,7 @@ logScope:
 const ACCOUNT_ALREADY_EXISTS_ERROR* =  "account already exists"
 const KDF_ITERATIONS* {.intdefine.} = 256_000
 const DEFAULT_CUSTOMIZATION_COLOR = "primary"  # to match `CustomizationColor` on the go side
+const MOBILE_WAKU_V2_NAMESERVER = "8.8.8.8"  # Temporary fix until status-go#3024/status-go#7606 is resolved
 
 # allow runtime override via environment variable. core contributors can set a
 # specific peer to set for testing messaging and mailserver functionality with squish.
@@ -188,6 +189,7 @@ QtObject:
         customizationColor: DEFAULT_CUSTOMIZATION_COLOR,
         logLevel: some(main_constants.getStatusGoLogLevel()),
         wakuV2LightClient: main_constants.IS_MOBILE,
+        wakuV2Nameserver: if main_constants.IS_MOBILE: some(MOBILE_WAKU_V2_NAMESERVER) else: none(string),
         wakuV2EnableMissingMessageVerification: true,
         wakuV2EnableStoreConfirmationForMessagesSent: true,
         previewPrivacy: true,
@@ -432,6 +434,7 @@ QtObject:
       bandwidthStatsEnabled: false,
       apiConfig: defaultApiConfig(),
       walletConnectProjectID: main_constants.WALLET_CONNECT_PROJECT_ID,
+      wakuV2Nameserver: if main_constants.IS_MOBILE: MOBILE_WAKU_V2_NAMESERVER else: "",
     )
 
     if main_constants.runtimeLogLevelSet():

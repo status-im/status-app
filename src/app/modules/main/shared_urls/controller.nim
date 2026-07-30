@@ -35,5 +35,11 @@ proc parseContactSharedUrl*(self: Controller, url: string): ContactUrlDataDto =
   let data = self.sharedUrlsService.parseSharedUrl(url)
   return data.contact
 
+proc createMessageUrl*(self: Controller, chatId: string, messageId: string): string =
+  return self.sharedUrlsService.createMessageUrl(chatId, messageId)
+
+proc parseMessageUrl*(self: Controller, url: string): MessageUrlDataDto =
+  return self.sharedUrlsService.parseMessageUrl(url)
+
 proc parseSharedUrl*(self: Controller, url: string): UrlDataDto =
   return self.sharedUrlsService.parseSharedUrl(url)

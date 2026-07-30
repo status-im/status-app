@@ -245,7 +245,10 @@ pipeline {
   post {
     always { script {
       dir('test/e2e') {
-        archiveArtifacts('aut/*.*')
+        archiveArtifacts(
+          artifacts: 'local_run_results/*.log',
+          allowEmptyArchive: true,
+        )
 
         /* Needed to categorize types of errors and add environment section in allure report. */
         sh 'cp ext/allure_files/categories.json allure-results'

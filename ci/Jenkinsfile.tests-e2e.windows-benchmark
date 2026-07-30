@@ -186,7 +186,10 @@ pipeline {
     always {
       script {
         dir('test/e2e') {
-          archiveArtifacts('aut/Status/bin/*.log')
+          archiveArtifacts(
+            artifacts: 'local_run_results/*.log',
+            allowEmptyArchive: true,
+          )
 
           sh 'cp ext/allure_files/categories.json allure-results'
           sh 'cp ext/allure_files/environment.properties allure-results'

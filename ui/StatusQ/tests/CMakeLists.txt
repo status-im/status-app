@@ -39,3 +39,31 @@ target_link_libraries(StatusQQmlTests PRIVATE Qt::QuickTest Qt::Qml Qt::Quick
 add_test(NAME StatusQQmlTests WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND StatusQQmlTests -input "${CMAKE_CURRENT_SOURCE_DIR}"
 )
+
+###########
+# C++ Tests
+###########
+
+add_executable(MarkdownParserTest src/tst_markdownparser.cpp)
+target_link_libraries(MarkdownParserTest PRIVATE Qt::Test StatusQ)
+add_test(NAME MarkdownParserTest COMMAND MarkdownParserTest)
+
+add_executable(MarkdownHtmlTest src/tst_markdownhtml.cpp)
+target_link_libraries(MarkdownHtmlTest PRIVATE Qt::Test StatusQ)
+add_test(NAME MarkdownHtmlTest COMMAND MarkdownHtmlTest)
+
+# Parser benchmark — a reference point for optimisation. Labelled "benchmark" so it can be
+# excluded from a normal run (ctest -LE benchmark) or run alone (ctest -R MarkdownParserBenchmark).
+add_executable(MarkdownParserBenchmark src/tst_markdownparser_benchmark.cpp)
+target_link_libraries(MarkdownParserBenchmark PRIVATE Qt::Test StatusQ)
+# Fixed, small iteration count keeps the whole benchmark under ~10s (QBENCHMARK otherwise
+# auto-tunes to many iterations + calibration). Enough for a stable-enough reference number.
+add_test(NAME MarkdownParserBenchmark COMMAND MarkdownParserBenchmark -iterations 5)
+set_tests_properties(MarkdownParserBenchmark PROPERTIES LABELS "benchmark")
+
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Test REQUIRED)
+
+add_executable(TestManageTokensController tst_ManageTokensController.cpp)
+target_link_libraries(TestManageTokensController PRIVATE Qt::Test Qt::Gui Qt::Qml StatusQ)
+target_include_directories(TestManageTokensController PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src/wallet)
+add_test(NAME TestManageTokensController COMMAND TestManageTokensController)

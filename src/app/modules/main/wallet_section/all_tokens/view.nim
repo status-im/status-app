@@ -13,11 +13,14 @@ QtObject:
       marketHistoryIsLoading: bool
       tokenListsLoading: bool
       groupsForChainLoading: bool
+      groupsForChainToLoading: bool
       pendingMandatoryGroupKeys: seq[string]
+      pendingMandatoryGroupKeysTo: seq[string]
 
       tokenListsModel: TokenListsModel
       tokenGroupsModel: TokenGroupsModel # refers to tokens of interest for active networks mode
-      tokenGroupsForChainModel: TokenGroupsModel # refers to all tokens for a specific chain
+      tokenGroupsForChainModel: TokenGroupsModel # all tokens for the source (pay) chain
+      tokenGroupsForChainToModel: TokenGroupsModel # all tokens for the destination (receive) chain (swap+bridge)
       searchResultModel: TokenGroupsModel # refers to tokens that match the search keyword
 
   ## Forward declaration
@@ -38,6 +41,12 @@ QtObject:
       delegate.getTokenMarketValuesDataSource(),
       modelModes = @[ModelMode.NoMarketDetails, ModelMode.UseLazyLoading],  # We allow empty market details for the tokenGroupsForChainModel, because
                                                                             # it is used for the swap input panel where market details are not needed.
+      lazyLoadingBatchSize = LAZY_LOADING_BATCH_SIZE,
+      lazyLoadingInitialCount = LAZY_LOADING_INITIAL_COUNT)
+    result.tokenGroupsForChainToModel = newTokenGroupsModel(
+      delegate.getTokenGroupsForChainToModelDataSource(),
+      delegate.getTokenMarketValuesDataSource(),
+      modelModes = @[ModelMode.NoMarketDetails, ModelMode.UseLazyLoading],
       lazyLoadingBatchSize = LAZY_LOADING_BATCH_SIZE,
       lazyLoadingInitialCount = LAZY_LOADING_INITIAL_COUNT)
     result.searchResultModel = newTokenGroupsModel(
@@ -100,6 +109,13 @@ QtObject:
     read = getTokenGroupsForChainModel
     notify = tokenGroupsForChainModelChanged
 
+  proc tokenGroupsForChainToModelChanged*(self: View) {.signal.}
+  proc getTokenGroupsForChainToModel(self: View): QVariant {.slot.} =
+    return newQVariant(self.tokenGroupsForChainToModel)
+  QtProperty[QVariant] tokenGroupsForChainToModel:
+    read = getTokenGroupsForChainToModel
+    notify = tokenGroupsForChainToModelChanged
+
   proc searchResultModelChanged*(self: View) {.signal.}
   proc getSearchResultModel(self: View): QVariant {.slot.} =
     return newQVariant(self.searchResultModel)
@@ -126,6 +142,18 @@ QtObject:
     read = getGroupsForChainLoading
     notify = groupsForChainLoadingChanged
 
+  proc groupsForChainToLoadingChanged*(self: View) {.signal.}
+  proc getGroupsForChainToLoading(self: View): bool {.slot.} =
+    return self.groupsForChainToLoading
+  proc setGroupsForChainToLoading*(self: View, loading: bool) =
+    if self.groupsForChainToLoading == loading:
+      return
+    self.groupsForChainToLoading = loading
+    self.groupsForChainToLoadingChanged()
+  QtProperty[bool] groupsForChainToLoading:
+    read = getGroupsForChainToLoading
+    notify = groupsForChainToLoadingChanged
+
   proc buildGroupsForChain*(self: View, chainId: int, mandatoryGroupKeysString: string) {.slot.} =
     if mandatoryGroupKeysString.len > 0:
       self.pendingMandatoryGroupKeys = mandatoryGroupKeysString.split("$$")
@@ -139,11 +167,35 @@ QtObject:
     self.tokenGroupsForChainModel.modelsUpdated(resetModelSize = true, self.pendingMandatoryGroupKeys)
     self.tokenGroupsForChainModelChanged()
 
+  proc buildGroupsForChainTo*(self: View, chainId: int, mandatoryGroupKeysString: string) {.slot.} =
+    if mandatoryGroupKeysString.len > 0:
+      self.pendingMandatoryGroupKeysTo = mandatoryGroupKeysString.split("$$")
+    else:
+      self.pendingMandatoryGroupKeysTo = self.delegate.getMandatoryTokenGroupKeys()
+    self.setGroupsForChainToLoading(true)
+    self.delegate.buildGroupsForChainTo(chainId)
+
+  proc onGroupsForChainToLoaded*(self: View) =
+    self.setGroupsForChainToLoading(false)
+    self.tokenGroupsForChainToModel.modelsUpdated(resetModelSize = true, self.pendingMandatoryGroupKeysTo)
+    self.tokenGroupsForChainToModelChanged()
+
   proc getTokenByKeyOrGroupKeyFromAllTokens*(self: View, key: string): string {.slot.} =
     let token = self.delegate.getTokenByKeyOrGroupKeyFromAllTokens(key)
     if token.isNil:
       return ""
     return $(%* token)
+
+  proc getTokenGroupsModelObj*(self: View): TokenGroupsModel =
+    ## Non-QML accessor: the raw model instances, so a sibling producer can
+    ## snapshot their loaded rows and drive their lazy loading directly.
+    self.tokenGroupsModel
+  proc getTokenGroupsForChainModelObj*(self: View): TokenGroupsModel =
+    self.tokenGroupsForChainModel
+  proc getTokenGroupsForChainToModelObj*(self: View): TokenGroupsModel =
+    self.tokenGroupsForChainToModel
+  proc getSearchResultModelObj*(self: View): TokenGroupsModel =
+    self.searchResultModel
 
   proc modelsUpdated*(self: View) =
     self.tokenGroupsModel.modelsUpdated()
@@ -273,6 +325,9 @@ QtObject:
 
   proc isChainSupportedForSwapViaParaswap*(self: View, chainId: int): bool {.slot.} =
     return self.delegate.isChainSupportedForSwapViaParaswap(chainId)
+
+  proc isChainSupportedForSwapViaLiFi*(self: View, chainId: int): bool {.slot.} =
+    return self.delegate.isChainSupportedForSwapViaLiFi(chainId)
 
   proc delete*(self: View) =
     self.QObject.delete

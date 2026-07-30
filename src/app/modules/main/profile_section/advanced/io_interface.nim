@@ -51,13 +51,10 @@ method isDebugEnabled*(self: AccessInterface): bool {.base.} =
 method isRuntimeLogLevelSet*(self: AccessInterface): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method isCommunityHistoryArchiveSupportEnabled*(self: AccessInterface): bool {.base.} =
+method getCommunityHistoryArchiveProtocolMode*(self: AccessInterface): int {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method enableCommunityHistoryArchiveSupport*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method disableCommunityHistoryArchiveSupport*(self: AccessInterface) {.base.} =
+method setCommunityHistoryArchiveProtocolMode*(self: AccessInterface, mode: int): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method toggleDebug*(self: AccessInterface) {.base.} =

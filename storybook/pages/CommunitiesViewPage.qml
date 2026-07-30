@@ -6,7 +6,6 @@ import StatusQ.Core
 
 import AppLayouts.stores as AppLayoutsStores
 import AppLayouts.Profile.views
-import AppLayouts.Wallet.stores
 import AppLayouts.Profile.stores
 import mainui
 import utils
@@ -23,11 +22,6 @@ SplitView {
     Logs { id: logs }
 
     orientation: Qt.Vertical
-
-    readonly property WalletAssetsStoreMock walletAssetStore: WalletAssetsStoreMock {
-    }
-
-    readonly property var currencyStore: SharedStores.CurrenciesStore {}
 
     Keychain {
         id: popupsKeychain
@@ -52,9 +46,10 @@ SplitView {
 
     CommunitiesView {
         SplitView.fillWidth: true
-        SplitView.preferredHeight: 400
+        SplitView.fillHeight: true
 
-        contentWidth: 664
+        readonly property bool compactRowMode: contentWidth < 560
+        contentWidth: width / 3 * 2
 
         communitiesList: ctrlEmptyView.checked ? emptyModel : communitiesModel
         rootStore: AppLayoutsStores.RootStore {
@@ -66,11 +61,9 @@ SplitView {
             return communityId === "0x0006"
         }
 
-        currencyStore: currencyStore
-        walletAssetsStore: walletAssetsStore
-
         onLeaveCommunityRequest: logs.logEvent("onLeaveCommunityRequest", ["communityId"], arguments)
         onSetCommunityMutedRequest: logs.logEvent("onSetCommunityMutedRequest", ["communityId", "mutedType"], arguments)
+        onInviteFriends: communityData => logs.logEvent("onInviteFriends", ["communityData"], communityData)
         onCancelPendingRequestRequested: logs.logEvent("onCancelPendingRequestRequested", ["communityId"], arguments)
     }
 

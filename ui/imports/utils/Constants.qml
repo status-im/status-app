@@ -15,6 +15,12 @@ QtObject {
         readonly property int appEncryptionProcess: 3
     }
 
+    enum CommunityFetchState {
+        Idle,
+        Fetching,
+        Failed
+    }
+
     readonly property QtObject chains: QtObject {
         readonly property int mainnetChainId: 1
         readonly property int sepoliaChainId: 11155111
@@ -451,6 +457,7 @@ QtObject {
         readonly property string addAccount: "add-account"
         readonly property string importKeypair: "import-keypair"
         readonly property string syncDevice: "sync-device"
+        readonly property string signing: "signing"
     }
 
     readonly property QtObject signingReason: QtObject {
@@ -1441,6 +1448,16 @@ QtObject {
         readonly property string paraswapV5SwapContractAddress: "0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57"
         readonly property string paraswapV6_2ContractAddress: "0x6a000f20005980200259b80c5102003040001068"
         readonly property string paraswapTermsAndConditionUrl: "https://www.velora.xyz/terms/terms-of-use"
+
+        readonly property string lifiName: "LI.FI"
+        readonly property string lifiIcon: "lifi" // FIXME add ui/StatusQ/src/assets/png/swap/lifi.png
+        readonly property string lifiHostname: "li.fi"
+        readonly property string lifiUrl: "https://li.fi/"
+        readonly property string lifiTermsAndConditionUrl: "https://li.fi/legal/terms-and-conditions/"
+        readonly property string lifiContractAddress: "0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE"
+
+        readonly property string paraswapProcessorName: "Paraswap"
+        readonly property string lifiProcessorName: "LiFi"
     }
 
     // Mirrors src/app_service/service/transaction/service.nim -> EstimatedTime

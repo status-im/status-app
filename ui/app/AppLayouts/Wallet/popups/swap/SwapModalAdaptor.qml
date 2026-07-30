@@ -224,11 +224,16 @@ QObject {
             root.swapProposalLoading = true
 
             let accountAddress = root.swapFormData.selectedAccountAddress
+            const fromChainId = root.swapFormData.selectedNetworkChainId
+            const toChainId = root.swapFormData.toNetworkChainId
+            // same chain => Swap, different chain => Bridge (the router gates LI.FI on send type)
+            const sendType = fromChainId === toChainId ? Constants.SendType.Swap
+                                                       : Constants.SendType.Bridge
 
             root.swapStore.fetchSuggestedRoutes(d.uuid, accountAddress, accountAddress,
                                                 cryptoValueInRaw, "0", root.swapFormData.fromGroupKey, root.swapFormData.toGroupKey,
-                                                root.swapFormData.selectedNetworkChainId, root.swapFormData.selectedNetworkChainId,
-                                                Constants.SendType.Swap, root.swapFormData.selectedSlippage)
+                                                fromChainId, toChainId,
+                                                sendType, root.swapFormData.selectedSlippage)
         } else {
             root.swapProposalLoading = false
             root.swapOutputData.reset()

@@ -25,6 +25,8 @@ Item {
     }
 
     property StatusButton controlUnderTest: null
+    readonly property real coordinateTolerance: 1
+    readonly property real radiusTolerance: 0.5
 
     TestCase {
         name: "StatusButton"
@@ -46,6 +48,9 @@ Item {
             verify(!controlUnderTest.loading)
             verify(!controlUnderTest.loadingWithText)
             verify(!controlUnderTest.isRoundIcon)
+            verify(controlUnderTest.rippleEnabled)
+            verify(controlUnderTest.scaleOnPressEnabled)
+            compare(controlUnderTest.rippleOrigin, StatusRipple.RippleOrigin.Center)
         }
 
         function test_text() {
@@ -208,6 +213,55 @@ Item {
             compare(signalSpy.count, data.spyCount)
         }
 
+        function test_nonEnabledAndNonInteractiveStates_data() {
+            return [
+                { tag: "disabled", enabled: false, interactive: true },
+                { tag: "non interactive", enabled: true, interactive: false },
+                { tag: "disabled and non interactive", enabled: false, interactive: false },
+            ]
+        }
+
+        function test_nonEnabledAndNonInteractiveStates(data) {
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {
+                                                        text: "Hello",
+                                                        "icon.name": "gif",
+                                                        "asset.emoji": "😀"
+                                                    })
+            verify(!!controlUnderTest)
+            controlUnderTest.enabled = data.enabled
+            controlUnderTest.interactive = data.interactive
+
+            const buttonBackground = findChild(controlUnderTest, "buttonBackground")
+            verify(!!buttonBackground)
+            verify(Qt.colorEqual(buttonBackground.color, controlUnderTest.disabledColor))
+
+            const buttonText = findChild(controlUnderTest, "buttonText")
+            verify(!!buttonText)
+            verify(Qt.colorEqual(buttonText.color, controlUnderTest.disabledTextColor))
+
+            const buttonEmoji = findChild(controlUnderTest, "buttonEmoji")
+            verify(!!buttonEmoji)
+            compare(buttonEmoji.opacity, 0.4)
+
+            const buttonRipple = findChild(controlUnderTest, "buttonRipple")
+            verify(!!buttonRipple)
+            verify(!buttonRipple.enabled)
+
+            mousePress(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+            compare(buttonBackground.scale, 1)
+            verify(!buttonRipple.visible)
+            mouseRelease(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+            compare(signalSpy.count, 0)
+
+            touchEvent(controlUnderTest)
+                    .press(0, controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+                    .release(0, controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+                    .commit()
+            compare(buttonBackground.scale, 1)
+            verify(!buttonRipple.visible)
+            compare(signalSpy.count, 0)
+        }
+
         function test_loadingIndicators() {
             controlUnderTest =
                     createTemporaryObject(componentUnderTest, root,
@@ -255,6 +309,63 @@ Item {
             compare(buttonIcon.visible, false)
             compare(buttonText.visible, true)
             compare(buttonEmoji.visible, false)
+        }
+
+        function test_pressFeedback() {
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, { text: "Hello" })
+            verify(!!controlUnderTest)
+
+            const buttonRipple = findChild(controlUnderTest, "buttonRipple")
+            verify(!!buttonRipple)
+            verify(buttonRipple.enabled)
+            verify(!buttonRipple.visible)
+            const buttonBackground = findChild(controlUnderTest, "buttonBackground")
+            verify(!!buttonBackground)
+            compare(buttonBackground.scale, 1)
+            compare(controlUnderTest.contentItem.scale, 1)
+
+            mousePress(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+            tryVerify(() => buttonRipple.visible)
+            tryCompare(buttonBackground, "scale", controlUnderTest.pressedScale)
+            compare(controlUnderTest.contentItem.scale, 1)
+            verify(buttonRipple.rippleRadius >= 0)
+
+            mouseRelease(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+            tryCompare(buttonRipple, "visible", false)
+            tryCompare(buttonBackground, "scale", 1)
+            compare(buttonRipple.rippleRadius, 0)
+
+            const pressX = controlUnderTest.width / 4
+            const pressY = controlUnderTest.height * 3 / 4
+            controlUnderTest.rippleOrigin = StatusRipple.RippleOrigin.Pointer
+            compare(buttonRipple.origin, StatusRipple.RippleOrigin.Pointer)
+            mousePress(controlUnderTest, pressX, pressY)
+            tryVerify(() => buttonRipple.visible)
+            verify(Math.abs(buttonRipple.pressX - pressX) <= coordinateTolerance)
+            verify(Math.abs(buttonRipple.pressY - pressY) <= coordinateTolerance)
+            mouseRelease(controlUnderTest, pressX, pressY)
+            tryCompare(buttonRipple, "visible", false)
+
+            controlUnderTest.rippleOrigin = StatusRipple.RippleOrigin.Center
+            compare(buttonRipple.origin, StatusRipple.RippleOrigin.Center)
+            mousePress(controlUnderTest, pressX, pressY)
+            tryVerify(() => buttonRipple.visible)
+            verify(Math.abs(buttonRipple.pressX - controlUnderTest.width / 2) <= coordinateTolerance)
+            verify(Math.abs(buttonRipple.pressY - controlUnderTest.height / 2) <= coordinateTolerance)
+            mouseRelease(controlUnderTest, pressX, pressY)
+            tryCompare(buttonRipple, "visible", false)
+
+            mousePress(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+            tryVerify(() => buttonRipple.visible)
+            wait(buttonRipple.expandDuration + buttonRipple.collapseDuration)
+            verify(buttonRipple.visible)
+            verify(buttonRipple.rippleRadius >= buttonRipple.endRadius - radiusTolerance)
+            mouseRelease(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+            tryCompare(buttonRipple, "visible", false)
+            compare(buttonRipple.rippleRadius, 0)
+
+            controlUnderTest.rippleEnabled = false
+            verify(!buttonRipple.enabled)
         }
 
         function test_outlineButton_data() {

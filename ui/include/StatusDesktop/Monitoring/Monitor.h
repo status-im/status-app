@@ -20,11 +20,11 @@ class Monitor : public QObject
 public:
     void initialize(QQmlApplicationEngine *engine);
     ContextPropertiesModel* contexPropertiesModel();
-    void addContextPropertyName(const QString &contextPropertyName);
 
     Q_INVOKABLE bool isModel(const QVariant &obj) const;
     Q_INVOKABLE QString typeName(const QVariant &obj) const;
     Q_INVOKABLE QJSValue modelRoles(QAbstractItemModel *model) const;
+    Q_INVOKABLE void refreshContextProperties();
 
     Q_INVOKABLE QObject* findChild(QObject* parent, const QString& name) const;
 
@@ -32,5 +32,6 @@ public:
     static QObject* qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine);
 
 private:
+    QQmlApplicationEngine* m_engine = nullptr;
     ContextPropertiesModel m_contexPropertiesModel;
 };

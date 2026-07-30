@@ -1,4 +1,4 @@
-import nimqml, sequtils, strutils, chronicles
+import nimqml, sequtils, strutils, chronicles, tables
 
 import ./io_interface
 
@@ -9,6 +9,10 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       allCollectiblesModel: collectibles_model.Model
+      # QVariants wrapping the created picker models, keyed by the id handed to
+      # QML so a released model's QVariant can be dropped (freeing the model).
+      selectorModelVariants: Table[int, QVariant]
+      lastCreatedSelectorModelId: int
 
   proc delete*(self: View)
   proc newView*(delegate: io_interface.AccessInterface): View =
@@ -16,6 +20,8 @@ QtObject:
     result.QObject.setup
     result.delegate = delegate
     result.allCollectiblesModel = delegate.getAllCollectiblesModel()
+    result.selectorModelVariants = initTable[int, QVariant]()
+    result.lastCreatedSelectorModelId = -1
 
   proc load*(self: View) =
     self.delegate.viewDidLoad()
@@ -24,6 +30,32 @@ QtObject:
     return newQVariant(self.allCollectiblesModel)
   QtProperty[QVariant] allCollectiblesModel:
     read = getAllCollectiblesModel
+
+  # Picker factory for the send modal. No-arg QVariant slot (nimqml allows a
+  # QVariant return only when the slot takes no args), paired with an id property
+  # the caller passes back to releaseCollectiblesSelectorModel on teardown.
+  proc createCollectiblesSelectorModel*(self: View): QVariant {.slot.} =
+    let (id, model) = self.delegate.createCollectiblesSelectorModel()
+    let variant = newQVariant(model)
+    self.selectorModelVariants[id] = variant
+    self.lastCreatedSelectorModelId = id
+    return variant
+
+  proc getLastCreatedSelectorModelId(self: View): int {.slot.} =
+    self.lastCreatedSelectorModelId
+  QtProperty[int] lastCreatedSelectorModelId:
+    read = getLastCreatedSelectorModelId
+
+  proc releaseCollectiblesSelectorModel*(self: View, id: int) {.slot.} =
+    self.delegate.releaseCollectiblesSelectorModel(id)
+    if self.selectorModelVariants.hasKey(id):
+      self.selectorModelVariants[id].delete
+      self.selectorModelVariants.del(id)
+
+  # Connected to the collectibles model's countChanged/itemsDataUpdated so live
+  # picker models re-derive when the universe changes.
+  proc onCollectiblesUniverseChanged*(self: View) {.slot.} =
+    self.delegate.refreshCollectiblesSelectorModels()
 
   proc collectiblePreferencesUpdated*(self: View, result: bool) {.signal.}
 
@@ -68,5 +100,7 @@ QtObject:
     self.collectibleGroupByCollectionChanged()
 
   proc delete*(self: View) =
+    for v in self.selectorModelVariants.values:
+      v.delete
     self.QObject.delete
 

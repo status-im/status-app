@@ -11,28 +11,73 @@ TokensStore {
 
     property var tokenGroupsModel
     property var tokenGroupsForChainModel
+    property var tokenGroupsForChainToModel
     property var searchResultModel
     property bool showCommunityAssetsInSend
     property bool displayAssetsBelowBalance
     property var _displayAssetsBelowBalanceThresholdDisplayAmountFunc: function() { return 0 }
     property double tokenListUpdatedAt
 
+    // Terminal token-selector picker stub. The real producer (context property
+    // walletSectionTokenSelector) is unavailable in storybook, so hand out
+    // configurable TokenSelectorModelMock instances instead. Callers override
+    // tokenSelectorStubData to seed the rows they need.
+    property var tokenSelectorStubData: []
+    property int _tokenSelectorIdCounter: 0
+    readonly property Component _tokenSelectorModelMockComponent: Component { TokenSelectorModelMock {} }
+
+    // The kind of every picker handed out, in order, so tests can assert which
+    // pickers a consumer builds and when. Tests reset it to [] to scope a window.
+    property var createdKinds: []
+
+    function createTokenSelectorModel(kind) {
+        root.createdKinds = root.createdKinds.concat([kind])
+        // Mirror the producer's per-kind source: swap (1) uses the source-chain
+        // groups, bridge receive (3) uses the destination-chain groups, send (0) /
+        // buy (2) use the full groups. If a caller pre-seeded tokenSelectorStubData,
+        // use that static set instead.
+        let props = {}
+        if (!!root.tokenSelectorStubData && root.tokenSelectorStubData.length > 0)
+            props = { sourceData: root.tokenSelectorStubData }
+        else if (kind === 1)
+            props = { sourceModel: root.tokenGroupsForChainModel }
+        else if (kind === 3)
+            props = { sourceModel: root.tokenGroupsForChainToModel }
+        else
+            props = { sourceModel: root.tokenGroupsModel }
+        const model = _tokenSelectorModelMockComponent.createObject(root, props)
+        return { model: model, id: root._tokenSelectorIdCounter++ }
+    }
+
+    function releaseTokenSelectorModel(id) {}
+
     function getDisplayAssetsBelowBalanceThresholdDisplayAmount() {
         return _displayAssetsBelowBalanceThresholdDisplayAmountFunc()
     }
 
     function buildGroupsForChain(chainId) {
+        root._buildGroupsInto(root.tokenGroupsForChainModel, chainId)
+        // keep the destination model in sync so receive-panel tests have data
+        if (root.tokenGroupsForChainToModel)
+            root._buildGroupsInto(root.tokenGroupsForChainToModel, chainId)
+    }
+
+    function buildGroupsForChainTo(chainId) {
+        root._buildGroupsInto(root.tokenGroupsForChainToModel, chainId)
+    }
+
+    function _buildGroupsInto(targetModel, chainId) {
         if (!root.tokenGroupsModel || chainId <= 0) {
             console.warn("buildGroupsForChain: invalid parameters", chainId)
             return
         }
 
-        if (!root.tokenGroupsForChainModel) {
-            console.warn("buildGroupsForChain: tokenGroupsForChainModel is not set")
+        if (!targetModel) {
+            console.warn("buildGroupsForChain: target model is not set")
             return
         }
 
-        root.tokenGroupsForChainModel.clear()
+        targetModel.clear()
 
         for (let i = 0; i < root.tokenGroupsModel.ModelCount.count; i++) {
             const group = ModelUtils.get(root.tokenGroupsModel, i)
@@ -62,7 +107,7 @@ TokensStore {
             }
 
             if (tokensListModel.count > 0) {
-                root.tokenGroupsForChainModel.append({
+                targetModel.append({
                     key: group.key,
                     symbol: group.symbol,
                     name: group.name,

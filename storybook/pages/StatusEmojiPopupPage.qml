@@ -41,13 +41,6 @@ SplitView {
             onClicked: emojiPopup.open()
         }
 
-        Settings {
-            id: settings
-            category: "EmojiPopup"
-            property var recentEmojis: []
-            property string skinColor
-        }
-
         StatusEmojiPopup {
             id: emojiPopup
 
@@ -58,8 +51,7 @@ SplitView {
             height: 440
             visible: true
             modal: false
-            recentEmojis: settings.recentEmojis
-            skinColor: settings.skinColor
+            userUID: "0xdeadbeef"
             emojiModel: StatusQUtils.Emoji.emojiModel
             onEmojiSelected: function(emoji, atCu, hexcode) {
                 logs.logEvent("onEmojiSelected", ["emoji", "atCu", "hexcode"], arguments)
@@ -79,13 +71,11 @@ SplitView {
             anchors.fill: parent
 
             Button {
-                text: "Clear settings (reload to take effect)"
+                text: "Clear settings"
                 onClicked: {
                     d.lastSelectedEmoji = ""
                     d.lastSelectedEmojiHexcode = ""
-                    settings.recentEmojis = []
-                    settings.skinColor = ""
-                    settings.sync()
+                    emojiPopup.clearSettings()
                 }
             }
 

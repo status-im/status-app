@@ -73,6 +73,18 @@ method cancelRequestToJoinCommunity*(self: AccessInterface, communityId: string)
 method requestCommunityInfo*(self: AccessInterface, communityId: string, importing: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method startPendingCommunityFetch*(self: AccessInterface, communityId: string, channelUuid: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method cancelPendingCommunityFetch*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method timeoutPendingCommunityFetch*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method retryCommunityFetch*(self: AccessInterface, communityId: string, channelUuid: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method myRequestAdded*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 

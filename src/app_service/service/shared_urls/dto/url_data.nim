@@ -24,6 +24,11 @@ type ContactUrlDataDto* = object
   description*: string
   publicKey*: string
 
+type MessageUrlDataDto* = object
+  chatId*: string
+  messageId*: string
+  communityId*: string
+
 type UrlDataDto* = object
   community*: CommunityUrlDataDto
   channel*: CommunityChannelUrlDataDto
@@ -56,6 +61,12 @@ proc toContactUrlDataDto*(jsonObj: JsonNode): ContactUrlDataDto =
   discard jsonObj.getProp("displayName", result.displayName)
   discard jsonObj.getProp("description", result.description)
   discard jsonObj.getProp("publicKey", result.publicKey)
+
+proc toMessageUrlDataDto*(jsonObj: JsonNode): MessageUrlDataDto =
+  result = MessageUrlDataDto()
+  discard jsonObj.getProp("chatId", result.chatId)
+  discard jsonObj.getProp("messageId", result.messageId)
+  discard jsonObj.getProp("communityId", result.communityId)
 
 proc toUrlDataDto*(jsonObj: JsonNode): UrlDataDto =
   result = UrlDataDto()
@@ -98,4 +109,11 @@ proc `$`*(contactUrlDataDto: ContactUrlDataDto): string =
   jsonObj["displayName"] = %* contactUrlDataDto.displayName
   jsonObj["description"] = %* contactUrlDataDto.description
   jsonObj["publicKey"] = %* contactUrlDataDto.publicKey
+  return $jsonObj
+
+proc `$`*(messageUrlDataDto: MessageUrlDataDto): string =
+  var jsonObj = newJObject()
+  jsonObj["chatId"] = %* messageUrlDataDto.chatId
+  jsonObj["messageId"] = %* messageUrlDataDto.messageId
+  jsonObj["communityId"] = %* messageUrlDataDto.communityId
   return $jsonObj

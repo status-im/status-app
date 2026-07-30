@@ -12,5 +12,6 @@ QtObject {
     property bool homePageEnabled
     property bool localBackupEnabled
     property bool privacyModeFeatureEnabled
+    property bool messageLinkSharingEnabled
     property bool buyEnabled
 }

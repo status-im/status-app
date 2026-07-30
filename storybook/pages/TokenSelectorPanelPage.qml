@@ -8,73 +8,73 @@ import utils
 Pane {
     readonly property var assetsData: [
         {
-            tokensKey: "key_1",
+            key: "key_1",
             communityId: "",
             name: "Status Test Token",
-            currencyBalanceAsString: "42,23 USD",
+            currencyBalance: 42.23,
             symbol: "STT",
-            iconSource: Constants.tokenIcon("STT"),
-            tokensKey: "STT",
+            logoUri: Constants.tokenIcon("STT"),
+            key: "STT",
 
             balances: [
                 {
-                    balanceAsString: "0,56",
+                    balance: 0.56,
                     iconUrl: "network/ethereum"
                 },
                 {
-                    balanceAsString: "0,22",
+                    balance: 0.22,
                     iconUrl: "network/arbitrum"
                 },
                 {
-                    balanceAsString: "0,12",
+                    balance: 0.12,
                     iconUrl: "network/optimism"
                 }
             ]
         },
         {
-            tokensKey: "key_2",
+            key: "key_2",
             communityId: "",
             name: "Ether",
-            currencyBalanceAsString: "4 276,86 USD",
+            currencyBalance: 4276.86,
             symbol: "ETH",
-            iconSource: Constants.tokenIcon("ETH"),
-            tokensKey: "ETH",
+            logoUri: Constants.tokenIcon("ETH"),
+            key: "ETH",
 
             balances: [
                 {
-                    balanceAsString: "1,01",
+                    balance: 1.01,
                     iconUrl: "network/optimism"
                 },
                 {
-                    balanceAsString: "0,47",
+                    balance: 0.47,
                     iconUrl: "network/arbitrum"
                 },
                 {
-                    balanceAsString: "0,12",
+                    balance: 0.12,
                     iconUrl: "network/ethereum"
                 }
             ]
         },
         {
-            tokensKey: "key_2",
+            key: "key_2",
             communityId: "",
             name: "Dai Stablecoin",
-            currencyBalanceAsString: "45,92 USD",
+            currencyBalance: 45.92,
             symbol: "DAI",
-            iconSource: Constants.tokenIcon("DAI"),
-            tokensKey: "DAI",
+            logoUri: Constants.tokenIcon("DAI"),
+            key: "DAI",
 
             balances: [
                 {
-                    balanceAsString: "45,12",
+                    balance: 45.12,
                     iconUrl: "network/arbitrum"
                 },
                 {
-                    balanceAsString: "0,56",
+                    balance: 0.56,
                     iconUrl: "network/optimism"
                 },
                 {
-                    balanceAsString: "0,12",
+                    balance: 0.12,
                     iconUrl: "network/ethereum"
                 }
             ]

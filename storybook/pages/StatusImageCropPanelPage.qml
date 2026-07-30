@@ -7,11 +7,15 @@ import Qt5Compat.GraphicalEffects
 import Storybook
 import Models
 
+import StatusQ
+import StatusQ.Core
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Popups
 import StatusQ.Popups.Dialog
 import StatusQ.Core.Theme
+
+import utils
 
 SplitView {
     id: root
@@ -49,7 +53,7 @@ SplitView {
                 Layout.margins: root.testSpacing
                 Layout.fillWidth: true
 
-                Text {
+                Label {
                     text: `AR: ${ctrl1.aspectRatio.toFixed(2)}`
                 }
 
@@ -64,7 +68,7 @@ SplitView {
                     margins: root.testFrameMargins
                 }
 
-                Text {
+                Label {
                     text: `AR: ${ctrl2.aspectRatio.toFixed(2)}`
                 }
 
@@ -86,7 +90,7 @@ SplitView {
                 Layout.margins: root.testSpacing
                 Layout.fillWidth: true
 
-                Text {
+                Label {
                     text: `AR: ${ctrl3.aspectRatio.toFixed(2)}`
                 }
 
@@ -157,15 +161,43 @@ SplitView {
 
                     title: workflowItem.imageFileDialogTitle
                     currentFolder: workflowItem.userSelectedImage ? imageCropper.source.substr(0, imageCropper.source.lastIndexOf("/")) : picturesShortcut
-                    nameFilters: [qsTr("Supported image formats (%1)").arg("*.jpg *.jpeg *.jfif *.webp *.png *.heif")]
                     onAccepted: {
                         if (fileDialog.selectedFiles.length > 0) {
-                            imageCropper.source = fileDialog.selectedFiles[0]
-                            imageCropperModal.open()
+                            const url = fileDialog.selectedFile
+                            if (Utils.isValidDragNDropImage(url)) {
+                                imageCropper.source = url
+                                imageCropperModal.open()
+                            } else {
+                                errorDialog.fileOpened = url
+                                errorDialog.open()
+                            }
                         }
                     }
                     onRejected: workflowItem.canceled()
                 } // StatusFileDialog
+
+                StatusDialog {
+                    id: errorDialog
+
+                    property string fileOpened
+
+                    title: qsTr("Image format not supported")
+                    width: 480
+                    contentItem: ColumnLayout {
+                        StatusBaseText {
+                            Layout.fillWidth: true
+                            wrapMode: Text.Wrap
+                            text: qsTr("Format of the image you chose is not supported. Most probably you picked a file that is invalid, corrupted or has a wrong file extension. The requested file was: %1").arg(errorDialog.fileOpened)
+                        }
+                        StatusBaseText {
+                            Layout.fillWidth: true
+                            font.pixelSize: Theme.additionalTextSize
+                            text: qsTr("Supported image extensions: %1").arg(UrlUtils.allValidImageExtensions)
+                        }
+                    }
+                    standardButtons: Dialog.Ok
+                    onClosed: workflowItem.canceled()
+                } // StatusDialog
 
                 StatusModal {
                     id: imageCropperModal
@@ -213,7 +245,7 @@ SplitView {
         }
 
         Shortcut {
-            sequence: StandardKey.ZoomIn
+            sequences: [StandardKey.ZoomIn]
             onActivated: {
                 for(let i in testControls) {
                     const c = testControls[i]
@@ -223,7 +255,7 @@ SplitView {
         }
 
         Shortcut {
-            sequence: StandardKey.ZoomOut
+            sequences: [StandardKey.ZoomOut]
             onActivated: {
                 for(let i in testControls) {
                     const c = testControls[i]
@@ -299,3 +331,4 @@ SplitView {
 }
 
 // category: Components
+// status: good

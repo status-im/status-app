@@ -1,4 +1,5 @@
 import io_interface, tables, sets
+import std/strutils
 
 
 import ../../../../../../app_service/service/settings/service as settings_service
@@ -175,6 +176,11 @@ proc setText*(self: Controller, text: string, unfurlNewUrls: bool) =
   self.unfurlingPlanActiveRequest = self.messageService.asyncGetTextURLsToUnfurl(text)
 
 proc handleUnfurlingPlan*(self: Controller, unfurlNewUrls: bool) =
+  proc isStatusMessageUrl(url: string): bool =
+      return startsWith(url, "https://status.app/m/") or
+        startsWith(url, "http://status.app/m/") or
+        startsWith(url, "status-app://m/")
+
   var allUrls = newSeq[string]() # Used for URLs syntax highlighting only
   var allAllowedUrls = newSeq[string]() # Used for LinkPreviewsModel to keep the urls order
   var statusAllowedUrls = newSeq[string]()
@@ -183,6 +189,11 @@ proc handleUnfurlingPlan*(self: Controller, unfurlNewUrls: bool) =
 
   for metadata in self.unfurlingPlan.urls:
     allUrls.add(metadata.url)
+
+    # Message deep links are navigational links for now and intentionally have no
+    # preview payload, so keep them clickable/highlighted but don't unfurl.
+    if isStatusMessageUrl(metadata.url):
+      continue
 
     if metadata.permission == UrlUnfurlingForbiddenBySettings or
        metadata.permission == UrlUnfurlingNotSupported:

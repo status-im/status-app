@@ -57,10 +57,11 @@ HomePageGridItem {
     component CustomInfoTag: InformationTag {
         height: Theme.bigPadding
         spacing: 4
-        horizontalPadding: Theme.halfPadding
-        verticalPadding: 4
+        horizontalPadding: 6
+        verticalPadding: 2
         bgRadius: 20
         bgBorderColor: Theme.palette.directColor6
+        tagPrimaryLabel.font.pixelSize: Theme.fontSize(11)
         tagPrimaryLabel.font.weight: Font.Medium
         asset.color: Theme.palette.baseColor1
     }
@@ -69,7 +70,7 @@ HomePageGridItem {
         id: membersComponent
         CustomInfoTag {
             asset.name: root.activeMembersCount ? "tiny/flash" : "tiny/members"
-            tagPrimaryLabel.text: numberFormat(root.activeMembersCount ? root.activeMembersCount : root.membersCount)
+            tagPrimaryLabel.text: root.numberFormat(root.activeMembersCount ? root.activeMembersCount : root.membersCount)
         }
     }
 
@@ -86,10 +87,11 @@ HomePageGridItem {
         ErrorTag {
             height: Theme.bigPadding
             spacing: 4
-            horizontalPadding: Theme.halfPadding
+            leftPadding: 4
             verticalPadding: 4
             bgRadius: 20
             tagPrimaryLabel.text: qsTr("Banned")
+            tagPrimaryLabel.font.pixelSize: Theme.fontSize(11)
             tagPrimaryLabel.font.weight: Font.Medium
         }
     }

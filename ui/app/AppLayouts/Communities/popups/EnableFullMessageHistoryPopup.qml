@@ -33,7 +33,7 @@ StatusDialog {
             Layout.fillWidth: true
             wrapMode: Text.Wrap
             color: Theme.palette.directColor5
-            text: qsTr("This service operates using the Archive Protocol, which will be automatically enabled.")
+            text: qsTr("This service operates using the Archive Protocol, which will be automatically enabled using Logos Storage by default.")
         }
     }
 

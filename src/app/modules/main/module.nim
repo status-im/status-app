@@ -145,6 +145,8 @@ type
     contactsLoaded: bool
     pendingSpectateRequest: SpectateRequest
     statusDeepLinkToActivate: string
+    pendingProfileMigrationCheck: bool
+    profileMigrationFlowInProgress: bool
 
 {.push warning[Deprecated]: off.}
 
@@ -154,6 +156,9 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string)
 proc checkIfWeHaveNotifications[T](self: Module[T])
 proc createMemberItem[T](self: Module[T], memberId: string, requestId: string, state: MembershipRequestState, role: MemberRole, airdropAddress: string = ""): MemberItem
 proc getAllCommunityMemberItems[T](self: Module[T], community: CommunityDto): seq[MemberItem]
+
+proc clearPendingSpectateRequest[T](self: Module[T]) =
+  self.pendingSpectateRequest = SpectateRequest()
 
 
 proc newModule*[T](
@@ -237,6 +242,7 @@ proc newModule*[T](
   result.walletAccountService = walletAccountService
   result.savedAddressService = savedAddressService
   result.followingAddressService = followingAddressService
+  result.networkConnectionService = networkConnectionService
   result.stickersService = stickersService
   result.communityTokensService = communityTokensService
   result.transactionService = transactionService
@@ -512,7 +518,7 @@ proc sendNotification[T](self: Module[T], status: string, sendDetails: SendDetai
     if txType == SendType.Bridge:
       txToName = "Hop" # no translations, currently we hardcode providers here, when we add more, this info should come from the status-go side.
     elif txType == SendType.Swap:
-      txToName = "Velora" # no translations, currently we hardcode providers here, when we add more, this info should come from the status-go side.
+      txToName = "LI.FI"
     else:
       accDto = self.walletAccountService.getAccountByAddress(txTo)
       if not accDto.isNil:
@@ -1008,6 +1014,10 @@ method onChatsLoaded*[T](
   if self.statusDeepLinkToActivate != "":
     self.activateStatusDeepLink(self.statusDeepLinkToActivate)
 
+  if self.pendingProfileMigrationCheck:
+    self.pendingProfileMigrationCheck = false
+    self.checkAndPerformProfileMigrationIfNeeded()
+
 method onCommunityDataLoaded*[T](
   self: Module[T],
   events: EventEmitter,
@@ -1166,9 +1176,18 @@ method emitMailserverWorking*[T](self: Module[T]) =
 method emitMailserverNotWorking*[T](self: Module[T]) =
   self.view.emitMailserverNotWorking()
 
-method setCommunityIdToSpectate*[T](self: Module[T], communityId: string) =
+method emitMessagingNetworkConnected*[T](self: Module[T]) =
+  self.view.emitMessagingNetworkConnected()
+
+method emitMessagingNetworkDisconnected*[T](self: Module[T]) =
+  self.view.emitMessagingNetworkDisconnected()
+
+method isMessagingNetworkConnected*[T](self: Module[T]): bool =
+  self.controller.isMessagingNetworkConnected()
+
+method setCommunityIdToSpectate*[T](self: Module[T], communityId: string, channelUuid: string = "") =
   self.pendingSpectateRequest.communityId = communityId
-  self.pendingSpectateRequest.channelUuid = ""
+  self.pendingSpectateRequest.channelUuid = channelUuid
 
 method getActiveSectionId*[T](self: Module[T]): string =
   return self.controller.getActiveSectionId()
@@ -1270,26 +1289,17 @@ method onNotificationsUpdated[T](self: Module[T], sectionId: string, sectionHasU
 method onPlayNotificationSound[T](self: Module[T]) =
   self.view.playNotificationSound()
 
-method onNetworkConnected[T](self: Module[T]) =
-  self.view.setConnected(true)
-
-method onNetworkDisconnected[T](self: Module[T]) =
-  self.view.setConnected(false)
-
-method isConnected[T](self: Module[T]): bool =
-  self.controller.isConnected()
-
 method getAppSearchModule*[T](self: Module[T]): QVariant =
   self.appSearchModule.getModuleAsVariant()
 
 method communitySpectated*[T](self: Module[T], communityId: string) =
   if self.pendingSpectateRequest.communityId != communityId:
     return
-  self.pendingSpectateRequest.communityId = ""
   if self.pendingSpectateRequest.channelUuid == "":
+    self.clearPendingSpectateRequest()
     return
   let chatId = communityId & self.pendingSpectateRequest.channelUuid
-  self.pendingSpectateRequest.channelUuid = ""
+  self.clearPendingSpectateRequest()
   self.controller.switchTo(communityId, chatId, "")
 
 method communityJoined*[T](
@@ -1411,6 +1421,11 @@ method isEnsVerified*[T](self: Module[T], publicKey: string): bool =
 method communityDataImported*[T](self: Module[T], community: CommunityDto) =
   if community.id == self.pendingSpectateRequest.communityId:
     discard self.communitiesModule.spectateCommunity(community.id)
+
+method communityInfoRequestFailed*[T](self: Module[T], communityId: string, errorMsg: string) =
+  discard errorMsg
+  if communityId == self.pendingSpectateRequest.communityId:
+    self.clearPendingSpectateRequest()
 
 method resolveENS*[T](self: Module[T], ensName: string, uuid: string, reason: string = "") =
   if ensName.len == 0:
@@ -1630,9 +1645,6 @@ method newCommunityMembershipRequestReceived*[T](self: Module[T], membershipRequ
 
 method communityMembershipRequestCanceled*[T](self: Module[T], communityId: string, requestId: string, pubKey: string) =
   self.view.model().removeMember(communityId, pubKey)
-
-method meMentionedCountChanged*[T](self: Module[T], allMentions: int) =
-  singletonInstance.globalEvents.meMentionedIconBadgeNotification(allMentions)
 
 method displayEphemeralNotification*[T](
     self: Module[T],
@@ -1906,6 +1918,21 @@ proc activateChatDeepLink[T](self: Module[T], statusDeepLink: string): bool =
 
   return true
 
+proc activateMessageDeepLink[T](self: Module[T], statusDeepLink: string): bool =
+  let data = self.sharedUrlsModule.parseMessageUrl(statusDeepLink)
+  if data.chatId.len == 0 or data.messageId.len == 0:
+    return false
+
+  var sectionId = singletonInstance.userProfile.getPubKey()
+  if data.communityId.len > 0:
+    sectionId = data.communityId
+
+  if self.getActiveSectionId() != sectionId:
+    self.setActiveSectionById(sectionId)
+
+  self.view.emitNavigateToMessageDetailsSignal()
+  return self.openSectionChatAndMessage(sectionId, data.chatId, data.messageId)
+
 method onStatusUrlRequested*[T](self: Module[T], action: StatusUrlAction, communityId: string, channelId: string,
     url: string, userId: string) =
 
@@ -1923,10 +1950,7 @@ method onStatusUrlRequested*[T](self: Module[T], action: StatusUrlAction, commun
         if self.controller.getCommunityById(communityId).id != "":
           self.controller.spectateCommunity(communityId)
           return
-        # request community info and then spectate
-        self.pendingSpectateRequest.communityId = communityId
-        self.pendingSpectateRequest.channelUuid = ""
-        self.communitiesModule.requestCommunityInfo(communityId, importing = false)
+        self.communitiesModule.startPendingCommunityFetch(communityId, channelUuid = "")
         return
 
       self.controller.switchTo(communityId, "", "")
@@ -1936,9 +1960,10 @@ method onStatusUrlRequested*[T](self: Module[T], action: StatusUrlAction, commun
       let item = self.view.model().getItemById(communityId)
 
       if item.isEmpty():
-        self.pendingSpectateRequest.communityId = communityId
-        self.pendingSpectateRequest.channelUuid = channelId
-        self.communitiesModule.requestCommunityInfo(communityId, importing = false)
+        if self.controller.getCommunityById(communityId).id != "":
+          self.controller.spectateCommunity(communityId)
+          return
+        self.communitiesModule.startPendingCommunityFetch(communityId, channelUuid = channelId)
         return
 
       self.controller.switchTo(communityId, chatId, "")
@@ -2035,12 +2060,24 @@ method checkAndPerformProfileMigrationIfNeeded*[T](self: Module[T]) =
     return
   if not migrationNeeded:
     return
+  if not self.chatsLoaded:
+    # delay the check for after the chats are loaded
+    self.pendingProfileMigrationCheck = true
+    return
+  if self.profileMigrationFlowInProgress:
+    return
   if profileKeypair.migratedToColdWallet():
     info "run stop using keycard flow for the profile, cause profile was migrated on paired device"
-    # TODO: send signal to qml to `runStopUsingKeycardForProfilePopup()`
+    self.view.profileMigrationFlowRequested(migrateToKeycard = false)
     return
   info "run migrate to a Keycard flow for the profile, cause profile was migrated on paired device"
-  # TODO: send signal to qml to `runStartUsingKeycardForProfilePopup()`
+  self.view.profileMigrationFlowRequested(migrateToKeycard = true)
+
+method onProfileMigrationFlowOpened*[T](self: Module[T]) =
+  self.profileMigrationFlowInProgress = true
+
+method onProfileMigrationFlowClosed*[T](self: Module[T]) =
+  self.profileMigrationFlowInProgress = false
 
 
 method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
@@ -2049,6 +2086,8 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
     return
   if statusDeepLink.contains("/wc?"):
     self.view.wcLinkActivated(statusDeepLink)
+    return
+  if self.activateMessageDeepLink(statusDeepLink):
     return
   # Generic, id-less navigation deep links (e.g. bundled in remote push notifications).
   # Matched before the chat/community/contact routes so the reserved keywords never
@@ -2080,11 +2119,12 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
       url="", userId="")
     return
   if urlData.community.communityId != "":
-    self.onStatusUrlRequested(StatusUrlAction.OpenCommunity, urlData.community.communityId, channelId="", url="", userId="")
+    self.onStatusUrlRequested(StatusUrlAction.OpenCommunity, urlData.community.communityId, channelId="",
+      url="", userId="")
     return
   if urlData.contact.publicKey != "":
     self.onStatusUrlRequested(StatusUrlAction.DisplayUserProfile, communityId="", channelId="", url="",
-      urlData.contact.publicKey)
+      userId = urlData.contact.publicKey)
     return
 
 method onDeactivateChatLoader*[T](self: Module[T], sectionId: string, chatId: string) =
@@ -2097,7 +2137,9 @@ method windowActivated*[T](self: Module[T]) =
 method windowDeactivated*[T](self: Module[T]) =
   self.controller.speedupArchivesImport()
 
-method connectionChange*[T](self: Module[T], connectionType: string, isExpensive: bool) =
+method connectionChange*[T](self: Module[T], connectionType: string, isExpensive: bool, isOnline: bool) =
+  self.view.setConnected(isOnline)
+  self.networkConnectionService.networkConnected(isOnline)
   self.controller.connectionChange(connectionType, isExpensive)
 
 method communityMembersRevealedAccountsLoaded*[T](self: Module[T], communityId: string, membersRevealedAccounts: MembersRevealedAccounts) =
@@ -2130,9 +2172,11 @@ method addressWasShown*[T](self: Module[T], address: string) =
     return
   self.walletAccountService.addressWasShown(address)
 
-method openSectionChatAndMessage*[T](self: Module[T], sectionId: string, chatId: string, messageId: string) =
-  if sectionId in self.chatSectionModules:
-    self.chatSectionModules[sectionId].openCommunityChatAndScrollToMessage(chatId, messageId)
+method openSectionChatAndMessage*[T](self: Module[T], sectionId: string, chatId: string, messageId: string): bool =
+  if sectionId notin self.chatSectionModules:
+    return false
+
+  return self.chatSectionModules[sectionId].openCommunityChatAndScrollToMessage(chatId, messageId)
 
 method updateRequestToJoinState*[T](self: Module[T], sectionId: string, requestToJoinState: RequestToJoinState) =
   if sectionId in self.chatSectionModules:

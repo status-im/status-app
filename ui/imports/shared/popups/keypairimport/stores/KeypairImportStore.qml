@@ -13,6 +13,9 @@ BasePopupStore {
 
     property bool syncViaQr: true
 
+    readonly property string userProfileKeyUid: userProfile.keyUid
+    readonly property bool migratedToColdWallet: userProfile.migratedToColdWallet
+
     // Module Properties
     property var currentState: root.keypairImportModule.currentState
     property var selectedKeypair: root.keypairImportModule.selectedKeypair

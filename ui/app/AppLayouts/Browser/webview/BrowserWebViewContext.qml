@@ -192,6 +192,26 @@ QtObject {
         currentWebView.stop()
     }
 
+    function forceReloadCurrent() {
+        if (!currentWebView)
+            return
+        if (typeof currentWebView.ensureLoaded === "function")
+            currentWebView.ensureLoaded()
+        currentWebView.forceReload()
+    }
+
+    function clearSiteDataCurrent() {
+        if (!currentWebView)
+            return
+        currentWebView.clearSiteData()
+    }
+
+    function clearBrowsingDataCurrent() {
+        if (!currentWebView)
+            return
+        currentWebView.clearBrowsingData()
+    }
+
     function findTextCurrent(text, backward = false) {
         if (!currentWebView)
             return
@@ -210,6 +230,20 @@ QtObject {
         const target = checked ? otrProfileParams : defaultProfileParams
         if (currentWebView.profileParams !== target)
             currentWebView.profileParams = target
+    }
+
+    // Stop → update setting → deferred reload so profile.httpUserAgent Binding
+    // settles before navigation.
+    function setCompatibilityMode(checked) {
+        for (let i = 0; i < tabsModel.count; ++i)
+            getWebView(i)?.stop()
+
+        browserSettings.compatibilityMode = checked
+
+        Qt.callLater(() => {
+            for (let i = 0; i < tabsModel.count; ++i)
+                getWebView(i)?.reload()
+        })
     }
 
     function changeZoomCurrent(delta) {

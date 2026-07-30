@@ -77,10 +77,11 @@ StatusSelect {
 
         width: root.width
 
-        property bool isProfileKeypair: model.keyPair.pairType === Constants.addAccountPopup.keyPairType.profile
-        property bool isOption: model.keyPair.keyUid === Constants.appTranslatableConstants.addAccountLabelOptionAddNewMasterKey ||
-                                model.keyPair.keyUid === Constants.appTranslatableConstants.addAccountLabelOptionAddWatchOnlyAcc
-        property bool isHeader: model.keyPair.pairType === Constants.addAccountPopup.keyPairType.unknown && !menu.isOption
+        readonly property bool isProfileKeypair: model.keyPair.pairType === Constants.addAccountPopup.keyPairType.profile
+        readonly property bool isOption: model.keyPair.keyUid === Constants.appTranslatableConstants.addAccountLabelOptionAddNewMasterKey
+                                         || model.keyPair.keyUid === Constants.appTranslatableConstants.addAccountLabelOptionAddWatchOnlyAcc
+        readonly property bool isHeader: model.keyPair.pairType === Constants.addAccountPopup.keyPairType.unknown && !menu.isOption
+        readonly property bool nonOperableKeypair: model.keyPair.operability === Constants.keypair.operability.nonOperable
 
         title: model.keyPair.pairType === Constants.addAccountPopup.keyPairType.unknown?
                    Utils.appTranslation(model.keyPair.keyUid) :
@@ -94,7 +95,12 @@ StatusSelect {
             }
             return ""
         }
-        enabled: !menu.isHeader && model.keyPair.pairType !== Constants.addAccountPopup.keyPairType.privateKeyImport
+        enabled: !menu.isHeader
+                 && model.keyPair.pairType !== Constants.addAccountPopup.keyPairType.privateKeyImport
+                 && !menu.nonOperableKeypair
+
+        tertiaryTitle: menu.nonOperableKeypair? qsTr("key pair requires import to use on this device") : ""
+        statusListItemTertiaryTitle.color: Theme.palette.warningColor1
 
         asset {
             width: model.keyPair.icon? 24 : 40

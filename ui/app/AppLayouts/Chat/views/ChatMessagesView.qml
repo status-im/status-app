@@ -55,6 +55,7 @@ Item {
     property bool joined
 
     property bool sendViaPersonalChatEnabled
+    property bool messageLinkSharingEnabled
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -66,7 +67,7 @@ Item {
     signal openStickerPackPopup(string stickerPackId)
     signal tokenPaymentRequested(string recipientAddress, string tokenKey, string rawAmount)
     signal showReplyArea(string messageId, string author)
-    signal editModeChanged(bool editModeOn)
+    signal editModeChanged(bool editModeOn, string messageId, string unparsedText, string renderedText)
 
     // Unfurling related requests:
     signal setNeverAskAboutUnfurlingAgain(bool neverAskAgain)
@@ -366,6 +367,8 @@ Item {
             joined: root.joined
 
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
+            messageLinkSharingEnabled: root.messageLinkSharingEnabled
+            createMessageLink: (chatId, messageId) => root.messageStore.createMessageLink(chatId, messageId)
             disabledTooltipText: root.disabledTooltipText
             areTestNetworksEnabled: root.areTestNetworksEnabled
             extraLeftPadding: root.extraLeftPadding
@@ -399,7 +402,7 @@ Item {
             sticker: model.sticker
             stickerPack: model.stickerPack
             editModeOn: model.editMode
-            onEditModeOnChanged: root.editModeChanged(editModeOn)
+            onEditModeOnChanged: root.editModeChanged(editModeOn, model.id, model.unparsedText, model.messageText)
             isEdited: model.isEdited
             deleted: model.deleted
             deletedBy: model.deletedBy

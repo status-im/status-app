@@ -25,10 +25,12 @@ StatusMenu {
     signal launchFindBar()
     signal toggleCompatibilityMode(bool checked)
     signal launchBrowserSettings()
+    signal forceReload()
     signal clearSiteData()
-    signal clearCache()
+    signal clearBrowsingData()
 
-    property bool clearingCache: false
+    property bool clearingBrowsingData: false
+    property bool clearSiteDataSupported: true
 
     background: Rectangle {
         color: root.incognitoMode ?
@@ -119,7 +121,7 @@ StatusMenu {
     StatusAction {
         text: qsTr("Compatibility mode")
         checkable: true
-        checked: true
+        checked: root.browserSettings.compatibilityMode
         onToggled: toggleCompatibilityMode(checked)
     }
 
@@ -134,10 +136,19 @@ StatusMenu {
         }
     }
 
+    StatusAction {
+        text: qsTr("Force reload")
+        icon.name: "refresh"
+        shortcut: "Ctrl+Shift+R"
+        onTriggered: forceReload()
+    }
+
     StatusMenuItem {
         text: qsTr("Clear site data")
         icon.name: "delete"
         icon.color: Theme.palette.primaryColor1
+        enabled: root.clearSiteDataSupported
+        visible: root.clearSiteDataSupported
         onTriggered: clearSiteData()
 
         StatusToolTip {
@@ -147,16 +158,16 @@ StatusMenu {
     }
 
     StatusMenuItem {
-        text: root.clearingCache ? qsTr("Clearing cache...") : qsTr("Clear cache")
+        text: root.clearingBrowsingData ? qsTr("Clearing browsing data...") : qsTr("Clear browsing data")
         icon.name: "broom"
         icon.color: Theme.palette.primaryColor1
-        enabled: !root.clearingCache
+        enabled: !root.clearingBrowsingData
         visibleOnDisabled: true
-        onTriggered: clearCache()
+        onTriggered: clearBrowsingData()
 
         StatusToolTip {
             visible: parent.hovered
-            text: qsTr("Clears cached files, cookies, and history for the entire browser. Browsing is paused until it is done.")
+            text: qsTr("Clears the cache and cookies for the entire browser. Browsing is paused until it is done.")
         }
     }
 

@@ -1606,10 +1606,13 @@ method onCommunityMemberMessagesDeleted*(self: Module, deletedMessages: seq[stri
 method communityContainsChat*(self: Module, chatId: string): bool =
   return self.chatContentModules.hasKey(chatId)
 
-method openCommunityChatAndScrollToMessage*(self: Module, chatId: string, messageId: string) =
-  if chatId in self.chatContentModules:
-    self.setActiveItem(chatId)
-    self.chatContentModules[chatId].scrollToMessage(messageId)
+method openCommunityChatAndScrollToMessage*(self: Module, chatId: string, messageId: string): bool =
+  if chatId notin self.chatContentModules:
+    return false
+
+  self.setActiveItem(chatId)
+  self.chatContentModules[chatId].scrollToMessage(messageId)
+  return true
 
 method updateRequestToJoinState*(self: Module, state: RequestToJoinState) =
   self.view.setRequestToJoinState(state)

@@ -461,8 +461,7 @@ proc finishAppLoading*(self: AppController) =
     self.onboardingModule.onAppLoaded(account.keyUid)
     self.onboardingModule = nil
 
-  if not self.resumeLogin:
-    self.mainModule.checkAndPerformProfileMigrationIfNeeded()
+  self.mainModule.checkAndPerformProfileMigrationIfNeeded()
 
   self.notificationsManager.onAppReady()
 

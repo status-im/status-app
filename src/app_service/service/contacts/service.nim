@@ -1,5 +1,4 @@
 import nimqml, tables, json, sequtils, std/strformat, chronicles, strutils, times, std/times
-import dotherside_ext
 
 import app/global/global_singleton
 import app/core/signals/types
@@ -278,13 +277,6 @@ QtObject:
       error "error: ", errDesription
       return
 
-  proc init*(self: Service) =
-    self.fetchContacts()
-    self.doConnect()
-
-    signalConnect(singletonInstance.userProfile, "nameChanged()", self, "onLoggedInUserNameChange()", 2)
-    signalConnect(singletonInstance.userProfile, "imageChanged()", self, "onLoggedInUserImageChange()", 2)
-
   proc onLoggedInUserNameChange*(self: Service) {.slot.} =
     let data = Args()
     self.events.emit(SIGNAL_LOGGEDIN_USER_NAME_CHANGED, data)
@@ -292,6 +284,13 @@ QtObject:
   proc onLoggedInUserImageChange*(self: Service) {.slot.} =
     let data = Args()
     self.events.emit(SIGNAL_LOGGEDIN_USER_IMAGE_CHANGED, data)
+
+  proc init*(self: Service) =
+    self.fetchContacts()
+    self.doConnect()
+
+    discard QObject.connect(singletonInstance.userProfile, nameChanged, self, onLoggedInUserNameChange, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.userProfile, imageChanged, self, onLoggedInUserImageChange, ConnectionType.QueuedConnection)
 
   proc getContactsByGroup*(self: Service, group: ContactsGroup): seq[ContactsDto] =
     # Having this logic here we ensure that the same contact group in each part of the app will have the same list

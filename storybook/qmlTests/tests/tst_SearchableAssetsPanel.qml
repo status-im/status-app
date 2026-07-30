@@ -59,20 +59,20 @@ Item {
                     key: "stt_key",
                     communityId: "",
                     name: "Status Test Token",
-                    currencyBalanceAsString: "42,23 USD",
+                    currencyBalance: 42.23,
                     symbol: "STT",
                     logoUri: Constants.tokenIcon("STT"),
                     balances: [
                         {
-                            balanceAsString: "0,56",
+                            balance: 0.56,
                             iconUrl: "network/ethereum"
                         },
                         {
-                            balanceAsString: "0,22",
+                            balance: 0.22,
                             iconUrl: "network/arbitrum"
                         },
                         {
-                            balanceAsString: "0,12",
+                            balance: 0.12,
                             iconUrl: "network/optimism"
                         }
                     ],
@@ -83,7 +83,7 @@ Item {
                     key: "dai_key",
                     communityId: "",
                     name: "Dai Stablecoin",
-                    currencyBalanceAsString: "45,92 USD",
+                    currencyBalance: 45.92,
                     symbol: "DAI",
                     logoUri: Constants.tokenIcon("DAI"),
                     balances: [],
@@ -94,7 +94,7 @@ Item {
                     key: "zrx_key",
                     communityId: "",
                     name: "0x",
-                    currencyBalanceAsString: "41,22 USD",
+                    currencyBalance: 41.22,
                     symbol: "ZRX",
                     logoUri: Constants.tokenIcon("ZRX"),
                     balances: [],
@@ -148,7 +148,7 @@ Item {
                         key: e.key,
                         communityId: e.communityId,
                         name: e.name,
-                        currencyBalanceAsString: e.currencyBalanceAsString,
+                        currencyBalance: e.currencyBalance,
                         symbol: e.symbol,
                         logoUri: e.logoUri,
                         balances: e.balances,

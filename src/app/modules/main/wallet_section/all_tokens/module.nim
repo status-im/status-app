@@ -1,7 +1,9 @@
 import nimqml, chronicles
 
-import ./io_interface, ./view, ./controller
+import ./io_interface, ./view, ./controller, ./token_groups_model
 import ../io_interface as delegate_interface
+
+export token_groups_model
 
 import app/global/global_singleton
 import app/core/eventemitter
@@ -74,6 +76,8 @@ method load*(self: Module) =
     self.view.tokenListsUpdated()
   self.events.on(SIGNAL_GROUPS_FOR_CHAIN_LOADED) do(e: Args):
     self.view.onGroupsForChainLoaded()
+  self.events.on(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED) do(e: Args):
+    self.view.onGroupsForChainToLoaded()
 
   self.controller.init()
   self.view.load()
@@ -125,6 +129,16 @@ method getTokenGroupsForChainModelDataSource*(self: Module): TokenGroupsModelDat
     getTokensMarketValuesLoading: proc(): bool = self.controller.getTokensMarketValuesLoading(),
   )
 
+method getTokenGroupsForChainToModelDataSource*(self: Module): TokenGroupsModelDataSource =
+  return (
+    getAllTokenGroups: proc(): var seq[TokenGroupItem] = self.controller.getGroupsForChainTo(),
+    getTokenDetails: proc(tokenKey: string): TokenDetailsItem = self.controller.getTokenDetails(tokenKey),
+    getTokenPreferences: proc(groupKey: string): TokenPreferencesItem = self.controller.getTokenPreferences(groupKey),
+    getCommunityTokenDescription: proc(chainId: int, address: string): string = self.controller.getCommunityTokenDescription(chainId, address),
+    getTokensDetailsLoading: proc(): bool = self.controller.getTokensDetailsLoading(),
+    getTokensMarketValuesLoading: proc(): bool = self.controller.getTokensMarketValuesLoading(),
+  )
+
 method getTokenMarketValuesDataSource*(self: Module): TokenMarketValuesDataSource =
   return (
     getMarketValuesForToken: proc(tokenKey: string): TokenMarketValuesItem = self.controller.getMarketValuesForToken(tokenKey),
@@ -135,6 +149,20 @@ method getTokenMarketValuesDataSource*(self: Module): TokenMarketValuesDataSourc
 
 method buildGroupsForChain*(self: Module, chainId: int) =
   self.controller.buildGroupsForChain(chainId)
+
+method buildGroupsForChainTo*(self: Module, chainId: int) =
+  self.controller.buildGroupsForChainTo(chainId)
+
+# Non-QML accessors so the token-selector producer can snapshot the lazy popular
+# and search lists and drive their fetchMore/search directly.
+proc getTokenGroupsModelObj*(self: Module): TokenGroupsModel =
+  self.view.getTokenGroupsModelObj()
+proc getTokenGroupsForChainModelObj*(self: Module): TokenGroupsModel =
+  self.view.getTokenGroupsForChainModelObj()
+proc getTokenGroupsForChainToModelObj*(self: Module): TokenGroupsModel =
+  self.view.getTokenGroupsForChainToModelObj()
+proc getSearchResultModelObj*(self: Module): TokenGroupsModel =
+  self.view.getSearchResultModelObj()
 
 method getTokenByKeyOrGroupKeyFromAllTokens*(self: Module, key: string): TokenItem =
   return self.controller.getTokenByKeyOrGroupKeyFromAllTokens(key)
@@ -200,6 +228,9 @@ method getMandatoryTokenGroupKeys*(self: Module): seq[string] =
 
 method isChainSupportedForSwapViaParaswap*(self: Module, chainId: int): bool =
   return self.controller.isChainSupportedForSwapViaParaswap(chainId)
+
+method isChainSupportedForSwapViaLiFi*(self: Module, chainId: int): bool =
+  return self.controller.isChainSupportedForSwapViaLiFi(chainId)
 
 method loadTokenLists*(self: Module) =
   self.view.setTokenListsLoading(true)

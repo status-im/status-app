@@ -17,6 +17,26 @@ QtObject {
     /* PRIVATE: Modules used to get data from backend */
     readonly property var _allTokensModule: !!walletSectionAllTokens ? walletSectionAllTokens : null
     readonly property var _networksModule: !!networksModule ? networksModule : null
+    readonly property var _tokenSelectorModule: !!walletSectionTokenSelector ? walletSectionTokenSelector : null
+
+    /* Creates a terminal token-selector picker model for the given kind
+       (0=send, 1=swap, 2=buy, 3=swap-to/bridge receive — destination-chain
+       catalog). Returns { model, id }: the producer keeps the
+       model updated with the owned source and the caller sets its per-modal
+       params; the id must be passed to releaseTokenSelectorModel when the owning
+       modal is destroyed so the model stops being tracked and can be freed. */
+    function createTokenSelectorModel(kind) {
+        if (!root._tokenSelectorModule)
+            return { model: null, id: -1 }
+        root._tokenSelectorModule.prepareModel(kind)
+        const model = root._tokenSelectorModule.getPreparedModel()
+        return { model: model, id: root._tokenSelectorModule.lastPreparedModelId }
+    }
+
+    function releaseTokenSelectorModel(id) {
+        if (!!root._tokenSelectorModule && id >= 0)
+            root._tokenSelectorModule.releaseModel(id)
+    }
 
     readonly property double tokenListUpdatedAt: root._allTokensModule.tokenListUpdatedAt
 
@@ -99,6 +119,8 @@ QtObject {
     */
     readonly property var tokenGroupsModel: !!root._allTokensModule ? root._allTokensModule.tokenGroupsModel : null
     readonly property var tokenGroupsForChainModel: !!root._allTokensModule ? root._allTokensModule.tokenGroupsForChainModel : null
+    // destination-chain catalog for the swap+bridge receive panel
+    readonly property var tokenGroupsForChainToModel: !!root._allTokensModule ? root._allTokensModule.tokenGroupsForChainToModel : null
     readonly property var searchResultModel: !!root._allTokensModule ? root._allTokensModule.searchResultModel : null
 
     // Property and methods below are used to apply advanced token management settings to the SendModal
@@ -109,6 +131,7 @@ QtObject {
     readonly property bool autoRefreshTokensLists: root._allTokensModule.autoRefreshTokensLists
     readonly property bool tokenListsLoading: !!root._allTokensModule ? root._allTokensModule.tokenListsLoading : false
     readonly property bool groupsForChainLoading: !!root._allTokensModule ? root._allTokensModule.groupsForChainLoading : false
+    readonly property bool groupsForChainToLoading: !!root._allTokensModule ? root._allTokensModule.groupsForChainToLoading : false
 
     signal displayAssetsBelowBalanceThresholdChanged()
 
@@ -119,6 +142,10 @@ QtObject {
 
     function buildGroupsForChain(chainId, mandatoryKeys) {
         root._allTokensModule.buildGroupsForChain(chainId, mandatoryKeys)
+    }
+
+    function buildGroupsForChainTo(chainId, mandatoryKeys) {
+        root._allTokensModule.buildGroupsForChainTo(chainId, mandatoryKeys)
     }
 
     // Due to performance reasons, use this function as the last option, when you're sure the token is not present in the models.
@@ -202,5 +229,9 @@ QtObject {
 
     function isChainSupportedForSwapViaParaswap(chainId) {
         return root._allTokensModule.isChainSupportedForSwapViaParaswap(chainId)
+    }
+
+    function isChainSupportedForSwapViaLiFi(chainId) {
+        return root._allTokensModule.isChainSupportedForSwapViaLiFi(chainId)
     }
 }

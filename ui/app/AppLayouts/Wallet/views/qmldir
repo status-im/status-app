@@ -2,6 +2,8 @@ AssetsDetailView 1.0 AssetsDetailView.qml
 CollectiblesView 1.0 CollectiblesView.qml
 FollowingAddresses 1.0 FollowingAddresses.qml
 FollowingAddressesView 1.0 FollowingAddressesView.qml
+LeftTabView 1.0 LeftTabView.qml
+LeftTabViewState 1.0 LeftTabViewState.qml
 NetworkSelectorView 1.0 NetworkSelectorView.qml
 SavedAddresses 1.0 SavedAddresses.qml
 TokenSelectorAssetDelegate 1.0 TokenSelectorAssetDelegate.qml

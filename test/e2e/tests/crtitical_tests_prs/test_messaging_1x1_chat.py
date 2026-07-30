@@ -19,6 +19,7 @@ import configs
 from constants import RandomUser, UserAccount
 from gui.main_window import MainWindow
 from scripts.utils.generators import random_text_message
+from scripts.utils.parsers import remove_tags
 
 
 @pytest.mark.critical
@@ -129,11 +130,19 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             message = chat.find_message_by_text(chat_message1, 0)
             message_actions = message.hover_message()
             message_actions.edit_message(edited_body)
-            message_object = messages_screen.chat.messages(0)[0]
-            assert edited_body in str(message_object.object.unparsedText), \
-                f"Message text is not found in last message"
-            assert message_object.delegate_button.object.isEdited, \
-                f"Message status was not changed to edited"
+
+            def _edited_message_visible() -> bool:
+                msgs = chat.messages(0)
+                if not msgs:
+                    return False
+                plain = remove_tags(msgs[0].text or '')
+                return (
+                    chat_message1 in plain
+                    and additional_text in plain
+                    and '(edited)' in plain
+                )
+
+            assert driver.waitFor(_edited_message_visible, timeout), 'Message was not updated after edit'
             main_window.minimize()
 
 
@@ -149,8 +158,9 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             assert chat_message2 in message_object_0.text, \
                 f"Message text is not found in the last message"
             message_object_1 = messages_screen.chat.messages(1)[0]
-            assert chat_message1 in str(message_object_1.object.unparsedText), \
-                f"Message text is not found in the last message"
+            plain = remove_tags(message_object_1.text or '')
+            assert chat_message1 in plain and additional_text in plain, \
+                'Message text is not found in the last message'
 
         with step(f'User {user_two.name} send emoji to {user_one.name}'):
             messages_screen.group_chat.send_emoji_to_chat(emoji)

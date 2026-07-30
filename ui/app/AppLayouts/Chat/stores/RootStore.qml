@@ -65,6 +65,7 @@ QtObject {
     }
 
     readonly property var activeChatContentModule: root.currentChatContentModule()
+    readonly property int activeChatType: d.activeChatType
 
     property AppLayoutStores.ContactsStore contactsStore
     property CommunityTokensStore communityTokensStore

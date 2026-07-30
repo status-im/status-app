@@ -17,6 +17,7 @@ PopupBase {
 
     required property SigningStore store
 
+    signal passwordProvided(string password)
     signal signingSuccess(string signature)
 
     purpose: PopupBase.Purpose.Signing
@@ -42,10 +43,14 @@ PopupBase {
     isKeycardKeyPair: root.store.ready && root.store.isKeypairMigratedToColdWallet(root.keyUid)
     keyPairForProcessing: root.store.keyPairForProcessing
 
+    externalAuthorization: !root.isKeycardKeyPair && root.userProfileMigratedToColdWallet
+
     performPasswordAction: function(password) {
         const success = root.store.verifyPassword(password)
         if (!success)
             return false
+
+        root.passwordProvided(password) // in case of signing tx via keycard no password (enc pub key)
 
         const signature = root.store.signMessage(root.address, password, root.txHash)
         if (signature === "")
@@ -58,6 +63,10 @@ PopupBase {
 
     performKeycardAction: function(keyUid, pin) {
         root.store.startKeycardSigning(keyUid, pin, root.txHash, root.path)
+    }
+
+    onAuthorizeRequested: {
+        Global.openAuthenticationPopup(Constants.authenticationReason.signing, root.store.userProfileKeyUid, false)
     }
 
     closePopupAction: function() {
@@ -75,6 +84,29 @@ PopupBase {
 
         function onKeycardSignError(error) {
             root.handleKeycardError(error)
+        }
+    }
+
+    Connections {
+        target: Global
+        enabled: root.externalAuthorization
+
+        function onAuthenticationResult(reason, password, pin, keyUid, chatPrivateKey) {
+            if (reason !== Constants.authenticationReason.signing)
+                return
+            if (!password)
+                return
+
+            root.passwordProvided(password) // in case of signing tx via keycard no password (enc pub key)
+
+            const signature = root.store.signMessage(root.address, password, root.txHash)
+            if (signature === "") {
+                Global.displayToastMessage(qsTr("Failed to sign with the authorized credentials"), "", "warning",
+                                           false, Constants.ephemeralNotificationType.danger, "")
+                return
+            }
+            root.signingSuccess(signature)
+            root.close()
         }
     }
 

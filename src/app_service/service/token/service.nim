@@ -1,4 +1,4 @@
-import nimqml, tables, json, std/sequtils, chronicles, strutils, sugar, algorithm
+import nimqml, tables, sets, json, std/sequtils, chronicles, strutils, sugar, algorithm
 
 import web3/eth_api_types
 import backend/backend as backend
@@ -20,6 +20,11 @@ import backend/tokens as status_go_tokens
 
 import dto/types as dto_types
 import items/types as items_types
+import token_lookup_cache
+import token_missing_fetch
+import token_pending_fetch
+import token_refresh_generation
+import token_apply_builder
 
 export dto_types, items_types
 
@@ -42,17 +47,23 @@ QtObject:
 
     # local storage, fulfilled by need, empty at the start
     chainsSupportedForSwapViaParaswap: Table[int, bool] # [chainId, bool]
+    chainsSupportedForSwapViaLiFi: Table[int, bool] # [chainId, bool]
     # local storage
     tokensOfInterestByKey: Table[string, TokenItem] # [tokenKey, TokenItem]
+    knownMissingKeys: HashSet[string] # keys the backend confirmed as "not found"; skip re-fetching until a refresh applies
+    pendingTokenFetch: PendingTokenFetch # missing keys awaiting an async batch fetch (replaces the sync GUI-thread RPC)
+    missingTokenKeysFetchDebouncer: debouncer_service.Debouncer # coalesces a burst of misses into one batch
     groupsOfInterestByKey: Table[string, TokenGroupItem] # [tokenGroupKey, TokenGroupItem]
     groupsOfInterest: seq[TokenGroupItem] # refers to groups for tokens of interest
     allTokensByGroupKey: Table[string, seq[TokenItem]] # rebuilt in applyRefreshTokensData for getTokenByKeyOrGroupKeyFromAllTokens
-    groupsForChain: seq[TokenGroupItem] # refers to groups for a specific chain
+    groupsForChain: seq[TokenGroupItem] # groups for the source (pay) chain
+    groupsForChainTo: seq[TokenGroupItem] # groups for the destination (receive) chain (swap+bridge)
     allTokenGroupsForActiveNetworks: seq[TokenGroupItem] # all token groups, fetched on demand
     allTokenGroupsLoading: bool
     allTokenLists: seq[TokenListItem] # fetched on demand, not at startup
     tokenListsLoading: bool
     groupsForChainLoading: bool
+    groupsForChainToLoading: bool
     tokenDetailsTable: Table[string, TokenDetailsItem] # [tokenKey, TokenDetailsItem]
     tokenMarketValuesTable: Table[string, TokenMarketValuesItem] # [tokenKey, TokenMarketValuesItem]
     tokenPriceTable: Table[string, float64] # [tokenKey, price]
@@ -65,12 +76,24 @@ QtObject:
     hasMarketDetailsCache: bool
     hasPriceValuesCache: bool
     tokenListUpdatedAt: int64
-    refreshTokensRequestId: int
+    # Generation coalescing for the two heavy async tasks: N queued triggers ->
+    # one apply of the newest data, no piling-up in-flight tasks.
+    refreshTokensGen: RefreshGenerationState
+    fetchAllTokenListsGen: RefreshGenerationState
+    # Catalogue-fetch want for refresh tasks: ORed
+    # across coalesced triggers, consumed at task start, re-fetched when a flagged
+    # task's result is dropped as stale.
+    pendingFetchAllTokens: bool
+    inFlightFetchAllTokens: bool
 
   # Forward declaration
   proc getCurrency*(self: Service): string
   proc rebuildMarketData*(self: Service)
   proc fetchTokenPreferences(self: Service)
+  proc scheduleMissingTokenKeysFetch(self: Service)
+  proc fetchPendingMissingTokenKeys(self: Service)
+  proc startRefreshTokensTask(self: Service, generation: int, fetchAllTokens: bool = false)
+  proc startFetchAllTokenListsTask(self: Service, generation: int)
 
   # All slots defined in included files have to be forward declared
   proc tokensMarketValuesRetrieved(self: Service, response: string) {.slot.}
@@ -79,9 +102,12 @@ QtObject:
   proc tokenHistoricalDataResolved*(self: Service, response: string) {.slot.}
   proc onAsyncRefreshTokensDone(self: Service, response: string) {.slot.}
   proc onAsyncFetchAllTokenListsDone(self: Service, response: string) {.slot.}
+  proc onAsyncFetchMissingTokensDone(self: Service, response: string) {.slot.}
   proc onAsyncBuildGroupsForChainDone(self: Service, response: string) {.slot.}
+  proc onAsyncBuildGroupsForChainToDone(self: Service, response: string) {.slot.}
   proc onAsyncFetchAllTokenGroupsDone(self: Service, response: string) {.slot.}
   proc prefetchParaswapSupportRetrieved(self: Service, response: string) {.slot.}
+  proc prefetchLiFiSupportRetrieved(self: Service, response: string) {.slot.}
 
 
   proc delete*(self: Service)
@@ -100,6 +126,10 @@ QtObject:
     result.settingsService = settingsService
 
     result.tokensOfInterestByKey = initTable[string, TokenItem]()
+    result.knownMissingKeys = initHashSet[string]()
+    result.pendingTokenFetch = initPendingTokenFetch()
+    result.refreshTokensGen = initRefreshGenerationState()
+    result.fetchAllTokenListsGen = initRefreshGenerationState()
     result.groupsOfInterestByKey = initTable[string, TokenGroupItem]()
     result.allTokensByGroupKey = initTable[string, seq[TokenItem]]()
     result.tokenDetailsTable = initTable[string, TokenDetailsItem]()

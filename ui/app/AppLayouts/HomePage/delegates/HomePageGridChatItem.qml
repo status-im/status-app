@@ -49,7 +49,7 @@ HomePageGridItem {
     bottomRowComponent: StatusBaseText {
         visible: !!root.lastMessageText
         text: root.lastMessageText
-        font.pixelSize: Theme.additionalTextSize
+        font.pixelSize: Theme.fontSize(12)
         maximumLineCount: 1
         textFormat: Text.PlainText
         elide: Text.ElideRight

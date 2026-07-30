@@ -68,6 +68,9 @@ public:
     // emits shakeDetected signal when shake is detected
     Q_INVOKABLE void startShakeDetection();
 
+    // (native) screen helper
+    Q_INVOKABLE qreal nativeDpr(QQuickWindow *window) const;
+
 signals:
     // Emitted when event of type QEvent::Quit is detected by event filter on
     // QGuiApplication. It's helpful to handle close requests on mac coming from
@@ -88,5 +91,7 @@ private:
     bool m_androidKeyboardVisible = false;
     int m_iosKeyboardHeight = 0;
     bool m_iosKeyboardVisible = false;
+#ifdef Q_OS_IOS
     QTimer* m_iosKeyboardPollTimer = nullptr;
+#endif
 };

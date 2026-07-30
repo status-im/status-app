@@ -13,6 +13,9 @@ import QtMultimedia
 ApplicationWindow {
     id: root
 
+    // Allows selecting the initial page from the command line (see main.cpp).
+    property alias currentPage: storybook.currentPage
+
     width: 1450
     height: 840
     visible: true

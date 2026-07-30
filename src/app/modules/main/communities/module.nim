@@ -45,6 +45,8 @@ type
     JoinCommunity
     EditSharedAddresses
 
+const COMMUNITY_FETCH_TIMEOUT_SECONDS = 60
+
 type
   AddressToShareDetails = object
     keyUid: string
@@ -73,6 +75,13 @@ proc allSigned(self: JoiningCommunityDetails): bool =
   return true
 
 type
+  PendingCommunityFetch = object
+    communityId*: string
+    channelUuid*: string
+    previousSectionId*: string
+    requestId*: int
+    active*: bool
+
   Module*  = ref object of io_interface.AccessInterface
     delegate: delegate_interface.AccessInterface
     controller: Controller
@@ -85,6 +94,8 @@ type
     checkingPermissionToJoinInProgress: bool
     checkingAllChannelPermissionsInProgress: bool
     joiningCommunityDetails: JoiningCommunityDetails
+    pendingCommunityFetch: PendingCommunityFetch
+    nextCommunityFetchRequestId: int
 
 # Forward declaration
 method setCommunityTags*(self: Module, communityTags: string)
@@ -93,6 +104,36 @@ method setCuratedCommunities*(self: Module, curatedCommunities: seq[CommunityDto
 proc buildTokensAndCollectiblesFromAllCommunities(self: Module)
 proc buildTokensAndCollectiblesFromCommunities(self: Module, communities: seq[CommunityDto])
 proc setCheckingPermissionToJoinInProgress(self: Module, inProgress: bool)
+
+proc hasPendingCommunityFetch(self: Module, communityId: string): bool =
+  self.pendingCommunityFetch.active and self.pendingCommunityFetch.communityId == communityId
+
+proc clearPendingCommunityFetch(self: Module) =
+  self.pendingCommunityFetch = PendingCommunityFetch()
+
+proc restorePreviousSectionAfterCommunityFetch(self: Module, previousSectionId: string) =
+  if previousSectionId.len == 0 or previousSectionId == self.delegate.getActiveSectionId():
+    return
+
+  self.delegate.setActiveSectionById(previousSectionId)
+
+proc finishPendingCommunityFetch(self: Module, timedOut: bool) =
+  if not self.pendingCommunityFetch.active:
+    return
+
+  let communityId = self.pendingCommunityFetch.communityId
+  let previousSectionId = self.pendingCommunityFetch.previousSectionId
+  let requestId = self.pendingCommunityFetch.requestId
+
+  self.clearPendingCommunityFetch()
+  self.delegate.setCommunityIdToSpectate("", "")
+
+  if timedOut:
+    self.view.emitCommunityFetchFailedSignal(communityId, requestId)
+  else:
+    self.view.emitCommunityFetchCancelledSignal(communityId, requestId)
+
+  self.restorePreviousSectionAfterCommunityFetch(previousSectionId)
 
 proc newModule*(
     delegate: delegate_interface.AccessInterface,
@@ -366,6 +407,38 @@ method cancelRequestToJoinCommunity*(self: Module, communityId: string) =
 method requestCommunityInfo*(self: Module, communityId: string, importing: bool) =
   self.controller.requestCommunityInfo(communityId, importing)
 
+method startPendingCommunityFetch*(self: Module, communityId: string, channelUuid: string) =
+  # The UI exposes a single global community fetch popup. Starting a new fetch
+  # replaces any previous pending one to avoid overlapping popup state.
+  if self.pendingCommunityFetch.active:
+    self.finishPendingCommunityFetch(timedOut = false)
+
+  inc self.nextCommunityFetchRequestId
+  self.pendingCommunityFetch = PendingCommunityFetch(
+    communityId: communityId,
+    channelUuid: channelUuid,
+    previousSectionId: self.delegate.getActiveSectionId(),
+    requestId: self.nextCommunityFetchRequestId,
+    active: true,
+  )
+
+  self.delegate.setCommunityIdToSpectate(communityId, channelUuid)
+  self.view.emitCommunityFetchStartedSignal(communityId, channelUuid, self.pendingCommunityFetch.requestId,
+    COMMUNITY_FETCH_TIMEOUT_SECONDS)
+  self.controller.requestCommunityInfo(communityId, importing = false)
+
+method cancelPendingCommunityFetch*(self: Module) =
+  self.finishPendingCommunityFetch(timedOut = false)
+
+method timeoutPendingCommunityFetch*(self: Module) =
+  self.finishPendingCommunityFetch(timedOut = true)
+
+method retryCommunityFetch*(self: Module, communityId: string, channelUuid: string) =
+  if communityId.len == 0:
+    return
+
+  self.startPendingCommunityFetch(communityId, channelUuid = channelUuid)
+
 method isUserMemberOfCommunity*(self: Module, communityId: string): bool =
   self.controller.isUserMemberOfCommunity(communityId)
 
@@ -375,9 +448,22 @@ method isMyCommunityRequestPending*(self: Module, communityId: string): bool =
 method communityDataImported*(self: Module, community: CommunityDto) =
   self.view.addItem(self.getCommunityItem(community))
   self.buildTokensAndCollectiblesFromCommunities(@[community])
+  if self.hasPendingCommunityFetch(community.id):
+    let requestId = self.pendingCommunityFetch.requestId
+    self.clearPendingCommunityFetch()
+    self.view.emitCommunityFetchCompletedSignal(community.id, requestId)
   self.view.emitCommunityInfoRequestCompleted(community.id, "")
 
 method communityInfoRequestFailed*(self: Module, communityId: string, errorMsg: string) =
+  if self.hasPendingCommunityFetch(communityId):
+    let requestId = self.pendingCommunityFetch.requestId
+    let previousSectionId = self.pendingCommunityFetch.previousSectionId
+    self.clearPendingCommunityFetch()
+    self.delegate.setCommunityIdToSpectate("", "")
+    warn "Community info request failed", communityId, errorMsg
+    self.view.emitCommunityFetchFailedSignal(communityId, requestId)
+    self.restorePreviousSectionAfterCommunityFetch(previousSectionId)
+
   self.view.emitCommunityInfoRequestCompleted(communityId, errorMsg)
 
 method onImportCommunityErrorOccured*(self: Module, communityId: string, error: string) =

@@ -150,6 +150,9 @@ SwipeView {
     */
     signal backButtonClicked()
 
+    // Bound (not a function) so StatusSectionLayout.canGoBack stays reactive.
+    readonly property bool canGoBackInternally: root.currentIndex > 0 || !!root.backButtonName
+
     QtObject {
         id: d
         // Cache wrapper items removed from the swipe view
@@ -160,19 +163,39 @@ SwipeView {
                 root.backButtonClicked()
                 return
             }
-
-            if (root.currentIndex > 0) {
+            if (root.currentIndex > 0)
                 root.currentIndex--
-            }
         }
     }
 
     Keys.onPressed: function(e) {
-        if (e.key === Qt.Key_Back && root.currentIndex > 0) {
+        if (e.key === Qt.Key_Back && root.canGoBackInternally) {
             e.accepted = true
             d.handleBackAction()
         }
     }
+
+    function tryGoBack() {
+        if (root.canGoBackInternally) {
+            d.handleBackAction()
+            return true
+        }
+        return false
+    }
+
+    onCurrentItemChanged: {
+        if (currentItem) {
+            currentItem.focus = true
+            currentItem.forceActiveFocus()
+        }
+    }
+
+    onVisibleChanged: {
+         if (visible && currentItem) {
+             currentItem.focus = true
+             currentItem.forceActiveFocus()
+         }
+     }
 
     component BaseProxyPanel : Control {
         id: baseProxyPanel

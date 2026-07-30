@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, TypeVar
@@ -8,7 +9,8 @@ import allure
 from allure_commons.types import AttachmentType
 from allure_commons._allure import step
 
-from scripts.utils.process_metrics import ProcessSampleStats, ProcessMonitor
+from driver.aut import AUT
+from scripts.utils.process_metrics import ProcessSampleStats, ProcessMonitor, resolve_monitored_pid
 
 LOG = logging.getLogger(__name__)
 
@@ -25,7 +27,7 @@ class BenchmarkMetricReport:
 
 
 @dataclass
-class CommunityOpenSamples:
+class BenchmarkScenarioSamples:
     load_times: list[float] = field(default_factory=list)
     cpu_percents: list[float] = field(default_factory=list)
     ram_mb: list[float] = field(default_factory=list)
@@ -75,54 +77,78 @@ def enable_benchmark_mode() -> None:
     os.environ['STATUS_RUNTIME_TEST_MODE'] = 'True'  # to omit banners
 
 
-def attach_load_time_report(
-    tmp_path: Path,
-    *,
-    attachment_prefix: str,
-    line_subject: str,
-    filename: str,
-    load_times: list[float],
-) -> None:
-    attach_benchmark_metrics(tmp_path, [
-        BenchmarkMetricReport(
-            attachment_prefix=attachment_prefix,
-            filename=filename,
-            line_subject=line_subject,
-            unit='seconds',
-            values=load_times,
-        ),
-    ])
-
-
-def attach_community_scenario_reports(tmp_path: Path, scenario: str, samples: CommunityOpenSamples) -> None:
-    subject = f'Status community {scenario}'
-    slug = scenario.replace(' ', '_')
-    attach_benchmark_metrics(tmp_path, [
-        BenchmarkMetricReport(
-            attachment_prefix=f'{subject} load times',
-            filename=f'status_community_{slug}_load_times.txt',
-            line_subject=f'{subject} load time',
-            unit='seconds',
-            values=samples.load_times,
-        ),
+def _resource_metric_reports(
+    subject: str,
+    slug: str,
+    samples: BenchmarkScenarioSamples,
+) -> list[BenchmarkMetricReport]:
+    return [
         BenchmarkMetricReport(
             attachment_prefix=f'{subject} CPU usage',
-            filename=f'status_community_{slug}_cpu_usage.txt',
+            filename=f'{slug}_cpu_usage.txt',
             line_subject=f'{subject} CPU usage',
             unit='percent',
             values=samples.cpu_percents,
         ),
         BenchmarkMetricReport(
             attachment_prefix=f'{subject} RAM usage',
-            filename=f'status_community_{slug}_ram_usage.txt',
+            filename=f'{slug}_ram_usage.txt',
             line_subject=f'{subject} RAM usage',
             unit='MB',
             values=samples.ram_mb,
         ),
+    ]
+
+
+def attach_resource_reports(
+    tmp_path: Path,
+    *,
+    subject: str,
+    slug: str,
+    samples: BenchmarkScenarioSamples,
+) -> None:
+    attach_benchmark_metrics(tmp_path, _resource_metric_reports(subject, slug, samples))
+
+
+def attach_scenario_reports(
+    tmp_path: Path,
+    *,
+    subject: str,
+    slug: str,
+    samples: BenchmarkScenarioSamples,
+) -> None:
+    attach_benchmark_metrics(tmp_path, [
+        BenchmarkMetricReport(
+            attachment_prefix=f'{subject} load times',
+            filename=f'{slug}_load_times.txt',
+            line_subject=f'{subject} load time',
+            unit='seconds',
+            values=samples.load_times,
+        ),
+        *_resource_metric_reports(subject, slug, samples),
     ])
 
 
-def monitored_call(pid: int, action: Callable[[], T], interval_sec: float = 0.1) -> tuple[T, ProcessSampleStats]:
-    with ProcessMonitor(pid, interval_sec=interval_sec) as monitor:
+def monitored_call(aut: AUT, action: Callable[[], T], interval_sec: float = 0.1) -> tuple[T, ProcessSampleStats]:
+    monitor_pid = resolve_monitored_pid(aut.pid, aut.path, aut.app_data)
+    with ProcessMonitor(monitor_pid, interval_sec=interval_sec) as monitor:
         result = action()
     return result, monitor.stats()
+
+
+def monitored_timed_call(
+    aut: AUT,
+    action: Callable[[], T],
+    interval_sec: float = 0.1,
+) -> tuple[T, float, ProcessSampleStats]:
+    def timed_action() -> tuple[T, float]:
+        started_at = time.perf_counter()
+        result = action()
+        return result, time.perf_counter() - started_at
+
+    (result, load_time), stats = monitored_call(
+        aut,
+        timed_action,
+        interval_sec=interval_sec,
+    )
+    return result, load_time, stats

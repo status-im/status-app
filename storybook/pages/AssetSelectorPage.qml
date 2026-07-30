@@ -8,16 +8,16 @@ import utils
 Pane {
     readonly property var assetsData: [
         {
-            tokensKey: "stt_key",
+            key: "stt_key",
             communityId: "",
             name: "Status Test Token",
-            currencyBalanceAsString: "42,23 USD",
+            currencyBalance: 42.23,
             symbol: "STT",
-            iconSource: Constants.tokenIcon("STT"),
+            logoUri: Constants.tokenIcon("STT"),
 
             balances: [
                 {
-                    balanceAsString: "0,56",
+                    balance: 0.56,
                     iconUrl: "network/ethereum"
                 }
             ],
@@ -25,16 +25,16 @@ Pane {
             sectionName: "My assets on Mainnet"
         },
         {
-            tokensKey: "eth_key",
+            key: "eth_key",
             communityId: "",
             name: "Ether",
-            currencyBalanceAsString: "4 276,86 USD",
+            currencyBalance: 4276.86,
             symbol: "ETH",
-            iconSource: Constants.tokenIcon("ETH"),
+            logoUri: Constants.tokenIcon("ETH"),
 
             balances: [
                 {
-                    balanceAsString: "0,12",
+                    balance: 0.12,
                     iconUrl: "network/ethereum"
                 }
             ],
@@ -42,23 +42,23 @@ Pane {
             sectionName: "My assets on Mainnet"
         },
         {
-            tokensKey: "dai_key",
+            key: "dai_key",
             communityId: "",
             name: "Dai Stablecoin",
-            currencyBalanceAsString: "45,92 USD",
+            currencyBalance: 45.92,
             symbol: "DAI",
-            iconSource: Constants.tokenIcon("DAI"),
+            logoUri: Constants.tokenIcon("DAI"),
             balances: [],
 
             sectionName: "Popular assets"
         },
         {
-            tokensKey: "zrx_key",
+            key: "zrx_key",
             communityId: "",
             name: "0x",
-            currencyBalanceAsString: "41,22 USD",
+            currencyBalance: 41.22,
             symbol: "ZRX",
-            iconSource: Constants.tokenIcon("ZRX"),
+            logoUri: Constants.tokenIcon("ZRX"),
             balances: [],
 
             sectionName: "Popular assets"

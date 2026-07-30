@@ -116,17 +116,18 @@ pipeline {
                 }
               }
               steps {
-                script {
-                  benchmark_windows_e2e = build(
-                    job: 'status-app/e2e/nightly-benchmark-windows-master',
-                    propagate: false,
-                    parameters: jenkins.mapToParams([
-                      BUILD_SOURCE:      windows_x86_64.fullProjectName,
-                      TESTRAIL_RUN_NAME: utils.pkgFilename(),
-                      TEST_SCOPE_FLAG:   utils.isReleaseBuild() ? '-m=critical' : '',
-                      GIT_REF:           env.BRANCH_NAME
-                    ]),
-                  )
+                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                  script {
+                    benchmark_windows_e2e = build(
+                      job: 'status-app/e2e/nightly-benchmark-windows-master',
+                      parameters: jenkins.mapToParams([
+                        BUILD_SOURCE:      windows_x86_64.fullProjectName,
+                        TESTRAIL_RUN_NAME: utils.pkgFilename(),
+                        TEST_SCOPE_FLAG:   utils.isReleaseBuild() ? '-m=critical' : '',
+                        GIT_REF:           env.BRANCH_NAME
+                      ]),
+                    )
+                  }
                 }
               }
             }

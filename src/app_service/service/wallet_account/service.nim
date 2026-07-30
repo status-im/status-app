@@ -59,8 +59,7 @@ QtObject:
   proc handleWalletAccount(self: Service, account: WalletAccountDto, notify: bool = true)
   proc handleKeypair(self: Service, keypair: KeypairDto)
   proc updateAccountsPositions(self: Service)
-  proc importPartiallyOperableAccounts(self: Service, keyUid: string, password: string)
-  proc cleanKeystoreFiles(self: Service, password: string)
+  proc onPasswordProvided(self: Service, keyUid: string, password: string)
   proc getCurrencyValueForToken*(self: Service, tokenKey: string, amountInt: UInt256): float64
   proc fetchENSNamesForAddressesAsync(self: Service, addresses: seq[string], chainId: int)
   # All slots defined in included files have to be forward declared

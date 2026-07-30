@@ -1,19 +1,22 @@
 import squishtest  # noqa
 
-from . import server, context, objects_access, toplevel_window, aut, mouse
+from . import server, context, objects_access, toplevel_window, mouse
 from .squish_api import *
 
 imports = {module.__name__: module for module in [
-    aut,
     context,
     objects_access,
     mouse,
     server,
-    toplevel_window
+    toplevel_window,
 ]}
 
 
 def __getattr__(name):
+    if name == 'aut':
+        from . import aut as aut_module
+        imports['aut'] = aut_module
+        return aut_module
     if name in imports:
         return imports[name]
     try:

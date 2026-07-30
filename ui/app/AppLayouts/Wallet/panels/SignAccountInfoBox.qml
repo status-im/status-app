@@ -31,6 +31,9 @@ ColumnLayout {
     RecipientViewDelegate {
         id: delegate
         objectName: "recipientDelegate"
+        // StatusListItem sets Accessible.name but no role; roleless items are
+        // dropped from the Android accessibility tree, hiding the account/address.
+        Accessible.role: Accessible.StaticText
 
         Layout.fillWidth: true
         Layout.preferredHeight: root.listItemHeight

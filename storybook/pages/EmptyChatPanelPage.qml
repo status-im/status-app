@@ -15,7 +15,7 @@ Item {
 
         EmptyChatPanel {
             anchors.fill: parent
-            onShareChatKeyClicked: console.log("EmptyChatPanel::onShareChatKeyClicked")
+            onShareChatKeyClicked: console.info("EmptyChatPanel::onShareChatKeyClicked")
         }
     }
 }

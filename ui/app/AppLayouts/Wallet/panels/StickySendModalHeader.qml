@@ -10,20 +10,23 @@ Control {
 
     /**
     Expected model structure:
-    - tokensKey: unique string ID of the token (asset); e.g. "ETH" or contract address
+    - key: unique string ID of the token group; e.g. "ETH" or contract address
     - name: user visible token name (e.g. "Ethereum")
     - symbol: user visible token symbol (e.g. "ETH")
+    - logoUri: string
     - decimals: number of decimal places
-    - communityId:optional; ID of the community this token belongs to, if any
-    - marketDetails: object containing props like `currencyPrice` for the computed values below
-    - balances: submodel[ chainId:int, account:string, balance:BigIntString, iconUrl:string ]
+    - cryptoPrice: current price of one token in the user's fiat currency
     - currentBalance: amount of tokens
     - currencyBalance: e.g. `1000.42` in user's fiat currency
-    - currencyBalanceAsString: e.g. "1 000,42 CZK" formatted as a string according to the user's locale
-    - balanceAsString: `1.42` formatted as e.g. "1,42" in user's locale
-    - iconSource: string
+    - sectionName: title of the section this row belongs to (owned / popular)
+    - balances: submodel[ chainId:int, iconUrl:string, chainName:string,
+                          balance:real, rawBalance:string ]
+    - tokens: submodel[ key:string, chainId:int ]
     **/
     required property var assetsModel
+
+    /** Forwarded to the inner SendModalHeader. **/
+    property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : Number(amount).toLocaleCurrencyString(Qt.locale()))
     /**
     Expected model structure:
     - groupName: group name (from collection or community name)
@@ -103,6 +106,7 @@ Control {
     background: Item {
 
         Rectangle {
+            objectName: "blurBackdropRect"
             anchors.fill: parent
             anchors.leftMargin: radius
             anchors.rightMargin: radius
@@ -116,12 +120,46 @@ Control {
             }
 
             ShaderEffectSource {
+                id: blurBackdropSource
+                objectName: "blurBackdropSource"
+
                 sourceItem: root.blurSource
                 anchors.fill: parent
                 anchors.leftMargin: Theme.xlPadding - parent.radius
                 anchors.rightMargin: -Theme.xlPadding - parent.radius
                 sourceRect: Qt.rect(0, 0, width, height)
-                live: true
+
+                live: false
+
+                // Emitted whenever the backdrop is re-captured; exposes the
+                // refresh-on-movement contract for testing.
+                signal refreshRequested()
+                function refreshBlur() {
+                    refreshRequested()
+                    scheduleUpdate()
+                }
+
+                Connections {
+                    target: root.blurSource
+                    ignoreUnknownSignals: true
+                    function onContentYChanged() { blurBackdropSource.refreshBlur() }
+                    function onContentHeightChanged() { blurBackdropSource.refreshBlur() }
+                    function onContentWidthChanged() { blurBackdropSource.refreshBlur() }
+                    function onWidthChanged() { blurBackdropSource.refreshBlur() }
+                    function onHeightChanged() { blurBackdropSource.refreshBlur() }
+                }
+
+                // With live == false Qt marks a sourceRect/size change dirty but
+                // never re-renders it, so the capture taken while the header
+                // animates 0 -> N gets stretched; ask for a fresh one explicitly.
+                onSourceRectChanged: refreshBlur()
+                onWidthChanged: refreshBlur()
+                onHeightChanged: refreshBlur()
+
+                // A theme switch recolors the content behind the header without
+                // moving it; re-capture so the static backdrop is not left stale.
+                readonly property color themeProbe: foregroundRect.color
+                onThemeProbeChanged: refreshBlur()
             }
         }
 
@@ -129,6 +167,7 @@ Control {
             anchors.fill: parent
             Rectangle {
                 id: foregroundRect
+                objectName: "sendHeaderForegroundRect"
                 anchors.fill: parent
                 color: root.implicitHeight > d.bottomMargin ? StatusColors.alphaColor(Theme.palette.baseColor3, 0.85) : StatusColors.transparent
                 radius: 8
@@ -171,6 +210,7 @@ Control {
 
         networksModel: root.networksModel
         assetsModel: root.assetsModel
+        formatCurrencyBalance: root.formatCurrencyBalance
         collectiblesModel: root.collectiblesModel
 
         selectedChainId: root.selectedChainId

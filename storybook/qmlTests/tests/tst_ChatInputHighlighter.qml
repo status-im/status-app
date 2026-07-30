@@ -1,0 +1,788 @@
+import QtQuick
+import QtTest
+import StatusQ
+
+TestCase {
+    id: testCase
+    name: "ChatInputHighlighter"
+
+    property ChatInputHighlighter highlighter: ChatInputHighlighter {}
+    property ChatInputHighlighter highlighterOpenFence: ChatInputHighlighter { formatUnclosedCodeFence: true }
+
+    // Returns the one span whose [start, end) exactly covers contentSubstring
+    // inside text, or null if no such span exists.
+    function spanFor(text, contentSubstring) {
+        const spans = highlighter.parseFormats(text)
+        const idx   = text.indexOf(contentSubstring)
+        for (let i = 0; i < spans.length; i++) {
+            if (spans[i].start === idx && spans[i].end === idx + contentSubstring.length)
+                return spans[i]
+        }
+        return null
+    }
+
+    function spanForMultiLine(text, contentSubstring) {
+        const spans = highlighter.parseFormats(text)
+        const idx   = text.indexOf(contentSubstring)
+        for (let i = 0; i < spans.length; i++) {
+            if (spans[i].start === idx && spans[i].end === idx + contentSubstring.length)
+                return spans[i]
+        }
+        return null
+    }
+
+    // ── bold ──────────────────────────────────────────────────────────────────
+
+    function test_boldBasic() {
+        const s = spanFor("**bold**", "bold")
+        verify(s !== null, "expected a span over 'bold'")
+        verify(s.bold,    "expected bold")
+        verify(!s.italic, "must not be italic")
+    }
+
+    function test_boldDelimitersNotFormatted() {
+        // The ** markers (positions 0-1 and 6-7) must not be inside any span
+        const spans = highlighter.parseFormats("**bold**")
+        for (let i = 0; i < spans.length; i++) {
+            verify(spans[i].start >= 2, "opening ** must not be formatted")
+            verify(spans[i].end   <= 6, "closing ** must not be formatted")
+        }
+    }
+
+    function test_boldWithSurroundingText() {
+        const s = spanFor("hello **world** there", "world")
+        verify(s !== null)
+        verify(s.bold)
+    }
+
+    function test_boldDelimiterPositionsExact() {
+        // "**hi**": bold span must be exactly [2, 4)
+        const spans = highlighter.parseFormats("**hi**")
+        compare(spans.length, 1)
+        compare(spans[0].start, 2)
+        compare(spans[0].end,   4)
+        verify(spans[0].bold)
+    }
+
+    // ── italic ────────────────────────────────────────────────────────────────
+
+    function test_italicBasic() {
+        const s = spanFor("*italic*", "italic")
+        verify(s !== null)
+        verify(s.italic)
+        verify(!s.bold)
+    }
+
+    function test_italicDelimitersNotFormatted() {
+        const spans = highlighter.parseFormats("*italic*")
+        for (let i = 0; i < spans.length; i++) {
+            verify(spans[i].start >= 1, "opening * must not be formatted")
+            verify(spans[i].end   <= 7, "closing * must not be formatted")
+        }
+    }
+
+    function test_italicDelimiterPositionsExact() {
+        // "*hi*": italic span must be exactly [1, 3)
+        const spans = highlighter.parseFormats("*hi*")
+        compare(spans.length, 1)
+        compare(spans[0].start, 1)
+        compare(spans[0].end,   3)
+        verify(spans[0].italic)
+    }
+
+    // ── strikethrough ─────────────────────────────────────────────────────────
+
+    function test_strikethroughBasic() {
+        const s = spanFor("~~strike~~", "strike")
+        verify(s !== null)
+        verify(s.strikethrough)
+        verify(!s.bold)
+        verify(!s.italic)
+    }
+
+    function test_strikethroughDelimiterPositionsExact() {
+        // "~~hi~~": strikethrough span must be exactly [2, 4)
+        const spans = highlighter.parseFormats("~~hi~~")
+        compare(spans.length, 1)
+        compare(spans[0].start, 2)
+        compare(spans[0].end,   4)
+        verify(spans[0].strikethrough)
+    }
+
+    function test_singleTildeNotFormatted() {
+        // ~word~ must produce no spans — only ~~ is supported
+        compare(highlighter.parseFormats("~word~").length, 0)
+    }
+
+    function test_tripleTildeNotFormatted() {
+        compare(highlighter.parseFormats("~~~word~~~").length, 0)
+    }
+
+    // ── bold + italic ─────────────────────────────────────────────────────────
+
+    function test_boldItalicTripleStar() {
+        // ***foo*** → "foo" (positions 3–6) must be covered by both a bold
+        // and an italic span
+        const spans = highlighter.parseFormats("***foo***")
+        let boldSpan   = null
+        let italicSpan = null
+        for (let i = 0; i < spans.length; i++) {
+            if (spans[i].bold)   boldSpan   = spans[i]
+            if (spans[i].italic) italicSpan = spans[i]
+        }
+        verify(boldSpan   !== null, "expected bold span")
+        verify(italicSpan !== null, "expected italic span")
+        compare(boldSpan.start,   3)
+        compare(boldSpan.end,     6)
+        compare(italicSpan.start, 1)
+        compare(italicSpan.end,   8)
+    }
+
+    // ── no formatting — negative cases ───────────────────────────────────────
+
+    function test_spaceAfterOpeningDelimiter_bold() {
+        // Whitespace is neutral: "** foo **" still produces a bold span over " foo "
+        const s = spanFor("** foo **", " foo ")
+        verify(s !== null, "expected a bold span over ' foo '")
+        verify(s.bold, "expected bold")
+    }
+
+    function test_spaceBeforeClosingDelimiter_italic() {
+        // Whitespace is neutral: "*not italic *" produces an italic span
+        const s = spanFor("*not italic *", "not italic ")
+        verify(s !== null, "expected an italic span over 'not italic '")
+        verify(s.italic, "expected italic")
+    }
+
+    function test_emptyDelimiters() {
+        compare(highlighter.parseFormats("****").length,  0)
+        compare(highlighter.parseFormats("**").length,    0)
+        compare(highlighter.parseFormats("~~~~").length,  0)
+    }
+
+    function test_plainText() {
+        compare(highlighter.parseFormats("hello world").length, 0)
+    }
+
+    function test_emptyString() {
+        compare(highlighter.parseFormats("").length, 0)
+    }
+
+    // ── multiple independent spans on one line ────────────────────────────────
+
+    function test_boldAndItalicOnSameLine() {
+        const text  = "**bold** and *italic*"
+        const bspan = spanFor(text, "bold")
+        const ispan = spanFor(text, "italic")
+        verify(bspan !== null, "expected bold span")
+        verify(ispan !== null, "expected italic span")
+        verify(bspan.bold,    "bold span must be bold")
+        verify(ispan.italic,  "italic span must be italic")
+        verify(!bspan.italic, "bold span must not be italic")
+        verify(!ispan.bold,   "italic span must not be bold")
+    }
+
+    // ── multi-line emphasis ───────────────────────────────────────────────────
+
+    function test_multiline_bold() {
+        const s = spanForMultiLine("**bold\ncontent**", "bold\ncontent")
+        verify(s !== null, "expected bold span across newline")
+        verify(s.bold)
+    }
+
+    function test_multiline_italic() {
+        const s = spanForMultiLine("*first line\nsecond line*", "first line\nsecond line")
+        verify(s !== null, "expected italic span across newline")
+        verify(s.italic)
+    }
+
+    function test_multiline_strikethrough() {
+        const s = spanForMultiLine("~~line one\nline two~~", "line one\nline two")
+        verify(s !== null, "expected strikethrough span across newline")
+        verify(s.strikethrough)
+    }
+
+    function test_multiline_threeLines() {
+        const s = spanForMultiLine("**first\nmiddle\nlast**", "first\nmiddle\nlast")
+        verify(s !== null, "expected bold span across three lines")
+        verify(s.bold)
+    }
+
+    function test_multiline_independentSingleLineSpansUnaffected() {
+        // Single-line spans on separate lines must still work
+        const text  = "**bold**\n*italic*"
+        const bspan = spanForMultiLine(text, "bold")
+        const ispan = spanForMultiLine(text, "italic")
+        verify(bspan !== null && bspan.bold,   "bold span must still match")
+        verify(ispan !== null && ispan.italic, "italic span must still match")
+    }
+
+    function test_singleLineSpansStillWork() {
+        const text  = "**bold**\n*italic*"
+        const bspan = spanFor(text, "bold")
+        const ispan = spanFor(text, "italic")
+        verify(bspan !== null && bspan.bold,   "single-line bold must still work")
+        verify(ispan !== null && ispan.italic, "single-line italic must still work")
+    }
+
+    // ── intraword emphasis ────────────────────────────────────────────────────
+
+    function test_intrawordItalicAllowed() {
+        // CommonMark: a*b*c is valid italic (left-flanking does not require
+        // whitespace before the opening run)
+        const s = spanFor("a*b*c", "b")
+        verify(s !== null)
+        verify(s.italic)
+    }
+
+    // ── unmatched delimiters ──────────────────────────────────────────────────
+
+    function test_unmatchedOpeningDelimiter() {
+        compare(highlighter.parseFormats("*unclosed").length, 0)
+    }
+
+    function test_unmatchedClosingDelimiter() {
+        compare(highlighter.parseFormats("unclosed*").length, 0)
+    }
+
+    function test_mismatchedDelimiters_partialConsumption() {
+        // **foo* — the closer has only 1 star so it can consume 1 char from
+        // the opener; *foo* becomes italic, the leading * is unmatched.
+        // At minimum: no crash, all positions are valid and start < end.
+        const spans = highlighter.parseFormats("**foo*")
+        for (let i = 0; i < spans.length; i++) {
+            verify(spans[i].start >= 0,                        "start must be >= 0")
+            verify(spans[i].end   <= 6,                        "end must be <= text length")
+            verify(spans[i].start <  spans[i].end,             "start must be < end")
+        }
+    }
+
+    // ── delimiter positions ───────────────────────────────────────────────────
+
+    function delimFor(text, delimStr, fromPos) {
+        // finds the delimiter entry whose [start,end) = [fromPos, fromPos+delimStr.length)
+        const delims = highlighter.parseDelimiters(text)
+        for (let i = 0; i < delims.length; i++) {
+            if (delims[i].start === fromPos &&
+                delims[i].end   === fromPos + delimStr.length)
+                return delims[i]
+        }
+        return null
+    }
+
+    function test_delimiter_boldOpenerAndCloser() {
+        // "**bold**": opener=[0,2), closer=[6,8)
+        verify(delimFor("**bold**", "**", 0) !== null, "bold opener missing")
+        verify(delimFor("**bold**", "**", 6) !== null, "bold closer missing")
+    }
+
+    function test_delimiter_italicOpenerAndCloser() {
+        // "*italic*": opener=[0,1), closer=[7,8)
+        verify(delimFor("*italic*", "*", 0) !== null, "italic opener missing")
+        verify(delimFor("*italic*", "*", 7) !== null, "italic closer missing")
+    }
+
+    function test_delimiter_strikethroughOpenerAndCloser() {
+        // "~~strike~~": opener=[0,2), closer=[8,10)
+        verify(delimFor("~~strike~~", "~~", 0) !== null, "strikethrough opener missing")
+        verify(delimFor("~~strike~~", "~~", 8) !== null, "strikethrough closer missing")
+    }
+
+    function test_delimiter_unmatchedNotReturned() {
+        compare(highlighter.parseDelimiters("*unclosed").length, 0)
+        compare(highlighter.parseDelimiters("unclosed*").length, 0)
+    }
+
+    function test_delimiter_boldItalicTripleStar() {
+        // "***foo***": positions 0,1,2 and 6,7,8 are all delimiters
+        const text = "***foo***"
+        const delims = highlighter.parseDelimiters(text)
+        // 2 spans × 2 delimiter runs = 4 entries
+        compare(delims.length, 4)
+        // collect all covered positions
+        let covered = new Set()
+        for (let i = 0; i < delims.length; i++)
+            for (let p = delims[i].start; p < delims[i].end; p++)
+                covered.add(p)
+        for (let p = 0; p <= 2; p++)
+            verify(covered.has(p), "position " + p + " must be a delimiter")
+        for (let p = 6; p <= 8; p++)
+            verify(covered.has(p), "position " + p + " must be a delimiter")
+    }
+
+    function test_delimiter_count_bold() {
+        compare(highlighter.parseDelimiters("**bold**").length, 2)
+    }
+
+    function test_delimiter_noDelimitersInPlainText() {
+        compare(highlighter.parseDelimiters("hello world").length, 0)
+    }
+
+    // ── code span / emphasis interaction ──────────────────────────────────────
+
+    function test_codeSpan_delimsInsideCodeDoNotConsumeOutsideDelims() {
+        // "`A**B` C **D**": D must be bold; C must not be bold
+        const text  = "`A**B` C **D**"
+        const spans = highlighter.parseFormats(text)
+        let hasBoldD = false
+        let hasBoldC = false
+        for (let i = 0; i < spans.length; i++) {
+            if (!spans[i].bold) continue
+            for (let p = spans[i].start; p < spans[i].end; p++) {
+                if (text[p] === 'D') hasBoldD = true
+                if (text[p] === 'C') hasBoldC = true
+            }
+        }
+        verify(hasBoldD,  "D should be bold")
+        verify(!hasBoldC, "C must not be bold")
+    }
+
+    function test_codeSpan_emphasisAfterMultipleCodeSpans() {
+        // Two code spans then **bold**: bold must match correctly
+        const text  = "`a` `b` **bold**"
+        const spans = highlighter.parseFormats(text)
+        let boldSpan = null
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].bold) boldSpan = spans[i]
+        verify(boldSpan !== null, "expected a bold span")
+        compare(boldSpan.start, text.indexOf("bold"))
+        compare(boldSpan.end,   text.indexOf("bold") + 4)
+    }
+
+    function test_emphasis_hugsAdjacentInlineMarkup() {
+        // "**~~A~~**B": a "**" run abutting the "~~" still closes, so bold hugs the
+        // strikethrough — A is bold, B is plain text.
+        const text  = "**~~A~~**B"
+        const spans = highlighter.parseFormats(text)
+        let boldA = false
+        let boldB = false
+        for (let i = 0; i < spans.length; i++) {
+            if (!spans[i].bold) continue
+            for (let p = spans[i].start; p < spans[i].end; p++) {
+                if (text[p] === 'A') boldA = true
+                if (text[p] === 'B') boldB = true
+            }
+        }
+        verify(boldA,  "A should be bold")
+        verify(!boldB, "B must not be bold")
+    }
+
+    function test_emphasis_hugsMention() {
+        // "A**<M>B**\n**C**" (<M> = mention object char): the "**" run hugs the mention
+        // (a word-like content token), so B is bold, and the next line's **C** stays bold.
+        const M = String.fromCharCode(0xFFFC)
+        const text = "A**" + M + "B**\n**C**"
+        const spans = highlighter.parseFormats(text)
+        let boldB = false
+        let boldC = false
+        for (let i = 0; i < spans.length; i++) {
+            if (!spans[i].bold) continue
+            for (let p = spans[i].start; p < spans[i].end; p++) {
+                if (text[p] === 'B') boldB = true
+                if (text[p] === 'C') boldC = true
+            }
+        }
+        verify(boldB, "B should be bold")
+        verify(boldC, "C should be bold")
+    }
+
+    function test_inlineCode_basic() {
+        // "`hello`": content = [1, 6)
+        const spans = highlighter.parseCodeSpans("`hello`")
+        compare(spans.length, 1)
+        compare(spans[0].start, 1)
+        compare(spans[0].end,   6)
+    }
+
+    function test_inlineCode_unmatchedNotReturned() {
+        compare(highlighter.parseCodeSpans("`unclosed").length, 0)
+        compare(highlighter.parseCodeSpans("unclosed`").length, 0)
+    }
+
+    function test_inlineCode_noFormattingInsideCode() {
+        // **bold** inside backticks must not produce emphasis spans
+        const spans = highlighter.parseFormats("`**not bold**`")
+        for (let i = 0; i < spans.length; i++)
+            verify(!spans[i].bold, "bold must not apply inside code span")
+    }
+
+    function test_inlineCode_delimiterPositions() {
+        // backtick markers at [0,1) and [6,7) must appear as delimiter entries
+        // (returned by parseDelimiters; rendered as kCode — monospace + background, not blue)
+        verify(delimFor("`hello`", "`", 0) !== null, "opener delimiter missing")
+        verify(delimFor("`hello`", "`", 6) !== null, "closer delimiter missing")
+    }
+
+    function test_inlineCode_plainText() {
+        compare(highlighter.parseCodeSpans("hello world").length, 0)
+    }
+
+    // ── triple-backtick code fence ─────────────────────────────────────────────
+
+    function test_tripleBacktick_basic() {
+        // "```hello```": content = [3, 8)
+        const spans = highlighter.parseCodeSpans("```hello```")
+        compare(spans.length, 1)
+        compare(spans[0].start, 3)
+        compare(spans[0].end,   8)
+    }
+
+    function test_tripleBacktick_noFormattingInsideFence() {
+        const spans = highlighter.parseFormats("```**not bold**```")
+        for (let i = 0; i < spans.length; i++)
+            verify(!spans[i].bold, "bold must not apply inside code fence")
+    }
+
+    function test_tripleBacktick_delimiters() {
+        verify(delimFor("```hi```", "```", 0) !== null, "fence opener delimiter missing")
+        verify(delimFor("```hi```", "```", 5) !== null, "fence closer delimiter missing")
+    }
+
+    // ── single vs triple backtick do not cross-match ───────────────────────────
+
+    function test_code_singleAndTripleDoNotCrossMatch() {
+        // "``foo`" — opener is 2 backticks, only one closer backtick → no match
+        compare(highlighter.parseCodeSpans("``foo`").length, 0)
+    }
+
+    // ── emphasis spans across a code block (top level, like inside a quote) ──────
+
+    function test_codeBlock_emphasisSpansAcross() {
+        const text = "**\nA\n```\nB\n```\nC\n**"
+
+        // A single bold span covers A and C (the content between the ** markers),
+        // while B (inside the fence) is not bold.
+        const spans = highlighter.parseFormats(text)
+        let boldSpan = null
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].bold) boldSpan = spans[i]
+        verify(boldSpan !== null, "expected a bold span across the code block")
+        verify(boldSpan.start <= text.indexOf("A") && boldSpan.end > text.indexOf("A"),
+               "A must be bold")
+        verify(boldSpan.start <= text.indexOf("C") && boldSpan.end > text.indexOf("C"),
+               "C must be bold")
+
+        // B is inside the fenced code block (rendered as code, not bold).
+        const codeSpans = highlighter.parseCodeSpans(text)
+        let bInCode = false
+        for (let i = 0; i < codeSpans.length; i++)
+            if (codeSpans[i].start <= text.indexOf("B") && codeSpans[i].end > text.indexOf("B"))
+                bInCode = true
+        verify(bInCode, "B must be inside a code block")
+
+        // Both ** runs are delimiters at [0,2) and [17,19).
+        verify(delimFor(text, "**", 0)  !== null, "opening ** delimiter missing")
+        verify(delimFor(text, "**", 17) !== null, "closing ** delimiter missing")
+    }
+
+    // ── multiline code ──────────────────────────────────────────────────────────
+
+    function test_multiline_inlineCode() {
+        const spans = highlighter.parseCodeSpans("`first\nsecond`")
+        compare(spans.length, 1)
+        compare(spans[0].start, 1)
+        compare(spans[0].end,   13)
+    }
+
+    function test_multiline_tripleBacktick() {
+        const spans = highlighter.parseCodeSpans("```first\nsecond```")
+        compare(spans.length, 1)
+        compare(spans[0].start, 3)
+        compare(spans[0].end,   15)
+    }
+
+    // ── link detection ────────────────────────────────────────────────────────
+
+    function test_link_basic() {
+        const links = highlighter.parseLinks("see https://status.im")
+        compare(links.length, 1)
+        compare(links[0].start, 4)
+        compare(links[0].length, 17)
+    }
+
+    function test_link_trailingPunct() {
+        const links = highlighter.parseLinks("https://status.im.")
+        compare(links.length, 1)
+        verify(links[0].length < "https://status.im.".length, "trailing dot must be excluded")
+        compare(links[0].text, "https://status.im")
+    }
+
+    function test_link_inSingleBacktick() {
+        const links = highlighter.parseLinks("`https://status.im`")
+        compare(links.length, 0)
+    }
+
+    function test_link_inTripleBacktick() {
+        const links = highlighter.parseLinks("```https://status.im```")
+        compare(links.length, 0)
+    }
+
+    function test_link_boldLink() {
+        // Bold delimiters around a URL: 1 link, and parseFormats sees a bold span
+        const links = highlighter.parseLinks("**https://status.im**")
+        compare(links.length, 1)
+        const spans = highlighter.parseFormats("**https://status.im**")
+        let hasBold = false
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].bold) hasBold = true
+        verify(hasBold, "expected bold span around URL")
+    }
+
+    function test_link_italicLink() {
+        const links = highlighter.parseLinks("*https://status.im*")
+        compare(links.length, 1)
+        const spans = highlighter.parseFormats("*https://status.im*")
+        let hasItalic = false
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].italic) hasItalic = true
+        verify(hasItalic, "expected italic span around URL")
+    }
+
+    function test_link_noHttp() {
+        // Plain domain without scheme must not be detected
+        compare(highlighter.parseLinks("status.im").length, 0)
+    }
+
+    function test_link_multiple() {
+        const links = highlighter.parseLinks("https://status.im and https://example.com")
+        compare(links.length, 2)
+    }
+
+    function test_link_starInUrl() {
+        // * characters inside a URL must not create italic spans
+        const text = "https://x.com/a*b*c"
+        const links = highlighter.parseLinks(text)
+        compare(links.length, 1)
+        compare(links[0].text, text)
+
+        const spans = highlighter.parseFormats(text)
+        let hasItalic = false
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].italic) hasItalic = true
+        verify(!hasItalic, "*b* inside URL must not produce italic span")
+    }
+
+    // ── unclosed code fence ───────────────────────────────────────────────────
+
+    function test_openFence_closedUnaffected() {
+        // "```hi```": flag on → 1 normal span with content [3, 5)
+        const spans = highlighterOpenFence.parseCodeSpans("```hi```")
+        compare(spans.length, 1)
+        compare(spans[0].start, 3)
+        compare(spans[0].end,   5)
+    }
+
+    function test_openFence_unclosedWithFlag() {
+        // "```code": flag on → 1 span with content [3, 7)
+        const spans = highlighterOpenFence.parseCodeSpans("```code")
+        compare(spans.length, 1)
+        compare(spans[0].start, 3)
+        compare(spans[0].end,   7)
+    }
+
+    function test_openFence_unclosedWithoutFlag() {
+        // "```code": flag off → 0 spans (unclosed opener ignored)
+        compare(highlighter.parseCodeSpans("```code").length, 0)
+    }
+
+    function test_openFence_noEmphasisInOpen() {
+        // "```**bold**": flag on → parseFormats must not produce bold spans
+        const spans = highlighterOpenFence.parseFormats("```**bold**")
+        let hasBold = false
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].bold) hasBold = true
+        verify(!hasBold, "bold must be suppressed inside unclosed code fence")
+    }
+
+    function test_openFence_multiLine() {
+        // "```\ncode\n**bold**": flag on → no bold spans
+        const spans = highlighterOpenFence.parseFormats("```\ncode\n**bold**")
+        let hasBold = false
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].bold) hasBold = true
+        verify(!hasBold, "bold must be suppressed across lines inside unclosed code fence")
+    }
+
+    function test_openFence_closedThenOpen() {
+        // "```a``` ```b": paired "```a```" span is normal [3,4),
+        // second unclosed ``` at pos 8 → synthetic content [11, 12)
+        const spans = highlighterOpenFence.parseCodeSpans("```a``` ```b")
+        compare(spans.length, 2)
+        // first span: content of the closed fence
+        compare(spans[0].start, 3)
+        compare(spans[0].end,   4)
+        // second span: content of the unclosed fence (from pos 11 to end=12)
+        compare(spans[1].start, 11)
+        compare(spans[1].end,   12)
+    }
+
+    // ── quote blocks ──────────────────────────────────────────────────────────
+
+    function test_quote_singleLine() {
+        const text = "> hello"
+        const groups = highlighter.parseQuoteBlocks(text)
+        compare(groups.length, 1)
+        compare(groups[0].start, 0)
+        compare(groups[0].end,   text.length)
+    }
+
+    function test_quote_consecutiveLines_oneGroup() {
+        const text = "> line one\n> line two"
+        const groups = highlighter.parseQuoteBlocks(text)
+        compare(groups.length, 1)
+        compare(groups[0].start, 0)
+        compare(groups[0].end,   text.length)
+    }
+
+    function test_quote_twoGroups_separatedByBlankLine() {
+        // "> first\n" = 8 chars; "> second" starts at position 9
+        const text = "> first\n\n> second"
+        const groups = highlighter.parseQuoteBlocks(text)
+        compare(groups.length, 2)
+        compare(groups[0].start, 0)
+        compare(groups[0].end,   8)
+        compare(groups[1].start, 9)
+        compare(groups[1].end,   text.length)
+    }
+
+    function test_quote_noSpaceAfterAngle_notQuote() {
+        // ">hello" (no space after >) must not be treated as a quote
+        compare(highlighter.parseQuoteBlocks(">hello").length, 0)
+    }
+
+    function test_quote_plainText_noGroups() {
+        compare(highlighter.parseQuoteBlocks("hello world").length, 0)
+    }
+
+    function test_quote_emptyString_noGroups() {
+        compare(highlighter.parseQuoteBlocks("").length, 0)
+    }
+
+    function test_quote_insideCodeFence_notQuote() {
+        // Lines whose start falls inside an already-open ``` fence must not
+        // be treated as quote blocks
+        const text = "```\n> inside fence\n```"
+        compare(highlighter.parseQuoteBlocks(text).length, 0)
+    }
+
+    function test_quote_boldInside() {
+        const text = "> **bold** text"
+        const s = spanFor(text, "bold")
+        verify(s !== null, "expected bold span inside quote")
+        verify(s.bold)
+    }
+
+    function test_quote_italicInside() {
+        const text = "> *italic*"
+        const s = spanFor(text, "italic")
+        verify(s !== null, "expected italic span inside quote")
+        verify(s.italic)
+    }
+
+    function test_quote_strikethroughInside() {
+        const text = "> ~~strike~~"
+        const s = spanFor(text, "strike")
+        verify(s !== null, "expected strikethrough span inside quote")
+        verify(s.strikethrough)
+    }
+
+    function test_quote_crossLineEmphasisWithinGroup() {
+        // Consecutive quote lines form one group; bold spans them
+        const text = "> **bold\n> content**"
+        const s = spanForMultiLine(text, "bold\n> content")
+        verify(s !== null, "bold should span lines within the same quote group")
+        verify(s.bold)
+    }
+
+    function test_quote_noEmphasisAcrossGroupBoundary() {
+        // A blank line between two quote lines creates separate groups;
+        // a delimiter in the first group must not pair with one in the second
+        compare(highlighter.parseFormats("> *open\n\n> close*").length, 0)
+    }
+
+    function test_quote_noEmphasisBetweenQuoteAndOutside() {
+        // A delimiter outside a quote group must not pair with one inside it
+        compare(highlighter.parseFormats("*before\n> inside*").length, 0)
+    }
+
+    function test_quote_emphasisOutsideUnaffected() {
+        // Emphasis on a non-quote line and inside a quote line both work
+        const text = "**bold**\n> *italic*"
+        const bspan = spanFor(text, "bold")
+        const ispan = spanFor(text, "italic")
+        verify(bspan !== null && bspan.bold,   "bold outside quote must still apply")
+        verify(ispan !== null && ispan.italic, "italic inside quote must still apply")
+    }
+
+    function test_quote_emphasisSpansAcross() {
+        // Bold spans across a quote block at the top level: A is bold, the quote
+        // is its own group, and both ** are delimiters (symmetric to the code case).
+        const text = "**\nA\n> B\n**"
+
+        const spans = highlighter.parseFormats(text)
+        let boldSpan = null
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].bold) boldSpan = spans[i]
+        verify(boldSpan !== null, "expected a bold span across the quote block")
+        verify(boldSpan.start <= text.indexOf("A") && boldSpan.end > text.indexOf("A"),
+               "A must be bold")
+
+        const groups = highlighter.parseQuoteBlocks(text)
+        compare(groups.length, 1)
+        compare(groups[0].start, text.indexOf("> B"))
+
+        verify(delimFor(text, "**", 0) !== null, "opening ** delimiter missing")
+        verify(delimFor(text, "**", text.lastIndexOf("**")) !== null,
+               "closing ** delimiter missing")
+    }
+
+    function test_quote_unclosedFenceDoesNotEatQuote() {
+        // An unclosed standalone ``` must not swallow the following quote line when
+        // unclosed fences aren't formatted; with the flag on it becomes a code block.
+        const text = "```\n> A"
+
+        compare(highlighter.parseQuoteBlocks(text).length, 1)
+        compare(highlighter.parseCodeSpans(text).length, 0)
+
+        compare(highlighterOpenFence.parseQuoteBlocks(text).length, 0)
+        compare(highlighterOpenFence.parseCodeSpans(text).length, 1)
+    }
+
+    function test_quote_scopedFence() {
+        // A fence opened inside a quote and one opened outside are separate
+        // unclosed fences — they must not pair across the quote boundary.
+        const text = "> ```\n> A\nB\n```\nC"
+
+        // Flag off: neither fence closes → no code blocks.
+        compare(highlighter.parseCodeSpans(text).length, 0)
+
+        // Flag on: quote fence covers A (bounded by the quote), top-level fence
+        // covers C; B (between them) is in no code block.
+        const spans = highlighterOpenFence.parseCodeSpans(text)
+        compare(spans.length, 2)
+        function covers(span, pos) { return span.start <= pos && span.end > pos }
+        const a = text.indexOf("A"), b = text.indexOf("B"), c = text.indexOf("C")
+        verify(spans.some(s => covers(s, a)), "A must be in a code block")
+        verify(spans.some(s => covers(s, c)), "C must be in a code block")
+        verify(!spans.some(s => covers(s, b)), "B must not be in a code block")
+    }
+
+    function test_quote_codeBlockInside() {
+        // A fenced code block inside a quote stays one quote group spanning all
+        // lines, with the fence recognized as a code block (its content reported
+        // by parseCodeSpans) and no emphasis leaking out.
+        const text = "> ```\n> A\n> ```"
+
+        const groups = highlighter.parseQuoteBlocks(text)
+        compare(groups.length, 1)
+        compare(groups[0].start, 0)
+        compare(groups[0].end, text.length)
+
+        const spans = highlighter.parseCodeSpans(text)
+        compare(spans.length, 1)
+        compare(spans[0].start, 5)   // content starts right after the opening ```
+        compare(spans[0].end, 12)    // content ends right before the closing ```
+
+        compare(highlighter.parseFormats(text).length, 0)
+    }
+}

@@ -25,6 +25,7 @@ StatusMenu {
     property string unparsedText: ""
     property string messageSenderId: ""
     property int messageContentType: Constants.messageContentType.unknownContentType
+    property string selectedText
 
     property bool pinMessageAllowedForMembers: false
     property bool isDebugEnabled: false
@@ -32,6 +33,7 @@ StatusMenu {
     property bool pinnedMessage: false
     property bool canPin: false
     property bool emojiReactionLimitReached: false
+    property bool messageLinkSharingEnabled: false
 
     readonly property bool isMyMessage: {
         return root.messageSenderId !== "" && root.messageSenderId === root.myPublicKey;
@@ -46,6 +48,7 @@ StatusMenu {
     signal editClicked()
     signal markMessageAsUnread()
     signal copyToClipboard(string text)
+    signal copyMessageLink()
     signal openEmojiPopup(var parent, var mouse)
 
     MessageReactionsRow {
@@ -88,11 +91,20 @@ StatusMenu {
         id: editMessageAction
         objectName: "messageContextMenu_edit"
         text: qsTr("Edit message")
-        onTriggered: editClicked()
+        onTriggered: root.editClicked()
         icon.name: "edit"
         enabled: root.isMyMessage &&
                  !root.editRestricted &&
                  !root.disabledForChat
+    }
+
+    StatusAction {
+        id: copySelectedTextItem
+        objectName: "messageContextMenu_copySelection"
+        text: qsTr("Copy")
+        icon.name: "copy"
+        enabled: !!root.selectedText
+        onTriggered: root.copyToClipboard(root.selectedText)
     }
 
     StatusAction {
@@ -102,8 +114,9 @@ StatusMenu {
         icon.name: "copy"
         onTriggered: root.copyToClipboard(root.unparsedText)
         enabled: (root.messageContentType === Constants.messageContentType.messageType ||
-                (root.messageContentType === Constants.messageContentType.imageType && root.unparsedText != "")) &&
-                replyToMenuItem.enabled
+                  root.messageContentType === Constants.messageContentType.contactRequestType ||
+                  root.messageContentType === Constants.messageContentType.bridgeMessageType ||
+                (root.messageContentType === Constants.messageContentType.imageType && root.unparsedText != ""))
     }
 
     StatusAction {
@@ -111,8 +124,17 @@ StatusMenu {
         objectName: "messageContextMenu_copyId"
         text: qsTr("Copy Message Id")
         icon.name: "copy"
-        enabled: root.isDebugEnabled && replyToMenuItem.enabled
+        enabled: root.isDebugEnabled
         onTriggered: root.copyToClipboard(root.messageId)
+    }
+
+    StatusAction {
+        id: copyMessageLinkAction
+        objectName: "messageContextMenu_copyLink"
+        text: qsTr("Copy link to message")
+        icon.name: "copy"
+        enabled: root.messageLinkSharingEnabled
+        onTriggered: root.copyMessageLink()
     }
 
     StatusAction {
@@ -158,6 +180,7 @@ StatusMenu {
                  (replyToMenuItem.enabled ||
                   copyMessageMenuItem.enabled ||
                   copyMessageIdAction.enabled ||
+                  copyMessageLinkAction.enabled ||
                   editMessageAction.enabled ||
                   pinAction.enabled ||
                   markMessageAsUnreadAction.enabled)

@@ -100,7 +100,7 @@ Loader {
             callable()
             return
         }
-        if (root.active == false) {
+        if (!root.active) {
             root.active = true
         }
         d.pending.push(callable)

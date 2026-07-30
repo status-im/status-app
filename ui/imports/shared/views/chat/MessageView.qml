@@ -149,6 +149,7 @@ Loader {
     property bool hasMention: false
 
     property bool sendViaPersonalChatEnabled
+    property bool messageLinkSharingEnabled
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -174,6 +175,8 @@ Loader {
 
     // Contacts related data:
     property string myPublicKey
+
+    property var createMessageLink // function(chatId, messageId) → string
 
     // Contacts related requests:
     signal changeContactNicknameRequest(string pubKey, string nickname, string displayName, bool isEdit)
@@ -247,7 +250,7 @@ Loader {
         profileContextMenuComponent.createObject(root, params).popup(x, y)
     }
 
-    function openMessageContextMenu(point) {
+    function openMessageContextMenu(point, selectedText = "") {
         if (isViewMemberMessagesePopup || placeholderMessage || !root.joined)
             return
 
@@ -272,11 +275,24 @@ Loader {
             pinnedMessage: root.pinnedMessage,
             canPin: !!root.messageStore && root.messageStore.getNumberOfPinnedMessages() < Constants.maxNumberOfPins,
             editRestricted: root.editRestricted,
+            selectedText
         }
 
         d.preventVirtualKeyboardOpening()
         d.contextMenu = messageContextMenuComponent.createObject(root, params)
         d.contextMenu.popup(point)
+    }
+
+    function getMessageLinkUrl() {
+        if (!root.messageLinkSharingEnabled || !root.messageId) {
+            return ""
+        }
+
+        if (!root.createMessageLink) {
+            return ""
+        }
+
+        return root.createMessageLink(root.chatId, root.messageId) || ""
     }
 
     function setMessageActive(messageId, active) {
@@ -791,39 +807,12 @@ Loader {
                 Layout.bottomMargin: !root.isInPinnedPopup ? 2 : 0
 
                 readonly property int contentType: d.convertContentType(root.messageContentType)
-                property string originalMessageText: ""
                 readonly property bool hideQuickActions: {
                     return root.isChatBlocked ||
                                   root.placeholderMessage ||
                                   root.isInPinnedPopup ||
                                   root.editModeOn ||
-                                  !root.joined
-                }
-
-                function editCancelledHandler() {
-                    root.messageStore.setEditModeOff(root.messageId)
-                }
-
-                function editCompletedHandler(newMessageText) {
-
-                    if (delegate.originalMessageText === newMessageText) {
-                        delegate.editCancelledHandler()
-                        return
-                    }
-
-                    const message = StatusQUtils.StringUtils.plainText(StatusQUtils.Emoji.deparse(newMessageText))
-
-                    if (message.length <= 0)
-                        return;
-
-                    root.unparsedText = message
-
-                    const interpretedMessage = root.messageStore.interpretMessage(message)
-                    root.messageStore.setEditModeOff(root.messageId)
-                    root.messageStore.editMessage(
-                        root.messageId,
-                        interpretedMessage
-                    )
+                                      !root.joined
                 }
 
                 pinnedMsgInfoText: root.isDiscordMessage ? qsTr("Pinned") : qsTr("Pinned by")
@@ -875,12 +864,6 @@ Loader {
                 overrideBackground: root.placeholderMessage
                 profileClickable: !root.isDiscordMessage
                 messageAttachments: root.messageAttachments
-
-                onEditCancelled: {
-                    delegate.editCancelledHandler()
-                }
-
-                onEditCompleted: delegate.editCompletedHandler(newMsgText)
 
                 onImageClicked: (image, mouse, imageSource, pos) => {
                     d.onImageClicked(image, mouse, imageSource, "", pos)
@@ -939,17 +922,17 @@ Loader {
                     root.messageStore.resendMessage(root.messageId)
                 }
 
-                onContextMenuRequested: pos => root.openMessageContextMenu(pos) // for StatusTextMessage which would eat the press events internally
+                onContextMenuRequested: pos => root.openMessageContextMenu(pos, delegate.selectedText) // for StatusTextMessage which would eat the press events internally
                 TapHandler {
                     gesturePolicy: TapHandler.ReleaseWithinBounds // exclusive grab on press
                     acceptedDevices: PointerDevice.TouchScreen
-                    onLongPressed: root.openMessageContextMenu(point.position)
+                    onLongPressed: root.openMessageContextMenu(point.position, delegate.selectedText)
                 }
 
                 TapHandler {
                     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
                     acceptedButtons: Qt.RightButton
-                    onTapped: (point, button) => root.openMessageContextMenu(point.position)
+                    onTapped: (point, button) => root.openMessageContextMenu(point.position, delegate.selectedText)
                 }
 
                 messageDetails: StatusMessageDetails {
@@ -1046,66 +1029,6 @@ Loader {
                     }
                 }
 
-                statusChatInput: Component {
-                    StatusChatInput {
-                        id: editTextInput
-                        objectName: "editMessageInput"
-
-                        readonly property string messageText: editTextInput.textInput.text
-
-                        // TODO: Move this property and Escape handler to StatusChatInput
-                        property bool suggestionsOpened: false
-
-                        width: parent.width
-
-                        Keys.onEscapePressed: {
-                            if (!suggestionsOpened) {
-                                delegate.editCancelled()
-                            }
-                            suggestionsOpened = false
-                        }
-
-                        usersModel: root.usersModel
-                        emojiPopup: root.emojiPopup
-                        stickersPopup: root.stickersPopup
-
-                        isEdit: true
-
-                        onSendMessageRequested: delegate.editCompletedHandler(editTextInput.getTextWithPublicKeys())
-                        onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) => root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
-
-                        Component.onCompleted: {
-                            // Workaround to restore original message to chat input.
-                            // Will be reworked later along with removal of in-place editing.
-                            //
-                            // Populate the edit field with the raw, unparsed text
-                            // (original markdown) while keeping mentions readable:
-                            //  - system mentions (e.g. "@0x00001") -> their tag
-                            //    ("@everyone"), mirroring SystemTagMapping in
-                            //    app_service/common/conversion.nim
-                            //  - user mentions ("@0x<pubkey>") -> the rendered mention
-                            //    link from root.messageText (matched in order), which
-                            //    parseMessage() then turns into a chip.
-                            // Other text is escaped/<br/>-converted so parseMessage()
-                            // treats it like the rendered message.
-                            const systemMentions = ({ "0x00001": "@everyone" })
-                            let seed = root.unparsedText
-                                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-                                .replace(/\n/g, "<br/>")
-                            const userMentions = root.messageText.match(/<a href="\/\/0x[0-9a-fA-F]+"[^>]*class="mention"[^>]*>@[^<]*<\/a>/g) || []
-                            let u = 0
-                            seed = seed.replace(/@0x[0-9a-fA-F]+/g, function(token) {
-                                const key = token.substring(1) // drop leading '@'
-                                if (systemMentions[key] !== undefined)
-                                    return systemMentions[key]
-                                return u < userMentions.length ? userMentions[u++] : token
-                            })
-                            parseMessage(seed);
-                            delegate.originalMessageText = editTextInput.textInput.text
-                        }
-                    }
-                }
-
                 linksComponent: Component {
                     LinksMessageView {
                         id: linksMessageView
@@ -1129,6 +1052,7 @@ Loader {
                         }
                         onHoveredLinkChanged: delegate.highlightedLink = linksMessageView.hoveredLink
                         gifUnfurlingEnabled: root.gifUnfurlingEnabled
+                        onSetGifUnfurlingEnabled: localAccountSensitiveSettings.gifUnfurlingEnabled = true
                         canAskToUnfurlGifs: !root.neverAskAboutUnfurlingAgain
                         onSetNeverAskAboutUnfurlingAgain: root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
                         onPaymentRequestClicked: (index) => {
@@ -1154,15 +1078,15 @@ Loader {
                 }
 
                 quickActions: [
-                    MessageReactionsRow {
-                        visible: {
-                            root.emojiReactionLimitReached
-                            return !root.emojiReactionLimitReached && !root.isViewMemberMessagesePopup
-                        }
-                        emojiModel: emojiPopup.fullModel
-                        onToggleReaction: hexcode => root.emojiReactionToggled(root.messageId, hexcode)
-                        onOpenEmojiPopup: (parent, mouse) => {
-                            d.addReactionClicked(parent, mouse)
+                    Loader {
+                        active: delegate.hovered && d.addReactionAllowed && !root.emojiReactionLimitReached
+                        visible: active
+                        sourceComponent: MessageReactionsRow {
+                            emojiModel: emojiPopup.fullModel
+                            onToggleReaction: hexcode => root.emojiReactionToggled(root.messageId, hexcode)
+                            onOpenEmojiPopup: (parent, mouse) => {
+                                                  d.addReactionClicked(parent, mouse)
+                                              }
                         }
                     },
                     Loader {
@@ -1369,6 +1293,7 @@ Loader {
             disabledForChat: !root.rootStore.isUserAllowedToSendMessage
             forceEnableEmojiReactions: !root.rootStore.isUserAllowedToSendMessage && d.addReactionAllowed
             isDebugEnabled: root.rootStore && root.rootStore.isDebugEnabled
+            messageLinkSharingEnabled: root.messageLinkSharingEnabled
             onPinMessage: root.messageStore.pinMessage(messageContextMenuView.messageId)
             onUnpinMessage: root.messageStore.unpinMessage(messageContextMenuView.messageId)
             onPinnedMessagesLimitReached: () => {
@@ -1391,6 +1316,11 @@ Loader {
             }
             onCopyToClipboard: (text) => {
                 ClipboardUtils.setText(text)
+            }
+            onCopyMessageLink: () => {
+                const url = root.getMessageLinkUrl()
+                if (url)
+                    ClipboardUtils.setText(url)
             }
             onOpenEmojiPopup: (parent, mouse) => d.addReactionClicked(parent, mouse)
             onOpened: {

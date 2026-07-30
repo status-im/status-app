@@ -163,12 +163,12 @@ SettingsContentBase {
                 Layout.fillWidth: true
                 Layout.topMargin: Theme.padding
                 Layout.leftMargin: Theme.padding
-                text: qsTr("Status desktop’s GitHub Repositories")
+                text: qsTr("Status App's GitHub Repositories")
                 color: Theme.palette.secondaryText
             }
 
             LinkItem {
-                title: qsTr("status-desktop")
+                title: qsTr("status-app")
                 onClicked: root.openLink("https://github.com/status-im/status-app")
             }
 
@@ -183,8 +183,8 @@ SettingsContentBase {
             }
 
             LinkItem {
-                title: qsTr("go-waku")
-                onClicked: root.openLink("https://github.com/status-im/go-waku")
+                title: qsTr("logos-delivery-go")
+                onClicked: root.openLink("https://github.com/logos-messaging/logos-delivery-go")
             }
 
             StatusDialogDivider {

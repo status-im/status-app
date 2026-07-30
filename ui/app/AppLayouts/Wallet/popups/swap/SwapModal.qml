@@ -38,6 +38,16 @@ StatusDialog {
 
     objectName: "swapModal"
 
+    Component.onDestruction: {
+        const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+        if (d.payTokenSelector)
+            store.releaseTokenSelectorModel(d.payTokenSelector.id)
+        if (d.receiveTokenSelector)
+            store.releaseTokenSelectorModel(d.receiveTokenSelector.id)
+        if (d.receiveTokenSelectorTo)
+            store.releaseTokenSelectorModel(d.receiveTokenSelectorTo.id)
+    }
+
     implicitWidth: 556
     fillHeightOnBottomSheet: true
     topPadding: Theme.xlPadding
@@ -47,6 +57,36 @@ StatusDialog {
         id: d
 
         readonly property string mandatoryKeysSeparator: "$$"
+
+        property int lastRequestedChainId: -1
+        property int lastRequestedChainIdTo: -1
+
+        property var payTokenSelector: null
+        property var receiveTokenSelector: null
+        property var receiveTokenSelectorTo: null
+
+        property bool pickersInitialized: false
+
+        function createPickers() {
+            const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+            if (!d.payTokenSelector) {
+                d.payTokenSelector = store.createTokenSelectorModel(1)
+                d.receiveTokenSelector = store.createTokenSelectorModel(1)
+            }
+            d.pickersInitialized = true
+            if (d.isBridge)
+                d.ensureBridgePicker()
+            payPanel.reset()
+            receivePanel.reset()
+        }
+
+        function ensureBridgePicker() {
+            if (d.receiveTokenSelectorTo)
+                return
+            d.receiveTokenSelectorTo = root.swapAdaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(3)
+            // seed it like createPickers seeds the source-chain ones
+            receivePanel.reset()
+        }
 
         property var debounceFetchSuggestedRoutes: Backpressure.debounce(root, 1000, function() {
             root.swapAdaptor.fetchSuggestedRoutes(payPanel.rawValue)
@@ -90,18 +130,52 @@ StatusDialog {
 
         readonly property string nativeTokenSymbol: Utils.getNativeTokenSymbol(root.swapInputParamsForm.selectedNetworkChainId)
 
-        function rebuildGroupsForChain(chainId) {
+        // same chain => plain swap (from/to token must differ); different chains => bridge (same token ok)
+        readonly property bool isSameChainSwap: root.swapInputParamsForm.selectedNetworkChainId === root.swapInputParamsForm.toNetworkChainId
+        readonly property bool isBridge: root.swapInputParamsForm.toNetworkChainId !== -1 && !isSameChainSwap
+        onIsBridgeChanged: {
+            // `opened` also excludes teardown: the handler resets the form one
+            // field at a time, which flickers through a bridge state that would
+            // otherwise build a picker for the modal being destroyed.
+            if (isBridge && d.pickersInitialized && root.opened)
+                d.ensureBridgePicker()
+        }
+
+        readonly property bool swapViaLiFi: root.swapAdaptor.swapOutputData.txProviderName === Constants.swap.lifiProcessorName
+        readonly property string serviceProviderName: d.swapViaLiFi ? Constants.swap.lifiName : Constants.swap.paraswapName
+        readonly property string serviceProviderUrl: d.swapViaLiFi ? Constants.swap.lifiUrl : Constants.swap.paraswapUrl
+        readonly property string serviceProviderTandCUrl: d.swapViaLiFi ? Constants.swap.lifiTermsAndConditionUrl : Constants.swap.paraswapTermsAndConditionUrl
+        readonly property string serviceProviderHostname: d.swapViaLiFi ? Constants.swap.lifiHostname : Constants.swap.paraswapHostname
+        readonly property string serviceProviderIconName: d.swapViaLiFi ? Constants.swap.lifiIcon : Constants.swap.paraswapIcon
+
+        function rebuildGroupsForChain(chainId, isToSide = false) {
             if (chainId <= 0) {
                 return
             }
 
-            const chainAvailableForSwapViaParaswap = root.swapAdaptor.walletAssetsStore.walletTokensStore.isChainSupportedForSwapViaParaswap(chainId)
-            if (!chainAvailableForSwapViaParaswap) {
-                console.warn("swap via paraswap not supported for chain", chainId)
+            // Skip the redundant harvest + async fetch when this side's chain hasn't
+            // changed (Component.onCompleted + the chain-changed handler both fire for
+            // the same chain on open). Tracked per side; reset on close.
+            if (isToSide) {
+                if (chainId === d.lastRequestedChainIdTo)
+                    return
+            } else if (chainId === d.lastRequestedChainId) {
+                return
+            }
+
+            const walletTokensStore = root.swapAdaptor.walletAssetsStore.walletTokensStore
+            const chainAvailableForSwap = walletTokensStore.isChainSupportedForSwapViaParaswap(chainId)
+                                       || walletTokensStore.isChainSupportedForSwapViaLiFi(chainId)
+            if (!chainAvailableForSwap) {
+                console.warn("swap not supported for chain", chainId)
                 const networkName = Utils.getNetworkName(chainId)
                 Global.openInfoPopup(qsTr("Info"), qsTr("Swaps on %1 are coming soon.").arg(networkName))
 
                 Qt.callLater(() => {
+                                 if (isToSide) {
+                                     root.swapInputParamsForm.toNetworkChainId = root.swapInputParamsForm.selectedNetworkChainId
+                                     return
+                                 }
                                  // by default set ethereum chain
                                  root.swapInputParamsForm.selectedNetworkChainId = Utils.isChainIDTestnet(chainId)?
                                      Constants.chains.hoodiChainId
@@ -110,8 +184,15 @@ StatusDialog {
                 return
             }
 
+            if (isToSide)
+                d.lastRequestedChainIdTo = chainId
+            else
+                d.lastRequestedChainId = chainId
             const keys = SQUtils.ModelUtils.joinModelEntries(root.swapAdaptor.walletAssetsStore.groupedAccountAssetsModel, "key", d.mandatoryKeysSeparator)
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(chainId, keys)
+            if (isToSide)
+                walletTokensStore.buildGroupsForChainTo(chainId, keys)
+            else
+                walletTokensStore.buildGroupsForChain(chainId, keys)
         }
     }
 
@@ -122,16 +203,29 @@ StatusDialog {
         value: root.swapInputParamsForm.selectedAccountAddress
     }
 
+    // source (pay) network data for the approve/sign modals (tx executes on the source chain)
+    ModelEntry {
+        id: fromNetworkEntry
+        sourceModel: root.swapAdaptor.networksStore.activeNetworks
+        key: "chainId"
+        value: root.swapInputParamsForm.selectedNetworkChainId
+    }
+
     Connections {
         target: root.swapInputParamsForm
         function onFormValuesChanged() {
             d.fetchSuggestedRoutes()
         }
 
+        // the two chain selectors are independent: each rebuilds only its own catalog
         function onSelectedNetworkChainIdChanged() {
             d.rebuildGroupsForChain(root.swapInputParamsForm.selectedNetworkChainId)
+        }
 
-            networkFilter.selection = [root.swapInputParamsForm.selectedNetworkChainId]
+        function onToNetworkChainIdChanged() {
+            // only bridging needs a separate destination catalog; a same-chain receive reuses the source
+            if (d.isBridge)
+                d.rebuildGroupsForChain(root.swapInputParamsForm.toNetworkChainId, true)
         }
 
         function onFromGroupKeyChanged() {
@@ -151,16 +245,20 @@ StatusDialog {
     }
 
     Component.onCompleted: {
-        payPanel.reset()
-        receivePanel.reset()
-
         d.rebuildGroupsForChain(root.swapInputParamsForm.selectedNetworkChainId)
+        if (d.isBridge)
+            d.rebuildGroupsForChain(root.swapInputParamsForm.toNetworkChainId, true)
     }
 
     onOpened: {
+        // Defer the terminal picker model creation + seed off the open critical
+        // path; callLater lets the opened frame render before the seed runs.
+        Qt.callLater(d.createPickers)
         payPanel.forceActiveFocus()
     }
     onClosed: {
+        d.lastRequestedChainId = -1
+        d.lastRequestedChainIdTo = -1
         root.swapAdaptor.resetData()
     }
 
@@ -191,42 +289,10 @@ StatusDialog {
             spacing: Theme.padding
             clip: true
 
-            // without this Column, the whole popup resizing when the network selector popup is clicked
-            Column {
+            HeaderTitleText {
                 Layout.fillWidth: true
-                spacing: 0
-                RowLayout {
-                    width: parent.width
-                    spacing: 12
-                    HeaderTitleText {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                        text: qsTr("Swap")
-                    }
-                    StatusBaseText {
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        text: qsTr("On:")
-                        color: Theme.palette.baseColor1
-                        font.pixelSize: Theme.additionalTextSize
-                        lineHeight: 38
-                        lineHeightMode: Text.FixedHeight
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    NetworkFilter {
-                        id: networkFilter
-                        objectName: "networkFilter"
-                        Layout.alignment: Qt.AlignVCenter
-                        multiSelection: false
-                        showSelectionIndicator: false
-                        showTitle: false
-                        flatNetworks: root.swapAdaptor.networksStore.activeNetworks
-                        selection: [root.swapInputParamsForm.selectedNetworkChainId]
-                        onSelectionChanged: {
-                            root.swapInputParamsForm.selectedNetworkChainId = selection[0]
-                            payPanel.forceActiveFocus()
-                        }
-                    }
-                }
+                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                text: qsTr("Swap")
             }
 
             Item {
@@ -246,9 +312,8 @@ StatusDialog {
 
                     currencyStore: root.swapAdaptor.currencyStore
                     flatNetworksModel: root.swapAdaptor.networksStore.activeNetworks
-                    processedAssetsModel: root.swapAdaptor.walletAssetsStore.groupedAccountAssetsModel
-                    allTokenGroupsForChainModel: root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsForChainModel
-                    searchResultModel: root.swapAdaptor.walletAssetsStore.walletTokensStore.searchResultModel
+                    // null until the deferred createPickers runs post-open
+                    tokenSelectorModel: d.payTokenSelector ? d.payTokenSelector.model : null
 
                     groupKey: root.swapInputParamsForm.fromGroupKey
                     defaultGroupKey: root.swapInputParamsForm.defaultFromGroupKey
@@ -258,9 +323,14 @@ StatusDialog {
                     cryptoFeesToReserve: root.swapAdaptor.swapOutputData.maxFeesToReserveRaw
 
                     selectedNetworkChainId: root.swapInputParamsForm.selectedNetworkChainId
+                    showNetworkSelector: true
+                    onNetworkSelected: function(chainId) {
+                        root.swapInputParamsForm.selectedNetworkChainId = chainId
+                        payPanel.forceActiveFocus()
+                    }
 
                     selectedAccountAddress: root.swapInputParamsForm.selectedAccountAddress
-                    nonInteractiveGroupKey: receivePanel.selectedHoldingId
+                    nonInteractiveGroupKey: d.isSameChainSwap ? receivePanel.selectedHoldingId : ""
 
                     swapSide: SwapInputPanel.SwapSide.Pay
                     swapExchangeButtonWidth: swapExchangeButton.width
@@ -294,24 +364,35 @@ StatusDialog {
 
                     currencyStore: root.swapAdaptor.currencyStore
                     flatNetworksModel: root.swapAdaptor.networksStore.activeNetworks
-                    processedAssetsModel: root.swapAdaptor.walletAssetsStore.groupedAccountAssetsModel
-                    allTokenGroupsForChainModel: root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsForChainModel
-                    searchResultModel: root.swapAdaptor.walletAssetsStore.walletTokensStore.searchResultModel
+                    // plain swap reuses the source-chain picker; only a bridge uses the destination one
+                    // (both null until the deferred createPickers/ensureBridgePicker run post-open)
+                    tokenSelectorModel: {
+                        if (d.isSameChainSwap)
+                            return d.receiveTokenSelector ? d.receiveTokenSelector.model : null
+                        return d.receiveTokenSelectorTo ? d.receiveTokenSelectorTo.model : null
+                    }
 
                     groupKey: root.swapInputParamsForm.toGroupKey
                     defaultGroupKey: root.swapInputParamsForm.defaultToGroupKey
                     oppositeSideGroupKey: root.swapInputParamsForm.fromGroupKey
                     tokenAmount: root.swapAdaptor.validSwapProposalReceived && root.swapAdaptor.toToken ? root.swapAdaptor.swapOutputData.toTokenAmount: root.swapInputParamsForm.toTokenAmount
 
-                    selectedNetworkChainId: root.swapInputParamsForm.selectedNetworkChainId
+                    selectedNetworkChainId: root.swapInputParamsForm.toNetworkChainId
+                    showNetworkSelector: true
+                    onNetworkSelected: function(chainId) {
+                        root.swapInputParamsForm.toNetworkChainId = chainId
+                        payPanel.forceActiveFocus()
+                    }
 
                     selectedAccountAddress: root.swapInputParamsForm.selectedAccountAddress
-                    nonInteractiveGroupKey: payPanel.selectedHoldingId
+                    nonInteractiveGroupKey: d.isSameChainSwap ? payPanel.selectedHoldingId : ""
 
                     swapSide: SwapInputPanel.SwapSide.Receive
                     swapExchangeButtonWidth: swapExchangeButton.width
 
-                    tokenSelectorLoading: root.swapAdaptor.walletAssetsStore.walletTokensStore.groupsForChainLoading
+                    tokenSelectorLoading: d.isSameChainSwap
+                        ? root.swapAdaptor.walletAssetsStore.walletTokensStore.groupsForChainLoading
+                        : root.swapAdaptor.walletAssetsStore.walletTokensStore.groupsForChainToLoading
                     mainInputLoading: root.swapAdaptor.swapProposalLoading
                     bottomTextLoading: root.swapAdaptor.swapProposalLoading
 
@@ -331,6 +412,10 @@ StatusDialog {
                     onClicked: {
                         const tempPayToken = root.swapInputParamsForm.fromGroupKey
                         const tempPayAmount = root.swapInputParamsForm.fromTokenAmount
+                        // also swap the chains so the bridge direction is inverted
+                        const tempFromChain = root.swapInputParamsForm.selectedNetworkChainId
+                        root.swapInputParamsForm.selectedNetworkChainId = root.swapInputParamsForm.toNetworkChainId
+                        root.swapInputParamsForm.toNetworkChainId = tempFromChain
                         root.swapInputParamsForm.fromGroupKey = root.swapInputParamsForm.toGroupKey
                         root.swapInputParamsForm.fromTokenAmount = !!root.swapAdaptor.swapOutputData.toTokenAmount ? root.swapAdaptor.swapOutputData.toTokenAmount : root.swapInputParamsForm.toTokenAmount
                         root.swapInputParamsForm.toGroupKey = tempPayToken
@@ -618,11 +703,11 @@ StatusDialog {
             accountColor: Utils.getColorForId(Theme.palette, d.selectedAccount.colorId)
             accountBalanceFormatted: d.selectedAccount.accountBalance.formattedBalance
 
-            networkShortName: networkFilter.singleSelectionItemData.shortName
-            networkName: networkFilter.singleSelectionItemData.chainName
-            networkIconPath: Assets.svg(networkFilter.singleSelectionItemData.iconUrl)
-            networkBlockExplorerUrl: networkFilter.singleSelectionItemData.blockExplorerURL
-            networkChainId: networkFilter.singleSelectionItemData.chainId
+            networkShortName: fromNetworkEntry.item.shortName
+            networkName: fromNetworkEntry.item.chainName
+            networkIconPath: Assets.svg(fromNetworkEntry.item.iconUrl)
+            networkBlockExplorerUrl: fromNetworkEntry.item.blockExplorerURL
+            networkChainId: fromNetworkEntry.item.chainId
 
             fiatFees: root.swapAdaptor.currencyStore.formatCurrencyAmount(root.swapAdaptor.swapOutputData.approvalTxFeesFiat, root.swapAdaptor.currencyStore.currentCurrency)
 
@@ -633,12 +718,12 @@ StatusDialog {
 
             estimatedTime: root.swapAdaptor.swapOutputData.estimatedTime
 
-            serviceProviderName: Constants.swap.paraswapName
-            serviceProviderURL: Constants.swap.paraswapUrl // TODO https://github.com/status-im/status-app/issues/15329
-            serviceProviderTandCUrl: Constants.swap.paraswapTermsAndConditionUrl // TODO https://github.com/status-im/status-app/issues/15329
-            serviceProviderIcon: Assets.png("swap/%1".arg(Constants.swap.paraswapIcon)) // FIXME svg
+            serviceProviderName: d.serviceProviderName
+            serviceProviderURL: d.serviceProviderUrl // TODO https://github.com/status-im/status-app/issues/15329
+            serviceProviderTandCUrl: d.serviceProviderTandCUrl // TODO https://github.com/status-im/status-app/issues/15329
+            serviceProviderIcon: Assets.png("swap/%1".arg(d.serviceProviderIconName)) // FIXME svg
             serviceProviderContractAddress: root.swapAdaptor.swapOutputData.approvalContractAddress
-            serviceProviderHostname: Constants.swap.paraswapHostname
+            serviceProviderHostname: d.serviceProviderHostname
 
             onAccepted: {
                 root.swapAdaptor.sendApproveTx()
@@ -679,10 +764,10 @@ StatusDialog {
             accountEmoji: d.selectedAccount.emoji
             accountColor: Utils.getColorForId(Theme.palette, d.selectedAccount.colorId)
 
-            networkShortName: networkFilter.singleSelectionItemData.shortName
-            networkName: networkFilter.singleSelectionItemData.chainName
-            networkIconPath: Assets.svg(networkFilter.singleSelectionItemData.iconUrl)
-            networkBlockExplorerUrl: networkFilter.singleSelectionItemData.blockExplorerURL
+            networkShortName: fromNetworkEntry.item.shortName
+            networkName: fromNetworkEntry.item.chainName
+            networkIconPath: Assets.svg(fromNetworkEntry.item.iconUrl)
+            networkBlockExplorerUrl: fromNetworkEntry.item.blockExplorerURL
             networkChainId: root.swapInputParamsForm.selectedNetworkChainId
 
             fiatFees: {
@@ -703,9 +788,9 @@ StatusDialog {
 
             slippage: root.swapInputParamsForm.selectedSlippage
 
-            serviceProviderName: Constants.swap.paraswapName
-            serviceProviderURL: Constants.swap.paraswapUrl // TODO https://github.com/status-im/status-app/issues/15329
-            serviceProviderTandCUrl: Constants.swap.paraswapTermsAndConditionUrl // TODO https://github.com/status-im/status-app/issues/15329
+            serviceProviderName: d.serviceProviderName
+            serviceProviderURL: d.serviceProviderUrl // TODO https://github.com/status-im/status-app/issues/15329
+            serviceProviderTandCUrl: d.serviceProviderTandCUrl // TODO https://github.com/status-im/status-app/issues/15329
 
             onAccepted: {
                 root.swapAdaptor.sendSwapTx()

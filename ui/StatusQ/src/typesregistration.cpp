@@ -9,6 +9,7 @@
 #include "StatusQ/imageencoderutils.h"
 #include "StatusQ/keychain.h"
 #include "StatusQ/localnetworkpermission.h"
+#include "StatusQ/markdownutils.h"
 #include "StatusQ/networkchecker.h"
 #include "StatusQ/oneoffilter.h"
 #include "StatusQ/permissionutilsinternal.h"
@@ -16,6 +17,7 @@
 #include "StatusQ/shareutils.h"
 #include "StatusQ/statuscolors.h"
 #include "StatusQ/statusemojimodel.h"
+#include "StatusQ/chatinputhighlighter.h"
 #include "StatusQ/statussyntaxhighlighter.h"
 #include "StatusQ/stringutilsinternal.h"
 #include "StatusQ/systemutilsinternal.h"
@@ -32,11 +34,18 @@
 #include "MobileWebView/mobilewebviewbackend.h"
 #endif
 
+#if defined(STATUSQ_HAS_QTWEBENGINE)
+#include "StatusQ/browserprofileutils.h"
+#endif
+
 // Forward declare platform-specific registration functions
 // These are implemented in the respective platform files
 #if defined(Q_OS_IOS) || defined(Q_OS_ANDROID) || defined(Q_OS_MACOS)
 extern void registerNativeSwipeHandlerItemType();
 extern void registerNativeIndicatorItemType();
+#endif
+#if defined(Q_OS_IOS) || defined(Q_OS_MACOS)
+extern "C" void statusq_linkAccessibilityCrashFilter();
 #endif
 
 #include <qtmodelstoolkit/registerqmltypes.h>
@@ -55,6 +64,7 @@ extern void registerNativeIndicatorItemType();
 #include <QQmlEngine>
 
 void registerStatusQTypes() {
+    qmlRegisterType<ChatInputHighlighter>("StatusQ", 0, 1, "ChatInputHighlighter");
     qmlRegisterType<StatusSyntaxHighlighter>("StatusQ", 0, 1, "StatusSyntaxHighlighter");
     qmlRegisterType<RXValidator>("StatusQ", 0, 1, "RXValidator");
 
@@ -93,6 +103,9 @@ void registerStatusQTypes() {
     });
     qmlRegisterSingletonType<UrlUtils>("StatusQ", 0, 1, "UrlUtils", [](QQmlEngine* engine, QJSEngine*) {
         return new UrlUtils(engine);
+    });
+    qmlRegisterSingletonType<MarkdownUtils>("StatusQ", 0, 1, "MarkdownUtils", [](QQmlEngine*, QJSEngine*) {
+        return new MarkdownUtils;
     });
     qmlRegisterSingletonType<ShareUtils>("StatusQ", 0, 1, "ShareUtils", [](QQmlEngine*, QJSEngine*) {
         return new ShareUtils;
@@ -152,6 +165,13 @@ void registerStatusQTypes() {
 #if defined(STATUSQ_HAS_MOBILEWEBVIEW)
     qmlRegisterType<MobileWebViewBackend>("StatusQ.CustomWebView", 1, 0, "MobileWebViewBackend");
 #endif
+
+#if defined(STATUSQ_HAS_QTWEBENGINE)
+    qmlRegisterSingletonType<BrowserProfileUtils>(
+        "StatusQ.Internal", 0, 1, "BrowserProfileUtils", [](QQmlEngine*, QJSEngine*) {
+            return new BrowserProfileUtils;
+        });
+#endif
     // Register NativeSwipeHandler + NativeIndicator (native on iOS/Android/macOS)
 #if defined(Q_OS_IOS) || defined(Q_OS_ANDROID) || defined(Q_OS_MACOS)
     registerNativeSwipeHandlerItemType();
@@ -159,6 +179,12 @@ void registerStatusQTypes() {
 #else
     qmlRegisterType<NativeSwipeHandlerItem>("StatusQ.Controls", 0, 1, "NativeSwipeHandlerItem");
     qmlRegisterType<NativeIndicatorItem>("StatusQ.Controls", 0, 1, "NativeIndicatorItem");
+#endif
+
+#if defined(Q_OS_IOS) || defined(Q_OS_MACOS)
+    // Force-link the Qt 6.11 a11y crash filter TU for STATUSQ_STATIC_LIB builds
+    // (constructor alone is not a live reference; #21450, #21491).
+    statusq_linkAccessibilityCrashFilter();
 #endif
 
 #ifdef BUNDLE_QML_RESOURCES

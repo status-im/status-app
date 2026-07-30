@@ -40,18 +40,18 @@ StatusDialog {
     required property var accountsModel
     /**
     Expected model structure:
-    - tokensKey: unique string ID of the token (asset); e.g. "ETH" or contract address
+    - key: unique string ID of the token group; e.g. "ETH" or contract address
     - name: user visible token name (e.g. "Ethereum")
     - symbol: user visible token symbol (e.g. "ETH")
+    - logoUri: string
     - decimals: number of decimal places
-    - communityId:optional; ID of the community this token belongs to, if any
-    - marketDetails: object containing props like `currencyPrice` for the computed values below
-    - balances: submodel[ chainId:int, account:string, balance:BigIntString, iconUrl:string ]
+    - cryptoPrice: current price of one token in the user's fiat currency
     - currentBalance: amount of tokens
     - currencyBalance: e.g. `1000.42` in user's fiat currency
-    - currencyBalanceAsString: e.g. "1 000,42 CZK" formatted as a string according to the user's locale
-    - balanceAsString: `1.42` formatted as e.g. "1,42" in user's locale
-    - iconSource: string
+    - sectionName: title of the section this row belongs to (owned / popular)
+    - balances: submodel[ chainId:int, iconUrl:string, chainName:string,
+                          balance:real, rawBalance:string ]
+    - tokens: submodel[ key:string, chainId:int ]
     **/
     required property var assetsModel
     /**
@@ -240,6 +240,15 @@ StatusDialog {
             }
         }
         property bool stickyHeaderVisible: false
+        // The sticky header duplicates the token-selector header and is invisible
+        // until the user first scrolls; it is deferred (Loader) to keep it off the
+        // modal-open instantiation path. This latch keeps it loaded once revealed,
+        // and the token cache replays the pre-load selection into it on creation.
+        property bool stickyHeaderActivated: false
+        onStickyHeaderVisibleChanged: if (stickyHeaderVisible) d.stickyHeaderActivated = true
+        property string lastTokenName: ""
+        property string lastTokenIcon: ""
+        property string lastTokenKey: ""
 
         // Used to get asset entry if selected token is an asset
         readonly property var selectedAssetEntry: ModelEntry {
@@ -346,8 +355,12 @@ StatusDialog {
         }
 
         function setTokenOnBothHeaders(name, icon, key) {
+            d.lastTokenName = name
+            d.lastTokenIcon = icon
+            d.lastTokenKey = key
             sendModalHeader.setToken(name, icon, key)
-            stickySendModalHeader.setToken(name, icon, key)
+            if (stickyHeaderLoader.item)
+                stickyHeaderLoader.item.setToken(name, icon, key)
         }
 
         readonly property var debounceResetTokenSelector: Backpressure.debounce(root, 200, function() {
@@ -387,13 +400,16 @@ StatusDialog {
             }
             !!d.selectedAssetEntry.item.balances ? d.selectedAssetEntry.item.balances.ModelCount.count : null
             if (selectedCollectibleEntryValid) {
-                let collectibleBalance = SQUtils.ModelUtils.getByKey(selectedCollectibleEntry.item.ownership, "accountAddress", root.selectedAccountAddress, "balance")
+                // The flat collectibles model is already filtered to the selected
+                // account, so its `balance` role is that account's owned amount
+                // (ERC-1155 count; 1 for ERC-721).
+                let collectibleBalance = selectedCollectibleEntry.item.balance
                 return !!collectibleBalance ? collectibleBalance: 0
             } else if (!!d.selectedAssetEntry.item && d.selectedAssetEntryValid) {
                 let maxCryptoBalance = 0.0
                 let balanceOnChain = SQUtils.ModelUtils.getByKey(d.selectedAssetEntry.item.balances, "chainId", root.selectedChainId)
                 if (!!balanceOnChain) {
-                    let bigIntBalance = SQUtils.AmountsArithmetic.fromString(balanceOnChain.balance)
+                    let bigIntBalance = SQUtils.AmountsArithmetic.fromString(balanceOnChain.rawBalance)
                     maxCryptoBalance = SQUtils.AmountsArithmetic.toNumber(bigIntBalance, d.selectedAssetEntry.item.decimals)
                 }
                 return WalletUtils.calculateMaxSafeSendAmount(maxCryptoBalance, d.selectedCryptoTokenSymbol, root.selectedChainId)
@@ -423,7 +439,7 @@ StatusDialog {
                     return allowSend
                 }
 
-                const bigIntBalance = SQUtils.AmountsArithmetic.fromString(balanceOnChain.balance)
+                const bigIntBalance = SQUtils.AmountsArithmetic.fromString(balanceOnChain.rawBalance)
                 const oneGwei = SQUtils.AmountsArithmetic.fromString("1000000000") // 1 GWei
                 if(SQUtils.AmountsArithmetic.cmp(oneGwei, bigIntBalance) >= 0) {
                     // if the balance is less than or equal 1GWei, let the user enter any amount, this way for L2 chains the app allows sending
@@ -586,38 +602,55 @@ StatusDialog {
             clip: true
             z: 1
 
-            StickySendModalHeader {
-                id: stickySendModalHeader
-
-                objectName: "stickySendModalHeader"
+            // Deferred until the user first scrolls the sticky header into view
+            // (d.stickyHeaderActivated); building it eagerly costs ~15ms of the
+            // modal's open-time instantiation for a view that is initially hidden.
+            Loader {
+                id: stickyHeaderLoader
 
                 width: parent.width
-                blurSource: scrollView.contentItem
+                active: d.stickyHeaderActivated
 
-                stickyHeaderVisible: d.stickyHeaderVisible
+                sourceComponent: StickySendModalHeader {
+                    objectName: "stickySendModalHeader"
 
-                interactive: root.interactive && !root.transferOwnership
-                displayOnlyAssets: root.displayOnlyAssets
-                tokenSelectorTab: d.lastTabSettings.lastSelectedTab
+                    width: stickyHeaderLoader.width
+                    blurSource: scrollView.contentItem
 
-                networksModel: root.networksModel
-                assetsModel: root.assetsModel
-                collectiblesModel: root.collectiblesModel
+                    // Start hidden so the first reveal animates via the height
+                    // Behavior instead of popping to full height on Loader creation.
+                    property bool initialRevealDone: false
+                    stickyHeaderVisible: d.stickyHeaderVisible && initialRevealDone
 
-                selectedChainId: root.selectedChainId
+                    interactive: root.interactive && !root.transferOwnership
+                    displayOnlyAssets: root.displayOnlyAssets
+                    tokenSelectorTab: d.lastTabSettings.lastSelectedTab
 
-                onCollectibleSelected: (key) => {
-                                           d.setSelectedCollectible(key)
+                    networksModel: root.networksModel
+                    assetsModel: root.assetsModel
+                    collectiblesModel: root.collectiblesModel
+                    formatCurrencyBalance: (amount) => root.fnFormatCurrencyAmount(amount, root.currentCurrency)
+
+                    selectedChainId: root.selectedChainId
+
+                    onCollectibleSelected: (key) => {
+                                               d.setSelectedCollectible(key)
+                                           }
+                    onCollectionSelected: (key) => {
+                                              d.setSelectedCollectible(key)
+                                          }
+                    onAssetSelected: (key) => {
+                                         d.setSelectedAsset(key)
+                                     }
+                    onNetworkSelected: (chainId) => {
+                                           root.selectedChainId = chainId
                                        }
-                onCollectionSelected: (key) => {
-                                          d.setSelectedCollectible(key)
-                                      }
-                onAssetSelected: (key) => {
-                                     d.setSelectedAsset(key)
-                                 }
-                onNetworkSelected: (chainId) => {
-                                       root.selectedChainId = chainId
-                                   }
+                    // Replay the token selected before this header was created.
+                    Component.onCompleted: {
+                        setToken(d.lastTokenName, d.lastTokenIcon, d.lastTokenKey)
+                        Qt.callLater(() => initialRevealDone = true)
+                    }
+                }
             }
         }
 
@@ -661,6 +694,7 @@ StatusDialog {
                     networksModel: root.networksModel
                     assetsModel: root.assetsModel
                     collectiblesModel: root.collectiblesModel
+                    formatCurrencyBalance: (amount) => root.fnFormatCurrencyAmount(amount, root.currentCurrency)
 
                     selectedChainId: root.selectedChainId
 

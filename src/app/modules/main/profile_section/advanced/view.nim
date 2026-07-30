@@ -67,18 +67,15 @@ QtObject:
   QtProperty[bool] isRuntimeLogLevelSet:
     read = getIsRuntimeLogLevelSet
 
-  proc archiveProtocolEnabledChanged*(self: View) {.signal.}
-  proc getArchiveProtocolEnabled*(self: View): bool {.slot.} =
-    return self.delegate.isCommunityHistoryArchiveSupportEnabled()
-  QtProperty[bool] archiveProtocolEnabled:
-    read = getArchiveProtocolEnabled
-    notify = archiveProtocolEnabledChanged
+  proc archiveProtocolModeChanged*(self: View) {.signal.}
+  proc getArchiveProtocolMode*(self: View): int {.slot.} =
+    return self.delegate.getCommunityHistoryArchiveProtocolMode()
+  QtProperty[int] archiveProtocolMode:
+    read = getArchiveProtocolMode
+    notify = archiveProtocolModeChanged
 
-  proc enableCommunityHistoryArchiveSupport*(self: View) {.slot.} =
-    self.delegate.enableCommunityHistoryArchiveSupport()
-
-  proc disableCommunityHistoryArchiveSupport*(self: View) {.slot.} =
-    self.delegate.disableCommunityHistoryArchiveSupport()
+  proc setCommunityHistoryArchiveProtocolMode*(self: View, mode: int): bool {.slot.} =
+    return self.delegate.setCommunityHistoryArchiveProtocolMode(mode)
 
   proc toggleWalletSection*(self: View) {.slot.} =
     self.delegate.toggleWalletSection()

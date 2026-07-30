@@ -1,5 +1,4 @@
 import nimqml, strutils
-import dotherside_ext
 import app/global/global_singleton
 import app/modules/shared_models/section_model
 import app/modules/shared_models/section_item
@@ -15,6 +14,7 @@ QtObject:
       delegate: io_interface.AccessInterface
       model: section_model.SectionModel
       modelVariant: QVariant
+      online: bool
       sectionsLoaded: bool
       notificationAvailable: bool
       activeSection: SectionDetails
@@ -33,6 +33,7 @@ QtObject:
     result.QObject.setup
     result.delegate = delegate
     result.model = section_model.newModel()
+    result.online = false
     result.sectionsLoaded = false
     result.notificationAvailable = false
     result.modelVariant = newQVariant(result.model)
@@ -41,8 +42,6 @@ QtObject:
     result.ephemeralNotificationModel = ephemeralNotification_model.newModel()
     result.ephemeralNotificationModelVariant = newQVariant(result.ephemeralNotificationModel)
     result.mainLoaded = false
-
-    signalConnect(result.model, "notificationsCountChanged()", result, "onNotificationsCountChanged()", 2)
 
   proc load*(self: View) =
     # In some point, here, we will setup some exposed main module related things.
@@ -87,9 +86,6 @@ QtObject:
   QtProperty[QVariant] sectionsModel:
     read = getModel
     notify = modelChanged
-
-  proc onNotificationsCountChanged*(self: View) {.slot.} =
-    self.delegate.meMentionedCountChanged(self.model.allMentionsCount())
 
   proc ephemeralNotificationModel*(self: View): ephemeralNotification_model.Model =
     return self.ephemeralNotificationModel
@@ -140,6 +136,10 @@ QtObject:
 
   proc mailserverNotWorking*(self:View) {.signal.}
 
+  proc messagingNetworkConnected*(self: View) {.signal.}
+
+  proc messagingNetworkDisconnected*(self: View) {.signal.}
+
   proc displayWindowsOsNotification*(self:View, title: string, message: string) {.signal.}
 
   proc emitMailserverWorking*(self: View) =
@@ -147,6 +147,18 @@ QtObject:
 
   proc emitMailserverNotWorking*(self: View) =
     self.mailserverNotWorking()
+
+  proc emitMessagingNetworkConnected*(self: View) =
+    self.messagingNetworkConnected()
+
+  proc emitMessagingNetworkDisconnected*(self: View) =
+    self.messagingNetworkDisconnected()
+
+  proc isMessagingNetworkConnected*(self: View): bool {.slot.} =
+    return self.delegate.isMessagingNetworkConnected()
+
+  QtProperty[bool] isMessagingNetworkConnected:
+    read = isMessagingNetworkConnected
 
   proc activeSection*(self: View): SectionDetails =
     return self.activeSection
@@ -240,9 +252,12 @@ QtObject:
   proc onlineStatusChanged(self: View, connected: bool) {.signal.}
 
   proc isConnected*(self: View): bool {.slot.} =
-    result = self.delegate.isConnected()
+    result = self.online
 
   proc setConnected*(self: View, connected: bool) = # Not a slot
+    if self.online == connected:
+      return
+    self.online = connected
     self.onlineStatusChanged(connected)
 
   QtProperty[bool] isOnline:
@@ -328,15 +343,14 @@ QtObject:
   proc activateStatusDeepLink*(self: View, statusDeepLink: string) {.slot.} =
     self.delegate.activateStatusDeepLink(statusDeepLink)
 
-
   proc windowActivated*(self: View) {.slot.} =
     self.delegate.windowActivated()
 
   proc windowDeactivated*(self: View) {.slot.} =
     self.delegate.windowDeactivated()
 
-  proc connectionChange*(self: View, connectionType: string, isExpensive: bool) {.slot.} =
-    self.delegate.connectionChange(connectionType, isExpensive)
+  proc connectionChange*(self: View, connectionType: string, isExpensive: bool, isOnline: bool) {.slot.} =
+    self.delegate.connectionChange(connectionType, isExpensive, isOnline)
 
   proc setCommunityIdToSpectate*(self: View, communityId: string) {.slot.} =
     self.delegate.setCommunityIdToSpectate(communityId)
@@ -423,6 +437,17 @@ QtObject:
   proc navigateToMessageList*(self: View) {.signal.}
 
   proc wcLinkActivated*(self: View, url: string) {.signal.}
+
+  proc profileMigrationFlowRequested*(self: View, migrateToKeycard: bool) {.signal.}
+
+  proc profileMigrationFlowOpened*(self: View) {.slot.} =
+    self.delegate.onProfileMigrationFlowOpened()
+
+  proc profileMigrationFlowClosed*(self: View) {.slot.} =
+    self.delegate.onProfileMigrationFlowClosed()
+
+  proc checkProfileMigrationNeeded*(self: View) {.slot.} =
+    self.delegate.checkAndPerformProfileMigrationIfNeeded()
 
   proc loadMembersForSectionId*(self: View, communityId: string) {.slot.} =
     self.delegate.loadMembersForSectionId(communityId)

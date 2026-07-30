@@ -42,7 +42,6 @@ Control {
     }
 
     property list<Item> quickActions
-    property var statusChatInput
     property alias linksComponent: linksLoader.sourceComponent
     property alias invitationComponent: invitationBubbleLoader.sourceComponent
 
@@ -80,6 +79,7 @@ Control {
     property string hoveredLink: ""
     property bool linkAddressAndEnsName
     property string disabledTooltipText
+    readonly property string selectedText: d.selectedText
 
     property bool isMobile: Utils.isMobile
 
@@ -98,8 +98,6 @@ Control {
     signal stickerClicked()
     signal resendClicked()
 
-    signal editCompleted(string newMsgText)
-    signal editCancelled()
     signal stickerLoaded()
     signal linkActivated(string link)
 
@@ -254,7 +252,7 @@ Control {
                     }
                     Loader {
                         Layout.fillWidth: true
-                        active: root.showHeader && !editMode
+                        active: root.showHeader
                         visible: active
                         sourceComponent: StatusMessageHeader {
                             sender: root.messageDetails.sender
@@ -271,7 +269,7 @@ Control {
                     }
                     Loader {
                         Layout.fillWidth: true
-                        active: (!root.editMode && !!root.messageDetails.messageText && !root.hideMessage
+                        active: (!!root.messageDetails.messageText && !root.hideMessage
                                  && ((root.messageDetails.contentType === StatusMessage.ContentType.Text) ||
                                      (root.messageDetails.contentType === StatusMessage.ContentType.Emoji) ||
                                      (root.messageDetails.contentType === StatusMessage.ContentType.DiscordMessage) ||
@@ -281,7 +279,7 @@ Control {
                         sourceComponent: StatusTextMessageCommon {}
                     }
                     Loader {
-                        active: root.messageDetails.contentType === StatusMessage.ContentType.Image && !editMode
+                        active: root.messageDetails.contentType === StatusMessage.ContentType.Image
                         visible: active
                         Layout.fillWidth: true
 
@@ -314,7 +312,7 @@ Control {
                     }
 
                     Loader {
-                        active: root.messageAttachments && !editMode
+                        active: root.messageAttachments
                         visible: active
                         sourceComponent: Column {
                             spacing: 4
@@ -330,7 +328,7 @@ Control {
                         }
                     }
                     StatusSticker {
-                        active: root.messageDetails.contentType === StatusMessage.ContentType.Sticker && !editMode
+                        active: root.messageDetails.contentType === StatusMessage.ContentType.Sticker
                         visible: active
                         asset.isImage: true
                         asset.name: root.messageDetails.messageContent
@@ -341,7 +339,7 @@ Control {
                         id: linksLoader
                         Layout.fillWidth: true
                         Layout.preferredHeight: implicitHeight
-                        active: parent.visible && !root.editMode &&
+                        active: parent.visible &&
                                 ((!!root.linkPreviewModel && root.linkPreviewModel.count > 0)
                                 || (!!root.gifLinks && root.gifLinks.length > 0)
                                 || (!!root.paymentRequestModel && root.paymentRequestModel.ModelCount.count > 0))
@@ -350,26 +348,15 @@ Control {
                     Loader {
                         id: invitationBubbleLoader
                         // TODO remove this component in #12570
-                        active: root.messageDetails.contentType === StatusMessage.ContentType.Invitation && !editMode
+                        active: root.messageDetails.contentType === StatusMessage.ContentType.Invitation
                         visible: active
                     }
 
                     Loader {
-                        Layout.fillWidth: true
-                        Layout.rightMargin: Theme.padding
-                        active: root.editMode
-                        visible: active
-                        sourceComponent: StatusEditMessage {
-                            inputComponent: root.statusChatInput
-                            messageText: root.messageDetails.messageText
-                            onEditCancelled: root.editCancelled()
-                            onEditCompleted: (newMsgText) => root.editCompleted(newMsgText)
-                        }
-                    }
-                    Loader {
                         active: !!root.reactionsModel && root.reactionsModel.ModelCount.count > 0
                         visible: active
                         Layout.fillWidth: true
+                        Layout.bottomMargin: root.editMode ? Theme.halfPadding : 0
                         sourceComponent: StatusMessageEmojiReactions {
                             id: emojiReactionsPanel
                             enabled: !root.disableEmojis
@@ -407,6 +394,11 @@ Control {
         }
     }
 
+    QtObject {
+        id: d
+        property string selectedText
+    }
+
     component StatusTextMessageCommon: StatusTextMessage {
         objectName: "StatusMessage_textMessage"
         messageDetails: root.messageDetails
@@ -420,5 +412,6 @@ Control {
         onLinkActivated: link => root.linkActivated(link)
         onHoveredLinkChanged: root.hoveredLink = hoveredLink
         onContextMenuRequested: pos => root.contextMenuRequested(pos)
+        onSelectedTextChanged: d.selectedText = selectedText
     }
 }

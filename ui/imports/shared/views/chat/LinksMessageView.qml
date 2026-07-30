@@ -45,6 +45,7 @@ Flow {
     signal imageClicked(var image, var mouse, string imageSource, string url)
     signal openContextMenu(var item, string url, string domain)
     signal setNeverAskAboutUnfurlingAgain(bool neverAskAgain)
+    signal setGifUnfurlingEnabled
     signal paymentRequestClicked(int index)
 
     function resetLocalAskAboutUnfurling() {
@@ -207,15 +208,11 @@ Flow {
             StatusFlatButton {
                 id: enableBtn
                 objectName: "LinksMessageView_enableBtn"
-                text: qsTr("Enable in Settings")
-                onClicked: {
-                    Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.messaging);
-                }
+                text: qsTr("Always Enable")
+                onClicked: root.setGifUnfurlingEnabled()
                 width: parent.width
                 anchors.top: sep1.bottom
-                Component.onCompleted: {
-                    background.radius = 0
-                }
+                radius: 0
             }
             Separator {
                 id: sep2
@@ -232,8 +229,8 @@ Flow {
                 onClicked: root.setNeverAskAboutUnfurlingAgain(true)
                 Component.onCompleted: {
                     background.radius = 0
-                    background.bottomRightRadius = Theme.padding
-                    background.bottomRightRadius = Theme.padding
+                    background.bottomLeftRadius = enableLinkRoot.radius
+                    background.bottomRightRadius = enableLinkRoot.radius
                 }
             }
         }

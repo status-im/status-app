@@ -5,26 +5,6 @@ import times, std/strformat, json
 #################################################
 
 type
-  BuildGroupsForChainResponse* = object
-    chainId*: int
-    tokens*: seq[TokenDtoSafe]
-    error*: string
-
-  FetchAllTokenGroupsResponse* = object
-    tokens*: seq[TokenDtoSafe]
-    error*: string
-
-  RefreshTokensResponse* = object
-    requestId*: int
-    tokensOfInterest*: seq[TokenDtoSafe]
-    tokenPreferences*: JsonNode
-    allTokens*: seq[TokenDtoSafe]
-    error*: string
-
-  FetchAllTokenListsResponse* = object
-    allTokenLists*: seq[TokenListDto]
-    error*: string
-
   TokensMarketValuesSlotResponse* = object
     tokenMarketValues*: JsonNode
     error*: string
@@ -44,62 +24,92 @@ type
 type
   AsyncRefreshTokensTaskArg = ref object of QObjectTaskArg
     requestId: int
+    # When false, the full token catalogue (~3MB) is NOT fetched and "allTokens" stays
+    # empty, so the main-thread slot keeps the existing cache and skips the heavy decode.
+    # Only init / token-lists-updated set this to true.
+    fetchAllTokens: bool
 
 proc asyncRefreshTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncRefreshTokensTaskArg](argEncoded)
-  var output = %*{
-    "requestId": arg.requestId,
-    "tokensOfInterest": newJArray(),
-    "tokenPreferences": newJArray(),
-    "allTokens": newJArray(),
-    "error": ""
-  }
+  # Decode the RPC responses AND build the finished token structures here on the
+  # threadpool, then hand the GUI slot a ready object via finishTyped — no multi-MB
+  # JSON crosses the boundary and no token-model build runs on the GUI thread.
+  # finishTyped is always called (assemble*Result never returns nil / never raises)
+  # so the generation gate never wedges.
+  var tokensOfInterestNode: JsonNode = newJArray()
+  var tokenPrefsNode: JsonNode = newJArray()
+  var allTokensNode: JsonNode = newJArray()
+  var errorMsg = ""
   try:
     var tokensOfInterestResponse: JsonNode
     var err = status_go_tokens.getTokensOfInterestForActiveNetworksMode(tokensOfInterestResponse)
     if err.len > 0:
       raise newException(CatchableError, "getTokensOfInterestForActiveNetworksMode failed: " & err)
-    output["tokensOfInterest"] = if tokensOfInterestResponse.isNil: newJArray() else: tokensOfInterestResponse
+    if not tokensOfInterestResponse.isNil: tokensOfInterestNode = tokensOfInterestResponse
 
     let prefsResponse = backend.getTokenPreferences()
     if not prefsResponse.error.isNil:
       raise newException(CatchableError, "getTokenPreferences failed: " & prefsResponse.error.message)
-    output["tokenPreferences"] = if prefsResponse.result.isNil: newJNull() else: prefsResponse.result
+    tokenPrefsNode = if prefsResponse.result.isNil: newJNull() else: prefsResponse.result
   except Exception as e:
-    output["error"] = %* fmt"Error refreshing tokens: {e.msg}"
+    errorMsg = fmt"Error refreshing tokens: {e.msg}"
 
-  # fetch all tokens for the group-key index
+  # fetch all tokens for the group-key index only when the catalogue may have
+  # changed: routine refreshes skip the ~3MB getAllTokens fetch.
+  if arg.fetchAllTokens:
+    try:
+      var allTokensResponse: JsonNode
+      let allTokensErr = status_go_tokens.getAllTokens(allTokensResponse)
+      if allTokensErr.len > 0:
+        warn "asyncRefreshTokensTask: getAllTokens failed", err = allTokensErr
+      elif not allTokensResponse.isNil:
+        allTokensNode = allTokensResponse
+    except Exception as e:
+      warn "asyncRefreshTokensTask: getAllTokens exception", err = e.msg
+
+  # Liveness invariant: finishTyped MUST run on every task invocation, with a
+  # non-nil result, or the generation in-flight gate wedges permanently (tokens
+  # never refresh again until app restart). assembleRefreshResult is written to
+  # never raise / never return nil; this finally makes that structural — the gate's
+  # liveness must not depend on a catch-clause choice in another file.
+  var res: RefreshTokensApplyResult
   try:
-    var allTokensResponse: JsonNode
-    let allTokensErr = status_go_tokens.getAllTokens(allTokensResponse)
-    if allTokensErr.len > 0:
-      warn "asyncRefreshTokensTask: getAllTokens failed", err = allTokensErr
-    else:
-      output["allTokens"] = if allTokensResponse.isNil: newJArray() else: allTokensResponse
-  except Exception as e:
-    warn "asyncRefreshTokensTask: getAllTokens exception", err = e.msg
-
-  arg.finish(output)
+    res = assembleRefreshResult(tokensOfInterestNode, allTokensNode, tokenPrefsNode,
+                                arg.requestId, errorMsg)
+  finally:
+    if res.isNil:
+      res = RefreshTokensApplyResult(generation: arg.requestId,
+        error: "internal: refresh result assembly produced no result")
+    arg.finishTyped(res)
 
 type
   AsyncFetchAllTokenListsTaskArg = ref object of QObjectTaskArg
-    discard
+    requestId: int
 
 proc asyncFetchAllTokenListsTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncFetchAllTokenListsTaskArg](argEncoded)
-  var output = %*{
-    "allTokenLists": newJArray(),
-    "error": ""
-  }
+  # Decode + build the token-list items off the GUI thread and hand them over via
+  # finishTyped. Always finishes (deadlock-safe, see refresh).
+  var allTokenListsNode: JsonNode = newJArray()
+  var errorMsg = ""
   try:
     var allTokenListsResponse: JsonNode
     var err = status_go_tokens.getAllTokenLists(allTokenListsResponse)
     if err.len > 0:
       raise newException(CatchableError, "getAllTokenLists failed: " & err)
-    output["allTokenLists"] = if allTokenListsResponse.isNil: newJArray() else: allTokenListsResponse
+    if not allTokenListsResponse.isNil: allTokenListsNode = allTokenListsResponse
   except Exception as e:
-    output["error"] = %* fmt"Error fetching all token lists: {e.msg}"
-  arg.finish(output)
+    errorMsg = fmt"Error fetching all token lists: {e.msg}"
+  # Same liveness invariant as asyncRefreshTokensTask: finishTyped always fires with
+  # a non-nil result (structural finally), so the 0004 gate can never wedge.
+  var res: AllTokenListsApplyResult
+  try:
+    res = assembleAllTokenListsResult(allTokenListsNode, arg.requestId, errorMsg)
+  finally:
+    if res.isNil:
+      res = AllTokenListsApplyResult(generation: arg.requestId,
+        error: "internal: token lists result assembly produced no result")
+    arg.finishTyped(res)
 
 type
   AsyncFetchAllTokenGroupsTaskArg = ref object of QObjectTaskArg
@@ -107,19 +117,27 @@ type
 
 proc asyncFetchAllTokenGroupsTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncFetchAllTokenGroupsTaskArg](argEncoded)
-  var output = %*{
-    "tokens": newJArray(),
-    "error": ""
-  }
+  # Decode + build the name-sorted groups off the GUI thread and hand them over via
+  # finishTyped (no multi-MB JSON crosses the boundary, no group build on the GUI
+  # slot). Always finishes with a non-nil result (structural finally) so the
+  # allTokenGroupsLoading bool the slot clears can never stay stuck true.
+  var tokensNode: JsonNode = newJArray()
+  var errorMsg = ""
   try:
     var response: JsonNode
     var err = status_go_tokens.getTokensForActiveNetworksMode(response)
     if err.len > 0:
       raise newException(CatchableError, "getTokensForActiveNetworksMode failed: " & err)
-    output["tokens"] = if response.isNil: newJArray() else: response
+    if not response.isNil: tokensNode = response
   except Exception as e:
-    output["error"] = %* fmt"Error fetching all token groups: {e.msg}"
-  arg.finish(output)
+    errorMsg = fmt"Error fetching all token groups: {e.msg}"
+  var res: TokenGroupsApplyResult
+  try:
+    res = assembleTokenGroupsResult(tokensNode, errorMsg)
+  finally:
+    if res.isNil:
+      res = TokenGroupsApplyResult(error: "internal: token groups result assembly produced no result")
+    arg.finishTyped(res)
 
 type
   AsyncBuildGroupsForChainTaskArg = ref object of QObjectTaskArg
@@ -127,19 +145,44 @@ type
 
 proc asyncBuildGroupsForChainTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncBuildGroupsForChainTaskArg](argEncoded)
-  var output = %*{
-    "chainId": arg.chainId,
-    "tokens": newJArray(),
-    "error": ""
-  }
+  # Same typed-handoff build as asyncFetchAllTokenGroupsTask, for one chain.
+  var tokensNode: JsonNode = newJArray()
+  var errorMsg = ""
   try:
     var response: JsonNode
     var err = status_go_tokens.getTokensByChain(response, arg.chainId)
     if err.len > 0:
       raise newException(CatchableError, "getTokensByChain failed: " & err)
+    if not response.isNil: tokensNode = response
+  except Exception as e:
+    errorMsg = fmt"Error building groups for chain {arg.chainId}: {e.msg}"
+  var res: TokenGroupsApplyResult
+  try:
+    res = assembleTokenGroupsResult(tokensNode, errorMsg)
+  finally:
+    if res.isNil:
+      res = TokenGroupsApplyResult(error: "internal: groups-for-chain result assembly produced no result")
+    arg.finishTyped(res)
+
+type
+  AsyncFetchMissingTokensTaskArg = ref object of QObjectTaskArg
+    keys: seq[string]
+
+proc asyncFetchMissingTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncFetchMissingTokensTaskArg](argEncoded)
+  var output = %*{
+    "requestedKeys": arg.keys,
+    "tokens": newJArray(),
+    "error": ""
+  }
+  try:
+    var response: JsonNode
+    let err = status_go_tokens.getTokensByKeys(response, arg.keys)
+    if err.len > 0:
+      raise newException(CatchableError, "getTokensByKeys failed: " & err)
     output["tokens"] = if response.isNil: newJArray() else: response
   except Exception as e:
-    output["error"] = %* fmt"Error building groups for chain {arg.chainId}: {e.msg}"
+    output["error"] = %* fmt"Error fetching missing tokens: {e.msg}"
   arg.finish(output)
 
 #################################################
@@ -276,6 +319,34 @@ proc prefetchParaswapSupportTask*(argEncoded: string) {.gcsafe, nimcall.} =
     })
   except Exception as e:
     error "prefetch paraswap chain support failed", chainId = arg.chainId, err = e.msg
+    arg.finish(%*{
+      "chainId": arg.chainId,
+      "error": e.msg,
+    })
+
+type
+  PrefetchLiFiSupportTaskArg = ref object of QObjectTaskArg
+    chainId: int
+
+proc prefetchLiFiSupportTask*(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[PrefetchLiFiSupportTaskArg](argEncoded)
+  if arg.chainId <= 0:
+    arg.finish(%*{"chainId": 0, "error": "invalid chainId"})
+    return
+  try:
+    var response: JsonNode
+    var err = status_go_tokens.isChainSupportedForSwapViaLiFi(response, arg.chainId)
+    if err.len > 0:
+      raise newException(CatchableError, "failed" & err)
+    if response.isNil or response.kind != JsonNodeKind.JBool:
+      raise newException(CatchableError, "unexpected response")
+    arg.finish(%*{
+      "chainId": arg.chainId,
+      "supported": response.getBool(),
+      "error": "",
+    })
+  except Exception as e:
+    error "prefetch lifi chain support failed", chainId = arg.chainId, err = e.msg
     arg.finish(%*{
       "chainId": arg.chainId,
       "error": e.msg,

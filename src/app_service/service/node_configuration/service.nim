@@ -23,6 +23,12 @@ type
     logLevel*: LogLevel
 
 type
+  ArchiveProtocolMode* {.pure.} = enum
+    Disabled = 0
+    LogosStorage = 1
+    Torrent = 2
+
+type
   ErrorArgs* = ref object of Args
     msg*: string
 
@@ -32,8 +38,8 @@ type
     events: EventEmitter
 
 # Forward declarations
-proc isCommunityHistoryArchiveSupportEnabled*(self: Service): bool
-proc enableCommunityHistoryArchiveSupport*(self: Service): bool
+proc getCommunityHistoryArchiveProtocolMode*(self: Service): ArchiveProtocolMode
+proc setCommunityHistoryArchiveProtocolMode*(self: Service, mode: ArchiveProtocolMode): bool
 
 
 proc delete*(self: Service) =
@@ -68,20 +74,41 @@ proc getWakuVersion*(self: Service): int =
   error "unsupported waku version"
   return 0
 
-proc isCommunityHistoryArchiveSupportEnabled*(self: Service): bool =
-  return self.configuration.TorrentConfig.Enabled
+proc getCommunityHistoryArchiveProtocolMode*(self: Service): ArchiveProtocolMode =
+  if self.configuration.LogosStorageConfig.Enabled:
+    return ArchiveProtocolMode.LogosStorage
 
-proc enableCommunityHistoryArchiveSupport*(self: Service): bool =
+  if self.configuration.TorrentConfig.Enabled:
+    return ArchiveProtocolMode.Torrent
+
+  return ArchiveProtocolMode.Disabled
+
+proc enableTorrentCommunityHistoryArchiveSupport*(self: Service): bool =
   try:
-    let response = status_node_config.enableCommunityHistoryArchiveSupport()
+    let response = status_node_config.enableTorrentCommunityHistoryArchiveSupport()
     if response.error != nil:
       let error = Json.decode($response.error, RpcError)
       raise newException(RpcException, error.message)
 
     self.configuration.TorrentConfig.Enabled = true
+    self.configuration.LogosStorageConfig.Enabled = false
     return true
   except Exception as e:
-    error "error enabling community history archive support: ", errDescription = e.msg
+    error "error enabling Torrent community history archive support:", errDescription = e.msg
+    return false
+
+proc enableLogosStorageCommunityHistoryArchiveSupport*(self: Service): bool =
+  try:
+    let response = status_node_config.enableLogosStorageCommunityHistoryArchiveSupport()
+    if response.error != nil:
+      let error = Json.decode($response.error, RpcError)
+      raise newException(RpcException, error.message)
+
+    self.configuration.LogosStorageConfig.Enabled = true
+    self.configuration.TorrentConfig.Enabled = false
+    return true
+  except Exception as e:
+    error "error enabling Logos Storage community history archive support:", errDescription = e.msg
     return false
 
 proc disableCommunityHistoryArchiveSupport*(self: Service): bool =
@@ -92,10 +119,29 @@ proc disableCommunityHistoryArchiveSupport*(self: Service): bool =
       raise newException(RpcException, error.message)
 
     self.configuration.TorrentConfig.Enabled = false
+    self.configuration.LogosStorageConfig.Enabled = false
     return true
   except Exception as e:
     error "error disabling community history archive support: ", errDescription = e.msg
     return false
+
+proc setCommunityHistoryArchiveProtocolMode*(self: Service, mode: ArchiveProtocolMode): bool =
+  if self.getCommunityHistoryArchiveProtocolMode() == mode:
+    return true
+
+  case mode:
+    of ArchiveProtocolMode.Disabled:
+      return self.disableCommunityHistoryArchiveSupport()
+    of ArchiveProtocolMode.LogosStorage:
+      if self.getCommunityHistoryArchiveProtocolMode() == ArchiveProtocolMode.Torrent:
+        if not self.disableCommunityHistoryArchiveSupport():
+          return false
+      return self.enableLogosStorageCommunityHistoryArchiveSupport()
+    of ArchiveProtocolMode.Torrent:
+      if self.getCommunityHistoryArchiveProtocolMode() == ArchiveProtocolMode.LogosStorage:
+        if not self.disableCommunityHistoryArchiveSupport():
+          return false
+      return self.enableTorrentCommunityHistoryArchiveSupport()
 
 proc setLightClient*(self: Service, enabled: bool): bool =
   try:

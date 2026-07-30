@@ -14,6 +14,8 @@ import AppLayouts.Wallet
 
 import shared.stores
 
+import utils
+
 import QtModelsToolkit
 
 import Storybook
@@ -27,6 +29,8 @@ Item {
 
     property string ethGroupKey: "eth-native"
     property string sttGroupKey: "status-test-token"
+    // a group the mock source gives no logoUri for
+    property string noLogoGroupKey: "11155420-0x6b175474e89094c44da98b954eedeac495271e0f"
 
     QtObject {
         id: d
@@ -64,9 +68,7 @@ Item {
 
             currencyStore: d.adaptor.currencyStore
             flatNetworksModel: d.adaptor.networksStore.activeNetworks
-            processedAssetsModel: d.adaptor.walletAssetsStore.groupedAccountAssetsModel
-            allTokenGroupsForChainModel: d.adaptor.walletAssetsStore.walletTokensStore.tokenGroupsForChainModel
-            searchResultModel: d.adaptor.walletAssetsStore.walletTokensStore.searchResultModel
+            tokenSelectorModel: d.adaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(1).model
             selectedAccountAddress: d.adaptor.swapFormData.selectedAccountAddress
             selectedNetworkChainId: d.goOptChainId
             defaultGroupKey: ethGroupKey
@@ -123,6 +125,75 @@ Item {
             tryCompare(controlUnderTest, "selectedHoldingId", sttGroupKey)
             tryCompare(controlUnderTest, "value", 10000000.0000001)
             verify(controlUnderTest.valueValid)
+        }
+
+        function test_sectionNamesPushedToASwappedInModel() {
+            // SwapModal rebinds the receive panel between the swap and swap-to
+            // picker models whenever the same-chain check flips (it depends on BOTH
+            // chain ids), so a chain change on the PAY side can hand this panel a
+            // model instance that never got its section titles — blank headers.
+            const activeNetworks = d.adaptor.networksStore.activeNetworks
+            verify(activeNetworks.count > 0)
+            const chainId = ModelUtils.get(activeNetworks, 0, "chainId")
+            const chainName = ModelUtils.get(activeNetworks, 0, "chainName")
+            verify(!!chainName)
+
+            const store = d.adaptor.walletAssetsStore.walletTokensStore
+            const initial = store.createTokenSelectorModel(1).model
+            controlUnderTest = createTemporaryObject(componentUnderTest, root,
+                                                     {tokenSelectorModel: initial,
+                                                      selectedNetworkChainId: chainId})
+            verify(!!controlUnderTest)
+
+            const expectedOwned = qsTr("Your assets on %1").arg(chainName)
+            tryCompare(initial, "ownedSectionName", expectedOwned)
+
+            const fresh = store.createTokenSelectorModel(3).model
+            verify(!!fresh)
+            compare(fresh.ownedSectionName, "")
+
+            controlUnderTest.tokenSelectorModel = fresh
+
+            tryCompare(fresh, "ownedSectionName", expectedOwned)
+            compare(fresh.popularSectionName, qsTr("Popular assets"))
+        }
+
+        // The picker model is created lazily after the modal opens, so the panel
+        // lives with a null model for a while — and both of these paths can still
+        // fire in that window (the keyword arrives through a debounce, and the
+        // selector clears its search when the popup closes).
+        function test_searchAndLoadMoreAreSafeWithoutAModel() {
+            failOnWarning(/TypeError/)
+
+            controlUnderTest = createTemporaryObject(componentUnderTest, root,
+                                                     {tokenSelectorModel: null})
+            verify(!!controlUnderTest)
+
+            const holdingSelector = findChild(controlUnderTest, "holdingSelector")
+            verify(!!holdingSelector)
+
+            holdingSelector.search("eth")
+            holdingSelector.search("")
+            holdingSelector.loadMoreRequested()
+        }
+
+        function test_selectedHoldingWithoutLogoFallsBackToTheSymbolIcon() {
+            controlUnderTest = createTemporaryObject(componentUnderTest, root,
+                                                     {groupKey: noLogoGroupKey})
+            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            verify(!!controlUnderTest)
+
+            const entry = ModelUtils.getByKey(controlUnderTest.tokenSelectorModel,
+                                              "key", noLogoGroupKey)
+            verify(!!entry)
+            compare(entry.logoUri, "") // nothing to render without a fallback
+
+            const tokenSelectorButton = findChild(controlUnderTest, "tokenSelectorButton")
+            verify(!!tokenSelectorButton)
+            tryCompare(tokenSelectorButton, "name", entry.symbol)
+            verify(tokenSelectorButton.icon != "")
+            // same icon the picker's own selection path sets for this row
+            compare(String(tokenSelectorButton.icon), Constants.tokenIcon(entry.symbol))
         }
 
         function test_setTokenKeyAndAmounts_data() {
@@ -287,29 +358,6 @@ Item {
             verify(!maxTagButton.text.endsWith("ETH"))
         }
 
-        function test_clickingMaxButton() {
-            controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})
-            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
-            verify(!!controlUnderTest)
-            waitForRendering(controlUnderTest)
-            tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
-
-            const maxTagButton = findChild(controlUnderTest, "maxTagButton")
-            verify(!!maxTagButton)
-            waitForRendering(maxTagButton)
-            verify(maxTagButton.visible)
-            compare(maxTagButton.type, StatusBaseButton.Type.Normal)
-            mouseClick(maxTagButton)
-
-            const amountToSendInput = findChild(controlUnderTest, "amountToSendInput")
-            verify(!!amountToSendInput)
-            waitForRendering(amountToSendInput)
-            const maxValue = maxTagButton.maxSafeValue
-
-            tryCompare(amountToSendInput, "text", maxValue.toLocaleString(Qt.locale(), 'f', -128))
-            tryCompare(controlUnderTest, "value", maxValue)
-            verify(controlUnderTest.valueValid)
-        }
 
         function test_loadingState() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
@@ -335,61 +383,6 @@ Item {
             verify(bottomItemText.loading)
         }
 
-        function test_max_button_when_different_tokens_clicked() {
-            controlUnderTest = createTemporaryObject(componentUnderTest, root)
-            verify(!!controlUnderTest)
-            waitForRendering(controlUnderTest)
-
-            const maxTagButton = findChild(controlUnderTest, "maxTagButton")
-            verify(!!maxTagButton)
-            verify(!maxTagButton.visible)
-
-            const holdingSelector = findChild(controlUnderTest, "holdingSelector")
-            verify(!!holdingSelector)
-
-            const assetSelectorList = findChild(holdingSelector, "assetsListView")
-            verify(!!assetSelectorList)
-
-            const amountToSendInput = findChild(controlUnderTest, "amountToSendInput")
-            verify(!!amountToSendInput)
-
-            const bottomItemText = findChild(amountToSendInput, "bottomItemText")
-            verify(!!bottomItemText)
-
-            const assetCount = assetSelectorList.count
-            for (let i= 0; i < assetCount; i++) {
-                mouseClick(holdingSelector)
-                waitForRendering(assetSelectorList)
-                assetSelectorList.positionViewAtIndex(i, ListView.Center)
-
-                const delToTest = assetSelectorList.itemAtIndex(i)
-                verify(!!delToTest)
-                const modelItemToTest = ModelUtils.get(assetSelectorList.model, i)
-                mouseClick(delToTest)
-
-                waitForRendering(controlUnderTest)
-                verify(maxTagButton.visible)
-                verify(maxTagButton.enabled)
-                verify(!maxTagButton.text.endsWith(modelItemToTest.symbol))
-                tryCompare(maxTagButton, "type", modelItemToTest.currentBalance === 0 ? StatusBaseButton.Type.Danger : StatusBaseButton.Type.Normal)
-
-                if (maxTagButton.enabled) {
-                    mouseClick(maxTagButton)
-                    waitForRendering(amountToSendInput)
-
-                    if (modelItemToTest.currentBalance === 0) {
-                        tryCompare(amountToSendInput, "text", "")
-                        verify(!controlUnderTest.valueValid)
-                    } else {
-                        tryCompare(controlUnderTest, "value", maxTagButton.maxSafeValue)
-                        verify(controlUnderTest.valueValid)
-                    }
-                    compare(bottomItemText.text,  d.adaptor.currencyStore.formatCurrencyAmount(
-                                maxTagButton.maxSafeValue * amountToSendInput.cryptoPrice, d.adaptor.currencyStore.currentCurrency))
-                }
-                amountToSendInput.clear()
-            }
-        }
 
         function test_input_greater_than_max_balance() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root)

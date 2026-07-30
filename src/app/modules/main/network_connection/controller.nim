@@ -30,12 +30,6 @@ proc init*(self: Controller) =
     let args = NetworkConnectionsArgs(e)
     self.delegate.networkConnectionStatusUpdate(args.website, args.completelyDown, ord(args.connectionState), args.chainIds, args.lastCheckedAt)
 
-  self.events.on(SIGNAL_NETWORK_CONNECTED) do(e: Args):
-    self.networkConnectionService.networkConnected(true)
-
-  self.events.on(SIGNAL_NETWORK_DISCONNECTED) do(e: Args):
-    self.networkConnectionService.networkConnected(false)
-
 proc refreshBlockchainValues*(self: Controller) =
   self.networkConnectionService.blockchainsRetry()
 

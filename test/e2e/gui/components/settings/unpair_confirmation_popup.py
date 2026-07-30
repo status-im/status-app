@@ -12,6 +12,6 @@ class UnpairDeviceConfirmationPopup(QObject):
 
     @allure.step('Confirm unpairing')
     def confirm_unpairing(self):
+        self.unpair_button.wait_until_enabled()
         self.unpair_button.click()
         return self
-    

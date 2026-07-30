@@ -61,6 +61,7 @@ ColumnLayout {
     }
 
     property bool sendViaPersonalChatEnabled
+    property bool messageLinkSharingEnabled
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -70,6 +71,7 @@ ColumnLayout {
 
     signal showReplyArea(messageId: string)
     signal forceInputFocus()
+    signal editMessageRequested(messageId: string, unparsedText: string, renderedText: string)
 
     // Unfurling related data:
     property bool gifUnfurlingEnabled
@@ -121,6 +123,7 @@ ColumnLayout {
             isContactBlocked: root.isBlocked
             channelEmoji: !chatContentModule ? "" : (chatContentModule.chatDetails.emoji || "")
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
+            messageLinkSharingEnabled: root.messageLinkSharingEnabled
             disabledTooltipText: root.disabledTooltipText
             areTestNetworksEnabled: root.areTestNetworksEnabled
             extraLeftPadding: root.extraLeftPadding
@@ -140,6 +143,11 @@ ColumnLayout {
             onOpenStickerPackPopup: stickerPackId => root.openStickerPackPopup(stickerPackId)
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
             onEditModeChanged: {
+                if (editModeOn) {
+                    root.editMessageRequested(messageId, unparsedText, renderedText)
+                    return
+                }
+
                 if (!editModeOn)
                     root.forceInputFocus()
             }

@@ -55,11 +55,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Status desktop’s GitHub Repositories</source>
+        <source>status-app</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>status-desktop</source>
+        <source>logos-delivery-go</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status App&apos;s GitHub Repositories</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -68,10 +72,6 @@
     </message>
     <message>
         <source>StatusQ</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>go-waku</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1021,6 +1021,21 @@
     </message>
 </context>
 <context>
+    <name>AdvancedStore</name>
+    <message>
+        <source>Logos Storage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Torrent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>AdvancedView</name>
     <message>
         <source>This feature is experimental and is meant for testing purposes by core contributors and the community. It&apos;s not meant for real use and makes no claims of security or integrity of funds or data. Use at your own risk.</source>
@@ -1059,15 +1074,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Archive Protocol Enabled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>ENS Community Permissions Enabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>WakuV2 options</source>
+        <source>Enable Copying Message Links</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1091,10 +1102,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>History nodes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Developer features</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1104,6 +1111,14 @@
     </message>
     <message>
         <source>Debug</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Archive Protocol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Logos Messaging options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1164,6 +1179,18 @@
     </message>
     <message>
         <source>Change</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Logos Storage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Torrent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1649,6 +1676,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Cannot connect to the Logos Messaging network. Messaging may not work. Retrying automatically.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>CoinGecko connection successful</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1874,43 +1905,7 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
 <context>
     <name>AppearanceView</name>
     <message>
-        <source>Blockchains will drop search costs, causing a kind of decomposition that allows you to have markets of entities that are horizontally segregated and vertically segregated.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Text size</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>XS</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>S</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>M</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>L</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>XL</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>XXL</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Mode</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>XXS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1922,15 +1917,35 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Interface zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scale the app interface and text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Follow display zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Apply your system settings defaults values</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart to apply</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status to apply the new interface zoom level</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>System</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Layout Spacing</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Adjust how compact or spacious the layout looks</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2599,6 +2614,10 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Force reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Clear site data</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2607,15 +2626,15 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clearing cache...</source>
+        <source>Clearing browsing data...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clear cache</source>
+        <source>Clear browsing data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clears cached files, cookies, and history for the entire browser. Browsing is paused until it is done.</source>
+        <source>Clears the cache and cookies for the entire browser. Browsing is paused until it is done.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2715,6 +2734,14 @@ Do you wish to override the security check and continue?</source>
     <name>BuyCryptoModal</name>
     <message>
         <source>Buy via %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3562,6 +3589,29 @@ file format</source>
     </message>
 </context>
 <context>
+    <name>CommunityFetchPopup</name>
+    <message>
+        <source>%1s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to fetch the community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We&apos;re fetching community...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>It may be offline, or Status couldn&apos;t reach it</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>CommunityInfoPanel</name>
     <message>
         <source>%1 Owner token</source>
@@ -4202,7 +4252,7 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Search chats...</source>
+        <source>Search contacts and groups...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4611,6 +4661,10 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     </message>
     <message>
         <source>channel name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Only letters, numbers, underscores, periods and hyphens allowed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5709,23 +5763,11 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Full metadata privacy means it’s impossible to tell who you are talking to by surveilling your internet traffic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Status is truly private - none of your personal details (or any other information) are sent to us</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Messages sent using Status are end to end encrypted and can only be opened by the recipient</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF’s original Whisper protocol</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status is home to crypto’s leading multi-chain self-custodial wallet</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5745,14 +5787,6 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Your cryptographic key pair encrypts all of your messages which can only be unlocked by the intended recipient</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status’ Web3 browser requires all DApps to ask permission before connecting to your wallet</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Your non-custodial wallet gives you full control over your funds without the use of a server</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5761,7 +5795,27 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Status is open source software that lets you use with p2p networks. Status itself doesn’t provide any services</source>
+        <source>Full metadata privacy means it&apos;s impossible to tell who you are talking to by surveilling your internet traffic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status is home to crypto&apos;s leading multi-chain self-custodial wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your cryptographic key pairs encrypt all of your messages which can only be unlocked by the intended recipient</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Web3 browser requires all DApps to ask permission before connecting to your wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status is open source software that lets you interact with p2p networks. Status itself doesn&apos;t provide any services</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5793,7 +5847,35 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Status is a public good licensed under the MIT open source license, for anyone to share, modify and benefit from</source>
+        <source>Status is a public good licensed under the MPL-2.0 open source license, for anyone to share, modify and benefit from</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The only continent that doesn&apos;t (yet!) have any Status core contributors is Antarctica</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We are the 5th most active crypto project on GitHub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Many other messengers with e2e encryption don&apos;t have metadata privacy!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Help to translate Status into your native language. See https://status.app/translations for more info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status has a multi-chain wallet which will allow quick and easy multi-chain txns.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Nimbus team is collaborating with the Ethereum Foundation to create the Portal Network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status&apos; Portal Network client (Fluffy) will let Status users interact with Ethereum in a fully decentralised way</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5813,19 +5895,7 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Status is a globally distributed team of 150+ specialist core contributors</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Our team of core contributors work remotely from over 50+ countries spread across 6 continents</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The only continent that doesn’t (yet!) have any Status core contributors is Antarctica</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>We are the 5th most active crypto project on github</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5853,47 +5923,11 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Many other messengers with e2e encryption don’t have metadata privacy!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Help to translate Status into your native language see https://translate.status.im/ for more info</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>By using Keycard, you can ensure your funds are safe even if your phone is stolen</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You can enhance security by using Keycard + PIN entry as two-factor authentication</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status is currently working on a multi-chain wallet which will allow quick and easy multi-chain txns.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The new Status mobile app is being actively developed and is earmarked for release in 2023</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The all new Status desktop app is being actively developed and is earmarked for release in 2023</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status also builds the Nimbus Ethereum consensus, execution and light clients</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status’s Nimbus team is collaborating with the Ethereum Foundation to create the Portal Network</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status’s Portal Network client (Fluffy) will let Status users interact with Ethereum in a fully decenteralised way</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>We are currently working on a tool to let you import an existing Telegram or Discord group into Status</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6775,7 +6809,7 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>This service operates using the Archive Protocol, which will be automatically enabled.</source>
+        <source>This service operates using the Archive Protocol, which will be automatically enabled using Logos Storage by default.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -7282,6 +7316,19 @@ Please add it and try again.</source>
 <context>
     <name>EnterPin</name>
     <message>
+        <source>Authorization required</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This key pair is not stored on your Keycard. Authorize with your profile
+to sign using the keys stored on this device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authorize</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>PIN incorrect</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7654,6 +7701,14 @@ Please add it and try again.</source>
 </context>
 <context>
     <name>ExportKeypair</name>
+    <message>
+        <source>Authenticate to create a QR code</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authenticate</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <source>Encrypted key pairs code</source>
         <translation type="unfinished"></translation>
@@ -9923,7 +9978,7 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Enable in Settings</source>
+        <source>Always Enable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10335,6 +10390,14 @@ to load</source>
         <source>Saved Addresses</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Import key pairs from this device to your other synced devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show encrypted QR of key pairs on device</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>%n key pair(s) require import to use on this device</source>
         <translation type="unfinished">
@@ -10344,6 +10407,14 @@ to load</source>
     </message>
     <message>
         <source>Import missing key pairs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Automatically apply key pair migrations from paired devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>When off, moving a key pair to or from a Keycard on a paired device won&apos;t change how this device logs in or signs. Turning it back on doesn&apos;t apply past changes.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10914,11 +10985,19 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Copy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Copy message</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy Message Id</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy link to message</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -11345,6 +11424,26 @@ to load</source>
     </message>
     <message>
         <source>Zoom Fit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Compatibility mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Force reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear site data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clearing browsing data...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear browsing data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12876,10 +12975,6 @@ to load</source>
 <context>
     <name>Popups</name>
     <message>
-        <source>Image saved to system gallery</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Share addresses with %1&apos;s owner</source>
         <translation type="unfinished"></translation>
     </message>
@@ -12889,6 +12984,10 @@ to load</source>
     </message>
     <message>
         <source>Image saved to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Image saved to system gallery</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12993,6 +13092,30 @@ to load</source>
     </message>
     <message>
         <source>Testnet mode turned off</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Align with paired device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your profile has been migrated to Keycard on paired device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your profile has been migrated from Keycard to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In order to align on the login/signing method on this device, you need to complete the migration flow, clicking the &quot;Continue&quot; button below, or cancel this popup if you want to keep the current login/signing method.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you don&apos;t want to see this message again, go to Settings/Wallet and toggle off &quot;Automatically apply key pair migrations from paired device&quot;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -14611,6 +14734,10 @@ to load</source>
         <source>Any ETH address</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>key pair requires import to use on this device</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SelectParamsForBuyCryptoPanel</name>
@@ -14730,6 +14857,14 @@ to load</source>
     </message>
     <message>
         <source>Token that you&apos;re trying to send is not supported.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15277,6 +15412,10 @@ to load</source>
         <source>Update PIN &amp; sign</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Failed to sign with the authorized credentials</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SignTransactionModalBase</name>
@@ -15640,6 +15779,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Edit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Multiple payment requests</source>
         <translation type="unfinished"></translation>
     </message>
@@ -15878,17 +16021,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>StatusEditMessage</name>
-    <message>
-        <source>Cancel</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Save</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>StatusEmojiPopup</name>
     <message>
         <source>Search Results</source>
@@ -15956,13 +16088,6 @@ to load</source>
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>StatusImageSelector</name>
-    <message>
-        <source>Supported image formats (%1)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -16489,15 +16614,19 @@ to load</source>
         <source>Receive</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SwapModal</name>
     <message>
         <source>Swap</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>On:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -17430,17 +17559,6 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Collectibles</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>TokenSelectorViewAdaptor</name>
-    <message>
-        <source>Popular assets</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your assets on %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

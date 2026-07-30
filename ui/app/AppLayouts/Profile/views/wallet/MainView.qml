@@ -180,41 +180,63 @@ Column {
 
     Separator {}
 
+    StatusListItem {
+        objectName: "autoApplyKeypairMigrationsItem"
+        title: qsTr("Automatically apply key pair migrations from paired devices")
+        subTitle: qsTr("When off, moving a key pair to or from a Keycard on a paired device won't change how this device logs in or signs. Turning it back on doesn't apply past changes.")
+        visible: root.walletStore.walletModule.hasPairedDevices
+        width: parent.width
+        bgColor: StatusColors.transparent
+        components: [
+            StatusSwitch {
+                objectName: "autoApplyKeypairMigrationsSwitch"
+                checked: root.walletStore.autoApplyKeypairMigrations
+                onToggled: {
+                    checked = Qt.binding(() => root.walletStore.autoApplyKeypairMigrations)
+                    root.walletStore.setAutoApplyKeypairMigrations(!root.walletStore.autoApplyKeypairMigrations)
+                }
+            }
+        ]
+    }
+
+    Separator {
+        visible: root.walletStore.walletModule.hasPairedDevices
+    }
+
     Spacer {
         visible: root.walletStore.walletModule.hasPairedDevices
         width: parent.width
     }
 
-    // TODO uncomment when mobile has implemented the QR code import
-    // Rectangle {
-    //     visible: root.walletStore.walletModule.hasPairedDevices &&
-    //              !d.allNonProfileKeypairsMigratedToAColdWallet
-    //     height: 102
-    //     width: parent.width
-    //     color: StatusColors.transparent
-    //     radius: 8
-    //     border.width: 1
-    //     border.color: Theme.palette.baseColor5
+    Rectangle {
+        visible: root.walletStore.walletModule.hasPairedDevices &&
+                 !d.allNonProfileKeypairsMigratedToAColdWallet
+        height: 102
+        width: parent.width
+        color: StatusColors.transparent
+        radius: 8
+        border.width: 1
+        border.color: Theme.palette.baseColor5
 
-    //     Column {
-    //         anchors.fill: parent
-    //         padding: 16
-    //         spacing: 8
+        Column {
+            anchors.fill: parent
+            padding: 16
+            spacing: 8
 
-    //         StatusBaseText {
-    //             text: qsTr("Import key pairs from this device to your other synced devices")
-    //             font.pixelSize: Theme.primaryTextFontSize
-    //         }
+            StatusBaseText {
+                text: qsTr("Import key pairs from this device to your other synced devices")
+                font.pixelSize: Theme.primaryTextFontSize
+            }
 
-    //         StatusButton {
-    //             text: qsTr("Show encrypted QR of key pairs on device")
-    //             icon.name: "qr"
-    //             onClicked: {
-    //                 root.walletStore.runKeypairImportPopup("", Constants.keypairImportPopup.mode.exportKeypairQr)
-    //             }
-    //         }
-    //     }
-    // }
+            StatusButton {
+                text: qsTr("Show encrypted QR of key pairs on device")
+                icon.name: "qr"
+                onClicked: {
+                    root.walletStore.runKeypairImportPopup("", Constants.keypairImportPopup.mode.exportKeypairQr)
+                }
+            }
+        }
+    }
 
     Rectangle {
         visible: root.walletStore.walletModule.hasPairedDevices &&

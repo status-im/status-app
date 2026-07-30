@@ -8,7 +8,7 @@ import StatusQ.Core.Theme
 Rectangle {
     id: root
 
-    property list<Item> items
+    default property alias items: buttonRow.children
 
     QtObject {
         id: _internal
@@ -17,7 +17,7 @@ Rectangle {
 
     implicitWidth: buttonRow.width > 0 ? buttonRow.width + (_internal.containerMargin * 2) : 0
     implicitHeight: 36
-    radius: 8
+    radius: Theme.radius
     color: Theme.palette.statusSelect.menuItemBackgroundColor
 
     layer.enabled: true
@@ -41,11 +41,5 @@ Rectangle {
         anchors.leftMargin: _internal.containerMargin
         anchors.verticalCenter: root.verticalCenter
         height: parent.height - 2 * _internal.containerMargin
-    }
-
-    onItemsChanged: {
-        for (let idx in items) {
-            items[idx].parent = buttonRow
-        }
     }
 }

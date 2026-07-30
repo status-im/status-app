@@ -25,13 +25,13 @@ Item {
                     key: "stt_key",
                     communityId: "",
                     name: "Status Test Token",
-                    currencyBalanceAsString: "42,23 USD",
+                    currencyBalance: 42.23,
                     symbol: "STT",
                     logoUri: Constants.tokenIcon("STT"),
 
                     balances: [
                         {
-                            balanceAsString: "0,56",
+                            balance: 0.56,
                             iconUrl: "network/ethereum"
                         }
                     ],
@@ -42,13 +42,13 @@ Item {
                     key: "eth_key",
                     communityId: "",
                     name: "Ether",
-                    currencyBalanceAsString: "4 276,86 USD",
+                    currencyBalance: 4276.86,
                     symbol: "ETH",
                     logoUri: Constants.tokenIcon("ETH"),
 
                     balances: [
                         {
-                            balanceAsString: "0,12",
+                            balance: 0.12,
                             iconUrl: "network/ethereum"
                         }
                     ],
@@ -59,7 +59,7 @@ Item {
                     key: "dai_key",
                     communityId: "",
                     name: "Dai Stablecoin",
-                    currencyBalanceAsString: "45,92 USD",
+                    currencyBalance: 45.92,
                     symbol: "DAI",
                     logoUri: Constants.tokenIcon("DAI"),
                     balances: [],

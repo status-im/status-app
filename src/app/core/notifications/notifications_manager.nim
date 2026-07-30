@@ -1,8 +1,9 @@
 import nimqml, json, chronicles
-import dotherside_ext
+import ../notifications/os_notification
 
 import ../../global/app_signals
 import ../../global/global_singleton
+import ../../global/app_window
 import ../eventemitter
 import ../../../app_service/service/settings/service as settings_service
 import details
@@ -57,44 +58,6 @@ QtObject:
     new(result, delete)
     result.setup(events, settingsService)
 
-  proc onAppReady*(self: NotificationsManager) =
-    self.osNotification = newStatusOSNotification()
-
-    signalConnect(self.osNotification, "notificationClicked(QString)", self, "onOSNotificationClicked(QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "showTestNotification(QString, QString)",
-      self, "onShowTestNotification(QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "showMessageNotification(QString, QString, QString, bool, bool, QString, bool, QString, int, bool, bool)",
-      self, "onShowMessageNotification(QString, QString, QString, bool, bool, QString, bool, QString, int, bool, bool)", 2)
-    signalConnect(singletonInstance.globalEvents, "showNewContactRequestNotification(QString, QString, QString)",
-      self, "onShowNewContactRequestNotification(QString, QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "showAcceptedContactRequest(QString, QString, QString)",
-      self, "onShowAcceptedContactRequest(QString, QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "showContactRemoved(QString, QString, QString)",
-      self, "onShowContactRemoved(QString, QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "newCommunityMembershipRequestNotification(QString, QString, QString)",
-      self, "onNewCommunityMembershipRequestNotification(QString, QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "myRequestToJoinCommunityAcccepted(QString, QString, QString)",
-      self, "onMyRequestToJoinCommunityAcccepted(QString, QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "myRequestToJoinCommunityRejected(QString, QString, QString)",
-      self, "onMyRequestToJoinCommunityRejected(QString, QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "meMentionedIconBadgeNotification(int)",
-      self, "onMeMentionedIconBadgeNotification(int)", 2)
-    signalConnect(singletonInstance.globalEvents, "showCommunityTokenPermissionCreatedNotification(QString, QString, QString)", self, "onShowCommunityTokenPermissionCreatedNotification(QString, QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "showCommunityTokenPermissionUpdatedNotification(QString, QString, QString)", self, "onShowCommunityTokenPermissionUpdatedNotification(QString, QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "showCommunityTokenPermissionDeletedNotification(QString, QString, QString)", self, "onShowCommunityTokenPermissionDeletedNotification(QString, QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "showCommunityTokenPermissionCreationFailedNotification(QString, QString, QString)", self, "onShowCommunityTokenPermissionCreationFailedNotification(QString, QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "showCommunityTokenPermissionUpdateFailedNotification(QString, QString, QString)", self, "onShowCommunityTokenPermissionUpdateFailedNotification(QString, QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "showCommunityTokenPermissionDeletionFailedNotification(QString, QString, QString)", self, "onShowCommunityTokenPermissionDeletionFailedNotification(QString, QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "showCommunityMemberKickedNotification(QString, QString, QString)", self, "onShowCommunityMemberKickedNotification(QString, QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "showCommunityMemberBannedNotification(QString, QString, QString)", self, "onShowCommunityMemberBannedNotification(QString, QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "showCommunityMemberUnbannedNotification(QString, QString, QString)", self, "onShowCommunityMemberUnbannedNotification(QString, QString, QString)", 2)
-    signalConnect(singletonInstance.globalEvents, "showNewsMessageNotification(QString, QString)", self, "onShowNewsMessageNotification(QString, QString)", 2)
-
-    self.notificationSetUp = true
-
-  proc init*(self: NotificationsManager) =
-    discard
-
   proc showOSNotification(self: NotificationsManager, title: string, message: string, identifier: string) =
     if defined(windows):
       let data = NotificationArgs(title: title, message: message)
@@ -110,7 +73,7 @@ QtObject:
     debug "OS notification clicked", identifier=identifier
 
     # Make the app the top most window.
-    app_makeItActive(singletonInstance.engine)
+    app_window.app_makeItActive(singletonInstance.engine)
 
     let details = toNotificationDetails(parseJson(identifier))
     if(details.isEmpty()):
@@ -210,8 +173,8 @@ QtObject:
     sectionId: sectionId)
     self.processNotification(title, message, details)
 
-  proc onMeMentionedIconBadgeNotification(self: NotificationsManager, allMentions: int) {.slot.} =
-    self.osNotification.showIconBadgeNotification(allMentions)
+  proc onNotificationsCountChanged(self: NotificationsManager, count: int) {.slot.} =
+    self.osNotification.showIconBadgeNotification(count)
 
   proc onShowCommunityMemberKickedNotification*(self: NotificationsManager, title: string, message: string, sectionId: string) {.slot.} =
     let details = NotificationDetails(notificationType: NotificationType.CommunityMemberKicked, sectionId: sectionId, isCommunitySection: true)
@@ -225,6 +188,36 @@ QtObject:
     let details = NotificationDetails(notificationType: NotificationType.CommunityMemberUnbanned, sectionId: sectionId, isCommunitySection: true)
     self.processNotification(title, message, details)
 
+  proc onAppReady*(self: NotificationsManager) =
+    self.osNotification = newStatusOSNotification()
+
+    discard QObject.connect(self.osNotification, SIGNAL("notificationClicked(QString)"),
+      self, SLOT("onOSNotificationClicked(QString)"), ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, showTestNotification, self, onShowTestNotification, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, showMessageNotification, self, onShowMessageNotification, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, showNewContactRequestNotification, self, onShowNewContactRequestNotification, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, showAcceptedContactRequest, self, onShowAcceptedContactRequest, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, showContactRemoved, self, onShowContactRemoved, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, newCommunityMembershipRequestNotification, self, onNewCommunityMembershipRequestNotification, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, myRequestToJoinCommunityAcccepted, self, onMyRequestToJoinCommunityAcccepted, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, myRequestToJoinCommunityRejected, self, onMyRequestToJoinCommunityRejected, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, notificationsCountChanged, self, onNotificationsCountChanged, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, showCommunityTokenPermissionCreatedNotification, self, onShowCommunityTokenPermissionCreatedNotification, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, showCommunityTokenPermissionUpdatedNotification, self, onShowCommunityTokenPermissionUpdatedNotification, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, showCommunityTokenPermissionDeletedNotification, self, onShowCommunityTokenPermissionDeletedNotification, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, showCommunityTokenPermissionCreationFailedNotification, self, onShowCommunityTokenPermissionCreationFailedNotification, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, showCommunityTokenPermissionUpdateFailedNotification, self, onShowCommunityTokenPermissionUpdateFailedNotification, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, showCommunityTokenPermissionDeletionFailedNotification, self, onShowCommunityTokenPermissionDeletionFailedNotification, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, showCommunityMemberKickedNotification, self, onShowCommunityMemberKickedNotification, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, showCommunityMemberBannedNotification, self, onShowCommunityMemberBannedNotification, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, showCommunityMemberUnbannedNotification, self, onShowCommunityMemberUnbannedNotification, ConnectionType.QueuedConnection)
+    discard QObject.connect(singletonInstance.globalEvents, showNewsMessageNotification, self, onShowNewsMessageNotification, ConnectionType.QueuedConnection)
+
+    self.notificationSetUp = true
+
+  proc init*(self: NotificationsManager) =
+    discard
+
   proc notificationCheck(self: NotificationsManager, title: string, message: string, details: NotificationDetails,
       notificationWay: string) =
     var data = NotificationArgs(title: title, message: message, details: details)
@@ -232,7 +225,7 @@ QtObject:
     # An exemption from the diagrams, at least for now, is that we don't need to implement the "Badge Check" block here,
     # cause that's already handled in appropriate modules.
 
-    let appIsActive = app_isActive(singletonInstance.engine)
+    let appIsActive = app_window.app_isActive()
 
     if (details.notificationType == NotificationType.NewMessage or
         details.notificationType == NotificationType.NewMessageWithPersonalMention or

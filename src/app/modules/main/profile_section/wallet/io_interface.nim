@@ -60,3 +60,12 @@ method resetRpcStats*(self: AccessInterface) {.base.} =
 
 method refetchTxHistory*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
+
+method getAutoApplyKeypairMigrations*(self: AccessInterface): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method setAutoApplyKeypairMigrations*(self: AccessInterface, value: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onAutoApplyKeypairMigrationsUpdated*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")

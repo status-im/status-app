@@ -39,9 +39,27 @@ QtObject {
 
     property string communityTags: communitiesModuleInst.tags
 
+    readonly property int communityFetchState: d.communityFetchState
+    readonly property bool communityFetchInProgress: d.communityFetchInProgress
+    readonly property bool communityFetchFailed: d.communityFetchFailed
+    readonly property string communityFetchId: d.communityFetchId
+    readonly property string communityFetchChannelUuid: d.communityFetchChannelUuid
+    // Guards against stale backend signals from previous fetch attempts.
+    readonly property int communityFetchRequestId: d.communityFetchRequestId
+    // Backend-provided timeout shown by the countdown UI.
+    readonly property int communityFetchTimeoutSeconds: d.communityFetchTimeoutSeconds
+
     readonly property QtObject _d: QtObject {
         id: d
         readonly property var profileSectionModuleInst: profileSectionModule
+
+        property int communityFetchState: Constants.CommunityFetchState.Idle
+        readonly property bool communityFetchInProgress: communityFetchState === Constants.CommunityFetchState.Fetching
+        readonly property bool communityFetchFailed: communityFetchState === Constants.CommunityFetchState.Failed
+        property string communityFetchId: ""
+        property string communityFetchChannelUuid: ""
+        property int communityFetchRequestId: -1
+        property int communityFetchTimeoutSeconds: 0
     }
     readonly property var communitiesProfileModule: d.profileSectionModuleInst.communitiesModule // TODO: Must be private or directly removed (no direct access to modules externally)
 
@@ -103,6 +121,36 @@ QtObject {
         if (importing)
             root.mainModuleInst.setCommunityIdToSpectate(communityPubKey)
         root.communitiesModuleInst.requestCommunityInfo(communityPubKey, importing)
+    }
+
+    function cancelPendingCommunityFetch() {
+        if(!root.communitiesModuleInst)
+            return
+        root.communitiesModuleInst.cancelPendingCommunityFetch()
+    }
+
+    function timeoutPendingCommunityFetch() {
+        if(!root.communitiesModuleInst)
+            return
+        root.communitiesModuleInst.timeoutPendingCommunityFetch()
+    }
+
+    function retryCommunityFetch() {
+        if(!root.communitiesModuleInst || !d.communityFetchId)
+            return
+        root.communitiesModuleInst.retryCommunityFetch(d.communityFetchId, d.communityFetchChannelUuid)
+    }
+
+    function clearCommunityFetchState() {
+        d.communityFetchState = Constants.CommunityFetchState.Idle
+        d.communityFetchId = ""
+        d.communityFetchChannelUuid = ""
+        d.communityFetchRequestId = -1
+        d.communityFetchTimeoutSeconds = 0
+    }
+
+    function clearCommunityFetchFailure() {
+        root.clearCommunityFetchState()
     }
 
     property var communitiesList: communitiesModuleInst.model
@@ -254,6 +302,37 @@ QtObject {
 
         function onCommunityInfoRequestCompleted(communityId, erorrMsg) {
             root.communityInfoRequestCompleted(communityId, erorrMsg)
+        }
+    }
+
+    readonly property Connections communityFetchConnections: Connections {
+        target: root.communitiesModuleInst
+
+        function onCommunityFetchStarted(communityId, channelUuid, requestId, timeoutSeconds) {
+            d.communityFetchState = Constants.CommunityFetchState.Fetching
+            d.communityFetchId = communityId
+            d.communityFetchChannelUuid = channelUuid
+            d.communityFetchRequestId = requestId
+            d.communityFetchTimeoutSeconds = timeoutSeconds
+        }
+
+        function onCommunityFetchCompleted(communityId, requestId) {
+            if (requestId !== d.communityFetchRequestId)
+                return
+            root.clearCommunityFetchState()
+        }
+
+        function onCommunityFetchFailed(communityId, requestId) {
+            if (requestId !== d.communityFetchRequestId)
+                return
+            d.communityFetchState = Constants.CommunityFetchState.Failed
+            d.communityFetchId = communityId
+        }
+
+        function onCommunityFetchCancelled(communityId, requestId) {
+            if (requestId !== d.communityFetchRequestId)
+                return
+            root.clearCommunityFetchState()
         }
     }
 }

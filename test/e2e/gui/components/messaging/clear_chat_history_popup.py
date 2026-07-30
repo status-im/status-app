@@ -19,5 +19,7 @@ class ClearChatHistoryPopup(QObject):
 
     @allure.step("Confirm clearing chat")
     def confirm_clearing_chat(self):
+        self._clear_button.wait_until_appears()
+        self._clear_button.wait_until_enabled()
         self._clear_button.click()
         self._clear_button.wait_until_hidden()

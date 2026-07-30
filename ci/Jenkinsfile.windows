@@ -7,7 +7,7 @@ QT_VERSION = "6.11.0"
 def isPRBuild = utils.isPRBuild()
 
 pipeline {
-  agent { label "windows && x86_64 && qt-${QT_VERSION} && go-1.24" }
+  agent { label "windows && x86_64 && qt-${QT_VERSION} && go-1.26" }
 
   parameters {
     booleanParam(

@@ -36,11 +36,22 @@ Control {
         currentEntry.value = selection
     }
 
+    onModelChanged: Qt.callLater(() => setSelection(selectedProfileKeyId))
+
+    Connections {
+        target: root.model?.ModelCount ?? null
+
+        function onCountChanged() {
+            root.setSelection(root.selectedProfileKeyId)
+        }
+    }
+
     QtObject {
         id: d
 
         readonly property int maxPopupHeight: 300
         readonly property int delegateHeight: 64
+        readonly property int visibleProfilesCount: dropdownProfilesModel.count
     }
 
     ModelEntry {
@@ -49,6 +60,26 @@ Control {
         sourceModel: root.model
         key: "keyUid"
         value: ""
+    }
+
+    SortFilterProxyModel {
+        id: dropdownProfilesModel
+
+        sourceModel: root.model
+        sorters: RoleSorter {
+            roleName: "order"
+        }
+        filters: [
+            FastExpressionFilter {
+                expectedRoles: ["keyUid", "username"]
+                expression: !!model.keyUid && !!model.username
+            },
+            ValueFilter { // don't show the currently selected item
+                roleName: "keyUid"
+                value: root.selectedProfileKeyId
+                inverted: true
+            }
+        ]
     }
 
     contentItem: LoginUserSelectorDelegate {
@@ -103,45 +134,45 @@ Control {
 
         contentItem: ColumnLayout {
             spacing: 0
-            StatusListView {
+            StatusScrollView {
+                id: profilesScrollView
+
                 Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.maximumHeight: d.maxPopupHeight
-                id: userSelectorPanel
-                model: SortFilterProxyModel {
-                    id: proxyModel
-                    sourceModel: root.model
-                    sorters: RoleSorter {
-                        roleName: "order"
-                    }
-                    filters: [
-                        ValueFilter { // don't show the currently selected item
-                            roleName: "keyUid"
-                            value: root.selectedProfileKeyId
-                            inverted: true
+                Layout.preferredHeight: Math.min(d.visibleProfilesCount * d.delegateHeight, d.maxPopupHeight)
+                visible: d.visibleProfilesCount > 0
+                contentWidth: availableWidth
+                padding: 0
+
+                ColumnLayout {
+                    width: profilesScrollView.availableWidth
+                    spacing: 0
+
+                    Repeater {
+                        model: dropdownProfilesModel
+
+                        LoginUserSelectorDelegate {
+                            readonly property bool hasProfileData: !!model.keyUid && !!model.username
+
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: hasProfileData ? d.delegateHeight : 0
+                            visible: hasProfileData
+                            label: model.username
+                            image: model.thumbnailImage
+                            colorId: model.colorId
+                            keycardCreatedAccount: model.keycardCreatedAccount
+                            keycardEnabled: root.isKeycardEnabled
+                            enabled: !model.keycardCreatedAccount ? true : root.isKeycardEnabled
+                            onClicked: {
+                                dropdown.close()
+                                root.setSelection(model.keyUid)
+                            }
                         }
-                    ]
-                }
-                implicitHeight: contentHeight
-                spacing: 0
-                delegate: LoginUserSelectorDelegate {
-                    width: ListView.view.width
-                    height: d.delegateHeight
-                    label: model.username
-                    image: model.thumbnailImage
-                    colorId: model.colorId
-                    keycardCreatedAccount: model.keycardCreatedAccount
-                    keycardEnabled: root.isKeycardEnabled
-                    enabled: !model.keycardCreatedAccount ? true : root.isKeycardEnabled
-                    onClicked: {
-                        dropdown.close()
-                        root.setSelection(model.keyUid)
                     }
                 }
             }
             StatusMenuSeparator {
                 Layout.fillWidth: true
-                visible: proxyModel.count > 0
+                visible: d.visibleProfilesCount > 0
             }
             LoginUserSelectorDelegate {
                 Layout.fillWidth: true

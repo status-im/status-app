@@ -22,10 +22,13 @@ Control {
     property bool submitOnPinComplete: true
     property var keyPairForProcessing: null
 
+    property bool authorizeMode: false // instead of entering a PIN here, the credential is collected via "Authorize" button
+
     readonly property alias pin: pinInputField.pinInput
     readonly property bool pinValid: pinInputField.pinInput.length === Constants.keycard.general.keycardPinLength && !root.wrongPin
 
     signal accepted()
+    signal authorizeRequested()
 
     leftPadding: Theme.xlPadding
     rightPadding: Theme.xlPadding
@@ -51,13 +54,25 @@ Control {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
-            text: qsTr("Enter the Keycard PIN")
+            text: root.authorizeMode ? qsTr("Authorization required")
+                                     : qsTr("Enter the Keycard PIN")
             font.weight: Font.Bold
             font.pixelSize: Theme.fontSize(22)
         }
 
+        StatusBaseText {
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
+            visible: root.authorizeMode
+            text: qsTr("This key pair is not stored on your Keycard. Authorize with your profile\nto sign using the keys stored on this device.")
+            font.pixelSize: Theme.primaryTextFontSize
+            color: Theme.palette.baseColor1
+        }
+
         StatusPinInput {
             id: pinInputField
+            visible: !root.authorizeMode
             Layout.fillWidth: true
             Layout.maximumWidth: implicitWidth
             Layout.alignment: Qt.AlignHCenter
@@ -71,6 +86,14 @@ Control {
                 if (pinInput.length === pinLen && root.submitOnPinComplete)
                     root.accepted()
             }
+        }
+
+        StatusButton {
+            objectName: "authorizeToSignButton"
+            Layout.alignment: Qt.AlignHCenter
+            visible: root.authorizeMode
+            text: qsTr("Authorize")
+            onClicked: root.authorizeRequested()
         }
 
         StatusBaseText {

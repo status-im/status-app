@@ -30,7 +30,7 @@ Item {
 
         Repeater {
             model: root.customButtons
-            onItemAdded: {
+            onItemAdded: function(index, item) {
                 item.Layout.fillHeight = true
                 item.Layout.preferredHeight = d.buttonSize
                 item.Layout.preferredWidth = d.buttonSize

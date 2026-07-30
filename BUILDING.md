@@ -14,7 +14,7 @@ If you're looking for instructions to build Status Mobile instead, go [here](/mo
       - [Install Chocolatey](#install-chocolatey)
       - [Install Required Packages](#install-required-packages)
       - [Install Microsoft Visual C++ Build Tools](#install-microsoft-visual-c-build-tools)
-      - [Install Go 1.24](#install-go-124)
+      - [Install Go 1.26](#install-go-126)
       - [Install Nim 2.2.x](#install-nim-22x)
       - [Install protobuf](#install-protobuf)
     - [Linux](#linux)
@@ -71,9 +71,9 @@ choco install make cmake mingw wget
 
 You can install them from the [Microsoft website](https://visualstudio.microsoft.com/visual-cpp-build-tools/) or run the `Install-VC-BuildTools` from the setup script `scripts/windows_build_setup.ps1`.
 
-#### Install Go 1.24
+#### Install Go 1.26
 
-Download and install Go 1.24 from the [official website](https://go.dev/dl/).
+Download and install Go 1.26 from the [official website](https://go.dev/dl/).
 
 #### Install Nim 2.2.x
 
@@ -101,7 +101,7 @@ sudo apt update
 sudo apt install libpcsclite-dev build-essential mesa-common-dev libglu1-mesa-dev libssl-dev cmake jq libxcb-xinerama0 protobuf-compiler
 ```
 
-Install **Go 1.24**:
+Install **Go 1.26**:
 
 Download and install from the [official website](https://go.dev/dl/).
 
@@ -146,7 +146,7 @@ Install [Homebrew](https://brew.sh/) if not already installed.
 #### Install Required Packages
 
 ```bash
-brew install cmake pkg-config go@1.24 qt protobuf 
+brew install cmake pkg-config go qt protobuf 
 ```
 
 Install additional packages if you are planning to build DMG
@@ -222,7 +222,7 @@ Install **Qt 6.11.0** using the [Qt Online Installer](https://download.qt.io/off
 
 ### Linux (Alternative)
 
-You can use any newer 6.9.x version available in your system's package manager.
+You can use any newer 6.11.x version available in your system's package manager.
 
 #### Ubuntu
 
@@ -322,12 +322,11 @@ The following environment variables can be used to customize the build:
 
 - INCLUDE_DEBUG_SYMBOLS (0,1) - Configure nim to include the debug symbols for desktop platforms.
 - KDF_ITERATIONS (number) - Configure the KDF_ITERATIONS to use for the DB encryption
-- KEYCARD_QT_SOURCE_DIR (path) - Point the build system to a local keycard-qt folder. Defaults to a new clone of the latest master in the `status-keycard-qt` build folder.
 - MONITORING (true,false) - Enable/disable qml monitoring tools. The monitoring tools provide a suite of qml introspection tools to debug data transformations. Defaults to `false`
 - NIM_SDS_SOURCE_DIR (path) - Point the build system to a local nim-sds folder. Defaults to `$(GIT_ROOT)/../nim-sds`
 - PRODUCTION_PARAMETERS (string) - Configure the production arguments for nim compilation. Defaults to `-d:production`
 - QMAKE (path to executable) - Point the build system to a different qt installation. Defaults to env configuration
-- QML_DEBUG (true,false) - Enable qml debugger and profiler. Needs DOtherSide recompilation. Defaults to `false`
+- QML_DEBUG (true,false) - Enable qml debugger and profiler. Defaults to `false`
 - QML_DEBUG_PORT (number) - Configure the qml debugger port. Defaults to `49152`
 - QT_ARCH (string) - Configure the Qt architecture for macOS cross-compilation. Can be used to compile Intel builds on ARM64 OS. Defaults to `$(shell uname -m)`
 - REBUILD_NIM (true,false) - Force nim recompilation

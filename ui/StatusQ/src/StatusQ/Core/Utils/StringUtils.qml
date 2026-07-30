@@ -13,6 +13,10 @@ QtObject {
         return Internal.StringUtils.readTextFile(file)
     }
 
+    function writeTextFile(filePath, data) {
+        return Internal.StringUtils.writeTextFile(filePath, data)
+    }
+
     function extractDomainFromLink(link) {
         return Internal.StringUtils.extractDomainFromLink(link)
     }

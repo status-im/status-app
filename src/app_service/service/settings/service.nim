@@ -1,10 +1,11 @@
-import nimqml, chronicles, json, strutils, sequtils, tables, times
+import nimqml, chronicles, json, strutils, sequtils, tables
 
 import app/core/eventemitter
 import app/core/signals/types
 when defined(android):
   import app/android/safutils
 import app_service/common/types as common_types
+import app_service/common/utils as common_utils
 import backend/newsfeed as status_newsfeed
 import backend/mailservers as status_mailservers
 import backend/settings as status_settings
@@ -30,6 +31,7 @@ const SIGNAL_BIO_UPDATED* = "bioUpdated"
 const SIGNAL_MNEMONIC_REMOVED* = "mnemonicRemoved"
 const SIGNAL_CURRENT_USER_STATUS_UPDATED* = "currentUserStatusUpdated"
 const SIGNAL_PROFILE_MIGRATION_NEEDED_UPDATED* = "profileMigrationNeededUpdated"
+const SIGNAL_AUTO_APPLY_KEYPAIR_MIGRATIONS_UPDATED* = "autoApplyKeypairMigrationsUpdated"
 const SIGNAL_URL_UNFURLING_MODE_UPDATED* = "urlUnfurlingModeUpdated"
 const SIGNAL_PINNED_MAILSERVER_CHANGED* = "pinnedMailserverChanged"
 const SIGNAL_AUTO_REFRESH_TOKENS_UPDATED* = "autoRefreshTokensUpdated"
@@ -106,6 +108,9 @@ QtObject:
     of PROFILE_MIGRATION_NEEDED:
       self.settings.profileMigrationNeeded = settingsField.value.getBool
       self.events.emit(SIGNAL_PROFILE_MIGRATION_NEEDED_UPDATED, SettingsBoolValueArgs(value: self.settings.profileMigrationNeeded))
+    of KEY_AUTO_APPLY_KEYPAIR_MIGRATIONS:
+      self.settings.autoApplyKeypairMigrations = settingsField.value.getBool
+      self.events.emit(SIGNAL_AUTO_APPLY_KEYPAIR_MIGRATIONS_UPDATED, SettingsBoolValueArgs(value: self.settings.autoApplyKeypairMigrations))
     of KEY_URL_UNFURLING_MODE:
       self.settings.urlUnfurlingMode = toUrlUnfurlingMode(settingsField.value.getInt)
       self.events.emit(SIGNAL_URL_UNFURLING_MODE_UPDATED, UrlUnfurlingModeArgs(value: self.settings.urlUnfurlingMode))
@@ -1099,6 +1104,16 @@ QtObject:
   proc getProfileMigrationNeeded*(self: Service): bool =
     self.settings.profileMigrationNeeded
 
+  proc getAutoApplyKeypairMigrations*(self: Service): bool =
+    self.settings.autoApplyKeypairMigrations
+
+  proc saveAutoApplyKeypairMigrations*(self: Service, value: bool): bool =
+    if(self.saveSetting(KEY_AUTO_APPLY_KEYPAIR_MIGRATIONS, value)):
+      self.settings.autoApplyKeypairMigrations = value
+      self.events.emit(SIGNAL_AUTO_APPLY_KEYPAIR_MIGRATIONS_UPDATED, SettingsBoolValueArgs(value: value))
+      return true
+    return false
+
   proc mnemonicWasShown*(self: Service) =
     let response = status_settings.mnemonicWasShown()
     if(not response.error.isNil):
@@ -1115,18 +1130,17 @@ QtObject:
     return self.settings.autoRefreshTokens
 
   proc getLastTokensUpdate*(self: Service): int64 =
-    var lastTokensUpdate: string
     try:
       let response = status_settings.lastTokensUpdate()
       if not response.error.isNil:
         error "fetching lastTokensUpdate: ", errDescription = response.error.message
         return
 
-      lastTokensUpdate = response.result.getStr
-      let dateTime = parse(lastTokensUpdate, DATE_TIME_FORMAT_2)
-      self.settings.lastTokensUpdate = dateTime.toTime().toUnix()
+      # timestampToUnix normalizes the formats seen in the field and never raises
+      # on the hot path (returns 0 on failure), so the wake path stays exception-free.
+      self.settings.lastTokensUpdate = common_utils.timestampToUnix(response.result.getStr)
     except Exception as e:
-      error "parse lastTokensUpdate: ", data=lastTokensUpdate, errName = e.name, errDesription = e.msg
+      error "fetching lastTokensUpdate: ", errName = e.name, errDesription = e.msg
     return self.settings.lastTokensUpdate
 
   ### News Feed Settings ###

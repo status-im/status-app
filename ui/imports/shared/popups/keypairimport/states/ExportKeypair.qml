@@ -1,6 +1,11 @@
 import QtQuick
 import QtQuick.Layouts
 
+import StatusQ.Core
+import StatusQ.Core.Theme
+import StatusQ.Controls
+
+import utils
 import shared.views
 
 import "../stores"
@@ -12,10 +17,42 @@ Item {
 
     implicitHeight: layout.implicitHeight
 
+    Component.onCompleted: {
+        Qt.callLater(root.store.currentState.doSecondaryAction)
+    }
+
     ColumnLayout {
         id: layout
         anchors.fill: parent
         anchors.margins: 16
+
+        Column {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
+            visible: !root.store.keypairImportModule.connectionString
+                     && !root.store.keypairImportModule.connectionStringError
+            spacing: Theme.padding
+
+            StatusBaseText {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Authenticate to create a QR code")
+                font.pixelSize: Theme.secondaryAdditionalTextSize
+            }
+
+            StatusButton {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Authenticate")
+                visible: !root.store.keypairImportModule.connectionString
+                         && !root.store.keypairImportModule.connectionStringError
+
+                icon.name: Utils.resolveAuthSignIcon(root.store.userProfileKeyUid,
+                                                     root.store.migratedToColdWallet,
+                                                     Constants.AuthSignPurpose.General)
+                onClicked: {
+                    root.store.currentState.doSecondaryAction()
+                }
+            }
+        }
 
         SyncingDisplayCode {
             Layout.fillWidth: true

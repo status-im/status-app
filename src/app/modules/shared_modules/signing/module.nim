@@ -3,6 +3,7 @@ import nimqml, chronicles, strutils
 import io_interface
 import view, controller
 import app/core/eventemitter
+import app/global/global_singleton
 import app/modules/shared_models/keypair_item
 
 import app_service/common/wallet_constants as wallet_constants
@@ -48,6 +49,9 @@ method delete*[T](self: Module[T]) =
 method getModuleAsVariant*[T](self: Module[T]): QVariant =
   return self.viewVariant
 
+method passwordProvided*[T](self: Module[T], keyUid: string, password: string) =
+  self.controller.passwordProvided(keyUid, password)
+
 method verifyPassword*[T](self: Module[T], password: string): bool =
   return self.controller.verifyPassword(password)
 
@@ -70,7 +74,8 @@ proc toCanonicalSignature(r, s, v: string): string =
     error "failed to parse v", msg = vClean
 
 method signMessage*[T](self: Module[T], address: string, password: string, txHash: string): string =
-  let (res, err) = self.controller.signMessage(address, password, txHash)
+  let doPasswordHashing = not singletonInstance.userProfile.getMigratedToColdWallet()
+  let (res, err) = self.controller.signMessage(address, password, txHash, doPasswordHashing)
   if err.len > 0:
     error "signMessage failed", error=err
     return ""

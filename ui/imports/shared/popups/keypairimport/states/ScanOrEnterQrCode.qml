@@ -28,6 +28,7 @@ Item {
         firstInstructionButtonName: Constants.keypairImportPopup.instructionsLabelForQr
         secondInstructionButtonName: Constants.keypairImportPopup.instructionsLabelForEncryptedKey
         syncCodeLabel: qsTr("Paste encrypted key")
+        proceedWithContineButton: false
 
         validateConnectionString: function(connectionString) {
             const result = root.store.validateConnectionString(connectionString)
