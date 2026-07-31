@@ -59,8 +59,8 @@ proc verifyPassword*(self: Controller, password: string): bool =
   return self.accountsService.verifyPassword(password)
 
 proc startKeycardAuthentication*(self: Controller, keyUid: string, paths: seq[string], exportPrivate: bool,
-  exportMasterAddr: bool, pin: string) =
-  self.keycardServiceV2.asyncExportPublicKey(keyUid, paths, exportPrivate, exportMasterAddr, pin)
+  exportMasterAddr: bool, pin: string, pairingPassword: string = "") =
+  self.keycardServiceV2.asyncExportPublicKey(keyUid, paths, exportPrivate, exportMasterAddr, pin, pairingPassword)
 
 proc stopKeycardAuthentication*(self: Controller) =
   self.keycardServiceV2.stop()

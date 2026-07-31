@@ -61,7 +61,8 @@ method buildKeyPairForProcessing*[T](self: Module[T], keyUid: string): KeyPairIt
     self.view.setKeyPairForProcessing(item)
   return item
 
-method startKeycardAuthentication*[T](self: Module[T], keyUid: string, pin: string, exportChatKey: bool) =
+method startKeycardAuthentication*[T](self: Module[T], keyUid: string, pin: string, exportChatKey: bool,
+    pairingPassword: string) =
   let
     targetKeyUid = if keyUid.len > 0: keyUid
                    else: singletonInstance.userProfile.getKeyUid()
@@ -70,13 +71,14 @@ method startKeycardAuthentication*[T](self: Module[T], keyUid: string, pin: stri
   var paths = @[PATH_ENCRYPTION]
   if exportChatKey:
     paths.add(PATH_WHISPER)
-  self.controller.startKeycardAuthentication(targetKeyUid, paths, exportPrivate, exportMasterAddr, pin)
+  self.controller.startKeycardAuthentication(targetKeyUid, paths, exportPrivate, exportMasterAddr, pin, pairingPassword)
 
 method stopKeycardAuthentication*[T](self: Module[T]) =
   self.controller.stopKeycardAuthentication()
 
 method onKeycardStateUpdated*[T](self: Module[T], kcEvent: KeycardEventDto) =
   self.view.setKeycardState($kcEvent.stateString)
+  self.view.setKeycardUid(kcEvent.keycardInfo.instanceUID)
   self.view.setRemainingPinAttempts(kcEvent.keycardStatus.remainingAttemptsPIN)
 
 method onKeycardExportPublicKeysFinished*[T](self: Module[T], exportedPublicKeys: KeycardExportedPublicKeysDto, error: string) =

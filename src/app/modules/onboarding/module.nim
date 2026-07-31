@@ -164,8 +164,8 @@ method load*[T](self: Module[T]) =
 
   self.delegate.onboardingDidLoad()
 
-method loginKeycard*[T](self: Module[T], keyUid: string, pin: string) =
-  self.controller.loginKeycard(keyUid, pin)
+method loginKeycard*[T](self: Module[T], keyUid: string, pin: string, pairingPassword: string) =
+  self.controller.loginKeycard(keyUid, pin, pairingPassword)
 
 method getPasswordStrengthScore*[T](self: Module[T], password, userName: string): int =
   self.controller.getPasswordStrengthScore(password, userName)
@@ -325,7 +325,7 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
       of LoginMethod.Password:
         self.controller.login(account, data["password"].str)
       of LoginMethod.Keycard:
-        self.loginKeycard(keyUid, data["pin"].str)
+        self.loginKeycard(keyUid, data["pin"].str, data{"pairingPassword"}.getStr)
       of LoginMethod.Mnemonic:
         self.controller.login(account, password = "", mnemonic = data["mnemonic"].str)
       else:

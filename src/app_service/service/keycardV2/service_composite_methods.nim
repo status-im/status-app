@@ -1,6 +1,8 @@
-proc asyncLogin*(self: Service, keyUid: string, pin: string, xPubPath: string = "", extendedResponse: bool = false) {.featureGuard(KEYCARD_ENABLED).} =
+proc asyncLogin*(self: Service, keyUid: string, pin: string, xPubPath: string = "", extendedResponse: bool = false,
+    pairingPassword: string = "") {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+    "pairingPassword": pairingPassword,
     "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
     "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
     "keyUid": keyUid,
@@ -30,16 +32,16 @@ proc asyncLogin*(self: Service, keyUid: string, pin: string, xPubPath: string = 
   )
 
 proc asyncRecover*(self: Service, pin: string, puk: string, mnemonic: string, metadataName: string = "", metadataPaths: seq[string] = @[],
-    keycardUid: string = "") {.featureGuard(KEYCARD_ENABLED).} =
+    keycardUid: string = "", pairingPassword: string = "") {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "pin": pin,
     "puk": puk,
-    "pairingPassword": "", # we keep it empty for now
     "mnemonic": mnemonic,
     "metadataName": metadataName,
     "metadataPaths": metadataPaths,
     "keycardUid": keycardUid,
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+    "pairingPassword": pairingPassword,
     "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
     "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
   }
@@ -64,7 +66,7 @@ proc asyncRecover*(self: Service, pin: string, puk: string, mnemonic: string, me
   )
 
 proc asyncExportPublicKey*(self: Service, keyUid: string, paths: seq[string], exportPrivate: bool, exportMasterAddr: bool,
-  pin: string) {.featureGuard(KEYCARD_ENABLED).} =
+  pin: string, pairingPassword: string = "") {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "keyUid": keyUid,
     "paths": paths,
@@ -72,6 +74,7 @@ proc asyncExportPublicKey*(self: Service, keyUid: string, paths: seq[string], ex
     "exportMasterAddr": exportMasterAddr,
     "pin": pin,
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+    "pairingPassword": pairingPassword,
     "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
     "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
   }
@@ -92,13 +95,15 @@ proc asyncExportPublicKey*(self: Service, keyUid: string, paths: seq[string], ex
     self.events.emit(SIGNAL_KEYCARD_EXPORT_PUBLIC_KEYS_FINISHED, data)
   )
 
-proc asyncExportExtendedPublicKey*(self: Service, keyUid: string, path: string, exportMasterAddr: bool, pin: string) {.featureGuard(KEYCARD_ENABLED).} =
+proc asyncExportExtendedPublicKey*(self: Service, keyUid: string, path: string, exportMasterAddr: bool, pin: string,
+    pairingPassword: string = "") {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "keyUid": keyUid,
     "path": path,
     "exportMasterAddr": exportMasterAddr,
     "pin": pin,
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+    "pairingPassword": pairingPassword,
     "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
     "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
   }
@@ -119,13 +124,15 @@ proc asyncExportExtendedPublicKey*(self: Service, keyUid: string, path: string, 
     self.events.emit(SIGNAL_KEYCARD_EXPORT_EXTENDED_PUBLIC_KEYS_FINISHED, data)
   )
 
-proc asyncChangeKeycardPIN*(self: Service, keyUid: string, pin: string, newPin: string, keycardUid: string) {.featureGuard(KEYCARD_ENABLED).} =
+proc asyncChangeKeycardPIN*(self: Service, keyUid: string, pin: string, newPin: string, keycardUid: string,
+    pairingPassword: string = "") {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "keyUid": keyUid,
     "keycardUid": keycardUid,
     "pin": pin,
     "newPin": newPin,
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+    "pairingPassword": pairingPassword,
     "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
     "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
   }
@@ -145,13 +152,15 @@ proc asyncChangeKeycardPIN*(self: Service, keyUid: string, pin: string, newPin: 
     self.events.emit(SIGNAL_KEYCARD_CHANGE_PIN_FINISHED, data)
   )
 
-proc asyncChangeKeycardPUK*(self: Service, keyUid: string, pin: string, newPuk: string, keycardUid: string) {.featureGuard(KEYCARD_ENABLED).} =
+proc asyncChangeKeycardPUK*(self: Service, keyUid: string, pin: string, newPuk: string, keycardUid: string,
+    pairingPassword: string = "") {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "keyUid": keyUid,
     "keycardUid": keycardUid,
     "pin": pin,
     "newPuk": newPuk,
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+    "pairingPassword": pairingPassword,
     "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
     "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
   }
@@ -171,13 +180,15 @@ proc asyncChangeKeycardPUK*(self: Service, keyUid: string, pin: string, newPuk: 
     self.events.emit(SIGNAL_KEYCARD_CHANGE_PUK_FINISHED, data)
   )
 
-proc asyncUnblockUsingPUK*(self: Service, keyUid: string, puk: string, newPin: string, keycardUid: string) {.featureGuard(KEYCARD_ENABLED).} =
+proc asyncUnblockUsingPUK*(self: Service, keyUid: string, puk: string, newPin: string, keycardUid: string,
+    pairingPassword: string = "") {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "keyUid": keyUid,
     "keycardUid": keycardUid,
     "puk": puk,
     "newPin": newPin,
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+    "pairingPassword": pairingPassword,
     "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
     "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
   }
@@ -197,13 +208,15 @@ proc asyncUnblockUsingPUK*(self: Service, keyUid: string, puk: string, newPin: s
     self.events.emit(SIGNAL_KEYCARD_UNBLOCK_FINISHED, data)
   )
 
-proc asyncSign*(self: Service, keyUid: string, pin: string, txHash: string, path: string) {.featureGuard(KEYCARD_ENABLED).} =
+proc asyncSign*(self: Service, keyUid: string, pin: string, txHash: string, path: string,
+    pairingPassword: string = "") {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "keyUid": keyUid,
     "pin": pin,
     "txHash": txHash,
     "path": path,
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+    "pairingPassword": pairingPassword,
     "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
     "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
   }
@@ -224,10 +237,11 @@ proc asyncSign*(self: Service, keyUid: string, pin: string, txHash: string, path
     self.events.emit(SIGNAL_KEYCARD_SIGN_FINISHED, data)
   )
 
-proc asyncGetKeycardMetadata*(self: Service, pin: string) {.featureGuard(KEYCARD_ENABLED).} =
+proc asyncGetKeycardMetadata*(self: Service, pin: string, pairingPassword: string = "") {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "pin": pin, # optional, if provided, authorizes and resolves wallet address/publicKey for each metadata wallet path.
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+    "pairingPassword": pairingPassword,
     "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
     "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
   }
@@ -248,12 +262,14 @@ proc asyncGetKeycardMetadata*(self: Service, pin: string) {.featureGuard(KEYCARD
     self.events.emit(SIGNAL_KEYCARD_GET_KEYCARD_METADATA_FINISHED, data)
   )
 
-proc asyncStoreKeycardMetadata*(self: Service, pin: string, metadataName: string, metadataPaths: seq[string]) {.featureGuard(KEYCARD_ENABLED).} =
+proc asyncStoreKeycardMetadata*(self: Service, pin: string, metadataName: string, metadataPaths: seq[string],
+    pairingPassword: string = "") {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "pin": pin,
     "name": metadataName,
     "paths": metadataPaths,
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+    "pairingPassword": pairingPassword,
     "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
     "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
   }
@@ -273,10 +289,11 @@ proc asyncStoreKeycardMetadata*(self: Service, pin: string, metadataName: string
     self.events.emit(SIGNAL_KEYCARD_STORE_KEYCARD_METADATA_FINISHED, data)
   )
 
-proc asyncFactoryResetKeycard*(self: Service, keycardUid: string) {.featureGuard(KEYCARD_ENABLED).} =
+proc asyncFactoryResetKeycard*(self: Service, keycardUid: string, pairingPassword: string = "") {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "keycardUid": keycardUid,
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+    "pairingPassword": pairingPassword,
     "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
     "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
   }
@@ -297,15 +314,15 @@ proc asyncFactoryResetKeycard*(self: Service, keycardUid: string) {.featureGuard
   )
 
 proc asyncLoadSeedPhrase*(self: Service, pin: string, puk: string, seedPhrase: string, metadataName: string,
-    metadataPaths: seq[string]) {.featureGuard(KEYCARD_ENABLED).} =
+    metadataPaths: seq[string], pairingPassword: string = "") {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "pin": pin,
     "puk": puk,
-    "pairingPassword": "", # we keep it empty for now
     "mnemonic": seedPhrase,
     "metadataName": metadataName,
     "metadataPaths": metadataPaths,
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+    "pairingPassword": pairingPassword,
     "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
     "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
   }

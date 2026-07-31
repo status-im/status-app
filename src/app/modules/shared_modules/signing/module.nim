@@ -94,14 +94,16 @@ method buildKeyPairForProcessing*[T](self: Module[T], keyUid: string): KeyPairIt
     self.view.setKeyPairForProcessing(item)
   return item
 
-method startKeycardSigning*[T](self: Module[T], keyUid: string, pin: string, txHash: string, path: string) =
-  self.controller.startKeycardSigning(keyUid, pin, txHash, path)
+method startKeycardSigning*[T](self: Module[T], keyUid: string, pin: string, txHash: string, path: string,
+    pairingPassword: string) =
+  self.controller.startKeycardSigning(keyUid, pin, txHash, path, pairingPassword)
 
 method stopKeycardSigning*[T](self: Module[T]) =
   self.controller.stopKeycardSigning()
 
 method onKeycardStateUpdated*[T](self: Module[T], kcEvent: KeycardEventDto) =
   self.view.setKeycardState($kcEvent.stateString)
+  self.view.setKeycardUid(kcEvent.keycardInfo.instanceUID)
   self.view.setRemainingPinAttempts(kcEvent.keycardStatus.remainingAttemptsPIN)
 
 method onKeycardSignFinished*[T](self: Module[T], signature: KeycardSignatureDto, error: string) =

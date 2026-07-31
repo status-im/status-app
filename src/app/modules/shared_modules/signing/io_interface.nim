@@ -30,7 +30,8 @@ method getAccountNameByAddress*(self: AccessInterface, address: string): string 
 method buildKeyPairForProcessing*(self: AccessInterface, keyUid: string): KeyPairItem {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method startKeycardSigning*(self: AccessInterface, keyUid: string, pin: string, txHash: string, path: string) {.base.} =
+method startKeycardSigning*(self: AccessInterface, keyUid: string, pin: string, txHash: string, path: string,
+    pairingPassword: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method stopKeycardSigning*(self: AccessInterface) {.base.} =

@@ -113,8 +113,8 @@ proc init*(self: Controller) =
     self.delegate.onMessengerStarted(args.error)
   self.connectionIds.add(handlerId)
 
-proc loginKeycard*(self: Controller, keyUid: string, pin: string) =
-  self.keycardServiceV2.asyncLogin(keyUid, pin, xPubPath = account_constants.PATH_WALLET_XPUB)
+proc loginKeycard*(self: Controller, keyUid: string, pin: string, pairingPassword: string = "") =
+  self.keycardServiceV2.asyncLogin(keyUid, pin, xPubPath = account_constants.PATH_WALLET_XPUB, extendedResponse = false, pairingPassword)
 
 proc getPasswordStrengthScore*(self: Controller, password, userName: string): int =
   return self.generalService.getPasswordStrengthScore(password, userName)
