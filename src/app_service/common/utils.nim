@@ -214,7 +214,7 @@ proc escape_html*(s: string): string =
 
 proc save_byte_image_to_file*(imagePathOrData: string): string =
   ## Accepts either a data URI (data:image/<fmt>;base64,<data>) or a file path.
-  ## Loads into a QImage and saves to ~/Pictures (falling back to tempPath).
+  ## Loads into a QImage and saves it in the OS temporary directory.
   ## Returns the saved file path, or "" on failure.
   var format = "jpg"
   var img = QImage.create()
@@ -233,13 +233,17 @@ proc save_byte_image_to_file*(imagePathOrData: string): string =
     warn "save_byte_image_to_file: failed to load image", path = imagePathOrData
     return ""
 
-  var destDirPath = QStandardPaths.writableLocation(
-    cint(QStandardPathsStandardLocationEnum.PicturesLocation))
+  var destDirPath = QStandardPaths.writableLocation(QStandardPathsStandardLocationEnum.TempLocation)
+  if destDirPath == "":
+    destDirPath = getTempDir()
+
   if not dirExists(destDirPath):
     try:
       createDir(destDirPath)
-    except:
-      destDirPath = getEnv("TMPDIR", "/tmp")
+    except OSError as e:
+      warn "save_byte_image_to_file: failed to create temporary directory",
+        dir = destDirPath, error = e.msg
+      return ""
 
   let uuid = QUuid.createUuid().toString(cint(QUuidStringFormatEnum.WithoutBraces))
   let newFilePath = destDirPath & "/" & uuid & "." & format

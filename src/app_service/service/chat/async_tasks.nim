@@ -117,12 +117,18 @@ const asyncSendImagesTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
   try:
     var images = Json.decode(arg.imagePathsJson, seq[string])
     var imagePaths: seq[string] = @[]
+    var temporaryImagePaths: seq[string] = @[]
+    defer:
+      for imagePath in temporaryImagePaths:
+        if not tryRemoveFile(imagePath) and fileExists(imagePath):
+          warn "asyncSendImagesTask: failed to remove temporary image", imagePath = imagePath
 
     for imagePathOrSource in images.mitems:
       if utils.isBase64DataUrl(imagePathOrSource):
         let imagePath = common_utils.save_byte_image_to_file(imagePathOrSource)
         if imagePath != "":
           imagePaths.add(imagePath)
+          temporaryImagePaths.add(imagePath)
       else:
         imagePaths.add(imagePathOrSource)
 
