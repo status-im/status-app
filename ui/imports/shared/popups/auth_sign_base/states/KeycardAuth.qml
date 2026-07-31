@@ -248,9 +248,8 @@ Control {
             }
         },
         State {
-            name: "pairing-error"
-            when: root.keycardState === Constants.keycard.state.pairingError
-                  || root.keycardState === Constants.keycard.state.noAvailablePairingSlots
+            name: "no-available-pairing-slots"
+            when: root.keycardState === Constants.keycard.state.noAvailablePairingSlots
             PropertyChanges {
                 target: image
                 source: Assets.png("keycard/card_inserted/writing-negative")
@@ -263,6 +262,24 @@ Control {
             PropertyChanges {
                 target: message
                 text: qsTr("Max pairing slots reached for this Keycard")
+                color: Theme.palette.dangerColor1
+            }
+        },
+        State {
+            name: "pairing-error"
+            when: root.keycardState === Constants.keycard.state.pairingError
+            PropertyChanges {
+                target: image
+                source: Assets.png("keycard/card_inserted/writing-negative")
+            }
+            PropertyChanges {
+                target: title
+                text: qsTr("Keycard pairing error")
+                color: Theme.palette.dangerColor1
+            }
+            PropertyChanges {
+                target: message
+                text: qsTr("This Keycard was set up with a custom pairing password")
                 color: Theme.palette.dangerColor1
             }
         },

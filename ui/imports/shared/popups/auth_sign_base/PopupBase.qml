@@ -9,6 +9,8 @@ import StatusQ.Popups.Dialog
 
 import utils
 
+import shared.popups.keycard_new.helpers 1.0
+
 import "states"
 
 StatusDialog {
@@ -28,6 +30,7 @@ StatusDialog {
 
     // interface properties
     required property string keycardState
+    required property string keycardUid
     required property int remainingPinAttempts
     required property string userProfileKeyUid
     required property string userProfilePublicKey
@@ -53,7 +56,7 @@ StatusDialog {
 
     // actions
     property var performPasswordAction: null // (password: string) => bool — returns true on success
-    property var performKeycardAction: null // (keyUid: string, pin: string) => void — async
+    property var performKeycardAction: null // (keyUid: string, pin: string, pairingPassword: string) => void — async
     property var closePopupAction: null // () => void — cancel ongoing keycard operation, destroy module
 
 
@@ -86,6 +89,10 @@ StatusDialog {
 
                 if (d.verifying) {
                     return keycardAuthComponent
+                }
+
+                if (d.pairingPasswordRequired) {
+                    return enterPairingPasswordComponent
                 }
 
                 if (!!d.error) {
@@ -144,6 +151,18 @@ StatusDialog {
                     if (!contentLoader.item)
                         return
                     d.performPasswordActionInternal()
+                }
+            }
+            StatusButton {
+                objectName: "keycardPairingPasswordSubmitButton"
+                text: qsTr("Continue")
+                visible: contentLoader.status === Loader.Ready
+                         && contentLoader.sourceComponent === enterPairingPasswordComponent
+                enabled: !!contentLoader.item && contentLoader.item.pairingPasswordValid && !d.verifying
+                onClicked: {
+                    if (!contentLoader.item)
+                        return
+                    contentLoader.item.accepted()
                 }
             }
             StatusButton {
@@ -276,6 +295,15 @@ StatusDialog {
             d.success = true
         }
 
+        property string pairingPassword: ""
+        property string pairingPasswordKeycardUid: ""
+        property bool keycardActionAttempted: false
+        readonly property bool pairingPasswordRequired: !d.verifying
+                                                        && d.keycardActionAttempted
+                                                        && (keycardErrors.pairingPasswordRequiredError
+                                                            || root.keycardState === Constants.keycard.state.pairingError)
+        readonly property bool wrongPairingPassword: d.pairingPasswordRequired && d.pairingPassword !== ""
+
         function performKeycardActionInternal(pin) {
             if (!root.performKeycardAction)
                 return
@@ -283,7 +311,8 @@ StatusDialog {
             d.verifying = true
             d.error = ""
             d.lastPin = pin
-            root.performKeycardAction(root.useKeyUid, pin)
+            d.keycardActionAttempted = true
+            root.performKeycardAction(root.useKeyUid, pin, d.pairingPassword)
         }
 
         // Called by the concrete popup when keycard action succeeds
@@ -390,6 +419,26 @@ StatusDialog {
         id: enterPasswordComponent
         EnterPassword {
             onAccepted: d.performPasswordActionInternal()
+        }
+    }
+
+    Component {
+        id: enterPairingPasswordComponent
+        EnterPairingPassword {
+            wrongPairingPassword: d.wrongPairingPassword
+
+            Component.onCompleted: {
+                d.pairingPasswordKeycardUid = root.keycardUid
+            }
+
+            onAccepted: {
+                if (root.keycardUid !== d.pairingPasswordKeycardUid) {
+                    d.pairingPassword = ""
+                    return
+                }
+                d.pairingPassword = pairingPassword
+                d.performKeycardActionInternal(d.lastPin)
+            }
         }
     }
 

@@ -36,6 +36,7 @@ PopupBase {
     btnPinActionAndUpdateName: qsTr("Update PIN & sign")
 
     keycardState: root.store.keycardState
+    keycardUid: root.store.keycardUid
     remainingPinAttempts: root.store.remainingPinAttempts
     userProfileKeyUid: root.store.userProfileKeyUid
     userProfilePublicKey: root.store.userProfilePubKey
@@ -61,8 +62,8 @@ PopupBase {
         return true
     }
 
-    performKeycardAction: function(keyUid, pin) {
-        root.store.startKeycardSigning(keyUid, pin, root.txHash, root.path)
+    performKeycardAction: function(keyUid, pin, pairingPassword) {
+        root.store.startKeycardSigning(keyUid, pin, root.txHash, root.path, pairingPassword)
     }
 
     onAuthorizeRequested: {

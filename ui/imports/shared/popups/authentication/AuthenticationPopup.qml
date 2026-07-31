@@ -24,6 +24,7 @@ PopupBase {
     btnPinActionAndUpdateName: qsTr("Update PIN & authenticate")
 
     keycardState: root.store.keycardState
+    keycardUid: root.store.keycardUid
     remainingPinAttempts: root.store.remainingPinAttempts
     userProfileKeyUid: root.store.userProfileKeyUid
     userProfilePublicKey: root.store.userProfilePubKey
@@ -40,8 +41,8 @@ PopupBase {
         return success
     }
 
-    performKeycardAction: function(keyUid, pin) {
-        root.store.startKeycardAuthentication(keyUid, pin, root.exportChatKey)
+    performKeycardAction: function(keyUid, pin, pairingPassword) {
+        root.store.startKeycardAuthentication(keyUid, pin, root.exportChatKey, pairingPassword)
     }
 
     closePopupAction: function() {
