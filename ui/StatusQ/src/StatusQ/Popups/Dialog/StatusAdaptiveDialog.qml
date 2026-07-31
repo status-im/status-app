@@ -31,6 +31,7 @@ Dialog {
     property alias leftHeaderComponent: headerToolbarItem.leftComponent
     readonly property alias headerActions: headerToolbarItem.actions
     property alias headerCustomButtons: headerToolbarItem.actions.customButtons
+    property alias backgroundColor: dialogBackground.color
 
     // Dialog body supplied by consumers. The component should describe only the
     // content itself; StatusAdaptiveDialog owns sizing, padding/insets and scroll
@@ -62,6 +63,9 @@ Dialog {
     property bool escapeKeyCloses: !d.bottomSheet
     // Whether the dialog object should destroy itself after it is closed.
     property bool destroyOnClose: false
+    // Invoked by the header close button. Override when a dialog needs to
+    // confirm/discard dirty state before closing.
+    property var closeHandler: () => root.close()
 
     // Exceptional override. Leave 0 to let the dialog resolve its own width.
     property int maximumWidthOverride: 0
@@ -71,6 +75,12 @@ Dialog {
     property bool showHeaderDivider: true
     // Whether to show the divider between the content and footer.
     property bool showFooterDivider: true
+    // Exceptional padding overrides. Leave below 0 to use the adaptive defaults.
+    property real edgePaddingOverride: -1
+    property real contentTopPaddingOverride: -1
+    property real contentBottomPaddingOverride: -1
+    property real contentLeftPaddingOverride: -1
+    property real contentRightPaddingOverride: -1
 
     function openInternalPopup() {
         internalPopupLayer.open()
@@ -109,7 +119,8 @@ Dialog {
         readonly property real footerHeight: footerSection.implicitHeight
 
         // Internal spacing between the dialog edge and each visible component.
-        readonly property real edgePadding: Math.max(root.Theme.padding, 8)
+        readonly property real edgePadding: root.edgePaddingOverride >= 0 ? root.edgePaddingOverride
+                                                                          : Math.max(root.Theme.padding, 8)
 
         readonly property bool bottomSheet: windowWidth <= ThemeUtils.portraitBreakpoint.width
                                             && windowHeight > windowWidth
@@ -123,10 +134,14 @@ Dialog {
         readonly property real rightSafeArea: bottomSheet ? surfaceSafeArea.margins.right : 0
         // Vertical padding owned by the content host. When content is the first or
         // last visible section, it also absorbs the corresponding safe area.
-        readonly property real contentTopPadding: edgePadding
-        readonly property real contentBottomPadding: edgePadding + (hasFooterSection ? 0 : footerSafeArea)
-        readonly property real contentLeftPadding: edgePadding + leftSafeArea
-        readonly property real contentRightPadding: edgePadding + rightSafeArea
+        readonly property real contentTopPadding: root.contentTopPaddingOverride >= 0 ? root.contentTopPaddingOverride
+                                                                                      : edgePadding
+        readonly property real contentBottomPadding: root.contentBottomPaddingOverride >= 0 ? root.contentBottomPaddingOverride
+                                                                                            : edgePadding + (hasFooterSection ? 0 : footerSafeArea)
+        readonly property real contentLeftPadding: (root.contentLeftPaddingOverride >= 0 ? root.contentLeftPaddingOverride
+                                                                                         : edgePadding) + leftSafeArea
+        readonly property real contentRightPadding: (root.contentRightPaddingOverride >= 0 ? root.contentRightPaddingOverride
+                                                                                           : edgePadding) + rightSafeArea
 
         // Internal max width for centered dialogs.
         readonly property real centeredMaxWidth: 560
@@ -238,7 +253,9 @@ Dialog {
         }
     }
 
-    background: StatusDialogBackground {}
+    background: StatusDialogBackground {
+        id: dialogBackground
+    }
 
     // Header contract:
     // - Uses Dialog.header so the native Dialog layout owns section placement.
@@ -260,7 +277,7 @@ Dialog {
             Layout.rightMargin: d.edgePadding + d.rightSafeArea
             visible: d.hasHeader
             title: root.title
-            actions.closeButton.onClicked: mouse => root.close()
+            actions.closeButton.onClicked: mouse => root.closeHandler()
         }
 
         StatusDialogDivider {
