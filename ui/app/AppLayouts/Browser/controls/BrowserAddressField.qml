@@ -31,7 +31,8 @@ StatusTextField {
     placeholderText: qsTr("Search or enter address")
     color: root.incognitoMode ? Theme.palette.privacyColors.tertiary : Theme.palette.textColor
 
-    inputMethodHints: Qt.ImhUrlCharactersOnly | Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhSensitiveData
+    inputMethodHints: (SQUtils.Utils.isIOS ? Qt.ImhNone : Qt.ImhUrlCharactersOnly) // iOS would hide the spacebar; space not being a valid URL character
+                      | Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhSensitiveData
     EnterKey.type: Qt.EnterKeyGo
 
     text: root.url
