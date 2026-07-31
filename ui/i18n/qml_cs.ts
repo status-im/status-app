@@ -6319,6 +6319,10 @@ key pair. Keycard will be required for signing</source>
         <translation>Nejprve musíte vyrazit nebo importovat sběratelský předmět, než budete moci provést airdrop</translation>
     </message>
     <message>
+        <source>No members found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Show fees (will be enabled once the form is filled)</source>
         <translation>Zobrazit poplatky (bude povoleno po vyplnění formuláře)</translation>
     </message>

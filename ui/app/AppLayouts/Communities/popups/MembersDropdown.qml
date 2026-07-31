@@ -16,6 +16,7 @@ StatusDropdown {
     property var selectedKeys: new Set()
     property bool forceButtonDisabled: false
     property int maximumListHeight: 288
+    property string noContactsFoundText: qsTr("No contacts found")
 
     property alias model: listView.model
     readonly property alias count: listView.count
@@ -122,7 +123,7 @@ StatusDropdown {
 
             visible: listView.count === 0
 
-            text: qsTr("No contacts found")
+            text: root.noContactsFoundText
             color: Theme.palette.baseColor1
             font.pixelSize: Theme.tertiaryTextFontSize
             elide: Text.ElideRight

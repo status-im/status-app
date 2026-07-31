@@ -6276,6 +6276,10 @@ key pair. Keycard will be required for signing</source>
         <translation>에어드롭을 진행하려면 먼저 컬렉티블을 민트하거나 가져와야 합니다</translation>
     </message>
     <message>
+        <source>No members found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Show fees (will be enabled once the form is filled)</source>
         <translation>수수료 표시(양식을 모두 입력하면 활성화됨)</translation>
     </message>

@@ -44,11 +44,15 @@ QtObject:
       # O(1) pubkey -> row index lookup for hasMember and the various per-pubkey
       # update procs. Maintained by every mutation below.
       pubKeyIndex: Table[string, int]
+      # Revealed airdrop addresses can arrive before the corresponding member
+      # is inserted into the model. Keep them until that member is available.
+      pendingAirdropAddresses: Table[string, string]
 
   proc delete(self: Model)
   proc setup(self: Model)
   proc newModel*(): Model =
     new(result, delete)
+    result.pendingAirdropAddresses = initTable[string, string]()
     result.setup
 
   proc countChanged(self: Model) {.signal.}
@@ -58,10 +62,19 @@ QtObject:
     for i, it in self.items:
       self.pubKeyIndex[it.pubKey] = i
 
+  proc applyPendingAirdropAddress(self: Model, item: MemberItem) =
+    if not self.pendingAirdropAddresses.hasKey(item.pubKey):
+      return
+
+    item.airdropAddress = self.pendingAirdropAddresses[item.pubKey]
+    self.pendingAirdropAddresses.del(item.pubKey)
+
   proc setItems*(self: Model, items: seq[MemberItem]) =
     self.beginResetModel()
     self.items = items
     self.rebuildPubKeyIndex()
+    for item in self.items:
+      self.applyPendingAirdropAddress(item)
     self.endResetModel()
     self.countChanged()
 
@@ -185,6 +198,7 @@ QtObject:
     self.beginInsertRows(modelIndex, self.items.len, self.items.len)
     self.pubKeyIndex[item.pubKey] = self.items.len
     self.items.add(item)
+    self.applyPendingAirdropAddress(item)
     self.endInsertRows()
     self.countChanged()
 
@@ -212,6 +226,7 @@ QtObject:
     self.beginRemoveRows(parentModelIndex, index, index)
     self.items.delete(index)
     self.pubKeyIndex.del(removedPubKey)
+    self.pendingAirdropAddresses.del(removedPubKey)
     # seq.delete shifts every later entry left by one — reflect that in the index.
     for v in self.pubKeyIndex.mvalues:
       if v > index:
@@ -259,6 +274,8 @@ QtObject:
 
     self.beginInsertRows(modelIndex, first, last)
     self.items.add(newItems)
+    for index in first ..< self.items.len:
+      self.applyPendingAirdropAddress(self.items[index])
     self.endInsertRows()
     self.countChanged()
 
@@ -454,7 +471,16 @@ QtObject:
       updateRole(onlineStatus)
 
   proc setAirdropAddress*(self: Model, pubKey: string, airdropAddress: string) =
-    updateItemRolesAndNotify self.findIndexForMember(pubKey):
+    let ind = self.findIndexForMember(pubKey)
+    if ind == -1:
+      if airdropAddress.len == 0:
+        self.pendingAirdropAddresses.del(pubKey)
+      else:
+        self.pendingAirdropAddresses[pubKey] = airdropAddress
+      return
+
+    self.pendingAirdropAddresses.del(pubKey)
+    updateRolesAndNotify:
       updateRole(airdropAddress)
 
   proc getAirdropAddressForMember*(self: Model, pubKey: string): string =

@@ -6298,6 +6298,10 @@ key pair. Keycard will be required for signing</source>
         <translation>Primero necesitas acuñar o importar un coleccionable antes de poder realizar un airdrop</translation>
     </message>
     <message>
+        <source>No members found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Show fees (will be enabled once the form is filled)</source>
         <translation></translation>
     </message>

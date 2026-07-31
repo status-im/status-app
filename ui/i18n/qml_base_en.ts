@@ -6287,6 +6287,10 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>No members found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Show fees (will be enabled once the form is filled)</source>
         <translation type="unfinished"></translation>
     </message>

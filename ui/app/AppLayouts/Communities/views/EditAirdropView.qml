@@ -525,6 +525,7 @@ StatusScrollView {
 
                 directParent: airdropRecipientsSelector.addButton
                 relativeX: airdropRecipientsSelector.addButton.width
+                noContactsFoundText: qsTr("No members found")
 
                 forceButtonDisabled:
                     mode === MembersDropdown.Mode.Update &&

@@ -101,6 +101,17 @@ suite "updating member items":
     model.updateToTheseItems(@[memberA, memberB, memberD])
     check(model.rowCount == 3)
 
+  test "applies an airdrop address received before the member is added":
+    model.setAirdropAddress("0xd", "0xairdrop")
+    model.updateToTheseItems(@[memberA, memberB, memberC, memberD])
+    check(model.getAirdropAddressForMember("0xd") == "0xairdrop")
+
+  test "applies an airdrop address received before the model is populated":
+    let emptyModel = newModel()
+    emptyModel.setAirdropAddress("0xd", "0xairdrop")
+    emptyModel.setItems(@[memberA, memberB, memberC, memberD])
+    check(emptyModel.getAirdropAddressForMember("0xd") == "0xairdrop")
+
   test "add an item and update another using updateToTheseItems":
     let memberACopy = memberA
     memberACopy.displayName = "roger"
