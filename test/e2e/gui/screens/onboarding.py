@@ -62,6 +62,10 @@ class CreateYourProfileViewOnboarding(OnboardingWelcomeToStatusView):
         self.use_a_recovery_phrase_button = Button(onboarding_names.useRecoveryPhraseButton)
         self.use_an_empty_keycard_button = Button(onboarding_names.useEmptyKeycardButton)
 
+    def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+        self.lets_go_button.wait_until_appears(timeout_msec)
+        return self
+
     def open_password_view(self):
         self.lets_go_button.click()
         return OnboardingCreatePasswordView()
@@ -77,6 +81,10 @@ class OnboardingLogIn(OnboardingWelcomeToStatusView):
         self.enter_recovery_phrase_button = Button(onboarding_names.enterRecoveryPhraseButton)
         self.log_in_by_syncing_button = Button(onboarding_names.logInBySyncingButton)
         self.log_in_with_keycard_button = Button(onboarding_names.logInWithKeycardButton)
+
+    def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+        self.enter_recovery_phrase_button.wait_until_appears(timeout_msec)
+        return self
 
 
 class OnboardingView(QObject):
@@ -699,6 +707,7 @@ class ReturningLoginView(QObject):
         self.user_selector_button.click()
         OnboardingLoginUsersPopup().wait_until_appears().create_profile_button.click()
         return CreateYourProfileViewOnboarding().wait_until_appears()
+
 
     @allure.step('Select user by name')
     def select_user_by_name(self, user_name):
