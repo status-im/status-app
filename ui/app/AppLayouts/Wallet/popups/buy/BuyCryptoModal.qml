@@ -4,7 +4,6 @@ import QtQml.Models
 import SortFilterProxyModel
 
 import StatusQ
-import StatusQ.Popups
 import StatusQ.Popups.Dialog
 import StatusQ.Controls
 import StatusQ.Components
@@ -19,7 +18,7 @@ import AppLayouts.Wallet.panels
 
 import QtModelsToolkit
 
-StatusStackModal {
+StatusAdaptiveStackDialog {
     id: root
 
     // required data
@@ -63,26 +62,6 @@ StatusStackModal {
         // States to track requests
         property string uuid
         property bool urlIsBeingFetched
-
-        readonly property var buyButton: StatusButton {
-            height: root.finishButton.height
-            visible: !!root.replaceItem
-            borderColor: "transparent"
-            text: qsTr("Buy via %1").arg(!!d.selectedProviderEntry.item ? d.selectedProviderEntry.item.name: "")
-            loading: d.urlIsBeingFetched
-            onClicked: {
-                if(!!d.selectedProviderEntry.item && !!d.selectedTokenEntry.item) {
-                    d.fetchProviderUrl(
-                                root.buyCryptoInputParamsForm.selectedProviderId,
-                                buyCryptoProvidersListPanel.currentTabIndex,
-                                root.buyCryptoInputParamsForm.selectedWalletAddress,
-                                root.buyCryptoInputParamsForm.selectedNetworkChainId,
-                                d.selectedTokenEntry.item.symbol
-                                )
-                }
-            }
-            enabled: root.buyCryptoInputParamsForm.filledCorrectly
-        }
 
         readonly property ModelEntry selectedAccountEntry: ModelEntry {
             sourceModel: root.walletAccountsModel
@@ -158,35 +137,34 @@ StatusStackModal {
         }
     }
 
-    width: 560
-    padding: Theme.xlPadding
-    stackTitle: !!root.buyCryptoInputParamsForm.selectedTokenGroupKey ?
+    implicitWidth: 560
+    maximumWidthOverride: 560
+    defaultTitle: !!root.buyCryptoInputParamsForm.selectedTokenGroupKey ?
                     qsTr("Ways to buy %1 for %2").arg(d.selectedTokenEntry.item.name).arg(!!d.selectedAccountEntry.item ? d.selectedAccountEntry.item.name: "")
                   : qsTr("Ways to buy assets for %1").arg(!!d.selectedAccountEntry.item ? d.selectedAccountEntry.item.name: "")
-    rightButtons: [d.buyButton, finishButton]
-    finishButton: StatusButton {
-        text: qsTr("Done")
-        onClicked: root.close()
-    }
+    initialItem: buyCryptoProvidersListPanelComponent
+    customFooterRightButtons: buyCryptoFooterRightButtonsModel
 
     onOpened: root.fetchProviders()
     onClosed: {
         // reset the view
         d.uuid = ""
         d.urlIsBeingFetched = false
-        root.replaceItem = undefined
-        buyCryptoProvidersListPanel.currentTabIndex = 0
+        root.replaceItem = null
+        if (root.stack && root.stack.currentItem)
+            root.stack.currentItem.currentTabIndex = 0
         root.buyCryptoInputParamsForm.resetFormData()
     }
 
-    stackItems: [
+    Component {
+        id: buyCryptoProvidersListPanelComponent
+
         BuyCryptoProvidersListPanel {
-            id: buyCryptoProvidersListPanel
             providersLoading: root.isBuyProvidersModelLoading
             providersModel: root.buyProvidersModel
             selectedProviderId: root.buyCryptoInputParamsForm.selectedProviderId
             isUrlBeingFetched: d.urlIsBeingFetched
-            onProviderSelected: {
+            onProviderSelected: (id) => {
                 root.buyCryptoInputParamsForm.selectedProviderId = id
                 if(!!d.selectedProviderEntry.item) {
                     if(d.selectedProviderEntry.item.urlsNeedParameters) {
@@ -197,7 +175,7 @@ StatusStackModal {
                 }
             }
         }
-    ]
+    }
 
     Component {
         id: selectParamsPanel
@@ -219,6 +197,37 @@ StatusStackModal {
                     root.buyCryptoInputParamsForm.selectedTokenGroupKey = tokenGroupKey
                 }
             }
+        }
+    }
+
+    ObjectModel {
+        id: buyCryptoFooterRightButtonsModel
+
+        StatusButton {
+            objectName: "buyCryptoModalBuyButton"
+            visible: !!root.replaceItem
+            borderColor: "transparent"
+            text: qsTr("Buy via %1").arg(!!d.selectedProviderEntry.item ? d.selectedProviderEntry.item.name: "")
+            loading: d.urlIsBeingFetched
+            enabled: root.buyCryptoInputParamsForm.filledCorrectly
+            onClicked: {
+                if(!!d.selectedProviderEntry.item && !!d.selectedTokenEntry.item) {
+                    d.fetchProviderUrl(
+                                root.buyCryptoInputParamsForm.selectedProviderId,
+                                root.currentItem.currentTabIndex,
+                                root.buyCryptoInputParamsForm.selectedWalletAddress,
+                                root.buyCryptoInputParamsForm.selectedNetworkChainId,
+                                d.selectedTokenEntry.item.symbol
+                                )
+                }
+            }
+        }
+
+        StatusButton {
+            objectName: "buyCryptoModalDoneButton"
+            visible: !root.replaceItem
+            text: qsTr("Done")
+            onClicked: root.close()
         }
     }
 }

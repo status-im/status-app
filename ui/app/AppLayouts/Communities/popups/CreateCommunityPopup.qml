@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -21,7 +23,7 @@ import AppLayouts.Communities.panels
 import AppLayouts.Communities.stores
 import AppLayouts.Profile.stores
 
-StatusStackModal {
+StatusAdaptiveStackDialog {
     id: root
 
     property CommunitiesStore store
@@ -29,61 +31,70 @@ StatusStackModal {
     property bool isDiscordImport // creating new or importing from discord?
     property bool isDevBuild
 
-    stackTitle: isDiscordImport ? qsTr("Import a community from Discord into Status") :
-                                  qsTr("Create New Community")
-    width: 640
+    defaultTitle: isDiscordImport ? qsTr("Import a community from Discord into Status") :
+                                    qsTr("Create New Community")
+    implicitWidth: 640
+    maximumWidthOverride: 640
+    initialItem: generalStepComponent
+    customFooterRightButtons: footerRightButtonsModel
+    showStackBackButton: !d.progressReplaceActive && (!!replaceItem || depth > 1)
 
-    closePolicy: Popup.NoAutoClose // explicit [x] click needed, or via the `close()` method
+    closeOnOverlayClick: false // explicit [x] click needed, or via the `close()` method
+    escapeKeyCloses: false
 
-    nextButton: StatusButton {
-        objectName: "createCommunityNextBtn"
-        text: typeof currentItem.nextButtonText !== "undefined" ? currentItem.nextButtonText : qsTr("Next")
-        enabled: typeof(currentItem.canGoNext) == "undefined" || currentItem.canGoNext
-        loading: root.store.discordDataExtractionInProgress
-        onClicked: {
-            let nextAction = currentItem.nextAction
-            if (typeof(nextAction) == "function") {
-                return nextAction()
+    ObjectModel {
+        id: footerRightButtonsModel
+
+        StatusButton {
+            text: qsTr("Clear all")
+            type: StatusBaseButton.Type.Danger
+            visible: root.currentItem && root.currentItem.objectName === "discordFileListView"
+            enabled: d.fileListView && !d.fileListView.fileListModelEmpty && !root.store.discordDataExtractionInProgress
+            onClicked: root.store.clearFileList()
+        }
+
+        StatusButton {
+            objectName: "createCommunityNextBtn"
+            visible: !root.replaceItem && !d.activeStepIsFinal
+            text: root.currentItem && typeof root.currentItem.nextButtonText !== "undefined" ? root.currentItem.nextButtonText : qsTr("Next")
+            enabled: !root.currentItem || typeof(root.currentItem.canGoNext) == "undefined" || root.currentItem.canGoNext
+            loading: root.store.discordDataExtractionInProgress
+            onClicked: {
+                let nextAction = root.currentItem.nextAction
+                if (typeof(nextAction) == "function") {
+                    return nextAction()
+                }
             }
-            root.currentIndex++
+        }
+
+        StatusButton {
+            objectName: "createCommunityFinalBtn"
+            visible: !root.replaceItem && d.activeStepIsFinal
+            text: root.isDiscordImport ? qsTr("Start Discord import") : qsTr("Create Community")
+            enabled: !root.currentItem || typeof(root.currentItem.canGoNext) == "undefined" || root.currentItem.canGoNext
+            onClicked: {
+                let nextAction = root.currentItem.nextAction
+                if (typeof (nextAction) == "function") {
+                    return nextAction()
+                }
+            }
         }
     }
-
-    finishButton: StatusButton {
-        objectName: "createCommunityFinalBtn"
-        text: root.isDiscordImport ? qsTr("Start Discord import") : qsTr("Create Community")
-        enabled: typeof(currentItem.canGoNext) == "undefined" || currentItem.canGoNext
-        onClicked: {
-            let nextAction = currentItem.nextAction
-            if (typeof (nextAction) == "function") {
-                return nextAction()
-            }
-        }
-    }
-
-    readonly property var clearFilesButton: StatusButton {
-        text: qsTr("Clear all")
-        type: StatusBaseButton.Type.Danger
-        visible: root.currentItem.objectName === "discordFileListView" // no better way to address the current item in the stack :/
-        enabled: !fileListView.fileListModelEmpty && !root.store.discordDataExtractionInProgress
-        onClicked: root.store.clearFileList()
-    }
-
-    rightButtons: [clearFilesButton, nextButton, finishButton]
 
     onAboutToShow: {
-        if (root.isDiscordImport) {
-            if (!root.store.discordImportInProgress) {
-                root.store.clearFileList()
-                root.store.clearDiscordCategoriesAndChannels()
-            }
-            for (let i = 0; i < discordPages.length; i++) {
-                stackItems.push(discordPages[i])
-            }
+        d.progressReplaceActive = false
+        root.replace(null)
+        root.resetStack(StackView.Immediate)
+        root.backgroundColor = Theme.palette.statusModal.backgroundColor
+        if (root.isDiscordImport && !root.store.discordImportInProgress) {
+            root.store.clearFileList()
+            root.store.clearDiscordCategoriesAndChannels()
         }
     }
 
-    readonly property list<Item> discordPages: [
+    Component {
+        id: discordFileListStepComponent
+
         ColumnLayout {
             id: fileListView
             objectName: "discordFileListView" // !!! DON'T CHANGE, clearFilesButton depends on this
@@ -97,12 +108,17 @@ StatusStackModal {
                 fileListModel.selectedCount && fileListModel.selectedFilesValid ? qsTr("Proceed with (%1/%2) files").arg(fileListModel.selectedCount).arg(fileListModel.count) :
                 fileListModel.selectedCount ? qsTr("Validate (%1/%2) files").arg(fileListModel.selectedCount).arg(fileListModel.count)
                 : qsTr("Import files")
+            readonly property bool isFinalStep: false
             readonly property var nextAction: function () {
                 if (!fileListView.fileListModel.selectedFilesValid) {
                     return root.store.requestExtractChannelsAndCategories()
                 }
-                root.currentIndex++
+                root.stack.push(discordCategoriesStepComponent)
             }
+
+            Component.onCompleted: d.fileListView = fileListView
+            Component.onDestruction: if (d.fileListView === fileListView)
+                d.fileListView = null
 
             RowLayout {
                 Layout.fillWidth: true
@@ -245,17 +261,22 @@ StatusStackModal {
                     }
                 }
             }
-        },
+        }
+    }
+
+    Component {
+        id: discordCategoriesStepComponent
 
         ColumnLayout {
             id: categoriesAndChannelsView
             spacing: 24
 
             readonly property bool canGoNext: root.store.discordChannelsModel.hasSelectedItems
+            readonly property bool isFinalStep: true
             readonly property var nextAction: function () {
                 d.requestImportDiscordCommunity()
                 // replace ourselves with the progress dialog, no way back
-                root.leftButtons[0].visible = false
+                d.progressReplaceActive = true
                 root.backgroundColor = Theme.palette.baseColor4
                 root.replace(progressComponent)
             }
@@ -312,6 +333,10 @@ StatusStackModal {
                     }
                 }
 
+                Component.onCompleted: d.datePicker = datePicker
+                Component.onDestruction: if (d.datePicker === datePicker)
+                    d.datePicker = null
+
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -354,16 +379,18 @@ StatusStackModal {
                 }
             }
         }
-    ]
+    }
 
-    stackItems: [
+    Component {
+        id: generalStepComponent
+
         StatusScrollView {
             id: generalView
             contentWidth: availableWidth
 
             readonly property var nextAction: () => {
                 if (generalViewLayout.validate(root.isDevBuild)) {
-                    root.currentIndex++
+                    root.stack.push(introOutroStepComponent)
                 }
             }
 
@@ -387,12 +414,21 @@ StatusStackModal {
 
                 tags: root.store.communityTags
             }
-        },
+
+            Component.onCompleted: d.generalViewLayout = generalViewLayout
+            Component.onDestruction: if (d.generalViewLayout === generalViewLayout)
+                d.generalViewLayout = null
+        }
+    }
+
+    Component {
+        id: introOutroStepComponent
 
         ColumnLayout {
             id: introOutroMessageView
             spacing: Theme.padding
 
+            readonly property bool isFinalStep: !root.isDiscordImport
             readonly property var nextAction: () => {
                 if (!introMessageInput.validate(true))
                     introMessageInput.input.dirty = true
@@ -400,7 +436,7 @@ StatusStackModal {
                     outroMessageInput.input.dirty = true
                 if (introMessageInput.valid && outroMessageInput.valid) {
                     if (root.isDiscordImport)
-                        root.currentIndex++
+                        root.stack.push(discordFileListStepComponent)
                     else
                         d.createCommunity()
                 }
@@ -424,34 +460,54 @@ StatusStackModal {
 
                 Layout.fillWidth: true
             }
+
+            Component.onCompleted: {
+                d.introMessageInput = introMessageInput
+                d.outroMessageInput = outroMessageInput
+            }
+            Component.onDestruction: {
+                if (d.introMessageInput === introMessageInput)
+                    d.introMessageInput = null
+                if (d.outroMessageInput === outroMessageInput)
+                    d.outroMessageInput = null
+            }
         }
-    ]
+    }
 
     QtObject {
         id: d
 
+        property var generalViewLayout
+        property var introMessageInput
+        property var outroMessageInput
+        property var fileListView
+        property var datePicker
+        property bool progressReplaceActive: false
+
+        readonly property bool activeStepIsFinal: root.currentItem && root.currentItem.isFinalStep
+
         function _getCommunityConfig() {
             return {
-                name: StatusQUtils.Utils.filterXSS(generalViewLayout.name),
-                description: StatusQUtils.Utils.filterXSS(generalViewLayout.description),
-                introMessage: StatusQUtils.Utils.filterXSS(introMessageInput.input.text),
-                outroMessage: StatusQUtils.Utils.filterXSS(outroMessageInput.input.text),
-                color: generalViewLayout.color.toString().toUpperCase(),
-                tags: generalViewLayout.selectedTags,
+                name: StatusQUtils.Utils.filterXSS(d.generalViewLayout.name),
+                description: StatusQUtils.Utils.filterXSS(d.generalViewLayout.description),
+                introMessage: StatusQUtils.Utils.filterXSS(d.introMessageInput.input.text),
+                outroMessage: StatusQUtils.Utils.filterXSS(d.outroMessageInput.input.text),
+                color: d.generalViewLayout.color.toString().toUpperCase(),
+                tags: d.generalViewLayout.selectedTags,
                 image: {
-                    src: generalViewLayout.logoImagePath,
-                    AX: generalViewLayout.logoCropRect.x,
-                    AY: generalViewLayout.logoCropRect.y,
-                    BX: generalViewLayout.logoCropRect.x + generalViewLayout.logoCropRect.width,
-                    BY: generalViewLayout.logoCropRect.y + generalViewLayout.logoCropRect.height,
+                    src: d.generalViewLayout.logoImagePath,
+                    AX: d.generalViewLayout.logoCropRect.x,
+                    AY: d.generalViewLayout.logoCropRect.y,
+                    BX: d.generalViewLayout.logoCropRect.x + d.generalViewLayout.logoCropRect.width,
+                    BY: d.generalViewLayout.logoCropRect.y + d.generalViewLayout.logoCropRect.height,
                 },
                 options: {
-                    historyArchiveSupportEnabled: generalViewLayout.options.archiveSupportEnabled,
-                    checkedMembership: generalViewLayout.options.requestToJoinEnabled ? Constants.communityChatOnRequestAccess : Constants.communityChatPublicAccess,
-                    pinMessagesAllowedForMembers: generalViewLayout.options.pinMessagesEnabled,
+                    historyArchiveSupportEnabled: d.generalViewLayout.options.archiveSupportEnabled,
+                    checkedMembership: d.generalViewLayout.options.requestToJoinEnabled ? Constants.communityChatOnRequestAccess : Constants.communityChatPublicAccess,
+                    pinMessagesAllowedForMembers: d.generalViewLayout.options.pinMessagesEnabled,
                     archiveSupporVisible: true
                 },
-                bannerJsonStr: JSON.stringify({imagePath: String(generalViewLayout.bannerPath).replace("file://", ""), cropRect: generalViewLayout.bannerCropRect})
+                bannerJsonStr: JSON.stringify({imagePath: String(d.generalViewLayout.bannerPath).replace("file://", ""), cropRect: d.generalViewLayout.bannerCropRect})
             }
         }
 
@@ -465,7 +521,7 @@ StatusStackModal {
             }
             // Step 2: Automatically set the archive protocol global property if it's been checked as
             // an option during community creation process. It's a more user friendly process
-            else if(generalViewLayout.options.archiveSupportEnabled) {
+            else if(d.generalViewLayout.options.archiveSupportEnabled) {
                 root.advancedStore.enableArchiveProtocolProperty()
             }
 
@@ -473,7 +529,7 @@ StatusStackModal {
         }
 
         function requestImportDiscordCommunity() {
-            const error = root.store.requestImportDiscordCommunity(_getCommunityConfig(), datePicker.selectedDate.valueOf()/1000)
+            const error = root.store.requestImportDiscordCommunity(_getCommunityConfig(), d.datePicker.selectedDate.valueOf()/1000)
             if (error) {
                 errorDialog.text = error.error
                 errorDialog.open()

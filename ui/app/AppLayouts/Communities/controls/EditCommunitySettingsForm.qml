@@ -6,6 +6,7 @@ import utils
 
 import StatusQ.Core.Theme
 import StatusQ.Popups
+import StatusQ.Popups.Dialog
 
 import AppLayouts.Communities.controls
 import AppLayouts.Communities.panels
@@ -96,19 +97,22 @@ Control {
             Component {
                 id: pickColorComponent
 
-                StatusStackModal {
-                    width: 640
+                StatusAdaptiveStackDialog {
+                    id: pickColorDialog
+
                     anchors.centerIn: parent
-                    leftButtons: []
+                    implicitWidth: 640
+                    maximumWidthOverride: 640
+                    showStackBackButton: false
+                    destroyOnClose: true
                     replaceItem: ColorPanel {
                         clip: true
                         Component.onCompleted: color = colorPicker.color
                         onAccepted: {
                             colorPicker.color = color;
-                            close();
+                            pickColorDialog.close();
                         }
                     }
-                    onClosed: destroy()
                 }
             }
         }
@@ -122,10 +126,14 @@ Control {
             Component {
                 id: pickTagsComponent
 
-                StatusStackModal {
+                StatusAdaptiveStackDialog {
+                    id: pickTagsDialog
+
                     anchors.centerIn: parent
-                    leftButtons: []
-                    width: 640
+                    implicitWidth: 640
+                    maximumWidthOverride: 640
+                    showStackBackButton: false
+                    destroyOnClose: true
                     replaceItem: TagsPanel {
                         Component.onCompleted: {
                             tags = tagsPicker.tags
@@ -134,10 +142,9 @@ Control {
                         onAccepted: (selectedTags) => {
                             tagsPicker.selectedTags = selectedTags
                             tagsPicker.validate()
-                            close()
+                            pickTagsDialog.close()
                         }
                     }
-                    onClosed: destroy()
                 }
             }
         }

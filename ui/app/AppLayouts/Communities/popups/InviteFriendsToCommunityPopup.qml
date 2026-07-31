@@ -5,7 +5,7 @@ import StatusQ.Core.Theme
 import StatusQ.Core.Backpressure
 import StatusQ.Controls
 import StatusQ.Components
-import StatusQ.Popups
+import StatusQ.Popups.Dialog
 
 import utils
 import shared.panels
@@ -14,7 +14,7 @@ import AppLayouts.Communities.panels
 import AppLayouts.stores as AppLayoutStores
 import AppLayouts.Profile.stores as ProfileStores
 
-StatusStackModal {
+StatusAdaptiveStackDialog {
     id: root
 
     property var contactsModel
@@ -58,59 +58,59 @@ StatusStackModal {
         root.pubKeys = [];
         root.successMessage = "";
         root.validationError = "";
+        root.resetStack();
     }
 
-    stackTitle: qsTr("Invite Contacts to %1").arg(community.name)
-    width: 640
-    height: d.popupContentHeight
+    defaultTitle: qsTr("Invite Contacts to %1").arg(community.name)
+    implicitWidth: 640
+    maximumWidthOverride: 640
+    maximumHeightOverride: d.popupContentHeight
+    stackContentImplicitHeight: 430
+    subHeaderPadding: Theme.padding
+    initialItem: inviteFriendsStepComponent
 
-    leftPadding: 0
-    rightPadding: 0
-
-    nextButton: StatusButton {
-        objectName: "InviteFriendsToCommunityPopup_NextButton"
-        implicitHeight: d.footerButtonsHeight
-        text: qsTr("Next")
-        enabled: root.pubKeys.length
-        onClicked: {
-            root.currentIndex++;
+    subHeaderItem: Component {
+        StyledText {
+            text: root.validationError || root.successMessage
+            visible: root.validationError !== "" || root.successMessage !== ""
+            font.pixelSize: Theme.additionalTextSize
+            color: !!root.validationError ? Theme.palette.dangerColor1 : Theme.palette.successColor1
+            horizontalAlignment: Text.AlignHCenter
+            height: visible ? contentHeight : 0
         }
     }
 
-    finishButton: StatusButton {
-        objectName: "InviteFriendsToCommunityPopup_SendButton"
-        implicitHeight: d.footerButtonsHeight
-        enabled: root.pubKeys.length > 0
-        text: qsTr("Send %n invite(s)", "", root.pubKeys.length)
-        onClicked: {
-            d.shareCommunity(root.pubKeys, root.inviteMessage);
-        }
-    }
+    Component {
+        id: inviteFriendsStepComponent
 
-    subHeaderItem: StyledText {
-        text: root.validationError || root.successMessage
-        visible: root.validationError !== "" || root.successMessage !== ""
-        font.pixelSize: Theme.additionalTextSize
-        color: !!root.validationError ? Theme.palette.dangerColor1 : Theme.palette.successColor1
-        horizontalAlignment: Text.AlignHCenter
-        height: visible ? contentHeight : 0
-    }
-
-    stackItems: [
         ProfilePopupInviteFriendsPanel {
+            readonly property string nextButtonObjectName: "InviteFriendsToCommunityPopup_NextButton"
+            readonly property string nextButtonText: qsTr("Next")
+            readonly property int nextButtonImplicitHeight: d.footerButtonsHeight
+            readonly property bool canGoNext: root.pubKeys.length > 0
+            readonly property var nextAction: () => root.stack.push(inviteMessageStepComponent)
 
             contactsModel: root.contactsModel
             membersModel: root.membersModel
             communityId: root.community.id
 
             onPubKeysChanged: root.pubKeys = pubKeys
-        },
+        }
+    }
+
+    Component {
+        id: inviteMessageStepComponent
 
         ProfilePopupInviteMessagePanel {
+            readonly property string nextButtonObjectName: "InviteFriendsToCommunityPopup_SendButton"
+            readonly property string nextButtonText: qsTr("Send %n invite(s)", "", root.pubKeys.length)
+            readonly property int nextButtonImplicitHeight: d.footerButtonsHeight
+            readonly property bool canGoNext: root.pubKeys.length > 0
+            readonly property var nextAction: () => d.shareCommunity(root.pubKeys, root.inviteMessage)
+
             contactsModel: root.contactsModel
             pubKeys: root.pubKeys
             onInviteMessageChanged: root.inviteMessage = inviteMessage
         }
-    ]
+    }
 }
-

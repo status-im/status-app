@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -24,7 +26,7 @@ import AppLayouts.Communities.controls
 import AppLayouts.Communities.stores as CommunitiesStores
 import AppLayouts.Wallet.stores
 
-StatusStackModal {
+StatusAdaptiveStackDialog {
     id: root
 
     property CommunitiesStores.CommunitiesStore communitiesStore
@@ -83,12 +85,15 @@ StatusStackModal {
     signal removePermissions(var permissions)
     signal editPermissions(var permissions)
 
-    width: 640
-    leftPadding: 0
-    rightPadding: 0
-    currentIndex: d.currentPage
-    closePolicy: d.dirty && !root.isDiscordImport ? Popup.NoAutoClose : (Popup.CloseOnEscape | Popup.CloseOnPressOutside)
-    
+    implicitWidth: 640
+    maximumWidthOverride: 640
+    contentLeftPaddingOverride: 0
+    contentRightPaddingOverride: 0
+    initialItem: channelDetailsStepComponent
+    customFooterLeftButtons: footerLeftButtonsModel
+    customFooterRightButtons: footerRightButtonsModel
+    closeOnOverlayClick: !(d.dirty && !root.isDiscordImport)
+    escapeKeyCloses: !(d.dirty && !root.isDiscordImport)
     closeHandler: d.closeRequested
     
     enum CurrentPage {
@@ -102,13 +107,26 @@ StatusStackModal {
     QtObject {
         id: d
 
-        readonly property bool dirty: d.channelEditModel.dirtyPermissions ||
+        property var nameInput
+        property var descriptionTextArea
+        property var colorPanel
+        property var scrollView
+        property var datePicker
+        property var fileListViewItem
+        property var editPermissionView
+        property var pendingPermissionProperties: null
+        property bool progressReplaceActive: false
+        property color selectedChannelColor: root.channelColor || Theme.palette.primaryColor1
+        property bool selectedChannelColorSet: !!root.channelColor && root.channelColor != Theme.palette.primaryColor1
+
+        readonly property bool detailsReady: !!d.nameInput && !!d.descriptionTextArea
+        readonly property bool dirty: d.detailsReady && (d.channelEditModel.dirtyPermissions ||
                                     d.viewOnlyCanAddReaction !== root.viewOnlyCanAddReaction ||
                                     d.hideIfPermissionsNotMet !== root.hideIfPermissionsNotMet ||
-                                    nameInput.input.text !== root.channelName ||
-                                    descriptionTextArea.text !== root.channelDescription ||
-                                    !Qt.colorEqual(colorPanel.color, root.channelColor) ||
-                                    nameInput.input.asset.emoji !== root.channelEmoji
+                                    d.nameInput.input.text !== root.channelName ||
+                                    d.descriptionTextArea.text !== root.channelDescription ||
+                                    !Qt.colorEqual(d.selectedChannelColor, root.channelColor) ||
+                                    d.nameInput.input.asset.emoji !== root.channelEmoji)
 
         property int currentPage: CreateChannelPopup.CurrentPage.ChannelDetails
 
@@ -124,9 +142,9 @@ StatusStackModal {
 
         readonly property ChannelPermissionsModelEditor channelEditModel: ChannelPermissionsModelEditor {
             channelId: root.chatId
-            name: nameInput.input.text
-            emoji: nameInput.input.asset.emoji
-            color: colorPanel.color.toString().toUpperCase()
+            name: d.nameInput ? d.nameInput.input.text : ""
+            emoji: d.nameInput ? d.nameInput.input.asset.emoji : ""
+            color: d.selectedChannelColor.toString().toUpperCase()
             channelsModel: root.channelsModel
             permissionsModel: root.permissionsModel
             newChannelMode: !root.isEdit
@@ -142,19 +160,72 @@ StatusStackModal {
         property bool viewOnlyCanAddReaction: root.viewOnlyCanAddReaction
         property bool hideIfPermissionsNotMet: root.hideIfPermissionsNotMet
         property bool colorPickerOpened: false
+        readonly property bool activeStepIsFinal: root.currentItem && root.currentItem.isFinalStep
+
+        function openPage(page) {
+            if (!root.stack)
+                return
+
+            switch (page) {
+            case CreateChannelPopup.CurrentPage.ColorPicker:
+                root.stack.push(colorPanelStepComponent)
+                d.colorPickerOpened = true
+                break
+            case CreateChannelPopup.CurrentPage.ChannelPermissions:
+                root.stack.push(channelPermissionsStepComponent)
+                d.colorPickerOpened = false
+                break
+            case CreateChannelPopup.CurrentPage.DiscordImportUploadFile:
+                root.stack.push(discordFileListStepComponent)
+                d.colorPickerOpened = false
+                break
+            case CreateChannelPopup.CurrentPage.DiscordImportUploadStart:
+                root.stack.push(discordImportStartStepComponent)
+                d.colorPickerOpened = false
+                break
+            default:
+                root.stack.popToIndex(0)
+                d.colorPickerOpened = false
+                break
+            }
+
+            d.currentPage = page
+        }
+
+        function returnToDetails() {
+            if (root.stack)
+                root.stack.popToIndex(0)
+            d.currentPage = CreateChannelPopup.CurrentPage.ChannelDetails
+            d.colorPickerOpened = false
+        }
+
+        function goBack() {
+            if (d.currentPage === CreateChannelPopup.CurrentPage.DiscordImportUploadStart) {
+                root.stack.popCurrentItem()
+                d.currentPage = CreateChannelPopup.CurrentPage.DiscordImportUploadFile
+                return
+            }
+
+            d.returnToDetails()
+        }
+
+        function openPermissionEditor(properties) {
+            d.pendingPermissionProperties = properties
+            d.openPage(CreateChannelPopup.CurrentPage.ChannelPermissions)
+        }
 
         function isFormValid() {
-            return nameInput.valid && descriptionTextArea.valid &&
-                    Utils.validateAndReturnError(colorPanel.color.toString().toUpperCase(), communityColorValidator) === ""
+            return d.detailsReady && d.nameInput.valid && d.descriptionTextArea.valid &&
+                    Utils.validateAndReturnError(d.selectedChannelColor.toString().toUpperCase(), communityColorValidator) === ""
         }
 
         function openEmojiPopup(leftSide = false) {
             root.emojiPopupOpened = true;
             root.emojiPopup.open();
             root.emojiPopup.emojiSize = StatusQUtils.Emoji.size.verySmall;
-            root.emojiPopup.directParent = nameInput
-            root.emojiPopup.relativeX = leftSide ? 0 : nameInput.width - root.emojiPopup.width
-            root.emojiPopup.relativeY = nameInput.height + Theme.smallPadding;
+            root.emojiPopup.directParent = d.nameInput
+            root.emojiPopup.relativeX = leftSide ? 0 : d.nameInput.width - root.emojiPopup.width
+            root.emojiPopup.relativeY = d.nameInput.height + Theme.smallPadding;
         }
 
         function _getChannelConfig() {
@@ -162,10 +233,10 @@ StatusStackModal {
                 communityId: root.communityId,
                 discordChannelId: root.communitiesStore.discordImportChannelId,
                 categoryId: root.categoryId,
-                name: StatusQUtils.Utils.filterXSS(nameInput.input.text),
-                description: StatusQUtils.Utils.filterXSS(descriptionTextArea.text),
-                color: colorPanel.color.toString().toUpperCase(),
-                emoji: StatusQUtils.Emoji.deparse(nameInput.input.asset.emoji),
+                name: StatusQUtils.Utils.filterXSS(d.nameInput.input.text),
+                description: StatusQUtils.Utils.filterXSS(d.descriptionTextArea.text),
+                color: d.selectedChannelColor.toString().toUpperCase(),
+                emoji: StatusQUtils.Emoji.deparse(d.nameInput.input.asset.emoji),
                 options: {
                     // TODO
                 }
@@ -173,7 +244,7 @@ StatusStackModal {
         }
 
         function requestImportDiscordChannel() {
-            const error = root.communitiesStore.requestImportDiscordChannel(_getChannelConfig(), datePicker.selectedDate.valueOf()/1000)
+            const error = root.communitiesStore.requestImportDiscordChannel(_getChannelConfig(), d.datePicker.selectedDate.valueOf()/1000)
             if (error) {
                 creatingError.text = error.error
                 creatingError.open()
@@ -182,23 +253,23 @@ StatusStackModal {
 
         function saveAndClose() {
             if (!d.isFormValid()) {
-                scrollView.scrollBackUp()
+                d.scrollView.scrollBackUp()
                 return
             }
-            let emoji = StatusQUtils.Emoji.deparse(nameInput.input.asset.emoji)
+            let emoji = StatusQUtils.Emoji.deparse(d.nameInput.input.asset.emoji)
             if (!isEdit) {
-                root.createCommunityChannel(StatusQUtils.Utils.filterXSS(nameInput.input.text),
-                                            StatusQUtils.Utils.filterXSS(descriptionTextArea.text),
+                root.createCommunityChannel(StatusQUtils.Utils.filterXSS(d.nameInput.input.text),
+                                            StatusQUtils.Utils.filterXSS(d.descriptionTextArea.text),
                                             emoji,
-                                            colorPanel.color.toString().toUpperCase(),
+                                            d.selectedChannelColor.toString().toUpperCase(),
                                             root.categoryId,
                                             d.viewOnlyCanAddReaction,
                                             d.hideIfPermissionsNotMet)
             } else {
-                root.editCommunityChannel(StatusQUtils.Utils.filterXSS(nameInput.input.text),
-                                            StatusQUtils.Utils.filterXSS(descriptionTextArea.text),
+                root.editCommunityChannel(StatusQUtils.Utils.filterXSS(d.nameInput.input.text),
+                                            StatusQUtils.Utils.filterXSS(d.descriptionTextArea.text),
                                             emoji,
-                                            colorPanel.color.toString().toUpperCase(),
+                                            d.selectedChannelColor.toString().toUpperCase(),
                                             root.categoryId,
                                             d.viewOnlyCanAddReaction,
                                             d.hideIfPermissionsNotMet)
@@ -235,8 +306,8 @@ StatusStackModal {
 
     StatusConfirmationDialog {
         id: closeConfirmation
-        title: qsTr("Save changes to #%1 channel?").arg(root.channelName || nameInput.input.text)
-        body: qsTr("You have made changes to #%1 channel. If you close this dialog without saving these changes will be lost?").arg(root.channelName || nameInput.input.text)
+        title: qsTr("Save changes to #%1 channel?").arg(root.channelName || (d.nameInput ? d.nameInput.input.text : ""))
+        body: qsTr("You have made changes to #%1 channel. If you close this dialog without saving these changes will be lost?").arg(root.channelName || (d.nameInput ? d.nameInput.input.text : ""))
         acceptButtonText: qsTr("Save changes")
         rejectButtonText: qsTr("Close without saving")
         onAccepted: {
@@ -247,110 +318,115 @@ StatusStackModal {
         }
     }
 
-    stackTitle: isDiscordImport ? qsTr("New Channel With Imported Chat History") :
-                                  !!currentItem.stackTitleText ? currentItem.stackTitleText :
-                                                                 (isEdit ? qsTr("Edit #%1").arg(root.channelName) : qsTr("New channel"))
+    defaultTitle: isDiscordImport ? qsTr("New Channel With Imported Chat History") :
+                                    (isEdit ? qsTr("Edit #%1").arg(root.channelName) : qsTr("New channel"))
 
-    nextButton: StatusButton {
-        objectName: "createOrEditCommunityChannelBtn"
-        visible: !d.colorPickerOpened
-        enabled: typeof(currentItem.canGoNext) == "undefined" || currentItem.canGoNext
-        text: !!currentItem.nextButtonText ? currentItem.nextButtonText :
-                                             d.colorPickerOpened ? qsTr("Set channel color") : (
-                                                                       isDiscordImport ? qsTr("Import chat history") :
-                                                                                         isEdit ? qsTr("Save changes") : qsTr("Create channel"))
-        loading: root.communitiesStore.discordDataExtractionInProgress
-        onClicked: {
-            let nextAction = currentItem.nextAction
-            if (typeof (nextAction) == "function") {
-                return nextAction()
+    ObjectModel {
+        id: footerLeftButtonsModel
+
+        StatusBackButton {
+            visible: d.currentPage !== CreateChannelPopup.CurrentPage.ChannelDetails && !d.progressReplaceActive
+            onClicked: d.goBack()
+
+            Layout.minimumWidth: implicitWidth
+        }
+    }
+
+    ObjectModel {
+        id: footerRightButtonsModel
+
+        StatusButton {
+            text: qsTr("Clear all")
+            type: StatusBaseButton.Type.Danger
+            visible: root.currentItem && typeof root.currentItem.isFileListView !== "undefined" && root.currentItem.isFileListView
+            enabled: d.fileListViewItem && !d.fileListViewItem.fileListModelEmpty && !root.communitiesStore.discordDataExtractionInProgress
+            onClicked: root.communitiesStore.clearFileList()
+        }
+
+        StatusButton {
+            objectName: "deleteCommunityChannelBtn"
+            height: 44
+            visible: isEdit && isDeleteable && !isDiscordImport && (d.currentPage === CreateChannelPopup.CurrentPage.ChannelDetails) ||
+                     !!(root.currentItem && root.currentItem.deleteButtonText)
+            text: (d.currentPage === CreateChannelPopup.CurrentPage.ChannelPermissions) ? root.currentItem.deleteButtonText : qsTr("Delete channel")
+            enabled: (d.currentPage === CreateChannelPopup.CurrentPage.ChannelPermissions) ? root.currentItem.deleteButtonEnabled : true
+            type: StatusBaseButton.Type.Danger
+            onClicked: {
+                const nextAction = root.currentItem.nextDeleteAction
+                if (typeof(nextAction) == "function") {
+                    return nextAction()
+                } else {
+                    root.deleteCommunityChannel();
+                }
+            }
+        }
+
+        StatusButton {
+            objectName: "createOrEditCommunityChannelBtn"
+            visible: !d.colorPickerOpened && !d.activeStepIsFinal && !root.replaceItem
+            enabled: !root.currentItem || typeof(root.currentItem.canGoNext) == "undefined" || root.currentItem.canGoNext
+            text: root.currentItem && !!root.currentItem.nextButtonText ? root.currentItem.nextButtonText :
+                                                                    isDiscordImport ? qsTr("Import chat history") :
+                                                                                      isEdit ? qsTr("Save changes") : qsTr("Create channel")
+            loading: root.communitiesStore.discordDataExtractionInProgress
+            onClicked: {
+                let nextAction = root.currentItem.nextAction
+                if (typeof (nextAction) == "function") {
+                    return nextAction()
+                }
+            }
+        }
+
+        StatusButton {
+            objectName: "createChannelNextBtn"
+            visible: !root.replaceItem && d.activeStepIsFinal
+            text: (root.currentItem && typeof root.currentItem.nextButtonText !== "undefined") ? root.currentItem.nextButtonText :
+                                                                        qsTr("Import chat history")
+            enabled: !root.currentItem || typeof(root.currentItem.canGoNext) == "undefined" || root.currentItem.canGoNext
+            onClicked: {
+                const nextAction = root.currentItem.nextAction
+                if (typeof(nextAction) == "function") {
+                    return nextAction()
+                }
             }
         }
     }
-
-    finishButton: StatusButton {
-        objectName: "createChannelNextBtn"
-        text: (typeof currentItem.nextButtonText !== "undefined") ? currentItem.nextButtonText :
-                                                                    qsTr("Import chat history")
-        enabled: typeof(currentItem.canGoNext) == "undefined" || currentItem.canGoNext
-        onClicked: {
-            const nextAction = currentItem.nextAction
-            if (typeof(nextAction) == "function") {
-                return nextAction()
-            }
-        }
-    }
-    //TODO
-    onCurrentIndexChanged: {
-        d.colorPickerOpened = false;
-    }
-
-    readonly property StatusButton clearFilesButton: StatusButton {
-        text: qsTr("Clear all")
-        type: StatusBaseButton.Type.Danger
-        visible: typeof currentItem.isFileListView !== "undefined" && currentItem.isFileListView
-        enabled: !fileListView.fileListModelEmpty && !root.communitiesStore.discordDataExtractionInProgress
-        onClicked: root.communitiesStore.clearFileList()
-    }
-
-    readonly property StatusButton deleteChannelButton: StatusButton {
-        objectName: "deleteCommunityChannelBtn"
-        height: 44
-        visible: isEdit && isDeleteable && !isDiscordImport && (d.currentPage === CreateChannelPopup.CurrentPage.ChannelDetails) ||
-                 !!currentItem.deleteButtonText
-        text: (d.currentPage === CreateChannelPopup.CurrentPage.ChannelPermissions) ? currentItem.deleteButtonText : qsTr("Delete channel")
-        enabled: (d.currentPage === CreateChannelPopup.CurrentPage.ChannelPermissions) ? currentItem.deleteButtonEnabled : true
-        type: StatusBaseButton.Type.Danger
-        onClicked: {
-            const nextAction = currentItem.nextDeleteAction
-            if (typeof(nextAction) == "function") {
-                return nextAction()
-            } else {
-                root.deleteCommunityChannel();
-            }
-        }
-    }
-
-    property Item backButton: StatusBackButton {
-        visible: d.currentPage !== CreateChannelPopup.CurrentPage.ChannelDetails
-        onClicked: {
-            d.currentPage = (d.currentPage === CreateChannelPopup.CurrentPage.DiscordImportUploadStart) ?
-                        CreateChannelPopup.CurrentPage.DiscordImportUploadFile : CreateChannelPopup.CurrentPage.ChannelDetails
-        }
-
-        Layout.minimumWidth: implicitWidth
-    }
-
-
-    leftButtons: [ backButton ]
-    rightButtons: [clearFilesButton, deleteChannelButton, nextButton, finishButton]
 
     onAboutToShow: {
+        d.progressReplaceActive = false
+        root.replace(null)
+        root.backgroundColor = Theme.palette.statusModal.backgroundColor
+        d.selectedChannelColor = root.channelColor || Theme.palette.primaryColor1
+        d.selectedChannelColorSet = !!root.channelColor && root.channelColor != Theme.palette.primaryColor1
+        d.returnToDetails()
+
         if (root.isDiscordImport) {
             if (!root.communitiesStore.discordImportInProgress) {
                 root.communitiesStore.clearFileList()
                 root.communitiesStore.clearDiscordCategoriesAndChannels()
             }
-            for (let i = 0; i < discordPages.length; i++) {
-                stackItems.push(discordPages[i])
-            }
         }
-
-        nameInput.input.edit.forceActiveFocus(Qt.MouseFocusReason)
-        if (isEdit) {
-            nameInput.text = root.channelName
-            descriptionTextArea.text = root.channelDescription
-            if (root.channelEmoji) {
-                nameInput.input.asset.emoji = root.channelEmoji
-            }
-        } else {
-            nameInput.input.asset.isLetterIdenticon = true;
-        }
-
-        updateRightButtons()
     }
 
-    readonly property list<Item> discordPages: [
+    onOpened: {
+        if (!d.nameInput || !d.descriptionTextArea)
+            return
+
+        d.nameInput.input.edit.forceActiveFocus(Qt.MouseFocusReason)
+        if (isEdit) {
+            d.nameInput.text = root.channelName
+            d.descriptionTextArea.text = root.channelDescription
+            if (root.channelEmoji) {
+                d.nameInput.input.asset.emoji = root.channelEmoji
+            }
+        } else {
+            d.nameInput.input.asset.isLetterIdenticon = true;
+        }
+    }
+
+    Component {
+        id: discordFileListStepComponent
+
         Item {
             id: fileListViewItem
             readonly property bool isFileListView: true
@@ -369,8 +445,13 @@ StatusStackModal {
                 if (!fileListViewItem.fileListModel.selectedFilesValid)
                     return root.communitiesStore.requestExtractChannelsAndCategories()
 
-                d.currentPage = CreateChannelPopup.CurrentPage.DiscordImportUploadStart;
+                d.openPage(CreateChannelPopup.CurrentPage.DiscordImportUploadStart);
             }
+
+            Component.onCompleted: d.fileListViewItem = fileListViewItem
+            Component.onDestruction: if (d.fileListViewItem === fileListViewItem)
+                d.fileListViewItem = null
+
             ColumnLayout {
                 id: fileListView
                 anchors.fill: parent
@@ -533,13 +614,19 @@ StatusStackModal {
                     }
                 }
             }
-        },
+        }
+    }
+
+    Component {
+        id: discordImportStartStepComponent
+
         Item {
             readonly property bool canGoNext: root.communitiesStore.discordChannelsModel.hasSelectedItems
+            readonly property bool isFinalStep: true
             readonly property var nextAction: function () {
                 d.requestImportDiscordChannel()
                 // replace ourselves with the progress dialog, no way back
-                root.leftButtons[0].visible = false
+                d.progressReplaceActive = true
                 root.backgroundColor = Theme.palette.baseColor4
                 root.replace(progressComponent)
             }
@@ -581,7 +668,7 @@ StatusStackModal {
 
                     StatusBaseText {
                         Layout.fillWidth: true
-                        text: qsTr("Select the chat history you would like to import into #%1...").arg(StatusQUtils.Utils.filterXSS(nameInput.input.text))
+                        text: qsTr("Select the chat history you would like to import into #%1...").arg(StatusQUtils.Utils.filterXSS(d.nameInput.input.text))
                         wrapMode: Text.WordWrap
                     }
 
@@ -603,6 +690,10 @@ StatusStackModal {
                             enabled: startDateRadio.checked
                         }
                     }
+
+                    Component.onCompleted: d.datePicker = datePicker
+                    Component.onDestruction: if (d.datePicker === datePicker)
+                        d.datePicker = null
 
                     Rectangle {
                         Layout.fillWidth: true
@@ -650,22 +741,24 @@ StatusStackModal {
                 }
             }
         }
-    ]
+    }
 
     Connections {
         enabled: root.opened && root.emojiPopupOpened
         target: emojiPopup
 
         function onEmojiSelected(emojiText: string, atCursor: bool) {
-            nameInput.input.asset.isLetterIdenticon = false;
-            nameInput.input.asset.emoji = emojiText
+            d.nameInput.input.asset.isLetterIdenticon = false;
+            d.nameInput.input.asset.emoji = emojiText
         }
         function onClosed() {
             root.emojiPopupOpened = false
         }
     }
 
-    stackItems: [
+    Component {
+        id: channelDetailsStepComponent
+
         StatusScrollView {
             id: scrollView
 
@@ -701,7 +794,7 @@ StatusStackModal {
                             input.letterIconName = text
                         }
                     }
-                    input.asset.color: colorPanel.color
+                    input.asset.color: d.selectedChannelColor
                     input.rightComponent: StatusRoundButton {
                         objectName: "StatusChannelPopup_emojiButton"
                         implicitWidth: 32
@@ -745,12 +838,12 @@ StatusStackModal {
                         width: parent.width
                         height: 44
                         anchors.bottom: parent.bottom
-                        bgColor: colorPanel.colorSelected ? colorPanel.color : Theme.palette.baseColor2
-                        contentColor: colorPanel.colorSelected ? StatusColors.white : Theme.palette.baseColor1
-                        text: colorPanel.colorSelected ? colorPanel.color.toString().toUpperCase() : qsTr("Pick a colour")
-                        onClicked: { d.currentPage = CreateChannelPopup.CurrentPage.ColorPicker; d.colorPickerOpened = true; }
+                        bgColor: d.selectedChannelColorSet ? d.selectedChannelColor : Theme.palette.baseColor2
+                        contentColor: d.selectedChannelColorSet ? StatusColors.white : Theme.palette.baseColor1
+                        text: d.selectedChannelColorSet ? d.selectedChannelColor.toString().toUpperCase() : qsTr("Pick a colour")
+                        onClicked: d.openPage(CreateChannelPopup.CurrentPage.ColorPicker)
                         onTextChanged: {
-                            if (colorPanel.colorSelected) {
+                            if (d.selectedChannelColorSet) {
                                 validationError = Utils.validateAndReturnError(text, communityColorValidator)
                             }
                         }
@@ -827,8 +920,7 @@ StatusStackModal {
                                 leftPadding: 0,
                                 viewWidth: scrollView.availableWidth - 32
                             };
-                            editPermissionView.pushEditView(properties);
-                            d.currentPage = CreateChannelPopup.CurrentPage.ChannelPermissions;
+                            d.openPermissionEditor(properties);
                         }
                     }
                 }
@@ -868,9 +960,8 @@ StatusStackModal {
                             rightPadding: 16,
                             viewWidth: scrollView.availableWidth - 32
                         }
-                        editPermissionView.pushEditView(properties);
-                        editPermissionView.currentItem.resetChanges()
-                        d.currentPage = CreateChannelPopup.CurrentPage.ChannelPermissions;
+                        properties.resetOnOpen = true
+                        d.openPermissionEditor(properties);
                     }
 
                     onEditPermissionRequested: {
@@ -888,10 +979,8 @@ StatusStackModal {
                             rightPadding: 16,
                             viewWidth: scrollView.availableWidth - 32
                         }
-                        editPermissionView.pushEditView(properties);
-                        editPermissionView.currentItem.resetChanges()
-
-                        d.currentPage = CreateChannelPopup.CurrentPage.ChannelPermissions;
+                        properties.resetOnOpen = true
+                        d.openPermissionEditor(properties);
                     }
                     onUserRestrictionsToggled: {
                         d.viewOnlyCanAddReaction = checked;
@@ -902,10 +991,28 @@ StatusStackModal {
                 if (!root.isDiscordImport) {
                     d.saveAndClose()
                 } else {
-                    d.currentPage = CreateChannelPopup.CurrentPage.DiscordImportUploadFile;
+                    d.openPage(CreateChannelPopup.CurrentPage.DiscordImportUploadFile);
                 }
             }
-        },
+            Component.onCompleted: {
+                d.scrollView = scrollView
+                d.nameInput = nameInput
+                d.descriptionTextArea = descriptionTextArea
+            }
+            Component.onDestruction: {
+                if (d.scrollView === scrollView)
+                    d.scrollView = null
+                if (d.nameInput === nameInput)
+                    d.nameInput = null
+                if (d.descriptionTextArea === descriptionTextArea)
+                    d.descriptionTextArea = null
+            }
+        }
+    }
+
+    Component {
+        id: colorPanelStepComponent
+
         ColorPanel {
             id: colorPanel
             readonly property string stackTitleText: qsTr("Channel Colour")
@@ -914,15 +1021,25 @@ StatusStackModal {
             leftPadding: 16
             rightPadding: 16
             height: Math.min(parent.height, 624)
-            property bool colorSelected: !!root.channelColor && root.channelColor != Theme.palette.primaryColor1
-            color: root.channelColor || Theme.palette.primaryColor1
+            property bool colorSelected: d.selectedChannelColorSet
+            color: d.selectedChannelColor
             onAccepted: {
-                colorSelected = true; d.colorPickerOpened = false; d.currentPage = CreateChannelPopup.CurrentPage.ChannelDetails;
+                d.selectedChannelColor = color
+                d.selectedChannelColorSet = true
+                d.returnToDetails();
             }
             readonly property var nextAction: function () {
                 accepted();
             }
-        },
+            Component.onCompleted: d.colorPanel = colorPanel
+            Component.onDestruction: if (d.colorPanel === colorPanel)
+                d.colorPanel = null
+        }
+    }
+
+    Component {
+        id: channelPermissionsStepComponent
+
         PermissionsSettingsPanel {
             id: editPermissionView
 
@@ -950,7 +1067,7 @@ StatusStackModal {
             readonly property string nextButtonText: !!currentItem.permissionKeyToEdit ?
                                                          qsTr("Update permission") : qsTr("Create permission")
             readonly property string stackTitleText: !!currentItem.permissionKeyToEdit ?
-                                                         qsTr("Edit #%1 permission").arg(nameInput.text) : qsTr("New #%1 permission").arg(nameInput.text)
+                                                         qsTr("Edit #%1 permission").arg(d.nameInput.text) : qsTr("New #%1 permission").arg(d.nameInput.text)
             readonly property string deleteButtonText: !!currentItem.permissionKeyToEdit ?
                                                            qsTr("Revert changes") : ""
             readonly property bool canGoNext: !!currentItem && !!currentItem.isSaveEnabled ? currentItem.isSaveEnabled : false
@@ -971,15 +1088,29 @@ StatusStackModal {
             }
             onCreatePermissionRequested: {
                 d.channelEditModel.appendPermission(holdings, channels, permissionType, isPrivate)
-                d.currentPage = CreateChannelPopup.CurrentPage.ChannelDetails;
+                d.returnToDetails();
             }
 
             onUpdatePermissionRequested: {
                 d.channelEditModel.editPermission(key, permissionType, holdings, channels, isPrivate)
-                d.currentPage = CreateChannelPopup.CurrentPage.ChannelDetails;
+                d.returnToDetails();
             }
+
+            Component.onCompleted: {
+                d.editPermissionView = editPermissionView
+                if (d.pendingPermissionProperties) {
+                    const resetOnOpen = d.pendingPermissionProperties.resetOnOpen
+                    delete d.pendingPermissionProperties.resetOnOpen
+                    editPermissionView.pushEditView(d.pendingPermissionProperties)
+                    if (resetOnOpen)
+                        editPermissionView.currentItem.resetChanges()
+                    d.pendingPermissionProperties = null
+                }
+            }
+            Component.onDestruction: if (d.editPermissionView === editPermissionView)
+                d.editPermissionView = null
         }
-    ]
+    }
 
     StatusMessageDialog {
         id: creatingError

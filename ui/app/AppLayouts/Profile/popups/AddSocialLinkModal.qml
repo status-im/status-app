@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQml.Models
 
 import utils
 
@@ -9,43 +10,67 @@ import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Controls.Validators
 import StatusQ.Components
-import StatusQ.Popups
+import StatusQ.Popups.Dialog
 
 import AppLayouts.Profile.controls
 
-StatusStackModal {
+StatusAdaptiveDialog {
     id: root
 
     property var containsSocialLink: function (text, url) {return false}
+    property int currentIndex: 0
+
     signal addLinkRequested(string linkText, string linkUrl, int linkType, string linkIcon)
 
     implicitWidth: 480 // design
-    implicitHeight: 512 // design
-    padding: currentIndex === 0 ? 0 : Theme.padding
-    fillHeightOnBottomSheet: true
+    maximumWidthOverride: 480 // design
 
-    headerSettings.title: currentIndex === 0 ? qsTr("Add a link") :
-                                               qsTr("Add %1 link").arg(ProfileUtils.linkTypeToText(d.selectedLinkType) || qsTr("custom"))
-    rightButtons: [finishButton]
-    finishButton: StatusButton {
-        text: qsTr("Add")
-        objectName: "addButton"
-        enabled: linkTarget.valid && (!customTitle.visible || customTitle.valid)
-        onClicked: {
-            root.addLinkRequested(d.selectedLinkTypeText || customTitle.text, // text for custom link, otherwise the link typeId
-                                  ProfileUtils.addSocialLinkPrefix(linkTarget.text, d.selectedLinkType),
-                                  d.selectedLinkType, d.selectedIcon)
-            root.close()
+    title: currentIndex === 0 ? qsTr("Add a link") :
+                                qsTr("Add %1 link").arg(ProfileUtils.linkTypeToText(d.selectedLinkType) || qsTr("custom"))
+    footerLeftButtons: currentIndex > 0 ? footerLeftButtonsModel : null
+    footerRightButtons: currentIndex > 0 ? footerRightButtonsModel : null
+    destroyOnClose: true
+
+    contentComponent: Component {
+        Loader {
+            sourceComponent: root.currentIndex === 0 ? linkTypeStepComponent : linkDetailsStepComponent
+            implicitHeight: item ? item.implicitHeight : 0
         }
     }
-    showFooter: currentIndex > 0
 
-    onClosed: destroy()
+    ObjectModel {
+        id: footerLeftButtonsModel
+
+        StatusBackButton {
+            onClicked: root.currentIndex = 0
+            Layout.minimumWidth: implicitWidth
+        }
+    }
+
+    ObjectModel {
+        id: footerRightButtonsModel
+
+        StatusButton {
+            text: qsTr("Add")
+            objectName: "addButton"
+            enabled: d.detailsValid
+            onClicked: {
+                root.addLinkRequested(d.selectedLinkTypeText || d.customTitleText, // text for custom link, otherwise the link typeId
+                                      ProfileUtils.addSocialLinkPrefix(d.linkTargetText, d.selectedLinkType),
+                                      d.selectedLinkType, d.selectedIcon)
+                root.close()
+            }
+        }
+    }
 
     QtObject {
         id: d
 
         property int selectedLinkIndex: -1
+        property bool detailsValid: false
+        property string customTitleText
+        property string linkTargetText
+
         readonly property int selectedLinkType: d.selectedLinkIndex !== -1 ? staticLinkTypesModel.get(d.selectedLinkIndex).type : 0
         readonly property string selectedLinkTypeText: d.selectedLinkIndex !== -1 ? staticLinkTypesModel.get(d.selectedLinkIndex).text : ""
         readonly property string selectedIcon: d.selectedLinkIndex !== -1 ? staticLinkTypesModel.get(d.selectedLinkIndex).icon : ""
@@ -65,22 +90,18 @@ StatusStackModal {
     }
 
     onCurrentIndexChanged: {
-        //StatusAnimatedStack doesn't handle well items' visibility,
-        //keeping this solution for now until #8024 is fixed
-        if (currentIndex === 1) {
-            customTitle.input.edit.clear()
-            linkTarget.input.edit.clear()
-            if (d.selectedLinkType === Constants.socialLinkType.custom)
-                customTitle.input.edit.forceActiveFocus()
-            else
-                linkTarget.input.edit.forceActiveFocus()
-        }
+        d.detailsValid = false
+        d.customTitleText = ""
+        d.linkTargetText = ""
     }
 
-    stackItems: [
+    Component {
+        id: linkTypeStepComponent
+
         StatusListView {
             width: root.availableWidth
             height: contentHeight
+            implicitHeight: contentHeight
             model: d.staticLinkTypesModel
             delegate: StatusListItem {
                 width: ListView.view.width
@@ -89,10 +110,8 @@ StatusStackModal {
                 asset.color: ProfileUtils.linkTypeColor(model.type, root.Theme.palette)
                 asset.bgColor: ProfileUtils.linkTypeBgColor(model.type, root.Theme.palette)
                 onClicked: {
-                    customTitle.reset()
-                    linkTarget.reset()
                     d.selectedLinkIndex = index
-                    root.currentIndex++
+                    root.currentIndex = 1
                 }
                 components: [
                     StatusIcon {
@@ -102,8 +121,15 @@ StatusStackModal {
                     }
                 ]
             }
-        },
+        }
+    }
+
+    Component {
+        id: linkDetailsStepComponent
+
         ColumnLayout {
+            id: detailsStep
+
             width: root.availableWidth
             spacing: Theme.halfPadding
 
@@ -135,8 +161,14 @@ StatusStackModal {
                     }
                 ]
 
-                onValidChanged: {linkTarget.validate(true)}
-                onTextChanged: {linkTarget.validate(true)}
+                onValidChanged: {
+                    linkTarget.validate(true)
+                    detailsStep.updateDetailsState()
+                }
+                onTextChanged: {
+                    linkTarget.validate(true)
+                    detailsStep.updateDetailsState()
+                }
             }
 
             StaticSocialLinkInput {
@@ -179,9 +211,31 @@ StatusStackModal {
                     }
                 ]
 
-                onValidChanged: {customTitle.validate(true)}
-                onTextChanged: {customTitle.validate(true)}
+                onValidChanged: {
+                    customTitle.validate(true)
+                    detailsStep.updateDetailsState()
+                }
+                onTextChanged: {
+                    customTitle.validate(true)
+                    detailsStep.updateDetailsState()
+                }
+            }
+
+            function updateDetailsState() {
+                d.customTitleText = customTitle.text
+                d.linkTargetText = linkTarget.text
+                d.detailsValid = linkTarget.valid && (!customTitle.visible || customTitle.valid)
+            }
+
+            Component.onCompleted: {
+                customTitle.reset()
+                linkTarget.reset()
+                detailsStep.updateDetailsState()
+                if (d.selectedLinkType === Constants.socialLinkType.custom)
+                    customTitle.input.edit.forceActiveFocus()
+                else
+                    linkTarget.input.edit.forceActiveFocus()
             }
         }
-    ]
+    }
 }

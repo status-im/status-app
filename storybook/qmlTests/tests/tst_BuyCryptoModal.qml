@@ -211,14 +211,18 @@ Item {
             verify(!!selectParamsPanel)
 
             // title should not change
-            verify(controlUnderTest.stackTitle, qsTr("Ways to buy assets %1").arg(!!controlUnderTest.selectedAccountEntry.item ? controlUnderTest.selectedAccountEntry.item.name: ""))
+            compare(controlUnderTest.title, controlUnderTest.defaultTitle)
 
-            compare(controlUnderTest.rightButtons.length, 2)
-            verify(controlUnderTest.rightButtons[0].visible)
-            verify(controlUnderTest.rightButtons[1].enabled)
-            verify(controlUnderTest.rightButtons[0].text, qsTr("Buy via %1").arg(!!controlUnderTest.selectedProviderEntry.item ? controlUnderTest.selectedProviderEntry.item.name: ""))
-            verify(!controlUnderTest.rightButtons[1].visible)
-            verify(controlUnderTest.backButton.visible)
+            const buyButton = findChild(controlUnderTest, "buyCryptoModalBuyButton")
+            verify(!!buyButton)
+            const doneButton = findChild(controlUnderTest, "buyCryptoModalDoneButton")
+            verify(!!doneButton)
+
+            verify(buyButton.visible)
+            verify(doneButton.enabled)
+            compare(buyButton.text, qsTr("Buy via %1").arg(!!controlUnderTest.selectedProviderEntry.item ? controlUnderTest.selectedProviderEntry.item.name: ""))
+            verify(!doneButton.visible)
+            verify(controlUnderTest.showStackBackButton)
 
             const selectParamsForBuyCryptoPanelHeader = findChild(selectParamsPanel, "selectParamsForBuyCryptoPanelHeader")
             verify(!!selectParamsForBuyCryptoPanelHeader)
@@ -254,18 +258,18 @@ Item {
             waitForRendering(selectParamsPanel)
 
             compare(selectedAssetButton.selected, false)
-            verify(!controlUnderTest.rightButtons[0].enabled)
+            verify(!buyButton.enabled)
 
             // switch back a network and token thats valid and check if clicking buy button works properly
             controlUnderTest.buyCryptoInputParamsForm.selectedNetworkChainId = 11155111
             controlUnderTest.buyCryptoInputParamsForm.selectedTokenGroupKey = Constants.ethGroupKey
 
             waitForRendering(selectParamsPanel)
-            verify(controlUnderTest.rightButtons[0].enabled)
+            verify(buyButton.enabled)
 
-            mouseClick(controlUnderTest.rightButtons[0])
+            mouseClick(buyButton)
 
-            verify(controlUnderTest.rightButtons[0].loading)
+            verify(buyButton.loading)
             tryCompare(notificationSpy, "count", 1)
             compare(notificationSpy.signalArguments[0][0], "xxxx")
             notificationSpy.clear()
@@ -310,13 +314,17 @@ Item {
             launchPopup()
 
             // check if footer has Done button and action on button clicked
-            compare(controlUnderTest.rightButtons.length, 2)
-            verify(!controlUnderTest.rightButtons[0].visible)
-            verify(controlUnderTest.rightButtons[1].visible)
-            compare(controlUnderTest.rightButtons[1].text, qsTr("Done"))
-            mouseClick(controlUnderTest.rightButtons[1])
+            const buyButton = findChild(controlUnderTest, "buyCryptoModalBuyButton")
+            verify(!!buyButton)
+            const doneButton = findChild(controlUnderTest, "buyCryptoModalDoneButton")
+            verify(!!doneButton)
 
-            verify(!controlUnderTest.backButton.visible)
+            verify(!buyButton.visible)
+            verify(doneButton.visible)
+            compare(doneButton.text, qsTr("Done"))
+            mouseClick(doneButton)
+
+            verify(!controlUnderTest.showStackBackButton)
 
             // popup should be closed
             verify(!controlUnderTest.opened)
@@ -326,7 +334,7 @@ Item {
             // Launch modal
             launchPopup()
 
-            verify(controlUnderTest.stackTitle, qsTr("Ways to buy assets for %1").arg(!!controlUnderTest.selectedAccountEntry.item ? controlUnderTest.selectedAccountEntry.item.name: ""))
+            compare(controlUnderTest.title, controlUnderTest.defaultTitle)
 
             // // find tab bar
             // const tabBar = findChild(controlUnderTest, "tabBar")

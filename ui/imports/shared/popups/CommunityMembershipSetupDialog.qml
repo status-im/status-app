@@ -9,7 +9,7 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Components
-import StatusQ.Popups
+import StatusQ.Popups.Dialog
 import StatusQ.Core.Utils
 
 import AppLayouts.Communities.panels
@@ -18,7 +18,7 @@ import AppLayouts.Communities.helpers
 
 import SortFilterProxyModel
 
-StatusStackModal {
+StatusAdaptiveStackDialog {
     id: root
 
     destroyOnClose: true
@@ -61,77 +61,16 @@ StatusStackModal {
     signal cancelMembershipRequest()
     signal sharedAddressesUpdated(var sharedAddresses)
 
-    width: 640 // by design
-    padding: 0
-    stackTitle: d.accessType === Constants.communityChatOnRequestAccess ?
+    implicitWidth: 640 // by design
+    maximumWidthOverride: 640
+    edgePaddingOverride: 0
+    defaultTitle: d.accessType === Constants.communityChatOnRequestAccess ?
                     qsTr("Request to join %1").arg(root.communityName)
                   : qsTr("Welcome to %1").arg(root.communityName)
-
-    rightButtons: [d.shareButton, finishButton]
-
-    finishButton: StatusButton {
-        objectName: "membershipShareAllAddressesButton"
-        interactive: {
-            if (root.isInvitationPending || d.accessType !== Constants.communityChatOnRequestAccess)
-                return true
-
-            if (root.checkingPermissionToJoinInProgress || !root.joinPermissionsCheckCompletedWithoutErrors)
-                return false
-
-            return d.eligibleToJoinAs !== PermissionTypes.Type.None
-        }
-        loading: root.checkingPermissionToJoinInProgress && !root.isInvitationPending
-        tooltip.text: {
-            if (interactive)
-                return ""
-
-            if (root.checkingPermissionToJoinInProgress)
-                return qsTr("Requirements check pending")
-
-            if (!root.joinPermissionsCheckCompletedWithoutErrors)
-                return qsTr("Checking permissions to join failed")
-
-            return ""
-        }
-        text: root.isInvitationPending ? qsTr("Cancel Membership Request")
-                                       : qsTr("Share all addresses to join")
-        type: root.isInvitationPending ? StatusBaseButton.Type.Danger
-                                       : StatusBaseButton.Type.Normal
-
-        onClicked: {
-            if (root.isInvitationPending) {
-                root.cancelMembershipRequest()
-                root.close()
-                return
-            }
-
-            d.reEvaluateModels()
-            d.proceedToSigningOrSubmitRequest(d.communityIntroUid)
-        }
-    }
-
-    backButton: StatusBackButton {
-        visible: !!root.replaceLoader.item
-                 && !(root.replaceLoader.item.componentUid === d.shareAddressesUid && root.isEditMode)
-
-        onClicked: {
-            if (d.backActionGoesTo === d.communityIntroUid) {
-                if (root.replaceItem) {
-                    root.replaceItem = undefined
-                }
-                return
-            }
-
-            if (d.backActionGoesTo === d.shareAddressesUid) {
-                d.backActionGoesTo = d.communityIntroUid
-                root.replace(sharedAddressesPanelComponent)
-
-                return
-            }
-        }
-
-        Layout.minimumWidth: implicitWidth
-    }
+    showStackBackButton: false
+    customFooterLeftButtons: membershipFooterLeftButtonsModel
+    customFooterRightButtons: membershipFooterRightButtonsModel
+    initialItem: communityIntroComponent
 
     QtObject {
         id: d
@@ -268,16 +207,6 @@ StatusStackModal {
             }
         }
 
-        readonly property var shareButton: StatusFlatButton {
-            height: finishButton.height
-            visible: !root.isInvitationPending && !root.replaceItem
-            borderColor: "transparent"
-            text: qsTr("Select addresses to share")
-            onClicked: {
-                d.backActionGoesTo = d.communityIntroUid
-                root.replace(sharedAddressesPanelComponent)
-            }
-        }
     }
 
     Component.onCompleted: {
@@ -368,7 +297,9 @@ StatusStackModal {
         }
     }
 
-    stackItems: [
+    Component {
+        id: communityIntroComponent
+
         Item {
             implicitHeight: scrollView.contentHeight + scrollView.bottomPadding + eligibilityTag.anchors.bottomMargin
 
@@ -412,5 +343,87 @@ StatusStackModal {
                          d.accessType === Constants.communityChatOnRequestAccess
             }
         }
-    ]
+    }
+
+    ObjectModel {
+        id: membershipFooterLeftButtonsModel
+
+        StatusBackButton {
+            visible: root.replaceLoader && root.replaceLoader.item
+                     && !(root.replaceLoader.item.componentUid === d.shareAddressesUid && root.isEditMode)
+
+            onClicked: {
+                if (d.backActionGoesTo === d.communityIntroUid) {
+                    if (root.replaceItem) {
+                        root.replaceItem = null
+                    }
+                    return
+                }
+
+                if (d.backActionGoesTo === d.shareAddressesUid) {
+                    d.backActionGoesTo = d.communityIntroUid
+                    root.replace(sharedAddressesPanelComponent)
+
+                    return
+                }
+            }
+
+            Layout.minimumWidth: implicitWidth
+        }
+    }
+
+    ObjectModel {
+        id: membershipFooterRightButtonsModel
+
+        StatusFlatButton {
+            visible: !root.isInvitationPending && !root.replaceItem
+            borderColor: "transparent"
+            text: qsTr("Select addresses to share")
+            onClicked: {
+                d.backActionGoesTo = d.communityIntroUid
+                root.replace(sharedAddressesPanelComponent)
+            }
+        }
+
+        StatusButton {
+            objectName: "membershipShareAllAddressesButton"
+            interactive: {
+                if (root.isInvitationPending || d.accessType !== Constants.communityChatOnRequestAccess)
+                    return true
+
+                if (root.checkingPermissionToJoinInProgress || !root.joinPermissionsCheckCompletedWithoutErrors)
+                    return false
+
+                return d.eligibleToJoinAs !== PermissionTypes.Type.None
+            }
+            loading: root.checkingPermissionToJoinInProgress && !root.isInvitationPending
+            tooltip.text: {
+                if (interactive)
+                    return ""
+
+                if (root.checkingPermissionToJoinInProgress)
+                    return qsTr("Requirements check pending")
+
+                if (!root.joinPermissionsCheckCompletedWithoutErrors)
+                    return qsTr("Checking permissions to join failed")
+
+                return ""
+            }
+            text: root.isInvitationPending ? qsTr("Cancel Membership Request")
+                                           : qsTr("Share all addresses to join")
+            type: root.isInvitationPending ? StatusBaseButton.Type.Danger
+                                           : StatusBaseButton.Type.Normal
+
+            onClicked: {
+                if (root.isInvitationPending) {
+                    root.cancelMembershipRequest()
+                    root.close()
+                    return
+                }
+
+                d.reEvaluateModels()
+                d.proceedToSigningOrSubmitRequest(d.communityIntroUid)
+            }
+        }
+    }
 }
