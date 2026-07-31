@@ -130,11 +130,30 @@ OnboardingPage {
             root.loginRequested(root.selectedProfileKeyId, Onboarding.LoginMethod.Password, { password })
         }
 
+        property string lastPin: ""
+
         function doKeycardLogin(pin: string) {
             if (pin.length === 0)
                 return
 
-            root.loginRequested(root.selectedProfileKeyId, Onboarding.LoginMethod.Keycard, { pin })
+            d.lastPin = pin
+
+            root.loginRequested(root.selectedProfileKeyId, Onboarding.LoginMethod.Keycard, {
+                                    pin,
+                                    pairingPassword:
+                                    keycardBox.pairingPassword
+                                })
+        }
+
+        function retryKeycardLoginWithPairingPassword() {
+            if (d.lastPin.length === 0 || keycardBox.pairingPassword.length === 0)
+                return
+
+            root.loginRequested(root.selectedProfileKeyId, Onboarding.LoginMethod.Keycard, {
+                                    pin: d.lastPin,
+                                    pairingPassword:
+                                    keycardBox.pairingPassword
+                                })
         }
     }
 
@@ -160,6 +179,11 @@ OnboardingPage {
         d.biometricsSuccessful = false
 
         if (d.currentProfileIsKeycard) { // Login with keycard
+            if (root.keycardState === Onboarding.KeycardState.PairingPasswordRequired) {
+                keycardBox.loginError = ""
+                return
+            }
+
             if (wrongPassword) {
                 keycardBox.loginError = ""
                 keycardBox.markAsWrongPin()
@@ -231,6 +255,7 @@ OnboardingPage {
                     if (d.currentProfileIsKeycard) {
                         keycardBox.loginError = ""
                         keycardBox.clear()
+                        d.lastPin = ""
                     } else {
                        passwordBox.validationError = ""
                        passwordBox.clear()
@@ -292,6 +317,7 @@ OnboardingPage {
                 onDetailedErrorPopupRequested: detailedErrorPopupComp.createObject(root, {detailedError: loginError}).open()
                 onBiometricsRequested: root.biometricsRequested(loginUserSelector.selectedProfileKeyId)
                 onLoginRequested: (pin) => d.doKeycardLogin(pin)
+                onPairingPasswordSubmitted: d.retryKeycardLoginWithPairingPassword()
             }
 
             Item { Layout.fillHeight: true }
