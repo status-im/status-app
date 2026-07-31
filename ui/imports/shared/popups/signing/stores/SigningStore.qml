@@ -34,6 +34,12 @@ QtObject {
         return d.mainModuleInst.signingModule.keycardState
     }
 
+    readonly property string keycardUid: {
+        if (!d.mainModuleInst?.signingModule)
+            return ""
+        return d.mainModuleInst.signingModule.keycardUid
+    }
+
     readonly property int remainingPinAttempts: {
         if (!d.mainModuleInst?.signingModule)
             return -1
@@ -101,12 +107,12 @@ QtObject {
         return d.mainModuleInst.signingModule.signMessage(address, password, txHash)
     }
 
-    function startKeycardSigning(keyUid, pin, txHash, path) {
+    function startKeycardSigning(keyUid, pin, txHash, path, pairingPassword = "") {
         if (!d.mainModuleInst.signingModule) {
             console.error("signing module was not created")
             return
         }
-        d.mainModuleInst.signingModule.startKeycardSigning(keyUid, pin, txHash, path)
+        d.mainModuleInst.signingModule.startKeycardSigning(keyUid, pin, txHash, path, pairingPassword)
     }
 
     function buildKeyPairForProcessing(keyUid) {

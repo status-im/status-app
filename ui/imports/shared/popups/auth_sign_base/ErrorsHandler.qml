@@ -23,6 +23,7 @@ QtObject {
         readonly property string blockedPin: Constants.keycard.state.blockedPIN
         readonly property string blockedPuk: Constants.keycard.state.blockedPUK
         readonly property string noAvailablePairingSlots: Constants.keycard.state.noAvailablePairingSlots
+        readonly property string pairingError: Constants.keycard.state.pairingError
     }
 
     readonly property bool internalError: root.errorText.toLowerCase().indexOf(errKeyword.internalError.toLowerCase()) > -1
@@ -40,4 +41,5 @@ QtObject {
     readonly property bool blockedPinError: root.errorText.toLowerCase().indexOf(errKeyword.blockedPin.toLowerCase()) > -1
     readonly property bool blockedPukError: root.errorText.toLowerCase().indexOf(errKeyword.blockedPuk.toLowerCase()) > -1
     readonly property bool noAvailablePairingSlotsError: root.errorText.toLowerCase().indexOf(errKeyword.noAvailablePairingSlots.toLowerCase()) > -1
+    readonly property bool pairingPasswordRequiredError: root.errorText.toLowerCase().indexOf(errKeyword.pairingError.toLowerCase()) > -1
 }
