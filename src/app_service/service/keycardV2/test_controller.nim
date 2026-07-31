@@ -78,6 +78,8 @@ when defined(useSimulatedKeycard):
       info "creating a new keycard with id: ", cardId
       discard keycard_go.keycardTestCreateCard(cardId)
 
+    proc cardCreationFinished*(self: KeycardTestController, error: string) {.signal.}
+
     proc onLoadCardDone(self: KeycardTestController, response: string) {.slot.} =
       info "load card task done with response: ", response
       defer:
@@ -85,22 +87,34 @@ when defined(useSimulatedKeycard):
       discard callRPC("Stop") # fully resets the SessionManager, returning the lib to its pre-call idle state
       discard keycard_go.keycardTestRemoveCard()
       discard keycard_go.keycardTestUnplugReader()
+      var failure = ""
       try:
         let obj = response.parseJson
         let err = obj{"error"}.getStr
         if err.len > 0:
+          failure = err
           error "createKeycardWithSeed: task error", err = err
-          return
-        let rpcObj = obj{"response"}.getStr.parseJson
-        if rpcObj.hasKey("error") and rpcObj["error"].kind != JNull:
-          error "createKeycardWithSeed: Load error", err = $rpcObj["error"]
         else:
-          info "createKeycardWithSeed: card provisioned"
+          let rpcObj = obj{"response"}.getStr.parseJson
+          if rpcObj.hasKey("error") and rpcObj["error"].kind != JNull:
+            failure = rpcObj["error"]{"message"}.getStr($rpcObj["error"])
+            error "createKeycardWithSeed: Load error", err = $rpcObj["error"]
+          else:
+            info "createKeycardWithSeed: card provisioned"
       except CatchableError as e:
+        failure = e.msg
         warn "createKeycardWithSeed: bad Load response", err = e.msg
+      self.cardCreationFinished(failure)
+
+    proc clearLocalPairings*(self: KeycardTestController) {.slot.} =
+      try:
+        writeFile(status_const.KEYCARDPAIRINGDATAFILE, "{}")
+        info "cleared all keycard pairings", file = status_const.KEYCARDPAIRINGDATAFILE
+      except CatchableError as e:
+        error "failed to clear keycard pairings", err = e.msg
 
     proc createKeycardWithSeed*(self: KeycardTestController, cardId: string, mnemonic: string, pin: string, puk: string,
-      metadataName: string, metadataPaths: string) {.slot.} =
+      metadataName: string, metadataPaths: string, pairingPassword: string = "") {.slot.} =
       ignoreKeycardLibSignals = true
 
       var paths: seq[string]
@@ -116,7 +130,7 @@ when defined(useSimulatedKeycard):
       let params = %*{
         "pin": pin,
         "puk": puk,
-        "pairingPassword": "",
+        "pairingPassword": pairingPassword,
         "mnemonic": mnemonic,
         "metadataName": metadataName,
         "metadataPaths": paths,
