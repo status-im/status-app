@@ -38,7 +38,8 @@ type KeycardState* = enum
   NotEmpty,
   Empty,
   Authorized,
-  Cancelled
+  Cancelled,
+  PairingPasswordRequired
 
 type KeycardInfoDto* = object
   initialized*: bool
@@ -124,7 +125,7 @@ proc fromStringStateToInt*(state: StateString): KeycardState =
   of StateString.NotKeycard:
     result = KeycardState.NotKeycard
   of StateString.PairingError:
-    result = KeycardState.NoPCSCService # TODO Change the UI states to have a pairing error state
+    result = KeycardState.PairingPasswordRequired
   of StateString.EmptyKeycard:
     result = KeycardState.Empty
   of StateString.NoAvailablePairingSlots:
