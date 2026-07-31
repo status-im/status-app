@@ -12,6 +12,7 @@ import utils
 
 import AppLayouts.Onboarding.pages
 import shared.popups.auth_sign_base 1.0
+import shared.popups.keycard_new.helpers 1.0
 
 import "states"
 import "stores"
@@ -115,7 +116,8 @@ StatusDialog {
         RenamingKeycard,
         EnterPuk,
         UnblockingKeycard,
-        OnboardingMixedFlowSuccess // added to easier deal with keycard-related flows while Onboarding (keycard part is just one step of the entire flow, clicking "Continue" button emits keycardFlowCompletedWithData)
+        OnboardingMixedFlowSuccess, // added to easier deal with keycard-related flows while Onboarding (keycard part is just one step of the entire flow, clicking "Continue" button emits keycardFlowCompletedWithData)
+        EnterPairingPassword // reached only for cards provisioned outside the app, after the default pairing password is rejected
     }
 
     QtObject {
@@ -130,6 +132,24 @@ StatusDialog {
         property string error: ""
 
         property bool factoryResetConfirmationChecked: false
+
+        property string pairingPassword: ""
+        property string pairingPasswordKeycardUid: ""
+        readonly property bool pairingPasswordRequired: !d.processing
+                                                        && !!d.lastInvocation
+                                                        && (keycardErrors.pairingPasswordRequiredError
+                                                            || root.store.keycardState === Constants.keycard.state.pairingError)
+        readonly property bool wrongPairingPassword: d.pairingPasswordRequired && d.pairingPassword !== ""
+
+        property var lastInvocation: null
+
+        function retryLastInvocation() {
+            if (!d.lastInvocation)
+                return
+            d.error = ""
+            d.keycardInteractionCompleted = false
+            d.lastInvocation()
+        }
 
         property int currentStep: {
             switch(root.flow) {
@@ -240,14 +260,17 @@ StatusDialog {
                 return renameKeycardComponent
             case KeycardManagementPopup.FlowStep.EnterPuk:
                 return enterPukComponent
+            case KeycardManagementPopup.FlowStep.EnterPairingPassword:
+                return enterPairingPasswordComponent
             default: return null
             }
         }
 
         function startKeycardReading(pin) {
+            d.lastInvocation = () => d.startKeycardReading(pin)
             d.processing = true
             Backpressure.setTimeout(this, 500, () => {
-                                        root.store.startGetMetadata(pin)
+                                        root.store.startGetMetadata(pin, d.pairingPassword)
                                     })
         }
 
@@ -280,13 +303,15 @@ StatusDialog {
         }
 
         function startMigratingProfileKeypairToKeycard() {
+            d.lastInvocation = d.startMigratingProfileKeypairToKeycard
             d.currentStep = KeycardManagementPopup.FlowStep.Migrating
             d.processing = true
             Backpressure.setTimeout(this, 500, () => {
                                         if (root.useExistingKeycardWhenMigratingProfileToKeycard) {
                                             root.store.startMigratingProfileKeypairUsingExistingKeycard(d.authenticationPassword,
                                                                                                      d.newPin,
-                                                                                                     d.seedPhrase)
+                                                                                                     d.seedPhrase,
+                                                                                                     d.pairingPassword)
                                             return
                                         }
                                         root.store.startMigratingProfileKeypairToKeycard(d.authenticationPassword,
@@ -296,13 +321,15 @@ StatusDialog {
         }
 
         function startAddingKeyPairToStatus() {
+            d.lastInvocation = d.startAddingKeyPairToStatus
             d.currentStep = KeycardManagementPopup.FlowStep.AddingKeyPair
             d.processing = true
             Backpressure.setTimeout(this, 500, () => {
                                         root.store.startAddingKeyPairToStatusFromKeycard(d.newPin,
                                                                                          root.keyUid,
                                                                                          d.keyPairName,
-                                                                                         d.accountPathsJson)
+                                                                                         d.accountPathsJson,
+                                                                                         d.pairingPassword)
                                     })
         }
 
@@ -328,36 +355,41 @@ StatusDialog {
         }
 
         function startChangeKeycardPIN() {
+            d.lastInvocation = d.startChangeKeycardPIN
             d.currentStep = KeycardManagementPopup.FlowStep.ChangingPin
             d.processing = true
             Backpressure.setTimeout(this, 500, () => {
-                                        root.store.startChangeKeycardPIN(d.currentPin, d.newPin)
+                                        root.store.startChangeKeycardPIN(d.currentPin, d.newPin, d.pairingPassword)
                                     })
         }
 
         function startChangeKeycardPUK() {
+            d.lastInvocation = d.startChangeKeycardPUK
             d.currentStep = KeycardManagementPopup.FlowStep.ChangingPuk
             d.processing = true
             Backpressure.setTimeout(this, 500, () => {
-                                        root.store.startChangeKeycardPUK(d.currentPin, d.newPuk)
+                                        root.store.startChangeKeycardPUK(d.currentPin, d.newPuk, d.pairingPassword)
                                     })
         }
 
         function startRenameKeycard() {
+            d.lastInvocation = d.startRenameKeycard
             d.currentStep = KeycardManagementPopup.FlowStep.RenamingKeycard
             d.processing = true
             Backpressure.setTimeout(this, 500, () => {
                                         root.store.startRenameKeycard(d.currentPin,
                                                                       d.newName,
-                                                                      root.cardMetadataWalletAccountsJson)
+                                                                      root.cardMetadataWalletAccountsJson,
+                                                                      d.pairingPassword)
                                     })
         }
 
         function startUnblockKeycardUsingPuk() {
+            d.lastInvocation = d.startUnblockKeycardUsingPuk
             d.currentStep = KeycardManagementPopup.FlowStep.UnblockingKeycard
             d.processing = true
             Backpressure.setTimeout(this, 500, () => {
-                                        root.store.startUnblockKeycardUsingPuk(d.newPin, d.puk)
+                                        root.store.startUnblockKeycardUsingPuk(d.newPin, d.puk, d.pairingPassword)
                                     })
         }
 
@@ -373,9 +405,10 @@ StatusDialog {
         }
 
         function startOnboardingLoginWithKeycard() {
+            d.lastInvocation = d.startOnboardingLoginWithKeycard
             d.processing = true
             Backpressure.setTimeout(this, 500, () => {
-                                        root.store.startAsyncLogin(root.keyUid, d.currentPin, true)
+                                        root.store.startAsyncLogin(root.keyUid, d.currentPin, true, d.pairingPassword)
                                     })
         }
 
@@ -726,6 +759,11 @@ StatusDialog {
 
         function onKeycardGetMetadataSuccess() {
             d.processing = false
+
+            if (d.pairingPasswordRequired) {
+                return
+            }
+
             d.success = true
             root.metadataResult(root.store.keycardState,
                                 root.store.keycardUid,
@@ -751,6 +789,7 @@ StatusDialog {
                     || keycardErrors.wrongPinError2
                     || keycardErrors.connectionKeycardError1
                     || keycardErrors.connectionKeycardError2
+                    || d.pairingPasswordRequired
                     || keycardErrors.notKeycardError) {
                 // in these cases the flow remains open, not a valid state to proceed to keycard details view
                 return
@@ -963,6 +1002,10 @@ StatusDialog {
             anchors.fill: parent
 
             sourceComponent: {
+                if (d.pairingPasswordRequired) {
+                    return enterPairingPasswordComponent
+                }
+
                 if (d.processing) {
                     return keycardProgressComponent
                 }
@@ -1059,6 +1102,10 @@ StatusDialog {
                 visible: d.currentStep !== KeycardManagementPopup.FlowStep.ManageAccounts
                          && d.currentStep !== KeycardManagementPopup.FlowStep.OnboardingMixedFlowSuccess
                 text: {
+                    if (d.pairingPasswordRequired) {
+                        return qsTr("Cancel")
+                    }
+
                     if (root.flow === Constants.keycard.flow.readKeycard) {
                         if (contentLoader.status === Loader.Ready
                                 && contentLoader.sourceComponent === enterPinComponent) {
@@ -1170,7 +1217,8 @@ StatusDialog {
             StatusButton {
                 objectName: "keycardManagementNextButton"
                 visible: contentLoader.item
-                         && ((root.flow === Constants.keycard.flow.importSeedPhrase
+                         && (contentLoader.sourceComponent === enterPairingPasswordComponent
+                             || (root.flow === Constants.keycard.flow.importSeedPhrase
                               && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
                                   || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase
                                   || d.currentStep === KeycardManagementPopup.FlowStep.EnterKeyPairName
@@ -1230,7 +1278,9 @@ StatusDialog {
                                  && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
                                      || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase)))
                 enabled: visible
-                         && ((d.currentStep === KeycardManagementPopup.FlowStep.InsertEmptyKeycard)
+                         && ((contentLoader.sourceComponent === enterPairingPasswordComponent
+                              && contentLoader.item.pairingPasswordValid)
+                             || (d.currentStep === KeycardManagementPopup.FlowStep.InsertEmptyKeycard)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin && d.pinMismatch)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase && contentLoader.item.seedPhraseValid)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.DisplaySeedPhrase && contentLoader.item.seedPhraseRevealed)
@@ -1254,6 +1304,9 @@ StatusDialog {
                                  && contentLoader.item.nameValid
                                  && contentLoader.item.keyPairName !== root.cardMetadataName))
                 text: {
+                    if (contentLoader.sourceComponent === enterPairingPasswordComponent) {
+                        return qsTr("Continue")
+                    }
                     if (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin) {
                         return qsTr("Try setting the PIN again")
                     }
@@ -1274,6 +1327,10 @@ StatusDialog {
                     return qsTr("Next")
                 }
                 onClicked: {
+                    if (contentLoader.sourceComponent === enterPairingPasswordComponent) {
+                        contentLoader.item.accepted()
+                        return
+                    }
                     if (d.currentStep === KeycardManagementPopup.FlowStep.InsertEmptyKeycard) {
                         d.nextStep()
                         return
@@ -1614,6 +1671,26 @@ StatusDialog {
             }
             failureTitle: qsTr("Something went wrong")
             failureMessage: qsTr("Try again")
+        }
+    }
+
+    Component {
+        id: enterPairingPasswordComponent
+        EnterPairingPassword {
+            wrongPairingPassword: d.wrongPairingPassword
+
+            Component.onCompleted: {
+                d.pairingPasswordKeycardUid = root.store.keycardUid
+            }
+
+            onAccepted: {
+                if (root.store.keycardUid !== d.pairingPasswordKeycardUid) {
+                    d.pairingPassword = ""
+                    return
+                }
+                d.pairingPassword = pairingPassword
+                d.retryLastInvocation()
+            }
         }
     }
 
