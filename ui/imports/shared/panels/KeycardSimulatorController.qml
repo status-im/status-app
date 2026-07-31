@@ -18,8 +18,8 @@ ApplicationWindow {
     title: qsTr("Keycard Simulator Controller")
     width: 380
     minimumWidth: 380
-    height: 800
-    minimumHeight: 800
+    height: 890
+    minimumHeight: 890
 
     x: mainWindow ? Math.max(0, mainWindow.x + mainWindow.width + 4) : 100
     y: mainWindow ? mainWindow.y + 32 : 100
@@ -32,6 +32,10 @@ ApplicationWindow {
         property bool readerPlugged: false
         property bool cardInserted: false
 
+        property bool creatingCard: false
+        property bool creationFailed: false
+        property string creationStatus: ""
+        property string pendingCardId: ""
 
         readonly property string keycardVersion32: "3.2"
         readonly property string keycardVersion40: "4.0"
@@ -48,7 +52,25 @@ ApplicationWindow {
             d.cardIds = []
             d.readerPlugged = false
             d.cardInserted = false
+            d.creatingCard = false
+            d.creationFailed = false
+            d.creationStatus = ""
             cardSelector.currentIndex = -1
+        }
+    }
+
+    Connections {
+        target: root.controller
+
+        function onCardCreationFinished(error) {
+            d.creatingCard = false
+            d.creationFailed = !!error
+            d.creationStatus = !!error ? qsTr("Keycard \"%1\" not created: %2").arg(d.pendingCardId).arg(error)
+                                       : qsTr("Keycard \"%1\" created").arg(d.pendingCardId)
+            if (!!error) {
+                d.cardIds = d.cardIds.filter(id => id !== d.pendingCardId)
+            }
+            d.pendingCardId = ""
         }
     }
 
@@ -194,11 +216,20 @@ ApplicationWindow {
             text: "m/44'/60'/0'/0/0"
             placeholderText: qsTr("Paths, comma-separated (optional)")
         }
+        TextField {
+            id: pairingPasswordField
+            objectName: "keycardSimPairingPassword"
+            enabled: d.simulatorStarted
+            selectByMouse: true
+            Layout.fillWidth: true
+            placeholderText: qsTr("Pairing password (optional, default if empty)")
+        }
         StatusButton {
             objectName: "keycardSimCreateWithSeedButton"
             Layout.fillWidth: true
-            text: qsTr("Create Keycard")
+            text: d.creatingCard ? qsTr("Creating Keycard...") : qsTr("Create Keycard")
             enabled: d.simulatorStarted
+                     && !d.creatingCard
                      && cardIdField.text.trim() !== ""
                      && d.cardIds.indexOf(cardIdField.text.trim()) === -1
                      && seedField.text.trim() !== ""
@@ -206,11 +237,33 @@ ApplicationWindow {
                      && pukField.text.length === 12
             onClicked: {
                 const id = cardIdField.text.trim()
+                d.creatingCard = true
+                d.creationStatus = ""
+                d.pendingCardId = id
                 root.controller.createKeycardWithSeed(id, seedField.text.trim(),
-                                                      pinField.text, pukField.text, nameField.text.trim(), pathsField.text.trim())
+                                                      pinField.text, pukField.text, nameField.text.trim(), pathsField.text.trim(),
+                                                      pairingPasswordField.text)
                 d.cardIds = d.cardIds.concat([id])
                 cardIdField.clear()
                 seedField.clear()
+            }
+        }
+        StatusBaseText {
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            font.pixelSize: 12
+            visible: !!text
+            color: d.creationFailed ? Theme.palette.dangerColor1 : Theme.palette.successColor1
+            // A failed Load leaves the card empty, and that only shows up much later as "the
+            // keycard is empty" in whatever flow the card is used in — report it here, at the source.
+            text: d.creationStatus
+        }
+        StatusButton {
+            objectName: "keycardSimClearLocalPairingsButton"
+            Layout.fillWidth: true
+            text: qsTr("Clear local pairings")
+            onClicked: {
+                root.controller.clearLocalPairings()
             }
         }
 
