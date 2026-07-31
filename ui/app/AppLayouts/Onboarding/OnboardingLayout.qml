@@ -211,7 +211,7 @@ Page {
         }
 
         onDismissBiometricsRequested: {
-            if (root.keychain.loading)
+            if (root.keychain && root.keychain.loading)
                 root.keychain.cancelActiveRequest()
         }
 
