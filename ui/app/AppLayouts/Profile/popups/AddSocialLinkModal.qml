@@ -22,9 +22,6 @@ StatusAdaptiveDialog {
 
     signal addLinkRequested(string linkText, string linkUrl, int linkType, string linkIcon)
 
-    implicitWidth: 480 // design
-    maximumWidthOverride: 480 // design
-
     title: currentIndex === 0 ? qsTr("Add a link") :
                                 qsTr("Add %1 link").arg(ProfileUtils.linkTypeToText(d.selectedLinkType) || qsTr("custom"))
     footerLeftButtons: currentIndex > 0 ? footerLeftButtonsModel : null

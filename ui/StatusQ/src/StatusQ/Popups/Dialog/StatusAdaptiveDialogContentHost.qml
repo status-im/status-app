@@ -98,8 +98,6 @@ Control {
                     flickable.topMargin = Qt.binding(() => root.flickableTopPadding);
                     flickable.bottomMargin = Qt.binding(() => root.flickableBottomPadding);
                     flickable.interactive = Qt.binding(() => d.contentOverflows);
-                    if (d.contentVerticalScrollBar)
-                        d.contentVerticalScrollBar.policy = ScrollBar.AlwaysOff;
                 } else {
                     item.parent = scrollFlickable.contentItem;
                     item.width = Qt.binding(() => scrollFlickable.width);
@@ -110,6 +108,13 @@ Control {
                 }
             }
         }
+    }
+
+    Binding {
+        target: d.contentVerticalScrollBar
+        property: "policy"
+        value: ScrollBar.AlwaysOff
+        when: !!d.contentVerticalScrollBar
     }
 
     StatusScrollBar {

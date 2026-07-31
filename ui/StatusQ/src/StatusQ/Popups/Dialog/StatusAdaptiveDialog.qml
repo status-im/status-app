@@ -338,6 +338,7 @@ Dialog {
             id: footerToolbarItem
 
             Layout.fillWidth: true
+            Layout.preferredHeight: implicitHeight
             Layout.topMargin: d.hasErrorTags ? Math.max(Theme.halfPadding, 8) : d.edgePadding
             Layout.bottomMargin: d.edgePadding + d.footerSafeArea
             Layout.leftMargin: d.edgePadding + d.leftSafeArea

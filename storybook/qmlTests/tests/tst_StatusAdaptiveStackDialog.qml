@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Window
 import QtTest
 
@@ -34,6 +35,7 @@ Item {
 
                 Item {
                     property string title: "First step"
+                    property string nextButtonObjectName: "stackNextButton"
                     property string nextButtonText: "Next"
                     property bool canGoNext: true
                     property var nextAction: () => dialog.stack.push(secondStepComponent)
@@ -123,6 +125,64 @@ Item {
         }
     }
 
+    Component {
+        id: nestedScrollbarDialogComponent
+
+        StatusAdaptiveStackDialog {
+            maximumWidthOverride: 420
+            stackContentImplicitHeight: 160
+            initialItem: nestedScrollbarStepComponent
+
+            Component {
+                id: nestedScrollbarStepComponent
+
+                Item {
+                    objectName: "nestedScrollbarStep"
+                    implicitHeight: 120
+                    readonly property ScrollBar statusAdaptiveDialogContentVerticalScrollBar: nestedScrollBar
+
+                    ScrollBar {
+                        id: nestedScrollBar
+                        policy: ScrollBar.AsNeeded
+                    }
+                }
+            }
+        }
+    }
+
+    Component {
+        id: adaptiveHeightDialogComponent
+
+        StatusAdaptiveStackDialog {
+            id: dialog
+
+            maximumWidthOverride: 420
+            initialItem: shortStepComponent
+
+            Component {
+                id: shortStepComponent
+
+                Item {
+                    property string title: "Short step"
+                    property string nextButtonText: "Next"
+                    property var nextAction: () => dialog.stack.push(tallStepComponent)
+
+                    implicitHeight: 80
+                }
+            }
+
+            Component {
+                id: tallStepComponent
+
+                Item {
+                    property string title: "Tall step"
+
+                    implicitHeight: 180
+                }
+            }
+        }
+    }
+
     property StatusAdaptiveStackDialog controlUnderTest: null
 
     TestCase {
@@ -148,12 +208,24 @@ Item {
 
         function test_stackNavigationAndBackAction() {
             const dialog = openDialog(stackDialogComponent);
+            const nextButton = findChild(dialog, "stackNextButton");
+            const footer = findChild(dialog, "statusAdaptiveDialogFooter");
+            verify(!!nextButton);
+            verify(!!footer);
+            verify(nextButton.enabled);
+            verify(nextButton.visible);
+            verify(nextButton.width > 0);
+            verify(nextButton.height > 0);
+            wait(300);
+            verify(footer.height >= nextButton.height);
+            verify(nextButton.mapToItem(null, 0, nextButton.height).y <= dialog.y + dialog.height);
+            verify(nextButton.mapToItem(null, 0, nextButton.height).y <= footer.mapToItem(null, 0, footer.height).y);
 
             compare(dialog.depth, 1);
             compare(dialog.currentIndex, 0);
             compare(dialog.title, "First step");
 
-            dialog.currentItem.nextAction();
+            mouseClick(nextButton, Qt.LeftButton);
             tryCompare(dialog, "depth", 2);
             compare(dialog.currentIndex, 1);
             compare(dialog.title, "Second step");
@@ -185,5 +257,27 @@ Item {
             verify(findChild(dialog, "stackSubHeader"));
             compare(dialog.contentItem.naturalHeight, 80 + 24 + 12);
         }
+
+        function test_nestedStepScrollbarIsDisabledByContentHost() {
+            const dialog = openDialog(nestedScrollbarDialogComponent);
+
+            verify(!!dialog.currentItem.statusAdaptiveDialogContentVerticalScrollBar);
+            tryCompare(dialog.currentItem.statusAdaptiveDialogContentVerticalScrollBar,
+                       "policy", ScrollBar.AlwaysOff);
+        }
+
+        function test_contentHeightKeepsLargestVisitedStackPage() {
+            const dialog = openDialog(adaptiveHeightDialogComponent);
+
+            compare(dialog.contentItem.naturalHeight, 80);
+            dialog.currentItem.nextAction();
+            tryCompare(dialog, "depth", 2);
+            tryCompare(dialog.contentItem, "naturalHeight", 180);
+
+            dialog.back();
+            tryCompare(dialog, "depth", 1);
+            compare(dialog.contentItem.naturalHeight, 180);
+        }
+
     }
 }

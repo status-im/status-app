@@ -37,6 +37,8 @@ ColumnLayout {
         label: qsTr("Invitation Message")
         charLimit: d.maxMsgLength
         placeholderText: qsTr("The message a contact will get with community invitation")
+        leftPadding: Theme.padding
+        rightPadding: Theme.padding
         input.multiline: true
         input.implicitHeight: d.msgHeight
         input.verticalAlignment: TextEdit.AlignTop
@@ -61,6 +63,7 @@ ColumnLayout {
         id: existingContacts
 
         contactsModel: root.contactsModel
+        itemSpacing: Theme.bigPadding
         pubKeys: root.pubKeys
         Layout.fillWidth: true
         Layout.fillHeight: true

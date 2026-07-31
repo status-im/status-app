@@ -101,8 +101,6 @@ Control {
                     id: pickColorDialog
 
                     anchors.centerIn: parent
-                    implicitWidth: 640
-                    maximumWidthOverride: 640
                     showStackBackButton: false
                     destroyOnClose: true
                     replaceItem: ColorPanel {
@@ -130,8 +128,6 @@ Control {
                     id: pickTagsDialog
 
                     anchors.centerIn: parent
-                    implicitWidth: 640
-                    maximumWidthOverride: 640
                     showStackBackButton: false
                     destroyOnClose: true
                     replaceItem: TagsPanel {

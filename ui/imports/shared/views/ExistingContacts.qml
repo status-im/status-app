@@ -28,9 +28,11 @@ Item {
     property bool expanded: true
     property bool showCheckbox: false
     property bool hideCommunityMembers: false
+    property real itemSpacing: Theme.halfPadding
     property var pubKeys: ([])
 
     readonly property alias count: contactListView.count
+    readonly property var statusAdaptiveDialogContentVerticalScrollBar: contactListView.verticalScrollBar
 
     signal contactClicked(var contact)
 
@@ -89,6 +91,7 @@ Item {
             status: model.onlineStatus
             height: visible ? implicitHeight : 0
             color: hovered ? Theme.palette.baseColor2 : "transparent"
+            spacing: root.itemSpacing
             nickName: model.localNickname
             userName: ProfileUtils.displayName("", model.ensName, model.displayName, model.alias)
             icon.name: model.icon

@@ -81,6 +81,7 @@ StatusAdaptiveDialog {
     }
 
     function resetStack(operation) {
+        d.maxObservedStackContentImplicitHeight = 0
         if (stack)
             stack.popToIndex(0, operation ?? StackView.Immediate)
     }
@@ -108,8 +109,13 @@ StatusAdaptiveDialog {
         property var stackObject
         property var replaceLoaderObject
         property var replaceObject
+        property real maxObservedStackContentImplicitHeight: 0
         readonly property var replaceRightButton: replaceObject && typeof(replaceObject.rightButtons) !== "undefined"
                                                   ? replaceObject.rightButtons : null
+
+        function rememberStackContentImplicitHeight(height) {
+            maxObservedStackContentImplicitHeight = Math.max(maxObservedStackContentImplicitHeight, height)
+        }
     }
 
     contentComponent: Component {
@@ -117,13 +123,21 @@ StatusAdaptiveDialog {
             id: contentRoot
 
             readonly property bool subHeaderVisible: !!subHeaderLoader.item && subHeaderLoader.item.visible
+            readonly property var statusAdaptiveDialogContentVerticalScrollBar: root.activeItem
+                                                                                 && root.activeItem.statusAdaptiveDialogContentVerticalScrollBar
+                                                                                 ? root.activeItem.statusAdaptiveDialogContentVerticalScrollBar
+                                                                                 : null
+            readonly property real activeContentImplicitHeight: Math.max(root.currentItem ? root.currentItem.implicitHeight : 0,
+                                                                         root.replaceObject ? root.replaceObject.implicitHeight : 0)
+                                                                + (contentRoot.subHeaderVisible
+                                                                   ? subHeaderLoader.implicitHeight + root.subHeaderPadding : 0)
 
             implicitHeight: root.stackContentImplicitHeight > 0
                             ? root.stackContentImplicitHeight
-                            : Math.max(root.currentItem ? root.currentItem.implicitHeight : 0,
-                                       root.replaceObject ? root.replaceObject.implicitHeight : 0)
-                              + (contentRoot.subHeaderVisible
-                                 ? subHeaderLoader.implicitHeight + root.subHeaderPadding : 0)
+                            : Math.max(contentRoot.activeContentImplicitHeight,
+                                       d.maxObservedStackContentImplicitHeight)
+
+            onActiveContentImplicitHeightChanged: d.rememberStackContentImplicitHeight(activeContentImplicitHeight)
 
             Loader {
                 id: subHeaderLoader
@@ -149,6 +163,13 @@ StatusAdaptiveDialog {
                     clip: true
                     visible: !root.replaceItem
                     initialItem: root.initialItem
+                    onCurrentItemChanged: {
+                        if (!currentItem)
+                            return
+
+                        currentItem.width = Qt.binding(() => stack.width)
+                        currentItem.height = Qt.binding(() => stack.height)
+                    }
                 }
 
                 Loader {
@@ -159,7 +180,14 @@ StatusAdaptiveDialog {
                     sourceComponent: root.replaceItem
                     visible: !!item
                     clip: true
-                    onItemChanged: d.replaceObject = item
+                    onItemChanged: {
+                        d.replaceObject = item
+                        if (!item)
+                            return
+
+                        item.width = Qt.binding(() => replaceLoader.width)
+                        item.height = Qt.binding(() => replaceLoader.height)
+                    }
                     Component.onCompleted: d.replaceLoaderObject = replaceLoader
                     Component.onDestruction: if (d.replaceLoaderObject === replaceLoader)
                         d.replaceLoaderObject = null
@@ -197,8 +225,8 @@ StatusAdaptiveDialog {
                         ? root.currentItem.nextButtonObjectName : ""
             text: root.currentItem && typeof(root.currentItem.nextButtonText) !== "undefined"
                   ? root.currentItem.nextButtonText : root.defaultNextButtonText
-            implicitHeight: root.currentItem && typeof(root.currentItem.nextButtonImplicitHeight) !== "undefined"
-                            ? root.currentItem.nextButtonImplicitHeight : implicitBackgroundHeight + topInset + bottomInset
+            Layout.preferredHeight: root.currentItem && typeof(root.currentItem.nextButtonImplicitHeight) !== "undefined"
+                                    ? root.currentItem.nextButtonImplicitHeight : implicitHeight
             enabled: !root.currentItem
                      || typeof(root.currentItem.canGoNext) === "undefined"
                      || root.currentItem.canGoNext

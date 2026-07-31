@@ -137,8 +137,6 @@ StatusAdaptiveStackDialog {
         }
     }
 
-    implicitWidth: 560
-    maximumWidthOverride: 560
     defaultTitle: !!root.buyCryptoInputParamsForm.selectedTokenGroupKey ?
                     qsTr("Ways to buy %1 for %2").arg(d.selectedTokenEntry.item.name).arg(!!d.selectedAccountEntry.item ? d.selectedAccountEntry.item.name: "")
                   : qsTr("Ways to buy assets for %1").arg(!!d.selectedAccountEntry.item ? d.selectedAccountEntry.item.name: "")

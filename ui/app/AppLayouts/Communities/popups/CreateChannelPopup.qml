@@ -85,10 +85,6 @@ StatusAdaptiveStackDialog {
     signal removePermissions(var permissions)
     signal editPermissions(var permissions)
 
-    implicitWidth: 640
-    maximumWidthOverride: 640
-    contentLeftPaddingOverride: 0
-    contentRightPaddingOverride: 0
     initialItem: channelDetailsStepComponent
     customFooterLeftButtons: footerLeftButtonsModel
     customFooterRightButtons: footerRightButtonsModel
@@ -455,8 +451,6 @@ StatusAdaptiveStackDialog {
             ColumnLayout {
                 id: fileListView
                 anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 16
                 spacing: 24
 
                 RowLayout {
@@ -635,8 +629,6 @@ StatusAdaptiveStackDialog {
                 id: categoriesAndChannelsView
                 spacing: 24
                 anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 16
 
                 Component {
                     id: progressComponent
@@ -780,8 +772,6 @@ StatusAdaptiveStackDialog {
                 StatusInput {
                     id: nameInput
                     Layout.fillWidth: true
-                    Layout.leftMargin: Theme.padding
-                    Layout.rightMargin: Theme.padding
                     input.edit.objectName: "createOrEditCommunityChannelNameInput"
                     label: qsTr("Channel name")
                     charLimit: root.maxChannelNameLength
@@ -823,8 +813,6 @@ StatusAdaptiveStackDialog {
                 Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 82
-                    Layout.leftMargin: Theme.padding
-                    Layout.rightMargin: Theme.padding
                     StatusBaseText {
                         width: parent.width
                         anchors.top: parent.top
@@ -854,8 +842,6 @@ StatusAdaptiveStackDialog {
                     id: descriptionTextArea
                     Layout.fillWidth: true
                     Layout.topMargin: Theme.halfPadding
-                    Layout.leftMargin: Theme.padding
-                    Layout.rightMargin: Theme.padding
                     input.edit.objectName: "createOrEditCommunityChannelDescriptionInput"
                     input.verticalAlignment: TextEdit.AlignTop
                     label: qsTr("Description")
@@ -884,8 +870,6 @@ StatusAdaptiveStackDialog {
                     id: viewOnlyCanAddReactionCheckbox
                     Layout.fillWidth: true
                     Layout.preferredHeight: 48
-                    Layout.leftMargin: Theme.padding
-                    Layout.rightMargin: Theme.padding
                     leftSide: false
                     text: qsTr("Hide channel from members who don't have permissions to view the channel")
                     checked: d.hideIfPermissionsNotMet
@@ -899,8 +883,6 @@ StatusAdaptiveStackDialog {
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 56
-                    Layout.leftMargin: Theme.padding
-                    Layout.rightMargin: Theme.padding
                     StatusBaseText {
                         text: qsTr("Permissions")
                     }
@@ -918,7 +900,7 @@ StatusAdaptiveStackDialog {
                                 header: null,
                                 topPadding: -root.subHeaderPadding - 8,
                                 leftPadding: 0,
-                                viewWidth: scrollView.availableWidth - 32
+                                viewWidth: scrollView.availableWidth
                             };
                             d.openPermissionEditor(properties);
                         }
@@ -927,8 +909,6 @@ StatusAdaptiveStackDialog {
                 PermissionsView {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignBottom
-                    Layout.leftMargin: Theme.padding
-                    Layout.rightMargin: Theme.padding
 
                     preferredContentWidth: scrollView.availableWidth
                     internalRightPadding: 0
@@ -957,8 +937,7 @@ StatusAdaptiveStackDialog {
                             header: null,
                             topPadding: -root.subHeaderPadding - 8,
                             leftPadding: 0,
-                            rightPadding: 16,
-                            viewWidth: scrollView.availableWidth - 32
+                            viewWidth: scrollView.availableWidth
                         }
                         properties.resetOnOpen = true
                         d.openPermissionEditor(properties);
@@ -976,8 +955,7 @@ StatusAdaptiveStackDialog {
                             header: null,
                             topPadding: -root.subHeaderPadding - 8,
                             leftPadding: 0,
-                            rightPadding: 16,
-                            viewWidth: scrollView.availableWidth - 32
+                            viewWidth: scrollView.availableWidth
                         }
                         properties.resetOnOpen = true
                         d.openPermissionEditor(properties);
@@ -1018,8 +996,6 @@ StatusAdaptiveStackDialog {
             readonly property string stackTitleText: qsTr("Channel Colour")
             readonly property string nextButtonText: qsTr("Select Channel Colour")
             padding: 0
-            leftPadding: 16
-            rightPadding: 16
             height: Math.min(parent.height, 624)
             property bool colorSelected: d.selectedChannelColorSet
             color: d.selectedChannelColor
@@ -1043,8 +1019,6 @@ StatusAdaptiveStackDialog {
         PermissionsSettingsPanel {
             id: editPermissionView
 
-            leftPadding: 16
-            rightPadding: 16
             initialPage.header: null
             initialPage.topPadding: 0
             initialPage.leftPadding: 0

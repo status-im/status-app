@@ -12,8 +12,6 @@ StatusAdaptiveStackDialog {
 
     signal backupSeedphraseFinished(bool removeSeedphrase)
 
-    implicitWidth: 480
-    maximumWidthOverride: 480
     maximumHeightOverride: 700
     stackContentImplicitHeight: 560
     initialItem: backupSeedRevealPage

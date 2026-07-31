@@ -61,8 +61,6 @@ StatusAdaptiveStackDialog {
     signal cancelMembershipRequest()
     signal sharedAddressesUpdated(var sharedAddresses)
 
-    implicitWidth: 640 // by design
-    maximumWidthOverride: 640
     edgePaddingOverride: 0
     defaultTitle: d.accessType === Constants.communityChatOnRequestAccess ?
                     qsTr("Request to join %1").arg(root.communityName)

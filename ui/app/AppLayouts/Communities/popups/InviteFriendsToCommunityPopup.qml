@@ -31,10 +31,6 @@ StatusAdaptiveStackDialog {
     QtObject {
         id: d
 
-        // values from Figma design
-        readonly property int footerButtonsHeight: 44
-        readonly property int popupContentHeight: 551
-
         function shareCommunity(pubKeys, inviteMessage) {
             const error = root.shareCommunityToUsers(JSON.stringify(pubKeys), inviteMessage);
             d.processInviteResult(error);
@@ -62,10 +58,6 @@ StatusAdaptiveStackDialog {
     }
 
     defaultTitle: qsTr("Invite Contacts to %1").arg(community.name)
-    implicitWidth: 640
-    maximumWidthOverride: 640
-    maximumHeightOverride: d.popupContentHeight
-    stackContentImplicitHeight: 430
     subHeaderPadding: Theme.padding
     initialItem: inviteFriendsStepComponent
 
@@ -86,7 +78,6 @@ StatusAdaptiveStackDialog {
         ProfilePopupInviteFriendsPanel {
             readonly property string nextButtonObjectName: "InviteFriendsToCommunityPopup_NextButton"
             readonly property string nextButtonText: qsTr("Next")
-            readonly property int nextButtonImplicitHeight: d.footerButtonsHeight
             readonly property bool canGoNext: root.pubKeys.length > 0
             readonly property var nextAction: () => root.stack.push(inviteMessageStepComponent)
 
@@ -104,7 +95,6 @@ StatusAdaptiveStackDialog {
         ProfilePopupInviteMessagePanel {
             readonly property string nextButtonObjectName: "InviteFriendsToCommunityPopup_SendButton"
             readonly property string nextButtonText: qsTr("Send %n invite(s)", "", root.pubKeys.length)
-            readonly property int nextButtonImplicitHeight: d.footerButtonsHeight
             readonly property bool canGoNext: root.pubKeys.length > 0
             readonly property var nextAction: () => d.shareCommunity(root.pubKeys, root.inviteMessage)
 

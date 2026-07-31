@@ -13,6 +13,18 @@ Rectangle {
     property list<StatusBaseButton> rightButtons
     property bool showFooter: true
 
+    QtObject {
+        id: d
+
+        function buttonsImplicitWidth(buttons) {
+            let width = 0
+            for (let idx in buttons)
+                width += buttons[idx].implicitWidth
+
+            return width + Math.max(0, buttons.length - 1) * Theme.padding
+        }
+    }
+
     radius: Theme.radius
 
     color: Theme.palette.statusModal.backgroundColor
@@ -33,7 +45,10 @@ Rectangle {
         }
     }
 
-    implicitWidth: rootLayout.implicitWidth + rootLayout.anchors.leftMargin
+    implicitWidth: d.buttonsImplicitWidth(leftButtons)
+                   + d.buttonsImplicitWidth(rightButtons)
+                   + Theme.padding
+                   + rootLayout.anchors.leftMargin
                    + rootLayout.anchors.rightMargin
     implicitHeight: rootLayout.implicitHeight + 30
 

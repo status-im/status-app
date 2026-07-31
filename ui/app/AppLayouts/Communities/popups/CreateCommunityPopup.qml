@@ -33,8 +33,6 @@ StatusAdaptiveStackDialog {
 
     defaultTitle: isDiscordImport ? qsTr("Import a community from Discord into Status") :
                                     qsTr("Create New Community")
-    implicitWidth: 640
-    maximumWidthOverride: 640
     initialItem: generalStepComponent
     customFooterRightButtons: footerRightButtonsModel
     showStackBackButton: !d.progressReplaceActive && (!!replaceItem || depth > 1)

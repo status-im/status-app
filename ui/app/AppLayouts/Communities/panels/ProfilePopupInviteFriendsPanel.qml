@@ -28,6 +28,8 @@ ColumnLayout {
 
     property var pubKeys: ([])
 
+    readonly property var statusAdaptiveDialogContentVerticalScrollBar: existingContacts.statusAdaptiveDialogContentVerticalScrollBar
+
     spacing: 0
 
     StyledText {
@@ -35,8 +37,6 @@ ColumnLayout {
         text: qsTr("Contacts")
         font.pixelSize: Theme.primaryTextFontSize
         color: Theme.palette.secondaryText
-        Layout.leftMargin: Theme.padding
-        Layout.rightMargin: Theme.padding
     }
 
     SearchBox {
@@ -46,11 +46,11 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.topMargin: Theme.bigPadding
         Layout.bottomMargin: Theme.padding
-        Layout.leftMargin: Theme.padding
-        Layout.rightMargin: Theme.padding
     }
 
     ExistingContacts {
+        id: existingContacts
+
         contactsModel: root.contactsModel
         membersModel: root.membersModel
         communityId: root.communityId
@@ -58,6 +58,7 @@ ColumnLayout {
         hideCommunityMembers: true
         showCheckbox: true
         filterText: filterInput.text
+        itemSpacing: Theme.bigPadding
         pubKeys: root.pubKeys
         onContactClicked: function (contact) {
             if (!contact || typeof contact === "string") {

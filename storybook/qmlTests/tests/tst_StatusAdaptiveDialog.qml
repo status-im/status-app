@@ -309,8 +309,11 @@ Item {
             verify(!!toolbar);
             compare(toolbar.objectName, "statusAdaptiveDialogFooter");
             const edgePadding = Math.max(Theme.padding, 8);
+            verify(toolbar.height > 0);
             compare(toolbar.x, edgePadding);
             compare(toolbar.width, controlUnderTest.width - 2 * edgePadding);
+            compare(toolbar.mapToItem(null, 0, toolbar.height).y,
+                    controlUnderTest.y + controlUnderTest.height - edgePadding);
 
             const divider = findChild(controlUnderTest, "statusAdaptiveDialogFooterDivider");
             verify(!!divider);

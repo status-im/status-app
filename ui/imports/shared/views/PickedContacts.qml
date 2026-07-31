@@ -14,9 +14,11 @@ Item {
     id: root
 
     property var contactsModel
+    property real itemSpacing: Theme.halfPadding
     property var pubKeys: ([])
 
     readonly property alias count: contactGridView.count
+    implicitHeight: contactGridView.contentHeight
 
     StatusGridView {
         id: contactGridView
@@ -45,6 +47,7 @@ Item {
             icon.width: 40
             icon.height: 40
             color: "transparent"
+            spacing: root.itemSpacing
             icon.color: Utils.colorForColorId(Theme.palette, model.colorId)
 
             hoverEnabled: false

@@ -47,6 +47,7 @@ Control {
 
         Repeater {
             model: root.leftButtons
+            onItemAdded: (_, item) => item.Layout.alignment = Qt.AlignVCenter
         }
 
         Item {
@@ -55,6 +56,7 @@ Control {
 
         Repeater {
             model: root.rightButtons
+            onItemAdded: (_, item) => item.Layout.alignment = Qt.AlignVCenter
         }
     }
 }
