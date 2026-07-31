@@ -72,7 +72,8 @@ public:
         NotEmpty,
         Empty,
         Authorized,
-        Cancelled
+        Cancelled,
+        PairingPasswordRequired
     };
 
     enum class ProgressState {
