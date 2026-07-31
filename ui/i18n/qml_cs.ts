@@ -13128,30 +13128,6 @@ selhalo</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Turn off testnet mode</source>
-        <translation type="unfinished">Vypnout režim testnet</translation>
-    </message>
-    <message>
-        <source>Turn on testnet mode</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you sure you want to turn off %1? All future transactions will be performed on live networks with real funds</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you sure you want to turn on %1? In this mode, all blockchain data displayed will come from testnets and all blockchain interactions will be with testnets. Testnet mode switches the entire app to using testnets only. Please switch this mode on only if you know exactly why you need to use it.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Testnet mode turned on</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Testnet mode turned off</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Align with paired device</source>
         <translation type="unfinished"></translation>
     </message>
@@ -17212,6 +17188,33 @@ Tuto akci nelze vzít zpět.</translation>
     <message>
         <source>Add at least 1 tag</source>
         <translation>Přidejte alespoň 1 štítek</translation>
+    </message>
+</context>
+<context>
+    <name>TestnetModePopup</name>
+    <message>
+        <source>Turn off testnet mode</source>
+        <translation type="unfinished">Vypnout režim testnet</translation>
+    </message>
+    <message>
+        <source>Turn on testnet mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to turn off %1? All future transactions will be performed on live networks with real funds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to turn on %1? In this mode, all blockchain data displayed will come from testnets and all blockchain interactions will be with testnets. Testnet mode switches the entire app to using testnets only. Please switch this mode on only if you know exactly why you need to use it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Testnet mode turned on</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Testnet mode turned off</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
