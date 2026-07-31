@@ -160,12 +160,12 @@ Item {
         \qmlproperty real StatusBaseInput::leftPadding
         This property sets the left padding.
     */
-    property real leftPadding: leftComponentLoader.status === Loader.Ready && leftComponentLoader.item ? 6 : Theme.halfPadding
+    property real leftPadding: leftComponentLoader.status === Loader.Ready && leftComponentLoader.item ? 6 : Theme.defaultSmallPadding
     /*!
         \qmlproperty real StatusBaseInput::rightPadding
         This property sets the right padding.
     */
-    property real rightPadding: rightComponentLoader.status === Loader.Ready && rightComponentLoader.item ? 6 : Theme.halfPadding
+    property real rightPadding: rightComponentLoader.status === Loader.Ready && rightComponentLoader.item ? 6 : Theme.defaultSmallPadding
     /*!
         \qmlproperty real StatusBaseInput::topPadding
         This property sets the top padding.
