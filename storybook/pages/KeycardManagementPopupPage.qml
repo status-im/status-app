@@ -96,20 +96,22 @@ SplitView {
         function teardown() { logs.logEvent("store.teardown()") }
 
         // --- flow operations (logging no-ops) ---
-        function startGetMetadata(pin) { logs.logEvent("startGetMetadata(%1)".arg(pin)) }
+        // `pairingPassword` is empty except on a retry after the card rejected the default one.
+        function startGetMetadata(pin, pairingPassword) { logs.logEvent("startGetMetadata(%1, %2)".arg(pin).arg(pairingPassword)) }
         function startFactoryReset(keycardUid) { logs.logEvent("startFactoryReset(%1)".arg(keycardUid)) }
-        function startUnblockKeycardUsingPuk(newPin, puk) { logs.logEvent("startUnblockKeycardUsingPuk()") }
+        function startUnblockKeycardUsingPuk(newPin, puk, pairingPassword) { logs.logEvent("startUnblockKeycardUsingPuk(%1)".arg(pairingPassword)) }
         function startUnblockKeycardUsingRecoveryPhrase(newPin, seedPhrase, metadataName, metadataAccountsJson) { logs.logEvent("startUnblockKeycardUsingRecoveryPhrase()") }
         function startImportingKeyPair(pin, seedPhrase, metadataName, metadataAccounts) { logs.logEvent("startImportingKeyPair()") }
         function startMigratingNonProfileKeypairToKeycard(password, pin, keyUid, keycardUid) { logs.logEvent("startMigratingNonProfileKeypairToKeycard()") }
         function startMigratingProfileKeypairToKeycard(password, pin, keycardUid) { logs.logEvent("startMigratingProfileKeypairToKeycard()") }
-        function startAddingKeyPairToStatusFromKeycard(pin, keyUid, keycardUid) { logs.logEvent("startAddingKeyPairToStatusFromKeycard()") }
+        function startMigratingProfileKeypairUsingExistingKeycard(password, pin, seedPhrase, pairingPassword) { logs.logEvent("startMigratingProfileKeypairUsingExistingKeycard(%1)".arg(pairingPassword)) }
+        function startAddingKeyPairToStatusFromKeycard(pin, keyUid, metadataName, metadataAccounts, pairingPassword) { logs.logEvent("startAddingKeyPairToStatusFromKeycard(%1)".arg(pairingPassword)) }
         function startStopUsingKeycardForKeyPair(keyUid, pin) { logs.logEvent("startStopUsingKeycardForKeyPair()") }
         function startStopUsingKeycardForProfileKeyPair(seedPhrase, newPassword) { logs.logEvent("startStopUsingKeycardForProfileKeyPair()") }
-        function startChangeKeycardPIN(currentPin, newPin) { logs.logEvent("startChangeKeycardPIN()") }
-        function startChangeKeycardPUK(pin, newPuk) { logs.logEvent("startChangeKeycardPUK()") }
-        function startRenameKeycard(pin, newName) { logs.logEvent("startRenameKeycard(%1)".arg(newName)) }
-        function startAsyncLogin(keyUid, pin, withBiometrics) { logs.logEvent("startAsyncLogin()") }
+        function startChangeKeycardPIN(currentPin, newPin, pairingPassword) { logs.logEvent("startChangeKeycardPIN(%1)".arg(pairingPassword)) }
+        function startChangeKeycardPUK(pin, newPuk, pairingPassword) { logs.logEvent("startChangeKeycardPUK(%1)".arg(pairingPassword)) }
+        function startRenameKeycard(pin, newName, metadataAccountsJson, pairingPassword) { logs.logEvent("startRenameKeycard(%1, %2)".arg(newName).arg(pairingPassword)) }
+        function startAsyncLogin(keyUid, pin, withBiometrics, pairingPassword) { logs.logEvent("startAsyncLogin(%1)".arg(pairingPassword)) }
 
         // --- queries ---
         function getKeyUidForSeedPhrase(seedPhrase) { return "seed-key-uid" }
@@ -278,7 +280,8 @@ SplitView {
                 id: keycardStateSelector
                 Layout.fillWidth: true
                 editable: true
-                model: ["", "ready", "not-keycard", "empty-keycard", "blocked-pin", "blocked-puk"]
+                model: ["", "ready", "not-keycard", "empty-keycard", "blocked-pin", "blocked-puk",
+                        "pairing-error", "no-available-pairing-slots"]
                 onActivated: mockStore.keycardState = editText
                 onAccepted: mockStore.keycardState = editText
             }
@@ -332,6 +335,24 @@ SplitView {
                     Layout.fillWidth: true
                     text: "Metadata OK"
                     onClicked: mockStore.keycardGetMetadataSuccess()
+                }
+            }
+
+            Label { text: "Simulate custom pairing password card:" }
+            Button {
+                Layout.fillWidth: true
+                text: "Pairing password required"
+                // Mirrors what the backend reports: composite operations put the session state
+                // into their error text, which is how the popup recognises this case.
+                onClicked: {
+                    const err = "Card not ready (state: pairing-error)"
+                    mockStore.keycardGetMetadataError(err)
+                    mockStore.keycardChangePinError(err)
+                    mockStore.keycardChangePukError(err)
+                    mockStore.keycardRenameError(err)
+                    mockStore.keycardUnblockError(err)
+                    mockStore.keycardAsyncLoginError(err)
+                    mockStore.keycardAddKeyPairError(err)
                 }
             }
         }
