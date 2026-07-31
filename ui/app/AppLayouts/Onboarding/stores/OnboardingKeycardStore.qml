@@ -37,12 +37,12 @@ BaseKeycardManagementStore {
         d.onboardingModuleInst.destroyKeycardModule()
     }
 
-    function startAsyncLogin(keyUid, pin, generateXPub) {
+    function startAsyncLogin(keyUid, pin, generateXPub, pairingPassword = "") {
         if (!backend) {
             console.error("onboarding - keycard management module was not created")
             return
         }
-        backend.startAsyncLogin(keyUid, pin, generateXPub)
+        backend.startAsyncLogin(keyUid, pin, generateXPub, pairingPassword)
     }
 
     function isMnemonicBackedUp() {

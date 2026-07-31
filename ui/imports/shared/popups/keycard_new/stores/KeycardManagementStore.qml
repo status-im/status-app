@@ -172,20 +172,20 @@ BaseKeycardManagementStore {
         backend.startMigratingProfileKeypairToKeycard(password, pin, seedPhrase)
     }
 
-    function startMigratingProfileKeypairUsingExistingKeycard(password, pin, seedPhrase) {
+    function startMigratingProfileKeypairUsingExistingKeycard(password, pin, seedPhrase, pairingPassword = "") {
         if (!backend) {
             console.error("keycard management module was not created")
             return
         }
-        backend.startMigratingProfileKeypairUsingExistingKeycard(password, pin, seedPhrase)
+        backend.startMigratingProfileKeypairUsingExistingKeycard(password, pin, seedPhrase, pairingPassword)
     }
 
-    function startAddingKeyPairToStatusFromKeycard(pin, keyUid, metadataName, metadataAccounts) {
+    function startAddingKeyPairToStatusFromKeycard(pin, keyUid, metadataName, metadataAccounts, pairingPassword = "") {
         if (!backend) {
             console.error("keycard management module was not created")
             return
         }
-        backend.startAddingKeyPairToStatusFromKeycard(pin, keyUid, metadataName, metadataAccounts)
+        backend.startAddingKeyPairToStatusFromKeycard(pin, keyUid, metadataName, metadataAccounts, pairingPassword)
     }
 
     function resolveKeyPairItemForKeyUid(keyUid) {
@@ -212,28 +212,28 @@ BaseKeycardManagementStore {
         backend.startStopUsingKeycardForProfileKeyPair(seedPhrase, newPassword)
     }
 
-    function startChangeKeycardPIN(currentPin, newPin) {
+    function startChangeKeycardPIN(currentPin, newPin, pairingPassword = "") {
         if (!backend) {
             console.error("keycard management module was not created")
             return
         }
-        backend.startChangeKeycardPIN(currentPin, newPin)
+        backend.startChangeKeycardPIN(currentPin, newPin, pairingPassword)
     }
 
-    function startChangeKeycardPUK(currentPin, newPuk) {
+    function startChangeKeycardPUK(currentPin, newPuk, pairingPassword = "") {
         if (!backend) {
             console.error("keycard management module was not created")
             return
         }
-        backend.startChangeKeycardPUK(currentPin, newPuk)
+        backend.startChangeKeycardPUK(currentPin, newPuk, pairingPassword)
     }
 
-    function startRenameKeycard(currentPin, newName, metadataAccountsJson) {
+    function startRenameKeycard(currentPin, newName, metadataAccountsJson, pairingPassword = "") {
         if (!backend) {
             console.error("keycard management module was not created")
             return
         }
-        backend.startRenameKeycard(currentPin, newName, metadataAccountsJson)
+        backend.startRenameKeycard(currentPin, newName, metadataAccountsJson, pairingPassword)
     }
 
     function remainingKeypairCapacity() {

@@ -35,6 +35,12 @@ QtObject {
         return d.mainModuleInst.authenticationModule.keycardState
     }
 
+    readonly property string keycardUid: {
+        if (!d.mainModuleInst?.authenticationModule)
+            return ""
+        return d.mainModuleInst.authenticationModule.keycardUid
+    }
+
     readonly property int remainingPinAttempts: {
         if (!d.mainModuleInst?.authenticationModule)
             return -1
@@ -89,13 +95,13 @@ QtObject {
         return d.mainModuleInst.authenticationModule.verifyPassword(password)
     }
 
-    function startKeycardAuthentication(keyUid, pin, exportChatKey) {
+    function startKeycardAuthentication(keyUid, pin, exportChatKey, pairingPassword = "") {
         if (!d.mainModuleInst.authenticationModule) {
             console.error("authentication module was not created")
             return
         }
         d.keycardAuthentication = true
-        d.mainModuleInst.authenticationModule.startKeycardAuthentication(keyUid, pin, exportChatKey)
+        d.mainModuleInst.authenticationModule.startKeycardAuthentication(keyUid, pin, exportChatKey, pairingPassword)
     }
 
     function buildKeyPairForProcessing(keyUid) {

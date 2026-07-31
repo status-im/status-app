@@ -491,7 +491,6 @@ QtObject {
             readonly property int keycardPukLength: 12
             readonly property int keycardNameLength: keypair.nameLengthMax
             readonly property int keycardNameInputWidth: 448
-            readonly property int keycardPairingCodeInputWidth: 512
             readonly property int keycardPukAdditionalSpacingOnEvery4Items: 4
             readonly property int keycardPukAdditionalSpacing: 32
             readonly property int seedPhraseCellWidth: 193
