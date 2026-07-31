@@ -7304,6 +7304,25 @@ Por favor, agrégala e intenta de nuevo.</translation>
     </message>
 </context>
 <context>
+    <name>EnterPairingPassword</name>
+    <message>
+        <source>Enter Keycard pairing password</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This Keycard was set up with a custom pairing password. Enter it to continue.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pairing password</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pairing password incorrect</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>EnterPassword</name>
     <message>
         <source>Password</source>
@@ -9036,6 +9055,10 @@ Are you sure you want to do this?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>This Keycard was set up with a custom pairing password</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Wrong Keycard inserted</source>
         <translation type="unfinished">Keycard incorrecto insertado</translation>
     </message>
@@ -9662,6 +9685,14 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Keycard &quot;%1&quot; not created: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard &quot;%1&quot; created</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Applet version</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9726,7 +9757,19 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Pairing password (optional, default if empty)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Create Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Creating Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear local pairings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10148,10 +10191,6 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Max pairing slots reached.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Keycard blocked</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10160,11 +10199,27 @@ al cargar</translation>
         <translation type="unfinished">Desbloquear</translation>
     </message>
     <message>
+        <source>Pairing password</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">Continuar</translation>
+    </message>
+    <message>
         <source>This isn&apos;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Issue detecting Keycard.&lt;br&gt;Re-scan Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This Keycard was set up with a custom pairing password. Enter it to continue.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No free pairing slots on this Keycard.&lt;br&gt;You can use it with previously paired installations.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12938,6 +12993,10 @@ al cargar</translation>
     <message>
         <source>Cancel</source>
         <translation type="unfinished">Cancelar</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">Continuar</translation>
     </message>
     <message>
         <source>Failed to update stored credentials</source>
