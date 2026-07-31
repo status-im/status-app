@@ -150,6 +150,7 @@ Control {
                       && (root.keycardState === Constants.keycard.state.waitingForReader
                           || root.keycardState === Constants.keycard.state.noReadersFound
                           || root.keycardState === Constants.keycard.state.unknownReaderState
+                          || root.keycardState === Constants.keycard.state.pairingError
                           || root.keycardState === "")
                 PropertyChanges {
                     target: image
