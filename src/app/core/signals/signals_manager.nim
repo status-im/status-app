@@ -78,8 +78,8 @@ QtObject:
     result = case signalType:
       of SignalType.Message: MessageSignal.fromEvent(jsonSignal)
       of SignalType.MessageDelivered: MessageDeliveredSignal.fromEvent(jsonSignal)
-      of SignalType.EnvelopeSent: EnvelopeSentSignal.fromEvent(jsonSignal)
-      of SignalType.EnvelopeExpired: EnvelopeExpiredSignal.fromEvent(jsonSignal)
+      of SignalType.MessagesSent: MessagesSentSignal.fromEvent(jsonSignal)
+      of SignalType.MessagesExpired: MessagesExpiredSignal.fromEvent(jsonSignal)
       of SignalType.WhisperFilterAdded: WhisperFilterSignal.fromEvent(jsonSignal)
       of SignalType.Wallet,
         SignalType.WalletSignTransactions,
@@ -98,8 +98,6 @@ QtObject:
           NodeSignal.fromEvent(signalType, jsonSignal)
       of SignalType.ConnectionStatusChange: ConnectionStatusChangeSignal.fromEvent(jsonSignal)
       of SignalType.DiscoverySummary: DiscoverySummarySignal.fromEvent(jsonSignal)
-      of SignalType.MailserverRequestCompleted: MailserverRequestCompletedSignal.fromEvent(jsonSignal)
-      of SignalType.MailserverRequestExpired: MailserverRequestExpiredSignal.fromEvent(jsonSignal)
       of SignalType.CommunityFound: CommunitySignal.fromEvent(jsonSignal)
       of SignalType.CuratedCommunitiesUpdated: CuratedCommunitiesSignal.fromEvent(jsonSignal)
       of SignalType.HistoryRequestCompleted: HistoryRequestCompletedSignal.fromEvent(jsonSignal)

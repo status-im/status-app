@@ -63,10 +63,10 @@ method onSendingMessageSuccess*(self: AccessInterface, message: MessageDto) {.ba
 method onSendingMessageError*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onEnvelopeSent*(self: AccessInterface, messagesIds: seq[string]) {.base.} =
+method onMessagesSent*(self: AccessInterface, messagesIds: seq[string]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onEnvelopeExpired*(self: AccessInterface, messagesIds: seq[string]) {.base.} =
+method onMessagesExpired*(self: AccessInterface, messagesIds: seq[string]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onMessageDelivered*(self: AccessInterface, messageId: string) {.base.} =

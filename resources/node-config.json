@@ -33,8 +33,6 @@
     "BackupDisabledDataDir": "./",
     "DataSyncEnabled": true,
     "InstallationID": "%INSTALLATIONID%",
-    "MailServerConfirmations": true,
-    "MaxMessageDeliveryAttempts": 6,
     "PFSEnabled": true,
     "VerifyENSContractAddress": "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
     "VerifyENSURL": "https://mainnet.infura.io/v3/%INFURA_TOKEN_RESOLVED%",

@@ -114,13 +114,11 @@ type
     PFSEnabled*: bool
     BackupDisabledDataDir*: string
     InstallationID*: string
-    MailServerConfirmations*: bool
     EnableConnectionManager*: bool
     EnableLastUsedMonitor*: bool
     ConnectionTarget*: int
     RequestsDelay*: int
     MaxServerFailures*: int
-    MaxMessageDeliveryAttempts*: int
     WhisperCacheDir*: string
     DisableGenericDiscoveryTopic*: bool
     SendV1Messages*: bool
@@ -386,13 +384,11 @@ proc toShhextConfig*(jsonObj: JsonNode): ShhextConfig =
   discard jsonObj.getProp("PFSEnabled", result.PFSEnabled)
   discard jsonObj.getProp("BackupDisabledDataDir", result.BackupDisabledDataDir)
   discard jsonObj.getProp("InstallationID", result.InstallationID)
-  discard jsonObj.getProp("MailServerConfirmations", result.MailServerConfirmations)
   discard jsonObj.getProp("EnableConnectionManager", result.EnableConnectionManager)
   discard jsonObj.getProp("EnableLastUsedMonitor", result.EnableLastUsedMonitor)
   discard jsonObj.getProp("ConnectionTarget", result.ConnectionTarget)
   discard jsonObj.getProp("RequestsDelay", result.RequestsDelay)
   discard jsonObj.getProp("MaxServerFailures", result.MaxServerFailures)
-  discard jsonObj.getProp("MaxMessageDeliveryAttempts", result.MaxMessageDeliveryAttempts)
   discard jsonObj.getProp("WhisperCacheDir", result.WhisperCacheDir)
   discard jsonObj.getProp("DisableGenericDiscoveryTopic", result.DisableGenericDiscoveryTopic)
   discard jsonObj.getProp("SendV1Messages", result.SendV1Messages)
