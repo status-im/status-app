@@ -10,8 +10,6 @@ statusDesktop_mainWindow_overlay_popup2 = {"container": statusDesktop_mainWindow
                                            "type": "PopupItem", "unnamed": 1, "visible": True}
 statusModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "StatusModal", "type": "PopupItem",
                "visible": True}
-statusStackModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "StatusStackModal",
-                    "type": "PopupItem", "visible": True}
 basePopupItem = {"container": statusDesktop_mainWindow_overlay, "type": "PopupItem", "unnamed": 1, "visible": True}
 
 commonDialog = {"container": statusDesktop_mainWindow_overlay, "objectName": "CommonDialogComponent", "type": "PopupItem", "visible": True}

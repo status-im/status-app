@@ -13,7 +13,7 @@ class StatusModal(QObject):
         self.wait_until_enabled()
 
 
-class StatusStackModal(QObject):
+class StatusPopup(QObject):
     def __init__(self):
-        super().__init__(names.statusStackModal)
+        super().__init__(names.basePopupItem)
         self.wait_until_enabled()

@@ -1,13 +1,13 @@
 import allure
 
 import configs
-from gui.components.status_modals import StatusStackModal
+from gui.components.status_modals import StatusPopup
 from gui.elements.button import Button
 from gui.elements.text_edit import TextEdit
 from gui.objects_map import names
 
 
-class ColorSelectPopup(StatusStackModal):
+class ColorSelectPopup(StatusPopup):
 
     def __init__(self):
         super().__init__()

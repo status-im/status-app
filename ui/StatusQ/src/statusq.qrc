@@ -259,7 +259,6 @@
         <file>StatusQ/Popups/StatusSearchPopup.qml</file>
         <file>StatusQ/Popups/StatusSearchPopupMenuItem.qml</file>
         <file>StatusQ/Popups/StatusSimpleTextPopup.qml</file>
-        <file>StatusQ/Popups/StatusStackModal.qml</file>
         <file>StatusQ/Popups/StatusSuccessAction.qml</file>
         <file>StatusQ/Popups/qmldir</file>
         <file>StatusQ/Popups/statusModal/StatusImageWithTitle.qml</file>

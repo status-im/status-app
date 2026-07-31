@@ -6,13 +6,13 @@ import allure
 
 import configs
 import driver
-from gui.components.status_modals import StatusStackModal
+from gui.components.status_modals import StatusPopup
 from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.objects_map import names
 
 
-class TagsSelectPopup(StatusStackModal):
+class TagsSelectPopup(StatusPopup):
 
     def __init__(self):
         super().__init__()
