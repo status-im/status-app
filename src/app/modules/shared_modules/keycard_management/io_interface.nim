@@ -12,7 +12,7 @@ method delete*(self: AccessInterface) {.base.} =
 method getModuleAsVariant*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method startGetMetadata*(self: AccessInterface, pin: string) {.base.} =
+method startGetMetadata*(self: AccessInterface, pin: string, pairingPassword: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method stopKeycardAction*(self: AccessInterface) {.base.} =
@@ -54,7 +54,7 @@ method startMigratingNonProfileKeypairToKeycard*(self: AccessInterface, password
   raise newException(ValueError, "No implementation available")
 
 method startAddingKeyPairToStatusFromKeycard*(self: AccessInterface, pin: string, keyUid: string,
-    metadataName: string, metadataAccounts: string) {.base.} =
+    metadataName: string, metadataAccounts: string, pairingPassword: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onKeycardExportExtendedPublicKeyFinished*(self: AccessInterface, xpub: string, rootWalletMasterKey: string, error: string) {.base.} =
@@ -80,7 +80,7 @@ method startMigratingProfileKeypairToKeycard*(self: AccessInterface, password: s
   raise newException(ValueError, "No implementation available")
 
 method startMigratingProfileKeypairUsingExistingKeycard*(self: AccessInterface, password: string, pin: string,
-    seedPhrase: string) {.base.} =
+    seedPhrase: string, pairingPassword: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onConvertingProfileKeypairFinished*(self: AccessInterface, success: bool) {.base.} =
@@ -98,25 +98,25 @@ method onNonProfileKeypairMigratedToColdWalletFinished*(self: AccessInterface, k
 method startStopUsingKeycardForProfileKeyPair*(self: AccessInterface, seedPhrase, newPassword: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method startChangeKeycardPIN*(self: AccessInterface, currentPin, newPin: string) {.base.} =
+method startChangeKeycardPIN*(self: AccessInterface, currentPin, newPin, pairingPassword: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onChangeKeycardPINFinished*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method startChangeKeycardPUK*(self: AccessInterface, currentPin, newPuk: string) {.base.} =
+method startChangeKeycardPUK*(self: AccessInterface, currentPin, newPuk, pairingPassword: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onChangeKeycardPUKFinished*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method startRenameKeycard*(self: AccessInterface, currentPin, newName, metadataAccountsJson: string) {.base.} =
+method startRenameKeycard*(self: AccessInterface, currentPin, newName, metadataAccountsJson, pairingPassword: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onRenameKeycardFinished*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method startUnblockKeycardUsingPuk*(self: AccessInterface, newPin, puk: string) {.base.} =
+method startUnblockKeycardUsingPuk*(self: AccessInterface, newPin, puk, pairingPassword: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onUnblockKeycardFinished*(self: AccessInterface, error: string) {.base.} =
@@ -129,7 +129,7 @@ method startUnblockKeycardUsingRecoveryPhrase*(self: AccessInterface, newPin: st
 method onKeycardRecoverFinished*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method startAsyncLogin*(self: AccessInterface, keyUid, pin: string, generateXPub: bool) {.base.} =
+method startAsyncLogin*(self: AccessInterface, keyUid, pin: string, generateXPub: bool, pairingPassword: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onKeycardAsyncLoginFinished*(self: AccessInterface, exportedKeys: KeycardExportedKeysDto, error: string) {.base.} =

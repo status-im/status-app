@@ -116,18 +116,19 @@ proc init*(self: Controller) =
     self.delegate.onKeycardAsyncLoginFinished(args.exportedKeys, args.error)
   self.connectionIds.add(handlerId)
 
-proc startGetMetadata*(self: Controller, pin: string) =
-  self.keycardServiceV2.asyncGetKeycardMetadata(pin)
+proc startGetMetadata*(self: Controller, pin: string, pairingPassword: string = "") =
+  self.keycardServiceV2.asyncGetKeycardMetadata(pin, pairingPassword)
 
-proc startFactoryReset*(self: Controller, keycardUid: string) =
-  self.keycardServiceV2.asyncFactoryResetKeycard(keycardUid)
+proc startFactoryReset*(self: Controller, keycardUid: string, pairingPassword: string = "") =
+  self.keycardServiceV2.asyncFactoryResetKeycard(keycardUid, pairingPassword)
 
 proc startLoadSeedPhrase*(self: Controller, pin: string, puk: string, seedPhrase: string, metadataName: string,
-    metadataPaths: seq[string]) =
-  self.keycardServiceV2.asyncLoadSeedPhrase(pin, puk, seedPhrase, metadataName, metadataPaths)
+    metadataPaths: seq[string], pairingPassword: string = "") =
+  self.keycardServiceV2.asyncLoadSeedPhrase(pin, puk, seedPhrase, metadataName, metadataPaths, pairingPassword)
 
-proc startExportExtendedPublicKey*(self: Controller, keyUid: string, path: string, exportMasterAddr: bool, pin: string) =
-  self.keycardServiceV2.asyncExportExtendedPublicKey(keyUid, path, exportMasterAddr, pin)
+proc startExportExtendedPublicKey*(self: Controller, keyUid: string, path: string, exportMasterAddr: bool, pin: string,
+    pairingPassword: string = "") =
+  self.keycardServiceV2.asyncExportExtendedPublicKey(keyUid, path, exportMasterAddr, pin, pairingPassword)
 
 proc stopKeycardAction*(self: Controller) =
   self.keycardServiceV2.asyncStop()
@@ -208,23 +209,25 @@ proc migrateNonProfileKeypairToColdWallet*(self: Controller, keyUid, password, c
     return
   self.walletAccountService.migrateNonProfileKeypairToColdWalletAsync(keyUid, password, coldWallet, doPasswordHashing)
 
-proc startChangeKeycardPIN*(self: Controller, keyUid, currentPin, newPin, keycardUid: string) =
-  self.keycardServiceV2.asyncChangeKeycardPIN(keyUid, currentPin, newPin, keycardUid)
+proc startChangeKeycardPIN*(self: Controller, keyUid, currentPin, newPin, keycardUid: string, pairingPassword: string = "") =
+  self.keycardServiceV2.asyncChangeKeycardPIN(keyUid, currentPin, newPin, keycardUid, pairingPassword)
 
-proc startChangeKeycardPUK*(self: Controller, keyUid, currentPin, newPuk, keycardUid: string) =
-  self.keycardServiceV2.asyncChangeKeycardPUK(keyUid, currentPin, newPuk, keycardUid)
+proc startChangeKeycardPUK*(self: Controller, keyUid, currentPin, newPuk, keycardUid: string, pairingPassword: string = "") =
+  self.keycardServiceV2.asyncChangeKeycardPUK(keyUid, currentPin, newPuk, keycardUid, pairingPassword)
 
-proc startRenameKeycard*(self: Controller, pin, name: string, paths: seq[string]) =
-  self.keycardServiceV2.asyncStoreKeycardMetadata(pin, name, paths)
+proc startRenameKeycard*(self: Controller, pin, name: string, paths: seq[string], pairingPassword: string = "") =
+  self.keycardServiceV2.asyncStoreKeycardMetadata(pin, name, paths, pairingPassword)
 
-proc startUnblockKeycardUsingPuk*(self: Controller, keyUid, puk, newPin, keycardUid: string) =
-  self.keycardServiceV2.asyncUnblockUsingPUK(keyUid, puk, newPin, keycardUid)
+proc startUnblockKeycardUsingPuk*(self: Controller, keyUid, puk, newPin, keycardUid: string, pairingPassword: string = "") =
+  self.keycardServiceV2.asyncUnblockUsingPUK(keyUid, puk, newPin, keycardUid, pairingPassword)
 
-proc startRecover*(self: Controller, pin, puk, mnemonic, metadataName: string, metadataPaths: seq[string], keycardUid: string) =
-  self.keycardServiceV2.asyncRecover(pin, puk, mnemonic, metadataName, metadataPaths, keycardUid)
+proc startRecover*(self: Controller, pin, puk, mnemonic, metadataName: string, metadataPaths: seq[string],
+    keycardUid: string, pairingPassword: string = "") =
+  self.keycardServiceV2.asyncRecover(pin, puk, mnemonic, metadataName, metadataPaths, keycardUid, pairingPassword)
 
-proc startAsyncLogin*(self: Controller, keyUid, pin, xPubPath: string, extendedResponse: bool = false) =
-  self.keycardServiceV2.asyncLogin(keyUid, pin, xPubPath, extendedResponse)
+proc startAsyncLogin*(self: Controller, keyUid, pin, xPubPath: string, extendedResponse: bool = false,
+    pairingPassword: string = "") =
+  self.keycardServiceV2.asyncLogin(keyUid, pin, xPubPath, extendedResponse, pairingPassword)
 
 proc remainingKeypairCapacity*(self: Controller): int =
   if not serviceApplicable(self.walletAccountService):
