@@ -83,8 +83,8 @@ method delete*[T](self: Module[T]) =
 method getModuleAsVariant*[T](self: Module[T]): QVariant =
   return self.viewVariant
 
-method startGetMetadata*[T](self: Module[T], pin: string) =
-  self.controller.startGetMetadata(pin)
+method startGetMetadata*[T](self: Module[T], pin: string, pairingPassword: string) =
+  self.controller.startGetMetadata(pin, pairingPassword)
 
 method stopKeycardAction*[T](self: Module[T]) =
   self.controller.stopKeycardAction()
@@ -280,7 +280,8 @@ method startMigratingProfileKeypairToKeycard*[T](self: Module[T], password: stri
   let metadataAccounts = self.getKeyPairAccountPathsJsonForKeyUid(keyUid)
   self.startLoadSeedPhrase(pin, seedPhrase, metadataName, metadataAccounts)
 
-method startMigratingProfileKeypairUsingExistingKeycard*[T](self: Module[T], password: string, pin: string, seedPhrase: string) =
+method startMigratingProfileKeypairUsingExistingKeycard*[T](self: Module[T], password: string, pin: string,
+    seedPhrase: string, pairingPassword: string) =
   self.tmpFlowType = FlowType.MigratingProfileKeypairUsingExistingKeycard
   self.tmpPassword = password
   self.tmpSeedPhrase = seedPhrase
@@ -289,7 +290,7 @@ method startMigratingProfileKeypairUsingExistingKeycard*[T](self: Module[T], pas
     self.emitError("provided seed phrase doesn't match the profile key pair")
     return
   self.tmpKeyUid = keyUid
-  self.controller.startAsyncLogin(keyUid, pin, xPubPath = "")
+  self.controller.startAsyncLogin(keyUid, pin, xPubPath = "", pairingPassword = pairingPassword)
 
 method onConvertingProfileKeypairFinished*[T](self: Module[T], success: bool) =
   if self.tmpFlowType == FlowType.MigratingProfileKeypairToKeycard or
@@ -366,11 +367,11 @@ method onNonProfileKeypairMigratedToColdWalletFinished*[T](self: Module[T], keyU
     return
   self.view.keycardMoveKeyPairSuccess()
 
-method startChangeKeycardPIN*[T](self: Module[T], currentPin, newPin: string) =
+method startChangeKeycardPIN*[T](self: Module[T], currentPin, newPin, pairingPassword: string) =
   self.tmpFlowType = FlowType.ChangingKeycardPIN
   let keyUid = self.view.getKeyUid()
   let keycardUid = self.view.getKeycardUid()
-  self.controller.startChangeKeycardPIN(keyUid, currentPin, newPin, keycardUid)
+  self.controller.startChangeKeycardPIN(keyUid, currentPin, newPin, keycardUid, pairingPassword)
 
 method onChangeKeycardPINFinished*[T](self: Module[T], error: string) =
   if self.tmpFlowType != FlowType.ChangingKeycardPIN:
@@ -380,11 +381,11 @@ method onChangeKeycardPINFinished*[T](self: Module[T], error: string) =
     return
   self.view.keycardChangePinSuccess()
 
-method startChangeKeycardPUK*[T](self: Module[T], currentPin, newPuk: string) =
+method startChangeKeycardPUK*[T](self: Module[T], currentPin, newPuk, pairingPassword: string) =
   self.tmpFlowType = FlowType.ChangingKeycardPUK
   let keyUid = self.view.getKeyUid()
   let keycardUid = self.view.getKeycardUid()
-  self.controller.startChangeKeycardPUK(keyUid, currentPin, newPuk, keycardUid)
+  self.controller.startChangeKeycardPUK(keyUid, currentPin, newPuk, keycardUid, pairingPassword)
 
 method onChangeKeycardPUKFinished*[T](self: Module[T], error: string) =
   if self.tmpFlowType != FlowType.ChangingKeycardPUK:
@@ -394,14 +395,14 @@ method onChangeKeycardPUKFinished*[T](self: Module[T], error: string) =
     return
   self.view.keycardChangePukSuccess()
 
-method startRenameKeycard*[T](self: Module[T], currentPin, newName, metadataAccountsJson: string) =
+method startRenameKeycard*[T](self: Module[T], currentPin, newName, metadataAccountsJson, pairingPassword: string) =
   self.tmpFlowType = FlowType.RenamingKeycard
   var paths: seq[string] = @[]
   let err = self.setPathsFromMetadataAccountsJson(paths, metadataAccountsJson)
   if err.len > 0:
     self.emitError(err)
     return
-  self.controller.startRenameKeycard(currentPin, newName, paths)
+  self.controller.startRenameKeycard(currentPin, newName, paths, pairingPassword)
 
 method onRenameKeycardFinished*[T](self: Module[T], error: string) =
   if self.tmpFlowType != FlowType.RenamingKeycard:
@@ -411,11 +412,11 @@ method onRenameKeycardFinished*[T](self: Module[T], error: string) =
     return
   self.view.keycardRenameSuccess()
 
-method startUnblockKeycardUsingPuk*[T](self: Module[T], newPin, puk: string) =
+method startUnblockKeycardUsingPuk*[T](self: Module[T], newPin, puk, pairingPassword: string) =
   self.tmpFlowType = FlowType.UnblockingKeycard
   let keyUid = self.view.getKeyUid()
   let keycardUid = self.view.getKeycardUid()
-  self.controller.startUnblockKeycardUsingPuk(keyUid, puk, newPin, keycardUid)
+  self.controller.startUnblockKeycardUsingPuk(keyUid, puk, newPin, keycardUid, pairingPassword)
 
 method onUnblockKeycardFinished*[T](self: Module[T], error: string) =
   if self.tmpFlowType != FlowType.UnblockingKeycard:
@@ -445,13 +446,13 @@ method onKeycardRecoverFinished*[T](self: Module[T], error: string) =
     return
   self.view.keycardUnblockSuccess()
 
-method startAsyncLogin*[T](self: Module[T], keyUid, pin: string, generateXPub: bool) =
+method startAsyncLogin*[T](self: Module[T], keyUid, pin: string, generateXPub: bool, pairingPassword: string) =
   self.tmpFlowType = FlowType.AsyncLogin
   self.tmpKeyUid = keyUid
   var xPubPath = ""
   if generateXPub:
     xPubPath = PATH_WALLET_XPUB
-  self.controller.startAsyncLogin(keyUid, pin, xPubPath, extendedResponse = true) # extendedResponse is true to get the full recover keys set (master address, walletRootAddress, eip1581Address...)
+  self.controller.startAsyncLogin(keyUid, pin, xPubPath, extendedResponse = true, pairingPassword = pairingPassword) # extendedResponse is true to get the full recover keys set (master address, walletRootAddress, eip1581Address...)
 
 method onKeycardAsyncLoginFinished*[T](self: Module[T], exportedKeys: KeycardExportedKeysDto, error: string) =
   if self.tmpFlowType == FlowType.MigratingProfileKeypairUsingExistingKeycard:
@@ -518,12 +519,13 @@ method startStopUsingKeycardForProfileKeyPair*[T](self: Module[T], seedPhrase, n
   self.controller.convertKeycardProfileKeypairToRegular(seedPhrase, currentPassword, newPassword)
 
 method startAddingKeyPairToStatusFromKeycard*[T](self: Module[T], pin: string, keyUid: string,
-    metadataName: string, metadataAccounts: string) =
+    metadataName: string, metadataAccounts: string, pairingPassword: string) =
   self.tmpFlowType = FlowType.AddingKeyPairFromKeycard
   self.tmpKeyUid = keyUid
   self.tmpKeypairName = metadataName
   self.tmpMetadataAccountsJson = metadataAccounts
-  self.controller.startExportExtendedPublicKey(self.tmpKeyUid, PATH_WALLET_XPUB, exportMasterAddr = true, pin)
+  self.controller.startExportExtendedPublicKey(self.tmpKeyUid, PATH_WALLET_XPUB, exportMasterAddr = true, pin,
+    pairingPassword)
 
 method onKeycardExportExtendedPublicKeyFinished*[T](self: Module[T], xpub: string, masterAddress: string, error: string) =
   if self.tmpFlowType != FlowType.AddingKeyPairFromKeycard:

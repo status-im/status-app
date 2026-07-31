@@ -7,6 +7,7 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       keycardState: string
+      keycardUid: string
       remainingPinAttempts: int
       keyPairForProcessing: KeyPairItem
       keyPairForProcessingVariant: QVariant
@@ -19,6 +20,7 @@ QtObject:
     result.QObject.setup
     result.delegate = delegate
     result.keycardState = ""
+    result.keycardUid = ""
     result.remainingPinAttempts = 0
 
   proc passwordProvided*(self: View, keyUid: string, password: string) {.slot.} =
@@ -42,8 +44,9 @@ QtObject:
   proc keycardSignSuccess*(self: View, signature: string) {.signal.}
   proc keycardSignError*(self: View, error: string) {.signal.}
 
-  proc startKeycardSigning*(self: View, keyUid: string, pin: string, txHash: string, path: string) {.slot.} =
-    self.delegate.startKeycardSigning(keyUid, pin, txHash, path)
+  proc startKeycardSigning*(self: View, keyUid: string, pin: string, txHash: string, path: string,
+      pairingPassword: string) {.slot.} =
+    self.delegate.startKeycardSigning(keyUid, pin, txHash, path, pairingPassword)
 
   proc stopKeycardSigning*(self: View) {.slot.} =
     self.delegate.stopKeycardSigning()
@@ -59,6 +62,18 @@ QtObject:
   QtProperty[string] keycardState:
     read = getKeycardState
     notify = keycardStateChanged
+
+  proc keycardUidChanged*(self: View) {.signal.}
+  proc getKeycardUid*(self: View): string {.slot.} =
+    return self.keycardUid
+  proc setKeycardUid*(self: View, value: string) =
+    if self.keycardUid == value:
+      return
+    self.keycardUid = value
+    self.keycardUidChanged()
+  QtProperty[string] keycardUid:
+    read = getKeycardUid
+    notify = keycardUidChanged
 
   proc remainingPinAttemptsChanged*(self: View) {.signal.}
   proc getRemainingPinAttempts*(self: View): int {.slot.} =

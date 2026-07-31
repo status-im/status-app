@@ -70,8 +70,9 @@ proc signMessage*(self: Controller, address: string, password: string, txHash: s
     finalPassword = common_utils.hashPassword(password)
   return self.transactionService.signMessage(address, finalPassword, txHash)
 
-proc startKeycardSigning*(self: Controller, keyUid: string, pin: string, txHash: string, path: string) =
-  self.keycardServiceV2.asyncSign(keyUid, pin, txHash, path)
+proc startKeycardSigning*(self: Controller, keyUid: string, pin: string, txHash: string, path: string,
+    pairingPassword: string = "") =
+  self.keycardServiceV2.asyncSign(keyUid, pin, txHash, path, pairingPassword)
 
 proc stopKeycardSigning*(self: Controller) =
   self.keycardServiceV2.stop()

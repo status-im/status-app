@@ -47,8 +47,8 @@ QtObject:
   proc keycardGetMetadataSuccess*(self: View) {.signal.}
   proc keycardGetMetadataError*(self: View, error: string) {.signal.}
 
-  proc startGetMetadata*(self: View, pin: string) {.slot.} =
-    self.delegate.startGetMetadata(pin)
+  proc startGetMetadata*(self: View, pin: string, pairingPassword: string) {.slot.} =
+    self.delegate.startGetMetadata(pin, pairingPassword)
 
   proc keycardFactoryResetSuccess*(self: View) {.signal.}
   proc keycardFactoryResetError*(self: View, error: string) {.signal.}
@@ -77,26 +77,27 @@ QtObject:
   proc keycardChangePinSuccess*(self: View) {.signal.}
   proc keycardChangePinError*(self: View, error: string) {.signal.}
 
-  proc startChangeKeycardPIN*(self: View, currentPin: string, newPin: string) {.slot.} =
-    self.delegate.startChangeKeycardPIN(currentPin, newPin)
+  proc startChangeKeycardPIN*(self: View, currentPin: string, newPin: string, pairingPassword: string) {.slot.} =
+    self.delegate.startChangeKeycardPIN(currentPin, newPin, pairingPassword)
 
   proc keycardChangePukSuccess*(self: View) {.signal.}
   proc keycardChangePukError*(self: View, error: string) {.signal.}
 
-  proc startChangeKeycardPUK*(self: View, currentPin: string, newPuk: string) {.slot.} =
-    self.delegate.startChangeKeycardPUK(currentPin, newPuk)
+  proc startChangeKeycardPUK*(self: View, currentPin: string, newPuk: string, pairingPassword: string) {.slot.} =
+    self.delegate.startChangeKeycardPUK(currentPin, newPuk, pairingPassword)
 
   proc keycardRenameSuccess*(self: View) {.signal.}
   proc keycardRenameError*(self: View, error: string) {.signal.}
 
-  proc startRenameKeycard*(self: View, currentPin: string, newName: string, metadataAccountsJson: string) {.slot.} =
-    self.delegate.startRenameKeycard(currentPin, newName, metadataAccountsJson)
+  proc startRenameKeycard*(self: View, currentPin: string, newName: string, metadataAccountsJson: string,
+      pairingPassword: string) {.slot.} =
+    self.delegate.startRenameKeycard(currentPin, newName, metadataAccountsJson, pairingPassword)
 
   proc keycardUnblockSuccess*(self: View) {.signal.}
   proc keycardUnblockError*(self: View, error: string) {.signal.}
 
-  proc startUnblockKeycardUsingPuk*(self: View, newPin: string, puk: string) {.slot.} =
-    self.delegate.startUnblockKeycardUsingPuk(newPin, puk)
+  proc startUnblockKeycardUsingPuk*(self: View, newPin: string, puk: string, pairingPassword: string) {.slot.} =
+    self.delegate.startUnblockKeycardUsingPuk(newPin, puk, pairingPassword)
 
   proc startUnblockKeycardUsingRecoveryPhrase*(self: View, newPin: string, seedPhrase: string,
       metadataName: string, metadataAccountsJson: string) {.slot.} =
@@ -105,8 +106,8 @@ QtObject:
   proc keycardAsyncLoginSuccess*(self: View, dataJson: string) {.signal.}
   proc keycardAsyncLoginError*(self: View, error: string) {.signal.}
 
-  proc startAsyncLogin*(self: View, keyUid: string, pin: string, generateXPub: bool) {.slot.} =
-    self.delegate.startAsyncLogin(keyUid, pin, generateXPub)
+  proc startAsyncLogin*(self: View, keyUid: string, pin: string, generateXPub: bool, pairingPassword: string) {.slot.} =
+    self.delegate.startAsyncLogin(keyUid, pin, generateXPub, pairingPassword)
 
   proc keyPairModelChanged(self: View) {.signal.}
   proc getKeyPairModel(self: View): QVariant {.slot.} =
@@ -162,12 +163,13 @@ QtObject:
   proc startMigratingProfileKeypairToKeycard*(self: View, password: string, pin: string, seedPhrase: string) {.slot.} =
     self.delegate.startMigratingProfileKeypairToKeycard(password, pin, seedPhrase)
 
-  proc startMigratingProfileKeypairUsingExistingKeycard*(self: View, password: string, pin: string, seedPhrase: string) {.slot.} =
-    self.delegate.startMigratingProfileKeypairUsingExistingKeycard(password, pin, seedPhrase)
+  proc startMigratingProfileKeypairUsingExistingKeycard*(self: View, password: string, pin: string, seedPhrase: string,
+      pairingPassword: string) {.slot.} =
+    self.delegate.startMigratingProfileKeypairUsingExistingKeycard(password, pin, seedPhrase, pairingPassword)
 
   proc startAddingKeyPairToStatusFromKeycard*(self: View, pin: string, keyUid: string, metadataName: string,
-      metadataAccounts: string) {.slot.} =
-    self.delegate.startAddingKeyPairToStatusFromKeycard(pin, keyUid, metadataName, metadataAccounts)
+      metadataAccounts: string, pairingPassword: string) {.slot.} =
+    self.delegate.startAddingKeyPairToStatusFromKeycard(pin, keyUid, metadataName, metadataAccounts, pairingPassword)
 
   proc startStopUsingKeycardForKeyPair*(self: View, keyUid: string, seedPhrase: string, newPassword: string) {.slot.} =
     self.delegate.startStopUsingKeycardForKeyPair(keyUid, seedPhrase, newPassword)
