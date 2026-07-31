@@ -64,6 +64,15 @@ Item {
             }
             onAccountLoginError: function (error, wrongPassword) {
                 onboardingStore.loginRequestSent = false
+
+                // Pop the splash screen that onLoginRequested pushed, instead of unwinding — unwinding replaces the current screen
+                const loginScreen = onboardingLayout.stack.loginScreen
+                if (onboardingStore.keycardState === Onboarding.KeycardState.PairingPasswordRequired
+                        && !!loginScreen) {
+                    onboardingLayout.stack.pop(loginScreen)
+                    return
+                }
+
                 onboardingLayout.unwindToLoginScreen()
             }
             onSaveBiometricsRequested: (account, credential) => {

@@ -35,10 +35,14 @@ Control {
 
     signal loginRequested(string pin)
 
+    signal pairingPasswordSubmitted()
+
+    readonly property alias pairingPassword: pairingPasswordInput.text
 
     function clear() {
         d.wrongPin = false
         pinInputField.clearPin()
+        pairingPasswordInput.clear()
     }
 
     function markAsWrongPin() {
@@ -55,7 +59,9 @@ Control {
 
     QtObject {
         id: d
+
         property bool wrongPin
+        readonly property bool pairingPasswordRequired: root.keycardState === Onboarding.KeycardState.PairingPasswordRequired
     }
 
     background: Rectangle {
@@ -122,6 +128,30 @@ Control {
                 cursorShape: !!parent.hoveredLink ? Qt.PointingHandCursor : undefined
             }
             onLinkActivated: root.detailedErrorPopupRequested()
+        }
+
+        StatusPasswordInput {
+            id: pairingPasswordInput
+            objectName: "keycardPairingPasswordInput"
+            Layout.fillWidth: true
+            visible: false
+            placeholderText: qsTr("Pairing password")
+            selectByMouse: true
+
+            onAccepted: {
+                if (text !== "")
+                    root.pairingPasswordSubmitted()
+            }
+        }
+
+        MaybeOutlineButton {
+            id: pairingPasswordButton
+            objectName: "btnSubmitPairingPassword"
+            Layout.fillWidth: true
+            visible: false
+            enabled: pairingPasswordInput.text !== ""
+            text: qsTr("Continue")
+            onClicked: root.pairingPasswordSubmitted()
         }
 
         MaybeOutlineButton {
@@ -193,8 +223,7 @@ Control {
         },
         State {
             name: "genericError"
-            when: (root.keycardState === Onboarding.KeycardState.NoPCSCService ||
-                  root.keycardState === Onboarding.KeycardState.MaxPairingSlotsReached ) && !SQUtils.Utils.isMobile
+            when: root.keycardState === Onboarding.KeycardState.NoPCSCService && !SQUtils.Utils.isMobile
             extend: "notEmpty"
             PropertyChanges {
                 target: infoText
@@ -203,13 +232,38 @@ Control {
             }
         },
         State {
+            name: "pairingPasswordRequired"
+            when: d.pairingPasswordRequired
+            PropertyChanges {
+                target: infoText
+                text: qsTr("This Keycard was set up with a custom pairing password. Enter it to continue.")
+            }
+            PropertyChanges {
+                target: background
+                border.color: Theme.palette.primaryColor1
+            }
+            PropertyChanges {
+                target: pinInputField
+                visible: false
+            }
+            PropertyChanges {
+                target: pairingPasswordInput
+                visible: true
+                enabled: true
+            }
+            PropertyChanges {
+                target: pairingPasswordButton
+                visible: true
+            }
+        },
+        State {
             name: "maxPairingSlotsReached"
-            when: root.keycardState === Onboarding.KeycardState.MaxPairingSlotsReached && SQUtils.Utils.isMobile
+            when: root.keycardState === Onboarding.KeycardState.MaxPairingSlotsReached
             extend: "notEmpty"
             PropertyChanges {
                 target: infoText
                 color: Theme.palette.dangerColor1
-                text: qsTr("Max pairing slots reached.")
+                text: qsTr("No free pairing slots on this Keycard.<br>You can use it with previously paired installations.")
             }
         },
         State {
