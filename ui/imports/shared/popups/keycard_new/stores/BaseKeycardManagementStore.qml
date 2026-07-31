@@ -24,10 +24,10 @@ QtObject {
     }
 
     // common function calls
-    function startGetMetadata(pin) {
+    function startGetMetadata(pin, pairingPassword = "") {
         if (!backend)
             return
-        backend.startGetMetadata(pin)
+        backend.startGetMetadata(pin, pairingPassword)
     }
 
     function startFactoryReset(keycardUid) {
@@ -36,10 +36,10 @@ QtObject {
         backend.startFactoryReset(keycardUid)
     }
 
-    function startUnblockKeycardUsingPuk(newPin, puk) {
+    function startUnblockKeycardUsingPuk(newPin, puk, pairingPassword = "") {
         if (!backend)
             return
-        backend.startUnblockKeycardUsingPuk(newPin, puk)
+        backend.startUnblockKeycardUsingPuk(newPin, puk, pairingPassword)
     }
 
     function startUnblockKeycardUsingRecoveryPhrase(newPin, seedPhrase, metadataName, metadataAccountsJson) {
