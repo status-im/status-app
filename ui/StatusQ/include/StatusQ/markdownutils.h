@@ -3,6 +3,7 @@
 #include <QFont>
 #include <QObject>
 #include <QString>
+#include <QStringList>
 #include <QVariantList>
 #include <QVariantMap>
 
@@ -50,4 +51,9 @@ public:
     // code content inline, line breaks preserved) — e.g. for Accessible.name. Mentions are
     // resolved from `mentions` as in toBlocks. See Markdown::toPlainText.
     Q_INVOKABLE QString plainText(const QString& text, const QVariantMap& mentions = {}) const;
+
+    // Returns the pub keys of all mentions in `text`, unique and in first-seen order
+    // (e.g. "0x04ab…", "0x00001"). Parsed via the Markdown AST, so "@0x…" tokens inside
+    // code spans/blocks are excluded. Empty when there are none.
+    Q_INVOKABLE QStringList mentions(const QString& text) const;
 };

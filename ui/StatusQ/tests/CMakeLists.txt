@@ -52,6 +52,11 @@ add_executable(MarkdownHtmlTest src/tst_markdownhtml.cpp)
 target_link_libraries(MarkdownHtmlTest PRIVATE Qt::Test StatusQ)
 add_test(NAME MarkdownHtmlTest COMMAND MarkdownHtmlTest)
 
+# MarkdownUtils pulls in QFont (QtGui) via its header, so this test also needs Qt::Gui.
+add_executable(MarkdownUtilsTest src/tst_markdownutils.cpp)
+target_link_libraries(MarkdownUtilsTest PRIVATE Qt::Test Qt::Gui StatusQ)
+add_test(NAME MarkdownUtilsTest COMMAND MarkdownUtilsTest)
+
 # Parser benchmark — a reference point for optimisation. Labelled "benchmark" so it can be
 # excluded from a normal run (ctest -LE benchmark) or run alone (ctest -R MarkdownParserBenchmark).
 add_executable(MarkdownParserBenchmark src/tst_markdownparser_benchmark.cpp)

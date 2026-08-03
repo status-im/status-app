@@ -25,6 +25,17 @@ void collectTextMentions(const Markdown::Node& node, const QVariantMap& names,
         collectTextMentions(c, names, out);
 }
 
+// Collects the pub key (`destination`) of every textual Mention node into `out`, unique and in
+// first-seen order. Pill mentions (ObjectReplacementCharacter) carry no destination and are skipped.
+void collectMentionKeys(const Markdown::Node& node, QStringList& out)
+{
+    if (node.kind == Markdown::NodeKind::Mention && !node.destination.isEmpty()
+            && !out.contains(node.destination))
+        out.append(node.destination);
+    for (const Markdown::Node& c : node.children)
+        collectMentionKeys(c, out);
+}
+
 } // namespace
 
 MarkdownUtils::MarkdownUtils(QObject* parent)
@@ -82,4 +93,11 @@ QString MarkdownUtils::plainText(const QString& text, const QVariantMap& mention
     collectTextMentions(root, mentions, mentionMap);
 
     return Markdown::toPlainText(root, mentionMap);
+}
+
+QStringList MarkdownUtils::mentions(const QString& text) const
+{
+    QStringList out;
+    collectMentionKeys(Markdown::parse(text, {}), out);
+    return out;
 }
