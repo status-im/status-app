@@ -1,11 +1,15 @@
 import QtQuick
 import QtTest
 
+import StatusQ.Popups
+
 import AppLayouts.Profile.helpers
 
 import mainui
 import mainui.adaptors
 import utils
+
+import shared.controls.chat.menuItems
 
 import Models
 
@@ -62,6 +66,11 @@ Item {
         }
     }
 
+    QtObject {
+        id: d
+        property bool cascadeSubmenus: true
+    }
+
     SignalSpy {
         id: itemActivatedSpy
         signalName: "itemActivated"
@@ -91,6 +100,7 @@ Item {
             itemActivatedSpy.clear()
             activityCenterSpy.clear()
             sidebarAdaptor.reset()
+            d.cascadeSubmenus = true
         }
 
         function test_basic_geometry() {
@@ -275,9 +285,9 @@ Item {
 
         function test_community_buttons_have_object_name() {
             // Look for community buttons with specific objectName
-            const communityBtn = findChild(controlUnderTest, "CommunityNavBarButton")
-            // May or may not exist depending on model data, just verify no crash
-            verify(true)
+            const communityBtn = findChild(controlUnderTest, "CommunityNavBarButton_Status.app")
+            verify(!!communityBtn)
+            tryCompare(communityBtn, "visible", true)
         }
 
         function test_drawer_always_visible() {
@@ -288,6 +298,58 @@ Item {
             // Test non-interactive mode
             controlUnderTest.alwaysVisible = true
             tryCompare(controlUnderTest, "position", 1.0)
+        }
+
+        Component {
+            id: communityMuteContextMenu
+            StatusMenu {
+                objectName: "communityContextMenu"
+                required property var model
+                cascade: d.cascadeSubmenus
+                MuteChatMenuItem {
+                    objectName: "muteSubMenuPopup"
+                    title: qsTr("Mute Community")
+                }
+            }
+        }
+
+        function test_community_context_menu_mute_submenu_data() {
+            return [
+              { tag: "cascade (desktop)", cascade: true },
+              { tag: "no cascade (mobile)", cascade: false },
+            ]
+        }
+
+        function test_community_context_menu_mute_submenu(data) {
+            d.cascadeSubmenus = data.cascade
+
+            controlUnderTest.communityPopupMenu = communityMuteContextMenu
+            const communityBtn = findChild(controlUnderTest, "CommunityNavBarButton_Status.app")
+            verify(!!communityBtn)
+            tryCompare(communityBtn, "visible", true)
+            mouseClick(communityBtn, communityBtn.width/2, communityBtn.height/2, Qt.RightButton)
+
+            const menu = findChild(communityBtn, "communityContextMenu")
+            verify(!!menu)
+            tryCompare(menu, "visible", true)
+
+            const muteSubMenu = findChild(menu, "StatusMenuItemDelegate") // need the delegate here to click
+            verify(!!muteSubMenu)
+
+            if (d.cascadeSubmenus) {
+                mouseMove(muteSubMenu)
+                // both menus are shown, usually side by side
+                const muteSubMenuPopup = findChild(communityBtn, "muteSubMenuPopup")
+                verify(!!muteSubMenuPopup)
+                tryCompare(muteSubMenuPopup, "visible", true)
+            } else {
+                mouseClick(muteSubMenu)
+                // the old menu is gone; and we have a new one
+                tryCompare(menu, "visible", false)
+                const muteSubMenuPopup = findChild(communityBtn, "muteSubMenuPopup")
+                verify(!!muteSubMenuPopup)
+                tryCompare(muteSubMenuPopup, "visible", true)
+            }
         }
     }
 }

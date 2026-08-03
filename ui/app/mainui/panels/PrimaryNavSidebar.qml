@@ -352,7 +352,7 @@ Control {
 
     component CommunitySectionButton: RegularSectionButton {
         id: communityNavBarButton
-        objectName: "CommunityNavBarButton"
+        objectName: "CommunityNavBarButton_" + model.name
 
         tooltipText: model.name
 
