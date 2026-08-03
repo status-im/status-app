@@ -11332,10 +11332,6 @@ to load</source>
         <source>Wallet</source>
         <translation type="unfinished">지갑</translation>
     </message>
-    <message>
-        <source>Close</source>
-        <translation type="unfinished">닫기</translation>
-    </message>
 </context>
 <context>
     <name>MobileSettingsMenu</name>

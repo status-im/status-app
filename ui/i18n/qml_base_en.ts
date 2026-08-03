@@ -11372,10 +11372,6 @@ to load</source>
         <source>Wallet</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Close</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>MobileSettingsMenu</name>

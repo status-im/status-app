@@ -11385,10 +11385,6 @@ al cargar</translation>
         <source>Wallet</source>
         <translation type="unfinished">Billetera</translation>
     </message>
-    <message>
-        <source>Close</source>
-        <translation type="unfinished">Cerrar</translation>
-    </message>
 </context>
 <context>
     <name>MobileSettingsMenu</name>

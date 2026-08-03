@@ -11439,10 +11439,6 @@ selhalo</translation>
         <source>Wallet</source>
         <translation type="unfinished">Peněženka</translation>
     </message>
-    <message>
-        <source>Close</source>
-        <translation type="unfinished">Zavřít</translation>
-    </message>
 </context>
 <context>
     <name>MobileSettingsMenu</name>
