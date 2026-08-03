@@ -1,6 +1,7 @@
 import allure
 import pytest
 from allure_commons._allure import step
+from web3 import Web3
 
 from constants import RandomWalletAccount
 from helpers.wallet_helper import authenticate_with_password
@@ -42,8 +43,9 @@ def test_plus_button_manage_account_from_private_key(main_screen: MainWindow, us
                 wallet_account.name,
                 account_index))
         address = settings_acc_view.get_account_address_value()
-        assert address == address_pair.wallet_address, \
-            f"Recovered account should have address {address_pair.wallet_address}, but has {address}"
+        expected_address = Web3.to_checksum_address(address_pair.wallet_address)
+        assert address == expected_address, \
+            f"Recovered account should have address {expected_address}, but has {address}"
 
     with step('Edit wallet account'):
         main_screen.left_panel.open_wallet()

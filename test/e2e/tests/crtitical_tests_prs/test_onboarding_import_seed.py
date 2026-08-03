@@ -1,6 +1,7 @@
 import allure
 import pytest
 from allure_commons._allure import step
+from web3 import Web3
 
 from constants import UserAccount
 from constants.dock_buttons import DockButtons
@@ -42,9 +43,9 @@ def test_import_and_reimport_random_seed(
         address = status_acc_view.get_account_address_value()
 
         address_from_seed = get_wallet_address_from_mnemonic(seed_phrase)
-        # assert Web3.is_checksum_address(address) todo: https://github.com/status-im/status-desktop/issues/17648
-        assert address == address_from_seed, \
-            f"Recovered account should have address {address_from_seed}, but has {address}"
+        expected_address = Web3.to_checksum_address(address_from_seed)
+        assert address == expected_address, \
+            f"Recovered account should have address {expected_address}, but has {address}"
 
     with step('Verify that the user logged in via seed phrase correctly'):
         user_canvas = main_window.left_panel.open_online_identifier()

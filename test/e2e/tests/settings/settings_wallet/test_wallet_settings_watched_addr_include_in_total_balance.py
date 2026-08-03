@@ -4,6 +4,7 @@ import string
 import allure
 import pytest
 from allure_commons._allure import step
+from web3 import Web3
 
 
 import configs
@@ -53,7 +54,7 @@ def test_settings_include_in_total_balance(main_screen: MainWindow, name, watche
         assert acc_view.get_account_name_value() == name, \
             f"Watched address name is incorrect, current name is {acc_view.get_account_name_value()}, expected {name}"
 
-        assert acc_view.get_account_address_value() == str(watched_address).lower(), \
+        assert acc_view.get_account_address_value() == Web3.to_checksum_address(watched_address), \
             f"Watched address in details view does not match {watched_address}"
 
         assert acc_view.get_account_origin_value() == WalletAccountSettings.WATCHED_ADDRESS_ORIGIN.value, \

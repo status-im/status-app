@@ -18,20 +18,35 @@ except ImportError:
     )
 
 def _resolve_aut_path(aut_path: str) -> SystemPath:
-    """On macOS, accept a .app bundle path and resolve to the MacOS binary."""
-    path = SystemPath(aut_path)
+    """Resolve AUT_PATH to the launchable binary.
+
+    macOS accepts:
+    - /path/to/Status.app
+    - /path/to/Status.app/Contents/MacOS/nim_status_client
+    - /path/to/status-app/bin/nim_status_client
+    """
+    resolved = SystemPath(aut_path)
     if get_platform() != 'Darwin':
-        return path
-    if path.suffix == '.app' and path.is_dir():
-        binary = path / 'Contents' / 'MacOS' / 'nim_status_client'
-        if binary.is_file():
-            return binary
-        exit(f'AUT_PATH bundle has no binary at {binary}')
-    if path.is_dir():
-        exit(
-            f'AUT_PATH must be Status.app or .../Contents/MacOS/nim_status_client, got: {path}'
-        )
-    return path
+        return resolved
+
+    if resolved.suffix == '.app':
+        if not resolved.is_dir():
+            exit(f'AUT_PATH .app bundle not found: {resolved}')
+        binary = resolved / 'Contents' / 'MacOS' / 'nim_status_client'
+        if not binary.is_file():
+            exit(f'AUT_PATH bundle has no binary at {binary}')
+        return binary
+
+    if resolved.is_file():
+        return resolved
+
+    exit(
+        f'AUT_PATH not found: {resolved}\n'
+        'On macOS set AUT_PATH to one of:\n'
+        '  /path/to/Status.app\n'
+        '  /path/to/Status.app/Contents/MacOS/nim_status_client\n'
+        '  /path/to/status-app/bin/nim_status_client'
+    )
 
 
 if AUT_PATH is None:
@@ -39,8 +54,6 @@ if AUT_PATH is None:
 if get_platform() == "Windows" and 'Status' not in AUT_PATH:
     exit('Please use launcher from "Status" folder in "AUT_PATH"')
 AUT_PATH = _resolve_aut_path(AUT_PATH)
-if get_platform() == 'Darwin' and not AUT_PATH.is_file():
-    exit(f'AUT_PATH must point to nim_status_client binary, got: {AUT_PATH}')
 WALLET_SEED = os.getenv('WALLET_TEST_USER_SEED')
 
 # Application and Squish logs (all platforms).
