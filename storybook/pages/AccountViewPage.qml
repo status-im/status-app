@@ -33,6 +33,7 @@ SplitView {
             dummyOverview = ({
                                  name: "helloworld",
                                  address: "0xcdc2ea3b6ba8fed3a3402f8db8b2fab53e7b7421",
+                                 mixedcaseAddress: "0xcDC2Ea3b6bA8FEd3a3402F8dB8b2fAb53E7B7421",
                                  ens: emptyString,
                                  colorId: clr,
                                  emoji: "⚽",
