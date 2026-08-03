@@ -20,6 +20,7 @@ Control {
     required property var browserDappsModel
     required property url url
     property url faviconUrl
+    property var autocompleteHistory
 
     signal requestStopLoadingPage()
     signal requestReloadPage()
@@ -64,7 +65,8 @@ Control {
                     return addressBar.cursorVisible ? Theme.palette.privacyColors.primary : Theme.palette.privacyColors.secondary
                 return addressBar.cursorVisible ? Theme.palette.baseColor2 : Theme.palette.background
             }
-            onAccepted: root.requestLaunchInBrowser(text)
+            autocompleteHistory: root.autocompleteHistory
+            onNavigationRequested: url => root.requestLaunchInBrowser(url)
         }
 
         BrowserHeaderButton {

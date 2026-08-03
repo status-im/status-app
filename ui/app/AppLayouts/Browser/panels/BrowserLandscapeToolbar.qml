@@ -17,6 +17,7 @@ BrowserToolbarBase {
     id: root
 
     required property url url
+    property var autocompleteHistory
 
     function activateAddressBar() {
         addressBar.forceActiveFocus()
@@ -81,7 +82,8 @@ BrowserToolbarBase {
                     return StatusColors.transparent
                 return incognitoMode ? Theme.palette.privacyColors.secondary : Theme.palette.baseColor2
             }
-            onAccepted: root.requestLaunchInBrowser(text)
+            autocompleteHistory: root.autocompleteHistory
+            onNavigationRequested: url => root.requestLaunchInBrowser(url)
         }
 
         LandscapeToolbarButton {

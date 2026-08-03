@@ -1,10 +1,16 @@
 import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
 
+import StatusQ.Core
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Components
 
 import utils
+
+import SortFilterProxyModel
 
 StatusTextField {
     id: root
@@ -17,7 +23,11 @@ StatusTextField {
     property bool showFavicon
     property bool loading
 
+    property var autocompleteHistory
+
     readonly property url searchEngineIcon: Assets.svg(SearchEnginesConfig.getEngineIcon(localAccountSensitiveSettings.selectedBrowserSearchEngineId))
+
+    signal navigationRequested(string url)
 
     implicitHeight: 40
 
@@ -36,13 +46,19 @@ StatusTextField {
     EnterKey.type: Qt.EnterKeyGo
 
     text: root.url
+
     onActiveFocusChanged: {
         if (activeFocus) {
             selectAll()
-        } else {
-            if (text === "") // restore the old URL
+        } else if (!dropdown.visible) {
+            if (text !== root.url.toString() && root.url.toString() !== "") // restore the old (non empty) URL
                 text = Qt.binding(() => root.url)
         }
+    }
+
+    onAccepted: {
+        dropdown.close()
+        navigationRequested(text)
     }
 
     StatusRoundedImage {
@@ -75,9 +91,107 @@ StatusTextField {
         anchors.verticalCenter: parent.verticalCenter
         visible: parent.cursorVisible && !!parent.text
         tooltip.orientation: StatusToolTip.Orientation.Bottom
-        onClicked: {
-            parent.forceActiveFocus()
-            parent.clear()
+        onClicked: parent.clear()
+    }
+
+    SortFilterProxyModel {
+        id: sfpm
+        sourceModel: root.autocompleteHistory
+        filters: [
+            SQUtils.SearchFilter {
+                roleName: "escapedUrl"
+                searchPhrase: root.text
+            }
+        ]
+        sorters: [
+            RoleSorter {
+                roleName: "timestamp"
+                sortOrder: Qt.DescendingOrder
+            },
+            StringSorter {
+                roleName: "url"
+                caseSensitivity: Qt.CaseInsensitive
+            }
+        ]
+    }
+
+    Keys.forwardTo: dropdown
+    Keys.onEscapePressed: {
+        dropdown.close()
+        root.focus = sfpm.count > 0
+    }
+    Keys.onDownPressed: {
+        if (dropdown.visible) {
+            selectorPanel.forceActiveFocus()
+            selectorPanel.currentIndex = 0
         }
+    }
+
+    StatusDropdown {
+        id: dropdown
+
+        directParent: root
+        relativeX: root.width - width
+        relativeY: root.height + 2
+        width: root.width
+        bottomSheetAllowed: false
+        padding: 0
+        focus: false
+        dim: false
+
+        visible: sfpm.count > 0 && root.text !== ""
+
+        contentItem: StatusListView {
+            id: selectorPanel
+            width: root.width
+            implicitHeight: contentHeight
+            model: sfpm
+            currentIndex: -1
+            highlightFollowsCurrentItem: true
+            highlight: Rectangle {
+                radius: Theme.radius
+                color: selectorPanel.activeFocus ? Theme.palette.primaryColor2 : StatusColors.transparent
+            }
+            Keys.onUpPressed: {
+                if (currentIndex === 0)
+                    root.forceActiveFocus()
+                else
+                    currentIndex--
+            }
+
+            delegate: ItemDelegate {
+                width: ListView.view.width - Theme.padding
+                background: Rectangle {
+                    radius: Theme.radius
+                    color: selectorPanel.activeFocus ? StatusColors.transparent
+                                                     : hovered ? Theme.palette.primaryColor2
+                                                               : StatusColors.transparent
+                }
+                contentItem: RowLayout {
+                    StatusIcon {
+                        Layout.preferredWidth: 20
+                        Layout.preferredHeight: 20
+                        icon: model.isSearch ? "search" : "globe"
+                        color: Theme.palette.primaryColor1
+                    }
+                    StatusBaseText {
+                        Layout.fillWidth: true
+                        elide: Text.ElideMiddle
+                        maximumLineCount: 1
+                        text: model.url
+                        font.pixelSize: Theme.fontSize(14)
+                    }
+                }
+                onClicked: {
+                    dropdown.close()
+                    root.navigationRequested(model.url)
+                }
+                HoverHandler {
+                    cursorShape: hovered ? Qt.PointingHandCursor : undefined
+                }
+            }
+        }
+
+        onClosed: selectorPanel.currentIndex = -1
     }
 }

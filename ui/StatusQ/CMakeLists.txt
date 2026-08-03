@@ -184,6 +184,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/rxvalidator.h
         include/StatusQ/shareutils.h
         include/StatusQ/stablearraysorter.h
+        include/StatusQ/statusbrowserautocompletemodel.h
         include/StatusQ/statuscolors.h
         include/StatusQ/statusemojimodel.h
         include/StatusQ/statussyntaxhighlighter.h
@@ -222,6 +223,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/permissionutilsinternal.cpp
         src/rxvalidator.cpp
         src/stablearraysorter.cpp
+        src/statusbrowserautocompletemodel.cpp
         src/statuscolors.cpp
         src/statusemojimodel.cpp
         src/statussyntaxhighlighter.cpp

@@ -16,6 +16,7 @@
 #include "StatusQ/rxvalidator.h"
 #include "StatusQ/shareutils.h"
 #include "StatusQ/statuscolors.h"
+#include "StatusQ/statusbrowserautocompletemodel.h"
 #include "StatusQ/statusemojimodel.h"
 #include "StatusQ/chatinputhighlighter.h"
 #include "StatusQ/statussyntaxhighlighter.h"
@@ -91,6 +92,7 @@ void registerStatusQTypes() {
     qmlRegisterType<UndefinedFilter>("StatusQ", 0, 1, "UndefinedFilter");
     qmlRegisterType<ConstantRole>("StatusQ", 0, 1, "ConstantRole");
 
+    qmlRegisterType<StatusBrowserAutocompleteModel>("StatusQ.Models", 0, 1, "StatusBrowserAutocompleteModel");
     qmlRegisterType<StatusEmojiModel>("StatusQ", 0, 1, "StatusEmojiModel");
     qmlRegisterType<FormattedDoubleProperty>("StatusQ", 0, 1, "FormattedDoubleProperty");
 
