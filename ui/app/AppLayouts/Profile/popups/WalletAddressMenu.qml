@@ -6,6 +6,7 @@ import StatusQ.Popups
 import shared.popups
 import utils
 
+import AppLayouts.Wallet
 import AppLayouts.Wallet.popups
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,11 +26,14 @@ StatusMenu {
 
     property var selectedAccount: ({
                                        address: "",
+                                       mixedcaseAddress: "",
                                        name: "",
                                        emoji: "",
                                        colorId: "",
                                    })
     property var flatNetworks
+
+    readonly property string displayAddress: WalletUtils.preferredAddress(root.selectedAccount)
 
     signal copyToClipboard(string address)
 
@@ -53,7 +57,7 @@ StatusMenu {
         successText:  qsTr("Address copied")
         text: qsTr("Copy address")
         icon.name: "copy"
-        onTriggered: root.copyToClipboard(root.selectedAccount.address?? "")
+        onTriggered: root.copyToClipboard(root.displayAddress)
     }
     StatusAction {
         id: showQrAction
@@ -65,6 +69,7 @@ StatusMenu {
                                                 hasFloatingButtons: false,
                                                 name: root.selectedAccount.name?? "",
                                                 address: root.selectedAccount.address?? "",
+                                                mixedcaseAddress: root.displayAddress,
                                                 emoji: root.selectedAccount.emoji?? "",
                                                 colorId: root.selectedAccount.colorId?? ""
                                             })

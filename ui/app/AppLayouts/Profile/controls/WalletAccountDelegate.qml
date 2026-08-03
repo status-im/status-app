@@ -20,7 +20,9 @@ StatusListItem {
 
     objectName: account.name
     title: account.name
-    subTitle: WalletUtils.addressToDisplay(Theme.palette, account.address, true, sensor.containsMouse)
+    subTitle: WalletUtils.addressToDisplay(Theme.palette,
+                                           WalletUtils.preferredAddress(account),
+                                           true, sensor.containsMouse)
     asset.color: !!account.colorId ? Utils.getColorForId(Theme.palette, account.colorId): ""
     asset.emoji: account.emoji
     asset.name: !account.emoji ? "filled-account": ""

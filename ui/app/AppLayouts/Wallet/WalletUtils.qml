@@ -34,6 +34,12 @@ QtObject {
         return hovered ? Utils.richColorText(finalAddress, palette.directColor1) : finalAddress
     }
 
+    function preferredAddress(account) {
+        if (!account)
+            return ""
+        return account.mixedcaseAddress || account.address || ""
+    }
+
     /**
       Calculate max safe amount to be used when making a transaction
 

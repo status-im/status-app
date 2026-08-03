@@ -93,7 +93,9 @@ ColumnLayout {
                 draggable: accountsList.count > 1
                 Drag.keys: [d.walletAccountDnDKey]
                 title: model.name
-                secondaryTitle: WalletUtils.addressToDisplay(Theme.palette, model.address, true, containsMouse)
+                secondaryTitle: WalletUtils.addressToDisplay(Theme.palette,
+                                                             WalletUtils.preferredAddress(model),
+                                                             true, containsMouse)
                 secondaryTitleIcon: model.walletType === Constants.watchWalletType? "show" :
                                                                                     model.migratedToColdWallet ? "keycard" : ""
                 hasEmoji: true

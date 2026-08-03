@@ -139,7 +139,7 @@ ColumnLayout {
                 isInteractive: true
                 moreButtonEnabled: true
                 title: qsTr("Address")
-                subTitle: !!root.account && root.account.address ? root.account.address: ""
+                subTitle: WalletUtils.preferredAddress(root.account)
                 onButtonClicked: addressMenu.openMenu(this)
             }
             Separator {
