@@ -99,7 +99,7 @@ OnboardingPage {
                             objectName: "seedInput_%1".arg(seedWordIndex)
                             Layout.fillWidth: true
                             id: seedInput
-                            valid: text === modelData.seedWord
+                            valid: text.trim().toLowerCase() === modelData.seedWord
                             seedSuggestions: d.seedSuggestions
                             Component.onCompleted: if (index === 0) forceActiveFocus()
                             onAccepted: {

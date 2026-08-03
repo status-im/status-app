@@ -77,11 +77,14 @@ StatusTextField {
     Keys.forwardTo: [suggestionsList]
 
     StatusDropdown {
+        objectName: "seedSuggestionsDropdown"
         directParent: root
         relativeY: root.height + d.contentSpacing
         width: parent.width
         contentHeight: ((suggestionsList.count <= 5) ? suggestionsList.count : 5) * d.delegateHeight // max 5 delegates
-        visible: filteredModel.count > 0 && root.cursorVisible && !d.isEmpty && !root.valid
+        focus: false
+        bottomSheetAllowed: false
+        visible: filteredModel.count > 0 && root.activeFocus && !d.isEmpty && !root.valid
         verticalPadding: Theme.halfPadding
         horizontalPadding: 0
         contentItem: StatusListView {
@@ -91,6 +94,7 @@ StatusTextField {
                 id: filteredModel
                 sourceModel: root.seedSuggestions
                 filters: RegExpFilter {
+                    roleName: "seedWord"
                     pattern: `^${root.text}`
                     caseSensitivity: Qt.CaseInsensitive
                 }
@@ -116,6 +120,7 @@ StatusTextField {
 
     StatusIcon {
         id: clearIcon
+        objectName: "seedClearIcon"
         width: 20
         height: 20
         anchors.verticalCenter: parent.verticalCenter
