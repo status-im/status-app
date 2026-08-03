@@ -131,15 +131,7 @@ Control {
                 root.close()
         }
 
-        // context menu guard
         property var popupMenuInstance: null
-        readonly property var _conn: Connections {
-            target: d.popupMenuInstance ?? null
-            function onClosed() {
-                d.popupMenuInstance.destroy()
-                d.popupMenuInstance = null
-            }
-        }
 
         // When true, disable snapping animation so the drawer tracks the finger precisely.
         property bool dragActive: false
@@ -338,7 +330,6 @@ Control {
         thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
 
         onClicked: {
-            d.popupMenuInstance?.close()
             root.itemActivated(model.sectionType, model.id)
             if (root.interactive)
                 root.close()
@@ -381,14 +372,19 @@ Control {
             if (!root.communityPopupMenu)
                 return
 
-            if (!!d.popupMenuInstance)
-                d.popupMenuInstance.close() // will run destruction/cleanup
+            closeContextMenu()
 
             d.popupMenuInstance = root.communityPopupMenu.createObject(this, {model})
             this.highlighted = Qt.binding(() => !!d.popupMenuInstance && d.popupMenuInstance.opened && d.popupMenuInstance.parent === this)
             d.popupMenuInstance.popup(this, x, y)
         }
+        function closeContextMenu() {
+            d.popupMenuInstance?.close()
+            d.popupMenuInstance?.destroy()
+            d.popupMenuInstance = null
+        }
         onContextMenuRequested: (x, y) => openCommunityContextMenu(x, y)
+        onClicked: closeContextMenu()
 
         // "banned" decoration
         StatusRoundIcon {

@@ -88,6 +88,9 @@ StatusListView {
                 property var menu: null
                 highlighted: menu?.opened ?? false
                 onClicked: {
+                    menu?.close()
+                    menu?.destroy()
+                    menu = null
                     menu = moreMenuComponent.createObject(this, {listItem, model})
                     menu.popup(-menu.width + width, height)
                 }
@@ -99,7 +102,6 @@ StatusListView {
         id: moreMenuComponent
         StatusMenu {
             id: moreMenu
-            onClosed: destroy()
 
             property var listItem
             property var model
@@ -183,7 +185,7 @@ StatusListView {
                     moreMenu.close()
                     if (listItem.isInvitationPending) {
                         root.cancelMembershipRequest(model.id)
-                        listItem.isInvitationPending = root.fnIsMyCommunityRequestPending(model.id)
+                        listItem.isInvitationPending = Qt.binding(() => root.fnIsMyCommunityRequestPending(model.id))
                     } else if (listItem.isSpectator)
                         root.closeCommunityClicked(model.id)
                     else
