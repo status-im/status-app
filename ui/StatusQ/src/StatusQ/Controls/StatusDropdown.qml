@@ -75,8 +75,8 @@ QC.Popup {
     /*!
        \qmlproperty bool fillHeightOnBottomSheet
         This property decides the height of the dialog when `bottomSheet` is active:
-          * If active: it fills the 90% of the screen viewport.
-          * If not active: the height is the minimum value between the implicitHeight and the 90% of the screen viewport.
+          * If active: it fills the 85% of the screen viewport.
+          * If not active: the height is the minimum value between the implicitHeight and the 85% of the screen viewport.
     */
     property bool fillHeightOnBottomSheet: false
 
@@ -105,7 +105,6 @@ QC.Popup {
         root {
             parent: root.directParent
             modal: false
-            dim: false
             closePolicy: QC.Popup.CloseOnEscape | QC.Popup.CloseOnPressOutsideParent
 
             x: root.relativeX
@@ -121,7 +120,6 @@ QC.Popup {
         root {
             parent: root.QC.Overlay.overlay || parent
             modal: true
-            dim: true
             closePolicy: QC.Popup.CloseOnPressOutside
 
             x: 0

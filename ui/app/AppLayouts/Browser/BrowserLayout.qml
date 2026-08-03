@@ -12,6 +12,7 @@ import StatusQ.Controls
 import StatusQ.Layout
 import StatusQ.Popups
 import StatusQ.Popups.Dialog
+import StatusQ.Models
 
 import utils
 import shared.popups.send
@@ -223,17 +224,25 @@ StatusSectionLayout {
             addNewTab("", "", true)
         }
 
+        readonly property var autocompleteHistory: StatusBrowserAutocompleteModel {
+            userUID: root.userUID
+        }
+
         function onRequestLaunchInBrowser(url) {
             if (localAccountSensitiveSettings.useBrowserEthereumExplorer !== Constants.browserEthereumExplorerNone && url.startsWith("0x")) {
                 webViewContext.setCurrentWebUrl(root.browserRootStore.get0xFormedUrl(localAccountSensitiveSettings.useBrowserEthereumExplorer, url))
                 return
             }
             if (localAccountSensitiveSettings.selectedBrowserSearchEngineId !== SearchEnginesConfig.browserSearchEngineNone && !Utils.isURL(url) && !Utils.isURLWithOptionalProtocol(url)) {
+                if (!currentTabIncognito)
+                    autocompleteHistory.addEntry(url, true /*isSearch*/)
                 webViewContext.setCurrentWebUrl(root.browserRootStore.getFormedUrl(localAccountSensitiveSettings.selectedBrowserSearchEngineId, url))
                 return
             } else if (Utils.isURLWithOptionalProtocol(url)) {
                 url = "https://" + url
             }
+            if (!currentTabIncognito)
+                autocompleteHistory.addEntry(url)
             webViewContext.setCurrentWebUrl(url);
         }
 
@@ -478,6 +487,7 @@ StatusSectionLayout {
                 currentTabIsDownloads: _internal.currentTabIsDownloads
                 browserDappsModel: browserDappsProvider.model
                 historyModel: _internal.currentWebView?.history?.items ?? null
+                autocompleteHistory: _internal.autocompleteHistory
             }
         }
 
@@ -534,6 +544,7 @@ StatusSectionLayout {
             incognitoMode: _internal.currentTabIncognito
             browserDappsModel: browserDappsProvider.model
             faviconUrl: _internal.currentWebView?.icon ?? ""
+            autocompleteHistory: _internal.autocompleteHistory
 
             onRequestReloadPage: webViewContext.reloadCurrent()
             onRequestStopLoadingPage: webViewContext.stopCurrent()
