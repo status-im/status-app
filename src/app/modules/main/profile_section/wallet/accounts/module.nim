@@ -79,7 +79,8 @@ proc convertWalletAccountDtoToKeyPairAccountItem(self: Module, account: WalletAc
     operability = account.operable,
     isDefaultAccount = account.isWallet,
     self.controller.areTestNetworksEnabled(),
-    hideFromTotalBalance = account.hideFromTotalBalance)
+    hideFromTotalBalance = account.hideFromTotalBalance,
+    mixedcaseAddress = account.mixedcaseAddress)
 
 proc setBalance(self: Module, accountAddresses: seq[string]) =
   let enabledChainIds = self.controller.getEnabledChainIds()

@@ -9,6 +9,7 @@ QtObject:
     name: string
     path: string
     address: string
+    mixedcaseAddress: string
     pubKey: string
     operability: string
     emoji: string
@@ -23,12 +24,14 @@ QtObject:
   proc delete*(self: KeyPairAccountItem)
   proc newKeyPairAccountItem*(name = "", path = "", address = "", pubKey = "", emoji = "", colorId = "", icon = "",
     balance = newCurrencyAmount(), balanceFetched = true, operability = wa_dto.AccountFullyOperable,
-    isDefaultAccount = false, areTestNetworksEnabled =false, hideFromTotalBalance = false): KeyPairAccountItem =
+    isDefaultAccount = false, areTestNetworksEnabled = false, hideFromTotalBalance = false,
+    mixedcaseAddress = ""): KeyPairAccountItem =
     new(result, delete)
     result.QObject.setup
     result.name = name
     result.path = path
     result.address = address
+    result.mixedcaseAddress = mixedcaseAddress
     result.pubKey = pubKey
     result.emoji = emoji
     result.colorId = colorId
@@ -45,6 +48,7 @@ QtObject:
       name: {self.name},
       path: {self.path},
       address: {self.address},
+      mixedcaseAddress: {self.mixedcaseAddress},
       pubKey: {self.pubKey},
       emoji: {self.emoji},
       colorId: {self.colorId},
@@ -89,6 +93,17 @@ QtObject:
     read = getAddress
     write = setAddress
     notify = addressChanged
+
+  proc mixedcaseAddressChanged*(self: KeyPairAccountItem) {.signal.}
+  proc getMixedcaseAddress*(self: KeyPairAccountItem): string {.slot.} =
+    return self.mixedcaseAddress
+  proc setMixedcaseAddress*(self: KeyPairAccountItem, value: string) {.slot.} =
+    self.mixedcaseAddress = value
+    self.mixedcaseAddressChanged()
+  QtProperty[string] mixedcaseAddress:
+    read = getMixedcaseAddress
+    write = setMixedcaseAddress
+    notify = mixedcaseAddressChanged
 
   proc pubKeyChanged*(self: KeyPairAccountItem) {.signal.}
   proc getPubKey*(self: KeyPairAccountItem): string {.slot.} =

@@ -49,7 +49,7 @@ proc buildKeypairItem*(keypair: KeypairDto, areTestNetworksEnabled: bool): KeyPa
       icon = "wallet"
     item.addAccount(newKeyPairAccountItem(acc.name, acc.path, acc.address, acc.publicKey, acc.emoji, acc.colorId,
       icon, newCurrencyAmount(), balanceFetched = true, operability = acc.operable, acc.isWallet, areTestNetworksEnabled,
-      acc.hideFromTotalBalance))
+      acc.hideFromTotalBalance, mixedcaseAddress = acc.mixedcaseAddress))
   return item
 
 proc buildKeyPairsList*(keypairs: seq[KeypairDto], excludeAlreadyMigratedPairs: bool,
