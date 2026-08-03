@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml
 
+import StatusQ
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core
@@ -163,19 +164,19 @@ Item {
             return root.parentModule.getChatContentModule()
         }
 
-        function seedTextForEdit(unparsedText, renderedText) {
-            const systemMentions = ({ "0x00001": "@everyone" })
-            let seed = unparsedText
-                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-                .replace(/\n/g, "<br/>")
-            const userMentions = renderedText.match(/<a href="\/\/0x[0-9a-fA-F]+"[^>]*class="mention"[^>]*>@[^<]*<\/a>/g) || []
-            let userMentionIndex = 0
-            return seed.replace(/@0x[0-9a-fA-F]+/g, function(token) {
-                const key = token.substring(1)
-                if (systemMentions[key] !== undefined)
-                    return systemMentions[key]
-                return userMentionIndex < userMentions.length ? userMentions[userMentionIndex++] : token
-            })
+        // Builds a { pubKey: displayName } map for the mentions in `unparsedText`, resolving each
+        // pub key to a display name via usersModel, so ChatTextArea.loadText() can turn the raw
+        // "@0x…" mentions back into pills. Unknown keys and the "everyone" tag are omitted;
+        // loadText() falls back to the raw key / "everyone" for those.
+        function mentionNames(unparsedText) {
+            const names = ({})
+            const keys = MarkdownUtils.mentions(unparsedText)
+            for (const key of keys) {
+                const user = SQUtils.ModelUtils.getByKey(root.usersModel, "pubKey", key)
+                if (user)
+                    names[key] = user.preferredDisplayName
+            }
+            return names
         }
 
         function setCurrentEditMessageOff() {
@@ -185,9 +186,16 @@ Item {
             d.activeMessagesStore.setEditModeOff(editMessageId)
         }
 
-        function startEditMessage(messageId, unparsedText, renderedText) {
+        function startEditMessage(messageId) {
             if (!messageId)
                 return
+
+            const msg = SQUtils.ModelUtils.getByKey(
+                          d.activeMessagesStore.messagesModel, "id", messageId)
+            if (!msg)
+                return
+
+            const unparsedText = msg.unparsedText
 
             if (editMessageId && editMessageId !== messageId)
                 d.activeMessagesStore.setEditModeOff(editMessageId)
@@ -202,8 +210,8 @@ Item {
             chatInput.isEdit = true
             chatInput.resetReplyArea()
             chatInput.resetImageArea()
-            chatInput.parseMessage(seedTextForEdit(unparsedText, renderedText))
-            editOriginalInputText = chatInput.textInput.text
+            chatInput.textInput.loadText(unparsedText, d.mentionNames(unparsedText))
+            editOriginalInputText = chatInput.getTextWithPublicKeys()
             chatInput.forceInputActiveFocus()
             Qt.callLater(() => d.activeMessagesStore.jumpToMessage(messageId))
         }
@@ -246,7 +254,10 @@ Item {
                 return
             }
 
-            const message = SQUtils.StringUtils.plainText(SQUtils.Emoji.deparse(newMessageText))
+            // ChatTextArea already yields plain text with literal newlines, unicode emojis and
+            // "@0x…" mentions, so the legacy HTML round-trip (plainText/deparse) is not needed
+            // and would collapse newlines. Align with the new-message path (RootStore.cleanMessageText).
+            const message = newMessageText
 
             if (message.length <= 0)
                 return
@@ -464,8 +475,8 @@ Item {
                         onShowReplyArea: (messageId) => {
                                             d.showReplyArea(messageId)
                                         }
-                        onEditMessageRequested: (messageId, unparsedText, renderedText) => {
-                            d.startEditMessage(messageId, unparsedText, renderedText)
+                        onEditMessageRequested: (messageId) => {
+                            d.startEditMessage(messageId)
                         }
                         onForceInputFocus: {
                             chatInput.forceInputActiveFocus()

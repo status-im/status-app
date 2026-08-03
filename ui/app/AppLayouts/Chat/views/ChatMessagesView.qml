@@ -74,7 +74,7 @@ Item {
     signal openStickerPackPopup(string stickerPackId)
     signal tokenPaymentRequested(string recipientAddress, string tokenKey, string rawAmount)
     signal showReplyArea(string messageId, string author)
-    signal editModeChanged(bool editModeOn, string messageId, string unparsedText, string renderedText)
+    signal editModeChanged(bool editModeOn, string messageId)
 
     // Unfurling related requests:
     signal setNeverAskAboutUnfurlingAgain(bool neverAskAgain)
@@ -410,7 +410,7 @@ Item {
             sticker: model.sticker
             stickerPack: model.stickerPack
             editModeOn: model.editMode
-            onEditModeOnChanged: root.editModeChanged(editModeOn, model.id, model.unparsedText, model.messageText)
+            onEditModeOnChanged: root.editModeChanged(editModeOn, model.id)
             isEdited: model.isEdited
             deleted: model.deleted
             deletedBy: model.deletedBy

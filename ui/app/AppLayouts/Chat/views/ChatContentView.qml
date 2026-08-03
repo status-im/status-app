@@ -71,7 +71,7 @@ ColumnLayout {
 
     signal showReplyArea(messageId: string)
     signal forceInputFocus()
-    signal editMessageRequested(messageId: string, unparsedText: string, renderedText: string)
+    signal editMessageRequested(messageId: string)
 
     // Unfurling related data:
     property bool gifUnfurlingEnabled
@@ -142,9 +142,9 @@ ColumnLayout {
             }
             onOpenStickerPackPopup: stickerPackId => root.openStickerPackPopup(stickerPackId)
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
-            onEditModeChanged: {
+            onEditModeChanged: (editModeOn, messageId) => {
                 if (editModeOn) {
-                    root.editMessageRequested(messageId, unparsedText, renderedText)
+                    root.editMessageRequested(messageId)
                     return
                 }
 
