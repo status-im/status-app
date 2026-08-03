@@ -841,8 +841,8 @@ removeConfirmationConfirmButton = {"checkable": False, "container": statusDeskto
                                    "objectName": "RemoveAccountPopup-ConfirmButton", "type": "StatusButton"}
 
 # Testnet mode popup
-testnetAlert = {"container": statusDesktop_mainWindow_overlay, "objectName": "AlertPopup", "type": "PopupItem",
-                "visible": True}
+testnetAlert = {"container": statusDesktop_mainWindow_overlay, "objectName": "TestnetModePopup",
+                "type": "TestnetModePopup", "visible": True}
 turn_on_testnet_mode_StatusButton = {"container": statusDesktop_mainWindow_overlay, "id": "acceptBtn",
                                      "text": "Turn on testnet mode", "type": "StatusButton", "unnamed": 1,
                                      "visible": True}
