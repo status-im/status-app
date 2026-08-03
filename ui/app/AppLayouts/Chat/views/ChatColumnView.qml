@@ -201,7 +201,7 @@ Item {
                 d.activeMessagesStore.setEditModeOff(editMessageId)
 
             if (!editMessageId) {
-                preEditInputText = chatInput.textInput.text
+                preEditInputText = chatInput.getTextWithPublicKeys()
                 preEditReplyMessageId = chatInput.replyMessageId
                 preEditFileUrlsAndSources = [...chatInput.fileUrlsAndSources]
             }
@@ -217,7 +217,7 @@ Item {
         }
 
         function restorePreEditInput() {
-            chatInput.setText(preEditInputText)
+            chatInput.textInput.loadText(preEditInputText, d.mentionNames(preEditInputText))
             chatInput.replyMessageId = preEditReplyMessageId
 
             if (preEditReplyMessageId)
@@ -327,7 +327,7 @@ Item {
             chatInput.validateImagesAndShowImageArea(filesList)
         }
 
-        function restoreInputState(textInput) {
+        function restoreInputState(preservedText) {
 
             if (!d.activeChatContentModule) {
                 chatInput.clear()
@@ -337,7 +337,7 @@ Item {
             }
 
             // Restore message text
-            chatInput.setText(textInput)
+            chatInput.textInput.loadText(preservedText, d.mentionNames(preservedText))
 
             d.restoreInputReply()
             d.restoreInputAttachments()
@@ -588,8 +588,14 @@ Item {
                     paymentRequestButtonVisible: !isEdit && !areTestNetworksEnabled && paymentRequestFeatureEnabled
 
                     textInput.onTextChanged: {
-                        if (!chatInput.isEdit && !!d.activeChatContentModule && textInput.text !== d.activeChatContentModule.inputAreaModule.preservedProperties.text) {
-                            d.activeChatContentModule.inputAreaModule.preservedProperties.text = textInput.text
+                        if (chatInput.isEdit || !d.activeChatContentModule)
+                            return
+                        // Preserve the wire form ("@0x…" mentions + unicode emojis), not textInput.text
+                        // (which holds ObjectReplacementCharacter placeholders for pills/emojis), so the
+                        // draft can be restored with pills/emojis intact via loadText().
+                        const wireText = chatInput.getTextWithPublicKeys()
+                        if (wireText !== d.activeChatContentModule.inputAreaModule.preservedProperties.text) {
+                            d.activeChatContentModule.inputAreaModule.preservedProperties.text = wireText
                             d.updateLinkPreviews()
                         }
                     }
