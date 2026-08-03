@@ -7,6 +7,7 @@ import utils
 
 AlertPopup {
     id: root
+    objectName: "TestnetModePopup"
 
     property bool areTestNetworksEnabled
 
