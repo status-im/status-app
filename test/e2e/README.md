@@ -170,9 +170,9 @@ pytest -m keycard -v
 USE_SIMULATED_KEYCARD=true make -j12
 ```
 
-`AUT_PATH` → `…/status-app/bin/nim_status_client` (or the platform equivalent under `bin/`).
+`AUT_PATH` → `…/status-app/bin/StatusDev` (or the platform equivalent under `bin/`).
 
-**2. Packaged build** (`Status.app` / AppImage / exe) — CI **Build with Parameters** → enable `USE_SIMULATED_KEYCARD` (on macOS also Squish entitlements as [above](#getting-a-mac-build-from-ci)). `AUT_PATH` → the packaged app.
+**2. Packaged build** (`Status.app` / AppImage / .exe) — CI **Build with Parameters** → enable `USE_SIMULATED_KEYCARD` (on macOS also Squish entitlements as [above](#getting-a-mac-build-from-ci)). `AUT_PATH` → the packaged app.
 
 ---
 

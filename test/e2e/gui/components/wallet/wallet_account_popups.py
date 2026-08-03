@@ -1,3 +1,5 @@
+import time
+
 import squish
 
 from constants.wallet import *
