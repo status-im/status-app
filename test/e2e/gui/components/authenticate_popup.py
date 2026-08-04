@@ -1,6 +1,7 @@
 import allure
 
 import configs
+import driver
 from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.text_edit import TextEdit
@@ -35,3 +36,11 @@ class AuthenticatePopup(QObject):
     @allure.step('Close authenticate popup by close button')
     def close_authenticate_popup(self):
         self._close_button.click()
+
+    @allure.step('Verify authentication popup does not appear')
+    def assert_does_not_appear(self, timeout_msec: int = 2000):
+        appeared = driver.waitFor(lambda: self.is_visible, timeout_msec)
+        assert not appeared, (
+            'Authentication popup should not appear when adding a generated account '
+            'from profile keypair (xpub derivation)'
+        )

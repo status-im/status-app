@@ -47,7 +47,6 @@ class AccountPopup(QObject):
         self._derivation_path_text_edit = TextEdit(names.mainWallet_AddEditAccountPopup_DerivationPathInput)
         self._address_combobox_button = Button(names.mainWallet_AddEditAccountPopup_GeneratedAddressComponent)
         self._non_eth_checkbox = CheckBox(names.mainWallet_AddEditAccountPopup_NonEthDerivationPathCheckBox)
-        self.non_ethereum_checkbox_indicator = QObject(names.nonEthCheckBoxIndicator)
 
     def verify_add_account_popup_present(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
         driver.waitFor(lambda: self._popup_header_title.is_visible, timeout_msec)
@@ -142,10 +141,16 @@ class AccountPopup(QObject):
         self.click_new_master_key()
         return AddNewAccountPopup().wait_until_appears()
 
+    @allure.step('Confirm non-Ethereum derivation path if confirmation is required')
+    def _confirm_non_eth_derivation_path_if_needed(self):
+        if driver.waitFor(lambda: self._non_eth_checkbox.is_visible, 3000):
+            self._scroll.vertical_scroll_down(self._non_eth_checkbox, extra_scrolls_after=2)
+            self._non_eth_checkbox.set(True)
+
     @allure.step('Set derivation path for account')
-    def set_derivation_path(self, value: str, index: int, password: str):
+    def set_derivation_path(self, value: str, index: int):
         self._edit_derivation_path_button.hover().click()
-        AuthenticatePopup().wait_until_appears().authenticate(password)
+        AuthenticatePopup().assert_does_not_appear()
         self._scroll.vertical_scroll_down(self._derivation_path_text_edit)
         if value in [_.value for _ in DerivationPathName]:
             self._derivation_path_combobox_button.click()
@@ -155,11 +160,9 @@ class AccountPopup(QObject):
             # del self._derivation_path_list_item.real_name['title']
             self._address_combobox_button.click()
             GeneratedAddressesList().select(index)
-            if value != DerivationPathName.ETHEREUM.value:
-                self._scroll.vertical_scroll_down(self._non_eth_checkbox)
-                self.non_ethereum_checkbox_indicator.click()
         else:
             self._derivation_path_text_edit.type_text(str(index))
+        self._confirm_non_eth_derivation_path_if_needed()
         return self
 
     @allure.step('Click confirmation (add account / save changes) button')

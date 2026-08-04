@@ -4,7 +4,7 @@ import string
 import pytest
 from allure_commons._allure import step
 
-from helpers.wallet_helper import authenticate_with_password
+from helpers.wallet_helper import assert_authenticate_popup_not_appears
 
 import driver
 from constants.wallet import WalletAccountSettings, DerivationPathValue
@@ -30,8 +30,8 @@ def test_delete_generated_account_from_wallet_settings(
     with step('Add a new generated account from wallet settings screen'):
         add_account_popup.set_name(account_name).save_changes()
 
-        with step('Authenticate with password'):
-            authenticate_with_password(user_account)
+        with step('Verify authentication popup does not appear when adding account'):
+            assert_authenticate_popup_not_appears()
             add_account_popup.wait_until_hidden()
 
     with step('Open account details view for the generated account'):

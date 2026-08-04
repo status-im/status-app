@@ -160,6 +160,11 @@ def authenticate_with_password(user_account):
     auth_popup.wait_until_hidden()
 
 
+@step('Verify authentication popup does not appear')
+def assert_authenticate_popup_not_appears(timeout_msec: int = 2000):
+    AuthenticatePopup().assert_does_not_appear(timeout_msec)
+
+
 @step('Open wallet and send modal after balances are loaded')
 def open_send_modal_for_account(main_window, account_name):
     timeout_msec = configs.timeouts.WALLET_TRANSACTION_SYNC_TIMEOUT_MSEC

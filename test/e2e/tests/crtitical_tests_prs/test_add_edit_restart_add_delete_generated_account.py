@@ -6,7 +6,7 @@ from allure_commons._allure import step
 from constants.dock_buttons import DockButtons
 from constants.wallet import WalletNetworkSettings
 from driver.aut import AUT
-from helpers.wallet_helper import authenticate_with_password
+from helpers.wallet_helper import assert_authenticate_popup_not_appears
 from scripts.utils.generators import random_wallet_acc_keypair_name
 
 import driver
@@ -38,8 +38,8 @@ def test_add_edit_restart_add_delete_generated_account(aut: AUT, main_screen: Ma
         account_popup = wallet.left_panel.open_add_account_popup()
         account_popup.set_name(name1).save_changes()
 
-        with step('Authenticate with password'):
-            authenticate_with_password(user_account)
+        with step('Verify authentication popup does not appear when adding account'):
+            assert_authenticate_popup_not_appears()
             account_popup.wait_until_hidden()
 
     with step('Verify toast message notification when adding account'):
@@ -69,8 +69,8 @@ def test_add_edit_restart_add_delete_generated_account(aut: AUT, main_screen: Ma
         account_popup = wallet.left_panel.open_add_account_popup()
         account_popup.set_name(name2).save_changes()
 
-        with step('Authenticate with password'):
-            authenticate_with_password(user_account)
+        with step('Verify authentication popup does not appear when adding account'):
+            assert_authenticate_popup_not_appears()
             account_popup.wait_until_hidden()
 
     with step('Verify toast message notification when adding account'):

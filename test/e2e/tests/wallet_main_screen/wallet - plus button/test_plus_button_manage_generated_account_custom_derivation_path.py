@@ -8,6 +8,7 @@ import driver
 from constants import RandomWalletAccount
 from constants.wallet import DerivationPathName
 from gui.main_window import MainWindow
+from helpers.wallet_helper import assert_authenticate_popup_not_appears
 
 
 @pytest.mark.case(703028)
@@ -17,9 +18,12 @@ def test_plus_button_manage_generated_account_custom_derivation_path(main_screen
         wallet_account = RandomWalletAccount()
         wallet = main_screen.left_panel.open_wallet()
         account_popup = wallet.left_panel.open_add_account_popup()
-        account_popup.set_name(wallet_account.name).set_derivation_path(path_name,
-            random.randrange(2, 100),
-            user_account.password).save_changes()
+        account_popup.set_name(wallet_account.name).set_derivation_path(
+            path_name, random.randrange(2, 100)).save_changes()
+
+        with step('Verify authentication popup does not appear when adding account'):
+            assert_authenticate_popup_not_appears()
+            account_popup.wait_until_hidden()
 
     with step('Verify toast message notification when adding account'):
         messages = main_screen.wait_for_toast_notifications()

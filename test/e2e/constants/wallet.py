@@ -58,8 +58,13 @@ class DerivationPathName(Enum):
     ETHEREUM_LEDGER_LIVE = 'Ethereum (Ledger Live/KeepKey)'
 
     @classmethod
+    def xpub_derivation_path_names(cls):
+        """Derivation path presets available when deriving from stored xpub."""
+        return [cls.ETHEREUM, cls.ETHEREUM_LEDGER]
+
+    @classmethod
     def select_random_path_name(cls):
-        return random.choice(list(DerivationPathName))
+        return random.choice(cls.xpub_derivation_path_names())
 
 
 class WalletAddress(Enum):
