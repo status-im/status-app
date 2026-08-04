@@ -811,7 +811,8 @@ Control {
                         topPadding: length ? 0 : basePadding
                         bottomPadding: (length ? 0 : basePadding) - Theme.padding
 
-                        textMargin: length ? effectiveTextMargin : 0
+                        onLengthChanged: textMargin = length ? effectiveTextMargin : 0
+                        onEffectiveTextMarginChanged: textMargin = length ? effectiveTextMargin : 0
 
                         onLineCountChanged: {
                             const flickable = inputScrollView.contentItem
