@@ -24,6 +24,14 @@ const sep* = when defined(windows): "\\" else: "/"
 # default is 50 MB, which a single collectibles page can evict on its own.
 const NETWORK_DISK_CACHE_SIZE* = 512'i64 * 1024 * 1024
 
+# Largest single collectible asset we are willing to download
+# (status-im/status-app#21506). Deliberately generous: the heaviest legitimate
+# asset measured for docs/adr/0006-qt-http-cache.md was a 2.85 MB still frame,
+# so this only catches the abusive tail, and the HTTP statistics screen is what
+# tightens it from data. Enforced by status-go, which learns each asset's size
+# from the provider's own response; unused until it accepts the limit.
+const MAX_COLLECTIBLE_ASSET_SIZE* = 10'i64 * 1024 * 1024
+
 # Push notification token types (from push_notifications.proto)
 const PUSH_TOKEN_TYPE_UNKNOWN* = 0
 const PUSH_TOKEN_TYPE_APN* = 1      # iOS
