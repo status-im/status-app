@@ -89,15 +89,11 @@ ColumnLayout {
         readonly property var sourceModel: root.controller.sourceModel
         readonly property bool isLoading: root.isUpdating || root.isFetching
 
-        function setSortByDateIsDisabled(value) {
+        function setSortByDateIsDisabled(disabled) {
             const orderByDateIndex =  cmbTokenOrder.indexOfValue(SortOrderComboBox.TokenOrderDateAdded)
 
-            cmbTokenOrder.model[orderByDateIndex].isDisabled = value
+            cmbTokenOrder.model[orderByDateIndex].isDisabled = disabled
             cmbTokenOrder.modelChanged()
-
-            if (!value && cmbTokenOrder.currentIndex === orderByDateIndex) {
-                cmbTokenOrder.indexOfValue(SortOrderComboBox.TokenOrderAlpha)
-            }
         }
 
         onIsLoadingChanged: {
@@ -206,7 +202,7 @@ ColumnLayout {
             onValueChanged: {
                 Qt.callLater(() => {
                     d.hasAllTimestamps = value
-                    d.setSortByDateIsDisabled(value)
+                    d.setSortByDateIsDisabled(!value)
                 })
             }
 
@@ -350,7 +346,8 @@ ColumnLayout {
                     value: {
                         cmbTokenOrder.count
                         let sortValue = d.sortValue
-                        if (root.sortValue === SortOrderComboBox.TokenOrderDateAdded && !d.hasAllTimestamps)
+                        // Date-added needs timestamps on every item; fall back to A–Z until then.
+                        if (sortValue === SortOrderComboBox.TokenOrderDateAdded && !d.hasAllTimestamps)
                             sortValue = SortOrderComboBox.TokenOrderAlpha
                         let id = cmbTokenOrder.indexOfValue(sortValue)
                         if (id === -1)
@@ -359,7 +356,15 @@ ColumnLayout {
                     }
                     when: cmbTokenOrder.count > 0
                 }
-                onCurrentValueChanged: d.sortValue = cmbTokenOrder.currentValue
+                onCurrentValueChanged: {
+                    // Don't persist the temporary A–Z fallback over a stored date-added preference.
+                    if (!d.hasAllTimestamps
+                            && d.sortValue === SortOrderComboBox.TokenOrderDateAdded
+                            && cmbTokenOrder.currentValue === SortOrderComboBox.TokenOrderAlpha)
+                        return
+
+                    d.sortValue = cmbTokenOrder.currentValue
+                }
                 Binding on currentSortOrder {
                     value: d.sortOrder
                 }

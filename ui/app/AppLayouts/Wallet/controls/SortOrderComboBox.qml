@@ -82,7 +82,8 @@ ComboBox {
 
     contentItem: StatusBaseText {
         leftPadding: root.horizontalPadding
-        rightPadding: root.horizontalPadding
+        // Keep a clear gap between the sort-direction arrow in displayText and the chevron.
+        rightPadding: root.horizontalPadding + root.spacing
         font.pixelSize: root.font.pixelSize
         font.weight: Font.Medium
         verticalAlignment: Text.AlignVCenter
@@ -153,7 +154,7 @@ ComboBox {
 
             Row {
                 visible: showUpDownArrows
-                spacing: 4
+                spacing: Theme.halfPadding
                 StatusFlatRoundButton {
                     objectName: "sortArrowUp"
                     radius: 6
