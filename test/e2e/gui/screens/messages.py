@@ -337,12 +337,11 @@ class ChatView(QObject):
         text_messages = driver.findAllObjects(self._message_text_item.real_name)
         for item in text_messages:
             if remove_tags(str(getattr(item, 'text', ''))) == text:
-                pattern = r'(//send-via-personal-chat//0x[a-fA-F0-9]{40})'
-                raw_link = str(getattr(item, 'text', ''))
-                match = re.search(pattern, raw_link)
-                link = match.group(1)
-                item.linkActivated(link)
+                # ChatTextView.text is plain; send href lives only in rendered blocks
+                link = f'//send-via-personal-chat//{text}'
+                item.linkClicked(link)
                 return SendPopup().wait_until_appears()
+        raise LookupError(f'Message with text "{text}" not found for send modal link')
 
     @allure.step('Get deleted message state')
     def get_deleted_message_state(self):
