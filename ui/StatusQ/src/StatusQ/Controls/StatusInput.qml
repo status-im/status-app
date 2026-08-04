@@ -249,6 +249,8 @@ Control {
     */
     property string warningMessage: ""
 
+    property alias readOnly: statusBaseInput.readOnly
+
     /*!
         \qmlsignal
         This signal is emitted when the icon is clicked.

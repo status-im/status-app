@@ -259,6 +259,8 @@ Item {
     */
     property Component rightComponent
 
+    property alias readOnly: edit.readOnly
+
     /*!
         \qmlsignal
          This signal is emitted when the icon is clicked.
@@ -394,7 +396,7 @@ Item {
                         focus: !Utils.isMobile
                         font.pixelSize: Theme.primaryTextFontSize
                         font.family: Fonts.baseFont.family
-                        color: root.enabled ? Theme.palette.directColor1 : Theme.palette.baseColor1
+                        color: root.enabled && !edit.readOnly ? Theme.palette.directColor1 : Theme.palette.baseColor1
                         wrapMode: root.multiline ? Text.WrapAtWordBoundaryOrAnywhere : TextEdit.NoWrap
 
                         Keys.onReturnPressed: function (event) {
@@ -473,7 +475,7 @@ Item {
                             verticalAlignment: parent.verticalAlignment
                             wrapMode: root.multiline ? Text.WrapAnywhere : Text.NoWrap
                             elide: root.multiline? Text.ElideNone : Text.ElideRight
-                            color: root.enabled ? Theme.palette.baseColor1 : Theme.palette.directColor6
+                            color: root.enabled && !edit.readOnly ? Theme.palette.baseColor1 : Theme.palette.directColor6
                         }
                     }
                 } // Flickable
