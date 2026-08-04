@@ -1105,7 +1105,12 @@ Item {
                 return
             }
             globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.browser)
-            Qt.callLater(() => browserLayoutContainer.item.openUrlInNewTab(link))
+            Qt.callLater(() => {
+                // BrowserPrivacyWall (privacy mode) has no openUrlInNewTab()
+                const browser = browserLayoutContainer.item
+                if (browser && browser.openUrlInNewTab)
+                    browser.openUrlInNewTab(link)
+            })
         }
 
         function tryOpenNavigationEducationPopup() {
