@@ -54,6 +54,7 @@ QObject {
         collectionName      [string] - collection name e.g. "Crypto Kitties"
         mediaUrl            [url]    - collectible's media url
         imageUrl            [url]    - collectible's image url
+        thumbnailUrl        [url]    - collectible's list-sized preview, may be empty
         communityId         [string] - unique identifier of a community for community collectible or empty
         ownership           [model]  - submodel of balances per chain/account
             balance         [int]    - balance (always 1 for ERC-721)
@@ -65,7 +66,7 @@ QObject {
       Model structure:
 
         groupName           [string] - group name (from collection or community name)
-        icon                [url]    - from imageUrl or mediaUrl
+        icon                [url]    - from thumbnailUrl, falling back to imageUrl
         type                [string] - can be "community" or "other"
         subitems            [model]  - submodel of collectibles/collections of the group
             key             [string] - key of collection (community type) or collectible (other type)
@@ -111,7 +112,8 @@ QObject {
 
 
                 readonly property url icon:
-                    model.imageUrl || model.mediaUrl || Assets.png(Constants.defaultTokenIcon)
+                    Utils.collectibleThumbnailSource(model.thumbnailUrl, model.imageUrl)
+                    || Assets.png(Constants.defaultTokenIcon)
 
                 SortFilterProxyModel { /* 1 */
                     id: ownershipFiltered
@@ -134,7 +136,7 @@ QObject {
 
             expectedRoles: [
                 "ownership", "communityId", "collectionUid", "imageUrl",
-                "mediaUrl"
+                "thumbnailUrl"
             ]
             exposedRoles: ["balance", "groupingValue", "icon"]
         }

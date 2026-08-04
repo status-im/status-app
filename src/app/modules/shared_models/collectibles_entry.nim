@@ -150,6 +150,18 @@ QtObject:
     read = getImageURL
     notify = imageURLChanged
 
+  proc thumbnailURLChanged*(self: CollectiblesEntry) {.signal.}
+  # The provider's own small preview, for list-sized renders. Empty when the
+  # provider offers none; consumers fall back to imageUrl.
+  proc getThumbnailURL*(self: CollectiblesEntry): string {.slot.} =
+    if not self.hasCollectibleData() or isNone(self.getCollectibleData().thumbnailUrl):
+      return ""
+    return self.getCollectibleData().thumbnailUrl.get()
+
+  QtProperty[string] thumbnailUrl:
+    read = getThumbnailURL
+    notify = thumbnailURLChanged
+
   proc getOriginalMediaURL(self: CollectiblesEntry): string =
     if not self.hasCollectibleData() or isNone(self.getCollectibleData().animationUrl):
       return ""
@@ -382,6 +394,7 @@ QtObject:
 
     let name = self.getName()
     let imageUrl = self.getImageURL()
+    let thumbnailUrl = self.getThumbnailURL()
     let mediaUrl = self.getMediaURL()
     let mediaType = self.getMediaType()
     let backgroundColor = self.getBackgroundColor()
@@ -406,6 +419,8 @@ QtObject:
       self.nameChanged()
     addChangedRole(changedProperties, imageUrl, self.getImageURL(), "imageUrl"):
       self.imageUrlChanged()
+    addChangedRole(changedProperties, thumbnailUrl, self.getThumbnailURL(), "thumbnailUrl"):
+      self.thumbnailURLChanged()
     addChangedRole(changedProperties, mediaUrl, self.getMediaURL(), "mediaUrl"):
       self.mediaUrlChanged()
     addChangedRole(changedProperties, mediaType, self.getMediaType(), "mediaType"):

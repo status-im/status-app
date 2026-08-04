@@ -9,6 +9,69 @@ import StatusQ.Core.Theme
 import StatusQ.Core.Utils as StatusQUtils
 
 QtObject {
+    /*!
+        List-sized collectible source: provider preview when present, else still
+        image. Never the animation URL (full-size asset). Empty when neither.
+    */
+    function collectibleThumbnailSource(thumbnailUrl, imageUrl, renderWidthPoints) {
+        return resizedMediaSource(collectibleMediaSource(thumbnailUrl, imageUrl),
+                                  renderWidthPoints)
+    }
+
+    /*!
+        Same pick as \l collectibleThumbnailSource without a delivery hint —
+        fallback if the CDN ignores the resized URL.
+    */
+    function collectibleMediaSource(thumbnailUrl, imageUrl) {
+        return thumbnailUrl || imageUrl || ""
+    }
+
+    //! Width of a collectible grid tile, in points.
+    readonly property int defaultCollectibleTileWidth: 150
+
+    /*!
+        Assumed pixels per point when asking the CDN for a size.
+
+        Deliberately fixed rather than read from \c Screen.devicePixelRatio: the
+        width goes into the URL, so a ratio that follows the screen would give
+        the same collectible a different URL — a second cache entry, and a fresh
+        download every time the window moves to another monitor.
+    */
+    readonly property int mediaPixelRatio: 2
+
+    /*!
+        Rewrite a Cloudinary delivery URL for the given render width
+        (\c w_, \c c_limit, \c f_auto, \c q_auto). Non-Cloudinary URLs and URLs
+        that already carry a width are returned untouched.
+        See docs/adr/0006-qt-http-cache.md.
+
+        \a renderWidthPoints is in points, as call sites measure themselves;
+        \l mediaPixelRatio turns it into the pixels the CDN is asked for.
+    */
+    function resizedMediaSource(url, renderWidthPoints) {
+        const source = String(url || "")
+        if (!source.startsWith("https://res.cloudinary.com/"))
+            return source
+
+        // /video/fetch/ already chains f_png,so_0; a transform ahead of it chains,
+        // it does not replace — required for animated-collectible stills.
+        const marker = source.indexOf("/image/upload/") > -1 ? "/image/upload/"
+                                                             : "/video/fetch/"
+        const at = source.indexOf(marker)
+        if (at < 0)
+            return source
+
+        const rest = source.substring(at + marker.length)
+        if (rest.startsWith("w_") || rest.indexOf(",w_") > -1)
+            return source
+
+        const points = renderWidthPoints > 0 ? renderWidthPoints
+                                             : defaultCollectibleTileWidth
+        const width = Math.round(points * mediaPixelRatio)
+        return source.substring(0, at + marker.length)
+             + "w_" + width + ",c_limit,f_auto,q_auto/" + rest
+    }
+
     function isDigit(value) {
         return /^\d$/.test(value);
     }

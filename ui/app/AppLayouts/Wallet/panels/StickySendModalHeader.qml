@@ -30,7 +30,7 @@ Control {
     /**
     Expected model structure:
     - groupName: group name (from collection or community name)
-    - icon: from imageUrl or mediaUrl
+    - icon: from thumbnailUrl, falling back to imageUrl
     - type: can be "community" or "other"
     - subitems: submodel of collectibles/collections of the group
     - key: key of collection (community type) or collectible (other type)

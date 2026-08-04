@@ -102,9 +102,12 @@ Item {
                 color: !!model.backgroundColor ? model.backgroundColor : "transparent"
                 radius: Theme.radius
                 showLoadingIndicator: true
-                isLoading: image.isLoading || !model.imageUrl
+                readonly property url source:
+                    Utils.collectibleThumbnailSource(model.thumbnailUrl, model.imageUrl)
+
+                isLoading: image.isLoading || !collectibleImage.source
                 image.fillMode: Image.PreserveAspectCrop
-                image.source: model.imageUrl ?? ""
+                image.source: collectibleImage.source
             }
 
             Image {
