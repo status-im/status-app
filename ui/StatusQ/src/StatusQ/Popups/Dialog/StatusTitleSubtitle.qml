@@ -9,6 +9,7 @@ Item {
 
     property alias title: title.text
     property alias subtitle: subtitle.text
+    property alias subtitleTextFormat: subtitle.textFormat
 
     implicitHeight: layout.implicitHeight
     implicitWidth: layout.implicitWidth

@@ -48,6 +48,7 @@ StatusDialog {
 
      header: StatusDialogHeader {
         headline.title: qsTr("Remove %1").arg(root.name)
+        headline.subtitleTextFormat: Text.StyledText
         headline.subtitle: {
             if (root.ens.length > 0)
                 return root.ens
