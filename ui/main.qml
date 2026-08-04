@@ -188,9 +188,19 @@ Window {
 
         readonly property bool macOSWindowed: SQUtils.Utils.isMacOS && applicationWindow.visibility !== Window.FullScreen
 
+        function restoreScreenAfterMinimizing() {
+            if (Qt.platform.os !== SQUtils.Utils.windows || !lastMinimizedScreen)
+                return
+
+            if (Qt.application.screens.includes(lastMinimizedScreen))
+                applicationWindow.screen = lastMinimizedScreen
+            lastMinimizedScreen = null
+        }
+
         function restoreWindowState() {
             if (SQUtils.Utils.isMobile) // no point in restoring window state
                 return
+            restoreScreenAfterMinimizing()
             switch(lastNonMinVisibility) {
             case Window.Windowed:
                 applicationWindow.showNormal()
@@ -205,6 +215,7 @@ Window {
         }
 
         property int lastNonMinVisibility
+        property var lastMinimizedScreen: null
 
         property bool showSkippedBiometricFlow: false
 
@@ -334,8 +345,13 @@ Window {
     Connections {
         target: applicationWindow
         function onVisibilityChanged(visibility) {
+            if (visibility === Window.Minimized) {
+                d.lastMinimizedScreen = applicationWindow.screen
+                return
+            }
             if (applicationWindow.visibility !== Window.Minimized
                         && applicationWindow.visibility !== Window.Hidden) {
+                d.restoreScreenAfterMinimizing()
                 d.lastNonMinVisibility = applicationWindow.visibility
             }
         }
