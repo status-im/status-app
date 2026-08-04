@@ -160,6 +160,10 @@ QtObject {
         return QtMT.ModelQuery.roleNames(model)
     }
 
+    function roleByName(model, roleName) {
+        return QtMT.ModelQuery.roleByName(model, roleName)
+    }
+
     /// Returns the first model entry that satisfies the condition function or null if none is found.
     function getFirstModelEntryIf(model, conditionFn) {
         if (!model)

@@ -17,12 +17,20 @@ Item {
         sourceModel: usersModel
     }
 
+    SignalSpy {
+        id: mapSpy
+        target: resolver
+        signalName: "mapChanged"
+    }
+
     TestCase {
         name: "MentionResolver"
         when: windowShown
 
         function init() {
             usersModel.clear()
+            resolver.enabled = true
+            mapSpy.clear()
         }
 
         // The "everyone" system tag is always resolvable, even with no source rows.
@@ -62,6 +70,57 @@ Item {
 
             usersModel.remove(0)
             verify(resolver.map["0xAAA"] === undefined)
+        }
+
+        // The map is rebuilt only when the display-name role changes, not for unrelated roles.
+        // (map is a `var` returning a fresh object per rebuild, so mapChanged fires per rebuild.)
+        function test_rebuildsOnlyForNameRole() {
+            usersModel.append({ pubKey: "0xAAA", name: "Alice", online: false })
+            compare(resolver.map["0xAAA"], "Alice") // force the initial build
+
+            mapSpy.clear()
+            usersModel.setProperty(0, "online", true)   // non-name role → no rebuild
+            compare(mapSpy.count, 0)
+
+            usersModel.setProperty(0, "name", "Alicia") // name role → rebuild
+            verify(mapSpy.count > 0)
+            compare(resolver.map["0xAAA"], "Alicia")
+        }
+
+        // Disabled: source-model changes don't rebuild the map; it holds the last value.
+        function test_disabledFreezesMap() {
+            usersModel.append({ pubKey: "0xAAA", name: "Alice" })
+            compare(resolver.map["0xAAA"], "Alice")
+
+            resolver.enabled = false
+            mapSpy.clear()
+            usersModel.setProperty(0, "name", "Alicia")
+            compare(mapSpy.count, 0)
+            compare(resolver.map["0xAAA"], "Alice")   // frozen at the last value
+        }
+
+        // Re-enabling rebuilds once when the model changed while disabled.
+        function test_reEnableRebuildsWhenOutdated() {
+            usersModel.append({ pubKey: "0xAAA", name: "Alice" })
+            compare(resolver.map["0xAAA"], "Alice")
+
+            resolver.enabled = false
+            usersModel.setProperty(0, "name", "Alicia")
+            mapSpy.clear()
+            resolver.enabled = true
+            verify(mapSpy.count > 0)
+            compare(resolver.map["0xAAA"], "Alicia")
+        }
+
+        // Re-enabling is a no-op when nothing changed while disabled.
+        function test_reEnableNoopWhenUpToDate() {
+            usersModel.append({ pubKey: "0xAAA", name: "Alice" })
+            compare(resolver.map["0xAAA"], "Alice")
+
+            resolver.enabled = false
+            mapSpy.clear()
+            resolver.enabled = true
+            compare(mapSpy.count, 0)
         }
 
         // Custom role names are honoured.

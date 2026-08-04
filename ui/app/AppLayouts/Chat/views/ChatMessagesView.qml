@@ -41,7 +41,10 @@ Item {
 
     // Resolves mention pub keys to display names. Reactive to member/contact
     // name changes; "everyone" is built in.
-    readonly property MentionResolver mentionResolver: MentionResolver {
+    MentionResolver {
+        id: mentionResolver
+
+        enabled: root.visible
         sourceModel: root.usersModel
         nameRole: "preferredDisplayName"
     }
@@ -369,7 +372,7 @@ Item {
             chatContentModule: root.chatContentModule
             formatBalance: root.formatBalance
             usersModel: root.usersModel
-            mentionsMap: root.mentionResolver.map
+            mentionsMap: mentionResolver.map
 
             isChatBlocked: root.isChatBlocked
             joined: root.joined
