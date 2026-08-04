@@ -370,6 +370,13 @@ SettingsContentBase {
                 text: qsTr("RPC statistics")
                 onClicked: rpcStatsModal.open()
             }
+
+            StatusSettingsLineButton {
+                width: parent.width
+                id: httpStatsButton
+                text: qsTr("HTTP statistics")
+                onClicked: httpStatsModal.open()
+            }
         }
 
         FleetsModal {
@@ -554,6 +561,12 @@ SettingsContentBase {
 
             walletStore: root.walletStore
             title: rpcStatsButton.text
+        }
+
+        HttpStatsModal {
+            id: httpStatsModal
+
+            title: httpStatsButton.text
         }
     }
 }
