@@ -42,6 +42,7 @@ type
     name*: string
     description*: Option[string]
     imageUrl*: Option[string]
+    thumbnailUrl*: Option[string]
     animationUrl*: Option[string]
     animationMediaType*: Option[string]
     traits*: Option[seq[CollectibleTrait]]
@@ -258,6 +259,7 @@ proc `$`*(self: CollectibleData): string =
     name:{self.name},
     description:{self.description},
     imageUrl:{self.imageUrl},
+    thumbnailUrl:{self.thumbnailUrl},
     animationUrl:{self.animationUrl},
     animationMediaType:{self.animationMediaType},
     traits:{self.traits},
@@ -288,6 +290,11 @@ proc fromJson*(t: JsonNode, T: typedesc[CollectibleData]): CollectibleData =
     result.imageUrl = some(imageUrlNode.getStr())
   else:
     result.imageUrl = none(string)
+  let thumbnailUrlNode = t{"thumbnail_url"}
+  if thumbnailUrlNode != nil and thumbnailUrlNode.kind != JNull:
+    result.thumbnailUrl = some(thumbnailUrlNode.getStr())
+  else:
+    result.thumbnailUrl = none(string)
   let animationUrlNode = t{"animation_url"}
   if animationUrlNode != nil and animationUrlNode.kind != JBool:
     result.animationUrl = some(animationUrlNode.getStr())

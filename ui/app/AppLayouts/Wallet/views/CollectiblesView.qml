@@ -499,9 +499,10 @@ ColumnLayout {
             height: (isCommunityCollectible ? d.communityCellHeight : d.cellHeight) - d.itemSpacing
             title: model.name ?? ""
             subTitle: model.collectionName ? model.collectionName : model.collectionUid ? model.collectionUid : ""
-            mediaUrl: model.mediaUrl ?? ""
-            mediaType: model.mediaType ?? ""
-            fallbackImageUrl: model.imageUrl ?? ""
+            mediaUrl: Utils.collectibleThumbnailSource(model.thumbnailUrl, model.imageUrl)
+            // Untransformed pick: fallback if the CDN ignores delivery hints in mediaUrl.
+            fallbackImageUrl: Utils.collectibleMediaSource(model.thumbnailUrl, model.imageUrl)
+            allowAnimation: false
             backgroundColor: model.backgroundColor ? model.backgroundColor : Theme.palette.baseColor5
             isLoading: !!model.isLoading
             privilegesLevel: model.communityPrivilegesLevel ?? Constants.TokenPrivilegesLevel.Community

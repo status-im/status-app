@@ -14,6 +14,7 @@ type
     TokenId
     Name
     ImageUrl
+    ThumbnailUrl
     MediaUrl
     MediaType
     BackgroundColor
@@ -133,6 +134,7 @@ QtObject:
       CollectibleRole.MediaUrl.int:"mediaUrl",
       CollectibleRole.MediaType.int:"mediaType",
       CollectibleRole.ImageUrl.int:"imageUrl",
+      CollectibleRole.ThumbnailUrl.int:"thumbnailUrl",
       CollectibleRole.BackgroundColor.int:"backgroundColor",
       CollectibleRole.CollectionUid.int:"collectionUid",
       CollectibleRole.CollectionName.int:"collectionName",
@@ -169,6 +171,8 @@ QtObject:
         result = newQVariant(item.getMediaType())
       of CollectibleRole.ImageUrl:
         result = newQVariant(item.getImageURL())
+      of CollectibleRole.ThumbnailUrl:
+        result = newQVariant(item.getThumbnailURL())
       of CollectibleRole.BackgroundColor:
         result = newQVariant(item.getBackgroundColor())
       of CollectibleRole.CollectionUid:

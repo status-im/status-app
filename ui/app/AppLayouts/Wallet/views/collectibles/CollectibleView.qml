@@ -27,6 +27,8 @@ AbstractButton {
     property url mediaUrl : ""
     property string mediaType: ""
     property url fallbackImageUrl : ""
+    // False for small tiles: animation URL is the full-size asset.
+    property bool allowAnimation: true
     property bool isLoading: false
     property bool navigationIconVisible: false
     property string communityId: ""
@@ -95,6 +97,7 @@ AbstractButton {
             mediaUrl: root.mediaUrl
             mediaType: root.mediaType
             fallbackImageUrl: root.fallbackImageUrl
+            allowAnimation: root.allowAnimation
             showLoadingIndicator: true
             isCollectibleLoading: root.isLoading
             fillMode: Image.PreserveAspectCrop

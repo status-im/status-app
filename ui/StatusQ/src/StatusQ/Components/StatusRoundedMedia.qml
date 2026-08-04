@@ -86,6 +86,14 @@ StatusRoundedComponent {
     property int manualMaxDimension: 0
 
     /*!
+        \qmlproperty bool StatusRoundedMedia::allowAnimation
+
+        When false, always render a still — for small tiles where the animation
+        URL is the full-size asset.
+    */
+    property bool allowAnimation: true
+
+    /*!
         \qmlproperty bool StatusRoundedMedia::interactive
 
         Enable mouse interaction with the media.
@@ -100,6 +108,8 @@ StatusRoundedComponent {
     property bool isEmpty: false
 
     readonly property int componentMediaType: {
+        if (!root.allowAnimation)
+            return StatusRoundedMedia.MediaType.Image
         if (root.mediaType.startsWith("image"))
             return StatusRoundedMedia.MediaType.Image
         if (root.mediaType.startsWith("video"))
@@ -196,6 +206,7 @@ StatusRoundedComponent {
     }
 
     Component.onCompleted: updateMediaLoader()
+    onAllowAnimationChanged: updateMediaLoader()
     onMediaUrlChanged: updateMediaLoader()
     onComponentMediaTypeChanged: updateMediaLoader()
     onFallbackImageUrlChanged: updateMediaLoader()
@@ -213,7 +224,8 @@ StatusRoundedComponent {
         d.reset()
         if (root.mediaUrl.toString() !== "") {
             if (componentMediaType === StatusRoundedMedia.MediaType.Image) {
-                mediaLoader.setSource("StatusAnimatedImage.qml",
+                mediaLoader.setSource(root.allowAnimation ? "StatusAnimatedImage.qml"
+                                                          : "StatusImage.qml",
                                     {
                                         "source": root.mediaUrl,
                                         "fillMode": root.fillMode,
@@ -234,8 +246,11 @@ StatusRoundedComponent {
 
     function processError() {
         if (!d.isFallback) {
-            // AnimatedImage sometimes cannot load stuff that plan Image can, try that first
-            if (componentMediaType === StatusRoundedMedia.MediaType.Image && d.errorCounter <= 1) {
+            // AnimatedImage sometimes cannot load stuff that plan Image can, try that first.
+            // With animation disallowed the media is already a plain Image, so retrying the
+            // same URL would only download it a second time.
+            if (root.allowAnimation && componentMediaType === StatusRoundedMedia.MediaType.Image
+                    && d.errorCounter <= 1) {
                 d.plainImage = true
                 mediaLoader.setSource("StatusImage.qml",
                                     {

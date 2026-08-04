@@ -358,8 +358,14 @@ Item {
             id: collectibleImage
             backgroundColor: collectible.backgroundColor ? collectible.backgroundColor : Theme.palette.baseColor5
             isCollectibleLoading: root.isCollectibleLoading
-            mediaUrl: collectible.mediaUrl ?? ""
+            // Asked for at the size it is drawn: the raw URL is the provider's
+            // original, which averages 293 KB to fill 240 points. An animation
+            // URL is not a Cloudinary delivery URL and comes back untouched.
+            mediaUrl: Utils.resizedMediaSource(collectible.mediaUrl ?? "",
+                                               collectibleImage.manualMaxDimension)
             mediaType: !!collectible ? (modelIndex > 0 && collectible.mediaType.startsWith("video")) ? "" : collectible.mediaType: ""
+            // Untransformed, so the tile degrades to today's behaviour if the CDN
+            // stops honouring the hint rather than showing nothing.
             fallbackImageUrl: collectible.imageUrl
             manualMaxDimension: 240
             interactive: !isError && !isEmpty

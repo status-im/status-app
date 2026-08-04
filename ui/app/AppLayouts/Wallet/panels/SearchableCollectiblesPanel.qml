@@ -120,7 +120,8 @@ Control {
 
                     name: model.groupName
                     balance: showCount ? subitemsCount : ""
-                    image: model.imageUrl || model.mediaUrl
+                    image: Utils.collectibleThumbnailSource(model.thumbnailUrl,
+                                                           model.imageUrl)
                     goDeeperIconVisible: subitemsCount > 1
                                          || isCommunity
                     networkIcon: model.iconUrl
