@@ -15719,68 +15719,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>StatusChatInput</name>
-    <message>
-        <source>Message</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please choose an image</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Image files (%1)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please reduce the message length</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message numerus="yes">
-        <source>Maximum message character count is %n</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>Add image</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Not available in Testnet mode</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Add payment request</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Bold</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Italic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Strikethrough</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Code</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Quote (%1)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Send message</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>StatusChatInputNew</name>
     <message>
         <source>Sticker</source>
@@ -15823,36 +15761,6 @@ to load</source>
     </message>
     <message>
         <source>Type something</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>StatusChatInputReplyArea</name>
-    <message>
-        <source>Replying to %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cancel reply</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>StatusChatInputTextArea</name>
-    <message>
-        <source>Cut</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Select All</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

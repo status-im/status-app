@@ -15665,67 +15665,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>StatusChatInput</name>
-    <message>
-        <source>Message</source>
-        <translation>메시지</translation>
-    </message>
-    <message>
-        <source>Please choose an image</source>
-        <translation>이미지를 선택하세요</translation>
-    </message>
-    <message>
-        <source>Image files (%1)</source>
-        <translation>이미지 파일(%1)</translation>
-    </message>
-    <message>
-        <source>Please reduce the message length</source>
-        <translation>메시지 길이를 줄여 주세요</translation>
-    </message>
-    <message numerus="yes">
-        <source>Maximum message character count is %n</source>
-        <translation>
-            <numerusform>최대 메시지 글자 수는 %n자입니다</numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>Add image</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Not available in Testnet mode</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Add payment request</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Bold</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Italic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Strikethrough</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Code</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Quote (%1)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Send message</source>
-        <translation type="unfinished">메시지 보내기</translation>
-    </message>
-</context>
-<context>
     <name>StatusChatInputNew</name>
     <message>
         <source>Sticker</source>
@@ -15767,36 +15706,6 @@ to load</source>
     </message>
     <message>
         <source>Type something</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>StatusChatInputReplyArea</name>
-    <message>
-        <source>Replying to %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cancel reply</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>StatusChatInputTextArea</name>
-    <message>
-        <source>Cut</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation type="unfinished">클립보드로 복사</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation type="unfinished">붙여넣기</translation>
-    </message>
-    <message>
-        <source>Select All</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

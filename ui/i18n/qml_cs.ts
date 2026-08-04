@@ -15804,69 +15804,6 @@ selhalo</translation>
     </message>
 </context>
 <context>
-    <name>StatusChatInput</name>
-    <message>
-        <source>Message</source>
-        <translation>Zpráva</translation>
-    </message>
-    <message>
-        <source>Please choose an image</source>
-        <translation>Prosím vyberte obrázek</translation>
-    </message>
-    <message>
-        <source>Image files (%1)</source>
-        <translation>Soubory s obrázky (%1)</translation>
-    </message>
-    <message>
-        <source>Please reduce the message length</source>
-        <translation>Prosím zkraťte délku zprávy</translation>
-    </message>
-    <message numerus="yes">
-        <source>Maximum message character count is %n</source>
-        <translation>
-            <numerusform>Maximální počet znaků je %n</numerusform>
-            <numerusform>Maximální počet znaků je %n</numerusform>
-            <numerusform>Maximální počet znaků je %n</numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>Add image</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Not available in Testnet mode</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Add payment request</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Bold</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Italic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Strikethrough</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Code</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Quote (%1)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Send message</source>
-        <translation type="unfinished">Odeslat zprávu</translation>
-    </message>
-</context>
-<context>
     <name>StatusChatInputNew</name>
     <message>
         <source>Sticker</source>
@@ -15910,36 +15847,6 @@ selhalo</translation>
     </message>
     <message>
         <source>Type something</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>StatusChatInputReplyArea</name>
-    <message>
-        <source>Replying to %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cancel reply</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>StatusChatInputTextArea</name>
-    <message>
-        <source>Cut</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation type="unfinished">Kopírovat</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation type="unfinished">Vložit</translation>
-    </message>
-    <message>
-        <source>Select All</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

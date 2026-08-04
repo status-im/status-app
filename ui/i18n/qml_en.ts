@@ -635,16 +635,6 @@
     </message>
 </context>
 <context>
-    <name>StatusChatInput</name>
-    <message numerus="yes">
-        <source>Maximum message character count is %n</source>
-        <translation>
-            <numerusform>Maximum message character count is %n</numerusform>
-            <numerusform>Maximum message character count is %n</numerusform>
-        </translation>
-    </message>
-</context>
-<context>
     <name>StatusChatInputNew</name>
     <message numerus="yes">
         <source>%n Image(s)</source>
