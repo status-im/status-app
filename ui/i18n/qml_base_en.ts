@@ -1154,6 +1154,10 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>HTTP statistics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Are you sure you want to disable debug mode?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8525,6 +8529,41 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Custom</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>HttpStatsModal</name>
+    <message>
+        <source>network %1 in %2 req · cache %3 in %4 req</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Total: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disk cache: %1 of %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Not counted here: status-go, messaging, the webviews, and requests made outside the QML network access manager.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear cache</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Total</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
