@@ -53,10 +53,42 @@ ComboBox {
 
         readonly property int defaultDelegateHeight: 34
 
+        /* Icons load only after the dropdown has been opened once. The list
+           sizes to contentHeight (every row, not a viewport), so eagerly building
+           icons would fetch every group image on tab open. Latched so closing
+           the popup does not discard them and re-fetch on the next open. */
+        property bool dropdownOpenedOnce: false
+
         readonly property string searchTextLowerCase: searchBox.text
 
         readonly property SQUtils.ModelChangeTracker sourceModelTracker: SQUtils.ModelChangeTracker {
             model: root.sourceModel
+        }
+
+        /* Owned group ids, rebuilt once per sourceModel revision.
+           Mutated in place so filter evaluation does not fire change signals.
+           Empty ids are kept: callers pass "" for uncategorized groups. */
+        readonly property var groupIdsCache: ({ revision: -1, ids: new Set() })
+
+        function collectiblesHaveGroup(groupId) {
+            const cache = d.groupIdsCache
+            const revision = d.sourceModelTracker.revision
+
+            if (cache.revision !== revision) {
+                const ids = new Set()
+                const model = root.sourceModel
+                const count = !!model ? model.rowCount() : 0
+
+                for (let i = 0; i < count; i++) {
+                    ids.add(SQUtils.ModelUtils.get(model, i, "communityId"))
+                    ids.add(SQUtils.ModelUtils.get(model, i, "collectionUid"))
+                }
+
+                cache.ids = ids
+                cache.revision = revision
+            }
+
+            return cache.ids.has(groupId)
         }
 
         readonly property var combinedModel: ConcatModel {
@@ -76,10 +108,7 @@ ComboBox {
         }
 
         readonly property var combinedProxyModel: SortFilterProxyModel {
-            id: combinedProxyModel
             sourceModel: d.combinedModel
-            readonly property var containsCollectible: (groupId) => SQUtils.ModelUtils.indexOf(root.sourceModel, "communityId", groupId) >= 0
-                                                                    || SQUtils.ModelUtils.indexOf(root.sourceModel, "collectionUid", groupId) >= 0
             proxyRoles: [
                 JoinRole {
                     name: "groupId"
@@ -110,7 +139,7 @@ ComboBox {
                 FastExpressionFilter {
                     expression: {
                         d.sourceModelTracker.revision
-                        return combinedProxyModel.containsCollectible(model.groupId)
+                        return d.collectiblesHaveGroup(model.groupId)
                     }
                     expectedRoles: ["groupId"]
                 }
@@ -180,6 +209,10 @@ ComboBox {
 
         directParent: root
         relativeY: root.height + 4
+
+        // Before it is shown, not when it is shown: the icons have a frame to
+        // start loading while the popup is still opening.
+        onAboutToShow: d.dropdownOpenedOnce = true
 
         implicitWidth: 290
         implicitHeight: Math.min(contentHeight+margins, 380)
@@ -276,7 +309,14 @@ ComboBox {
         property int count: model.enabledNetworkBalance
         readonly property bool isCommunityGroup: !!model && !!model.communityId
         property string groupId: model.groupId
-        readonly property string groupImage: !!model ? model.communityImage || model.imageUrl : ""
+        // Same render width as the grid so dropdown icons reuse its cache entries.
+        readonly property string groupImage: {
+            if (!model)
+                return ""
+            if (model.communityImage)
+                return Utils.resizedMediaSource(model.communityImage)
+            return Utils.collectibleThumbnailSource(model.thumbnailUrl, model.imageUrl)
+        }
 
         highlighted: hovered
         leftPadding: Theme.padding
@@ -285,7 +325,7 @@ ComboBox {
         spacing: root.spacing
         font: root.font
         text: model.groupName
-        icon.source: groupImage
+        icon.source: d.dropdownOpenedOnce ? groupImage : ""
         icon.name: isCommunityGroup ? "group" : "gallery"
         checked: d.selectedFilterGroupIds.includes(menuDelegate.groupId)
         onToggled: checked ? d.addFilter(menuDelegate.groupId) : d.removeFilter(menuDelegate.groupId)
