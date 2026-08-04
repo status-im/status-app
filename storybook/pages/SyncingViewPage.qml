@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 import Storybook
 
-import mainui
+import mainui.sectionLoaders
 import utils
 
 import StatusQ
@@ -20,12 +20,8 @@ SplitView {
 
     Logs { id: logs }
 
-    Keychain {
-        id: popupsKeychain
-    }
-
-    Popups {
-        keychain: popupsKeychain
+    PopupsLoader {
+        keychain: Keychain {}
         popupParent: root
         sharedRootStore: SharedStores.RootStore {}
         rootStore: AppLayoutStores.RootStore {}
@@ -117,7 +113,7 @@ SplitView {
                     deviceType: "desktop"
                     isCurrentDevice: false
                     enabled: false
-                    installationId: "f"
+                    installationId: "This is a long selectable installation ID"
                 }
             }
         }

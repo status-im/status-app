@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 import StatusQ
 
-import mainui
+import mainui.sectionLoaders
 import shared.stores as SharedStores
 import AppLayouts.stores as AppLayoutsStores
 import AppLayouts.Communities.panels
@@ -15,12 +15,8 @@ SplitView {
     id: root
     SplitView.fillWidth: true
 
-    Keychain {
-        id: popupsKeychain
-    }
-
-    Popups {
-        keychain: popupsKeychain
+    PopupsLoader {
+        keychain: Keychain {}
         popupParent: root
         sharedRootStore: SharedStores.RootStore {}
         rootStore: AppLayoutsStores.RootStore {}

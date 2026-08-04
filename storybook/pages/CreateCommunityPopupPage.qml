@@ -7,7 +7,7 @@ import StatusQ
 import Storybook
 import Models
 
-import mainui
+import mainui.sectionLoaders
 
 import shared.stores as SharedStores
 
@@ -49,12 +49,8 @@ SplitView {
             }
         }
 
-        Keychain {
-            id: popupsKeychain
-        }
-
-        Popups {
-            keychain: popupsKeychain
+        PopupsLoader {
+            keychain: Keychain {}
             popupParent: root
             sharedRootStore: SharedStores.RootStore {}
             rootStore: AppLayoutStores.RootStore {}

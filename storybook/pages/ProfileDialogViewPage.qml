@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import utils
 import shared.views
 import shared.stores as SharedStores
-import mainui
+import mainui.sectionLoaders
 
 import StatusQ
 import StatusQ.Core.Theme
@@ -144,7 +144,7 @@ SplitView {
         id: popupsKeychain
     }
 
-    Popups {
+    PopupsLoader {
         keychain: popupsKeychain
         popupParent: root
         sharedRootStore: SharedStores.RootStore {}

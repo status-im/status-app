@@ -4,7 +4,7 @@ import QtQuick.Controls
 import StatusQ
 import StatusQ.Core
 
-import mainui
+import mainui.sectionLoaders
 import AppLayouts.stores as AppLayoutStores
 import AppLayouts.Profile.panels
 import shared.stores as SharedStores
@@ -20,12 +20,8 @@ SplitView {
 
     orientation: Qt.Vertical
 
-    Keychain {
-        id: popupsKeychain
-    }
-
-    Popups {
-        keychain: popupsKeychain
+    PopupsLoader {
+        keychain: Keychain {}
         popupParent: root
         sharedRootStore: SharedStores.RootStore {}
         rootStore: AppLayoutStores.RootStore {}

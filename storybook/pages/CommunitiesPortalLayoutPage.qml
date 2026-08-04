@@ -12,19 +12,15 @@ import Storybook
 import Models
 
 import utils
-import mainui
+import mainui.sectionLoaders
 import shared.stores as SharedStores
 
 SplitView {
     id: root
     Logs { id: logs }
 
-    Keychain {
-        id: popupsKeychain
-    }
-
-    Popups {
-        keychain: popupsKeychain
+    PopupsLoader {
+        keychain: Keychain {}
         popupParent: root
         sharedRootStore: SharedStores.RootStore {}
         rootStore: AppLayoutStores.RootStore {}

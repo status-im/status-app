@@ -9,7 +9,7 @@ import StatusQ.Models
 import StatusQ.Core
 import StatusQ.Core.Utils as SQUtils
 
-import mainui
+import mainui.sectionLoaders
 import utils
 
 import AppLayouts.stores as AppLayoutStores
@@ -51,12 +51,8 @@ SplitView {
         ]
     }
 
-    Keychain {
-        id: popupsKeychain
-    }
-
-    Popups {
-        keychain: popupsKeychain
+    PopupsLoader {
+        keychain: Keychain {}
         popupParent: root
         sharedRootStore: SharedStores.RootStore {}
         rootStore: AppLayoutStores.RootStore {}

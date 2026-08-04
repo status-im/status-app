@@ -7,7 +7,7 @@ import StatusQ.Core
 import AppLayouts.stores as AppLayoutsStores
 import AppLayouts.Profile.views
 import AppLayouts.Profile.stores
-import mainui
+import mainui.sectionLoaders
 import utils
 
 import shared.stores as SharedStores
@@ -23,15 +23,11 @@ SplitView {
 
     orientation: Qt.Vertical
 
-    Keychain {
-        id: popupsKeychain
-    }
-
-    Popups {
-        keychain: popupsKeychain
+    PopupsLoader {
+        keychain: Keychain {}
         popupParent: root
         sharedRootStore: SharedStores.RootStore {}
-        rootStore: AppLayoutsStores.RootStore
+        rootStore: AppLayoutsStores.RootStore {}
         communityTokensStore: SharedStores.CommunityTokensStore {}
         networksStore: SharedStores.NetworksStore {}
     }
@@ -48,7 +44,6 @@ SplitView {
         SplitView.fillWidth: true
         SplitView.fillHeight: true
 
-        readonly property bool compactRowMode: contentWidth < 560
         contentWidth: width / 3 * 2
 
         communitiesList: ctrlEmptyView.checked ? emptyModel : communitiesModel

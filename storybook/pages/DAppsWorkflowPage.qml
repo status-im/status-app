@@ -19,7 +19,6 @@ import StatusQ.Core.Utils as SQUtils
 import Models
 import Storybook as StoryBook
 
-import AppLayouts.Wallet.controls
 import AppLayouts.Wallet.services.dapps
 import AppLayouts.Wallet.services.dapps.types
 
@@ -32,20 +31,15 @@ import AppLayouts.Profile.stores
 import AppLayouts.Wallet.stores as WalletStore
 import AppLayouts.stores as AppLayoutStores
 
-import mainui
+import mainui.sectionLoaders
 import shared.stores as SharedStores
 import utils
 
 Item {
     id: root
 
-    // Needed for DAppsWorkflow->PairWCModal to open its instructions popup
-    Keychain {
-        id: popupsKeychain
-    }
-
-    Popups {
-        keychain: popupsKeychain
+    PopupsLoader {
+        keychain: Keychain {}
         popupParent: root
         sharedRootStore: SharedStores.RootStore {}
         rootStore: AppLayoutStores.RootStore {}
