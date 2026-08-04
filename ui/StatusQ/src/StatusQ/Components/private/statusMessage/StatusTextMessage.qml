@@ -62,6 +62,7 @@ Item {
     ChatTextView {
         id: chatTextView
         objectName: "StatusTextMessage_chatText"
+        readonly property string text: d.plainText // for e2e / a11y read
         Accessible.role: Accessible.StaticText
         Accessible.name: d.plainText
 
