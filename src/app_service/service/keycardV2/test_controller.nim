@@ -57,8 +57,13 @@ when defined(useSimulatedKeycard):
 
     proc startSimulator*(self: KeycardTestController, version: string) {.slot.} =
       if not self.simProcess.isNil and self.simProcess.running:
-        info "keycard simulator already running"
-        return
+        self.simProcess.terminate()
+        self.simProcess.close()
+      self.simProcess = nil
+      discard callRPC("Stop")
+      discard keycard_go.keycardTestRemoveCard()
+      discard keycard_go.keycardTestUnplugReader()
+
       var safeVersion = ""
       for c in version:
         if c in {'0'..'9', '.'}: safeVersion.add(c)
