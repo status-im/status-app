@@ -11583,6 +11583,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>NetworkChipFilter</name>
+    <message>
+        <source>All</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>NetworkConnectionStore</name>
     <message>
         <source>Requires internet connection</source>
@@ -14514,6 +14521,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Paste</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Loading more tokens...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -16562,17 +16573,20 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>SwapFromAccountPopup</name>
+    <message>
+        <source>From account</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>SwapInputPanel</name>
     <message>
-        <source>Pay</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Receive</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Your assets on %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your assets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16595,15 +16609,20 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Max slippage:</source>
+        <source>%1 s</source>
+        <comment>short for seconds</comment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>N/A</source>
+        <source>Best return</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Max fees:</source>
+        <source>by %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>via %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16612,6 +16631,10 @@ to load</source>
     </message>
     <message>
         <source>Approve %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm swap</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16731,6 +16754,13 @@ to load</source>
     </message>
     <message>
         <source>Max. fees on %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>SwapToAccountPopup</name>
+    <message>
+        <source>Send to</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

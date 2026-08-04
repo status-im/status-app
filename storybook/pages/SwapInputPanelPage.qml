@@ -66,7 +66,7 @@ SplitView {
 
         readonly property SwapModalAdaptor adaptor: SwapModalAdaptor {
             swapStore: SwapStore {
-                readonly property var accounts: WalletAccountsModel {}
+                accounts: WalletAccountsModel {}
                 signal suggestedRoutesReady(var txRoutes, string errCode, string errDescription)
                 signal transactionSent(var chainId, var txHash, var uuid, var error)
                 signal transactionSendingComplete(var txHash, var status)

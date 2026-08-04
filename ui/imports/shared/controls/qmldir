@@ -1,6 +1,7 @@
 A11YInformationTag 1.0 A11YInformationTag.qml
 AccountSelector 1.0 AccountSelector.qml
 AccountSelectorHeader 1.0 AccountSelectorHeader.qml
+AccountSelectorPill 1.0 AccountSelectorPill.qml
 AmountInput 1.0 AmountInput.qml
 AssetAndAmountInput 1.0 AssetAndAmountInput.qml
 AssetDelegate 1.0 AssetDelegate.qml

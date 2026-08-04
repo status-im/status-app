@@ -12,6 +12,7 @@ QtObject {
     signal formValuesChanged()
 
     property string selectedAccountAddress: ""
+    property string toAccountAddress: ""
     property int selectedNetworkChainId: -1 // source (pay) chain
     // destination (receive) chain, independent of the source. Defaulted once to the source
     // (plain swap); a different value makes it a swap+bridge.
@@ -26,10 +27,14 @@ QtObject {
     property string defaultToGroupKey: root.getDefaultToGroupKey(root.toNetworkChainId)
     // default from group key
     property string defaultFromGroupKey: root.getDefaultFromGroupKey(root.selectedNetworkChainId)
-    // 15 seconds
-    property int autoRefreshTime: 15000
+    property int autoRefreshTime: 30000
 
-    onSelectedAccountAddressChanged: root.formValuesChanged()
+    onSelectedAccountAddressChanged: {
+        if (root.toAccountAddress === "")
+            root.toAccountAddress = root.selectedAccountAddress
+        root.formValuesChanged()
+    }
+    onToAccountAddressChanged: root.formValuesChanged()
     onSelectedNetworkChainIdChanged: {
         // one-time default to the source chain; the selectors are independent after that
         if (root.toNetworkChainId === -1)
@@ -45,6 +50,7 @@ QtObject {
 
     function resetFormData() {
         root.selectedAccountAddress = ""
+        root.toAccountAddress = ""
         root.selectedNetworkChainId = -1
         root.toNetworkChainId = -1
         root.selectedSlippage = 0.5

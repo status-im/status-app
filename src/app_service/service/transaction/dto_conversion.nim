@@ -50,6 +50,7 @@ proc convertToOldRoute*(route: seq[TransactionPathDtoV2]): seq[TransactionPathDt
 
       # prepare tx path
       trPath.bridgeName = p.processorName
+      trPath.tool = p.tool
       trPath.fromNetwork = p.fromChain
       trPath.toNetwork = p.toChain
       trPath.fromToken = p.fromToken

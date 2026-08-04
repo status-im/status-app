@@ -18,6 +18,11 @@ Control {
     /** Expected model structure: see SearchableCollectiblesPanel::model **/
     property alias collectiblesModel: tokenSelectorPanel.collectiblesModel
 
+    /** networks catalog for the assets chain-filter chip row (optional) **/
+    property alias flatNetworksModel: tokenSelectorPanel.flatNetworksModel
+    /** selected chain in the chip row; -1 = All (in/out) **/
+    property alias selectedChainId: tokenSelectorPanel.selectedChainId
+
     /** Sets size of the TokenSelectorButton **/
     property alias size: tokenSelectorButton.size
 
@@ -33,6 +38,7 @@ Control {
     signal collectibleSelected(string key)
     signal searchInAssets(string keyword)
     signal fetchMoreAssets()
+    signal chainSelected(int chainId)
 
     // Index of the current tab, indexes ​​correspond to the
     // TokensSelectorPanel.Tabs enum values.
@@ -149,6 +155,10 @@ Control {
 
                 onFetchMoreAssets: function() {
                     root.fetchMoreAssets()
+                }
+
+                onChainSelected: function(chainId) {
+                    root.chainSelected(chainId)
                 }
             }
         }

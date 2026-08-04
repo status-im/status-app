@@ -34,7 +34,7 @@ Item {
         signal transactionSent(var chainId,var txHash, var uuid, var error)
         signal transactionSendingComplete(var txHash,  var status)
 
-        readonly property var accounts: WalletAccountsModel {}
+        accounts: WalletAccountsModel {}
         function getWei2Eth(wei, decimals) {
             return wei/(10**decimals)
         }
@@ -78,6 +78,20 @@ Item {
     }
 
     property SwapInputParamsForm swapFormData: SwapInputParamsForm {}
+
+    readonly property WalletAccountsSelectorAdaptor accountsSelectorAdaptor: WalletAccountsSelectorAdaptor {
+        accounts: root.swapAdaptor.swapStore.accounts
+        assetsModel: root.swapAdaptor.walletAssetsStore.baseGroupedAccountAssetModel
+        tokenGroupsModel: root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsModel
+        filteredFlatNetworksModel: root.swapAdaptor.networksStore.activeNetworks
+
+        selectedGroupKey: root.swapFormData.fromGroupKey
+        selectedNetworkChainId: root.swapFormData.selectedNetworkChainId
+
+        fnFormatCurrencyAmountFromBigInt: function(balance, symbol, decimals, options = null) {
+            return root.swapAdaptor.currencyStore.formatCurrencyAmountFromBigInt(balance, symbol, decimals, options)
+        }
+    }
 
     Component {
         id: componentUnderTest
@@ -148,20 +162,41 @@ Item {
             root.swapFormData.resetFormData()
         }
 
-        function getAndVerifyAccountsModalHeader() {
-            const accountsModalHeader = findChild(controlUnderTest, "accountSelector")
-            verify(!!accountsModalHeader)
-            return accountsModalHeader
+        function getProcessedAccountsModel() {
+            const model = root.accountsSelectorAdaptor.processedWalletAccounts
+            verify(!!model)
+            return model
         }
 
-        function launchAccountSelectionPopup(accountsModalHeader) {
-            // Launch account selection popup
-            verify(!accountsModalHeader.control.popup.opened)
-            mouseClick(accountsModalHeader)
-            waitForRendering(accountsModalHeader, 200)
-            verify(!!accountsModalHeader.control.popup.opened)
-            mouseMove(accountsModalHeader)
-            return accountsModalHeader
+        function getPayAccountPill() {
+            const payPanel = findChild(controlUnderTest, "payPanel")
+            verify(!!payPanel)
+            const pill = findChild(payPanel, "accountSelectorPill")
+            verify(!!pill)
+            return pill
+        }
+
+        function popupSearchRoot() {
+            const overlay = controlUnderTest.Overlay.overlay
+            verify(!!overlay)
+            return overlay
+        }
+
+        function openFromAccountPopup() {
+            const walletAccounts = getProcessedAccountsModel()
+            tryVerify(() => walletAccounts.count > 0)
+            const pill = getPayAccountPill()
+            mouseClick(pill)
+            const overlay = popupSearchRoot()
+            let listView = null
+            tryVerify(() => {
+                const anyDelegate = findChild(overlay, walletAccounts.get(0).name)
+                if (!anyDelegate)
+                    return false
+                listView = anyDelegate.ListView.view
+                return !!listView
+            }, 2000, "SwapFromAccountPopup did not open")
+            return listView
         }
 
         function verifyLoadingAndNoErrorsState(payPanel, receivePanel) {
@@ -187,36 +222,37 @@ Item {
         }
         // end helper functions -------------------------------------------------------------
 
-        function test_floating_header_default_account() {
+        function test_account_pill_default_account() {
             verify(!!controlUnderTest)
-            const accountsModalHeader = getAndVerifyAccountsModalHeader()
-            let walletAccounts = accountsModalHeader.model
-            /* using a for loop set different accounts as default index and
-            check if the correct values are displayed in the floating header*/
+
+            launchAndVerfyModal()
+
+            const pill = getPayAccountPill()
+            const pillText = findChild(pill, "accountPillText")
+            verify(!!pillText)
+            const pillBackground = findChild(pill, "accountPillBackground")
+            verify(!!pillBackground)
+
+            let walletAccounts = getProcessedAccountsModel()
+            /* using a for loop set different accounts as the selected account and
+            check that the pay account pill reflects the correct name/emoji/color */
             for (let i = 0; i< walletAccounts.count; i++) {
                 const accountToTest = walletAccounts.get(i)
                 root.swapFormData.selectedAccountAddress = accountToTest.address
 
-                // Launch popup
-                launchAndVerfyModal()
+                tryCompare(pill, "name", accountToTest.name)
+                compare(pill.emoji, accountToTest.emoji)
+                compare(pill.colorId, accountToTest.colorId)
+                compare(pill.address, accountToTest.address)
 
-                const floatingHeaderBackground = findChild(controlUnderTest, "headerBackground")
-                verify(!!floatingHeaderBackground)
-                compare(floatingHeaderBackground.color.toString().toUpperCase(),
+                compare(pillText.text, accountToTest.name)
+                compare(pillBackground.color.toString().toUpperCase(),
                         Utils.getColorForId(controlUnderTest.Theme.palette, accountToTest.colorId).toString().toUpperCase())
-
-                const headerContentItemText = findChild(controlUnderTest, "textContent")
-                verify(!!headerContentItemText)
-                compare(headerContentItemText.text, accountToTest.name)
-
-                const headerContentItemEmoji = findChild(controlUnderTest, "assetContent")
-                verify(!!headerContentItemEmoji)
-                compare(headerContentItemEmoji.asset.emoji, accountToTest.emoji)
             }
             closeAndVerfyModal()
         }
 
-        function test_floating_header_doesnt_contain_watch_accounts() {
+        function test_account_pill_doesnt_contain_watch_accounts() {
             // main input list from store should contian watch accounts
             let hasWatchAccount = false
             for(let i =0; i< swapStore.accounts.count; i++) {
@@ -227,103 +263,87 @@ Item {
             }
             verify(!!hasWatchAccount)
 
-            // launch modal and get the account selection header
             launchAndVerfyModal()
-            const accountsModalHeader = getAndVerifyAccountsModalHeader()
 
-            // header model should not contain watch accounts
-            let floatingHeaderHasWatchAccount = false
-            for(let i =0; i< accountsModalHeader.model.count; i++) {
-                if(accountsModalHeader.model.get(i).walletType === Constants.watchWalletType) {
-                    floatingHeaderHasWatchAccount = true
+            const walletAccounts = getProcessedAccountsModel()
+            let listHasWatchAccount = false
+            for(let i =0; i< walletAccounts.count; i++) {
+                if(walletAccounts.get(i).walletType === Constants.watchWalletType) {
+                    listHasWatchAccount = true
                     break
                 }
             }
-            verify(!floatingHeaderHasWatchAccount)
+            verify(!listHasWatchAccount)
+
+            const listView = openFromAccountPopup()
+            compare(listView.count, walletAccounts.count)
 
             closeAndVerfyModal()
         }
 
-        function test_floating_header_list_items() {
-            // Launch popup and account selection modal
+        function test_account_pill_list_items() {
             launchAndVerfyModal()
-            const accountsModalHeader = getAndVerifyAccountsModalHeader()
-            launchAccountSelectionPopup(accountsModalHeader)
-            let walletAccounts = accountsModalHeader.model
+            let walletAccounts = getProcessedAccountsModel()
 
-            const comboBoxList = findChild(controlUnderTest, "accountSelectorList")
+            const comboBoxList = openFromAccountPopup()
             verify(!!comboBoxList)
             waitForRendering(comboBoxList)
+            compare(comboBoxList.count, walletAccounts.count)
 
-            for(let i =0; i< comboBoxList.model.count; i++) {
+            for(let i =0; i< comboBoxList.count; i++) {
                 let delegateUnderTest = comboBoxList.itemAtIndex(i)
+                verify(!!delegateUnderTest)
                 let accountToBeTested = walletAccounts.get(i)
                 let elidedAddress = SQUtils.Utils.elideAndFormatWalletAddress(accountToBeTested.address)
                 compare(delegateUnderTest.title, accountToBeTested.name)
                 compare(delegateUnderTest.subTitle, elidedAddress)
-                compare(delegateUnderTest.asset.color.toString().toUpperCase(), accountToBeTested.color.toString().toUpperCase())
+                compare(delegateUnderTest.asset.color.toString().toUpperCase(),
+                        Utils.getColorForId(Theme.palette, accountToBeTested.colorId).toString().toUpperCase())
                 compare(delegateUnderTest.asset.emoji, accountToBeTested.emoji)
 
                 const walletAccountCurrencyBalance = findChild(delegateUnderTest, "walletAccountCurrencyBalance")
                 verify(!!walletAccountCurrencyBalance)
                 verify(walletAccountCurrencyBalance.text, LocaleUtils.currencyAmountToLocaleString(accountToBeTested.currencyBalance))
 
-                // check if selected item in combo box is highlighted with the right color
-                if(comboBoxList.currentIndex === i) {
+                if(root.swapFormData.selectedAccountAddress === accountToBeTested.address) {
                     verify(delegateUnderTest.color, Theme.palette.statusListItem.highlightColor)
                 }
                 else {
                     verify(delegateUnderTest.color, StatusColors.transparent)
                 }
-
-                // TODO: always null not sure why
-                // const walletAccountTypeIcon = findChild(delegateUnderTest, "walletAccountTypeIcon")
-                // verify(!!walletAccountTypeIcon)
-                // compare(walletAccountTypeIcon.icon, accountToBeTested.walletType === Constants.watchWalletType ? "show" : delegateUnderTest.model.migratedToColdWallet ? "keycard": "")
-
-                // Hover over the item and check hovered state
-                mouseMove(delegateUnderTest, delegateUnderTest.width/2, delegateUnderTest.height/2)
-                verify(delegateUnderTest.sensor.containsMouse)
-                compare(delegateUnderTest.title, accountToBeTested.name)
-                compare(delegateUnderTest.subTitle,  Utils.richColorText(elidedAddress, Theme.palette.directColor1))
-                verify(delegateUnderTest.color, Theme.palette.baseColor2)
-
             }
             controlUnderTest.close()
         }
 
-        function test_floating_header_after_setting_fromAsset() {
+        function test_account_pill_after_setting_fromAsset() {
             // Launch popup
             launchAndVerfyModal()
 
-            // launch account selection dropdown
-            const accountsModalHeader = getAndVerifyAccountsModalHeader()
-            launchAccountSelectionPopup(accountsModalHeader)
-
-            const comboBoxList = findChild(accountsModalHeader, "accountSelectorList")
+            let comboBoxList = openFromAccountPopup()
             verify(!!comboBoxList)
 
-            // before setting network chainId and fromGroupKey the header should not have balances
-            for(let i =0; i< comboBoxList.model.count; i++) {
+            for(let i =0; i< comboBoxList.count; i++) {
                 let delegateUnderTest = comboBoxList.itemAtIndex(i)
                 verify(!delegateUnderTest.model.accountBalance)
             }
 
-            // close account selection dropdown
-            accountsModalHeader.control.popup.close()
-
-            // set network chainId and fromGroupKey and verify balances in account selection dropdown
             root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
             root.swapFormData.fromGroupKey = root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsModel.get(0).key
             compare(controlUnderTest.swapInputParamsForm.selectedNetworkChainId, root.swapFormData.selectedNetworkChainId)
             compare(controlUnderTest.swapInputParamsForm.fromGroupKey, root.swapFormData.fromGroupKey)
 
-            // launch account selection dropdown
-            launchAccountSelectionPopup(accountsModalHeader)
-            verify(!!comboBoxList)
+            tryVerify(() => {
+                for (let j = 0; j < comboBoxList.count; j++) {
+                    const d = comboBoxList.itemAtIndex(j)
+                    if (!d || !d.model.accountBalance || d.inlineTagModel !== 1)
+                        return false
+                }
+                return true
+            })
 
-            for(let i =0; i< comboBoxList.model.count; i++) {
+            for(let i =0; i< comboBoxList.count; i++) {
                 let delegateUnderTest = comboBoxList.itemAtIndex(i)
+                verify(!!delegateUnderTest)
                 verify(!!delegateUnderTest.model.accountBalance)
                 compare(delegateUnderTest.inlineTagModel, 1)
 
@@ -344,12 +364,13 @@ Item {
             closeAndVerfyModal()
         }
 
-        function test_floating_header_selection() {
+        function test_account_pill_selection() {
             // Launch popup
             launchAndVerfyModal()
 
-            const accountsModalHeader = getAndVerifyAccountsModalHeader()
-            let walletAccounts = accountsModalHeader.model
+            let walletAccounts = getProcessedAccountsModel()
+
+            const pill = getPayAccountPill()
 
             const payPanel = findChild(controlUnderTest, "payPanel")
             verify(!!payPanel)
@@ -358,38 +379,25 @@ Item {
             verify(amountToSendInput.cursorVisible)
 
             for(let i =0; i< walletAccounts.count; i++) {
-                // launch account selection dropdown
-                const accountsModalHeader = getAndVerifyAccountsModalHeader()
-                launchAccountSelectionPopup(accountsModalHeader)
+                const expectedAccount = walletAccounts.get(i)
 
-                const comboBoxList = findChild(accountsModalHeader, "accountSelectorList")
+                const comboBoxList = openFromAccountPopup()
                 verify(!!comboBoxList)
 
                 let delegateUnderTest = comboBoxList.itemAtIndex(i)
+                verify(!!delegateUnderTest)
 
-                mouseClick(delegateUnderTest)
-                waitForRendering(delegateUnderTest, 200)
-                verify(accountsModalHeader.control.popup.closed)
+                delegateUnderTest.clicked(delegateUnderTest.itemId ?? "", null)
 
-                // The input params form's slected Index should be updated  as per this selection
-                compare(root.swapFormData.selectedAccountAddress, walletAccounts.get(i).address)
+                tryCompare(root.swapFormData, "selectedAccountAddress", expectedAccount.address)
 
-                // The comboBox item should  reflect chosen account
-                const floatingHeaderBackground = findChild(accountsModalHeader, "headerBackground")
-                verify(!!floatingHeaderBackground)
-                compare(floatingHeaderBackground.color.toString().toUpperCase(), walletAccounts.get(i).color.toString().toUpperCase())
+                tryVerify(() => !findChild(popupSearchRoot(), expectedAccount.name), 1000, "SwapFromAccountPopup did not close")
 
-                const headerContentItemText = findChild(accountsModalHeader, "textContent")
-                verify(!!headerContentItemText)
-                compare(headerContentItemText.text, walletAccounts.get(i).name)
+                tryCompare(pill, "name", expectedAccount.name)
+                compare(pill.emoji, expectedAccount.emoji)
+                compare(pill.colorId, expectedAccount.colorId)
 
-                const headerContentItemEmoji = findChild(accountsModalHeader, "assetContent")
-                verify(!!headerContentItemEmoji)
-                compare(headerContentItemEmoji.asset.emoji, walletAccounts.get(i).emoji)
-
-                waitForRendering(amountToSendInput, 200)
-
-                verify(amountToSendInput.cursorVisible)
+                tryVerify(() => amountToSendInput.cursorVisible)
             }
             closeAndVerfyModal()
         }
@@ -406,58 +414,24 @@ Item {
             verify(!!amountToSendInput)
             verify(amountToSendInput.cursorVisible)
 
-            // get the pay-side network comboBox (the selector now lives in the panel)
-            const networkComboBox = findChild(payPanel, "networkFilter")
-            verify(!!networkComboBox)
+            const networkBadge = findChild(payPanel, "networkBadge")
+            verify(!!networkBadge)
+            const networkBadgeText = findChild(payPanel, "networkBadgeText")
+            verify(!!networkBadgeText)
 
-            // check default value of network comboBox, should be mainnet
             compare(root.swapFormData.selectedNetworkChainId, 1)
             compare(root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId, 560048 /*Hoodi*/)
 
-            // lets ensure that the selected one is correctly set
-            // popup content is created lazily on first open
-            mouseClick(networkComboBox)
-            verify(networkComboBox.control.popup.opened)
-            const networkSelectorView = findChild(networkComboBox.control.popup.contentItem, "networkSelectorList")
-            verify(!!networkSelectorView)
-            mouseClick(networkComboBox)
-            verify(!networkComboBox.control.popup.opened)
+            const activeNetworks = root.swapAdaptor.networksStore.activeNetworks
 
-            for (let i=0; i<networkSelectorView.count; i++) {
-                // launch network selection popup
-                verify(!networkComboBox.control.popup.opened)
-                mouseClick(networkComboBox)
-                verify(networkComboBox.control.popup.opened)
+            for (let i=0; i<activeNetworks.count; i++) {
+                const networkItem = activeNetworks.get(i)
+                root.swapFormData.selectedNetworkChainId = networkItem.chainId
 
-                let delegateUnderTest = networkSelectorView.itemAtIndex(i)
-                verify(!!delegateUnderTest)
-
-                // if you try selecting an item already selected it doesnt do anything
-                if(networkSelectorView.currentIndex === i) {
-                    mouseClick(networkComboBox)
-                } else {
-                    const expectedChainId = delegateUnderTest.model.chainId
-
-                    // select item
-                    mouseClick(delegateUnderTest)
-
-                    // verify values set
-                    verify(!networkComboBox.control.popup.opened)
-
-                    tryVerify(function() {
-                        return networkComboBox.selection.length > 0 &&
-                               networkComboBox.selection[0] === expectedChainId &&
-                               root.swapFormData.selectedNetworkChainId === expectedChainId
-                    }, 1000, "selectedNetworkChainId should be " + expectedChainId + " but was " + root.swapFormData.selectedNetworkChainId + " and networkComboBox.selection is " + JSON.stringify(networkComboBox.selection))
-
-                    const networkComboIcon = findChild(networkComboBox.control.contentItem, "contentItemIcon")
-                    verify(!!networkComboIcon)
-                    verify(networkComboIcon.asset.name.includes(root.swapAdaptor.filteredFlatNetworksModel.get(i).iconUrl))
-
-                    verify(amountToSendInput.cursorVisible)
-                }
+                tryCompare(root.swapFormData, "selectedNetworkChainId", networkItem.chainId)
+                verify(networkBadge.visible)
+                tryCompare(networkBadgeText, "text", networkItem.chainName)
             }
-            networkComboBox.control.popup.close()
             closeAndVerfyModal()
         }
 
@@ -467,49 +441,30 @@ Item {
 
             const payPanel = findChild(controlUnderTest, "payPanel")
             verify(!!payPanel)
+            const networkBadgeText = findChild(payPanel, "networkBadgeText")
+            verify(!!networkBadgeText)
 
-            // get the pay-side network comboBox (the selector now lives in the panel)
-            const networkComboBox = findChild(payPanel, "networkFilter")
-            verify(!!networkComboBox)
+            root.swapFormData.fromGroupKey = root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsModel.get(0).key
 
-            for (let i=0; i<networkComboBox.control.popup.contentItem.count; i++) {
-                // launch network selection popup
-                verify(!networkComboBox.control.popup.opened)
-                mouseClick(networkComboBox)
-                verify(networkComboBox.control.popup.opened)
+            const activeNetworks = root.swapAdaptor.networksStore.activeNetworks
 
-                let delegateUnderTest = networkComboBox.control.popup.contentItem.itemAtIndex(i)
-                verify(!!delegateUnderTest)
+            const comboBoxList = openFromAccountPopup()
+            verify(!!comboBoxList)
 
-                let networkModelItem = networkComboBox.control.popup.contentItem.model.get(i)
+            for (let i=0; i<activeNetworks.count; i++) {
+                let networkModelItem = activeNetworks.get(i)
 
-                // if you try selecting an item already selected it doesnt do anything
-                if(networkComboBox.control.popup.contentItem.currentIndex === i) {
-                    mouseClick(networkComboBox)
-                    root.swapFormData.selectedNetworkChainId = networkModelItem.chainId
-                } else {
-                    // select item
-                    mouseClick(delegateUnderTest)
-                }
+                root.swapFormData.selectedNetworkChainId = networkModelItem.chainId
+                tryCompare(networkBadgeText, "text", networkModelItem.chainName)
 
-                root.swapFormData.fromGroupKey = root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsModel.get(0).key
+                waitForRendering(comboBoxList)
 
-                // verify values in accouns modal header dropdown
-                const accountsModalHeader = getAndVerifyAccountsModalHeader()
-                launchAccountSelectionPopup(accountsModalHeader)
-
-                const comboBoxList = findChild(accountsModalHeader, "accountSelectorList")
-                verify(!!comboBoxList)
-
-                for(let j =0; j< comboBoxList.model.count; j++) {
+                for(let j =0; j< comboBoxList.count; j++) {
                     let accountDelegateUnderTest = comboBoxList.itemAtIndex(j)
                     verify(!!accountDelegateUnderTest)
                     waitForItemPolished(accountDelegateUnderTest)
                     const inlineTagDelegate_0 = findChild(accountDelegateUnderTest, "inlineTagDelegate_0")
                     verify(!!inlineTagDelegate_0)
-
-                    compare(inlineTagDelegate_0.asset.name, Assets.svg(networkModelItem.iconUrl))
-                    compare(inlineTagDelegate_0.asset.color.toString().toUpperCase(), networkModelItem.chainColor.toString().toUpperCase())
 
                     let balancesModel = SQUtils.ModelUtils.getByKey(root.swapAdaptor.walletAssetsStore.baseGroupedAccountAssetModel, "key", root.swapFormData.fromGroupKey).balances
                     verify(!!balancesModel)
@@ -520,14 +475,14 @@ Item {
                     let fromToken = SQUtils.ModelUtils.getByKey(root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsModel, "key", root.swapFormData.fromGroupKey)
                     verify(!!fromToken)
                     let bigIntBalance = SQUtils.AmountsArithmetic.toNumber(accountBalance.balance, fromToken.decimals)
-                    compare(inlineTagDelegate_0.title, bigIntBalance === 0 ? "0 %1".arg(fromToken.symbol)
+
+                    tryCompare(inlineTagDelegate_0.asset, "name", Assets.svg(networkModelItem.iconUrl))
+                    compare(inlineTagDelegate_0.asset.color.toString().toUpperCase(), networkModelItem.chainColor.toString().toUpperCase())
+                    tryCompare(inlineTagDelegate_0, "title", bigIntBalance === 0 ? "0 %1".arg(fromToken.symbol)
                                                                            : root.swapAdaptor.currencyStore.formatCurrencyAmount(bigIntBalance, fromToken.symbol))
                 }
-                // close account selection dropdown
-                accountsModalHeader.control.popup.close()
             }
             root.swapFormData.selectedNetworkChainId = -1
-            networkComboBox.control.popup.close()
             closeAndVerfyModal()
         }
 
@@ -535,29 +490,23 @@ Item {
             // Launch popup
             launchAndVerfyModal()
 
-            // test default values for the various footer items for slippage
-            const maxSlippageText = findChild(controlUnderTest, "maxSlippageText")
-            verify(!!maxSlippageText)
-            compare(maxSlippageText.text, qsTr("Max slippage:"))
-
-            const maxSlippageValue = findChild(controlUnderTest, "maxSlippageValue")
-            verify(!!maxSlippageValue)
-
-            const editSlippageButton = findChild(controlUnderTest, "editSlippageButton")
-            verify(!!editSlippageButton)
+            const slippageButton = findChild(controlUnderTest, "slippageButton")
+            verify(!!slippageButton)
+            verify(slippageButton.checkable)
 
             const editSlippagePanel = findChild(controlUnderTest, "editSlippagePanel")
             verify(!!editSlippagePanel)
             verify(!editSlippagePanel.visible)
+            verify(!slippageButton.checked)
 
-            // set swap proposal to ready and check state of the edit slippage buttons and max slippage values
             root.swapAdaptor.validSwapProposalReceived = true
-            compare(maxSlippageValue.text, "%1%".arg(0.5))
-            verify(editSlippageButton.visible)
+            verify(slippageButton.visible)
+            compare(slippageButton.text, "%1%".arg(LocaleUtils.numberToLocaleString(root.swapFormData.selectedSlippage)))
+            compare(slippageButton.text, "%1%".arg(0.5))
 
-            // clicking on editSlippageButton should show the edit slippage panel
-            mouseClick(editSlippageButton)
-            verify(!editSlippageButton.visible)
+            waitForRendering(slippageButton)
+            mouseClick(slippageButton)
+            tryVerify(() => slippageButton.checked, 2000, "slippage button did not toggle")
             verify(editSlippagePanel.visible)
 
             const slippageSelector = findChild(editSlippagePanel, "slippageSelector")
@@ -580,7 +529,7 @@ Item {
                 verify(slippageSelector.valid)
                 compare(slippageSelector.value, buttonUnderTest.value)
 
-                compare(maxSlippageValue.text, "%1%".arg(buttonUnderTest.value))
+                tryCompare(slippageButton, "text", "%1%".arg(LocaleUtils.numberToLocaleString(buttonUnderTest.value)))
             }
 
             const signButton = findChild(controlUnderTest, "signButton")
@@ -596,12 +545,6 @@ Item {
 
             waitForItemPolished(controlUnderTest.contentItem)
 
-            const maxFeesText = findChild(controlUnderTest, "maxFeesText")
-            verify(!!maxFeesText)
-
-            const maxFeesValue = findChild(controlUnderTest, "maxFeesValue")
-            verify(!!maxFeesValue)
-
             const signButton = findChild(controlUnderTest, "signButton")
             verify(!!signButton)
 
@@ -614,9 +557,6 @@ Item {
             const receivePanel = findChild(controlUnderTest, "receivePanel")
             verify(!!receivePanel)
 
-            // Check max fees values and sign button state when nothing is set
-            compare(maxFeesText.text, qsTr("Max fees:"))
-            compare(maxFeesValue.text, "--")
             verify(!signButton.interactive)
             verify(!errorTag.visible)
 
@@ -655,7 +595,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("An error has occured, please try again"))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Swap"))
+            compare(signButton.text, qsTr("Confirm swap"))
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -693,7 +633,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Insufficient funds for swap"))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Swap"))
+            compare(signButton.text, qsTr("Confirm swap"))
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -731,7 +671,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Not enough ETH to pay gas fees"))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Swap"))
+            compare(signButton.text, qsTr("Confirm swap"))
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -769,7 +709,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Fetching the price took longer than expected. Please, try again later."))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Swap"))
+            compare(signButton.text, qsTr("Confirm swap"))
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -807,7 +747,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Not enough liquidity. Lower token amount or try again later."))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Swap"))
+            compare(signButton.text, qsTr("Confirm swap"))
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -851,7 +791,7 @@ Item {
             compare(root.swapAdaptor.swapOutputData.hasError, false)
             verify(!errorTag.visible, "error tag visible with text: " + errorTag.text)
             verify(signButton.enabled)
-            compare(signButton.text, qsTr("Swap"))
+            compare(signButton.text, qsTr("Confirm swap"))
 
             // verfy input and output panels
             waitForRendering(receivePanel)
@@ -949,8 +889,8 @@ Item {
             verify(!!bottomItemText)
             const holdingSelector = findChild(payPanel, "holdingSelector")
             verify(!!holdingSelector)
-            const maxTagButton = findChild(payPanel, "maxTagButton")
-            verify(!!maxTagButton)
+            const balanceLine = findChild(payPanel, "balanceLine")
+            verify(!!balanceLine)
             const tokenSelectorContentItemText = findChild(payPanel, "tokenSelectorContentItemText")
             verify(!!tokenSelectorContentItemText)
             const payTokenModel = payPanel.tokenSelectorModel
@@ -961,14 +901,13 @@ Item {
             waitForRendering(controlUnderTest.contentItem)
 
             // check default states for the from input selector
-            compare(amountToSendInput.caption, qsTr("Pay"))
             verify(amountToSendInput.interactive)
             compare(amountToSendInput.text, "")
             verify(amountToSendInput.cursorVisible)
             compare(amountToSendInput.placeholderText, LocaleUtils.numberToLocaleString(0))
             compare(bottomItemText.text, root.swapAdaptor.currencyStore.formatCurrencyAmount(0, root.swapAdaptor.currencyStore.currentCurrency))
             compare(tokenSelectorContentItemText.text, defaultToken.symbol)
-            verify(maxTagButton.visible)
+            verify(balanceLine.visible)
             compare(payPanel.selectedHoldingId, root.swapFormData.fromGroupKey)
             compare(payPanel.value, 0)
             compare(payPanel.rawValue, "0")
@@ -982,8 +921,7 @@ Item {
             let valueToExchange = 0.001
             let valueToExchangeString = valueToExchange.toString()
 
-            const accountsModalHeader = getAndVerifyAccountsModalHeader()
-            let walletAccounts = accountsModalHeader.model
+            let walletAccounts = getProcessedAccountsModel()
 
             root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
             root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
@@ -1005,8 +943,10 @@ Item {
             verify(!!bottomItemText)
             const holdingSelector = findChild(payPanel, "holdingSelector")
             verify(!!holdingSelector)
-            const maxTagButton = findChild(payPanel, "maxTagButton")
-            verify(!!maxTagButton)
+            const balanceLine = findChild(payPanel, "balanceLine")
+            verify(!!balanceLine)
+            const balanceCryptoText = findChild(payPanel, "balanceCryptoText")
+            verify(!!balanceCryptoText)
             const tokenSelectorContentItemText = findChild(payPanel, "tokenSelectorContentItemText")
             verify(!!tokenSelectorContentItemText)
             const tokenSelectorIcon = findChild(payPanel, "tokenSelectorIcon")
@@ -1015,8 +955,6 @@ Item {
             verify(!!payTokenModel)
 
             const expectedToken = SQUtils.ModelUtils.getByKey(payTokenModel, "key", sttGroupKey)
-
-            compare(amountToSendInput.caption, qsTr("Pay"))
             verify(amountToSendInput.interactive)
             tryCompare(amountToSendInput, "text", valueToExchangeString)
             compare(amountToSendInput.placeholderText, LocaleUtils.numberToLocaleString(0))
@@ -1026,9 +964,9 @@ Item {
             const expectedIconSource = expectedToken.logoUri || Constants.tokenIcon(expectedToken.symbol)
             compare(tokenSelectorIcon.image.source, expectedIconSource)
             verify(tokenSelectorIcon.visible)
-            verify(maxTagButton.visible)
-            compare(maxTagButton.text, qsTr("Max. %1").arg(!expectedToken.currentBalance ? "0"
-                                                                                              : root.swapAdaptor.currencyStore.formatCurrencyAmount(WalletUtils.calculateMaxSafeSendAmount(expectedToken.currentBalance, expectedToken.symbol), expectedToken.symbol, {noSymbol: true, roundingMode: LocaleUtils.RoundingMode.Down})))
+            verify(balanceLine.visible)
+            compare(balanceCryptoText.text, root.swapAdaptor.currencyStore.formatCurrencyAmount(payPanel.maxCryptoBalance, expectedToken.symbol, {noSymbol: true, roundingMode: LocaleUtils.RoundingMode.Down}))
+            compare(payPanel.maxSafeCryptoValue, WalletUtils.calculateMaxSafeSendAmount(payPanel.maxCryptoBalance, expectedToken.symbol, root.swapFormData.selectedNetworkChainId))
             compare(payPanel.selectedHoldingId, expectedToken.key)
             compare(payPanel.value, valueToExchange)
             compare(payPanel.rawValue, SQUtils.AmountsArithmetic.fromNumber(valueToExchangeString, expectedToken.decimals).toString())
@@ -1038,8 +976,7 @@ Item {
         }
 
         function test_modal_pay_input_wrong_value_1() {
-            const accountsModalHeader = getAndVerifyAccountsModalHeader()
-            let walletAccounts = accountsModalHeader.model
+            let walletAccounts = getProcessedAccountsModel()
 
             let invalidValues = ["ABC", "0.0.010201", "12PASA", "100,9.01"]
             for (let i =0; i<invalidValues.length; i++) {
@@ -1062,14 +999,12 @@ Item {
                 verify(!!bottomItemText)
                 const holdingSelector = findChild(payPanel, "holdingSelector")
                 verify(!!holdingSelector)
-                const maxTagButton = findChild(payPanel, "maxTagButton")
-                verify(!!maxTagButton)
+                const balanceLine = findChild(payPanel, "balanceLine")
+                verify(!!balanceLine)
 
                 waitForRendering(payPanel)
                 const payTokenModel = payPanel.tokenSelectorModel
                 verify(!!payTokenModel)
-
-                compare(amountToSendInput.caption, qsTr("Pay"))
                 verify(amountToSendInput.interactive)
                 compare(amountToSendInput.placeholderText, LocaleUtils.numberToLocaleString(0))
                 verify(amountToSendInput.cursorVisible)
@@ -1078,7 +1013,7 @@ Item {
                 verify(!!tokenSelectorContentItemText)
                 const defaultTokenEntry = SQUtils.ModelUtils.getByKey(payTokenModel, "key", root.swapFormData.defaultFromGroupKey)
                 compare(tokenSelectorContentItemText.text, defaultTokenEntry ? defaultTokenEntry.symbol : "")
-                verify(maxTagButton.visible)
+                verify(balanceLine.visible)
                 compare(payPanel.selectedHoldingId, root.swapFormData.defaultFromGroupKey)
                 compare(payPanel.value, 0)
                 compare(payPanel.rawValue, SQUtils.AmountsArithmetic.fromNumber("0", 0).toString())
@@ -1089,8 +1024,7 @@ Item {
         }
 
         function test_modal_pay_input_wrong_value_2() {
-            const accountsModalHeader = getAndVerifyAccountsModalHeader()
-            let walletAccounts = accountsModalHeader.model
+            let walletAccounts = getProcessedAccountsModel()
 
             // try setting value before popup is launched and check values
             let valueToExchange = 100
@@ -1115,8 +1049,10 @@ Item {
             verify(!!bottomItemText)
             const holdingSelector = findChild(payPanel, "holdingSelector")
             verify(!!holdingSelector)
-            const maxTagButton = findChild(payPanel, "maxTagButton")
-            verify(!!maxTagButton)
+            const balanceLine = findChild(payPanel, "balanceLine")
+            verify(!!balanceLine)
+            const balanceCryptoText = findChild(payPanel, "balanceCryptoText")
+            verify(!!balanceCryptoText)
             const tokenSelectorContentItemText = findChild(payPanel, "tokenSelectorContentItemText")
             verify(!!tokenSelectorContentItemText)
             const tokenSelectorIcon = findChild(payPanel, "tokenSelectorIcon")
@@ -1124,8 +1060,6 @@ Item {
             const payTokenModel = payPanel.tokenSelectorModel
             verify(!!payTokenModel)
             const expectedToken = SQUtils.ModelUtils.getByKey(payTokenModel, "key", sttGroupKey)
-
-            compare(amountToSendInput.caption, qsTr("Pay"))
             verify(amountToSendInput.interactive)
             compare(amountToSendInput.text, valueToExchangeString)
             compare(amountToSendInput.placeholderText, LocaleUtils.numberToLocaleString(0))
@@ -1135,7 +1069,9 @@ Item {
             const expectedIconSource = expectedToken.logoUri || Constants.tokenIcon(expectedToken.symbol)
             compare(tokenSelectorIcon.image.source, expectedIconSource)
             verify(tokenSelectorIcon.visible)
-            verify(maxTagButton.visible)
+            verify(balanceLine.visible)
+            compare(balanceCryptoText.text, root.swapAdaptor.currencyStore.formatCurrencyAmount(payPanel.maxCryptoBalance, expectedToken.symbol, {noSymbol: true, roundingMode: LocaleUtils.RoundingMode.Down}))
+            compare(payPanel.maxSafeCryptoValue, WalletUtils.calculateMaxSafeSendAmount(payPanel.maxCryptoBalance, expectedToken.symbol, root.swapFormData.selectedNetworkChainId))
             compare(payPanel.selectedHoldingId, expectedToken.key)
             compare(payPanel.value, valueToExchange)
             compare(payPanel.rawValue, SQUtils.AmountsArithmetic.fromNumber(valueToExchangeString, expectedToken.decimals).toString())
@@ -1164,13 +1100,10 @@ Item {
             verify(!!bottomItemText)
             const holdingSelector = findChild(receivePanel, "holdingSelector")
             verify(!!holdingSelector)
-            const maxTagButton = findChild(receivePanel, "maxTagButton")
-            verify(!!maxTagButton)
             const tokenSelectorContentItemText = findChild(receivePanel, "tokenSelectorContentItemText")
             verify(!!tokenSelectorContentItemText)
 
             // check default states for the from input selector
-            compare(amountToSendInput.caption, qsTr("Receive"))
             compare(amountToSendInput.text, "")
             // TODO: this should be come interactive under https://github.com/status-im/status-desktop/issues/15095
             verify(!amountToSendInput.interactive)
@@ -1178,7 +1111,6 @@ Item {
             compare(amountToSendInput.placeholderText, LocaleUtils.numberToLocaleString(0))
             tryCompare(bottomItemText, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(0, root.swapAdaptor.currencyStore.currentCurrency))
             compare(tokenSelectorContentItemText.text, Constants.ethToken)
-            verify(!maxTagButton.visible)
             compare(receivePanel.selectedHoldingId, Constants.ethGroupKey)
             compare(receivePanel.value, 0)
             compare(receivePanel.rawValue, "0")
@@ -1188,8 +1120,7 @@ Item {
         }
 
         function test_modal_receive_input_presetValues() {
-            const accountsModalHeader = getAndVerifyAccountsModalHeader()
-            let walletAccounts = accountsModalHeader.model
+            let walletAccounts = getProcessedAccountsModel()
 
             let valueToReceive = 0.001
             let valueToReceiveString = valueToReceive.toString()
@@ -1214,8 +1145,6 @@ Item {
             verify(!!bottomItemText)
             const holdingSelector = findChild(receivePanel, "holdingSelector")
             verify(!!holdingSelector)
-            const maxTagButton = findChild(receivePanel, "maxTagButton")
-            verify(!!maxTagButton)
             const tokenSelectorContentItemText = findChild(receivePanel, "tokenSelectorContentItemText")
             verify(!!tokenSelectorContentItemText)
             const tokenSelectorIcon = findChild(receivePanel, "tokenSelectorIcon")
@@ -1224,8 +1153,6 @@ Item {
             verify(!!payTokenModel)
 
             let expectedToken = SQUtils.ModelUtils.getByKey(payTokenModel, "key", sttGroupKey)
-
-            compare(amountToSendInput.caption, qsTr("Receive"))
             // TODO: this should be come interactive under https://github.com/status-im/status-desktop/issues/15095
             verify(!amountToSendInput.interactive)
             verify(!amountToSendInput.cursorVisible)
@@ -1236,7 +1163,6 @@ Item {
             const expectedIconSource = expectedToken.logoUri || Constants.tokenIcon(expectedToken.symbol)
             compare(tokenSelectorIcon.image.source, expectedIconSource)
             verify(tokenSelectorIcon.visible)
-            verify(!maxTagButton.visible)
             compare(receivePanel.selectedHoldingId, expectedToken.key)
             compare(receivePanel.value, valueToReceive)
             compare(receivePanel.rawValue, SQUtils.AmountsArithmetic.fromNumber(valueToReceiveString, expectedToken.decimals).toString())
@@ -1245,12 +1171,68 @@ Item {
             closeAndVerfyModal()
         }
 
+        function test_modal_max_button_click_with_no_preset_pay_value() {
+            launchAndVerfyModal()
 
+            let walletAccounts = getProcessedAccountsModel()
+
+            root.swapFormData.selectedAccountAddress = walletAccounts.get(1).address
+            formValuesChanged.clear()
+
+            root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
+            root.swapFormData.fromGroupKey = ethGroupKey
+            root.swapFormData.toGroupKey = sttGroupKey
+
+            formValuesChanged.wait()
+
+            const payPanel = findChild(controlUnderTest, "payPanel")
+            verify(!!payPanel)
+            const balanceLine = findChild(payPanel, "balanceLine")
+            verify(!!balanceLine)
+            const amountToSendInput = findChild(payPanel, "amountToSendInput")
+            verify(!!amountToSendInput)
+            const bottomItemText = findChild(payPanel, "bottomItemText")
+            verify(!!bottomItemText)
+            const payPanelAssetsModel = payPanel.tokenSelectorModel
+            verify(!!payPanelAssetsModel)
+            const amountSlider = findChild(controlUnderTest, "amountSlider")
+            verify(!!amountSlider)
+
+            waitForRendering(payPanel, 200)
+
+            let expectedToken =  SQUtils.ModelUtils.getByKey(payPanelAssetsModel, "key", ethGroupKey)
+
+            verify(balanceLine.visible)
+            let maxPossibleValue = WalletUtils.calculateMaxSafeSendAmount(payPanel.maxCryptoBalance, expectedToken.symbol, root.swapFormData.selectedNetworkChainId)
+            compare(payPanel.maxSafeCryptoValue, maxPossibleValue)
+            tryCompare(amountSlider, "to", maxPossibleValue)
+            verify(amountToSendInput.interactive)
+            verify(amountToSendInput.cursorVisible)
+            compare(amountToSendInput.text, "")
+            compare(amountToSendInput.placeholderText, LocaleUtils.numberToLocaleString(0))
+            compare(bottomItemText.text, root.swapAdaptor.currencyStore.formatCurrencyAmount(0, root.swapAdaptor.currencyStore.currentCurrency))
+
+            payPanel.setAmount(payPanel.maxSafeCryptoValue)
+            waitForItemPolished(payPanel)
+
+            formValuesChanged.wait()
+
+            verify(amountToSendInput.interactive)
+            verify(amountToSendInput.cursorVisible)
+            if (maxPossibleValue > 0)
+                fuzzyCompare(parseFloat(amountToSendInput.delocalized), maxPossibleValue, 1e-6)
+            else
+                compare(amountToSendInput.text, "")
+            tryCompare(bottomItemText, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(maxPossibleValue * expectedToken.cryptoPrice, root.swapAdaptor.currencyStore.currentCurrency))
+
+            closeAndVerfyModal()
+        }
 
         function test_modal_pay_input_switching_accounts() {
 
-            const accountsModalHeader = getAndVerifyAccountsModalHeader()
-            let walletAccounts = accountsModalHeader.model
+            let walletAccounts = getProcessedAccountsModel()
 
             // test with pay value being set and not set
             let payValuesToTestWith = ["", "0.2"]
@@ -1271,8 +1253,8 @@ Item {
 
                 const payPanel = findChild(controlUnderTest, "payPanel")
                 verify(!!payPanel)
-                const maxTagButton = findChild(payPanel, "maxTagButton")
-                verify(!!maxTagButton)
+                const balanceLine = findChild(payPanel, "balanceLine")
+                verify(!!balanceLine)
                 const amountToSendInput = findChild(payPanel, "amountToSendInput")
                 verify(!!amountToSendInput)
 
@@ -1290,10 +1272,9 @@ Item {
                     let expectedToken = SQUtils.ModelUtils.getByKey(payTokenModel, "key", sttGroupKey)
 
                     // check states for the pay input selector
-                    tryCompare(maxTagButton, "visible", true)
+                    tryCompare(balanceLine, "visible", true)
                     let maxPossibleValue = WalletUtils.calculateMaxSafeSendAmount(expectedToken.currentBalance, expectedToken.symbol)
-                    tryCompare(maxTagButton, "text", qsTr("Max. %1").arg(maxPossibleValue === 0 ? Qt.locale().zeroDigit :
-                    root.swapAdaptor.currencyStore.formatCurrencyAmount(maxPossibleValue, expectedToken.symbol, {noSymbol: true, roundingMode: LocaleUtils.RoundingMode.Down})))
+                    tryCompare(payPanel, "maxSafeCryptoValue", WalletUtils.calculateMaxSafeSendAmount(payPanel.maxCryptoBalance, expectedToken.symbol, root.swapFormData.selectedNetworkChainId))
                     compare(payPanel.selectedHoldingId, expectedToken.key)
                     tryCompare(payPanel, "valueValid", !!valueToExchangeString && valueToExchange <= maxPossibleValue)
 
@@ -1367,16 +1348,15 @@ Item {
             verify(!!payAmountToSendInput)
             const payBottomItemText = findChild(payPanel, "bottomItemText")
             verify(!!payBottomItemText)
-            const maxTagButton = findChild(payPanel, "maxTagButton")
-            verify(!!maxTagButton)
+            const balanceLine = findChild(payPanel, "balanceLine")
+            verify(!!balanceLine)
 
             const receiveAmountToSendInput = findChild(receivePanel, "amountToSendInput")
             verify(!!receiveAmountToSendInput)
             const receiveBottomItemText = findChild(receivePanel, "bottomItemText")
             verify(!!receiveBottomItemText)
 
-            const accountsModalHeader = getAndVerifyAccountsModalHeader()
-            let walletAccounts = accountsModalHeader.model
+            let walletAccounts = getProcessedAccountsModel()
 
             root.swapAdaptor.reset()
 
@@ -1424,7 +1404,7 @@ Item {
             if(!!paytokenSelectorIcon) {
                 compare(paytokenSelectorIcon.image.source, expectedFromTokenIcon)
             }
-            verify(!!expectedFromTokenKey ? maxTagButton.visible: !maxTagButton.visible)
+            verify(!!expectedFromTokenKey ? balanceLine.visible: !balanceLine.visible)
 
             // verify receive values
             compare(receivePanel.groupKey, expectedToTokenKey)
@@ -1465,7 +1445,7 @@ Item {
             if(!!paytokenSelectorIcon) {
                 compare(paytokenSelectorIcon.image.source, swappedFromToken ? swappedFromToken.logoUri : "")
             }
-            verify(!!payPanel.groupKey ? maxTagButton.visible: !maxTagButton.visible)
+            verify(!!payPanel.groupKey ? balanceLine.visible: !balanceLine.visible)
 
             // verify receive values
             compare(receivePanel.groupKey, expectedFromTokenKey)
@@ -1485,8 +1465,8 @@ Item {
             // Launch popup
             launchAndVerfyModal()
 
-            const maxFeesValue = findChild(controlUnderTest, "maxFeesValue")
-            verify(!!maxFeesValue)
+            const strategyFees = findChild(controlUnderTest, "strategyFees")
+            verify(!!strategyFees)
             const signButton = findChild(controlUnderTest, "signButton")
             verify(!!signButton)
             const errorTag = findChild(controlUnderTest, "errorTag")
@@ -1496,8 +1476,6 @@ Item {
             const receivePanel = findChild(controlUnderTest, "receivePanel")
             verify(!!receivePanel)
 
-            // Check max fees values and sign button state when nothing is set
-            compare(maxFeesValue.text, "--")
             verify(!signButton.interactive)
             verify(!errorTag.visible)
 
@@ -1508,6 +1486,7 @@ Item {
             root.swapFormData.fromTokenAmount = "0.001"
             formValuesChanged.wait()
             root.swapFormData.selectedNetworkChainId = 11155420
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
             formValuesChanged.wait()
             root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
             formValuesChanged.wait()
@@ -1550,8 +1529,8 @@ Item {
             verify(!signButton.loadingWithText)
             compare(signButton.text, qsTr("Approve %1").arg(root.swapAdaptor.fromToken.symbol))
             // TODO: note that there is a loss of precision as the approvalGasFees is currently passes as float from the backend and not string.
-            compare(maxFeesValue.text, root.swapAdaptor.currencyStore.formatCurrencyAmount(
-                        root.swapAdaptor.swapOutputData.approvalTxFeesFiat,
+            tryCompare(strategyFees, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(
+                        root.swapAdaptor.swapOutputData.txFeesInFiat,
                         root.swapAdaptor.currencyStore.currentCurrency))
 
             // simulate user click on approve button and approval failed
@@ -1564,8 +1543,8 @@ Item {
             verify(signButton.loadingWithText)
             compare(signButton.text, qsTr("Approving %1").arg(root.swapAdaptor.fromToken.symbol))
             // TODO: note that there is a loss of precision as the approvalGasFees is currently passes as float from the backend and not string.
-            compare(maxFeesValue.text, root.swapAdaptor.currencyStore.formatCurrencyAmount(
-                        root.swapAdaptor.swapOutputData.approvalTxFeesFiat,
+            tryCompare(strategyFees, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(
+                        root.swapAdaptor.swapOutputData.txFeesInFiat,
                         root.swapAdaptor.currencyStore.currentCurrency))
 
             // simulate approval tx was unsuccessful
@@ -1578,8 +1557,8 @@ Item {
             verify(!signButton.loadingWithText)
             compare(signButton.text, qsTr("Approve %1").arg(root.swapAdaptor.fromToken.symbol))
             // TODO: note that there is a loss of precision as the approvalGasFees is currently passes as float from the backend and not string.
-            compare(maxFeesValue.text, root.swapAdaptor.currencyStore.formatCurrencyAmount(
-                        root.swapAdaptor.swapOutputData.approvalTxFeesFiat,
+            tryCompare(strategyFees, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(
+                        root.swapAdaptor.swapOutputData.txFeesInFiat,
                         root.swapAdaptor.currencyStore.currentCurrency))
 
             // simulate user click on approve button and successful approval tx made
@@ -1593,8 +1572,8 @@ Item {
             verify(signButton.loadingWithText)
             compare(signButton.text, qsTr("Approving %1").arg(root.swapAdaptor.fromToken.symbol))
             // TODO: note that there is a loss of precision as the approvalGasFees is currently passes as float from the backend and not string.
-            compare(maxFeesValue.text, root.swapAdaptor.currencyStore.formatCurrencyAmount(
-                        root.swapAdaptor.swapOutputData.approvalTxFeesFiat,
+            tryCompare(strategyFees, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(
+                        root.swapAdaptor.swapOutputData.txFeesInFiat,
                         root.swapAdaptor.currencyStore.currentCurrency))
 
             root.swapStore.transactionSendingComplete("0x877ffe47fc29340312611d4e833ab189fe4f4152b01cc9a05bb4125b81b2a89a", "Success")
@@ -1609,8 +1588,8 @@ Item {
             verify(!errorTag.visible)
             verify(signButton.interactive)
             verify(!signButton.loadingWithText)
-            compare(signButton.text, qsTr("Swap"))
-            compare(maxFeesValue.text, root.swapAdaptor.currencyStore.formatCurrencyAmount(
+            compare(signButton.text, qsTr("Confirm swap"))
+            tryCompare(strategyFees, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(
                         root.swapAdaptor.swapOutputData.txFeesInFiat,
                         root.swapAdaptor.currencyStore.currentCurrency))
 
@@ -1623,9 +1602,9 @@ Item {
             verify(!errorTag.visible)
             verify(signButton.enabled)
             verify(!signButton.loadingWithText)
-            compare(signButton.text, qsTr("Swap"))
-            compare(maxFeesValue.text, root.swapAdaptor.currencyStore.formatCurrencyAmount(
-                        root.swapAdaptor.swapOutputData.approvalTxFeesFiat,
+            compare(signButton.text, qsTr("Confirm swap"))
+            tryCompare(strategyFees, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(
+                        root.swapAdaptor.swapOutputData.txFeesInFiat,
                         root.swapAdaptor.currencyStore.currentCurrency))
             closeAndVerfyModal()
         }
@@ -1650,68 +1629,28 @@ Item {
 
             const payPanel = findChild(controlUnderTest, "payPanel")
             verify(!!payPanel)
-            const maxTagButton = findChild(payPanel, "maxTagButton")
-            verify(!!maxTagButton)
-            const networkComboBox = findChild(payPanel, "networkFilter")
-            verify(!!networkComboBox)
-            const errorTag = findChild(controlUnderTest, "errorTag")
-            verify(!!errorTag)
+            const networkBadgeText = findChild(payPanel, "networkBadgeText")
+            verify(!!networkBadgeText)
+            const payAssetsModel = payPanel.tokenSelectorModel
+            verify(!!payAssetsModel)
 
-            for (let i=0; i<networkComboBox.control.popup.contentItem.count; i++) {
-                // launch network selection popup
-                verify(!networkComboBox.control.popup.opened)
-                mouseClick(networkComboBox)
-                verify(networkComboBox.control.popup.opened)
+            const activeNetworks = root.swapAdaptor.networksStore.activeNetworks
 
-                let delegateUnderTest = networkComboBox.control.popup.contentItem.itemAtIndex(i)
-                verify(!!delegateUnderTest)
-                mouseClick(delegateUnderTest)
+            for (let i=0; i<activeNetworks.count; i++) {
+                const chainId = activeNetworks.get(i).chainId
+
+                payPanel.listChainFilter = chainId
+                root.swapFormData.selectedNetworkChainId = chainId
+                root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(chainId)
 
                 waitForRendering(payPanel)
 
-                const tokenSelectorContentItemText = findChild(payPanel, "tokenSelectorContentItemText")
-                verify(!!tokenSelectorContentItemText)
+                tryCompare(networkBadgeText, "text", activeNetworks.get(i).chainName)
 
-                let fromTokenExistsOnNetwork = false
-                let expectedToken = SQUtils.ModelUtils.getByKey(root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsModel, "key", root.swapFormData.fromGroupKey)
-                if(!!expectedToken) {
-                    fromTokenExistsOnNetwork = !!SQUtils.ModelUtils.getByKey(expectedToken.addressPerChain, "chainId",networkComboBox.selection[0], "address")
-                }
+                let existsOnChain = !!SQUtils.ModelUtils.getByKey(root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsForChainModel, "key", root.swapFormData.fromGroupKey)
 
-                if (!fromTokenExistsOnNetwork) {
-                    verify(!maxTagButton.visible)
-                    compare(payPanel.selectedHoldingId, "")
-                    verify(!payPanel.valueValid)
-                    tryCompare(payPanel, "rawValue", "0")
-                    verify(!errorTag.visible)
-                    compare(tokenSelectorContentItemText.text, qsTr("Select asset"))
-                } else {
-                    // check states for the pay input selector
-                    verify(maxTagButton.visible)
-                    const payAssetsModel = payPanel.tokenSelectorModel
-                    verify(!!payAssetsModel)
-                    let balancesModel = SQUtils.ModelUtils.getByKey(payAssetsModel, "key", root.swapFormData.fromGroupKey, "balances")
-                    let balanceEntry = SQUtils.ModelUtils.getFirstModelEntryIf(balancesModel, (balance) => {
-                                                                                   return balance.account.toLowerCase() === root.swapFormData.selectedAccountAddress.toLowerCase() &&
-                                                                                   balance.chainId === root.swapFormData.selectedNetworkChainId
-                                                                               })
-                    let balance =  SQUtils.AmountsArithmetic.toNumber(
-                            SQUtils.AmountsArithmetic.fromString(balanceEntry.balance),
-                            expectedToken.decimals)
-
-                    let maxPossibleValue = WalletUtils.calculateMaxSafeSendAmount(balance, expectedToken.symbol)
-
-                    compare(maxTagButton.text, qsTr("Max. %1").arg(
-                                maxPossibleValue === 0 ? "0" :
-                                                         root.swapAdaptor.currencyStore.formatCurrencyAmount(maxPossibleValue, expectedToken.symbol, {noSymbol: true, roundingMode: LocaleUtils.RoundingMode.Down})))
-                    compare(payPanel.selectedHoldingId.toLowerCase(), expectedToken.key.toLowerCase())
-                    compare(payPanel.valueValid, valueToExchange <= maxPossibleValue)
-                    tryCompare(payPanel, "rawValue", SQUtils.AmountsArithmetic.fromNumber(valueToExchangeString, expectedToken.decimals).toString())
-                    compare(errorTag.visible, valueToExchange > maxPossibleValue)
-                    if(errorTag.visible)
-                        compare(errorTag.text, qsTr("Insufficient funds for swap"))
-                    compare(tokenSelectorContentItemText.text, expectedToken.symbol)
-                }
+                tryVerify(() => (!!SQUtils.ModelUtils.getByKey(payAssetsModel, "key", root.swapFormData.fromGroupKey)) === existsOnChain,
+                          1000, "token presence in chain-filtered list mismatch for chain " + chainId)
             }
 
             closeAndVerfyModal()
@@ -1738,37 +1677,24 @@ Item {
 
             const receivePanel = findChild(controlUnderTest, "receivePanel")
             verify(!!receivePanel)
-            const networkComboBox = findChild(receivePanel, "networkFilter")
-            verify(!!networkComboBox)
+            const receiveAssetsModel = receivePanel.tokenSelectorModel
+            verify(!!receiveAssetsModel)
 
-            for (let i=0; i<networkComboBox.control.popup.contentItem.count; i++) {
-                // launch network selection popup
-                verify(!networkComboBox.control.popup.opened)
-                mouseClick(networkComboBox)
-                verify(networkComboBox.control.popup.opened)
+            const activeNetworks = root.swapAdaptor.networksStore.activeNetworks
 
-                let delegateUnderTest = networkComboBox.control.popup.contentItem.itemAtIndex(i)
-                verify(!!delegateUnderTest)
-                mouseClick(delegateUnderTest)
+            for (let i=0; i<activeNetworks.count; i++) {
+                const chainId = activeNetworks.get(i).chainId
+
+                receivePanel.listChainFilter = chainId
+                root.swapFormData.toNetworkChainId = chainId
+                root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(chainId)
 
                 waitForRendering(receivePanel)
 
-                const tokenSelectorContentItemText = findChild(receivePanel, "tokenSelectorContentItemText")
-                verify(!!tokenSelectorContentItemText)
+                let existsOnChain = !!SQUtils.ModelUtils.getByKey(root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsForChainToModel, "key", root.swapFormData.toGroupKey)
 
-                let fromTokenExistsOnNetwork = false
-                let expectedToken = SQUtils.ModelUtils.getByKey(root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsModel, "key", root.swapFormData.toGroupKey)
-                if(!!expectedToken) {
-                    fromTokenExistsOnNetwork = !!SQUtils.ModelUtils.getByKey(expectedToken.addressPerChain, "chainId", networkComboBox.selection[0], "address")
-                }
-
-                if (!fromTokenExistsOnNetwork) {
-                    compare(receivePanel.selectedHoldingId, "")
-                    compare(tokenSelectorContentItemText.text, qsTr("Select asset"))
-                } else {
-                    compare(receivePanel.selectedHoldingId.toLowerCase(), expectedToken.key.toLowerCase())
-                    compare(tokenSelectorContentItemText.text, expectedToken.symbol)
-                }
+                tryVerify(() => (!!SQUtils.ModelUtils.getByKey(receiveAssetsModel, "key", root.swapFormData.toGroupKey)) === existsOnChain,
+                          1000, "token presence in chain-filtered list mismatch for chain " + chainId)
             }
 
             closeAndVerfyModal()
@@ -1935,7 +1861,6 @@ Item {
         }
 
         function test_exchange_rate() {
-            // Asset chosen but no pay value set state -------------------------------------------------------------------------------
             root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(11155111)
 
             root.swapFormData.fromTokenAmount = "1"
@@ -1944,39 +1869,25 @@ Item {
             root.swapFormData.fromGroupKey = ethGroupKey
             root.swapFormData.toGroupKey = ""
 
-            // Launch popup
             launchAndVerfyModal()
 
-            const quoteItem = findChild(controlUnderTest, "quoteApproximationRight")
-            verify(!!quoteItem)
+            const cs = root.swapAdaptor.currencyStore
 
-            const sellItem = findChild(controlUnderTest, "quoteApproximationLeft")
-            verify(!!sellItem)
+            const quoteText = findChild(controlUnderTest, "swapQuoteText")
+            verify(!!quoteText)
 
-            const priceItem = findChild(controlUnderTest, "quoteApproximationPrice")
-            verify(!!priceItem)
+            const invertQuoteButton = findChild(controlUnderTest, "invertQuoteButton")
+            verify(!!invertQuoteButton)
 
-            const invertQuoteApproximation = findChild(controlUnderTest, "invertQuoteApproximation")
-            verify(!!invertQuoteApproximation)
-
-            // The post-open form setup runs via Qt.callLater (SwapModal onOpened),
-            // so the row's visibility lands asynchronously — poll, don't assert.
-            tryVerify(() => sellItem.visible) // left item is visible once the from token is set
-            tryVerify(() => quoteItem.visible)
-            verify(quoteItem.loading) // right item is loading until routes are fetched
-            verify(!priceItem.visible)
-            verify(!invertQuoteApproximation.visible)
+            compare(quoteText.text, "")
+            verify(!invertQuoteButton.visible)
 
             fetchSuggestedRoutesCalled.clear()
             root.swapFormData.toGroupKey = sttGroupKey
 
             tryCompare(fetchSuggestedRoutesCalled, "count", 1)
-            tryCompare(sellItem, "visible", true)
-            compare(sellItem.text, "1 ETH ≈ ")
-            verify(quoteItem.visible)
-            verify(quoteItem.loading)
-            verify(!priceItem.visible)
-            verify(!invertQuoteApproximation.visible)
+            tryVerify(() => quoteText.loading)
+            verify(!invertQuoteButton.visible)
 
             // emit routes ready
             let txHasRouteNoApproval = root.dummySwapTransactionRoutes.txHasRouteNoApproval
@@ -1984,24 +1895,16 @@ Item {
             txHasRouteNoApproval.amountToReceive = "1000000000000000000" // "1" in STT
             root.swapStore.suggestedRoutesReady(txHasRouteNoApproval, "", "")
 
-            tryVerify( () => quoteItem.visible)
-            verify(!quoteItem.loading)
-            verify(priceItem.visible)
-            verify(invertQuoteApproximation.visible)
-
-            tryCompare(sellItem, "text", "1 ETH ≈ ")
-            tryCompare(quoteItem, "text", "1 STT ")
-            verify(priceItem.text.startsWith("(1 ")) //Hardcoded to crypto amount input - 1 in our case
+            tryVerify(() => !quoteText.loading)
+            tryCompare(quoteText, "text", "1 ETH ≈ %1".arg(cs.formatCurrencyAmount(1, "STT")))
+            verify(invertQuoteButton.visible)
 
             fetchSuggestedRoutesCalled.clear()
             root.swapFormData.fromTokenAmount = "2"
 
-            // Back to loading states
             tryCompare(fetchSuggestedRoutesCalled, "count", 1)
-            tryCompare(quoteItem, "visible", true)
-            verify(quoteItem.loading)
-            verify(!priceItem.visible)
-            verify(!invertQuoteApproximation.visible)
+            tryVerify(() => quoteText.loading)
+            verify(!invertQuoteButton.visible)
 
             // emit routes ready
             txHasRouteNoApproval = root.dummySwapTransactionRoutes.txHasRouteNoApproval
@@ -2009,33 +1912,11 @@ Item {
             txHasRouteNoApproval.amountToReceive = "4000000000000000000" // "4" in STT
             root.swapStore.suggestedRoutesReady(txHasRouteNoApproval, "", "")
 
-            tryCompare(sellItem, "text", "1 ETH ≈ ")
-            tryCompare(quoteItem, "text", "2 STT ")
-            verify(priceItem.text.startsWith("(1 ")) //Hardcoded to crypto amount input - 1 in our case
-            verify(invertQuoteApproximation.visible)
+            tryCompare(quoteText, "text", "1 ETH ≈ %1".arg(cs.formatCurrencyAmount(2, "STT")))
+            verify(invertQuoteButton.visible)
 
-            mouseClick(invertQuoteApproximation)
-            tryCompare(sellItem, "text", "1 STT ≈ ")
-            tryCompare(quoteItem, "text", "0.5 ETH ")
-
-            // resetting to default
-            fetchSuggestedRoutesCalled.clear()
-            root.swapFormData.fromTokenAmount = "1"
-
-            // Back to loading states
-            tryCompare(fetchSuggestedRoutesCalled, "count", 1)
-            tryCompare(quoteItem, "visible", true)
-            verify(quoteItem.loading)
-            verify(!priceItem.visible)
-
-            // emit routes ready
-            txHasRouteNoApproval = root.dummySwapTransactionRoutes.txHasRouteNoApproval
-            txHasRouteNoApproval.uuid = root.swapAdaptor.uuid
-            txHasRouteNoApproval.amountToReceive = "1000000000000000000" // "1" in STT
-            root.swapStore.suggestedRoutesReady(txHasRouteNoApproval, "", "")
-
-            tryCompare(sellItem, "text", "1 ETH ≈ ")
-            tryCompare(quoteItem, "text", "1 STT ")
+            mouseClick(invertQuoteButton)
+            tryCompare(quoteText, "text", "1 STT ≈ %1".arg(cs.formatCurrencyAmount(0.5, "ETH")))
         }
 
         // The handler destroys the modal and then resets the form, and the reset
@@ -2059,6 +1940,33 @@ Item {
             compare(store.createdKinds.indexOf(3), -1,
                     "no destination picker built during teardown, got kinds: "
                     + JSON.stringify(store.createdKinds))
+        }
+
+        function test_payChainFilterDrivesTheCatalog() {
+            const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+
+            launchAndVerfyModal()
+
+            const payPanel = findChild(controlUnderTest, "payPanel")
+            verify(!!payPanel)
+            const payChainId = root.swapFormData.selectedNetworkChainId
+            const chainFilter = findChild(payPanel, "chainFilter")
+            verify(!!chainFilter)
+
+            const otherChainId = payChainId === 10 ? 1 : 10
+            store.builtChainIds = []
+            chainFilter.chainSelected(otherChainId)
+
+            compare(store.builtChainIds, [otherChainId], "catalog scoped to the filter")
+            compare(root.swapFormData.selectedNetworkChainId, payChainId,
+                    "and the swap stays on its own chain")
+
+            store.builtChainIds = []
+            chainFilter.chainSelected(-1)
+
+            compare(store.builtChainIds, [payChainId], "\"All\" restores this side's catalog")
+
+            closeAndVerfyModal()
         }
 
         // A destination picker built lazily (the user switches the receive chain

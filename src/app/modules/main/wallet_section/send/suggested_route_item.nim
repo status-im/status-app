@@ -5,6 +5,7 @@ import ./gas_fees_item
 QtObject:
   type  SuggestedRouteItem* = ref object of QObject
     bridgeName: string
+    tool: string
     fromNetwork: int
     toNetwork: int
     maxAmountIn: string
@@ -52,7 +53,8 @@ QtObject:
     txFeeInWei: string,
     txL1FeeInWei: string,
     approvalFeeInWei: string,
-    approvalL1FeeInWei: string
+    approvalL1FeeInWei: string,
+    tool: string
   )
   proc delete*(self: SuggestedRouteItem)
   proc newSuggestedRouteItem*(
@@ -78,17 +80,19 @@ QtObject:
     txFeeInWei: string = "",
     txL1FeeInWei: string = "",
     approvalFeeInWei: string = "",
-    approvalL1FeeInWei: string = ""
+    approvalL1FeeInWei: string = "",
+    tool: string = ""
     ): SuggestedRouteItem =
       new(result, delete)
       result.setup(bridgeName, fromNetwork, toNetwork, maxAmountIn, amountIn, amountOut, gasAmount, gasFees, tokenFees,
         cost, estimatedTime, amountInLocked, isFirstSimpleTx, isFirstBridgeTx, approvalRequired, approvalGasFees,
         approvalAmountRequired, approvalContractAddress, slippagePercentage, txFeeInWei, txL1FeeInWei, approvalFeeInWei,
-        approvalL1FeeInWei)
+        approvalL1FeeInWei, tool)
 
   proc `$`*(self: SuggestedRouteItem): string =
     result = "SuggestedRouteItem("
     result = result & "\nbridgeName: " & $self.bridgeName
+    result = result & "\ntool: " & $self.tool
     result = result & "\nfromNetwork: " & $self.fromNetwork
     result = result & "\ntoNetwork: " & $self.toNetwork
     result = result & "\nmaxAmountIn: " & $self.maxAmountIn
@@ -119,6 +123,13 @@ QtObject:
   QtProperty[string] bridgeName:
     read = getBridgeName
     notify = bridgeNameChanged
+
+  proc toolChanged*(self: SuggestedRouteItem) {.signal.}
+  proc getTool*(self: SuggestedRouteItem): string {.slot.} =
+    return self.tool
+  QtProperty[string] tool:
+    read = getTool
+    notify = toolChanged
 
   proc fromNetworkChanged*(self: SuggestedRouteItem) {.signal.}
   proc getfromNetwork*(self: SuggestedRouteItem): int {.slot.} =
@@ -300,10 +311,12 @@ QtObject:
     txFeeInWei: string,
     txL1FeeInWei: string,
     approvalFeeInWei: string,
-    approvalL1FeeInWei: string
+    approvalL1FeeInWei: string,
+    tool: string
   ) =
     self.QObject.setup
     self.bridgeName = bridgeName
+    self.tool = tool
     self.fromNetwork = fromNetwork
     self.toNetwork = toNetwork
     self.maxAmountIn = maxAmountIn

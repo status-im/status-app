@@ -4,3 +4,5 @@ SwapModalAdaptor 1.0 SwapModalAdaptor.qml
 SwapOutputData 1.0 SwapOutputData.qml
 SwapApproveCapModal 1.0 SwapApproveCapModal.qml
 SwapSignModal 1.0 SwapSignModal.qml
+SwapFromAccountPopup 1.0 SwapFromAccountPopup.qml
+SwapToAccountPopup 1.0 SwapToAccountPopup.qml

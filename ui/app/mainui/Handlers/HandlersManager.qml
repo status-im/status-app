@@ -86,6 +86,9 @@ QtObject {
         currencyStore: root.currencyStore
         networksStore: root.networksStore
         rootStore: root.rootStore
+
+        savedAddressesModel: root.walletRootStore.savedAddresses
+        recentRecipientsModel: root.transactionStore.tempActivityController1Model
     }
 
     readonly property SendModalHandler sendModalHandler: SendModalHandler {

@@ -11543,6 +11543,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>NetworkChipFilter</name>
+    <message>
+        <source>All</source>
+        <translation type="unfinished">전체</translation>
+    </message>
+</context>
+<context>
     <name>NetworkConnectionStore</name>
     <message>
         <source>Requires internet connection</source>
@@ -14466,6 +14473,10 @@ to load</source>
         <translation>토큰을 검색하거나 토큰 주소를 입력하세요</translation>
     </message>
     <message>
+        <source>Paste</source>
+        <translation type="unfinished">붙여넣기</translation>
+    </message>
+    <message>
         <source>Loading more tokens...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -16503,18 +16514,21 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>SwapFromAccountPopup</name>
+    <message>
+        <source>From account</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>SwapInputPanel</name>
-    <message>
-        <source>Pay</source>
-        <translation>결제</translation>
-    </message>
-    <message>
-        <source>Receive</source>
-        <translation>받기</translation>
-    </message>
     <message>
         <source>Your assets on %1</source>
         <translation type="unfinished">%1의 자산</translation>
+    </message>
+    <message>
+        <source>Your assets</source>
+        <translation type="unfinished">내 자산</translation>
     </message>
     <message>
         <source>Popular assets</source>
@@ -16536,16 +16550,21 @@ to load</source>
         <translation>%1 추가</translation>
     </message>
     <message>
-        <source>Max slippage:</source>
-        <translation>최대 슬리피지:</translation>
+        <source>%1 s</source>
+        <comment>short for seconds</comment>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>N/A</source>
-        <translation>해당 없음</translation>
+        <source>Best return</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Max fees:</source>
-        <translation>최대 수수료:</translation>
+        <source>by %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>via %1</source>
+        <translation type="unfinished">%1 경유</translation>
     </message>
     <message>
         <source>Approving %1</source>
@@ -16554,6 +16573,10 @@ to load</source>
     <message>
         <source>Approve %1</source>
         <translation>%1 승인</translation>
+    </message>
+    <message>
+        <source>Confirm swap</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Approving %1 spending cap to Swap</source>
@@ -16673,6 +16696,13 @@ to load</source>
     <message>
         <source>Max. fees on %1</source>
         <translation>최대 수수료 한도: %1</translation>
+    </message>
+</context>
+<context>
+    <name>SwapToAccountPopup</name>
+    <message>
+        <source>Send to</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

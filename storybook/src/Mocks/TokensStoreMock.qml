@@ -51,11 +51,19 @@ TokensStore {
 
     function releaseTokenSelectorModel(id) {}
 
+    property var swapUnsupportedChainIds: []
+    function isChainSupportedForSwapViaLiFi(chainId) {
+        return root.swapUnsupportedChainIds.indexOf(chainId) === -1
+    }
+
     function getDisplayAssetsBelowBalanceThresholdDisplayAmount() {
         return _displayAssetsBelowBalanceThresholdDisplayAmountFunc()
     }
 
+    property var builtChainIds: []
+
     function buildGroupsForChain(chainId) {
+        root.builtChainIds = root.builtChainIds.concat([chainId])
         root._buildGroupsInto(root.tokenGroupsForChainModel, chainId)
         // keep the destination model in sync so receive-panel tests have data
         if (root.tokenGroupsForChainToModel)

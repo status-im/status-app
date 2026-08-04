@@ -44,8 +44,9 @@ SplitView {
 
                 name: "Ethereum"
                 symbol: "ETH"
-                currencyBalanceAsString: "14,456.42 USD"
                 iconSource: Constants.tokenIcon(symbol)
+                cryptoBalanceStr: "8.42 ETH"
+                currencyBalanceAsString: "14,456.42 USD"
                 isAutoHovered: ctrlIsAutoHovered.checked
 
                 balancesModel: ListModel {
@@ -57,11 +58,15 @@ SplitView {
                     ]
                     Component.onCompleted: append(data)
                 }
+                currentBalance: 1336.76
+                defaultNetworkIcon: "network/ethereum"
+                tokenAddress: ctrlShowAddress.checked
+                              ? "0xdAC17F958D2ee523a2206206994597C13D831ec7" : ""
 
                 enabled: ctrlEnabled.checked
                 highlighted: ctrlHighlighted.checked
 
-                onClicked: key => logs.logEvent("TokenSelectorAssetDelegate::onClicked")
+                onClicked: logs.logEvent("TokenSelectorAssetDelegate::onClicked")
             }
         }
     }
@@ -89,6 +94,11 @@ SplitView {
                 Switch {
                     id: ctrlIsAutoHovered
                     text: "isAutoHovered"
+                    checked: false
+                }
+                Switch {
+                    id: ctrlShowAddress
+                    text: "Show address"
                     checked: false
                 }
 

@@ -18,6 +18,9 @@ QtObject {
     required property WalletStores.WalletAssetsStore walletAssetsStore
     required property NetworksStore networksStore
 
+    required property var savedAddressesModel
+    required property var recentRecipientsModel
+
     function openSendModal(params = {}, callback = null) {
         d.swapInputParams.resetFormData()
 
@@ -98,6 +101,8 @@ QtObject {
     readonly property Component swapModalComponent: Component {
         // TODO: Update the API to be explicit and avoid direct store access
         SwapModal {
+            id: swapModal
+
             swapAdaptor: SwapModalAdaptor {
                 swapStore: d.swapStore
                 walletAssetsStore: root.walletAssetsStore
@@ -112,6 +117,20 @@ QtObject {
                 }
             }
             swapInputParamsForm: d.swapInputParams
+
+            savedAddressesModel: root.savedAddressesModel
+            recentRecipientsModel: root.recentRecipientsModel
+            fnResolveENS: function(ensName, uuid) {
+                root.rootStore.resolveENS(ensName, uuid)
+            }
+
+            readonly property Connections resolvedEnsConnection: Connections {
+                target: root.rootStore
+                function onEnsNameResolved(resolvedPubKey, resolvedAddress, uuid) {
+                    swapModal.ensNameResolved(resolvedPubKey, resolvedAddress, uuid)
+                }
+            }
+
             onClosed: {
                 destroy()
                 swapInputParamsForm.resetFormData()

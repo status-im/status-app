@@ -5,7 +5,9 @@ import QtQuick.Layouts
 import StatusQ.Core
 import StatusQ.Components
 import StatusQ.Core.Theme
-import StatusQ.Core.Utils
+import StatusQ.Core.Utils as SQUtils
+
+import AppLayouts.Wallet.controls
 
 import utils
 
@@ -20,10 +22,49 @@ ItemDelegate {
     required property string iconSource
     required property bool isAutoHovered
 
-    // expected structure: [iconUrl: string, balance: double]
-    property alias balancesModel: balancesListView.model
+    property var balancesModel
+    property real currentBalance: 0
 
-    property alias balancesListInteractive: balancesListView.interactive
+    /** when >= 0 the row stands for this single chain (the list isn't scoped to
+        one chain, so each holding is listed per chain) instead of the aggregate **/
+    property int chainId: -1
+
+    property string networkIconUrl: {
+        root.balancesTracker.revision
+        if (!root.balancesModel || !root.balancesModel.count)
+            return ""
+        if (root.chainId >= 0)
+            return SQUtils.ModelUtils.getByKey(root.balancesModel, "chainId", root.chainId, "iconUrl") ?? ""
+        return SQUtils.ModelUtils.get(root.balancesModel, 0, "iconUrl") ?? ""
+    }
+
+    property string cryptoBalanceStr: currentBalance > 0
+        ? LocaleUtils.currencyAmountToLocaleString({amount: currentBalance, displayDecimals: 2}, {noSymbol: true})
+        : ""
+    property var tokensModel
+
+    property string tokenAddress: {
+        root.balancesTracker.revision
+        if (!tokensModel || !tokensModel.count)
+            return ""
+        let chain = root.chainId
+        if (chain < 0) {
+            if (!balancesModel || !balancesModel.count)
+                return ""
+            chain = SQUtils.ModelUtils.get(root.balancesModel, 0, "chainId")
+        }
+        const key = SQUtils.ModelUtils.getByKey(tokensModel, "chainId", chain, "key")
+        return !!key ? Utils.getChainAndAddressFromTokenKey(key).address : ""
+    }
+    property string defaultNetworkIcon
+
+    readonly property SQUtils.ModelChangeTracker balancesTracker: SQUtils.ModelChangeTracker {
+        model: root.balancesModel
+    }
+
+    readonly property string effectiveNetworkIcon: !!networkIconUrl ? networkIconUrl : defaultNetworkIcon
+    readonly property bool hasNetworkBadge: !!effectiveNetworkIcon
+    readonly property bool hasAddressChip: !!tokenAddress && tokenAddress !== Constants.zeroAddress
 
     spacing: Theme.halfPadding
     horizontalPadding: Theme.padding
@@ -32,8 +73,8 @@ ItemDelegate {
     opacity: enabled ? 1 : 0.3
     implicitHeight: 60
 
-    icon.width: 32
-    icon.height: 32
+    icon.width: 40
+    icon.height: 40
     icon.source: iconSource
 
     background: Rectangle {
@@ -52,92 +93,83 @@ ItemDelegate {
     contentItem: RowLayout {
         spacing: root.spacing
 
-        // asset icon
-        StatusRoundedImage {
+        TokenIconWithNetworkBadge {
             Layout.preferredWidth: root.icon.width
             Layout.preferredHeight: root.icon.height
+
             image.source: root.icon.source
+            networkIcon: root.hasNetworkBadge ? Assets.svg(root.effectiveNetworkIcon) : ""
         }
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 0
+            spacing: 2
 
-            // name, symbol, total balance
-            RowLayout {
+            StatusBaseText {
+                objectName: "tokenName"
                 Layout.fillWidth: true
-                spacing: root.spacing
-
-                Item {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: childrenRect.height
-
-                    StatusBaseText {
-                        id: nameText
-                        anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: Math.min(implicitWidth, parent.width - symbolText.width
-                                        - symbolText.anchors.leftMargin)
-                        text: root.name
-                        font.weight: Font.Medium
-                        elide: Text.ElideRight
-                    }
-
-                    StatusBaseText {
-                        id: symbolText
-                        anchors.left: nameText.right
-                        anchors.leftMargin: 6
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: root.symbol
-                        color: Theme.palette.baseColor1
-                    }
-                }
-
-                StatusBaseText {
-                    font.weight: Font.Medium
-                    text: root.currencyBalanceAsString
-                }
+                text: root.name
+                font.weight: Font.Medium
+                elide: Text.ElideRight
             }
 
-            // balances per chain
-            StatusListView {
-                id: balancesListView
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.halfPadding
 
-                objectName: "balancesListView"
+                StatusBaseText {
+                    text: root.symbol
+                    color: Theme.palette.baseColor1
+                }
 
-                Layout.maximumWidth: parent.width
-                Layout.preferredWidth: contentWidth
-                Layout.preferredHeight: 22
+                Rectangle {
+                    Layout.preferredHeight: 22
+                    Layout.preferredWidth: addressRow.implicitWidth + 12
+                    radius: Theme.radius
+                    color: Theme.palette.baseColor2
+                    visible: root.hasAddressChip
 
-                ScrollBar.horizontal: null
+                    RowLayout {
+                        id: addressRow
+                        anchors.centerIn: parent
+                        spacing: 4
 
-                orientation: ListView.Horizontal
-                spacing: root.spacing
-                visible: count
-                interactive: root.balancesListInteractive
-
-                delegate: RowLayout {
-                    height: ListView.view.height
-                    spacing: 4
-
-                    StatusRoundedImage {
-                        Layout.preferredWidth: 16
-                        Layout.preferredHeight: 16
-                        image.source: Assets.svg(model.iconUrl)
-                    }
-                    StatusBaseText {
-                        font.pixelSize: Theme.tertiaryTextFontSize
-                        // numeric balance formatted at the UI layer (no currency symbol)
-                        text: LocaleUtils.currencyAmountToLocaleString(
-                                  {amount: model.balance, displayDecimals: 2}, {noSymbol: true})
+                        StatusBaseText {
+                            text: SQUtils.Utils.elideAndFormatWalletAddress(root.tokenAddress)
+                            color: Theme.palette.baseColor1
+                            font.pixelSize: Theme.tertiaryTextFontSize
+                            font.family: Fonts.monoFont.family
+                        }
+                        StatusIcon {
+                            width: 12
+                            height: 12
+                            icon: "external"
+                            color: Theme.palette.baseColor1
+                        }
                     }
                 }
 
-                // let the root handle the click
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: root.clicked()
-                }
+                Item { Layout.fillWidth: true }
+            }
+        }
+
+        ColumnLayout {
+            Layout.alignment: Qt.AlignVCenter
+            spacing: 0
+            visible: !!root.currencyBalanceAsString || !!root.cryptoBalanceStr
+
+            StatusBaseText {
+                Layout.alignment: Qt.AlignRight
+                text: root.cryptoBalanceStr
+                font.weight: Font.Medium
+                visible: !!text
+            }
+            StatusBaseText {
+                Layout.alignment: Qt.AlignRight
+                text: root.currencyBalanceAsString
+                color: Theme.palette.baseColor1
+                font.pixelSize: Theme.additionalTextSize
+                visible: !!text
             }
         }
     }

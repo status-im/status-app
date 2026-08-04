@@ -18,6 +18,7 @@ ManageTokensCommunityTag 1.0 ManageTokensCommunityTag.qml
 ManageTokensDelegate 1.0 ManageTokensDelegate.qml
 ManageTokensGroupDelegate 1.0 ManageTokensGroupDelegate.qml
 MaxSendButton 1.0 MaxSendButton.qml
+NetworkChipFilter 1.0 NetworkChipFilter.qml
 NetworkFilter 1.0 NetworkFilter.qml
 NetworkSelectItemDelegate 1.0 NetworkSelectItemDelegate.qml
 SortOrderComboBox 1.0 SortOrderComboBox.qml
@@ -25,6 +26,7 @@ StatusDateRangePicker 1.0 StatusDateRangePicker.qml
 StatusTxProgressBar 1.0 StatusTxProgressBar.qml
 SwapExchangeButton 1.0 SwapExchangeButton.qml
 SwapProvidersTermsAndConditionsText 1.0 SwapProvidersTermsAndConditionsText.qml
+TokenIconWithNetworkBadge 1.0 TokenIconWithNetworkBadge.qml
 TokenSelector 1.0 TokenSelector.qml
 TokenSelectorButton 1.0 TokenSelectorButton.qml
 TokenSelectorCompactButton 1.0 TokenSelectorCompactButton.qml

@@ -189,8 +189,8 @@ Item {
             verify(!!assetsList)
             const delegateUnderTest = assetsList.itemAtIndex(2)
             verify(!!delegateUnderTest)
-            compare(delegateUnderTest.symbol, "DAI")
-            mouseClick(delegateUnderTest)
+            compare(delegateUnderTest.rowAt(0).symbol, "DAI")
+            mouseClick(delegateUnderTest.rowAt(0))
 
             compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
             compare(assetSelector.contentItem.name, "DAI")

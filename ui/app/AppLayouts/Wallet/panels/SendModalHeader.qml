@@ -133,11 +133,15 @@ RowLayout {
         formatCurrencyBalance: root.formatCurrencyBalance
         collectiblesModel: root.displayOnlyAssets ? null: root.collectiblesModel
 
+        flatNetworksModel: root.networksModel
+        selectedChainId: root.selectedChainId
+
         onCollectibleSelected: (key) => root.collectibleSelected(key)
         onCollectionSelected: (key) => root.collectionSelected(key)
         onAssetSelected: (key) => root.assetSelected(key)
         onSearchInAssets: (keyword) => root.searchInAssets(keyword)
         onFetchMoreAssets: root.fetchMoreAssets()
+        onChainSelected: (chainId) => { if (chainId !== -1) root.networkSelected(chainId) }
     }
 
     // Horizontal spacer

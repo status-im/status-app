@@ -19,24 +19,32 @@ Control {
 
     property string name
     property url icon
+    /** optional network badge; when empty the button keeps its plain look (e.g. in Send) **/
+    property url networkIcon
+
+    readonly property bool showChip: root.selected && !!root.networkIcon.toString()
 
     /** Sets size of the Token Selector Button **/
     property int size: TokenSelectorButton.Size.Normal
 
     signal clicked
 
+    Accessible.role: Accessible.Button
+    Accessible.name: root.selected ? root.name : root.text
+    Accessible.onPressAction: root.clicked()
+
     enum Size {
         Small,
         Normal
     }
 
-    padding: root.selected ? 0 : 10
+    padding: root.selected ? (root.showChip ? 8 : 0) : 10
 
     background: StatusComboboxBackground {
         border.width: 0
         color: {
             if (root.selected)
-                return "transparent"
+                return root.showChip ? Theme.palette.baseColor4 : "transparent"
 
             return root.hovered || root.forceHovered
                     ? Theme.palette.primaryColor2
@@ -78,13 +86,20 @@ Control {
 
             spacing: Theme.halfPadding
 
-            StatusRoundedImage {
+            TokenIconWithNetworkBadge {
                 id: tokenSelectorIcon
                 objectName: "tokenSelectorIcon"
 
                 Layout.preferredWidth: 24
                 Layout.preferredHeight: 24
+
                 image.source: root.icon
+                networkIcon: root.showChip ? root.networkIcon : ""
+                badgeColor: Theme.palette.baseColor4
+                badgeSize: 14
+                badgeRadius: 4
+                badgeIconSize: 11
+                badgeIconRadius: 3
             }
 
             StatusBaseText {

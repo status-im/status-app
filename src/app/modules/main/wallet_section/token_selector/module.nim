@@ -38,6 +38,8 @@ type
     # model (createModelForKind adds, releaseModel removes).
     models: Table[int, TokenSelectorModel]
     nextModelId: int
+    # freed one release late: QML tears list delegates down after this returns
+    pendingRelease: seq[TokenSelectorModel]
 
 proc newModule*(
   events: EventEmitter,
@@ -177,7 +179,12 @@ method createModelForKind*(self: Module, kind: int): tuple[id: int, model: Token
   return (id, model)
 
 method releaseModel*(self: Module, id: int) =
+  if not self.models.hasKey(id):
+    return
+  let model = self.models[id]
   self.models.del(id)
+  self.pendingRelease.setLen(0)
+  self.pendingRelease.add(model)
 
 method load*(self: Module) =
   singletonInstance.engine.setRootContextProperty("walletSectionTokenSelector", self.viewVariant)

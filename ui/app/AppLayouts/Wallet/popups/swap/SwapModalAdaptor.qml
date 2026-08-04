@@ -36,6 +36,9 @@ QObject {
     readonly property var fromToken: fromTokenEntry.item
     readonly property var toToken: toTokenEntry.item
 
+    /** the user's own wallet accounts, usable as sender or recipient **/
+    readonly property var accountsModel: root.swapStore.accounts
+
     readonly property string uuid: d.uuid
     readonly property var filteredFlatNetworksModel: root.networksStore.activeNetworks
 
@@ -139,6 +142,10 @@ QObject {
             root.swapOutputData.errDescription = errDescription
             // if valid route was found
             if(txRoutes.suggestedRoutes.count > 0) {
+                if (!root.toToken) {
+                    root.swapOutputData.hasError = true
+                    return
+                }
                 root.validSwapProposalReceived = true
                 root.swapOutputData.toTokenAmount = AmountsArithmetic.div(AmountsArithmetic.fromString(txRoutes.amountToReceive), AmountsArithmetic.fromNumber(1, root.toToken.decimals)).toString()
 
@@ -166,6 +173,7 @@ QObject {
                 root.swapOutputData.approvalContractAddress = !!bestPath ? bestPath.approvalContractAddress: ""
                 root.swapOutputData.estimatedTime = !!bestPath ? bestPath.estimatedTime: Constants.TransactionEstimatedTime.Unknown
                 root.swapOutputData.txProviderName = !!bestPath ? bestPath.bridgeName: ""
+                root.swapOutputData.txProviderTool = !!bestPath ? bestPath.tool: ""
                 // TODO: should approval fees be included in maxFeesToReserveRaw?
             } else {
                 root.swapOutputData.hasError = true
@@ -224,13 +232,14 @@ QObject {
             root.swapProposalLoading = true
 
             let accountAddress = root.swapFormData.selectedAccountAddress
+            const toAccountAddress = root.swapFormData.toAccountAddress || accountAddress
             const fromChainId = root.swapFormData.selectedNetworkChainId
             const toChainId = root.swapFormData.toNetworkChainId
             // same chain => Swap, different chain => Bridge (the router gates LI.FI on send type)
             const sendType = fromChainId === toChainId ? Constants.SendType.Swap
                                                        : Constants.SendType.Bridge
 
-            root.swapStore.fetchSuggestedRoutes(d.uuid, accountAddress, accountAddress,
+            root.swapStore.fetchSuggestedRoutes(d.uuid, accountAddress, toAccountAddress,
                                                 cryptoValueInRaw, "0", root.swapFormData.fromGroupKey, root.swapFormData.toGroupKey,
                                                 fromChainId, toChainId,
                                                 sendType, root.swapFormData.selectedSlippage)

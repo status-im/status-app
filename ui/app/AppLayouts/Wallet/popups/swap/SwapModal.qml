@@ -1,9 +1,8 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
-import QtQml.Models
 
 import QtModelsToolkit
-import SortFilterProxyModel
 
 import utils
 
@@ -20,6 +19,7 @@ import shared.popups.send.controls
 import shared.controls
 import shared.panels
 
+import AppLayouts.Wallet
 import AppLayouts.Wallet.controls
 import AppLayouts.Wallet.panels
 import AppLayouts.Wallet.popups.buy
@@ -28,24 +28,31 @@ import AppLayouts.Wallet.adaptors
 StatusDialog {
     id: root
 
-    /* This should be the only property which should be used to input
-    parameters to the modal when being launched from elsewhere */
     required property SwapInputParamsForm swapInputParamsForm
     required property SwapModalAdaptor swapAdaptor
 
     /** input property to indicate if buy action is enabled **/
     property bool buyEnabled
 
+    /** recipient source models for the "Send to" (receive) account selector **/
+    property var savedAddressesModel
+    property var recentRecipientsModel
+    /** resolve an ENS name typed into the receive-side recipient input **/
+    property var fnResolveENS: function(ensName, uuid) {}
+    signal ensNameResolved(string resolvedPubKey, string resolvedAddress, string uuid)
+
     objectName: "swapModal"
 
     Component.onDestruction: {
         const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
-        if (d.payTokenSelector)
-            store.releaseTokenSelectorModel(d.payTokenSelector.id)
-        if (d.receiveTokenSelector)
-            store.releaseTokenSelectorModel(d.receiveTokenSelector.id)
-        if (d.receiveTokenSelectorTo)
-            store.releaseTokenSelectorModel(d.receiveTokenSelectorTo.id)
+        const ids = [d.payTokenSelector, d.receiveTokenSelector, d.receiveTokenSelectorTo]
+                        .filter(sel => !!sel).map(sel => sel.id)
+
+        d.payTokenSelector = null
+        d.receiveTokenSelector = null
+        d.receiveTokenSelectorTo = null
+
+        ids.forEach(id => store.releaseTokenSelectorModel(id))
     }
 
     implicitWidth: 556
@@ -84,8 +91,7 @@ StatusDialog {
             if (d.receiveTokenSelectorTo)
                 return
             d.receiveTokenSelectorTo = root.swapAdaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(3)
-            // seed it like createPickers seeds the source-chain ones
-            receivePanel.reset()
+                receivePanel.reset()
         }
 
         property var debounceFetchSuggestedRoutes: Backpressure.debounce(root, 1000, function() {
@@ -111,7 +117,7 @@ StatusDialog {
         }
 
         readonly property WalletAccountsSelectorAdaptor accountsSelectorAdaptor : WalletAccountsSelectorAdaptor {
-            accounts: root.swapAdaptor.swapStore.accounts
+            accounts: root.swapAdaptor.accountsModel
             assetsModel: root.swapAdaptor.walletAssetsStore.baseGroupedAccountAssetModel
             tokenGroupsModel: root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsModel
             filteredFlatNetworksModel: root.swapAdaptor.networksStore.activeNetworks
@@ -125,12 +131,10 @@ StatusDialog {
         }
 
         readonly property var selectedAccount: selectedAccountEntry.item
-
-        readonly property int loadingFeesWidth: 60
+        readonly property var toAccount: toAccountEntry.item
 
         readonly property string nativeTokenSymbol: Utils.getNativeTokenSymbol(root.swapInputParamsForm.selectedNetworkChainId)
 
-        // same chain => plain swap (from/to token must differ); different chains => bridge (same token ok)
         readonly property bool isSameChainSwap: root.swapInputParamsForm.selectedNetworkChainId === root.swapInputParamsForm.toNetworkChainId
         readonly property bool isBridge: root.swapInputParamsForm.toNetworkChainId !== -1 && !isSameChainSwap
         onIsBridgeChanged: {
@@ -164,23 +168,25 @@ StatusDialog {
             }
 
             const walletTokensStore = root.swapAdaptor.walletAssetsStore.walletTokensStore
-            const chainAvailableForSwap = walletTokensStore.isChainSupportedForSwapViaParaswap(chainId)
-                                       || walletTokensStore.isChainSupportedForSwapViaLiFi(chainId)
+            const chainAvailableForSwap = walletTokensStore.isChainSupportedForSwapViaLiFi(chainId)
             if (!chainAvailableForSwap) {
                 console.warn("swap not supported for chain", chainId)
                 const networkName = Utils.getNetworkName(chainId)
                 Global.openInfoPopup(qsTr("Info"), qsTr("Swaps on %1 are coming soon.").arg(networkName))
 
-                Qt.callLater(() => {
-                                 if (isToSide) {
-                                     root.swapInputParamsForm.toNetworkChainId = root.swapInputParamsForm.selectedNetworkChainId
-                                     return
-                                 }
-                                 // by default set ethereum chain
-                                 root.swapInputParamsForm.selectedNetworkChainId = Utils.isChainIDTestnet(chainId)?
-                                     Constants.chains.hoodiChainId
-                                   : Constants.chains.mainnetChainId
-                             })
+                const isSideChain = chainId === (isToSide ? root.swapInputParamsForm.toNetworkChainId
+                                                          : root.swapInputParamsForm.selectedNetworkChainId)
+                if (isSideChain)
+                    Qt.callLater(() => {
+                                     if (isToSide) {
+                                         root.swapInputParamsForm.toNetworkChainId = root.swapInputParamsForm.selectedNetworkChainId
+                                         return
+                                     }
+                                     // by default set ethereum chain
+                                     root.swapInputParamsForm.selectedNetworkChainId = Utils.isChainIDTestnet(chainId)?
+                                         Constants.chains.hoodiChainId
+                                       : Constants.chains.mainnetChainId
+                                 })
                 return
             }
 
@@ -203,7 +209,13 @@ StatusDialog {
         value: root.swapInputParamsForm.selectedAccountAddress
     }
 
-    // source (pay) network data for the approve/sign modals (tx executes on the source chain)
+    ModelEntry {
+        id: toAccountEntry
+        sourceModel: d.accountsSelectorAdaptor.processedWalletAccounts
+        key: "address"
+        value: root.swapInputParamsForm.toAccountAddress || root.swapInputParamsForm.selectedAccountAddress
+    }
+
     ModelEntry {
         id: fromNetworkEntry
         sourceModel: root.swapAdaptor.networksStore.activeNetworks
@@ -217,15 +229,13 @@ StatusDialog {
             d.fetchSuggestedRoutes()
         }
 
-        // the two chain selectors are independent: each rebuilds only its own catalog
         function onSelectedNetworkChainIdChanged() {
-            d.rebuildGroupsForChain(root.swapInputParamsForm.selectedNetworkChainId)
+            d.rebuildGroupsForChain(payPanel.listCatalogChainId)
         }
 
         function onToNetworkChainIdChanged() {
-            // only bridging needs a separate destination catalog; a same-chain receive reuses the source
             if (d.isBridge)
-                d.rebuildGroupsForChain(root.swapInputParamsForm.toNetworkChainId, true)
+                d.rebuildGroupsForChain(receivePanel.listCatalogChainId, true)
         }
 
         function onFromGroupKeyChanged() {
@@ -245,9 +255,9 @@ StatusDialog {
     }
 
     Component.onCompleted: {
-        d.rebuildGroupsForChain(root.swapInputParamsForm.selectedNetworkChainId)
+        d.rebuildGroupsForChain(payPanel.listCatalogChainId)
         if (d.isBridge)
-            d.rebuildGroupsForChain(root.swapInputParamsForm.toNetworkChainId, true)
+            d.rebuildGroupsForChain(receivePanel.listCatalogChainId, true)
     }
 
     onOpened: {
@@ -262,18 +272,38 @@ StatusDialog {
         root.swapAdaptor.resetData()
     }
 
-    header: Item {
-        AccountSelectorHeader {
-            y: -height - Theme.padding
-            control.popup.width: 512
+    Component {
+        id: fromAccountPopupComponent
+        SwapFromAccountPopup {
             model: d.accountsSelectorAdaptor.processedWalletAccounts
             selectedAddress: root.swapInputParamsForm.selectedAccountAddress
-            onCurrentAccountAddressChanged: {
-                if (currentAccountAddress !== "" && currentAccountAddress !== root.swapInputParamsForm.selectedAccountAddress) {
-                    root.swapInputParamsForm.selectedAccountAddress = currentAccountAddress
+            onAccountSelected: function(address) {
+                root.swapInputParamsForm.selectedAccountAddress = address
+            }
+            onClosed: payPanel.forceActiveFocus()
+        }
+    }
+
+    Component {
+        id: toAccountPopupComponent
+        SwapToAccountPopup {
+            id: toAccountPopup
+            savedAddressesModel: root.savedAddressesModel
+            accountsModel: root.swapAdaptor.accountsModel
+            recentRecipientsModel: root.recentRecipientsModel
+            selectedSenderAddress: root.swapInputParamsForm.selectedAccountAddress
+            fnResolveENS: root.fnResolveENS
+            onRecipientSelected: function(address) {
+                root.swapInputParamsForm.toAccountAddress = address
+            }
+            onClosed: payPanel.forceActiveFocus()
+
+            readonly property Connections resolvedEnsConnection: Connections {
+                target: root
+                function onEnsNameResolved(resolvedPubKey, resolvedAddress, uuid) {
+                    toAccountPopup.ensNameResolved(resolvedPubKey, resolvedAddress, uuid)
                 }
             }
-            control.popup.onClosed: payPanel.forceActiveFocus()
         }
     }
 
@@ -323,14 +353,20 @@ StatusDialog {
                     cryptoFeesToReserve: root.swapAdaptor.swapOutputData.maxFeesToReserveRaw
 
                     selectedNetworkChainId: root.swapInputParamsForm.selectedNetworkChainId
-                    showNetworkSelector: true
                     onNetworkSelected: function(chainId) {
                         root.swapInputParamsForm.selectedNetworkChainId = chainId
                         payPanel.forceActiveFocus()
                     }
 
+                    onListCatalogChainIdChanged: d.rebuildGroupsForChain(listCatalogChainId)
+
                     selectedAccountAddress: root.swapInputParamsForm.selectedAccountAddress
                     nonInteractiveGroupKey: d.isSameChainSwap ? receivePanel.selectedHoldingId : ""
+
+                    accountName: !!d.selectedAccount ? d.selectedAccount.name : ""
+                    accountEmoji: !!d.selectedAccount ? d.selectedAccount.emoji : ""
+                    accountColorId: !!d.selectedAccount ? d.selectedAccount.colorId : ""
+                    onAccountPillClicked: fromAccountPopupComponent.createObject(root).open()
 
                     swapSide: SwapInputPanel.SwapSide.Pay
                     swapExchangeButtonWidth: swapExchangeButton.width
@@ -378,14 +414,28 @@ StatusDialog {
                     tokenAmount: root.swapAdaptor.validSwapProposalReceived && root.swapAdaptor.toToken ? root.swapAdaptor.swapOutputData.toTokenAmount: root.swapInputParamsForm.toTokenAmount
 
                     selectedNetworkChainId: root.swapInputParamsForm.toNetworkChainId
-                    showNetworkSelector: true
                     onNetworkSelected: function(chainId) {
                         root.swapInputParamsForm.toNetworkChainId = chainId
                         payPanel.forceActiveFocus()
                     }
 
-                    selectedAccountAddress: root.swapInputParamsForm.selectedAccountAddress
+                    onListChainFilterChanged: {
+                        if (listChainFilter !== -1)
+                            root.swapInputParamsForm.toNetworkChainId = listChainFilter
+                    }
+
+                    onListCatalogChainIdChanged: {
+                        if (d.isBridge)
+                            d.rebuildGroupsForChain(listCatalogChainId, true)
+                    }
+
+                    selectedAccountAddress: root.swapInputParamsForm.toAccountAddress || root.swapInputParamsForm.selectedAccountAddress
                     nonInteractiveGroupKey: d.isSameChainSwap ? payPanel.selectedHoldingId : ""
+
+                    accountName: !!d.toAccount ? d.toAccount.name : ""
+                    accountEmoji: !!d.toAccount ? d.toAccount.emoji : ""
+                    accountColorId: !!d.toAccount ? d.toAccount.colorId : ""
+                    onAccountPillClicked: toAccountPopupComponent.createObject(root).open()
 
                     swapSide: SwapInputPanel.SwapSide.Receive
                     swapExchangeButtonWidth: swapExchangeButton.width
@@ -412,10 +462,14 @@ StatusDialog {
                     onClicked: {
                         const tempPayToken = root.swapInputParamsForm.fromGroupKey
                         const tempPayAmount = root.swapInputParamsForm.fromTokenAmount
-                        // also swap the chains so the bridge direction is inverted
                         const tempFromChain = root.swapInputParamsForm.selectedNetworkChainId
                         root.swapInputParamsForm.selectedNetworkChainId = root.swapInputParamsForm.toNetworkChainId
                         root.swapInputParamsForm.toNetworkChainId = tempFromChain
+                        if (!!root.swapInputParamsForm.toAccountAddress && toAccountEntry.available) {
+                            const tempFromAccount = root.swapInputParamsForm.selectedAccountAddress
+                            root.swapInputParamsForm.selectedAccountAddress = root.swapInputParamsForm.toAccountAddress
+                            root.swapInputParamsForm.toAccountAddress = tempFromAccount
+                        }
                         root.swapInputParamsForm.fromGroupKey = root.swapInputParamsForm.toGroupKey
                         root.swapInputParamsForm.fromTokenAmount = !!root.swapAdaptor.swapOutputData.toTokenAmount ? root.swapAdaptor.swapOutputData.toTokenAmount : root.swapInputParamsForm.toTokenAmount
                         root.swapInputParamsForm.toGroupKey = tempPayToken
@@ -425,93 +479,12 @@ StatusDialog {
                 }
             }
 
-            RowLayout {
-                id: approximationRow
-                property bool inversedOrder: false
-                readonly property SwapInputPanel leftPanel: inversedOrder ? receivePanel : payPanel
-                readonly property SwapInputPanel rightPanel: inversedOrder ? payPanel : receivePanel
-
-                readonly property string lhsSymbol: leftPanel.groupKey ?? ""
-                readonly property double lhsAmount: leftPanel.value
-                readonly property string rhsSymbol: rightPanel.groupKey ?? ""
-                readonly property double rhsAmount: rightPanel.value
-                readonly property int rhsDecimals: rightPanel.rawValueMultiplierIndex
-                readonly property bool amountLoading: receivePanel.mainInputLoading || payPanel.mainInputLoading
-
-                readonly property string quote: !!lhsAmount && !!rhsAmount ? SQUtils.AmountsArithmetic.div(
-                                                    SQUtils.AmountsArithmetic.fromNumber(rhsAmount),
-                                                    SQUtils.AmountsArithmetic.fromNumber(lhsAmount)).toFixed(rhsDecimals) : 1
-
-                readonly property string price: root.swapAdaptor.currencyStore.getFiatValue(1, leftPanel.selectedHoldingTokenKey)
-
-                function formatCurrency(amount, symbol) {
-                    return root.swapAdaptor.currencyStore.formatCurrencyAmount(amount, symbol,
-                                                                            { roundingMode: LocaleUtils.RoundingMode.Down, stripTrailingZeroes: true })
-                }
-
-                visible: root.swapAdaptor.validSwapProposalReceived || root.swapAdaptor.swapProposalLoading
-                spacing: 0
-
-                onVisibleChanged: inversedOrder = false // restore to default
-                onAmountLoadingChanged: inversedOrder = false // restore to default
-
-                StatusBaseText {
-                    objectName: "quoteApproximationLeft"
-                    text: "%1 ≈ ".arg(approximationRow.formatCurrency(1, approximationRow.lhsSymbol))
-
-                    color: Theme.palette.directColor4
-                    font {
-                        weight: Font.Medium
-                        pixelSize: Theme.additionalTextSize
-                    }
-                }
-
-                StatusTextWithLoadingState {
-                    Layout.preferredWidth: loading ? 40 : implicitWidth
-                    objectName: "quoteApproximationRight"
-                    text: "%1 ".arg(approximationRow.formatCurrency(approximationRow.quote, approximationRow.rhsSymbol))
-
-                    customColor: Theme.palette.directColor4
-                    font {
-                        weight: Font.Medium
-                        pixelSize: Theme.additionalTextSize
-                    }
-                    loading: approximationRow.amountLoading
-                }
-
-                StatusBaseText {
-                    id: quoteApproximation
-                    objectName: "quoteApproximationPrice"
-                    text: "(%1)".arg(approximationRow.formatCurrency(
-                                            approximationRow.price,
-                                            root.swapAdaptor.currencyStore.currentCurrency
-                                            ))
-
-                    color: Theme.palette.directColor5
-                    font {
-                        weight: Font.Medium
-                        pixelSize: Theme.additionalTextSize
-                    }
-                    visible: !approximationRow.amountLoading
-                }
-
-                StatusFlatButton {
-                    objectName: "invertQuoteApproximation"
-                    icon.name: "swap"
-                    size: StatusBaseButton.Size.XSmall
-                    onClicked: approximationRow.inversedOrder = !approximationRow.inversedOrder
-                    hoverColor: "transparent"
-                    textColor: hovered ? Theme.palette.directColor4 : Theme.palette.directColor5
-                    visible: !approximationRow.amountLoading
-                }
-            }
-
             EditSlippagePanel {
                 id: editSlippagePanel
                 objectName: "editSlippagePanel"
                 Layout.fillWidth: true
                 Layout.topMargin: Theme.padding
-                visible: editSlippageButton.checked
+                visible: slippageButton.checked
                 selectedToToken: root.swapAdaptor.toToken
                 toTokenAmount: root.swapAdaptor.swapOutputData.toTokenAmount
                 loading: root.swapAdaptor.swapProposalLoading
@@ -542,96 +515,245 @@ StatusDialog {
         }
     }
 
-    footer: StatusDialogFooter {
-        color: Theme.palette.baseColor3
-        dropShadowEnabled: true
-        leftButtons: ObjectModel {
-            ColumnLayout {
-                Layout.leftMargin: Theme.padding
-                spacing: 0
-                StatusBaseText {
-                    objectName: "maxSlippageText"
-                    text: qsTr("Max slippage:")
-                    color: Theme.palette.directColor5
-                    font.weight: Font.Medium
-                }
-                RowLayout {
-                    StatusBaseText {
-                        objectName: "maxSlippageValue"
-                        text: editSlippagePanel.valid ? "%1%".arg(LocaleUtils.numberToLocaleString(root.swapInputParamsForm.selectedSlippage))
-                                                      : qsTr("N/A")
-                        color: Theme.palette.directColor4
-                        font.weight: Font.Medium
-                    }
-                    StatusFlatButton {
-                        id: editSlippageButton
-                        objectName: "editSlippageButton"
-                        checkable: true
-                        checked: false
-                        icon.name: "edit_pencil"
-                        textColor: editSlippageButton.hovered ? Theme.palette.directColor1 : Theme.palette.directColor5
-                        size: StatusBaseButton.Size.Tiny
-                        hoverColor: StatusColors.transparent
-                        visible: !checked
-                    }
-                }
+    footer: Control {
+        id: swapFooter
+
+        width: root.width
+        horizontalPadding: Theme.padding
+        topPadding: Theme.padding
+        bottomPadding: Theme.padding
+
+        readonly property bool hasProposal: root.swapAdaptor.validSwapProposalReceived
+        readonly property bool loading: root.swapAdaptor.swapProposalLoading
+
+        readonly property int refreshSeconds: Math.max(1, Math.round(root.swapInputParamsForm.autoRefreshTime / 1000))
+        property int secondsLeft: refreshSeconds
+
+        property bool quoteInverted: false
+        readonly property string fromSym: !!root.swapAdaptor.fromToken ? (root.swapAdaptor.fromToken.symbol ?? "") : ""
+        readonly property string toSym: !!root.swapAdaptor.toToken ? (root.swapAdaptor.toToken.symbol ?? "") : ""
+        readonly property double fromAmt: parseFloat(root.swapInputParamsForm.fromTokenAmount) || 0
+        readonly property double toAmt: parseFloat(root.swapAdaptor.swapOutputData.toTokenAmount) || 0
+        readonly property string quoteText: {
+            if (!fromAmt || !toAmt || !fromSym || !toSym)
+                return ""
+            const cs = root.swapAdaptor.currencyStore
+            const rate = quoteInverted ? fromAmt / toAmt : toAmt / fromAmt
+            const baseSym = quoteInverted ? toSym : fromSym
+            const quoteSym = quoteInverted ? fromSym : toSym
+            return "1 %1 ≈ %2".arg(baseSym).arg(cs.formatCurrencyAmount(rate, quoteSym))
+        }
+
+        function refresh() {
+            secondsLeft = refreshSeconds
+            d.fetchSuggestedRoutes()
+        }
+
+        background: Rectangle {
+            color: Theme.palette.baseColor3
+            Rectangle {
+                width: parent.width
+                height: 1
+                anchors.top: parent.top
+                color: Theme.palette.baseColor2
             }
         }
-        rightButtons: ObjectModel {
+
+        Timer {
+            interval: 1000
+            repeat: true
+            running: swapFooter.hasProposal && !swapFooter.loading && root.visible
+            onTriggered: {
+                if (swapFooter.secondsLeft <= 1)
+                    swapFooter.refresh()
+                else
+                    swapFooter.secondsLeft--
+            }
+        }
+
+        Connections {
+            target: root.swapAdaptor
+            function onValidSwapProposalReceivedChanged() {
+                if (root.swapAdaptor.validSwapProposalReceived)
+                    swapFooter.secondsLeft = swapFooter.refreshSeconds
+            }
+        }
+
+        contentItem: ColumnLayout {
+            spacing: Theme.padding
+
             RowLayout {
-                Layout.rightMargin: Theme.padding
-                spacing: Theme.bigPadding
-                ColumnLayout {
-                    StatusBaseText {
-                        objectName: "maxFeesText"
-                        text: qsTr("Max fees:")
-                        color: Theme.palette.directColor5
-                        font.weight: Font.Medium
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                spacing: Theme.halfPadding
+                visible: swapFooter.hasProposal || swapFooter.loading
+
+                Item {
+                    Layout.preferredWidth: 28
+                    Layout.preferredHeight: 28
+
+                    StatusCircularProgressBar {
+                        anchors.fill: parent
+                        size: 28
+                        lineWidth: 2
+                        animationDuration: 0
+                        value: swapFooter.secondsLeft / swapFooter.refreshSeconds
                     }
                     StatusBaseText {
-                        id: fees
-                        objectName: "maxFeesValue"
-                        text: {
-                            if(root.swapAdaptor.swapProposalLoading) {
-                                return ""
-                            }
-
-                            if(root.swapAdaptor.validSwapProposalReceived) {
-                                let fees = root.swapAdaptor.swapOutputData.txFeesInFiat
-                                if(root.swapAdaptor.swapOutputData.approvalNeeded && !root.swapAdaptor.approvalSuccessful) {
-                                    fees = root.swapAdaptor.swapOutputData.approvalTxFeesFiat
-                                }
-                                return root.swapAdaptor.currencyStore.formatCurrencyAmount(fees, root.swapAdaptor.currencyStore.currentCurrency)
-                            }
-
-                            return "--"
-                        }
-
-                        onTextChanged: function(text) {
-                            if (text === "" || text === "--") {
-                                animation.stop()
-                                return
-                            }
-                            animation.restart()
-                        }
-
-                        color: Theme.palette.directColor4
+                        anchors.centerIn: parent
+                        text: qsTr("%1 s", "short for seconds").arg(swapFooter.secondsLeft)
+                        font.pixelSize: 10
                         font.weight: Font.Medium
-
-                        StatusColorAnimation {
-                            id: animation
-                            target: fees
-                        }
-
-                        LoadingComponent {
-                            width: d.loadingFeesWidth
-                            height: parent.font.pixelSize
-                            visible: root.swapAdaptor.swapProposalLoading
-                        }
+                        color: Theme.palette.primaryColor1
                     }
                 }
+
+                StatusTextWithLoadingState {
+                    objectName: "swapQuoteText"
+                    Layout.preferredWidth: loading ? 120 : implicitWidth
+                    Layout.minimumWidth: 0
+                    elide: Text.ElideRight
+                    text: swapFooter.quoteText
+                    customColor: Theme.palette.directColor1
+                    font.weight: Font.Medium
+                    loading: swapFooter.loading
+                }
+
+                StatusFlatRoundButton {
+                    objectName: "invertQuoteButton"
+                    Layout.preferredWidth: 24
+                    Layout.preferredHeight: 24
+                    icon.name: "swap"
+                    icon.width: 16
+                    icon.height: 16
+                    type: StatusFlatRoundButton.Type.Tertiary
+                    visible: !swapFooter.loading && !!swapFooter.quoteText
+                    onClicked: swapFooter.quoteInverted = !swapFooter.quoteInverted
+                }
+
+                Item { Layout.fillWidth: true }
+
+                StatusFlatButton {
+                    id: slippageButton
+                    objectName: "slippageButton"
+                    checkable: true
+                    icon.name: "settings"
+                    size: StatusBaseButton.Size.Small
+                    text: "%1%".arg(LocaleUtils.numberToLocaleString(root.swapInputParamsForm.selectedSlippage))
+                    textColor: checked || hovered ? Theme.palette.directColor1 : Theme.palette.directColor4
+                    hoverColor: StatusColors.transparent
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                spacing: Theme.halfPadding
+                visible: swapFooter.hasProposal
+
+                StatusIcon {
+                    width: 16; height: 16
+                    icon: "filter"
+                    color: Theme.palette.directColor4
+                }
+                StatusBaseText {
+                    text: qsTr("Best return")
+                    font.weight: Font.Medium
+                    color: Theme.palette.directColor1
+                }
+                StatusBaseText {
+                    Layout.minimumWidth: 0
+                    elide: Text.ElideRight
+                    text: qsTr("by %1").arg(d.serviceProviderName)
+                    color: Theme.palette.directColor4
+                }
+                StatusBaseText {
+                    objectName: "strategyTool"
+                    Layout.minimumWidth: 0
+                    elide: Text.ElideRight
+                    text: qsTr("via %1").arg(root.swapAdaptor.swapOutputData.txProviderTool)
+                    color: Theme.palette.directColor4
+                    visible: !!root.swapAdaptor.swapOutputData.txProviderTool
+                }
+
+                Item { Layout.preferredWidth: Theme.halfPadding }
+
+                StatusIcon {
+                    width: 16; height: 16
+                    icon: "gas"
+                    color: Theme.palette.directColor4
+                }
+                StatusBaseText {
+                    objectName: "strategyFees"
+                    text: root.swapAdaptor.currencyStore.formatCurrencyAmount(
+                              root.swapAdaptor.swapOutputData.txFeesInFiat, root.swapAdaptor.currencyStore.currentCurrency)
+                    color: Theme.palette.directColor4
+                }
+
+                Item { Layout.preferredWidth: Theme.halfPadding }
+
+                StatusIcon {
+                    width: 16; height: 16
+                    icon: "time"
+                    color: Theme.palette.directColor4
+                }
+                StatusBaseText {
+                    objectName: "strategyTime"
+                    text: WalletUtils.getLabelForEstimatedTxTime(root.swapAdaptor.swapOutputData.estimatedTime)
+                    color: Theme.palette.directColor4
+                }
+
+                Item { Layout.fillWidth: true }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                spacing: Theme.padding
+                visible: !!root.swapInputParamsForm.fromGroupKey
+
+                StatusSlider {
+                    id: amountSlider
+                    objectName: "amountSlider"
+                    Layout.fillWidth: true
+                    enabled: payPanel.maxCryptoBalance > 0
+                    from: 0
+                    to: payPanel.maxSafeCryptoValue
+                    stepSize: payPanel.maxSafeCryptoValue > 0
+                              ? Math.pow(10, Math.floor(Math.log10(payPanel.maxSafeCryptoValue)) - 2)
+                              : 1
+                    snapMode: Slider.SnapAlways
+                    onMoved: payPanel.setAmount(value)
+
+                    Binding {
+                        target: amountSlider
+                        property: "value"
+                        value: payPanel.value
+                        when: !amountSlider.pressed
+                        restoreMode: Binding.RestoreBindingOrValue
+                    }
+                }
+
+                StatusBaseText {
+                    objectName: "amountPercent"
+                    Layout.preferredWidth: 44
+                    horizontalAlignment: Text.AlignRight
+                    text: "%1%".arg(LocaleUtils.numberToLocaleString(
+                                        payPanel.maxSafeCryptoValue > 0
+                                        ? Math.round(amountSlider.value / payPanel.maxSafeCryptoValue * 100) : 0, 0))
+                    font.weight: Font.Medium
+                    color: Theme.palette.directColor1
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                spacing: Theme.halfPadding
+
                 StatusButton {
                     objectName: "signButton"
+                    Layout.fillWidth: true
                     readonly property string fromTokenSymbol: !!root.swapAdaptor.fromToken ? root.swapAdaptor.fromToken.symbol ?? "" : ""
                     loadingWithText: root.swapAdaptor.approvalPending
                     icon.name: Utils.resolveAuthSignIcon(!!d.selectedAccount ? d.selectedAccount.keyUid : "",
@@ -647,7 +769,7 @@ StatusDialog {
                                 }
                             }
                         }
-                        return qsTr("Swap")
+                        return qsTr("Confirm swap")
                     }
                     tooltip.text: {
                         if(root.swapAdaptor.validSwapProposalReceived) {
@@ -674,6 +796,16 @@ StatusDialog {
                                 Global.openPopup(swapSignModalComponent)
                         }
                     }
+                }
+
+                StatusButton {
+                    objectName: "refreshQuoteButton"
+                    Layout.preferredWidth: implicitWidth
+                    Layout.preferredHeight: implicitHeight
+                    icon.name: "rotate"
+                    type: StatusBaseButton.Type.Normal
+                    enabled: swapFooter.hasProposal && !swapFooter.loading
+                    onClicked: swapFooter.refresh()
                 }
             }
         }

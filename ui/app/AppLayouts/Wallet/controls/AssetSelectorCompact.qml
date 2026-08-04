@@ -14,12 +14,18 @@ Control {
     /** Expected model structure: see SearchableAssetsPanel::model **/
     property alias model: searchableAssetsPanel.model
 
+    /** networks catalog for the in-panel chain-filter chip row (optional) **/
+    property alias flatNetworksModel: searchableAssetsPanel.flatNetworksModel
+    /** selected chain in the chip row; -1 = All (in/out) **/
+    property alias selectedChainId: searchableAssetsPanel.selectedChainId
+
     readonly property bool isSelected: button.selected
 
     /** Forwarded to SearchableAssetsPanel; see its formatCurrencyBalance. **/
     property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : Number(amount).toLocaleCurrencyString(Qt.locale()))
 
     signal selected(string key)
+    signal chainSelected(int chainId)
 
     function setSelection(name: string, symbol: string, icon: url, key: string) {
         button.name = name
@@ -74,6 +80,8 @@ Control {
                 setCurrentAndClose(entry.name, entry.symbol, entry.logoUri || Constants.tokenIcon(entry.symbol))
                 root.selected(key)
             }
+
+            onChainSelected: (chainId) => root.chainSelected(chainId)
         }
 
         onClosed: searchableAssetsPanel.clearSearch()

@@ -6,6 +6,9 @@ import AppLayouts.Wallet.views
 import Storybook
 
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
+
+import utils
 
 Item {
     id: root
@@ -34,20 +37,7 @@ Item {
         }
     }
 
-    ListModel {
-        id: balancesModel
-
-        ListElement {
-            balance: 1234.50
-
-            iconUrl: "network/ethereum"
-        }
-        ListElement {
-            balance: 33.52
-
-            iconUrl: "network/arbitrum"
-        }
-    }
+    readonly property string tokenAddress: "0x1234567890abcdef1234567890abcdef12345678"
 
     TestCase {
         name: "TokenSelectorAssetDelegate"
@@ -88,10 +78,10 @@ Item {
         function test_noBalances() {
             const control = createTemporaryObject(delegateCmp, root)
 
-            const list = findChild(control, "balancesListView")
-            compare(list.visible, false)
-            compare(list.count, 0)
-            compare(list.interactive, true)
+            compare(control.networkIconUrl, "")
+            compare(control.tokenAddress, "")
+            compare(control.hasNetworkBadge, false)
+            compare(control.hasAddressChip, false)
 
             compare(control.opacity, 1)
             control.enabled = false
@@ -107,41 +97,65 @@ Item {
         }
 
         function test_withBalances() {
-            const control = createTemporaryObject(delegateCmp, root,
-                                                  { balancesModel })
+            const control = createTemporaryObject(delegateCmp, root, {
+                networkIconUrl: "network/ethereum",
+                tokenAddress: root.tokenAddress,
+                cryptoBalanceStr: "1234.50"
+            })
 
-            const list = findChild(control, "balancesListView")
-            waitForRendering(list)
+            waitForRendering(control)
 
-            compare(list.visible, true)
-            compare(list.count, 2)
-            compare(list.interactive, true)
+            compare(control.effectiveNetworkIcon, "network/ethereum")
+            compare(control.hasNetworkBadge, true)
+            compare(control.hasAddressChip, true)
+
+            const cryptoText = TestUtils.findTextItem(control, "1234.50")
+            const fiatText = TestUtils.findTextItem(control, "42.02 USD")
+
+            verify(cryptoText)
+            verify(fiatText)
+
+            verify(cryptoText.visible)
+            verify(fiatText.visible)
+
+            const chipText = TestUtils.findTextItem(
+                    control, SQUtils.Utils.elideAndFormatWalletAddress(root.tokenAddress))
+
+            verify(chipText)
+            verify(chipText.visible)
 
             mouseClick(control)
             compare(control.clickSpy.count, 1)
+        }
 
-            mouseClick(list)
-            compare(control.clickSpy.count, 2)
+        function test_networkBadgeFallback() {
+            const control = createTemporaryObject(delegateCmp, root, {
+                networkIconUrl: "",
+                defaultNetworkIcon: "network/arbitrum"
+            })
 
-            control.balancesListInteractive = false
-            compare(list.interactive, false)
+            compare(control.effectiveNetworkIcon, "network/arbitrum")
+            compare(control.hasNetworkBadge, true)
 
-            // The chip formats the numeric balance at the UI layer (2 decimals,
-            // no symbol), so 1234.50 renders with a thousands separator.
-            const subBalanceText1 = TestUtils.findTextItem(control, "1,234.50")
-            const subBalanceText2 = TestUtils.findTextItem(control, "33.52")
+            control.networkIconUrl = "network/ethereum"
+            compare(control.effectiveNetworkIcon, "network/ethereum")
+            compare(control.hasNetworkBadge, true)
+        }
 
-            verify(subBalanceText1)
-            verify(subBalanceText2)
+        function test_zeroAddressHasNoChip() {
+            const control = createTemporaryObject(delegateCmp, root, {
+                tokenAddress: Constants.zeroAddress
+            })
 
-            verify(subBalanceText1.visible)
-            verify(subBalanceText2.visible)
+            compare(control.hasAddressChip, false)
+
+            control.tokenAddress = root.tokenAddress
+            compare(control.hasAddressChip, true)
         }
 
 
         function test_hovered_highlighted_states() {
-            const control = createTemporaryObject(delegateCmp, root,
-                                                  { balancesModel })
+            const control = createTemporaryObject(delegateCmp, root)
 
             control.highlighted = true
             compare(control.background.color, Theme.palette.statusListItem.highlightColor)

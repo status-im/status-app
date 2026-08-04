@@ -22,10 +22,25 @@ Control {
     /** Forwarded to SearchableAssetsPanel; see its formatCurrencyBalance. **/
     property var formatCurrencyBalance: (amount) => (amount === undefined ? "" : Number(amount).toLocaleCurrencyString(Qt.locale()))
 
+    /** networks catalog for the in-panel chain-filter chip row (optional) **/
+    property var flatNetworksModel
+    /** selected chain in the chip row; -1 = All. Input only, see NetworkChipFilter **/
+    property int selectedChainId: -1
+    signal chainSelected(int chainId)
+
+    /** chain of the currently selected holding, to highlight the right per-chain row **/
+    property int highlightedChainId: -1
+
+    /** network icon badge for the selected token button (optional) **/
+    property url selectedNetworkIcon
+    /** fallback chain icon (raw iconUrl) for list rows without a per-chain balance **/
+    property string defaultNetworkIcon
+
     readonly property bool isSelected: button.selected
 
     signal search(string keyword)
-    signal selected(string groupKey)
+    /** chainId is -1 when the row didn't pin one down; the caller then picks it **/
+    signal selected(string groupKey, int chainId)
     signal loadMoreRequested()
 
     function setSelection(symbol, icon, tokenGroupKey) {
@@ -54,6 +69,7 @@ Control {
 
         forceHovered: dropdown.opened
         text: qsTr("Select asset")
+        networkIcon: root.selectedNetworkIcon
 
         onClicked: dropdown.opened ? dropdown.close() : dropdown.open()
     }
@@ -85,6 +101,12 @@ Control {
             isLoadingMore: root.isLoadingMore
             formatCurrencyBalance: root.formatCurrencyBalance
 
+            flatNetworksModel: root.flatNetworksModel
+            selectedChainId: root.selectedChainId
+            highlightedChainId: root.highlightedChainId
+            defaultNetworkIcon: root.defaultNetworkIcon
+            onChainSelected: (chainId) => root.chainSelected(chainId)
+
             onLoadMoreRequested: root.loadMoreRequested()
 
             function setCurrentAndClose(symbol, icon, tokenGroupKey) {
@@ -92,7 +114,7 @@ Control {
                 dropdown.close()
             }
 
-            onSelected: function(key) {
+            onSelected: function(key, chainId) {
                 const entry = ModelUtils.getByKey(root.model, "key", key) // refers to group key
                 if (!entry) {
                     console.error("asset couldn't be resolved for the key", key)
@@ -100,7 +122,7 @@ Control {
                 }
 
                 setCurrentAndClose(entry.symbol, entry.logoUri || Constants.tokenIcon(entry.symbol), entry.key)
-                root.selected(entry.key)
+                root.selected(entry.key, chainId)
             }
 
             onSearch: function(keyword) {

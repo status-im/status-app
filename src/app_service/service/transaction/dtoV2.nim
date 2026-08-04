@@ -34,6 +34,7 @@ type
   TransactionPathDtoV2* = ref object
     routerInputParamsUuid*: string
     processorName*: string
+    tool*: string
     fromChain*: NetworkDto
     toChain*: NetworkDto
     fromToken*: TokenDto
@@ -115,6 +116,7 @@ proc toTransactionPathDtoV2*(jsonObj: JsonNode): TransactionPathDtoV2 =
   result = TransactionPathDtoV2()
   discard jsonObj.getProp("RouterInputParamsUuid", result.routerInputParamsUuid)
   discard jsonObj.getProp("ProcessorName", result.processorName)
+  discard jsonObj.getProp("Tool", result.tool)
   result.fromChain = Json.decode($jsonObj["FromChain"], NetworkDto, allowUnknownFields = true)
   result.toChain = Json.decode($jsonObj["ToChain"], NetworkDto, allowUnknownFields = true)
   result.fromToken = Json.decode($jsonObj["FromToken"], TokenDto, allowUnknownFields = true)

@@ -25,6 +25,7 @@ QtObject {
     // need to check how this is done in new router v2, right now it is Enum type
     property int estimatedTime
     property string txProviderName
+    property string txProviderTool
     property bool approvalNeeded
     property string approvalGasFees
     property string approvalAmountRequired
@@ -41,6 +42,7 @@ QtObject {
         root.fromTokenAmount = ""
         root.toTokenAmount = ""
         root.txProviderName = ""
+        root.txProviderTool = ""
         root.estimatedTime = Constants.TransactionEstimatedTime.Unknown
         root.totalFees = 0
         root.maxFeesToReserveRaw = 0

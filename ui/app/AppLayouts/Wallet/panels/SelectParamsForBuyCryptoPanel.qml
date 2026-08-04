@@ -100,6 +100,13 @@ ColumnLayout {
             model: root.assetsModel
             formatCurrencyBalance: root.formatCurrencyBalance
 
+            flatNetworksModel: root.filteredFlatNetworksModel
+            selectedChainId: root.selectedNetworkChainId
+            onChainSelected: function(chainId) {
+                if (chainId !== -1)
+                    root.networkSelected(chainId)
+            }
+
             onSelected: root.tokenSelected(key)
 
             function update() {

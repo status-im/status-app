@@ -121,6 +121,7 @@ proc convertFeesDtoToGasEstimateItem(self: Module, fees: FeesDto): GasEstimateIt
 proc convertTransactionPathDtoToSuggestedRouteItem(self: Module, pathOld: TransactionPathDto, pathNew: TransactionPathDtoV2): SuggestedRouteItem =
   result = newSuggestedRouteItem(
     bridgeName = pathOld.bridgeName,
+    tool = pathOld.tool,
     fromNetwork = pathOld.fromNetwork.chainId,
     toNetwork = pathOld.toNetwork.chainId,
     maxAmountIn = $pathOld.maxAmountIn,

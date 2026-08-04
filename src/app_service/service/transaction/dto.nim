@@ -248,6 +248,7 @@ proc `$`*(self: SuggestedFeesDto): string =
 type
   TransactionPathDto* = ref object
     bridgeName*: string
+    tool*: string
     fromNetwork*: NetworkDto
     toNetwork*: NetworkDto
     fromToken*: TokenDto  # Only populated when converting from V2
@@ -274,6 +275,7 @@ type
 proc `$`*(self: TransactionPathDto): string =
   return fmt"""TransactionPath(
     bridgeName:{self.bridgeName},
+    tool:{self.tool},
     fromNetwork:{self.fromNetwork},
     toNetwork:{self.toNetwork},
     fromToken:{self.fromToken},
@@ -300,6 +302,7 @@ proc `$`*(self: TransactionPathDto): string =
 proc convertToTransactionPathDto*(jsonObj: JsonNode): TransactionPathDto =
   result = TransactionPathDto()
   discard jsonObj.getProp("bridgeName", result.bridgeName)
+  discard jsonObj.getProp("tool", result.tool)
   result.fromNetwork = Json.decode($jsonObj["fromNetwork"], NetworkDto, allowUnknownFields = true)
   result.toNetwork = Json.decode($jsonObj["toNetwork"], NetworkDto, allowUnknownFields = true)
   result.gasFees = decodeSuggestedFeesDto(jsonObj["gasFees"])

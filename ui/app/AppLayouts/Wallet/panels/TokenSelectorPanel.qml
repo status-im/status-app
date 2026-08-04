@@ -33,6 +33,11 @@ Control {
     /** Expected model structure: see SearchableCollectiblesPanel::model **/
     property alias collectiblesModel: searchableCollectiblesPanel.model
 
+    /** networks catalog for the assets chain-filter chip row (optional) **/
+    property alias flatNetworksModel: searchableAssetsPanel.flatNetworksModel
+    /** selected chain in the chip row; -1 = All (in/out) **/
+    property alias selectedChainId: searchableAssetsPanel.selectedChainId
+
     // Index of the current tab, indexes ​​correspond to the Tabs enum values.
     property alias currentTab: tabBar.currentIndex
 
@@ -46,6 +51,7 @@ Control {
     signal collectibleSelected(string key)
     signal searchInAssets(string keyword)
     signal fetchMoreAssets()
+    signal chainSelected(int chainId)
 
     property string highlightedKey: ""
 
@@ -108,6 +114,7 @@ Control {
             onSelected: (key) => root.assetSelected(key)
             onSearch: (keyword) => root.searchInAssets(keyword)
             onLoadMoreRequested: root.fetchMoreAssets()
+            onChainSelected: (chainId) => root.chainSelected(chainId)
         }
 
         SearchableCollectiblesPanel {

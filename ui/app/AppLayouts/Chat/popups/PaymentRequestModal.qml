@@ -203,6 +203,13 @@ StatusDialog {
                 hasMoreItems: d.adaptor.outputModel.hasMoreItems
                 isLoadingMore: d.adaptor.outputModel.isLoadingMore
 
+                flatNetworksModel: root.flatNetworksModel
+                selectedChainId: root.selectedNetworkChainId
+                onChainSelected: function(chainId) {
+                    if (chainId !== -1)
+                        root.selectedNetworkChainId = chainId
+                }
+
                 onSearch: function(keyword) {
                     d.adaptor.search(keyword)
                 }

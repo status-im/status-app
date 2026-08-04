@@ -38,7 +38,7 @@ Item {
 
         readonly property SwapModalAdaptor adaptor: SwapModalAdaptor {
             swapStore: SwapStore {
-                readonly property var accounts: WalletAccountsModel {}
+                accounts: WalletAccountsModel {}
             }
             walletAssetsStore: WalletAssetsStoreMock {
                 walletTokensStore: TokensStoreMock {
@@ -81,6 +81,38 @@ Item {
         name: "SwapInputPanel"
         when: windowShown
 
+        function test_chainFilterScopesTheListNotTheSwapChain() {
+            const activeNetworks = d.adaptor.networksStore.activeNetworks
+            verify(activeNetworks.count > 1)
+            const otherChainId = ModelUtils.get(activeNetworks, 0, "chainId")
+            verify(otherChainId !== d.goOptChainId)
+
+            controlUnderTest = createTemporaryObject(componentUnderTest, root)
+            verify(!!controlUnderTest)
+
+            const networkSpy = createTemporaryQmlObject(
+                    "import QtTest; SignalSpy {}", root)
+            networkSpy.target = controlUnderTest
+            networkSpy.signalName = "networkSelected"
+
+            compare(controlUnderTest.listCatalogChainId, d.goOptChainId)
+
+            const chainFilter = findChild(controlUnderTest, "chainFilter")
+            verify(!!chainFilter)
+            chainFilter.chainSelected(otherChainId)
+
+            compare(controlUnderTest.listChainFilter, otherChainId)
+            compare(controlUnderTest.listCatalogChainId, otherChainId)
+            compare(controlUnderTest.selectedNetworkChainId, d.goOptChainId)
+            compare(networkSpy.count, 0)
+
+            chainFilter.chainSelected(-1)
+
+            compare(controlUnderTest.listChainFilter, -1)
+            compare(controlUnderTest.listCatalogChainId, d.goOptChainId)
+            compare(networkSpy.count, 0)
+        }
+
         function test_basicSetupAndDefaults() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
             verify(!!controlUnderTest)
@@ -88,7 +120,6 @@ Item {
             verify(controlUnderTest.height > 0)
 
             tryCompare(controlUnderTest, "swapSide", SwapInputPanel.SwapSide.Pay)
-            tryCompare(controlUnderTest, "caption", qsTr("Pay"))
             tryCompare(controlUnderTest, "selectedHoldingId", "")
             tryCompare(controlUnderTest, "value", 0)
             tryCompare(controlUnderTest, "rawValue", "0")
@@ -102,7 +133,6 @@ Item {
             verify(controlUnderTest.height > 0)
 
             tryCompare(controlUnderTest, "swapSide", SwapInputPanel.SwapSide.Receive)
-            tryCompare(controlUnderTest, "caption", qsTr("Receive"))
             tryCompare(controlUnderTest, "selectedHoldingId", "")
             tryCompare(controlUnderTest, "value", 0)
             tryCompare(controlUnderTest, "rawValue", "0")
@@ -142,7 +172,8 @@ Item {
             const initial = store.createTokenSelectorModel(1).model
             controlUnderTest = createTemporaryObject(componentUnderTest, root,
                                                      {tokenSelectorModel: initial,
-                                                      selectedNetworkChainId: chainId})
+                                                      selectedNetworkChainId: chainId,
+                                                      listChainFilter: chainId})
             verify(!!controlUnderTest)
 
             const expectedOwned = qsTr("Your assets on %1").arg(chainName)
@@ -314,48 +345,39 @@ Item {
             verify(controlUnderTest.valueValid)
         }
 
-        // verify that when "fiatInputInteractive" mode is on, the Max send button text shows fiat currency symbol (e.g. "1.2 USD")
-        function test_maxButtonFiatCurrencySymbol() {
+        function test_balanceLineFiatCurrencySymbol() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})
             d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
             waitForRendering(controlUnderTest)
             controlUnderTest.fiatInputInteractive = true
 
-            const maxTagButton = findChild(controlUnderTest, "maxTagButton")
-            verify(!!maxTagButton)
-            waitForRendering(maxTagButton)
-            verify(maxTagButton.visible)
-            verify(!maxTagButton.text.endsWith("ETH"))
-            compare(maxTagButton.type, StatusBaseButton.Type.Normal)
-            mouseClick(maxTagButton)
+            const balanceLine = findChild(controlUnderTest, "balanceLine")
+            verify(!!balanceLine)
+            verify(balanceLine.visible)
 
-            const amountToSendInput = findChild(controlUnderTest, "amountToSendInput")
-            verify(!!amountToSendInput)
-            waitForRendering(amountToSendInput)
+            const balanceCryptoText = findChild(controlUnderTest, "balanceCryptoText")
+            verify(!!balanceCryptoText)
+            const balanceFiatText = findChild(controlUnderTest, "balanceFiatText")
+            verify(!!balanceFiatText)
 
-            const bottomItemText = findChild(amountToSendInput, "bottomItemText")
-            verify(!!bottomItemText)
-            verify(bottomItemText.visible)
-            mouseClick(bottomItemText)
-            waitForRendering(amountToSendInput)
-
-            verify(maxTagButton.text.endsWith("USD"))
+            verify(!balanceCryptoText.text.endsWith("ETH"))
+            verify(balanceFiatText.text.endsWith("USD"))
         }
 
-        // verify that in default mode, the Max send button text doesn't show the currency symbol for crypto (e.g. "1.2" for ETH)
-        function test_maxButtonNoCryptoCurrencySymbol() {
+        function test_balanceLineNoCryptoCurrencySymbol() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})
             d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
             waitForRendering(controlUnderTest)
 
-            const maxTagButton = findChild(controlUnderTest, "maxTagButton")
-            verify(!!maxTagButton)
-            waitForRendering(maxTagButton)
-            verify(maxTagButton.visible)
-            compare(maxTagButton.type, StatusBaseButton.Type.Normal)
-            verify(!maxTagButton.text.endsWith("ETH"))
+            const balanceLine = findChild(controlUnderTest, "balanceLine")
+            verify(!!balanceLine)
+            verify(balanceLine.visible)
+
+            const balanceCryptoText = findChild(controlUnderTest, "balanceCryptoText")
+            verify(!!balanceCryptoText)
+            verify(!balanceCryptoText.text.endsWith("ETH"))
         }
 
 
@@ -388,9 +410,9 @@ Item {
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
             verify(!!controlUnderTest)
 
-            const maxTagButton = findChild(controlUnderTest, "maxTagButton")
-            verify(!!maxTagButton)
-            verify(!maxTagButton.visible)
+            const balanceLine = findChild(controlUnderTest, "balanceLine")
+            verify(!!balanceLine)
+            verify(!balanceLine.visible)
 
             const tokenSelectorButton = findChild(controlUnderTest, "tokenSelectorButton")
             verify(!!tokenSelectorButton)
@@ -448,9 +470,9 @@ Item {
                                     d.adaptor.currencyStore.currentCurrency))
                     compare(controlUnderTest.value, numberTested)
                     compare(controlUnderTest.rawValue, AmountsArithmetic.fromNumber(amountToSendInput.text, modelItemToTest.decimals).toString())
-                    compare(controlUnderTest.valueValid, numberTested <= maxTagButton.maxSafeValue)
+                    compare(controlUnderTest.valueValid, numberTested <= controlUnderTest.maxSafeCryptoValue)
                     compare(controlUnderTest.selectedHoldingId, modelItemToTest.key)
-                    compare(controlUnderTest.amountEnteredGreaterThanBalance, numberTested > maxTagButton.maxSafeValue)
+                    compare(controlUnderTest.amountEnteredGreaterThanBalance, numberTested > controlUnderTest.maxSafeCryptoValue)
                 }
             }
         }
