@@ -1,5 +1,7 @@
 import nimqml, json, sequtils, chronicles, strutils
 
+import constants
+
 import backend/collectibles as backend
 
 import app/core/eventemitter
@@ -32,7 +34,15 @@ QtObject:
     result.threadpool = threadpool
 
   proc init*(self: Service) =
-    discard
+    # status-go serves URLs, not bytes, so it cannot know what a download costs
+    # us; we tell it what we are willing to be handed. Applied on read, so this
+    # holds for the rest of the session without refetching anything.
+    try:
+      let response = backend.setMaxCollectibleAssetSize(MAX_COLLECTIBLE_ASSET_SIZE)
+      if not response.error.isNil:
+        error "status-go error", procName="setMaxCollectibleAssetSize", errCode=response.error.code, errDesription=response.error.message
+    except Exception as e:
+      error "error: ", procName="setMaxCollectibleAssetSize", errName=e.name, errDesription=e.msg
 
   proc getCollectiblePreferences*(self: Service): JsonNode =
     try:

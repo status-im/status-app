@@ -278,6 +278,12 @@ rpc(fetchCollectionSocialsAsync, "wallet"):
 rpc(refetchOwnedCollectibles, "wallet"):
   discard
 
+# Deliberately its own call rather than a parameter on the fetches above: those
+# are hot and positional, so a client and a status-go that disagree about the
+# cap end up with it unapplied rather than with collectibles that do not load.
+rpc(setMaxCollectibleAssetSize, "wallet"):
+  size: int64
+
 rpc(updateCollectiblePreferences, "accounts"):
   preferences: seq[CollectiblePreferences]
 
