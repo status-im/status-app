@@ -37,8 +37,16 @@ QtObject {
         root.activityCenterModuleInst.markAsSeenActivityCenterNotifications()
     }
 
+    function chatExists(chatId) {
+        return root.activityCenterModuleInst.chatExists(chatId)
+    }
+
     function switchTo(sectionId, chatId, messageId) {
+        if (!root.chatExists(chatId))
+            return false
+
         root.activityCenterModuleInst.switchTo(sectionId, chatId, messageId)
+        return true
     }
 
     function setActiveNotificationGroup(group) {

@@ -1715,6 +1715,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>This channel no longer exists</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Invite People</source>
         <translation>Pozvat lidi</translation>
     </message>

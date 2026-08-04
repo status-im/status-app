@@ -131,6 +131,9 @@ QtObject:
   proc switchTo*(self: View, sectionId: string, chatId: string, messageId: string) {.slot.} =
     self.delegate.switchTo(sectionId, chatId, messageId)
 
+  proc chatExists*(self: View, chatId: string): bool {.slot.} =
+    return self.delegate.chatExists(chatId)
+
   proc getDetails*(self: View, sectionId: string, chatId: string): string {.slot.} =
     return self.delegate.getDetails(sectionId, chatId)
 

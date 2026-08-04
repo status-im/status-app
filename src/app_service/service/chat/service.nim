@@ -342,6 +342,9 @@ QtObject:
   proc getChatsForCommunity*(self: Service, communityId: string): seq[ChatDto] =
     return self.getAllChats().filterIt(it.communityId == communityId)
 
+  proc chatExists*(self: Service, chatId: string): bool =
+    return self.chats.contains(chatId)
+
   proc getChatById*(self: Service, chatId: string, showWarning: bool = true): lent ChatDto =
     if(not self.chats.contains(chatId)):
       if (showWarning):
