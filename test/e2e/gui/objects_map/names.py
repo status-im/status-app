@@ -73,7 +73,7 @@ onlineIdentifierButton = {"checkable": True, "container": primaryNavSidebar, "ob
 mainWindow_statusCommunityMainNavBarListView_ListView = {"container": statusDesktop_mainWindow,
                                                          "objectName": "statusCommunityMainNavBarListView",
                                                          "type": "ListView", "visible": True}
-statusCommunityMainNavBarListView_CommunityNavBarButton = {"container": primaryNavSidebar, "objectName": "CommunityNavBarButton", "type": "CommunitySectionButton", "visible": True}
+statusCommunityMainNavBarListView_CommunityNavBarButton = {"container": primaryNavSidebar, "objectName": RegularExpression("CommunityNavBarButton_.*"), "type": "CommunitySectionButton", "visible": True}
 
 scrollView_Add_members_StatusButton = {"container": mainWindow_scrollView_StatusScrollView,
                                        "objectName": "CommunityWelcomeBannerPanel_AddMembersButton",

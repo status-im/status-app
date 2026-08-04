@@ -114,16 +114,14 @@ class MainLeftPanel(QObject):
 
     @allure.step('Get communities names')
     def communities(self) -> typing.List[str]:
-        community_names = []
-        for obj in driver.findAllObjects(self.community_template_button.real_name):
-            try:
-                if obj is not None and hasattr(obj, 'text') and obj.text is not None:
-                    community_names.append(str(obj.text))
-            except Exception as e:
-                LOG.warning(f'Error getting community name: {e}')
-                continue
-
-        return community_names
+        self.community_template_button.real_name['objectName'] = (
+            names.statusCommunityMainNavBarListView_CommunityNavBarButton['objectName']
+        )
+        prefix = 'CommunityNavBarButton_'
+        return [
+            str(obj.objectName).removeprefix(prefix)
+            for obj in driver.findAllObjects(self.community_template_button.real_name)
+        ]
 
     @allure.step('Create community')
     def create_community(self, community_data: CommunityData) -> 'CommunityScreen':
@@ -172,41 +170,16 @@ class MainLeftPanel(QObject):
         raise Exception(f"Failed to open Communities Portal after {attempts} attempts with {last_exception}")
 
     def _get_community(self, name: str):
-        community_names = []
-        max_attempts = 10
-        attempt = 0
-        
-        LOG.info(f'Looking for community: {name}')
-        LOG.info(f'Using template: {self.community_template_button.real_name}')
-        
-        while attempt < max_attempts:
-            community_names = []
-            objects = driver.findAllObjects(self.community_template_button.real_name)
-            LOG.info(f'Attempt {attempt + 1}: Found {len(objects)} objects')
-            
-            for i, obj in enumerate(objects):
-                try:
-                    if obj is not None and hasattr(obj, 'text') and obj.text is not None:
-                        obj_name = str(obj.text)
-                        community_names.append(obj_name)
-                        LOG.info(f'  Object {i}: {obj_name}')
-                        if obj_name == str(name):
-                            LOG.info(f'Found target community: {name}')
-                            return obj
-                    else:
-                        LOG.warning(f'  Object {i}: null or missing name property')
-                except Exception as e:
-                    LOG.warning(f'  Object {i}: Error getting name - {e}')
-
-            LOG.info(f'Available communities: {community_names}')
-            attempt += 1
-            time.sleep(0.5)
-        
-        raise LookupError(f'Community: {name} not found in {community_names}')
+        self.community_template_button.real_name['objectName'] = f'CommunityNavBarButton_{name}'
+        try:
+            return self.community_template_button.object
+        except Exception as error:
+            raise LookupError(f'Community: {name} not found in {self.communities()}') from error
 
     @allure.step('Open community')
     def open_community(self, name: str) -> CommunityScreen:
-        driver.mouseClick(self._get_community(name))
+        self._get_community(name)
+        self.community_template_button.click()
         skip_message_backup_popup_if_visible()
         skip_intro_if_visible()
         community = CommunityScreen()
@@ -218,7 +191,8 @@ class MainLeftPanel(QObject):
         self, name: str, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC
     ):
         start_time = time.time()
-        driver.mouseClick(self._get_community(name))
+        self._get_community(name)
+        self.community_template_button.click()
         skip_message_backup_popup_if_visible()
         skip_intro_if_visible()
         community = CommunityScreen()
@@ -248,12 +222,13 @@ class MainLeftPanel(QObject):
 
     @allure.step('Get community logo')
     def get_community_logo(self, name: str) -> Image:
-        return Image(driver.objectMap.realName(self._get_community(name)))
+        self._get_community(name)
+        return self.community_template_button.image
 
     @allure.step('Open context menu for community')
     def open_community_context_menu(self, name: str) -> ContextMenu:
-        community = QObject(driver.objectMap.realName(self._get_community(name)))
-        community.right_click()
+        self._get_community(name)
+        self.community_template_button.right_click()
         return ContextMenu().wait_until_appears()
 
 
