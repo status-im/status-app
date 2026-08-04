@@ -40,33 +40,37 @@ Control {
             font.pixelSize: Theme.fontSize(22)
         }
 
-        SharedPanels.EnterSeedPhrase {
-            id: seedPhraseInput
+        StatusScrollView {
+            id: scrollView
 
-            Layout.fillWidth: true
-
-            dictionary: BIP39_en {}
-            initialSeedPhrase: root.initialSeedPhrase
-
-            onSeedPhraseProvided: function(seedPhrase) {
-                const phrase = seedPhrase.join(" ")
-                const keyUid = root.validateSeedPhrase(phrase)
-                if (keyUid.length > 0) {
-                    root.seedPhraseValid = true
-                    root.validatedSeedPhrase = phrase
-                    setError("")
-                    root.seedPhraseValidated(phrase, keyUid)
-                } else {
-                    root.seedPhraseValid = false
-                    root.validatedSeedPhrase = ""
-                    setError(qsTr("Invalid recovery phrase"))
-                }
-            }
-        }
-
-        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            contentWidth: availableWidth
+
+            SharedPanels.EnterSeedPhrase {
+                id: seedPhraseInput
+
+                flickable: scrollView.flickable
+                width: scrollView.availableWidth
+
+                dictionary: BIP39_en {}
+                initialSeedPhrase: root.initialSeedPhrase
+
+                onSeedPhraseProvided: function(seedPhrase) {
+                    const phrase = seedPhrase.join(" ")
+                    const keyUid = root.validateSeedPhrase(phrase)
+                    if (keyUid.length > 0) {
+                        root.seedPhraseValid = true
+                        root.validatedSeedPhrase = phrase
+                        setError("")
+                        root.seedPhraseValidated(phrase, keyUid)
+                    } else {
+                        root.seedPhraseValid = false
+                        root.validatedSeedPhrase = ""
+                        setError(qsTr("Invalid recovery phrase"))
+                    }
+                }
+            }
         }
     }
 }
