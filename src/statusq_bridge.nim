@@ -5,7 +5,7 @@ type StatusQMessageHandler* = proc(messageType: cint, message: cstring, category
 
 proc statusq_registerQmlTypes*() {.cdecl, importc.}
 proc statusq_installMessageHandler*(cb: StatusQMessageHandler) {.cdecl, importc.}
-proc statusq_setupNetworkAccessManagerFactory*(engine: pointer, tmpPath: cstring) {.cdecl, importc.}
+proc statusq_setupNetworkAccessManagerFactory*(engine: pointer, tmpPath: cstring, maxCacheSize: int64) {.cdecl, importc.}
 proc statusq_initializeWebEngine*() {.cdecl, importc.}
 
 proc statusq_osnotification_create*(): pointer {.cdecl, importc.}

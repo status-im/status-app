@@ -4,10 +4,8 @@
 #include <QByteArray>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <QQmlNetworkAccessManagerFactory>
-#include <QNetworkAccessManager>
-#include <QNetworkDiskCache>
 
+#include <StatusQ/networkaccessfactory.h>
 #include <StatusQ/typesregistration.h>
 #include <StatusQ/osnotification.h>
 #include <StatusQ/urlschemeevent.h>
@@ -40,23 +38,6 @@ static void statusq_messageOutput(QtMsgType type, const QMessageLogContext &cont
     g_statusqMessageHandler(int(type), message, category, file, function, context.line);
 }
 
-// --- Disk-cache network factory (ported from DOtherSide QMLNetworkAccessFactory) ----------
-class StatusQNetworkAccessFactory : public QQmlNetworkAccessManagerFactory {
-public:
-    explicit StatusQNetworkAccessFactory(const QString &cacheDir) : m_cacheDir(cacheDir) {}
-
-    QNetworkAccessManager* create(QObject* parent) override {
-        auto* manager = new QNetworkAccessManager(parent);
-        auto* cache = new QNetworkDiskCache(manager);
-        cache->setCacheDirectory(m_cacheDir);
-        manager->setCache(cache);
-        return manager;
-    }
-
-private:
-    QString m_cacheDir;
-};
-
 extern "C" {
 
 Q_DECL_EXPORT void statusq_registerQmlTypes() {
@@ -72,12 +53,11 @@ Q_DECL_EXPORT void statusq_installMessageHandler(StatusQMessageHandler cb) {
     qInstallMessageHandler(statusq_messageOutput);
 }
 
-// `engine` is a QQmlApplicationEngine* (nimqml engine.vptr). The factory must outlive the
-// engine; it is intentionally not deleted (process-lifetime, as in DOtherSide).
-Q_DECL_EXPORT void statusq_setupNetworkAccessManagerFactory(void* engine, const char* tmpPath) {
-    auto* qmlEngine = static_cast<QQmlApplicationEngine*>(engine);
-    qmlEngine->setNetworkAccessManagerFactory(
-        new StatusQNetworkAccessFactory(QString::fromUtf8(tmpPath)));
+// `engine` is a QQmlApplicationEngine* (nimqml engine.vptr).
+Q_DECL_EXPORT void statusq_setupNetworkAccessManagerFactory(void* engine, const char* tmpPath,
+                                                            qint64 maxCacheSize) {
+    Status::setupNetworkAccessManagerFactory(static_cast<QQmlApplicationEngine*>(engine),
+                                             QString::fromUtf8(tmpPath), maxCacheSize);
 }
 
 Q_DECL_EXPORT void statusq_initializeWebEngine() {
