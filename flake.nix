@@ -21,6 +21,9 @@
               hash = "sha256-Z2sXrNRIiZ9tSoOyGE4GV0gEROy2rJxJIoie+tnl2/s=";
             };
           });
+
+          # JDK to precompile the keycard simulator when packaging a USE_SIMULATED_KEYCARD build
+          jdk = pkgs.jdk;
         }
       );
     };

@@ -14,12 +14,27 @@ when defined(useSimulatedKeycard):
   const
     KEYCARD_SIMULATOR_DEFAULT_VERSION = "3.2"
     KEYCARD_SIMULATOR_DEFAULT_SIMULATOR_ADDRESS = "127.0.0.1:9025"
-    KEYCARD_SIMULATOR_DEFAULT_SIMULATOR_DIR = "vendor/status-keycard-qt/test/keycard-simulator"
+    # Subdirs (relative to the app executable) where packaging bundles the precompiled simulator:
+    #   macOS  Status.app/Contents/MacOS/nim_status_client -> ../Resources/keycard-simulator
+    #   Linux  AppDir/usr/bin/nim_status_client            -> ../share/keycard-simulator
+    KEYCARD_SIMULATOR_BUNDLED_SUBDIRS = ["../Resources/keycard-simulator", "../share/keycard-simulator"]
+    KEYCARD_SIMULATOR_DEV_DIR = "vendor/status-keycard-qt/test/keycard-simulator"
 
   var ignoreKeycardLibSignals = false # used to avoid triggering of any keycard actions while setting up the test keycard
 
   proc shouldIgnoreKeycardLibSignals*(): bool =
     return ignoreKeycardLibSignals
+
+  proc resolveSimDir(): string =
+    let envDir = getEnv("STATUS_KEYCARD_SIM_DIR")
+    if envDir.len > 0:
+      return absolutePath(envDir)
+    let appDir = getAppDir()
+    for sub in KEYCARD_SIMULATOR_BUNDLED_SUBDIRS:
+      let candidate = normalizedPath(appDir / sub)
+      if dirExists(candidate):
+        return candidate
+    return absolutePath(KEYCARD_SIMULATOR_DEV_DIR)
 
   type
     LoadCardArg = ref object of QObjectTaskArg
@@ -56,6 +71,21 @@ when defined(useSimulatedKeycard):
       self.QObject.delete
 
     proc startSimulator*(self: KeycardTestController, version: string) {.slot.} =
+      var safeVersion = ""
+      for c in version:
+        if c in {'0'..'9', '.'}: safeVersion.add(c)
+      if safeVersion.len == 0:
+        safeVersion = KEYCARD_SIMULATOR_DEFAULT_VERSION
+      let simDir = resolveSimDir()
+      if not dirExists(simDir):
+        error "keycard simulator directory not found; set STATUS_KEYCARD_SIM_DIR to " &
+          "'<status-desktop checkout>/vendor/status-keycard-qt/test/keycard-simulator'", dir = simDir
+        return
+      let port = getEnv("STATUS_KEYCARD_SIM_ENDPOINT", KEYCARD_SIMULATOR_DEFAULT_SIMULATOR_ADDRESS).rsplit(":", 1)[^1]
+      let launch =
+        if dirExists(simDir / "out"): "exec ./run.sh " & port & " " & safeVersion
+        else: "./build.sh && exec ./run.sh " & port & " " & safeVersion
+
       if not self.simProcess.isNil and self.simProcess.running:
         self.simProcess.terminate()
         self.simProcess.close()
@@ -64,16 +94,9 @@ when defined(useSimulatedKeycard):
       discard keycard_go.keycardTestRemoveCard()
       discard keycard_go.keycardTestUnplugReader()
 
-      var safeVersion = ""
-      for c in version:
-        if c in {'0'..'9', '.'}: safeVersion.add(c)
-      if safeVersion.len == 0:
-        safeVersion = KEYCARD_SIMULATOR_DEFAULT_VERSION
-      let simDir = getEnv("STATUS_KEYCARD_SIM_DIR", KEYCARD_SIMULATOR_DEFAULT_SIMULATOR_DIR)
-      let port = getEnv("STATUS_KEYCARD_SIM_ENDPOINT", KEYCARD_SIMULATOR_DEFAULT_SIMULATOR_ADDRESS).rsplit(":", 1)[^1]
       try:
         self.simProcess = startProcess("/bin/bash",
-          args = @["-c", "cd '" & simDir & "' && ./build.sh && exec ./run.sh " & port & " " & safeVersion],
+          args = @["-c", "cd '" & simDir & "' && " & launch],
           options = {poParentStreams})
         info "starting keycard simulator", dir = simDir, port = port, version = safeVersion
       except CatchableError as e:

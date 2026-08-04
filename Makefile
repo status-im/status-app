@@ -557,6 +557,9 @@ export STATUSKEYCARD_QT_LIB := $(STATUSKEYCARD_QT_LIBDIR)/$(STATUSKEYCARD_QT_LIB
 STATUSKEYCARD_QT_DYLIB_NAME := $(notdir $(STATUSKEYCARD_QT_LIB))
 STATUSKEYCARD_QT_LINKNAME := $(patsubst lib%,%,$(basename $(STATUSKEYCARD_QT_DYLIB_NAME)))
 
+KEYCARD_SIM_SRC_DIR := $(STATUS_KEYCARD_QT_SOURCE_DIR)/test/keycard-simulator
+KEYCARD_SIM_RUNTIME_BITS := run.sh libs versions out
+
 status-keycard-qt: $(STATUSKEYCARD_QT_LIB)
 $(STATUSKEYCARD_QT_LIB): | deps check-qt-dir
 	echo -e $(BUILD_MSG) "status-keycard-qt"
@@ -892,6 +895,15 @@ $(STATUS_CLIENT_DMG): nim_status_client
 	cp status.icns $(MACOS_OUTER_BUNDLE)/Contents/Resources/
 	cp status-macos.svg $(MACOS_OUTER_BUNDLE)/Contents/
 	cp -R resources.rcc $(MACOS_OUTER_BUNDLE)/Contents/
+
+# Precompile (JDK from nix) + bundle the keycard simulator into the app, before macdeployqt/signing
+ifeq ($(USE_SIMULATED_KEYCARD),true)
+	echo -e $(BUILD_MSG) "keycard-simulator (precompile + bundle)"
+	nix shell .#jdk -c bash -c 'cd $(KEYCARD_SIM_SRC_DIR) && ./build.sh'
+	mkdir -p $(MACOS_OUTER_BUNDLE)/Contents/Resources/keycard-simulator
+	cp -R $(addprefix $(KEYCARD_SIM_SRC_DIR)/,$(KEYCARD_SIM_RUNTIME_BITS)) \
+		$(MACOS_OUTER_BUNDLE)/Contents/Resources/keycard-simulator/
+endif
 
 	echo -e $(BUILD_MSG) "app"
 	MAC_QTQMLDIR=$(shell $(QMAKE) -query QT_INSTALL_QML) && \
