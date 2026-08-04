@@ -187,7 +187,6 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/stablearraysorter.h
         include/StatusQ/statuscolors.h
         include/StatusQ/statusemojimodel.h
-        include/StatusQ/statussyntaxhighlighter.h
         include/StatusQ/stringutilsinternal.h
         include/StatusQ/systemutilsinternal.h
         include/StatusQ/textdocumentutilsinternal.h
@@ -226,7 +225,6 @@ add_library(StatusQ ${LIB_TYPE}
         src/stablearraysorter.cpp
         src/statuscolors.cpp
         src/statusemojimodel.cpp
-        src/statussyntaxhighlighter.cpp
         src/stringutilsinternal.cpp
         src/systemutilsinternal.cpp
         src/textdocumentutilsinternal.cpp

@@ -57,8 +57,7 @@ Item {
 
     // Client-side markdown render path (main desktop bubble): renders `unparsedText` via the
     // StatusQ parser + ChatTextView, matching the editor. Quote bars, code frames and link-hover
-    // are drawn inside ChatTextView, so the legacy quote-bar overlay and StatusSyntaxHighlighter
-    // below stay inert on this path (both key off a textDocument, which ChatTextView doesn't expose).
+    // are drawn inside ChatTextView.
     ChatTextView {
         id: chatTextView
         objectName: "StatusTextMessage_chatText"
