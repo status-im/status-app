@@ -536,7 +536,7 @@ Control {
         z: 100
         enabled: root.selectable
         visible: root.selectable
-        cursorShape: Qt.IBeamCursor
+        cursorShape: !!root.hoveredLink ? Qt.PointingHandCursor : Qt.IBeamCursor
         preventStealing: true
 
         property real pressX: 0
