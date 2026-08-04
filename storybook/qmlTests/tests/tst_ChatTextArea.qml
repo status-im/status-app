@@ -1280,5 +1280,193 @@ Item {
             control.undo()
             compare(control.text, "x****y")
         }
+
+        // ── keyboard typing / navigation / selection
+
+        readonly property var multiLineText: [
+            "Typing on first row", "Typing on the second row", "Typing on the third row"]
+
+        function typeText(str) {
+            for (let i = 0; i < str.length; i++)
+                keyClick(str[i])
+        }
+
+        // Types each line followed by Shift+Enter, so lines are separated by real "\n".
+        function typeMultiline(lines) {
+            for (let i = 0; i < lines.length; i++) {
+                typeText(lines[i])
+                keyClick(Qt.Key_Enter, Qt.ShiftModifier)
+            }
+        }
+
+        // A fresh ChatTextArea is empty plain text (no RichText document, no HTML doctype).
+        function test_empty_defaultState() {
+            compare(control.length, 0)
+            compare(control.text, "")
+            compare(control.textWithMentions(), "")
+        }
+
+        // Typing markdown-neutral characters lands verbatim. (The old "every ASCII char" test no
+        // longer applies: `*/@/~/: are interception triggers, exercised by the dedicated tests.)
+        function test_typing_plainTextRoundTrips() {
+            control.forceActiveFocus()
+            typeText("Hello World 123")
+
+            compare(control.text, "Hello World 123")
+            compare(control.textWithMentions(), "Hello World 123")
+        }
+
+        // Arrow-key navigation across a multi-line document. Shift+Enter yields real newlines, so
+        // the document is the three lines joined by "\n" plus a trailing "\n" (4 blocks).
+        function test_navigation_arrowKeysMoveCaret() {
+            control.forceActiveFocus()
+            typeMultiline(multiLineText)
+
+            compare(control.text, multiLineText.join("\n") + "\n")
+            compare(control.lineCount, 4)
+
+            control.cursorPosition = control.length
+            keyClick(Qt.Key_Right)
+            compare(control.cursorPosition, control.length, "caret is clamped at the end")
+
+            keyClick(Qt.Key_Left)
+            compare(control.cursorPosition, control.length - 1)
+
+            // Column-preserving vertical navigation from column 5 of the third line (index 45+5).
+            control.cursorPosition = 50
+            keyClick(Qt.Key_Up)
+            compare(control.cursorPosition, 25, "column 5 of the second line (20 + 5)")
+            keyClick(Qt.Key_Up)
+            compare(control.cursorPosition, 5, "column 5 of the first line")
+            keyClick(Qt.Key_Down)
+            compare(control.cursorPosition, 25)
+            keyClick(Qt.Key_Down)
+            compare(control.cursorPosition, 50)
+        }
+
+        // Shift+arrow extends the selection one character at a time (a "\n" is one character).
+        function test_selection_shiftArrowSelects() {
+            control.forceActiveFocus()
+            typeMultiline(multiLineText)
+            control.cursorPosition = control.length
+
+            keyClick(Qt.Key_Right, Qt.ShiftModifier)
+            compare(control.selectedText, "", "nothing to select past the end")
+
+            keyClick(Qt.Key_Left, Qt.ShiftModifier)
+            compare(control.selectedText, "\n", "the trailing newline")
+        }
+
+        // Select-all selects the whole "\n"-joined document.
+        function test_selectAll_keyboardSelectsWholeDocument() {
+            control.forceActiveFocus()
+            typeMultiline(multiLineText)
+
+            keySequence(StandardKey.SelectAll)
+            compare(control.selectedText, multiLineText.join("\n") + "\n")
+        }
+
+        // Select-all / cut / paste round-trips the document through the clipboard.
+        function test_cutPaste_keyboardRoundTrip() {
+            control.forceActiveFocus()
+            typeMultiline(multiLineText)
+            const whole = multiLineText.join("\n") + "\n"
+
+            keySequence(StandardKey.SelectAll)
+            keySequence(StandardKey.Cut)
+            compare(control.text, "")
+
+            keySequence(StandardKey.Paste)
+            tryCompare(control, "text", whole)
+        }
+
+        // Standard (non-intercepted) caret-navigation keys behave as in a plain editor. The keys
+        // ChatTextArea deliberately overrides (Bold/Italic/InsertLineSeparator, quote/fence
+        // handling) are covered by the formatting and quote tests above; text-editing keys
+        // (Backspace, character limit) are covered by their own tests.
+        function test_standardNavigationKeys_data() {
+            // Single line "alpha beta gamma": word starts at 0/6/11, end of line at 16.
+            return [
+                {tag: "MoveToNextChar",     from: 0,  key: StandardKey.MoveToNextChar,     to: 1},
+                {tag: "MoveToPreviousChar", from: 5,  key: StandardKey.MoveToPreviousChar, to: 4},
+                {tag: "MoveToNextWord",     from: 0,  key: StandardKey.MoveToNextWord,     to: 6},
+                {tag: "MoveToPreviousWord", from: 16, key: StandardKey.MoveToPreviousWord, to: 11},
+                {tag: "MoveToStartOfLine",  from: 16, key: StandardKey.MoveToStartOfLine,  to: 0},
+                {tag: "MoveToEndOfLine",    from: 0,  key: StandardKey.MoveToEndOfLine,    to: 16},
+            ]
+        }
+
+        function test_standardNavigationKeys(data) {
+            control.text = "alpha beta gamma"
+            control.forceActiveFocus()
+            control.cursorPosition = data.from
+
+            keySequence(data.key)
+            compare(control.cursorPosition, data.to)
+        }
+
+        // ── mentions behave as a single atomic object
+        //
+        // In ChatTextArea a mention is one embedded object char (U+FFFC), so the "mention acts
+        // like a single character under the caret" scenarios reduce to plain object-char handling.
+
+        // "Hello " + <mention @JohnDoe> + "!" — the mention object sits at index 6.
+        function makeHelloMention() {
+            control.text = "Hello "
+            control.insertMention(control.length, "@JohnDoe", "0x0JohnDoe")
+            control.insert(control.length, "!")
+            tryCompare(mentionsRepeater, "count", 1)
+            control.forceActiveFocus()
+        }
+
+        // Left/Right step over the whole mention in a single press (it is one object char).
+        function test_mention_cursorSkipsAsOneChar() {
+            makeHelloMention()
+
+            control.cursorPosition = 6
+            keyClick(Qt.Key_Right)
+            compare(control.cursorPosition, 7)
+
+            keyClick(Qt.Key_Left)
+            compare(control.cursorPosition, 6)
+        }
+
+        // Shift+arrow selects the whole mention object at once.
+        function test_mention_selectedAsOneChar() {
+            makeHelloMention()
+
+            control.cursorPosition = 6
+            keyClick(Qt.Key_Right, Qt.ShiftModifier)
+
+            compare(control.selectionStart, 6)
+            compare(control.selectionEnd, 7)
+            compare(control.selectedText, String.fromCharCode(0xFFFC))
+        }
+
+        // A mention survives edits to the surrounding text and keeps serializing to its pub key.
+        function test_mention_survivesSurroundingEdits() {
+            makeHelloMention()
+            compare(control.textWithMentions(), "Hello @0x0JohnDoe!")
+
+            control.cursorPosition = control.length
+            keyClick(Qt.Key_Backspace) // remove the trailing "!"
+
+            tryCompare(mentionsRepeater, "count", 1)
+            compare(control.textWithMentions(), "Hello @0x0JohnDoe")
+            compare(mentionsRepeater.itemAt(0).pubKey, "0x0JohnDoe")
+        }
+
+        // Replacing a selection that spans the mention removes it (and its model entry).
+        function test_mention_removedByLargeSelectionReplace() {
+            makeHelloMention()
+
+            control.select(3, 8) // "lo " + <mention> + "!"
+            verify(control.selectedText.indexOf(String.fromCharCode(0xFFFC)) !== -1)
+
+            keyClick("s")
+            tryCompare(mentionsRepeater, "count", 0)
+            compare(control.text, "Hels")
+            compare(control.textWithMentions(), "Hels")
+        }
     }
 }

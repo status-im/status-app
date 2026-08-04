@@ -153,6 +153,7 @@ Item {
                 isAdmin: false,
                 isUntrustworthy: false,
                 displayName: displayName,
+                preferredDisplayName: displayName,
                 alias: displayName + "-alias",
                 localNickname: displayName + "-local-nickname",
                 ensName: displayName + ".stateofus.eth",
@@ -317,6 +318,60 @@ Item {
             mouseClick(cancelButton)
 
             compare(signalSpy.count, 1)
+        }
+
+        function typeText(str) {
+            for (let i = 0; i < str.length; i++)
+                keyClick(str[i])
+        }
+
+        // ── typed mention flow
+
+        // Typing "@" opens the suggestion box, filtered live by ChatTextArea's mentionsFilter.
+        // Committing the highlighted suggestion (Tab) replaces the typed "@filter" with a mention
+        // pill that serializes to the contact's pub key.
+        function test_typedMention_opensSuggestionsAndCommits() {
+            appendContact("JohnDoe")
+            waitForRendering(controlUnderTest)
+
+            controlUnderTest.textInput.forceActiveFocus()
+            typeText("Hello @Jo")
+            waitForRendering(controlUnderTest)
+
+            const box = findChild(controlUnderTest, "suggestionsBox")
+            verify(!!box)
+            verify(box.visible)
+            compare(controlUnderTest.textInput.mentionsFilter, "Jo")
+            verify(controlUnderTest.getPlainText().includes("@Jo"))
+
+            keyClick(Qt.Key_Tab) // commit the highlighted suggestion
+            waitForRendering(controlUnderTest)
+
+            verify(!box.visible)
+            tryVerify(() => controlUnderTest.getPlainText() === "Hello @0x0JohnDoe ")
+        }
+
+        // ── typed emoji-shortcode flow (migrated from tst_StatusChatInput, re-enabled) ──
+        //
+        // Typing ":" + a shortcode makes ChatTextArea report enteringEmoji/emojiFilter, which
+        // drives the emoji suggestion popup. Committing (Tab) replaces the shortcode with the emoji.
+        function test_typedEmojiShortcode_insertsEmoji() {
+            controlUnderTest.textInput.forceActiveFocus()
+            typeText(":grin")
+            waitForRendering(controlUnderTest)
+
+            verify(controlUnderTest.textInput.enteringEmoji)
+            compare(controlUnderTest.textInput.emojiFilter, "grin")
+
+            keyClick(Qt.Key_Tab) // commit the highlighted emoji suggestion
+            tryVerify(() => !controlUnderTest.textInput.enteringEmoji)
+
+            const plain = controlUnderTest.getPlainText()
+            verify(!plain.includes(":grin"), "the shortcode was replaced")
+            verify(plain.length > 0)
+            // Committed to a real emoji: the first code unit is a high surrogate (U+D800..U+DBFF).
+            const first = plain.charCodeAt(0)
+            verify(first >= 0xD800 && first <= 0xDBFF, "starts with an emoji: " + JSON.stringify(plain))
         }
     }
 }
