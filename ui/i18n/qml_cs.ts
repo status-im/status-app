@@ -2553,9 +2553,12 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Home</source>
-        <comment>web browser home page</comment>
-        <translation type="unfinished"></translation>
+        <source>Exit Incognito mode</source>
+        <translation type="unfinished">Ukončit anonymní režim</translation>
+    </message>
+    <message>
+        <source>Go Incognito</source>
+        <translation type="unfinished">Přejít do anonymního režimu</translation>
     </message>
     <message>
         <source>Menu</source>

@@ -82,10 +82,12 @@ BrowserToolbarBase {
         Item { Layout.fillWidth: true }
 
         BrowserHeaderButton {
-            incognitoMode: root.currentTabIncognito
-            icon.name: "home"
-            tooltip.text: qsTr("Home", "web browser home page")
-            onClicked: root.requestLaunchInBrowser(Constants.browserDefaultHomepage)
+            checkable: true
+            checked: root.currentTabIncognito
+            incognitoMode: checked
+            icon.name: checked ? "privacy-activated" : "privacy"
+            tooltip.text: checked ? qsTr("Exit Incognito mode") : qsTr("Go Incognito")
+            onToggled: root.goIncognito(checked)
         }
 
         Item { Layout.fillWidth: true }

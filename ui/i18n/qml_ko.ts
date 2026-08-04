@@ -2538,9 +2538,12 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Home</source>
-        <comment>web browser home page</comment>
-        <translation type="unfinished"></translation>
+        <source>Exit Incognito mode</source>
+        <translation type="unfinished">시크릿 모드 종료</translation>
+    </message>
+    <message>
+        <source>Go Incognito</source>
+        <translation type="unfinished">시크릿 모드로 전환</translation>
     </message>
     <message>
         <source>Menu</source>

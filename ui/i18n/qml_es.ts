@@ -2546,9 +2546,12 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Home</source>
-        <comment>web browser home page</comment>
-        <translation type="unfinished"></translation>
+        <source>Exit Incognito mode</source>
+        <translation type="unfinished">Salir del modo incógnito</translation>
+    </message>
+    <message>
+        <source>Go Incognito</source>
+        <translation type="unfinished">Ir a modo incógnito</translation>
     </message>
     <message>
         <source>Menu</source>
