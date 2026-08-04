@@ -283,6 +283,9 @@ QtObject {
         const jsonObj = d.walletSectionSavedAddressesInst.getSavedAddressAsJson(address)
 
         try {
+            if (!jsonObj || jsonObj === "null") {
+                return defaultValue
+            }
             return JSON.parse(jsonObj)
         }
         catch (e) {

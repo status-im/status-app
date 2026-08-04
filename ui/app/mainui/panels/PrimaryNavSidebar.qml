@@ -89,7 +89,7 @@ Control {
     x: alwaysVisible ? 0 : (-width + width * position)
 
     background: Rectangle {
-        color: alwaysVisible ? Theme.palette.baseColor4: Theme.palette.transparent
+        color: alwaysVisible ? Theme.palette.baseColor4 : Theme.palette.transparent
     }
 
     // Animate snapping when not directly driven by a drag/swipe.
@@ -105,8 +105,14 @@ Control {
     function close() { if (root.alwaysVisible) return; d.dragActive = false; position = 0.0 } 
     function toggle() { root.position == 0.0 ? open() : close() }
 
+    // Prefer the window SafeArea: on macOS the app is laid out under the title bar
+    // (ExpandedClientAreaHint), and parent.SafeArea can be 0 once banners/layout shift the item.
+    readonly property real topSafeInset: Window.window?.SafeArea.margins.top
+                                         ?? parent.SafeArea.margins.top
+                                         ?? 0
+
     // Padding and spacing were previously Drawer properties; keep them as locals.
-    topPadding: parent.SafeArea.margins.top + Theme.defaultHalfPadding
+    topPadding: root.topSafeInset + Theme.defaultHalfPadding
     bottomPadding: parent.SafeArea.margins.bottom + Theme.defaultHalfPadding
     leftPadding: parent.SafeArea.margins.left + Theme.defaultHalfPadding
     rightPadding: alwaysVisible ? Theme.defaultHalfPadding : 0

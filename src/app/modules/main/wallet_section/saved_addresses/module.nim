@@ -86,7 +86,7 @@ method savedAddressNameExists*(self: Module, name: string): bool =
 method getSavedAddressAsJson*(self: Module, address: string): string =
   let saDto = self.controller.getSavedAddress(address, ignoreNetworkMode = false)
   if saDto.isNil:
-    return ""
+    return $newJNull()
   let jsonObj = %* {
     "name": saDto.name,
     "address": saDto.address,
