@@ -428,7 +428,6 @@ StatusSectionLayout {
                 profileStore: root.profileStore
                 devicesStore: root.devicesStore
                 privacyStore: root.privacyStore
-                advancedStore: root.advancedStore
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.syncingSettings)
                 contentWidth: d.contentWidth
 

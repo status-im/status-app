@@ -40,10 +40,6 @@ SplitView {
 
         onDeleteDeviceRequested: installationId => logs.logEvent("onDeleteDeviceRequested", ["installationId"], [installationId])
 
-        advancedStore: ProfileStores.AdvancedStore {
-            readonly property bool isDebugEnabled: ctrlDebugEnabled.checked
-        }
-
         devicesStore: ProfileStores.DevicesStore {
             function generateConnectionStringAndRunSetupSyncingPopup(enabled) {
                 logs.logEvent("devicesStore::generateConnectionStringAndRunSetupSyncingPopup", ["enabled"], arguments)
@@ -144,12 +140,6 @@ SplitView {
             Switch {
                 id: ctrlDevicesDeletionError
                 text: "Devices deletion error"
-            }
-
-            Switch {
-                id: ctrlDebugEnabled
-                text: "Debug enabled"
-                checked: true
             }
         }
     }

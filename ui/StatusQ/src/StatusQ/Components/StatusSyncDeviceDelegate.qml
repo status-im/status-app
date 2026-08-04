@@ -18,7 +18,6 @@ StatusListItem {
     property bool isCurrentDevice: false
     property bool showOnlineBadge: !isCurrentDevice
 
-    signal itemClicked
     signal pairRequested
     signal unpairRequested
 

@@ -20,7 +20,6 @@ StatusDialog {
     id: root
 
     property ProfileStores.DevicesStore devicesStore
-    property ProfileStores.AdvancedStore advancedStore
     property var deviceModel
 
     readonly property string deviceName: d.deviceName
@@ -71,9 +70,8 @@ StatusDialog {
             id: idInput
             Layout.fillWidth: true
             label: qsTr("Installation ID")
-            enabled: false
+            readOnly: true
             text: root.deviceModel.installationId
-            visible: root.advancedStore.isDebugEnabled
         }
     }
 

@@ -27,7 +27,6 @@ SettingsContentBase {
     property ProfileStores.DevicesStore devicesStore
     property ProfileStores.ProfileStore profileStore
     property ProfileStores.PrivacyStore privacyStore
-    property ProfileStores.AdvancedStore advancedStore
 
     property string errorDeletingDeviceMessage
 
@@ -282,7 +281,6 @@ SettingsContentBase {
             SyncDeviceCustomizationPopup {
                 destroyOnClose: true
                 devicesStore: root.devicesStore
-                advancedStore: root.advancedStore
                 onDeleteDeviceRequested: installationId => d.setupDeleteDevice(installationId)
             }
         }
