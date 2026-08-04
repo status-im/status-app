@@ -121,7 +121,7 @@ QVector<LinkSpan> scanExplicitLinks(const QString& text)
         // The url must match the standard link rule, anchored at urlStart, and be immediately
         // followed by ')'.
         const auto um = kLinkRegex().match(text, urlStart, QRegularExpression::NormalMatch,
-                                           QRegularExpression::AnchoredMatchOption);
+                                           QRegularExpression::AnchorAtOffsetMatchOption);
         if (!um.hasMatch() || um.capturedStart() != urlStart)
             continue;
         const qsizetype urlEnd = um.capturedEnd();
