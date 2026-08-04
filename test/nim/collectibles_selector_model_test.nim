@@ -26,14 +26,15 @@ proc own(account: string, balance = 1): CollectibleOwnership =
 
 proc item(key: string, chainId = 1, collectionUid = "c0", collectionName = "Coll 0",
     communityId = "", communityName = "", communityImage = "", privileges = 2,
-    imageUrl = "", mediaUrl = "", tokenType = 2,
+    imageUrl = "", mediaUrl = "", thumbnailUrl = "", tokenType = 2,
     ownership: seq[CollectibleOwnership] = @[]): CollectibleItem =
   CollectibleItem(
     key: key, chainId: chainId, collectionUid: collectionUid,
     collectionName: collectionName, name: key, tokenType: tokenType,
     communityId: communityId, communityName: communityName,
     communityImage: communityImage, communityPrivilegesLevel: privileges,
-    imageUrl: imageUrl, mediaUrl: mediaUrl, ownership: ownership)
+    imageUrl: imageUrl, mediaUrl: mediaUrl, thumbnailUrl: thumbnailUrl,
+    ownership: ownership)
 
 let networks = @[
   CollectiblesNetworkInfo(chainId: 1, chainName: "Mainnet", iconUrl: "net/eth"),
@@ -86,24 +87,30 @@ suite "CollectiblesSelectorModel - grouping + views":
     check fm.keysInOrder() == @["owned"]
     check fm.balanceForKey("owned") == 2
 
-  test "grouped model exposes representative imageUrl/mediaUrl for the shared panel thumbnail":
+  test "grouped model exposes representative thumbnailUrl/imageUrl/mediaUrl for the shared panel thumbnail":
     let m = newCollectiblesSelectorModel()
     m.setParams(params("0xA"))
     m.setSource(@[
       # community group: top-level thumbnail is the representative collectible's
-      # raw media (SearchableCollectiblesPanel reads imageUrl||mediaUrl), NOT the
+      # media (SearchableCollectiblesPanel reads thumbnailUrl||imageUrl), NOT the
       # community image (which is exposed separately as `icon`).
       item("g1", collectionUid = "collX", communityId = "com1",
         communityName = "Comm One", communityImage = "cimg",
-        imageUrl = "g1.png", mediaUrl = "g1.mp4", ownership = @[own("0xA")]),
+        imageUrl = "g1.png", mediaUrl = "g1.mp4", thumbnailUrl = "g1_thumb.png",
+        ownership = @[own("0xA")]),
       item("o1", collectionUid = "collZ", imageUrl = "", mediaUrl = "o1.mp4",
         ownership = @[own("0xA")]),
     ], networks)
     let roles = m.groupRoleNamesForTest()
+    # The panel binds model.thumbnailUrl; without the role it silently reads
+    # `undefined` and falls through to the full-size imageUrl (specs/001 D8).
+    check "thumbnailUrl" in roles
     check "imageUrl" in roles
     check "mediaUrl" in roles
+    check m.groupThumbnailUrlAt(0) == "g1_thumb.png"
     check m.groupImageUrlAt(0) == "g1.png"   # community group -> rep collectible image
     check m.groupMediaUrlAt(0) == "g1.mp4"
+    check m.groupThumbnailUrlAt(1) == ""
     check m.groupImageUrlAt(1) == ""         # other group falls back to mediaUrl in QML
     check m.groupMediaUrlAt(1) == "o1.mp4"
 
@@ -118,6 +125,8 @@ suite "CollectiblesSelectorModel - grouping + views":
     let roles = fm.roleNamesForTest()
     check "uid" in roles      # SimpleSendModal.qml:367 item.uid
     check "tokenType" in roles # SimpleSendModal.qml:514 getByKey(..., "tokenType")
+    check "icon" in roles      # SimpleSendModal reads it for the selected-token header
+    check "thumbnailUrl" in roles
     check fm.tokenTypeForKey("erc721") == 2
     check fm.tokenTypeForKey("erc1155") == 3
 

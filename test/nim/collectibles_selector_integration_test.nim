@@ -5,9 +5,10 @@
 ## which reads back the SAME roles the production QML reads:
 ##  - SimpleSendModal off selectedCollectibleEntry.item: uid (:367), tokenType
 ##    (:514), balance (:429, the account-scoped ERC-1155 max), plus communityId /
-##    collectionUid / name / imageUrl / mediaUrl used to set the header;
+##    collectionUid / name / imageUrl / mediaUrl and the `icon` pick used to set
+##    the header;
 ##  - SearchableCollectiblesPanel top-level delegate: groupName / type / icon and
-##    the imageUrl||mediaUrl thumbnail.
+##    the thumbnailUrl||imageUrl thumbnail.
 ##
 ## This closes the "device-gated" gap for the role contract: if a role name or
 ## type regresses, an assertion here fails on the host.
@@ -23,8 +24,9 @@ type
     uid: string
     tokenType, balance: int
     communityId, collectionUid, name, imageUrl, mediaUrl: string
+    thumbnailUrl, icon: string
   GroupRec = object
-    groupName, gtype, icon, imageUrl, mediaUrl: string
+    groupName, gtype, icon, thumbnailUrl, imageUrl, mediaUrl: string
     subCount: int
 
 QtObject:
@@ -43,15 +45,19 @@ QtObject:
 
   proc recordFlat(self: Probe, key: string, uidVal: string, tokenType: int,
       balance: int, communityId: string, collectionUid: string, name: string,
-      imageUrl: string, mediaUrl: string) {.slot.} =
+      imageUrl: string, mediaUrl: string, thumbnailUrl: string,
+      icon: string) {.slot.} =
     self.flat[key] = FlatRec(uid: uidVal, tokenType: tokenType, balance: balance,
       communityId: communityId, collectionUid: collectionUid, name: name,
-      imageUrl: imageUrl, mediaUrl: mediaUrl)
+      imageUrl: imageUrl, mediaUrl: mediaUrl, thumbnailUrl: thumbnailUrl,
+      icon: icon)
 
   proc recordGrouped(self: Probe, key: string, groupName: string, gtype: string,
-      icon: string, imageUrl: string, mediaUrl: string, subCount: int) {.slot.} =
+      icon: string, thumbnailUrl: string, imageUrl: string, mediaUrl: string,
+      subCount: int) {.slot.} =
     self.grouped[key] = GroupRec(groupName: groupName, gtype: gtype, icon: icon,
-      imageUrl: imageUrl, mediaUrl: mediaUrl, subCount: subCount)
+      thumbnailUrl: thumbnailUrl, imageUrl: imageUrl, mediaUrl: mediaUrl,
+      subCount: subCount)
 
 proc own(account: string, balance = 1): CollectibleOwnership =
   CollectibleOwnership(accountAddress: account, balance: balance)
@@ -63,7 +69,7 @@ let networks = @[
 # Known universe covering ERC-721, ERC-1155 and a community collectible.
 let universe = @[
   CollectibleItem(key: "a721", chainId: 1, collectionUid: "cA", tokenType: 2,
-    name: "Cat", imageUrl: "a.png", mediaUrl: "",
+    name: "Cat", imageUrl: "a.png", mediaUrl: "", thumbnailUrl: "a_thumb.png",
     ownership: @[own("0xA", 1), own("0xB", 3)]),
   CollectibleItem(key: "b1155", chainId: 1, collectionUid: "cB", tokenType: 3,
     name: "Sword", imageUrl: "", mediaUrl: "b.mp4",
@@ -114,6 +120,9 @@ suite "collectibles picker QML<->Nim role contract (host)":
     check probe.flat["a721"].tokenType == 2
     check probe.flat["a721"].balance == 1
     check probe.flat["a721"].imageUrl == "a.png"
+    # the header renders `icon`: the preview, not the full-size image
+    check probe.flat["a721"].thumbnailUrl == "a_thumb.png"
+    check probe.flat["a721"].icon == "a_thumb.png"
     # ERC-1155: tokenType 3, and balance is the ACCOUNT's amount (5), not 0xB's
     check probe.flat["b1155"].tokenType == 3
     check probe.flat["b1155"].balance == 5
@@ -129,10 +138,27 @@ suite "collectibles picker QML<->Nim role contract (host)":
     check g.gtype == "community"
     check g.groupName == "Comm"
     check g.icon == "cimg"
-    check g.imageUrl == "c.png"   # SearchableCollectiblesPanel reads imageUrl||mediaUrl
+    # SearchableCollectiblesPanel reads thumbnailUrl||imageUrl; c1 has no preview
+    check g.thumbnailUrl == ""
+    check g.imageUrl == "c.png"
     check g.subCount == 1         # one collection (cC)
-    # other groups fall back through imageUrl -> mediaUrl
+    # other groups fall back through thumbnailUrl -> imageUrl -> mediaUrl
     check probe.grouped["cA"].gtype == "other"
+    check probe.grouped["cA"].thumbnailUrl == "a_thumb.png"
     check probe.grouped["cA"].imageUrl == "a.png"
+    check probe.grouped["cA"].icon == "a_thumb.png"  # preview wins over the original
+    check probe.grouped["cB"].thumbnailUrl == ""
     check probe.grouped["cB"].imageUrl == ""
     check probe.grouped["cB"].mediaUrl == "b.mp4"
+
+  test "the panel never binds a missing role":
+    # A role that disappears reaches the probe as the string "undefined" (see the
+    # scene): that is exactly how the thumbnail regression hid — the delegate bound
+    # model.thumbnailUrl while the model had no such role.
+    for _, g in probe.grouped:
+      check g.thumbnailUrl != "undefined"
+      check g.imageUrl != "undefined"
+      check g.icon != "undefined"
+    for _, f in probe.flat:
+      check f.thumbnailUrl != "undefined"
+      check f.icon != "undefined"

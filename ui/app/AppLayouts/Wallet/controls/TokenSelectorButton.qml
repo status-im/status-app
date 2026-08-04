@@ -82,9 +82,14 @@ Control {
                 id: tokenSelectorIcon
                 objectName: "tokenSelectorIcon"
 
-                Layout.preferredWidth: 24
-                Layout.preferredHeight: 24
-                image.source: root.icon
+                readonly property int iconSize: 24
+
+                Layout.preferredWidth: iconSize
+                Layout.preferredHeight: iconSize
+                // Sized here, where the render size is known (ADR-0006). Non-CDN
+                // urls — asset logos, the local media server — pass through
+                // untouched.
+                image.source: Utils.resizedMediaSource(root.icon, iconSize)
             }
 
             StatusBaseText {

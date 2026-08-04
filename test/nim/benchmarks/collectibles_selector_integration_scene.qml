@@ -2,10 +2,14 @@
 // CollectiblesSelectorModel and its filteredFlatModel and reports the EXACT
 // roles the production send modal reads, back to the native `probe`:
 //  - flat rows: the roles SimpleSendModal reads off selectedCollectibleEntry.item
-//    (uid, tokenType, balance, communityId, collectionUid, name, imageUrl, mediaUrl)
+//    (uid, tokenType, balance, communityId, collectionUid, name, imageUrl,
+//    mediaUrl, thumbnailUrl and the `icon` pick the header renders)
 //  - grouped rows: what SearchableCollectiblesPanel's top-level delegate reads
-//    (groupName, type, icon, imageUrl||mediaUrl thumbnail, subitems count)
+//    (groupName, type, icon, thumbnailUrl||imageUrl thumbnail, subitems count)
 // This proves the QML<->Nim role contract host-side, without the full app.
+//
+// The `"" + role` stringification is deliberate: a role that goes missing reaches
+// the probe as "undefined" instead of silently falling through in QML.
 
 import QtQuick
 
@@ -18,7 +22,8 @@ Item {
             Component.onCompleted: probe.recordFlat(
                 model.key, model.uid, model.tokenType, model.balance,
                 model.communityId, model.collectionUid, model.name,
-                "" + model.imageUrl, "" + model.mediaUrl)
+                "" + model.imageUrl, "" + model.mediaUrl,
+                "" + model.thumbnailUrl, "" + model.icon)
         }
     }
 
@@ -27,7 +32,8 @@ Item {
         delegate: Item {
             Component.onCompleted: probe.recordGrouped(
                 model.key, model.groupName, model.type,
-                "" + model.icon, "" + model.imageUrl, "" + model.mediaUrl,
+                "" + model.icon, "" + model.thumbnailUrl,
+                "" + model.imageUrl, "" + model.mediaUrl,
                 model.subitems ? model.subitems.count : 0)
         }
     }

@@ -25,6 +25,7 @@ type
     CollectionName
     MediaUrl
     ImageUrl
+    ThumbnailUrl
     Icon
     IconUrl
     ChainName
@@ -70,6 +71,7 @@ QtObject:
       ModelRole.CollectionName.int: "collectionName",
       ModelRole.MediaUrl.int: "mediaUrl",
       ModelRole.ImageUrl.int: "imageUrl",
+      ModelRole.ThumbnailUrl.int: "thumbnailUrl",
       ModelRole.Icon.int: "icon",
       ModelRole.IconUrl.int: "iconUrl",
       ModelRole.ChainName.int: "chainName",
@@ -95,6 +97,7 @@ QtObject:
     of ModelRole.CollectionName: return newQVariant(item.collectionName)
     of ModelRole.MediaUrl: return newQVariant(item.mediaUrl)
     of ModelRole.ImageUrl: return newQVariant(item.imageUrl)
+    of ModelRole.ThumbnailUrl: return newQVariant(item.thumbnailUrl)
     of ModelRole.Icon: return newQVariant(item.icon)
     of ModelRole.IconUrl: return newQVariant(item.iconUrl)
     of ModelRole.ChainName: return newQVariant(item.chainName)
@@ -115,6 +118,11 @@ QtObject:
     result = @[]
     if o.name != n.name: result.add(ModelRole.Name.int)
     if o.icon != n.icon: result.add(ModelRole.Icon.int)
+    # The media urls arrive with the fetched collectible data, after the row is
+    # already shown; the send modal header reads them, so they are diffed too.
+    if o.thumbnailUrl != n.thumbnailUrl: result.add(ModelRole.ThumbnailUrl.int)
+    if o.imageUrl != n.imageUrl: result.add(ModelRole.ImageUrl.int)
+    if o.mediaUrl != n.mediaUrl: result.add(ModelRole.MediaUrl.int)
     if o.iconUrl != n.iconUrl: result.add(ModelRole.IconUrl.int)
     if o.chainName != n.chainName: result.add(ModelRole.ChainName.int)
     if o.balance != n.balance: result.add(ModelRole.Balance.int)
