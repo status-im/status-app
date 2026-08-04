@@ -36,6 +36,7 @@ type
     GroupName
     Icon
     IconUrl
+    ThumbnailUrl
     ImageUrl
     MediaUrl
     Type
@@ -85,6 +86,7 @@ QtObject:
       ModelRole.GroupName.int: "groupName",
       ModelRole.Icon.int: "icon",
       ModelRole.IconUrl.int: "iconUrl",
+      ModelRole.ThumbnailUrl.int: "thumbnailUrl",
       ModelRole.ImageUrl.int: "imageUrl",
       ModelRole.MediaUrl.int: "mediaUrl",
       ModelRole.Type.int: "type",
@@ -99,6 +101,7 @@ QtObject:
     of ModelRole.GroupName: return newQVariant(group.groupName)
     of ModelRole.Icon: return newQVariant(group.icon)
     of ModelRole.IconUrl: return newQVariant(group.iconUrl)
+    of ModelRole.ThumbnailUrl: return newQVariant(group.thumbnailUrl)
     of ModelRole.ImageUrl: return newQVariant(group.imageUrl)
     of ModelRole.MediaUrl: return newQVariant(group.mediaUrl)
     of ModelRole.Type: return newQVariant(group.groupType)
@@ -112,6 +115,9 @@ QtObject:
     if o.groupName != n.groupName: result.add(ModelRole.GroupName.int)
     if o.icon != n.icon: result.add(ModelRole.Icon.int)
     if o.iconUrl != n.iconUrl: result.add(ModelRole.IconUrl.int)
+    # thumbnailUrl arrives with the fetched collectible data, after the row is
+    # already shown, so it has to be diffed like the other media roles.
+    if o.thumbnailUrl != n.thumbnailUrl: result.add(ModelRole.ThumbnailUrl.int)
     if o.imageUrl != n.imageUrl: result.add(ModelRole.ImageUrl.int)
     if o.mediaUrl != n.mediaUrl: result.add(ModelRole.MediaUrl.int)
     if o.groupType != n.groupType: result.add(ModelRole.Type.int)
@@ -216,6 +222,8 @@ QtObject:
       self.groups[i].groupType
     proc groupNameAt*(self: CollectiblesSelectorModel, i: int): string =
       self.groups[i].groupName
+    proc groupThumbnailUrlAt*(self: CollectiblesSelectorModel, i: int): string =
+      self.groups[i].thumbnailUrl
     proc groupImageUrlAt*(self: CollectiblesSelectorModel, i: int): string =
       self.groups[i].imageUrl
     proc groupMediaUrlAt*(self: CollectiblesSelectorModel, i: int): string =

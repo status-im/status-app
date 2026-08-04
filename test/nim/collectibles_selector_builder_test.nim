@@ -6,8 +6,9 @@
 ## behaviors were accidental QML-proxy artifacts):
 ##  - Default-token-icon fallback: the adaptor's flat `icon` was
 ##    `imageUrl || mediaUrl || Assets.png(defaultTokenIcon)`. The builder emits
-##    only `imageUrl || mediaUrl` and leaves the default fallback to the QML
-##    delegate (the Assets singleton is not reachable from Nim).
+##    `thumbnailUrl || imageUrl || mediaUrl` (specs/001 D8 — small renders take the
+##    preview) and leaves the default fallback to the QML delegate (the Assets
+##    singleton is not reachable from Nim).
 ##  - Community collection subitem `name`: the adaptor's inner ObjectProxyModel
 ##    passed the representative COLLECTIBLE's `name` through as the collection's
 ##    name. The builder uses `collectionName`, the correct collection label.
@@ -21,7 +22,7 @@ proc own(account: string, balance = 1): CollectibleOwnership =
 
 proc item(key: string, chainId = 1, collectionUid = "c0", collectionName = "Coll 0",
     name = "", communityId = "", communityName = "", communityImage = "",
-    privileges = 2, imageUrl = "", mediaUrl = "", tokenType = 2,
+    privileges = 2, imageUrl = "", mediaUrl = "", thumbnailUrl = "", tokenType = 2,
     ownership: seq[CollectibleOwnership] = @[]): CollectibleItem =
   CollectibleItem(
     key: key, chainId: chainId, collectionUid: collectionUid,
@@ -29,7 +30,8 @@ proc item(key: string, chainId = 1, collectionUid = "c0", collectionName = "Coll
     name: if name.len > 0: name else: key,
     communityId: communityId, communityName: communityName,
     communityImage: communityImage, communityPrivilegesLevel: privileges,
-    imageUrl: imageUrl, mediaUrl: mediaUrl, ownership: ownership)
+    imageUrl: imageUrl, mediaUrl: mediaUrl, thumbnailUrl: thumbnailUrl,
+    ownership: ownership)
 
 let networks = @[
   CollectiblesNetworkInfo(chainId: 1, chainName: "Mainnet", iconUrl: "net/eth"),
@@ -107,17 +109,38 @@ suite "collectibles builder - flat filtering":
     check flat[0].chainName == "Optimism"
     check flat[0].iconUrl == "net/op"
 
-  test "icon prefers imageUrl then mediaUrl (no default fallback in Nim)":
+  test "icon prefers thumbnailUrl, then imageUrl, then mediaUrl (no default fallback in Nim)":
+    # specs/001 D8: every small render takes the preview, never the full-size asset.
     let items = @[
+      item("thumb", thumbnailUrl = "t.png", imageUrl = "i.png", mediaUrl = "m.mp4",
+        ownership = @[own("0xA", 1)]),
       item("img", imageUrl = "i.png", mediaUrl = "m.mp4", ownership = @[own("0xA", 1)]),
       item("media", imageUrl = "", mediaUrl = "m.mp4", ownership = @[own("0xA", 1)]),
       item("none", imageUrl = "", mediaUrl = "", ownership = @[own("0xA", 1)]),
     ]
     let flat = buildFlatCollectibles(items, networks, params("0xA"))
     let byKey = flat.mapIt((it.key, it.icon)).toTable
+    check byKey["thumb"] == "t.png"
     check byKey["img"] == "i.png"
     check byKey["media"] == "m.mp4"
     check byKey["none"] == "" # default token icon applied in the QML delegate
+
+  test "the raw urls stay on the row next to the pick":
+    # The picked `icon` is for small renders; the detail view still wants the
+    # full-size asset, so imageUrl/mediaUrl/thumbnailUrl travel untouched.
+    let items = @[item("k", thumbnailUrl = "t.png", imageUrl = "i.png",
+      mediaUrl = "m.mp4", ownership = @[own("0xA", 1)])]
+    let row = buildFlatCollectibles(items, networks, params("0xA"))[0]
+    check row.thumbnailUrl == "t.png"
+    check row.imageUrl == "i.png"
+    check row.mediaUrl == "m.mp4"
+
+  test "icon is never sized in Nim (the delegate asks the CDN for its width)":
+    # ADR-0006: the render width is only known at the leaf, so the builder must
+    # not bake a delivery transform into the url.
+    let cdn = "https://res.cloudinary.com/x/image/upload/v1/a.png"
+    let items = @[item("k", thumbnailUrl = cdn, ownership = @[own("0xA", 1)])]
+    check buildFlatCollectibles(items, networks, params("0xA"))[0].icon == cdn
 
 suite "collectibles builder - sort and grouping":
 
@@ -140,7 +163,8 @@ suite "collectibles builder - sort and grouping":
         communityId = "com1", communityName = "Comm One", communityImage = "cimg",
         ownership = @[own("0xA", 1)]),
       item("o1", collectionUid = "collZ", collectionName = "Zed",
-        imageUrl = "z.png", ownership = @[own("0xA", 1)]),
+        thumbnailUrl = "z_thumb.png", imageUrl = "z.png",
+        ownership = @[own("0xA", 1)]),
     ]
     let (flat, groups) = buildDisplay(items, networks, params("0xA"))
     check flat.len == 3
@@ -158,8 +182,14 @@ suite "collectibles builder - sort and grouping":
     check groups[1].groupType == "other"
     check groups[1].groupKey == "collZ"
     check groups[1].groupName == "Zed"
-    check groups[1].icon == "z.png"
+    check groups[1].icon == "z_thumb.png"
+    # The panel's top-level delegate reads thumbnailUrl||imageUrl off the group,
+    # so the representative's media has to travel with it.
+    check groups[1].thumbnailUrl == "z_thumb.png"
+    check groups[1].imageUrl == "z.png"
     check groups[1].subitems.mapIt(it.key) == @["o1"]
+    # subitem icons follow the same pick
+    check groups[1].subitems.mapIt(it.icon) == @["z_thumb.png"]
 
   test "community group name uses communityName when non-empty":
     let items = @[

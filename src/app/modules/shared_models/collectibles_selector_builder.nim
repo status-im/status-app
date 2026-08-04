@@ -24,9 +24,14 @@ const
   PrivilegeTMaster = 1
 
 proc iconFor(item: CollectibleItem): string =
-  ## imageUrl preferred, else mediaUrl. The default-token-icon fallback is applied
-  ## in the QML delegate (needs the Assets singleton), so it is NOT added here.
-  if item.imageUrl.len > 0: item.imageUrl else: item.mediaUrl
+  ## List-icon pick, per specs/001 D8: the provider preview first, then the still
+  ## image, then the animation. Never sized here — the delegate knows the render
+  ## width and asks the CDN for it (ADR-0006). The default-token-icon fallback is
+  ## applied in the QML delegate (needs the Assets singleton), so it is NOT added
+  ## here.
+  if item.thumbnailUrl.len > 0: item.thumbnailUrl
+  elif item.imageUrl.len > 0: item.imageUrl
+  else: item.mediaUrl
 
 proc balanceForAccount(item: CollectibleItem, accountLower: string): int =
   ## Sum the ownership entries belonging to the account (empty account = all).
@@ -65,7 +70,8 @@ proc buildFlatCollectibles*(items: seq[CollectibleItem],
       contractAddress: item.contractAddress, tokenId: item.tokenId,
       tokenType: item.tokenType,
       name: item.name, collectionName: item.collectionName,
-      mediaUrl: item.mediaUrl, imageUrl: item.imageUrl, icon: item.iconFor(),
+      mediaUrl: item.mediaUrl, imageUrl: item.imageUrl,
+      thumbnailUrl: item.thumbnailUrl, icon: item.iconFor(),
       iconUrl: net.iconUrl, chainName: net.chainName,
       communityId: item.communityId, communityName: item.communityName,
       communityImage: item.communityImage,
@@ -120,9 +126,10 @@ proc buildCollectibleGroups*(flat: seq[FlatCollectible]): seq[CollectibleGroup] 
       groupName: if isCommunity and rep.communityName.len > 0: rep.communityName else: rep.collectionName,
       icon: if isCommunity: rep.communityImage else: rep.icon,
       iconUrl: rep.iconUrl,
-      # Representative collectible's raw media; the shared SearchableCollectiblesPanel
-      # top-level delegate reads `imageUrl || mediaUrl` for the group thumbnail.
-      imageUrl: rep.imageUrl, mediaUrl: rep.mediaUrl)
+      # Representative collectible's media; the shared SearchableCollectiblesPanel
+      # top-level delegate reads `thumbnailUrl || imageUrl` for the group thumbnail
+      # (mediaUrl stays exposed for consumers that want the raw animation).
+      thumbnailUrl: rep.thumbnailUrl, imageUrl: rep.imageUrl, mediaUrl: rep.mediaUrl)
     if isCommunity:
       group.subitems = communitySubitems(members)
     else:

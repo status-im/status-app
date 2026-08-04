@@ -27,12 +27,17 @@ Control {
 
         groupName           [string] - group name
         icon                [url]    - icon image of a group
+        thumbnailUrl        [url]    - representative collectible's preview
+        imageUrl            [url]    - representative collectible's still image
         type                [string] - group type, can be "community" or "other"
         subitems            [model]  - submodel of collectibles/collections of the group
             key             [string] - balance
             name            [string] - name of the subitem
             balance         [int]    - balance of the subitem
             icon            [url]    - icon of the subitem
+
+      Every media url above is UNSIZED: the model picks which asset a small render
+      gets (preview first), the delegate asks the CDN for its own render width.
     **/
     property alias model: sfpm.sourceModel
 
@@ -120,8 +125,10 @@ Control {
 
                     name: model.groupName
                     balance: showCount ? subitemsCount : ""
-                    image: Utils.collectibleThumbnailSource(model.thumbnailUrl,
-                                                           model.imageUrl)
+                    // Pick only — TokenSelectorCollectibleDelegate asks the CDN
+                    // for its own icon width.
+                    image: Utils.collectibleMediaSource(model.thumbnailUrl,
+                                                        model.imageUrl)
                     goDeeperIconVisible: subitemsCount > 1
                                          || isCommunity
                     networkIcon: model.iconUrl

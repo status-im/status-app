@@ -4,7 +4,12 @@
 #
 # Balances are plain ints (ERC-721 = 1, ERC-1155 = on-chain count); no floats.
 # Icon fallback to the default token icon stays in the QML delegate (needs the
-# Assets singleton), so `icon` here is only imageUrl-or-mediaUrl.
+# Assets singleton), so `icon` here is only thumbnailUrl-or-imageUrl-or-mediaUrl.
+#
+# Media contract (specs/001, D3 + D8): these DTOs pick WHICH asset a small render
+# gets — the provider preview first, the still image next, the animation last. The
+# picked URL is unsized on purpose; the render width is only known at the leaf, so
+# the delegate applies the delivery size (Utils.resizedMediaSource, ADR-0006).
 
 type
   CollectibleOwnership* = object
@@ -26,6 +31,7 @@ type
     collectionName*: string
     mediaUrl*: string
     imageUrl*: string
+    thumbnailUrl*: string                   ## provider preview; what small renders get
     communityId*: string
     communityName*: string
     communityImage*: string
@@ -56,7 +62,8 @@ type
     collectionName*: string
     mediaUrl*: string
     imageUrl*: string
-    icon*: string                          ## imageUrl or mediaUrl (default in QML)
+    thumbnailUrl*: string                  ## provider preview (empty until fetched)
+    icon*: string                          ## thumbnail, else image, else media (default in QML)
     iconUrl*: string                       ## network icon (joined)
     chainName*: string
     communityId*: string
@@ -82,6 +89,7 @@ type
     groupName*: string
     icon*: string
     iconUrl*: string
+    thumbnailUrl*: string                  ## representative collectible's thumbnailUrl
     imageUrl*: string                      ## representative collectible's imageUrl
     mediaUrl*: string                      ## representative collectible's mediaUrl
     groupType*: string                     ## "community" | "other"

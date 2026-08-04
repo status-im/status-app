@@ -32,9 +32,14 @@ ItemDelegate {
 
     icon.width: 32
     icon.height: 32
-    // Default-token-icon fallback for empty media lives here at the leaf (the
-    // Assets singleton is not reachable from the Nim picker model).
-    icon.source: root.image != "" ? root.image : Assets.png(Constants.defaultTokenIcon)
+    // `image` arrives unsized: the picker models choose WHICH asset (thumbnail,
+    // else image, else animation), the render size is only known here. Asking the
+    // CDN for the icon width is the whole point — see docs/adr/0006-qt-http-cache.md.
+    // The default-token-icon fallback for empty media also lives here at the leaf
+    // (the Assets singleton is not reachable from the Nim picker model).
+    icon.source: root.image != ""
+                 ? Utils.resizedMediaSource(root.image, root.icon.width)
+                 : Assets.png(Constants.defaultTokenIcon)
 
     enabled: interactive
 

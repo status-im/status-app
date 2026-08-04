@@ -90,10 +90,14 @@ Control {
                 id: tokenSelectorIcon
                 objectName: "tokenSelectorIcon"
 
-                Layout.preferredWidth: 24
-                Layout.preferredHeight: 24
+                readonly property int iconSize: 24
 
-                image.source: root.icon
+                Layout.preferredWidth: iconSize
+                Layout.preferredHeight: iconSize
+                // Sized here, where the render size is known (ADR-0006). Non-CDN
+                // urls — asset logos, the local media server — pass through
+                // untouched.
+                image.source: Utils.resizedMediaSource(root.icon, iconSize)
                 networkIcon: root.showChip ? root.networkIcon : ""
                 badgeColor: Theme.palette.baseColor4
                 badgeSize: 14

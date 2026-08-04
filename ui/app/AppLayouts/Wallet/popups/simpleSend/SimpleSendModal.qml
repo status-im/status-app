@@ -63,7 +63,8 @@ StatusDialog {
     /**
     Expected model structure:
     - groupName: group name (from collection or community name)
-    - icon: from thumbnailUrl, falling back to imageUrl
+    - icon: from thumbnailUrl, falling back to imageUrl, then mediaUrl
+    - thumbnailUrl / imageUrl: representative collectible's preview / still image
     - type: can be "community" or "other"
     - subitems: submodel of collectibles/collections of the group
     - key: key of collection (community type) or collectible (other type)
@@ -90,6 +91,9 @@ StatusDialog {
         collectionName      [string] - collection name e.g. "Crypto Kitties"
         mediaUrl            [url]    - collectible's media url
         imageUrl            [url]    - collectible's image url
+        thumbnailUrl        [url]    - collectible's preview url
+        icon                [url]    - list-render pick: thumbnailUrl, else imageUrl,
+                                       else mediaUrl; unsized (sized at the leaf)
         communityId         [string] - unique identifier of a community for community collectible or empty
         ownership           [model]  - submodel of balances per chain/account
             balance         [int]    - balance (always 1 for ERC-721)
@@ -339,9 +343,10 @@ StatusDialog {
                 const id = selectedCollectibleEntry.item.communityId ?
                              selectedCollectibleEntry.item.collectionUid :
                              selectedCollectibleEntry.item.uid
+                // `icon` is the model's list-render pick (preview, else image,
+                // else animation), unsized — the header sizes it itself.
                 d.setTokenOnBothHeaders(selectedCollectibleEntry.item.name,
-                                        selectedCollectibleEntry.item.imageUrl ||
-                                        selectedCollectibleEntry.item.mediaUrl,
+                                        selectedCollectibleEntry.item.icon,
                                         id)
             }
         }
