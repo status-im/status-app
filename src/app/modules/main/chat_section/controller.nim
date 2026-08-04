@@ -482,11 +482,13 @@ proc setActiveItem*(self: Controller, itemId: string) =
   let isSectionActive = self.getIsCurrentSectionActive()
   if not isSectionActive:
     return
+
+  # Ensure chat content modules are loaded and subscribed to message events
+  # before triggering async initial message loading.
+  self.delegate.activeItemSet(self.activeItemId)
+
   if self.activeItemId != "":
     self.messageService.asyncLoadInitialMessagesForChat(self.activeItemId)
-
-  # We need to take other actions here like notify status go that unviewed mentions count is updated and so...
-  self.delegate.activeItemSet(self.activeItemId)
 
 proc removeCommunityChat*(self: Controller, itemId: string) =
   self.communityService.deleteCommunityChat(self.getMySectionId(), itemId)
