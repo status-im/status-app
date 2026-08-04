@@ -330,7 +330,7 @@ proc mainProc() =
     singletonInstance.engine.addImportPath("qrc:/./imports")
     singletonInstance.engine.addImportPath("qrc:/./app");
 
-  statusq_setupNetworkAccessManagerFactory(singletonInstance.engine.vptr, (TMPDIR & "netcache").cstring)
+  statusq_setupNetworkAccessManagerFactory(singletonInstance.engine.vptr, (TMPDIR & "netcache").cstring, NETWORK_DISK_CACHE_SIZE)
   singletonInstance.engine.setRootContextProperty("uiScaleFilePath", newQVariant(uiScaleFilePath))
   singletonInstance.engine.setRootContextProperty("singleInstance", newQVariant(singleInstance))
   singletonInstance.engine.setRootContextProperty("isExperimental", isExperimentalQVariant)

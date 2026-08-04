@@ -72,3 +72,11 @@ add_executable(TestManageTokensController tst_ManageTokensController.cpp)
 target_link_libraries(TestManageTokensController PRIVATE Qt::Test Qt::Gui Qt::Qml StatusQ)
 target_include_directories(TestManageTokensController PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src/wallet)
 add_test(NAME TestManageTokensController COMMAND TestManageTokensController)
+
+add_executable(TestHttpStats src/tst_httpstats.cpp)
+target_link_libraries(TestHttpStats PRIVATE Qt::Test Qt::Gui Qt::Qml StatusQ)
+add_test(NAME TestHttpStats COMMAND TestHttpStats)
+
+add_executable(TestNetworkAccessFactory src/tst_networkaccessfactory.cpp)
+target_link_libraries(TestNetworkAccessFactory PRIVATE Qt::Test Qt::Network Qt::Qml StatusQ)
+add_test(NAME TestNetworkAccessFactory COMMAND TestNetworkAccessFactory)

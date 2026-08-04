@@ -166,6 +166,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/fastexpressionsorter.h
         include/StatusQ/formatteddoubleproperty.h
         include/StatusQ/genericvalidator.h
+        include/StatusQ/httpstats.h
         include/StatusQ/imageencoderutils.h
         include/StatusQ/inputmethodeventfilter.h
         include/StatusQ/keychain.h
@@ -174,6 +175,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/markdownparser.h
         include/StatusQ/markdownutils.h
         include/StatusQ/mentiontextobject.h
+        include/StatusQ/networkaccessfactory.h
         include/StatusQ/osnotification.h
         include/StatusQ/urlschemeevent.h
         include/StatusQ/NativeSwipeHandlerItem.h
@@ -206,6 +208,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/fastexpressionsorter.cpp
         src/formatteddoubleproperty.cpp
         src/genericvalidator.cpp
+        src/httpstats.cpp
         src/imageencoderutils.cpp
         src/inputmethodeventfilter.cpp
         src/keychain.cpp
@@ -218,6 +221,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/markdownparser.cpp
         src/markdownutils.cpp
         src/mentiontextobject.cpp
+        src/networkaccessfactory.cpp
         src/networkchecker.cpp
         src/oneoffilter.cpp
         src/permissionutilsinternal.cpp

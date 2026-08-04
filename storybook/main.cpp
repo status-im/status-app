@@ -4,6 +4,7 @@
 #include <QQmlComponent>
 #include <QQmlContext>
 #include <QQuickStyle>
+#include <QStandardPaths>
 #include <QtWebView>
 
 #include <Storybook/storybooksetup.h>
@@ -11,9 +12,13 @@
 
 #include <memory>
 
+#include <StatusQ/networkaccessfactory.h>
 #include <StatusQ/typesregistration.h>
 
 using namespace Qt::Literals::StringLiterals;
+
+// Mirrors NETWORK_DISK_CACHE_SIZE in src/constants.nim.
+constexpr qint64 networkDiskCacheSize = 512ll * 1024 * 1024;
 
 void loadContextPropertiesMocks(const char* storybookRoot, QQmlApplicationEngine& engine);
 
@@ -104,6 +109,12 @@ int main(int argc, char *argv[])
     }
 
     QQmlApplicationEngine engine;
+
+    // Same disk cache and Accept hints the application installs, so media traffic
+    // measured in Storybook is the traffic the application would produce.
+    Status::setupNetworkAccessManagerFactory(
+        &engine, QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + u"/netcache"_s,
+        networkDiskCacheSize);
 
     for (auto& path : std::as_const(additionalImportPaths))
         engine.addImportPath(path);

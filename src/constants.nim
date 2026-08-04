@@ -20,6 +20,10 @@ const DATE_TIME_FORMAT_2* = "yyyy-MM-dd'T'HH:mm:ss'.'ffffffzzz"
 
 const sep* = when defined(windows): "\\" else: "/"
 
+# Budget of the QML layer's HTTP disk cache (images, animations, XHR). Qt's own
+# default is 50 MB, which a single collectibles page can evict on its own.
+const NETWORK_DISK_CACHE_SIZE* = 512'i64 * 1024 * 1024
+
 # Push notification token types (from push_notifications.proto)
 const PUSH_TOKEN_TYPE_UNKNOWN* = 0
 const PUSH_TOKEN_TYPE_APN* = 1      # iOS
