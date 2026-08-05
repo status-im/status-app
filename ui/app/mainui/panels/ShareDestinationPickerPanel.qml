@@ -90,7 +90,8 @@ Control {
             }
 
             delegate: StatusListItem {
-                objectName: "shareDestinationDelegate_" + model.name
+                // name alone collides (two channels called "general") and is mutable
+                objectName: "shareDestinationDelegate_" + model.name + "_" + model.chatId
                 width: ListView.view.width
                 title: model.name
                 label: model.sectionName
