@@ -104,7 +104,7 @@ SplitView {
 
         onObtainingPasswordSuccess: {
             loginScreen.setBiometricResponse(loginScreen.selectedProfileIsKeycard
-                                             ? ctrlPin.text : ctrlPassword.text)
+                                             ? ctrlPin.text : ctrlPassword.text, "")
         }
     }
 

@@ -56,12 +56,12 @@ Page {
     signal loginRequested(string keyUid, int method, var data)
     signal profileSelected(string keyUid)
 
-    function restartFlow() {
+    function restartFlow() : void {
         unload()
         onboardingFlow.restart()
     }
 
-    function unload() {
+    function unload() : void {
         onboardingFlow.clear()
         d.resetState()
     }
@@ -69,7 +69,7 @@ Page {
     // clear the stack and load the LoginScreen
     // the purpose is to return from main/splash screen in case of a late stage error
     // and use the below error handler (onAccountLoginError)
-    function unwindToLoginScreen() {
+    function unwindToLoginScreen() : void {
         restartFlow()
     }
 
@@ -94,7 +94,7 @@ Page {
 
         property bool thirdpartyServicesEnabled: true
 
-        function resetState() {
+        function resetState() : void {
             d.password = ""
             d.keycardPin = ""
             d.enableBiometrics = false
@@ -109,12 +109,12 @@ Page {
         readonly property var settings: Settings { /* https://bugreports.qt.io/browse/QTBUG-135039 */
             property bool keycardPromoShown // whether we've seen the keycard promo banner on KeycardIntroPage
 
-            function reset() {
+            function reset() : void {
                 keycardPromoShown = false
             }
         }
 
-        function finishFlow(flow) {
+        function finishFlow(flow: int) : void {
             const keyUid = onboardingFlow.loginScreen ? onboardingFlow.loginScreen.selectedProfileKeyId : ""
             const data = {
                 selectedProfileKeyUid: keyUid, // used to determine whether import seed phrase was done for the login or onboarding purpose
@@ -266,7 +266,7 @@ Page {
         target: onboardingFlow.topLevelItem
         ignoreUnknownSignals: true
 
-        function onRequestOpenLink(link: string) {
+        function onRequestOpenLink(link: string) : void {
             Qt.openUrlExternally(link)
         }
     }
@@ -275,7 +275,7 @@ Page {
     Connections {
         target: root.onboardingStore
 
-        function onAccountLoginError(error: string, wrongPassword: bool) {
+        function onAccountLoginError(error: string, wrongPassword: bool) : void {
             const loginScreen = onboardingFlow.loginScreen
 
             if (!loginScreen)
@@ -290,7 +290,7 @@ Page {
 
         function onGetCredentialRequestCompleted(status, secret) {
             if (status === Keychain.StatusSuccess)
-                onboardingFlow.setBiometricResponse(secret)
+                onboardingFlow.setBiometricResponse(secret, "")
             else if (status === Keychain.StatusNotFound)
                 onboardingFlow.setBiometricResponse("", qsTr("Credentials not found."))
             else if (status === Keychain.StatusFallbackSelected)

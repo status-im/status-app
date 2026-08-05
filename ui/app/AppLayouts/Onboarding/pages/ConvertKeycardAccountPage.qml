@@ -23,84 +23,66 @@ OnboardingPage {
                 when: root.convertKeycardAccountState === Onboarding.ProgressState.InProgress
 
                 PropertyChanges {
-                    target: root
-                    title: qsTr("Re-encrypting your profile data")
+                    root.title: qsTr("Re-encrypting your profile data")
                 }
                 PropertyChanges {
-                    target: iconLoader
-                    sourceComponent: loadingIndicator
+                    iconLoader.sourceComponent: loadingIndicator
                 }
                 PropertyChanges {
-                    target: subtitle
-                    text: qsTr("Your data must be re-encrypted with your new password which may take some time.")
+                    subtitle.text: qsTr("Your data must be re-encrypted with your new password which may take some time.")
                 }
                 PropertyChanges {
-                    target: warningText
-                    visible: true
+                    warningText.visible: true
                 }
                 PropertyChanges {
-                    target: btnQuit
-                    visible: false
+                    btnQuit.visible: false
                 }
                 PropertyChanges {
-                    target: btnTryAgain
-                    visible: false
+                    btnTryAgain.visible: false
                 }
             },
             State {
                 when: root.convertKeycardAccountState === Onboarding.ProgressState.Success
 
                 PropertyChanges {
-                    target: root
-                    title: qsTr("Re-encryption complete")
+                    root.title: qsTr("Re-encryption complete")
                 }
                 PropertyChanges {
-                    target: iconLoader
-                    sourceComponent: successIcon
+                    iconLoader.sourceComponent: successIcon
                 }
                 PropertyChanges {
-                    target: subtitle
-                    text: qsTr("Your data was successfully re-encrypted with your new password. You can now restart Status and log in to your profile using the password you just created.")
+                    subtitle.text: qsTr("Your data was successfully re-encrypted with your new password. You can now restart Status and log in to your profile using the password you just created.")
                 }
                 PropertyChanges {
-                    target: warningText
-                    visible: false
+                    warningText.visible: false
                 }
                 PropertyChanges {
-                    target: btnQuit
-                    visible: true
+                    btnQuit.visible: true
                 }
                 PropertyChanges {
-                    target: btnTryAgain
-                    visible: false
+                    btnTryAgain.visible: false
                 }
             },
             State {
                 when: root.convertKeycardAccountState === Onboarding.ProgressState.Failed
 
                 PropertyChanges {
-                    target: root
-                    title: qsTr("Re-encryption failed")
+                    root.title: qsTr("Re-encryption failed")
                 }
                 PropertyChanges {
-                    target: iconLoader
-                    sourceComponent: failedIcon
+                    iconLoader.sourceComponent: failedIcon
                 }
                 PropertyChanges {
-                    target: subtitle
-                    text: qsTr("Your data must be re-encrypted with your new password which may take some time.")
+                    subtitle.text: qsTr("Your data must be re-encrypted with your new password which may take some time.")
                 }
                 PropertyChanges {
-                    target: warningText
-                    visible: true
+                    warningText.visible: true
                 }
                 PropertyChanges {
-                    target: btnQuit
-                    visible: false
+                    btnQuit.visible: false
                 }
                 PropertyChanges {
-                    target: btnTryAgain
-                    visible: true
+                    btnTryAgain.visible: true
                 }
             }
         ]

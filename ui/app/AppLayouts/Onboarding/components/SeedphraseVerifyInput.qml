@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -103,12 +105,17 @@ StatusTextField {
                 }
             }
             delegate: StatusItemDelegate {
+                id: suggestionDelegate
+
+                required property string seedWord
+                required property int index
+
                 width: ListView.view.width
                 height: d.delegateHeight
-                text: model.seedWord
+                text: suggestionDelegate.seedWord
                 font.pixelSize: Theme.additionalTextSize
                 highlightColor: Theme.palette.primaryColor1
-                highlighted: hovered || index === suggestionsList.currentIndex
+                highlighted: hovered || suggestionDelegate.index === suggestionsList.currentIndex
                 onClicked: {
                     root.text = text
                     root.accepted()

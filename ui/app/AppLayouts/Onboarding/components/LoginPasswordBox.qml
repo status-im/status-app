@@ -34,15 +34,15 @@ Control {
     signal biometricsRequested()
     signal loginRequested(string password)
 
-    function clear() {
+    function clear() : void {
         txtPassword.clear()
     }
 
-    function forceActiveFocus() {
+    function forceActiveFocus() : void {
         txtPassword.forceActiveFocus()
     }
 
-    function clearInputFocus() {
+    function clearInputFocus() : void {
         if (!txtPassword.activeFocus) {
             return
         }

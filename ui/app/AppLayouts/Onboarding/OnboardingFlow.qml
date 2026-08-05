@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -87,11 +89,11 @@ OnboardingStackView {
 
     signal skippedBiometricFlow()
 
-    function restart() {
+    function restart() : void {
         replace(null, loginAccountsModel.ModelCount.empty ? welcomePage : loginScreenComponent)
     }
 
-    function setBiometricResponse(secret: string, error = "") {
+    function setBiometricResponse(secret: string, error: string) : void {
         if (!loginScreen)
             return
 
@@ -101,7 +103,7 @@ OnboardingStackView {
     Connections {
         target: root.loginAccountsModel?.ModelCount ?? null
 
-        function onCountChanged() {
+        function onCountChanged() : void {
             d.showWelcomePageIfNoProfiles()
         }
     }
@@ -114,7 +116,7 @@ OnboardingStackView {
         property var manageProfilesDialog: null
 
 
-        function pushOrSkipBiometricsPage() {
+        function pushOrSkipBiometricsPage() : void {
             if (d.flow === Onboarding.OnboardingFlow.LoginWithSyncing
                     || d.flow === Onboarding.OnboardingFlow.LoginWithKeycard) {
                 root.skippedBiometricFlow()
@@ -129,24 +131,24 @@ OnboardingStackView {
             }
         }
 
-        function openPrivacyPolicyPopup() {
+        function openPrivacyPolicyPopup() : void {
             privacyPolicyPopup.createObject(root).open()
         }
 
-        function openTermsOfUsePopup() {
+        function openTermsOfUsePopup() : void {
             termsOfUsePopup.createObject(root).open()
         }
 
-        function openThirdpartyServicesPopup() {
+        function openThirdpartyServicesPopup() : void {
             thirdpartyServicesPopup.createObject(root).open()
         }
 
-        function openManageProfilesPopup() {
+        function openManageProfilesPopup() : void {
             d.manageProfilesDialog = manageProfilesPopup.createObject(root)
             d.manageProfilesDialog.open()
         }
 
-        function showWelcomePageIfNoProfiles() {
+        function showWelcomePageIfNoProfiles() : void {
             if (!root.loginAccountsModel?.ModelCount.empty)
                 return
 
@@ -156,7 +158,7 @@ OnboardingStackView {
             root.replace(null, welcomePage)
         }
 
-        function openDeleteMultiaccountConfirmationDialog(keyUid, username) {
+        function openDeleteMultiaccountConfirmationDialog(keyUid: string, username: string) : void {
             deleteMultiaccountConfirmationDialog.createObject(root, { keyUid, username }).open()
         }
     }
@@ -370,7 +372,7 @@ OnboardingStackView {
         id: onboardingKeycardStore
     }
 
-    function openKeycardPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson) {
+    function openKeycardPopup(flow: string, keyUid: string, keycardUid: string, cardMetadataName: string, cardMetadataWalletAccountsJson: string) : void {
         console.info("onboarding - openning keycard popup for flow: ", flow, " keyUid: ", keyUid, " keycardUid: ", keycardUid, " cardMetadataName: ", cardMetadataName, " cardMetadataWalletAccountsJson: ", cardMetadataWalletAccountsJson)
         keycardManagementPopupComponent.createObject(root, {
             flow: flow,
@@ -604,16 +606,20 @@ OnboardingStackView {
                     spacing: Theme.halfPadding
 
                     delegate: LoginUserSelectorDelegate {
-                        objectName: "manageProfilesDelegate-" + model.keyUid
+                        id: profileDelegate
+
+                        required property var model
+
+                        objectName: "manageProfilesDelegate-" + profileDelegate.model.keyUid
                         width: ListView.view.width
                         height: d.delegateHeight
-                        label: model.username
-                        image: model.thumbnailImage
-                        colorId: model.colorId
-                        keycardCreatedAccount: model.keycardCreatedAccount
+                        label: profileDelegate.model.username
+                        image: profileDelegate.model.thumbnailImage
+                        colorId: profileDelegate.model.colorId
+                        keycardCreatedAccount: profileDelegate.model.keycardCreatedAccount
                         keycardEnabled: true // We just care to show the icon here
                         managementMode: true
-                        onDeleteProfileRequested: d.openDeleteMultiaccountConfirmationDialog(model.keyUid, model.username)
+                        onDeleteProfileRequested: d.openDeleteMultiaccountConfirmationDialog(profileDelegate.model.keyUid, profileDelegate.model.username)
                     }
                 }
             }

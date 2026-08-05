@@ -24,7 +24,7 @@ OnboardingPage {
     QtObject {
         id: d
 
-        function submit() {
+        function submit() : void {
             if (!passView.ready)
                 return
             root.setPasswordRequested(passView.newPswText)

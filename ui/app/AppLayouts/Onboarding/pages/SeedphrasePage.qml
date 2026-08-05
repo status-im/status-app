@@ -23,7 +23,7 @@ OnboardingPage {
     signal seedphraseSubmitted(string seedphrase)
     signal seedphraseProvided(var seedPhrase)
 
-    function setSeedPhraseError(errorMessage: string) {
+    function setSeedPhraseError(errorMessage: string) : void {
         seedPanel.setError(errorMessage)
     }
 
