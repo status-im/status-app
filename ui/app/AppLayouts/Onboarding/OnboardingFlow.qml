@@ -111,6 +111,8 @@ OnboardingStackView {
     QtObject {
         id: d
 
+        readonly property int delegateHeight: 64
+
         property int flow
         property LoginScreen loginScreen: null
         property var manageProfilesDialog: null
