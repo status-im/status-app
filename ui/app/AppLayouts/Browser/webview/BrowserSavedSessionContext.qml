@@ -66,8 +66,7 @@ QtObject {
         return BrowserSessionUtils.displayTitle(webView, recordForWebView(webView), {
             isStartPage: !!isStartPage,
             startPageLabel: qsTr("Start Page"),
-            emptyLabel: qsTr("New Tab"),
-            downloadsLabel: qsTr("Downloads")
+            emptyLabel: qsTr("New Tab")
         })
     }
 

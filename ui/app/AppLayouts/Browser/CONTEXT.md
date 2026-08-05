@@ -7,7 +7,7 @@ implementation details.
 Terms owned by the library rather than by this layer (Storage Profile, Standard
 and Incognito mode, Clearing, Freeze, Download, Download Request, Download
 Target, Download State, Inline Download) are defined in the MobileWebView
-glossary and are not repeated here. See [CONTEXT-MAP.md](../../../../CONTEXT-MAP.md).
+glossary and are not repeated here.
 
 ## Browsing
 

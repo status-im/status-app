@@ -13,8 +13,6 @@ Item {
     required property ProfileParams profileParams
     required property bool devToolsEnabled
     required property bool enableJsLogs
-    // Kept for session restore compatibility; Downloads Page Tab is gone (UX 03).
-    property bool isDownloadView: false
 
     readonly property bool offTheRecord: profileParams.offTheRecord
 

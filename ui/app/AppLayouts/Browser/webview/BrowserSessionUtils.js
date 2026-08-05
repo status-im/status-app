@@ -42,9 +42,6 @@ function displayTitle(webView, persistedRecord, labels) {
     if (!webView)
         return fallback
 
-    if (webView.isDownloadView)
-        return labels.downloadsLabel || fallback
-
     const resolved = resolveTitle(webView.title || "", persistedRecord)
     if (resolved)
         return resolved
