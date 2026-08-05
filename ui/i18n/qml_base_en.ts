@@ -15719,9 +15719,21 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>StatusChatInputNew</name>
+    <name>StatusChatInput</name>
+    <message>
+        <source>Type something</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <source>Sticker</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Multiple payment requests</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Payment request %1 %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
@@ -15749,18 +15761,6 @@ to load</source>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Multiple payment requests</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Payment request %1 %2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Type something</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -65,7 +65,7 @@ Item {
                 }
             }
 
-            StatusChatInputNew {
+            StatusChatInput {
                 id: editModeInput
                 objectName: "editModeInput"
 
@@ -99,11 +99,11 @@ Item {
     }
 
     TestCase {
-        name: "StatusChatInputNew"
+        name: "StatusChatInput"
         when: windowShown
 
         property Item wrapperUnderTest: null
-        property StatusChatInputNew controlUnderTest: null
+        property StatusChatInput controlUnderTest: null
 
         function init() {
             wrapperUnderTest = createTemporaryObject(editModeComponent, root)

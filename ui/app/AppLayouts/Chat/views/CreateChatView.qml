@@ -161,7 +161,7 @@ Page {
                 }
             }
 
-            StatusChatInputNew {
+            StatusChatInput {
                 id: chatInput
 
                 // Pinpoint default padding

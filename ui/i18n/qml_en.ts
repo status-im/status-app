@@ -635,10 +635,10 @@
     </message>
 </context>
 <context>
-    <name>StatusChatInputNew</name>
+    <name>StatusChatInput</name>
     <message numerus="yes">
         <source>%n Image(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform>%n Image</numerusform>
             <numerusform>%n Images</numerusform>
         </translation>

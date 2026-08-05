@@ -525,7 +525,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: chatInput.height
 
-                StatusChatInputNew {
+                StatusChatInput {
                     id: chatInput
                     width: parent.width
                     visible: !!d.activeChatContentModule

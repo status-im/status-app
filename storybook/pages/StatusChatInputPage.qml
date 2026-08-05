@@ -96,7 +96,7 @@ SplitView {
             border.width: 1
         }
 
-        StatusChatInputNew {
+        StatusChatInput {
             id: chatInput
 
             anchors.horizontalCenter: parent.horizontalCenter
