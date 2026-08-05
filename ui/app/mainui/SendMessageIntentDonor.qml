@@ -37,8 +37,9 @@ Item {
 
     /* A send to chatId just succeeded: donate it as a suggestion. Ids not in
        the model are skipped — a destination that is no longer postable is
-       never donated. Safe to call in bursts: donations are processed one
-       avatar grab at a time, and a chat already waiting is not re-queued. */
+       never donated. Safe to call in bursts (one multi-image send emits one
+       messageSentToChat per image): donations are processed one avatar grab
+       at a time, and a chat already queued or in flight is not re-queued. */
     function donateForChat(chatId) {
         if (d.queue.includes(chatId))
             return
@@ -85,15 +86,19 @@ Item {
             if (busy || queue.length === 0)
                 return
 
-            const chatId = queue.shift()
+            // Peeked, not shifted, so donateForChat's dedup still sees the
+            // in-flight entry; every path that abandons it shifts explicitly.
+            const chatId = queue[0]
             const destination = SQUtils.ModelUtils.getByKey(root.model, "chatId", chatId)
             if (!destination) {
+                queue.shift()
                 processNext()
                 return
             }
 
             const name = destination.name
             if (root.iconDirectory === "") {
+                queue.shift()
                 root.donationRequested(chatId, name, "")
                 processNext()
                 return
@@ -118,6 +123,7 @@ Item {
         }
 
         function finish(chatId, name, iconPath) {
+            queue.shift()
             busy = false
             root.donationRequested(chatId, name, iconPath)
             processNext()
