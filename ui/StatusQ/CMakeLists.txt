@@ -126,24 +126,34 @@ else()
     set(LIB_TYPE SHARED)
 endif ()
 
+# When OFF, the application must bundle statusq.qrc and the asset qrcs itself
+# (e.g. to run the QML through the Qt Quick Compiler, which only sees app resources).
+option(STATUSQ_BUNDLE_QML "Embed StatusQ QML sources and assets into the library" ON)
+
 if (${STATUSQ_SHADOW_BUILD})
     add_definitions(-DBUNDLE_QML_RESOURCES)
-    set(STATUSQ_QRC_FILES src/statusq.qrc
-        src/assets/fonts/fonts.qrc
-        src/assets/img/img.qrc
-        src/assets/png/png.qrc
-        src/assets/twemoji/twemoji.qrc
-        src/assets/twemoji/twemoji-svg.qrc)
+    set(STATUSQ_QRC_FILES "")
 
-    # Platform-specific PNG bundles
-    if(ANDROID OR IOS)
+    if (${STATUSQ_BUNDLE_QML})
+        add_definitions(-DBUNDLE_STATUSQ_QML)
         list(APPEND STATUSQ_QRC_FILES
-            src/assets/png/png-mobile.qrc
-        )
-    else()
-        list(APPEND STATUSQ_QRC_FILES
-            src/assets/png/png-desktop.qrc
-        )
+            src/statusq.qrc
+            src/assets/fonts/fonts.qrc
+            src/assets/img/img.qrc
+            src/assets/png/png.qrc
+            src/assets/twemoji/twemoji.qrc
+            src/assets/twemoji/twemoji-svg.qrc)
+
+        # Platform-specific PNG bundles
+        if(ANDROID OR IOS)
+            list(APPEND STATUSQ_QRC_FILES
+                src/assets/png/png-mobile.qrc
+            )
+        else()
+            list(APPEND STATUSQ_QRC_FILES
+                src/assets/png/png-desktop.qrc
+            )
+        endif()
     endif()
 
     if (${STATUSQ_STATIC_LIB})

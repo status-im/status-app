@@ -41,9 +41,17 @@ SOURCES += \
 WEBSCRIPTS_QRC = $$PWD/../../ui/resources_webscripts.qrc
 QTQUICK_COMPILER_SKIPPED_RESOURCES += $$WEBSCRIPTS_QRC
 
-# Add all status-desktop qrc files
+# StatusQ resources are bundled here instead of libStatusQ (STATUSQ_BUNDLE_QML=OFF)
+# so its QML goes through the Qt Quick Compiler too.
 RESOURCES += \
     $$PWD/../../ui/resources.qrc \
+    $$PWD/../../ui/StatusQ/src/statusq.qrc \
+    $$PWD/../../ui/StatusQ/src/assets/fonts/fonts.qrc \
+    $$PWD/../../ui/StatusQ/src/assets/img/img.qrc \
+    $$PWD/../../ui/StatusQ/src/assets/png/png.qrc \
+    $$PWD/../../ui/StatusQ/src/assets/png/png-mobile.qrc \
+    $$PWD/../../ui/StatusQ/src/assets/twemoji/twemoji.qrc \
+    $$PWD/../../ui/StatusQ/src/assets/twemoji/twemoji-svg.qrc \
     $$WEBSCRIPTS_QRC
 
 QML_IMPORT_PATH += $$PWD/../../ui/imports \
