@@ -18259,6 +18259,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
 <context>
     <name>UserStatusContextMenu</name>
     <message>
+        <source>Copy Chat Key</source>
+        <translation type="unfinished">Copiar clave de chat</translation>
+    </message>
+    <message>
         <source>Copy link to profile</source>
         <translation>Copiar enlace al perfil</translation>
     </message>

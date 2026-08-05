@@ -1,5 +1,5 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import QtQuick.Controls as QC
 import QtQml
 
@@ -90,6 +90,8 @@ QC.Popup {
        // Keeping a small gap at the top lets users tap to return to the underlying dialog
        // instead of closing the entire flow.
        readonly property real bottomSheetHeightRatio: 0.85
+
+       readonly property int cornerRadius: root.Theme.radius
     }
 
     // workaround for QTBUG-142248
@@ -136,16 +138,20 @@ QC.Popup {
 
     background: Rectangle {
        color: Theme.palette.statusMenu.backgroundColor
-       radius: Theme.radius
-       border.color: "transparent"
-       layer.enabled: true
-       layer.effect: DropShadow {
-           source: root.background
-           horizontalOffset: 0
-           verticalOffset: 4
-           radius: 12
-           samples: 25
-           spread: 0.2
+       topLeftRadius: d.cornerRadius
+       topRightRadius: d.cornerRadius
+       bottomLeftRadius: root.bottomSheet ? 0 : d.cornerRadius
+       bottomRightRadius: root.bottomSheet ? 0 : d.cornerRadius
+
+       RectangularShadow {
+           anchors.fill: parent
+           anchors.margins: -d.cornerRadius
+           z: parent.z - 1
+           topLeftRadius: parent.topLeftRadius
+           topRightRadius: parent.topRightRadius
+           bottomLeftRadius: parent.bottomLeftRadius
+           bottomRightRadius: parent.bottomRightRadius
+           spread: 0.1
            color: Theme.palette.dropShadow
        }
     }

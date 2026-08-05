@@ -158,12 +158,13 @@ SplitView {
 
             selfContactDetails: ContactDetails {
                 publicKey: "0xdeadbeef"
-                compressedPubKey: "zxDeadBeef"
-                displayName: "John Doe"
-                icon: ModelsData.icons.rarible
+                compressedPubKey: "zx3shDeadBeef"
+                preferredDisplayName: "John Doe"
+                largeImage: ModelsData.icons.dribble
                 colorId: 7
                 usesDefaultName: false
                 onlineStatus: Constants.currentUserStatus.automatic
+                bio: "Core developer <john.doe@acme.org> Lorem ipsum dolor sit amet"
             }
 
             getEmojiHashFn: function(pubKey) { // <- root.utilsStore.getEmojiHash(pubKey)
@@ -266,6 +267,7 @@ SplitView {
             onViewProfileRequested: function(pubKey) {
                 logs.logEvent("onViewProfileRequested", ["pubKey"], arguments) // <- Global.openProfilePopup(pubKey)
             }
+            onShareOwnProfileRequested: logs.logEvent("onShareOwnProfileRequested", [], arguments)
         }
     }
 

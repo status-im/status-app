@@ -66,7 +66,7 @@ Control {
     // Portrait mobile drawer on Browser: keep sidebar open while overlay popups are shown.
     readonly property bool keepOpenWhenPopups: SQUtils.Utils.isMobile && !root.alwaysVisible && root.browserSectionActive
 
-    required property bool acVisible // FIXME AC should not be a section
+    required property bool acVisible
     required property bool acHasUnseenNotifications // ActivityCenterStore.hasUnseenNotifications
     required property int acUnreadNotificationsCount // ActivityCenterStore.unreadNotificationsCount
 
@@ -269,13 +269,14 @@ Control {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.topMargin: root.spacing
                     loading: root.profileLoading
-                    name: root.selfContactDetails.displayName
+                    name: root.selfContactDetails.preferredDisplayName
                     pubKey: root.selfContactDetails.publicKey
                     compressedPubKey: root.selfContactDetails.compressedPubKey
-                    iconSource: root.selfContactDetails.icon
+                    iconSource: root.selfContactDetails.largeImage
                     colorId: root.selfContactDetails.colorId
                     currentUserStatus: root.selfContactDetails.onlineStatus
                     usesDefaultName: root.selfContactDetails.usesDefaultName
+                    bio: root.selfContactDetails.bio
 
                     getEmojiHashFn: root.getEmojiHashFn
                     getLinkToProfileFn: root.getLinkToProfileFn

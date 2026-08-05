@@ -15,6 +15,7 @@ Control {
     property ObjectModel errorTags
     property color color: Theme.palette.statusModal.backgroundColor
     property bool dropShadowEnabled
+    property bool bottomSheet
 
     spacing: Theme.defaultHalfPadding
     padding: Theme.defaultPadding
@@ -22,7 +23,10 @@ Control {
 
     background: Rectangle {
         color: root.color
-        radius: Theme.radius
+        bottomLeftRadius: root.bottomSheet ? 0 : Theme.radius
+        bottomRightRadius: root.bottomSheet ? 0 : Theme.radius
+        topLeftRadius: 0
+        topRightRadius: 0
 
         layer.enabled: root.dropShadowEnabled
         layer.effect: DropShadow {
@@ -30,14 +34,6 @@ Control {
             verticalOffset: -2
             samples: 37
             color: Theme.palette.dropShadow
-        }
-
-        // cover for the top rounded corners
-        Rectangle {
-            width: parent.width
-            height: parent.radius
-            anchors.top: parent.top
-            color: parent.color
         }
 
         StatusDialogDivider {

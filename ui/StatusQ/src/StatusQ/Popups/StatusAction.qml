@@ -20,8 +20,8 @@ Action {
     property bool visibleOnDisabled: false
 
     property StatusAssetSettings assetSettings: StatusAssetSettings {
-        width: 18
-        height: 18
+        width: root.icon.width
+        height: root.icon.height
         rotation: 0
         isLetterIdenticon: false
         imgIsIdenticon: false
@@ -34,6 +34,8 @@ Action {
         Theme.fontSizeOffset: root.Theme.fontSizeOffset
     }
 
+    icon.width: 18
+    icon.height: 18
     icon.color: {
         if (!root.enabled)
             return root.Theme.palette.baseColor1

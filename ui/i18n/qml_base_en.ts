@@ -18231,6 +18231,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
 <context>
     <name>UserStatusContextMenu</name>
     <message>
+        <source>Copy Chat Key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Copy link to profile</source>
         <translation type="unfinished"></translation>
     </message>

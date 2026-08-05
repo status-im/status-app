@@ -7,7 +7,10 @@ Rectangle {
     id: root
 
     color: Theme.palette.statusModal.backgroundColor
-    radius: Theme.radius
+    topLeftRadius: Theme.radius
+    topRightRadius: Theme.radius
+    bottomLeftRadius: Theme.radius
+    bottomRightRadius: Theme.radius
 
     signal closeRequested()
 

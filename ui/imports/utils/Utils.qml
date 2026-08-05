@@ -1272,7 +1272,7 @@ QtObject {
     }
 
     function isChatKey(value) {
-        return (startsWith0x(value) && isHex(value) && value.length === 132) || globalUtilsInst.isCompressedPubKey(value)
+        return (startsWith0x(value) && isHex(value) && value.length === 132) || globalUtilsInst?.isCompressedPubKey(value)
     }
 
     function isEnsVerified(publicKey) {

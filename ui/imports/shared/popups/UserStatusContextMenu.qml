@@ -1,108 +1,194 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+
+import StatusQ.Core
+import StatusQ.Core.Theme
+import StatusQ.Controls
+import StatusQ.Components
 import StatusQ.Popups
 import StatusQ.Core.Utils as SQUtils
 
-import shared.controls.chat
+import shared.controls
 import shared.controls.chat.menuItems
-import shared.panels
 import utils
 
-StatusMenu {
+StatusDropdown {
     id: root
 
-    property alias compressedPubKey: header.compressedPubKey
-    property alias emojiHash: header.emojiHash
-    property alias name: header.displayName
-    property alias headerIcon: header.icon
-    property alias colorId: header.colorId
-    property alias usesDefaultName: header.usesDefaultName
-    property alias isCurrentUser: header.isCurrentUser
+    required property string compressedPubKey
+    required property var emojiHash
+    required property string name
+    required property string headerIcon
+    required property int colorId
+    required property bool usesDefaultName
+    required property string bio
 
-    // Constants.currentUserStatus
-    property int currentUserStatus
+    property int currentUserStatus: Constants.currentUserStatus.unknown
 
     signal viewProfileRequested
     signal copyLinkRequested
     signal shareOwnProfileRequested
     signal setCurrentUserStatusRequested(int status)
 
-    ProfileHeader {
-        id: header
+    implicitWidth: 400
+    padding: 0
+    bottomPadding: root.bottomSheet ? 0 : Theme.halfPadding
 
-        objectName: 'onlineIdentifierProfileHeader'
+    contentItem: ColumnLayout {
+        spacing: 0
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.margins: Theme.defaultPadding
+            Layout.bottomMargin: Theme.halfPadding
+            spacing: Theme.halfPadding
 
-        width: parent.width
-    }
+            StatusUserImage {
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                name: root.name
+                usesDefaultName: root.usesDefaultName
+                image: root.headerIcon
+                userColor: Utils.colorForColorId(Theme.palette, root.colorId)
+                interactive: false
+                onlineStatus: root.currentUserStatus
+                imageWidth: 60
+                imageHeight: imageWidth
+            }
+            StatusBaseText {
+                Layout.fillWidth: true
+                font.bold: true
+                font.pixelSize: Theme.fontSize(20)
+                elide: Text.ElideRight
+                text: SQUtils.Emoji.parse(root.name, SQUtils.Emoji.size.middle)
+            }
 
-    StatusMenuSeparator {}
+            RowLayout {
+                Layout.fillWidth: true
+                StatusBaseText {
+                    color: Theme.palette.baseColor1
+                    text: Utils.getElidedPk(root.compressedPubKey)
+                    HoverHandler {
+                        id: keyHoverHandler
+                    }
+                    StatusToolTip {
+                        text: root.compressedPubKey
+                        visible: keyHoverHandler.hovered
+                    }
+                }
+                CopyButton {
+                    Layout.leftMargin: -4
+                    Layout.preferredWidth: 16
+                    Layout.preferredHeight: 16
+                    textToCopy: root.compressedPubKey
+                    StatusToolTip {
+                        text: qsTr("Copy Chat Key")
+                        visible: parent.hovered
+                    }
+                }
+            }
 
-    ViewProfileMenuItem {
-        objectName: "userStatusViewMyProfileAction"
-        onTriggered: {
-            root.viewProfileRequested()
-            root.close()
+            StatusBaseText {
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+                maximumLineCount: 1
+                text: root.bio
+            }
+
+            EmojiHash {
+                Layout.fillWidth: true
+                emojiHash: root.emojiHash
+                oneRow: true
+            }
+        }
+
+        StatusMenuSeparator {
+            Layout.fillWidth: true
+        }
+
+        ActionWrapper {
+            action: ViewProfileMenuItem {
+                objectName: "userStatusViewMyProfileAction"
+                onTriggered: {
+                    root.viewProfileRequested()
+                    root.close()
+                }
+            }
+        }
+
+        ActionWrapper {
+            visible: !SQUtils.Utils.isMobile
+            action: StatusAction {
+                objectName: "userStatusCopyLinkAction"
+                text: qsTr("Copy link to profile")
+                icon.name: "copy"
+                onTriggered: {
+                    root.copyLinkRequested()
+                    root.close()
+                }
+            }
+        }
+
+        ActionWrapper {
+            visible: SQUtils.Utils.isMobile
+            action: StatusAction {
+                objectName: "userStatusShareProfileAction"
+                text: qsTr("Invite contacts")
+                icon.name: "add-contact"
+                onTriggered: {
+                    root.shareOwnProfileRequested()
+                    root.close()
+                }
+            }
+        }
+
+        StatusMenuSeparator {
+            Layout.fillWidth: true
+        }
+
+        ActionWrapper {
+            font.bold: checked
+            action: OnlineStatusAction {
+                objectName: "userStatusMenuAlwaysOnlineAction"
+                userStatus: Constants.currentUserStatus.alwaysOnline
+                text: qsTr("Always online")
+                icon.name: "statuses/online"
+            }
+        }
+
+        ActionWrapper {
+            font.bold: checked
+            action: OnlineStatusAction {
+                objectName: "userStatusMenuInactiveAction"
+                userStatus: Constants.currentUserStatus.inactive
+                text: qsTr("Inactive")
+                icon.name: "statuses/inactive"
+            }
+        }
+
+        ActionWrapper {
+            font.bold: checked
+            action: OnlineStatusAction {
+                objectName: "userStatusMenuAutomaticAction"
+                userStatus: Constants.currentUserStatus.automatic
+                text: qsTr("Set status automatically")
+                icon.name: "statuses/automatic"
+            }
         }
     }
 
-    StatusAction {
-        objectName: "userStatusCopyLinkAction"
-        enabled: !SQUtils.Utils.isMobile
-        text: qsTr("Copy link to profile")
-        icon.name: "copy"
-        onTriggered: {
-            root.copyLinkRequested()
-            root.close()
-        }
+    component ActionWrapper: StatusMenuItem {
+        Layout.fillWidth: true
+        horizontalPadding: Theme.defaultSmallPadding
     }
 
-    StatusAction {
-        objectName: "userStatusShareProfileAction"
-        enabled: root.isCurrentUser && SQUtils.Utils.isMobile
-        text: qsTr("Invite contacts")
-        icon.name: "add-contact"
+    component OnlineStatusAction: StatusAction {
+        required property int userStatus
+        icon.color: "transparent"
+        icon.width: 12
+        icon.height: 12
+        checked: userStatus === root.currentUserStatus
         onTriggered: {
-            root.shareOwnProfileRequested()
-            root.close()
-        }
-    }
-
-    StatusMenuSeparator {}
-
-    StatusAction {
-        objectName: "userStatusMenuAlwaysOnlineAction"
-        text: qsTr("Always online")
-        assetSettings.name: "statuses/online"
-        assetSettings.width: 12
-        assetSettings.height: 12
-        assetSettings.color: "transparent"
-        fontSettings.bold: root.currentUserStatus === Constants.currentUserStatus.alwaysOnline
-        onTriggered: {
-            root.setCurrentUserStatusRequested(Constants.currentUserStatus.alwaysOnline)
-            root.close()
-        }
-    }
-
-    StatusAction {
-        objectName: "userStatusMenuInactiveAction"
-        text: qsTr("Inactive")
-        assetSettings.name: "statuses/inactive"
-        assetSettings.width: 12
-        assetSettings.height: 12
-        assetSettings.color: "transparent"
-        fontSettings.bold: root.currentUserStatus === Constants.currentUserStatus.inactive
-        onTriggered: {
-            root.setCurrentUserStatusRequested(Constants.currentUserStatus.inactive)
-            root.close()
-        }
-    }
-
-    StatusAction {
-        objectName: "userStatusMenuAutomaticAction"
-        text: qsTr("Set status automatically")
-        assetSettings.name: "statuses/automatic"
-        assetSettings.color: "transparent"
-        fontSettings.bold: root.currentUserStatus === Constants.currentUserStatus.automatic
-        onTriggered: {
-            root.setCurrentUserStatusRequested(Constants.currentUserStatus.automatic)
+            root.setCurrentUserStatusRequested(userStatus)
             root.close()
         }
     }

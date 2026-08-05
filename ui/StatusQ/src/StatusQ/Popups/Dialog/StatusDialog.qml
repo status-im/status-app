@@ -188,6 +188,14 @@ Dialog {
 
     background: StatusDialogBackground {
         id: background
+        Binding on bottomLeftRadius {
+            value: 0
+            when: root.bottomSheet
+        }
+        Binding on bottomRightRadius {
+            value: 0
+            when: root.bottomSheet
+        }
     }
 
     Connections {
@@ -221,6 +229,7 @@ Dialog {
         visible: rightButtons
                  && root.standardButtons & (rejectRoleFlags | noRoleFlags | acceptRoleFlags
                                             | yesRoleFlags | Dialog.ApplyRole)
+        bottomSheet: root.bottomSheet
 
         rightButtons: ObjectModel {
             StatusButton {

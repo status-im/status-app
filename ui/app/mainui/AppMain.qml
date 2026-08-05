@@ -230,9 +230,9 @@ Item {
                 publicKey: appMain.profileStore.pubKey
                 compressedPubKey: appMain.profileStore.compressedPubKey
                 displayName: appMain.profileStore.displayName
-                ensName: appMain.profileStore.name
+                ensName: appMain.profileStore.preferredName
                 ensVerified: !!ensName && Utils.isValidEns(ensName)
-                preferredDisplayName: appMain.profileStore.preferredName
+                preferredDisplayName: appMain.profileStore.name // returns ENS, or display name, or alias
                 alias: appMain.profileStore.username
                 usesDefaultName: appMain.profileStore.usesDefaultName
                 icon: appMain.profileStore.icon

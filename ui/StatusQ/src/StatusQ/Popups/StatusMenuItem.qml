@@ -25,14 +25,17 @@ MenuItem {
 
     font.pixelSize: d.fontSettings ? d.fontSettings.pixelSize : d.defaultFontSettings.pixelSize
 
+    icon.width: 18
+    icon.height: 18
+
     QtObject {
         id: d
 
         readonly property bool isSubMenu: !!root.subMenu
-        readonly property bool isStatusSubMenu: isSubMenu && root.subMenu.toString().startsWith("StatusMenu_")
+        readonly property bool isStatusSubMenu: isSubMenu && (root.subMenu instanceof StatusMenu)
         readonly property bool subMenuOpened: isSubMenu && root.subMenu.opened
         readonly property bool hasAction: !!root.action
-        readonly property bool isStatusAction: d.hasAction && root.action.toString().startsWith("StatusAction_")
+        readonly property bool isStatusAction: d.hasAction && (root.action instanceof StatusAction)
         readonly property bool isStatusDangerAction: (d.isStatusAction && root.action.type === StatusAction.Type.Danger) ||
                                                      (d.isStatusSubMenu && root.subMenu.type === StatusAction.Type.Danger)
         readonly property bool isStatusSuccessAction: (d.isStatusAction && root.action.type === StatusAction.Type.Success) ||
@@ -81,8 +84,8 @@ MenuItem {
                                                              : d.defaultFontSettings
 
         readonly property StatusAssetSettings defaultAssetSettings: StatusAssetSettings {
-            width: 18
-            height: 18
+            width: root.icon.width
+            height: root.icon.height
             rotation: 0
             // Link to standard Qt properties. Not because it's a good idea,
             // but because it we use it in some places and it will make refactor easier.
@@ -95,9 +98,8 @@ MenuItem {
         }
 
         readonly property StatusFontSettings defaultFontSettings: StatusFontSettings {
-            pixelSize: root.Theme.additionalTextSize
-            bold: false
-            italic: false
+            bold: root.font.bold
+            italic: root.font.italic
         }
     }
 

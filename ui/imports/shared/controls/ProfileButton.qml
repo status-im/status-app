@@ -19,6 +19,7 @@ StatusIconTabButton {
     required property string iconSource
     required property int colorId
     required property int currentUserStatus
+    property string bio
 
     property bool loading: false
     property var getLinkToProfileFn: function(pubKey) { console.error("IMPLEMENT ME"); return "" }
@@ -80,10 +81,12 @@ StatusIconTabButton {
         id: userStatusContextMenu
         objectName: "userStatusContextMenu"
 
+        directParent: root
+
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
 
-        y: root.y - userStatusContextMenu.height + root.height
-        x: root.x + root.width + 5
+        relativeY: root.y - userStatusContextMenu.height + root.height
+        relativeX: root.x + root.width + 8
 
         compressedPubKey: root.compressedPubKey
         emojiHash: root.getEmojiHashFn(root.pubKey)
@@ -91,8 +94,8 @@ StatusIconTabButton {
         name: root.name
         headerIcon: root.iconSource
         usesDefaultName: root.usesDefaultName
+        bio: root.bio
 
-        isCurrentUser: true
         currentUserStatus: root.currentUserStatus
 
         onViewProfileRequested: root.viewProfileRequested(root.pubKey)
