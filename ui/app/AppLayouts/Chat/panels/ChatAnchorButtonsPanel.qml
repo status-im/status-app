@@ -33,15 +33,11 @@ Item {
     }
 
     component AnchorButton: StatusButton {
-        Layout.preferredHeight: 38
-        radius: height
+        Layout.preferredHeight: 40
         spacing: 2
 
-        icon.width: Theme.primaryTextFontSize + 5
-        icon.height: Theme.primaryTextFontSize + 5
         verticalPadding: Theme.halfPadding
         horizontalPadding: Theme.smallPadding
-        font.pixelSize: Theme.primaryTextFontSize
 
         layer.enabled: true
         layer.effect: DropShadow {
@@ -71,10 +67,11 @@ Item {
         AnchorButton {
             id: recentMessagesButton
 
+            leftPadding: text ? 8 : 2
+            rightPadding: 2
             text: root.recentMessagesCount <= 0 ? "" : d.limitNumberTo99(root.recentMessagesCount)
-            normalColor: Theme.palette.baseColor1
-            hoverColor: Theme.palette.hoverColor(normalColor)
-            textColor: StatusColors.white
+            normalColor: Theme.palette.primaryColor2
+            textColor: Theme.palette.primaryColor1
             textPosition: StatusBaseButton.TextPosition.Left
             icon.name: "arrow-down"
 

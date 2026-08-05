@@ -136,10 +136,9 @@ Item {
         visible: active
         anchors.verticalCenter: chatTextView.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        sourceComponent: StatusRoundButton {
-            implicitWidth: 24
-            implicitHeight: 24
-            type: StatusRoundButton.Type.Secondary
+        sourceComponent: StatusButton {
+            type: StatusBaseButton.Type.Primary
+            size: StatusBaseButton.Size.Small
             icon.name: d.readMore ? "chevron-up":  "chevron-down"
             onClicked: {
                 d.readMore = !d.readMore

@@ -1,6 +1,7 @@
 import QtQuick
 
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Controls
 import StatusQ.Components
 

@@ -8,7 +8,7 @@ Control {
     id: root
 
     property string limitText
-    property string iconName: "send"
+    property string iconName: "arrow-up"
     property alias interactive: mouseArea.enabled
 
     signal clicked
@@ -19,6 +19,7 @@ Control {
         readonly property int implicitHeight: 36
         readonly property real hoverExpandFactor: 1.2
         readonly property real pressedExpandFactor: 1.1
+        readonly property int cornerRadius: 8
     }
 
     contentItem: Item {
@@ -51,8 +52,8 @@ Control {
                 }
             }
 
-            topLeftRadius: height / 2
-            bottomLeftRadius: topLeftRadius
+            topLeftRadius: d.cornerRadius
+            bottomLeftRadius: d.cornerRadius
 
             border.color: StatusColors.alphaColor(
                               Theme.palette.customisationColors.orange, 0.2)
@@ -87,8 +88,6 @@ Control {
         Rectangle {
             anchors.centerIn: baseBackgroundRectangle
 
-            smooth: true
-
             property real factor: mouseArea.pressed
                                   ? d.pressedExpandFactor
                                   : (mouseArea.containsMouse
@@ -96,7 +95,7 @@ Control {
 
             width: baseBackgroundRectangle.width * factor
             height: width
-            radius: width / 2
+            radius: d.cornerRadius
 
             color: baseBackgroundRectangle.color
 
@@ -117,10 +116,9 @@ Control {
             anchors.bottom: parent.bottom
             anchors.top: parent.top
 
-            smooth: true
             color: root.enabled ? Theme.palette.primaryColor1
                                 : Theme.palette.baseColor1
-            radius: width / 2
+            radius: d.cornerRadius
 
             Behavior on color {
                 ColorAnimation {
@@ -134,7 +132,7 @@ Control {
                 anchors.centerIn: parent
 
                 icon: root.iconName
-                color: Theme.palette.baseColor3
+                color: Theme.palette.white
             }
 
             MouseArea {
