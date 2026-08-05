@@ -498,6 +498,11 @@ Control {
         messageInputField.forceActiveFocus();
     }
 
+    // Used by Squish tests to send a sticker without opening the stickers popup / market
+    function selectStickerForTest(hashId, packId, url) {
+        root.stickerSelected(hashId, packId, url)
+    }
+
     StatusFileDialog {
         id: imageDialog
 
