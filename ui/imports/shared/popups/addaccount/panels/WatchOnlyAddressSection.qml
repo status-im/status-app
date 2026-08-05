@@ -62,15 +62,9 @@ Column {
         input.multiline: true
         warningMode: d.incorrectChecksum
         warningMessage: qsTr("Checksum of the entered address is incorrect")
-        input.rightComponent: StatusButton {
+        input.rightComponent: StatusPasteButton {
             anchors.verticalCenter: parent.verticalCenter
-            borderColor: Theme.palette.primaryColor1
-            size: StatusBaseButton.Size.Tiny
-            text: qsTr("Paste")
-            onClicked: {
-                addressInput.text = ""
-                addressInput.input.edit.paste()
-            }
+            onPasted: (text) => addressInput.text = text
         }
         validators: [
             StatusValidator {

@@ -7489,10 +7489,6 @@ to sign using the keys stored on this device.</source>
         <translation>Napište nebo vložte svůj soukromý klíč</translation>
     </message>
     <message>
-        <source>Paste</source>
-        <translation>Vložit</translation>
-    </message>
-    <message>
         <source>Private key invalid</source>
         <translation>Neplatný soukromý klíč</translation>
     </message>
@@ -15061,10 +15057,6 @@ selhalo</translation>
         <translation>Odeslat žádost o kontakt na klíč chatu</translation>
     </message>
     <message>
-        <source>Paste</source>
-        <translation>Vložit</translation>
-    </message>
-    <message>
         <source>Enter chat key here</source>
         <translation>Zde zadejte klíč chatu</translation>
     </message>
@@ -15154,10 +15146,6 @@ selhalo</translation>
     <message>
         <source>Enter an ENS name or address</source>
         <translation>Zadejte ENS jméno nebo adresu</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation>Vložit</translation>
     </message>
 </context>
 <context>
@@ -16429,6 +16417,13 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>StatusPasteButton</name>
+    <message>
+        <source>Paste</source>
+        <translation type="unfinished">Vložit</translation>
+    </message>
+</context>
+<context>
     <name>StatusQrCodeScanner</name>
     <message>
         <source>Camera is not available</source>
@@ -16569,10 +16564,6 @@ selhalo</translation>
     <message>
         <source>Copy</source>
         <translation>Kopírovat</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation>Vložit</translation>
     </message>
 </context>
 <context>
@@ -18695,10 +18686,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <source>Unexpected error occurred. Try again.</source>
         <translation>Nastala neočekávaná chyba. Zkuste znovu.</translation>
     </message>
-    <message>
-        <source>Paste</source>
-        <translation>Vložit</translation>
-    </message>
 </context>
 <context>
     <name>WalletAccountDetailsKeypairItem</name>
@@ -19287,10 +19274,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Checksum of the entered address is incorrect</source>
         <translation>Kontrolní součet zadané adresy je nesprávný</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation>Vložit</translation>
     </message>
     <message>
         <source>Please enter a valid Ethereum address or ENS name</source>

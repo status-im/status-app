@@ -30,6 +30,7 @@
 #include "StatusQ/statuslayoutstate.h"
 #include "StatusQ/NativeSwipeHandlerItem.h"
 #include "StatusQ/NativeIndicatorItem.h"
+#include "StatusQ/NativePasteButtonItem.h"
 
 #if defined(STATUSQ_HAS_MOBILEWEBVIEW)
 #include "MobileWebView/mobilewebviewbackend.h"
@@ -44,6 +45,9 @@
 #if defined(Q_OS_IOS) || defined(Q_OS_ANDROID) || defined(Q_OS_MACOS)
 extern void registerNativeSwipeHandlerItemType();
 extern void registerNativeIndicatorItemType();
+#endif
+#if defined(Q_OS_IOS)
+extern void registerNativePasteButtonItemType();
 #endif
 #if defined(Q_OS_IOS) || defined(Q_OS_MACOS)
 extern "C" void statusq_linkAccessibilityCrashFilter();
@@ -184,6 +188,12 @@ void registerStatusQTypes() {
 #else
     qmlRegisterType<NativeSwipeHandlerItem>("StatusQ.Controls", 0, 1, "NativeSwipeHandlerItem");
     qmlRegisterType<NativeIndicatorItem>("StatusQ.Controls", 0, 1, "NativeIndicatorItem");
+#endif
+
+#if defined(Q_OS_IOS)
+    registerNativePasteButtonItemType();
+#else
+    qmlRegisterType<NativePasteButtonItem>("StatusQ.Controls", 0, 1, "NativePasteButtonItem");
 #endif
 
 #if defined(Q_OS_IOS) || defined(Q_OS_MACOS)

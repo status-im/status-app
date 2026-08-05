@@ -69,24 +69,17 @@ ColumnLayout {
                 visible: showIcon && !input.pending
             }
 
-            StatusButton {
+            StatusPasteButton {
                 id: pasteButton
 
-                text: qsTr("Paste")
-
-                size: StatusBaseButton.Size.Small
-
                 visible: !showIcon
+                size: StatusBaseButton.Size.Small
+                borderWidth: pasteButton.canPaste ? 1 : 0
+                borderColor: Theme.palette.primaryColor1
 
-                borderWidth: enabled ? 1 : 0
-                borderColor: textColor
-
-                // On iOS, reading canPaste touches UIPasteboard and triggers the
-                // system "paste from..." prompt. Keep enabled; the actual paste reads.
-                enabled: SQUtils.Utils.isIOS || input.edit.canPaste
-
-                onClicked: {
-                    input.edit.paste()
+                onPasted: (text) => {
+                    // insert at the caret, as edit.paste() did
+                    input.edit.insert(input.edit.cursorPosition, text)
                     input.edit.focus = !SQUtils.Utils.isMobile
                 }
             }

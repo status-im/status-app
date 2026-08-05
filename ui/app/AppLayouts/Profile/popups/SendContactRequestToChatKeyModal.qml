@@ -156,13 +156,10 @@ StatusDialog {
 
     Component {
         id: pasteButtonComponent
-        StatusButton {
+        StatusPasteButton {
             anchors.verticalCenter: parent.verticalCenter
-            borderColor: Theme.palette.primaryColor1
-            size: StatusBaseButton.Size.Tiny
-            text: qsTr("Paste")
-            onClicked: {
-                d.realChatKey = ClipboardUtils.text
+            onPasted: (text) => {
+                d.realChatKey = text
                 d.showPasteButton = false
                 d.textChanged(d.realChatKey)
             }

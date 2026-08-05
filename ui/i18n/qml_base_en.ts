@@ -7450,10 +7450,6 @@ to sign using the keys stored on this device.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Paste</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Private key invalid</source>
         <translation type="unfinished"></translation>
     </message>
@@ -14981,10 +14977,6 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Paste</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Enter chat key here</source>
         <translation type="unfinished"></translation>
     </message>
@@ -15073,10 +15065,6 @@ to load</source>
     <name>SendRecipientInput</name>
     <message>
         <source>Enter an ENS name or address</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Paste</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -16340,6 +16328,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>StatusPasteButton</name>
+    <message>
+        <source>Paste</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>StatusQrCodeScanner</name>
     <message>
         <source>Camera is not available</source>
@@ -16479,10 +16474,6 @@ to load</source>
     <name>StatusSyncCodeInput</name>
     <message>
         <source>Copy</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Paste</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -18594,10 +18585,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <source>Unexpected error occurred. Try again.</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Paste</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>WalletAccountDetailsKeypairItem</name>
@@ -19184,10 +19171,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Checksum of the entered address is incorrect</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Paste</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

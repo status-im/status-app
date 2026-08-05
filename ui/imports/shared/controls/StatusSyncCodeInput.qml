@@ -3,7 +3,6 @@ import QtQuick
 import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
-import StatusQ.Core.Utils
 import StatusQ.Controls
 
 StatusInput {
@@ -26,10 +25,7 @@ StatusInput {
     input.rightComponent: {
         switch (root.mode) {
         case StatusSyncCodeInput.Mode.WriteMode:
-            // On iOS, don't read ClipboardUtils.hasText to decide the paste button:
-            // it triggers the system "paste from..." prompt. Always offer paste there.
-            return root.valid ? validCodeIconComponent
-                              : (Utils.isIOS || ClipboardUtils.hasText) ? pasteButtonComponent : null
+            return root.valid ? validCodeIconComponent : pasteButtonComponent
         case StatusSyncCodeInput.Mode.ReadMode:
             return copyButtonComponent
         }
@@ -50,15 +46,12 @@ StatusInput {
     Component {
         id: pasteButtonComponent
 
-        StatusButton {
+        StatusPasteButton {
             objectName: "syncCodePasteButton"
-            size: StatusBaseButton.Size.Tiny
-            enabled: !root.readOnly && (Utils.isIOS || ClipboardUtils.hasText)
-            text: qsTr("Paste")
-            onClicked: {
-                const pasted = ClipboardUtils.text
-                if (pasted.length > 0)
-                    root.input.text = pasted
+            enabled: !root.readOnly
+            onPasted: (text) => {
+                if (text.length > 0)
+                    root.input.text = text
             }
         }
     }

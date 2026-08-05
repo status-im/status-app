@@ -3185,6 +3185,12 @@ Item {
     Connections {
         target: ClipboardUtils
 
+        // Not on iOS: this reads the clipboard with no user action at all, which
+        // is exactly what triggers the "Allow Paste?" prompt (#21365, #21438).
+        // It is already inert there - ClipboardUtils.suppressChangeNotifications()
+        // blocks the change signal - but that is a side effect, so state it.
+        enabled: !SQUtils.Utils.isIOS
+
         function onContentChanged() {
             if (!ClipboardUtils.hasText)
                 return

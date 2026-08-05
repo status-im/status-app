@@ -7462,10 +7462,6 @@ to sign using the keys stored on this device.</source>
         <translation>Escribe o pega tu clave privada</translation>
     </message>
     <message>
-        <source>Paste</source>
-        <translation>Pegar</translation>
-    </message>
-    <message>
         <source>Private key invalid</source>
         <translation>Clave privada inválida</translation>
     </message>
@@ -14996,10 +14992,6 @@ al cargar</translation>
         <translation>Enviar solicitud de contacto a clave de chat</translation>
     </message>
     <message>
-        <source>Paste</source>
-        <translation>Pegar</translation>
-    </message>
-    <message>
         <source>Enter chat key here</source>
         <translation>Ingresa la clave de chat aquí</translation>
     </message>
@@ -15089,10 +15081,6 @@ al cargar</translation>
     <message>
         <source>Enter an ENS name or address</source>
         <translation>Escribe un nombre ENS o dirección</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation>Pegar</translation>
     </message>
 </context>
 <context>
@@ -16356,6 +16344,13 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>StatusPasteButton</name>
+    <message>
+        <source>Paste</source>
+        <translation type="unfinished">Pegar</translation>
+    </message>
+</context>
+<context>
     <name>StatusQrCodeScanner</name>
     <message>
         <source>Camera is not available</source>
@@ -16496,10 +16491,6 @@ al cargar</translation>
     <message>
         <source>Copy</source>
         <translation>Copiar</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation>Pegar</translation>
     </message>
 </context>
 <context>
@@ -18622,10 +18613,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
         <source>Unexpected error occurred. Try again.</source>
         <translation>Ocurrió un error inesperado. Intente nuevamente.</translation>
     </message>
-    <message>
-        <source>Paste</source>
-        <translation>Pegar</translation>
-    </message>
 </context>
 <context>
     <name>WalletAccountDetailsKeypairItem</name>
@@ -19213,10 +19200,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Checksum of the entered address is incorrect</source>
         <translation></translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation>Pegar</translation>
     </message>
     <message>
         <source>Please enter a valid Ethereum address or ENS name</source>

@@ -83,8 +83,7 @@ TextField {
         active: false
         sourceComponent: StatusMenu {
             hideDisabledItems: false
-            popupType: Utils.isIOS ? Popup.Native : Popup.Item
-
+    
             StatusAction {
                 text: qsTr("Cut")
                 enabled: !root.noSelection
@@ -97,12 +96,7 @@ TextField {
             }
             StatusAction {
                 text: qsTr("Paste")
-                // On iOS, never read the clipboard for UI enablement: reading
-                // canPaste touches UIPasteboard and triggers the system
-                // "paste from..." prompt. Keep Paste always enabled there and let
-                // the actual paste() be the only (user-initiated) clipboard read.
-                // On desktop, reading canPaste is free and keeps the disabled state.
-                enabled: Utils.isIOS || root.canPaste
+                enabled: root.canPaste
                 onTriggered: root.paste()
             }
             StatusMenuSeparator {}

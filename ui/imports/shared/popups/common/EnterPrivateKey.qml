@@ -70,17 +70,12 @@ Item {
                         root.store.submitPopup(event)
                     }
 
-                    StatusButton {
+                    StatusPasteButton {
                         id: pasteButton
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.right: parent.right
                         anchors.rightMargin: Theme.padding
-                        borderColor: Theme.palette.primaryColor1
-                        size: StatusBaseButton.Size.Tiny
-                        text: qsTr("Paste")
-                        onClicked: {
-                            privKeyInput.text = ClipboardUtils.text
-                        }
+                        onPasted: (text) => privKeyInput.text = text
                     }
                 }
 

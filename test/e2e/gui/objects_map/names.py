@@ -967,7 +967,7 @@ amountInput_TextEdit = {"container": statusDesktop_mainWindow_overlay, "objectNa
 paste_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "type": "StatusButton",
                       "unnamed": 1, "visible": True}
 ens_or_address_text_input = {"container": statusDesktop_mainWindow_overlay, "objectName": "RecipientView_SendRecipientInput", "type": "SendRecipientInput", "visible": True}
-ens_or_address_paste_button = {"container": statusDesktop_mainWindow_overlay, "objectName": "pasteButton", "type": "StatusButton", "visible": True}
+ens_or_address_paste_button = {"container": statusDesktop_mainWindow_overlay, "objectName": "pasteButton", "type": "StatusPasteButton", "visible": True}
 
 accountSelectionTabBar_StatusTabBar = {"container": statusDesktop_mainWindow_overlay, "id": "accountSelectionTabBar",
                                        "type": "StatusTabBar", "unnamed": 1, "visible": True}

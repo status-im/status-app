@@ -39,6 +39,7 @@ NativeIndicatorImpl 0.1 NativeIndicatorImpl.qml
 StatusNavigationButton 0.1 StatusNavigationButton.qml
 StatusPasswordInput 0.1 StatusPasswordInput.qml
 StatusPasswordStrengthIndicator 0.1 StatusPasswordStrengthIndicator.qml
+StatusPasteButton 0.1 StatusPasteButton.qml
 StatusPickerButton 0.1 StatusPickerButton.qml
 StatusPinInput 0.1 StatusPinInput.qml
 StatusProgressBar 0.1 StatusProgressBar.qml

@@ -180,6 +180,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/urlschemeevent.h
         include/StatusQ/NativeSwipeHandlerItem.h
         include/StatusQ/NativeIndicatorItem.h
+        include/StatusQ/NativePasteButtonItem.h
         include/StatusQ/localnetworkpermission.h
         include/StatusQ/networkchecker.h
         include/StatusQ/oneoffilter.h
@@ -242,6 +243,7 @@ add_library(StatusQ ${LIB_TYPE}
 
         src/StatusQ/Controls/NativeSwipeHandlerItem.cpp
         src/StatusQ/Controls/NativeIndicatorItem.cpp
+        src/StatusQ/Controls/NativePasteButtonItem.cpp
 
         # wallet
         src/wallet/managetokenscontroller.cpp
@@ -301,6 +303,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
         src/accessibility_crash_filter.mm
         src/StatusQ/Controls/NativeSwipeHandlerItem_ios.mm
         src/StatusQ/Controls/NativeIndicatorItem_ios.mm
+        src/StatusQ/Controls/NativePasteButtonItem_ios.mm
         src/localnetworkpermission_ios.mm
     )
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")

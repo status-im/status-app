@@ -7434,10 +7434,6 @@ to sign using the keys stored on this device.</source>
         <translation>개인 키를 입력하거나 붙여넣기</translation>
     </message>
     <message>
-        <source>Paste</source>
-        <translation>붙여넣기</translation>
-    </message>
-    <message>
         <source>Private key invalid</source>
         <translation>개인 키가 올바르지 않습니다</translation>
     </message>
@@ -14932,10 +14928,6 @@ to load</source>
         <translation>채팅 키로 연락처 요청 보내기</translation>
     </message>
     <message>
-        <source>Paste</source>
-        <translation>붙여넣기</translation>
-    </message>
-    <message>
         <source>Enter chat key here</source>
         <translation>여기에 채팅 키를 입력하세요</translation>
     </message>
@@ -15025,10 +15017,6 @@ to load</source>
     <message>
         <source>Enter an ENS name or address</source>
         <translation>ENS 이름 또는 주소 입력</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation>붙여넣기</translation>
     </message>
 </context>
 <context>
@@ -16284,6 +16272,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>StatusPasteButton</name>
+    <message>
+        <source>Paste</source>
+        <translation type="unfinished">붙여넣기</translation>
+    </message>
+</context>
+<context>
     <name>StatusQrCodeScanner</name>
     <message>
         <source>Camera is not available</source>
@@ -16424,10 +16419,6 @@ to load</source>
     <message>
         <source>Copy</source>
         <translation>클립보드로 복사</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation>붙여넣기</translation>
     </message>
 </context>
 <context>
@@ -18541,10 +18532,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <source>Unexpected error occurred. Try again.</source>
         <translation>예기치 않은 오류가 발생했습니다. 다시 시도하세요.</translation>
     </message>
-    <message>
-        <source>Paste</source>
-        <translation>붙여넣기</translation>
-    </message>
 </context>
 <context>
     <name>WalletAccountDetailsKeypairItem</name>
@@ -19132,10 +19119,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Checksum of the entered address is incorrect</source>
         <translation>입력한 주소의 체크섬이 올바르지 않습니다</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation>붙여넣기</translation>
     </message>
     <message>
         <source>Please enter a valid Ethereum address or ENS name</source>

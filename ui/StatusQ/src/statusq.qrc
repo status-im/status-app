@@ -131,6 +131,7 @@
         <file>StatusQ/Controls/StatusNavigationButton.qml</file>
         <file>StatusQ/Controls/StatusPasswordInput.qml</file>
         <file>StatusQ/Controls/StatusPasswordStrengthIndicator.qml</file>
+        <file>StatusQ/Controls/StatusPasteButton.qml</file>
         <file>StatusQ/Controls/StatusPickerButton.qml</file>
         <file>StatusQ/Controls/StatusPinInput.qml</file>
         <file>StatusQ/Controls/StatusProgressBar.qml</file>
