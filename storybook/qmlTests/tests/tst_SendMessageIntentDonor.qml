@@ -166,5 +166,21 @@ Item {
             compare(spy.signalArguments[0][0], "chat-alice")
             compare(spy.signalArguments[1][0], "chat-design-group")
         }
+
+        function test_repeatSendToTheChatBeingDonatedIsCoalesced() {
+            // Above repeats a queued chat; this repeats the in-flight one.
+            const iconDir = SystemUtils.shareShortcutsIconDirectory()
+            const { donor, spy } = createDonor({ iconDirectory: iconDir })
+
+            donor.donateForChat("chat-alice")
+            donor.donateForChat("chat-alice")
+            donor.donateForChat("chat-design-group")
+
+            tryCompare(spy, "count", 2)
+            wait(50)
+            compare(spy.count, 2)
+            compare(spy.signalArguments[0][0], "chat-alice")
+            compare(spy.signalArguments[1][0], "chat-design-group")
+        }
     }
 }
