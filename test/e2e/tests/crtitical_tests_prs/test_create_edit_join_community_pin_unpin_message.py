@@ -12,6 +12,7 @@ from helpers.multiple_instances_helper import (
 from scripts.utils.validators import verify_community_link_format
 from scripts.utils.generators import random_text_message, random_community_introduction, random_community_description, \
     random_community_name, random_community_leave_message
+from scripts.utils.parsers import remove_tags
 import configs
 from constants import ColorCodes, UserAccount, RandomUser, RandomCommunity
 from gui.screens.community_settings import CommunitySettingsScreen
@@ -153,10 +154,13 @@ def test_create_edit_join_community_pin_unpin_message(multiple_instances):
             messages_screen.group_chat.send_message_to_group_chat(message_text)
             second_message_text = random_text_message()
             messages_screen.group_chat.send_message_to_group_chat(second_message_text)
-            newest_message_object = messages_screen.chat.messages(0)
-            message_items = [message.text for message in newest_message_object]
-            for message_item in message_items:
-                assert second_message_text in message_item, f'Message {message_text} is not visible'
+            assert driver.waitFor(
+                lambda: any(
+                    second_message_text in remove_tags(m.text or '')
+                    for m in messages_screen.chat.messages(0)
+                ),
+                configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+            ), f'Message {second_message_text} is not visible'
 
         with step(f'Hover message {second_message_text} and pin it'):
             message = messages_screen.chat.find_message_by_text(second_message_text, 0)

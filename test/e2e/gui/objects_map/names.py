@@ -1123,10 +1123,13 @@ close_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_
                       "type": "StatusButton", "visible": True}
 
 # Build showcase popup
-profileShowCasePopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "ProfileShowcaseInfoPopup",
-                        "type": "PopupItem", "visible": True}
+profileShowCasePopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "buildShowcaseButton",
+                        "type": "StatusButton", "visible": True}
 build_your_showcase_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
                                     "objectName": "buildShowcaseButton", "type": "StatusButton", "visible": True}
+profileShowcaseCloseButton = {"container": statusDesktop_mainWindow_overlay,
+                              "objectName": "headerActionsCloseButton", "type": "StatusFlatRoundButton",
+                              "visible": True}
 
 # Activity center
 activityCenterPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "ActivityCenterPopup",

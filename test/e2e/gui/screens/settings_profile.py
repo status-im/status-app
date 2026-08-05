@@ -35,22 +35,26 @@ class ProfileSettingsView(QObject):
     @property
     @allure.step('Get display name')
     def get_display_name(self) -> str:
+        self.showcase_popup_close_if_present()
         self._identity_tab_button.click()
         return self._display_name_text_field.text
 
     @allure.step('Set user name')
     def set_name(self, value: str):
+        self.showcase_popup_close_if_present()
         self._identity_tab_button.click()
         self._display_name_text_field.text = value
 
     @property
     @allure.step('Get bio')
     def get_bio(self) -> str:
+        self.showcase_popup_close_if_present()
         self._identity_tab_button.click()
         return self._bio_text_field.text
 
     @allure.step('Set bio')
     def set_bio(self, value: str):
+        self.showcase_popup_close_if_present()
         self._identity_tab_button.click()
         self._bio_text_field.text = value
 
@@ -70,12 +74,9 @@ class ProfileSettingsView(QObject):
 
     @allure.step('Close Showcase profile popup if it is there')
     def showcase_popup_close_if_present(self):
-        try:
-            showcase_popup = BuildShowcasePopup()
-            if showcase_popup.is_visible:
-                showcase_popup.close()
-        except (LookupError, TimeoutError, RuntimeError, AssertionError):
-            pass
+        showcase_popup = BuildShowcasePopup()
+        if showcase_popup.is_present:
+            showcase_popup.close()
 
     @allure.step('Set social links')
     def set_social_links(self, links):

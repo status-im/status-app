@@ -7,7 +7,7 @@ from allure_commons._allure import step
 
 import driver
 from constants import RandomWalletAccount
-from helpers.wallet_helper import authenticate_with_password
+from helpers.wallet_helper import assert_authenticate_popup_not_appears
 from constants.wallet import WalletAccountPopup
 
 from gui.main_window import MainWindow
@@ -37,8 +37,8 @@ def test_add_new_account_from_wallet_settings(
             assert add_account_popup.get_error_message() == WalletAccountPopup.WALLET_ACCOUNT_NAME_MIN.value
 
         add_account_popup.set_name(wallet_account.name).save_changes()
-        with step('Authenticate with password'):
-            authenticate_with_password(user_account)
+        with step('Verify authentication popup does not appear when adding account'):
+            assert_authenticate_popup_not_appears()
             add_account_popup.wait_until_hidden()
 
     with step('Verify toast message notification when adding account'):

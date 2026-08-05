@@ -8,7 +8,7 @@ import allure
 
 import configs
 import driver
-from driver.objects_access import is_descendant_of, walk_children
+from driver.objects_access import find_descendant_by_object_name, is_descendant_of, walk_children
 from gui.components.settings.send_contact_request_popup import SendContactRequestFromProfile
 from gui.components.community.pinned_messages_popup import PinnedMessagesPopup
 from gui.components.context_menu import ContextMenu
@@ -313,7 +313,6 @@ class ChatView(QObject):
     def __init__(self):
         super().__init__(messaging_names.mainWindow_ChatColumnView)
         self._message_list_item = QObject(messaging_names.chatLogView_chatMessageViewDelegate_MessageView)
-        self._message_text_item = QObject(messaging_names.StatusTextMessage_chatTextMessage)
         self._deleted_message = QObject(messaging_names.chatMessageViewDelegate_deletedMessage_RowLayout)
         self._recent_messages_button = QObject(messaging_names.layout_recentMessagesButton_AnchorButton)
 
@@ -333,15 +332,15 @@ class ChatView(QObject):
                 _messages.append(Message(item))
         return _messages
 
-    def open_send_modal_from_link(self, text):
-        text_messages = driver.findAllObjects(self._message_text_item.real_name)
-        for item in text_messages:
-            if remove_tags(str(getattr(item, 'text', ''))) == text:
-                # ChatTextView.text is plain; send href lives only in rendered blocks
-                link = f'//send-via-personal-chat//{text}'
-                item.linkClicked(link)
-                return SendPopup().wait_until_appears()
-        raise LookupError(f'Message with text "{text}" not found for send modal link')
+    @allure.step('Open send modal from address link in message')
+    def open_send_modal_from_link(self, text: str, index: int = 0):
+        message = self.find_message_by_text(text, index)
+        text_bubble = find_descendant_by_object_name(
+            message.object, 'StatusMessage_textMessage')
+        if text_bubble is None:
+            raise LookupError(f'Text bubble not found for "{text}"')
+        text_bubble.linkActivated(f'//send-via-personal-chat//{text}')
+        return SendPopup().wait_until_appears()
 
     @allure.step('Get deleted message state')
     def get_deleted_message_state(self):
