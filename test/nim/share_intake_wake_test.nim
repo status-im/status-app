@@ -359,3 +359,19 @@ suite "share_intake_wake":
   test "appReady with an empty slot is a no-op":
     manager.appReady()
     check slot.take() == ""
+
+  test "a web url is routed, not eaten as a wake ping, where no slot exists":
+    # Android's host-less http/https filter can deliver any web URL, and there
+    # the slot is inactive — so it must reach the routing seam, not the wake path.
+    let inactiveSlot = newPendingIntakeSlot("")
+    let browserManager = newUrlsManager(events, urlSchemeEvent, singleInstance, "",
+      inactiveSlot)
+    browserManager.appReady()
+    var browserTabUrls: seq[string] = @[]
+    events.on(SIGNAL_EXTERNAL_URL_INTAKE_BROWSER_TAB) do(e: Args):
+      browserTabUrls.add(ExternalUrlIntakeArgs(e).url)
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, "https://share-intake".cstring)
+    drainEvents()
+
+    check browserTabUrls == @["https://share-intake"]
