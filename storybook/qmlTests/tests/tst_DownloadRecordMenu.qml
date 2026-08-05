@@ -23,8 +23,8 @@ Item {
             property string targetPath: "/tmp/downloads/report.pdf"
             property string mimeType: "application/pdf"
             property int state: AbstractWebView.DownloadState.DownloadCompleted
-            property int receivedBytes: 1000
-            property int totalBytes: 1000
+            property double receivedBytes: 1000
+            property double totalBytes: 1000
             property bool isPaused: false
             property bool isTerminal: true
             property bool missingFile: false

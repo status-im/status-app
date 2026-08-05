@@ -355,7 +355,7 @@ Item {
 
             verify(ctx.retryRecord(record))
             compare(tab.downloadUrlCalls, 1)
-            compare(ctx.pendingRetryRecord, record)
+            compare(ctx._pendingRetry, record)
 
             const retryLive = createTemporaryObject(fakeDownloadComponent, root)
             retryLive.url = "https://example.com/clip.webm"
@@ -367,9 +367,74 @@ Item {
             compare(store.downloadModel[0], record)
             compare(record.liveDownload, retryLive)
             compare(record.state, AbstractWebView.DownloadState.DownloadInProgress)
-            verify(!ctx.pendingRetryRecord)
+            verify(!ctx._pendingRetry)
             compare(store.downloadStripModel.length, 1)
             compare(store.downloadStripModel[0], record)
+        }
+
+        function test_retry_armIsOneShot_droppedByUnrelatedRequest() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const tab = createTemporaryObject(fakeTabComponent, root)
+            tabs = [tab]
+
+            const cancelledLive = createTemporaryObject(fakeDownloadComponent, root)
+            cancelledLive.url = "https://example.com/clip.webm"
+            cancelledLive.downloadFileName = "clip.webm"
+            cancelledLive.state = AbstractWebView.DownloadState.DownloadCancelled
+            const record = store.addDownload(cancelledLive, tab)
+            record.state = AbstractWebView.DownloadState.DownloadCancelled
+
+            verify(ctx.retryRecord(record))
+            compare(ctx._pendingRetry, record)
+
+            // An unrelated download consumes the arm without matching…
+            const otherLive = createTemporaryObject(fakeDownloadComponent, root)
+            otherLive.url = "https://example.com/other.bin"
+            otherLive.downloadFileName = "other.bin"
+            ctx.handleDownloadRequest(otherLive, tab)
+            verify(!ctx._pendingRetry)
+            compare(store.downloadModel.length, 2)
+
+            // …so a later same-URL download is a fresh Record, not a reattach.
+            const laterLive = createTemporaryObject(fakeDownloadComponent, root)
+            laterLive.url = "https://example.com/clip.webm"
+            laterLive.downloadFileName = "clip.webm"
+            ctx.handleDownloadRequest(laterLive, tab)
+            compare(store.downloadModel.length, 3)
+            compare(record.state, AbstractWebView.DownloadState.DownloadCancelled)
+            verify(record.liveDownload !== laterLive)
+        }
+
+        function test_retry_armExpires_whenNoRequestArrives() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const tab = createTemporaryObject(fakeTabComponent, root)
+            tabs = [tab]
+
+            const cancelledLive = createTemporaryObject(fakeDownloadComponent, root)
+            cancelledLive.url = "https://example.com/clip.webm"
+            cancelledLive.downloadFileName = "clip.webm"
+            cancelledLive.state = AbstractWebView.DownloadState.DownloadCancelled
+            const record = store.addDownload(cancelledLive, tab)
+            record.state = AbstractWebView.DownloadState.DownloadCancelled
+
+            verify(ctx.retryRecord(record))
+            compare(ctx._pendingRetry, record)
+
+            ctx._pendingRetryExpiry.stop()
+            ctx._pendingRetryExpiry.interval = 20
+            ctx._pendingRetryExpiry.start()
+            tryVerify(() => !ctx._pendingRetry, 1000,
+                      "retry arm should expire without a matching request")
+
+            // The download that finally arrives with the same URL is new.
+            const laterLive = createTemporaryObject(fakeDownloadComponent, root)
+            laterLive.url = "https://example.com/clip.webm"
+            laterLive.downloadFileName = "clip.webm"
+            ctx.handleDownloadRequest(laterLive, tab)
+            compare(store.downloadModel.length, 2)
+            verify(record.liveDownload !== laterLive)
         }
 
         function test_openCompleted_prefersBrowser_forRenderableType() {

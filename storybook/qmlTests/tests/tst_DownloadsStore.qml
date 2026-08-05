@@ -27,8 +27,8 @@ Item {
             property string downloadDirectory: "/tmp/downloads"
             property string suggestedFileName: downloadFileName
             property string mimeType: "application/pdf"
-            property int receivedBytes: 0
-            property int totalBytes: 1000
+            property double receivedBytes: 0
+            property double totalBytes: 1000
             property int state: AbstractWebView.DownloadState.DownloadRequested
             property bool isPaused: false
             property bool isInline: false
@@ -76,8 +76,8 @@ Item {
             property url url: "https://example.com/a.bin"
             property string suggestedFileName: "a.bin"
             property string mimeType: "application/octet-stream"
-            property int receivedBytes: 0
-            property int totalBytes: -1
+            property double receivedBytes: 0
+            property double totalBytes: -1
             property int state: AbstractWebView.DownloadState.DownloadRequested
             property bool isPaused: false
             property bool isInline: false
@@ -977,6 +977,24 @@ Item {
 
             record.state = AbstractWebView.DownloadState.DownloadCancelled
             compare(store.statusText(record), "Canceled")
+        }
+
+        function test_statusText_survivesFilesOver2GiB() {
+            const store = createStore()
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.totalBytes = 3 * 1024 * 1024 * 1024      // 3 GiB > 2^31
+            live.receivedBytes = 2.5 * 1024 * 1024 * 1024
+            const record = store.addDownload(live)
+            live.advance(live.receivedBytes)
+
+            compare(record.totalBytes, 3 * 1024 * 1024 * 1024)
+            compare(record.receivedBytes, 2.5 * 1024 * 1024 * 1024)
+
+            const text = store.statusText(record)
+            verify(text.indexOf("/") >= 0)
+            // A wrapped int would render negative sizes.
+            verify(text.indexOf("-") < 0, "overflowed to negative: " + text)
+            verify(text.indexOf("GB") >= 0, "expected GB sizes, got: " + text)
         }
 
         function test_shareFile_desktop_copiesBareFilesystemPath() {

@@ -22,8 +22,9 @@ QtObject {
     property bool missingFile: false
 
     property int state: AbstractWebView.DownloadState.DownloadRequested
-    property int receivedBytes: 0
-    property int totalBytes: -1
+    // double, not int: files over 2 GiB overflow a 32-bit QML int.
+    property double receivedBytes: 0
+    property double totalBytes: -1
     property bool isPaused: false
 
     // Transient Backend download (WebEngineDownloadRequest / MobileWebViewDownload). May become null.

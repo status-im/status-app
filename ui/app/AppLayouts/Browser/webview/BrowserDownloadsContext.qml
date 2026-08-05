@@ -29,8 +29,15 @@ QtObject {
     // True while Find in page (QML bar or native panel) is open on mobile.
     property bool findUiActive: false
 
-    // Record waiting for the Retry downloadRequested; cleared on match or superseded.
-    property var pendingRetryRecord: null
+    // One-shot Record armed by retryRecord for the reattach; consumed (or dropped)
+    // by the next downloadRequested and expired by timer so a failed retry can
+    // never capture a later unrelated download of the same URL.
+    property var _pendingRetry: null
+
+    readonly property Timer _pendingRetryExpiry: Timer {
+        interval: 10000
+        onTriggered: root._pendingRetry = null
+    }
 
     property var openUrlFn: function(url) {
         console.warn("BrowserDownloadsContext: openUrlFn not set")
@@ -69,11 +76,14 @@ QtObject {
         if (!download)
             return
 
+        // One-shot: whatever this request is, the retry arm does not outlive it.
+        const pending = root._pendingRetry
+        root._pendingRetry = null
+        root._pendingRetryExpiry.stop()
+
         let record = null
-        const pending = root.pendingRetryRecord
         if (pending && root._urlsMatch(pending.url, download.url)
                 && downloadsStore.reattachForRetry) {
-            root.pendingRetryRecord = null
             record = downloadsStore.reattachForRetry(pending, download, hostView)
         } else {
             record = downloadsStore.addDownload(download, hostView)
@@ -195,7 +205,8 @@ QtObject {
             console.warn("BrowserDownloadsContext: no Backend available for retry")
             return false
         }
-        root.pendingRetryRecord = record
+        root._pendingRetry = record
+        root._pendingRetryExpiry.restart()
         webView.downloadUrl(url, record.fileName || "")
         return true
     }

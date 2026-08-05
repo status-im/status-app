@@ -24,8 +24,8 @@ Item {
             property string fileName: "report.pdf"
             property url url: "https://example.com/report.pdf"
             property int state: AbstractWebView.DownloadState.DownloadInProgress
-            property int receivedBytes: 400
-            property int totalBytes: 1000
+            property double receivedBytes: 400
+            property double totalBytes: 1000
             property bool isPaused: false
             property bool isTerminal: false
             property bool missingFile: false
