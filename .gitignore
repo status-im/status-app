@@ -26,6 +26,7 @@ nim-status-client*.tgz
 TODO
 resources.rcc
 ui/resources.qrc
+ui/resources_webscripts.qrc
 status-react-translations/
 /.update.timestamp
 notarization.log
