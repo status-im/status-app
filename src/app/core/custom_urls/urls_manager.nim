@@ -85,11 +85,14 @@ QtObject:
       result = StatusExternalLink & result
 
   proc onUrlActivated*(self: UrlsManager, urlRaw: string) {.slot.} =
-    if isShareIntakeWakeUrl(urlRaw):
+    if not self.intakeSlot.isNil and self.intakeSlot.isActive() and
+        isShareIntakeWakeUrl(urlRaw):
       # Wake ping from the share extension — not a routable deep link; the
       # actual payload travels through the App Group pending intake slot.
       # Scheme-agnostic match: on iOS the wake scheme is variant-unique
       # (the app's bundle id), so co-installed variants can't hijack it.
+      # Slot-gated: the match is authority-only, so off iOS (no App Group, no
+      # wake possible) it would swallow a plain `https://share-intake` URL.
       self.consumePendingIntake()
       return
 
