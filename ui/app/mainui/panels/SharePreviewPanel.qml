@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
+import StatusQ
 
 import shared.status
 
@@ -99,11 +100,14 @@ Control {
         }
 
         // Inverse mapping: the host consumes plain paths (send + cache
-        // lifecycle), the input holds URLs.
+        // lifecycle), the input holds URLs. Not all of them come from
+        // toImageSource — the input's own picker returns a single-slash
+        // "file:/…" on mobile — so use the same helper the in-chat send does.
         function toImagePath(url) {
             const str = url.toString()
-            return str.startsWith("file://") ? str.slice("file://".length)
-                                             : str
+            return str.startsWith(Constants.dataImagePrefix)
+                    ? str
+                    : UrlUtils.convertUrlToLocalPath(str)
         }
 
         // The shared images go through the input's own validators (extension,
