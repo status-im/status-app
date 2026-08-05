@@ -330,15 +330,13 @@ SplitView {
     LogsAndControlsPanel {
         id: logsAndControlsPanel
 
-        SplitView.minimumHeight: 300
-        SplitView.preferredHeight: 300
+        SplitView.minimumHeight: 260
+        SplitView.preferredHeight: 260
 
         logsView.logText: logs.logText
 
         ColumnLayout {
             anchors.fill: parent
-
-            spacing: 10
 
             TextField {
                 Layout.fillWidth: true

@@ -176,7 +176,7 @@ OnboardingPage {
                 StatusBaseText {
                     Layout.fillWidth: true
                     wrapMode: Text.Wrap
-                    text: qsTr("To pair your devices and sync your profile, make sure:<br><ul><li>Both devices are on the same network</li><li>You're logged in on the other device</li><li>No firewall or VPN is blocking local network access</li></ul>")
+                    text: qsTr("To pair your devices and sync your profile, make sure:<br><ul><li>Both devices are on the same non-mobile network</li><li>You're logged in on the other device</li><li>No firewall or VPN is blocking local network access</li></ul>")
                 }
             }
             footer: StatusDialogFooter {
