@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -107,14 +109,14 @@ Window {
         }
     }
 
-    function contentLoaded() {
+    function contentLoaded() : void {
         if (SQUtils.Utils.isAndroid && !d.splashDismissed) {
             d.splashDismissed = true
             SystemUtils.setMainWindowReady()
         }
     }
 
-    function restoreAppState() {
+    function restoreAppState() : void {
         if (SQUtils.Utils.isMobile && applicationWindow.visibility !== Window.Windowed) {
             // just correct visibility on mobile
             applicationWindow.visibility = Window.Maximized
@@ -163,7 +165,7 @@ Window {
         applicationWindow.visibility = visibility
     }
 
-    function storeAppState() {
+    function storeAppState() : void {
         if (SQUtils.Utils.isMobile) // no point in storing geometry or visibility
             return
 
@@ -188,7 +190,7 @@ Window {
 
         readonly property bool macOSWindowed: SQUtils.Utils.isMacOS && applicationWindow.visibility !== Window.FullScreen
 
-        function restoreScreenAfterMinimizing() {
+        function restoreScreenAfterMinimizing() : void {
             if (Qt.platform.os !== SQUtils.Utils.windows || !lastMinimizedScreen)
                 return
 
@@ -197,7 +199,7 @@ Window {
             lastMinimizedScreen = null
         }
 
-        function restoreWindowState() {
+        function restoreWindowState() : void {
             if (SQUtils.Utils.isMobile) // no point in restoring window state
                 return
             restoreScreenAfterMinimizing()
@@ -220,7 +222,7 @@ Window {
         property bool showSkippedBiometricFlow: false
 
         property var keycardSimulatorWindow
-        function createKeycardSimulatorController() {
+        function createKeycardSimulatorController() : void {
             if (d.keycardSimulatorWindow)
                 return
             if (!localAppSettings || !localAppSettings.useSimulatedKeycard)
@@ -288,7 +290,7 @@ Window {
         id: windowsOsNotificationsConnection
         enabled: Qt.platform.os === SQUtils.Utils.windows
         target: Qt.platform.os === SQUtils.Utils.windows && typeof mainModule !== "undefined" ? mainModule : null
-        function onDisplayWindowsOsNotification(title, message) {
+        function onDisplayWindowsOsNotification(title: string, message: string) : void {
             systemTray.showMessage(title, message)
         }
     }
@@ -302,7 +304,7 @@ Window {
         running: false
     }
 
-    function moveToAppMain() {
+    function moveToAppMain() : void {
         d.appMainTriggered = true
     }
 
@@ -317,7 +319,7 @@ Window {
         target: SystemUtils
         enabled: SQUtils.Utils.isMacOS
 
-        function onQuit(spontaneous) {
+        function onQuit(spontaneous: bool) : void {
             if (spontaneous)
                 Qt.exit(0)
         }
@@ -326,7 +328,7 @@ Window {
     Connections {
         target: SystemUtils
         enabled: SQUtils.Utils.isMobile
-        function onShakeDetected() {
+        function onShakeDetected() : void {
             const nowMs = Date.now()
             if (nowMs - d.lastShakeShareMs < 3000) {
                 openShakeToSharePopup()
@@ -411,7 +413,7 @@ Window {
     Connections {
         target: singleInstance
 
-        function onSecondInstanceDetected() {
+        function onSecondInstanceDetected() : void {
             console.log("User attempted to run the second instance of the application")
             // activating this instance to give user visual feedback
             makeStatusAppActive()
@@ -420,7 +422,7 @@ Window {
 
     Connections {
         target: Application
-        function onAboutToQuit() {
+        function onAboutToQuit() : void {
             applicationWindow.storeAppState()
         }
     }
@@ -463,13 +465,13 @@ Window {
         }
     }
 
-    function makeStatusAppActive() {
+    function makeStatusAppActive() : void {
         d.restoreWindowState()
         applicationWindow.raise()
         applicationWindow.requestActivate()
     }
 
-    function openShakeToSharePopup() {
+    function openShakeToSharePopup() : void {
         shakeToShareLoader.active = true
     }
 
@@ -639,22 +641,22 @@ Window {
             target: startupOnboardingLoader.item
             ignoreUnknownSignals: true
 
-            function onAppReady() {
+            function onAppReady() : void {
                 applicationWindow.appIsReady = true
             }
-            function onStoreAppStateRequested() {
+            function onStoreAppStateRequested() : void {
                 applicationWindow.storeAppState()
             }
-            function onRequestMoveToAppMain() {
+            function onRequestMoveToAppMain() : void {
                 applicationWindow.moveToAppMain()
             }
-            function onBiometricFlowStarted() {
+            function onBiometricFlowStarted() : void {
                 applicationWindow.biometricFlowPending = true
             }
-            function onSkippedBiometricFlow(available) {
+            function onSkippedBiometricFlow(available: bool) : void {
                 d.showSkippedBiometricFlow = available
             }
-            function onProfileSelected(keyUid) {
+            function onProfileSelected(keyUid: string) : void {
                 localAppSettings.selectedProfileKeyUid = keyUid
             }
         }

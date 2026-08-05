@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -28,7 +30,7 @@ Control {
     signal onboardingLoginFlowRequested()
     signal onboardingManageProfilesFlowRequested()
 
-    function setSelection(keyUid: string) {
+    function setSelection(keyUid: string) : void {
         let selection = keyUid
         if (!ModelUtils.contains(root.model, "keyUid", selection)) // get first item if not existing (or empty)
             selection = ModelUtils.get(root.model, 0, "keyUid")
@@ -41,7 +43,7 @@ Control {
     Connections {
         target: root.model?.ModelCount ?? null
 
-        function onCountChanged() {
+        function onCountChanged() : void {
             root.setSelection(root.selectedProfileKeyId)
         }
     }
@@ -88,14 +90,12 @@ Control {
             State {
                 when: currentEntry.available
                 PropertyChanges {
-                    target: userSelectorButton
-
-                    label: currentEntry.item.username
-                    image: currentEntry.item.thumbnailImage
-                    colorId: currentEntry.item.colorId
-                    keycardCreatedAccount: currentEntry.item.keycardCreatedAccount
-                    keycardLocked: root.currentKeycardLocked
-                    keycardEnabled: root.isKeycardEnabled
+                    userSelectorButton.label: currentEntry.item.username
+                    userSelectorButton.image: currentEntry.item.thumbnailImage
+                    userSelectorButton.colorId: currentEntry.item.colorId
+                    userSelectorButton.keycardCreatedAccount: currentEntry.item.keycardCreatedAccount
+                    userSelectorButton.keycardLocked: root.currentKeycardLocked
+                    userSelectorButton.keycardEnabled: root.isKeycardEnabled
                 }
             }
         ]
@@ -151,20 +151,24 @@ Control {
                         model: dropdownProfilesModel
 
                         LoginUserSelectorDelegate {
-                            readonly property bool hasProfileData: !!model.keyUid && !!model.username
+                            id: profileDelegate
+
+                            required property var model
+
+                            readonly property bool hasProfileData: !!profileDelegate.model.keyUid && !!profileDelegate.model.username
 
                             Layout.fillWidth: true
-                            Layout.preferredHeight: hasProfileData ? d.delegateHeight : 0
-                            visible: hasProfileData
-                            label: model.username
-                            image: model.thumbnailImage
-                            colorId: model.colorId
-                            keycardCreatedAccount: model.keycardCreatedAccount
+                            Layout.preferredHeight: profileDelegate.hasProfileData ? d.delegateHeight : 0
+                            visible: profileDelegate.hasProfileData
+                            label: profileDelegate.model.username
+                            image: profileDelegate.model.thumbnailImage
+                            colorId: profileDelegate.model.colorId
+                            keycardCreatedAccount: profileDelegate.model.keycardCreatedAccount
                             keycardEnabled: root.isKeycardEnabled
-                            enabled: !model.keycardCreatedAccount ? true : root.isKeycardEnabled
+                            enabled: !profileDelegate.model.keycardCreatedAccount ? true : root.isKeycardEnabled
                             onClicked: {
                                 dropdown.close()
-                                root.setSelection(model.keyUid)
+                                root.setSelection(profileDelegate.model.keyUid)
                             }
                         }
                     }

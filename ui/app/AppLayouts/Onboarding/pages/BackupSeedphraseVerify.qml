@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -79,6 +81,8 @@ OnboardingPage {
                     id: seedRepeater
                     model: d.verificationWordsMap
                     delegate: RowLayout {
+                        id: seedRow
+
                         required property var modelData
                         required property int index
 
@@ -91,22 +95,22 @@ OnboardingPage {
                         spacing: 12
                         StatusBaseText {
                             Layout.preferredWidth: 20
-                            text: modelData.seedWordNumber
+                            text: seedRow.modelData.seedWordNumber
                             horizontalAlignment: Text.AlignHCenter
                         }
                         SeedphraseVerifyInput {
-                            readonly property int seedWordIndex: modelData.seedWordNumber - 1 // 0 based idx in the mnemonic
+                            readonly property int seedWordIndex: seedRow.modelData.seedWordNumber - 1 // 0 based idx in the mnemonic
                             objectName: "seedInput_%1".arg(seedWordIndex)
                             Layout.fillWidth: true
                             id: seedInput
-                            valid: text.trim().toLowerCase() === modelData.seedWord
+                            valid: text.trim().toLowerCase() === seedRow.modelData.seedWord
                             seedSuggestions: d.seedSuggestions
-                            Component.onCompleted: if (index === 0) forceActiveFocus()
+                            Component.onCompleted: if (seedRow.index === 0) forceActiveFocus()
                             onAccepted: {
                                 if (seedRepeater.allValid) { // move to next page
                                     root.backupSeedphraseVerified()
                                 } else { // move to next field
-                                    const nextItem = seedRepeater.itemAt(index + 1) ?? seedRepeater.itemAt(0)
+                                    const nextItem = seedRepeater.itemAt(seedRow.index + 1) ?? seedRepeater.itemAt(0)
                                     if (!!nextItem) {
                                         nextItem.input.forceActiveFocus()
                                     }

@@ -55,7 +55,7 @@ OnboardingPage {
     signal changeLanguageRequested(string newLanguageCode)
     signal profileSelected(string keyUid)
 
-    function setBiometricResponse(secret: string, error = "") {
+    function setBiometricResponse(secret: string, error: string) : void {
         if (!root.isBiometricsLogin)
             return
 
@@ -109,7 +109,7 @@ OnboardingPage {
         readonly property int loginModelCount: root.loginAccountsModel.ModelCount.count
         onLoginModelCountChanged: setSelectedLoginUser()
 
-        function setSelectedLoginUser() {
+        function setSelectedLoginUser() : void {
             if (loginModelCount > 0) {
                 loginUserSelector.setSelection(root.lastSelectedProfileKeyUid)
                 if (!d.currentProfileIsKeycard)
@@ -118,12 +118,12 @@ OnboardingPage {
         }
 
 
-        function resetBiometricsResult() {
+        function resetBiometricsResult() : void {
             d.biometricsSuccessful = false
             d.biometricsFailed = false
         }
 
-        function doPasswordLogin(password: string) {
+        function doPasswordLogin(password: string) : void {
             if (password.length === 0)
                 return
 
@@ -132,7 +132,7 @@ OnboardingPage {
 
         property string lastPin: ""
 
-        function doKeycardLogin(pin: string) {
+        function doKeycardLogin(pin: string) : void {
             if (pin.length === 0)
                 return
 
@@ -169,7 +169,7 @@ OnboardingPage {
 
 
     // login errors reporting
-    function setAccountLoginError(error: string, wrongPassword: bool) {
+    function setAccountLoginError(error: string, wrongPassword: bool) : void {
         if (!error && !wrongPassword) {
             return
         }

@@ -39,26 +39,26 @@ QtObject {
     readonly property string keycardCardMetadataName: d.onboardingModuleInst.keycardCardMetadataName
     readonly property string keycardCardMetadataWalletAccountsJson: d.onboardingModuleInst.keycardCardMetadataWalletAccountsJson
 
-    function finishOnboardingFlow(flow: int, data: Object) { // -> string
+    function finishOnboardingFlow(flow: int, data: Object) : string {
         return d.onboardingModuleInst.finishOnboardingFlow(flow, JSON.stringify(data))
     }
 
-    function loginRequested(keyUid: string, method: int, data: Object) { // -> void
+    function loginRequested(keyUid: string, method: int, data: Object) : void {
         d.onboardingModuleInst.loginRequested(keyUid, method, JSON.stringify(data))
     }
 
-    function deleteMultiaccountRequested(keyUid: string) {
+    function deleteMultiaccountRequested(keyUid: string) : void {
         d.onboardingModuleInst.requestDeleteMultiaccount(keyUid)
     }
 
-    function cleanupAfterMainTransition() {
+    function cleanupAfterMainTransition() : void {
         d.onboardingModuleInst.cleanupAfterMainTransition()
     }
 
     // password
     signal accountLoginError(string error, bool wrongPassword)
 
-    function getPasswordStrengthScore(password: string) { // -> int
+    function getPasswordStrengthScore(password: string) : int {
         return d.onboardingModuleInst.getPasswordStrengthScore(password, "") // The second argument is username
     }
 
@@ -75,7 +75,7 @@ QtObject {
     function validateLocalPairingConnectionString(connectionString: string) : bool {
         return d.onboardingModuleInst.validateLocalPairingConnectionString(connectionString)
     }
-    function inputConnectionStringForBootstrapping(connectionString: string) {
+    function inputConnectionStringForBootstrapping(connectionString: string) : void {
         d.onboardingModuleInst.inputConnectionStringForBootstrapping(connectionString)
     }
 }

@@ -39,18 +39,18 @@ Control {
 
     readonly property alias pairingPassword: pairingPasswordInput.text
 
-    function clear() {
+    function clear() : void {
         d.wrongPin = false
         pinInputField.clearPin()
         pairingPasswordInput.clear()
     }
 
-    function markAsWrongPin() {
+    function markAsWrongPin() : void {
         d.wrongPin = true
         pinInputField.statesInitialization()
     }
 
-    function setPin(pin: string) {
+    function setPin(pin: string) : void {
         pinInputField.setPin(pin)
     }
 
@@ -65,6 +65,8 @@ Control {
     }
 
     background: Rectangle {
+        id: backgroundRect
+
         color: StatusColors.transparent
         border.width: 1
         border.color: Theme.palette.baseColor2
@@ -170,16 +172,14 @@ Control {
             name: "plugin"
             when: root.keycardState === Onboarding.KeycardState.PluginReader && !SQUtils.Utils.isMobile
             PropertyChanges {
-                target: infoText
-                text: qsTr("Plug in Keycard reader...")
+                infoText.text: qsTr("Plug in Keycard reader...")
             }
         },
         State {
             name: "insert"
             when: root.keycardState === Onboarding.KeycardState.InsertKeycard && !SQUtils.Utils.isMobile
             PropertyChanges {
-                target: infoText
-                text: qsTr("Tap or insert your Keycard...")
+                infoText.text: qsTr("Tap or insert your Keycard...")
             }
         },
         State {
@@ -196,8 +196,7 @@ Control {
             name: "reading"
             when: root.keycardState === Onboarding.KeycardState.ReadingKeycard && !SQUtils.Utils.isMobile
             PropertyChanges {
-                target: infoText
-                text: qsTr("Reading Keycard...")
+                infoText.text: qsTr("Reading Keycard...")
             }
         },
         // error states
@@ -206,9 +205,8 @@ Control {
             when: root.keycardState === Onboarding.KeycardState.NotKeycard
             extend: "notEmpty"
             PropertyChanges {
-                target: infoText
-                color: Theme.palette.dangerColor1
-                text: qsTr("This isn't a Keycard.<br>Remove card and insert a Keycard.")
+                infoText.color: Theme.palette.dangerColor1
+                infoText.text: qsTr("This isn't a Keycard.<br>Remove card and insert a Keycard.")
             }
         },
         State {
@@ -216,9 +214,8 @@ Control {
             when: root.isWrongKeycard
             extend: "notEmpty"
             PropertyChanges {
-                target: infoText
-                color: Theme.palette.dangerColor1
-                text: qsTr("Wrong Keycard for this profile")
+                infoText.color: Theme.palette.dangerColor1
+                infoText.text: qsTr("Wrong Keycard for this profile")
             }
         },
         State {
@@ -226,9 +223,8 @@ Control {
             when: root.keycardState === Onboarding.KeycardState.NoPCSCService && !SQUtils.Utils.isMobile
             extend: "notEmpty"
             PropertyChanges {
-                target: infoText
-                color: Theme.palette.dangerColor1
-                text: qsTr("Issue detecting Keycard.<br>Re-scan Keycard.")
+                infoText.color: Theme.palette.dangerColor1
+                infoText.text: qsTr("Issue detecting Keycard.<br>Re-scan Keycard.")
             }
         },
         State {
@@ -261,9 +257,8 @@ Control {
             when: root.keycardState === Onboarding.KeycardState.MaxPairingSlotsReached
             extend: "notEmpty"
             PropertyChanges {
-                target: infoText
-                color: Theme.palette.dangerColor1
-                text: qsTr("No free pairing slots on this Keycard.<br>You can use it with previously paired installations.")
+                infoText.color: Theme.palette.dangerColor1
+                infoText.text: qsTr("No free pairing slots on this Keycard.<br>You can use it with previously paired installations.")
             }
         },
         State {
@@ -271,18 +266,15 @@ Control {
             when: root.keycardState === Onboarding.KeycardState.BlockedPIN ||
                   root.keycardState === Onboarding.KeycardState.BlockedPUK
             PropertyChanges {
-                target: infoText
-                color: Theme.palette.dangerColor1
-                text: qsTr("Keycard blocked")
+                infoText.color: Theme.palette.dangerColor1
+                infoText.text: qsTr("Keycard blocked")
             }
             PropertyChanges {
-                target: unblockButton
-                visible: true
+                unblockButton.visible: true
             }
             PropertyChanges {
-                target: pinInputField
-                enabled: false
-                visible: false
+                pinInputField.enabled: false
+                pinInputField.visible: false
             }
         },
         State {
@@ -290,9 +282,8 @@ Control {
             when: root.keycardState === Onboarding.KeycardState.Empty
             extend: "notEmpty"
             PropertyChanges {
-                target: infoText
-                color: Theme.palette.dangerColor1
-                text: qsTr("The scanned Keycard is empty.<br>Scan the correct Keycard for this profile.")
+                infoText.color: Theme.palette.dangerColor1
+                infoText.text: qsTr("The scanned Keycard is empty.<br>Scan the correct Keycard for this profile.")
             }
         },
         State {
@@ -300,9 +291,8 @@ Control {
             extend: "notEmpty"
             when: root.keycardState === Onboarding.KeycardState.NotEmpty && d.wrongPin
             PropertyChanges {
-                target: infoText
-                color: Theme.palette.dangerColor1
-                text: qsTr("PIN incorrect. %n attempt(s) remaining.", "", root.keycardRemainingPinAttempts)
+                infoText.color: Theme.palette.dangerColor1
+                infoText.text: qsTr("PIN incorrect. %n attempt(s) remaining.", "", root.keycardRemainingPinAttempts)
             }
         },
         State {
@@ -310,9 +300,8 @@ Control {
             when: !!root.loginError
             extend: "notEmpty"
             PropertyChanges {
-                target: infoText
-                color: Theme.palette.dangerColor1
-                text: qsTr("Login failed. %1").arg("<a href='#details'>" + qsTr("Show details.") + "</a>")
+                infoText.color: Theme.palette.dangerColor1
+                infoText.text: qsTr("Login failed. %1").arg("<a href='#details'>" + qsTr("Show details.") + "</a>")
             }
         },
         // exit states
@@ -321,21 +310,17 @@ Control {
             // Mobile UnknownReaderState just means the keycard was never tapped, so we show the PIN input
             when: (root.keycardState === Onboarding.KeycardState.UnknownReaderState) || (root.keycardState === Onboarding.KeycardState.NotEmpty) && !d.wrongPin
             PropertyChanges {
-                target: infoText
-                text: qsTr("Enter Keycard PIN")
+                infoText.text: qsTr("Enter Keycard PIN")
             }
             PropertyChanges {
-                target: background
-                border.color: Theme.palette.primaryColor1
+                backgroundRect.border.color: Theme.palette.primaryColor1
             }
             PropertyChanges {
-                target: pinInputField
-                visible: true
-                enabled: true
+                pinInputField.visible: true
+                pinInputField.enabled: true
             }
             PropertyChanges {
-                target: touchIdIcon
-                visible: root.isBiometricsLogin
+                touchIdIcon.visible: root.isBiometricsLogin
             }
         }
     ]

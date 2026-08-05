@@ -20,15 +20,15 @@ BaseKeycardManagementStore {
     readonly property Connections _onboardingConn: Connections {
         target: backend ?? null
 
-        function onKeycardAsyncLoginSuccess(dataJson) { root.keycardAsyncLoginSuccess(dataJson) }
-        function onKeycardAsyncLoginError(error) { root.keycardAsyncLoginError(error) }
+        function onKeycardAsyncLoginSuccess(dataJson: string) : void { root.keycardAsyncLoginSuccess(dataJson) }
+        function onKeycardAsyncLoginError(error: string) : void { root.keycardAsyncLoginError(error) }
     }
 
-    function prepare() {
+    function prepare() : void {
         d.onboardingModuleInst.prepareKeycardModule()
     }
 
-    function teardown() {
+    function teardown() : void {
         if (!backend) {
             console.error("onboarding - keycard management module was not created")
             return
@@ -37,7 +37,7 @@ BaseKeycardManagementStore {
         d.onboardingModuleInst.destroyKeycardModule()
     }
 
-    function startAsyncLogin(keyUid, pin, generateXPub, pairingPassword = "") {
+    function startAsyncLogin(keyUid: string, pin: string, generateXPub: bool, pairingPassword = "") {
         if (!backend) {
             console.error("onboarding - keycard management module was not created")
             return
@@ -45,15 +45,15 @@ BaseKeycardManagementStore {
         backend.startAsyncLogin(keyUid, pin, generateXPub, pairingPassword)
     }
 
-    function isMnemonicBackedUp() {
+    function isMnemonicBackedUp() : bool {
         return false
     }
 
-    function getMnemonic() {
+    function getMnemonic() : string {
         return ""
     }
 
-    function isKnownKeyUid(keyUid) {
+    function isKnownKeyUid(keyUid: string) : bool {
         const profile = StatusQUtils.ModelUtils.getByKey(d.loginAccountsModel, "keyUid", keyUid)
         if (!!profile) {
             return true
@@ -61,7 +61,7 @@ BaseKeycardManagementStore {
         return false
     }
 
-    function isKeypairMigratedToColdWallet(keyUid) {
+    function isKeypairMigratedToColdWallet(keyUid: string) : bool {
         const profile = StatusQUtils.ModelUtils.getByKey(d.loginAccountsModel, "keyUid", keyUid)
         if (!!profile && profile.keycardPairing.trim().length > 0) {
             return true

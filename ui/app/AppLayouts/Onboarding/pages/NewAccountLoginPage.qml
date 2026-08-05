@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -140,22 +142,22 @@ OnboardingPage {
     Loader {
         id: popupsLoader
         property bool waitingForPermission: false
-        function goToLoginWithSyncAck() {
+        function goToLoginWithSyncAck() : void {
             sourceComponent = loginWithSyncAck
             active = true
         }
 
-        function goToLocalNetworkPermissionDenied() {
+        function goToLocalNetworkPermissionDenied() : void {
             sourceComponent = localNetworkPermissionDeniedPopup
             active = true
         }
 
-        function goToNetworkCheck() {
+        function goToNetworkCheck() : void {
             sourceComponent = networkCheckPopup
             active = true
         }
 
-        function reset() {
+        function reset() : void {
             active = false
             sourceComponent = null
             waitingForPermission = false
@@ -191,7 +193,7 @@ OnboardingPage {
                         id: btnContinue
                         objectName: "btnContinue"
                         
-                        function tryAccept() {
+                        function tryAccept() : void {
                             if (localNetworkPermission.status === LocalNetworkPermission.Unknown) {
                                 popupsLoader.waitingForPermission = true
                                 localNetworkPermission.request()
@@ -348,7 +350,7 @@ OnboardingPage {
             }
             Connections {
                 target: netChecker
-                function onIsOnlineChanged() {
+                function onIsOnlineChanged() : void {
                     if (netChecker.isOnline) {
                         root.loginWithSyncingRequested()
                         close()

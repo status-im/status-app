@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -83,6 +85,11 @@ OnboardingPage {
                     Repeater {
                         model: d.mnemonicWords
                         delegate: Frame {
+                            id: wordFrame
+
+                            required property string modelData
+                            required property int index
+
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             padding: Theme.smallPadding
@@ -97,16 +104,16 @@ OnboardingPage {
                                 StatusBaseText {
                                     Layout.preferredWidth: idxMetrics.advanceWidth
                                     horizontalAlignment: Qt.AlignHCenter
-                                    text: index + 1
+                                    text: wordFrame.index + 1
                                     color: Theme.palette.baseColor1
                                     font: idxMetrics.font
                                 }
                                 StatusBaseText {
-                                    objectName: "seedWordText_" + (index+1)
+                                    objectName: "seedWordText_" + (wordFrame.index + 1)
                                     Layout.fillWidth: true
-                                    text: modelData
+                                    text: wordFrame.modelData
                                     Accessible.role: Accessible.StaticText
-                                    Accessible.name: SQUtils.Utils.formatAccessibleName(modelData, objectName)
+                                    Accessible.name: SQUtils.Utils.formatAccessibleName(wordFrame.modelData, objectName)
                                 }
                             }
                         }

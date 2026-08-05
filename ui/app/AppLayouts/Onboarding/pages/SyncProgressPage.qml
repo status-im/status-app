@@ -23,77 +23,61 @@ OnboardingPage {
             name: "inprogress"
             when: root.syncState === Onboarding.LocalPairingState.Transferring || root.syncState === Onboarding.LocalPairingState.Idle
             PropertyChanges {
-                target: root
-                title: qsTr("Profile sync in progress...")
+                root.title: qsTr("Profile sync in progress...")
             }
             PropertyChanges {
-                target: subtitle
-                text: qsTr("Your profile data is being synced to this device")
+                subtitle.text: qsTr("Your profile data is being synced to this device")
             }
             PropertyChanges {
-                target: iconLoader
-                sourceComponent: loadingIndicator
+                iconLoader.sourceComponent: loadingIndicator
             }
             PropertyChanges {
-                target: image
-                source: Assets.png("onboarding/status_sync_progress")
+                image.source: Assets.png("onboarding/status_sync_progress")
             }
             PropertyChanges {
-                target: subImageText
-                text: qsTr("Please keep both devices switched on and connected to the same network until the sync is complete")
-                visible: true
+                subImageText.text: qsTr("Please keep both devices switched on and connected to the same network until the sync is complete")
+                subImageText.visible: true
             }
         },
         State {
             name: "success"
             when: root.syncState === Onboarding.LocalPairingState.Finished
             PropertyChanges {
-                target: root
-                title: qsTr("Profile synced")
+                root.title: qsTr("Profile synced")
             }
             PropertyChanges {
-                target: subtitle
-                text: qsTr("Your profile data has been synced to this device")
+                subtitle.text: qsTr("Your profile data has been synced to this device")
             }
             PropertyChanges {
-                target: iconLoader
-                sourceComponent: successIcon
+                iconLoader.sourceComponent: successIcon
             }
             PropertyChanges {
-                target: image
-                source: Assets.png("onboarding/status_sync_success")
+                image.source: Assets.png("onboarding/status_sync_success")
             }
             PropertyChanges {
-                target: loginButton
-                visible: true
+                loginButton.visible: true
             }
         },
         State {
             name: "failed"
             when: root.syncState === Onboarding.LocalPairingState.Error
             PropertyChanges {
-                target: root
-                title: "<font color='%1'>".arg(Theme.palette.dangerColor1) + qsTr("Failed to pair devices") + "</font>"
+                root.title: "<font color='%1'>".arg(Theme.palette.dangerColor1) + qsTr("Failed to pair devices") + "</font>"
             }
             PropertyChanges {
-                target: subtitle
-                text: qsTr("Try again and double-check the instructions")
+                subtitle.text: qsTr("Try again and double-check the instructions")
             }
             PropertyChanges {
-                target: iconLoader
-                sourceComponent: failedIcon
+                iconLoader.sourceComponent: failedIcon
             }
             PropertyChanges {
-                target: image
-                source: Assets.png("onboarding/status_sync_failed")
+                image.source: Assets.png("onboarding/status_sync_failed")
             }
             PropertyChanges {
-                target: tryAgainButton
-                visible: true
+                tryAgainButton.visible: true
             }
             PropertyChanges {
-                target: loginWithSeedphraseButton
-                visible: true
+                loginWithSeedphraseButton.visible: true
             }
         }
     ]
