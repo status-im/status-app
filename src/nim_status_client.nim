@@ -208,6 +208,9 @@ proc enableHDPI(uiScaleFilePath: string) =
       warn "Error parsing 'ui-scale' file contents, not a float"
       discard
 
+from seaqt/qprocess import QProcess, startDetached
+const ExitCodeRestart = 1337
+
 proc mainProc() =
 
   when defined(macosx) and defined(arm64):
@@ -368,12 +371,6 @@ proc mainProc() =
     singleInstance.delete()
     app.delete()
 
-  featureGuard SINGLE_STATUS_INSTANCE_ENABLED:
-    # Checks below must be always after "defer", in case anything fails destructors will freed a memory.
-    if singleInstance.secondInstance():
-      info "Terminating the app as the second instance"
-      quit()
-
   # We need these global variables in order to be able to access the application
   # from the non-closure callback passed to `statusgo_backend.setSignalEventCallback`
   signalsManagerQObjPointer = cast[pointer](statusFoundation.signalsManager.vptr)
@@ -388,7 +385,18 @@ proc mainProc() =
   appController.start()
 
   info "starting application..."
-  app.exec()
+  let exitCode = app.exec()
+
+  if exitCode == ExitCodeRestart:
+    info "Restarting application..."
+    singleInstance.delete() # release the guard
+    discard QProcess.startDetached(QCoreApplication.applicationFilePath(), commandLineParams())
+
+  featureGuard SINGLE_STATUS_INSTANCE_ENABLED:
+    # Checks below must be always after "defer", in case anything fails destructors will freed a memory.
+    if singleInstance.secondInstance():
+      info "Terminating the app as the second instance"
+      quit()
 
 when isMainModule:
   mainProc()

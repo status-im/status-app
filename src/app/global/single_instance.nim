@@ -8,7 +8,7 @@ import nimqml
 import chronicles
 from seaqt/qlocalserver import QLocalServer,
   QLocalServernewConnectionSlot, create, onNewConnection, close, isListening,
-  listen, nextPendingConnection, removeServer
+  listen, nextPendingConnection, removeServer, serverName
 from seaqt/qlocalsocket import QLocalSocket, create,
   connectToServer, waitForConnected, waitForBytesWritten, waitForReadyRead,
   canReadLine, close
@@ -61,6 +61,7 @@ QtObject:
   proc delete*(self: SingleInstance) =
     if not self.localServer.h.isNil and self.localServer.isListening():
       self.localServer.close()
+    discard QLocalServer.removeServer(self.localServer.serverName())
     reset(self.localServer)
     self.QObject.delete
 

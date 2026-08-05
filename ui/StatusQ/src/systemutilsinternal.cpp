@@ -154,10 +154,8 @@ void SystemUtilsInternal::restartApplication(bool killBackend) const
     return;
 #else
     Q_UNUSED(killBackend);
-#if QT_CONFIG(process)
-    QProcess::startDetached(QCoreApplication::applicationFilePath(), {});
-#endif
-    QMetaObject::invokeMethod(QCoreApplication::instance(), &QCoreApplication::exit, Qt::QueuedConnection, EXIT_SUCCESS);
+    constexpr int EXIT_CODE_RESTART = 1337;
+    QMetaObject::invokeMethod(QCoreApplication::instance(), &QCoreApplication::exit, Qt::QueuedConnection, EXIT_CODE_RESTART);
 #endif
 }
 
