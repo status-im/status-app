@@ -162,6 +162,17 @@ QtObject {
         const path = record.targetPath
         if (!path)
             return false
+
+        // Navigating to local audio/video makes WebEngine download it again instead of
+        // playing it — open a player page for those. No page, no in-browser route.
+        if (downloadsStore.isPlayableMedia(record)) {
+            const page = downloadsStore.mediaPlayerPageUrl(record)
+            if (!page)
+                return false
+            openUrlFn(page)
+            return true
+        }
+
         openUrlFn(UrlUtils.urlFromUserInput(path))
         return true
     }

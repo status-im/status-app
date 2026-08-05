@@ -228,10 +228,17 @@ AbstractWebView {
                 webView.htmlPageLoaded = true
         }
         onNavigationRequested: function(request) {
-            if (request.url.toString().startsWith("file:/")) {
-                console.log("Local file browsing is disabled")
-                request.reject()
-            }
+            const url = request.url.toString()
+            if (!url.startsWith("file:/"))
+                return
+            // Local browsing stays off; what the user downloaded through us — and the
+            // player pages we write for it — is the only exception (ADR 0006 §8).
+            if (root.downloadsStore
+                    && typeof root.downloadsStore.isBrowsableLocalUrl === "function"
+                    && root.downloadsStore.isBrowsableLocalUrl(url))
+                return
+            console.log("Local file browsing is disabled")
+            request.reject()
         }
         onJavaScriptConsoleMessage: function(level, message, lineNumber, sourceID) {
             const isOurScript = ScriptUtils.isOurInjectedScript(sourceID, root.profile)

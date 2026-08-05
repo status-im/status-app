@@ -26,6 +26,8 @@ Item {
             property var downloadModel: []
             property var downloadStripModel: []
             property int openRecordCalls: 0
+            // false → mediaPlayerPageUrl fails, as when the temp page cannot be written.
+            property bool playerPageWritable: true
             property var lastOpenedRecord: null
             property int dismissCalls: 0
 
@@ -111,6 +113,17 @@ Item {
                 if ((mime === "application/pdf" || name.endsWith(".pdf")) && supportsPdf)
                     return true
                 return false
+            }
+            function isPlayableMedia(record) {
+                const name = String(record?.fileName ?? "").toLowerCase()
+                const mime = String(record?.mimeType ?? "").toLowerCase()
+                return mime.startsWith("audio/") || mime.startsWith("video/")
+                    || name.endsWith(".mp3") || name.endsWith(".mp4") || name.endsWith(".webm")
+            }
+            function mediaPlayerPageUrl(record) {
+                if (!isPlayableMedia(record) || record.missingFile || !playerPageWritable)
+                    return ""
+                return "file:///tmp/player/" + String(record.fileName || "") + ".html"
             }
             function openRecord(record) {
                 openRecordCalls += 1
@@ -406,8 +419,28 @@ Item {
 
             verify(ctx.openCompletedRecord(record))
             compare(openedUrls.length, 1)
+            // Media opens through a player page — navigating to the file itself makes
+            // WebEngine download it again instead of playing it.
+            verify(openedUrls[0].endsWith(".html"))
             verify(openedUrls[0].indexOf("clip.webm") >= 0)
             compare(store.openRecordCalls, 0)
+        }
+
+        function test_openCompleted_media_fallsBackToOs_whenPlayerPageUnavailable() {
+            const store = createStore()
+            store.playerPageWritable = false
+            const ctx = createContext(store)
+            const record = {
+                fileName: "clip.webm",
+                mimeType: "video/webm",
+                state: AbstractWebView.DownloadState.DownloadCompleted,
+                missingFile: false,
+                targetPath: "/tmp/downloads/clip.webm"
+            }
+
+            verify(ctx.openCompletedRecord(record))
+            compare(openedUrls.length, 0)
+            compare(store.openRecordCalls, 1)
         }
 
         function test_openCompleted_missingFile_blocksBothRoutes() {

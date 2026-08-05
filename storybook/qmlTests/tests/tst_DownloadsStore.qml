@@ -674,14 +674,137 @@ Item {
 
             verify(store.canOpenInBrowser(completed("audio/mpeg", "a.mp3"), false))
             verify(store.canOpenInBrowser(completed("audio/wav", "a.wav"), false))
-            verify(store.canOpenInBrowser(completed("audio/mp4", "a.m4a"), false))
-            verify(store.canOpenInBrowser(completed("audio/aac", "a.aac"), false))
-            verify(store.canOpenInBrowser(completed("video/mp4", "a.mp4"), false))
             verify(store.canOpenInBrowser(completed("video/webm", "a.webm"), false))
 
-            // Containers our Backends do not reliably render stay off the allowlist.
+            // No proprietary codecs in the shipped Chromium: H.264/AAC would load a
+            // player that cannot decode, so they go to the OS like Ogg and Matroska.
+            verify(!store.canOpenInBrowser(completed("audio/mp4", "a.m4a"), true))
+            verify(!store.canOpenInBrowser(completed("audio/aac", "a.aac"), true))
+            verify(!store.canOpenInBrowser(completed("video/mp4", "a.mp4"), true))
             verify(!store.canOpenInBrowser(completed("audio/ogg", "a.ogg"), true))
             verify(!store.canOpenInBrowser(completed("video/x-matroska", "a.mkv"), true))
+        }
+
+        function test_mediaPlayerPage_writesPlayerForMedia_reusesPerTarget() {
+            const store = createStore()
+            store.downloadsDirectory = "/tmp/status-downloads"
+            store.pathExistsFn = function(path) { return false }
+            store.mediaPlayerDirectory = "/tmp/status-player"
+
+            let written = null
+            store.writeTextFileFn = function(path, data) {
+                written = { path: path, data: data }
+                return true
+            }
+
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.mimeType = "video/webm"
+            live.downloadFileName = "sample 30s (2).webm"
+            live.suggestedFileName = live.downloadFileName
+            const rec = store.addDownload(live)
+            live.complete()
+
+            verify(store.isPlayableMedia(rec))
+            const url = String(store.mediaPlayerPageUrl(rec))
+            verify(url.startsWith("file:///tmp/status-player/player-"))
+            verify(url.endsWith(".html"))
+
+            verify(!!written)
+            verify(written.data.indexOf("<video ") >= 0)
+            verify(written.data.indexOf("<audio ") < 0)
+            // Spaces are percent-encoded — a raw space would break the src.
+            verify(written.data.indexOf('src="file:///') >= 0)
+            verify(written.data.indexOf("sample%2030s%20(2).webm") >= 0)
+            verify(written.data.indexOf('.webm" controls') >= 0)
+
+            // Replaying the same target reuses one page instead of piling up temp files.
+            written = null
+            compare(String(store.mediaPlayerPageUrl(rec)), url)
+            verify(!!written)
+            compare(written.path, "/tmp/status-player/player-" + url.split("player-")[1].replace(".html", "") + ".html")
+        }
+
+        function test_isBrowsableLocalUrl_onlyPlayerPagesAndOwnTargets() {
+            const store = createStore()
+            store.downloadsDirectory = "/tmp/status-downloads"
+            store.pathExistsFn = function(path) { return false }
+            store.mediaPlayerDirectory = "/tmp/status-player"
+            store.writeTextFileFn = function(path, data) { return true }
+
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.mimeType = "video/webm"
+            live.downloadFileName = "clip 1.webm"
+            live.suggestedFileName = live.downloadFileName
+            const rec = store.addDownload(live)
+            live.complete()
+
+            verify(store.isBrowsableLocalUrl(store.mediaPlayerPageUrl(rec)))
+
+            // The Record's own Download Target, percent-encoded as WebEngine reports it.
+            const target = String(rec.targetPath)
+            verify(target.indexOf("clip 1.webm") > 0)
+            verify(store.isBrowsableLocalUrl(
+                       "file://" + target.split("/").map(encodeURIComponent).join("/")))
+
+            // Anything else local stays blocked by the Backend guard.
+            verify(!store.isBrowsableLocalUrl("file:///etc/passwd"))
+            verify(!store.isBrowsableLocalUrl("file:///tmp/status-player/evil.html"))
+            verify(!store.isBrowsableLocalUrl(
+                       "file://" + target.replace("clip 1.webm", "other.webm")))
+            verify(!store.isBrowsableLocalUrl("https://example.com/clip.webm"))
+            verify(!store.isBrowsableLocalUrl(""))
+        }
+
+        function test_mediaPlayerPage_audioTag_andEmptyWhenUnusable() {
+            const store = createStore()
+            store.mediaPlayerDirectory = "/tmp/status-player"
+
+            let data = ""
+            store.writeTextFileFn = function(path, text) { data = text; return true }
+
+            function completed(mime, name) {
+                const live = createTemporaryObject(fakeDownloadComponent, root)
+                live.mimeType = mime
+                live.downloadFileName = name
+                live.suggestedFileName = name
+                const rec = store.addDownload(live)
+                live.complete()
+                return rec
+            }
+
+            const mp3 = completed("audio/mpeg", "tune.mp3")
+            verify(String(store.mediaPlayerPageUrl(mp3)).length > 0)
+            verify(data.indexOf("<audio ") >= 0)
+            verify(data.indexOf("<video ") < 0)
+            // The name is shown — an audio page is otherwise an empty void.
+            verify(data.indexOf("tune.mp3") >= 0)
+            // A codec the build lacks must say so instead of leaving a dead control.
+            verify(data.indexOf('id="failed"') >= 0)
+            // Assets came from media_player.html/.js, fully substituted.
+            verify(data.indexOf("min(90%, 520px)") >= 0)
+            verify(data.indexOf('addEventListener("error"') >= 0)
+            verify(data.indexOf("__") < 0)
+
+            // Non-media never gets a page — it navigates to the file directly.
+            compare(String(store.mediaPlayerPageUrl(completed("application/pdf", "a.pdf"))), "")
+
+            // A failed write leaves the caller to fall back to the OS handler.
+            store.writeTextFileFn = function() { return false }
+            compare(String(store.mediaPlayerPageUrl(completed("video/webm", "clip.webm"))), "")
+
+            // Missing file blocks both routes.
+            store.writeTextFileFn = function(path, text) { return true }
+            const gone = completed("video/webm", "gone.webm")
+            gone.missingFile = true
+            compare(String(store.mediaPlayerPageUrl(gone)), "")
+
+            // An unreadable page asset must not write a half-built page.
+            let written = false
+            store.writeTextFileFn = function(path, text) { written = true; return true }
+            store._mediaPlayerTemplateCache = ""
+            store.readTextFileFn = function(path) { return "" }
+            compare(String(store.mediaPlayerPageUrl(completed("audio/mpeg", "b.mp3"))), "")
+            verify(!written)
         }
 
         function test_canShareFile_requiresCompletedPresentFile() {

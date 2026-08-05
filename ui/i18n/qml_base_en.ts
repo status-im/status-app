@@ -6246,6 +6246,10 @@ key pair. Keycard will be required for signing</source>
 <context>
     <name>DownloadsStore</name>
     <message>
+        <source>This file cannot be played here. Open it with another app.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Missing file</source>
         <translation type="unfinished"></translation>
     </message>
