@@ -117,7 +117,7 @@ Item {
 
         function test_pickingDestinationEmitsIntent() {
             const picker = createPicker()
-            const delegate = findChild(picker, "shareDestinationDelegate_general")
+            const delegate = findChild(picker, "shareDestinationDelegate_general_channel-general")
             verify(delegate)
 
             mouseClick(delegate)
