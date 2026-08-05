@@ -245,7 +245,7 @@ Control {
                     Layout.leftMargin: profileImage.active ? 0 : root.messageDetails.sender.profileImage.assetSettings.width + parent.spacing
 
                     StatusPinMessageDetails {
-                        active: root.isPinned && !editMode
+                        active: root.isPinned
                         visible: active
                         pinnedMsgInfoText: root.pinnedMsgInfoText
                         pinnedBy: root.pinnedBy
