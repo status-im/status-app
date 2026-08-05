@@ -375,9 +375,9 @@ Control {
         }
 
         Loader {
-            active: root.hovered && root.quickActions.length > 0
+            active: root.quickActions.length > 0
                     && !Utils.isMobile // hover menu disabled on mobile; we use the MessageContextMenuView
-            visible: active
+            visible: active && root.hovered
             anchors.right: parent.right
             anchors.rightMargin: Theme.padding
             anchors.verticalCenter: parent.top
