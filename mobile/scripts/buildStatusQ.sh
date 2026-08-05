@@ -29,6 +29,7 @@ cmake -S "${STATUSQ}" -B "${BUILD_DIR}" \
     -DSTATUSQ_BUILD_SANITY_CHECKER=OFF \
     -DSTATUSQ_BUILD_TESTS=OFF \
     -DSTATUSQ_STATIC_LIB=${STATIC_LIB} \
+    -DSTATUSQ_BUNDLE_QML=OFF \
     -DSTATUSQ_TESTMODE=$([[ "${STATUSQ_TESTMODE}" == "true" ]] && echo ON || echo OFF)
 
 make -C "${BUILD_DIR}" SCodes -j "$(nproc)"

@@ -210,10 +210,11 @@ void registerStatusQTypes() {
 
 #ifdef BUNDLE_QML_RESOURCES
     Q_INIT_RESOURCE(TestConfig);
-    Q_INIT_RESOURCE(statusq);
 #if defined(STATUSQ_HAS_MOBILEWEBVIEW)
     Q_INIT_RESOURCE(customwebview);
 #endif
+#ifdef BUNDLE_STATUSQ_QML
+    Q_INIT_RESOURCE(statusq);
     Q_INIT_RESOURCE(fonts);
     Q_INIT_RESOURCE(img);
     Q_INIT_RESOURCE(png);
@@ -224,6 +225,7 @@ void registerStatusQTypes() {
 #endif
     Q_INIT_RESOURCE(twemoji);
     Q_INIT_RESOURCE(twemoji_svg);
+#endif
 #endif
 
     qtmt::registerQmlTypes();
