@@ -772,20 +772,25 @@ Control {
                 StatusScrollView {
                     id: inputScrollView
 
-                    readonly property real editMaxHeight: Math.ceil(messageInputField.font.pixelSize * 1.4 * root.editInputMaxLines
-                                                                    + messageInputField.topPadding
-                                                                    + messageInputField.bottomPadding)
+                    readonly property real editMaxHeight:
+                        Math.ceil(messageInputField.font.pixelSize * 1.4 * root.editInputMaxLines
+                                  + messageInputField.topPadding
+                                  + messageInputField.bottomPadding)
 
-                    Layout.preferredHeight: root.isEdit ? Math.min(messageInputField.implicitHeight, editMaxHeight)
-                                                        : messageInputField.implicitHeight
-                    Layout.fillWidth: true
+                    Layout.preferredHeight: messageInputField.implicitHeight
+                                            + flickable.topMargin
+                                            + flickable.bottomMargin
                     Layout.maximumHeight: root.isEdit ? editMaxHeight : 200
+                    Layout.fillWidth: true
 
                     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                     ScrollBar.vertical.implicitWidth: Theme.halfPadding
 
                     padding: 0
                     contentWidth: availableWidth
+
+                    flickable.topMargin: messageInputField.effectiveTextMargin
+                    flickable.bottomMargin: messageInputField.effectiveTextMargin - Theme.padding
 
                     ChatTextArea {
                         id: messageInputField
@@ -800,25 +805,33 @@ Control {
                         characterLimit: root.messageLimitHard
                         imageEmojis: true
 
-                        // When the text area is empty, we need to use padding because textMargin is ignored
-                        // when calculating size. When not empty, textMargin is used because paddings are
-                        // clipped by ScrollView.
+                        // Paddings are used only for left/right sides because
+                        // when used nn top/bottom they cause artificial cut-off
+                        // lines when scrolling. Also textMargin cannot be used
+                        // for that because it breaks cursor position/geometry
+                        // and undo stack in some cases.
                         padding: 0
-                        leftPadding: (length ? -effectiveTextMargin + Theme.halfPadding : Theme.halfPadding)
-                                     + extraHorizontalPadding
-                        rightPadding: (length ? -effectiveTextMargin + Theme.halfPadding : Theme.halfPadding)
-                                      + extraHorizontalPadding
-                        topPadding: length ? 0 : basePadding
-                        bottomPadding: (length ? 0 : basePadding) - Theme.padding
+                        leftPadding: Theme.halfPadding + extraHorizontalPadding
+                        rightPadding: Theme.halfPadding + extraHorizontalPadding
+                        topPadding: 0
+                        bottomPadding: 0
 
-                        onLengthChanged: textMargin = length ? effectiveTextMargin : 0
-                        onEffectiveTextMarginChanged: textMargin = length ? effectiveTextMargin : 0
+                        onCursorPositionChanged: {
+                            const topMargin = inputScrollView.flickable.topMargin
+                            const bottomMargin = inputScrollView.flickable.bottomMargin
 
-                        onLineCountChanged: {
-                            const flickable = inputScrollView.contentItem
+                            const cursorRect = cursorRectangle
 
-                            if (height - (cursorRectangle.y + cursorRectangle.height) <= textMargin)
-                                flickable.contentY = height - flickable.height
+                            const extendedY = cursorRect.y - topMargin
+                            const extendedHeight = cursorRect.height +
+                                                 topMargin + bottomMargin
+
+                            const extendecCursorRect = Qt.rect(
+                                                         cursorRect.x,
+                                                         extendedY,
+                                                         cursorRect.width,
+                                                         extendedHeight)
+                            inputScrollView.ensureVisible(extendecCursorRect)
                         }
 
                         placeholderText: root.chatInputPlaceholder
