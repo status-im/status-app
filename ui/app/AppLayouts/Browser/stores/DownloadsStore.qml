@@ -104,6 +104,10 @@ QtObject {
     // Show in folder: Desktop + Android; hidden on iOS (ADR 0006 / UX 02 / UX 06).
     property bool showInFolderSupported: !SQUtils.Utils.isIOS
 
+    // false on iOS: WebKit rejects file:// media in a file:// player page.
+    // Injectable for QML tests.
+    property bool inBrowserMediaPlaybackSupported: !SQUtils.Utils.isIOS
+
     // Desktop reveals file; Android opens system Downloads UI. Injectable for QML tests.
     property var showInFolderFn: function(path) {
         SystemUtils.showInFolder(path)
@@ -359,7 +363,7 @@ QtObject {
             return true
         if (mime === "application/pdf" || name.endsWith(".pdf"))
             return !!supportsPdf
-        return isPlayableMedia(record)
+        return inBrowserMediaPlaybackSupported && isPlayableMedia(record)
     }
 
     /// Media our Backends can decode — and only inside a page (see mediaPlayerPageUrl).

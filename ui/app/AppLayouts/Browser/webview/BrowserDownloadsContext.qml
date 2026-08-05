@@ -1,6 +1,7 @@
 import QtQuick
 
 import StatusQ
+import StatusQ.Core.Utils as SQUtils
 
 import utils
 
@@ -101,9 +102,7 @@ QtObject {
         }
     }
 
-    /// Returns true when the tap opened the file (in-browser or OS handler) —
-    /// callers close the Downloads overview then. Retry keeps it open: nothing
-    /// opened, the Record just restarts in place.
+    /// true if the file opened (caller closes the overview). false on retry.
     function openDownloadFromList(downloadComplete, index) {
         const record = downloadsStore.getDownload(index)
         if (!record)
@@ -146,6 +145,9 @@ QtObject {
             return true
         if (record.missingFile)
             return false
+        // iOS: openUrlExternally ignores file:// — use the share sheet.
+        if (SQUtils.Utils.isIOS)
+            return shareFileRecord(record)
         downloadsStore.openRecord(record)
         return true
     }

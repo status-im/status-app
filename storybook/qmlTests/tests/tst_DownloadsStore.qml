@@ -683,6 +683,12 @@ Item {
             verify(!store.canOpenInBrowser(completed("video/mp4", "a.mp4"), true))
             verify(!store.canOpenInBrowser(completed("audio/ogg", "a.ogg"), true))
             verify(!store.canOpenInBrowser(completed("video/x-matroska", "a.mkv"), true))
+
+            // iOS: media leaves the in-browser route; images still render.
+            store.inBrowserMediaPlaybackSupported = false
+            verify(!store.canOpenInBrowser(completed("audio/mpeg", "b.mp3"), false))
+            verify(!store.canOpenInBrowser(completed("video/webm", "b.webm"), false))
+            verify(store.canOpenInBrowser(completed("image/png", "b.png"), false))
         }
 
         function test_mediaPlayerPage_writesPlayerForMedia_reusesPerTarget() {

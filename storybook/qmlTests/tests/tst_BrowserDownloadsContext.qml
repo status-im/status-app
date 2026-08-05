@@ -488,7 +488,7 @@ Item {
             record.fileName = "archive.bin"
             record.mimeType = "application/octet-stream"
 
-            // Opened via the OS handler → still "opened": the overview closes on true.
+            // OS open still counts as opened → overview closes on true.
             verify(ctx.openDownloadFromList(true, 0))
             compare(openedUrls.length, 0)
             compare(store.openRecordCalls, 1)
@@ -503,7 +503,7 @@ Item {
             record.state = AbstractWebView.DownloadState.DownloadInterrupted
             record.fileName = "a.bin"
 
-            // Retry restarts in place — the Downloads overview must stay open.
+            // Retry restarts in place — overview stays open.
             verify(!ctx.openDownloadFromList(false, 0))
         }
     }
