@@ -245,6 +245,11 @@ public class StatusQtActivity extends QtActivity {
         // it lets the app skip the destination picker.
         String destinationChatId = intent.getStringExtra(Intent.EXTRA_SHORTCUT_ID);
         if (destinationChatId == null) destinationChatId = "";
+        // Published ids are namespaced; downstream wants the bare chat id.
+        if (destinationChatId.startsWith(ShareShortcutsHelper.SHARE_ID_PREFIX)) {
+            destinationChatId =
+                    destinationChatId.substring(ShareShortcutsHelper.SHARE_ID_PREFIX.length());
+        }
 
         if (!userLoggedIn.get()) {
             clearPendingShare();
