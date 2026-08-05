@@ -146,6 +146,19 @@ Item {
         }
     }
 
+    // Notification shortcuts share our quota and outrank us, so the OS can
+    // evict ours; the signature memo cannot see that. Re-assert on foreground.
+    Connections {
+        target: Qt.application
+
+        function onStateChanged() {
+            if (Qt.application.state === Qt.ApplicationActive) {
+                d.lastPublishedSignature = ""
+                d.schedulePublish()
+            }
+        }
+    }
+
     Connections {
         target: topDestinations
 

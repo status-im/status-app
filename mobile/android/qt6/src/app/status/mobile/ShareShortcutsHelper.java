@@ -35,6 +35,10 @@ public class ShareShortcutsHelper {
     private static final String SHARE_CATEGORY =
             "app.status.mobile.directshare.category.SHARE_TARGET";
 
+    // The dynamic set is package-wide and shared with NotificationBuilder's
+    // "conv_" shortcuts. StatusQtActivity strips this off EXTRA_SHORTCUT_ID.
+    static final String SHARE_ID_PREFIX = "share_";
+
     /**
      * Replaces the published set. shortcutsJson: JSON array of
      * {id, name, iconPath?} objects in rank order (most recent first); an
@@ -60,7 +64,8 @@ public class ShareShortcutsHelper {
                         .setClass(context, StatusQtActivity.class)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-                ShortcutInfoCompat.Builder builder = new ShortcutInfoCompat.Builder(context, id)
+                ShortcutInfoCompat.Builder builder =
+                        new ShortcutInfoCompat.Builder(context, SHARE_ID_PREFIX + id)
                         .setShortLabel(name)
                         .setRank(i)
                         .setIntent(launchIntent)
@@ -77,7 +82,20 @@ public class ShareShortcutsHelper {
                 infos.add(builder.build());
             }
 
-            ShortcutManagerCompat.setDynamicShortcuts(context, infos);
+            // setDynamicShortcuts would drop the conversation shortcuts too;
+            // push (unlike add) evicts instead of throwing when the quota is full.
+            List<String> stale = new ArrayList<>();
+            for (ShortcutInfoCompat published : ShortcutManagerCompat.getDynamicShortcuts(context)) {
+                if (published.getId().startsWith(SHARE_ID_PREFIX)) {
+                    stale.add(published.getId());
+                }
+            }
+            if (!stale.isEmpty()) {
+                ShortcutManagerCompat.removeDynamicShortcuts(context, stale);
+            }
+            for (ShortcutInfoCompat info : infos) {
+                ShortcutManagerCompat.pushDynamicShortcut(context, info);
+            }
         } catch (Exception e) {
             Log.w(TAG, "failed to publish share shortcuts", e);
         }
@@ -96,12 +114,15 @@ public class ShareShortcutsHelper {
                             | ShortcutManagerCompat.FLAG_MATCH_CACHED);
             List<String> ids = new ArrayList<>();
             for (ShortcutInfoCompat shortcut : existing) {
-                ids.add(shortcut.getId());
+                // FLAG_MATCH_CACHED also matches conversation shortcuts held
+                // for live notifications; uncaching those breaks them.
+                if (shortcut.getId().startsWith(SHARE_ID_PREFIX)) {
+                    ids.add(shortcut.getId());
+                }
             }
             if (!ids.isEmpty()) {
                 ShortcutManagerCompat.removeLongLivedShortcuts(context, ids);
             }
-            ShortcutManagerCompat.removeAllDynamicShortcuts(context);
         } catch (Exception e) {
             Log.w(TAG, "failed to clear share shortcuts", e);
         }
