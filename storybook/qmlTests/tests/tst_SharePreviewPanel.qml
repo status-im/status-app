@@ -181,6 +181,24 @@ Item {
             compare(sendRequestedSpy.signalArguments[0][1][0], root.redImage)
         }
 
+        function test_sendConvertsSingleSlashFileUrlToPlainPath() {
+            // Real file needed: the image validator sniffs content.
+            const absPath = Qt.resolvedUrl("../../../ui/StatusQ/src/assets/png/qr-scan-success.png")
+                              .toString().slice("file://".length)
+            const preview = createPreview({ text: "" })
+            const chatInput = findChild(preview, "statusChatInput")
+            const sendButton = findChild(preview, "statusChatInputSendButton")
+            verify(chatInput)
+
+            chatInput.selectImageString("file:" + absPath)
+            compare(chatInput.fileUrlsAndSources.length, 1)
+
+            mouseClick(sendButton)
+
+            compare(sendRequestedSpy.count, 1)
+            compare(sendRequestedSpy.signalArguments[0][1][0], absPath)
+        }
+
         function test_sendWithImagesEmitsEditedCaption() {
             const preview = createPreview({
                 imagePaths: [root.redImage, root.greenImage]
