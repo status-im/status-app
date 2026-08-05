@@ -208,9 +208,10 @@ public class StatusQtActivity extends QtActivity {
         if (!isSend && !isSendMultiple) return;
         String type = intent.getType();
         if (type == null) return;
-        // Mirrors the manifest: image shares (single or multiple) and
-        // single text shares; anything else is dropped.
-        boolean isImageShare = type.startsWith("image/");
+        // Android matches "text/*" and "*/*" intents against our concrete
+        // text/plain and image/* filters, so the type can be a wildcard.
+        boolean isWildcard = "*/*".equals(type);
+        boolean isImageShare = type.startsWith("image/") || isWildcard;
         if (!isImageShare && !(isSend && type.startsWith("text/"))) return;
 
         String text = intent.getStringExtra(Intent.EXTRA_TEXT);
@@ -220,9 +221,16 @@ public class StatusQtActivity extends QtActivity {
         if (text == null) text = "";
 
         String[] imagePaths = isImageShare
-                ? copySharedImagesToCache(extractStreamUris(intent, isSendMultiple))
+                ? copySharedImagesToCache(
+                        imagesOnly(extractStreamUris(intent, isSendMultiple), isWildcard))
                 : new String[0];
-        if (text.isEmpty() && imagePaths.length == 0) return;
+        if (text.isEmpty() && imagePaths.length == 0) {
+            if (isImageShare) {
+                Toast.makeText(this, "Only images and text can be shared to Status",
+                        Toast.LENGTH_LONG).show();
+            }
+            return;
+        }
 
         if (!userLoggedIn.get()) {
             clearPendingShare();
@@ -259,6 +267,22 @@ public class StatusQtActivity extends QtActivity {
             if (stream != null) uris.add(stream);
         }
         return uris;
+    }
+
+    // Resolved before copying: the copy loop runs on the UI thread, so a
+    // wildcard share's video or archive would block it.
+    private List<Uri> imagesOnly(List<Uri> uris, boolean resolveTypes) {
+        if (!resolveTypes) return uris;
+        ArrayList<Uri> images = new ArrayList<>();
+        for (Uri uri : uris) {
+            String mime = getContentResolver().getType(uri);
+            if (mime != null && mime.startsWith("image/")) {
+                images.add(uri);
+            } else {
+                Log.w(TAG, "share intake: dropping non-image stream (" + mime + ")");
+            }
+        }
+        return images;
     }
 
     // Copies each shared stream into the share-intake cache dir and returns
