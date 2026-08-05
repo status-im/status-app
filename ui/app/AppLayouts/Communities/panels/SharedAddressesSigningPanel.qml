@@ -15,7 +15,7 @@ ColumnLayout {
 
     required property string componentUid
     required property bool isEditMode
-    property var keypairSigningModel
+    property var keypairSigningModel: []
 
     required property var selectedSharedAddressesMap // Map[address, [keyUid, selected, isAirdrop]
     required property int totalNumOfAddressesForSharing
@@ -123,21 +123,18 @@ ColumnLayout {
         spacing: Theme.padding
 
         StatusBaseText {
-            Layout.preferredWidth: parent.width
+            Layout.fillWidth: true
             elide: Text.ElideRight
+            wrapMode: Text.Wrap
             text: qsTr("To share %n address(s) with <b>%1</b>, sign with the associated key pairs...", "", d.selectedSharedAddressesCount).arg(root.communityName)
         }
 
-        RowLayout {
+        StatusBaseText {
             Layout.fillWidth: true
             visible: storedOnDeviceList.visible
-
-            StatusBaseText {
-                Layout.fillWidth: true
-                text: qsTr("Stored on device")
-                color: Theme.palette.baseColor1
-                wrapMode: Text.WordWrap
-            }
+            text: qsTr("Stored on device")
+            color: Theme.palette.baseColor1
+            wrapMode: Text.WordWrap
         }
 
         StatusListView {

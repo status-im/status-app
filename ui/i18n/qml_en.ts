@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="en" sourcelanguage="en">
+<TS version="2.1" language="en_US" sourcelanguage="en_US">
 <context>
     <name>AddressesSelectorPanel</name>
     <message numerus="yes">
@@ -608,9 +608,9 @@
     </message>
     <message numerus="yes">
         <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, sign with the associated key pairs...</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>To share %n address with &lt;b&gt;%1&lt;/b&gt;, sign with the associated key pairs...</numerusform>
+            <numerusform>To share %n addresses with &lt;b&gt;%1&lt;/b&gt;, sign with the associated key pairs...</numerusform>
         </translation>
     </message>
 </context>
@@ -638,7 +638,7 @@
     <name>StatusChatInput</name>
     <message numerus="yes">
         <source>%n Image(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n Image</numerusform>
             <numerusform>%n Images</numerusform>
         </translation>

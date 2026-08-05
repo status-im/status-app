@@ -22,6 +22,7 @@ StatusStackModal {
     id: root
 
     destroyOnClose: true
+    fullScreenSheet: true
     property bool isEditMode: false
 
     required property string communityId
@@ -45,7 +46,7 @@ StatusStackModal {
     required property var assetsModel
     required property var collectiblesModel
 
-    property var keypairSigningModel
+    property var keypairSigningModel: []
 
     property var currentSharedAddresses: []
     onCurrentSharedAddressesChanged: d.reEvaluateModels()
