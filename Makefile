@@ -641,9 +641,9 @@ UI_RESOURCES := resources.rcc
 $(UI_RESOURCES): $(UI_SOURCES) | check-qt-dir compile-translations
 	echo -e $(BUILD_MSG) "resources.rcc"
 	rm -f ./resources.rcc
-	rm -f ./ui/resources.qrc
-	go run ui/generate-rcc.go -source=ui -output=ui/resources.qrc
-	rcc -binary $(RCC_PARAMS) ui/resources.qrc -o ./resources.rcc
+	rm -f ./ui/resources.qrc ./ui/resources_webscripts.qrc
+	go run ui/generate-rcc.go -source=ui -output=ui/resources.qrc -webscripts-output=ui/resources_webscripts.qrc
+	rcc -binary $(RCC_PARAMS) ui/resources.qrc ui/resources_webscripts.qrc -o ./resources.rcc
 
 rcc: $(UI_RESOURCES)
 

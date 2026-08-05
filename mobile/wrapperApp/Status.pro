@@ -2,6 +2,19 @@ TEMPLATE = app
 
 QT += quick gui qml webview svg widgets multimedia
 
+CONFIG += qtquickcompiler
+# Per-binding AOT stats, written next to each generated .cpp
+QMLCACHE_FLAGS += --dump-aot-stats --module-id=status
+# qtquickcompiler.prf passes no import paths; without these, in-repo modules don't AOT-compile
+QMLCACHE_FLAGS += -I $$PWD/../../ui -I $$PWD/../../ui/imports -I $$PWD/../../ui/app -I $$PWD/../../ui/StatusQ/src
+
+# qmlcachegen cannot follow QtQuick.Controls' optional style imports; expose the Universal
+# style under the plain Controls module name so Control-derived types AOT-compile
+QMLSHIM_DIR = $$OUT_PWD/qmlcontrols-shim
+SHIM_RESULT = $$system(bash $$PWD/../scripts/gen_controls_shim.sh $$[QT_INSTALL_QML] $$system_quote($$QMLSHIM_DIR) Universal 2>&1)
+!isEmpty(SHIM_RESULT): warning("gen_controls_shim: $$SHIM_RESULT")
+QMLCACHE_FLAGS += -I $$QMLSHIM_DIR
+
 BUILD_VARIANT = $$(BUILD_VARIANT)
 TARGET = Status
 equals(BUILD_VARIANT, "pr"): TARGET = StatusPR
@@ -23,9 +36,15 @@ equals(QT_MAJOR_VERSION, 6) {
 SOURCES += \
     sources/main.cpp
 
+# Browser user scripts run in the web engine, not the QML engine, so they must
+# not go through qmlcachegen (it rejects async/await and optional catch binding).
+WEBSCRIPTS_QRC = $$PWD/../../ui/resources_webscripts.qrc
+QTQUICK_COMPILER_SKIPPED_RESOURCES += $$WEBSCRIPTS_QRC
+
 # Add all status-desktop qrc files
 RESOURCES += \
-    $$PWD/../../ui/resources.qrc
+    $$PWD/../../ui/resources.qrc \
+    $$WEBSCRIPTS_QRC
 
 QML_IMPORT_PATH += $$PWD/../../ui/imports \
                    $$PWD/../../ui/app \

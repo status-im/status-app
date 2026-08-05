@@ -264,6 +264,7 @@ clean-status-desktop-rcc:
 	@rm -f $(STATUS_DESKTOP_RCC)
 	@rm -f $(STATUS_DESKTOP)/resources.rcc
 	@rm -f $(STATUS_DESKTOP)/ui/resources.qrc
+	@rm -f $(STATUS_DESKTOP)/ui/resources_webscripts.qrc
 
 .PHONY: apk-fdroid
 apk-fdroid:
