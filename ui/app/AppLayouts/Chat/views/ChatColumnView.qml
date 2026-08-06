@@ -259,7 +259,9 @@ Item {
             // and would collapse newlines. Align with the new-message path (RootStore.cleanMessageText).
             const message = newMessageText
 
-            if (message.length <= 0)
+            // Reject blank/whitespace-only edits (mirrors the new-message send guard in
+            // RootStore.sendMessage): stay in edit mode instead of silently exiting.
+            if (message.trim().length <= 0)
                 return
 
             const messageId = editMessageId
