@@ -20,7 +20,6 @@ class MessageContextMenuLocators(BaseLocators):
     REPLY_TO = BaseLocators.resource_id_contains("messageContextMenu_replyTo")
     EDIT_MESSAGE = BaseLocators.resource_id_contains("messageContextMenu_edit")
     COPY_MESSAGE = BaseLocators.resource_id_contains("messageContextMenu_copy")
-    COPY_MESSAGE_ID = BaseLocators.resource_id_contains("messageContextMenu_copyId")
     PIN_MESSAGE = BaseLocators.resource_id_contains("messageContextMenu_pin")
     MARK_AS_UNREAD = BaseLocators.resource_id_contains("messageContextMenu_markUnread")
     DELETE_MESSAGE = BaseLocators.resource_id_contains("messageContextMenu_delete")
