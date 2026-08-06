@@ -45,10 +45,10 @@ StatusDialog {
     signal deleteBookmarkRequested(string url)
     signal bookmarkClicked(string url)
 
-    // downloads (issue 05)
+    // downloads
     property var downloadsModel: []
 
-    // Carries the Download Record — the one identity vocabulary (ticket 09).
+    // Carries the Download Record — the one identity vocabulary.
     signal downloadClicked(var record)
     signal downloadOptionsClicked(var record, Item anchor)
 

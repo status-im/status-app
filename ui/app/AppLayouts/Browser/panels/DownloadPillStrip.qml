@@ -9,7 +9,7 @@ import AppLayouts.Browser.controls
 
 /**
  * Download Pill strip (session-only — never fed from Download History).
- * Mobile: under the address bar. Desktop: window footer (replaces DownloadBar).
+ * Mobile: under the address bar. Desktop: window footer.
  * Newest pills insert at the left; existing pills animate right. Fixed width;
  * overflow scrolls horizontally.
  */
@@ -21,7 +21,7 @@ Rectangle {
     readonly property int pillWidth: 227
 
     /// Both signals carry the Download Record — the one identity vocabulary
-    /// for a download (ticket 09); no strip-index space to translate.
+    /// for a download; no strip-index space to translate.
     signal openDownloadClicked(var record)
     /// anchor is the pill's ⋮ button — the menu right-aligns under (or over) it.
     signal optionsClicked(var record, Item anchor)

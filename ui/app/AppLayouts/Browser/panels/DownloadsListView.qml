@@ -8,10 +8,10 @@ import StatusQ.Core.Theme
 import AppLayouts.Browser.controls
 
 /**
- * Downloads List for the tabs/bookmarks overview (issue 05 / UX 01–03).
+ * Downloads List for the tabs/bookmarks overview.
  * Newest Records first. Each row is the shared DownloadPill delegate rendered
- * flat (browser-downloads-polish 03) — the state-to-controls matrix, wording,
- * eliding and Missing File presentation all live in the pill.
+ * flat — the state-to-controls matrix, wording, eliding and Missing File
+ * presentation all live in the pill.
  */
 Item {
     id: root
@@ -19,13 +19,13 @@ Item {
     property var downloadsModel: []
 
     /// Both signals carry the Download Record — the one identity vocabulary
-    /// for a download (ticket 09); no index space to translate.
+    /// for a download; no index space to translate.
     signal openDownloadClicked(var record)
     /// anchor is the row's ⋮ button — the menu right-aligns under it.
     signal optionsClicked(var record, Item anchor)
 
     // Length, not Array.isArray: createObject converts JS arrays so isArray fails
-    // while .length still reports Records (browser-downloads-polish 01).
+    // while .length still reports Records.
     readonly property int _count: downloadsModel && downloadsModel.length !== undefined
                                   ? downloadsModel.length : 0
 

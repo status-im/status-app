@@ -7,7 +7,7 @@ import AppLayouts.Browser.adapters
 import AppLayouts.Browser.popups
 
 /**
- * Shared DownloadRecordMenu (browser-downloads-ux 02 / ticket 09):
+ * Shared DownloadRecordMenu:
  * item sets + Share/Copy labels from one bound `capabilities` object.
  */
 Item {
@@ -47,7 +47,7 @@ Item {
         name: "DownloadRecordMenu"
         when: windowShown
 
-        /// One capabilities object per case (was 7 separate menu properties).
+        /// One capabilities object per case.
         function caps(overrides) {
             return Object.assign({
                 openInBrowser: false,
@@ -183,7 +183,7 @@ Item {
             compare(menu.record, record)
         }
 
-        /// Spec §3: the pill strip menu leads with "Downloads" (opens the
+        /// The pill strip menu leads with "Downloads" (opens the
         /// Downloads List section of the Open tabs overview), above a divider.
         function test_downloadsEntry_firstInStripMenu_emitsSignal() {
             const record = createTemporaryObject(recordComponent, root)
@@ -212,7 +212,7 @@ Item {
             compare(opened, 1, "activating the entry requests the Downloads List")
         }
 
-        /// Spec §3: list-row menus never show the entry — the user is already
+        /// List-row menus never show the entry — the user is already
         /// in the Downloads List.
         function test_downloadsEntry_absentFromListMenus() {
             const record = createTemporaryObject(recordComponent, root)
@@ -230,7 +230,7 @@ Item {
             verify(texts.indexOf(qsTr("Downloads")) < 0)
         }
 
-        /// Ticket 09: `capabilities` is a BINDING at the call site, so the menu
+        /// `capabilities` is a BINDING at the call site, so the menu
         /// can never show stale capabilities — flipping the record's state
         /// re-derives the object with no populate step in between.
         function test_capabilitiesBinding_followsRecordState_noStaleMenu() {

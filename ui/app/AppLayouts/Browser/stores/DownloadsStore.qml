@@ -24,7 +24,7 @@ QtObject {
     // Array of DownloadRecord; reassigned on change so ListView refreshes.
     property var downloadModel: []
 
-    // Session-only Download Pill strip. Never restored from Download History (ADR 0006 / issue 03).
+    // Session-only Download Pill strip. Never restored from Download History (ADR 0006).
     property var downloadStripModel: []
 
     /// Newest-first list for the Downloads overview. Recomputes when downloadModel
@@ -60,7 +60,7 @@ QtObject {
     /// - showInFolder(path) — desktop reveals file; Android opens system Downloads UI
     /// - preferShareSheet: bool — mobile → share sheet; desktop → copy
     /// - showInFolderSupported: bool — Desktop + Android; hidden on iOS
-    ///   (ADR 0006 / UX 02 / UX 06)
+    ///   (ADR 0006)
     property var platform: ({
         fileExists: function(path) { return SystemUtils.fileExists(path) },
         ensureDirectory: function(path) { return SystemUtils.ensureDirectory(path) },
@@ -212,7 +212,7 @@ QtObject {
         if (!record || !canShowInFolder(record))
             return
         // Prefer the file path so desktop can reveal/select it; Android opens
-        // the system Downloads UI and ignores the path (UX 06).
+        // the system Downloads UI and ignores the path.
         const path = record.targetPath || record.downloadDirectory
         if (!path)
             return

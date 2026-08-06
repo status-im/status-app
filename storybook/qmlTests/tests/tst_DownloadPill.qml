@@ -8,7 +8,7 @@ import AppLayouts.Browser.panels
 import "../../../ui/app/AppLayouts/Browser/webview/DownloadFormatUtils.js" as DownloadFormatUtils
 
 /**
- * Download Pill UI (browser-downloads-ux 01 + polish 02/04):
+ * Download Pill UI:
  * Figma control matrix, DownloadFormatUtils wording, fixed strip width.
  */
 Item {
@@ -106,6 +106,20 @@ Item {
             verify(!pill.pauseButtonVisible)
             verify(pill.cancelButtonVisible)
             verify(!pill.optionsButtonVisible)
+
+            // The rendered controls follow the flags.
+            const primary = findChild(pill, "downloadPillPrimaryButton")
+            verify(!!primary)
+            verify(primary.visible)
+            compare(primary.icon.name, "play")
+
+            const cancel = findChild(pill, "downloadPillCancelButton")
+            verify(!!cancel)
+            verify(cancel.visible)
+
+            const options = findChild(pill, "downloadPillOptionsButton")
+            verify(!!options)
+            verify(!options.visible)
         }
 
         function test_completed_fileLeft_optionsRight_noCancel_emptyStatus() {
@@ -124,8 +138,7 @@ Item {
         }
 
         function test_cancelled_iconLeft_canceledStatus_hasOptionsMenu() {
-            // polish 03: Cancelled keeps its ⋮ so Retry/Dismiss stay reachable
-            // from the strip (reverses the earlier no-right-control matrix).
+            // Cancelled keeps its ⋮ so Retry/Dismiss stay reachable from the strip.
             const cancelled = createTemporaryObject(recordComponent, root, {
                 state: AbstractWebView.DownloadState.DownloadCancelled,
                 isTerminal: true
@@ -161,7 +174,22 @@ Item {
             compare(record.state, AbstractWebView.DownloadState.DownloadCancelled)
             compare(pill.primaryAction, DownloadPill.PrimaryAction.Cancelled)
             verify(!pill.cancelButtonVisible)
-            verify(pill.optionsButtonVisible) // polish 03: Cancelled keeps its ⋮
+            verify(pill.optionsButtonVisible) // Cancelled keeps its ⋮
+        }
+
+        // Missing File follows the Record, not the surface — the strikeout
+        // lives in the pill, so both strip and list rows get it.
+        function test_missingFile_strikesThroughFileName() {
+            const record = createTemporaryObject(recordComponent, root, {
+                state: AbstractWebView.DownloadState.DownloadCompleted,
+                isTerminal: true,
+                missingFile: true
+            })
+            const pill = makePill(record)
+
+            const label = findChild(pill, "downloadPillFileNameLabel")
+            verify(!!label)
+            verify(label.font.strikeout, "Missing File strikes through the file name")
         }
 
         function test_elideFileName_middleElidesBase_keepsExtension() {
@@ -277,7 +305,7 @@ Item {
             verify(first.color !== second.color)
         }
 
-        // Ticket 09: strip signals carry the Download Record, not a strip index.
+        // Strip signals carry the Download Record, not a strip index.
         function test_strip_click_and_options_emitTheRecord() {
             const done = createTemporaryObject(recordComponent, root, {
                 state: AbstractWebView.DownloadState.DownloadCompleted,

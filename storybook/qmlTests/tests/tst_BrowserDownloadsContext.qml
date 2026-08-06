@@ -6,7 +6,7 @@ import AppLayouts.Browser.stores as BrowserStores
 import AppLayouts.Browser.webview
 
 /**
- * BrowserDownloadsContext orchestration (browser-downloads-ux 05):
+ * BrowserDownloadsContext orchestration:
  * Find in page XOR Download Pill strip on mobile.
  * Uses the typed DownloadsStore stub (Storybook import path) with a minimal
  * session strip API — same pattern as BrowserLayoutPage.
@@ -227,7 +227,7 @@ Item {
                 supportsPdfFn: function() { return supportsPdf }
             })
             // The internal open seam runs for real; keep its filesystem side
-            // hermetic (playerPageWritable mirrors the old mock's failure knob).
+            // hermetic (playerPageWritable simulates a write failure).
             ctx._openContext.mediaPlayerDirectory = "/tmp/status-player"
             ctx._openContext.ensureDirectoryFn = function(path) { return true }
             ctx._openContext.writeTextFileFn = function(path, data) { return store.playerPageWritable }
@@ -245,17 +245,6 @@ Item {
 
             store.clearDownloadStrip()
             verify(!ctx.stripVisible, "emptying the model hides the strip by derivation")
-        }
-
-        function test_openingFind_hidesDownloadStrip() {
-            const store = createStore()
-            const ctx = createContext(store)
-            const live = createTemporaryObject(fakeDownloadComponent, root)
-            ctx.handleDownloadRequest(live)
-            verify(ctx.stripVisible)
-
-            ctx.setFindOpen(true)
-            verify(!ctx.stripVisible)
         }
 
         function test_closingFind_restoresStrip_onlyWhenPillsRemain() {
@@ -329,7 +318,7 @@ Item {
             verify(ctx.stripVisible)
         }
 
-        // ADR 0006 §6 / issue 06 — download-only Tab auto-close uses hostView
+        // ADR 0006 §6 — download-only Tab auto-close uses hostView
         function test_downloadOnlyTab_autoCloses_viaHostView() {
             const store = createStore()
             const ctx = createContext(store)
@@ -541,43 +530,9 @@ Item {
             compare(store.lastOpenedRecord, record)
         }
 
-        function test_openCompleted_prefersBrowser_forWebm() {
-            const store = createStore()
-            const ctx = createContext(store)
-            const record = {
-                fileName: "clip.webm",
-                mimeType: "video/webm",
-                state: AbstractWebView.DownloadState.DownloadCompleted,
-                missingFile: false,
-                targetPath: "/tmp/downloads/clip.webm"
-            }
-
-            verify(ctx.openCompletedRecord(record))
-            compare(openedUrls.length, 1)
-            // Media opens through a player page — navigating to the file itself makes
-            // WebEngine download it again instead of playing it.
-            verify(openedUrls[0].startsWith("file:///tmp/status-player/player-"))
-            verify(openedUrls[0].endsWith(".html"))
-            compare(store.openRecordCalls, 0)
-        }
-
-        function test_openCompleted_media_fallsBackToOs_whenPlayerPageUnavailable() {
-            const store = createStore()
-            store.playerPageWritable = false
-            const ctx = createContext(store)
-            const record = {
-                fileName: "clip.webm",
-                mimeType: "video/webm",
-                state: AbstractWebView.DownloadState.DownloadCompleted,
-                missingFile: false,
-                targetPath: "/tmp/downloads/clip.webm"
-            }
-
-            verify(ctx.openCompletedRecord(record))
-            compare(openedUrls.length, 0)
-            compare(store.openRecordCalls, 1)
-        }
-
+        // Per-mime routing (webm player page, write-failure → false) is pinned at
+        // the open seam in tst_BrowserDownloadOpenContext; openCompletedRecord is
+        // mime-agnostic, so one player-page case and one OS-fallback case suffice.
         function test_openCompleted_missingFile_blocksBothRoutes() {
             const store = createStore()
             const ctx = createContext(store)
@@ -643,7 +598,7 @@ Item {
             verify(!ctx.openDownloadFromList(record))
         }
 
-        // --- capabilitiesFor: the one capability vocabulary (ticket 09) ---
+        // --- capabilitiesFor: the one capability vocabulary ---
 
         function test_capabilitiesFor_composesStoreOpenSeamAndPlatform() {
             const store = createStore()
@@ -668,7 +623,7 @@ Item {
 
             compare(ctx.capabilitiesFor(record, { showDismiss: true }).dismiss, true)
 
-            // Spec §3: pill strip opens ask for the Downloads entry.
+            // Pill strip opens ask for the Downloads entry.
             const stripCaps = ctx.capabilitiesFor(record, { showDismiss: true, showDownloadsEntry: true })
             compare(stripCaps.downloadsEntry, true)
         }

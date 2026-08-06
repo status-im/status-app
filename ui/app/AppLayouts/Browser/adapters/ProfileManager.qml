@@ -58,7 +58,7 @@ QtObject {
             // Qt allows one live profile per data path and returns null on collision,
             // which happens while a previous Browser instance is still being torn down.
             // Returning null keeps the Web View on the default profile; dereferencing
-            // it here used to abort before the cache write and crash the render path.
+            // it here would abort before the cache write and crash the render path.
             if (!p) {
                 console.error("ProfileManager: no profile for", key,
                               "- another profile still holds this data path")

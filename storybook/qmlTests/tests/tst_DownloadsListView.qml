@@ -6,10 +6,11 @@ import AppLayouts.Browser.controls
 import AppLayouts.Browser.panels
 
 /**
- * DownloadsListView (browser-downloads-polish 01): empty line only at zero Records.
+ * DownloadsListView: empty line only at zero Records.
  * Model may arrive via object construction (BrowserLayout → createObject), where a
  * JS array is converted and no longer reports as Array — count must use .length.
- * Active rows mirror Download Pill Pause|Resume / Cancel controls.
+ * Rows render through the shared DownloadPill delegate; its per-state controls
+ * matrix is asserted in tst_DownloadPill.
  */
 Item {
     id: root
@@ -68,7 +69,7 @@ Item {
             return row
         }
 
-        // Rows render through the shared DownloadPill delegate (polish 03).
+        // Rows render through the shared DownloadPill delegate.
         function rowPill(view, index) {
             const pill = findChild(listRow(view, index), "downloadPill")
             verify(!!pill, "row " + index + " renders the shared DownloadPill")
@@ -120,104 +121,9 @@ Item {
             view.destroy()
         }
 
-        function test_empty_placeholder_hidden_for_restoredHistoryShapedModel() {
-            const record = createTemporaryObject(recordComponent, root, {
-                fileName: "from-history.bin",
-                state: AbstractWebView.DownloadState.DownloadCompleted
-            })
-            const view = listViewComponent.createObject(root, {
-                downloadsModel: [record],
-                width: 360,
-                height: 400
-            })
-            verify(!!view)
-            waitForRendering(view)
-
-            verify(!emptyLabel(view).visible)
-            view.destroy()
-        }
-
-        function test_paused_showsResumeAndCancel_noOptions() {
-            const record = createTemporaryObject(recordComponent, root, {
-                state: AbstractWebView.DownloadState.DownloadPaused,
-                isPaused: true
-            })
-            const view = createTemporaryObject(listViewComponent, root, {
-                downloadsModel: [record]
-            })
-            waitForRendering(view)
-
-            const pill = rowPill(view, 0)
-            compare(pill.primaryAction, DownloadPill.PrimaryAction.Resume)
-            verify(pill.resumeButtonVisible)
-            verify(!pill.pauseButtonVisible)
-            verify(pill.cancelButtonVisible)
-            verify(!pill.optionsButtonVisible)
-
-            const primary = findChild(pill, "downloadPillPrimaryButton")
-            verify(!!primary)
-            verify(primary.visible)
-            compare(primary.icon.name, "play")
-
-            const cancel = findChild(pill, "downloadPillCancelButton")
-            verify(!!cancel)
-            verify(cancel.visible)
-
-            const options = findChild(pill, "downloadPillOptionsButton")
-            verify(!!options)
-            verify(!options.visible)
-        }
-
-        function test_inProgress_showsPauseAndCancel_noOptions() {
-            const record = createTemporaryObject(recordComponent, root, {
-                state: AbstractWebView.DownloadState.DownloadInProgress
-            })
-            const view = createTemporaryObject(listViewComponent, root, {
-                downloadsModel: [record]
-            })
-            waitForRendering(view)
-
-            const pill = rowPill(view, 0)
-            compare(pill.primaryAction, DownloadPill.PrimaryAction.Pause)
-            verify(pill.pauseButtonVisible)
-            verify(!pill.resumeButtonVisible)
-            verify(pill.cancelButtonVisible)
-            verify(!pill.optionsButtonVisible)
-        }
-
-        function test_paused_primaryButton_resumesRecord() {
-            const record = createTemporaryObject(recordComponent, root, {
-                state: AbstractWebView.DownloadState.DownloadPaused,
-                isPaused: true
-            })
-            const view = createTemporaryObject(listViewComponent, root, {
-                downloadsModel: [record]
-            })
-            waitForRendering(view)
-
-            const pill = rowPill(view, 0)
-            pill.triggerPrimaryAction()
-            compare(record.state, AbstractWebView.DownloadState.DownloadInProgress)
-            compare(pill.primaryAction, DownloadPill.PrimaryAction.Pause)
-        }
-
-        function test_completed_showsOptions_noInlineTransferControls() {
-            const record = createTemporaryObject(recordComponent, root, {
-                state: AbstractWebView.DownloadState.DownloadCompleted
-            })
-            const view = createTemporaryObject(listViewComponent, root, {
-                downloadsModel: [record]
-            })
-            waitForRendering(view)
-
-            const pill = rowPill(view, 0)
-            compare(pill.primaryAction, DownloadPill.PrimaryAction.File)
-            verify(!pill.pauseButtonVisible)
-            verify(!pill.resumeButtonVisible)
-            verify(!pill.cancelButtonVisible)
-            verify(pill.optionsButtonVisible)
-        }
-
+        // The per-state controls matrix lives in the shared DownloadPill and is
+        // asserted once, in tst_DownloadPill. The list keeps one shared-delegate
+        // case (below) plus its own concerns: empty state and record signals.
         function test_cancelled_showsOptionsMenu_inList() {
             const record = createTemporaryObject(recordComponent, root, {
                 state: AbstractWebView.DownloadState.DownloadCancelled
@@ -237,7 +143,7 @@ Item {
             verify(options.visible)
         }
 
-        // Ticket 09: view signals carry the Download Record, not a list index.
+        // View signals carry the Download Record, not a list index.
         function test_rowClick_emitsTheRecord() {
             const record = createTemporaryObject(recordComponent, root)
             const view = createTemporaryObject(listViewComponent, root, {
@@ -271,21 +177,6 @@ Item {
             mouseClick(options)
             compare(gotRecord, record)
             verify(!!gotAnchor, "anchor Item for menu alignment")
-        }
-
-        function test_missingFile_struckThrough_inList() {
-            const record = createTemporaryObject(recordComponent, root, {
-                state: AbstractWebView.DownloadState.DownloadCompleted,
-                missingFile: true
-            })
-            const view = createTemporaryObject(listViewComponent, root, {
-                downloadsModel: [record]
-            })
-            waitForRendering(view)
-
-            const label = findChild(rowPill(view, 0), "downloadPillFileNameLabel")
-            verify(!!label)
-            verify(label.font.strikeout, "Missing File is struck through in the list")
         }
     }
 }

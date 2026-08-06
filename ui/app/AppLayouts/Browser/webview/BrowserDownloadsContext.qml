@@ -7,7 +7,7 @@ import AppLayouts.Browser.adapters
 import AppLayouts.Browser.stores as BrowserStores
 
 /**
- * Orchestrates Download Requests and list/pill actions (ADR 0006 / issue 05).
+ * Orchestrates Download Requests and list/pill actions (ADR 0006).
  * Retry is a host-side re-issue via Backend downloadUrl on a matching profile —
  * not library retry() (live object is usually already gone). The next matching
  * downloadRequested reattaches onto the same Record (no duplicate History row).
@@ -24,7 +24,7 @@ QtObject {
     // starts. Closing Find is an action on the Find UI, not derivable state.
     property var hideFindUiFn: function() {}
 
-    /// Find XOR Download Pill strip (browser-downloads-ux 05, mobile).
+    /// Find XOR Download Pill strip (mobile).
     /// The one derived view of strip visibility: session pills exist, Find is
     /// closed, and the user has not dismissed the strip. BrowserLayout binds
     /// its footer/strip to this — nothing writes visibility imperatively.
@@ -160,7 +160,7 @@ QtObject {
     }
 
     /// Prefer our browser when the type is renderable; otherwise hand off to the OS.
-    /// Missing File blocks both routes (ADR 0006 §8 / polish 05).
+    /// Missing File blocks both routes (ADR 0006 §8).
     function openCompletedRecord(record) {
         if (!record)
             return false
@@ -223,13 +223,23 @@ QtObject {
         downloadsStore.refreshMissingFiles()
     }
 
-    /// The one capability vocabulary for a Download Record menu (ticket 09):
+    // Missing File markers go stale while the app is backgrounded (files can
+    // be removed externally); refresh when it returns to the foreground.
+    readonly property Connections _appActiveRefresh: Connections {
+        target: Qt.application
+        function onStateChanged() {
+            if (Qt.application.state === Qt.ApplicationActive)
+                root.refreshMissingFiles()
+        }
+    }
+
+    /// The one capability vocabulary for a Download Record menu:
     /// store predicates + the open seam's canOpenInBrowser + the platform
     /// share-vs-copy fact. BIND it at the call site
     /// (capabilities: ctx.capabilitiesFor(menu.record, options)) so a stale
     /// menu is structurally impossible — the Missing File refresh happens here,
     /// never at call sites. options.showDismiss — pill strip session dismiss.
-    /// options.showDownloadsEntry — pill strip "Downloads" entry (spec §3);
+    /// options.showDownloadsEntry — pill strip "Downloads" entry;
     /// list menus never pass it — the user is already in the Downloads List.
     function capabilitiesFor(record, options) {
         downloadsStore.refreshMissingFiles()

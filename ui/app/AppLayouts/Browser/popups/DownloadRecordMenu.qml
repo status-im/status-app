@@ -6,10 +6,10 @@ import StatusQ.Core.Utils as SQUtils
 import AppLayouts.Browser.adapters
 
 /**
- * One download menu for Download Pill and Downloads List (browser-downloads-ux 02).
+ * One download menu for Download Pill and Downloads List.
  * Identity is the Download Record; enablement comes from one `capabilities`
  * object (BrowserDownloadsContext.capabilitiesFor) BOUND at the call site, so
- * the menu can never show stale capabilities (ticket 09). State-derived
+ * the menu can never show stale capabilities. State-derived
  * booleans stay internal. Share vs Copy labels via capabilities.useShareLabels.
  * StatusAction has no visible; StatusMenu hides disabled items by default.
  */
@@ -17,6 +17,22 @@ StatusMenu {
     id: root
 
     property var record: null
+
+    /// Pill strip opens grant session Dismiss; list opens do not.
+    /// Set by openAnchored options; read by the host's capabilities binding.
+    property bool forStrip: false
+
+    /// Open right-aligned with the ⋮ `anchor` it was invoked from;
+    /// options.above opens upward, options.forStrip marks a pill-strip open.
+    /// x/y stay bound: the menu's width is 0 until content is first laid out.
+    function openAnchored(record, anchor, options) {
+        root.forStrip = !!(options && options.forStrip)
+        root.record = record
+        root.parent = anchor
+        root.x = Qt.binding(() => anchor.width - root.width)
+        root.y = Qt.binding(() => (options && options.above) ? -root.height : anchor.height)
+        root.open()
+    }
 
     /// { openInBrowser, shareFile, shareUrl, showInFolder, retry, dismiss,
     ///   downloadsEntry, useShareLabels } — bind it:
@@ -55,7 +71,7 @@ StatusMenu {
             ? (SQUtils.Utils.isIOS ? "share-ios" : "share-android")
             : "copy"
 
-    // Plain signals — callers already hold the menu's Record (ticket 09).
+    // Plain signals — callers already hold the menu's Record.
     signal downloadsRequested()
     signal showInFolderRequested()
     signal shareFileRequested()

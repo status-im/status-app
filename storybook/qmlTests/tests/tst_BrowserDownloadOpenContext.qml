@@ -5,8 +5,7 @@ import AppLayouts.Browser.adapters
 
 /**
  * The open-a-downloaded-file seam (ADR 0006 §8): render/media allowlist,
- * player-page assembly and the local-URL guard exception. Cases moved from
- * tst_DownloadsStore when the policy left the store — semantically unchanged.
+ * player-page assembly and the local-URL guard exception.
  * Loads the real context; dependencies are the same narrow injected functions
  * production wires in.
  */

@@ -14,6 +14,22 @@ StatusMenu {
     property url linkUrl
     property url imageUrl
 
+    /// Host Web View (Backend) that raised the long-press; the host routes
+    /// Download link through it (ADR 0005). Set by openAt.
+    property var hostView: null
+
+    /// Open at a view-local touch point: `position` is relative to
+    /// `parentItem` (the host view fills it).
+    function openAt(linkUrl, imageUrl, position, parentItem, hostView) {
+        root.linkUrl = linkUrl
+        root.imageUrl = imageUrl
+        root.hostView = hostView
+        root.parent = parentItem
+        root.x = position.x
+        root.y = position.y
+        root.open()
+    }
+
     readonly property bool hasLink: linkUrl.toString() !== ""
     readonly property bool hasImage: imageUrl.toString() !== ""
 

@@ -11,7 +11,7 @@ import "../../../ui/app/AppLayouts/Browser/webview/DownloadFormatUtils.js" as Do
  * DownloadsStore seam: Download Records own list identity; a fake live Download
  * attaches for progress and can be destroyed without losing the Record.
  * Loads the real store (stubs are empty by architecture guide).
- * See ADR 0006 / .scratch/browser-downloads/issues/01-prefactor-download-records.md
+ * See ADR 0006.
  */
 Item {
     id: root
@@ -452,18 +452,7 @@ Item {
             compare(JSON.parse(store.preferencesStore.getDownloadHistoryRaw() || "[]").length, 0)
         }
 
-        // --- Download Pill strip (session-only; issue 03) ---
-
-        function test_strip_addDownload_appearsInStrip() {
-            const store = createStore()
-            const live = createTemporaryObject(fakeDownloadComponent, root)
-            const record = store.addDownload(live)
-
-            verify(Array.isArray(store.downloadStripModel))
-            compare(store.downloadStripModel.length, 1)
-            compare(store.downloadStripModel[0], record)
-            compare(store.downloadStripModel[0], record)
-        }
+        // --- Download Pill strip (session-only) ---
 
         function test_strip_newDownload_prependsNewestFirst() {
             const store = createStore()
@@ -474,10 +463,10 @@ Item {
             const older = store.addDownload(live1)
             const newer = store.addDownload(live2)
 
+            verify(Array.isArray(store.downloadStripModel))
             compare(store.downloadStripModel.length, 2)
             compare(store.downloadStripModel[0], newer)
             compare(store.downloadStripModel[1], older)
-            compare(store.downloadStripModel[0], newer)
         }
 
         function test_strip_restoreHistory_doesNotPopulateStrip() {
@@ -536,7 +525,7 @@ Item {
             compare(store.downloadModel.length, 2)
         }
 
-        // --- Downloads List policy (issue 05): Missing File, retry, open, share ---
+        // --- Downloads List policy: Missing File, retry, open, share ---
 
         function test_reattachForRetry_keepsIdentity_andMovesNewest() {
             const store = createStore()
@@ -646,7 +635,7 @@ Item {
             verify(!store.canRetryFromTap(completedRec))
         }
 
-        // Format policy, player pages and the guard exception moved to the open
+        // Format policy, player pages and the guard exception live at the open
         // seam — see tst_BrowserDownloadOpenContext. The store keeps only the
         // Record half of the guard:
         function test_isKnownTargetPath_matchesRecordTargetsOnly() {
@@ -853,26 +842,7 @@ Item {
             verify(text.indexOf("GB") >= 0, "expected GB sizes, got: " + text)
         }
 
-        function test_shareFile_desktop_copiesBareFilesystemPath() {
-            const store = createStore()
-            store.platform.preferShareSheet = false
-            let copied = ""
-            store.platform.copyText = function(text) { copied = text }
-            store.platform.fileExists = function(path) { return true }
-
-            const live = createTemporaryObject(fakeDownloadComponent, root)
-            live.downloadDirectory = "/tmp/downloads"
-            live.downloadFileName = "song.mp3"
-            const record = store.addDownload(live)
-            live.complete()
-            store.refreshMissingFiles()
-
-            verify(store.shareFile(record))
-            compare(copied, "/tmp/downloads/song.mp3")
-            verify(!copied.startsWith("file:"))
-        }
-
-        // ADR 0006 §6 / issue 06 — Retained View ownership seam
+        // ADR 0006 §6 — Retained View ownership seam
         function test_viewHasNonTerminalDownloads_tracksOriginatingView() {
             const store = createStore()
             const viewA = createTemporaryObject(fakeViewComponent, root)

@@ -181,28 +181,6 @@ StatusSectionLayout {
             _internal.scrolledUp = true
         }
 
-        /// Open a Download Record menu right-aligned with the ⋮ it was invoked from.
-        /// x/y stay bound: the menu's width is 0 until its content is first laid out.
-        function anchorRecordMenu(menu, anchor, above) {
-            menu.parent = anchor
-            menu.x = Qt.binding(() => anchor.width - menu.width)
-            menu.y = Qt.binding(() => above ? -menu.height : anchor.height)
-            menu.open()
-        }
-
-        /// Long-press on a link/image (mobile Backends): menu at the touch point,
-        /// Download link routed through the host view's Backend (ADR 0005).
-        function openLinkContextMenu(linkUrl, imageUrl, position, hostView) {
-            linkContextMenuInst.linkUrl = linkUrl
-            linkContextMenuInst.imageUrl = imageUrl
-            linkContextMenuInst.hostView = hostView
-            // position is view-local; the host view fills webStackView.
-            linkContextMenuInst.parent = webStackView
-            linkContextMenuInst.x = position.x
-            linkContextMenuInst.y = position.y
-            linkContextMenuInst.open()
-        }
-
         property Component jsDialogComponent: JSDialogWindow {}
 
         readonly property bool currentTabSupportsFindInPage: currentWebView?.supportsFindInPage ?? false
@@ -217,7 +195,7 @@ StatusSectionLayout {
                 findBar.visible = true
                 findBar.forceActiveFocus()
             }
-            // Mobile: Find XOR Download Pill strip (browser-downloads-ux 05).
+            // Mobile: Find XOR Download Pill strip.
             if (root.isMobile)
                 downloadsContext.setFindOpen(true)
         }
@@ -351,14 +329,6 @@ StatusSectionLayout {
         supportsPdfFn: () => !!(_internal.currentWebView && _internal.currentWebView.supportsPdfViewer)
     }
 
-    Connections {
-        target: Qt.application
-        function onStateChanged() {
-            if (Qt.application.state === Qt.ApplicationActive)
-                downloadsContext.refreshMissingFiles()
-        }
-    }
-
     BrowserWebViewContext {
         id: webViewContext
         savedSessionContext: savedSessionContext
@@ -379,7 +349,7 @@ StatusSectionLayout {
         determineRealURLFn: (url) => root.browserRootStore.determineRealURL(url)
         downloadRequestHandler: (download, hostView) => downloadsContext.handleDownloadRequest(download, hostView)
         linkLongPressHandler: (linkUrl, imageUrl, position, hostView) =>
-            _internal.openLinkContextMenu(linkUrl, imageUrl, position, hostView)
+            linkContextMenuInst.openAt(linkUrl, imageUrl, position, webStackView, hostView)
         sslErrorHandler: (error) => {
                              error.defer()
                              sslDialog.enqueue(error)
@@ -561,7 +531,7 @@ StatusSectionLayout {
 
     footer: Loader {
         id: footerLoader
-        // Desktop: same Download Pill strip as mobile, at the bottom (browser-downloads-ux 04).
+        // Desktop: same Download Pill strip as mobile, at the bottom.
         // Mobile hosts the strip under the address bar instead.
         sourceComponent: !root.isMobile ? downloadPillStrip : null
     }
@@ -759,10 +729,7 @@ StatusSectionLayout {
         clearSiteDataSupported: _internal.currentWebView?.clearSiteDataSupported ?? true
         onForceReload: webViewContext.forceReloadCurrent()
         onClearSiteData: webViewContext.clearSiteDataCurrent()
-        onClearBrowsingData: {
-            webViewContext.clearBrowsingDataCurrent()
-            root.downloadsStore.clearDownloadHistory()
-        }
+        onClearBrowsingData: root.clearBrowsingDataOnCurrentTab()
         onAddNewTab: _internal.addNewEmptyTab()
         onOpenDownloads: _internal.openDownloadsOverview()
         onGoIncognito: (checked) => root.applyIncognitoMode(checked)
@@ -796,10 +763,7 @@ StatusSectionLayout {
         compatibilityMode: localAccountSensitiveSettings.compatibilityMode
         onForceReload: webViewContext.forceReloadCurrent()
         onClearSiteData: webViewContext.clearSiteDataCurrent()
-        onClearBrowsingData: {
-            webViewContext.clearBrowsingDataCurrent()
-            root.downloadsStore.clearDownloadHistory()
-        }
+        onClearBrowsingData: root.clearBrowsingDataOnCurrentTab()
         onToggleCompatibilityMode: (checked) => webViewContext.setCompatibilityMode(checked)
 
         onGoIncognito: checked => root.applyIncognitoMode(checked)
@@ -864,11 +828,7 @@ StatusSectionLayout {
                 if (downloadsContext.openDownloadFromList(record))
                     close()
             }
-            onDownloadOptionsClicked: function (record, anchor) {
-                downloadRecordMenuInst.forStrip = false
-                downloadRecordMenuInst.record = record
-                _internal.anchorRecordMenu(downloadRecordMenuInst, anchor, false)
-            }
+            onDownloadOptionsClicked: (record, anchor) => downloadRecordMenuInst.openAnchored(record, anchor)
         }
     }
 
@@ -912,8 +872,6 @@ StatusSectionLayout {
     BrowserLinkContextMenu {
         id: linkContextMenuInst
 
-        property var hostView: null
-
         onOpenInNewTabRequested: targetUrl => root.openUrlInNewTab(targetUrl)
         onShareUrlRequested: targetUrl => root.downloadsStore.shareUrlString(targetUrl)
         onDownloadRequested: function (targetUrl) {
@@ -925,14 +883,11 @@ StatusSectionLayout {
         }
     }
 
-    /// The one Download Record menu, shared by Downloads List and Pill strip
-    /// (ticket 09). Open sites set `record` (and `forStrip`) then anchor —
+    /// The one Download Record menu, shared by Downloads List and Pill strip.
+    /// Open sites call `openAnchored(record, anchor, options)` —
     /// `capabilities` is a binding, so it can never go stale.
     DownloadRecordMenu {
         id: downloadRecordMenuInst
-
-        // Pill strip opens grant session Dismiss; list opens do not.
-        property bool forStrip: false
 
         capabilities: downloadsContext.capabilitiesFor(record, { showDismiss: forStrip, showDownloadsEntry: forStrip })
 
@@ -999,13 +954,10 @@ StatusSectionLayout {
             onOpenDownloadClicked: function (record) {
                 downloadsContext.handlePillClicked(record)
             }
-            onOptionsClicked: function (record, anchor) {
-                downloadRecordMenuInst.forStrip = true
-                downloadRecordMenuInst.record = record
-                // Mobile strip is under the address bar → menu below.
-                // Desktop strip is the window footer → menu above.
-                _internal.anchorRecordMenu(downloadRecordMenuInst, anchor, !root.isMobile)
-            }
+            // Mobile strip is under the address bar → menu below.
+            // Desktop strip is the window footer → menu above.
+            onOptionsClicked: (record, anchor) =>
+                downloadRecordMenuInst.openAnchored(record, anchor, { above: !root.isMobile, forStrip: true })
             onClose: {
                 // Hide strip only — in-progress pills stay in the session model.
                 // Reappears when the next download starts (handleDownloadRequest

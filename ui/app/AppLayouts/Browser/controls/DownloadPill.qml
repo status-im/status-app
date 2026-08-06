@@ -10,8 +10,8 @@ import AppLayouts.Browser.adapters
 import "../webview/DownloadFormatUtils.js" as DownloadFormatUtils
 
 /**
- * The one delegate for a Download Record (Browser CONTEXT / Figma File download,
- * browser-downloads-polish 03): the strip renders it as a capsule, the Downloads
+ * The one delegate for a Download Record (Browser CONTEXT / Figma File
+ * download): the strip renders it as a capsule, the Downloads
  * List as a flat row. The state-to-controls matrix lives here and only here.
  * Left: Pause | Play | file | downloads. Right: downloads-cancel | more-v.
  */
@@ -30,7 +30,7 @@ Rectangle {
 
     // Wording and eliding come straight from DownloadFormatUtils (pure functions).
 
-    // Presentation knobs (browser-downloads-polish 03): the surfaces differ in
+    // Presentation knobs: the surfaces differ in
     // chrome, not in behaviour. Defaults draw the strip capsule; the Downloads
     // List overrides them to render a flat row inside its own hover highlight.
     property color pillColor: root.highlighted ? Theme.palette.background : Theme.palette.baseColor2
@@ -64,8 +64,7 @@ Rectangle {
     readonly property bool resumeButtonVisible: primaryAction === DownloadPill.PrimaryAction.Resume
     readonly property bool cancelButtonVisible: primaryAction === DownloadPill.PrimaryAction.Pause
             || primaryAction === DownloadPill.PrimaryAction.Resume
-    // Cancelled keeps its ⋮ so Retry/Dismiss stay reachable (polish 03 reverses
-    // the earlier no-right-control matrix).
+    // Cancelled keeps its ⋮ so Retry/Dismiss stay reachable.
     readonly property bool optionsButtonVisible: primaryAction === DownloadPill.PrimaryAction.File
             || primaryAction === DownloadPill.PrimaryAction.None
             || primaryAction === DownloadPill.PrimaryAction.Cancelled
@@ -214,7 +213,7 @@ Rectangle {
                     elide: Text.ElideNone
                     maximumLineCount: 1
                     font.pixelSize: root.nameFontSize
-                    // Missing File follows the Record, not the surface (polish 03).
+                    // Missing File follows the Record, not the surface.
                     font.strikeout: root.missingFile
                     color: root.missingFile ? Theme.palette.baseColor1 : Theme.palette.directColor1
                 }
