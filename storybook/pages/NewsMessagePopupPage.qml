@@ -57,6 +57,7 @@ SplitView {
 
         ColumnLayout {
             spacing: 8
+            width: parent.width
 
             RowLayout {
                 spacing: 4
@@ -88,7 +89,7 @@ SplitView {
                 Layout.preferredHeight: 90
                 placeholderText: "newsContent"
                 text: notificationMock.newsContent
-                wrapMode: TextArea.Wrap
+                wrapMode: TextEdit.Wrap
                 onTextChanged: notificationMock.newsContent = newsContentInput.text
             }
         }

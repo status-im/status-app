@@ -41,14 +41,10 @@ StatusAdaptiveDialog {
     maximumWidthOverride: 480
     title: root.notification ? CoreUtils.StringUtils.plainText(root.notification.newsTitle) : ""
     subtitle: d.dateGroupLabel.text
-    leftHeaderComponent: Item {
-        implicitWidth: 40
-        implicitHeight: 40
-
-        StatusImage {
-            source: Assets.png("status")
-            anchors.fill: parent
-        }
+    leftHeaderComponent: StatusImage {
+        source: Assets.svg("status-logo")
+        width: 40
+        height: 40
     }
 
     Loader {
@@ -60,8 +56,6 @@ StatusAdaptiveDialog {
             activityCenterNotifications: root.activityCenterNotifications
         }
     }
-
-    headerActions.closeButton.onClicked: root.close()
 
     contentComponent: ColumnLayout {
         spacing: Theme.padding
@@ -86,10 +80,10 @@ StatusAdaptiveDialog {
         }
 
         StatusBaseText {
-            text: CoreUtils.StringUtils.plainText(root.notification.newsContent)
+            text: root.notification ? CoreUtils.StringUtils.plainText(root.notification.newsContent) : ""
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
-            onLinkActivated: root.linkClicked(link)
+            onLinkActivated: link => root.linkClicked(link)
         }
     }
 
