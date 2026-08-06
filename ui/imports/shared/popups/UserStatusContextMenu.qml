@@ -55,6 +55,7 @@ StatusDropdown {
                 imageHeight: imageWidth
             }
             StatusBaseText {
+                objectName: "userStatusDisplayName"
                 Layout.fillWidth: true
                 font.bold: true
                 font.pixelSize: Theme.fontSize(20)
