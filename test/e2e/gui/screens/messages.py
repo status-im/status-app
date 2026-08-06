@@ -8,7 +8,9 @@ import allure
 
 import configs
 import driver
+from constants.messaging import Sticker
 from driver.objects_access import find_descendant_by_object_name, is_descendant_of, walk_children
+from scripts.utils.generators import random_sticker
 from gui.components.settings.send_contact_request_popup import SendContactRequestFromProfile
 from gui.components.community.pinned_messages_popup import PinnedMessagesPopup
 from gui.components.context_menu import ContextMenu
@@ -246,6 +248,11 @@ class Message:
     def message_is_pinned(self) -> bool:
         return self.delegate_button.object.isPinned
 
+    @property
+    @allure.step('Whether message content is a sticker')
+    def is_sticker_message(self) -> bool:
+        return bool(getattr(self.object, 'isSticker', False))
+
     @allure.step('Get title of link preview')
     def get_link_preview_title(self) -> str:
         for child in walk_children(self.link_preview_title_object):
@@ -405,6 +412,24 @@ class ChatView(QObject):
                 raise LookupError(f'Community invitation was not found')
         return message
 
+    @allure.step('Wait until a sticker message appears in chat')
+    def wait_until_sticker_message(
+            self,
+            timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+    ) -> Message:
+        found = []
+
+        def sticker_visible():
+            found.clear()
+            for msg in self.messages(None):
+                if msg.is_sticker_message:
+                    found.append(msg)
+                    return True
+            return False
+
+        assert driver.waitFor(sticker_visible, timeout_msec), 'Sticker message not found in chat'
+        return found[0]
+
 
 class CreateChatView(QObject):
 
@@ -461,7 +486,6 @@ class ChatMessagesView(QObject):
         self._close_chat_item = QObject(messaging_names.close_Chat_StatusMenuItem)
         self._chat_input = QObject(messaging_names.mainWindow_statusChatInput_StatusChatInput)
         self._message_input_area = QObject(messaging_names.inputScrollView_messageInputField_TextArea)
-        # Composer text lives on messageInputField (TextArea); PlaceholderText is only the hint label.
         self._message_field = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
         self._emoji_button = Button(messaging_names.mainWindow_statusChatInputEmojiButton_StatusFlatRoundButton)
         self._image_button = Button(messaging_names.mainWindow_imageBtn_StatusFlatRoundButton)
@@ -523,12 +547,10 @@ class ChatMessagesView(QObject):
 
     @allure.step('Type text to message field')
     def type_message(self, message: str):
-        # StatusChatInputTextArea: driver.type() cannot set input focus; assign text directly.
         self._message_field.set_text_property(message)
 
     @allure.step('Confirm sending message')
     def confirm_sending_message(self):
-        # Enter via nativeType often does not reach Keys.forwardTo (tryFinalizeMessage); click send like the app.
         assert driver.waitFor(
             lambda: self._send_message_button.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
@@ -571,6 +593,11 @@ class ChatMessagesView(QObject):
     @allure.step('Get close button visibility state')
     def does_close_button_exist(self) -> bool:
         return self._close_preview_button.is_visible
+
+    @allure.step('Send sticker to chat')
+    def send_sticker_to_chat(self, sticker: Sticker = None, url: str = ''):
+        sticker = sticker or random_sticker()
+        self._chat_input.object.selectStickerForTest(sticker.hash, sticker.pack_id, url)
 
     @allure.step('Send emoji to chat')
     def send_emoji_to_chat(self, emoji: str):

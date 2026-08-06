@@ -7,6 +7,7 @@ from eth_account.hdaccount import generate_mnemonic, Mnemonic
 
 import configs
 from constants import WalletAccountColors
+from constants.messaging import STATUS_CAT_STICKERS, Sticker
 
 COMMUNITY_TAGS = [
     'Activism', 'Art', 'Blockchain', 'Books & blogs', 'Career', 'Collaboration', 'Commerce', 'Culture',
@@ -116,3 +117,7 @@ def random_wallet_account_color():
 def keycard_card_id(prefix: str = 'test-card') -> str:
     suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
     return f'{prefix}-{suffix}'
+
+
+def random_sticker() -> Sticker:
+    return random.choice(STATUS_CAT_STICKERS)

@@ -187,3 +187,14 @@ def test_create_edit_join_community_pin_unpin_message(multiple_instances):
             assert driver.waitFor(lambda: not message.message_is_pinned, configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
             assert message.user_name_in_pinned_message == ''
             assert not messages_screen.tool_bar.pinned_message_tooltip.is_visible
+
+        with step(f'User {user_two.name}, send sticker in #general'):
+            switch_to_aut(aut_two, main_screen)
+            messages_screen = MessagesScreen()
+            messages_screen.group_chat.send_sticker_to_chat()
+
+        with step(f'User {user_one.name}, see sticker from {user_two.name} in chat'):
+            switch_to_aut(aut_one, main_screen)
+            messages_screen = MessagesScreen()
+            sticker_message = messages_screen.chat.wait_until_sticker_message()
+            assert sticker_message.is_sticker_message
