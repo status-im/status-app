@@ -2923,10 +2923,6 @@ Do you wish to override the security check and continue?</source>
         <source>Sending...</source>
         <translation>보내는 중...</translation>
     </message>
-    <message>
-        <source>Unblock</source>
-        <translation>차단 해제</translation>
-    </message>
 </context>
 <context>
     <name>ChatContentView</name>

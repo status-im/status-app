@@ -2930,10 +2930,6 @@ Do you wish to override the security check and continue?</source>
         <source>Sending...</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Unblock</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>ChatContentView</name>

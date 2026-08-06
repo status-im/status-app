@@ -2932,10 +2932,6 @@ Do you wish to override the security check and continue?</source>
         <source>Sending...</source>
         <translation>Enviando...</translation>
     </message>
-    <message>
-        <source>Unblock</source>
-        <translation>Desbloquear</translation>
-    </message>
 </context>
 <context>
     <name>ChatContentView</name>

@@ -2940,10 +2940,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <source>Sending...</source>
         <translation>Odesílání...</translation>
     </message>
-    <message>
-        <source>Unblock</source>
-        <translation>Odblokovat</translation>
-    </message>
 </context>
 <context>
     <name>ChatContentView</name>

@@ -693,27 +693,6 @@ Item {
                     holdingsModel: root.viewAndPostHoldingsModel
                 }
             }
-
-            // Button wrapped into RowLayout as a workaround for QTBUG-146653 causing suggestions list inside
-            // StatusChatInput not clickable.
-            RowLayout {
-                Layout.fillWidth: false
-                Layout.fillHeight: false
-                visible: !!d.activeChatContentModule && d.activeChatContentModule.chatDetails.blocked
-
-                StatusButton {
-                    Layout.fillHeight: true
-                    Layout.maximumHeight: chatInput.implicitHeight
-                    verticalPadding: 0
-                    visible: !!d.activeChatContentModule && d.activeChatContentModule.chatDetails.blocked
-                    text: qsTr("Unblock")
-                    type: StatusBaseButton.Type.Danger
-                    onClicked: {
-                        if (!!d.activeChatContentModule)
-                            d.activeChatContentModule.unblockChat()
-                    }
-                }
-            }
         }
     }
 }
