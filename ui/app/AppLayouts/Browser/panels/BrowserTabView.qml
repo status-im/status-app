@@ -92,6 +92,10 @@ FocusScope {
             flickableDirection: Flickable.HorizontalFlick
             snapMode: ListView.SnapToItem
             clip: true
+            // Flicking is only needed when the tabs overflow. When they fit, the
+            // flickable must not accept presses in the empty strip — an unhandled
+            // press in the titlebar area is what lets macOS drag the window.
+            interactive: d.tabBarOverflowing
 
             footer: AddTabButton{
                 visible: !d.tabBarOverflowing
@@ -110,6 +114,26 @@ FocusScope {
         anchors.top: parent.top
         anchors.right: parent.right
         visible: d.tabBarOverflowing
+    }
+
+    // The strip between the last tab and the window controls acts as a
+    // titlebar: dragging it moves the window. The DragHandler stays passive
+    // until the drag threshold, so taps fall through to the tab bar ListView
+    // underneath, where double-tap still opens a new tab.
+    Item {
+        anchors.top: tabBar.top
+        anchors.bottom: tabBar.bottom
+        anchors.right: tabBar.right
+        anchors.left: tabBar.left
+        // content + the trailing AddTabButton footer
+        anchors.leftMargin: tabBarListView.contentWidth + d.tabHeight
+        visible: !d.tabBarOverflowing && !SQUtils.Utils.isMobile
+
+        DragHandler {
+            target: null
+            grabPermissions: PointerHandler.CanTakeOverFromAnything
+            onActiveChanged: if (active) root.Window.window.startSystemMove()
+        }
     }
 
     component AddTabButton: Rectangle {

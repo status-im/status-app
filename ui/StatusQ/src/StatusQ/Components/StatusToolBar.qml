@@ -18,6 +18,14 @@ ToolBar {
 
     objectName: "statusToolBar"
     padding: Theme.halfPadding
+    // The Qt 6.10+ style delegates bind the edge paddings to SafeArea.margins,
+    // which pushes the header out of the macOS titlebar area. Our headers are
+    // deliberately laid out into the titlebar (ExpandedClientAreaHint), so pin
+    // all edges back to the uniform padding. FIXES #20212
+    topPadding: padding
+    leftPadding: padding
+    rightPadding: padding
+    bottomPadding: padding
     background: null
 
     contentItem: RowLayout {
