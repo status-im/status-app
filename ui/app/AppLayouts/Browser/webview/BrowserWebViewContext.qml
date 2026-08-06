@@ -39,7 +39,10 @@ QtObject {
     }
 
     required property var determineRealURLFn
+    /// (download, hostView) — hostView is the LazyWebViewAdapter that raised the request.
     required property var downloadRequestHandler
+    /// (linkUrl, imageUrl, position, hostView) — long-press menu (mobile Backends).
+    required property var linkLongPressHandler
     required property var sslErrorHandler
     required property var jsDialogHandler
     required property var findTextFinishedHandler
@@ -47,16 +50,17 @@ QtObject {
 
     enum ContentMode {
         WebContent = 0,
-        DownloadContent,
         EmptyContent
     }
+
+    // Retained Views: host Web Views kept alive (hidden + frozen) after Tab close
+    // while they still own non-terminal Downloads. Not part of the Tab set.
+    property var _retainedViews: []
 
     readonly property Item currentWebView: tabsModel.currentIndex < tabsModel.count ? (getCurrentWebView() ?? null) : null
     readonly property int currentContentMode: {
         if (!currentWebView)
             return BrowserWebViewContext.ContentMode.EmptyContent
-        if (currentWebView.isDownloadView)
-            return BrowserWebViewContext.ContentMode.DownloadContent
         if (!currentWebView.url?.toString())
             return BrowserWebViewContext.ContentMode.EmptyContent
         return BrowserWebViewContext.ContentMode.WebContent
@@ -76,8 +80,7 @@ QtObject {
         focusOnNewTab = focusOnNewTab && !createAsStartPage
 
         var webview = webViewAdapterComponent.createObject(hostStackLayout, {
-            profileParams: profileParams,
-            isDownloadView: false
+            profileParams: profileParams
         })
         if (!webview) {
             console.error("[Browser] Failed to create webview")
@@ -100,22 +103,6 @@ QtObject {
         if ((focusOnNewTab || createAsStartPage) && webview.url.toString() && typeof webview.ensureLoaded === "function")
             webview.ensureLoaded()
 
-        return webview
-    }
-
-    function createDownloadTab(profileParams) {
-        var webview = webViewAdapterComponent.createObject(hostStackLayout, {
-            profileParams: profileParams,
-            isDownloadView: true
-        })
-        if (!webview) {
-            console.error("[Browser] Failed to create download webview")
-            return null
-        }
-
-        tabsModel.createDownloadTab()
-        webview.uid = SQUtils.Utils.uuid()
-        webview.ensureLoaded()
         return webview
     }
 
@@ -270,25 +257,87 @@ QtObject {
         tabsModel.removeTab(index)
         if (!view)
             return
+
+        // Mobile Backend aborts Downloads when the Web View is destroyed.
+        // Retain (hide + freeze) until DownloadsStore reports the view is clear.
+        // Desktop WebEngine keeps transfers alive after view destruction — no retain.
+        // Closing never cancels a Download (ADR 0006 §6).
+        const shouldRetain = root.isMobile
+            && !!downloadsStore
+            && typeof downloadsStore.viewHasNonTerminalDownloads === "function"
+            && downloadsStore.viewHasNonTerminalDownloads(view)
+
+        if (shouldRetain) {
+            view.retained = true
+            view.focus = false
+            // Reparent out of the StackLayout so children stay 1:1 with tabs.
+            // visible/freeze follow `retained` bindings on the adapter.
+            // Do not detachView()/stop() — that would abort the transfer.
+            view.parent = null
+            _retainedViews = _retainedViews.concat([view])
+            return
+        }
+
+        root._destroyWebView(view)
+    }
+
+    function _destroyWebView(view) {
+        if (!view)
+            return
         view.visible = false
         view.enabled = false
         view.focus = false
-        view.detachView()
+        if (typeof view.detachView === "function")
+            view.detachView()
         view.parent = null
         view.destroy()
+    }
+
+    function _destroyRetainedView(view) {
+        if (!view)
+            return
+        const next = []
+        let found = false
+        for (let i = 0; i < _retainedViews.length; ++i) {
+            if (_retainedViews[i] === view)
+                found = true
+            else
+                next.push(_retainedViews[i])
+        }
+        if (!found)
+            return
+        _retainedViews = next
+        root._destroyWebView(view)
+    }
+
+    readonly property Connections _retainedDownloadsConnections: Connections {
+        target: root.downloadsStore
+        ignoreUnknownSignals: true
+        function onViewDownloadsCleared(view) {
+            root._destroyRetainedView(view)
+        }
     }
 
     readonly property var webViewAdapterComponent: Component {
         LazyWebViewAdapter {
             id: lazyView
 
+            // StackLayout never sizes a child that was added while the layout was
+            // hidden, and neither forceLayout() nor re-setting currentIndex repairs
+            // it — the view stays 0x0 and renders nothing (issue 21282). Size to the
+            // host instead of relying on the layout to do it.
+            width: root.hostStackLayout.width
+            height: root.hostStackLayout.height
+
             // On mobile, only the active tab must be visible; native WKWebView
             // subviews share the same UIKit window and ignore QML z-order,
             // so StackLayout alone cannot hide inactive tabs reliably.
-            visible: root.isMobile ? StackLayout.isCurrentItem : true
+            // Retained Views stay hidden regardless of StackLayout current item.
+            visible: retained ? false
+                     : (root.isMobile ? StackLayout.isCurrentItem : true)
             enabled: visible
-            // Freeze native webview while QML popup is shown
-            freeze: root.isMobile && root.hasPopups
+            // Freeze while a QML popup is shown, or while Retained for Downloads.
+            freeze: root.isMobile && (root.hasPopups || retained)
 
             readonly property ConnectorBridge bridge: ConnectorBridge {
                 connectorController: root.dappsEnabled ? root.connectorController : null
@@ -312,9 +361,25 @@ QtObject {
             onNewWindowRequested: (makeCurrent, requestedUrl, callback) => {
                 var profileParams = root.currentWebView ? root.currentWebView.profileParams : root.defaultProfileParams
                 var tab = root.createEmptyTab(profileParams, false, makeCurrent, requestedUrl)
+                // Born from a page, nothing loaded in it yet: the Tab is download-only
+                // until it commits a page of its own (ADR 0006 §6).
+                if (tab)
+                    tab.pristinePopup = true
                 callback(tab)
             }
-            onDownloadRequested: (download) => root.downloadRequestHandler(download)
+            onDownloadRequested: (download) => {
+                // Retained Views finish only the Downloads they already own (ADR 0006 §6).
+                if (lazyView.retained) {
+                    if (download && download.cancel)
+                        download.cancel()
+                    return
+                }
+                root.downloadRequestHandler(download, lazyView)
+            }
+            onLinkLongPressed: (linkUrl, imageUrl, position) => {
+                if (!lazyView.retained)
+                    root.linkLongPressHandler(linkUrl, imageUrl, position, lazyView)
+            }
             onCertificateError: (error) => root.sslErrorHandler(error)
             onJavaScriptDialogRequested: (request) => root.jsDialogHandler(request)
             onFindTextFinished: (result) => root.findTextFinishedHandler(result)

@@ -280,7 +280,7 @@ StatusSectionLayout {
     }
 
     invertedLayout: height > width
-    showFooter: false
+    showFooter: downloadsContext.stripVisible
     headerPadding: 0
     backgroundColor: Theme.palette.statusAppNavBar.backgroundColor
 
@@ -303,10 +303,9 @@ StatusSectionLayout {
     BrowserDownloadsContext {
         id: downloadsContext
         downloadsStore: root.downloadsStore
-        tabsModel: tabs
+        getTabsCountFn: () => tabs.count
         getWebViewFn: (index) => webViewContext.getWebView(index)
         removeViewFn: (index) => webViewContext.removeView(index)
-        setFooterVisibleFn: (visible) => root.showFooter = visible
     }
 
     BrowserWebViewContext {
@@ -327,6 +326,9 @@ StatusSectionLayout {
         downloadsStore: root.downloadsStore
         determineRealURLFn: (url) => root.browserRootStore.determineRealURL(url)
         downloadRequestHandler: (download) => downloadsContext.handleDownloadRequest(download)
+        // The long-press menu itself arrives with the Downloads UI; until then
+        // the Backend signal has nowhere to go.
+        linkLongPressHandler: (linkUrl, imageUrl, position, hostView) => {}
         sslErrorHandler: (error) => {
                              error.defer()
                              sslDialog.enqueue(error)
@@ -905,7 +907,7 @@ StatusSectionLayout {
                 downloadsContext.openDownloadFromList(downloadComplete, index)
             }
             onAddNewDownloadTab: _internal.addNewDownloadTab()
-            onClose: root.showFooter = false
+            onClose: downloadsContext.dismissStrip()
         }
     }
 }

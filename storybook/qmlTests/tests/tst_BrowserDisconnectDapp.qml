@@ -76,7 +76,6 @@ Item {
             property int currentIndex: 0
             readonly property int count: 2
             function createEmptyTab() {}
-            function createDownloadTab() {}
             function removeTab() {}
         }
     }
@@ -88,7 +87,6 @@ Item {
             property int currentIndex: 0
             readonly property int count: 1
             function createEmptyTab() {}
-            function createDownloadTab() {}
             function removeTab() {}
         }
     }
@@ -126,6 +124,7 @@ Item {
             downloadsStore: QtObject {}
             determineRealURLFn: function(url) { return url }
             downloadRequestHandler: function() {}
+            linkLongPressHandler: function() {}
             sslErrorHandler: function() {}
             jsDialogHandler: function() {}
             findTextFinishedHandler: function() {}
