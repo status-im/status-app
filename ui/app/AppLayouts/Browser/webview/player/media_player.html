@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!--
+  Player page for a downloaded media Record
+  (BrowserDownloadOpenContext.mediaPlayerPageUrl).
+  Navigating a tab straight to local audio/video makes WebEngine download the file
+  again instead of playing it, so the Record is handed this page instead.
+
+  BrowserDownloadOpenContext._mediaPlayerHtml fills in the dunder placeholders below (TAG is
+  video or audio, SRC the percent-encoded file URL, NAME the escaped file name,
+  FAILED the escaped message, SCRIPT the contents of media_player.js). Do not
+  spell those tokens out here — this comment is substituted too.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>__NAME__</title>
+<style>
+  /* Only body is the flex container: making html one too shrinks body to its
+     content width, and the media control collapses along with it. */
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #000;
+    color: #fff;
+    font: 14px -apple-system, system-ui, sans-serif;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  #name {
+    max-width: 90%;
+    opacity: 0.7;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  video {
+    max-width: 100%;
+    max-height: 80%;
+  }
+
+  /* Chromium falls back to a collapsed control below ~250px. */
+  audio {
+    width: min(90%, 520px);
+  }
+</style>
+</head>
+<body>
+  <div id="name">__NAME__</div>
+  <__TAG__ id="media" src="__SRC__" controls autoplay></__TAG__>
+  <div id="failed" hidden>__FAILED__</div>
+  <script>__SCRIPT__</script>
+</body>
+</html>
