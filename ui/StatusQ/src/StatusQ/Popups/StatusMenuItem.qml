@@ -15,10 +15,13 @@ MenuItem {
 
     spacing: 4
     horizontalPadding: Theme.halfPadding
+    verticalPadding: Math.max(16, Theme.padding)
+    implicitHeight: contentItem.implicitHeight + 2 * root.verticalPadding
 
     hoverEnabled: enabled
 
     property bool visibleOnDisabled: d.isStatusAction ? action.visibleOnDisabled : false
+    property real backgroundRadius: 0
 
     property bool visualizeShortcuts
     property int rippleOrigin: StatusRipple.RippleOrigin.Pointer
@@ -122,8 +125,11 @@ MenuItem {
     }
 
     contentItem: RowLayout {
+        height: root.availableHeight
+
         StatusBaseText {
             Layout.fillWidth: true
+            Layout.fillHeight: true
             readonly property real arrowPadding: root.spacing + (root.subMenu && root.arrow ? root.arrow.width : 0)
             readonly property real indicatorPadding: root.spacing + (root.indicator.visible ? root.indicator.width : 0)
 
@@ -145,7 +151,9 @@ MenuItem {
         }
         StatusBaseText {
             Layout.alignment: Qt.AlignRight
+            Layout.fillHeight: true
             visible: root.visualizeShortcuts && !!text
+            verticalAlignment: Text.AlignVCenter
             font.pixelSize: root.font.pixelSize
             color: Theme.palette.baseColor1
             text: d.hasAction && !!root.action.shortcut ? StringUtils.shortcutToText(root.action.shortcut) : StringUtils.shortcutToText(root.shortcut)
@@ -171,6 +179,8 @@ MenuItem {
     }
 
     background: Rectangle {
+        radius: root.backgroundRadius
+
         color: {
             if (!hoverHandler.hovered && !d.subMenuOpened)
                 return "transparent"
