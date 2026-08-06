@@ -103,7 +103,7 @@ class ChatLocators(BaseLocators):
     def message_text(content: str) -> tuple:
         escaped = content.replace('"', '\\"')
         xpath = (
-            "//android.widget.EditText"
+            "//*[contains(@resource-id,'StatusTextMessage_chatText')]"
             f"[contains(@content-desc,\"{escaped}\")]"
         )
         return BaseLocators.xpath(xpath)
@@ -112,20 +112,23 @@ class ChatLocators(BaseLocators):
     def message_text_exact(content: str) -> tuple:
         escaped = content.replace('"', '\\"')
         xpath = (
-            "//android.widget.EditText"
+            "//*[contains(@resource-id,'StatusTextMessage_chatText')]"
             f"[@content-desc=\"{escaped}\"]"
         )
         return BaseLocators.xpath(xpath)
 
     @staticmethod
     def message_content_desc_any(content: str) -> tuple:
-        """Match any element whose content-desc contains the message text.
+        """Match any element in the message list carrying the message text.
 
-        Broader fallback for devices where the sent message renders as
-        a different element type than ``EditText``.
+        Broad fallback for layouts where the message text node type differs;
+        scoped to the message delegates so chat headers cannot match.
         """
         escaped = content.replace('"', '\\"')
-        return BaseLocators.xpath(f"//*[contains(@resource-id,'chatMessageViewDelegate')]//*[contains(@content-desc,\"{escaped}\")]")
+        return BaseLocators.xpath(
+            f"//*[contains(@resource-id,'chatMessageViewDelegate')]"
+            f"//*[contains(@content-desc,\"{escaped}\") or contains(@text,\"{escaped}\")]"
+        )
 
     # Reply preview bar shown above the chat input when replying.
     # QML: StatusChatInputReplyArea (objectName "statusChatInputReplyArea")
@@ -167,7 +170,7 @@ class ChatLocators(BaseLocators):
         """Locator for a message that contains both the content and '(edited)' indicator."""
         escaped = content.replace('"', '\\"')
         return BaseLocators.xpath(
-            f"//android.widget.EditText[contains(@content-desc,'{escaped}') "
+            f"//*[contains(@resource-id,'StatusTextMessage_chatText')][contains(@content-desc,'{escaped}') "
             f"and contains(@content-desc,'(edited)')]"
         )
 
