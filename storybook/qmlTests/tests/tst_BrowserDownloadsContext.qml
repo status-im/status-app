@@ -199,7 +199,6 @@ Item {
         name: "BrowserDownloadsContext"
         when: windowShown
 
-        property bool footerVisible: false
         property int findHiddenCount: 0
         property var tabs: []
         property var removedIndexes: []
@@ -211,7 +210,6 @@ Item {
         }
 
         function createContext(store) {
-            footerVisible = false
             findHiddenCount = 0
             tabs = []
             removedIndexes = []
@@ -224,7 +222,6 @@ Item {
                 getWebViewFn: function(index) { return tabs[index] || null },
                 getTabsCountFn: function() { return tabs.length },
                 removeViewFn: function(index) { removedIndexes.push(index) },
-                setFooterVisibleFn: function(visible) { footerVisible = visible },
                 hideFindUiFn: function() { findHiddenCount += 1 },
                 openUrlFn: function(url) { openedUrls.push(String(url)) },
                 supportsPdfFn: function() { return supportsPdf }
@@ -237,16 +234,28 @@ Item {
             return ctx
         }
 
+        function test_stripHidden_whileNoSessionPills() {
+            const store = createStore()
+            const ctx = createContext(store)
+            verify(!ctx.stripVisible, "empty strip model → no strip")
+
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            ctx.handleDownloadRequest(live)
+            verify(ctx.stripVisible, "first download shows the strip")
+
+            store.clearDownloadStrip()
+            verify(!ctx.stripVisible, "emptying the model hides the strip by derivation")
+        }
+
         function test_openingFind_hidesDownloadStrip() {
             const store = createStore()
             const ctx = createContext(store)
             const live = createTemporaryObject(fakeDownloadComponent, root)
             ctx.handleDownloadRequest(live)
-            verify(footerVisible)
+            verify(ctx.stripVisible)
 
-            ctx.setFindUiActive(true)
-            verify(!footerVisible)
-            verify(ctx.findUiActive)
+            ctx.setFindOpen(true)
+            verify(!ctx.stripVisible)
         }
 
         function test_closingFind_restoresStrip_onlyWhenPillsRemain() {
@@ -255,33 +264,69 @@ Item {
             const live = createTemporaryObject(fakeDownloadComponent, root)
             ctx.handleDownloadRequest(live)
 
-            ctx.setFindUiActive(true)
-            verify(!footerVisible)
+            ctx.setFindOpen(true)
+            verify(!ctx.stripVisible)
 
-            ctx.setFindUiActive(false)
-            verify(footerVisible)
+            ctx.setFindOpen(false)
+            verify(ctx.stripVisible)
 
             store.clearDownloadStrip()
-            ctx.setFindUiActive(true)
-            ctx.setFindUiActive(false)
-            verify(!footerVisible)
+            ctx.setFindOpen(true)
+            ctx.setFindOpen(false)
+            verify(!ctx.stripVisible)
         }
 
         function test_newDownload_hidesFind_andShowsStrip() {
             const store = createStore()
             const ctx = createContext(store)
-            ctx.setFindUiActive(true)
-            verify(ctx.findUiActive)
-            verify(!footerVisible)
+            ctx.setFindOpen(true)
+            verify(!ctx.stripVisible)
 
             const live = createTemporaryObject(fakeDownloadComponent, root)
             const before = findHiddenCount
             ctx.handleDownloadRequest(live)
 
-            verify(!ctx.findUiActive)
-            verify(findHiddenCount > before)
-            verify(footerVisible)
+            verify(findHiddenCount > before,
+                   "handleDownloadRequest actively closes the open Find UI")
+            verify(ctx.stripVisible)
             compare(store.downloadStripModel.length, 1)
+
+            // Find is treated as closed: closing it again is a no-op input.
+            ctx.setFindOpen(false)
+            verify(ctx.stripVisible)
+        }
+
+        function test_newDownload_doesNotTouchFindUi_whenFindClosed() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            const before = findHiddenCount
+            ctx.handleDownloadRequest(live)
+            compare(findHiddenCount, before,
+                    "no hideFindUiFn call when Find was not open")
+        }
+
+        function test_userDismissedStrip_staysHidden_untilNewDownload() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            ctx.handleDownloadRequest(live)
+            verify(ctx.stripVisible)
+
+            ctx.dismissStrip()
+            verify(!ctx.stripVisible, "close button hides the strip while pills remain")
+
+            // A Find round-trip does not resurrect a user-dismissed strip.
+            ctx.setFindOpen(true)
+            ctx.setFindOpen(false)
+            verify(!ctx.stripVisible)
+
+            // The next download clears the dismissal and re-shows the strip.
+            const nextLive = createTemporaryObject(fakeDownloadComponent, root)
+            nextLive.url = "https://example.com/other.bin"
+            nextLive.downloadFileName = "other.bin"
+            ctx.handleDownloadRequest(nextLive)
+            verify(ctx.stripVisible)
         }
 
         // ADR 0006 §6 / issue 06 — download-only Tab auto-close uses hostView
@@ -565,6 +610,7 @@ Item {
             compare(openedUrls.length, 1)
             compare(store.dismissCalls, 1)
             compare(store.downloadStripModel.length, 0)
+            verify(!ctx.stripVisible, "last pill gone → strip hides by derivation")
         }
 
         function test_listClick_completed_opensSameAsPill() {

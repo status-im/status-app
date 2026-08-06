@@ -219,7 +219,7 @@ StatusSectionLayout {
             }
             // Mobile: Find XOR Download Pill strip (browser-downloads-ux 05).
             if (root.isMobile)
-                downloadsContext.setFindUiActive(true)
+                downloadsContext.setFindOpen(true)
         }
 
         function hideFindBar() {
@@ -232,15 +232,11 @@ StatusSectionLayout {
             // QML FindBar syncs via onVisibleChanged; native panel has no dismiss
             // signal, so clear Find XOR here when we dismiss it ourselves.
             if (root.isMobile && hasNativeFindPanel)
-                downloadsContext.setFindUiActive(false)
+                downloadsContext.setFindOpen(false)
         }
 
         function openDownloadsOverview() {
             onOpenTabsBookmarksOverviewRequested(TabsBookmarksOverviewModal.Mode.Downloads)
-        }
-
-        function syncDownloadStripVisibility() {
-            downloadsContext.syncStripVisibility()
         }
 
         function addNewTab(url, initialTitle, activate) {
@@ -315,13 +311,14 @@ StatusSectionLayout {
             findBar.reset()
             // MobileWebView has no native-find dismiss signal; clear Find XOR on tab change.
             if (root.isMobile)
-                downloadsContext.setFindUiActive(false)
+                downloadsContext.setFindOpen(false)
             _internal.resetScroll()
         }
     }
 
     invertedLayout: height > width
-    showFooter: false
+    // The one view of Download Pill strip visibility — derived, never written.
+    showFooter: downloadsContext.stripVisible
     // Download Pill strip sits flush against the web content, like the mobile one.
     footerSpacing: 0
     headerPadding: 0
@@ -349,7 +346,6 @@ StatusSectionLayout {
         getWebViewFn: (index) => webViewContext.getWebView(index)
         getTabsCountFn: () => tabs.count
         removeViewFn: (index) => webViewContext.removeView(index)
-        setFooterVisibleFn: (visible) => root.showFooter = visible
         hideFindUiFn: () => _internal.hideFindBar()
         openUrlFn: (url) => root.openUrlInNewTab(url)
         supportsPdfFn: () => !!(_internal.currentWebView && _internal.currentWebView.supportsPdfViewer)
@@ -632,7 +628,7 @@ StatusSectionLayout {
                 // QML FindBar path (Android / desktop): keep Find XOR in sync when
                 // the bar is dismissed without going through hideFindBar().
                 if (root.isMobile && !_internal.hasNativeFindPanel)
-                    downloadsContext.setFindUiActive(visible)
+                    downloadsContext.setFindOpen(visible)
             }
         }
 
@@ -946,10 +942,8 @@ StatusSectionLayout {
         onShareUrlRequested: downloadsContext.shareUrlRecord(record)
         onOpenInBrowserRequested: downloadsContext.openInBrowserRecord(record)
         onRetryRequested: downloadsContext.retryRecord(record)
-        onDismissRequested: {
-            root.downloadsStore.dismissRecordFromStrip(record)
-            _internal.syncDownloadStripVisibility()
-        }
+        // stripVisible observes strip-model emptiness — no visibility sync call.
+        onDismissRequested: root.downloadsStore.dismissRecordFromStrip(record)
     }
 
     Component {
@@ -1014,8 +1008,9 @@ StatusSectionLayout {
             }
             onClose: {
                 // Hide strip only — in-progress pills stay in the session model.
-                // Reappears when the next download starts (setFooterVisibleFn).
-                root.showFooter = false
+                // Reappears when the next download starts (handleDownloadRequest
+                // clears the presenter's userDismissed input).
+                downloadsContext.dismissStrip()
             }
         }
     }

@@ -19,13 +19,29 @@ QtObject {
     required property var getWebViewFn
     required property var getTabsCountFn
     required property var removeViewFn
-    required property var setFooterVisibleFn
 
-    // Mobile Find XOR strip: hide Find UI when a new Download starts.
+    // Mobile Find XOR strip: actively closes the Find UI when a new Download
+    // starts. Closing Find is an action on the Find UI, not derivable state.
     property var hideFindUiFn: function() {}
 
-    // True while Find in page (QML bar or native panel) is open on mobile.
-    property bool findUiActive: false
+    /// Find XOR Download Pill strip (browser-downloads-ux 05, mobile).
+    /// The one derived view of strip visibility: session pills exist, Find is
+    /// closed, and the user has not dismissed the strip. BrowserLayout binds
+    /// its footer/strip to this — nothing writes visibility imperatively.
+    readonly property bool stripVisible: stripPresenter.stripVisible
+
+    // Presenter over the three inputs. findOpen / userDismissed change only
+    // via setFindOpen, dismissStrip and handleDownloadRequest; model emptiness
+    // is observed from the store.
+    readonly property QtObject _stripPresenter: QtObject {
+        id: stripPresenter
+
+        property bool findOpen: false
+        property bool userDismissed: false
+
+        readonly property bool stripVisible: !findOpen && !userDismissed
+            && (root.downloadsStore?.downloadStripModel.length ?? 0) > 0
+    }
 
     // One-shot Record armed by retryRecord for the reattach; consumed (or dropped)
     // by the next downloadRequested and expired by timer so a failed retry can
@@ -55,24 +71,16 @@ QtObject {
         openUrlFn: (url) => root.openUrlFn(url)
     }
 
-    /// Find XOR Download Pill strip (browser-downloads-ux 05, mobile).
-    /// Opening Find hides the strip; closing Find restores only if we hid it
-    /// for Find and session pills remain. Does not re-show a user-dismissed strip.
-    function setFindUiActive(active) {
-        const wasActive = root.findUiActive
-        root.findUiActive = !!active
-        if (root.findUiActive) {
-            setFooterVisibleFn(false)
-            return
-        }
-        if (wasActive && downloadsStore.downloadStripModel.length > 0)
-            setFooterVisibleFn(true)
+    /// Find UI open/close hook (mobile call sites). Opening Find hides the
+    /// strip; closing Find restores it only when session pills remain and the
+    /// user did not dismiss the strip (all derived — see stripVisible).
+    function setFindOpen(open) {
+        stripPresenter.findOpen = !!open
     }
 
-    /// Hide the strip when empty or Find is open; never force-show (user may have closed it).
-    function syncStripVisibility() {
-        if (root.findUiActive || downloadsStore.downloadStripModel.length === 0)
-            setFooterVisibleFn(false)
+    /// Strip close button: hidden until the next download starts.
+    function dismissStrip() {
+        stripPresenter.userDismissed = true
     }
 
     /// hostView is the host Web View (LazyWebViewAdapter) that raised the request.
@@ -95,11 +103,13 @@ QtObject {
         }
         downloadsStore.acceptLiveDownload(download, record)
 
-        // New download dismisses Find and shows the strip (Find XOR).
-        if (root.findUiActive)
+        // New download dismisses Find and re-shows the strip (Find XOR),
+        // expressed as presenter input changes; hideFindUiFn additionally
+        // closes the actual Find UI (not derivable from state).
+        if (stripPresenter.findOpen)
             hideFindUiFn()
-        root.findUiActive = false
-        setFooterVisibleFn(true)
+        stripPresenter.findOpen = false
+        stripPresenter.userDismissed = false
 
         // Download-only Tab (target=_blank attachment): leave the strip via removeView,
         // which retains the Web View on mobile while Downloads are non-terminal.
@@ -143,9 +153,9 @@ QtObject {
 
         if (record.state === AbstractWebView.DownloadState.DownloadCompleted) {
             openCompletedRecord(record)
+            // Dropping the last pill empties the strip model — stripVisible
+            // observes emptiness, so the strip hides by derivation.
             downloadsStore.dismissRecordFromStrip(record)
-            if (downloadsStore.downloadStripModel.length === 0)
-                setFooterVisibleFn(false)
         }
     }
 
