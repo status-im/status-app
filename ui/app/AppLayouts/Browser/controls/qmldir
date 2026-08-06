@@ -1,4 +1,5 @@
 BrowserAddressField 1.0 BrowserAddressField.qml
 DownloadElement 1.0 DownloadElement.qml
+DownloadPill 1.0 DownloadPill.qml
 BrowserHeaderButton 1.0 BrowserHeaderButton.qml
 StatusBubble 1.0 StatusBubble.qml

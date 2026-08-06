@@ -310,8 +310,8 @@ QtObject {
         return true
     }
 
-    // Formatting (elideFileName) lives in
-    // webview/DownloadFormatUtils.js — pure functions, imported by the pill.
+    // Formatting lives with the pill: elideFileName in
+    // webview/DownloadFormatUtils.js, the status wording in DownloadPill.qml.
 
     /// Sanitize a suggested file name and resolve a free Download Target under downloadsDirectory.
     /// Collisions with existing files or in-session Records get "(1)", "(2)", … suffixes.

@@ -136,6 +136,7 @@
         <file>icons/dots-icon.svg</file>
         <file>icons/double-checkmark.svg</file>
         <file>icons/download.svg</file>
+        <file>icons/downloads-cancel.svg</file>
         <file>icons/downloads.svg</file>
         <file>icons/edit.svg</file>
         <file>icons/edit_pencil.svg</file>
@@ -194,6 +195,7 @@
         <file>icons/mobile-sync-off.svg</file>
         <file>icons/mobile-sync.svg</file>
         <file>icons/mobile.svg</file>
+        <file>icons/more-v.svg</file>
         <file>icons/more.svg</file>
         <file>icons/muted.svg</file>
         <file>icons/network.svg</file>
