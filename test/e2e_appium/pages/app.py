@@ -212,10 +212,17 @@ class App(BasePage):
         return self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=5)
 
     # Locator for the drawer swipe-indicator handle visible in portrait mode.
+    # The rendered handle is a narrow strip (~12-16px) at the left edge. It is
+    # not clickable and its class varies by device, so match on geometry only:
+    # left edge, non-degenerate, narrow. Zero-rect phantom nav nodes (present
+    # while the drawer is closed) fail the x2 > x1 condition.
     NAV_DRAWER_HANDLE = (
         "xpath",
-        "//android.view.View[@clickable='true' and @bounds]"
-        "[number(substring-before(substring-after(@bounds,'['),','))<=10]",
+        "//*[@bounds]"
+        "[number(substring-before(substring-after(@bounds,'['),','))<=10]"
+        "[number(substring-before(substring-after(@bounds,']['),','))"
+        " > number(substring-before(substring-after(@bounds,'['),','))]"
+        "[number(substring-before(substring-after(@bounds,']['),','))<=40]",
     )
 
     def _open_nav_drawer(self) -> bool:
@@ -274,18 +281,20 @@ class App(BasePage):
                 except Exception as e:
                     self.logger.debug("Strategy 2 (W3C actions) failed: %s", e)
 
-            # Strategy 3: coordinate-based drag from left-centre area
-            try:
-                self.driver.execute_script("mobile: dragGesture", {
-                    "startX": int(w * 0.08),
-                    "startY": int(h * 0.5),
-                    "endX": int(w * 0.7),
-                    "endY": int(h * 0.5),
-                })
-                if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=3):
-                    return True
-            except Exception as e:
-                self.logger.debug("Strategy 3 (coordinate drag) failed: %s", e)
+            # Strategy 3: coordinate drag from the true edge, inside the strip's
+            # vertical band (~0.62-0.81 of height across known devices)
+            for frac_y in (0.72, 0.5):
+                try:
+                    self.driver.execute_script("mobile: dragGesture", {
+                        "startX": max(4, int(w * 0.01)),
+                        "startY": int(h * frac_y),
+                        "endX": int(w * 0.7),
+                        "endY": int(h * frac_y),
+                    })
+                    if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=3):
+                        return True
+                except Exception as e:
+                    self.logger.debug("Strategy 3 (coordinate drag) failed: %s", e)
 
             return False
         except Exception as e:
