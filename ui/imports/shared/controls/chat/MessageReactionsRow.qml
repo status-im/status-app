@@ -13,15 +13,19 @@ RowLayout {
 
     enum Size {
         Regular,
-        Big
+        Big,
+        Compact
     }
 
     required property var emojiModel
     property int size: MessageReactionsRow.Size.Regular
+    property color addReactionIconColor: addReactionButton.hovered ? Theme.palette.primaryColor1 : Theme.palette.baseColor1
+    property real reactionSize: 0
 
     signal toggleReaction(string hexcode)
     signal openEmojiPopup(var parent, var mouse)
 
+    // Set to 0 to show as many recent reactions as fit in the available width.
     property int countLimit: 5
 
     spacing: Theme.smallPadding
@@ -29,9 +33,27 @@ RowLayout {
     QtObject {
         id: d
 
-        readonly property int emojiSize:
-            root.Theme.fontSize(
-                root.size === MessageReactionsRow.Size.Regular ? 23 : 33)
+        readonly property int compactEmojiSize: 20
+        readonly property int compactReactionWidth: 32
+        readonly property int emojiSize: {
+            switch (root.size) {
+            case MessageReactionsRow.Size.Compact:
+                return compactEmojiSize
+            case MessageReactionsRow.Size.Big:
+                return root.Theme.fontSize(33)
+            default:
+                return root.Theme.fontSize(23)
+            }
+        }
+        readonly property real reactionWidth: root.reactionSize > 0
+                                               ? root.reactionSize
+                                               : root.size === MessageReactionsRow.Size.Compact
+                                                 ? compactReactionWidth
+                                                 : d.emojiSize + Theme.halfPadding
+        readonly property int dynamicAvailableWidth: root.width - reactionWidth
+        readonly property int effectiveCountLimit: root.countLimit > 0
+                                               ? root.countLimit
+                                               : Math.max(0, Math.floor(dynamicAvailableWidth / (reactionWidth + root.spacing)))
     }
 
     Repeater {
@@ -39,13 +61,15 @@ RowLayout {
         model: SortFilterProxyModel {
             sourceModel: root.emojiModel
             filters: IndexFilter {
-                maximumIndex: root.countLimit - 1
+                maximumIndex: d.effectiveCountLimit - 1
             }
         }
         delegate: EmojiReaction {
             required property string unicode
 
             Layout.alignment: Qt.AlignVCenter
+            Layout.preferredWidth: d.reactionWidth
+            Layout.preferredHeight: d.reactionWidth
 
             emojiId: unicode
             emojiSize: d.emojiSize
@@ -59,13 +83,16 @@ RowLayout {
     }
 
     StatusFlatRoundButton {
+        id: addReactionButton
+
         Layout.alignment: Qt.AlignVCenter
 
-        Layout.preferredHeight: d.emojiSize + Theme.halfPadding
+        Layout.preferredHeight: d.reactionWidth
         Layout.preferredWidth: Layout.preferredHeight
 
         icon.width: d.emojiSize
         icon.height: d.emojiSize
+        icon.color: root.addReactionIconColor
         icon.name: "reaction-b"
         type: StatusFlatRoundButton.Type.Tertiary
         onClicked: mouse => root.openEmojiPopup(this, mouse)

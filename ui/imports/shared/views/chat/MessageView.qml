@@ -258,7 +258,7 @@ Loader {
         profileContextMenuComponent.createObject(root, params).popup(x, y)
     }
 
-    function openMessageContextMenu(delegate, point, selectedText = "") {
+    function openMessageContextMenu(delegate, point, selectedText = "", options = ({})) {
         if (isViewMemberMessagesePopup || placeholderMessage || !root.joined)
             return
 
@@ -266,6 +266,13 @@ Loader {
             return
 
         if (chatLogView?.moving)
+            return
+
+        const openExpanded = options.openExpanded ?? false
+        const closeOnHoverExit = options.closeOnHoverExit ?? false
+        const deferCloseOnPressOutside = options.deferCloseOnPressOutside ?? false
+
+        if (deferCloseOnPressOutside && d.contextMenu?.opened && !d.contextMenu.openExpanded)
             return
 
         d.contextMenu?.close() // will run destruction/cleanup
@@ -283,15 +290,30 @@ Loader {
             pinnedMessage: root.pinnedMessage,
             canPin: !!root.messageStore && root.messageStore.getNumberOfPinnedMessages() < Constants.maxNumberOfPins,
             editRestricted: root.editRestricted,
-            selectedText
+            selectedText,
+            openExpanded,
+            collapsedSingleRow: !openExpanded && d.isLandscape,
+            deferCloseOnPressOutside,
+            closeOnPressOutsideRestoreDelay: deferCloseOnPressOutside && delegate?.isMobile ? 1000 : 350
         }
 
         d.preventVirtualKeyboardOpening()
         // Keep the text selection visible/available while the menu is open; the popup takes focus
         // and would otherwise clear it. Restored in the menu's onAboutToHide handler.
-        delegate.clearSelectionOnLostFocus = false
+        if (delegate)
+            delegate.clearSelectionOnLostFocus = false
         d.contextMenu = messageContextMenuComponent.createObject(root, params)
-        d.contextMenu.popup(point)
+        d.contextMenuClosesOnHoverExit = closeOnHoverExit
+        d.contextMenuOpenedFromHover = closeOnHoverExit
+        d.contextMenuHovered = false
+        let popupPoint = point
+        if (options.positionProvider) {
+            popupPoint = options.positionProvider(d.contextMenu)
+        } else if (deferCloseOnPressOutside && root.item && d.contextMenu) {
+            const menuWidth = d.contextMenu.maxImplicitWidth || d.contextMenu.implicitWidth
+            popupPoint = Qt.point(Math.max(0, root.item.width - menuWidth - Theme.padding), 0)
+        }
+        d.contextMenu.popup(popupPoint)
         d.contextMenu.aboutToHide.connect(() => {
             if (delegate)
                 delegate.clearSelectionOnLostFocus = true
@@ -408,7 +430,8 @@ Loader {
 
         readonly property bool canPost: root.chatContentModule.chatDetails.canPost
         readonly property bool canView: canPost || root.chatContentModule.chatDetails.canView
-
+        readonly property var window: root.Window.window || root.item?.Window.window
+        readonly property bool isLandscape: !!d.window && d.window.width > d.window.height
         function getNextMessageHasHeader() {
             if (!root.nextMessageAsJsonObj) {
                 return false
@@ -566,12 +589,27 @@ Loader {
 
         // messageContextMenuComponent lifetime trackers
         property var contextMenu: null
+        property bool contextMenuClosesOnHoverExit: false
+        property bool contextMenuOpenedFromHover: false
+        property bool contextMenuHovered: false
+        property var contextMenuHoverAnchor: null
+        property bool messageHovered: false
         readonly property var _contextMenuConn: Connections {
             target: root?.chatLogView ?? null
             function onMovementEnded() {
                 // prevent spurios context menus coming from the Flickable, at the end of the move/drag operations
                 d.contextMenu?.close() // will run destruction/cleanup
             }
+        }
+    }
+
+    Timer {
+        id: hoverMessageContextMenuCloseTimer
+        // Keep the hover menu alive while the pointer moves from the message to the popup.
+        interval: 350
+        onTriggered: {
+            if (d.contextMenuClosesOnHoverExit && d.contextMenu?.opened && !d.contextMenu.openExpanded && !d.contextMenu.expanded && !d.messageHovered && !d.contextMenuHovered)
+                d.contextMenu.close()
         }
     }
 
@@ -942,16 +980,69 @@ Loader {
                     root.messageStore.resendMessage(root.messageId)
                 }
 
-                TapHandler {
-                    gesturePolicy: TapHandler.ReleaseWithinBounds // exclusive grab on press
-                    acceptedDevices: PointerDevice.TouchScreen
-                    onLongPressed: root.openMessageContextMenu(delegate, point.position, delegate.selectedText)
+                HoverHandler {
+                    id: hoverHandler
+                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                    enabled: !delegate.disableHover && !delegate.isMobile
+
+                    onHoveredChanged: {
+                        d.messageHovered = hovered
+                        if (hovered) {
+                            if (delegate.hideQuickActions || root.isViewMemberMessagesePopup)
+                                return
+
+                            if (d.contextMenu?.opened && d.contextMenuOpenedFromHover && d.contextMenuHoverAnchor === delegate)
+                                return
+
+                            d.contextMenu?.close()
+                            d.contextMenuHoverAnchor = delegate
+                            root.openMessageContextMenu(delegate, Qt.point(0, 0), delegate.selectedText, {
+                                positionProvider: contextMenu => {
+                                    if (!root.item)
+                                        return Qt.point(0, 0)
+
+                                    const menuWidth = contextMenu?.maxImplicitWidth || 234
+                                    const menuHeight = contextMenu?.implicitHeight || 0
+                                    const x = Math.max(0, delegate.width - menuWidth - Theme.padding)
+                                    return delegate.mapToItem(root.item, x, -menuHeight / 2)
+                                },
+                                closeOnHoverExit: true
+                            })
+                            return
+                        }
+                        hoverMessageContextMenuCloseTimer.restart()
+                    }
                 }
 
-                TapHandler {
-                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
-                    acceptedButtons: Qt.RightButton
-                    onTapped: (point, button) => root.openMessageContextMenu(delegate, point.position, delegate.selectedText)
+                onContextMenuRequested: (pos, source) => {
+                    // StatusTextMessage can handle the gesture internally before the delegate-level
+                    // handler sees it, so keep its open mode aligned with StatusSecondaryActionHandler.
+                    if (delegate.isMobile && source !== StatusSecondaryActionHandler.LongPress)
+                        return
+
+                    const openCollapsed = source === StatusSecondaryActionHandler.LongPress
+                    root.openMessageContextMenu(delegate,
+                                                pos,
+                                                delegate.selectedText,
+                                                {
+                                                    openExpanded: !openCollapsed,
+                                                    deferCloseOnPressOutside: openCollapsed
+                                                })
+                }
+                StatusSecondaryActionHandler {
+                    onTriggered: (pos, source) => {
+                        if (delegate.isMobile && source !== StatusSecondaryActionHandler.LongPress)
+                            return
+
+                        const openCollapsed = source === StatusSecondaryActionHandler.LongPress
+                        root.openMessageContextMenu(delegate,
+                                                    pos,
+                                                    delegate.selectedText,
+                                                    {
+                                                        openExpanded: !openCollapsed,
+                                                        deferCloseOnPressOutside: openCollapsed
+                                                    })
+                    }
                 }
 
                 messageDetails: StatusMessageDetails {
@@ -1114,156 +1205,6 @@ Loader {
                     }
                 }
 
-                quickActions: [
-                    Loader {
-                        active: delegate.hovered && d.addReactionAllowed && !root.emojiReactionLimitReached
-                        visible: active
-                        sourceComponent: MessageReactionsRow {
-                            emojiModel: emojiPopup.fullModel
-                            onToggleReaction: hexcode => root.emojiReactionToggled(root.messageId, hexcode)
-                            onOpenEmojiPopup: (parent, mouse) => {
-                                                  d.addReactionClicked(parent, mouse)
-                                              }
-                        }
-                    },
-                    Loader {
-                        active: !root.isInPinnedPopup && delegate.hovered && !delegate.hideQuickActions
-                                && !root.isViewMemberMessagesePopup && d.canPost
-                        visible: active
-                        sourceComponent: StatusFlatRoundButton {
-                            objectName: "replyToMessageButton"
-                            width: d.chatButtonSize
-                            height: d.chatButtonSize
-                            icon.name: "reply"
-                            type: StatusFlatRoundButton.Type.Tertiary
-                            tooltip.text: qsTr("Reply")
-                            onClicked: {
-                                root.showReplyArea(root.messageId, root.senderId)
-                            }
-                        }
-                    },
-                    Loader {
-                        active: {
-
-                            return !root.isInPinnedPopup && !root.editRestricted && !root.editModeOn && root.amISender && delegate.hovered && !delegate.hideQuickActions
-                                && !root.isViewMemberMessagesePopup && d.canPost
-                        }
-                        visible: active
-                        sourceComponent: StatusFlatRoundButton {
-                            objectName: "editMessageButton"
-                            width: d.chatButtonSize
-                            height: d.chatButtonSize
-                            icon.name: "edit_pencil"
-                            type: StatusFlatRoundButton.Type.Tertiary
-                            tooltip.text: qsTr("Edit")
-                            onClicked: {
-                                root.messageStore.setEditModeOn(root.messageId)
-                            }
-                        }
-                    },
-                    Loader {
-                        active: {
-                            if(!delegate.hovered)
-                                return false;
-
-                            if (!root.messageStore)
-                                return false
-
-                            if(delegate.hideQuickActions)
-                                return false;
-
-                            if (!d.canPost)
-                                return false;
-
-                            if (root.isViewMemberMessagesePopup) {
-                                return false
-                            }
-
-                            const chatType = root.messageStore.chatType;
-                            const pinMessageAllowedForMembers = root.messageStore.isPinMessageAllowedForMembers
-
-                            return chatType === Constants.chatType.oneToOne ||
-                                    chatType === Constants.chatType.privateGroupChat && root.amIChatAdmin ||
-                                    chatType === Constants.chatType.communityChat && (root.amIChatAdmin || pinMessageAllowedForMembers);
-
-                        }
-                        visible: active
-                        sourceComponent: StatusFlatRoundButton {
-                            objectName: "MessageView_toggleMessagePin"
-                            width: d.chatButtonSize
-                            height: d.chatButtonSize
-                            icon.name: root.pinnedMessage ? "unpin" : "pin"
-                            type: StatusFlatRoundButton.Type.Tertiary
-                            tooltip.text: root.pinnedMessage ? qsTr("Unpin") : qsTr("Pin")
-                            onClicked: {
-                                if (root.pinnedMessage) {
-                                    messageStore.unpinMessage(root.messageId)
-                                    return;
-                                }
-
-                                if (!!root.messageStore && root.messageStore.getNumberOfPinnedMessages() < Constants.maxNumberOfPins) {
-                                    messageStore.pinMessage(root.messageId)
-                                    return;
-                                }
-
-                                if (!chatContentModule) {
-                                    console.warn("error on open pinned messages limit reached from message context menu - chat content module is not set")
-                                    return;
-                                }
-
-                                const chatId = root.messageStore.chatType === Constants.chatType.oneToOne ? chatContentModule.getMyChatId() : ""
-                                Global.openPinnedMessagesPopupRequested(root.rootStore, messageStore, chatContentModule.pinnedMessagesModel, root.messageId, chatId)
-                            }
-                        }
-                    },
-                    Loader {
-                        active: !root.editModeOn && delegate.hovered && !delegate.hideQuickActions && !root.isViewMemberMessagesePopup
-                        visible: active
-                        sourceComponent: StatusFlatRoundButton {
-                            objectName: "markAsUnreadButton"
-                            width: d.chatButtonSize
-                            height: d.chatButtonSize
-                            icon.name: "hide"
-                            type: StatusFlatRoundButton.Type.Tertiary
-                            tooltip.text: qsTr("Mark as unread")
-                            onClicked: {
-                                root.messageStore.markMessageAsUnread(root.messageId)
-                            }
-                        }
-                    },
-                    Loader {
-                        active: {
-                            if(!delegate.hovered)
-                                return false;
-                            if (root.isInPinnedPopup)
-                                return false;
-                            if (!root.messageStore)
-                                return false;
-                            if (delegate.hideQuickActions)
-                                return false;
-                            if (!d.canPost)
-                                return false;
-                            return (root.amISender || root.amIChatAdmin) &&
-                                    (messageContentType === Constants.messageContentType.messageType ||
-                                     messageContentType === Constants.messageContentType.stickerType ||
-                                     messageContentType === Constants.messageContentType.emojiType ||
-                                     messageContentType === Constants.messageContentType.imageType ||
-                                     messageContentType === Constants.messageContentType.audioType);
-                        }
-                        visible: active
-                        sourceComponent: StatusFlatRoundButton {
-                            objectName: "chatDeleteMessageButton"
-                            width: d.chatButtonSize
-                            height: d.chatButtonSize
-                            icon.name: "delete"
-                            type: StatusFlatRoundButton.Type.Tertiary
-                            tooltip.text: qsTr("Delete")
-                            onClicked: root.isViewMemberMessagesePopup
-                                       ? root.chatCommunitySectionModule.deleteCommunityMemberMessages(root.senderId, root.messageId, root.chatId)
-                                       : messageStore.warnAndDeleteMessage(root.messageId)
-                        }
-                    }
-                ]
             }
         }
     }
@@ -1330,7 +1271,6 @@ Loader {
             emojiModel: emojiPopup?.fullModel ?? null
             disabledForChat: !root.rootStore.isUserAllowedToSendMessage
             forceEnableEmojiReactions: !root.rootStore.isUserAllowedToSendMessage && d.addReactionAllowed
-            isDebugEnabled: root.rootStore && root.rootStore.isDebugEnabled
             messageLinkSharingEnabled: root.messageLinkSharingEnabled
             onPinMessage: root.messageStore.pinMessage(messageContextMenuView.messageId)
             onUnpinMessage: root.messageStore.unpinMessage(messageContextMenuView.messageId)
@@ -1361,12 +1301,23 @@ Loader {
                     ClipboardUtils.setText(url)
             }
             onOpenEmojiPopup: (parent, mouse) => d.addReactionClicked(parent, mouse)
+            onHoverChanged: (hovered) => {
+                d.contextMenuHovered = hovered
+                if (!hovered)
+                    hoverMessageContextMenuCloseTimer.restart()
+            }
             onOpened: {
-                root.setMessageActive(model.id, true)
+                if (!d.contextMenuOpenedFromHover)
+                    root.setMessageActive(model.id, true)
             }
 
             onClosed: {
-                root.setMessageActive(model.id, false)
+                if (!d.contextMenuOpenedFromHover)
+                    root.setMessageActive(model.id, false)
+                d.contextMenuClosesOnHoverExit = false
+                d.contextMenuOpenedFromHover = false
+                d.contextMenuHovered = false
+                d.contextMenuHoverAnchor = null
                 destroy()
             }
         }

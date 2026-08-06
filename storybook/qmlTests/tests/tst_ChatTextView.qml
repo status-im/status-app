@@ -42,6 +42,11 @@ Item {
         target: testCase.control
         signalName: "linkClicked"
     }
+    SignalSpy {
+        id: contextMenuSpy
+        target: testCase.control
+        signalName: "contextMenuRequested"
+    }
 
     TestCase {
         id: testCase
@@ -523,6 +528,35 @@ Item {
             mouseMove(control, control.width - 4, 5)
             mouseRelease(control, control.width - 4, 5)
             compare(mentionSpy.count, 0)
+        }
+
+        // Selectable text has its own mouse overlay. Right-clicking on the glyphs must still
+        // bubble out so the chat message can open its context menu.
+        function test_rightClickSelectableTextRequestsContextMenu() {
+            control.selectable = true
+            control.blocks = [{ type: "text", html: "hello world" }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            contextMenuSpy.clear()
+            mouseClick(control, 10, 5, Qt.RightButton)
+
+            compare(contextMenuSpy.count, 1)
+            compare(contextMenuSpy.signalArguments[0][0].x, 10)
+            compare(contextMenuSpy.signalArguments[0][0].y, 5)
+            compare(control.selectedText, "")
+        }
+
+        function test_rightClickNonSelectableTextRequestsContextMenu() {
+            control.selectable = false
+            control.blocks = [{ type: "text", html: "hello world" }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            contextMenuSpy.clear()
+            mouseClick(control, 10, 5, Qt.RightButton)
+
+            compare(contextMenuSpy.count, 1)
+            compare(contextMenuSpy.signalArguments[0][0].x, 10)
+            compare(contextMenuSpy.signalArguments[0][0].y, 5)
         }
 
         // ── hoveredLink ──────────────────────────────────────────────────────────

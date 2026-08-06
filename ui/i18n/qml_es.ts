@@ -11362,12 +11362,12 @@ al cargar</translation>
 <context>
     <name>MessageContextMenuView</name>
     <message>
-        <source>Reply to</source>
-        <translation>Responder a</translation>
+        <source>Reply</source>
+        <translation type="unfinished">Responder</translation>
     </message>
     <message>
-        <source>Edit message</source>
-        <translation>Editar mensaje</translation>
+        <source>Edit</source>
+        <translation type="unfinished">Editar</translation>
     </message>
     <message>
         <source>Copy</source>
@@ -11376,10 +11376,6 @@ al cargar</translation>
     <message>
         <source>Copy message</source>
         <translation>Copiar mensaje</translation>
-    </message>
-    <message>
-        <source>Copy Message Id</source>
-        <translation>Copiar ID del mensaje</translation>
     </message>
     <message>
         <source>Copy link to message</source>
@@ -11394,12 +11390,12 @@ al cargar</translation>
         <translation>Fijar</translation>
     </message>
     <message>
-        <source>Mark as unread</source>
-        <translation>Marcar como no leído</translation>
+        <source>Delete</source>
+        <translation type="unfinished">Eliminar</translation>
     </message>
     <message>
-        <source>Delete message</source>
-        <translation>Eliminar mensaje</translation>
+        <source>Mark as unread</source>
+        <translation>Marcar como no leído</translation>
     </message>
 </context>
 <context>
