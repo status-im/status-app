@@ -45,16 +45,13 @@ Control {
         focusPolicy: Qt.NoFocus
 
         checkable: true
-        padding: Math.round(Theme.halfPadding / 2)
+        padding: 2
 
         background: Rectangle {
             radius: Theme.radius
 
             color: checked ? Theme.palette.baseColor5
                            : StatusColors.transparent
-            border.color: checked || chatIconRoot.pressed
-                          ? Theme.palette.primaryColor1
-                          : Theme.palette.directColor7
         }
 
         contentItem: Item {
@@ -65,7 +62,7 @@ Control {
                 id: icon
 
                 icon: chatIconRoot.icon.name
-                width: 24 + Math.max(0, Theme.fontSizeOffset * 2)
+                width: 28 + Math.max(0, Theme.fontSizeOffset * 2)
                 height: width
 
                 color: chatIconRoot.checked || hoverHandler.hovered
@@ -85,7 +82,7 @@ Control {
     QtObject {
         id: d
 
-        readonly property int padding: Math.round(root.Theme.padding * 4 / 5)
+        readonly property int padding: 10
     }
 
     Rectangle {
