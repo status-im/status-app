@@ -14,12 +14,13 @@ Rectangle {
     required property string emojiId
 
     property int emojiSize: 23
+    property int itemSize: statusEmoji.width + Theme.halfPadding
     property bool reactedByUser: false
     property bool isHovered: false
     signal toggleReaction()
 
-    width: statusEmoji.width + Theme.halfPadding
-    height: width
+    width: root.itemSize
+    height: root.itemSize
     color: reactedByUser ? Theme.palette.secondaryBackground :
                            (isHovered ? Theme.palette.backgroundHover : StatusColors.transparent)
     border.width: reactedByUser ? 1 : 0

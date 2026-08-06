@@ -15,15 +15,22 @@ MenuItem {
 
     spacing: 4
     horizontalPadding: Theme.halfPadding
+    verticalPadding: Math.max(16, Theme.padding)
+    implicitHeight: contentItem.implicitHeight + 2 * root.verticalPadding
 
     hoverEnabled: enabled
 
+    property int iconSize: -1
+    property int fontPixelSize: -1
     property bool visibleOnDisabled: d.isStatusAction ? action.visibleOnDisabled : false
+    property real backgroundRadius: 0
 
     property bool visualizeShortcuts
     property int rippleOrigin: StatusRipple.RippleOrigin.Pointer
 
-    font.pixelSize: d.fontSettings ? d.fontSettings.pixelSize : d.defaultFontSettings.pixelSize
+    font.pixelSize: root.fontPixelSize > 0
+                    ? root.fontPixelSize
+                    : d.fontSettings ? d.fontSettings.pixelSize : d.defaultFontSettings.pixelSize
 
     icon.width: 18
     icon.height: 18
@@ -54,8 +61,8 @@ MenuItem {
             //icon
             name: d.originalAssetSettings ? d.originalAssetSettings.name : d.defaultAssetSettings.name
             source: d.originalAssetSettings ? d.originalAssetSettings.source : d.defaultAssetSettings.source
-            width:  d.originalAssetSettings ? d.originalAssetSettings.width : d.defaultAssetSettings.width
-            height: d.originalAssetSettings ? d.originalAssetSettings.height : d.defaultAssetSettings.height
+            width:  root.iconSize > 0 ? root.iconSize : d.originalAssetSettings ? d.originalAssetSettings.width : d.defaultAssetSettings.width
+            height: root.iconSize > 0 ? root.iconSize : d.originalAssetSettings ? d.originalAssetSettings.height : d.defaultAssetSettings.height
             color: d.originalAssetSettings ? d.originalAssetSettings.color : d.defaultAssetSettings.color
             hoverColor: d.originalAssetSettings ? d.originalAssetSettings.hoverColor : d.defaultAssetSettings.hoverColor
             disabledColor: d.originalAssetSettings ? d.originalAssetSettings.disabledColor : d.defaultAssetSettings.disabledColor
@@ -107,8 +114,8 @@ MenuItem {
         x: root.mirrored ? root.width - width - root.rightPadding : root.leftPadding
         y: root.topPadding + (root.availableHeight - height) / 2
 
-        implicitWidth: 24
-        implicitHeight: 24
+        implicitWidth: root.iconSize > 0 ? root.iconSize : 24
+        implicitHeight: root.iconSize > 0 ? root.iconSize : 24
         visible: d.assetSettings.isLetterIdenticon
                  || d.assetSettings.isImage
                  || !!d.assetSettings.name
@@ -122,7 +129,15 @@ MenuItem {
     }
 
     contentItem: RowLayout {
+        width: root.availableWidth
+        implicitHeight: Math.max(label.implicitHeight,
+                                 shortcut.implicitHeight,
+                                 checkmark.implicitHeight,
+                                 root.indicator.visible ? root.indicator.implicitHeight : 0)
+
         StatusBaseText {
+            id: label
+
             Layout.fillWidth: true
             readonly property real arrowPadding: root.spacing + (root.subMenu && root.arrow ? root.arrow.width : 0)
             readonly property real indicatorPadding: root.spacing + (root.indicator.visible ? root.indicator.width : 0)
@@ -144,6 +159,8 @@ MenuItem {
             elide: Text.ElideRight
         }
         StatusBaseText {
+            id: shortcut
+
             Layout.alignment: Qt.AlignRight
             visible: root.visualizeShortcuts && !!text
             font.pixelSize: root.font.pixelSize
@@ -151,6 +168,8 @@ MenuItem {
             text: d.hasAction && !!root.action.shortcut ? StringUtils.shortcutToText(root.action.shortcut) : StringUtils.shortcutToText(root.shortcut)
         }
         StatusIcon {
+            id: checkmark
+
             Layout.preferredHeight: 16
             Layout.alignment: Qt.AlignRight
             visible: root.checked
@@ -171,6 +190,8 @@ MenuItem {
     }
 
     background: Rectangle {
+        radius: root.backgroundRadius
+
         color: {
             if (!hoverHandler.hovered && !d.subMenuOpened)
                 return "transparent"

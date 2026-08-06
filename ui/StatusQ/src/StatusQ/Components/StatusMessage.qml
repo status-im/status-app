@@ -41,7 +41,6 @@ Control {
         FailedResending
     }
 
-    property list<Item> quickActions
     property alias linksComponent: linksLoader.sourceComponent
     property alias invitationComponent: invitationBubbleLoader.sourceComponent
 
@@ -122,6 +121,8 @@ Control {
     }
 
     hoverEnabled: (!root.isActiveMessage && !root.disableHover)
+    onHoveredChanged: root.hoverChanged(root.messageId, root.hovered)
+
     background: Rectangle {
         color: {
             if (root.overrideBackground)
@@ -364,8 +365,6 @@ Control {
                             limitReached: !!root.reactionsModel && root.reactionsModel.ModelCount.count >= root.maxEmojiReactionsPerMessage
                             messageHighlighted: root.hovered || root.isActiveMessage
 
-                            onHoverChanged: (hovered) => root.hoverChanged(messageId, hovered)
-
                             onAddEmojiClicked: (sender, mouse) => root.addReactionClicked(sender, mouse)
                             onToggleReaction: (hexcode) => root.toggleReactionClicked(hexcode)
                         }
@@ -374,17 +373,6 @@ Control {
             }
         }
 
-        Loader {
-            active: root.quickActions.length > 0
-                    && !root.isMobile // hover menu disabled on mobile; we use the MessageContextMenuView
-            visible: active && root.hovered
-            anchors.right: parent.right
-            anchors.rightMargin: Theme.padding
-            anchors.verticalCenter: parent.top
-            sourceComponent: StatusMessageQuickActions {
-                items: root.quickActions
-            }
-        }
     }
 
     ListModel {
@@ -400,6 +388,8 @@ Control {
     }
 
     component StatusTextMessageCommon: StatusTextMessage {
+        id: statusTextMessage
+
         objectName: "StatusMessage_textMessage"
         messageDetails: root.messageDetails
         isEdited: root.isEdited
@@ -411,7 +401,7 @@ Control {
         isMobile: root.isMobile
         onLinkActivated: link => root.linkActivated(link)
         onHoveredLinkChanged: root.hoveredLink = hoveredLink
-        onContextMenuRequested: pos => root.contextMenuRequested(pos)
+        onContextMenuRequested: pos => root.contextMenuRequested(statusTextMessage.mapToItem(root, pos))
         onSelectedTextChanged: d.selectedText = selectedText
     }
 }

@@ -90,6 +90,7 @@ Item {
         // Reuse the existing linkActivated contract: "//<pubkey>" opens the profile, a URL opens.
         onMentionClicked: (pubKey) => root.linkActivated("//" + pubKey)
         onLinkClicked: (url) => root.linkActivated(url)
+        onContextMenuRequested: (pos) => root.contextMenuRequested(chatTextView.mapToItem(root, pos))
 
         HoverHandler {
             id: hoverHandler

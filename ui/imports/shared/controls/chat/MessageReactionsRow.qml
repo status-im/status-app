@@ -18,10 +18,15 @@ RowLayout {
 
     required property var emojiModel
     property int size: MessageReactionsRow.Size.Regular
+    property int emojiSize: root.Theme.fontSize(
+                                root.size === MessageReactionsRow.Size.Regular ? 23 : 33)
+    property int itemSize: root.emojiSize + Theme.halfPadding
+    property color addReactionIconColor: addReactionButton.hovered ? Theme.palette.primaryColor1 : Theme.palette.baseColor1
 
     signal toggleReaction(string hexcode)
     signal openEmojiPopup(var parent, var mouse)
 
+    // Set to 0 to show as many recent reactions as fit in the available width.
     property int countLimit: 5
 
     spacing: Theme.smallPadding
@@ -29,9 +34,11 @@ RowLayout {
     QtObject {
         id: d
 
-        readonly property int emojiSize:
-            root.Theme.fontSize(
-                root.size === MessageReactionsRow.Size.Regular ? 23 : 33)
+        readonly property int reactionWidth: root.itemSize
+        readonly property int dynamicAvailableWidth: root.width - reactionWidth
+        readonly property int effectiveCountLimit: root.countLimit > 0
+                                               ? root.countLimit
+                                               : Math.max(0, Math.floor(dynamicAvailableWidth / (reactionWidth + root.spacing)) - 1)
     }
 
     Repeater {
@@ -39,7 +46,7 @@ RowLayout {
         model: SortFilterProxyModel {
             sourceModel: root.emojiModel
             filters: IndexFilter {
-                maximumIndex: root.countLimit - 1
+                maximumIndex: d.effectiveCountLimit - 1
             }
         }
         delegate: EmojiReaction {
@@ -48,7 +55,8 @@ RowLayout {
             Layout.alignment: Qt.AlignVCenter
 
             emojiId: unicode
-            emojiSize: d.emojiSize
+            emojiSize: root.emojiSize
+            itemSize: root.itemSize
 
             // TODO not implemented yet. We'll need to pass this info
             // reactedByUser: model.didIReactWithThisEmoji
@@ -59,13 +67,16 @@ RowLayout {
     }
 
     StatusFlatRoundButton {
+        id: addReactionButton
+
         Layout.alignment: Qt.AlignVCenter
 
-        Layout.preferredHeight: d.emojiSize + Theme.halfPadding
+        Layout.preferredHeight: root.itemSize
         Layout.preferredWidth: Layout.preferredHeight
 
-        icon.width: d.emojiSize
-        icon.height: d.emojiSize
+        icon.width: root.emojiSize
+        icon.height: root.emojiSize
+        icon.color: root.addReactionIconColor
         icon.name: "reaction-b"
         type: StatusFlatRoundButton.Type.Tertiary
         onClicked: mouse => root.openEmojiPopup(this, mouse)

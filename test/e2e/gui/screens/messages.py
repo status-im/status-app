@@ -631,26 +631,31 @@ class ChatMessagesView(QObject):
 
 class MessageQuickActions(QObject):
     def __init__(self):
-        super().__init__(messaging_names.chatMessageViewDelegate_StatusMessageQuickActions)
-        self._pin_button = Button(
-            messaging_names.chatMessageViewDelegate_pin_icon_StatusIcon)
-        self._unpin_button = Button(messaging_names.chatMessageViewDelegate_unpin_icon_StatusIcon)
-        self._edit_button = Button(messaging_names.chatMessageViewDelegate_editMessageButton_StatusFlatRoundButton)
-        self._delete_button = Button(
-            messaging_names.chatMessageViewDelegate_chatDeleteMessageButton_StatusFlatRoundButton)
-        self._reply_button = Button(messaging_names.chatMessageViewDelegate_reply_icon_StatusIcon)
+        super().__init__(messaging_names.messageContextView)
+        self._expand_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuExpandButton)
+        self._pin_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuPinButton)
+        self._unpin_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuUnpinButton)
+        self._edit_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuEditButton)
+        self._delete_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuDeleteButton)
+        self._reply_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuReplyButton)
         self._reply_panel = QObject(messaging_names.mainWindow_replyPanel_StatusChatInputReplyPanel)
         self._edit_message_input = QObject(messaging_names.mainWindow_statusChatInput_StatusChatInput)
         self._edit_message_field = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
         self._message_input_area = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
         self._send_message_button = Button(messaging_names.mainWindow_statusChatInputSendButton)
 
+    def expand(self):
+        if self._expand_button.is_visible:
+            self._expand_button.click()
+
     @allure.step('Click pin button')
     def pin_message(self):
+        self.expand()
         self._pin_button.click()
 
     @allure.step('Click unpin button')
     def unpin_message(self):
+        self.expand()
         self._unpin_button.click()
 
     @allure.step('Edit message and save changes')
@@ -662,6 +667,7 @@ class MessageQuickActions(QObject):
 
     @allure.step('Delete message')
     def delete_message(self):
+        self.expand()
         self._delete_button.click()
         ConfirmationMessagePopup().wait_until_appears().delete_button.click()
 
@@ -678,6 +684,7 @@ class MessageQuickActions(QObject):
 
     @allure.step('Delete button is visible')
     def is_delete_button_visible(self) -> bool:
+        self.expand()
         return self._delete_button.is_visible
 
 

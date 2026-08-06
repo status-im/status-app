@@ -48,6 +48,7 @@ Control {
     // Emitted when the user clicks a mention pill (its pub key) or a link (its url) in the text.
     signal mentionClicked(string pubKey)
     signal linkClicked(string url)
+    signal contextMenuRequested(point pos)
 
     // Decoration colors
     property color codeBackgroundColor: Theme.palette.baseColor4
@@ -539,6 +540,7 @@ Control {
         z: 100
         enabled: root.selectable
         visible: root.selectable
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         cursorShape: !!root.hoveredLink ? Qt.PointingHandCursor : Qt.IBeamCursor
         preventStealing: true
 
@@ -553,6 +555,12 @@ Control {
         readonly property int clickSlop: 4
 
         onPressed: (mouse) => {
+            if (mouse.button === Qt.RightButton) {
+                root.contextMenuRequested(Qt.point(mouse.x, mouse.y))
+                mouse.accepted = true
+                return
+            }
+
             root.forceActiveFocus() // Grab focus (deselects other views)
 
             const now = Date.now()
@@ -593,9 +601,26 @@ Control {
         }
         // A click (no drag) on a link activates it; a drag selects text instead.
         onReleased: (mouse) => {
+            if (mouse.button === Qt.RightButton)
+                return
+
             if (!moved)
                 d.activateLinkAt(mouse.x, mouse.y)
         }
+    }
+
+    TapHandler {
+        enabled: !root.selectable
+        acceptedButtons: Qt.RightButton
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
+        onTapped: (point, button) => root.contextMenuRequested(point.position)
+    }
+
+    TapHandler {
+        enabled: !root.selectable
+        acceptedButtons: Qt.LeftButton
+        acceptedDevices: PointerDevice.TouchScreen
+        onLongPressed: () => root.contextMenuRequested(point.position)
     }
 
     Shortcut {

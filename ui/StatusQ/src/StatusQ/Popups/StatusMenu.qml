@@ -67,6 +67,8 @@ Menu {
 
     property bool visualizeShortcuts
 
+    property bool menuItemsFillWidth: false
+
     property var openHandler
     property var closeHandler
 
@@ -78,12 +80,13 @@ Menu {
     QtObject {
         id: d
         readonly property var window: root.contentItem.Window.window
+        readonly property real bottomSafeAreaMargin: window?.SafeArea.margins.bottom ?? 0
     }
 
     leftMargin: Theme.padding + (d.window?.SafeArea.margins.left ?? 0)
     rightMargin: Theme.padding + (d.window?.SafeArea.margins.right ?? 0)
     topMargin: Theme.padding + (d.window?.SafeArea.margins.top ?? 0)
-    bottomMargin: Theme.padding + (d.window?.SafeArea.margins.bottom ?? 0)
+    bottomMargin: d.bottomSafeAreaMargin
 
     onOpened: {
         if (typeof openHandler === "function") {
@@ -99,7 +102,7 @@ Menu {
 
     delegate: StatusMenuItem {
         visible: root.hideDisabledItems && !visibleOnDisabled ? enabled : true
-        height: visible ? implicitHeight : 0
+        Layout.preferredHeight: visible ? implicitHeight : 0
         visualizeShortcuts: root.visualizeShortcuts
         rippleOrigin: root.rippleOrigin
     }
@@ -107,22 +110,37 @@ Menu {
     contentItem: StatusScrollView {
         id: scrollView
         padding: 0
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
         ColumnLayout {
             spacing: 0
 
-            width: root.availableWidth
+            width: scrollView.availableWidth
 
             Repeater {
                 model: root.contentModel
 
                 onItemAdded: (index, item) => {
                     item.Layout.fillWidth = true
-                    item.Layout.minimumWidth = scrollView.width
-                    item.Layout.maximumWidth = root.maxImplicitWidth
+                    item.Layout.minimumWidth = Qt.binding(() => root.menuItemsFillWidth ? 0 : scrollView.width)
+                    item.Layout.maximumWidth = Qt.binding(() => root.menuItemsFillWidth ? scrollView.width : root.maxImplicitWidth)
                 }
             }
         }
+    }
+
+    Binding {
+        when: root.menuItemsFillWidth
+        target: scrollView
+        property: "implicitWidth"
+        value: root.maxImplicitWidth
+    }
+
+    Binding {
+        when: root.menuItemsFillWidth
+        target: scrollView
+        property: "contentWidth"
+        value: scrollView.availableWidth
     }
 
     background: Rectangle {
