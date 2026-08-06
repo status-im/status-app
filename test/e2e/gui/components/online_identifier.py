@@ -18,7 +18,7 @@ class OnlineIdentifier(QObject):
         self.automatic_button = Button(names.userContextmenu_AutomaticButton)
         self.view_my_profile_button = Button(names.userContextMenu_ViewMyProfileAction)
         self.copy_link_to_profile_button = QObject(names.userContextMenu_CopyLinkToProfile)
-        self.user_name_text_label = TextLabel(names.userLabel_StyledText)
+        self.user_name_text_label = TextLabel(names.userStatusDisplayName)
 
     @property
     @allure.step('Get user name')

@@ -162,9 +162,6 @@ contactRequest_Send_Button = {"container": statusDesktop_mainWindow_overlay,
 # User Status Profile Menu
 onlineIdentifier = {"container": statusDesktop_mainWindow_overlay, "objectName": "UserStatusContextMenu",
                     "type": "PopupItem", "visible": True}
-onlineIdentifierProfileHeader = {"container": statusDesktop_mainWindow_overlay,
-                                 "objectName": "onlineIdentifierProfileHeader", "type": "ProfileHeader",
-                                 "visible": True}
 userContextmenu_AlwaysActiveButton = {"container": statusDesktop_mainWindow_overlay,
                                       "objectName": "userStatusMenuAlwaysOnlineAction", "type": "StatusMenuItem",
                                       "visible": True}
@@ -180,8 +177,8 @@ userContextMenu_ViewMyProfileAction = {"container": statusDesktop_mainWindow_ove
 userContextMenu_CopyLinkToProfile = {"container": statusDesktop_mainWindow_overlay,
                                      "objectName": "userStatusCopyLinkAction", "type": "StatusMenuItem",
                                      "visible": True}
-userLabel_StyledText = {"container": statusDesktop_mainWindow_overlay, "type": "StyledText", "unnamed": 1,
-                        "visible": True}
+userStatusDisplayName = {"container": onlineIdentifier, "objectName": "userStatusDisplayName",
+                         "type": "StatusBaseText", "visible": True}
 
 # My Profile Popup (online identifier)
 ProfileDialogView = {"container": statusDesktop_mainWindow_overlay, "id": "profileView", "type": "ProfileDialogView",

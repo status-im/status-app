@@ -147,7 +147,6 @@ StatusDropdown {
         }
 
         ActionWrapper {
-            font.bold: checked
             action: OnlineStatusAction {
                 objectName: "userStatusMenuAlwaysOnlineAction"
                 userStatus: Constants.currentUserStatus.alwaysOnline
@@ -157,7 +156,6 @@ StatusDropdown {
         }
 
         ActionWrapper {
-            font.bold: checked
             action: OnlineStatusAction {
                 objectName: "userStatusMenuInactiveAction"
                 userStatus: Constants.currentUserStatus.inactive
@@ -167,7 +165,6 @@ StatusDropdown {
         }
 
         ActionWrapper {
-            font.bold: checked
             action: OnlineStatusAction {
                 objectName: "userStatusMenuAutomaticAction"
                 userStatus: Constants.currentUserStatus.automatic
@@ -184,10 +181,12 @@ StatusDropdown {
 
     component OnlineStatusAction: StatusAction {
         required property int userStatus
+        checkable: true
         icon.color: "transparent"
         icon.width: 12
         icon.height: 12
         checked: userStatus === root.currentUserStatus
+        fontSettings.bold: checked
         onTriggered: {
             root.setCurrentUserStatusRequested(userStatus)
             root.close()
