@@ -71,6 +71,10 @@ AbstractWebView {
         function onDownloadRequested(download) {
             root.downloadRequested(download)
         }
+
+        function onLinkLongPressed(linkUrl, imageUrl, position) {
+            root.linkLongPressed(linkUrl, imageUrl, position)
+        }
     }
 
     function rebuildHistoryModel() {

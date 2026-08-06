@@ -40,6 +40,8 @@ QtObject {
 
     required property var determineRealURLFn
     required property var downloadRequestHandler
+    /// (linkUrl, imageUrl, position, hostView) — long-press menu (mobile Backends).
+    required property var linkLongPressHandler
     required property var sslErrorHandler
     required property var jsDialogHandler
     required property var findTextFinishedHandler
@@ -362,6 +364,10 @@ QtObject {
                     return
                 }
                 root.downloadRequestHandler(download, lazyView)
+            }
+            onLinkLongPressed: (linkUrl, imageUrl, position) => {
+                if (!lazyView.retained)
+                    root.linkLongPressHandler(linkUrl, imageUrl, position, lazyView)
             }
             onCertificateError: (error) => root.sslErrorHandler(error)
             onJavaScriptDialogRequested: (request) => root.jsDialogHandler(request)

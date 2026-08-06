@@ -104,6 +104,9 @@ Item {
     signal linkHovered(string hoveredUrl)
     signal windowCloseRequested()
     signal downloadRequested(var download)
+    /// Long-press on a link/image (mobile Backends; WebEngine has its own menu).
+    /// Either URL may be empty, never both. position is view-local logical px.
+    signal linkLongPressed(url linkUrl, url imageUrl, point position)
     signal devToolsToggled(bool enabled)
 
     // Signals to be handled at Layout level

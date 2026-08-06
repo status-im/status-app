@@ -101,18 +101,22 @@ QtObject {
         }
     }
 
+    /// Returns true when the tap opened the file (in-browser or OS handler) —
+    /// callers close the Downloads overview then. Retry keeps it open: nothing
+    /// opened, the Record just restarts in place.
     function openDownloadFromList(downloadComplete, index) {
         const record = downloadsStore.getDownload(index)
         if (!record)
-            return
+            return false
 
         if (downloadsStore.canRetryFromTap(record)) {
             retryRecord(record)
-            return
+            return false
         }
 
         if (downloadComplete)
-            openCompletedRecord(record)
+            return openCompletedRecord(record)
+        return false
     }
 
     function handlePillClicked(index) {

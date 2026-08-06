@@ -488,10 +488,23 @@ Item {
             record.fileName = "archive.bin"
             record.mimeType = "application/octet-stream"
 
-            ctx.openDownloadFromList(true, 0)
+            // Opened via the OS handler → still "opened": the overview closes on true.
+            verify(ctx.openDownloadFromList(true, 0))
             compare(openedUrls.length, 0)
             compare(store.openRecordCalls, 1)
             compare(store.lastOpenedRecord, record)
+        }
+
+        function test_listClick_interrupted_retries_reportsNothingOpened() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            const record = store.addDownload(live)
+            record.state = AbstractWebView.DownloadState.DownloadInterrupted
+            record.fileName = "a.bin"
+
+            // Retry restarts in place — the Downloads overview must stay open.
+            verify(!ctx.openDownloadFromList(false, 0))
         }
     }
 }

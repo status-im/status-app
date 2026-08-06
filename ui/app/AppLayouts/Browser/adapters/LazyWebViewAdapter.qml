@@ -172,6 +172,9 @@ AbstractWebView {
         function onLinkHovered(hoveredUrl)             { root.linkHovered(hoveredUrl) }
         function onWindowCloseRequested()              { root.windowCloseRequested() }
         function onDownloadRequested(download)         { root.downloadRequested(download) }
+        function onLinkLongPressed(linkUrl, imageUrl, position) {
+            root.linkLongPressed(linkUrl, imageUrl, position)
+        }
         function onNewWindowRequested(makeCurrent, requestedUrl, callback) {
             root.newWindowRequested(makeCurrent, requestedUrl, callback)
         }

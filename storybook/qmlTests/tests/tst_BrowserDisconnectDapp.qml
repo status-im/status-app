@@ -124,6 +124,7 @@ Item {
             downloadsStore: QtObject {}
             determineRealURLFn: function(url) { return url }
             downloadRequestHandler: function() {}
+            linkLongPressHandler: function() {}
             sslErrorHandler: function() {}
             jsDialogHandler: function() {}
             findTextFinishedHandler: function() {}

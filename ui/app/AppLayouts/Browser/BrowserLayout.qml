@@ -190,6 +190,19 @@ StatusSectionLayout {
             menu.open()
         }
 
+        /// Long-press on a link/image (mobile Backends): menu at the touch point,
+        /// Download link routed through the host view's Backend (ADR 0005).
+        function openLinkContextMenu(linkUrl, imageUrl, position, hostView) {
+            linkContextMenuInst.linkUrl = linkUrl
+            linkContextMenuInst.imageUrl = imageUrl
+            linkContextMenuInst.hostView = hostView
+            // position is view-local; the host view fills webStackView.
+            linkContextMenuInst.parent = webStackView
+            linkContextMenuInst.x = position.x
+            linkContextMenuInst.y = position.y
+            linkContextMenuInst.open()
+        }
+
         property Component jsDialogComponent: JSDialogWindow {}
 
         readonly property bool currentTabSupportsFindInPage: currentWebView?.supportsFindInPage ?? false
@@ -370,6 +383,8 @@ StatusSectionLayout {
         downloadsStore: root.downloadsStore
         determineRealURLFn: (url) => root.browserRootStore.determineRealURL(url)
         downloadRequestHandler: (download, hostView) => downloadsContext.handleDownloadRequest(download, hostView)
+        linkLongPressHandler: (linkUrl, imageUrl, position, hostView) =>
+            _internal.openLinkContextMenu(linkUrl, imageUrl, position, hostView)
         sslErrorHandler: (error) => {
                              error.defer()
                              sslDialog.enqueue(error)
@@ -859,7 +874,8 @@ StatusSectionLayout {
                 if (modelIndex < 0)
                     return
                 const complete = record.state === AbstractWebView.DownloadState.DownloadCompleted
-                downloadsContext.openDownloadFromList(complete, modelIndex)
+                if (downloadsContext.openDownloadFromList(complete, modelIndex))
+                    close()
             }
             onDownloadOptionsClicked: function (listIndex, anchor) {
                 const list = root.downloadsStore.downloadsListNewestFirst()
@@ -909,6 +925,22 @@ StatusSectionLayout {
         }
         function presentError(){
             visible = certErrors.length > 0
+        }
+    }
+
+    BrowserLinkContextMenu {
+        id: linkContextMenuInst
+
+        property var hostView: null
+
+        onOpenInNewTabRequested: targetUrl => root.openUrlInNewTab(targetUrl)
+        onShareUrlRequested: targetUrl => root.downloadsStore.shareUrlString(targetUrl)
+        onDownloadRequested: function (targetUrl) {
+            // downloadUrl (not navigation): renderable media would play in the tab
+            // instead of saving; the Backend path always raises downloadRequested.
+            const view = hostView || _internal.currentWebView
+            if (view && view.downloadUrl)
+                view.downloadUrl(targetUrl, "")
         }
     }
 

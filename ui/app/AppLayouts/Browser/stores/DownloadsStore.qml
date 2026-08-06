@@ -511,14 +511,19 @@ QtObject {
 
     /// Mobile: system share sheet. Desktop: copy the source URL.
     function shareUrl(record) {
-        const url = sourceUrlString(record)
-        if (!url)
+        return shareUrlString(sourceUrlString(record))
+    }
+
+    /// Same share-vs-copy policy for a raw URL (link long-press menu).
+    function shareUrlString(url) {
+        const text = String(url || "")
+        if (!text)
             return false
         if (root.preferShareSheet) {
             if (root.shareTextFn)
-                root.shareTextFn(url)
+                root.shareTextFn(text)
         } else if (root.copyTextFn) {
-            root.copyTextFn(url)
+            root.copyTextFn(text)
         }
         return true
     }
