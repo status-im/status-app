@@ -56,7 +56,7 @@ Item {
                                     enabled: false
                                     leftPadding: 2
                                     title: model.text
-                                    asset.name: model.imageSource
+                                    asset.name: model.imageSource || ""
                                     asset.isImage: true
                                     asset.bgColor: "transparent"
                                     asset.height: 16
