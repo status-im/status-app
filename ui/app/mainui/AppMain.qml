@@ -1504,7 +1504,8 @@ Item {
 
     Loader {
         id: statusEmojiPopup
-        active: appMain.mainReady
+        active: appMain.mainReady && appMain.rootStore.sectionsLoaded
+        asynchronous: true
         sourceComponent: StatusEmojiPopup {
             directParent: appMain.Window.window.contentItem
             height: 440
@@ -1515,7 +1516,8 @@ Item {
 
     Loader {
         id: statusStickersPopupLoader
-        active: appMain.mainReady
+        active: appMain.mainReady && appMain.rootStore.sectionsLoaded
+        asynchronous: true
         sourceComponent: StatusStickersPopup {
             directParent: appMain.Window.contentItem
             height: 440
