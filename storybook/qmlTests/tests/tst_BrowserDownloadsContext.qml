@@ -99,31 +99,12 @@ Item {
                 return record && record.url ? String(record.url) : ""
             }
             function refreshMissingFiles() {}
-            function canOpenInBrowser(record, supportsPdf) {
-                if (!record || record.missingFile)
-                    return false
-                if (record.state !== AbstractWebView.DownloadState.DownloadCompleted)
-                    return false
-                const name = String(record.fileName || "").toLowerCase()
-                const mime = String(record.mimeType || "").toLowerCase()
-                if (mime.startsWith("image/") || name.endsWith(".png") || name.endsWith(".mp3")
-                        || name.endsWith(".mp4") || name.endsWith(".webm") || name.endsWith(".html")
-                        || mime === "video/webm")
-                    return true
-                if ((mime === "application/pdf" || name.endsWith(".pdf")) && supportsPdf)
-                    return true
+            function isKnownTargetPath(path) {
+                for (let i = 0; i < downloadModel.length; ++i) {
+                    if (downloadModel[i] && String(downloadModel[i].targetPath || "") === path)
+                        return true
+                }
                 return false
-            }
-            function isPlayableMedia(record) {
-                const name = String(record?.fileName ?? "").toLowerCase()
-                const mime = String(record?.mimeType ?? "").toLowerCase()
-                return mime.startsWith("audio/") || mime.startsWith("video/")
-                    || name.endsWith(".mp3") || name.endsWith(".mp4") || name.endsWith(".webm")
-            }
-            function mediaPlayerPageUrl(record) {
-                if (!isPlayableMedia(record) || record.missingFile || !playerPageWritable)
-                    return ""
-                return "file:///tmp/player/" + String(record.fileName || "") + ".html"
             }
             function openRecord(record) {
                 openRecordCalls += 1
@@ -202,7 +183,7 @@ Item {
             supportsPdf = false
             const component = Qt.createComponent(root.downloadsContextUrl)
             verify(component.status === Component.Ready, component.errorString())
-            return createTemporaryObject(component, root, {
+            const ctx = createTemporaryObject(component, root, {
                 downloadsStore: store,
                 getWebViewFn: function(index) { return tabs[index] || null },
                 getTabsCountFn: function() { return tabs.length },
@@ -212,6 +193,12 @@ Item {
                 openUrlFn: function(url) { openedUrls.push(String(url)) },
                 supportsPdfFn: function() { return supportsPdf }
             })
+            // The internal open seam runs for real; keep its filesystem side
+            // hermetic (playerPageWritable mirrors the old mock's failure knob).
+            ctx._openContext.mediaPlayerDirectory = "/tmp/status-player"
+            ctx._openContext.ensureDirectoryFn = function(path) { return true }
+            ctx._openContext.writeTextFileFn = function(path, data) { return store.playerPageWritable }
+            return ctx
         }
 
         function test_openingFind_hidesDownloadStrip() {
@@ -450,7 +437,9 @@ Item {
 
             verify(ctx.openCompletedRecord(record))
             compare(openedUrls.length, 1)
-            verify(openedUrls[0].indexOf("track.mp3") >= 0)
+            // Media opens through a generated player page (one per Download Target).
+            verify(openedUrls[0].startsWith("file:///tmp/status-player/player-"))
+            verify(openedUrls[0].endsWith(".html"))
             compare(store.openRecordCalls, 0)
         }
 
@@ -486,8 +475,8 @@ Item {
             compare(openedUrls.length, 1)
             // Media opens through a player page — navigating to the file itself makes
             // WebEngine download it again instead of playing it.
+            verify(openedUrls[0].startsWith("file:///tmp/status-player/player-"))
             verify(openedUrls[0].endsWith(".html"))
-            verify(openedUrls[0].indexOf("clip.webm") >= 0)
             compare(store.openRecordCalls, 0)
         }
 

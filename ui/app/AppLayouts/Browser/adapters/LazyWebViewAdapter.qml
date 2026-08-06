@@ -19,6 +19,11 @@ AbstractWebView {
     // WARN: needs to remain a var to avoid mixing platform-specific types
     property var profileManager: null
 
+    // Desktop-only: local-URL guard exception forwarded to WebViewAdapter
+    // (MobileWebViewAdapter has no local-browsing guard). Lives on the
+    // concrete adapter path, not on AbstractWebView — no other reader exists.
+    property var isBrowsableLocalUrlFn: null
+
     supportsZoom:           loader.item ? loader.item.supportsZoom           : false
     supportsDevTools:       loader.item ? loader.item.supportsDevTools       : false
     supportsFindInPage:     loader.item ? loader.item.supportsFindInPage     : false
@@ -64,15 +69,16 @@ AbstractWebView {
             profileParams:                 Qt.binding(() => root.profileParams),
             uid:                           Qt.binding(() => root.uid),
             bookmarksStore:                Qt.binding(() => root.bookmarksStore),
-            downloadsStore:                Qt.binding(() => root.downloadsStore),
             webChannel:                    Qt.binding(() => root.webChannel),
             enableJsLogs:                  Qt.binding(() => root.enableJsLogs),
             localAccountSensitiveSettings: Qt.binding(() => root.localAccountSensitiveSettings),
             devToolsEnabled:               Qt.binding(() => root.devToolsEnabled),
             freeze:                        Qt.binding(() => root.freeze),
         }
-        if (!SQUtils.Utils.isMobile)
+        if (!SQUtils.Utils.isMobile) {
             props.profileManager = Qt.binding(() => root.profileManager)
+            props.isBrowsableLocalUrlFn = Qt.binding(() => root.isBrowsableLocalUrlFn)
+        }
         loader.setSource(loader.adapterPath, props)
     }
 

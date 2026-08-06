@@ -49,30 +49,6 @@ QtObject {
         return loc ? String(loc).replace("file://", "") : ""
     }
 
-    // Player pages for downloaded media (see mediaPlayerPageUrl); temp, disposable.
-    property string mediaPlayerDirectory: {
-        const loc = StandardPaths.writableLocation(StandardPaths.TempLocation)
-        return loc ? String(loc).replace("file://", "").replace(/[/\\]+$/, "") + "/status-browser-player" : ""
-    }
-
-    // Text file writer; production uses StringUtils, tests inject a fake.
-    property var writeTextFileFn: function(path, data) {
-        return StringUtils.writeTextFile(path, data)
-    }
-
-    // Text file reader; reads qrc: and file: alike. Tests inject a fake.
-    property var readTextFileFn: function(path) {
-        return StringUtils.readTextFile(path)
-    }
-
-    // Player page assets, substituted and inlined by _mediaPlayerHtml.
-    readonly property url mediaPlayerTemplateUrl:
-        Qt.resolvedUrl("../webview/player/media_player.html")
-    readonly property url mediaPlayerScriptUrl:
-        Qt.resolvedUrl("../webview/player/media_player.js")
-
-    property string _mediaPlayerTemplateCache: ""
-
     // Disk existence probe; production uses SystemUtils.fileExists, tests inject a fake.
     property var pathExistsFn: function(path) {
         return SystemUtils.fileExists(path)
@@ -103,10 +79,6 @@ QtObject {
 
     // Show in folder: Desktop + Android; hidden on iOS (ADR 0006 / UX 02 / UX 06).
     property bool showInFolderSupported: !SQUtils.Utils.isIOS
-
-    // false on iOS: WebKit rejects file:// media in a file:// player page.
-    // Injectable for QML tests.
-    property bool inBrowserMediaPlaybackSupported: !SQUtils.Utils.isIOS
 
     // Desktop reveals file; Android opens system Downloads UI. Injectable for QML tests.
     property var showInFolderFn: function(path) {
@@ -344,159 +316,18 @@ QtObject {
         return String(record.url)
     }
 
-    /// Open-in-Browser allowlist: types our Backends render (ADR 0006 §8).
-    /// Images, plain text, HTML; PDF when Backend supports it; media per
-    /// isPlayableMedia. Everything else is handed to the OS.
-    function canOpenInBrowser(record, supportsPdf) {
-        if (!record || record.missingFile)
-            return false
-        if (record.state !== AbstractWebView.DownloadState.DownloadCompleted)
-            return false
-
-        const mime = String(record.mimeType || "").toLowerCase()
-        const name = String(record.fileName || "").toLowerCase()
-
-        if (mime.startsWith("image/") || /\.(png|jpe?g|gif|webp|bmp|svg)$/.test(name))
-            return true
-        if (mime === "text/plain" || mime === "text/html" || mime === "application/xhtml+xml"
-                || /\.(txt|html?|xhtml)$/.test(name))
-            return true
-        if (mime === "application/pdf" || name.endsWith(".pdf"))
-            return !!supportsPdf
-        return inBrowserMediaPlaybackSupported && isPlayableMedia(record)
-    }
-
-    /// Media our Backends can decode — and only inside a page (see mediaPlayerPageUrl).
-    ///
-    /// MP4/M4A/AAC are deliberately absent: the shipped Chromium is built without
-    /// proprietary codecs, so H.264/AAC fail with DEMUXER_ERROR_NO_SUPPORTED_STREAMS
-    /// and would leave the user staring at a dead player. They go to the OS instead,
-    /// as do Ogg and Matroska. Revisit if the build ever gains those codecs.
-    function isPlayableMedia(record) {
-        if (!record)
-            return false
-
-        const mime = String(record.mimeType || "").toLowerCase()
-        const name = String(record.fileName || "").toLowerCase()
-
-        if (mime === "audio/mpeg" || mime === "audio/mp3" || name.endsWith(".mp3"))
-            return true
-        if (mime === "audio/wav" || mime === "audio/x-wav" || mime === "audio/wave"
-                || name.endsWith(".wav"))
-            return true
-        if (mime === "video/webm" || mime === "audio/webm" || name.endsWith(".webm"))
-            return true
-        return false
-    }
-
-    /// The only file:// URLs the browser may navigate to: player pages we generated
-    /// and the Download Targets of Records the user downloaded. Everything else stays
-    /// blocked by the Backend's local-browsing guard (WebViewAdapter).
-    function isBrowsableLocalUrl(url) {
-        const path = UrlUtils.convertUrlToLocalPath(String(url || ""))
+    /// True when path is the Download Target of one of our Records. The Record
+    /// half of the Backend local-URL guard exception — the format policy and
+    /// player pages live in BrowserDownloadOpenContext (ADR 0006 §8).
+    function isKnownTargetPath(path) {
         if (!path)
             return false
-
-        const dir = root.mediaPlayerDirectory
-        if (dir && path.startsWith(dir + "/player-") && path.endsWith(".html"))
-            return true
-
         for (let i = 0; i < root.downloadModel.length; ++i) {
             const record = root.downloadModel[i]
             if (record && String(record.targetPath || "") === path)
                 return true
         }
         return false
-    }
-
-    /// Write (and reuse) a player page for a downloaded media Record and return its
-    /// file URL, or "" when it cannot be written.
-    ///
-    /// A top-level navigation to local audio/video is turned into a fresh Download by
-    /// WebEngine (net::ERR_ABORTED), which re-saves the file as "name (1)" instead of
-    /// playing it. The same file inside a file:// page plays fine, so we hand the tab
-    /// a one-element page instead of the media itself.
-    function mediaPlayerPageUrl(record) {
-        if (!isPlayableMedia(record) || record.missingFile)
-            return ""
-        const path = String(record.targetPath || "")
-        if (!path)
-            return ""
-
-        const dir = root.mediaPlayerDirectory
-        if (!dir)
-            return ""
-        if (root.ensureDirectoryFn)
-            root.ensureDirectoryFn(dir)
-
-        const html = _mediaPlayerHtml(record, path)
-        if (!html)
-            return ""
-
-        // One page per target path: replaying a file reuses it instead of piling up.
-        const pagePath = joinPath(dir, "player-" + _pathKey(path) + ".html")
-        if (!root.writeTextFileFn(pagePath, html))
-            return ""
-        return UrlUtils.urlFromUserInput(pagePath)
-    }
-
-    /// media_player.html with its placeholders filled in, or "" when the asset is
-    /// unreadable. Function replacements throughout: a file name may contain "$&".
-    function _mediaPlayerHtml(record, path) {
-        const template = _mediaPlayerTemplate()
-        if (!template)
-            return ""
-
-        const tag = _isVideoRecord(record) ? "video" : "audio"
-        const name = StringUtils.escapeHtml(String(record.fileName || ""))
-        // Every path segment is percent-encoded, so the src carries no quote to escape.
-        const src = _fileUrlForPage(path)
-        const failed = StringUtils.escapeHtml(
-                         qsTr("This file cannot be played here. Open it with another app."))
-
-        return template
-            .replace(/__TAG__/g, () => tag)
-            .replace(/__SRC__/g, () => src)
-            .replace(/__NAME__/g, () => name)
-            .replace(/__FAILED__/g, () => failed)
-    }
-
-    /// media_player.html with media_player.js inlined, read once per session.
-    /// One page beats a page plus a sibling script copied into the temp directory.
-    function _mediaPlayerTemplate() {
-        if (root._mediaPlayerTemplateCache)
-            return root._mediaPlayerTemplateCache
-
-        const html = String(root.readTextFileFn(root.mediaPlayerTemplateUrl) || "")
-        if (!html)
-            return ""
-        const script = String(root.readTextFileFn(root.mediaPlayerScriptUrl) || "")
-        root._mediaPlayerTemplateCache = html.replace(/__SCRIPT__/g, () => script)
-        return root._mediaPlayerTemplateCache
-    }
-
-    function _isVideoRecord(record) {
-        const mime = String(record.mimeType || "").toLowerCase()
-        const name = String(record.fileName || "").toLowerCase()
-        if (mime.startsWith("audio/"))
-            return false
-        return mime.startsWith("video/") || name.endsWith(".webm")
-    }
-
-    /// Absolute path → file URL safe to inline in HTML. Drive letters keep their colon
-    /// so Windows targets stay valid ("C:/x" → "file:///C:/x").
-    function _fileUrlForPage(path) {
-        const encoded = String(path).replace(/\\/g, "/").split("/")
-            .map(segment => /^[A-Za-z]:$/.test(segment) ? segment : encodeURIComponent(segment))
-            .join("/")
-        return encoded.startsWith("/") ? "file://" + encoded : "file:///" + encoded
-    }
-
-    function _pathKey(path) {
-        let hash = 5381
-        for (let i = 0; i < path.length; ++i)
-            hash = ((hash << 5) + hash + path.charCodeAt(i)) >>> 0
-        return hash.toString(16)
     }
 
     /// Mobile: system share sheet. Desktop: copy the Download Target path.

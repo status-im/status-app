@@ -12,6 +12,12 @@ AbstractWebView {
 
     required property var profileManager
 
+    /// Local-URL guard exception: the only file:// URLs navigation may pass
+    /// (Download Targets and their player pages — ADR 0006 §8). Injected by
+    /// the owner (BrowserDownloadsContext.isBrowsableLocalUrl, wired through
+    /// BrowserWebViewContext → LazyWebViewAdapter). Null blocks all local URLs.
+    property var isBrowsableLocalUrlFn: null
+
     property var profile: root.profileParams
         ? root.profileManager.getOrCreateStorageProfile(root.profileParams)
         : null
@@ -236,9 +242,7 @@ AbstractWebView {
                 return
             // Local browsing stays off; what the user downloaded through us — and the
             // player pages we write for it — is the only exception (ADR 0006 §8).
-            if (root.downloadsStore
-                    && typeof root.downloadsStore.isBrowsableLocalUrl === "function"
-                    && root.downloadsStore.isBrowsableLocalUrl(url))
+            if (root.isBrowsableLocalUrlFn && root.isBrowsableLocalUrlFn(url))
                 return
             console.log("Local file browsing is disabled")
             request.reject()

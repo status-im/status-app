@@ -3,8 +3,6 @@ import QtQuick
 import StatusQ
 import StatusQ.Core.Utils as SQUtils
 
-import utils
-
 import AppLayouts.Browser.adapters
 import AppLayouts.Browser.stores as BrowserStores
 
@@ -43,11 +41,18 @@ QtObject {
         console.warn("BrowserDownloadsContext: openUrlFn not set")
     }
 
-    property var supportsPdfFn: function() {
-        const webView = root._firstWebView()
-        if (webView && webView.supportsPdfViewer !== undefined)
-            return !!webView.supportsPdfViewer
-        return false
+    // Backend PDF-rendering Capability. BrowserLayout always overrides with the
+    // current Web View's supportsPdfViewer; the trivial default only keeps the
+    // type instantiable on its own (tests inject their own).
+    property var supportsPdfFn: function() { return false }
+
+    /// The open-a-downloaded-file seam (ADR 0006 §8): format allowlist, player
+    /// pages, local-URL guard exception. Internal composition — BrowserLayout
+    /// talks to this context only; the seam sees narrow injected functions,
+    /// never the store.
+    readonly property BrowserDownloadOpenContext _openContext: BrowserDownloadOpenContext {
+        isKnownTargetPathFn: (path) => root.downloadsStore.isKnownTargetPath(path)
+        openUrlFn: (url) => root.openUrlFn(url)
     }
 
     /// Find XOR Download Pill strip (browser-downloads-ux 05, mobile).
@@ -173,24 +178,13 @@ QtObject {
 
     function openInBrowserRecord(record) {
         downloadsStore.refreshMissingFiles()
-        if (!downloadsStore.canOpenInBrowser(record, supportsPdfFn()))
-            return false
-        const path = record.targetPath
-        if (!path)
-            return false
+        return _openContext.openInBrowser(record, supportsPdfFn())
+    }
 
-        // Navigating to local audio/video makes WebEngine download it again instead of
-        // playing it — open a player page for those. No page, no in-browser route.
-        if (downloadsStore.isPlayableMedia(record)) {
-            const page = downloadsStore.mediaPlayerPageUrl(record)
-            if (!page)
-                return false
-            openUrlFn(page)
-            return true
-        }
-
-        openUrlFn(UrlUtils.urlFromUserInput(path))
-        return true
+    /// Local-URL guard exception for the Backend's local-browsing guard
+    /// (WebViewAdapter, wired via BrowserWebViewContext).
+    function isBrowsableLocalUrl(url) {
+        return _openContext.isBrowsableLocalUrl(url)
     }
 
     function retryRecord(record) {
@@ -233,20 +227,10 @@ QtObject {
         menu.useShareLabels = !!downloadsStore.preferShareSheet
         menu.canShareFile = downloadsStore.canShareFile(record)
         menu.canShareUrl = downloadsStore.canShareUrl(record)
-        menu.canOpenInBrowser = downloadsStore.canOpenInBrowser(record, pdf)
+        menu.canOpenInBrowser = _openContext.canOpenInBrowser(record, pdf)
         menu.canShowInFolder = downloadsStore.canShowInFolder(record)
         menu.canRetry = downloadsStore.canRetryFromMenu(record)
         menu.showDismiss = !!(options && options.showDismiss)
-    }
-
-    function _firstWebView() {
-        const count = getTabsCountFn ? getTabsCountFn() : 0
-        for (let i = 0; i < count; ++i) {
-            const tab = getWebViewFn(i)
-            if (tab)
-                return tab
-        }
-        return null
     }
 
     /// Retry Backend must match the Record profile (ADR 0006 §7) and must be a

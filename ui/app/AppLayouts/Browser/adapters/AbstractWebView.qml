@@ -6,7 +6,6 @@ Item {
     id: root
 
     required property BrowserStores.BookmarksStore bookmarksStore
-    required property BrowserStores.DownloadsStore downloadsStore
     required property var localAccountSensitiveSettings
 
     required property var webChannel

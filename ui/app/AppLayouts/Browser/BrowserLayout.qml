@@ -381,6 +381,7 @@ StatusSectionLayout {
         otrProfileParams: browserConfig.otrProfileParams
         bookmarksStore: root.bookmarksStore
         downloadsStore: root.downloadsStore
+        isBrowsableLocalUrlFn: (url) => downloadsContext.isBrowsableLocalUrl(url)
         determineRealURLFn: (url) => root.browserRootStore.determineRealURL(url)
         downloadRequestHandler: (download, hostView) => downloadsContext.handleDownloadRequest(download, hostView)
         linkLongPressHandler: (linkUrl, imageUrl, position, hostView) =>

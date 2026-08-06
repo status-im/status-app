@@ -31,6 +31,10 @@ QtObject {
     required property var bookmarksStore
     required property var downloadsStore
 
+    // Local-URL guard exception for desktop Backends (ADR 0006 §8); injected
+    // by BrowserLayout from BrowserDownloadsContext. Null blocks all local URLs.
+    property var isBrowsableLocalUrlFn: null
+
     readonly property var profileManager: _profileManagerLoader.item
 
     readonly property Loader _profileManagerLoader: Loader {
@@ -349,7 +353,7 @@ QtObject {
             webChannel: bridge.channel
 
             bookmarksStore: root.bookmarksStore
-            downloadsStore: root.downloadsStore
+            isBrowsableLocalUrlFn: root.isBrowsableLocalUrlFn
             profileManager: root.profileManager
             enableJsLogs: root.isDebugEnabled
             localAccountSensitiveSettings: root.browserSettings
