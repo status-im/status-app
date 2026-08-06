@@ -45,7 +45,7 @@ SplitView {
             id: popup
             visible: true
             notification: notificationMock
-            onLinkClicked: logs.logEvent("NewsMessagesPopup::onLinkClicked")
+            onLinkClicked: link => logs.logEvent("NewsMessagesPopup::onLinkClicked " + link)
         }
     }
    
@@ -55,19 +55,41 @@ SplitView {
 
         logsView.logText: logs.logText
 
-        RowLayout {
-            spacing: 4
+        ColumnLayout {
+            spacing: 8
 
-            CheckBox {
-                id: hasImage
-                text: "Has Image"
-                checked: true
+            RowLayout {
+                spacing: 4
+
+                CheckBox {
+                    id: hasImage
+                    text: "Has Image"
+                    checked: true
+                }
+
+                StatusInput {
+                    id: linkLabelInput
+                    label: "linkLabel"
+                    text: "Read our blog post"
+                }
             }
 
             StatusInput {
-                id: linkLabelInput
-                label: "linkLabel"
-                text: "Read our blog post"
+                id: newsTitleInput
+                Layout.fillWidth: true
+                label: "newsTitle"
+                text: notificationMock.newsTitle
+                onTextChanged: notificationMock.newsTitle = newsTitleInput.text
+            }
+
+            TextArea {
+                id: newsContentInput
+                Layout.fillWidth: true
+                Layout.preferredHeight: 90
+                placeholderText: "newsContent"
+                text: notificationMock.newsContent
+                wrapMode: TextArea.Wrap
+                onTextChanged: notificationMock.newsContent = newsContentInput.text
             }
         }
     }

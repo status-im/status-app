@@ -43,7 +43,7 @@ StatusDialog {
     padding: Theme.bigPadding
 
     header: StatusDialogHeader {
-        headline.title: notification.newsTitle
+        headline.title: CoreUtils.StringUtils.plainText(notification.newsTitle)
         headline.subtitle: d.dateGroupLabel.text
         actions.closeButton.onClicked: root.close()
         leftComponent: Item {
@@ -91,11 +91,12 @@ StatusDialog {
         }
 
         StatusBaseText {
-            text: notification.newsContent
+            text: CoreUtils.StringUtils.plainText(notification.newsContent)
             Layout.fillWidth: true
             Layout.fillHeight: true
             wrapMode: Text.WordWrap
             elide: Text.ElideRight
+            onLinkActivated: root.linkClicked(link)
         }
     }
     footer: StatusDialogFooter {
