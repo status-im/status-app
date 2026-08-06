@@ -76,6 +76,17 @@ Loader {
             Layout.fillWidth: !skeletonRow.landscape
             Layout.fillHeight: true
             Layout.margins: Theme.padding
+
+            createChatOpened: root.createChatViewOpened
+
+            onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.contactsStore.myPublicKey)
+            onStartChatClicked: {
+                if (root.createChatViewOpened) {
+                    Global.closeCreateChatView()
+                } else {
+                    Global.openCreateChatView()
+                }
+            }
         }
 
         MessagesChatSkeleton {
