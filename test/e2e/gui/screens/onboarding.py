@@ -720,9 +720,9 @@ class ReturningLoginView(QObject):
     @allure.step('Add existing user')
     def add_existing_status_user(self):
         self.user_selector_button.click()
-        OnboardingLoginUsersPopup().wait_until_appears().create_profile_button.click()
+        popup = OnboardingLoginUsersPopup().wait_until_appears()
+        popup.create_profile_button.wait_until_stable().click()
         return CreateYourProfileViewOnboarding().wait_until_appears()
-
 
     @allure.step('Select user by name')
     def select_user_by_name(self, user_name):

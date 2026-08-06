@@ -221,6 +221,14 @@ class QObject:
         LOG.error(f'Object {self} is not visible within {timeout_msec} ms')
         raise TimeoutError(f'Object {self} is not visible within {timeout_msec} ms')
 
+    @allure.step('Wait until stable {0}')
+    def wait_until_stable(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+        assert driver.waitFor(
+            lambda: self.is_visible and self.width > 0 and self.height > 0,
+            timeout_msec,
+        ), f'{self} geometry was not stable within {timeout_msec} ms'
+        return self
+
     @allure.step('Wait until hidden {0}')
     def wait_until_hidden(self, timeout_msec: int =  configs.timeouts.UI_LOAD_TIMEOUT_MSEC, check_interval=0.5):
         timeout_sec = timeout_msec / 1000
