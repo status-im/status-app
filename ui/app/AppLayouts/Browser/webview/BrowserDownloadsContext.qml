@@ -219,6 +219,8 @@ QtObject {
     /// (capabilities: ctx.capabilitiesFor(menu.record, options)) so a stale
     /// menu is structurally impossible — the Missing File refresh happens here,
     /// never at call sites. options.showDismiss — pill strip session dismiss.
+    /// options.showDownloadsEntry — pill strip "Downloads" entry (spec §3);
+    /// list menus never pass it — the user is already in the Downloads List.
     function capabilitiesFor(record, options) {
         downloadsStore.refreshMissingFiles()
         return {
@@ -228,6 +230,7 @@ QtObject {
             showInFolder: downloadsStore.canShowInFolder(record),
             retry: downloadsStore.canRetryFromMenu(record),
             dismiss: !!(options && options.showDismiss),
+            downloadsEntry: !!(options && options.showDownloadsEntry),
             useShareLabels: !!(downloadsStore.platform && downloadsStore.platform.preferShareSheet)
         }
     }

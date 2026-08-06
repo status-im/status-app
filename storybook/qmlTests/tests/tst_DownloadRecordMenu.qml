@@ -56,6 +56,7 @@ Item {
                 showInFolder: false,
                 retry: false,
                 dismiss: false,
+                downloadsEntry: false,
                 useShareLabels: false
             }, overrides || {})
         }
@@ -180,6 +181,53 @@ Item {
             compare(retried, 1)
             // The caller reads the Record straight off the menu.
             compare(menu.record, record)
+        }
+
+        /// Spec §3: the pill strip menu leads with "Downloads" (opens the
+        /// Downloads List section of the Open tabs overview), above a divider.
+        function test_downloadsEntry_firstInStripMenu_emitsSignal() {
+            const record = createTemporaryObject(recordComponent, root)
+            const menu = createTemporaryObject(menuComponent, root, {
+                record: record,
+                capabilities: caps({
+                    shareFile: true,
+                    shareUrl: true,
+                    showInFolder: true,
+                    dismiss: true,
+                    downloadsEntry: true
+                })
+            })
+
+            const texts = actionTexts(menu)
+            verify(texts.indexOf(qsTr("Downloads")) >= 0)
+            compare(texts[0], qsTr("Downloads"), "Downloads leads the strip menu")
+
+            let opened = 0
+            menu.downloadsRequested.connect(function() { opened += 1 })
+            for (let i = 0; i < menu.count; ++i) {
+                const action = menu.actionAt(i)
+                if (action && action.enabled && action.text === qsTr("Downloads"))
+                    action.trigger()
+            }
+            compare(opened, 1, "activating the entry requests the Downloads List")
+        }
+
+        /// Spec §3: list-row menus never show the entry — the user is already
+        /// in the Downloads List.
+        function test_downloadsEntry_absentFromListMenus() {
+            const record = createTemporaryObject(recordComponent, root)
+            const menu = createTemporaryObject(menuComponent, root, {
+                record: record,
+                capabilities: caps({
+                    openInBrowser: true,
+                    shareFile: true,
+                    shareUrl: true,
+                    showInFolder: true
+                })
+            })
+
+            const texts = actionTexts(menu)
+            verify(texts.indexOf(qsTr("Downloads")) < 0)
         }
 
         /// Ticket 09: `capabilities` is a BINDING at the call site, so the menu

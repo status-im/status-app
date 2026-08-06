@@ -19,7 +19,8 @@ StatusMenu {
     property var record: null
 
     /// { openInBrowser, shareFile, shareUrl, showInFolder, retry, dismiss,
-    ///   useShareLabels } — bind it: capabilities: ctx.capabilitiesFor(record, …)
+    ///   downloadsEntry, useShareLabels } — bind it:
+    /// capabilities: ctx.capabilitiesFor(record, …)
     property var capabilities: null
 
     readonly property var _caps: root.capabilities ?? ({})
@@ -55,6 +56,7 @@ StatusMenu {
             : "copy"
 
     // Plain signals — callers already hold the menu's Record (ticket 09).
+    signal downloadsRequested()
     signal showInFolderRequested()
     signal shareFileRequested()
     signal shareUrlRequested()
@@ -62,6 +64,17 @@ StatusMenu {
     signal retryRequested()
     signal dismissRequested()
 
+    StatusAction {
+        // Pill strip only (Figma pill menu): opens the Downloads List section
+        // of the Open tabs overview. Absent in list menus — you are already there.
+        enabled: !!root._caps.downloadsEntry
+        icon.name: "download"
+        text: qsTr("Downloads")
+        onTriggered: root.downloadsRequested()
+    }
+    StatusMenuSeparator {
+        visible: !!root._caps.downloadsEntry
+    }
     StatusAction {
         enabled: isActiveTransfer && !isPaused
         icon.name: "pause"

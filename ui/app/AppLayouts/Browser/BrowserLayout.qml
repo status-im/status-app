@@ -938,8 +938,9 @@ StatusSectionLayout {
         // Pill strip opens grant session Dismiss; list opens do not.
         property bool forStrip: false
 
-        capabilities: downloadsContext.capabilitiesFor(record, { showDismiss: forStrip })
+        capabilities: downloadsContext.capabilitiesFor(record, { showDismiss: forStrip, showDownloadsEntry: forStrip })
 
+        onDownloadsRequested: _internal.openDownloadsOverview()
         onShowInFolderRequested: root.downloadsStore.openDirectoryForRecord(record)
         onShareFileRequested: downloadsContext.shareFileRecord(record)
         onShareUrlRequested: downloadsContext.shareUrlRecord(record)

@@ -617,9 +617,14 @@ Item {
             verify(!caps.showInFolder, "platform.showInFolderSupported is false here")
             verify(!caps.retry)
             verify(!caps.dismiss)
+            verify(!caps.downloadsEntry, "list menus never get the Downloads entry")
             verify(caps.useShareLabels, "platform.preferShareSheet flows through")
 
             compare(ctx.capabilitiesFor(record, { showDismiss: true }).dismiss, true)
+
+            // Spec §3: pill strip opens ask for the Downloads entry.
+            const stripCaps = ctx.capabilitiesFor(record, { showDismiss: true, showDownloadsEntry: true })
+            compare(stripCaps.downloadsEntry, true)
         }
 
         function test_capabilitiesFor_interrupted_onlyRetryAndUrl() {
