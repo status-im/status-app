@@ -2527,10 +2527,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished">지갑</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation type="unfinished">다운로드</translation>
-    </message>
-    <message>
         <source>Open Tabs view</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2721,13 +2717,6 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Zoom</source>
         <translation>확대/축소</translation>
-    </message>
-</context>
-<context>
-    <name>BrowserTabView</name>
-    <message>
-        <source>Downloads</source>
-        <translation type="unfinished">다운로드</translation>
     </message>
 </context>
 <context>
@@ -6223,51 +6212,13 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
-    <name>DownloadBar</name>
-    <message>
-        <source>Cancelled</source>
-        <translation>취소됨</translation>
-    </message>
-    <message>
-        <source>Paused</source>
-        <translation>일시 중지됨</translation>
-    </message>
-    <message>
-        <source>Show All</source>
-        <translation>모두 보기</translation>
-    </message>
-</context>
-<context>
-    <name>DownloadMenu</name>
-    <message>
-        <source>Open</source>
-        <translation>열기</translation>
-    </message>
-    <message>
-        <source>Show in folder</source>
-        <translation>폴더에서 보기</translation>
-    </message>
-    <message>
-        <source>Pause</source>
-        <translation>일시 중지</translation>
-    </message>
-    <message>
-        <source>Resume</source>
-        <translation>이력서</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>취소</translation>
-    </message>
-</context>
-<context>
     <name>DownloadPage</name>
     <message>
         <source>Thanks for using Status</source>
         <translation>Status를 이용해 주셔서 감사합니다</translation>
     </message>
     <message>
-        <source>You&apos;re curently using version %1 of Status.</source>
+        <source>You&apos;re currently using version %1 of Status.</source>
         <translation>현재 Status의 버전 %1을(를) 사용 중입니다.</translation>
     </message>
     <message>
@@ -6322,7 +6273,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Resume</source>
-        <translation type="unfinished">이력서</translation>
+        <translation type="unfinished">재개</translation>
     </message>
     <message>
         <source>Open in Browser</source>
@@ -6343,21 +6294,6 @@ key pair. Keycard will be required for signing</source>
     <message>
         <source>Dismiss</source>
         <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>DownloadView</name>
-    <message>
-        <source>Cancelled</source>
-        <translation>취소됨</translation>
-    </message>
-    <message>
-        <source>Paused</source>
-        <translation>일시 중지됨</translation>
-    </message>
-    <message>
-        <source>Downloaded files will appear here.</source>
-        <translation>다운로드한 파일이 여기에 표시됩니다.</translation>
     </message>
 </context>
 <context>

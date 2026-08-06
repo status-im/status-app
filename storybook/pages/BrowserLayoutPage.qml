@@ -10,6 +10,7 @@ import StatusQ.Core.Utils as SQUtils
 import utils
 
 import AppLayouts.Browser
+import AppLayouts.Browser.adapters
 import AppLayouts.Browser.stores as BrowserStores
 import AppLayouts.Browser.webview
 import AppLayouts.Wallet.stores
@@ -87,12 +88,89 @@ SplitView {
         bookmarksStore: BrowserStores.BookmarksStore {}
         browserPreferencesStore: BrowserStores.BrowserPreferencesStore { id: browserPrefsStore }
         downloadsStore: BrowserStores.DownloadsStore {
-            property ListModel downloadModel : ListModel {
-                property var downloads: []
+            // Stub is empty; provide the real Download Records API for Storybook.
+            property var downloadModel: []
+            property string downloadsDirectory: "/tmp/status-storybook-downloads"
+            // One platform seam (DownloadsStore.platform) — nothing exists on disk here.
+            property var platform: ({
+                fileExists: function(path) { return false },
+                preferShareSheet: false,
+                showInFolderSupported: true
+            })
+            readonly property url _downloadRecordUrl: Qt.resolvedUrl(
+                "../../../ui/app/AppLayouts/Browser/stores/DownloadRecord.qml")
+            function addDownload(download, hostView) {
+                const component = Qt.createComponent(_downloadRecordUrl)
+                if (component.status !== Component.Ready)
+                    return null
+                const record = component.createObject(this)
+                record.attach(download)
+                if (hostView)
+                    record.originatingView = hostView
+                else if (download && download.view)
+                    record.originatingView = download.view
+                if (hostView && hostView.offTheRecord !== undefined)
+                    record.offTheRecord = !!hostView.offTheRecord
+                record.terminalReached.connect(() => {
+                    if (!viewHasNonTerminalDownloads(record.originatingView))
+                        viewDownloadsCleared(record.originatingView)
+                })
+                downloadModel = downloadModel.concat([record])
+                return record
             }
-            function getDownload(index) {
-                return downloadModel.downloads[index]
+            function viewHasNonTerminalDownloads(view) {
+                if (!view)
+                    return false
+                for (let i = 0; i < downloadModel.length; ++i) {
+                    const record = downloadModel[i]
+                    if (!record || record.originatingView !== view)
+                        continue
+                    if (record.isTerminalState) {
+                        if (!record.isTerminalState(record.state))
+                            return true
+                    } else if (!record.isTerminal) {
+                        return true
+                    }
+                }
+                return false
             }
+            signal viewDownloadsCleared(var view)
+            function resolveDownloadTarget(suggestedFileName) {
+                const name = suggestedFileName || "download.bin"
+                return downloadsDirectory + "/" + name
+            }
+            function acceptLiveDownload(download, record) {
+                const target = resolveDownloadTarget(
+                    download.suggestedFileName || download.downloadFileName || "download.bin")
+                const slash = target.lastIndexOf("/")
+                if (record) {
+                    record.downloadDirectory = target.substring(0, slash)
+                    record.fileName = target.substring(slash + 1)
+                }
+                if (download.downloadDirectory !== undefined) {
+                    download.downloadDirectory = target.substring(0, slash)
+                    download.downloadFileName = target.substring(slash + 1)
+                    download.accept()
+                } else {
+                    download.accept(target)
+                }
+                return target
+            }
+            // Record-vocabulary surface the shared Record menu binds against (ticket 09).
+            function refreshMissingFiles() {}
+            function canShareFile(record) {
+                return !!record && !record.missingFile && !!record.targetPath
+            }
+            function canShareUrl(record) {
+                return !!record && !!record.url && String(record.url).length > 0
+            }
+            function canShowInFolder(record) {
+                return canShareFile(record)
+            }
+            function canRetryFromMenu(record) { return false }
+            function canRetryFromTap(record) { return false }
+            function openRecord(record) {}
+            function openDirectoryForRecord(record) {}
         }
         browserRootStore: BrowserStores.BrowserRootStore {
             property var urlENSDictionary: ({})
@@ -175,7 +253,6 @@ SplitView {
             property bool autoLoadIconsForPage: true
             property bool touchIconsEnabled: browserLayout.isMobile
             property bool webRTCPublicInterfacesOnly
-            property bool pdfViewerEnabled: true
             property bool focusOnNavigationEnabled: true
         }
 

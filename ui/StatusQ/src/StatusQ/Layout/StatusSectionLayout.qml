@@ -113,6 +113,13 @@ LayoutChooser {
     */
     property bool showFooter: true
     /*!
+        \qmlproperty real StatusSectionLayout::footerSpacing
+        This property sets the gap between the center panel and the footer.
+        Only applied in landscape; the portrait layout stacks them with no gap.
+        Default value is Theme.halfPadding.
+    */
+    property real footerSpacing: Theme.halfPadding
+    /*!
         \qmlproperty real StatusSectionLayout::headerPadding
         This property sets the padding for the header component
         Default value is Theme.halfPadding.
@@ -264,6 +271,7 @@ LayoutChooser {
         showHeader: root.showHeader
         headerPadding: root.headerPadding
         showFooter: root.showFooter
+        footerSpacing: root.footerSpacing
         backButtonName: root.backButtonName
         headerContent: root.headerContent
         backgroundColor: root.backgroundColor

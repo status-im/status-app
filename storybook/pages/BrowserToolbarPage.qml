@@ -46,7 +46,6 @@ SplitView {
                 Layout.preferredHeight: 50
 
                 isMobile: ctrlIsMobile.checked
-                currentTabIsDownloads: false
                 url: "https://status.app"
                 openTabsCount: 24
                 currentTabIncognito: inConginto.checked
@@ -100,9 +99,6 @@ SplitView {
                 onGoIncognito: function(checked) {
                     logs.logEvent("browser::goIncognito; checked: " + checked)
                 }
-                onRequestDownloadsView: {
-                    logs.logEvent("browser::requestDownloadsView")
-                }
             }
 
             BrowserPortraitToolbar {
@@ -111,7 +107,6 @@ SplitView {
                 Layout.alignment: Qt.AlignHCenter
 
                 isMobile: ctrlIsMobile.checked
-                currentTabIsDownloads: false
                 openTabsCount: 24
                 currentTabIncognito: inConginto.checked
                 currentTabIsBookmark: false
@@ -163,9 +158,6 @@ SplitView {
                 }
                 onGoIncognito: function(checked) {
                     logs.logEvent("browser::goIncognito; checked: " + checked)
-                }
-                onRequestDownloadsView: {
-                    logs.logEvent("browser::requestDownloadsView")
                 }
             }
         }

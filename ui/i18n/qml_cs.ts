@@ -2544,10 +2544,6 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation type="unfinished">Peněženka</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation type="unfinished">Stažené soubory</translation>
-    </message>
-    <message>
         <source>Open Tabs view</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2738,13 +2734,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <message>
         <source>Zoom</source>
         <translation>Lupa</translation>
-    </message>
-</context>
-<context>
-    <name>BrowserTabView</name>
-    <message>
-        <source>Downloads</source>
-        <translation type="unfinished">Stažené soubory</translation>
     </message>
 </context>
 <context>
@@ -6268,51 +6257,13 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
-    <name>DownloadBar</name>
-    <message>
-        <source>Cancelled</source>
-        <translation>Zrušeno</translation>
-    </message>
-    <message>
-        <source>Paused</source>
-        <translation>Pozastaveno</translation>
-    </message>
-    <message>
-        <source>Show All</source>
-        <translation>Zobrazit vše</translation>
-    </message>
-</context>
-<context>
-    <name>DownloadMenu</name>
-    <message>
-        <source>Open</source>
-        <translation>Otevřít</translation>
-    </message>
-    <message>
-        <source>Show in folder</source>
-        <translation>Zobrazit ve složce</translation>
-    </message>
-    <message>
-        <source>Pause</source>
-        <translation>Pozastavit</translation>
-    </message>
-    <message>
-        <source>Resume</source>
-        <translation>Obnovit</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Zrušit</translation>
-    </message>
-</context>
-<context>
     <name>DownloadPage</name>
     <message>
         <source>Thanks for using Status</source>
         <translation>Děkujeme, že používáte Status</translation>
     </message>
     <message>
-        <source>You&apos;re curently using version %1 of Status.</source>
+        <source>You&apos;re currently using version %1 of Status.</source>
         <translation>Právě používáte verzi %1 aplikace Status.</translation>
     </message>
     <message>
@@ -6388,21 +6339,6 @@ key pair. Keycard will be required for signing</source>
     <message>
         <source>Dismiss</source>
         <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>DownloadView</name>
-    <message>
-        <source>Cancelled</source>
-        <translation>Zrušeno</translation>
-    </message>
-    <message>
-        <source>Paused</source>
-        <translation>Pozastaveno</translation>
-    </message>
-    <message>
-        <source>Downloaded files will appear here.</source>
-        <translation>Stažené soubory se zobrazí zde.</translation>
     </message>
 </context>
 <context>

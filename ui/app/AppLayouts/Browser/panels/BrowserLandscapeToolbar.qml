@@ -123,17 +123,6 @@ BrowserToolbarBase {
         }
 
         LandscapeToolbarButton {
-            visible: !root.isMobile
-            checkable: true
-            checked: root.currentTabIsDownloads
-            interactive: !checked
-            incognitoMode: root.currentTabIncognito
-            icon.name: "downloads"
-            tooltip.text: qsTr("Downloads")
-            onClicked: root.requestDownloadsView()
-        }
-
-        LandscapeToolbarButton {
             incognitoMode: root.currentTabIncognito
             icon.name: "open-tabs"
             tooltip.text: qsTr("Open Tabs view")

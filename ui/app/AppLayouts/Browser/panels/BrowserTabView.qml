@@ -40,11 +40,6 @@ FocusScope {
         }
     }
 
-    function createDownloadTab() {
-        var newTabButton = tabButtonComponent.createObject(tabBar, {tabTitle: qsTr("Downloads")})
-        tabBar.addItem(newTabButton);
-    }
-
     function removeTab(index) {
         tabBar.takeItem(index).destroy()
     }
@@ -141,7 +136,6 @@ FocusScope {
 
             readonly property var webView: root.fnGetWebView(tabButton.TabBar.index)
             readonly property bool incognito: webView?.offTheRecord ?? false
-            readonly property bool isDownloadView: webView?.isDownloadView ?? false
 
             readonly property string tabTitle: SQUtils.StringUtils.escapeHtml(
                 root.savedSessionContext.displayTitle(webView, isStartPage)
@@ -201,7 +195,7 @@ FocusScope {
                     icon.name: "close"
                     icon.color: hovered ? Theme.palette.directColor1 : Theme.palette.baseColor1
                     radius: width/2
-                    opacity: root.isMobile || tabButton.hovered || tabButton.isDownloadView ? 1 : 0
+                    opacity: root.isMobile || tabButton.hovered ? 1 : 0
                     onClicked: root.removeView(tabButton.TabBar.index)
                 }
 

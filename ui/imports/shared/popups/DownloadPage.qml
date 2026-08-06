@@ -53,7 +53,7 @@ Rectangle {
 
     StatusBaseText {
         id: currentVersionText
-        text: qsTr("You're curently using version %1 of Status.").arg(root.currentVersion)
+        text: qsTr("You're currently using version %1 of Status.").arg(root.currentVersion)
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: title.bottom
         anchors.topMargin: 32
