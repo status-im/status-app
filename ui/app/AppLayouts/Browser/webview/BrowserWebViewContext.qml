@@ -301,7 +301,6 @@ QtObject {
             webChannel: bridge.channel
 
             bookmarksStore: root.bookmarksStore
-            downloadsStore: root.downloadsStore
             profileManager: root.profileManager
             enableJsLogs: root.isDebugEnabled
             localAccountSensitiveSettings: root.browserSettings

@@ -158,6 +158,7 @@ add_library(StatusQ ${LIB_TYPE}
         ${STATUSQ_QRC_COMPILED}
         ${STATUSQ_TESTCONFIG_RCC}
         include/StatusQ/audioutils.h
+        include/StatusQ/browserbackendcapabilities.h
         include/StatusQ/chatinputhighlighter.h
         include/StatusQ/clipboardutils.h
         include/StatusQ/constantrole.h
@@ -200,6 +201,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/urlutils.h
         include/StatusQ/statuslayoutstate.h
         src/audioutils.cpp
+        src/browserbackendcapabilities.cpp
         src/chatinputhighlighter.cpp
         src/clipboardutils.cpp
         src/constantrole.cpp
@@ -335,7 +337,7 @@ if(IOS OR ANDROID OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
       MobileWebView
 
       GIT_REPOSITORY https://github.com/status-im/mobilewebview.git
-      GIT_TAG 92a4c62212702048715c69a85c82fd87fab47666
+      GIT_TAG c5d8232b61a4329737048d5821c9396bd3f5d350
       SOURCE_SUBDIR mobilewebview
     )
     FetchContent_MakeAvailable(MobileWebView)

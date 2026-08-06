@@ -58,7 +58,8 @@ TARGET := $(BIN_PATH)/$(TARGET_NAME)
 # src files & obj files
 STATUS_DESKTOP_NIM_FILES := $(shell find $(STATUS_DESKTOP)/src -type f \( -iname '*.nim' -o -iname '*.nims' \))
 STATUS_DESKTOP_UI_FILES := $(shell find $(STATUS_DESKTOP)/ui -type f \( -iname 'qmldir' -o -iname '*.qml' -o -iname '*.qrc' \) -not -iname 'resources.qrc' -not -path '$(STATUS_DESKTOP)/ui/StatusQ/*')
-STATUS_Q_FILES := $(shell find $(STATUSQ) -type f \( -iname '*.cpp' -o -iname '*.h' -o -iname '*.mm' \) -not -iname '*.qrc' -not -iname '*.qml')
+# Include CMakeLists.txt (mobilewebview pin) and prune build/ (generated sources).
+STATUS_Q_FILES := $(shell find $(STATUSQ) \( -path '$(STATUSQ)/build' \) -prune -o -type f \( -iname '*.cpp' -o -iname '*.h' -o -iname '*.mm' -o -iname 'CMakeLists.txt' \) -print)
 STATUS_Q_UI_FILES := $(shell find $(STATUSQ) -type f \( -iname '*.qml' -o -iname '*.qrc' \))
 STATUS_GO_FILES := $(shell find $(STATUS_GO) -type f \( -iname '*.go' \))
 OPENSSL_FILES := $(shell find $(OPENSSL) -type f \( -iname '*.c' -o -iname '*.h' \))

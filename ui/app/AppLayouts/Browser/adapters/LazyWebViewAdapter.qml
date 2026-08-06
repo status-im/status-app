@@ -31,6 +31,9 @@ AbstractWebView {
     property string title: ""
     property url icon: ""
     property bool htmlPageLoaded: false
+    // A committed page load ends "pristine" for good — from here the Tab shows a
+    // page of its own, so no Download may close it.
+    onHtmlPageLoadedChanged: if (htmlPageLoaded) root.pristinePopup = false
     readonly property bool loading: loader.item ? loader.item.loading : false
     readonly property bool canGoBack: loader.item ? loader.item.canGoBack : false
     readonly property bool canGoForward: loader.item ? loader.item.canGoForward : false
@@ -64,11 +67,9 @@ AbstractWebView {
             profileParams:                 Qt.binding(() => root.profileParams),
             uid:                           Qt.binding(() => root.uid),
             bookmarksStore:                Qt.binding(() => root.bookmarksStore),
-            downloadsStore:                Qt.binding(() => root.downloadsStore),
             webChannel:                    Qt.binding(() => root.webChannel),
             enableJsLogs:                  Qt.binding(() => root.enableJsLogs),
             localAccountSensitiveSettings: Qt.binding(() => root.localAccountSensitiveSettings),
-            isDownloadView:                Qt.binding(() => root.isDownloadView),
             devToolsEnabled:               Qt.binding(() => root.devToolsEnabled),
             freeze:                        Qt.binding(() => root.freeze),
         }
@@ -132,6 +133,15 @@ AbstractWebView {
             loader.item.detachView()
     }
 
+    /// Host-side Retry — ensure the Backend is loaded, then forward.
+    function downloadUrl(url, suggestedFileName) {
+        ensureLoaded()
+        if (loader.item && loader.item.downloadUrl)
+            loader.item.downloadUrl(url, suggestedFileName || "")
+        else
+            console.warn("LazyWebViewAdapter: downloadUrl unavailable")
+    }
+
     onUrlChanged: {
         if (loader.item && loader.item.url !== url)
             loader.item.url = url
@@ -164,6 +174,9 @@ AbstractWebView {
         function onLinkHovered(hoveredUrl)             { root.linkHovered(hoveredUrl) }
         function onWindowCloseRequested()              { root.windowCloseRequested() }
         function onDownloadRequested(download)         { root.downloadRequested(download) }
+        function onLinkLongPressed(linkUrl, imageUrl, position) {
+            root.linkLongPressed(linkUrl, imageUrl, position)
+        }
         function onNewWindowRequested(makeCurrent, requestedUrl, callback) {
             root.newWindowRequested(makeCurrent, requestedUrl, callback)
         }

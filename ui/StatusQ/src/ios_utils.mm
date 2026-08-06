@@ -843,6 +843,26 @@ static void presentShareSheetWithRetry(UIActivityViewController* activityVC, NSI
     [vc presentViewController:activityVC animated:YES completion:nil];
 }
 
+/// Share extensions cannot open sandbox file URLs; NSItemProvider streams a
+/// file representation the system can hand off.
+static NSItemProvider* itemProviderForPath(NSString* nsPath) {
+    NSURL* url = [NSURL fileURLWithPath:nsPath];
+    if (!url) return nil;
+    NSItemProvider* provider = [[NSItemProvider alloc] initWithContentsOfURL:url];
+    if (!provider) return nil;
+    provider.suggestedName = url.lastPathComponent;
+    return provider;
+}
+
+static void presentShareSheetForProviders(NSArray<NSItemProvider*>* providers, NSString* logLabel) {
+    if (providers.count == 0) return;
+    UIActivityItemsConfiguration* config =
+        [UIActivityItemsConfiguration activityItemsConfigurationWithItemProviders:providers];
+    UIActivityViewController* activityVC =
+        [[UIActivityViewController alloc] initWithActivityItemsConfiguration:config];
+    presentShareSheetWithRetry(activityVC, 0, logLabel);
+}
+
 void presentIOSShareSheetForFilePath(const QString& filePath) {
     @autoreleasepool {
         if (filePath.isEmpty()) return;
@@ -851,13 +871,9 @@ void presentIOSShareSheetForFilePath(const QString& filePath) {
         dispatch_async(dispatch_get_main_queue(), ^{
             @autoreleasepool {
                 @try {
-                    NSString* nsPath = pathCopy.toNSString();
-                    NSURL* url = [NSURL fileURLWithPath:nsPath];
-                    if (!url) return;
-
-                    UIActivityViewController* activityVC =
-                        [[UIActivityViewController alloc] initWithActivityItems:@[url] applicationActivities:nil];
-                    presentShareSheetWithRetry(activityVC, 0, @"single");
+                    NSItemProvider* provider = itemProviderForPath(pathCopy.toNSString());
+                    if (!provider) return;
+                    presentShareSheetForProviders(@[provider], @"single");
                 }
                 @catch (NSException* e) {
                     NSLog(@"[iOS Share] Exception presenting share sheet (single): %@ %@", e.name, e.reason);
@@ -875,17 +891,14 @@ void presentIOSShareSheetForFilePaths(const QStringList& filePaths) {
         dispatch_async(dispatch_get_main_queue(), ^{
             @autoreleasepool {
                 @try {
-                    NSMutableArray* items = [NSMutableArray arrayWithCapacity:(NSUInteger)pathsCopy.size()];
+                    NSMutableArray<NSItemProvider*>* items =
+                        [NSMutableArray arrayWithCapacity:(NSUInteger)pathsCopy.size()];
                     for (const auto& p : pathsCopy) {
                         if (p.isEmpty()) continue;
-                        NSURL* url = [NSURL fileURLWithPath:p.toNSString()];
-                        if (url) [items addObject:url];
+                        NSItemProvider* provider = itemProviderForPath(p.toNSString());
+                        if (provider) [items addObject:provider];
                     }
-                    if (items.count == 0) return;
-
-                    UIActivityViewController* activityVC =
-                        [[UIActivityViewController alloc] initWithActivityItems:items applicationActivities:nil];
-                    presentShareSheetWithRetry(activityVC, 0, @"multi");
+                    presentShareSheetForProviders(items, @"multi");
                 }
                 @catch (NSException* e) {
                     NSLog(@"[iOS Share] Exception presenting share sheet (multi): %@ %@", e.name, e.reason);

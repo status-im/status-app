@@ -146,6 +146,22 @@ public class StatusQtActivity extends QtActivity {
         }
     }
 
+    /**
+     * Opens the system Downloads UI (Show in folder for browser downloads).
+     * Called from Qt via JNI. Standard-mode completed files are registered by
+     * MobileWebView; Incognito downloads are not (ADR 0006).
+     */
+    public static void openDownloadsUi() {
+        if (sInstance == null) return;
+        try {
+            Intent intent = new Intent(android.app.DownloadManager.ACTION_VIEW_DOWNLOADS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            sInstance.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            Log.e(TAG, "openDownloadsUi failed", e);
+        }
+    }
+
     // Opens the system Accessibility Settings screen. Called from Qt via JNI.
     public static void openAccessibilitySettings() {
         if (sInstance == null) return;

@@ -48,6 +48,16 @@ AbstractWebView {
     function stop() { webView.stop() }
     function forceReload() { webView.triggerWebAction(WebEngineView.ReloadAndBypassCache) }
 
+    /// Host-side Retry: force Download via BrowserProfileUtils (QWebEnginePage::download).
+    /// Navigating renderable media (video/audio) would play in the tab instead.
+    function downloadUrl(url, suggestedFileName) {
+        if (!root.profile) {
+            console.warn("WebViewAdapter: downloadUrl requires a profile")
+            return
+        }
+        BrowserProfileUtils.downloadUrl(root.profile, webView, url, suggestedFileName || "")
+    }
+
     // Native per-site cookies, then site_utils.js for current-origin DOM + reload.
     function clearSiteData() {
         if (root.clearing || !root.profile)
@@ -163,12 +173,15 @@ AbstractWebView {
         settings.autoLoadIconsForPage: root.localAccountSensitiveSettings.autoLoadIconsForPage
         settings.touchIconsEnabled: root.localAccountSensitiveSettings.touchIconsEnabled
         settings.webRTCPublicInterfacesOnly: root.localAccountSensitiveSettings.webRTCPublicInterfacesOnly
-        settings.pdfViewerEnabled: root.localAccountSensitiveSettings.pdfViewerEnabled
+        settings.pdfViewerEnabled: true
         settings.focusOnNavigationEnabled: true
         settings.forceDarkMode: Application.styleHints.colorScheme === Qt.ColorScheme.Dark
 
         webChannel: root.webChannel
-        profile: root.profile
+        // Never null: a view with no profile aborts the render path. ProfileManager
+        // yields null only while a previous Browser still holds the data path, and
+        // the default profile keeps this view renderable until it is torn down.
+        profile: root.profile ?? WebEngine.defaultProfile
 
         onQuotaRequested: function(request) {
             if (request.requestedSize <= 5 * 1024 * 1024)
@@ -214,12 +227,6 @@ AbstractWebView {
             if (progress >= 10)
                 webView.htmlPageLoaded = true
         }
-        onNavigationRequested: function(request) {
-            if (request.url.toString().startsWith("file:/")) {
-                console.log("Local file browsing is disabled")
-                request.reject()
-            }
-        }
         onJavaScriptConsoleMessage: function(level, message, lineNumber, sourceID) {
             const isOurScript = ScriptUtils.isOurInjectedScript(sourceID, root.profile)
             if (isOurScript || root.enableJsLogs)
@@ -254,6 +261,16 @@ AbstractWebView {
                 return
             // For viewless downloads, only visible adapter forwards to avoid fan-out.
             if (!download?.view && !root.visible)
+                return
+            root.downloadRequested(download)
+        }
+    }
+
+    // Retry downloads start on a helper Core profile (not this Quick profile).
+    Connections {
+        target: BrowserProfileUtils
+        function onDownloadRequested(webEngineView, download) {
+            if (webEngineView !== webView)
                 return
             root.downloadRequested(download)
         }

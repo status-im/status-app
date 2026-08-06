@@ -5,6 +5,10 @@
 #include <QObject>
 #include <QUrl>
 
+class QWebEngineDownloadRequest;
+class QWebEnginePage;
+class QWebEngineUrlRequestInterceptor;
+
 // Desktop-only helper exposing WebEngineProfile clearing that the QML
 // WebEngineProfile type does not expose (cookie store). Registered only when
 // StatusQ is built with Qt WebEngine (STATUSQ_HAS_QTWEBENGINE).
@@ -28,6 +32,13 @@ public:
     // are not indexed until they are (re)set in the current session.
     Q_INVOKABLE void trackProfile(QObject *profile);
 
+    // Install the local-browsing policy on `profile`: file:// navigation is
+    // blocked except under the downloads location and the generated player-page
+    // directory (ADR 0006 §8). Call once per profile at creation, before the
+    // first navigation. Also (re)installs on the default profile, which backs
+    // views whose storage profile could not be created.
+    Q_INVOKABLE void installLocalUrlPolicy(QObject *profile);
+
     // Clears profile-wide browsing data: HTTP cache and all cookies.
     // `profile` must be a QML WebEngineProfile (QQuickWebEngineProfile);
     // no-op with a warning otherwise. Invokes `callback` when clearHttpCache
@@ -43,11 +54,35 @@ public:
     Q_INVOKABLE void clearSiteData(QObject *profile, const QUrl &siteUrl,
                                    QJSValue callback = {});
 
+    // Force a Download via QWebEnginePage::download (QML WebEngineView has no
+    // page.download). Used for Retry — navigating renderable media (video/audio)
+    // would play in the tab instead of downloading. `webEngineView` is the
+    // initiating view so the matching adapter can forward downloadRequested.
+    // `profile` must be the view's QML WebEngineProfile.
+    Q_INVOKABLE void downloadUrl(QObject *profile, QObject *webEngineView,
+                                 const QUrl &url,
+                                 const QString &suggestedFileName = {});
+
+signals:
+    // Emitted for downloads started by downloadUrl(). `webEngineView` is the
+    // initiator passed to downloadUrl (null if it cannot be identified);
+    // `download` is a QWebEngineDownloadRequest.
+    void downloadRequested(QObject *webEngineView, QObject *download);
+
 private:
     struct TrackedStore;
+    struct DownloadHelper;
+
+    // Stateless policy shared by every profile; owned by this singleton.
+    QWebEngineUrlRequestInterceptor *m_localUrlPolicy = nullptr;
 
     TrackedStore *trackedStoreFor(QObject *profile) const;
+    DownloadHelper *helperFor(QObject *profile);
+    void retirePageWhenFinished(DownloadHelper *helper, QWebEnginePage *page,
+                                QWebEngineDownloadRequest *download);
 
     // Keyed by cookie store pointer; owned.
     QHash<quintptr, TrackedStore *> m_tracked;
+    // Keyed by Quick profile pointer; owned helpers (core profile + pages).
+    QHash<quintptr, DownloadHelper *> m_downloadHelpers;
 };

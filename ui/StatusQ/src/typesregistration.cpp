@@ -1,4 +1,5 @@
 #include "StatusQ/audioutils.h"
+#include "StatusQ/browserbackendcapabilities.h"
 #include "StatusQ/clipboardutils.h"
 #include "StatusQ/constantrole.h"
 #include "StatusQ/fastexpressionfilter.h"
@@ -174,6 +175,11 @@ void registerStatusQTypes() {
 #if defined(STATUSQ_HAS_MOBILEWEBVIEW)
     qmlRegisterType<MobileWebViewBackend>("StatusQ.CustomWebView", 1, 0, "MobileWebViewBackend");
 #endif
+
+    qmlRegisterSingletonType<BrowserBackendCapabilities>(
+        "StatusQ.Internal", 0, 1, "BrowserBackendCapabilities", [](QQmlEngine*, QJSEngine*) {
+            return new BrowserBackendCapabilities;
+        });
 
 #if defined(STATUSQ_HAS_QTWEBENGINE)
     qmlRegisterSingletonType<BrowserProfileUtils>(

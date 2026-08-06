@@ -6,14 +6,12 @@ Item {
     id: root
 
     required property BrowserStores.BookmarksStore bookmarksStore
-    required property BrowserStores.DownloadsStore downloadsStore
     required property var localAccountSensitiveSettings
 
     required property var webChannel
     required property ProfileParams profileParams
     required property bool devToolsEnabled
     required property bool enableJsLogs
-    required property bool isDownloadView
 
     readonly property bool offTheRecord: profileParams.offTheRecord
 
@@ -49,6 +47,14 @@ Item {
     // Mobile-only: pauses native webview updates (no-op on desktop)
     property bool freeze: false
 
+    // Tab strip gone but Web View kept alive for non-terminal Downloads (ADR 0006 §6).
+    // Retained Views take no new Downloads or retries.
+    property bool retained: false
+
+    // Opened by a page (target=_blank / window.open) and never committed a page of
+    // its own — the one fact that makes a Tab download-only (ADR 0006 §6).
+    property bool pristinePopup: false
+
     readonly property int devToolsHeight: 400
 
     readonly property int findBackward: 1
@@ -73,13 +79,15 @@ Item {
     }
 
     // === Download States (constants for cross-platform compatibility) ===
-    // These map to WebEngineDownloadRequest.DownloadState enum on desktop
+    // WebEngine-shaped numbering (0–4); Paused = 5 matches MobileWebViewDownload.
+    // Both adapters map Backend downloads into this seam — UI never branches on Backend.
     enum DownloadState {
         DownloadRequested = 0,
         DownloadInProgress = 1,
         DownloadCompleted = 2,
         DownloadCancelled = 3,
-        DownloadInterrupted = 4
+        DownloadInterrupted = 4,
+        DownloadPaused = 5
     }
 
     // === JavaScript Dialog Types (constants for cross-platform compatibility) ===
@@ -94,6 +102,9 @@ Item {
     signal linkHovered(string hoveredUrl)
     signal windowCloseRequested()
     signal downloadRequested(var download)
+    /// Long-press on a link/image (mobile Backends; WebEngine has its own menu).
+    /// Either URL may be empty, never both. position is view-local logical px.
+    signal linkLongPressed(url linkUrl, url imageUrl, point position)
     signal devToolsToggled(bool enabled)
 
     // Signals to be handled at Layout level
@@ -135,4 +146,10 @@ Item {
     function detachView() {}
 
     function triggerWebAction(action) { console.warn("AbstractWebView: triggerWebAction not implemented") }
+
+    /// Host-side re-issue of a Download (Retry). MobileWebView: backend.downloadUrl;
+    /// WebEngine: BrowserProfileUtils → QWebEnginePage::download (not navigate).
+    function downloadUrl(url, suggestedFileName) {
+        console.warn("AbstractWebView: downloadUrl not implemented")
+    }
 }

@@ -2,10 +2,18 @@
 
 #include <QtWebEngineQuick/qquickwebengineprofile.h>
 #include <QtWebEngineCore/QWebEngineCookieStore>
+#include <QtWebEngineCore/QWebEngineDownloadRequest>
+#include <QtWebEngineCore/QWebEnginePage>
+#include <QtWebEngineCore/QWebEngineProfile>
+#include <QtWebEngineCore/QWebEngineUrlRequestInfo>
+#include <QtWebEngineCore/QWebEngineUrlRequestInterceptor>
 
+#include <QDir>
+#include <QFileInfo>
 #include <QNetworkCookie>
 #include <QPointer>
 #include <QSet>
+#include <QStandardPaths>
 #include <QTimer>
 
 namespace {
@@ -167,6 +175,93 @@ private:
     bool m_finished = false;
 };
 
+// Keep in sync with BrowserDownloadOpenContext.mediaPlayerDirectory (QML).
+constexpr char kMediaPlayerDirName[] = "status-browser-player";
+
+// Resolve symlinks so the two allowed roots and the requested path are compared
+// in the same form (macOS TempLocation is /var/... -> /private/var/...).
+// canonicalFilePath() is empty for paths that do not exist, hence the fallback.
+QString canonicalPath(const QString &path)
+{
+    if (path.isEmpty())
+        return {};
+    const QString canonical = QFileInfo(path).canonicalFilePath();
+    return canonical.isEmpty() ? QDir::cleanPath(QDir(path).absolutePath()) : canonical;
+}
+
+// Canonicalize the (existing) parent and append the leaf, so the root resolves
+// even before the leaf is created — the player directory is written lazily, and
+// canonicalizing it while absent would leave /var/... unresolved and then fail
+// to match the /private/var/... form the same request arrives in later.
+QString canonicalSubDir(const QString &parent, const QString &leaf)
+{
+    const QString root = canonicalPath(parent);
+    return root.isEmpty() ? QString() : root + QLatin1Char('/') + leaf;
+}
+
+// The Backend's local-browsing policy: file:// navigation is blocked except
+// inside the two directories the browser itself writes — the platform downloads
+// location (Download Targets) and the temp directory holding generated player
+// pages (ADR 0006 §8). Owned here rather than injected from QML so both Backends
+// keep the policy library-side; mobilewebview has the equivalent guard.
+//
+// Scope: navigations only (main frame + subframes), matching what the QML
+// navigationRequested handler used to cover. Subresources are deliberately left
+// alone so a player page can load the media it points at; Chromium already
+// forbids web origins from reaching file:// subresources.
+//
+// Stateless after construction (two const roots computed on the UI thread), so
+// it is safe whichever thread WebEngine calls interceptRequest on.
+class LocalUrlPolicyInterceptor final : public QWebEngineUrlRequestInterceptor
+{
+public:
+    explicit LocalUrlPolicyInterceptor(QObject *parent = nullptr)
+        : QWebEngineUrlRequestInterceptor(parent)
+        , m_downloadsDir(canonicalPath(
+              QStandardPaths::writableLocation(QStandardPaths::DownloadLocation)))
+        , m_playerDir(canonicalSubDir(
+              QStandardPaths::writableLocation(QStandardPaths::TempLocation),
+              QLatin1String(kMediaPlayerDirName)))
+    {
+    }
+
+    void interceptRequest(QWebEngineUrlRequestInfo &info) override
+    {
+        const QUrl url = info.requestUrl();
+        if (!url.isLocalFile())
+            return;
+
+        const auto type = info.resourceType();
+        if (type != QWebEngineUrlRequestInfo::ResourceTypeMainFrame
+            && type != QWebEngineUrlRequestInfo::ResourceTypeSubFrame)
+            return;
+
+        if (isAllowed(url.toLocalFile()))
+            return;
+
+        qWarning("BrowserProfileUtils: local file browsing is disabled");
+        info.block(true);
+    }
+
+private:
+    bool isAllowed(const QString &localFile) const
+    {
+        const QString path = canonicalPath(localFile);
+        if (path.isEmpty())
+            return false;
+        return isUnder(path, m_downloadsDir) || isUnder(path, m_playerDir);
+    }
+
+    static bool isUnder(const QString &path, const QString &dir)
+    {
+        // The trailing separator keeps "/home/user/Downloads-evil" out.
+        return !dir.isEmpty() && path.startsWith(dir + QLatin1Char('/'));
+    }
+
+    const QString m_downloadsDir;
+    const QString m_playerDir;
+};
+
 } // namespace
 
 struct BrowserProfileUtils::TrackedStore
@@ -178,6 +273,31 @@ struct BrowserProfileUtils::TrackedStore
     QSet<QByteArray> cookieNames;
     QMetaObject::Connection addedConn;
     QMetaObject::Connection destroyedConn;
+};
+
+// QML WebEngineView has no page.download(); Core QWebEnginePages on an OTR
+// helper profile force downloadRequested for Retry (renderable media would
+// otherwise navigate/play). Helper does not share the tab's live cookies.
+struct BrowserProfileUtils::DownloadHelper
+{
+    // Owns the pages in pageViews and the coreProfile they live on; pages must
+    // go first so their retire connections die before the helper does.
+    ~DownloadHelper()
+    {
+        for (auto it = pageViews.cbegin(); it != pageViews.cend(); ++it)
+            delete it.key();
+        pageViews.clear();
+        delete coreProfile;
+    }
+
+    QPointer<QQuickWebEngineProfile> quickProfile;
+    QWebEngineProfile *coreProfile = nullptr;
+    QMetaObject::Connection downloadConn;
+    QMetaObject::Connection destroyedConn;
+
+    // Live transient download pages (one per downloadUrl() call) mapped to the
+    // initiating view; QPointer so a destroyed view degrades to null.
+    QHash<QWebEnginePage *, QPointer<QObject>> pageViews;
 };
 
 BrowserProfileUtils::BrowserProfileUtils(QObject *parent)
@@ -195,6 +315,35 @@ BrowserProfileUtils::~BrowserProfileUtils()
         delete tracked;
     }
     m_tracked.clear();
+
+    for (DownloadHelper *helper : std::as_const(m_downloadHelpers)) {
+        if (helper->downloadConn)
+            disconnect(helper->downloadConn);
+        if (helper->destroyedConn)
+            disconnect(helper->destroyedConn);
+        delete helper;
+    }
+    m_downloadHelpers.clear();
+}
+
+void BrowserProfileUtils::installLocalUrlPolicy(QObject *profile)
+{
+    auto *webProfile = qobject_cast<QQuickWebEngineProfile *>(profile);
+    if (!webProfile) {
+        qWarning("BrowserProfileUtils::installLocalUrlPolicy: expected a WebEngineProfile");
+        return;
+    }
+
+    if (!m_localUrlPolicy)
+        m_localUrlPolicy = new LocalUrlPolicyInterceptor(this);
+
+    webProfile->setUrlRequestInterceptor(m_localUrlPolicy);
+
+    // A storage profile can fail to instantiate (one live profile per data path),
+    // leaving the view on the default profile — it must carry the policy too.
+    if (auto *fallback = QQuickWebEngineProfile::defaultProfile();
+        fallback && fallback != webProfile)
+        fallback->setUrlRequestInterceptor(m_localUrlPolicy);
 }
 
 BrowserProfileUtils::TrackedStore *BrowserProfileUtils::trackedStoreFor(QObject *profile) const
@@ -305,4 +454,105 @@ void BrowserProfileUtils::clearSiteData(QObject *profile, const QUrl &siteUrl,
         std::move(callback),
         this);
     op->start();
+}
+
+BrowserProfileUtils::DownloadHelper *BrowserProfileUtils::helperFor(QObject *profile)
+{
+    auto *quickProfile = qobject_cast<QQuickWebEngineProfile *>(profile);
+    if (!quickProfile)
+        return nullptr;
+
+    const quintptr key = reinterpret_cast<quintptr>(quickProfile);
+    if (DownloadHelper *existing = m_downloadHelpers.value(key, nullptr))
+        return existing;
+
+    auto *helper = new DownloadHelper;
+    helper->quickProfile = quickProfile;
+
+    // Always OTR: a named Core profile with the same storageName as the Quick
+    // profile risks opening the same on-disk cookie DB twice. Public API cannot
+    // attach a QWebEnginePage to the Quick profile's ProfileAdapter, so Retry
+    // downloads do not see the tab's live cookies (OK for public CDN media;
+    // authenticated Retry may need a revisit).
+    helper->coreProfile = new QWebEngineProfile(this);
+
+    helper->downloadConn = connect(
+        helper->coreProfile,
+        &QWebEngineProfile::downloadRequested,
+        this,
+        [this, helper](QWebEngineDownloadRequest *download) {
+            if (!download)
+                return;
+            // Only downloadUrl() pages live on this profile, so an unknown
+            // page() means the request has no identifiable initiator.
+            QWebEnginePage *page = download->page();
+            const auto it = helper->pageViews.constFind(page);
+            if (it == helper->pageViews.cend()) {
+                qWarning("BrowserProfileUtils: downloadRequested from an unknown page");
+                emit downloadRequested(nullptr, download);
+                return;
+            }
+            retirePageWhenFinished(helper, page, download);
+            emit downloadRequested(it.value().data(), download);
+        });
+
+    helper->destroyedConn = connect(
+        quickProfile,
+        &QObject::destroyed,
+        this,
+        [this, key]() {
+            DownloadHelper *gone = m_downloadHelpers.take(key);
+            if (!gone)
+                return;
+            if (gone->downloadConn)
+                disconnect(gone->downloadConn);
+            if (gone->destroyedConn)
+                disconnect(gone->destroyedConn);
+            delete gone;
+        });
+
+    m_downloadHelpers.insert(key, helper);
+    return helper;
+}
+
+// Whether a download outlives the page it started on is undocumented, so the
+// transient page is kept until the download finishes (or is deleted).
+void BrowserProfileUtils::retirePageWhenFinished(DownloadHelper *helper,
+                                                 QWebEnginePage *page,
+                                                 QWebEngineDownloadRequest *download)
+{
+    // Capturing `helper` raw is safe: both connections have context `page`, and
+    // ~DownloadHelper deletes its pages first, so no run can outlive the helper.
+    const auto retire = [helper, page]() {
+        if (helper->pageViews.remove(page) > 0)
+            page->deleteLater();
+    };
+    connect(download, &QWebEngineDownloadRequest::isFinishedChanged, page,
+            [download, retire]() {
+                if (download->isFinished())
+                    retire();
+            });
+    connect(download, &QObject::destroyed, page, retire);
+}
+
+void BrowserProfileUtils::downloadUrl(QObject *profile, QObject *webEngineView,
+                                      const QUrl &url,
+                                      const QString &suggestedFileName)
+{
+    if (!url.isValid()) {
+        qWarning("BrowserProfileUtils::downloadUrl: invalid url");
+        return;
+    }
+
+    DownloadHelper *helper = helperFor(profile);
+    if (!helper || !helper->coreProfile) {
+        qWarning("BrowserProfileUtils::downloadUrl: expected a WebEngineProfile");
+        return;
+    }
+
+    // One page per call: downloadRequested carries page(), so concurrent calls
+    // are matched to their initiating view by identity, never by call order.
+    auto *page = new QWebEnginePage(helper->coreProfile, this);
+    helper->pageViews.insert(page, QPointer<QObject>(webEngineView));
+    page->download(url, suggestedFileName);
 }
