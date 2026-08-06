@@ -335,7 +335,7 @@ Control {
     }
 
     function checkTextInsert() {
-        if (emojiSuggestions.visible) {
+        if (emojiSuggestions.visible && emojiSuggestions.unicode !== "") {
             d.insertEmoji(emojiSuggestions.unicode)
             return true
         }
@@ -839,12 +839,14 @@ Control {
                         // Emoji shortcode suggestions: ChatTextArea exposes enteringEmoji/emojiFilter
                         // (>= 2 chars); feed the twemoji suggestion popup off it.
                         onEmojiFilterChanged: {
-                            if (enteringEmoji) {
-                                const emojis = StatusQUtils.Emoji.getSuggestions(emojiFilter)
+                            // Only open when there are actual matches; otherwise the popup would be
+                            // visible-but-empty and hijack Enter (checkTextInsert) into deleting the
+                            // typed ":shortcode" instead of sending it.
+                            const emojis = enteringEmoji ? StatusQUtils.Emoji.getSuggestions(emojiFilter) : []
+                            if (emojis.length > 0)
                                 emojiSuggestions.openPopup(emojis, emojiFilter)
-                            } else {
+                            else
                                 emojiSuggestions.close()
-                            }
                         }
 
                         Shortcut {

@@ -373,5 +373,26 @@ Item {
             const first = plain.charCodeAt(0)
             verify(first >= 0xD800 && first <= 0xDBFF, "starts with an emoji: " + JSON.stringify(plain))
         }
+
+        // A ":" shortcode with no matching emoji must not open an empty suggestion
+        // popup. Otherwise Enter is captured as "accept emoji" and deletes the typed text; instead
+        // it should send the text as-is.
+        function test_typedEmojiShortcode_noMatchSendsTextAsIs() {
+            signalSpy.setup(controlUnderTest, "sendMessageRequested")
+
+            controlUnderTest.textInput.forceActiveFocus()
+            typeText(":zzzznotanemoji")
+            waitForRendering(controlUnderTest)
+
+            // enteringEmoji is true (>= 2 chars after ":"), but there are no matches.
+            verify(controlUnderTest.textInput.enteringEmoji)
+
+            keyClick(Qt.Key_Return) // send (NoModifier maps to send on desktop/offscreen)
+            waitForRendering(controlUnderTest)
+
+            // The text is preserved (not replaced by an empty-emoji insert) and a send was requested.
+            compare(controlUnderTest.getPlainText(), ":zzzznotanemoji")
+            compare(signalSpy.count, 1)
+        }
     }
 }
