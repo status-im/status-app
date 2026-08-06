@@ -321,6 +321,13 @@ QtObject {
         LazyWebViewAdapter {
             id: lazyView
 
+            // StackLayout never sizes a child that was added while the layout was
+            // hidden, and neither forceLayout() nor re-setting currentIndex repairs
+            // it — the view stays 0x0 and renders nothing (issue 21282). Size to the
+            // host instead of relying on the layout to do it.
+            width: root.hostStackLayout.width
+            height: root.hostStackLayout.height
+
             // On mobile, only the active tab must be visible; native WKWebView
             // subviews share the same UIKit window and ignore QML z-order,
             // so StackLayout alone cannot hide inactive tabs reliably.
