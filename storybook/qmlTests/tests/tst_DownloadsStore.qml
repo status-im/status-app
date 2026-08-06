@@ -5,6 +5,8 @@ import AppLayouts.Browser.adapters
 
 import utils
 
+import "../../../ui/app/AppLayouts/Browser/webview/DownloadFormatUtils.js" as DownloadFormatUtils
+
 /**
  * DownloadsStore seam: Download Records own list identity; a fake live Download
  * attaches for progress and can be destroyed without losing the Record.
@@ -135,11 +137,26 @@ Item {
         name: "DownloadsStore"
         when: windowShown
 
+        /// The one platform seam (DownloadsStore.platform) as a single fake object.
+        function fakePlatform(overrides) {
+            const platform = {
+                fileExists: function(path) { return false },
+                ensureDirectory: function(path) { return true },
+                sharePaths: function(paths) {},
+                shareText: function(text) {},
+                copyText: function(text) {},
+                showInFolder: function(path) {},
+                preferShareSheet: false,
+                showInFolderSupported: true
+            }
+            return Object.assign(platform, overrides || {})
+        }
+
         function createStore() {
             const component = Qt.createComponent(root.downloadsStoreUrl)
             verify(component.status === Component.Ready, component.errorString())
             const store = createTemporaryObject(component, root)
-            store.ensureDirectoryFn = function(path) { return true }
+            store.platform = fakePlatform()
             return store
         }
 
@@ -258,42 +275,42 @@ Item {
         function test_resolveDownloadTarget_usesDownloadsDirAndSuggestedName() {
             const store = createStore()
             store.downloadsDirectory = "/tmp/status-downloads"
-            store.pathExistsFn = function(path) { return false }
+            store.platform.fileExists = function(path) { return false }
 
-            compare(store.resolveDownloadTarget("report.pdf"),
+            compare(store._resolveDownloadTarget("report.pdf"),
                     "/tmp/status-downloads/report.pdf")
         }
 
         function test_resolveDownloadTarget_addsCollisionSuffixes() {
             const store = createStore()
             store.downloadsDirectory = "/tmp/status-downloads"
-            store.pathExistsFn = function(path) {
+            store.platform.fileExists = function(path) {
                 return path === "/tmp/status-downloads/report.pdf"
                     || path === "/tmp/status-downloads/report (1).pdf"
             }
 
-            compare(store.resolveDownloadTarget("report.pdf"),
+            compare(store._resolveDownloadTarget("report.pdf"),
                     "/tmp/status-downloads/report (2).pdf")
         }
 
         function test_resolveDownloadTarget_skipsTargetsClaimedByRecords() {
             const store = createStore()
             store.downloadsDirectory = "/tmp/status-downloads"
-            store.pathExistsFn = function(path) { return false }
+            store.platform.fileExists = function(path) { return false }
 
             const live = createTemporaryObject(fakeDownloadComponent, root)
             const record = store.addDownload(live)
             record.downloadDirectory = "/tmp/status-downloads"
             record.fileName = "report.pdf"
 
-            compare(store.resolveDownloadTarget("report.pdf"),
+            compare(store._resolveDownloadTarget("report.pdf"),
                     "/tmp/status-downloads/report (1).pdf")
         }
 
         function test_acceptLiveDownload_mobileShaped_passesTargetPath() {
             const store = createStore()
             store.downloadsDirectory = "/tmp/status-downloads"
-            store.pathExistsFn = function(path) { return false }
+            store.platform.fileExists = function(path) { return false }
 
             const live = createTemporaryObject(fakeMobileDownloadComponent, root)
             const record = store.addDownload(live)
@@ -308,7 +325,7 @@ Item {
         function test_acceptLiveDownload_webEngineShaped_setsDirAndAccepts() {
             const store = createStore()
             store.downloadsDirectory = "/tmp/status-downloads"
-            store.pathExistsFn = function(path) { return false }
+            store.platform.fileExists = function(path) { return false }
 
             const live = createTemporaryObject(fakeDownloadComponent, root)
             const record = store.addDownload(live)
@@ -328,7 +345,7 @@ Item {
             store.historySaveDebounceMs = 0
             store.historyCap = 200
             store.downloadsDirectory = "/tmp/status-downloads"
-            store.pathExistsFn = function(path) { return false }
+            store.platform.fileExists = function(path) { return false }
             return store
         }
 
@@ -391,7 +408,7 @@ Item {
 
             const store = createStore()
             store.preferencesStore = prefs
-            store.pathExistsFn = function(path) { return false }
+            store.platform.fileExists = function(path) { return false }
             store.restoreDownloadHistory()
 
             compare(store.downloadModel.length, 1)
@@ -479,7 +496,7 @@ Item {
 
             const store = createStore()
             store.preferencesStore = prefs
-            store.pathExistsFn = function(path) { return false }
+            store.platform.fileExists = function(path) { return false }
             store.restoreDownloadHistory()
 
             compare(store.downloadModel.length, 1)
@@ -573,7 +590,7 @@ Item {
 
         function test_missingFile_lazyProbe_setsFlagOnCompleted() {
             const store = createStore()
-            store.pathExistsFn = function(path) {
+            store.platform.fileExists = function(path) {
                 return path !== "/tmp/downloads/gone.pdf"
             }
             const live = createTemporaryObject(fakeDownloadComponent, root)
@@ -589,7 +606,7 @@ Item {
 
         function test_missingFile_notFlaggedWhileInProgress() {
             const store = createStore()
-            store.pathExistsFn = function(path) { return false }
+            store.platform.fileExists = function(path) { return false }
             const live = createTemporaryObject(fakeDownloadComponent, root)
             const record = store.addDownload(live)
             live.advance(10)
@@ -636,7 +653,7 @@ Item {
         function test_isKnownTargetPath_matchesRecordTargetsOnly() {
             const store = createStore()
             store.downloadsDirectory = "/tmp/status-downloads"
-            store.pathExistsFn = function(path) { return false }
+            store.platform.fileExists = function(path) { return false }
 
             const live = createTemporaryObject(fakeDownloadComponent, root)
             live.downloadFileName = "clip 1.webm"
@@ -654,7 +671,7 @@ Item {
 
         function test_canShareFile_requiresCompletedPresentFile() {
             const store = createStore()
-            store.pathExistsFn = function(path) { return true }
+            store.platform.fileExists = function(path) { return true }
             const live = createTemporaryObject(fakeDownloadComponent, root)
             const record = store.addDownload(live)
             live.complete()
@@ -665,12 +682,12 @@ Item {
             verify(!store.canShareFile(record))
         }
 
-        function test_shareFile_invokesSharePathsFn() {
+        function test_shareFile_invokesPlatformSharePaths() {
             const store = createStore()
-            store.preferShareSheet = true
+            store.platform.preferShareSheet = true
             let shared = []
-            store.sharePathsFn = function(paths) { shared = paths.slice() }
-            store.pathExistsFn = function(path) { return true }
+            store.platform.sharePaths = function(paths) { shared = paths.slice() }
+            store.platform.fileExists = function(path) { return true }
 
             const live = createTemporaryObject(fakeDownloadComponent, root)
             live.downloadDirectory = "/tmp/downloads"
@@ -686,12 +703,12 @@ Item {
 
         function test_shareFile_desktop_copiesPath() {
             const store = createStore()
-            store.preferShareSheet = false
+            store.platform.preferShareSheet = false
             let copied = ""
             let shared = []
-            store.copyTextFn = function(text) { copied = text }
-            store.sharePathsFn = function(paths) { shared = paths.slice() }
-            store.pathExistsFn = function(path) { return true }
+            store.platform.copyText = function(text) { copied = text }
+            store.platform.sharePaths = function(paths) { shared = paths.slice() }
+            store.platform.fileExists = function(path) { return true }
 
             const live = createTemporaryObject(fakeDownloadComponent, root)
             live.downloadDirectory = "/tmp/downloads"
@@ -711,42 +728,42 @@ Item {
             live.url = "https://example.com/report.pdf"
             const record = store.addDownload(live)
 
-            store.preferShareSheet = true
+            store.platform.preferShareSheet = true
             let sharedText = ""
-            store.shareTextFn = function(text) { sharedText = text }
+            store.platform.shareText = function(text) { sharedText = text }
             verify(store.shareUrl(record))
             compare(sharedText, "https://example.com/report.pdf")
 
-            store.preferShareSheet = false
+            store.platform.preferShareSheet = false
             let copied = ""
-            store.copyTextFn = function(text) { copied = text }
+            store.platform.copyText = function(text) { copied = text }
             verify(store.shareUrl(record))
             compare(copied, "https://example.com/report.pdf")
         }
 
         function test_canShowInFolder_desktopAndroid_notIos() {
             const store = createStore()
-            store.pathExistsFn = function(path) { return true }
+            store.platform.fileExists = function(path) { return true }
             const live = createTemporaryObject(fakeDownloadComponent, root)
             const record = store.addDownload(live)
             live.complete()
             store.refreshMissingFiles()
 
-            store.showInFolderSupported = true
+            store.platform.showInFolderSupported = true
             verify(store.canShowInFolder(record))
-            store.showInFolderSupported = false
+            store.platform.showInFolderSupported = false
             verify(!store.canShowInFolder(record))
-            store.showInFolderSupported = true
+            store.platform.showInFolderSupported = true
             record.missingFile = true
             verify(!store.canShowInFolder(record))
         }
 
-        function test_openDirectoryForRecord_callsShowInFolderFn_withTargetPath() {
+        function test_openDirectoryForRecord_callsPlatformShowInFolder_withTargetPath() {
             const store = createStore()
-            store.pathExistsFn = function(path) { return true }
-            store.showInFolderSupported = true
+            store.platform.fileExists = function(path) { return true }
+            store.platform.showInFolderSupported = true
             let shownPath = ""
-            store.showInFolderFn = function(path) { shownPath = path }
+            store.platform.showInFolder = function(path) { shownPath = path }
 
             const live = createTemporaryObject(fakeDownloadComponent, root)
             const record = store.addDownload(live)
@@ -758,7 +775,7 @@ Item {
 
             // iOS / unsupported: no-op
             shownPath = "unchanged"
-            store.showInFolderSupported = false
+            store.platform.showInFolderSupported = false
             store.openDirectoryForRecord(record)
             compare(shownPath, "unchanged")
         }
@@ -768,8 +785,8 @@ Item {
             // with the Android Downloads UI, but Show in folder remains available
             // for the on-disk file (Desktop reveal / Android Downloads app).
             const store = createStore()
-            store.pathExistsFn = function(path) { return true }
-            store.showInFolderSupported = true
+            store.platform.fileExists = function(path) { return true }
+            store.platform.showInFolderSupported = true
             const live = createTemporaryObject(fakeDownloadComponent, root)
             live.offTheRecord = true
             const record = store.addDownload(live)
@@ -791,6 +808,7 @@ Item {
             verify(store.canShareUrl(record)) // URL actions remain for Missing File
         }
 
+        // Wording lives in DownloadFormatUtils; these run it against real Records.
         function test_statusText_oneWordingPerState() {
             const store = createStore()
             const live = createTemporaryObject(fakeDownloadComponent, root)
@@ -798,24 +816,24 @@ Item {
             live.totalBytes = 1000
             const record = store.addDownload(live)
 
-            verify(store.statusText(record).indexOf("/") >= 0)
+            verify(DownloadFormatUtils.statusText(record).indexOf("/") >= 0)
 
             live.pause()
-            verify(store.statusText(record).indexOf("/") >= 0)
-            verify(store.statusText(record).indexOf("Paused") < 0)
+            verify(DownloadFormatUtils.statusText(record).indexOf("/") >= 0)
+            verify(DownloadFormatUtils.statusText(record).indexOf("Paused") < 0)
 
             live.complete()
-            compare(store.statusText(record), "")
+            compare(DownloadFormatUtils.statusText(record), "")
 
             record.missingFile = true
-            compare(store.statusText(record), "Missing file")
+            compare(DownloadFormatUtils.statusText(record), "Missing file")
 
             record.missingFile = false
             record.state = AbstractWebView.DownloadState.DownloadInterrupted
-            compare(store.statusText(record), "Interrupted")
+            compare(DownloadFormatUtils.statusText(record), "Interrupted")
 
             record.state = AbstractWebView.DownloadState.DownloadCancelled
-            compare(store.statusText(record), "Canceled")
+            compare(DownloadFormatUtils.statusText(record), "Canceled")
         }
 
         function test_statusText_survivesFilesOver2GiB() {
@@ -829,7 +847,7 @@ Item {
             compare(record.totalBytes, 3 * 1024 * 1024 * 1024)
             compare(record.receivedBytes, 2.5 * 1024 * 1024 * 1024)
 
-            const text = store.statusText(record)
+            const text = DownloadFormatUtils.statusText(record)
             verify(text.indexOf("/") >= 0)
             // A wrapped int would render negative sizes.
             verify(text.indexOf("-") < 0, "overflowed to negative: " + text)
@@ -838,10 +856,10 @@ Item {
 
         function test_shareFile_desktop_copiesBareFilesystemPath() {
             const store = createStore()
-            store.preferShareSheet = false
+            store.platform.preferShareSheet = false
             let copied = ""
-            store.copyTextFn = function(text) { copied = text }
-            store.pathExistsFn = function(path) { return true }
+            store.platform.copyText = function(text) { copied = text }
+            store.platform.fileExists = function(path) { return true }
 
             const live = createTemporaryObject(fakeDownloadComponent, root)
             live.downloadDirectory = "/tmp/downloads"

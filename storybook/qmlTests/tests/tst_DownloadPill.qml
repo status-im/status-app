@@ -5,17 +5,16 @@ import AppLayouts.Browser.adapters
 import AppLayouts.Browser.controls
 import AppLayouts.Browser.panels
 
+import "../../../ui/app/AppLayouts/Browser/webview/DownloadFormatUtils.js" as DownloadFormatUtils
+
 /**
  * Download Pill UI (browser-downloads-ux 01 + polish 02/04):
- * Figma control matrix, store-backed status wording, fixed strip width.
+ * Figma control matrix, DownloadFormatUtils wording, fixed strip width.
  */
 Item {
     id: root
     width: 360
     height: 200
-
-    readonly property url downloadsStoreUrl: Qt.resolvedUrl(
-        "../../../ui/app/AppLayouts/Browser/stores/DownloadsStore.qml")
 
     Component {
         id: recordComponent
@@ -53,56 +52,40 @@ Item {
         name: "DownloadPill"
         when: windowShown
 
-        function createStore() {
-            const component = Qt.createComponent(root.downloadsStoreUrl)
-            verify(component.status === Component.Ready, component.errorString())
-            const store = createTemporaryObject(component, root)
-            store.ensureDirectoryFn = function(path) { return true }
-            return store
-        }
-
-        function statusFn(store) {
-            return function(record) { return store.statusText(record) }
-        }
-
-        function makePill(record, store, extras) {
+        function makePill(record, extras) {
             const props = Object.assign({
                 download: record,
-                width: 227,
-                statusTextFn: statusFn(store)
+                width: 227
             }, extras || {})
             return createTemporaryObject(pillComponent, root, props)
         }
 
         function test_inProgress_statusText_showsReceivedTotal() {
-            const store = createStore()
             const record = createTemporaryObject(recordComponent, root, {
                 receivedBytes: 400,
                 totalBytes: 1000
             })
-            const pill = makePill(record, store)
+            const pill = makePill(record)
             verify(pill.statusText.indexOf("/") >= 0)
-            compare(pill.statusText, store.statusText(record))
+            compare(pill.statusText, DownloadFormatUtils.statusText(record))
         }
 
         function test_paused_statusText_showsReceivedTotal_notPausedWord() {
-            const store = createStore()
             const record = createTemporaryObject(recordComponent, root, {
                 state: AbstractWebView.DownloadState.DownloadPaused,
                 isPaused: true,
                 receivedBytes: 400,
                 totalBytes: 1000
             })
-            const pill = makePill(record, store)
+            const pill = makePill(record)
             verify(pill.statusText.indexOf("/") >= 0)
             verify(pill.statusText.indexOf(qsTr("Paused")) < 0)
-            compare(pill.statusText, store.statusText(record))
+            compare(pill.statusText, DownloadFormatUtils.statusText(record))
         }
 
         function test_inProgress_pauseLeft_cancelRight_noOptions() {
-            const store = createStore()
             const record = createTemporaryObject(recordComponent, root)
-            const pill = makePill(record, store)
+            const pill = makePill(record)
 
             compare(pill.primaryAction, DownloadPill.PrimaryAction.Pause)
             verify(pill.pauseButtonVisible)
@@ -112,12 +95,11 @@ Item {
         }
 
         function test_paused_resumeLeft_cancelRight_noOptions() {
-            const store = createStore()
             const record = createTemporaryObject(recordComponent, root, {
                 state: AbstractWebView.DownloadState.DownloadPaused,
                 isPaused: true
             })
-            const pill = makePill(record, store)
+            const pill = makePill(record)
 
             compare(pill.primaryAction, DownloadPill.PrimaryAction.Resume)
             verify(pill.resumeButtonVisible)
@@ -127,57 +109,53 @@ Item {
         }
 
         function test_completed_fileLeft_optionsRight_noCancel_emptyStatus() {
-            const store = createStore()
             const done = createTemporaryObject(recordComponent, root, {
                 state: AbstractWebView.DownloadState.DownloadCompleted,
                 isTerminal: true,
                 receivedBytes: 1000
             })
-            const pill = makePill(done, store)
+            const pill = makePill(done)
 
             compare(pill.primaryAction, DownloadPill.PrimaryAction.File)
             verify(pill.optionsButtonVisible)
             verify(!pill.cancelButtonVisible)
             compare(pill.statusText, "")
-            compare(store.statusText(done), "")
+            compare(DownloadFormatUtils.statusText(done), "")
         }
 
         function test_cancelled_iconLeft_canceledStatus_hasOptionsMenu() {
             // polish 03: Cancelled keeps its ⋮ so Retry/Dismiss stay reachable
             // from the strip (reverses the earlier no-right-control matrix).
-            const store = createStore()
             const cancelled = createTemporaryObject(recordComponent, root, {
                 state: AbstractWebView.DownloadState.DownloadCancelled,
                 isTerminal: true
             })
-            const pill = makePill(cancelled, store)
+            const pill = makePill(cancelled)
 
             compare(pill.primaryAction, DownloadPill.PrimaryAction.Cancelled)
             compare(pill.statusText, qsTr("Canceled"))
-            compare(store.statusText(cancelled), qsTr("Canceled"))
+            compare(DownloadFormatUtils.statusText(cancelled), qsTr("Canceled"))
             verify(pill.optionsButtonVisible)
             verify(!pill.cancelButtonVisible)
         }
 
         function test_interrupted_optionsRight_shortStatus_noInlineCancel() {
-            const store = createStore()
             const interrupted = createTemporaryObject(recordComponent, root, {
                 state: AbstractWebView.DownloadState.DownloadInterrupted,
                 isTerminal: true
             })
-            const pill = makePill(interrupted, store)
+            const pill = makePill(interrupted)
 
             compare(pill.primaryAction, DownloadPill.PrimaryAction.None)
             verify(pill.optionsButtonVisible)
             verify(!pill.cancelButtonVisible)
             compare(pill.statusText, qsTr("Interrupted"))
-            compare(store.statusText(interrupted), qsTr("Interrupted"))
+            compare(DownloadFormatUtils.statusText(interrupted), qsTr("Interrupted"))
         }
 
         function test_cancelButton_forwardsToRecord() {
-            const store = createStore()
             const record = createTemporaryObject(recordComponent, root)
-            const pill = makePill(record, store)
+            const pill = makePill(record)
 
             pill.triggerCancel()
             compare(record.state, AbstractWebView.DownloadState.DownloadCancelled)
@@ -187,23 +165,19 @@ Item {
         }
 
         function test_elideFileName_middleElidesBase_keepsExtension() {
-            const store = createStore()
             const longName = "very-long-download-report-name.pdf"
-            const elided = store.elideFileName(longName, 18)
+            const elided = DownloadFormatUtils.elideFileName(longName, 18)
 
             verify(elided.endsWith(".pdf"))
             verify(elided.indexOf("…") >= 0 || elided.indexOf("...") >= 0)
             verify(elided.length <= 18)
-            compare(store.elideFileName("short.pdf", 40), "short.pdf")
-            compare(store.elideFileName("noext", 4).length <= 4, true)
+            compare(DownloadFormatUtils.elideFileName("short.pdf", 40), "short.pdf")
+            compare(DownloadFormatUtils.elideFileName("noext", 4).length <= 4, true)
         }
 
         function test_strip_singlePill_keepsFixedWidth_leftAligned() {
-            const store = createStore()
             const record = createTemporaryObject(recordComponent, root)
-            const strip = createTemporaryObject(stripComponent, root, {
-                statusTextFn: statusFn(store)
-            })
+            const strip = createTemporaryObject(stripComponent, root)
             strip.downloadsModel = [record]
             strip.width = 360
             strip.height = 44
@@ -222,13 +196,10 @@ Item {
         }
 
         function test_strip_multiPill_keepsFixedWidth_noShrink() {
-            const store = createStore()
             const a = createTemporaryObject(recordComponent, root, { fileName: "a.pdf" })
             const b = createTemporaryObject(recordComponent, root, { fileName: "b.pdf" })
             const c = createTemporaryObject(recordComponent, root, { fileName: "c.pdf" })
-            const strip = createTemporaryObject(stripComponent, root, {
-                statusTextFn: statusFn(store)
-            })
+            const strip = createTemporaryObject(stripComponent, root)
             strip.downloadsModel = [a, b, c]
             strip.width = 360
             strip.height = 44
@@ -252,12 +223,9 @@ Item {
         }
 
         function test_strip_newDownload_insertsAtLeft() {
-            const store = createStore()
             const older = createTemporaryObject(recordComponent, root, { fileName: "older.pdf" })
             const newer = createTemporaryObject(recordComponent, root, { fileName: "newer.pdf" })
-            const strip = createTemporaryObject(stripComponent, root, {
-                statusTextFn: statusFn(store)
-            })
+            const strip = createTemporaryObject(stripComponent, root)
             strip.width = 600
             strip.height = 44
             strip.downloadsModel = [older]
@@ -278,16 +246,13 @@ Item {
         }
 
         function test_strip_figmaChrome_flushPills_onlyActiveCardIsWhite() {
-            const store = createStore()
             const active = createTemporaryObject(recordComponent, root, { fileName: "a.pdf" })
             const done = createTemporaryObject(recordComponent, root, {
                 fileName: "b.pdf",
                 state: AbstractWebView.DownloadState.DownloadCompleted,
                 isTerminal: true
             })
-            const strip = createTemporaryObject(stripComponent, root, {
-                statusTextFn: statusFn(store)
-            })
+            const strip = createTemporaryObject(stripComponent, root)
             strip.downloadsModel = [active, done]
             strip.width = 600
             waitForRendering(strip)
@@ -313,9 +278,8 @@ Item {
         }
 
         function test_primaryPause_forwardsToRecord() {
-            const store = createStore()
             const record = createTemporaryObject(recordComponent, root)
-            const pill = makePill(record, store)
+            const pill = makePill(record)
 
             pill.triggerPrimaryAction()
             compare(record.state, AbstractWebView.DownloadState.DownloadPaused)

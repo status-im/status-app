@@ -49,41 +49,28 @@ QtObject {
         return loc ? String(loc).replace("file://", "") : ""
     }
 
-    // Disk existence probe; production uses SystemUtils.fileExists, tests inject a fake.
-    property var pathExistsFn: function(path) {
-        return SystemUtils.fileExists(path)
-    }
-
-    // Directory create; injectable so Storybook/unit tests need not stub SystemUtils.
-    property var ensureDirectoryFn: function(path) {
-        return SystemUtils.ensureDirectory(path)
-    }
-
-    // Mobile share sheet for files; production uses SystemUtils.sharePaths, tests inject a fake.
-    property var sharePathsFn: function(paths) {
-        SystemUtils.sharePaths(paths)
-    }
-
-    // Mobile share sheet for text/URL; production uses ShareUtils.shareText.
-    property var shareTextFn: function(text) {
-        ShareUtils.shareText(text)
-    }
-
-    // Desktop Copy file path / Copy URL; production uses ClipboardUtils.
-    property var copyTextFn: function(text) {
-        ClipboardUtils.setText(text)
-    }
-
-    // Mobile → share sheet; desktop → copy. Injectable for QML tests.
-    property bool preferShareSheet: SQUtils.Utils.isMobile
-
-    // Show in folder: Desktop + Android; hidden on iOS (ADR 0006 / UX 02 / UX 06).
-    property bool showInFolderSupported: !SQUtils.Utils.isIOS
-
-    // Desktop reveals file; Android opens system Downloads UI. Injectable for QML tests.
-    property var showInFolderFn: function(path) {
-        SystemUtils.showInFolder(path)
-    }
+    /// The one platform seam: filesystem, share/clipboard, and the two platform
+    /// facts the store branches on. Production injects nothing — the default
+    /// wraps SystemUtils / ShareUtils / ClipboardUtils; tests inject one fake:
+    /// - fileExists(path) → bool — disk existence probe (Missing File, collisions)
+    /// - ensureDirectory(path) → bool — create the downloads directory
+    /// - sharePaths([path]) — mobile share sheet for files
+    /// - shareText(text) — mobile share sheet for text/URL
+    /// - copyText(text) — desktop Copy file path / Copy URL
+    /// - showInFolder(path) — desktop reveals file; Android opens system Downloads UI
+    /// - preferShareSheet: bool — mobile → share sheet; desktop → copy
+    /// - showInFolderSupported: bool — Desktop + Android; hidden on iOS
+    ///   (ADR 0006 / UX 02 / UX 06)
+    property var platform: ({
+        fileExists: function(path) { return SystemUtils.fileExists(path) },
+        ensureDirectory: function(path) { return SystemUtils.ensureDirectory(path) },
+        sharePaths: function(paths) { SystemUtils.sharePaths(paths) },
+        shareText: function(text) { ShareUtils.shareText(text) },
+        copyText: function(text) { ClipboardUtils.setText(text) },
+        showInFolder: function(path) { SystemUtils.showInFolder(path) },
+        preferShareSheet: SQUtils.Utils.isMobile,
+        showInFolderSupported: !SQUtils.Utils.isIOS
+    })
 
     readonly property url _downloadRecordUrl: Qt.resolvedUrl("DownloadRecord.qml")
 
@@ -255,7 +242,8 @@ QtObject {
         const path = record.targetPath || record.downloadDirectory
         if (!path)
             return
-        root.showInFolderFn(path)
+        if (root.platform && root.platform.showInFolder)
+            root.platform.showInFolder(path)
     }
 
     /// Newest Download Records first for the Downloads List UI (History stays oldest-first).
@@ -275,7 +263,8 @@ QtObject {
                 continue
             }
             const path = record.targetPath
-            record.missingFile = !(path && root.pathExistsFn && root.pathExistsFn(path))
+            record.missingFile = !(path && root.platform && root.platform.fileExists
+                                   && root.platform.fileExists(path))
         }
     }
 
@@ -300,7 +289,7 @@ QtObject {
     }
 
     function canShowInFolder(record) {
-        if (!root.showInFolderSupported || !record || record.missingFile)
+        if (!root.platform || !root.platform.showInFolderSupported || !record || record.missingFile)
             return false
         return record.state === AbstractWebView.DownloadState.DownloadCompleted
             && !!record.targetPath
@@ -335,11 +324,11 @@ QtObject {
         if (!canShareFile(record))
             return false
         const path = record.targetPath
-        if (root.preferShareSheet) {
-            if (root.sharePathsFn)
-                root.sharePathsFn([path])
-        } else if (root.copyTextFn) {
-            root.copyTextFn(path)
+        if (root.platform.preferShareSheet) {
+            if (root.platform.sharePaths)
+                root.platform.sharePaths([path])
+        } else if (root.platform.copyText) {
+            root.platform.copyText(path)
         }
         return true
     }
@@ -354,94 +343,34 @@ QtObject {
         const text = String(url || "")
         if (!text)
             return false
-        if (root.preferShareSheet) {
-            if (root.shareTextFn)
-                root.shareTextFn(text)
-        } else if (root.copyTextFn) {
-            root.copyTextFn(text)
+        if (root.platform.preferShareSheet) {
+            if (root.platform.shareText)
+                root.platform.shareText(text)
+        } else if (root.platform.copyText) {
+            root.platform.copyText(text)
         }
         return true
     }
 
-    /// Middle-elide the base name, then keep the extension (pill + list).
-    function elideFileName(fileName, maxLength) {
-        if (!fileName)
-            return ""
-        const s = String(fileName)
-        const limit = Number(maxLength)
-        if (!(limit > 0) || s.length <= limit)
-            return s
-
-        const lastDot = s.lastIndexOf(".")
-        if (lastDot <= 0) {
-            if (limit <= 1)
-                return "…"
-            return s.substring(0, limit - 1) + "…"
-        }
-
-        const ext = s.substring(lastDot)
-        const base = s.substring(0, lastDot)
-        const budget = limit - ext.length
-        if (budget <= 1) {
-            if (ext.length >= limit)
-                return s.substring(0, Math.max(0, limit - 1)) + "…"
-            return "…" + ext
-        }
-        if (base.length <= budget)
-            return base + ext
-
-        const keep = budget - 1
-        const head = Math.ceil(keep / 2)
-        const tail = Math.floor(keep / 2)
-        return base.substring(0, head) + "…" + base.substring(base.length - tail) + ext
-    }
-
-    /// Shared subtitle for Downloads List / Download Pill (one wording per state).
-    function statusText(record) {
-        if (!record)
-            return ""
-        if (record.missingFile)
-            return qsTr("Missing file")
-        const state = record.state
-        if (state === AbstractWebView.DownloadState.DownloadCompleted)
-            return ""
-        if (state === AbstractWebView.DownloadState.DownloadCancelled)
-            return qsTr("Canceled")
-        if (state === AbstractWebView.DownloadState.DownloadInterrupted)
-            return qsTr("Interrupted")
-        // InProgress, Requested, and Paused: received/total. Resume control carries paused.
-        if (state === AbstractWebView.DownloadState.DownloadInProgress
-                || state === AbstractWebView.DownloadState.DownloadRequested
-                || state === AbstractWebView.DownloadState.DownloadPaused
-                || record.isPaused) {
-            const received = record.receivedBytes ?? 0
-            const total = record.totalBytes ?? 0
-            if (total > 0) {
-                return "%1 / %2"
-                    .arg(Qt.locale().formattedDataSize(received, 2, Locale.DataSizeTraditionalFormat))
-                    .arg(Qt.locale().formattedDataSize(total, 2, Locale.DataSizeTraditionalFormat))
-            }
-            return Qt.locale().formattedDataSize(received, 2, Locale.DataSizeTraditionalFormat)
-        }
-        return ""
-    }
+    // Formatting (elideFileName / statusText) lives in
+    // webview/DownloadFormatUtils.js — pure functions, imported by the pill.
 
     /// Sanitize a suggested file name and resolve a free Download Target under downloadsDirectory.
     /// Collisions with existing files or in-session Records get "(1)", "(2)", … suffixes.
-    function resolveDownloadTarget(suggestedFileName) {
+    function _resolveDownloadTarget(suggestedFileName) {
         const dir = root.downloadsDirectory.replace(/[/\\]+$/, "")
-        if (root.ensureDirectoryFn)
-            root.ensureDirectoryFn(dir)
+        if (root.platform && root.platform.ensureDirectory)
+            root.platform.ensureDirectory(dir)
 
         let name = String(suggestedFileName || "").trim()
         if (!name)
             name = "download.bin"
         name = name.replace(/[\\/]/g, "_")
 
-        let candidate = joinPath(dir, name)
+        let candidate = _joinPath(dir, name)
         let n = 1
-        while (pathTaken(candidate)) {
-            candidate = joinPath(dir, withCollisionSuffix(name, n))
+        while (_pathTaken(candidate)) {
+            candidate = _joinPath(dir, _withCollisionSuffix(name, n))
             n += 1
             if (n > 1000)
                 break
@@ -456,8 +385,8 @@ QtObject {
             return ""
 
         const suggested = download.suggestedFileName || download.downloadFileName || "download.bin"
-        const target = resolveDownloadTarget(suggested)
-        const parts = splitPath(target)
+        const target = _resolveDownloadTarget(suggested)
+        const parts = _splitPath(target)
 
         if (record) {
             record.downloadDirectory = parts.dir
@@ -618,8 +547,8 @@ QtObject {
         record.liveDownload = null
     }
 
-    function pathTaken(path) {
-        if (root.pathExistsFn && root.pathExistsFn(path))
+    function _pathTaken(path) {
+        if (root.platform && root.platform.fileExists && root.platform.fileExists(path))
             return true
         for (let i = 0; i < downloadModel.length; ++i) {
             const record = downloadModel[i]
@@ -629,7 +558,7 @@ QtObject {
         return false
     }
 
-    function joinPath(dir, fileName) {
+    function _joinPath(dir, fileName) {
         if (!dir)
             return fileName
         if (dir.endsWith("/") || dir.endsWith("\\"))
@@ -637,7 +566,7 @@ QtObject {
         return dir + "/" + fileName
     }
 
-    function splitPath(path) {
+    function _splitPath(path) {
         const s = String(path)
         const slash = Math.max(s.lastIndexOf("/"), s.lastIndexOf("\\"))
         if (slash < 0)
@@ -645,7 +574,7 @@ QtObject {
         return { dir: s.substring(0, slash), fileName: s.substring(slash + 1) }
     }
 
-    function withCollisionSuffix(fileName, n) {
+    function _withCollisionSuffix(fileName, n) {
         const dot = fileName.lastIndexOf(".")
         if (dot <= 0)
             return fileName + " (" + n + ")"

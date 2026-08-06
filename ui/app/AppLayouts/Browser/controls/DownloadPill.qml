@@ -7,6 +7,8 @@ import StatusQ.Controls
 
 import AppLayouts.Browser.adapters
 
+import "../webview/DownloadFormatUtils.js" as DownloadFormatUtils
+
 /**
  * The one delegate for a Download Record (Browser CONTEXT / Figma File download,
  * browser-downloads-polish 03): the strip renders it as a capsule, the Downloads
@@ -26,11 +28,7 @@ Rectangle {
 
     property var download: null
 
-    // Optional: DownloadsStore.elideFileName for middle-elide + extension.
-    property var elideFileNameFn: null
-
-    // Optional: DownloadsStore.statusText — single wording for strip and list.
-    property var statusTextFn: null
+    // Wording and eliding come straight from DownloadFormatUtils (pure functions).
 
     // Presentation knobs (browser-downloads-polish 03): the surfaces differ in
     // chrome, not in behaviour. Defaults draw the strip capsule; the Downloads
@@ -83,17 +81,17 @@ Rectangle {
         const name = download?.fileName ?? ""
         if (!name)
             return ""
-        if (!elideFileNameFn || fileNameLabel.width <= 0)
+        if (fileNameLabel.width <= 0)
             return name
         // Fit by measured width (char-budget from "x" under-elides and paints into Cancel).
         if (fileNameMetrics.advanceWidth(name) <= fileNameLabel.width)
             return name
         let lo = 4
         let hi = name.length
-        let best = elideFileNameFn(name, lo)
+        let best = DownloadFormatUtils.elideFileName(name, lo)
         while (lo <= hi) {
             const mid = Math.floor((lo + hi) / 2)
-            const candidate = elideFileNameFn(name, mid)
+            const candidate = DownloadFormatUtils.elideFileName(name, mid)
             if (fileNameMetrics.advanceWidth(candidate) <= fileNameLabel.width) {
                 best = candidate
                 lo = mid + 1
@@ -105,9 +103,9 @@ Rectangle {
     }
 
     readonly property string statusText: {
-        if (!download || !statusTextFn)
+        if (!download)
             return ""
-        return statusTextFn(download) || ""
+        return DownloadFormatUtils.statusText(download) || ""
     }
 
     /// anchor is the ⋮ button itself — the menu right-aligns under (or over) it.

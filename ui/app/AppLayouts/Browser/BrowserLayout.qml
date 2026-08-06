@@ -293,9 +293,7 @@ StatusSectionLayout {
                                                        currentTabIndex: tabs.currentIndex,
                                                        initialMode: mode,
                                                        // Live binding — snapshot would miss Retry / new Downloads while open.
-                                                       downloadsModel: Qt.binding(() => root.downloadsStore.downloadsListModel),
-                                                       statusTextFn: (record) => root.downloadsStore.statusText(record),
-                                                       elideFileNameFn: (name, maxChars) => root.downloadsStore.elideFileName(name, maxChars)
+                                                       downloadsModel: Qt.binding(() => root.downloadsStore.downloadsListModel)
                                                    }).open()
         }
 
@@ -1020,8 +1018,6 @@ StatusSectionLayout {
         id: downloadPillStrip
         DownloadPillStrip {
             downloadsModel: root.downloadsStore.downloadStripModel
-            elideFileNameFn: (name, maxChars) => root.downloadsStore.elideFileName(name, maxChars)
-            statusTextFn: (record) => root.downloadsStore.statusText(record)
             onOpenDownloadClicked: function (index) {
                 downloadsContext.handlePillClicked(index)
             }

@@ -47,8 +47,6 @@ StatusDialog {
 
     // downloads (issue 05)
     property var downloadsModel: []
-    property var statusTextFn: null
-    property var elideFileNameFn: null
 
     signal downloadClicked(int listIndex)
     signal downloadOptionsClicked(int listIndex, Item anchor)
@@ -305,8 +303,6 @@ StatusDialog {
                 Layout.preferredHeight: Math.min(root.availableHeight, 400)
                 Layout.fillHeight: true
                 downloadsModel: root.downloadsModel
-                statusTextFn: root.statusTextFn
-                elideFileNameFn: root.elideFileNameFn
                 onOpenDownloadClicked: listIndex => root.downloadClicked(listIndex)
                 onOptionsClicked: (listIndex, anchor) => root.downloadOptionsClicked(listIndex, anchor)
             }

@@ -17,8 +17,6 @@ Item {
     id: root
 
     property var downloadsModel: []
-    property var statusTextFn: null
-    property var elideFileNameFn: null
 
     signal openDownloadClicked(int index)
     /// anchor is the row's ⋮ button — the menu right-aligns under it.
@@ -56,8 +54,6 @@ Item {
 
             contentItem: DownloadPill {
                 download: row.record
-                elideFileNameFn: root.elideFileNameFn
-                statusTextFn: root.statusTextFn
 
                 // Flat-row chrome: the surrounding delegate owns hover and click.
                 interactive: false

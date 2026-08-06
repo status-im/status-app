@@ -1,4 +1,6 @@
 .pragma library
+.import QtQuick 2.15 as QtQuickModule
+.import AppLayouts.Browser.adapters 1.0 as Adapters
 
 // Pure format predicates for Download Records (ADR 0006 §8).
 //
@@ -62,4 +64,69 @@ function isVideoMedia(mimeType, fileName) {
     if (mime.startsWith("audio/"))
         return false
     return mime.startsWith("video/") || name.endsWith(".webm")
+}
+
+/// Middle-elide the base name, then keep the extension (pill + list).
+function elideFileName(fileName, maxLength) {
+    if (!fileName)
+        return ""
+    const s = String(fileName)
+    const limit = Number(maxLength)
+    if (!(limit > 0) || s.length <= limit)
+        return s
+
+    const lastDot = s.lastIndexOf(".")
+    if (lastDot <= 0) {
+        if (limit <= 1)
+            return "…"
+        return s.substring(0, limit - 1) + "…"
+    }
+
+    const ext = s.substring(lastDot)
+    const base = s.substring(0, lastDot)
+    const budget = limit - ext.length
+    if (budget <= 1) {
+        if (ext.length >= limit)
+            return s.substring(0, Math.max(0, limit - 1)) + "…"
+        return "…" + ext
+    }
+    if (base.length <= budget)
+        return base + ext
+
+    const keep = budget - 1
+    const head = Math.ceil(keep / 2)
+    const tail = Math.floor(keep / 2)
+    return base.substring(0, head) + "…" + base.substring(base.length - tail) + ext
+}
+
+/// Shared subtitle for Downloads List / Download Pill (one wording per state).
+function statusText(record) {
+    if (!record)
+        return ""
+    if (record.missingFile)
+        return qsTr("Missing file")
+    const DownloadState = Adapters.AbstractWebView.DownloadState
+    const state = record.state
+    if (state === DownloadState.DownloadCompleted)
+        return ""
+    if (state === DownloadState.DownloadCancelled)
+        return qsTr("Canceled")
+    if (state === DownloadState.DownloadInterrupted)
+        return qsTr("Interrupted")
+    // InProgress, Requested, and Paused: received/total. Resume control carries paused.
+    if (state === DownloadState.DownloadInProgress
+            || state === DownloadState.DownloadRequested
+            || state === DownloadState.DownloadPaused
+            || record.isPaused) {
+        const sizeFormat = QtQuickModule.Locale.DataSizeTraditionalFormat
+        const received = record.receivedBytes ?? 0
+        const total = record.totalBytes ?? 0
+        if (total > 0) {
+            return "%1 / %2"
+                .arg(Qt.locale().formattedDataSize(received, 2, sizeFormat))
+                .arg(Qt.locale().formattedDataSize(total, 2, sizeFormat))
+        }
+        return Qt.locale().formattedDataSize(received, 2, sizeFormat)
+    }
+    return ""
 }

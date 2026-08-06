@@ -91,7 +91,8 @@ SplitView {
             // Stub is empty; provide the real Download Records API for Storybook.
             property var downloadModel: []
             property string downloadsDirectory: "/tmp/status-storybook-downloads"
-            property var pathExistsFn: function(path) { return false }
+            // One platform seam (DownloadsStore.platform) — nothing exists on disk here.
+            property var platform: ({ fileExists: function(path) { return false } })
             readonly property url _downloadRecordUrl: Qt.resolvedUrl(
                 "../../../ui/app/AppLayouts/Browser/stores/DownloadRecord.qml")
             function getDownload(index) {

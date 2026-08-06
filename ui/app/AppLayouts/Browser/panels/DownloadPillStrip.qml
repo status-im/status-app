@@ -17,10 +17,6 @@ Rectangle {
     id: root
 
     property var downloadsModel: []
-    // Optional: DownloadsStore.elideFileName — middle-elide base, keep extension.
-    property var elideFileNameFn: null
-    // Optional: DownloadsStore.statusText — one wording for strip and list.
-    property var statusTextFn: null
 
     readonly property int pillWidth: 227
 
@@ -157,8 +153,6 @@ Rectangle {
                 required property int index
 
                 download: record
-                elideFileNameFn: root.elideFileNameFn
-                statusTextFn: root.statusTextFn
                 width: root.pillWidth
                 height: ListView.view.height
 

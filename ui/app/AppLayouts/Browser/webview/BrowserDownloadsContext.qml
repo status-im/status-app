@@ -224,7 +224,7 @@ QtObject {
         const pdf = supportsPdfFn()
         menu.record = record
         menu.index = index
-        menu.useShareLabels = !!downloadsStore.preferShareSheet
+        menu.useShareLabels = !!(downloadsStore.platform && downloadsStore.platform.preferShareSheet)
         menu.canShareFile = downloadsStore.canShareFile(record)
         menu.canShareUrl = downloadsStore.canShareUrl(record)
         menu.canOpenInBrowser = _openContext.canOpenInBrowser(record, pdf)
