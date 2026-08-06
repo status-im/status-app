@@ -11162,12 +11162,12 @@ to load</source>
 <context>
     <name>MessageContextMenuView</name>
     <message>
-        <source>Reply to</source>
-        <translation>답글 대상</translation>
+        <source>Reply</source>
+        <translation type="unfinished">답장</translation>
     </message>
     <message>
-        <source>Edit message</source>
-        <translation>메시지 편집</translation>
+        <source>Edit</source>
+        <translation type="unfinished">편집</translation>
     </message>
     <message>
         <source>Copy</source>
@@ -11176,10 +11176,6 @@ to load</source>
     <message>
         <source>Copy message</source>
         <translation>메시지 복사</translation>
-    </message>
-    <message>
-        <source>Copy Message Id</source>
-        <translation>메시지 ID 복사</translation>
     </message>
     <message>
         <source>Copy link to message</source>
@@ -11194,12 +11190,12 @@ to load</source>
         <translation>고정</translation>
     </message>
     <message>
-        <source>Mark as unread</source>
-        <translation>읽지 않음으로 표시</translation>
+        <source>Delete</source>
+        <translation type="unfinished">삭제</translation>
     </message>
     <message>
-        <source>Delete message</source>
-        <translation>메시지 삭제</translation>
+        <source>Mark as unread</source>
+        <translation>읽지 않음으로 표시</translation>
     </message>
 </context>
 <context>
@@ -12172,7 +12168,7 @@ to load</source>
     </message>
     <message>
         <source>Mark as unread</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">읽지 않음으로 표시</translation>
     </message>
 </context>
 <context>

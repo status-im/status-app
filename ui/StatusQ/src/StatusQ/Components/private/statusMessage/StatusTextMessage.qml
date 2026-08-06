@@ -27,6 +27,7 @@ Item {
     property alias textField: chatTextView
 
     signal linkActivated(string link)
+    signal contextMenuRequested(point pos, int source)
 
     implicitHeight: chatTextView.height + d.showMoreHeight / 2
 
