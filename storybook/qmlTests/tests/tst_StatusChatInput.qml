@@ -394,5 +394,16 @@ Item {
             compare(controlUnderTest.getPlainText(), ":zzzznotanemoji")
             compare(signalSpy.count, 1)
         }
+
+        function test_selectStickerForTest_emits_stickerSelected() {
+            signalSpy.setup(controlUnderTest, "stickerSelected")
+
+            controlUnderTest.selectStickerForTest("hash-abc", "pack-1", "https://example.com/sticker.png")
+
+            compare(signalSpy.count, 1)
+            compare(signalSpy.signalArguments[0][0], "hash-abc")
+            compare(signalSpy.signalArguments[0][1], "pack-1")
+            compare(signalSpy.signalArguments[0][2], "https://example.com/sticker.png")
+        }
     }
 }
