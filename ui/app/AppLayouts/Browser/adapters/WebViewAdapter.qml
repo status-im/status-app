@@ -181,7 +181,10 @@ AbstractWebView {
         settings.forceDarkMode: Application.styleHints.colorScheme === Qt.ColorScheme.Dark
 
         webChannel: root.webChannel
-        profile: root.profile
+        // Never null: a view with no profile aborts the render path. ProfileManager
+        // yields null only while a previous Browser still holds the data path, and
+        // the default profile keeps this view renderable until it is torn down.
+        profile: root.profile ?? WebEngine.defaultProfile
 
         onQuotaRequested: function(request) {
             if (request.requestedSize <= 5 * 1024 * 1024)

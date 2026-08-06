@@ -55,6 +55,15 @@ QtObject {
                 profileParams.offTheRecord,
                 key)
             p = prototype.instance()
+            // Qt allows one live profile per data path and returns null on collision,
+            // which happens while a previous Browser instance is still being torn down.
+            // Returning null keeps the Web View on the default profile; dereferencing
+            // it here used to abort before the cache write and crash the render path.
+            if (!p) {
+                console.error("ProfileManager: no profile for", key,
+                              "- another profile still holds this data path")
+                return null
+            }
             // Live cookie index for per-site clear (Qt 6 loadAllCookies is a no-op
             // for re-emitting existing cookies — see BrowserProfileUtils).
             BrowserProfileUtils.trackProfile(p)
