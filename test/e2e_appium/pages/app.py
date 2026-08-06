@@ -142,6 +142,39 @@ class App(BasePage):
 
         return False
 
+    # The backup-reminder banner overlays the top strip and shifts the drawer
+    # layout, which defeats the nav-arrival retries. Its close control is not
+    # exposed to accessibility, so its position is derived from the action
+    # button's rect: the close cross sits centred between the button's right
+    # edge and the screen edge.
+    BACKUP_BANNER_ACTION = (
+        "xpath",
+        "//*[contains(@resource-id,'mainWindow.actionButton')]"
+        "[@content-desc='Back up now']",
+    )
+
+    def dismiss_backup_banner(self) -> bool:
+        """Close the backup-reminder banner if it is showing."""
+        button = self.find_element_safe(self.BACKUP_BANNER_ACTION, timeout=1)
+        if button is None:
+            return False
+        rect = button.rect
+        width = self.driver.get_window_size()["width"]
+        x = (rect["x"] + rect["width"] + width) // 2
+        y = rect["y"] + rect["height"] // 2
+        try:
+            self.driver.execute_script("mobile: clickGesture", {"x": x, "y": y})
+        except Exception as exc:
+            self.logger.debug("Backup banner dismiss tap failed: %s", exc)
+            return False
+        gone = self.wait_for_condition(
+            lambda: not self.is_element_visible(self.BACKUP_BANNER_ACTION, timeout=1),
+            timeout=5,
+            poll_interval=0.5,
+        )
+        self.logger.info("Backup banner dismissed: %s", gone)
+        return gone
+
     def _ensure_main_nav_visible(self) -> bool:
         """Ensure the left navigation bar is visible.
 
@@ -154,6 +187,8 @@ class App(BasePage):
 
         if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=1):
             return self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=5)
+
+        self.dismiss_backup_banner()
 
         # Phase 1: unwind deep navigation stack via back button
         for _ in range(5):
