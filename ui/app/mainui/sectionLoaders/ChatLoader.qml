@@ -1,7 +1,11 @@
 import QtQml
 import QtQuick
+import QtQuick.Layouts
 
+import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
+
+import AppLayouts.Chat.panels
 
 import utils
 
@@ -54,7 +58,35 @@ Loader {
     // Bridges the chat profile button to the global app-section navigation.
     signal openAppSearchRequested()
 
-    asynchronous: false
+    asynchronous: true
+
+    // Skeleton shown while the section incubates: the chat list, with an open
+    // chat beside it in landscape
+    RowLayout {
+        id: skeletonRow
+
+        readonly property bool landscape: root.width >= ThemeUtils.portraitBreakpoint.width
+
+        anchors.fill: parent
+        visible: root.active && root.status !== Loader.Ready
+        spacing: 0
+
+        MessagesListSkeleton {
+            Layout.preferredWidth: skeletonRow.landscape ? 306 : -1
+            Layout.fillWidth: !skeletonRow.landscape
+            Layout.fillHeight: true
+            Layout.margins: Theme.padding
+        }
+
+        MessagesChatSkeleton {
+            visible: skeletonRow.landscape
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.margins: Theme.padding
+            Layout.leftMargin: Theme.xlPadding
+            Layout.rightMargin: Theme.xlPadding
+        }
+    }
 
     onStatusChanged: {
         if (status === Loader.Ready || status === Loader.Error)
