@@ -122,7 +122,6 @@ Control {
     }
 
     hoverEnabled: (!root.isActiveMessage && !root.disableHover)
-    opacity: outgoingStatus === StatusMessage.OutgoingStatus.Sending ? 0.5 : 1.0
     background: Rectangle {
         color: {
             if (root.overrideBackground)
@@ -259,12 +258,13 @@ Control {
                             amISender: root.messageDetails.amISender
                             messageOriginInfo: root.messageDetails.messageOriginInfo
                             resendError: root.messageDetails.amISender ? root.resendError : ""
-                            onClicked: (sender) => root.senderNameClicked(sender)
-                            onResendClicked: root.resendClicked()
                             timestamp: root.timestamp
                             displayNameClickable: root.profileClickable
                             outgoingStatus: root.outgoingStatus
-                            showOutgointStatusLabel: root.hovered && !root.isInPinnedPopup
+                            isMobile: root.isMobile
+                            showOutgoingStatusLabel: root.hovered && !root.isInPinnedPopup
+                            onClicked: (sender) => root.senderNameClicked(sender)
+                            onResendClicked: root.resendClicked()
                         }
                     }
                     Loader {
@@ -376,7 +376,7 @@ Control {
 
         Loader {
             active: root.quickActions.length > 0
-                    && !Utils.isMobile // hover menu disabled on mobile; we use the MessageContextMenuView
+                    && !root.isMobile // hover menu disabled on mobile; we use the MessageContextMenuView
             visible: active && root.hovered
             anchors.right: parent.right
             anchors.rightMargin: Theme.padding

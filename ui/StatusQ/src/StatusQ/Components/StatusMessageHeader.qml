@@ -26,7 +26,8 @@ Item {
     property string messageOriginInfo: ""
     property bool showFullTimestamp
     property int outgoingStatus: StatusMessage.OutgoingStatus.Unknown
-    property bool showOutgointStatusLabel: false
+    property bool showOutgoingStatusLabel: false
+    property bool isMobile
 
     signal clicked(var sender)
     signal resendClicked()
@@ -38,6 +39,7 @@ Item {
         id: d
 
         readonly property bool expired: root.outgoingStatus === StatusMessage.OutgoingStatus.Expired
+        readonly property bool failedToSend: root.resendError != ""
         readonly property color outgoingStatusColor: expired ? Theme.palette.warningColor1 : Theme.palette.baseColor1
     }
 
@@ -85,10 +87,11 @@ Item {
         Loader {
             id: messageOriginInfoLoader
             active: root.messageOriginInfo
+            visible: active
             sourceComponent: StatusBaseText {
                 verticalAlignment: Text.AlignVCenter
                 color: Theme.palette.baseColor1
-                font.pixelSize: Theme.asideTextFontSize
+                font.pixelSize: Theme.tertiaryTextFontSize
                 text: root.messageOriginInfo
             }
         }
@@ -96,6 +99,7 @@ Item {
         Loader {
             id: verificationIconsLoader
             active: !root.amISender
+            visible: active
             sourceComponent: StatusContactVerificationIcons {
                 isContact: root.isContact
                 trustIndicator: root.trustIndicator
@@ -109,7 +113,7 @@ Item {
             sourceComponent: StatusBaseText {
                 verticalAlignment: Text.AlignVCenter
                 color: Theme.palette.baseColor1
-                font.pixelSize: Theme.asideTextFontSize
+                font.pixelSize: Theme.tertiaryTextFontSize
                 text: `(${root.sender.secondaryName})`
             }
         }
@@ -118,6 +122,7 @@ Item {
             id: dotLoader
             sourceComponent: dotComponent
             active: secondaryDisplayNameLoader.active && tertiaryDetailTextLoader.active
+            visible: active
         }
 
         Loader {
@@ -126,8 +131,7 @@ Item {
             visible: active
             sourceComponent: StatusBaseText {
                 verticalAlignment: Text.AlignVCenter
-                font.pixelSize: Theme.asideTextFontSize
-                visible: text
+                font.pixelSize: Theme.tertiaryTextFontSize
                 elide: Text.ElideMiddle
                 color: Theme.palette.baseColor1
                 text: Utils.elideText(root.tertiaryDetail, 3, 6)
@@ -137,10 +141,12 @@ Item {
         Loader {
             id: secondDotLoader
             sourceComponent: dotComponent
-            active: verificationIconsLoader.active && verificationIconsLoader.item.width <= 0 || secondaryDisplayNameLoader.active || root.amISender || tertiaryDetailTextLoader.active
+            active: verificationIconsLoader.active || secondaryDisplayNameLoader.active || root.amISender || tertiaryDetailTextLoader.active
+            visible: active
         }
 
         StatusTimeStampLabel {
+            Layout.alignment: Qt.AlignVCenter
             id: timestampText
             verticalAlignment: Text.AlignVCenter
             timestamp: root.timestamp
@@ -151,7 +157,7 @@ Item {
             id: dotComponent
             StatusBaseText {
                 verticalAlignment: Text.AlignVCenter
-                font.pixelSize: Theme.asideTextFontSize
+                font.pixelSize: Theme.tertiaryTextFontSize
                 color: Theme.palette.baseColor1
                 text: "•"
             }
@@ -161,15 +167,15 @@ Item {
             id: deliveryStatusLoader
             Layout.alignment: Qt.AlignVCenter
             active: root.amISender && root.outgoingStatus !== StatusMessage.OutgoingStatus.Unknown
+            visible: active
             sourceComponent: RowLayout {
                 spacing: 0
                 StatusIcon {
-                    Layout.preferredHeight: 15
-                    Layout.preferredWidth: 15
-                    Layout.alignment: Qt.AlignVCenter
+                    Layout.preferredHeight: 16
+                    Layout.preferredWidth: 16
                     color: d.outgoingStatusColor
                     icon: {
-                        if (root.resendError != "")
+                        if (d.failedToSend)
                             return "tiny/tiny-exclamation"
                         switch (root.outgoingStatus) {
                         case StatusMessage.OutgoingStatus.Delivered:
@@ -186,11 +192,14 @@ Item {
                     }
                 }
                 Loader {
-                    active: root.showOutgointStatusLabel
+                    active: root.showOutgoingStatusLabel ||
+                            (root.isMobile && (d.expired || d.failedToSend)) // always show the Resend on mobile
+                    visible: active
+                    Layout.alignment: Qt.AlignVCenter
                     sourceComponent: StatusBaseText {
-                        Layout.alignment: Qt.AlignVCenter
+                        verticalAlignment: Text.AlignVCenter
                         color: d.outgoingStatusColor
-                        font.pixelSize: Theme.asideTextFontSize
+                        font.pixelSize: Theme.tertiaryTextFontSize
                         text: {
                             if (root.resendError != "")
                                 return qsTr("Failed to resend: %1").arg(root.resendError)
@@ -214,14 +223,15 @@ Item {
 
         Loader {
             id: resendButtonLoader
-            active: root.showOutgointStatusLabel && d.expired
+            Layout.alignment: Qt.AlignVCenter
+            active: (root.showOutgoingStatusLabel || root.isMobile) && d.expired
+            visible: active
             sourceComponent: StatusButton {
-                Layout.fillHeight: true
-                verticalPadding: 1
-                horizontalPadding: 5
-                size: StatusBaseButton.Tiny
-                type: StatusBaseButton.Warning
-                font.pixelSize: Theme.fontSize(9)
+                verticalPadding: 2
+                horizontalPadding: 6
+                size: StatusBaseButton.Size.Small
+                type: StatusBaseButton.Type.Warning
+                font.pixelSize: Theme.tertiaryTextFontSize
                 text: qsTr("Resend")
                 onClicked: root.resendClicked()
             }

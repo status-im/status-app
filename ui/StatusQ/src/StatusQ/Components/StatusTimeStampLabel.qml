@@ -12,7 +12,7 @@ StatusBaseText {
     property bool showFullTimestamp
 
     color: Theme.palette.baseColor1
-    font.pixelSize: Theme.asideTextFontSize
+    font.pixelSize: Theme.tertiaryTextFontSize
     visible: !!text
     text: d.formattedLabel
     Accessible.role: Accessible.StaticText
