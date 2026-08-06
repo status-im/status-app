@@ -11423,12 +11423,12 @@ selhalo</translation>
 <context>
     <name>MessageContextMenuView</name>
     <message>
-        <source>Reply to</source>
-        <translation>Odpovědět na</translation>
+        <source>Reply</source>
+        <translation type="unfinished">Odpovědět</translation>
     </message>
     <message>
-        <source>Edit message</source>
-        <translation>Upravit zprávu</translation>
+        <source>Edit</source>
+        <translation type="unfinished">Upravit</translation>
     </message>
     <message>
         <source>Copy</source>
@@ -11437,10 +11437,6 @@ selhalo</translation>
     <message>
         <source>Copy message</source>
         <translation>Kopírovar zprávu</translation>
-    </message>
-    <message>
-        <source>Copy Message Id</source>
-        <translation>Kopírovat ID zprávy</translation>
     </message>
     <message>
         <source>Copy link to message</source>
@@ -11455,12 +11451,12 @@ selhalo</translation>
         <translation>Připnout</translation>
     </message>
     <message>
-        <source>Mark as unread</source>
-        <translation>Označit jako nepřečtěné</translation>
+        <source>Delete</source>
+        <translation type="unfinished">Smazat</translation>
     </message>
     <message>
-        <source>Delete message</source>
-        <translation>Smazat zprávu</translation>
+        <source>Mark as unread</source>
+        <translation>Označit jako nepřečtěné</translation>
     </message>
 </context>
 <context>
