@@ -32,6 +32,9 @@ Control {
     // behind the text (the component's own background by default).
     property color fadeColor: Theme.palette.background
 
+    font.family: Fonts.baseFont.family
+    font.pixelSize: Theme.primaryTextFontSize
+
     contentItem: Text {
         id: label
 

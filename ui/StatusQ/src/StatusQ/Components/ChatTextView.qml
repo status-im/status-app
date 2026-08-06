@@ -60,6 +60,9 @@ Control {
     property color mentionBackgroundColor: Theme.palette.baseColor2
     property color linkHoverColor: Theme.palette.primaryColor3
 
+    font.family: Fonts.baseFont.family
+    font.pixelSize: Theme.primaryTextFontSize
+
     // Copies the current cross-block selection to the clipboard.
     function copySelection() {
         if (root.selectedText.length > 0)
