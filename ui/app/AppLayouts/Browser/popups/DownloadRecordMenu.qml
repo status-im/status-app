@@ -7,26 +7,25 @@ import AppLayouts.Browser.adapters
 
 /**
  * One download menu for Download Pill and Downloads List (browser-downloads-ux 02).
- * Capability + Record state driven; Share vs Copy labels via useShareLabels.
+ * Identity is the Download Record; enablement comes from one `capabilities`
+ * object (BrowserDownloadsContext.capabilitiesFor) BOUND at the call site, so
+ * the menu can never show stale capabilities (ticket 09). State-derived
+ * booleans stay internal. Share vs Copy labels via capabilities.useShareLabels.
  * StatusAction has no visible; StatusMenu hides disabled items by default.
  */
 StatusMenu {
     id: root
 
     property var record: null
-    property int index: -1
+
+    /// { openInBrowser, shareFile, shareUrl, showInFolder, retry, dismiss,
+    ///   useShareLabels } — bind it: capabilities: ctx.capabilitiesFor(record, …)
+    property var capabilities: null
+
+    readonly property var _caps: root.capabilities ?? ({})
 
     // Mobile: Share file / Share URL. Desktop: Copy file path / Copy URL.
-    property bool useShareLabels: SQUtils.Utils.isMobile
-
-    property bool canShareFile: false
-    property bool canShareUrl: false
-    property bool canOpenInBrowser: false
-    property bool canShowInFolder: false
-    property bool canRetry: false
-
-    // Pill strip only: remove Completed/Cancelled from the session strip.
-    property bool showDismiss: false
+    readonly property bool _useShareLabels: !!_caps.useShareLabels
 
     readonly property bool isCancelled: record?.state === AbstractWebView.DownloadState.DownloadCancelled ?? false
     readonly property bool isComplete: record?.state === AbstractWebView.DownloadState.DownloadCompleted ?? false
@@ -46,21 +45,22 @@ StatusMenu {
             || isPaused
     }
 
-    readonly property string shareFileLabel: useShareLabels ? qsTr("Share file") : qsTr("Copy file path")
-    readonly property string shareUrlLabel: useShareLabels ? qsTr("Share URL") : qsTr("Copy URL")
-    readonly property string shareFileIcon: useShareLabels
+    readonly property string shareFileLabel: _useShareLabels ? qsTr("Share file") : qsTr("Copy file path")
+    readonly property string shareUrlLabel: _useShareLabels ? qsTr("Share URL") : qsTr("Copy URL")
+    readonly property string shareFileIcon: _useShareLabels
             ? (SQUtils.Utils.isIOS ? "share-ios" : "share-android")
             : "copy"
-    readonly property string shareUrlIcon: useShareLabels
+    readonly property string shareUrlIcon: _useShareLabels
             ? (SQUtils.Utils.isIOS ? "share-ios" : "share-android")
             : "copy"
 
-    signal showInFolderRequested(int index)
-    signal shareFileRequested(int index)
-    signal shareUrlRequested(int index)
-    signal openInBrowserRequested(int index)
-    signal retryRequested(int index)
-    signal dismissRequested(int index)
+    // Plain signals — callers already hold the menu's Record (ticket 09).
+    signal showInFolderRequested()
+    signal shareFileRequested()
+    signal shareUrlRequested()
+    signal openInBrowserRequested()
+    signal retryRequested()
+    signal dismissRequested()
 
     StatusAction {
         enabled: isActiveTransfer && !isPaused
@@ -75,37 +75,37 @@ StatusMenu {
         onTriggered: root.record.resume()
     }
     StatusAction {
-        enabled: isComplete && root.canOpenInBrowser
+        enabled: isComplete && !!root._caps.openInBrowser
         icon.name: "browser"
         text: qsTr("Open in Browser")
-        onTriggered: root.openInBrowserRequested(root.index)
+        onTriggered: root.openInBrowserRequested()
     }
     StatusAction {
-        enabled: isComplete && root.canShareFile
+        enabled: isComplete && !!root._caps.shareFile
         icon.name: root.shareFileIcon
         text: root.shareFileLabel
-        onTriggered: root.shareFileRequested(root.index)
+        onTriggered: root.shareFileRequested()
     }
     StatusAction {
-        enabled: (isComplete || isInterrupted || isCancelled) && root.canShareUrl
+        enabled: (isComplete || isInterrupted || isCancelled) && !!root._caps.shareUrl
         icon.name: root.shareUrlIcon
         text: root.shareUrlLabel
-        onTriggered: root.shareUrlRequested(root.index)
+        onTriggered: root.shareUrlRequested()
     }
     StatusAction {
-        enabled: isComplete && root.canShowInFolder
+        enabled: isComplete && !!root._caps.showInFolder
         icon.name: "show"
         text: qsTr("Show in folder")
-        onTriggered: root.showInFolderRequested(root.index)
+        onTriggered: root.showInFolderRequested()
     }
     StatusAction {
-        enabled: root.canRetry
+        enabled: !!root._caps.retry
         icon.name: "refresh"
         text: qsTr("Retry")
-        onTriggered: root.retryRequested(root.index)
+        onTriggered: root.retryRequested()
     }
     StatusMenuSeparator {
-        visible: isActiveTransfer || (root.showDismiss && (isComplete || isCancelled))
+        visible: isActiveTransfer || (!!root._caps.dismiss && (isComplete || isCancelled))
     }
     StatusAction {
         enabled: isActiveTransfer
@@ -115,9 +115,10 @@ StatusMenu {
         onTriggered: root.record.cancel()
     }
     StatusAction {
-        enabled: root.showDismiss && (isComplete || isCancelled)
+        // Pill strip only: remove Completed/Cancelled from the session strip.
+        enabled: !!root._caps.dismiss && (isComplete || isCancelled)
         icon.name: "close"
         text: qsTr("Dismiss")
-        onTriggered: root.dismissRequested(root.index)
+        onTriggered: root.dismissRequested()
     }
 }

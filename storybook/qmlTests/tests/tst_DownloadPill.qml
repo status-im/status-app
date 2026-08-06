@@ -277,6 +277,42 @@ Item {
             verify(first.color !== second.color)
         }
 
+        // Ticket 09: strip signals carry the Download Record, not a strip index.
+        function test_strip_click_and_options_emitTheRecord() {
+            const done = createTemporaryObject(recordComponent, root, {
+                state: AbstractWebView.DownloadState.DownloadCompleted,
+                isTerminal: true
+            })
+            const strip = createTemporaryObject(stripComponent, root)
+            strip.downloadsModel = [done]
+            strip.width = 360
+            strip.height = 44
+            waitForRendering(strip)
+
+            const listView = findChild(strip, "downloadPillListView")
+            verify(!!listView)
+            const pill = listView.itemAtIndex(0)
+            verify(!!pill)
+
+            let clicked = null
+            strip.openDownloadClicked.connect(function (r) { clicked = r })
+            pill.itemClicked()
+            compare(clicked, done)
+
+            let gotRecord = null
+            let gotAnchor = null
+            strip.optionsClicked.connect(function (r, anchor) {
+                gotRecord = r
+                gotAnchor = anchor
+            })
+            const options = findChild(pill, "downloadPillOptionsButton")
+            verify(!!options)
+            verify(options.visible)
+            mouseClick(options)
+            compare(gotRecord, done)
+            verify(!!gotAnchor, "anchor Item for menu alignment")
+        }
+
         function test_primaryPause_forwardsToRecord() {
             const record = createTemporaryObject(recordComponent, root)
             const pill = makePill(record)

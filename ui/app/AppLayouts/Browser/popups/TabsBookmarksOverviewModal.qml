@@ -48,8 +48,9 @@ StatusDialog {
     // downloads (issue 05)
     property var downloadsModel: []
 
-    signal downloadClicked(int listIndex)
-    signal downloadOptionsClicked(int listIndex, Item anchor)
+    // Carries the Download Record — the one identity vocabulary (ticket 09).
+    signal downloadClicked(var record)
+    signal downloadOptionsClicked(var record, Item anchor)
 
     title: d.titleText
     destroyOnClose: true
@@ -303,8 +304,8 @@ StatusDialog {
                 Layout.preferredHeight: Math.min(root.availableHeight, 400)
                 Layout.fillHeight: true
                 downloadsModel: root.downloadsModel
-                onOpenDownloadClicked: listIndex => root.downloadClicked(listIndex)
-                onOptionsClicked: (listIndex, anchor) => root.downloadOptionsClicked(listIndex, anchor)
+                onOpenDownloadClicked: record => root.downloadClicked(record)
+                onOptionsClicked: (record, anchor) => root.downloadOptionsClicked(record, anchor)
             }
         }
     }

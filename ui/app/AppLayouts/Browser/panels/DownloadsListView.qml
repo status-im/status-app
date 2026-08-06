@@ -18,9 +18,11 @@ Item {
 
     property var downloadsModel: []
 
-    signal openDownloadClicked(int index)
+    /// Both signals carry the Download Record — the one identity vocabulary
+    /// for a download (ticket 09); no index space to translate.
+    signal openDownloadClicked(var record)
     /// anchor is the row's ⋮ button — the menu right-aligns under it.
-    signal optionsClicked(int index, Item anchor)
+    signal optionsClicked(var record, Item anchor)
 
     // Length, not Array.isArray: createObject converts JS arrays so isArray fails
     // while .length still reports Records (browser-downloads-polish 01).
@@ -41,7 +43,6 @@ Item {
             required property int index
 
             readonly property var record: modelData
-            readonly property int listIndex: index
 
             width: ListView.view.width
             height: 56
@@ -66,11 +67,11 @@ Item {
                 statusFontSize: Theme.fontSize(12)
 
                 onOptionsButtonClicked: function (anchor) {
-                    root.optionsClicked(row.listIndex, anchor)
+                    root.optionsClicked(row.record, anchor)
                 }
             }
 
-            onClicked: root.openDownloadClicked(row.listIndex)
+            onClicked: root.openDownloadClicked(row.record)
 
             HoverHandler {
                 cursorShape: hovered ? Qt.PointingHandCursor : undefined

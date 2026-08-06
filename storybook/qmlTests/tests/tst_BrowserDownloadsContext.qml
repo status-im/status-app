@@ -74,15 +74,25 @@ Item {
             }
             function acceptLiveDownload(download, record) {}
             function clearDownloadStrip() { downloadStripModel = [] }
-            function getDownload(index) {
-                if (index < 0 || index >= downloadModel.length)
-                    return null
-                return downloadModel[index]
+            // The one platform seam facts capabilitiesFor composes.
+            property var platform: ({
+                preferShareSheet: true,
+                showInFolderSupported: false
+            })
+            function canShareFile(record) {
+                if (!record || record.missingFile)
+                    return false
+                return record.state === AbstractWebView.DownloadState.DownloadCompleted
+                    && !!record.targetPath
             }
-            function getStripDownload(index) {
-                if (index < 0 || index >= downloadStripModel.length)
-                    return null
-                return downloadStripModel[index]
+            function canShareUrl(record) {
+                return !!record && sourceUrlString(record).length > 0
+            }
+            function canShowInFolder(record) {
+                if (!platform.showInFolderSupported || !record || record.missingFile)
+                    return false
+                return record.state === AbstractWebView.DownloadState.DownloadCompleted
+                    && !!record.targetPath
             }
             function canRetryFromMenu(record) {
                 if (!record || record.isInline)
@@ -98,7 +108,11 @@ Item {
             function sourceUrlString(record) {
                 return record && record.url ? String(record.url) : ""
             }
-            function refreshMissingFiles() {}
+            // Counter lives inside a var object: in-place mutation emits no
+            // change signal, so counting from inside a capabilities binding
+            // cannot invalidate that same binding (no read-write loop).
+            readonly property var refreshStats: ({ calls: 0 })
+            function refreshMissingFiles() { refreshStats.calls += 1 }
             function isKnownTargetPath(path) {
                 for (let i = 0; i < downloadModel.length; ++i) {
                     if (downloadModel[i] && String(downloadModel[i].targetPath || "") === path)
@@ -109,9 +123,6 @@ Item {
             function openRecord(record) {
                 openRecordCalls += 1
                 lastOpenedRecord = record
-            }
-            function openFile(index) {
-                openRecord(getDownload(index))
             }
             function dismissRecordFromStrip(record) {
                 dismissCalls += 1
@@ -156,6 +167,31 @@ Item {
                 lastDownloadUrl = String(url)
                 lastSuggestedName = suggestedFileName || ""
             }
+        }
+    }
+
+    Component {
+        id: fakeRecordComponent
+
+        // Notifiable Download Record stand-in — property changes must re-trigger
+        // bindings that call capabilitiesFor (the no-stale-menu guarantee).
+        QtObject {
+            property url url: "https://example.com/photo.png"
+            property string fileName: "photo.png"
+            property string mimeType: "image/png"
+            property string targetPath: "/tmp/downloads/photo.png"
+            property int state: AbstractWebView.DownloadState.DownloadInterrupted
+            property bool missingFile: false
+            property bool isInline: false
+        }
+    }
+
+    Component {
+        id: capsHolderComponent
+
+        QtObject {
+            property var record: null
+            property var caps: null
         }
     }
 
@@ -525,7 +561,7 @@ Item {
             record.fileName = "photo.png"
             record.mimeType = "image/png"
 
-            ctx.handlePillClicked(0)
+            ctx.handlePillClicked(record)
             compare(openedUrls.length, 1)
             compare(store.dismissCalls, 1)
             compare(store.downloadStripModel.length, 0)
@@ -543,7 +579,7 @@ Item {
             record.mimeType = "application/octet-stream"
 
             // OS open still counts as opened → overview closes on true.
-            verify(ctx.openDownloadFromList(true, 0))
+            verify(ctx.openDownloadFromList(record))
             compare(openedUrls.length, 0)
             compare(store.openRecordCalls, 1)
             compare(store.lastOpenedRecord, record)
@@ -558,7 +594,80 @@ Item {
             record.fileName = "a.bin"
 
             // Retry restarts in place — overview stays open.
-            verify(!ctx.openDownloadFromList(false, 0))
+            verify(!ctx.openDownloadFromList(record))
+        }
+
+        // --- capabilitiesFor: the one capability vocabulary (ticket 09) ---
+
+        function test_capabilitiesFor_composesStoreOpenSeamAndPlatform() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const record = createTemporaryObject(fakeRecordComponent, root, {
+                state: AbstractWebView.DownloadState.DownloadCompleted
+            })
+
+            const before = store.refreshStats.calls
+            const caps = ctx.capabilitiesFor(record, null)
+            verify(store.refreshStats.calls > before,
+                   "Missing File refresh happens inside capabilitiesFor, not at call sites")
+
+            verify(caps.openInBrowser, "renderable Completed type composes the open seam")
+            verify(caps.shareFile)
+            verify(caps.shareUrl)
+            verify(!caps.showInFolder, "platform.showInFolderSupported is false here")
+            verify(!caps.retry)
+            verify(!caps.dismiss)
+            verify(caps.useShareLabels, "platform.preferShareSheet flows through")
+
+            compare(ctx.capabilitiesFor(record, { showDismiss: true }).dismiss, true)
+        }
+
+        function test_capabilitiesFor_interrupted_onlyRetryAndUrl() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const record = createTemporaryObject(fakeRecordComponent, root)
+
+            const caps = ctx.capabilitiesFor(record, null)
+            verify(caps.retry)
+            verify(caps.shareUrl)
+            verify(!caps.openInBrowser)
+            verify(!caps.shareFile)
+        }
+
+        /// A binding on capabilitiesFor re-derives when the Record changes —
+        /// the structural replacement for populateRecordMenu ordering.
+        function test_capabilitiesFor_bindingUpdates_whenRecordChanges() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const interrupted = createTemporaryObject(fakeRecordComponent, root)
+            const holder = createTemporaryObject(capsHolderComponent, root, {
+                record: interrupted
+            })
+            holder.caps = Qt.binding(function() {
+                return ctx.capabilitiesFor(holder.record, { showDismiss: true })
+            })
+
+            verify(holder.caps.retry)
+            verify(!holder.caps.shareFile)
+
+            // The same Record completes (e.g. after Retry) — no repopulate call.
+            interrupted.state = AbstractWebView.DownloadState.DownloadCompleted
+            verify(!holder.caps.retry, "capabilities follow the record's state")
+            verify(holder.caps.shareFile)
+            verify(holder.caps.openInBrowser)
+
+            // Swapping the record identity re-derives too.
+            const other = createTemporaryObject(fakeRecordComponent, root, {
+                fileName: "other.bin",
+                mimeType: "application/octet-stream",
+                targetPath: ""
+            })
+            holder.record = other
+            verify(holder.caps.retry)
+            verify(!holder.caps.shareFile, "no target path → no share")
+
+            // Break the binding before teardown destroys ctx/store under it.
+            holder.caps = null
         }
     }
 }

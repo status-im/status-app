@@ -7,7 +7,8 @@ import AppLayouts.Browser.adapters
 import AppLayouts.Browser.popups
 
 /**
- * Shared DownloadRecordMenu (browser-downloads-ux 02): item sets + Share/Copy labels.
+ * Shared DownloadRecordMenu (browser-downloads-ux 02 / ticket 09):
+ * item sets + Share/Copy labels from one bound `capabilities` object.
  */
 Item {
     id: root
@@ -46,6 +47,19 @@ Item {
         name: "DownloadRecordMenu"
         when: windowShown
 
+        /// One capabilities object per case (was 7 separate menu properties).
+        function caps(overrides) {
+            return Object.assign({
+                openInBrowser: false,
+                shareFile: false,
+                shareUrl: false,
+                showInFolder: false,
+                retry: false,
+                dismiss: false,
+                useShareLabels: false
+            }, overrides || {})
+        }
+
         function actionTexts(menu) {
             const texts = []
             for (let i = 0; i < menu.count; ++i) {
@@ -62,14 +76,12 @@ Item {
             const record = createTemporaryObject(recordComponent, root)
             const menu = createTemporaryObject(menuComponent, root, {
                 record: record,
-                index: 0,
-                useShareLabels: false,
-                canShareFile: true,
-                canShareUrl: true,
-                canOpenInBrowser: true,
-                canShowInFolder: true,
-                canRetry: false,
-                showDismiss: false
+                capabilities: caps({
+                    openInBrowser: true,
+                    shareFile: true,
+                    shareUrl: true,
+                    showInFolder: true
+                })
             })
 
             const texts = actionTexts(menu)
@@ -87,13 +99,11 @@ Item {
             const record = createTemporaryObject(recordComponent, root)
             const menu = createTemporaryObject(menuComponent, root, {
                 record: record,
-                index: 0,
-                useShareLabels: true,
-                canShareFile: true,
-                canShareUrl: true,
-                canOpenInBrowser: false,
-                canShowInFolder: false,
-                canRetry: false
+                capabilities: caps({
+                    shareFile: true,
+                    shareUrl: true,
+                    useShareLabels: true
+                })
             })
 
             const texts = actionTexts(menu)
@@ -110,13 +120,7 @@ Item {
             })
             const menu = createTemporaryObject(menuComponent, root, {
                 record: record,
-                index: 0,
-                useShareLabels: true,
-                canShareFile: false,
-                canShareUrl: false,
-                canOpenInBrowser: false,
-                canShowInFolder: false,
-                canRetry: false
+                capabilities: caps({ useShareLabels: true })
             })
 
             const texts = actionTexts(menu)
@@ -137,13 +141,7 @@ Item {
             })
             const menu = createTemporaryObject(menuComponent, root, {
                 record: record,
-                index: 0,
-                useShareLabels: false,
-                canShareFile: false,
-                canShareUrl: true,
-                canOpenInBrowser: false,
-                canShowInFolder: false,
-                canRetry: true
+                capabilities: caps({ shareUrl: true, retry: true })
             })
 
             const texts = actionTexts(menu)
@@ -156,18 +154,68 @@ Item {
             const record = createTemporaryObject(recordComponent, root)
             const menu = createTemporaryObject(menuComponent, root, {
                 record: record,
-                index: 0,
-                useShareLabels: true,
-                canShareFile: true,
-                canShareUrl: true,
-                canOpenInBrowser: false,
-                canShowInFolder: true,
-                canRetry: false,
-                showDismiss: true
+                capabilities: caps({
+                    shareFile: true,
+                    shareUrl: true,
+                    showInFolder: true,
+                    dismiss: true,
+                    useShareLabels: true
+                })
             })
 
             const texts = actionTexts(menu)
             verify(texts.indexOf(qsTr("Dismiss")) >= 0)
+        }
+
+        function test_actionSignals_arePlain_recordIsTheMenus() {
+            const record = createTemporaryObject(recordComponent, root)
+            const menu = createTemporaryObject(menuComponent, root, {
+                record: record,
+                capabilities: caps({ retry: true, shareUrl: true })
+            })
+
+            let retried = 0
+            menu.retryRequested.connect(function() { retried += 1 })
+            menu.retryRequested()
+            compare(retried, 1)
+            // The caller reads the Record straight off the menu.
+            compare(menu.record, record)
+        }
+
+        /// Ticket 09: `capabilities` is a BINDING at the call site, so the menu
+        /// can never show stale capabilities — flipping the record's state
+        /// re-derives the object with no populate step in between.
+        function test_capabilitiesBinding_followsRecordState_noStaleMenu() {
+            const record = createTemporaryObject(recordComponent, root, {
+                state: AbstractWebView.DownloadState.DownloadInProgress,
+                isTerminal: false
+            })
+            const menu = createTemporaryObject(menuComponent, root, {
+                record: record
+            })
+            const self = this
+            menu.capabilities = Qt.binding(function() {
+                const complete = !!menu.record
+                    && menu.record.state === AbstractWebView.DownloadState.DownloadCompleted
+                return self.caps({
+                    openInBrowser: complete,
+                    shareFile: complete,
+                    shareUrl: true
+                })
+            })
+
+            let texts = actionTexts(menu)
+            verify(texts.indexOf(qsTr("Open in Browser")) < 0)
+            verify(texts.indexOf(qsTr("Pause")) >= 0)
+
+            record.state = AbstractWebView.DownloadState.DownloadCompleted
+            record.isTerminal = true
+
+            texts = actionTexts(menu)
+            verify(texts.indexOf(qsTr("Open in Browser")) >= 0,
+                   "capabilities re-derive from the record with no populate call")
+            verify(texts.indexOf(qsTr("Copy file path")) >= 0)
+            verify(texts.indexOf(qsTr("Pause")) < 0)
         }
     }
 }

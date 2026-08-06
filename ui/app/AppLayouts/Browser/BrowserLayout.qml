@@ -864,28 +864,14 @@ StatusSectionLayout {
             onDeleteBookmarkRequested: url => root.bookmarksStore.deleteBookmark(url)
             onBookmarkClicked: url => root.openUrlInNewTab(url)
 
-            onDownloadClicked: function (listIndex) {
-                const list = root.downloadsStore.downloadsListNewestFirst()
-                const record = list[listIndex]
-                if (!record)
-                    return
-                const modelIndex = root.downloadsStore.downloadModel.indexOf(record)
-                if (modelIndex < 0)
-                    return
-                const complete = record.state === AbstractWebView.DownloadState.DownloadCompleted
-                if (downloadsContext.openDownloadFromList(complete, modelIndex))
+            onDownloadClicked: function (record) {
+                if (downloadsContext.openDownloadFromList(record))
                     close()
             }
-            onDownloadOptionsClicked: function (listIndex, anchor) {
-                const list = root.downloadsStore.downloadsListNewestFirst()
-                const record = list[listIndex]
-                if (!record)
-                    return
-                const modelIndex = root.downloadsStore.downloadModel.indexOf(record)
-                if (modelIndex < 0)
-                    return
-                downloadsContext.populateRecordMenu(downloadListMenuInst, record, modelIndex)
-                _internal.anchorRecordMenu(downloadListMenuInst, anchor, false)
+            onDownloadOptionsClicked: function (record, anchor) {
+                downloadRecordMenuInst.forStrip = false
+                downloadRecordMenuInst.record = record
+                _internal.anchorRecordMenu(downloadRecordMenuInst, anchor, false)
             }
         }
     }
@@ -943,29 +929,26 @@ StatusSectionLayout {
         }
     }
 
+    /// The one Download Record menu, shared by Downloads List and Pill strip
+    /// (ticket 09). Open sites set `record` (and `forStrip`) then anchor —
+    /// `capabilities` is a binding, so it can never go stale.
     DownloadRecordMenu {
-        id: downloadListMenuInst
-        onShowInFolderRequested: index => root.downloadsStore.openDirectory(index)
-        onShareFileRequested: index => downloadsContext.shareFileRecord(root.downloadsStore.getDownload(index))
-        onShareUrlRequested: index => downloadsContext.shareUrlRecord(root.downloadsStore.getDownload(index))
-        onOpenInBrowserRequested: index => downloadsContext.openInBrowserRecord(root.downloadsStore.getDownload(index))
-        onRetryRequested: index => downloadsContext.retryRecord(root.downloadsStore.getDownload(index))
-    }
+        id: downloadRecordMenuInst
 
-    DownloadRecordMenu {
-        id: downloadPillMenuInst
-        onDismissRequested: function (index) {
-            root.downloadsStore.dismissFromStrip(index)
+        // Pill strip opens grant session Dismiss; list opens do not.
+        property bool forStrip: false
+
+        capabilities: downloadsContext.capabilitiesFor(record, { showDismiss: forStrip })
+
+        onShowInFolderRequested: root.downloadsStore.openDirectoryForRecord(record)
+        onShareFileRequested: downloadsContext.shareFileRecord(record)
+        onShareUrlRequested: downloadsContext.shareUrlRecord(record)
+        onOpenInBrowserRequested: downloadsContext.openInBrowserRecord(record)
+        onRetryRequested: downloadsContext.retryRecord(record)
+        onDismissRequested: {
+            root.downloadsStore.dismissRecordFromStrip(record)
             _internal.syncDownloadStripVisibility()
         }
-        onShowInFolderRequested: index => {
-            root.downloadsStore.openDirectoryForRecord(
-                        root.downloadsStore.getStripDownload(index))
-        }
-        onShareFileRequested: index => downloadsContext.shareFileRecord(root.downloadsStore.getStripDownload(index))
-        onShareUrlRequested: index => downloadsContext.shareUrlRecord(root.downloadsStore.getStripDownload(index))
-        onOpenInBrowserRequested: index => downloadsContext.openInBrowserRecord(root.downloadsStore.getStripDownload(index))
-        onRetryRequested: index => downloadsContext.retryRecord(root.downloadsStore.getStripDownload(index))
     }
 
     Component {
@@ -1018,15 +1001,15 @@ StatusSectionLayout {
         id: downloadPillStrip
         DownloadPillStrip {
             downloadsModel: root.downloadsStore.downloadStripModel
-            onOpenDownloadClicked: function (index) {
-                downloadsContext.handlePillClicked(index)
+            onOpenDownloadClicked: function (record) {
+                downloadsContext.handlePillClicked(record)
             }
-            onOptionsClicked: function (index, anchor) {
-                const record = root.downloadsStore.getStripDownload(index)
-                downloadsContext.populateRecordMenu(downloadPillMenuInst, record, index, { showDismiss: true })
+            onOptionsClicked: function (record, anchor) {
+                downloadRecordMenuInst.forStrip = true
+                downloadRecordMenuInst.record = record
                 // Mobile strip is under the address bar → menu below.
                 // Desktop strip is the window footer → menu above.
-                _internal.anchorRecordMenu(downloadPillMenuInst, anchor, !root.isMobile)
+                _internal.anchorRecordMenu(downloadRecordMenuInst, anchor, !root.isMobile)
             }
             onClose: {
                 // Hide strip only — in-progress pills stay in the session model.

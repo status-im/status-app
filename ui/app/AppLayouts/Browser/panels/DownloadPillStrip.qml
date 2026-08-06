@@ -20,9 +20,11 @@ Rectangle {
 
     readonly property int pillWidth: 227
 
-    signal openDownloadClicked(int index)
+    /// Both signals carry the Download Record — the one identity vocabulary
+    /// for a download (ticket 09); no strip-index space to translate.
+    signal openDownloadClicked(var record)
     /// anchor is the pill's ⋮ button — the menu right-aligns under (or over) it.
-    signal optionsClicked(int index, Item anchor)
+    signal optionsClicked(var record, Item anchor)
     signal close()
 
     // Figma File download: pills sit flush on a tinted strip, no card gaps, no border.
@@ -156,9 +158,9 @@ Rectangle {
                 width: root.pillWidth
                 height: ListView.view.height
 
-                onItemClicked: root.openDownloadClicked(index)
+                onItemClicked: root.openDownloadClicked(pill.record)
                 onOptionsButtonClicked: function (anchor) {
-                    root.optionsClicked(index, anchor)
+                    root.optionsClicked(pill.record, anchor)
                 }
 
                 // Figma divider: only between two blended (terminal) pills — a

@@ -237,6 +237,42 @@ Item {
             verify(options.visible)
         }
 
+        // Ticket 09: view signals carry the Download Record, not a list index.
+        function test_rowClick_emitsTheRecord() {
+            const record = createTemporaryObject(recordComponent, root)
+            const view = createTemporaryObject(listViewComponent, root, {
+                downloadsModel: [record]
+            })
+            waitForRendering(view)
+
+            let got = null
+            view.openDownloadClicked.connect(function (r) { got = r })
+            mouseClick(listRow(view, 0))
+            compare(got, record)
+        }
+
+        function test_optionsClick_emitsRecordAndAnchor() {
+            const record = createTemporaryObject(recordComponent, root, {
+                state: AbstractWebView.DownloadState.DownloadCompleted
+            })
+            const view = createTemporaryObject(listViewComponent, root, {
+                downloadsModel: [record]
+            })
+            waitForRendering(view)
+
+            let gotRecord = null
+            let gotAnchor = null
+            view.optionsClicked.connect(function (r, anchor) {
+                gotRecord = r
+                gotAnchor = anchor
+            })
+            const options = findChild(rowPill(view, 0), "downloadPillOptionsButton")
+            verify(!!options)
+            mouseClick(options)
+            compare(gotRecord, record)
+            verify(!!gotAnchor, "anchor Item for menu alignment")
+        }
+
         function test_missingFile_struckThrough_inList() {
             const record = createTemporaryObject(recordComponent, root, {
                 state: AbstractWebView.DownloadState.DownloadCompleted,

@@ -168,7 +168,7 @@ Item {
 
             verify(!!record)
             compare(store.downloadModel.length, 1)
-            compare(store.getDownload(0), record)
+            compare(store.downloadModel[0], record)
             compare(record.url, live.url)
             compare(record.fileName, "report.pdf")
             compare(record.downloadDirectory, "/tmp/downloads")
@@ -210,7 +210,7 @@ Item {
             compare(record.fileName, "report.pdf")
             compare(record.downloadDirectory, "/tmp/downloads")
             compare(store.downloadModel.length, 1)
-            compare(store.getDownload(0), record)
+            compare(store.downloadModel[0], record)
         }
 
         function test_pauseResumeCancel_forwardedToLive() {
@@ -412,9 +412,9 @@ Item {
             store.restoreDownloadHistory()
 
             compare(store.downloadModel.length, 1)
-            compare(store.getDownload(0).fileName, "x.bin")
-            compare(store.getDownload(0).state, AbstractWebView.DownloadState.DownloadInterrupted)
-            compare(store.getDownload(0).liveDownload, null)
+            compare(store.downloadModel[0].fileName, "x.bin")
+            compare(store.downloadModel[0].state, AbstractWebView.DownloadState.DownloadInterrupted)
+            compare(store.downloadModel[0].liveDownload, null)
         }
 
         function test_history_capEvictsOldest() {
@@ -462,7 +462,7 @@ Item {
             verify(Array.isArray(store.downloadStripModel))
             compare(store.downloadStripModel.length, 1)
             compare(store.downloadStripModel[0], record)
-            compare(store.getStripDownload(0), record)
+            compare(store.downloadStripModel[0], record)
         }
 
         function test_strip_newDownload_prependsNewestFirst() {
@@ -477,7 +477,7 @@ Item {
             compare(store.downloadStripModel.length, 2)
             compare(store.downloadStripModel[0], newer)
             compare(store.downloadStripModel[1], older)
-            compare(store.getStripDownload(0), newer)
+            compare(store.downloadStripModel[0], newer)
         }
 
         function test_strip_restoreHistory_doesNotPopulateStrip() {
@@ -503,18 +503,18 @@ Item {
             compare(store.downloadStripModel.length, 0)
         }
 
-        function test_strip_dismissFromStrip_removesOnlyFromStrip() {
+        function test_strip_dismissRecordFromStrip_removesOnlyFromStrip() {
             const store = createStore()
             const live = createTemporaryObject(fakeDownloadComponent, root)
             const record = store.addDownload(live)
             live.complete()
 
             compare(store.downloadStripModel.length, 1)
-            store.dismissFromStrip(0)
+            store.dismissRecordFromStrip(record)
 
             compare(store.downloadStripModel.length, 0)
             compare(store.downloadModel.length, 1)
-            compare(store.getDownload(0), record)
+            compare(store.downloadModel[0], record)
         }
 
         function test_strip_dismissRecord_byIdentity() {
@@ -579,8 +579,7 @@ Item {
             store.addDownload(live1)
             store.addDownload(live2)
 
-            const list = store.downloadsListNewestFirst()
-            compare(list, store.downloadsListModel)
+            const list = store.downloadsListModel
             compare(list.length, 2)
             compare(list[0].fileName, "new.bin")
             compare(list[1].fileName, "old.bin")

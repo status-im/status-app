@@ -92,14 +92,13 @@ SplitView {
             property var downloadModel: []
             property string downloadsDirectory: "/tmp/status-storybook-downloads"
             // One platform seam (DownloadsStore.platform) — nothing exists on disk here.
-            property var platform: ({ fileExists: function(path) { return false } })
+            property var platform: ({
+                fileExists: function(path) { return false },
+                preferShareSheet: false,
+                showInFolderSupported: true
+            })
             readonly property url _downloadRecordUrl: Qt.resolvedUrl(
                 "../../../ui/app/AppLayouts/Browser/stores/DownloadRecord.qml")
-            function getDownload(index) {
-                if (index < 0 || index >= downloadModel.length)
-                    return null
-                return downloadModel[index]
-            }
             function addDownload(download, hostView) {
                 const component = Qt.createComponent(_downloadRecordUrl)
                 if (component.status !== Component.Ready)
@@ -157,8 +156,21 @@ SplitView {
                 }
                 return target
             }
-            function openFile(index) {}
-            function openDirectory(index) {}
+            // Record-vocabulary surface the shared Record menu binds against (ticket 09).
+            function refreshMissingFiles() {}
+            function canShareFile(record) {
+                return !!record && !record.missingFile && !!record.targetPath
+            }
+            function canShareUrl(record) {
+                return !!record && !!record.url && String(record.url).length > 0
+            }
+            function canShowInFolder(record) {
+                return canShareFile(record)
+            }
+            function canRetryFromMenu(record) { return false }
+            function canRetryFromTap(record) { return false }
+            function openRecord(record) {}
+            function openDirectoryForRecord(record) {}
         }
         browserRootStore: BrowserStores.BrowserRootStore {
             property var urlENSDictionary: ({})

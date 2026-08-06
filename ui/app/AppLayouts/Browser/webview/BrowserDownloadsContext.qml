@@ -118,8 +118,7 @@ QtObject {
     }
 
     /// true if the file opened (caller closes the overview). false on retry.
-    function openDownloadFromList(downloadComplete, index) {
-        const record = downloadsStore.getDownload(index)
+    function openDownloadFromList(record) {
         if (!record)
             return false
 
@@ -128,13 +127,12 @@ QtObject {
             return false
         }
 
-        if (downloadComplete)
+        if (record.state === AbstractWebView.DownloadState.DownloadCompleted)
             return openCompletedRecord(record)
         return false
     }
 
-    function handlePillClicked(index) {
-        const record = downloadsStore.getStripDownload(index)
+    function handlePillClicked(record) {
         if (!record)
             return
 
@@ -215,22 +213,23 @@ QtObject {
         downloadsStore.refreshMissingFiles()
     }
 
-    /// Fill a Record menu's record + capability flags (menus stay store-free).
-    /// options.showDismiss — pill strip session dismiss.
-    function populateRecordMenu(menu, record, index, options) {
-        if (!menu || !record)
-            return
+    /// The one capability vocabulary for a Download Record menu (ticket 09):
+    /// store predicates + the open seam's canOpenInBrowser + the platform
+    /// share-vs-copy fact. BIND it at the call site
+    /// (capabilities: ctx.capabilitiesFor(menu.record, options)) so a stale
+    /// menu is structurally impossible — the Missing File refresh happens here,
+    /// never at call sites. options.showDismiss — pill strip session dismiss.
+    function capabilitiesFor(record, options) {
         downloadsStore.refreshMissingFiles()
-        const pdf = supportsPdfFn()
-        menu.record = record
-        menu.index = index
-        menu.useShareLabels = !!(downloadsStore.platform && downloadsStore.platform.preferShareSheet)
-        menu.canShareFile = downloadsStore.canShareFile(record)
-        menu.canShareUrl = downloadsStore.canShareUrl(record)
-        menu.canOpenInBrowser = _openContext.canOpenInBrowser(record, pdf)
-        menu.canShowInFolder = downloadsStore.canShowInFolder(record)
-        menu.canRetry = downloadsStore.canRetryFromMenu(record)
-        menu.showDismiss = !!(options && options.showDismiss)
+        return {
+            openInBrowser: _openContext.canOpenInBrowser(record, supportsPdfFn()),
+            shareFile: downloadsStore.canShareFile(record),
+            shareUrl: downloadsStore.canShareUrl(record),
+            showInFolder: downloadsStore.canShowInFolder(record),
+            retry: downloadsStore.canRetryFromMenu(record),
+            dismiss: !!(options && options.showDismiss),
+            useShareLabels: !!(downloadsStore.platform && downloadsStore.platform.preferShareSheet)
+        }
     }
 
     /// Retry Backend must match the Record profile (ADR 0006 §7) and must be a

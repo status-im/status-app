@@ -84,18 +84,6 @@ QtObject {
         onTriggered: root.saveDownloadHistoryNow()
     }
 
-    function getDownload(index) {
-        if (index < 0 || index >= downloadModel.length)
-            return null
-        return downloadModel[index]
-    }
-
-    function getStripDownload(index) {
-        if (index < 0 || index >= downloadStripModel.length)
-            return null
-        return downloadStripModel[index]
-    }
-
     /// hostView is the host Web View (LazyWebViewAdapter) that owns this Download.
     /// Required for Retained View ownership; Backend download.view is unreliable on mobile.
     function addDownload(download, hostView) {
@@ -197,20 +185,14 @@ QtObject {
     }
 
     /// Remove a Record from the Download Pill strip only (History / downloadModel unchanged).
-    function dismissFromStrip(index) {
-        if (index < 0 || index >= downloadStripModel.length)
-            return
-        const next = downloadStripModel.slice()
-        next.splice(index, 1)
-        downloadStripModel = next
-    }
-
     function dismissRecordFromStrip(record) {
         if (!record)
             return
         for (let i = 0; i < downloadStripModel.length; ++i) {
             if (downloadStripModel[i] === record) {
-                dismissFromStrip(i)
+                const next = downloadStripModel.slice()
+                next.splice(i, 1)
+                downloadStripModel = next
                 return
             }
         }
@@ -220,18 +202,10 @@ QtObject {
         downloadStripModel = []
     }
 
-    function openFile(index) {
-        openRecord(getDownload(index))
-    }
-
     function openRecord(record) {
         if (!record || record.missingFile)
             return
         Qt.openUrlExternally(UrlUtils.urlFromUserInput(record.targetPath))
-    }
-
-    function openDirectory(index) {
-        openDirectoryForRecord(getDownload(index))
     }
 
     function openDirectoryForRecord(record) {
@@ -244,12 +218,6 @@ QtObject {
             return
         if (root.platform && root.platform.showInFolder)
             root.platform.showInFolder(path)
-    }
-
-    /// Newest Download Records first for the Downloads List UI (History stays oldest-first).
-    /// Prefer `downloadsListModel` for bindings; this remains for one-shot lookups.
-    function downloadsListNewestFirst() {
-        return downloadsListModel
     }
 
     /// Lazy Missing File probe for Completed Records (list shown / app foreground).
