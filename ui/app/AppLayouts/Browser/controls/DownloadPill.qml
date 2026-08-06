@@ -8,8 +8,10 @@ import StatusQ.Controls
 import AppLayouts.Browser.adapters
 
 /**
- * Compact Download Pill (Browser CONTEXT / Figma File download).
- * Left: Pause | Play | file | downloads. Right: downloads-cancel | more-v | none.
+ * The one delegate for a Download Record (Browser CONTEXT / Figma File download,
+ * browser-downloads-polish 03): the strip renders it as a capsule, the Downloads
+ * List as a flat row. The state-to-controls matrix lives here and only here.
+ * Left: Pause | Play | file | downloads. Right: downloads-cancel | more-v.
  */
 Rectangle {
     id: root
@@ -29,6 +31,19 @@ Rectangle {
 
     // Optional: DownloadsStore.statusText — single wording for strip and list.
     property var statusTextFn: null
+
+    // Presentation knobs (browser-downloads-polish 03): the surfaces differ in
+    // chrome, not in behaviour. Defaults draw the strip capsule; the Downloads
+    // List overrides them to render a flat row inside its own hover highlight.
+    property color pillColor: root.highlighted ? Theme.palette.background : Theme.palette.baseColor2
+    property int nameFontSize: Theme.additionalTextSize
+    property int statusFontSize: Theme.tertiaryTextFontSize
+    property int leadingSlotSize: 24
+    property int contentSpacing: Theme.halfPadding
+    property int leadingMargin: 12
+    property int trailingMargin: Theme.halfPadding
+    // False when a surrounding delegate (Downloads List row) owns the click.
+    property bool interactive: true
 
     readonly property int primaryAction: {
         if (!download)
@@ -51,8 +66,13 @@ Rectangle {
     readonly property bool resumeButtonVisible: primaryAction === DownloadPill.PrimaryAction.Resume
     readonly property bool cancelButtonVisible: primaryAction === DownloadPill.PrimaryAction.Pause
             || primaryAction === DownloadPill.PrimaryAction.Resume
+    // Cancelled keeps its ⋮ so Retry/Dismiss stay reachable (polish 03 reverses
+    // the earlier no-right-control matrix).
     readonly property bool optionsButtonVisible: primaryAction === DownloadPill.PrimaryAction.File
             || primaryAction === DownloadPill.PrimaryAction.None
+            || primaryAction === DownloadPill.PrimaryAction.Cancelled
+
+    readonly property bool missingFile: !!(download && download.missingFile)
 
     /// Figma File download: only non-terminal Records get the white card; finished
     /// ones blend into the strip background.
@@ -101,7 +121,7 @@ Rectangle {
     implicitHeight: 44
     implicitWidth: 227
     height: implicitHeight
-    color: root.highlighted ? Theme.palette.background : Theme.palette.baseColor2
+    color: root.pillColor
     clip: true
 
     // FontMetrics.advanceWidth(text) is a method; TextMetrics.advanceWidth is a property.
@@ -130,6 +150,7 @@ Rectangle {
 
     MouseArea {
         anchors.fill: parent
+        enabled: root.interactive
         acceptedButtons: Qt.LeftButton
         onClicked: root.itemClicked()
     }
@@ -137,37 +158,40 @@ Rectangle {
     RowLayout {
         anchors.fill: parent
         // Figma File download: 12px inset, 8px between Play/text and text/Cancel.
-        anchors.leftMargin: 12
-        anchors.rightMargin: Theme.halfPadding
-        spacing: Theme.halfPadding
+        anchors.leftMargin: root.leadingMargin
+        anchors.rightMargin: root.trailingMargin
+        spacing: root.contentSpacing
 
-        StatusFlatRoundButton {
-            id: primaryBtn
-            objectName: "downloadPillPrimaryButton"
-            Layout.preferredWidth: 24
-            Layout.preferredHeight: 24
+        // Fixed leading slot — without a shared width, filenames jog left/right by state.
+        Item {
+            Layout.preferredWidth: root.leadingSlotSize
+            Layout.preferredHeight: root.leadingSlotSize
             Layout.alignment: Qt.AlignVCenter
 
-            visible: root.primaryAction === DownloadPill.PrimaryAction.Pause
-                     || root.primaryAction === DownloadPill.PrimaryAction.Resume
-            icon.name: root.pauseButtonVisible ? "pause" : "play"
-            type: StatusFlatRoundButton.Type.Tertiary
-            onClicked: root.triggerPrimaryAction()
-        }
+            StatusFlatRoundButton {
+                id: primaryBtn
+                objectName: "downloadPillPrimaryButton"
+                anchors.centerIn: parent
+                width: root.leadingSlotSize
+                height: root.leadingSlotSize
+                visible: root.pauseButtonVisible || root.resumeButtonVisible
+                icon.name: root.pauseButtonVisible ? "pause" : "play"
+                type: StatusFlatRoundButton.Type.Tertiary
+                onClicked: root.triggerPrimaryAction()
+            }
 
-        StatusIcon {
-            id: statusIcon
-            Layout.preferredWidth: 24
-            Layout.preferredHeight: 24
-            Layout.alignment: Qt.AlignVCenter
-            visible: root.primaryAction === DownloadPill.PrimaryAction.File
-                     || root.primaryAction === DownloadPill.PrimaryAction.Cancelled
-                     || root.primaryAction === DownloadPill.PrimaryAction.None
-            icon: root.primaryAction === DownloadPill.PrimaryAction.Cancelled ? "downloads" : "file"
-            color: root.primaryAction === DownloadPill.PrimaryAction.Cancelled
-                   ? Theme.palette.baseColor1
-                   : Theme.palette.directColor1
-            opacity: root.primaryAction === DownloadPill.PrimaryAction.None ? 0.5 : 1
+            StatusIcon {
+                anchors.centerIn: parent
+                width: 24
+                height: 24
+                visible: !primaryBtn.visible
+                icon: root.primaryAction === DownloadPill.PrimaryAction.Cancelled ? "downloads" : "file"
+                color: root.missingFile
+                       || root.primaryAction === DownloadPill.PrimaryAction.Cancelled
+                       ? Theme.palette.baseColor1
+                       : Theme.palette.directColor1
+                opacity: root.primaryAction === DownloadPill.PrimaryAction.None ? 0.5 : 1
+            }
         }
 
         Item {
@@ -186,12 +210,15 @@ Rectangle {
 
                 StatusBaseText {
                     id: fileNameLabel
+                    objectName: "downloadPillFileNameLabel"
                     Layout.fillWidth: true
                     text: root.fileNameText
                     elide: Text.ElideNone
                     maximumLineCount: 1
-                    font.pixelSize: Theme.additionalTextSize
-                    color: Theme.palette.directColor1
+                    font.pixelSize: root.nameFontSize
+                    // Missing File follows the Record, not the surface (polish 03).
+                    font.strikeout: root.missingFile
+                    color: root.missingFile ? Theme.palette.baseColor1 : Theme.palette.directColor1
                 }
 
                 StatusBaseText {
@@ -200,7 +227,7 @@ Rectangle {
                     text: root.statusText
                     elide: Text.ElideRight
                     maximumLineCount: 1
-                    font.pixelSize: Theme.tertiaryTextFontSize
+                    font.pixelSize: root.statusFontSize
                     color: root.primaryAction === DownloadPill.PrimaryAction.Cancelled
                            ? Theme.palette.dangerColor1
                            : Theme.palette.baseColor1
@@ -222,28 +249,35 @@ Rectangle {
             }
         }
 
-        StatusFlatRoundButton {
-            id: cancelBtn
-            objectName: "downloadPillCancelButton"
+        // Fixed trailing slot so Cancel vs ⋮ does not shift the text column.
+        Item {
             Layout.preferredWidth: 32
             Layout.preferredHeight: 32
             Layout.alignment: Qt.AlignVCenter
-            visible: root.cancelButtonVisible
-            icon.name: "downloads-cancel"
-            type: StatusFlatRoundButton.Type.Tertiary
-            onClicked: root.triggerCancel()
-        }
 
-        StatusFlatRoundButton {
-            id: optionsBtn
-            objectName: "downloadPillOptionsButton"
-            Layout.preferredWidth: 32
-            Layout.preferredHeight: 32
-            Layout.alignment: Qt.AlignVCenter
-            visible: root.optionsButtonVisible
-            icon.name: "more-v"
-            type: StatusFlatRoundButton.Type.Tertiary
-            onClicked: root.optionsButtonClicked(optionsBtn)
+            StatusFlatRoundButton {
+                id: cancelBtn
+                objectName: "downloadPillCancelButton"
+                anchors.centerIn: parent
+                width: 32
+                height: 32
+                visible: root.cancelButtonVisible
+                icon.name: "downloads-cancel"
+                type: StatusFlatRoundButton.Type.Tertiary
+                onClicked: root.triggerCancel()
+            }
+
+            StatusFlatRoundButton {
+                id: optionsBtn
+                objectName: "downloadPillOptionsButton"
+                anchors.centerIn: parent
+                width: 32
+                height: 32
+                visible: root.optionsButtonVisible
+                icon.name: "more-v"
+                type: StatusFlatRoundButton.Type.Tertiary
+                onClicked: root.optionsButtonClicked(optionsBtn)
+            }
         }
     }
 }

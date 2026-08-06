@@ -142,7 +142,9 @@ Item {
             compare(store.statusText(done), "")
         }
 
-        function test_cancelled_iconLeft_canceledStatus_noRightControl() {
+        function test_cancelled_iconLeft_canceledStatus_hasOptionsMenu() {
+            // polish 03: Cancelled keeps its ⋮ so Retry/Dismiss stay reachable
+            // from the strip (reverses the earlier no-right-control matrix).
             const store = createStore()
             const cancelled = createTemporaryObject(recordComponent, root, {
                 state: AbstractWebView.DownloadState.DownloadCancelled,
@@ -153,7 +155,7 @@ Item {
             compare(pill.primaryAction, DownloadPill.PrimaryAction.Cancelled)
             compare(pill.statusText, qsTr("Canceled"))
             compare(store.statusText(cancelled), qsTr("Canceled"))
-            verify(!pill.optionsButtonVisible)
+            verify(pill.optionsButtonVisible)
             verify(!pill.cancelButtonVisible)
         }
 
@@ -181,7 +183,7 @@ Item {
             compare(record.state, AbstractWebView.DownloadState.DownloadCancelled)
             compare(pill.primaryAction, DownloadPill.PrimaryAction.Cancelled)
             verify(!pill.cancelButtonVisible)
-            verify(!pill.optionsButtonVisible)
+            verify(pill.optionsButtonVisible) // polish 03: Cancelled keeps its ⋮
         }
 
         function test_elideFileName_middleElidesBase_keepsExtension() {

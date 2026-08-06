@@ -68,6 +68,13 @@ Item {
             return row
         }
 
+        // Rows render through the shared DownloadPill delegate (polish 03).
+        function rowPill(view, index) {
+            const pill = findChild(listRow(view, index), "downloadPill")
+            verify(!!pill, "row " + index + " renders the shared DownloadPill")
+            return pill
+        }
+
         function test_empty_placeholder_visible_when_noRecords() {
             const view = createTemporaryObject(listViewComponent, root, {
                 downloadsModel: []
@@ -140,23 +147,23 @@ Item {
             })
             waitForRendering(view)
 
-            const row = listRow(view, 0)
-            compare(row.primaryAction, DownloadPill.PrimaryAction.Resume)
-            verify(row.resumeButtonVisible)
-            verify(!row.pauseButtonVisible)
-            verify(row.cancelButtonVisible)
-            verify(!row.optionsButtonVisible)
+            const pill = rowPill(view, 0)
+            compare(pill.primaryAction, DownloadPill.PrimaryAction.Resume)
+            verify(pill.resumeButtonVisible)
+            verify(!pill.pauseButtonVisible)
+            verify(pill.cancelButtonVisible)
+            verify(!pill.optionsButtonVisible)
 
-            const primary = findChild(row, "downloadsListPrimaryButton")
+            const primary = findChild(pill, "downloadPillPrimaryButton")
             verify(!!primary)
             verify(primary.visible)
             compare(primary.icon.name, "play")
 
-            const cancel = findChild(row, "downloadsListCancelButton")
+            const cancel = findChild(pill, "downloadPillCancelButton")
             verify(!!cancel)
             verify(cancel.visible)
 
-            const options = findChild(row, "downloadsListOptionsButton")
+            const options = findChild(pill, "downloadPillOptionsButton")
             verify(!!options)
             verify(!options.visible)
         }
@@ -170,12 +177,12 @@ Item {
             })
             waitForRendering(view)
 
-            const row = listRow(view, 0)
-            compare(row.primaryAction, DownloadPill.PrimaryAction.Pause)
-            verify(row.pauseButtonVisible)
-            verify(!row.resumeButtonVisible)
-            verify(row.cancelButtonVisible)
-            verify(!row.optionsButtonVisible)
+            const pill = rowPill(view, 0)
+            compare(pill.primaryAction, DownloadPill.PrimaryAction.Pause)
+            verify(pill.pauseButtonVisible)
+            verify(!pill.resumeButtonVisible)
+            verify(pill.cancelButtonVisible)
+            verify(!pill.optionsButtonVisible)
         }
 
         function test_paused_primaryButton_resumesRecord() {
@@ -188,10 +195,10 @@ Item {
             })
             waitForRendering(view)
 
-            const row = listRow(view, 0)
-            row.triggerPrimaryAction()
+            const pill = rowPill(view, 0)
+            pill.triggerPrimaryAction()
             compare(record.state, AbstractWebView.DownloadState.DownloadInProgress)
-            compare(row.primaryAction, DownloadPill.PrimaryAction.Pause)
+            compare(pill.primaryAction, DownloadPill.PrimaryAction.Pause)
         }
 
         function test_completed_showsOptions_noInlineTransferControls() {
@@ -203,12 +210,46 @@ Item {
             })
             waitForRendering(view)
 
-            const row = listRow(view, 0)
-            compare(row.primaryAction, DownloadPill.PrimaryAction.File)
-            verify(!row.pauseButtonVisible)
-            verify(!row.resumeButtonVisible)
-            verify(!row.cancelButtonVisible)
-            verify(row.optionsButtonVisible)
+            const pill = rowPill(view, 0)
+            compare(pill.primaryAction, DownloadPill.PrimaryAction.File)
+            verify(!pill.pauseButtonVisible)
+            verify(!pill.resumeButtonVisible)
+            verify(!pill.cancelButtonVisible)
+            verify(pill.optionsButtonVisible)
+        }
+
+        function test_cancelled_showsOptionsMenu_inList() {
+            const record = createTemporaryObject(recordComponent, root, {
+                state: AbstractWebView.DownloadState.DownloadCancelled
+            })
+            const view = createTemporaryObject(listViewComponent, root, {
+                downloadsModel: [record]
+            })
+            waitForRendering(view)
+
+            const pill = rowPill(view, 0)
+            compare(pill.primaryAction, DownloadPill.PrimaryAction.Cancelled)
+            verify(!pill.cancelButtonVisible)
+            verify(pill.optionsButtonVisible, "Cancelled keeps its ⋮ (Retry/Dismiss reachable)")
+
+            const options = findChild(pill, "downloadPillOptionsButton")
+            verify(!!options)
+            verify(options.visible)
+        }
+
+        function test_missingFile_struckThrough_inList() {
+            const record = createTemporaryObject(recordComponent, root, {
+                state: AbstractWebView.DownloadState.DownloadCompleted,
+                missingFile: true
+            })
+            const view = createTemporaryObject(listViewComponent, root, {
+                downloadsModel: [record]
+            })
+            waitForRendering(view)
+
+            const label = findChild(rowPill(view, 0), "downloadPillFileNameLabel")
+            verify(!!label)
+            verify(label.font.strikeout, "Missing File is struck through in the list")
         }
     }
 }
