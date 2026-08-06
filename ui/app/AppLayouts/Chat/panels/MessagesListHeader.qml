@@ -13,10 +13,9 @@ RowLayout {
 
     property bool createChatOpened: false
     property alias searchChecked: searchBtn.checked
+    // Search only acts on the loaded chat list; disabled while the section loads
+    property alias searchEnabled: searchBtn.enabled
     property bool searchVisible: true
-    // Search only acts on the loaded chat list; while the section loads,
-    // its slot shows a loading tile instead of the button
-    property bool searchLoading: false
 
     signal shareOwnProfileRequested()
     signal startChatClicked()
@@ -59,17 +58,6 @@ RowLayout {
         icon.name: "search"
         tooltip.text: qsTr("Search")
         checkable: true
-        visible: root.searchVisible && !root.searchLoading
-    }
-
-    LoadingSkeletonGroup {
-        visible: root.searchLoading
-        Layout.preferredWidth: 32
-        Layout.preferredHeight: 32
-
-        LoadingSkeletonTile {
-            anchors.fill: parent
-            radius: width / 2
-        }
+        visible: root.searchVisible
     }
 }

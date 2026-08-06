@@ -17,11 +17,11 @@ ColumnLayout {
     spacing: Theme.padding
 
     // The real header: invite and start-chat act app-globally, so they work
-    // before the section exists; search shows its loading tile
+    // before the section exists; search needs the loaded list, so it is disabled
     MessagesListHeader {
         id: header
         Layout.fillWidth: true
-        searchLoading: true
+        searchEnabled: false
 
         onShareOwnProfileRequested: root.shareOwnProfileRequested()
         onStartChatClicked: root.startChatClicked()
