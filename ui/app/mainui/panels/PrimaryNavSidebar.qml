@@ -219,105 +219,174 @@ Control {
         }
     }
 
-    contentItem: ColumnLayout {
-        spacing: root.spacing
+    // The content is heavy (~30 buttons, identicons, badges); load it asynchronously
+    // so the sidebar doesn't block the GUI thread during AppMain creation.
+    contentItem: Loader {
+        id: contentLoader
+        asynchronous: true
+        sourceComponent: sidebarContentComponent
 
-        // main section
-        Control {
-            objectName: "primaryNavSideBarControl"
+        // Skeleton mirroring the sidebar layout, shown while the content incubates
+        ColumnLayout {
+            anchors.fill: parent
+            visible: contentLoader.status !== Loader.Ready
+            spacing: root.spacing
 
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            topPadding: Theme.defaultHalfPadding
-            bottomPadding: Theme.defaultBigPadding
-
-            background: Rectangle {
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
                 color: d.containerBgColor
                 radius: d.containerBgRadius
-            }
 
-            contentItem: ColumnLayout {
-                // regular sections + communities
-                SidebarListView {
-                    Layout.fillHeight: true
-                    model: root.regularItemsModel
-                    delegate: Loader {
-                        required property int index
-                        required property var model
-                        anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
-                        sourceComponent: model.sectionType === Constants.appSection.community ? communitySectionButtonComponent
-                                                                                              : regularSectionButtonComponent
+                LoadingSkeletonGroup {
+                    anchors.top: parent.top
+                    anchors.topMargin: Theme.defaultHalfPadding
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: sidebarSkeletonLayout.implicitWidth
+                    height: sidebarSkeletonLayout.implicitHeight
+
+                    ColumnLayout {
+                        id: sidebarSkeletonLayout
+                        anchors.fill: parent
+                        spacing: root.spacing
+
+                        Repeater {
+                            model: 5
+                            LoadingSkeletonTile {
+                                implicitWidth: 42
+                                implicitHeight: 42
+                                radius: width / 2
+                            }
+                        }
                     }
                 }
+            }
 
-                // separator
-                SidebarSeparator {
-                    Layout.topMargin: Theme.defaultHalfPadding
-                    Layout.bottomMargin: Theme.defaultHalfPadding
-                }
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: width
+                color: d.containerBgColor
+                radius: d.containerBgRadius
 
-                // qr + settings
-                SidebarListView {
-                    Layout.preferredHeight: contentHeight
-                    model: root.bottomItemsModel
-                    delegate: BottomSectionButton {}
-                }
+                LoadingSkeletonGroup {
+                    anchors.fill: parent
 
-                // own profile
-                ProfileButton {
-                    objectName: "statusProfileNavBarTabButton"
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.topMargin: root.spacing
-                    loading: root.profileLoading
-                    name: root.selfContactDetails.preferredDisplayName
-                    pubKey: root.selfContactDetails.publicKey
-                    compressedPubKey: root.selfContactDetails.compressedPubKey
-                    iconSource: root.selfContactDetails.largeImage
-                    colorId: root.selfContactDetails.colorId
-                    currentUserStatus: root.selfContactDetails.onlineStatus
-                    usesDefaultName: root.selfContactDetails.usesDefaultName
-                    bio: root.selfContactDetails.bio
-
-                    getEmojiHashFn: root.getEmojiHashFn
-                    getLinkToProfileFn: root.getLinkToProfileFn
-
-                    onSetCurrentUserStatusRequested: (status) => root.setCurrentUserStatusRequested(status)
-                    onViewProfileRequested: (pubKey) => root.viewProfileRequested(pubKey)
-                    onShareOwnProfileRequested: root.shareOwnProfileRequested()
+                    LoadingSkeletonTile {
+                        anchors.fill: parent
+                        radius: d.containerBgRadius
+                    }
                 }
             }
         }
+    }
 
-        // AC button
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: width
+    Component {
+        id: sidebarContentComponent
 
-            // prevent opacity multiplying; root has a "transparent" background!
-            color: d.containerBgColor
-            radius: d.containerBgRadius
+        ColumnLayout {
+            spacing: root.spacing
 
-            PrimaryNavSidebarButton {
-                anchors.fill: parent
-                bgRadius: parent.radius
+            // main section
+            Control {
+                objectName: "primaryNavSideBarControl"
 
-                objectName: "Activity Center-navbar"
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                topPadding: Theme.defaultHalfPadding
+                bottomPadding: Theme.defaultBigPadding
 
-                checkable: true
-                checked: root.acVisible
-                tooltipText: qsTr("Activity Center")
+                background: Rectangle {
+                    color: d.containerBgColor
+                    radius: d.containerBgRadius
+                }
 
-                icon.name: "notification"
+                contentItem: ColumnLayout {
+                    // regular sections + communities
+                    SidebarListView {
+                        Layout.fillHeight: true
+                        model: root.regularItemsModel
+                        delegate: Loader {
+                            required property int index
+                            required property var model
+                            anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
+                            sourceComponent: model.sectionType === Constants.appSection.community ? communitySectionButtonComponent
+                                                                                                  : regularSectionButtonComponent
+                            asynchronous: true
+                        }
+                    }
 
-                showBadge: (root.acHasUnseenNotifications || root.acUnreadNotificationsCount) && root.opened
-                badgeCount: root.acUnreadNotificationsCount
+                    // separator
+                    SidebarSeparator {
+                        Layout.topMargin: Theme.defaultHalfPadding
+                        Layout.bottomMargin: Theme.defaultHalfPadding
+                    }
 
-                thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
+                    // qr + settings
+                    SidebarListView {
+                        Layout.preferredHeight: contentHeight
+                        model: root.bottomItemsModel
+                        delegate: BottomSectionButton {}
+                    }
 
-                onToggled: {
-                    root.activityCenterRequested(checked)
-                    if (!root.keepOpenWhenPopups)
-                        root.close()
+                    // own profile
+                    Loader {
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.topMargin: root.spacing
+                        asynchronous: true
+                        sourceComponent: ProfileButton {
+                            objectName: "statusProfileNavBarTabButton"
+                            loading: root.profileLoading
+                            name: root.selfContactDetails.preferredDisplayName
+                            pubKey: root.selfContactDetails.publicKey
+                            compressedPubKey: root.selfContactDetails.compressedPubKey
+                            iconSource: root.selfContactDetails.largeImage
+                            colorId: root.selfContactDetails.colorId
+                            currentUserStatus: root.selfContactDetails.onlineStatus
+                            usesDefaultName: root.selfContactDetails.usesDefaultName
+                            bio: root.selfContactDetails.bio
+
+                            getEmojiHashFn: root.getEmojiHashFn
+                            getLinkToProfileFn: root.getLinkToProfileFn
+
+                            onSetCurrentUserStatusRequested: (status) => root.setCurrentUserStatusRequested(status)
+                            onViewProfileRequested: (pubKey) => root.viewProfileRequested(pubKey)
+                            onShareOwnProfileRequested: root.shareOwnProfileRequested()
+                        }
+                    }
+                }
+            }
+
+            // AC button
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: width
+
+                // prevent opacity multiplying; root has a "transparent" background!
+                color: d.containerBgColor
+                radius: d.containerBgRadius
+
+                PrimaryNavSidebarButton {
+                    anchors.fill: parent
+                    bgRadius: parent.radius
+
+                    objectName: "Activity Center-navbar"
+
+                    checkable: true
+                    checked: root.acVisible
+                    tooltipText: qsTr("Activity Center")
+
+                    icon.name: "notification"
+
+                    showBadge: (root.acHasUnseenNotifications || root.acUnreadNotificationsCount) && root.opened
+                    badgeCount: root.acUnreadNotificationsCount
+
+                    thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
+
+                    onToggled: {
+                        root.activityCenterRequested(checked)
+                        if (!root.keepOpenWhenPopups)
+                            root.close()
+                    }
                 }
             }
         }
