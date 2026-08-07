@@ -311,9 +311,13 @@ void NativePasteButtonItem_iOS::syncToNative()
 qreal NativePasteButtonItem_iOS::scaleFactor() const
 {
     UIView* view = getUIView();
-    const qreal hwScale = view ? view.contentScaleFactor : 0.0;
-    if (!window() || hwScale <= 0.0)
+    if (!view || !window())
         return 1.0;
+
+    const qreal hwScale = view.contentScaleFactor;
+    if (qFuzzyIsNull(hwScale))
+        return 1.0;
+
     return window()->devicePixelRatio() / hwScale;
 }
 
