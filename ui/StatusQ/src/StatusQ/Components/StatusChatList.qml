@@ -127,6 +127,7 @@ Item {
                         visible: draggableItem.isCategory
 
                         function setupPopup() {
+                            categoryPopupMenuSlot.active = true
                             categoryPopupMenuSlot.item.categoryItem = model
                         }
                         Connections {
@@ -225,6 +226,7 @@ Item {
                             if (mouse.button === Qt.RightButton && !!root.popupMenu) {
                                 statusChatListItem.highlighted = true
 
+                                popupMenuSlot.active = true
                                 const originalOpenHandler = popupMenuSlot.item.openHandler
                                 const originalCloseHandler = popupMenuSlot.item.closeHandler
 
@@ -262,13 +264,17 @@ Item {
         }
     }
 
+    // The menus instantiate on first use (right click / menu button) — an
+    // assigned sourceComponent alone must not build the full menu tree at
+    // list creation. Activation is synchronous, so `.item` is valid right
+    // after setting `active`.
     Loader {
         id: popupMenuSlot
-        active: !!sourceComponent
+        active: false
     }
 
     Loader {
         id: categoryPopupMenuSlot
-        active: !!sourceComponent
+        active: false
     }
 }

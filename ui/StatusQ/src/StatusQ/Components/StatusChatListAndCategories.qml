@@ -38,6 +38,7 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: {
             if (mouse.button === Qt.RightButton && showPopupMenu && !!root.popupMenu) {
+                popupMenuSlot.active = true
                 popupMenuSlot.item.popup(mouse.x + 4, mouse.y + 6)
                 return
             }
@@ -85,6 +86,7 @@ Item {
 
     Loader {
         id: popupMenuSlot
-        active: !!sourceComponent
+        // Built on first right click — see StatusChatList's menu slots
+        active: false
     }
 }
