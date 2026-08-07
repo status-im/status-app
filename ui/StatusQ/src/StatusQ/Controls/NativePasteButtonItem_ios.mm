@@ -43,7 +43,7 @@ private:
 
     bool isOccluded() const;
     qreal effectiveOpacity() const;
-    static qreal scaleFactor();
+    qreal scaleFactor() const;
 
     // Clips the control to the item's visible viewport. A native view is
     // composited above the whole Qt scene, so without this it draws over
@@ -303,17 +303,18 @@ void NativePasteButtonItem_iOS::syncToNative()
 }
 
 
-// QT_SCALE_FACTOR cannot change at runtime; parsing it per frame allocated a
-// QString on every rendered frame.
-qreal NativePasteButtonItem_iOS::scaleFactor()
+// Qt logical coordinates -> UIKit points. Both are "points" on iOS, so the
+// factor is 1 unless Qt has been told to scale on top of that. The window's
+// devicePixelRatio is the hardware scale times any such extra scaling, and the
+// view's contentScaleFactor is the hardware scale alone, so their ratio is
+// exactly the extra factor - without having to know how Qt was asked for it.
+qreal NativePasteButtonItem_iOS::scaleFactor() const
 {
-    static const qreal scale = []() -> qreal {
-        const QString env = qEnvironmentVariable("QT_SCALE_FACTOR");
-        bool ok = false;
-        const qreal parsed = env.toDouble(&ok);
-        return (ok && parsed > 0.0) ? parsed : 1.0;
-    }();
-    return scale;
+    UIView* view = getUIView();
+    const qreal hwScale = view ? view.contentScaleFactor : 0.0;
+    if (!window() || hwScale <= 0.0)
+        return 1.0;
+    return window()->devicePixelRatio() / hwScale;
 }
 
 qreal NativePasteButtonItem_iOS::effectiveOpacity() const

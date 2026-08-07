@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 
 import StatusQ
 import StatusQ.Core.Theme
@@ -20,7 +21,7 @@ import StatusQ.Core.Utils as SQUtils
    themselves - reading it to decide enablement is what caused issues #21365
    and #21438.
 */
-Item {
+Control {
     id: root
 
     /*! Emitted with the pasted plain text once the paste is authorised. */
@@ -40,15 +41,25 @@ Item {
     property int size: StatusBaseButton.Size.Tiny
     property color borderColor: "transparent"
     property int borderWidth: 0
-    property int fontWeight: Font.Medium
-    property int focusPolicy: Qt.StrongFocus
 
-    implicitWidth: impl.item ? impl.item.implicitWidth : 0
-    implicitHeight: impl.item ? impl.item.implicitHeight : 0
+    // StatusBaseButton's defaults, restated so the whole font group can be
+    // handed to it: it binds family, weight and pixelSize itself, so a
+    // consumer's font only reaches the label if it arrives as one group.
+    font.family: Fonts.baseFont.family
+    font.weight: Font.Medium
+    font.pixelSize: {
+        if (root.size === StatusBaseButton.Size.Large)
+            return Theme.primaryTextFontSize
+        return Theme.additionalTextSize
+    }
+    /*!
+       Focus policy of the desktop button. Kept separate from the wrapper's own
+       \c focusPolicy, which stays Qt.NoFocus so the composite does not add a
+       second tab stop in front of the button.
+    */
+    property int buttonFocusPolicy: Qt.StrongFocus
 
-    Loader {
-        id: impl
-        anchors.fill: parent
+    contentItem: Loader {
         sourceComponent: SQUtils.Utils.isIOS ? nativeComponent : buttonComponent
     }
 
@@ -80,8 +91,13 @@ Item {
             size: root.size
             borderColor: root.borderColor
             borderWidth: root.borderWidth
-            font.weight: root.fontWeight
-            focusPolicy: root.focusPolicy
+            // Forwarded one by one, not as a group: StatusBaseButton binds each
+            // of these itself, and a whole-group assignment here does not
+            // override those bindings.
+            font.family: root.font.family
+            font.weight: root.font.weight
+            font.pixelSize: root.font.pixelSize
+            focusPolicy: root.buttonFocusPolicy
             text: qsTr("Paste")
             enabled: root.canPaste
             onClicked: root.pasted(ClipboardUtils.text)

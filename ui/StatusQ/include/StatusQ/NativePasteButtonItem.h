@@ -18,8 +18,10 @@ class NativePasteButtonItem : public QQuickItem
     Q_OBJECT
 
     Q_PROPERTY(DisplayMode displayMode READ displayMode WRITE setDisplayMode NOTIFY displayModeChanged)
-    Q_PROPERTY(QColor foregroundColor READ foregroundColor WRITE setForegroundColor NOTIFY foregroundColorChanged)
-    Q_PROPERTY(QColor backgroundColor READ backgroundColor WRITE setBackgroundColor NOTIFY backgroundColorChanged)
+    // REQUIRED: UIKit picks each tint's default independently, so setting only
+    // one of them can leave the glyph unreadable against the fill.
+    Q_PROPERTY(QColor foregroundColor READ foregroundColor WRITE setForegroundColor NOTIFY foregroundColorChanged REQUIRED)
+    Q_PROPERTY(QColor backgroundColor READ backgroundColor WRITE setBackgroundColor NOTIFY backgroundColorChanged REQUIRED)
     Q_PROPERTY(CornerStyle cornerStyle READ cornerStyle WRITE setCornerStyle NOTIFY cornerStyleChanged)
 
 public:

@@ -39,10 +39,10 @@ StatusInput {
             id: pasteButton
 
             objectName: "pasteButton"
-            fontWeight: Font.Normal
+            font.weight: Font.Normal
             borderColor: Theme.palette.primaryColor1
             borderWidth: 1
-            focusPolicy: Qt.NoFocus
+            buttonFocusPolicy: Qt.NoFocus
             visible: root.input.edit.length === 0 && pasteButton.canPaste
             onPasted: (text) => {
                 root.input.edit.forceActiveFocus()
