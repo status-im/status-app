@@ -133,7 +133,8 @@ Rectangle {
         return ""
     }
 
-    /// anchor is the ⋮ button itself — the menu right-aligns under (or over) it.
+    /// anchor is the ⋮ button itself — the menu parents to it, right-aligns
+    /// under it and flips itself when there is no room below.
     signal optionsButtonClicked(Item anchor)
     signal primaryActionTriggered()
     signal cancelTriggered()
@@ -143,7 +144,6 @@ Rectangle {
 
     implicitHeight: 44
     implicitWidth: 227
-    height: implicitHeight
     color: root.pillColor
     clip: true
 

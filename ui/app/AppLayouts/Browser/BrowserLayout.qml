@@ -842,7 +842,8 @@ StatusSectionLayout {
             }
             // The menu needs its host: navigating actions close the overview.
             onDownloadOptionsClicked: (record, anchor) =>
-                downloadRecordMenuInst.openAnchored(record, anchor, { hostPopup: overviewModal })
+                downloadRecordMenuInst.openAt(record, anchor, { hostPopup: overviewModal })
+            onDownloadsScrolled: downloadRecordMenuInst.close()
         }
     }
 
@@ -898,7 +899,7 @@ StatusSectionLayout {
     }
 
     /// The one Download Record menu, shared by Downloads List and Pill strip.
-    /// Open sites call `openAnchored(record, anchor, options)` —
+    /// Open sites call `openAt(record, anchor, options)` —
     /// `capabilities` is a binding, so it can never go stale.
     DownloadRecordMenu {
         id: downloadRecordMenuInst
@@ -968,10 +969,9 @@ StatusSectionLayout {
             onOpenDownloadClicked: function (record) {
                 downloadsContext.handlePillClicked(record)
             }
-            // Mobile strip is under the address bar → menu below.
-            // Desktop strip is the window footer → menu above.
             onOptionsClicked: (record, anchor) =>
-                downloadRecordMenuInst.openAnchored(record, anchor, { above: !root.isMobile, forStrip: true })
+                downloadRecordMenuInst.openAt(record, anchor, { forStrip: true })
+            onScrolled: downloadRecordMenuInst.close()
             onClose: {
                 // Hide strip only — in-progress pills stay in the session model.
                 // Reappears when the next download starts (handleDownloadRequest

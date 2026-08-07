@@ -20,31 +20,30 @@ StatusMenu {
     property var record: null
 
     /// Pill strip opens grant session Dismiss; list opens do not.
-    /// Set by openAnchored options; read by the host's capabilities binding.
+    /// Set by openAt options; read by the host's capabilities binding.
     property bool forStrip: false
 
     /// The Popup this was opened from; null for pill-strip opens. Actions that
     /// navigate away from it close it, as a plain row tap does.
     property Popup hostPopup: null
 
-    /// Open right-aligned with the ⋮ `anchor` it was invoked from;
-    /// options.above opens upward, options.forStrip marks a pill-strip open,
-    /// options.hostPopup names the Popup the menu was invoked from.
-    /// x/y stay bound: the menu's width is 0 until content is first laid out.
-    function openAnchored(record, anchor, options) {
+    /// Open right-aligned under the ⋮ `anchor` it was invoked from.
+    /// popup(parent, x, y) both parents and position-fits: the menu follows the
+    /// row and flips itself when there is no room below, so there is no "above"
+    /// to pass. options.forStrip marks a pill-strip open, options.hostPopup
+    /// names the Popup it was invoked from. x stays bound (and guarded —
+    /// closing the host destroys the anchor while the menu may still be open):
+    /// the menu's width is 0 until content is first laid out.
+    function openAt(record, anchor, options) {
         root.forStrip = !!(options && options.forStrip)
         root.hostPopup = (options && options.hostPopup) ?? null
         root.record = record
-        root.parent = anchor
+        root.popup(anchor, anchor.width - root.width, anchor.height)
         root.x = Qt.binding(() => anchor ? anchor.width - root.width : 0)
-        root.y = Qt.binding(() => !anchor ? 0
-                            : (options && options.above) ? -root.height : anchor.height)
-        root.open()
     }
 
     /// Called by actions that take the user out of the host — a new page behind
-    /// it, or the OS file manager — after the caller has acted, since closing the
-    /// host destroys the anchor. Retry stays in the host, like a tap-to-retry.
+    /// it, or the OS file manager. Retry stays in the host, like a tap-to-retry.
     function _leaveHost() {
         if (root.hostPopup)
             root.hostPopup.close()

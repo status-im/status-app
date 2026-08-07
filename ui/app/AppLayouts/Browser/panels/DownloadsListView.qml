@@ -21,8 +21,11 @@ Item {
     /// Both signals carry the Download Record — the one identity vocabulary
     /// for a download; no index space to translate.
     signal openDownloadClicked(var record)
-    /// anchor is the row's ⋮ button — the menu right-aligns under it.
+    /// anchor is the row's ⋮ button — the menu parents to it.
     signal optionsClicked(var record, Item anchor)
+    /// A context menu over a scrolling list should not linger, attached or
+    /// not — the host closes it when the list starts moving.
+    signal scrolled()
 
     // Length, not Array.isArray: createObject converts JS arrays so isArray fails
     // while .length still reports Records.
@@ -35,14 +38,12 @@ Item {
         anchors.fill: parent
         model: root.downloadsModel
         spacing: Theme.halfPadding
-        clip: true
+        onMovementStarted: root.scrolled()
 
         delegate: ItemDelegate {
             id: row
             required property var modelData
             required property int index
-
-            readonly property var record: modelData
 
             width: ListView.view.width
             height: 56
@@ -54,7 +55,7 @@ Item {
             }
 
             contentItem: DownloadPill {
-                download: row.record
+                download: row.modelData
 
                 // Flat-row chrome: the surrounding delegate owns hover and click.
                 interactive: false
@@ -66,12 +67,10 @@ Item {
                 nameFontSize: Theme.fontSize(14)
                 statusFontSize: Theme.fontSize(12)
 
-                onOptionsButtonClicked: function (anchor) {
-                    root.optionsClicked(row.record, anchor)
-                }
+                onOptionsButtonClicked: anchor => root.optionsClicked(row.modelData, anchor)
             }
 
-            onClicked: root.openDownloadClicked(row.record)
+            onClicked: root.openDownloadClicked(row.modelData)
 
             HoverHandler {
                 cursorShape: hovered ? Qt.PointingHandCursor : undefined

@@ -358,7 +358,7 @@ Item {
             verify(options.visible)
             mouseClick(options)
             compare(gotRecord, done)
-            verify(!!gotAnchor, "anchor Item for menu alignment")
+            compare(gotAnchor, options)
         }
 
         function test_primaryPause_forwardsToRecord() {

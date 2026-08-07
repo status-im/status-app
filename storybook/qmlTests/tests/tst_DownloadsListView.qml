@@ -176,7 +176,30 @@ Item {
             verify(!!options)
             mouseClick(options)
             compare(gotRecord, record)
-            verify(!!gotAnchor, "anchor Item for menu alignment")
+            // The ⋮ button itself, so the menu can parent to it and follow the row.
+            compare(gotAnchor, options)
+        }
+
+        // A context menu over a scrolling list should not linger — the host
+        // must be told to close it.
+        function test_scroll_emitsScrolled() {
+            const records = []
+            for (let i = 0; i < 20; ++i)
+                records.push(createTemporaryObject(recordComponent, root, {
+                    fileName: "file-%1.bin".arg(i)
+                }))
+            const view = createTemporaryObject(listViewComponent, root, {
+                downloadsModel: records
+            })
+            waitForRendering(view)
+
+            let scrolled = 0
+            view.scrolled.connect(function () { scrolled += 1 })
+
+            const list = findChild(view, "downloadsListView")
+            verify(!!list)
+            list.flick(0, -800)
+            tryVerify(() => scrolled > 0, 1000, "scrolling must ask the host to close the menu")
         }
     }
 }

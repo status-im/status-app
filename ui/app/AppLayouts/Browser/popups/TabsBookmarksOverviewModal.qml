@@ -51,6 +51,7 @@ StatusDialog {
     // Carries the Download Record — the one identity vocabulary.
     signal downloadClicked(var record)
     signal downloadOptionsClicked(var record, Item anchor)
+    signal downloadsScrolled()
 
     title: d.titleText
     destroyOnClose: true
@@ -306,6 +307,7 @@ StatusDialog {
                 downloadsModel: root.downloadsModel
                 onOpenDownloadClicked: record => root.downloadClicked(record)
                 onOptionsClicked: (record, anchor) => root.downloadOptionsClicked(record, anchor)
+                onScrolled: root.downloadsScrolled()
             }
         }
     }

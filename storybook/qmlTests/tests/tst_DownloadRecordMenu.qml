@@ -53,7 +53,7 @@ Item {
         }
     }
 
-    /// The row's ⋮ button the menu anchors to.
+    /// The row's ⋮ button the menu parents to.
     Item {
         id: anchorItem
         width: 24
@@ -305,7 +305,7 @@ Item {
             const menu = createTemporaryObject(menuComponent, root, {
                 capabilities: caps({ openInBrowser: true, shareUrl: true, showInFolder: true })
             })
-            menu.openAnchored(record, anchorItem, { hostPopup: host })
+            menu.openAt(record, anchorItem, { hostPopup: host })
             compare(menu.hostPopup, host)
 
             let opened = 0
@@ -329,7 +329,7 @@ Item {
             const menu = createTemporaryObject(menuComponent, root, {
                 capabilities: caps({ retry: true, shareUrl: true })
             })
-            menu.openAnchored(record, anchorItem, { hostPopup: host })
+            menu.openAt(record, anchorItem, { hostPopup: host })
 
             let retried = 0
             menu.retryRequested.connect(function() { retried += 1 })
@@ -348,10 +348,10 @@ Item {
             const menu = createTemporaryObject(menuComponent, root, {
                 capabilities: caps({ openInBrowser: true })
             })
-            menu.openAnchored(record, anchorItem, { hostPopup: host })
+            menu.openAt(record, anchorItem, { hostPopup: host })
             compare(menu.hostPopup, host)
 
-            menu.openAnchored(record, anchorItem, { forStrip: true })
+            menu.openAt(record, anchorItem, { forStrip: true })
             compare(menu.hostPopup, null)
 
             verify(triggerAction(menu, qsTr("Open in Browser")))
