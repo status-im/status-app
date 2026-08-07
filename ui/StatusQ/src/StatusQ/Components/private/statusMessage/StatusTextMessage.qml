@@ -26,7 +26,6 @@ Item {
     property alias textField: chatTextView
 
     signal linkActivated(string link)
-    signal contextMenuRequested(point pos)
 
     implicitHeight: chatTextView.height + d.showMoreHeight / 2
 
@@ -91,15 +90,21 @@ Item {
         onMentionClicked: (pubKey) => root.linkActivated("//" + pubKey)
         onLinkClicked: (url) => root.linkActivated(url)
 
-        HoverHandler {
-            id: hoverHandler
+        // HoverHandler bloks external mouse events (e.g. for opening the context menu),
+        // so we use a MouseArea there
+        MouseArea {
+            id: hoverArea
+
+            acceptedButtons: Qt.NoButton
+            anchors.fill: parent
+            hoverEnabled: true
         }
+
         StatusToolTip {
-            id: disabledLinkTooltip
             text: root.disabledTooltipText
             delay: 100
-            x: hoverHandler.point.position.x - 60
-            y: -disabledLinkTooltip.height + hoverHandler.point.position.y - 10
+            x: hoverArea.mouseX - 60
+            y: -height + hoverArea.mouseY - 10
         }
     }
 

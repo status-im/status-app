@@ -926,7 +926,6 @@ Loader {
                     root.messageStore.resendMessage(root.messageId)
                 }
 
-                onContextMenuRequested: pos => root.openMessageContextMenu(pos, delegate.selectedText) // for StatusTextMessage which would eat the press events internally
                 TapHandler {
                     gesturePolicy: TapHandler.ReleaseWithinBounds // exclusive grab on press
                     acceptedDevices: PointerDevice.TouchScreen
