@@ -94,6 +94,7 @@ Control {
     signal senderNameClicked(var sender)
     signal replyProfileClicked(var sender, var mouse)
     signal replyMessageClicked(var mouse)
+    signal contextMenuRequested(point pos)
 
     signal addReactionClicked(var sender, var mouse)
     signal toggleReactionClicked(string hexcode)
@@ -415,6 +416,7 @@ Control {
         clearSelectionOnLostFocus: root.clearSelectionOnLostFocus
         onLinkActivated: link => root.linkActivated(link)
         onHoveredLinkChanged: root.hoveredLink = hoveredLink
+        onContextMenuRequested: pos => root.contextMenuRequested(pos)
         onSelectedTextChanged: d.selectedText = selectedText
     }
 }

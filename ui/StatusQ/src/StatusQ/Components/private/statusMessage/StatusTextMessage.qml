@@ -27,6 +27,9 @@ Item {
     property alias textField: chatTextView
 
     signal linkActivated(string link)
+    // Touch long press over the rendered text — re-emitted from ChatTextView,
+    // where the press-accepting text elements starve regular tap handlers
+    signal contextMenuRequested(point pos)
 
     implicitHeight: chatTextView.height + d.showMoreHeight / 2
 
@@ -90,6 +93,8 @@ Item {
         // Reuse the existing linkActivated contract: "//<pubkey>" opens the profile, a URL opens.
         onMentionClicked: (pubKey) => root.linkActivated("//" + pubKey)
         onLinkClicked: (url) => root.linkActivated(url)
+        onContextMenuRequested: (pos) => root.contextMenuRequested(
+                                    root.mapFromItem(chatTextView, pos.x, pos.y))
 
         // HoverHandler bloks external mouse events (e.g. for opening the context menu),
         // so we use a MouseArea there

@@ -53,6 +53,39 @@ Control {
     signal mentionClicked(string pubKey)
     signal linkClicked(string url)
 
+    // Touch long press over the rendered text, in this item's coordinates.
+    // The text elements accept presses (selection overlay on desktop, rich
+    // Text with anchors on mobile), so the consumer's own long-press
+    // detection never sees them — this signal is the replacement path.
+    signal contextMenuRequested(point pos)
+
+    // Shared long-press detector for the press-accepting text elements.
+    // PointHandler never grabs, so it keeps tracking even after the element
+    // takes the exclusive grab for text interaction.
+    component TouchLongPressDetector: Item {
+        id: detector
+
+        anchors.fill: parent
+
+        PointHandler {
+            id: pointHandler
+            acceptedDevices: PointerDevice.TouchScreen
+        }
+
+        Timer {
+            interval: 700
+            running: pointHandler.active
+            onTriggered: {
+                const p = pointHandler.point
+                const dx = p.position.x - p.pressPosition.x
+                const dy = p.position.y - p.pressPosition.y
+                if (dx * dx + dy * dy < 144) // stationary within 12px
+                    root.contextMenuRequested(
+                        root.mapFromItem(detector, p.position.x, p.position.y))
+            }
+        }
+    }
+
     // Decoration colors
     property color codeBackgroundColor: Theme.palette.baseColor4
     property color codeBorderColor: Theme.palette.baseColor2
@@ -115,6 +148,9 @@ Control {
 
                 onLinkActivated: (link) => d.activateLink(link)
                 onHoveredLinkChanged: d.hoveredLink = hoveredLink
+
+                // rich Text with anchors accepts presses over its whole area
+                TouchLongPressDetector {}
             }
         }
         Component {
@@ -184,6 +220,8 @@ Control {
                     font.italic: block.italic
                     font.strikeout: block.strikethrough
                     text: block.codeHtml !== "" ? block.codeHtml : block.content
+
+                    TouchLongPressDetector {}
                 }
             }
         }
@@ -222,6 +260,8 @@ Control {
                     font.italic: block.italic
                     font.strikeout: block.strikethrough
                     text: block.codeHtml !== "" ? block.codeHtml : block.content
+
+                    TouchLongPressDetector {}
                 }
             }
         }
@@ -549,6 +589,10 @@ Control {
         property real pressX: 0
         property real pressY: 0
         property bool moved: false
+
+        // the overlay takes every press while selectable; long presses from
+        // touch must still surface the context menu
+        TouchLongPressDetector {}
 
         // Multi-click tracking. Clicks in place cycle: 1 click, 2 word, 3 line, 4 deselect,
         // then repeat. Reset when a press lands too late or too far.

@@ -950,10 +950,27 @@ Loader {
                     root.messageStore.resendMessage(root.messageId)
                 }
 
-                TapHandler {
-                    gesturePolicy: TapHandler.ReleaseWithinBounds // exclusive grab on press
+                onContextMenuRequested: pos => root.openMessageContextMenu(delegate, pos, delegate.selectedText) // for StatusTextMessage which would eat the press events internally
+                // Touch long press must survive the message text's TextEdit
+                // taking the exclusive grab (it does so for text interaction,
+                // which starved a TapHandler of events wherever text sits
+                // under the finger). PointHandler never grabs and is immune
+                // to grab takeovers, so the long press is timed manually.
+                PointHandler {
+                    id: touchLongPressHandler
                     acceptedDevices: PointerDevice.TouchScreen
-                    onLongPressed: root.openMessageContextMenu(delegate, point.position, delegate.selectedText)
+                }
+
+                Timer {
+                    interval: 700
+                    running: touchLongPressHandler.active
+                    onTriggered: {
+                        const p = touchLongPressHandler.point
+                        const dx = p.position.x - p.pressPosition.x
+                        const dy = p.position.y - p.pressPosition.y
+                        if (dx * dx + dy * dy < 144) // stationary within 12px
+                            root.openMessageContextMenu(delegate, p.position, delegate.selectedText)
+                    }
                 }
 
                 TapHandler {
