@@ -208,6 +208,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
         with step(f'User {user_one.name}, reply to own message and verify that message displayed as a reply'):
             chat_message_reply = random_text_message()
 
+            message = chat.find_message_by_text(edited_body, 0)
             message.hover_message().reply_own_message(chat_message_reply)
             chat = main_window.left_panel.open_messages_screen().left_panel.click_chat_by_name(user_two.name)
             message = chat.find_message_by_text(chat_message_reply, 0)

@@ -264,6 +264,29 @@ class CommunityLeftPanel(QObject):
     def name(self) -> str:
         return self._name_text_label.text
 
+    @allure.step('Wait for community name {expected}')
+    def wait_for_name(
+            self,
+            expected: str,
+            timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+    ):
+        last_name = None
+
+        def _name_matches() -> bool:
+            nonlocal last_name
+            try:
+                last_name = self.name
+                return last_name == expected
+            except Exception:
+                return False
+
+        if not driver.waitFor(_name_matches, timeout_msec):
+            raise TimeoutError(
+                f'Community name did not become {expected!r} within {timeout_msec} ms; '
+                f'last visible name was {last_name!r}'
+            )
+        return self
+
     @property
     @allure.step('Get community members label')
     def members(self) -> str:

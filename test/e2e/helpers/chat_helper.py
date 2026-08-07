@@ -10,12 +10,16 @@ from gui.components.introduce_yourself_popup import IntroduceYourselfPopup
 from scripts.utils.parsers import remove_tags
 
 
+def message_plain_text(msg) -> str:
+    raw = str(getattr(msg.object, 'unparsedText', None) or msg.text or '')
+    return remove_tags(raw).strip()
+
+
 @allure.step('Get visible message texts from chat')
 def get_visible_message_texts(chat):
     texts = []
     for msg in chat.messages(index=None):
-        raw = str(getattr(msg.object, 'unparsedText', None) or msg.text or '')
-        text = remove_tags(raw).strip()
+        text = message_plain_text(msg)
         if text:
             texts.append(text)
     return texts

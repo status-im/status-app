@@ -4,7 +4,7 @@ from allure_commons._allure import step
 import driver
 from constants.community import Channel
 from gui.main_window import MainWindow
-from helpers.chat_helper import skip_message_backup_popup_if_visible
+from helpers.chat_helper import message_plain_text, skip_message_backup_popup_if_visible
 from helpers.multiple_instances_helper import (
     authorize_user_in_aut, get_chat_key, send_contact_request_from_settings, 
     accept_contact_request_from_settings, switch_to_aut
@@ -12,7 +12,6 @@ from helpers.multiple_instances_helper import (
 from scripts.utils.validators import verify_community_link_format
 from scripts.utils.generators import random_text_message, random_community_introduction, random_community_description, \
     random_community_name, random_community_leave_message
-from scripts.utils.parsers import remove_tags
 import configs
 from constants import ColorCodes, UserAccount, RandomUser, RandomCommunity
 from gui.screens.community_settings import CommunitySettingsScreen
@@ -107,18 +106,20 @@ def test_create_edit_join_community_pin_unpin_message(multiple_instances):
                 community_screen = main_screen.left_panel.open_community(new_name)
                 add_members = community_screen.left_panel.open_add_members_popup()
                 add_members.invite([user_one.name], message=random_text_message())
-                main_screen.minimize()
 
         with step(f'User {user_one.name}, accept invitation from {user_two.name}'):
             switch_to_aut(aut_one, main_screen)
             messages_view = main_screen.left_panel.open_messages_screen()
             chat = messages_view.left_panel.click_chat_by_name(user_two.name)
             skip_message_backup_popup_if_visible()
-            community_screen = chat.click_community_invite_message(0)
-            assert driver.waitFor(
-                lambda: community_screen.left_panel.name == new_name,
-                configs.timeouts.LOADING_LIST_TIMEOUT_MSEC,
-            ), f'Community header should show updated name {new_name!r}'
+            community_screen = chat.click_community_invite_message(
+                0,
+                expected_link=community_link,
+            )
+            community_screen.left_panel.wait_for_name(
+                new_name,
+                configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+            )
 
         with step(f'User {user_one.name}, verify welcome community popup'):
             welcome_popup = community_screen.left_panel.open_welcome_community_popup()
@@ -156,8 +157,8 @@ def test_create_edit_join_community_pin_unpin_message(multiple_instances):
             messages_screen.group_chat.send_message_to_group_chat(second_message_text)
             assert driver.waitFor(
                 lambda: any(
-                    second_message_text in remove_tags(m.text or '')
-                    for m in messages_screen.chat.messages(0)
+                    second_message_text in message_plain_text(message)
+                    for message in messages_screen.chat.messages(0)
                 ),
                 configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
             ), f'Message {second_message_text} is not visible'
@@ -169,10 +170,14 @@ def test_create_edit_join_community_pin_unpin_message(multiple_instances):
 
         with step(f'User {user_one.name} see the {second_message_text} as pinned'):
             switch_to_aut(aut_one, main_screen)
-            message = messages_screen.chat.find_message_by_text(second_message_text, 1)
-            assert driver.waitFor(lambda: message.message_is_pinned, configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
-            assert message.pinned_info_text + message.user_name_in_pinned_message == 'Pinned by' + user_two.name
-            assert message.get_message_color() == ColorCodes.ORANGE.value
+            message = messages_screen.chat.wait_for_message_pinned(
+                second_message_text,
+                True,
+                index=1,
+            )
+            pinned_info, pinned_by, background_color = message.pinned_details
+            assert pinned_info + pinned_by == 'Pinned by' + user_two.name
+            assert background_color == ColorCodes.ORANGE.value
 
 
         with step(f'User {user_two.name} unpin message from pinned messages popup'):
@@ -183,8 +188,11 @@ def test_create_edit_join_community_pin_unpin_message(multiple_instances):
 
         with step(f'User {user_one.name} see the {second_message_text} as unpinned'):
             switch_to_aut(aut_one, main_screen)
-            message = messages_screen.chat.find_message_by_text(second_message_text, 1)
-            assert driver.waitFor(lambda: not message.message_is_pinned, configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
+            message = messages_screen.chat.wait_for_message_pinned(
+                second_message_text,
+                False,
+                index=1,
+            )
             assert message.user_name_in_pinned_message == ''
             assert not messages_screen.tool_bar.pinned_message_tooltip.is_visible
 

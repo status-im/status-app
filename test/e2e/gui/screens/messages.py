@@ -9,9 +9,12 @@ import allure
 import configs
 import driver
 from constants.messaging import Sticker
-from driver.objects_access import find_descendant_by_object_name, is_descendant_of, walk_children
-from scripts.utils.generators import random_sticker
-from gui.components.settings.send_contact_request_popup import SendContactRequestFromProfile
+from driver.objects_access import (
+    find_descendant_by_object_name,
+    is_descendant_of,
+    item_is_visible,
+    walk_children,
+)
 from gui.components.community.pinned_messages_popup import PinnedMessagesPopup
 from gui.components.context_menu import ContextMenu
 from gui.components.delete_popup import ConfirmationMessagePopup
@@ -22,6 +25,7 @@ from gui.components.messaging.edit_group_name_and_image_popup import EditGroupNa
 from gui.components.messaging.leave_group_popup import LeaveGroupPopup
 from gui.components.messaging.link_preview_options_popup import LinkPreviewOptionsPopup
 from gui.components.messaging.message_context_menu_popup import MessageContextMenuPopup
+from gui.components.settings.send_contact_request_popup import SendContactRequestFromProfile
 from gui.components.wallet.send_popup import SendPopup
 from gui.elements.button import Button
 from gui.elements.list import List
@@ -31,9 +35,29 @@ from gui.elements.text_edit import TextEdit
 from gui.elements.text_label import TextLabel
 from gui.objects_map import messaging_names, communities_names
 from gui.screens.community import CommunityScreen, BannedCommunityScreen
-from helpers.chat_helper import skip_message_backup_popup_if_visible
+from helpers.chat_helper import message_plain_text, skip_message_backup_popup_if_visible
 from scripts.tools.image import Image
-from scripts.utils.parsers import remove_tags
+from scripts.utils.generators import random_sticker
+
+
+def _find_named_descendant(parent, object_name: str):
+    try:
+        descendant = find_descendant_by_object_name(parent, object_name)
+        if descendant is not None:
+            return descendant
+    except (LookupError, RuntimeError, AttributeError):
+        pass
+    try:
+        candidates = driver.findAllObjects({'objectName': object_name})
+    except (LookupError, RuntimeError, AttributeError):
+        return None
+    return next(
+        (
+            candidate for candidate in candidates
+            if is_descendant_of(parent, candidate)
+        ),
+        None,
+    )
 
 
 class LeftPanel(QObject):
@@ -184,13 +208,12 @@ class Message:
             pass
 
         if self.text is None:
-            for chat_text in driver.findAllObjects({'objectName': 'StatusTextMessage_chatText'}):
-                if is_descendant_of(self.object, chat_text):
-                    self.text = str(getattr(chat_text, 'text', ''))
-                    break
+            chat_text = _find_named_descendant(self.object, 'StatusTextMessage_chatText')
+            if chat_text is not None:
+                self.text = str(getattr(chat_text, 'text', ''))
 
     def has_community_invite(self) -> bool:
-        if 'status.app/c/' in str(self.text or ''):
+        if self.community_link:
             return True
         if str(getattr(self.object, 'communityId', '') or ''):
             return True
@@ -205,19 +228,37 @@ class Message:
             pass
         return False
 
-    @allure.step('Open community invitation')
-    def open_community_invitation(self, attempts: int = 4):
-        driver.waitFor(lambda: self.delegate_button.is_visible, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
+    @property
+    def community_link(self) -> typing.Optional[str]:
+        match = re.search(r'https?://status\.app/c/[^\s<]+', message_plain_text(self))
+        return match.group(0).rstrip('.,;:!?)]}') if match else None
 
-        for attempt in range(1, attempts + 1):
+    def activate_link(self, href: str) -> None:
+        text_bubble = _find_named_descendant(self.object, 'StatusMessage_textMessage')
+        if text_bubble is None:
+            raise LookupError(f'Message text bubble was not found for link {href!r}')
+        text_bubble.linkActivated(href)
+
+    @allure.step('Open community invitation')
+    def open_community_invitation(
+            self,
+            expected_link: str = None,
+    ):
+        community_link = self.community_link
+        if expected_link is not None and community_link != expected_link.strip():
+            raise AssertionError(
+                'Received community URL does not match the copied URL: '
+                f'expected={expected_link.strip()!r}, actual={community_link!r}'
+            )
+
+        if community_link is not None:
+            self.activate_link(community_link)
+        elif self.delegate_button is not None:
             self.delegate_button.click()
-            try:
-                return CommunityScreen().wait_until_appears()
-            except Exception as e:
-                if attempt < attempts:
-                    continue
-                else:
-                    raise Exception(f"Failed to open CommunityScreen after {attempts} attempts: {e}")
+        else:
+            raise LookupError('Community invitation has neither a link nor a clickable delegate')
+
+        return CommunityScreen().wait_for_content_loaded()
 
     def open_banned_community_invitation(self):
         driver.waitFor(lambda: self.delegate_button.is_visible, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
@@ -226,12 +267,7 @@ class Message:
 
     @allure.step('Hover message')
     def hover_message(self):
-        self.delegate_button.hover()
-        return MessageQuickActions()
-
-    @allure.step('Get color of message background')
-    def get_message_color(self) -> str:
-        return self.delegate_button.object.background.color.name
+        return MessageQuickActions(self)
 
     @property
     @allure.step('Get user name in pinned message details')
@@ -239,14 +275,26 @@ class Message:
         return str(self.delegate_button.object.pinnedBy)
 
     @property
-    @allure.step('Get info text in pinned message details')
-    def pinned_info_text(self) -> str:
-        return str(self.delegate_button.object.pinnedMsgInfoText)
+    @allure.step('Get pinned message details')
+    def pinned_details(self) -> typing.Tuple[str, str, str]:
+        delegate = self.delegate_button.object
+        return (
+            str(delegate.pinnedMsgInfoText),
+            str(delegate.pinnedBy),
+            str(delegate.background.color.name),
+        )
+
+    @property
+    def pinned_state(self) -> typing.Optional[bool]:
+        try:
+            return bool(getattr(self.object, 'pinnedMessage', False))
+        except (RuntimeError, AttributeError):
+            return None
 
     @property
     @allure.step('Get message pinned state')
     def message_is_pinned(self) -> bool:
-        return self.delegate_button.object.isPinned
+        return self.pinned_state is True
 
     @property
     @allure.step('Whether message content is a sticker')
@@ -342,28 +390,76 @@ class ChatView(QObject):
     @allure.step('Open send modal from address link in message')
     def open_send_modal_from_link(self, text: str, index: int = 0):
         message = self.find_message_by_text(text, index)
-        text_bubble = find_descendant_by_object_name(
-            message.object, 'StatusMessage_textMessage')
-        if text_bubble is None:
-            raise LookupError(f'Text bubble not found for "{text}"')
-        text_bubble.linkActivated(f'//send-via-personal-chat//{text}')
+        message.activate_link(f'//send-via-personal-chat//{text}')
         return SendPopup().wait_until_appears()
 
     @allure.step('Get deleted message state')
     def get_deleted_message_state(self):
         return self._deleted_message.exists
 
-    def find_message_by_text(self, message_text: str, index: int):
+    def _find_message_by_text_once(
+            self,
+            message_text: str,
+            index: typing.Optional[int],
+    ) -> typing.Optional[Message]:
+        indexes = (index, None) if index is not None else (None,)
+        for current_index in indexes:
+            for message in self.messages(current_index):
+                if message_text in message_plain_text(message):
+                    return message
+        return None
+
+    def find_message_by_text(
+            self,
+            message_text: str,
+            index: typing.Optional[int] = None,
+    ) -> Message:
         message = None
-        started_at = time.monotonic()
-        while message is None:
-            for _message in self.messages(index):
-                # Handle None text gracefully
-                if _message.text is not None and message_text in remove_tags(_message.text):
-                    message = _message
-                    break
-            if time.monotonic() - started_at > configs.timeouts.MESSAGING_TIMEOUT_SEC:
-                raise LookupError(f'Message not found')
+        last_error = None
+
+        def message_found() -> bool:
+            nonlocal last_error, message
+            try:
+                message = self._find_message_by_text_once(message_text, index)
+                return message is not None
+            except Exception as error:
+                last_error = error
+                return False
+
+        timeout_msec = configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000
+        if not driver.waitFor(message_found, timeout_msec):
+            raise LookupError(
+                f'Message not found within {timeout_msec} ms: {message_text!r}; '
+                f'last error was {last_error!r}'
+            )
+        return message
+
+    @allure.step('Wait for message pinned state')
+    def wait_for_message_pinned(
+            self,
+            message_text: str,
+            expected: bool,
+            index: typing.Optional[int] = None,
+            timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+    ) -> Message:
+        message = None
+        last_error = None
+
+        def state_matches() -> bool:
+            nonlocal last_error, message
+            try:
+                message = self._find_message_by_text_once(message_text, index)
+                return message is not None and message.pinned_state is expected
+            except Exception as error:
+                last_error = error
+                return False
+
+        state = 'pinned' if expected else 'unpinned'
+        if not driver.waitFor(state_matches, timeout_msec):
+            raise TimeoutError(
+                f'Message {message_text!r} did not become {state} within {timeout_msec} ms; '
+                f'last error was {last_error!r}'
+            )
         return message
 
     @allure.step('Open community invitation')
@@ -385,15 +481,24 @@ class ChatView(QObject):
         return None
 
     @allure.step('Open community invitation without relying on preview name')
-    def click_community_invite_message(self, index: int = 0) -> CommunityScreen:
-        started_at = time.monotonic()
-        while time.monotonic() - started_at < configs.timeouts.MESSAGING_TIMEOUT_SEC:
+    def click_community_invite_message(
+            self,
+            index: int = 0,
+            expected_link: str = None,
+    ) -> CommunityScreen:
+        message = None
+
+        def invitation_found() -> bool:
+            nonlocal message
             message = self._find_community_invitation_message(index)
             if message is None:
                 message = self._find_community_invitation_message_from_newest(0)
-            if message:
-                return message.open_community_invitation()
-        raise LookupError('Community invitation was not found')
+            return message is not None
+
+        timeout_msec = configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000
+        if not driver.waitFor(invitation_found, timeout_msec):
+            raise LookupError(f'Community invitation was not found within {timeout_msec} ms')
+        return message.open_community_invitation(expected_link=expected_link)
 
     @allure.step('Open banned community invitation')
     def open_banned_community(self, community, index) -> 'BannedCommunityScreen':
@@ -656,45 +761,84 @@ class ChatMessagesView(QObject):
         CloseChatPopup().wait_until_appears().confirm_closing_chat()
 
 
-class MessageQuickActions(QObject):
-    def __init__(self):
-        super().__init__(messaging_names.chatMessageViewDelegate_StatusMessageQuickActions)
-        self._pin_button = Button(
-            messaging_names.chatMessageViewDelegate_pin_icon_StatusIcon)
-        self._unpin_button = Button(messaging_names.chatMessageViewDelegate_unpin_icon_StatusIcon)
-        self._edit_button = Button(messaging_names.chatMessageViewDelegate_editMessageButton_StatusFlatRoundButton)
-        self._delete_button = Button(
-            messaging_names.chatMessageViewDelegate_chatDeleteMessageButton_StatusFlatRoundButton)
-        self._reply_button = Button(messaging_names.chatMessageViewDelegate_reply_icon_StatusIcon)
+class MessageQuickActions:
+
+    _OBJECT_NAME_BY_ACTION = {
+        'edit': 'editMessageButton',
+        'delete': 'chatDeleteMessageButton',
+        'reply': 'replyToMessageButton',
+        'pin': 'MessageView_toggleMessagePin',
+    }
+
+    def __init__(self, message: Message):
+        self._message = message
         self._reply_panel = QObject(messaging_names.mainWindow_replyPanel_StatusChatInputReplyPanel)
         self._edit_message_input = QObject(messaging_names.mainWindow_statusChatInput_StatusChatInput)
         self._edit_message_field = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
         self._message_input_area = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
         self._send_message_button = Button(messaging_names.mainWindow_statusChatInputSendButton)
 
+    def _refresh_action(self, action: str) -> Button:
+        if self._message.delegate_button is None:
+            raise LookupError('Message delegate not found; cannot open quick actions')
+
+        button = None
+        last_error = None
+
+        def action_ready():
+            nonlocal button, last_error
+            try:
+                self._message.delegate_button.hover()
+                item = _find_named_descendant(
+                    self._message.object,
+                    self._OBJECT_NAME_BY_ACTION[action],
+                )
+                if (
+                        item is None
+                        or not item_is_visible(item)
+                        or not bool(getattr(item, 'enabled', False))
+                ):
+                    return False
+                button = Button(real_name=driver.objectMap.realName(item))
+                return True
+            except Exception as error:
+                last_error = error
+                return False
+
+        timeout_msec = configs.timeouts.UI_LOAD_TIMEOUT_MSEC
+        if not driver.waitFor(action_ready, timeout_msec):
+            raise TimeoutError(
+                f'{action} quick action was not ready within {timeout_msec} ms; '
+                f'last error was {last_error!r}'
+            )
+        return button
+
+    def _toggle_pin(self):
+        self._refresh_action('pin').object.clicked(0)
+
     @allure.step('Click pin button')
     def pin_message(self):
-        self._pin_button.click()
+        self._toggle_pin()
 
     @allure.step('Click unpin button')
     def unpin_message(self):
-        self._unpin_button.click()
+        self._toggle_pin()
 
     @allure.step('Edit message and save changes')
     def edit_message(self, text: str):
-        self._edit_button.click()
+        self._refresh_action('edit').object.clicked(0)
         self._edit_message_input.wait_until_appears()
         self._edit_message_field.set_text_property(text)
         self._send_message_button.wait_until_enabled().click()
 
     @allure.step('Delete message')
     def delete_message(self):
-        self._delete_button.click()
+        self._refresh_action('delete').object.clicked(0)
         ConfirmationMessagePopup().wait_until_appears().delete_button.click()
 
     @allure.step('Reply to own message')
     def reply_own_message(self, text: str):
-        self._reply_button.click()
+        self._refresh_action('reply').object.clicked(0)
         assert self._reply_panel.exists
         self._message_input_area.set_text_property(text)
         assert driver.waitFor(
@@ -705,7 +849,11 @@ class MessageQuickActions(QObject):
 
     @allure.step('Delete button is visible')
     def is_delete_button_visible(self) -> bool:
-        return self._delete_button.is_visible
+        try:
+            self._refresh_action('delete')
+        except (LookupError, TimeoutError):
+            return False
+        return True
 
 
 class Members(QObject):
