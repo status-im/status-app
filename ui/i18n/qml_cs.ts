@@ -2494,6 +2494,13 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
 </context>
 <context>
+    <name>BrowserDownloadOpenContext</name>
+    <message>
+        <source>This file cannot be played here. Open it with another app.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BrowserLandscapeToolbar</name>
     <message>
         <source>Back</source>
