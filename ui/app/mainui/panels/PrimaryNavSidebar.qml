@@ -105,11 +105,15 @@ Control {
     function close() { if (root.alwaysVisible) return; d.dragActive = false; position = 0.0 } 
     function toggle() { root.position == 0.0 ? open() : close() }
 
-    // Prefer the window SafeArea: on macOS the app is laid out under the title bar
-    // (ExpandedClientAreaHint), and parent.SafeArea can be 0 once banners/layout shift the item.
-    readonly property real topSafeInset: Window.window?.SafeArea.margins.top
-                                         ?? parent.SafeArea.margins.top
-                                         ?? 0
+    // On macOS in landscape the app is laid out under the title bar
+    // (ExpandedClientAreaHint) and main.qml deliberately does not consume the top
+    // inset, so the sidebar has to keep clear of the traffic lights itself.
+    // Everywhere else (mobile, macOS portrait) the inset is already consumed above
+    // us and only parent.SafeArea reports what is left - taking the window value
+    // there would count the status bar twice.
+    readonly property real topSafeInset: SQUtils.Utils.isMacOS && root.alwaysVisible
+                                         ? (Window.window?.SafeArea.margins.top ?? 0)
+                                         : (parent?.SafeArea.margins.top ?? 0)
 
     // Padding and spacing were previously Drawer properties; keep them as locals.
     topPadding: root.topSafeInset + Theme.defaultHalfPadding
