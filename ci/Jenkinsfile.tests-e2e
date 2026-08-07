@@ -37,8 +37,13 @@ pipeline {
     )
     string(
       name: 'TEST_SCOPE_FLAG',
-      description: 'Paste a known mark to run tests labeled with this mark',
+      description: 'Paste a known mark to run tests labeled with this mark (ignored when KEYCARD_TESTS is enabled)',
       defaultValue: getDefaultTestScopeFlag()
+    )
+    booleanParam(
+      name: 'KEYCARD_TESTS',
+      description: 'Run @pytest.mark.keycard tests. Requires a build with USE_SIMULATED_KEYCARD=true.',
+      defaultValue: false
     )
     string(
       name: 'TESTRAIL_RUN_NAME',
@@ -204,7 +209,7 @@ pipeline {
                 dir('test/e2e') {
                   def flags = []
                   if (params.TEST_NAME)  { flags.add("-k=${params.TEST_NAME}") }
-                  if (params.TEST_SCOPE_FLAG) { flags.add(params.TEST_SCOPE_FLAG) }
+                  if (!params.KEYCARD_TESTS && params.TEST_SCOPE_FLAG) { flags.add(params.TEST_SCOPE_FLAG) }
                   if (params.LOG_LEVEL)  { flags.addAll(["--log-level=${params.LOG_LEVEL}", "--log-cli-level=${params.LOG_LEVEL}"]) }
                   dir ('configs') { sh 'ln -s _local.ci.py _local.py' }
                   wrap([
@@ -224,7 +229,7 @@ pipeline {
                       string(credentialsId: 'wallet-test-user-seed', variable: 'WALLET_TEST_USER_SEED')
                     ]) {
                       sh """
-                        python3 -m pytest -m "not keycard and not benchmark" -v --reruns=1 --timeout=300 ${flags.join(" ")} \
+                        python3 -m pytest -m "${getPytestMarkerExpr()}" -v --reruns=1 --timeout=300 ${flags.join(" ")} \
                           --disable-warnings \
                           --alluredir=./allure-results \
                           -o timeout_func_only=true
@@ -336,7 +341,13 @@ def getDefaultTestScopeFlag() {
   }
 }
 
-def getTestStageTimeout() { params.TEST_SCOPE_FLAG == '-m=critical' ? 30 : 120 }
+def getPytestMarkerExpr() {
+  return params.KEYCARD_TESTS ? 'keycard' : 'not (keycard or benchmark)'
+}
+
+def getTestStageTimeout() {
+  return (params.KEYCARD_TESTS || params.TEST_SCOPE_FLAG == '-m=critical') ? 30 : 120
+}
 
 def getAgentLabel() {
   if (params.AGENT_NODE && params.AGENT_NODE != '') {
