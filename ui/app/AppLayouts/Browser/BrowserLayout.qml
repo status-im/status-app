@@ -63,6 +63,15 @@ StatusSectionLayout {
         Qt.callLater(() => _internal.addNewTab(root.browserRootStore.determineRealURL(url), initialTitle, activate))
     }
 
+    /// Local file in a new tab, read-granted to a directory (ADR 0006 §8).
+    function openFileUrlInNewTab(fileUrl, readAccessUrl) {
+        Qt.callLater(() => {
+            const tab = _internal.addNewTab("", "", false)
+            if (tab)
+                tab.loadFileUrl(fileUrl, readAccessUrl || "")
+        })
+    }
+
     function reloadCurrentTab() {
         webViewContext.reloadCurrent()
     }
@@ -327,6 +336,7 @@ StatusSectionLayout {
         removeViewFn: (index) => webViewContext.removeView(index)
         hideFindUiFn: () => _internal.hideFindBar()
         openUrlFn: (url) => root.openUrlInNewTab(url)
+        openFileUrlFn: (fileUrl, readAccessUrl) => root.openFileUrlInNewTab(fileUrl, readAccessUrl)
         supportsPdfFn: () => BrowserBackendCapabilities.pdfViewerSupported
     }
 

@@ -10,13 +10,13 @@
 
 /// Open-in-Browser allowlist: types our Backends render (ADR 0006 §8).
 /// Images, plain text, HTML; PDF when the Backend supports it; media per
-/// isPlayableMedia, gated by mediaPlaybackSupported (false on iOS: WebKit
-/// rejects file:// media inside a file:// player page). Everything else is
-/// handed to the OS.
+/// isPlayableMedia, gated by mediaPlaybackSupported. Everything else is handed
+/// to the OS.
 ///
 /// Order matters and is behavior: a name ending in ".pdf" resolves on the
 /// PDF branch even if its MIME type would also match media.
-function canOpenInBrowser(mimeType, fileName, supportsPdf, mediaPlaybackSupported = true) {
+function canOpenInBrowser(mimeType, fileName, supportsPdf, mediaPlaybackSupported = true,
+                          proprietaryCodecs = false) {
     const mime = String(mimeType || "").toLowerCase()
     const name = String(fileName || "").toLowerCase()
 
@@ -27,19 +27,18 @@ function canOpenInBrowser(mimeType, fileName, supportsPdf, mediaPlaybackSupporte
         return true
     if (mime === "application/pdf" || name.endsWith(".pdf"))
         return !!supportsPdf
-    return !!mediaPlaybackSupported && isPlayableMedia(mimeType, fileName)
+    return !!mediaPlaybackSupported && isPlayableMedia(mimeType, fileName, proprietaryCodecs)
 }
 
 /// Media our Backends can decode — and only inside a page (WebEngine turns a
 /// top-level navigation to local media into a fresh Download instead of
 /// playing it; see BrowserDownloadOpenContext.mediaPlayerPageUrl).
 ///
-/// MP4/M4A/AAC are deliberately absent: the shipped Chromium is built without
-/// proprietary codecs (a WebEngine build quirk), so H.264/AAC fail with
-/// DEMUXER_ERROR_NO_SUPPORTED_STREAMS and would leave the user staring at a
-/// dead player. They go to the OS instead, as do Ogg and Matroska. Revisit if
-/// the build ever gains those codecs.
-function isPlayableMedia(mimeType, fileName) {
+/// MP4/M4A/AAC ride on proprietaryCodecs: our Qt WebEngine build carries no
+/// H.264/AAC and fails them with DEMUXER_ERROR_NO_SUPPORTED_STREAMS, while
+/// WebKit and the Android WebView decode them natively. Ogg and Matroska stay
+/// out everywhere (platform media stack). A format left out opens in the OS.
+function isPlayableMedia(mimeType, fileName, proprietaryCodecs = false) {
     const mime = String(mimeType || "").toLowerCase()
     const name = String(fileName || "").toLowerCase()
 
@@ -50,6 +49,13 @@ function isPlayableMedia(mimeType, fileName) {
         return true
     if (mime === "video/webm" || mime === "audio/webm" || name.endsWith(".webm"))
         return true
+    if (proprietaryCodecs) {
+        if (mime === "video/mp4" || name.endsWith(".mp4") || name.endsWith(".m4v"))
+            return true
+        if (mime === "audio/mp4" || mime === "audio/aac" || mime === "audio/x-m4a"
+                || name.endsWith(".m4a") || name.endsWith(".aac"))
+            return true
+    }
     return false
 }
 
@@ -62,6 +68,7 @@ function isVideoMedia(mimeType, fileName) {
     if (mime.startsWith("audio/"))
         return false
     return mime.startsWith("video/") || name.endsWith(".webm")
+            || name.endsWith(".mp4") || name.endsWith(".m4v")
 }
 
 /// Middle-elide the base name, then keep the extension (pill + list).

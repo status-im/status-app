@@ -41,6 +41,8 @@ AbstractWebView {
 
     // Override functions
     function loadUrl(newUrl) { webView.url = newUrl }
+    // WebEngine reads local files without a per-directory grant; readAccessUrl is moot.
+    function loadFileUrl(fileUrl, readAccessUrl) { loadUrl(fileUrl) }
     function goBack() { webView.goBack() }
     function goForward() { webView.goForward() }
     function goBackOrForward(offset) { webView.goBackOrForward(offset) }

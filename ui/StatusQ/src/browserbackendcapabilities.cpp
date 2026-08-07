@@ -21,6 +21,31 @@ bool BrowserBackendCapabilities::isInPageMediaPlaybackSupported()
 #endif
 }
 
+bool BrowserBackendCapabilities::isProprietaryCodecsSupported()
+{
+#if defined(STATUSQ_MOBILE_BACKEND)
+    // WebKit and the Android WebView decode H.264/AAC through the OS.
+    return true;
+#else
+    // Qt WebEngine ships a Chromium built without the licensed codecs, so these
+    // fail with DEMUXER_ERROR_NO_SUPPORTED_STREAMS.
+    return false;
+#endif
+}
+
+bool BrowserBackendCapabilities::isMediaPlayerPageRequired()
+{
+#if defined(STATUSQ_MOBILE_BACKEND)
+    // WebKit and the Android WebView give a directly loaded media file a native
+    // player, so the page would only get in the way.
+    return false;
+#else
+    // WebEngine turns a top-level navigation to local media into a fresh
+    // Download (net::ERR_ABORTED) instead of playing it.
+    return true;
+#endif
+}
+
 bool BrowserBackendCapabilities::isPdfViewerSupported()
 {
 #if defined(STATUSQ_MOBILE_BACKEND)

@@ -93,6 +93,11 @@ AbstractWebView {
         backend.loadUrl(newUrl)
     }
 
+    /// A plain load hands WebKit one file; subresources need the grant (§8).
+    function loadFileUrl(fileUrl, readAccessUrl) {
+        backend.loadFileUrl(fileUrl, readAccessUrl || "")
+    }
+
     /// Host-side Retry (ADR 0006): re-issue via Backend downloadUrl on this profile.
     function downloadUrl(url, suggestedFileName) {
         if (backend.downloadUrl)

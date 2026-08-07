@@ -118,6 +118,13 @@ Item {
     signal findTextFinished(var result)
 
     function loadUrl(url) { console.warn("AbstractWebView: loadUrl not implemented") }
+
+    /// Local-file load with a directory read grant (ADR 0006 §8).
+    /// Empty readAccessUrl means the file's own directory.
+    function loadFileUrl(fileUrl, readAccessUrl) {
+        console.warn("AbstractWebView: loadFileUrl not implemented")
+    }
+
     function goBack() { console.warn("AbstractWebView: goBack not implemented") }
     function goForward() { console.warn("AbstractWebView: goForward not implemented") }
     function goBackOrForward(offset) { console.warn("AbstractWebView: goBackOrForward not implemented") }

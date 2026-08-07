@@ -10,7 +10,10 @@ Accepted
   UI; allowlist limited to uniformly-rendered media; opening prefers our browser
   and falls back to the OS; desktop copies a file path)
 - **Amended**: 2026-08-07 — §8 (in-page media playback is a Capability the Backend
-  answers at runtime, not a platform check or a deployment floor)
+  answers at runtime, not a platform check or a deployment floor; the licensed
+  codecs are a Capability too, so the allowlist is per Backend; needing the
+  player page is a Capability as well, and Backends without it load the media
+  file directly)
 - **Owners**: Status Desktop (browser)
 
 ## Context
@@ -140,12 +143,12 @@ library's Download object is a transient attachment to it.**
    only where the Backend renders PDF — the system Android WebView does not.
 
    **The allowlist admits formats our Backends render.** Audio and video qualify
-   to the extent support is reliable in Chromium/WebEngine — MP3, WAV and WebM
-   are in; Ogg and Matroska stay out (platform media stack), and so do M4A/AAC
-   and MP4/H.264: the shipped Chromium is built without proprietary codecs, so
-   they fail with `DEMUXER_ERROR_NO_SUPPORTED_STREAMS` and would leave the user
-   on a dead player. A format left out is not a dead end: it opens in the OS
-   instead.
+   to the extent the Backend decodes them — MP3, WAV and WebM are in everywhere;
+   Ogg and Matroska stay out everywhere (platform media stack). M4A/AAC and
+   MP4/H.264 follow a Capability instead: our Qt WebEngine build carries no
+   licensed codecs and fails them with `DEMUXER_ERROR_NO_SUPPORTED_STREAMS`,
+   while WebKit and the Android WebView decode them natively. A format left out
+   is not a dead end: it opens in the OS instead.
 
    **Whether a page can play media at all is a Capability, not a platform check.**
    The allowlist says which formats a Backend renders; the Backend still has to
@@ -156,6 +159,19 @@ library's Download object is a transient attachment to it.**
    the question behind `isIOS` in the UI would state a platform fact the platform
    is perfectly able to state itself. A "no" takes the same route an unlisted
    format takes, out to the OS.
+
+   **The player page is a workaround, so needing one is a Capability too.** The
+   page exists only because WebEngine turns a top-level navigation to local
+   audio/video into a fresh Download instead of playing it; WebKit and the
+   Android WebView give the same file a native player. Keeping the page
+   everywhere is what broke iOS playback: it sits in `TempLocation` while the
+   media sits in the downloads directory, and a plain local load grants the web
+   content process only the file it was handed, so the page came up and the media
+   never loaded. Backends needing no page load the media file itself through
+   `loadFileUrl(fileUrl, readAccessUrl)`, its grant left empty and so resolving
+   to the file's own directory — the narrowest one that works. That entry point
+   joins the seam beside `loadUrl`, proxied by the decorator — the seam's
+   easiest member to forget.
 
    **Opening a finished Download prefers our own browser, and hands off when it
    cannot render.** Tapping a Completed Record — from the Downloads List or its

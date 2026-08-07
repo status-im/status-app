@@ -66,6 +66,12 @@ QtObject {
         console.warn("BrowserDownloadsContext: openUrlFn not set")
     }
 
+    /// Opens a local file through the Web View's loadFileUrl (read grant for a
+    /// directory); empty readAccessUrl means the file's own directory.
+    property var openFileUrlFn: function(fileUrl, readAccessUrl) {
+        console.warn("BrowserDownloadsContext: openFileUrlFn not set")
+    }
+
     // Backend PDF-rendering Capability. BrowserLayout overrides with
     // BrowserBackendCapabilities.pdfViewerSupported; tests inject their own.
     property var supportsPdfFn: function() { return false }
@@ -76,6 +82,7 @@ QtObject {
     /// never the store.
     readonly property BrowserDownloadOpenContext _openContext: BrowserDownloadOpenContext {
         openUrlFn: (url) => root.openUrlFn(url)
+        openFileUrlFn: (fileUrl, readAccessUrl) => root.openFileUrlFn(fileUrl, readAccessUrl)
     }
 
     /// Find UI open/close hook (mobile call sites). Opening Find hides the

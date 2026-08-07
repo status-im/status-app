@@ -22,8 +22,9 @@ import "DownloadFormatUtils.js" as DownloadFormatUtils
  * a plain per-call input.
  *
  * openInBrowser() makes the open-route choice: a generated player page for
- * media, a direct navigation for everything else, both via openUrlFn. A false
- * return means "not renderable here" — the caller hands the file to the OS.
+ * media (only where the Backend needs one — otherwise the media file itself
+ * via openFileUrlFn), a direct navigation for everything else. A false return
+ * means "not renderable here" — the caller hands the file to the OS.
  */
 QtObject {
     id: root
@@ -31,6 +32,12 @@ QtObject {
     /// Opens a URL in the browser; injected by the owner.
     property var openUrlFn: function(url) {
         console.warn("BrowserDownloadOpenContext: openUrlFn not set")
+    }
+
+    /// Opens a local file with a read grant for a directory (AbstractWebView
+    /// loadFileUrl); empty readAccessUrl means the file's own directory.
+    property var openFileUrlFn: function(fileUrl, readAccessUrl) {
+        console.warn("BrowserDownloadOpenContext: openFileUrlFn not set")
     }
 
     // Text file writer; production uses StringUtils, tests inject a fake.
@@ -51,6 +58,16 @@ QtObject {
     // Backend Capability, not a platform check. Injectable for QML tests.
     property bool inBrowserMediaPlaybackSupported:
         BrowserBackendCapabilities.inPageMediaPlaybackSupported
+
+    // H.264/AAC ride on the Backend too — absent from our WebEngine build,
+    // native to WebKit and the Android WebView. Injectable for QML tests.
+    property bool proprietaryCodecsSupported:
+        BrowserBackendCapabilities.proprietaryCodecsSupported
+
+    // Does this Backend need the player page at all? Only the ones that turn a
+    // navigation to local media into a download do. Injectable for QML tests.
+    property bool mediaPlayerPageRequired:
+        BrowserBackendCapabilities.mediaPlayerPageRequired
 
     // Player pages for downloaded media (see mediaPlayerPageUrl); temp, disposable.
     // The subdirectory name is also an allowed root of the Backend's local-browsing
@@ -78,13 +95,14 @@ QtObject {
             return false
         return DownloadFormatUtils.canOpenInBrowser(
                     record.mimeType, record.fileName, supportsPdf,
-                    root.inBrowserMediaPlaybackSupported)
+                    root.inBrowserMediaPlaybackSupported,
+                    root.proprietaryCodecsSupported)
     }
 
     /// The in-browser open route, or false for the OS handoff.
-    /// Media goes through a player page: navigating to local audio/video makes
-    /// WebEngine download it again instead of playing it. No page, no
-    /// in-browser route.
+    /// Media goes through a player page on Backends that need one: navigating
+    /// to local audio/video makes WebEngine download it again instead of
+    /// playing it. No page where one is needed, no in-browser route.
     function openInBrowser(record, supportsPdf) {
         if (!canOpenInBrowser(record, supportsPdf))
             return false
@@ -92,7 +110,14 @@ QtObject {
         if (!path)
             return false
 
-        if (DownloadFormatUtils.isPlayableMedia(record.mimeType, record.fileName)) {
+        if (DownloadFormatUtils.isPlayableMedia(record.mimeType, record.fileName,
+                                               root.proprietaryCodecsSupported)) {
+            // Backends that play a directly loaded file get the file itself,
+            // read-granted to its own directory (empty = the narrowest grant).
+            if (!root.mediaPlayerPageRequired) {
+                root.openFileUrlFn(UrlUtils.urlFromUserInput(path), "")
+                return true
+            }
             const page = mediaPlayerPageUrl(record)
             if (!page)
                 return false
@@ -113,7 +138,8 @@ QtObject {
     /// a one-element page instead of the media itself.
     function mediaPlayerPageUrl(record) {
         if (!record || record.missingFile
-                || !DownloadFormatUtils.isPlayableMedia(record.mimeType, record.fileName))
+                || !DownloadFormatUtils.isPlayableMedia(record.mimeType, record.fileName,
+                                                        root.proprietaryCodecsSupported))
             return ""
         const path = String(record.targetPath || "")
         if (!path)

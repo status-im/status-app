@@ -199,6 +199,7 @@ Item {
         property var tabs: []
         property var removedIndexes: []
         property var openedUrls: []
+        property var openedFileUrls: []
         property bool supportsPdf: false
 
         function createStore() {
@@ -210,6 +211,7 @@ Item {
             tabs = []
             removedIndexes = []
             openedUrls = []
+            openedFileUrls = []
             supportsPdf = false
             const component = Qt.createComponent(root.downloadsContextUrl)
             verify(component.status === Component.Ready, component.errorString())
@@ -220,6 +222,10 @@ Item {
                 removeViewFn: function(index) { removedIndexes.push(index) },
                 hideFindUiFn: function() { findHiddenCount += 1 },
                 openUrlFn: function(url) { openedUrls.push(String(url)) },
+                openFileUrlFn: function(fileUrl, readAccessUrl) {
+                    openedFileUrls.push({ url: String(fileUrl),
+                                          readAccess: String(readAccessUrl || "") })
+                },
                 supportsPdfFn: function() { return supportsPdf }
             })
             // The internal open seam runs for real; keep its filesystem side
@@ -626,6 +632,33 @@ Item {
 
             // Retry restarts in place — overview stays open.
             verify(!ctx.openDownloadFromList(record))
+        }
+
+        /// A Backend that needs no player page opens the media file itself, and
+        /// the direct-load route must reach the host's loadFileUrl plumbing.
+        function test_openInBrowser_directMediaLoad_reachesFileUrlPlumbing() {
+            const store = createStore()
+            const ctx = createContext(store)
+            const record = createTemporaryObject(fakeRecordComponent, root, {
+                state: AbstractWebView.DownloadState.DownloadCompleted,
+                fileName: "tune.mp3",
+                mimeType: "audio/mpeg",
+                targetPath: "/tmp/downloads/tune.mp3"
+            })
+
+            ctx._openContext.mediaPlayerPageRequired = false
+            verify(ctx.openInBrowserRecord(record))
+            compare(openedUrls.length, 0, "no player page navigation on this Backend")
+            compare(openedFileUrls.length, 1)
+            verify(openedFileUrls[0].url.indexOf("tune.mp3") >= 0)
+            compare(openedFileUrls[0].readAccess, "", "empty grant = the file's own directory")
+
+            // Flipping the Capability back restores the player-page route.
+            ctx._openContext.mediaPlayerPageRequired = true
+            verify(ctx.openInBrowserRecord(record))
+            compare(openedFileUrls.length, 1)
+            compare(openedUrls.length, 1)
+            verify(openedUrls[0].indexOf("/status-player/player-") > 0)
         }
 
         // --- capabilitiesFor: the one capability vocabulary ---

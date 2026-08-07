@@ -83,6 +83,14 @@ AbstractWebView {
         if (u && u.toString())
             ensureLoaded()
     }
+    /// Local-file load with a directory read grant; url syncs back via Connections.
+    function loadFileUrl(fileUrl, readAccessUrl) {
+        ensureLoaded()
+        if (loader.item && loader.item.loadFileUrl)
+            loader.item.loadFileUrl(fileUrl, readAccessUrl || "")
+        else
+            console.warn("LazyWebViewAdapter: loadFileUrl unavailable")
+    }
     function goBack()             { if (loader.item) loader.item.goBack() }
     function goForward()          { if (loader.item) loader.item.goForward() }
     function goBackOrForward(o)   { if (loader.item) loader.item.goBackOrForward(o) }

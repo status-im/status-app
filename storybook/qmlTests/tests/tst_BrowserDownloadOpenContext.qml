@@ -22,9 +22,11 @@ Item {
         when: windowShown
 
         property var openedUrls: []
+        property var openedFileUrls: []
 
         function createContext() {
             openedUrls = []
+            openedFileUrls = []
             const component = Qt.createComponent(root.openContextUrl)
             verify(component.status === Component.Ready, component.errorString())
             const ctx = createTemporaryObject(component, root)
@@ -32,6 +34,11 @@ Item {
             ctx.ensureDirectoryFn = function(path) { return true }
             ctx.writeTextFileFn = function(path, data) { return true }
             ctx.openUrlFn = (url) => openedUrls.push(String(url))
+            ctx.openFileUrlFn = (fileUrl, readAccessUrl) => openedFileUrls.push(
+                { url: String(fileUrl), readAccess: String(readAccessUrl || "") })
+            // The player page is what the desktop Backend needs; tests that
+            // exercise the direct route flip this Capability themselves.
+            ctx.mediaPlayerPageRequired = true
             return ctx
         }
 
@@ -76,17 +83,31 @@ Item {
             verify(ctx.canOpenInBrowser(completed("audio/wav", "a.wav"), false))
             verify(ctx.canOpenInBrowser(completed("video/webm", "a.webm"), false))
 
-            // No proprietary codecs in the shipped Chromium: H.264/AAC would load a
-            // player that cannot decode, so they go to the OS like Ogg and Matroska.
+            // Ogg and Matroska are out on every Backend (platform media stack).
+            verify(!ctx.canOpenInBrowser(completed("audio/ogg", "a.ogg"), true))
+            verify(!ctx.canOpenInBrowser(completed("video/x-matroska", "a.mkv"), true))
+
+            // H.264/AAC follow the Backend: absent from our WebEngine build, so a
+            // player would load and fail to decode; native to WebKit and Android.
+            ctx.proprietaryCodecsSupported = false
             verify(!ctx.canOpenInBrowser(completed("audio/mp4", "a.m4a"), true))
             verify(!ctx.canOpenInBrowser(completed("audio/aac", "a.aac"), true))
             verify(!ctx.canOpenInBrowser(completed("video/mp4", "a.mp4"), true))
+
+            ctx.proprietaryCodecsSupported = true
+            verify(ctx.canOpenInBrowser(completed("audio/mp4", "a.m4a"), true))
+            verify(ctx.canOpenInBrowser(completed("audio/aac", "a.aac"), true))
+            verify(ctx.canOpenInBrowser(completed("video/mp4", "a.mp4"), true))
+            // Still out: the codec Capability does not widen the container list.
             verify(!ctx.canOpenInBrowser(completed("audio/ogg", "a.ogg"), true))
             verify(!ctx.canOpenInBrowser(completed("video/x-matroska", "a.mkv"), true))
+            ctx.proprietaryCodecsSupported = false
 
             // Media playback is a Backend Capability, never a platform check.
             compare(ctx.inBrowserMediaPlaybackSupported,
                     BrowserBackendCapabilities.inPageMediaPlaybackSupported)
+            compare(createContext().proprietaryCodecsSupported,
+                    BrowserBackendCapabilities.proprietaryCodecsSupported)
 
             // Backend without in-page playback: media leaves the in-browser
             // route; images still render.
@@ -189,6 +210,49 @@ Item {
             ctx.writeTextFileFn = function() { return false }
             verify(!ctx.openInBrowser(completed("video/webm", "b.webm"), false))
             compare(openedUrls.length, 2)
+        }
+
+        /// The player page is a Backend workaround, so the route follows the
+        /// Capability: no page needed → load the media file itself.
+        function test_openInBrowser_mediaRoute_followsPlayerPageCapability() {
+            const ctx = createContext()
+
+            let written = 0
+            ctx.writeTextFileFn = function() { written += 1; return true }
+            ctx.mediaPlayerPageRequired = false
+
+            verify(ctx.openInBrowser(completed("audio/mpeg", "tune.mp3"), false))
+            compare(written, 0, "no page is generated where the Backend needs none")
+            compare(openedUrls.length, 0)
+            compare(openedFileUrls.length, 1)
+            verify(openedFileUrls[0].url.startsWith("file://"))
+            verify(openedFileUrls[0].url.endsWith("/tmp/downloads/tune.mp3"))
+            // Empty read access = the file's own directory, the narrowest grant.
+            compare(openedFileUrls[0].readAccess, "")
+
+            // Non-media is unaffected: still a plain navigation.
+            verify(ctx.openInBrowser(completed("image/png", "photo.png"), false))
+            compare(openedFileUrls.length, 1)
+            compare(openedUrls.length, 1)
+            verify(openedUrls[0].indexOf("photo.png") >= 0)
+
+            // Flipping the Capability back restores the player-page route —
+            // the fallback stays one property away.
+            ctx.mediaPlayerPageRequired = true
+            verify(ctx.openInBrowser(completed("audio/mpeg", "tune.mp3"), false))
+            compare(openedFileUrls.length, 1)
+            compare(openedUrls.length, 2)
+            verify(openedUrls[1].startsWith("file:///tmp/status-player/player-"))
+            compare(written, 1)
+        }
+
+        /// The Capability is a Backend fact, not a platform check.
+        function test_mediaPlayerPageRequired_defaultsToTheBackendCapability() {
+            const component = Qt.createComponent(root.openContextUrl)
+            verify(component.status === Component.Ready, component.errorString())
+            const ctx = createTemporaryObject(component, root)
+            compare(ctx.mediaPlayerPageRequired,
+                    BrowserBackendCapabilities.mediaPlayerPageRequired)
         }
     }
 }
