@@ -2578,6 +2578,29 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
 </context>
 <context>
+    <name>BrowserLinkContextMenu</name>
+    <message>
+        <source>Share link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy link</source>
+        <translation type="unfinished">Kopírovat odkaz</translation>
+    </message>
+    <message>
+        <source>Open in new tab</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download image</source>
+        <translation type="unfinished">Stáhnout obrázek</translation>
+    </message>
+</context>
+<context>
     <name>BrowserPortraitToolbar</name>
     <message>
         <source>Open Tabs view</source>
@@ -6302,6 +6325,72 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
+    <name>DownloadPill</name>
+    <message>
+        <source>Missing file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation type="unfinished">Zrušeno</translation>
+    </message>
+    <message>
+        <source>Interrupted</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>DownloadRecordMenu</name>
+    <message>
+        <source>Share file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy file path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Share URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished">Stažené soubory</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation type="unfinished">Pozastavit</translation>
+    </message>
+    <message>
+        <source>Resume</source>
+        <translation type="unfinished">Obnovit</translation>
+    </message>
+    <message>
+        <source>Open in Browser</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show in folder</source>
+        <translation type="unfinished">Zobrazit ve složce</translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished">Zkusit znovu</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Zrušit</translation>
+    </message>
+    <message>
+        <source>Dismiss</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>DownloadView</name>
     <message>
         <source>Cancelled</source>
@@ -6314,6 +6403,13 @@ key pair. Keycard will be required for signing</source>
     <message>
         <source>Downloaded files will appear here.</source>
         <translation>Stažené soubory se zobrazí zde.</translation>
+    </message>
+</context>
+<context>
+    <name>DownloadsListView</name>
+    <message>
+        <source>Downloaded files will appear here.</source>
+        <translation type="unfinished">Stažené soubory se zobrazí zde.</translation>
     </message>
 </context>
 <context>
@@ -17279,6 +17375,10 @@ Tuto akci nelze vzít zpět.</translation>
     <message>
         <source>Bookmarks</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished">Stažené soubory</translation>
     </message>
     <message>
         <source>Search in open tabs</source>

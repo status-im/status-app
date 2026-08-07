@@ -2570,6 +2570,29 @@ Do you wish to override the security check and continue?</source>
     </message>
 </context>
 <context>
+    <name>BrowserLinkContextMenu</name>
+    <message>
+        <source>Share link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy link</source>
+        <translation type="unfinished">Copiar enlace</translation>
+    </message>
+    <message>
+        <source>Open in new tab</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download image</source>
+        <translation type="unfinished">Descargar imagen</translation>
+    </message>
+</context>
+<context>
     <name>BrowserPortraitToolbar</name>
     <message>
         <source>Open Tabs view</source>
@@ -6280,6 +6303,72 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
+    <name>DownloadPill</name>
+    <message>
+        <source>Missing file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation type="unfinished">Cancelado</translation>
+    </message>
+    <message>
+        <source>Interrupted</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>DownloadRecordMenu</name>
+    <message>
+        <source>Share file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy file path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Share URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished">Descargas</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation type="unfinished">Pausar</translation>
+    </message>
+    <message>
+        <source>Resume</source>
+        <translation type="unfinished">Reanudar</translation>
+    </message>
+    <message>
+        <source>Open in Browser</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show in folder</source>
+        <translation type="unfinished">Mostrar en carpeta</translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished">Reintentar</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Cancelar</translation>
+    </message>
+    <message>
+        <source>Dismiss</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>DownloadView</name>
     <message>
         <source>Cancelled</source>
@@ -6292,6 +6381,13 @@ key pair. Keycard will be required for signing</source>
     <message>
         <source>Downloaded files will appear here.</source>
         <translation>Los archivos descargados aparecerán aquí.</translation>
+    </message>
+</context>
+<context>
+    <name>DownloadsListView</name>
+    <message>
+        <source>Downloaded files will appear here.</source>
+        <translation type="unfinished">Los archivos descargados aparecerán aquí.</translation>
     </message>
 </context>
 <context>
@@ -17202,6 +17298,10 @@ This action cannot be undone.</source>
     <message>
         <source>Bookmarks</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished">Descargas</translation>
     </message>
     <message>
         <source>Search in open tabs</source>
