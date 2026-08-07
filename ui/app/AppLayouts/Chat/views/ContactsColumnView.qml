@@ -84,7 +84,7 @@ Item {
             id: searchInput
             Layout.fillWidth: true
             Layout.leftMargin: Theme.halfPadding
-            Layout.rightMargin: scrollView.rightPadding
+            Layout.rightMargin: d.scrollBarWidth + d.scrollBarSpacing
             Layout.topMargin: 4
             Layout.bottomMargin: 4
             Layout.preferredHeight: 40
@@ -98,31 +98,17 @@ Item {
             }
         }
 
-        // loading panel
-        ChatsLoadingPanel {
-            Layout.fillWidth: true
-            visible: !chatSectionModule.chatsLoaded
-        }
-
-        // chat list
-        StatusScrollView {
-            id: scrollView
+        // chat list — StatusChatList's internal ListView must own the viewport
+        // (bounded height) so rows stay virtualized; wrapping it in a ScrollView
+        // expands it to contentHeight and creates every delegate eagerly
+        StatusChatList {
+            id: channelList
+            objectName: "ContactsColumnView_chatList"
             Layout.fillWidth: true
             Layout.fillHeight: true
-
-            topPadding: 0
-            leftPadding: d.listContentLeftMargin
-            rightPadding: d.scrollBarWidth + d.scrollBarSpacing
-            contentWidth: availableWidth
-
-            ScrollBar.vertical.implicitWidth: d.scrollBarWidth
-            ScrollBar.vertical.width: d.scrollBarWidth
-
-            StatusChatList {
-                id: channelList
-                objectName: "ContactsColumnView_chatList"
-                width: scrollView.availableWidth
-                model: SortFilterProxyModel {
+            Layout.leftMargin: d.listContentLeftMargin
+            Layout.rightMargin: d.scrollBarSpacing
+            model: SortFilterProxyModel {
                     sourceModel: root.chatSectionModule.model
                     filters: [
                         SQUtils.SearchFilter {
@@ -213,7 +199,6 @@ Item {
                         root.addRemoveGroupMemberClicked()
                     }
                 }
-            }
         }
     }
 }
