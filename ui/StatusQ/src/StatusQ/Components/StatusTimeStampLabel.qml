@@ -23,11 +23,12 @@ StatusBaseText {
         // initial value
         property string formattedLabel: root.showFullTimestamp ? LocaleUtils.formatDateTime(root.timestamp) : LocaleUtils.formatRelativeTimestamp(root.timestamp)
 
-        // updates
+        // updates — the relative format has day granularity ("Today 14:23",
+        // "Yesterday 14:23", …), so it can only change when the day rolls over
         Binding on formattedLabel {
             when: !root.showFullTimestamp && root.timestamp && root.visible
             value: {
-                StatusSharedUpdateTimer.secondsActive
+                StatusSharedUpdateTimer.daysActive
                 return LocaleUtils.formatRelativeTimestamp(root.timestamp)
             }
             restoreMode: Binding.RestoreBinding
