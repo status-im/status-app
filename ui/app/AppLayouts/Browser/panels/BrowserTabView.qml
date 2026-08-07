@@ -84,6 +84,7 @@ FocusScope {
         }
         contentItem: ListView {
             id: tabBarListView
+            objectName: "tabBarListView"
             model: tabBar.contentModel
             currentIndex: tabBar.currentIndex
             spacing: tabBar.spacing
@@ -121,15 +122,18 @@ FocusScope {
     // until the drag threshold, so taps fall through to the tab bar ListView
     // underneath, where double-tap still opens a new tab.
     Item {
+        objectName: "tabStripDragArea"
+
         anchors.top: tabBar.top
         anchors.bottom: tabBar.bottom
         anchors.right: tabBar.right
         anchors.left: tabBar.left
-        // content + the trailing AddTabButton footer
-        anchors.leftMargin: tabBarListView.contentWidth + d.tabHeight
+        // contentWidth already covers the trailing AddTabButton footer
+        anchors.leftMargin: tabBarListView.contentWidth
         visible: !d.tabBarOverflowing && !SQUtils.Utils.isMobile
 
         DragHandler {
+            objectName: "windowDragHandler"
             target: null
             grabPermissions: PointerHandler.CanTakeOverFromAnything
             onActiveChanged: if (active) root.Window.window.startSystemMove()
