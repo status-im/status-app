@@ -13,6 +13,8 @@ QtObject:
     keyUid: string
     pubKey: string
     migratedToColdWallet: bool
+    migratedToDEKEncryption: bool
+
     # fields which may change during runtime
     displayName: string
     preferredName: string
@@ -33,11 +35,13 @@ QtObject:
   proc delete*(self: UserProfile) =
     self.QObject.delete
 
-  proc setFixedData*(self: UserProfile, username: string, keyUid: string, pubKey: string, migratedToColdWallet: bool) =
+  proc setFixedData*(self: UserProfile, username: string, keyUid: string, pubKey: string, migratedToColdWallet: bool,
+    migratedToDEKEncryption: bool) =
     self.username = username
     self.keyUid = keyUid
     self.pubKey = pubKey
     self.migratedToColdWallet = migratedToColdWallet
+    self.migratedToDEKEncryption = migratedToDEKEncryption
 
   proc getKeyUid*(self: UserProfile): string {.slot.} =
     self.keyUid
@@ -55,10 +59,25 @@ QtObject:
   QtProperty[string] compressedPubKey:
     read = getCompressedPubKey
 
+  proc migratedToColdWalletChanged*(self: UserProfile) {.signal.}
+
   proc getMigratedToColdWallet*(self: UserProfile): bool {.slot.} =
     self.migratedToColdWallet
+
+  proc setMigratedToColdWallet*(self: UserProfile, value: bool) =
+    if self.migratedToColdWallet == value:
+      return
+    self.migratedToColdWallet = value
+    self.migratedToColdWalletChanged()
+
   QtProperty[bool] migratedToColdWallet:
     read = getMigratedToColdWallet
+    notify = migratedToColdWalletChanged
+
+  proc getMigratedToDEKEncryption*(self: UserProfile): bool {.slot.} =
+    self.migratedToDEKEncryption
+  QtProperty[bool] migratedToDEKEncryption:
+    read = getMigratedToDEKEncryption
 
   proc getUsingBiometricLogin*(self: UserProfile): bool {.slot.} =
     if(not main_constants.SUPPORTS_FINGERPRINT):

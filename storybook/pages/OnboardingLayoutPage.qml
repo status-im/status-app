@@ -99,6 +99,11 @@ SplitView {
                 return Math.min(password.length-1, 4)
             }
 
+            function isProfileMigratedToDEKEncryption(keyUid: string): bool {
+                logs.logEvent("OnboardingStore.isProfileMigratedToDEKEncryption", ["keyUid"], arguments)
+                return ctrlProfileEncryptionMigrated.checked
+            }
+
             // seedphrase/mnemonic
             function validMnemonic(mnemonic: string): bool {
                 logs.logEvent("OnboardingStore.validMnemonic", ["mnemonic"], arguments)
@@ -410,6 +415,13 @@ SplitView {
                 Switch {
                     id: ctrlLoginScreen
                     text: "Show login screen"
+                    checkable: true
+                    onToggled: root.restart()
+                }
+
+                Switch {
+                    id: ctrlProfileEncryptionMigrated
+                    text: "Profile encryption migrated (DEK)"
                     checkable: true
                     onToggled: root.restart()
                 }

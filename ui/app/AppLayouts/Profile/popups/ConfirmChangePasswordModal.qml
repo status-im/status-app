@@ -23,7 +23,9 @@ import "../views"
 StatusDialog {
     id: root
 
-    signal changePasswordRequested()
+    property bool fastPasswordChangePossible: false
+
+    signal changePasswordRequested(bool rekey)
     // Currently this modal handles only the happy path
     // The error is handled in the caller
     function passwordSuccessfulyChanged() {
@@ -37,10 +39,14 @@ StatusDialog {
         function reset() {
             d.dbEncryptionInProgress = false;
             d.passwordChanged = false;
+            rekeyCheckBox.checked = false;
         }
 
         property bool passwordChanged: false
         property bool dbEncryptionInProgress: false
+
+        // Deep password change implies a full db/keystore files re-encryption in case of not DEK migrated or if re-key is checked (for DEK migrated) profiles
+        readonly property bool doDeepPasswordChange: !root.fastPasswordChangePossible || rekeyCheckBox.checked
     }
 
     onClosed: {
@@ -48,9 +54,8 @@ StatusDialog {
     }
 
     width: 480
-    closePolicy: d.passwordChanged || d.dbEncryptionInProgress
-                     ? Popup.NoAutoClose
-                     : Popup.CloseOnEscape | Popup.CloseOnPressOutside
+    closePolicy: d.dbEncryptionInProgress || (d.passwordChanged && d.doDeepPasswordChange)? Popup.NoAutoClose
+                                                                                          : Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
     // Overwrite the default modal background with a conditioned blurred one
     Overlay.modal: Item {
@@ -64,7 +69,7 @@ StatusDialog {
             id: blurredBackground
 
             anchors.fill: parent
-            visible: d.dbEncryptionInProgress
+            visible: d.dbEncryptionInProgress && d.doDeepPasswordChange
 
             // Update the blur source only once, when the modal is shown for performance reasons
             onVisibleChanged: {
@@ -110,7 +115,37 @@ StatusDialog {
         StatusBaseText {
             width: parent.width
             wrapMode: Text.WordWrap
-            text: qsTr("Your data must now be re-encrypted with your new password. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.")
+            text: {
+                if (!d.doDeepPasswordChange) {
+                    return qsTr("Your password will be changed. This only re-encrypts your profile key file and takes a moment — no restart needed.")
+                }
+                if (root.fastPasswordChangePossible) {
+                    return qsTr("Your data will be fully re-encrypted with a new encryption key. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.")
+                }
+                return qsTr("Your data must now be re-encrypted with your new password. This one-time process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status. Future password changes will be instant.")
+            }
+        }
+
+        ColumnLayout {
+            width: parent.width
+            spacing: 4
+            visible: root.fastPasswordChangePossible && !d.dbEncryptionInProgress && !d.passwordChanged
+
+            StatusCheckBox {
+                id: rekeyCheckBox
+                objectName: "changePasswordModalRekeyCheckBox"
+                Layout.fillWidth: true
+                text: qsTr("Also re-encrypt my data with a new encryption key")
+            }
+
+            StatusBaseText {
+                Layout.fillWidth: true
+                Layout.leftMargin: rekeyCheckBox.indicator.width + rekeyCheckBox.spacing
+                wrapMode: Text.WordWrap
+                font.pixelSize: Theme.tertiaryTextFontSize
+                color: Theme.palette.baseColor1
+                text: qsTr("Only needed if you suspect your device was compromised. Takes considerably longer and requires a restart.")
+            }
         }
 
         Item {
@@ -131,11 +166,27 @@ StatusDialog {
                 anchors.fill: parent
                 sensor.enabled: false
                 visible: (d.dbEncryptionInProgress || d.passwordChanged)
-                title: !d.dbEncryptionInProgress ? qsTr("Re-encryption complete") :
-                                                   qsTr("Re-encrypting your data with your new password...")
-                subTitle: !d.dbEncryptionInProgress ? qsTr("Restart Status and log in using your new password") :
-                                                      qsTr("Do not quit the app or turn off your device")
-                statusListItemSubTitle.customColor: !d.passwordChanged ? Theme.palette.dangerColor1 : Theme.palette.successColor1
+                title: {
+                    if (!d.dbEncryptionInProgress) {
+                        return d.doDeepPasswordChange ? qsTr("Re-encryption complete") : qsTr("Password changed")
+                    }
+                    return d.doDeepPasswordChange ? qsTr("Re-encrypting your data...")
+                                                  : qsTr("Changing your password...")
+                }
+                subTitle: {
+                    if (!d.dbEncryptionInProgress) {
+                        return d.doDeepPasswordChange ? qsTr("Restart Status and log in using your new password")
+                                                      : qsTr("You can continue using Status")
+                    }
+                    return d.doDeepPasswordChange ? qsTr("Do not quit the app or turn off your device")
+                                                  : qsTr("This should only take a moment")
+                }
+                statusListItemSubTitle.customColor: {
+                    if (d.passwordChanged) {
+                        return Theme.palette.successColor1
+                    }
+                    return d.doDeepPasswordChange ? Theme.palette.dangerColor1 : Theme.palette.baseColor1
+                }
                 statusListItemIcon.active: d.passwordChanged
                 asset.name: "checkmark-circle"
                 asset.width: 24
@@ -171,14 +222,23 @@ StatusDialog {
             StatusButton {
                 id: submitBtn
                 objectName: "changePasswordModalSubmitButton"
-                text: !d.dbEncryptionInProgress && !d.passwordChanged ? qsTr("Re-encrypt data using new password") : qsTr("Restart Status")
+                text: {
+                    if (!d.dbEncryptionInProgress && !d.passwordChanged) {
+                        return d.doDeepPasswordChange ? qsTr("Re-encrypt data using new password") : qsTr("Change password")
+                    }
+                    return d.doDeepPasswordChange ? qsTr("Restart Status") : qsTr("Close")
+                }
                 enabled: !d.dbEncryptionInProgress
                 onClicked: {
                     if (d.passwordChanged) {
-                        SystemUtils.restartApplication(true);
+                        if (d.doDeepPasswordChange) {
+                            SystemUtils.restartApplication(true);
+                        } else {
+                            root.close();
+                        }
                     } else {
                         d.dbEncryptionInProgress = true
-                        root.changePasswordRequested()
+                        root.changePasswordRequested(rekeyCheckBox.checked)
                     }
                 }
             }

@@ -32,11 +32,13 @@ QtObject:
     threadpool: threadpool.ThreadPool
 
   proc delete*(self: Service)
-  proc newService*(events: EventEmitter, settingsService: settings_service.Service,
+  proc newService*(events: EventEmitter, threadpool: threadpool.ThreadPool,
+    settingsService: settings_service.Service,
     accountsService: accounts_service.Service): Service =
     new(result, delete)
     result.QObject.setup
     result.events = events
+    result.threadpool = threadpool
     result.settingsService = settingsService
     result.accountsService = accountsService
 
@@ -69,11 +71,11 @@ QtObject:
     except Exception as e:
       error "error: ", procName="changePassword", errName = e.name, errDesription = e.msg
       data.errorMsg = e.msg
-    
+
     self.events.emit(SIGNAL_PASSWORD_CHANGED, data)
 
 
-  proc changePassword*(self: Service, password: string, newPassword: string) =
+  proc changePassword*(self: Service, password: string, newPassword: string, rekey: bool = false) =
     try:
       let loggedInAccount = self.accountsService.getLoggedInAccount()
       let arg = ChangeDatabasePasswordTaskArg(
@@ -82,12 +84,22 @@ QtObject:
         slot: "onChangeDatabasePasswordResponse",
         accountId: loggedInAccount.keyUid,
         currentPassword: common_utils.hashPassword(password),
-        newPassword: common_utils.hashPassword(newPassword)
+        newPassword: common_utils.hashPassword(newPassword),
+        rekey: rekey
       )
       self.threadpool.start(arg)
 
     except Exception as e:
       error "error: ", procName="changePassword", errName = e.name, errDesription = e.msg
+
+  proc isProfileMigratedToDEKEncryption*(self: Service): bool =
+    try:
+      let loggedInAccount = self.accountsService.getLoggedInAccount()
+      let response = status_privacy.getProfileEncryptionInfo(loggedInAccount.keyUid)
+      return response.result{"migrated"}.getBool(false)
+    except Exception as e:
+      error "error: ", procName="isProfileMigratedToDEKEncryption", errName = e.name, errDesription = e.msg
+      return false
 
   proc isMnemonicBackedUp*(self: Service): bool =
     return self.settingsService.getMnemonic().len == 0

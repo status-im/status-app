@@ -137,6 +137,23 @@ proc startWallet(self: Service) =
     return
   discard backend.startWallet()
 
+proc onProfileKeypairConversionCompleted(self: Service, success: bool) =
+  if not success:
+    return
+  try:
+    let profileKeyUid = singletonInstance.userProfile.getKeyUid()
+    if profileKeyUid.len == 0 or not self.accountsService.isProfileMigratedToDEKEncryption(profileKeyUid):
+      return
+    let dbKp = self.getKeypairByKeyUidFromDb(profileKeyUid)
+    if dbKp.isNil:
+      return
+    self.replaceKeypair(dbKp)
+    singletonInstance.userProfile.setMigratedToColdWallet(dbKp.migratedToColdWallet())
+    self.events.emit(SIGNAL_NEW_KEYCARD_SET, KeycardArgs(success: true,
+      keycard: KeycardDto(keyUid: profileKeyUid)))
+  except Exception as e:
+    error "error refreshing profile keypair after conversion", errDesription=e.msg
+
 proc init*(self: Service) =
   try:
     self.buildTokensDebouncer = debouncer_service.newDebouncer(
@@ -205,6 +222,10 @@ proc init*(self: Service) =
   self.events.on(SIGNAL_PASSWORD_PROVIDED) do(e: Args):
     let args = AuthenticationArgs(e)
     self.onPasswordProvided(args.keyUid, args.password)
+
+  self.events.on(accounts_service.SIGNAL_CONVERTING_PROFILE_KEYPAIR) do(e: Args):
+    let args = accounts_service.ResultArgs(e)
+    self.onProfileKeypairConversionCompleted(args.success)
 
   let addresses = self.getWalletAddresses()
   self.buildAllTokens(addresses, forceRefresh = true)

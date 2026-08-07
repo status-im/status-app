@@ -62,6 +62,10 @@ QtObject {
         return d.onboardingModuleInst.getPasswordStrengthScore(password, "") // The second argument is username
     }
 
+    function isProfileMigratedToDEKEncryption(keyUid: string) : bool {
+        return d.onboardingModuleInst.isProfileMigratedToDEKEncryption(keyUid)
+    }
+
     // seedphrase/mnemonic
     function validMnemonic(mnemonic: string) : bool {
         return d.onboardingModuleInst.validMnemonic(mnemonic)

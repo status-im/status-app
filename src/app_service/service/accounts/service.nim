@@ -467,6 +467,14 @@ QtObject:
       error "login failed", errName = e.name, errDesription = e.msg
       self.events.emit(SIGNAL_LOGIN_ERROR, LoginErrorArgs(error: e.msg))
 
+  proc isProfileMigratedToDEKEncryption*(self: Service, keyUid: string): bool =
+    try:
+      let response = status_privacy.getProfileEncryptionInfo(keyUid)
+      return response.result{"migrated"}.getBool(false)
+    except Exception as e:
+      error "error: ", procName="isProfileMigratedToDEKEncryption", errName = e.name, errDesription = e.msg
+    return false
+
   proc convertRegularProfileKeypairToKeycard*(self: Service, keycardUid, currentPassword: string, newPassword: string) =
     var accountDataJson = %* {
       "key-uid": self.getLoggedInAccount().keyUid,
@@ -488,7 +496,8 @@ QtObject:
       newPassword: newPassword
     )
 
-    DB_BLOCKED_DUE_TO_PROFILE_MIGRATION = true
+    if not self.isProfileMigratedToDEKEncryption(self.getLoggedInAccount().keyUid):
+      DB_BLOCKED_DUE_TO_PROFILE_MIGRATION = true
     self.threadpool.start(arg)
 
   proc onConvertRegularProfileKeypairToKeycard*(self: Service, response: string) {.slot.} =
@@ -516,7 +525,8 @@ QtObject:
       hashedNewPassword: hashedNewPassword
     )
 
-    DB_BLOCKED_DUE_TO_PROFILE_MIGRATION = true
+    if not self.isProfileMigratedToDEKEncryption(self.getLoggedInAccount().keyUid):
+      DB_BLOCKED_DUE_TO_PROFILE_MIGRATION = true
     self.threadpool.start(arg)
 
   proc onConvertKeycardProfileKeypairToRegular*(self: Service, response: string) {.slot.} =

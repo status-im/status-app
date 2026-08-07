@@ -119,6 +119,9 @@ proc loginKeycard*(self: Controller, keyUid: string, pin: string, pairingPasswor
 proc getPasswordStrengthScore*(self: Controller, password, userName: string): int =
   return self.generalService.getPasswordStrengthScore(password, userName)
 
+proc isProfileMigratedToDEKEncryption*(self: Controller, keyUid: string): bool =
+  return self.accountsService.isProfileMigratedToDEKEncryption(keyUid)
+
 proc validMnemonic*(self: Controller, mnemonic: string): bool =
   let (_, err) = self.accountsService.validateMnemonic(mnemonic)
   return err.len == 0

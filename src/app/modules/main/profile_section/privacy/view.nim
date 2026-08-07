@@ -16,8 +16,11 @@ QtObject:
   proc load*(self: View) =
     self.delegate.viewDidLoad()
 
-  proc changePassword*(self: View, password: string, newPassword: string) {.slot.} =
-    self.delegate.changePassword(password, newPassword)
+  proc changePassword*(self: View, password: string, newPassword: string, rekey: bool) {.slot.} =
+    self.delegate.changePassword(password, newPassword, rekey)
+
+  proc isProfileMigratedToDEKEncryption*(self: View): bool {.slot.} =
+    return self.delegate.isProfileMigratedToDEKEncryption()
 
   proc passwordChanged(self: View, success: bool, errorMsg: string) {.signal.}
   proc emitPasswordChangedSignal*(self: View, success: bool, errorMsg: string) =

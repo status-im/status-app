@@ -38,6 +38,21 @@ class ChangePasswordModal(BasePage):
         except Exception:
             pass
 
+        if self._wait_for_primary_button_enabled(timeout=timeout):
+            label = ""
+            button = self.find_element_safe(self.locators.PRIMARY_BUTTON, timeout=2)
+            if button:
+                try:
+                    label = (button.text or "").strip()
+                except Exception:
+                    label = ""
+            if label.lower() == "close":
+                self.logger.info("Fast password change detected; closing modal, no restart")
+                self.safe_click(self.locators.PRIMARY_BUTTON, timeout=5)
+                if user and new_password:
+                    user.password = new_password
+                return True
+
         deadline = time.time() + timeout
         attempt = 1
         restart_confirmed = False

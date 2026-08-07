@@ -174,4 +174,5 @@ change_password_menu_current_password = {"container": statusDesktop_mainWindow_o
 change_password_menu_new_password = {"container": statusDesktop_mainWindow_overlay, "objectName": "passwordViewNewPassword", "type": "StatusPasswordInput", "visible": True}
 change_password_menu_new_password_confirm = {"container": statusDesktop_mainWindow_overlay, "objectName": "passwordViewNewPasswordConfirm", "type": "StatusPasswordInput", "visible": True}
 change_password_menu_submit_button = {"container": statusDesktop_mainWindow_overlay, "objectName": "changePasswordModalSubmitButton", "type": "StatusButton", "visible": True}
+change_password_menu_rekey_checkbox = {"container": statusDesktop_mainWindow_overlay, "objectName": "changePasswordModalRekeyCheckBox", "type": "StatusCheckBox", "visible": True}
 change_password_success_menu_sign_out_quit_button = {"container": statusDesktop_mainWindow_overlay, "objectName": "changePasswordSuccessModalSignOutAndQuitButton", "type": "StatusButton", "visible": True}
