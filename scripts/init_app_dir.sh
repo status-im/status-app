@@ -25,19 +25,6 @@ copy_system_libs() {
   cp -P /usr/local/lib/x86_64-linux-gnu/libpcsclite*.so* "$dest/"
 }
 
-bundle_keycard_simulator() {
-  local dest="$1"
-  local src="vendor/status-keycard-qt/test/keycard-simulator"
-  if ! command -v javac >/dev/null 2>&1; then
-    echo "WARNING: javac not found; skipping keycard simulator bundle." >&2
-    return 0
-  fi
-  echo "Bundling keycard simulator (precompile + copy)..."
-  ( cd "$src" && ./build.sh )
-  mkdir -p "$dest"
-  cp -R "$src"/run.sh "$src"/libs "$src"/versions "$src"/out "$dest/"
-}
-
 DEST="${APP_DIR:?APP_DIR must be set}/usr"
 rm -rf "${APP_DIR}"
 
@@ -60,11 +47,6 @@ cp status.png "${DEST}/"
 
 copy_native_libs "${DEST}/lib"
 cp "${FCITX5_QT}" "${DEST}/plugins/platforminputcontexts/"
-
-if [[ "${USE_SIMULATED_KEYCARD:-}" == "true" ]]; then
-  # Bundled at usr/share/keycard-simulator; the app finds it at ../share relative to usr/bin.
-  bundle_keycard_simulator "${DEST}/share/keycard-simulator"
-fi
 
 # Qt WebEngine only (process + resources + locales)
 copy_qt_webengine() {

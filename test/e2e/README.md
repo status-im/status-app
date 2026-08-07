@@ -164,6 +164,8 @@ cd test/e2e && source .venv/bin/activate
 pytest -m keycard -v
 ```
 
+Requires a **JRE ≥ 11** on `PATH` (packaged builds ship the simulator, but still start it with the host JVM).
+
 **1. Dev build** — from repo root:
 
 ```bash

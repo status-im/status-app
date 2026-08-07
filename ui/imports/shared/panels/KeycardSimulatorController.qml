@@ -28,6 +28,7 @@ ApplicationWindow {
         id: d
 
         property bool simulatorStarted: false
+        property string simulatorError: ""
         property var cardIds: []
         property bool readerPlugged: false
         property bool cardInserted: false
@@ -118,10 +119,20 @@ ApplicationWindow {
             text: d.simulatorStarted ? qsTr("Restart Keycard Simulator")
                                      : qsTr("Start Keycard Simulator")
             onClicked: {
-                root.controller.startSimulator(d.selectedVersion)
-                d.simulatorStarted = true
-                d.resetState()
+                d.simulatorError = root.controller.startSimulator(d.selectedVersion)
+                d.simulatorStarted = !d.simulatorError
+                if (d.simulatorStarted)
+                    d.resetState()
             }
+        }
+        StatusBaseText {
+            objectName: "keycardSimStartError"
+            Layout.fillWidth: true
+            visible: !!d.simulatorError
+            wrapMode: Text.WordWrap
+            font.pixelSize: 12
+            color: Theme.palette.dangerColor1
+            text: d.simulatorError
         }
 
         Separator {}

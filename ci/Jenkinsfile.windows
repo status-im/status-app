@@ -222,6 +222,7 @@ def assembePath(List<String> extraPaths) {
       'C:/ProgramData/scoop/apps/openssl-lts/3.0.19/bin',
       'C:/ProgramData/scoop/apps/protobuf/3.20.1/bin',
       'C:/ProgramData/scoop/apps/inno-setup/6.7.0',
+      'C:/ProgramData/scoop/apps/temurin17-jdk/17.0.19-10/bin',
       'C:/ProgramData/scoop/apps/git/current/bin',
       'C:/ProgramData/scoop/shims',
       'C:/BuildTools/MSBuild/Current/Bin',

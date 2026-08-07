@@ -14,10 +14,15 @@ when defined(useSimulatedKeycard):
   const
     KEYCARD_SIMULATOR_DEFAULT_VERSION = "3.2"
     KEYCARD_SIMULATOR_DEFAULT_SIMULATOR_ADDRESS = "127.0.0.1:9025"
-    # Subdirs (relative to the app executable) where packaging bundles the precompiled simulator:
-    #   macOS  Status.app/Contents/MacOS/nim_status_client -> ../Resources/keycard-simulator
-    #   Linux  AppDir/usr/bin/nim_status_client            -> ../share/keycard-simulator
-    KEYCARD_SIMULATOR_BUNDLED_SUBDIRS = ["../Resources/keycard-simulator", "../share/keycard-simulator"]
+    # Relative to the app executable:
+    #   macOS   ../Resources/keycard-simulator
+    #   Linux   ../share/keycard-simulator
+    #   Windows ../resources/keycard-simulator
+    KEYCARD_SIMULATOR_BUNDLED_SUBDIRS = [
+      "../Resources/keycard-simulator",
+      "../share/keycard-simulator",
+      "../resources/keycard-simulator",
+    ]
     KEYCARD_SIMULATOR_DEV_DIR = "vendor/status-keycard-qt/test/keycard-simulator"
 
   var ignoreKeycardLibSignals = false # used to avoid triggering of any keycard actions while setting up the test keycard
@@ -35,6 +40,76 @@ when defined(useSimulatedKeycard):
       if dirExists(candidate):
         return candidate
     return absolutePath(KEYCARD_SIMULATOR_DEV_DIR)
+
+  proc readMainClass(simDir, version: string): string =
+    let propsPath = simDir / "versions" / version / "version.properties"
+    if not fileExists(propsPath):
+      return ""
+    for line in lines(propsPath):
+      let t = line.strip()
+      if t.startsWith("mainClass="):
+        return t[len("mainClass=") .. ^1].strip()
+    return ""
+
+  proc buildClasspath(simDir, version: string): string =
+    var entries = @[simDir / "out" / "core", simDir / "versions" / version / "out"]
+    for jar in walkFiles(simDir / "libs" / "common" / "*"):
+      entries.add(jar)
+    for jar in walkFiles(simDir / "versions" / version / "libs" / "*"):
+      entries.add(jar)
+    entries.join($PathSep)
+
+  proc ensureSimulatorBuilt(simDir: string): string =
+    if dirExists(simDir / "out"):
+      return ""
+    when defined(windows):
+      return "keycard simulator not precompiled (out/ missing)"
+    else:
+      try:
+        let p = startProcess("/bin/bash", workingDir = simDir,
+          args = @["-c", "./build.sh"], options = {poParentStreams})
+        let code = p.waitForExit()
+        p.close()
+        if code != 0 or not dirExists(simDir / "out"):
+          return "keycard simulator build.sh failed"
+        return ""
+      except CatchableError as e:
+        return "failed to run build.sh: " & e.msg
+
+  # Windows: free leftover keycardqt on port; refuse if held by something else (like run.sh).
+  proc freeSimulatorPort(port: string): string =
+    when defined(windows):
+      try:
+        proc listeningPids(): seq[string] =
+          let (netOut, _) = execCmdEx("netstat -ano -p TCP")
+          for line in netOut.splitLines():
+            let parts = line.splitWhitespace()
+            if parts.len >= 5 and parts[0] == "TCP" and parts[^2] == "LISTENING" and
+                parts[1].endsWith(":" & port):
+              let pid = parts[^1]
+              if pid.len > 0 and pid != "0" and pid notin result:
+                result.add(pid)
+
+        let pids = listeningPids()
+        for pid in pids:
+          let (cmdOut, _) = execCmdEx(
+            "powershell -NoProfile -Command \"(Get-CimInstance Win32_Process -Filter 'ProcessId=" &
+            pid & "').CommandLine\"")
+          let cmd = cmdOut.strip()
+          if "keycardqt" in cmd.toLowerAscii():
+            info "Port held by previous simulator — stopping it", port = port, pid = pid
+            discard execCmdEx("taskkill /PID " & pid & " /F")
+          else:
+            return "port " & port & " is in use by a non-simulator process (pid " & pid & ")"
+        for _ in 0 ..< 20:
+          if listeningPids().len == 0:
+            break
+          sleep(200)
+        return ""
+      except CatchableError as e:
+        return "failed to check simulator port: " & e.msg
+    else:
+      return ""
 
   type
     LoadCardArg = ref object of QObjectTaskArg
@@ -70,21 +145,33 @@ when defined(useSimulatedKeycard):
         self.threadpool.teardown()
       self.QObject.delete
 
-    proc startSimulator*(self: KeycardTestController, version: string) {.slot.} =
+    proc startSimulator*(self: KeycardTestController, version: string): string {.slot.} =
       var safeVersion = ""
       for c in version:
         if c in {'0'..'9', '.'}: safeVersion.add(c)
       if safeVersion.len == 0:
         safeVersion = KEYCARD_SIMULATOR_DEFAULT_VERSION
+
       let simDir = resolveSimDir()
       if not dirExists(simDir):
-        error "keycard simulator directory not found; set STATUS_KEYCARD_SIM_DIR to " &
-          "'<status-desktop checkout>/vendor/status-keycard-qt/test/keycard-simulator'", dir = simDir
-        return
-      let port = getEnv("STATUS_KEYCARD_SIM_ENDPOINT", KEYCARD_SIMULATOR_DEFAULT_SIMULATOR_ADDRESS).rsplit(":", 1)[^1]
-      let launch =
-        if dirExists(simDir / "out"): "exec ./run.sh " & port & " " & safeVersion
-        else: "./build.sh && exec ./run.sh " & port & " " & safeVersion
+        error "keycard simulator directory not found", dir = simDir
+        return "keycard simulator directory not found; set STATUS_KEYCARD_SIM_DIR"
+
+      let buildErr = ensureSimulatorBuilt(simDir)
+      if buildErr.len > 0:
+        error "keycard simulator build failed", err = buildErr, dir = simDir
+        return buildErr
+
+      let mainClass = readMainClass(simDir, safeVersion)
+      if mainClass.len == 0:
+        error "keycard simulator mainClass missing", version = safeVersion, dir = simDir
+        return "missing mainClass for applet version " & safeVersion
+
+      var port = ""
+      for c in getEnv("STATUS_KEYCARD_SIM_ENDPOINT", KEYCARD_SIMULATOR_DEFAULT_SIMULATOR_ADDRESS).rsplit(":", 1)[^1]:
+        if c in {'0'..'9'}: port.add(c)
+      if port.len == 0:
+        port = "9025"
 
       if not self.simProcess.isNil and self.simProcess.running:
         self.simProcess.terminate()
@@ -95,12 +182,36 @@ when defined(useSimulatedKeycard):
       discard keycard_go.keycardTestUnplugReader()
 
       try:
-        self.simProcess = startProcess("/bin/bash",
-          args = @["-c", "cd '" & simDir & "' && " & launch],
-          options = {poParentStreams})
+        when defined(windows):
+          # Mirror run.sh: version/mainClass already validated above; free port then launch JVM.
+          let javaExe = findExe("java")
+          if javaExe.len == 0:
+            error "java not found for keycard simulator"
+            return "java not found in PATH; install a JRE >= 11"
+          let portErr = freeSimulatorPort(port)
+          if portErr.len > 0:
+            error "keycard simulator port unavailable", err = portErr, port = port
+            return portErr
+          let classpath = buildClasspath(simDir, safeVersion)
+          self.simProcess = startProcess(
+            javaExe,
+            workingDir = simDir,
+            args = @["-noverify", "-cp", classpath, mainClass, port],
+            options = {poParentStreams},
+          )
+        else:
+          # run.sh validates version props and frees a leftover simulator on the port.
+          self.simProcess = startProcess(
+            "/bin/bash",
+            workingDir = simDir,
+            args = @["./run.sh", port, safeVersion],
+            options = {poParentStreams},
+          )
         info "starting keycard simulator", dir = simDir, port = port, version = safeVersion
+        return ""
       except CatchableError as e:
         error "failed to start keycard simulator", err = e.msg
+        return "failed to start keycard simulator: " & e.msg
 
     proc createCard*(self: KeycardTestController, cardId: string) {.slot.} =
       info "creating a new keycard with id: ", cardId

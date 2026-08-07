@@ -43,6 +43,8 @@ GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 	benches-nim \
 	status-go \
 	status-keycard-qt \
+	keycard-simulator \
+	keycard-simulator-bundle \
 	statusq-sanity-checker \
 	run-statusq-sanity-checker \
 	statusq-tests \
@@ -561,6 +563,14 @@ STATUSKEYCARD_QT_LINKNAME := $(patsubst lib%,%,$(basename $(STATUSKEYCARD_QT_DYL
 KEYCARD_SIM_SRC_DIR := $(STATUS_KEYCARD_QT_SOURCE_DIR)/test/keycard-simulator
 KEYCARD_SIM_RUNTIME_BITS := run.sh libs versions out
 
+keycard-simulator:
+	echo -e $(BUILD_MSG) "keycard-simulator (precompile)"
+	bash scripts/precompile-keycard-simulator.sh $(KEYCARD_SIM_SRC_DIR)
+
+keycard-simulator-bundle:
+	mkdir -p $(KEYCARD_SIM_DEST)
+	cp -R $(addprefix $(KEYCARD_SIM_SRC_DIR)/,$(KEYCARD_SIM_RUNTIME_BITS)) $(KEYCARD_SIM_DEST)/
+
 status-keycard-qt: $(STATUSKEYCARD_QT_LIB)
 $(STATUSKEYCARD_QT_LIB): | deps check-qt-dir
 	echo -e $(BUILD_MSG) "status-keycard-qt"
@@ -817,7 +827,13 @@ $(STATUS_CLIENT_APPIMAGE): nim_status_client $(APPIMAGE_TOOL) nim-status.desktop
 	rm -rf pkg/*.AppImage
 	chmod -R u+w tmp || true
 
+ifeq ($(USE_SIMULATED_KEYCARD),true)
+	$(MAKE) keycard-simulator
+endif
 	scripts/init_app_dir.sh
+ifeq ($(USE_SIMULATED_KEYCARD),true)
+	$(MAKE) keycard-simulator-bundle KEYCARD_SIM_DEST=$(APP_DIR)/usr/share/keycard-simulator
+endif
 
 	echo -e $(BUILD_MSG) "AppImage"
 
@@ -897,13 +913,9 @@ $(STATUS_CLIENT_DMG): nim_status_client
 	cp status-macos.svg $(MACOS_OUTER_BUNDLE)/Contents/
 	cp -R resources.rcc $(MACOS_OUTER_BUNDLE)/Contents/
 
-# Precompile (JDK from nix) + bundle the keycard simulator into the app, before macdeployqt/signing
 ifeq ($(USE_SIMULATED_KEYCARD),true)
-	echo -e $(BUILD_MSG) "keycard-simulator (precompile + bundle)"
-	nix shell .#jdk -c bash -c 'cd $(KEYCARD_SIM_SRC_DIR) && ./build.sh'
-	mkdir -p $(MACOS_OUTER_BUNDLE)/Contents/Resources/keycard-simulator
-	cp -R $(addprefix $(KEYCARD_SIM_SRC_DIR)/,$(KEYCARD_SIM_RUNTIME_BITS)) \
-		$(MACOS_OUTER_BUNDLE)/Contents/Resources/keycard-simulator/
+	$(MAKE) keycard-simulator
+	$(MAKE) keycard-simulator-bundle KEYCARD_SIM_DEST=$(MACOS_OUTER_BUNDLE)/Contents/Resources/keycard-simulator
 endif
 
 	echo -e $(BUILD_MSG) "app"
@@ -963,6 +975,10 @@ $(STATUS_CLIENT_EXE): compile_windows_resources nim_status_client nim_windows_la
 	cp "$(shell which libwinpthread-1.dll)" $(OUTPUT)/bin/
 	cp "$(shell which libcrypto-3-x64.dll)" $(OUTPUT)/bin/
 	cp "$(shell which libssl-3-x64.dll)"    $(OUTPUT)/bin/
+ifeq ($(USE_SIMULATED_KEYCARD),true)
+	$(MAKE) keycard-simulator
+	$(MAKE) keycard-simulator-bundle KEYCARD_SIM_DEST=$(OUTPUT)/resources/keycard-simulator
+endif
 	echo -e $(BUILD_MSG) "deployable folder"
 	VCINSTALLDIR="$(VCINSTALLDIR)" windeployqt --compiler-runtime --qmldir ui --release \
 		tmp/windows/dist/Status/bin/Status.exe
