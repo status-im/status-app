@@ -151,6 +151,9 @@ QtObject:
   proc getPasswordStrengthScore(self: View, password: string, userName: string): int {.slot.} =
     return self.delegate.getPasswordStrengthScore(password, userName)
 
+  proc isProfileMigratedToDEKEncryption(self: View, keyUid: string): bool {.slot.} =
+    return self.delegate.isProfileMigratedToDEKEncryption(keyUid)
+
   proc validMnemonic(self: View, mnemonic: string): bool {.slot.} =
     return self.delegate.validMnemonic(mnemonic)
 

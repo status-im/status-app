@@ -4011,15 +4011,39 @@ file format</source>
 <context>
     <name>ConfirmChangePasswordModal</name>
     <message>
-        <source>Your data must now be re-encrypted with your new password. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Re-encryption complete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Re-encrypting your data with your new password...</source>
+        <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — no restart needed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your data will be fully re-encrypted with a new encryption key. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your data must now be re-encrypted with your new password. This one-time process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status. Future password changes will be instant.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Also re-encrypt my data with a new encryption key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires a restart.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Password changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Re-encrypting your data...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Changing your password...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4027,7 +4051,15 @@ file format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>You can continue using Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Do not quit the app or turn off your device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This should only take a moment</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4044,6 +4076,10 @@ file format</source>
     </message>
     <message>
         <source>Restart Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4536,6 +4572,10 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     </message>
     <message>
         <source>This profile and its accounts will be less secure, as Keycard will no longer be required to transact or login.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your profile encryption key will also be updated. Do you wish to continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

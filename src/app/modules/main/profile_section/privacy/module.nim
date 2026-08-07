@@ -49,8 +49,11 @@ method viewDidLoad*(self: Module) =
 method getModuleAsVariant*(self: Module): QVariant =
   return self.viewVariant
 
-method changePassword*(self: Module, password: string, newPassword: string) =
-  self.controller.changePassword(password, newPassword)
+method changePassword*(self: Module, password: string, newPassword: string, rekey: bool) =
+  self.controller.changePassword(password, newPassword, rekey)
+
+method isProfileMigratedToDEKEncryption*(self: Module): bool =
+  return self.controller.isProfileMigratedToDEKEncryption()
 
 method isMnemonicBackedUp*(self: Module): bool =
   return self.controller.isMnemonicBackedUp()

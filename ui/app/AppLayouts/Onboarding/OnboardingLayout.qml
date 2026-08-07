@@ -161,6 +161,7 @@ Page {
 
         isBiometricsLogin: (account) => root.keychain.hasCredential(account) === Keychain.StatusSuccess
         passwordStrengthScoreFunction: root.onboardingStore.getPasswordStrengthScore
+        isProfileMigratedToDEKEncryption: root.onboardingStore.isProfileMigratedToDEKEncryption
         isSeedPhraseValid: root.onboardingStore.validMnemonic
         isSeedPhraseDuplicate: root.onboardingStore.isMnemonicDuplicate
         validateConnectionString: root.onboardingStore.validateLocalPairingConnectionString

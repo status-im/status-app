@@ -214,8 +214,8 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
   result.aboutService = about_service.newService(statusFoundation.events, statusFoundation.threadpool)
   result.advancedService = advanced_service.newService(statusFoundation.events, statusFoundation.threadpool)
   result.dappPermissionsService = dapp_permissions_service.newService()
-  result.privacyService = privacy_service.newService(statusFoundation.events, result.settingsService,
-  result.accountsService)
+  result.privacyService = privacy_service.newService(statusFoundation.events, statusFoundation.threadpool,
+    result.settingsService, result.accountsService)
   result.savedAddressService = saved_address_service.newService(statusFoundation.threadpool, statusFoundation.events,
     result.networkService, result.settingsService)
   result.followingAddressService = following_address_service.newService(statusFoundation.threadpool, statusFoundation.events,
@@ -500,7 +500,8 @@ proc buildAndRegisterUserProfile(self: AppController) =
 
   let loggedInAccount = self.accountsService.getLoggedInAccount()
 
-  singletonInstance.userProfile.setFixedData(alias, loggedInAccount.keyUid, pubKey, loggedInAccount.keycardPairing.len > 0)
+  singletonInstance.userProfile.setFixedData(alias, loggedInAccount.keyUid, pubKey, loggedInAccount.keycardPairing.len > 0,
+    self.privacyService.isProfileMigratedToDEKEncryption())
   singletonInstance.userProfile.setDisplayName(displayName)
   singletonInstance.userProfile.setPreferredName(preferredName)
   singletonInstance.userProfile.setThumbnailImage(loggedInAccount.images.thumbnail)

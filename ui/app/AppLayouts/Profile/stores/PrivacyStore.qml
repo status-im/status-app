@@ -19,8 +19,12 @@ QtObject {
         appSettingsInst.newsRSSEnabled = isStatusNewsViaRSSEnabled
     }
 
-    function changePassword(password, newPassword) {
-        root.privacyModule.changePassword(password, newPassword)
+    function changePassword(password, newPassword, rekey = false) {
+        root.privacyModule.changePassword(password, newPassword, rekey)
+    }
+
+    function isProfileMigratedToDEKEncryption() {
+        return root.privacyModule.isProfileMigratedToDEKEncryption()
     }
 
     function getMnemonic() {

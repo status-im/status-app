@@ -4032,24 +4032,56 @@ formát souboru</translation>
 <context>
     <name>ConfirmChangePasswordModal</name>
     <message>
-        <source>Your data must now be re-encrypted with your new password. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.</source>
-        <translation>Vaše data musí být nyní přešifrována vaším novým heslem. Tento proces může chvíli trvat, během které nebudete moci s aplikací interagovat. Neukončujte aplikaci ani nevypínejte zařízení. Mohlo by to vést k poškození dat, ztrátě vašeho profilu Status a nemožnosti restartovat Status.</translation>
-    </message>
-    <message>
         <source>Re-encryption complete</source>
         <translation>Přešifrování dokončeno</translation>
     </message>
     <message>
-        <source>Re-encrypting your data with your new password...</source>
-        <translation>Přešifrování vašich dat novým heslem...</translation>
+        <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — no restart needed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your data will be fully re-encrypted with a new encryption key. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your data must now be re-encrypted with your new password. This one-time process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status. Future password changes will be instant.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Also re-encrypt my data with a new encryption key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires a restart.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Password changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Re-encrypting your data...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Changing your password...</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Restart Status and log in using your new password</source>
         <translation>Restartujte Status a přihlaste se pomocí nového hesla</translation>
     </message>
     <message>
+        <source>You can continue using Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Do not quit the app or turn off your device</source>
         <translation>Neukončujte aplikaci ani nevypínejte zařízení</translation>
+    </message>
+    <message>
+        <source>This should only take a moment</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Change password</source>
@@ -4066,6 +4098,10 @@ formát souboru</translation>
     <message>
         <source>Restart Status</source>
         <translation>Restartovat Status</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">Zavřít</translation>
     </message>
 </context>
 <context>
@@ -4563,8 +4599,12 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
         <translation>Tento profil a jeho účty budou méně zabezpečené, protože Keycard již nebude vyžadována pro transakce nebo přihlášení.</translation>
     </message>
     <message>
+        <source>Your profile encryption key will also be updated. Do you wish to continue?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Your data will also be re-encrypted, restricting access to Status for up to 30 mins. Do you wish to continue?</source>
-        <translation>Vaše data budou také přešifrována, což omezí přístup ke Statusu až na 30 minut. Přejete si pokračovat?</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Continue</source>

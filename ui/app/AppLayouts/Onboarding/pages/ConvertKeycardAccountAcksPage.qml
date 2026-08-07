@@ -11,6 +11,8 @@ OnboardingPage {
 
     title: qsTr("Are you sure you want to migrate this profile keypair to Status?")
 
+    property bool isProfileMigratedToDEKEncryption: false
+
     signal continueRequested()
 
     contentItem: Item {
@@ -52,7 +54,9 @@ OnboardingPage {
                 Layout.alignment: Qt.AlignCenter
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
-                text: qsTr("Your data will also be re-encrypted, restricting access to Status for up to 30 mins. Do you wish to continue?")
+                text: root.isProfileMigratedToDEKEncryption
+                      ? qsTr("Your profile encryption key will also be updated. Do you wish to continue?")
+                      : qsTr("Your data will also be re-encrypted, restricting access to Status for up to 30 mins. Do you wish to continue?")
             }
 
             StatusButton {

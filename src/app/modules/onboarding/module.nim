@@ -180,6 +180,9 @@ method loginKeycard*[T](self: Module[T], keyUid: string, pin: string, pairingPas
 method getPasswordStrengthScore*[T](self: Module[T], password, userName: string): int =
   self.controller.getPasswordStrengthScore(password, userName)
 
+method isProfileMigratedToDEKEncryption*[T](self: Module[T], keyUid: string): bool =
+  self.controller.isProfileMigratedToDEKEncryption(keyUid)
+
 method validMnemonic*[T](self: Module[T], mnemonic: string): bool =
   self.controller.validMnemonic(mnemonic)
 

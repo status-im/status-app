@@ -144,6 +144,11 @@ proc changeDatabasePasswordV2*(paramsJSON: string): string =
   defer: go_shim.free(funcOut)
   return $funcOut
 
+proc getProfileEncryptionInfo*(paramsJSON: string): string =
+  var funcOut = go_shim.getProfileEncryptionInfo(paramsJSON.cstring)
+  defer: go_shim.free(funcOut)
+  return $funcOut
+
 proc validateMnemonic*(mnemonic: string): string =
   var funcOut = go_shim.validateMnemonic(mnemonic.cstring)
   defer: go_shim.free(funcOut)

@@ -28,6 +28,7 @@ Item {
         property int keycardState // enum Onboarding.KeycardState
         property bool biometricsAvailable
         property string existingPin
+        property bool profileEncryptionMigrated: false
 
         readonly property string mnemonic: "apple banana cat country catalog catch category cattle dog elephant fish grape"
         readonly property string dummyNewPassword: "0123456789"
@@ -72,6 +73,10 @@ Item {
                 // password
                 function getPasswordStrengthScore(password: string) {
                     return Math.min(password.length-1, 4)
+                }
+
+                function isProfileMigratedToDEKEncryption(keyUid: string) { // -> bool
+                    return mockDriver.profileEncryptionMigrated
                 }
 
                 function finishOnboardingFlow(flow: int, data: Object) { // -> bool

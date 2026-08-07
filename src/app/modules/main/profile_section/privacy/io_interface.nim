@@ -25,7 +25,10 @@ method viewDidLoad*(self: AccessInterface) {.base.} =
 method isMnemonicBackedUp*(self: AccessInterface): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method changePassword*(self: AccessInterface, password: string, newPassword: string) {.base.} =
+method changePassword*(self: AccessInterface, password: string, newPassword: string, rekey: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method isProfileMigratedToDEKEncryption*(self: AccessInterface): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getMnemonic*(self: AccessInterface): string {.base.} =

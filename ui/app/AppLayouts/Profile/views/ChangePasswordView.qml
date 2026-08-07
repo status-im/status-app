@@ -58,6 +58,11 @@ SettingsContentBase {
                         qsTr("Biometric login and transaction authentication enabled for this device"),
                         "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
         }
+
+        function openConfirmChangePasswordPopup() {
+            confirmPasswordChangePopup.fastPasswordChangePossible = root.privacyStore.isProfileMigratedToDEKEncryption()
+            confirmPasswordChangePopup.open()
+        }
     }
 
     readonly property Item biometricsPopup: titleRowComponentLoader.item
@@ -160,7 +165,7 @@ SettingsContentBase {
 
             onReturnPressed: {
                 if (ready) {
-                    confirmPasswordChangePopup.open();
+                    d.openConfirmChangePasswordPopup();
                 }
             }
         }
@@ -199,8 +204,8 @@ SettingsContentBase {
 
         ConfirmChangePasswordModal {
             id: confirmPasswordChangePopup
-            onChangePasswordRequested: {
-                root.privacyStore.changePassword(choosePasswordForm.currentPswText, choosePasswordForm.newPswText);
+            onChangePasswordRequested: function(rekey) {
+                root.privacyStore.changePassword(choosePasswordForm.currentPswText, choosePasswordForm.newPswText, rekey);
             }
 
             Connections {
@@ -210,6 +215,8 @@ SettingsContentBase {
                         confirmPasswordChangePopup.passwordSuccessfulyChanged()
                         keychain.updateCredential(privacyStore.keyUid,
                                                   choosePasswordForm.newPswText)
+                        // Reset, cause no restart in this case.
+                        choosePasswordForm.reset()
                         return
                     }
 
@@ -227,6 +234,6 @@ SettingsContentBase {
         objectName: "changePasswordModalSubmitButton"
         text: qsTr("Change")
         enabled: choosePasswordForm.ready
-        onClicked: { confirmPasswordChangePopup.open(); }
+        onClicked: { d.openConfirmChangePasswordPopup(); }
     }
 }

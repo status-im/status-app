@@ -45,7 +45,15 @@ StatusDialog {
 
     width: Constants.keycard.general.popupWidth
     padding: Theme.halfPadding
-    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+    closePolicy: d.closingPopupDisabled ? Popup.NoAutoClose
+                                        : Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+    closeHandler: () => {
+                      if (d.closingPopupDisabled)
+                      return
+                      root.close()
+                  }
 
     title: {
         switch(root.flow) {
@@ -130,6 +138,13 @@ StatusDialog {
         property bool success: false
         property bool mixedFlowSuccess: false
         property string error: ""
+
+        readonly property bool profileConversionRequiresRestart:
+            (root.flow === Constants.keycard.flow.moveProfileKeyPair
+             || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile)
+            && !userProfile.migratedToDEKEncryption
+        readonly property bool closingPopupDisabled: d.processing
+                                                     || profileConversionRequiresRestart && d.success
 
         property bool factoryResetConfirmationChecked: false
 
@@ -1141,8 +1156,7 @@ StatusDialog {
                     if (!!d.error) {
                         return qsTr("Done")
                     } else if (d.success) {
-                        if (root.flow === Constants.keycard.flow.moveProfileKeyPair
-                                || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile) {
+                        if (d.profileConversionRequiresRestart) {
                             return qsTr("Quit and restart Status")
                         }
                         return qsTr("Done")
@@ -1151,8 +1165,7 @@ StatusDialog {
                 }
 
                 onClicked: {
-                    if (d.success && (root.flow === Constants.keycard.flow.moveProfileKeyPair
-                                      || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile)) {
+                    if (d.success && d.profileConversionRequiresRestart) {
                         console.info("the app is closing due to successfully converted profile key pair - flow: ", root.flow)
                         root.store.signOutAndQuit()
                     }
@@ -1529,10 +1542,12 @@ StatusDialog {
             }
             processingSpecialWarning1: (root.flow === Constants.keycard.flow.moveProfileKeyPair
                                         || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile)
+                                       && !userProfile.migratedToDEKEncryption
                                        ? qsTr("Re-encrypting data may take some time")
                                        : ""
             processingSpecialWarning2: (root.flow === Constants.keycard.flow.moveProfileKeyPair
                                         || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile)
+                                       && !userProfile.migratedToDEKEncryption
                                        ? qsTr("Do not quit the application or turn off your device. Doing so will lead to data\ncorruption, loss of your Status profile and the inability to restart Status.")
                                        : ""
 

@@ -16,6 +16,8 @@ OnboardingStackView {
 
     required property int type
 
+    property bool isProfileMigratedToDEKEncryption: false
+
     // functions
     required property var passwordStrengthScoreFunction // (string) => int
     required property var isSeedPhraseValid // (string) => bool
@@ -31,6 +33,7 @@ OnboardingStackView {
     Component {
         id: conversionAckPage
         ConvertKeycardAccountAcksPage {
+            isProfileMigratedToDEKEncryption: root.isProfileMigratedToDEKEncryption
             onContinueRequested: root.push(seedPhrasePage)
         }
     }

@@ -57,6 +57,7 @@ OnboardingStackView {
     // functions
     required property var isBiometricsLogin // (string account) => bool
     required property var passwordStrengthScoreFunction
+    property var isProfileMigratedToDEKEncryption: (keyUid) => false // (string keyUid) => bool
     required property var isSeedPhraseValid
     required property var isSeedPhraseDuplicate
     required property var validateConnectionString
@@ -334,6 +335,10 @@ OnboardingStackView {
             isSeedPhraseValid: root.isSeedPhraseValid
             isSeedPhraseDuplicate: root.isSeedPhraseDuplicate
             passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
+            isProfileMigratedToDEKEncryption: {
+                const keyUid = root.loginScreen ? root.loginScreen.selectedProfileKeyId : ""
+                return keyUid ? root.isProfileMigratedToDEKEncryption(keyUid) : false
+            }
 
             onSeedphraseSubmitted: (seedphrase) => root.seedphraseSubmitted(seedphrase)
             onSetPasswordRequested: (password) => root.setPasswordRequested(password)
@@ -439,7 +444,7 @@ OnboardingStackView {
                 d.flow = onboardingFlow
                 root.skippedBiometricFlow()
                 root.onboardingKeycardFlowCompletedWithData(flow, dataJson)
-                root.finished(onboardingFlow)                
+                root.finished(onboardingFlow)
             }
 
             onKeycardFlowCompleted: function(flow, kUid, kcUid, success) {

@@ -37,6 +37,9 @@ method loginKeycard*(self: AccessInterface, keyUid: string, pin: string, pairing
 method getPasswordStrengthScore*(self: AccessInterface, password, userName: string): int {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method isProfileMigratedToDEKEncryption*(self: AccessInterface, keyUid: string): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method validMnemonic*(self: AccessInterface, mnemonic: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 

@@ -3995,24 +3995,56 @@ file format</source>
 <context>
     <name>ConfirmChangePasswordModal</name>
     <message>
-        <source>Your data must now be re-encrypted with your new password. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.</source>
-        <translation>지금 새 비밀번호로 데이터를 다시 암호화해야 합니다. 이 과정은 시간이 걸릴 수 있으며, 진행되는 동안 앱을 사용할 수 없습니다. 앱을 종료하거나 기기를 끄지 마세요. 그렇게 하면 데이터가 손상되고 Status 프로필이 사라지며, Status를 다시 시작할 수 없게 됩니다.</translation>
-    </message>
-    <message>
         <source>Re-encryption complete</source>
         <translation>재암호화 완료</translation>
     </message>
     <message>
-        <source>Re-encrypting your data with your new password...</source>
-        <translation>새 비밀번호로 데이터 재암호화 중...</translation>
+        <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — no restart needed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your data will be fully re-encrypted with a new encryption key. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your data must now be re-encrypted with your new password. This one-time process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status. Future password changes will be instant.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Also re-encrypt my data with a new encryption key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires a restart.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Password changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Re-encrypting your data...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Changing your password...</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Restart Status and log in using your new password</source>
         <translation>Status를 다시 시작하고 새 비밀번호로 로그인하세요</translation>
     </message>
     <message>
+        <source>You can continue using Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Do not quit the app or turn off your device</source>
         <translation>앱을 종료하거나 기기를 끄지 마세요</translation>
+    </message>
+    <message>
+        <source>This should only take a moment</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Change password</source>
@@ -4029,6 +4061,10 @@ file format</source>
     <message>
         <source>Restart Status</source>
         <translation>Status 다시 시작</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">닫기</translation>
     </message>
 </context>
 <context>
@@ -4524,8 +4560,12 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <translation>이 프로필과 해당 계정은 보안이 약화됩니다. 이제 거래하거나 로그인할 때 Keycard가 더 이상 필요하지 않습니다.</translation>
     </message>
     <message>
+        <source>Your profile encryption key will also be updated. Do you wish to continue?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Your data will also be re-encrypted, restricting access to Status for up to 30 mins. Do you wish to continue?</source>
-        <translation>데이터도 다시 암호화되어 최대 30분 동안 Status 접근이 제한됩니다. 계속하시겠습니까?</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Continue</source>

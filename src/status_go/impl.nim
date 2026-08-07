@@ -62,6 +62,8 @@ proc logout*(): cstring {.importc: "Logout".}
 
 proc changeDatabasePasswordV2*(paramsJSON: cstring): cstring {.importc: "ChangeDatabasePasswordV2".}
 
+proc getProfileEncryptionInfo*(paramsJSON: cstring): cstring {.importc: "GetProfileEncryptionInfo".}
+
 proc validateMnemonic*(mnemonic: cstring): cstring {.importc: "ValidateMnemonic".}
 
 proc getRandomMnemonic*(): cstring {.importc: "GetRandomMnemonic".}

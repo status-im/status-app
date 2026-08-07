@@ -46,8 +46,11 @@ proc init*(self: Controller) =
 proc isMnemonicBackedUp*(self: Controller): bool =
   return self.privacyService.isMnemonicBackedUp()
 
-proc changePassword*(self: Controller, password: string, newPassword: string) =
-  self.privacyService.changePassword(password, newPassword)
+proc changePassword*(self: Controller, password: string, newPassword: string, rekey: bool) =
+  self.privacyService.changePassword(password, newPassword, rekey)
+
+proc isProfileMigratedToDEKEncryption*(self: Controller): bool =
+  return self.privacyService.isProfileMigratedToDEKEncryption()
 
 proc getMnemonic*(self: Controller): string =
   return self.privacyService.getMnemonic()

@@ -4012,24 +4012,56 @@ file format</source>
 <context>
     <name>ConfirmChangePasswordModal</name>
     <message>
-        <source>Your data must now be re-encrypted with your new password. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.</source>
-        <translation>Vos données doivent maintenant être réchiffrées avec votre nouveau mot de passe. Ce processus peut prendre un certain temps, pendant lequel vous ne pourrez pas interagir avec l’application. Ne quittez pas l’application et n’éteignez pas votre appareil. Cela entraînerait une corruption des données, la perte de votre profil Status et l’impossibilité de redémarrer Status.</translation>
-    </message>
-    <message>
         <source>Re-encryption complete</source>
         <translation>Réchiffrement terminé</translation>
     </message>
     <message>
-        <source>Re-encrypting your data with your new password...</source>
-        <translation>Vos données sont en cours de réchiffrement avec votre nouveau mot de passe... </translation>
+        <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — no restart needed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your data will be fully re-encrypted with a new encryption key. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your data must now be re-encrypted with your new password. This one-time process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status. Future password changes will be instant.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Also re-encrypt my data with a new encryption key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires a restart.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Password changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Re-encrypting your data...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Changing your password...</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Restart Status and log in using your new password</source>
         <translation>Redémarrez Status et connectez-vous à l’aide de votre nouveau mot de passe</translation>
     </message>
     <message>
+        <source>You can continue using Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Do not quit the app or turn off your device</source>
         <translation>Ne quittez pas l’application et n’éteignez pas votre appareil</translation>
+    </message>
+    <message>
+        <source>This should only take a moment</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Change password</source>
@@ -4046,6 +4078,10 @@ file format</source>
     <message>
         <source>Restart Status</source>
         <translation>Redémarrer Status</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">Fermer</translation>
     </message>
 </context>
 <context>
@@ -4542,6 +4578,10 @@ Vous resterez connecté et votre phrase de récupération sera entièrement entr
         <translation>Ce profil et ses comptes seront moins sécurisés, car la Keycard ne sera plus nécessaire pour effectuer des transactions ou se connecter.</translation>
     </message>
     <message>
+        <source>Your profile encryption key will also be updated. Do you wish to continue?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Your data will also be re-encrypted, restricting access to Status for up to 30 mins. Do you wish to continue?</source>
         <translation>Vos données seront également re-chiffrées, ce qui limitera l’accès à Status pendant un maximum de 30&#xa0;minutes. Souhaitez-vous continuer&#xa0;?</translation>
     </message>
@@ -4565,8 +4605,16 @@ Vous resterez connecté et votre phrase de récupération sera entièrement entr
         <translation>Réencryption terminée</translation>
     </message>
     <message>
+        <source>Profile migration complete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Your data was successfully re-encrypted with your new password. You can now restart Status and log in to your profile using the password you just created.</source>
         <translation>Vos données ont été re-chiffrées avec succès à l’aide de votre nouveau mot de passe. Vous pouvez maintenant redémarrer Status et vous connecter à votre profil en utilisant le mot de passe que vous venez de créer.</translation>
+    </message>
+    <message>
+        <source>Your profile no longer uses Keycard. You can now log in using the password you just created.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Re-encryption failed</source>
