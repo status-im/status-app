@@ -51,6 +51,7 @@ type ActivityCenterGroup* {.pure.}= enum
   Transactions = 7,
   System = 8
   News = 9
+  NonMessaging = 10
 
 type ActivityCenterReadType* {.pure.}= enum
   Read = 1,
@@ -235,5 +236,10 @@ proc activityCenterNotificationTypesByGroup*(group: ActivityCenterGroup) : seq[i
         ActivityCenterNotificationType.NewInstallationReceived.int,
         ActivityCenterNotificationType.NewInstallationCreated.int,
       ]
+    of ActivityCenterGroup.NonMessaging:
+      for activityType in activityCenterNotificationTypesByGroup(ActivityCenterGroup.All):
+        if activityType != ActivityCenterNotificationType.Mention.int and
+            activityType != ActivityCenterNotificationType.Reply.int:
+          result.add(activityType)
     else:
       return @[]

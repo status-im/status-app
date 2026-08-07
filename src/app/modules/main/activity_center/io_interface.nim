@@ -25,6 +25,9 @@ method hasMoreToShow*(self: AccessInterface): bool {.base.} =
 method unreadActivityCenterNotificationsCount*(self: AccessInterface): int {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method unreadNonMessagingActivityCenterNotificationsCount*(self: AccessInterface): int {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method unreadActivityCenterNotificationsCountFromView*(self: AccessInterface): int {.base.} =
   raise newException(ValueError, "No implementation available")
 

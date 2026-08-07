@@ -154,6 +154,7 @@ type
 proc switchToContactOrDisplayUserProfile[T](self: Module[T], publicKey: string)
 method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string)
 proc checkIfWeHaveNotifications[T](self: Module[T])
+proc updateIconBadgeNumber[T](self: Module[T])
 proc createMemberItem[T](self: Module[T], memberId: string, requestId: string, state: MembershipRequestState, role: MemberRole, airdropAddress: string = ""): MemberItem
 proc getAllCommunityMemberItems[T](self: Module[T], community: CommunityDto): seq[MemberItem]
 
@@ -1021,6 +1022,7 @@ method onChatsLoaded*[T](
   self.view.model().addItems(items)
 
   self.checkIfWeHaveNotifications()
+  self.updateIconBadgeNumber()
 
   # Set active section if it is one of the channel sections
   if not activeSection.isEmpty():
@@ -1301,13 +1303,20 @@ proc checkIfWeHaveNotifications[T](self: Module[T]) =
   let activtyCenterNotifications = self.activityCenterModule.unreadActivityCenterNotificationsCountFromView() > 0
   self.view.setNotificationAvailable(sectionWithUnread or activtyCenterNotifications)
 
+proc updateIconBadgeNumber[T](self: Module[T]) =
+  let sectionNotifications = self.view.model().allMentionsCount()
+  let activityCenterNotifications = self.activityCenterModule.unreadNonMessagingActivityCenterNotificationsCount()
+  singletonInstance.globalEvents.notificationsCountChanged(sectionNotifications + activityCenterNotifications)
+
 method onActivityNotificationsUpdated[T](self: Module[T]) =
   self.checkIfWeHaveNotifications()
+  self.updateIconBadgeNumber()
 
 method onNotificationsUpdated[T](self: Module[T], sectionId: string, sectionHasUnreadMessages: bool,
     sectionNotificationCount: int) =
   self.view.model().updateNotifications(sectionId, sectionHasUnreadMessages, sectionNotificationCount)
   self.checkIfWeHaveNotifications()
+  self.updateIconBadgeNumber()
 
 method onPlayNotificationSound[T](self: Module[T]) =
   self.view.playNotificationSound()

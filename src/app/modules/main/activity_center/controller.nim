@@ -107,6 +107,9 @@ proc hasMoreToShow*(self: Controller): bool =
 proc unreadActivityCenterNotificationsCount*(self: Controller): int =
   return self.activityCenterService.getUnreadActivityCenterNotificationsCount()
 
+proc unreadNonMessagingActivityCenterNotificationsCount*(self: Controller): int =
+  return self.activityCenterService.getUnreadNonMessagingActivityCenterNotificationsCount()
+
 proc hasUnseenActivityCenterNotifications*(self: Controller): bool =
   return self.activityCenterService.getHasUnseenActivityCenterNotifications()
 

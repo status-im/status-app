@@ -453,8 +453,6 @@ QtObject:
       updateRole(hasNotification)
       updateRole(notificationsCount)
 
-    singletonInstance.globalEvents.notificationsCountChanged(notificationsCount)
-
   proc isThereASectionWithUnreadMessages*(self: SectionModel): bool =
     for item in self.items:
       if item.isAMessengerItem() and item.hasNotification == true:

@@ -216,6 +216,14 @@ QtObject:
       total = total + counters.getOrDefault(activityType, 0)
     return total
 
+  proc getUnreadNonMessagingActivityCenterNotificationsCount*(self: Service): int =
+    let activityTypes = activityCenterNotificationTypesByGroup(ActivityCenterGroup.NonMessaging)
+    let counters = self.getActivityCenterNotificationsCounters(activityTypes, ActivityCenterReadType.Unread)
+    var total = 0
+    for activityType in activityTypes:
+      total = total + counters.getOrDefault(activityType, 0)
+    return total
+
   proc getHasUnseenActivityCenterNotifications*(self: Service): bool =
     try:
       let response = backend.hasUnseenActivityCenterNotifications()

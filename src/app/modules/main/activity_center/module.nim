@@ -70,6 +70,9 @@ method isLoaded*(self: Module): bool =
 method unreadActivityCenterNotificationsCount*(self: Module): int =
   self.controller.unreadActivityCenterNotificationsCount()
 
+method unreadNonMessagingActivityCenterNotificationsCount*(self: Module): int =
+  self.controller.unreadNonMessagingActivityCenterNotificationsCount()
+
 method unreadActivityCenterNotificationsCountFromView*(self: Module): int =
   self.view.unreadCount()
 
