@@ -2641,10 +2641,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <source>New Tab</source>
         <translation type="unfinished">Nová karta</translation>
     </message>
-    <message>
-        <source>Downloads</source>
-        <translation type="unfinished">Stažené soubory</translation>
-    </message>
 </context>
 <context>
     <name>BrowserSettingsMenu</name>

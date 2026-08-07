@@ -2633,10 +2633,6 @@ Do you wish to override the security check and continue?</source>
         <source>New Tab</source>
         <translation type="unfinished">Nueva pestaña</translation>
     </message>
-    <message>
-        <source>Downloads</source>
-        <translation type="unfinished">Descargas</translation>
-    </message>
 </context>
 <context>
     <name>BrowserSettingsMenu</name>

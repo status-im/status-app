@@ -2624,10 +2624,6 @@ Do you wish to override the security check and continue?</source>
         <source>New Tab</source>
         <translation type="unfinished">새 탭</translation>
     </message>
-    <message>
-        <source>Downloads</source>
-        <translation type="unfinished">다운로드</translation>
-    </message>
 </context>
 <context>
     <name>BrowserSettingsMenu</name>
