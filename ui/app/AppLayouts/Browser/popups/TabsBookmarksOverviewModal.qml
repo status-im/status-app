@@ -345,7 +345,9 @@ StatusDialog {
                 icon.width: d.iconSize
                 icon.height: d.iconSize
                 checkable: true
-                visible: mainTabBar.currentIndex !== TabsBookmarksOverviewModal.Mode.Downloads
+                // Disabled, not hidden: Downloads has neither action, and dropping
+                // the buttons would shift the header row on every tab switch.
+                enabled: mainTabBar.currentIndex !== TabsBookmarksOverviewModal.Mode.Downloads
                 tooltip.text: qsTr("Search")
                 onToggled: searchField.focus = checked
             }
@@ -353,7 +355,7 @@ StatusDialog {
                 icon.name: "add"
                 icon.width: d.iconSize
                 icon.height: d.iconSize
-                visible: mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs
+                enabled: mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs
                 tooltip.text: qsTr("Add")
                 onClicked: {
                     root.addTabRequested()

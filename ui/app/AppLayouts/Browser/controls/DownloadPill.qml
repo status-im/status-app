@@ -273,17 +273,18 @@ Rectangle {
         }
 
         // Fixed trailing slot so Cancel vs ⋮ does not shift the text column.
+        // Sized to the button: the pill clips, so a smaller slot cuts the corners.
         Item {
-            Layout.preferredWidth: 32
-            Layout.preferredHeight: 32
+            Layout.preferredWidth: 36
+            Layout.preferredHeight: 36
             Layout.alignment: Qt.AlignVCenter
 
             StatusFlatRoundButton {
                 id: cancelBtn
                 objectName: "downloadPillCancelButton"
                 anchors.centerIn: parent
-                width: 32
-                height: 32
+                width: 36
+                height: 36
                 visible: root.cancelButtonVisible
                 icon.name: "downloads-cancel"
                 type: StatusFlatRoundButton.Type.Tertiary
@@ -294,8 +295,8 @@ Rectangle {
                 id: optionsBtn
                 objectName: "downloadPillOptionsButton"
                 anchors.centerIn: parent
-                width: 32
-                height: 32
+                width: 36
+                height: 36
                 visible: root.optionsButtonVisible
                 icon.name: "more-v"
                 type: StatusFlatRoundButton.Type.Tertiary
