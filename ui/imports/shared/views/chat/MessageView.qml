@@ -254,7 +254,7 @@ Loader {
         profileContextMenuComponent.createObject(root, params).popup(x, y)
     }
 
-    function openMessageContextMenu(point, selectedText = "") {
+    function openMessageContextMenu(delegate, point, selectedText = "") {
         if (isViewMemberMessagesePopup || placeholderMessage || !root.joined)
             return
 
@@ -283,8 +283,15 @@ Loader {
         }
 
         d.preventVirtualKeyboardOpening()
+        // Keep the text selection visible/available while the menu is open; the popup takes focus
+        // and would otherwise clear it. Restored in the menu's onAboutToHide handler.
+        delegate.clearSelectionOnLostFocus = false
         d.contextMenu = messageContextMenuComponent.createObject(root, params)
         d.contextMenu.popup(point)
+        d.contextMenu.aboutToHide.connect(() => {
+            if (delegate)
+                delegate.clearSelectionOnLostFocus = true
+        })
     }
 
     function getMessageLinkUrl() {
@@ -929,13 +936,13 @@ Loader {
                 TapHandler {
                     gesturePolicy: TapHandler.ReleaseWithinBounds // exclusive grab on press
                     acceptedDevices: PointerDevice.TouchScreen
-                    onLongPressed: root.openMessageContextMenu(point.position, delegate.selectedText)
+                    onLongPressed: root.openMessageContextMenu(delegate, point.position, delegate.selectedText)
                 }
 
                 TapHandler {
                     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
                     acceptedButtons: Qt.RightButton
-                    onTapped: (point, button) => root.openMessageContextMenu(point.position, delegate.selectedText)
+                    onTapped: (point, button) => root.openMessageContextMenu(delegate, point.position, delegate.selectedText)
                 }
 
                 messageDetails: StatusMessageDetails {

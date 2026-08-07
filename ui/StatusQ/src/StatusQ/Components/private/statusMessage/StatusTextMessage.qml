@@ -14,6 +14,7 @@ Item {
     readonly property string selectedText: chatTextView.selectedText
 
     property alias highlightedLink: chatTextView.highlightedLink
+    property alias clearSelectionOnLostFocus: chatTextView.clearSelectionOnLostFocus
     property bool linkAddressAndEnsName
     property string disabledTooltipText
 

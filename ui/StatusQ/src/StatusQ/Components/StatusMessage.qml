@@ -81,6 +81,10 @@ Control {
     property string disabledTooltipText
     readonly property string selectedText: d.selectedText
 
+    // When true (default), the text selection is dropped when the message text loses active focus.
+    // Set to false to keep the selection while focus temporarily moves elsewhere (e.g. a context menu).
+    property bool clearSelectionOnLostFocus: true
+
     property bool isMobile: Utils.isMobile
 
     property StatusMessageDetails messageDetails: StatusMessageDetails {}
@@ -408,6 +412,7 @@ Control {
         linkAddressAndEnsName: root.linkAddressAndEnsName
         disabledTooltipText: root.disabledTooltipText
         isMobile: root.isMobile
+        clearSelectionOnLostFocus: root.clearSelectionOnLostFocus
         onLinkActivated: link => root.linkActivated(link)
         onHoveredLinkChanged: root.hoveredLink = hoveredLink
         onSelectedTextChanged: d.selectedText = selectedText

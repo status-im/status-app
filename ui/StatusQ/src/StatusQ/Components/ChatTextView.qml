@@ -27,6 +27,10 @@ Control {
     // that spans blocks; when false, they are plain (non-selectable) Labels.
     property bool selectable: false
 
+    // When true (default), the current selection is dropped when the view loses active focus.
+    // Set to false to keep the selection while focus temporarily moves elsewhere (e.g. a popup).
+    property bool clearSelectionOnLostFocus: true
+
     // When true, a small, dimmed "(edited)" marker is appended after the last block.
     property bool edited: false
     property int editedMarkerFontSize: Theme.tertiaryTextFontSize
@@ -75,7 +79,7 @@ Control {
 
     // Dropping the selection on focus loss keeps a single active selection,
     // so the copy shortcut stays unambiguous.
-    onActiveFocusChanged: if (!activeFocus) d.clearSelection()
+    onActiveFocusChanged: if (!activeFocus && root.clearSelectionOnLostFocus) d.clearSelection()
 
     // Renders one text or code region, instantiating exactly one child (via Loader): a Label
     // (not selectable) or a read-only TextEdit (selectable), plain or framed for code. Widths

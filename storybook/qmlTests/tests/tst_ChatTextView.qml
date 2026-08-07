@@ -266,6 +266,70 @@ Item {
             tryCompare(first, "selectedText", "")
         }
 
+        // Selects across both blocks in `ctrl` (which must be selectable with content laid out)
+        // and asserts a non-empty selection results.
+        function selectAll(ctrl) {
+            mousePress(ctrl, 0, 3)
+            mouseMove(ctrl, ctrl.width - 4, ctrl.implicitHeight - 4)
+            mouseRelease(ctrl, ctrl.width - 4, ctrl.implicitHeight - 4)
+            verify(ctrl.selectedText.length > 0, "nothing selected")
+        }
+
+        readonly property var twoBlocks: [
+            { type: "text", html: "first line" },
+            { type: "text", html: "second line" }
+        ]
+
+        // clearSelectionOnLostFocus (default true): losing active focus drops the selection.
+        function test_clearSelectionOnLostFocus_defaultClearsOnFocusLoss() {
+            control.selectable = true
+            control.blocks = twoBlocks
+            tryVerify(() => control.implicitHeight > 0)
+
+            selectAll(control)
+            verify(control.activeFocus, "selecting should have moved focus to the view")
+
+            // Focus goes elsewhere → selection cleared.
+            otherEditor.forceActiveFocus()
+            tryVerify(() => !control.activeFocus)
+            tryCompare(control, "selectedText", "")
+        }
+
+        // With clearSelectionOnLostFocus false, the selection survives focus loss (used while a
+        // context menu popup holds focus).
+        function test_clearSelectionOnLostFocus_falseKeepsSelectionOnFocusLoss() {
+            control.selectable = true
+            control.clearSelectionOnLostFocus = false
+            control.blocks = twoBlocks
+            tryVerify(() => control.implicitHeight > 0)
+
+            selectAll(control)
+            verify(control.activeFocus, "selecting should have moved focus to the view")
+
+            otherEditor.forceActiveFocus()
+            tryVerify(() => !control.activeFocus)
+            // Selection preserved despite having lost focus.
+            verify(control.selectedText.length > 0, "selection cleared despite the flag being false")
+        }
+
+        // Restoring the flag to true while the view already has a selection but no focus (e.g. the
+        // context menu just closed) doesn't clear the now-stale selection.
+        function test_clearSelectionOnLostFocus_setTrueWhileUnfocusedClears() {
+            control.selectable = true
+            control.clearSelectionOnLostFocus = false
+            control.blocks = twoBlocks
+            tryVerify(() => control.implicitHeight > 0)
+
+            selectAll(control)
+            otherEditor.forceActiveFocus()
+            tryVerify(() => !control.activeFocus)
+            verify(control.selectedText.length > 0, "precondition: selection kept while flag is false")
+
+            // Re-enabling the flag while unfocused doesn't clear the selection.
+            control.clearSelectionOnLostFocus = true
+            verify(control.selectedText.length > 0, "selection cleared by changing clearSelectionOnLostFocus")
+        }
+
         // Toggling `selectable` after blocks are set rebuilds each block's renderer (Loader
         // swap) and the coordinator re-collects the newly-created editors.
         function test_selectableToggledAfterBlocks() {
