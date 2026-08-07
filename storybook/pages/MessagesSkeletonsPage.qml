@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import StatusQ.Core.Theme
 
 import AppLayouts.Chat.panels
+import AppLayouts.Communities.panels
 
 import Storybook
 
@@ -36,6 +37,7 @@ SplitView {
                 spacing: Theme.padding
 
                 MessagesListSkeleton {
+                    visible: !ctrlCommunity.checked
                     Layout.preferredWidth: panelsRow.landscape ? 306 : -1
                     Layout.fillWidth: !panelsRow.landscape
                     Layout.fillHeight: true
@@ -44,12 +46,35 @@ SplitView {
                     onStartChatClicked: logs.logEvent("startChatClicked")
                 }
 
-                MessagesChatSkeleton {
+                CommunityChannelsSkeleton {
+                    visible: ctrlCommunity.checked
+                    Layout.preferredWidth: panelsRow.landscape ? 306 : -1
+                    Layout.fillWidth: !panelsRow.landscape
+                    Layout.fillHeight: true
+                }
+
+                ColumnLayout {
                     visible: panelsRow.landscape
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.leftMargin: Theme.xlPadding
                     Layout.rightMargin: Theme.xlPadding
+                    spacing: Theme.padding
+
+                    ChatHeaderSkeleton {
+                        Layout.preferredHeight: 40
+                    }
+
+                    MessagesChatSkeleton {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+                }
+
+                MembersListSkeleton {
+                    visible: panelsRow.landscape && ctrlMembers.checked
+                    Layout.preferredWidth: 250
+                    Layout.fillHeight: true
                 }
             }
         }
@@ -71,12 +96,22 @@ SplitView {
                 text: "Landscape (list + chat)"
             }
 
+            Switch {
+                id: ctrlCommunity
+                text: "Community list"
+            }
+
+            Switch {
+                id: ctrlMembers
+                text: "Members panel"
+            }
+
             RowLayout {
                 Label { text: "Width:" }
                 Slider {
                     id: ctrlWidth
                     from: 320
-                    to: 1000
+                    to: 1200
                     value: 455
                 }
                 Label { text: Math.round(ctrlWidth.value) }

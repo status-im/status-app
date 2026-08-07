@@ -1,9 +1,9 @@
 import QtQml
 import QtQuick
-import QtQuick.Layouts
 
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
+import StatusQ.Layout
 
 import AppLayouts.Chat.panels
 
@@ -13,7 +13,6 @@ import shared.stores as SharedStores
 import shared.stores.send
 
 import AppLayouts.stores as AppStores
-import AppLayouts.Chat
 import AppLayouts.Chat.stores as ChatStores
 import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Wallet.stores as WalletStores
@@ -60,22 +59,39 @@ Loader {
 
     asynchronous: true
 
-    // Skeleton shown while the section incubates: the chat list, with an open
-    // chat beside it in landscape
-    RowLayout {
-        id: skeletonRow
-
-        readonly property bool landscape: root.width >= ThemeUtils.portraitBreakpoint.width
+    // The section chrome is owned by the loader: it shows instantly with
+    // skeleton panels and swaps in the real panels produced by ChatView
+    // (LayoutItemProxy retarget) once the section finishes incubating.
+    StatusSectionLayout {
+        id: sectionLayout
 
         anchors.fill: parent
-        visible: root.active && root.status !== Loader.Ready
-        spacing: 0
 
+        headerContent: root.item?.headerContent ?? headerSkeleton
+        leftPanel: root.item?.leftPanel ?? listSkeleton
+        centerPanel: root.item?.centerPanel ?? chatSkeleton
+        rightPanel: root.item?.rightPanel ?? membersSkeleton
+        showRightPanel: root.item?.showRightPanel ?? root.accountSettingsStore.showUsersList
+        subsectionHistory: root.item?.viewSubsectionHistory ?? null
+
+        leftPanelWidthOverride: root.leftPanelWidthOverride
+    }
+
+    // Skeleton slot items carry the same page paddings as the real panels
+    ChatHeaderSkeleton {
+        id: headerSkeleton
+        visible: root.status !== Loader.Ready
+    }
+
+    Item {
+        id: listSkeleton
+        visible: root.status !== Loader.Ready
+
+        // The real header: invite and start-chat act app-globally, so they
+        // remain functional while the section incubates
         MessagesListSkeleton {
-            Layout.preferredWidth: skeletonRow.landscape ? 306 : -1
-            Layout.fillWidth: !skeletonRow.landscape
-            Layout.fillHeight: true
-            Layout.margins: Theme.padding
+            anchors.fill: parent
+            anchors.margins: Theme.padding
 
             createChatOpened: root.createChatViewOpened
 
@@ -88,14 +104,27 @@ Loader {
                 }
             }
         }
+    }
+
+    Item {
+        id: chatSkeleton
+        visible: root.status !== Loader.Ready
 
         MessagesChatSkeleton {
-            visible: skeletonRow.landscape
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            Layout.margins: Theme.padding
-            Layout.leftMargin: Theme.xlPadding
-            Layout.rightMargin: Theme.xlPadding
+            anchors.fill: parent
+            anchors.margins: Theme.padding
+            anchors.leftMargin: Theme.xlPadding
+            anchors.rightMargin: Theme.xlPadding
+        }
+    }
+
+    Item {
+        id: membersSkeleton
+        visible: root.status !== Loader.Ready
+
+        MembersListSkeleton {
+            anchors.fill: parent
+            anchors.margins: Theme.padding
         }
     }
 
@@ -138,6 +167,7 @@ Loader {
 
     Component.onCompleted: {
         Qt.callLater(() => QmlCompiler.precompile(QmlCompiler.chatUrl))
+        loadSection()
     }
 
     function loadSection() {
@@ -150,6 +180,7 @@ Loader {
         setSource(QmlCompiler.chatUrl, {
             visible: false,
             isChatView: true,
+            sectionLayout: sectionLayout,
             showUsersList:                  Qt.binding(() => root.accountSettingsStore.showUsersList),
             rootStore:                      Qt.binding(() => d.chatRootStore),
             createChatPropertiesStore:      Qt.binding(() => root.createChatPropertiesStore),
@@ -187,6 +218,7 @@ Loader {
 
     onActiveChanged: {
         if (root.active) {
+            loadSection()
             return
         }
         if (!!d.chatRootStore) {
@@ -237,15 +269,5 @@ Loader {
         function onNavToMsgListRequested(navigate) {
             root.rootStore.setNavToMsgListFlag(navigate)
         }
-    }
-
-    Loader {
-        id: chatLayoutLoading
-        anchors.fill: parent
-        active: root.active && root.status !== Loader.Ready
-        sourceComponent: ChatLayoutLoading {
-            showMembersPanel: root.accountSettingsStore.showUsersList
-        }
-        onLoaded: Qt.callLater(root.loadSection)
     }
 }
