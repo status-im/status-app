@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 
 import StatusQ.Popups
 import StatusQ.Core.Utils as SQUtils
@@ -22,16 +23,31 @@ StatusMenu {
     /// Set by openAnchored options; read by the host's capabilities binding.
     property bool forStrip: false
 
+    /// The Popup this was opened from; null for pill-strip opens. Actions that
+    /// navigate away from it close it, as a plain row tap does.
+    property Popup hostPopup: null
+
     /// Open right-aligned with the ⋮ `anchor` it was invoked from;
-    /// options.above opens upward, options.forStrip marks a pill-strip open.
+    /// options.above opens upward, options.forStrip marks a pill-strip open,
+    /// options.hostPopup names the Popup the menu was invoked from.
     /// x/y stay bound: the menu's width is 0 until content is first laid out.
     function openAnchored(record, anchor, options) {
         root.forStrip = !!(options && options.forStrip)
+        root.hostPopup = (options && options.hostPopup) ?? null
         root.record = record
         root.parent = anchor
-        root.x = Qt.binding(() => anchor.width - root.width)
-        root.y = Qt.binding(() => (options && options.above) ? -root.height : anchor.height)
+        root.x = Qt.binding(() => anchor ? anchor.width - root.width : 0)
+        root.y = Qt.binding(() => !anchor ? 0
+                            : (options && options.above) ? -root.height : anchor.height)
         root.open()
+    }
+
+    /// Called by actions that take the user out of the host — a new page behind
+    /// it, or the OS file manager — after the caller has acted, since closing the
+    /// host destroys the anchor. Retry stays in the host, like a tap-to-retry.
+    function _leaveHost() {
+        if (root.hostPopup)
+            root.hostPopup.close()
     }
 
     /// { openInBrowser, shareFile, shareUrl, showInFolder, retry, dismiss,
@@ -107,7 +123,10 @@ StatusMenu {
         enabled: isComplete && !!root._caps.openInBrowser
         icon.name: "browser"
         text: qsTr("Open in Browser")
-        onTriggered: root.openInBrowserRequested()
+        onTriggered: {
+            root.openInBrowserRequested()
+            root._leaveHost()
+        }
     }
     StatusAction {
         enabled: isComplete && !!root._caps.shareFile
@@ -125,7 +144,10 @@ StatusMenu {
         enabled: isComplete && !!root._caps.showInFolder
         icon.name: "show"
         text: qsTr("Show in folder")
-        onTriggered: root.showInFolderRequested()
+        onTriggered: {
+            root.showInFolderRequested()
+            root._leaveHost()
+        }
     }
     StatusAction {
         enabled: !!root._caps.retry

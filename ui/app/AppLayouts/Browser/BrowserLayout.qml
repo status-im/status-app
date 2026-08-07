@@ -773,6 +773,8 @@ StatusSectionLayout {
     Component {
         id: tabsBookmarksOverviewComp
         TabsBookmarksOverviewModal {
+            id: overviewModal
+
             getTitleFn: function(tabIndex) {
                 const webView = webViewContext.getWebView(tabIndex)
                 return savedSessionContext.displayTitle(webView, false)
@@ -828,7 +830,9 @@ StatusSectionLayout {
                 if (downloadsContext.openDownloadFromList(record))
                     close()
             }
-            onDownloadOptionsClicked: (record, anchor) => downloadRecordMenuInst.openAnchored(record, anchor)
+            // The menu needs its host: navigating actions close the overview.
+            onDownloadOptionsClicked: (record, anchor) =>
+                downloadRecordMenuInst.openAnchored(record, anchor, { hostPopup: overviewModal })
         }
     }
 

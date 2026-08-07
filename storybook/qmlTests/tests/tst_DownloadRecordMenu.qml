@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtTest
 
 import StatusQ.Popups
@@ -43,6 +44,22 @@ Item {
         DownloadRecordMenu {}
     }
 
+    /// Stands in for the tabs/bookmarks overview the Downloads List lives in.
+    Component {
+        id: hostPopupComponent
+        Popup {
+            width: 200
+            height: 200
+        }
+    }
+
+    /// The row's ⋮ button the menu anchors to.
+    Item {
+        id: anchorItem
+        width: 24
+        height: 24
+    }
+
     TestCase {
         name: "DownloadRecordMenu"
         when: windowShown
@@ -59,6 +76,17 @@ Item {
                 downloadsEntry: false,
                 useShareLabels: false
             }, overrides || {})
+        }
+
+        function triggerAction(menu, text) {
+            for (let i = 0; i < menu.count; ++i) {
+                const action = menu.actionAt(i)
+                if (action && action.enabled && action.text === text) {
+                    action.trigger()
+                    return true
+                }
+            }
+            return false
         }
 
         function actionTexts(menu) {
@@ -264,6 +292,70 @@ Item {
                    "capabilities re-derive from the record with no populate call")
             verify(texts.indexOf(qsTr("Copy file path")) >= 0)
             verify(texts.indexOf(qsTr("Pause")) < 0)
+        }
+
+        /// Opening the file in the browser leaves the overview behind, so the
+        /// menu closes it — a plain row tap already closes it in the host.
+        function test_openInBrowser_closesTheHostPopup() {
+            const host = createTemporaryObject(hostPopupComponent, root)
+            host.open()
+            tryCompare(host, "opened", true)
+
+            const record = createTemporaryObject(recordComponent, root)
+            const menu = createTemporaryObject(menuComponent, root, {
+                capabilities: caps({ openInBrowser: true, shareUrl: true, showInFolder: true })
+            })
+            menu.openAnchored(record, anchorItem, { hostPopup: host })
+            compare(menu.hostPopup, host)
+
+            let opened = 0
+            menu.openInBrowserRequested.connect(function() { opened += 1 })
+            verify(triggerAction(menu, qsTr("Open in Browser")))
+            compare(opened, 1)
+            tryCompare(host, "visible", false, 1000,
+                       "the overview must not stay on top of the page we navigated to")
+        }
+
+        /// Retry re-issues the download and the user stays in the list —
+        /// same as tap-to-retry, which does not close the overview either.
+        function test_retry_keepsTheHostPopupOpen() {
+            const host = createTemporaryObject(hostPopupComponent, root)
+            host.open()
+            tryCompare(host, "opened", true)
+
+            const record = createTemporaryObject(recordComponent, root, {
+                state: AbstractWebView.DownloadState.DownloadInterrupted
+            })
+            const menu = createTemporaryObject(menuComponent, root, {
+                capabilities: caps({ retry: true, shareUrl: true })
+            })
+            menu.openAnchored(record, anchorItem, { hostPopup: host })
+
+            let retried = 0
+            menu.retryRequested.connect(function() { retried += 1 })
+            verify(triggerAction(menu, qsTr("Retry")))
+            compare(retried, 1)
+            verify(host.visible, "Retry keeps the user in the Downloads List")
+        }
+
+        /// Pill strip opens have no host — the previous list open must not
+        /// leave one behind.
+        function test_stripOpen_clearsTheHostPopup() {
+            const host = createTemporaryObject(hostPopupComponent, root)
+            host.open()
+
+            const record = createTemporaryObject(recordComponent, root)
+            const menu = createTemporaryObject(menuComponent, root, {
+                capabilities: caps({ openInBrowser: true })
+            })
+            menu.openAnchored(record, anchorItem, { hostPopup: host })
+            compare(menu.hostPopup, host)
+
+            menu.openAnchored(record, anchorItem, { forStrip: true })
+            compare(menu.hostPopup, null)
+
+            verify(triggerAction(menu, qsTr("Open in Browser")))
+            verify(host.visible, "a strip menu never closes an unrelated popup")
         }
     }
 }
