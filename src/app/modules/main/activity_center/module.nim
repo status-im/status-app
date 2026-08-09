@@ -26,7 +26,7 @@ type
     view: View
     viewVariant: QVariant
     moduleLoaded: bool
-    unreadCount: int
+    unreadNonMessagingCount: int
 
 proc newModule*(
     delegate: delegate_interface.AccessInterface,
@@ -67,11 +67,8 @@ method load*(self: Module) =
 method isLoaded*(self: Module): bool =
   return self.moduleLoaded
 
-method unreadActivityCenterNotificationsCount*(self: Module): int =
-  self.controller.unreadActivityCenterNotificationsCount()
-
 method unreadNonMessagingActivityCenterNotificationsCount*(self: Module): int =
-  self.controller.unreadNonMessagingActivityCenterNotificationsCount()
+  self.unreadNonMessagingCount
 
 method unreadActivityCenterNotificationsCountFromView*(self: Module): int =
   self.view.unreadCount()
@@ -82,14 +79,21 @@ method hasUnseenActivityCenterNotifications*(self: Module): bool =
 method viewDidLoad*(self: Module) =
   self.moduleLoaded = true
   self.delegate.activityCenterDidLoad()
-  self.view.setUnreadCount(self.unreadActivityCenterNotificationsCount())
+  self.controller.asyncActivityCenterCounts()
   self.view.setHasUnseen(self.hasUnseenActivityCenterNotifications())
 
 method hasMoreToShow*(self: Module): bool =
   self.controller.hasMoreToShow()
 
-method onNotificationsCountMayHaveChanged*(self: Module) =
-  self.view.setUnreadCount(self.unreadActivityCenterNotificationsCount())
+method onActivityCenterNotificationCountsResolved*(
+    self: Module,
+    groupCounters: Table[ActivityCenterGroup, int],
+    unreadCount: int,
+    unreadNonMessagingCount: int,
+    ) =
+  self.view.setActivityGroupCounters(groupCounters)
+  self.view.setUnreadCount(unreadCount)
+  self.unreadNonMessagingCount = unreadNonMessagingCount
   self.delegate.onActivityNotificationsUpdated()
 
 method onUnseenChanged*(self: Module, hasUnseen: bool) =

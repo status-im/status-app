@@ -9,6 +9,8 @@ import web3/eth_api_types, web3/conversions, stew/byteutils, nimcrypto
 import ../../../backend/backend
 import ../../../backend/response_type
 import ./dto/notification
+import ./count_refresh_generation
+import ./count_snapshot
 
 import ../../common/activity_center
 import ../message/service
@@ -35,10 +37,16 @@ type
   ActivityCenterNotificationHasUnseen* = ref object of Args
     hasUnseen*: bool
 
+  ActivityCenterNotificationCountsArgs* = ref object of Args
+    groupCounters*: Table[ActivityCenterGroup, int]
+    unreadCount*: int
+    unreadNonMessagingCount*: int
+
 # Signals which may be emitted by this service:
 const SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_LOADED* = "activityCenterNotificationsLoaded"
 const SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_RECEIVED* = "activityCenterNotificationsReceived"
 const SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_COUNT_MAY_HAVE_CHANGED* = "activityCenterNotificationsCountMayChanged"
+const SIGNAL_ACTIVITY_CENTER_NOTIFICATION_COUNTS_RESOLVED* = "activityCenterNotificationCountsResolved"
 const SIGNAL_ACTIVITY_CENTER_UNSEEN_UPDATED* = "activityCenterNotificationsHasUnseenUpdated"
 const SIGNAL_ACTIVITY_CENTER_MARK_NOTIFICATIONS_AS_READ* = "activityCenterMarkNotificationsAsRead"
 const SIGNAL_ACTIVITY_CENTER_MARK_NOTIFICATIONS_AS_UNREAD* = "activityCenterMarkNotificationsAsUnread"
@@ -49,18 +57,6 @@ const SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_DISMISSED* = "activityCenterNotificat
 
 const DEFAULT_LIMIT = 20
 
-# NOTE: temporary disable Transactions and System and we don't count All group
-const ACTIVITY_GROUPS = @[
-  ActivityCenterGroup.Mentions,
-  ActivityCenterGroup.Replies,
-  ActivityCenterGroup.Membership,
-  ActivityCenterGroup.Admin,
-  ActivityCenterGroup.ContactRequests,
-  ActivityCenterGroup.IdentityVerification,
-  ActivityCenterGroup.System,
-  ActivityCenterGroup.News
-]
-
 QtObject:
   type Service* = ref object of QObject
     threadpool: ThreadPool
@@ -69,6 +65,7 @@ QtObject:
     activeGroup: ActivityCenterGroup
     readType: ActivityCenterReadType
     chatService: chat_service.Service
+    countRefreshState: CountRefreshGenerationState
 
   # Forward declaration
   proc asyncActivityNotificationLoad*(self: Service)
@@ -87,6 +84,7 @@ QtObject:
     result.activeGroup = ActivityCenterGroup.All
     result.readType = ActivityCenterReadType.All
     result.chatService = chatService
+    result.countRefreshState = initCountRefreshGenerationState()
 
   proc handleNewNotificationsLoaded(self: Service, activityCenterNotifications: seq[ActivityCenterNotificationDto]) =
     # For now status-go notify about every notification update regardless active group so we need filter manually on the desktop side
@@ -160,6 +158,21 @@ QtObject:
     )
     self.threadpool.start(arg)
 
+  proc startActivityCenterCountsTask(self: Service, generation: int) =
+    let arg = AsyncActivityCenterCountsTaskArg(
+      tptr: asyncActivityCenterCountsTask,
+      vptr: cast[uint](self.vptr),
+      slot: "asyncActivityCenterCountsLoaded",
+      generation: generation,
+      readType: self.readType,
+    )
+    self.threadpool.start(arg)
+
+  proc asyncActivityCenterCounts*(self: Service) =
+    let request = self.countRefreshState.requestRefresh()
+    if request.shouldStart:
+      self.startActivityCenterCountsTask(request.generation)
+
   proc getActivityCenterNotifications*(self: Service): seq[ActivityCenterNotificationDto] =
     try:
       let activityTypes = activityCenterNotificationTypesByGroup(self.activeGroup)
@@ -179,50 +192,6 @@ QtObject:
 
     except Exception as e:
       error "Error getting activity center notifications", msg = e.msg
-
-  proc getActivityCenterNotificationsCounters(self: Service, activityTypes: seq[int], readType: ActivityCenterReadType): Table[int, int] =
-    try:
-      let response = backend.activityCenterNotificationsCount(
-        backend.ActivityCenterCountRequest(
-          activityTypes: activityTypes,
-          readType: readType.int,
-        )
-      )
-      var counters = initTable[int, int]()
-      if response.result.kind != JNull:
-        for activityType in activityTypes:
-          if response.result.contains($activityType):
-            counters[activityType] = response.result[$activityType].getInt
-      return counters
-    except Exception as e:
-      error "Error getting unread activity center notifications count", msg = e.msg
-
-  proc getActivityGroupCounters*(self: Service): Table[ActivityCenterGroup, int] =
-    let allActivityTypes = activityCenterNotificationTypesByGroup(ActivityCenterGroup.All)
-    let counters = self.getActivityCenterNotificationsCounters(allActivityTypes, self.readType)
-    var groupCounters = initTable[ActivityCenterGroup, int]()
-    for group in ACTIVITY_GROUPS:
-      var groupTotal = 0
-      for activityType in activityCenterNotificationTypesByGroup(group):
-        groupTotal = groupTotal + counters.getOrDefault(activityType, 0)
-      groupCounters[group] = groupTotal
-    return groupCounters
-
-  proc getUnreadActivityCenterNotificationsCount*(self: Service): int =
-    let activityTypes = activityCenterNotificationTypesByGroup(ActivityCenterGroup.All)
-    let counters = self.getActivityCenterNotificationsCounters(activityTypes, ActivityCenterReadType.Unread)
-    var total = 0
-    for activityType in activityTypes:
-      total = total + counters.getOrDefault(activityType, 0)
-    return total
-
-  proc getUnreadNonMessagingActivityCenterNotificationsCount*(self: Service): int =
-    let activityTypes = activityCenterNotificationTypesByGroup(ActivityCenterGroup.NonMessaging)
-    let counters = self.getActivityCenterNotificationsCounters(activityTypes, ActivityCenterReadType.Unread)
-    var total = 0
-    for activityType in activityTypes:
-      total = total + counters.getOrDefault(activityType, 0)
-    return total
 
   proc getHasUnseenActivityCenterNotifications*(self: Service): bool =
     try:
@@ -313,6 +282,51 @@ QtObject:
           ActivityCenterNotificationsArgs(activityCenterNotifications: activityCenterNotificationsTuple[1]))
     except Exception as e:
       error "Error loading activity notification async", msg = e.msg
+
+  proc asyncActivityCenterCountsLoaded*(self: Service, response: string) {.slot.} =
+    var completedGeneration = self.countRefreshState.currentGeneration()
+    var responseObj: JsonNode
+    var responseError = ""
+    try:
+      responseObj = response.parseJson
+      if responseObj{"generation"}.kind != JNull:
+        completedGeneration = responseObj{"generation"}.getInt
+    except Exception as e:
+      responseError = e.msg
+
+    let completion = self.countRefreshState.onCompletion(completedGeneration)
+    if completion.action == crcaDropAndRefire:
+      self.startActivityCenterCountsTask(completion.generation)
+      return
+
+    if responseError != "":
+      error "Error decoding activity center notification counts", msg = responseError
+      return
+
+    try:
+      if responseObj{"error"}.kind != JNull and responseObj{"error"}.getStr != "":
+        raise newException(CatchableError, responseObj{"error"}.getStr)
+
+      var currentCounters = initTable[int, int]()
+      var unreadCounters = initTable[int, int]()
+      let activityTypes = activityCenterNotificationTypesByGroup(ActivityCenterGroup.All)
+      for activityType in activityTypes:
+        if responseObj["currentCounters"].contains($activityType):
+          currentCounters[activityType] = responseObj["currentCounters"][$activityType].getInt
+        if responseObj["unreadCounters"].contains($activityType):
+          unreadCounters[activityType] = responseObj["unreadCounters"][$activityType].getInt
+
+      let snapshot = buildActivityCenterCountSnapshot(currentCounters, unreadCounters)
+      self.events.emit(
+        SIGNAL_ACTIVITY_CENTER_NOTIFICATION_COUNTS_RESOLVED,
+        ActivityCenterNotificationCountsArgs(
+          groupCounters: snapshot.groupCounters,
+          unreadCount: snapshot.unreadCount,
+          unreadNonMessagingCount: snapshot.unreadNonMessagingCount,
+        ),
+      )
+    except Exception as e:
+      error "Error loading activity center notification counts", msg = e.msg
 
 
   proc deleteActivityCenterNotifications*(self: Service, notificationIds: seq[string]): string =

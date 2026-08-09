@@ -22,9 +22,6 @@ method viewDidLoad*(self: AccessInterface) {.base.} =
 method hasMoreToShow*(self: AccessInterface): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method unreadActivityCenterNotificationsCount*(self: AccessInterface): int {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method unreadNonMessagingActivityCenterNotificationsCount*(self: AccessInterface): int {.base.} =
   raise newException(ValueError, "No implementation available")
 
@@ -34,7 +31,12 @@ method unreadActivityCenterNotificationsCountFromView*(self: AccessInterface): i
 method hasUnseenActivityCenterNotifications*(self: AccessInterface): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onNotificationsCountMayHaveChanged*(self: AccessInterface) {.base.} =
+method onActivityCenterNotificationCountsResolved*(
+    self: AccessInterface,
+    groupCounters: Table[ActivityCenterGroup, int],
+    unreadCount: int,
+    unreadNonMessagingCount: int,
+    ) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onUnseenChanged*(self: AccessInterface, hasUnseen: bool) {.base.} =

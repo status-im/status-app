@@ -47,10 +47,6 @@ proc newController*(
 proc delete*(self: Controller) =
   discard
 
-proc updateActivityGroupCounters*(self: Controller) =
-  let counters = self.activityCenterService.getActivityGroupCounters()
-  self.delegate.setActivityGroupCounters(counters)
-
 proc init*(self: Controller) =
   self.events.once(chat_service.SIGNAL_ACTIVE_CHATS_LOADED) do(e:Args):
     # Only fectch activity center notification once channel groups are loaded,
@@ -60,12 +56,11 @@ proc init*(self: Controller) =
   self.events.on(activity_center_service.SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_LOADED) do(e: Args):
     let args = ActivityCenterNotificationsArgs(e)
     self.delegate.addActivityCenterNotifications(args.activityCenterNotifications, initialLoad = true)
-    self.updateActivityGroupCounters()
+    self.activityCenterService.asyncActivityCenterCounts()
 
   self.events.on(activity_center_service.SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_RECEIVED) do(e: Args):
     let args = ActivityCenterNotificationsArgs(e)
     self.delegate.addActivityCenterNotifications(args.activityCenterNotifications, initialLoad = false)
-    self.updateActivityGroupCounters()
 
   self.events.on(activity_center_service.SIGNAL_ACTIVITY_CENTER_MARK_NOTIFICATIONS_AS_READ) do(e: Args):
     var evArgs = ActivityCenterNotificationIdsArgs(e)
@@ -81,8 +76,15 @@ proc init*(self: Controller) =
     self.delegate.markAllActivityCenterNotificationsReadDone()
 
   self.events.on(activity_center_service.SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_COUNT_MAY_HAVE_CHANGED) do(e: Args):
-    self.delegate.onNotificationsCountMayHaveChanged()
-    self.updateActivityGroupCounters()
+    self.activityCenterService.asyncActivityCenterCounts()
+
+  self.events.on(activity_center_service.SIGNAL_ACTIVITY_CENTER_NOTIFICATION_COUNTS_RESOLVED) do(e: Args):
+    let args = ActivityCenterNotificationCountsArgs(e)
+    self.delegate.onActivityCenterNotificationCountsResolved(
+      args.groupCounters,
+      args.unreadCount,
+      args.unreadNonMessagingCount,
+    )
 
   self.events.on(activity_center_service.SIGNAL_ACTIVITY_CENTER_UNSEEN_UPDATED) do(e: Args):
     var evArgs = ActivityCenterNotificationHasUnseen(e)
@@ -104,12 +106,6 @@ proc init*(self: Controller) =
 proc hasMoreToShow*(self: Controller): bool =
   return self.activityCenterService.hasMoreToShow()
 
-proc unreadActivityCenterNotificationsCount*(self: Controller): int =
-  return self.activityCenterService.getUnreadActivityCenterNotificationsCount()
-
-proc unreadNonMessagingActivityCenterNotificationsCount*(self: Controller): int =
-  return self.activityCenterService.getUnreadNonMessagingActivityCenterNotificationsCount()
-
 proc hasUnseenActivityCenterNotifications*(self: Controller): bool =
   return self.activityCenterService.getHasUnseenActivityCenterNotifications()
 
@@ -124,6 +120,9 @@ proc getActivityCenterNotifications*(self: Controller): seq[ActivityCenterNotifi
 
 proc asyncActivityNotificationLoad*(self: Controller) =
   self.activityCenterService.asyncActivityNotificationLoad()
+
+proc asyncActivityCenterCounts*(self: Controller) =
+  self.activityCenterService.asyncActivityCenterCounts()
 
 proc markAllActivityCenterNotificationsRead*(self: Controller) =
   self.activityCenterService.markAllActivityCenterNotificationsRead()
@@ -174,7 +173,7 @@ proc setActivityCenterReadType*(self: Controller, readType: ActivityCenterReadTy
   self.activityCenterService.resetCursor()
   let activityCenterNotifications = self.activityCenterService.getActivityCenterNotifications()
   self.delegate.resetActivityCenterNotifications(activityCenterNotifications)
-  self.updateActivityGroupCounters()
+  self.activityCenterService.asyncActivityCenterCounts()
 
 proc getActivityCenterReadType*(self: Controller): ActivityCenterReadType =
   return self.activityCenterService.getActivityCenterReadType()
