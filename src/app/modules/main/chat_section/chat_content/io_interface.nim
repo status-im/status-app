@@ -5,6 +5,7 @@ import app_service/service/message/dto/pinned_message
 import app_service/service/chat/dto/chat
 import app_service/service/message/dto/message
 import app_service/service/message/dto/reaction
+import app_service/service/message/dto/thread
 
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
@@ -25,6 +26,12 @@ method getModuleAsVariant*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onNotificationsUpdated*(self: AccessInterface, hasUnreadMessages: bool, notificationCount: int) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method openThreadAsChat*(self: AccessInterface, threadId: string, threadName: string, parentMessageId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onChatThreadsLoaded*(self: AccessInterface, threads: seq[ThreadDto]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method newPinnedMessagesLoaded*(self: AccessInterface, pinnedMessages: seq[PinnedMessageDto], reactions: seq[ReactionDto]) {.base.} =

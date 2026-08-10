@@ -22,6 +22,7 @@ type
     events: UniqueUUIDEventEmitter
     sectionId: string
     chatId: string
+    threadId: string
     belongsToCommunity: bool
     searchedMessageId: string
     loadingMessagesPerPageFactor: int
@@ -35,12 +36,14 @@ type
 proc newController*(delegate: io_interface.AccessInterface, events: EventEmitter, sectionId: string, chatId: string,
     belongsToCommunity: bool, contactService: contact_service.Service, communityService: community_service.Service,
     chatService: chat_service.Service, messageService: message_service.Service,
-    mailserversService: mailservers_service.Service, sharedUrlsService: shared_urls_service.Service): Controller =
+    mailserversService: mailservers_service.Service, sharedUrlsService: shared_urls_service.Service,
+    threadId: string = ""): Controller =
   result = Controller()
   result.delegate = delegate
   result.events = initUniqueUUIDEventEmitter(events)
   result.sectionId = sectionId
   result.chatId = chatId
+  result.threadId = threadId
   result.loadingMessagesPerPageFactor = 1
   result.belongsToCommunity = belongsToCommunity
   result.contactService = contactService
@@ -72,7 +75,7 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_SENDING_SUCCESS) do(e:Args):
     let args = MessageSendingSuccess(e)
-    if self.chatId != args.chat.id:
+    if self.chatId != args.chat.id or args.message.threadId != self.threadId:
       return
     self.delegate.onSendingMessageSuccess(args.message)
 
@@ -235,11 +238,51 @@ proc init*(self: Controller) =
     let args = GetMessageResult(e)
     self.delegate.onGetMessageById(args.requestId, args.messageId, args.message, args.error)
 
+  self.events.on(SIGNAL_THREAD_CREATED) do(e: Args):
+    let args = ThreadCreatedArgs(e)
+    if self.chatId != args.chatId:
+      return
+    self.delegate.onThreadCreated(args.parentMessageId, args.threads)
+
+  self.events.on(SIGNAL_THREAD_MESSAGES_LOADED) do(e: Args):
+    let args = ThreadMessagesLoadedArgs(e)
+    if self.chatId != args.chatId:
+      return
+    if self.threadId != args.threadId:
+      return
+    self.delegate.newMessagesLoaded(args.messages, @[])
+
+  self.events.on(SIGNAL_CHAT_THREADS_LOADED) do(e: Args):
+    let args = ChatThreadsLoadedArgs(e)
+    if self.chatId != args.chatId:
+      return
+    self.delegate.onChatThreadsLoaded(args.threads)
+
 proc getMySectionId*(self: Controller): string =
   return self.sectionId
 
 proc getMyChatId*(self: Controller): string =
   return self.chatId
+
+proc getMyThreadId*(self: Controller): string =
+  return self.threadId
+
+proc setThreadId*(self: Controller, threadId: string) =
+  self.threadId = threadId
+
+proc createThread*(self: Controller, parentMessageId: string) =
+  if parentMessageId.len == 0:
+    return
+  self.messageService.asyncCreateThread(self.chatId, parentMessageId)
+
+proc loadChatThreadsIfNeeded*(self: Controller) =
+  self.messageService.loadChatThreadsIfNeeded(self.chatId)
+
+proc hasThreadForParentMessage*(self: Controller, parentMessageId: string): bool =
+  return self.messageService.chatHasThreadForParentMessage(self.chatId, parentMessageId)
+
+proc closeThread*(self: Controller) =
+  self.threadId = ""
 
 proc getChatDetails*(self: Controller): lent ChatDto =
   return self.chatService.getChatById(self.chatId)
@@ -264,6 +307,9 @@ proc belongsToCommunity*(self: Controller): bool =
 
 proc loadMoreMessages*(self: Controller): bool =
   let limit = self.loadingMessagesPerPageFactor * MESSAGES_PER_PAGE
+  # TODO is it possible to just extend the existing messages API?
+  if self.threadId.len > 0:
+    return self.messageService.asyncLoadMoreMessagesForThread(self.chatId, self.threadId, limit)
   return self.messageService.asyncLoadMoreMessagesForChat(self.chatId, limit)
 
 proc addReaction*(self: Controller, messageId: string, emoji: string) =

@@ -86,6 +86,7 @@ const asyncSendStickerTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} 
       "You can see a nice sticker here!",
       arg.replyTo,
       ContentType.Sticker.int,
+      "",
       arg.preferredUsername,
       standardLinkPreviews = JsonNode(),
       statusLinkPreviews = JsonNode(),

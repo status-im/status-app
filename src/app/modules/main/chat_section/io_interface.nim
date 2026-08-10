@@ -171,6 +171,12 @@ method viewDidLoad*(self: AccessInterface) {.base.} =
 method setActiveItem*(self: AccessInterface, itemId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method openThreadAsChat*(self: AccessInterface, parentChatId: string, threadId: string, threadName: string, parentMessageId: string, setActive: bool = false) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method isChatThread*(self: AccessInterface, chatId: string): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getChatContentModule*(self: AccessInterface, chatId: string): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 

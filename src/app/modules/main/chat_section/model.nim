@@ -263,11 +263,26 @@ QtObject:
         if categoryIdx == -1:
           return
         indexToInsertTo = categoryIdx + item.position + 1
+
     if indexToInsertTo < 0:
       indexToInsertTo = 0
     elif indexToInsertTo >= self.items.len + 1:
       indexToInsertTo = self.items.len
 
+    self.beginInsertRows(parentModelIndex, indexToInsertTo, indexToInsertTo)
+    self.items.insert(item, indexToInsertTo)
+    self.endInsertRows()
+
+    self.countChanged()
+
+  proc appendItemAfterParent*(self: Model, item: ChatItem, parentIndex: int) =
+    if parentIndex < 0 or parentIndex >= self.items.len:
+      return
+
+    let parentModelIndex = newQModelIndex()
+    defer: parentModelIndex.delete
+
+    let indexToInsertTo = parentIndex + 1
     self.beginInsertRows(parentModelIndex, indexToInsertTo, indexToInsertTo)
     self.items.insert(item, indexToInsertTo)
     self.endInsertRows()
