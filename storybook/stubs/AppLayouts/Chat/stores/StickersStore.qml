@@ -1,3 +1,5 @@
 import QtQuick
 
-QtObject {}
+QtObject {
+    property var stickersModule: null
+}
