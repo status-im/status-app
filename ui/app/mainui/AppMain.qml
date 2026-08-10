@@ -9,6 +9,7 @@ import QtQml.Models
 
 import AppLayouts.Chat
 import AppLayouts.Chat.views
+import AppLayouts.Chat.panels as ChatPanels
 import AppLayouts.Wallet
 import AppLayouts.Market.stores
 import AppLayouts.Wallet.services.dapps
@@ -2253,6 +2254,7 @@ Item {
                     }
 
                     CommunitiesPortalLoader {
+                        asynchronous: true
                         active: appMain.mainReady
                                 && appView.currentIndex === Constants.appViewStackIndex.communitiesPortal
                         rootStore: appMain.rootStore
@@ -2454,8 +2456,37 @@ Item {
                 Component {
                     id: chatLayoutLoading
 
-                    ChatLayoutLoading {
-                        showMembersPanel: appMain.accountSettingsStore.showUsersList
+                    // Composed from the section skeleton panels (the former
+                    // ChatLayoutLoading view is superseded by them)
+                    RowLayout {
+                        spacing: 0
+
+                        ChatPanels.MessagesListSkeleton {
+                            visible: !appMain.isPortraitMode
+                            Layout.fillHeight: true
+                            Layout.preferredWidth: Constants.chatSectionLeftColumnWidth
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            spacing: 0
+
+                            ChatPanels.ChatHeaderSkeleton {
+                                Layout.fillWidth: true
+                            }
+
+                            ChatPanels.MessagesChatSkeleton {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                            }
+                        }
+
+                        ChatPanels.MembersListSkeleton {
+                            visible: appMain.accountSettingsStore.showUsersList && !appMain.isPortraitMode
+                            Layout.fillHeight: true
+                            Layout.preferredWidth: 280
+                        }
                     }
                 }
 
