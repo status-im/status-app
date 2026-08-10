@@ -4,17 +4,32 @@ import QtQml.Models
 import utils
 
 ListModel {
+    id: root
+
     property bool includeRegularCollectibles: true
     onIncludeRegularCollectiblesChanged: fillData()
     property bool includeCommunityCollectibles: true
     onIncludeCommunityCollectiblesChanged: fillData()
 
+    // When false, every tile is listed without its metadata (name, collection,
+    // image URLs) — the state a tile is in between being listed and its metadata
+    // arriving. Entries carrying `isMetadataValid: false` are in that state even
+    // when this is true.
+    property bool metadataAvailable: true
+    onMetadataAvailableChanged: fillData()
+
+    function withMetadataFlag(entries) {
+        return entries.map(entry => Object.assign({}, entry, {
+            metadataAvailable: root.metadataAvailable && entry.isMetadataValid !== false
+        }))
+    }
+
     function fillData() {
         clear()
         if (includeRegularCollectibles)
-            append(data)
+            append(withMetadataFlag(data))
         if (includeCommunityCollectibles)
-            append(communityData)
+            append(withMetadataFlag(communityData))
     }
 
     readonly property var data: [

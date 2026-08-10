@@ -49,6 +49,7 @@ Item {
                     communityImage: "",
                     imageUrl: "",
                     backgroundColor: "",
+                    metadataAvailable: true,
                     ownership: [{
                         accountAddress: root.testAccount,
                         balance: "1",
@@ -68,6 +69,7 @@ Item {
                     communityImage: "",
                     imageUrl: "",
                     backgroundColor: "",
+                    metadataAvailable: true,
                     ownership: [{
                         accountAddress: root.testAccount,
                         balance: "1",
@@ -87,6 +89,7 @@ Item {
                     communityImage: "",
                     imageUrl: "",
                     backgroundColor: "",
+                    metadataAvailable: true,
                     ownership: [{
                         accountAddress: root.testAccount,
                         balance: "1",
@@ -106,6 +109,7 @@ Item {
                     communityImage: "",
                     imageUrl: "",
                     backgroundColor: "",
+                    metadataAvailable: true,
                     ownership: [{
                         accountAddress: root.testAccount,
                         balance: "1",
@@ -354,6 +358,40 @@ Item {
         function test_sortByUi_asc_desc(data) {
             verifySortByUi(data.optionText, data.communityAsc, data.communityDesc,
                            data.regularAsc, data.regularDesc)
+        }
+
+        function findGridItemByTitle(gridObjectName, title) {
+            const grid = findChild(controlUnderTest, gridObjectName)
+            verify(!!grid)
+            for (let i = 0; i < grid.count; ++i) {
+                const item = grid.itemAtIndex(i)
+                if (!!item && item.title === title)
+                    return item
+            }
+            return null
+        }
+
+        // A tile is listed before its metadata arrives: until then it must render
+        // as loading, and it must stop doing so the moment the metadata lands.
+        function test_tileRendersAsLoadingUntilMetadataArrives() {
+            const sourceIndex = 2 // "Reg Charlie"
+            compare(collectiblesModel.get(sourceIndex).name, "Reg Charlie")
+
+            let tile = findGridItemByTitle("regularCollectiblesView", "Reg Charlie")
+            verify(!!tile)
+            compare(tile.isLoading, false)
+
+            collectiblesModel.setProperty(sourceIndex, "metadataAvailable", false)
+            tryVerify(() => {
+                const item = findGridItemByTitle("regularCollectiblesView", "Reg Charlie")
+                return !!item && item.isLoading === true
+            })
+
+            collectiblesModel.setProperty(sourceIndex, "metadataAvailable", true)
+            tryVerify(() => {
+                const item = findGridItemByTitle("regularCollectiblesView", "Reg Charlie")
+                return !!item && item.isLoading === false
+            })
         }
     }
 

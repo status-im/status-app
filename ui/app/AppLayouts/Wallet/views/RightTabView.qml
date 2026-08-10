@@ -280,6 +280,33 @@ RightTabBaseView {
                         RootStore.setCurrentViewedHoldingType(walletTabBar.currentIndex === 1 ? Constants.TokenType.ERC721 : Constants.TokenType.ERC20)
                     }
                 }
+                // Ownership check running in the background. It lives in the tab
+                // header, next to the filter button, so that starting/finishing a
+                // check never shifts or overlays the list below: the row's height
+                // is set by the tab bar and the filter button, and the tab bar
+                // simply yields the few pixels it takes.
+                StatusLoadingIndicator {
+                    objectName: "collectiblesOwnershipCheckIndicator"
+
+                    Layout.alignment: Qt.AlignVCenter
+                    Layout.rightMargin: Theme.halfPadding
+                    Layout.preferredWidth: 16
+                    Layout.preferredHeight: 16
+
+                    color: Theme.palette.baseColor1
+                    visible: walletTabBar.currentIndex === RightTabView.TabIndex.Collectibles
+                             && RootStore.collectiblesStore.areCollectiblesUpdating
+
+                    StatusToolTip {
+                        visible: hoverHandler.hovered
+                        text: qsTr("Checking collectibles ownership…")
+                    }
+
+                    HoverHandler {
+                        id: hoverHandler
+                    }
+                }
+
                 StatusFlatButton {
                     id: filterButton
                     objectName: "filterButton"
@@ -518,8 +545,6 @@ RightTabBaseView {
                         onSwitchToCommunityRequested: (communityId) => Global.switchToCommunity(communityId)
                         onManageTokensRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.wallet,
                                                                                       Constants.walletSettingsSubsection.manageCollectibles)
-                        isFetching: RootStore.collectiblesStore.areCollectiblesFetching
-                        isUpdating: RootStore.collectiblesStore.areCollectiblesUpdating
                         isError: RootStore.collectiblesStore.areCollectiblesError
                     }
                 }

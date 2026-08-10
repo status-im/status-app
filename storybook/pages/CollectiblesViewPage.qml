@@ -37,6 +37,7 @@ SplitView {
         id: collectiblesModel
         includeRegularCollectibles: ctrlIncludeRegularCollectibles.checked
         includeCommunityCollectibles: ctrlIncludeCommunityCollectibles.checked
+        metadataAvailable: ctrlMetadataAvailable.checked
     }
 
     RolesRenamingModel {
@@ -130,8 +131,6 @@ SplitView {
         onReceiveRequested: logs.logEvent("onReceiveRequested", ["symbol"], arguments)
         onSwitchToCommunityRequested: logs.logEvent("onSwitchToCommunityRequested", ["communityId"], arguments)
         onManageTokensRequested: logs.logEvent("onManageTokensRequested")
-        isUpdating: ctrlUpdatingCheckbox.checked
-        isFetching: ctrlFetchingCheckbox.checked
         isError: ctrlErrorCheckbox.checked
         bannerComponent: BuyReceiveBanner {
             id: buyReceiveBanner
@@ -177,22 +176,23 @@ SplitView {
                 checked: true
             }
 
-            // The spinner/empty/error placeholders are only shown while there is
-            // nothing to display: switch both collectible types off to see them.
+            // Per-tile state: uncheck to list every collectible without its
+            // metadata, the way tiles look between being listed and their
+            // metadata arriving.
+            Switch {
+                id: ctrlMetadataAvailable
+                text: "Collectible metadata available"
+                checked: true
+            }
+
+            // With both collectible types off the list is empty: the empty state
+            // shows immediately, and is replaced by the error state below.
+            // The ownership check is NOT indicated here — its indicator lives in
+            // the wallet tab header (RightTabView), above this view.
             Text {
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
-                text: "States below only show up on an empty list (switch both collectible types off)"
-            }
-            CheckBox {
-                id: ctrlUpdatingCheckbox
-                checked: false
-                text: "isUpdating (spinner, ownership check)"
-            }
-            CheckBox {
-                id: ctrlFetchingCheckbox
-                checked: false
-                text: "isFetching (spinner, loading)"
+                text: "Empty/error states need an empty list (switch both collectible types off)"
             }
             CheckBox {
                 id: ctrlErrorCheckbox

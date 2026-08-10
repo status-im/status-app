@@ -28,6 +28,9 @@ type
     CommunityPrivilegesLevel
     TokenType
     Soulbound
+    # False until the collectible's metadata (name, collection, image URLs)
+    # arrives; the tile exists before that and renders as loading.
+    MetadataAvailable
 
 QtObject:
   type
@@ -143,7 +146,8 @@ QtObject:
       CollectibleRole.CommunityId.int:"communityId",
       CollectibleRole.CommunityPrivilegesLevel.int:"communityPrivilegesLevel",
       CollectibleRole.TokenType.int:"tokenType",
-      CollectibleRole.Soulbound.int:"soulbound"
+      CollectibleRole.Soulbound.int:"soulbound",
+      CollectibleRole.MetadataAvailable.int:"metadataAvailable"
     }.toTable
 
   method data(self: Model, index: QModelIndex, role: int): QVariant =
@@ -191,6 +195,8 @@ QtObject:
         result = newQVariant(item.getTokenType())
       of CollectibleRole.Soulbound:
         result = newQVariant(item.getSoulbound())
+      of CollectibleRole.MetadataAvailable:
+        result = newQVariant(item.getIsMetaDataValid())
       else:
         result = newQVariant()
     else:
@@ -316,6 +322,7 @@ QtObject:
       let communityPrivilegesLevel = entry.getCommunityPrivilegesLevel()
       let tokenType = entry.getTokenType()
       let soulbound = entry.getSoulbound()
+      let metadataAvailable = entry.getIsMetaDataValid()
 
       if not entry.updateDataIfSameID(update):
         return false
@@ -333,6 +340,10 @@ QtObject:
       addChangedRole(changedRoles, communityPrivilegesLevel, entry.getCommunityPrivilegesLevel(), CollectibleRole.CommunityPrivilegesLevel.int): discard
       addChangedRole(changedRoles, tokenType, entry.getTokenType(), CollectibleRole.TokenType.int): discard
       addChangedRole(changedRoles, soulbound, entry.getSoulbound(), CollectibleRole.Soulbound.int): discard
+      # Must be part of the diff: this is the role that makes a tile stop
+      # rendering as loading once its metadata arrives, and it can flip even
+      # when every other role above happens to keep its value.
+      addChangedRole(changedRoles, metadataAvailable, entry.getIsMetaDataValid(), CollectibleRole.MetadataAvailable.int): discard
 
       if changedRoles.len > 0:
         notifyRangeRolesChanged(ind, ind, changedRoles)

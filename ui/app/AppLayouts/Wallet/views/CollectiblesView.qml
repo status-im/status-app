@@ -35,9 +35,11 @@ ColumnLayout {
     required property string networkFilters
     property bool sendEnabled: true
     property bool filterVisible
-    property bool isFetching: false // Indicates if a collectibles page is being loaded from the backend
-    property bool isUpdating: false // Indicates if the collectibles list is being updated
-    property bool isError: false // Indicates an error occurred while updating/fetching the collectibles list
+    // Indicates that the list could not be read. Neither the ownership check nor
+    // the list read is surfaced here: the list read is fast and local, and the
+    // ownership check is indicated in the wallet tab header (see RightTabView),
+    // where it cannot shift or overlay the list.
+    property bool isError: false
     property alias bannerComponent: banner.sourceComponent
 
     // allows/disables choosing custom sort order from a sorter
@@ -88,10 +90,6 @@ ColumnLayout {
 
         readonly property var sourceModel: root.controller.sourceModel
 
-        // A load is in progress: either an ownership check is running in status-go
-        // (isUpdating) or a page of collectibles is being fetched (isFetching).
-        readonly property bool isLoading: root.isUpdating || root.isFetching
-
         function setSortByDateIsDisabled(disabled) {
             const orderByDateIndex =  cmbTokenOrder.indexOfValue(SortOrderComboBox.TokenOrderDateAdded)
 
@@ -128,11 +126,11 @@ ColumnLayout {
 
         readonly property bool isEmpty: !hasRegularCollectibles && !hasCommunityCollectibles
 
-        // Updates of an already populated list must be visually silent: the
-        // spinner/empty/error placeholders are only shown while there is nothing
-        // to display.
-        readonly property bool loadingPlaceholderVisible: isEmpty && isLoading
-        readonly property bool errorPlaceholderVisible: isEmpty && !isLoading && root.isError
+        // The empty state is never delayed by a running ownership check: an
+        // account with no known collectibles says so right away. Only the error
+        // state takes its place.
+        readonly property bool errorPlaceholderVisible: isEmpty && root.isError
+        readonly property bool emptyPlaceholderVisible: isEmpty && !root.isError
 
         readonly property var addrFilters: root.addressFilters.split(":")
 
@@ -375,34 +373,13 @@ ColumnLayout {
         Layout.fillWidth: true
     }
 
-    RowLayout {
-        objectName: "collectiblesLoadingIndicator"
-
-        Layout.alignment: Qt.AlignHCenter
-        Layout.topMargin: Theme.padding
-        spacing: Theme.halfPadding
-
-        visible: d.loadingPlaceholderVisible
-
-        StatusLoadingIndicator {
-            color: Theme.palette.directColor4
-        }
-
-        StatusBaseText {
-            color: Theme.palette.baseColor1
-            font.pixelSize: Theme.additionalTextSize
-            text: root.isUpdating ? qsTr("Checking collectibles ownership…")
-                                  : qsTr("Loading collectibles…")
-        }
-    }
-
     ShapeRectangle {
         objectName: "collectiblesEmptyPlaceholder"
 
         Layout.fillWidth: true
         Layout.preferredHeight: 44
         Layout.topMargin: Theme.padding
-        visible: d.isEmpty && !d.loadingPlaceholderVisible && !d.errorPlaceholderVisible
+        visible: d.emptyPlaceholderVisible
         text: qsTr("Collectibles will appear here")
     }
 
@@ -506,6 +483,11 @@ ColumnLayout {
             fallbackImageUrl: Utils.collectibleMediaSource(model.thumbnailUrl, model.imageUrl)
             allowAnimation: false
             backgroundColor: model.backgroundColor ? model.backgroundColor : Theme.palette.baseColor5
+            // The tile is listed before its metadata arrives; until then name and
+            // image would render as "#<tokenId>" and a blank square, so shimmer
+            // instead. Flips per tile as `wallet-collectibles-data-updated` fills
+            // the metadata in.
+            isLoading: !model.metadataAvailable
             privilegesLevel: model.communityPrivilegesLevel ?? Constants.TokenPrivilegesLevel.Community
             ornamentColor: model.communityColor ?? "transparent"
             communityId: model.communityId ?? ""
