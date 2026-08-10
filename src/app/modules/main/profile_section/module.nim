@@ -21,6 +21,7 @@ import ../../../../app_service/service/general/service as general_service
 import ../../../../app_service/service/community/service as community_service
 import ../../../../app_service/service/token/service as token_service
 import ../../../../app_service/service/node/service as node_service
+import ../../../../app_service/service/advanced/service as advanced_service
 
 import ./profile/module as profile_module
 import ./contacts/module as contacts_module
@@ -79,7 +80,8 @@ proc newModule*(delegate: delegate_interface.AccessInterface,
   communityService: community_service.Service,
   networkService: network_service.Service,
   tokenService: token_service.Service,
-  nodeService: node_service.Service
+  nodeService: node_service.Service,
+  advancedService: advanced_service.Service
 ): Module =
   result = Module()
   result.delegate = delegate
@@ -95,7 +97,7 @@ proc newModule*(delegate: delegate_interface.AccessInterface,
     generalService)
   result.aboutModule = about_module.newModule(result, events, aboutService)
   result.advancedModule = advanced_module.newModule(result, events, settingsService, stickersService,
-    nodeConfigurationService)
+    nodeConfigurationService, advancedService)
   result.devicesModule = devices_module.newModule(result, events, settingsService, devicesService)
   result.syncModule = sync_module.newModule(result, events, settingsService, nodeConfigurationService,
     generalService, devicesService)

@@ -9,6 +9,7 @@ import ../../../../global/global_singleton
 import ../../../../../app_service/service/settings/service as settings_service
 import ../../../../../app_service/service/stickers/service as stickers_service
 import ../../../../../app_service/service/node_configuration/service as node_configuration_service
+import ../../../../../app_service/service/advanced/service as advanced_service
 
 export io_interface
 
@@ -26,12 +27,14 @@ type
 proc newModule*(delegate: delegate_interface.AccessInterface, events: EventEmitter,
   settingsService: settings_service.Service,
   stickersService: stickers_service.Service,
-  nodeConfigurationService: node_configuration_service.Service): Module =
+  nodeConfigurationService: node_configuration_service.Service,
+  advancedService: advanced_service.Service): Module =
   result = Module()
   result.delegate = delegate
   result.view = view.newView(result)
   result.viewVariant = newQVariant(result.view)
-  result.controller = controller.newController(result, events, settingsService, stickersService, nodeConfigurationService)
+  result.controller = controller.newController(result, events, settingsService, stickersService,
+    nodeConfigurationService, advancedService)
   result.moduleLoaded = false
 
 method delete*(self: Module) =
@@ -126,3 +129,17 @@ method setMaxLogBackups*(self: Module, value: int) =
 
 method onLogMaxBackupsChanged*(self: Module) =
   self.view.logMaxBackupsChanged()
+
+method getIsClearingOldLogs*(self: Module): bool =
+  return self.controller.getIsClearingOldLogs()
+
+method clearOldLogs*(self: Module) =
+  self.controller.clearOldLogs()
+
+method onOldLogsCleanupStarted*(self: Module) =
+  self.view.isClearingOldLogsChanged()
+
+method onOldLogsCleanupFinished*(self: Module, deletedCount, failedCount: int,
+    error: string) =
+  self.view.isClearingOldLogsChanged()
+  self.view.oldLogsCleanupFinished(deletedCount, failedCount, error)

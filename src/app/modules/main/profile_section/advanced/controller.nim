@@ -6,6 +6,7 @@ import ../../../../core/eventemitter
 import ../../../../../app_service/service/settings/service as settings_service
 import ../../../../../app_service/service/stickers/service as stickers_service
 import ../../../../../app_service/service/node_configuration/service as node_configuration_service
+import ../../../../../app_service/service/advanced/service as advanced_service
 
 logScope:
   topics = "profile-section-advanced-module-controller"
@@ -17,22 +18,30 @@ type
     settingsService: settings_service.Service
     stickersService: stickers_service.Service
     nodeConfigurationService: node_configuration_service.Service
+    advancedService: advanced_service.Service
+
+proc onOldLogsCleanupFinished*(self: Controller, deletedCount, failedCount: int,
+  error: string)
 
 proc newController*(delegate: io_interface.AccessInterface, events: EventEmitter,
   settingsService: settings_service.Service,
   stickersService: stickers_service.Service,
-  nodeConfigurationService: node_configuration_service.Service): Controller =
+  nodeConfigurationService: node_configuration_service.Service,
+  advancedService: advanced_service.Service): Controller =
   result = Controller()
   result.delegate = delegate
   result.events = events
   result.settingsService = settingsService
   result.nodeConfigurationService = nodeConfigurationService
+  result.advancedService = advancedService
 
 proc delete*(self: Controller) =
   discard
 
 proc init*(self: Controller) =
-  discard
+  self.events.on(advanced_service.SIGNAL_ADVANCED_LOGS_CLEANUP_FINISHED) do(e: Args):
+    let args = advanced_service.AdvancedLogsCleanupFinishedArgs(e)
+    self.onOldLogsCleanupFinished(args.deletedCount, args.failedCount, args.error)
 
 proc getFleet*(self: Controller): string =
   return self.settingsService.getFleetAsString()
@@ -55,6 +64,17 @@ proc setMaxLogBackups*(self: Controller, value: int) =
     return
 
   self.delegate.onLogMaxBackupsChanged()
+
+proc getIsClearingOldLogs*(self: Controller): bool =
+  return self.advancedService.isClearingOldLogs()
+
+proc clearOldLogs*(self: Controller) =
+  if self.advancedService.clearOldLogs():
+    self.delegate.onOldLogsCleanupStarted()
+
+proc onOldLogsCleanupFinished*(self: Controller, deletedCount, failedCount: int,
+    error: string) =
+  self.delegate.onOldLogsCleanupFinished(deletedCount, failedCount, error)
 
 proc getWakuV2LightClientEnabled*(self: Controller): bool =
   return self.nodeConfigurationService.isLightClient()

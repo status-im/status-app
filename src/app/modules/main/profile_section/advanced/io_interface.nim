@@ -86,3 +86,16 @@ method setMaxLogBackups*(self: AccessInterface, value: int) {.base.} =
 
 method onLogMaxBackupsChanged*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
+
+method getIsClearingOldLogs*(self: AccessInterface): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method clearOldLogs*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onOldLogsCleanupFinished*(self: AccessInterface, deletedCount, failedCount: int,
+    error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onOldLogsCleanupStarted*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")

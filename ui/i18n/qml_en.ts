@@ -27,6 +27,16 @@
     </message>
 </context>
 <context>
+    <name>AdvancedView</name>
+    <message numerus="yes">
+        <source>%n old log file(s) cleared</source>
+        <translation>
+            <numerusform>%n old log file cleared</numerusform>
+            <numerusform>%n old log files cleared</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>AirdropRecipientsSelector</name>
     <message numerus="yes">
         <source>%n recipient(s)</source>

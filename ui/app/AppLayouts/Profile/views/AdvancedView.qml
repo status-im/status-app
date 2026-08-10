@@ -57,6 +57,27 @@ SettingsContentBase {
         QtObject {
             id: d
             readonly property string experimentalFeatureMessage: qsTr("This feature is experimental and is meant for testing purposes by core contributors and the community. It's not meant for real use and makes no claims of security or integrity of funds or data. Use at your own risk.")
+
+            function showOldLogsCleanupResult(deletedCount, failedCount, error) {
+                if (error !== "" || failedCount > 0) {
+                    Global.displayToastMessage(
+                                qsTr("Some old log files could not be cleared"),
+                                "", "warning", false, Constants.ephemeralNotificationType.danger, "")
+                    return
+                }
+
+                Global.displayToastMessage(
+                            deletedCount > 0 ? qsTr("%n old log file(s) cleared", "", deletedCount) : qsTr("No old log files to clear"),
+                            "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
+            }
+        }
+
+        Connections {
+            target: root.advancedStore
+
+            function onOldLogsCleanupFinished(deletedCount, failedCount, error) {
+                d.showOldLogsCleanupResult(deletedCount, failedCount, error)
+            }
         }
 
         Column {
@@ -140,6 +161,27 @@ SettingsContentBase {
                         }
                         Qt.openUrlExternally(UrlUtils.urlFromUserInput(root.advancedStore.logDir()))
                     }
+                }
+            }
+
+            RowLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: Theme.padding
+                anchors.rightMargin: Theme.padding
+                height: 64
+                spacing: Theme.padding
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    text: qsTr("Old logs")
+                    elide: Text.ElideRight
+                }
+
+                StatusButton {
+                    text: root.advancedStore.isClearingOldLogs ? qsTr("Clearing...") : qsTr("Clear old logs")
+                    enabled: !root.advancedStore.isClearingOldLogs
+                    onClicked: clearOldLogsConfirmation.open()
                 }
             }
 
@@ -487,6 +529,18 @@ SettingsContentBase {
             onCancelButtonClicked: {
                 close()
             }
+        }
+
+        ConfirmationDialog {
+            id: clearOldLogsConfirmation
+            showCancelButton: true
+            confirmationText: qsTr("Are you sure you want to clear old log files?")
+            confirmButtonLabel: qsTr("Clear old logs")
+            onConfirmButtonClicked: {
+                root.advancedStore.clearOldLogs()
+                close()
+            }
+            onCancelButtonClicked: close()
         }
 
         ScrollingModal {

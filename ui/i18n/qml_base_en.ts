@@ -1126,6 +1126,33 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Some old log files could not be cleared</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No old log files to clear</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n old log file(s) cleared</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Old logs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clearing...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear old logs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Archive Protocol</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1195,6 +1222,10 @@
     </message>
     <message>
         <source>Change</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to clear old log files?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

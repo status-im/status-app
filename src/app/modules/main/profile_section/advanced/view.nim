@@ -99,6 +99,17 @@ QtObject:
   proc setMaxLogBackups*(self: View, value: int) {.slot.} =
     self.delegate.setMaxLogBackups(value)
 
+  proc isClearingOldLogsChanged*(self: View) {.signal.}
+  proc getIsClearingOldLogs*(self: View): bool {.slot.} =
+    return self.delegate.getIsClearingOldLogs()
+  QtProperty[bool] isClearingOldLogs:
+    read = getIsClearingOldLogs
+    notify = isClearingOldLogsChanged
+
+  proc oldLogsCleanupFinished*(self: View, deletedCount: int, failedCount: int, error: string) {.signal.}
+  proc clearOldLogs*(self: View) {.slot.} =
+    self.delegate.clearOldLogs()
+
   proc delete*(self: View) =
     self.QObject.delete
 

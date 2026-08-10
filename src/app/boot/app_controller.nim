@@ -22,6 +22,7 @@ import app_service/service/profile/service as profile_service
 import app_service/service/settings/service as settings_service
 import app_service/service/stickers/service as stickers_service
 import app_service/service/about/service as about_service
+import app_service/service/advanced/service as advanced_service
 import app_service/service/node_configuration/service as node_configuration_service
 import app_service/service/network/service as network_service
 import app_service/service/activity_center/service as activity_center_service
@@ -84,6 +85,7 @@ type
     settingsService: settings_service.Service
     stickersService: stickers_service.Service
     aboutService: about_service.Service
+    advancedService: advanced_service.Service
     networkService: network_service.Service
     activityCenterService: activity_center_service.Service
     privacyService: privacy_service.Service
@@ -207,6 +209,7 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
     result.tokenService
   )
   result.aboutService = about_service.newService(statusFoundation.events, statusFoundation.threadpool)
+  result.advancedService = advanced_service.newService(statusFoundation.events, statusFoundation.threadpool)
   result.dappPermissionsService = dapp_permissions_service.newService()
   result.privacyService = privacy_service.newService(statusFoundation.events, result.settingsService,
   result.accountsService)
@@ -261,6 +264,7 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
     result.settingsService,
     result.contactsService,
     result.aboutService,
+    result.advancedService,
     result.dappPermissionsService,
     result.privacyService,
     result.stickersService,
@@ -330,6 +334,7 @@ proc delete*(self: AppController) =
   self.transactionService.delete
   self.walletAccountService.delete
   self.aboutService.delete
+  self.advancedService.delete
   self.networkService.delete
   self.activityCenterService.delete
   self.dappPermissionsService.delete

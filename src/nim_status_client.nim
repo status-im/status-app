@@ -27,6 +27,8 @@ when defined(qmldebug):
 
 import app/global/global_singleton
 import app/global/app_lifecycle
+import app/global/log_cleanup
+import app/global/log_cleanup_tasks
 import app/boot/app_controller
 
 featureGuard KEYCARD_ENABLED:
@@ -236,6 +238,9 @@ proc mainProc() =
 
   ensureDirectories(DATADIR, TMPDIR, LOGDIR)
 
+  let logCleanupProcessStartedAt = getTime()
+  initializeLogCleanup(logCleanupProcessStartedAt)
+
   # Open the log file and set the log level before any subsystem starts logging.
   # On iOS the stdout sink is disabled (no valid stdout FILE*), so logs go to the
   # file sink only; opening it here guarantees every startup log has a valid sink
@@ -248,6 +253,8 @@ proc mainProc() =
   let statusAppIconPath = determineStatusAppIconPath()
 
   let statusFoundation = newStatusFoundation()
+  scheduleStartupLogCleanup(statusFoundation.threadpool, LOGDIR, STATUSGODIR,
+    logCleanupProcessStartedAt)
 
   # Required by the WalletConnectSDK view right after creating the QGuiApplication instance
   statusq_initializeWebEngine()

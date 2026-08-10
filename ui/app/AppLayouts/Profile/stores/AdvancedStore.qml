@@ -21,6 +21,7 @@ QtObject {
     property bool isDebugEnabled: advancedModule? advancedModule.isDebugEnabled : false
     property int logMaxBackups: advancedModule ? advancedModule.logMaxBackups : 1
     property bool isRuntimeLogLevelSet: advancedModule ? advancedModule.isRuntimeLogLevelSet: false
+    property bool isClearingOldLogs: advancedModule ? advancedModule.isClearingOldLogs : false
     readonly property int archiveProtocolMode: advancedModule ? advancedModule.archiveProtocolMode : AdvancedStore.ArchiveProtocolMode.Disabled
     readonly property string archiveProtocolModeLabel: {
         switch (root.archiveProtocolMode) {
@@ -38,6 +39,16 @@ QtObject {
     property var customNetworksModel: advancedModule? advancedModule.customNetworksModel : []
 
     property bool isManageCommunityOnTestModeEnabled: false
+
+    signal oldLogsCleanupFinished(int deletedCount, int failedCount, string error)
+
+    readonly property Connections oldLogsCleanupConnection: Connections {
+        target: root.advancedModule
+
+        function onOldLogsCleanupFinished(deletedCount, failedCount, error) {
+            root.oldLogsCleanupFinished(deletedCount, failedCount, error)
+        }
+    }
 
     readonly property QtObject experimentalFeatures: QtObject {
         readonly property string browser: "browser"
@@ -102,6 +113,13 @@ QtObject {
             return
 
         root.advancedModule.setMaxLogBackups(value)
+    }
+
+    function clearOldLogs() {
+        if(!root.advancedModule)
+            return
+
+        root.advancedModule.clearOldLogs()
     }
 
     function toggleExperimentalFeature(feature) {
