@@ -319,11 +319,132 @@ RightTabBaseView {
                 }
             }
 
+            // Per-tab skeleton shown while the tab view incubates; takes the
+            // loader's layout slot while the loader is hidden. Built from plain
+            // LoadingComponent shapes — the real loading delegates
+            // (LoadingTokenDelegate & co) are too expensive to create here.
+            Loader {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.topMargin: Theme.padding
+                active: mainViewLoader.status !== Loader.Ready
+                visible: active
+                sourceComponent: {
+                    switch (walletTabBar.currentIndex) {
+                    case RightTabView.TabIndex.Collectibles:
+                        return collectiblesSkeleton
+                    case RightTabView.TabIndex.Activity:
+                        return activitySkeleton
+                    default:
+                        return assetsSkeleton
+                    }
+                }
+            }
+
+            Component {
+                id: assetsSkeleton
+
+                WalletAssetListSkeleton {}
+            }
+
+            // cell metrics mirror CollectiblesView
+            Component {
+                id: collectiblesSkeleton
+
+                LoadingSkeletonGroup {
+                    id: collectiblesSkeletonRoot
+
+                    readonly property bool compact: width < 600
+                    readonly property int itemSpacing: compact ? Theme.halfPadding : 0
+                    readonly property int cellWidth: compact ? Math.floor(width / 3) : 176
+                    readonly property int cellHeight: compact ? cellWidth + 49 : 225
+
+                    Flow {
+                        anchors.fill: parent
+                        spacing: collectiblesSkeletonRoot.itemSpacing
+
+                        Repeater {
+                            model: 6
+                            ColumnLayout {
+                                width: collectiblesSkeletonRoot.cellWidth - collectiblesSkeletonRoot.itemSpacing
+                                height: collectiblesSkeletonRoot.cellHeight - collectiblesSkeletonRoot.itemSpacing
+                                spacing: Theme.halfPadding
+
+                                LoadingSkeletonTile {
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    radius: Theme.radius
+                                }
+                                LoadingSkeletonTile {
+                                    implicitWidth: 90
+                                    implicitHeight: 14
+                                }
+                                LoadingSkeletonTile {
+                                    Layout.bottomMargin: Theme.halfPadding
+                                    implicitWidth: 60
+                                    implicitHeight: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Component {
+                id: activitySkeleton
+
+                LoadingSkeletonGroup {
+                    ColumnLayout {
+                        anchors {
+                            top: parent.top
+                            left: parent.left
+                            right: parent.right
+                        }
+                        spacing: Theme.padding
+
+                        Repeater {
+                            model: 6
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 56
+                                spacing: Theme.padding
+
+                                LoadingSkeletonTile {
+                                    implicitWidth: 32
+                                    implicitHeight: 32
+                                    radius: width / 2
+                                }
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: Theme.halfPadding
+
+                                    LoadingSkeletonTile {
+                                        implicitWidth: 140
+                                        implicitHeight: 14
+                                    }
+                                    LoadingSkeletonTile {
+                                        implicitWidth: 100
+                                        implicitHeight: 12
+                                    }
+                                }
+                                LoadingSkeletonTile {
+                                    Layout.alignment: Qt.AlignRight
+                                    implicitWidth: 70
+                                    implicitHeight: 14
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             Loader {
                 id: mainViewLoader
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.topMargin: Theme.padding
+                asynchronous: true
+                visible: status === Loader.Ready
                 sourceComponent: d.walletViewsMap[walletTabBar.currentIndex]
 
                 Component {
