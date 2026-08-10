@@ -35,17 +35,26 @@ StatusBaseText {
         }
     }
 
-    StatusToolTip {
-        id: tooltip
-        visible: hhandler.hovered && !!text
-        maxWidth: 350
+    // The tooltip only matters on desktop hover; created on demand so message
+    // rows don't pay for it (never on touch devices).
+    Loader {
+        id: tooltipLoader
+        active: false
+
+        sourceComponent: StatusToolTip {
+            objectName: "timestampTooltip"
+            parent: root
+            visible: hhandler.hovered && !!text
+            maxWidth: 350
+        }
     }
     HoverHandler {
         id: hhandler
         enabled: !root.showFullTimestamp
         onHoveredChanged: {
             if(hhandler.hovered && root.timestamp) {
-                tooltip.text = LocaleUtils.formatDateTime(root.timestamp)
+                tooltipLoader.active = true
+                tooltipLoader.item.text = LocaleUtils.formatDateTime(root.timestamp)
             }
         }
     }

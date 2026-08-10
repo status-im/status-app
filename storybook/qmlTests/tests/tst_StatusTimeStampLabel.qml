@@ -38,6 +38,19 @@ Item {
 
         readonly property int dayMs: 24 * 60 * 60 * 1000
 
+        // INTENT (perf): the hover tooltip is a pure desktop nicety; it must
+        // not be instantiated with the label (dozens per chat switch, never
+        // shown on touch devices)
+        function test_tooltipNotInstantiatedBeforeHover() {
+            const label = createTemporaryObject(labelComp, root,
+                                                {timestamp: Date.now()})
+            verify(!!label)
+            waitForRendering(label)
+
+            compare(findChild(label, "timestampTooltip"), null,
+                    "tooltip must not exist before the first hover")
+        }
+
         // INTENT (perf): the shared timer must expose a day-granularity
         // counter for consumers whose output only changes at midnight
         function test_timerExposesDayCounter() {

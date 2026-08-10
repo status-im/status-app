@@ -50,25 +50,37 @@ Row {
 
     HoverHandler {
         id: hoverHandler
+        onHoveredChanged: {
+            if (hovered)
+                tooltipLoader.active = true
+        }
     }
 
-    StatusToolTip {
-        text: {
-            if (root.isBlocked)
-                return qsTr("Blocked")
-            if (root.isContact) {
-                if (root.trustIndicator === StatusContactVerificationIcons.TrustedType.Verified)
-                    return qsTr("Trusted contact")
-                if (root.trustIndicator === StatusContactVerificationIcons.TrustedType.Untrustworthy)
-                    return qsTr("Untrusted contact")
-                return qsTr("Contact")
-            }
-            if (root.trustIndicator === StatusContactVerificationIcons.TrustedType.Untrustworthy)
-                return qsTr("Untrusted")
-            return ""
-        }
+    // Created on first hover only — one of these per message row otherwise.
+    Loader {
+        id: tooltipLoader
+        active: false
 
-        visible: hoverHandler.hovered && text
+        sourceComponent: StatusToolTip {
+            objectName: "verificationIconsTooltip"
+            parent: root
+            text: {
+                if (root.isBlocked)
+                    return qsTr("Blocked")
+                if (root.isContact) {
+                    if (root.trustIndicator === StatusContactVerificationIcons.TrustedType.Verified)
+                        return qsTr("Trusted contact")
+                    if (root.trustIndicator === StatusContactVerificationIcons.TrustedType.Untrustworthy)
+                        return qsTr("Untrusted contact")
+                    return qsTr("Contact")
+                }
+                if (root.trustIndicator === StatusContactVerificationIcons.TrustedType.Untrustworthy)
+                    return qsTr("Untrusted")
+                return ""
+            }
+
+            visible: hoverHandler.hovered && text
+        }
     }
 
     // blocked

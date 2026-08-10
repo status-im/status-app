@@ -101,15 +101,28 @@ Flow {
                 }
             }
 
-            StatusToolTip {
-                visible: reactionDelegate.hovered
-                maxWidth: 400
-                text: d.showReactionAuthors(model.jsonArrayOfUsersReactedWithThisEmoji, model.emoji) || ""
+            // Created on first hover — also defers the JSON parse of the
+            // reaction authors list out of row creation.
+            Loader {
+                id: authorsTooltipLoader
+                active: false
+
+                sourceComponent: StatusToolTip {
+                    objectName: "reactionAuthorsTooltip"
+                    parent: reactionDelegate
+                    visible: reactionDelegate.hovered
+                    maxWidth: 400
+                    text: d.showReactionAuthors(model.jsonArrayOfUsersReactedWithThisEmoji, model.emoji) || ""
+                }
             }
 
             HoverHandler {
                 cursorShape: hovered ? Qt.PointingHandCursor : undefined
-                onHoveredChanged: root.hoverChanged(hovered)
+                onHoveredChanged: {
+                    if (hovered)
+                        authorsTooltipLoader.active = true
+                    root.hoverChanged(hovered)
+                }
             }
 
             onClicked: root.toggleReaction(model.emoji)
