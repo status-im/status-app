@@ -985,6 +985,13 @@ Item {
         }
 
         readonly property int activeSectionType: appMain.rootStore.activeSectionType
+        // Deferred backend work (first-time section model builds) waits for
+        // the section-switch transition: notify once the navbar slide settles,
+        // or right away when the switch runs without one
+        onActiveSectionTypeChanged: Qt.callLater(function() {
+            if (!sidebar.slideAnimationRunning)
+                appMain.rootStore.notifySectionTransitionSettled()
+        })
         readonly property bool isMessagingRelatedSectionType: activeSectionType === Constants.appSection.chat ||
                                                               activeSectionType === Constants.appSection.community
         readonly property bool isWalletRelatedSectionType: activeSectionType === Constants.appSection.wallet ||
@@ -2211,6 +2218,7 @@ Item {
                     }
 
                     CommunitiesPortalLoader {
+                        asynchronous: true
                         active: appMain.mainReady
                                 && appView.currentIndex === Constants.appViewStackIndex.communitiesPortal
                         rootStore: appMain.rootStore
@@ -2459,6 +2467,13 @@ Item {
                 id: sidebar
                 height: parent.height
                 alwaysVisible: !appMain.isPortraitMode
+
+                // the counterpart of d.onActiveSectionTypeChanged for switches
+                // that DO animate the navbar away
+                onSlideAnimationRunningChanged: {
+                    if (!slideAnimationRunning)
+                        appMain.rootStore.notifySectionTransitionSettled()
+                }
 
                 browserSectionActive: d.activeSectionType === Constants.appSection.browser
 
