@@ -114,6 +114,16 @@
     </message>
 </context>
 <context>
+    <name>CommunityMembershipSetupDialog</name>
+    <message numerus="yes">
+        <source>Share %n address(s) to join</source>
+        <translation type="unfinished">
+            <numerusform>Share %n address to join</numerusform>
+            <numerusform>Share %n addresses to join</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>CommunitySettingsView</name>
     <message numerus="yes">
         <source>%n member(s)</source>
@@ -346,6 +356,26 @@
     </message>
 </context>
 <context>
+    <name>KeycardEnterPinPage</name>
+    <message numerus="yes">
+        <source>%n attempt(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform>%n attempt remaining</numerusform>
+            <numerusform>%n attempts remaining</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>KeycardEnterPukPage</name>
+    <message numerus="yes">
+        <source>%n attempt(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform>%n attempt remaining</numerusform>
+            <numerusform>%n attempts remaining</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>KeycardProgressState</name>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
@@ -495,6 +525,13 @@
             <numerusform>%n unread messages since %1</numerusform>
         </translation>
     </message>
+    <message numerus="yes">
+        <source>%n missed message(s) since %1</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
 </context>
 <context>
     <name>NicknamePopup</name>
@@ -613,6 +650,13 @@
             <numerusform>To share %n addresses with &lt;b&gt;%1&lt;/b&gt;, sign with the associated key pairs...</numerusform>
         </translation>
     </message>
+    <message numerus="yes">
+        <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, authenticate the associated key pairs...</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
 </context>
 <context>
     <name>StatusChatImageQtyValidator</name>
@@ -641,6 +685,13 @@
         <translation>
             <numerusform>%n Image</numerusform>
             <numerusform>%n Images</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Maximum message character count is %n</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
 </context>
