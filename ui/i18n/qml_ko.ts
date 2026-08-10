@@ -15858,6 +15858,22 @@ to load</source>
         <source>Edit</source>
         <translation type="unfinished">편집</translation>
     </message>
+    <message>
+        <source>Cut</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation type="unfinished">클립보드로 복사</translation>
+    </message>
+    <message>
+        <source>Paste</source>
+        <translation type="unfinished">붙여넣기</translation>
+    </message>
+    <message>
+        <source>Select All</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>StatusChatListCategoryItem</name>

@@ -126,6 +126,48 @@ StatusTextArea {
         return highlighter.inUnclosedCodeFence(pos)
     }
 
+    // Custom copy/cut/paste preserving mention pills via a private clipboard MIME.
+    // Exposed so the external context menu and the Ctrl+C/X/V shortcuts
+    // share the exact same logic.
+
+    // Copy the current selection. No-op when there is no selection.
+    function copySelection() {
+        if (root.selectionStart === root.selectionEnd)
+            return
+        highlighter.copySelectionToClipboard(root.selectionStart, root.selectionEnd)
+    }
+
+    // Copy the selection then delete it as one joinable, mention-aware edit
+    // (deleteRange, not remove). No-op when there is no selection.
+    function cutSelection() {
+        if (root.selectionStart === root.selectionEnd)
+            return
+        highlighter.copySelectionToClipboard(root.selectionStart, root.selectionEnd)
+        TextDocumentUtils.deleteRange(root.textDocument,
+                                      root.selectionStart, root.selectionEnd)
+    }
+
+    // Paste clipboard text at the caret/selection, restoring pills and enforcing
+    // the hard character limit. Rejects the whole paste (inserts nothing) when it
+    // would exceed the limit.
+    function pasteText() {
+        // The clipboard's plain text length is the character count; for an internal
+        // mention paste this slightly over-counts (names vs 1-char pills), erring
+        // toward stricter blocking.
+        const selLen = root.selectionEnd - root.selectionStart
+        if (root.length - selLen + ClipboardUtils.text.length > root.characterLimit) {
+            root.attemptToExceedHardLimit()
+            return
+        }
+        highlighter.pasteFromClipboard(root.selectionStart, root.selectionEnd,
+                                       root.cursorPosition)
+        d.ensureCursorRectanglePosition()
+    }
+
+    // no default menu, as default actions like copy/paste won't work correctly,
+    // custom routines must be used for handling such actions.
+    ContextMenu.menu: null
+
     wrapMode: TextEdit.Wrap
     background: null
 
@@ -422,32 +464,18 @@ StatusTextArea {
         if (event.matches(StandardKey.Copy)
                 && root.selectionStart !== root.selectionEnd) {
             event.accepted = true
-            highlighter.copySelectionToClipboard(root.selectionStart, root.selectionEnd)
+            root.copySelection()
             return
         }
         if (event.matches(StandardKey.Cut)
                 && root.selectionStart !== root.selectionEnd) {
             event.accepted = true
-            highlighter.copySelectionToClipboard(root.selectionStart, root.selectionEnd)
-            // deleteRange (not root.remove) so a reactive mention demotion folds into one
-            // undo step, matching the mention-aware deletion below.
-            TextDocumentUtils.deleteRange(root.textDocument,
-                                          root.selectionStart, root.selectionEnd)
+            root.cutSelection()
             return
         }
         if (event.matches(StandardKey.Paste)) {
             event.accepted = true
-            // Reject the whole paste when it would exceed the limit (nothing is inserted). The
-            // clipboard's plain text length is the character count; for an internal mention paste
-            // this slightly over-counts (names vs 1-char pills), erring toward stricter blocking.
-            const selLen = root.selectionEnd - root.selectionStart
-            if (root.length - selLen + ClipboardUtils.text.length > root.characterLimit) {
-                root.attemptToExceedHardLimit()
-                return
-            }
-            highlighter.pasteFromClipboard(root.selectionStart, root.selectionEnd,
-                                           root.cursorPosition)
-            d.ensureCursorRectanglePosition()
+            root.pasteText()
             return
         }
 
