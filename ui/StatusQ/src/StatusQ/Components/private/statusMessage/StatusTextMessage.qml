@@ -139,6 +139,7 @@ Item {
         sourceComponent: StatusButton {
             type: StatusBaseButton.Type.Primary
             size: StatusBaseButton.Size.Small
+            spacing: 1
             icon.name: d.readMore ? "chevron-up":  "chevron-down"
             onClicked: {
                 d.readMore = !d.readMore
