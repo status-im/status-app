@@ -66,6 +66,7 @@ Item {
 
     property bool sendViaPersonalChatEnabled
     property bool messageLinkSharingEnabled
+    property bool threadsFeatureEnabled
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -78,6 +79,7 @@ Item {
     signal tokenPaymentRequested(string recipientAddress, string tokenKey, string rawAmount)
     signal showReplyArea(string messageId, string author)
     signal editModeChanged(bool editModeOn, string messageId)
+    signal openThread(string messageId)
 
     // Unfurling related requests:
     signal setNeverAskAboutUnfurlingAgain(bool neverAskAgain)
@@ -360,6 +362,7 @@ Item {
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
             messageLinkSharingEnabled: root.messageLinkSharingEnabled
             createMessageLink: (chatId, messageId) => root.messageStore.createMessageLink(chatId, messageId)
+            threadsFeatureEnabled: root.threadsFeatureEnabled
             disabledTooltipText: root.disabledTooltipText
             areTestNetworksEnabled: root.areTestNetworksEnabled
             extraLeftPadding: root.extraLeftPadding
@@ -418,6 +421,7 @@ Item {
             quotedMessageAlbumMessageImages: model.quotedMessageAlbumMessageImages.split(" ")
             quotedMessageAlbumImagesCount: model.quotedMessageAlbumImagesCount
             bridgeName: model.bridgeName
+            hasThread: model.hasThread
 
             gapFrom: model.gapFrom
             gapTo: model.gapTo
@@ -446,6 +450,7 @@ Item {
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
 
             onShowReplyArea: (messageId, author) => root.showReplyArea(messageId, author)
+            onOpenThread: (messageId) => root.openThread(messageId)
 
             stickersLoaded: root.stickersLoaded
 

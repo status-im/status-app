@@ -48,7 +48,7 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_SEARCH_GIFS_DONE) do(e:Args):
     let args = GifsArgs(e)
-    self.delegate.serachGifsDone(args.gifs)
+    self.delegate.searchGifsDone(args.gifs)
 
   self.events.on(SIGNAL_SEARCH_GIFS_ERROR) do(e:Args):
     self.delegate.searchGifsError()

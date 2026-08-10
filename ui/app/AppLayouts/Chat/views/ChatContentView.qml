@@ -60,6 +60,7 @@ ColumnLayout {
 
     property bool sendViaPersonalChatEnabled
     property bool messageLinkSharingEnabled
+    property bool threadsFeatureEnabled
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -68,6 +69,7 @@ ColumnLayout {
     property string myPublicKey
 
     signal showReplyArea(messageId: string)
+    signal openThread(messageId: string)
     signal forceInputFocus()
     signal editMessageRequested(messageId: string)
 
@@ -140,6 +142,7 @@ ColumnLayout {
             channelEmoji: !chatContentModule ? "" : (chatContentModule.chatDetails.emoji || "")
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
             messageLinkSharingEnabled: root.messageLinkSharingEnabled
+            threadsFeatureEnabled: root.threadsFeatureEnabled
             disabledTooltipText: root.disabledTooltipText
             areTestNetworksEnabled: root.areTestNetworksEnabled
             extraLeftPadding: root.extraLeftPadding
@@ -155,6 +158,9 @@ ColumnLayout {
 
             onShowReplyArea: (messageId, senderId) => {
                 root.showReplyArea(messageId)
+            }
+            onOpenThread: (messageId) => {
+                root.openThread(messageId)
             }
             onOpenStickerPackPopup: stickerPackId => root.openStickerPackPopup(stickerPackId)
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)

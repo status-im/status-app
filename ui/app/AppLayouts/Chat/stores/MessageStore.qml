@@ -23,6 +23,7 @@ QtObject {
     readonly property string chatColor: messageModule ? messageModule.chatColor : Theme.palette.primaryColor1
     readonly property string chatIcon: messageModule ? messageModule.chatIcon : ""
     readonly property bool keepUnread: messageModule ? messageModule.keepUnread : false
+    readonly property string threadId: messageModule ? messageModule.threadId : ""
 
     onMessageModuleChanged: {
         if(!messageModule)
@@ -231,5 +232,11 @@ QtObject {
         }
 
         return sharedUrlsModule.createMessageUrl(chatId, messageId)
+    }
+
+    function createThread(parentMessageId) {
+        if (!messageModule)
+            return
+        messageModule.createThread(parentMessageId)
     }
 }
