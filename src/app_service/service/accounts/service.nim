@@ -125,6 +125,12 @@ QtObject:
       error "error: ", procName="openedAccounts", errName = e.name, errDesription = e.msg
       raise
 
+  proc clearOpenedAccountsCache*(self: Service) =
+    self.accounts = @[]
+
+  proc isAppRestartRequiredAfterProfileConversion*(self: Service): bool =
+    return DB_BLOCKED_DUE_TO_PROFILE_MIGRATION
+
   proc openedAccountsContainsKeyUid*(self: Service, keyUid: string): bool =
     try:
       return (keyUID in self.openedAccounts().mapIt(it.keyUid))

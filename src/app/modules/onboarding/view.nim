@@ -15,6 +15,7 @@ QtObject:
       loginAccountsModel: login_acc_model.Model
       loginAccountsModelVariant: QVariant
       convertKeycardAccountState: ProgressState
+      convertKeycardAccountRestartRequired: bool
       keycardModule: QVariant
 
   proc delete*(self: View)
@@ -25,6 +26,7 @@ QtObject:
     result.loginAccountsModel = login_acc_model.newModel()
     result.loginAccountsModelVariant = newQVariant(result.loginAccountsModel)
     result.keycardModule = newQVariant()
+    result.convertKeycardAccountRestartRequired = true
 
   ### QtSignals ###
 
@@ -135,6 +137,18 @@ QtObject:
   QtProperty[int] convertKeycardAccountState:
     read = getConvertKeycardAccountState
     notify = convertKeycardAccountStateChanged
+
+  proc convertKeycardAccountRestartRequiredChanged*(self: View) {.signal.}
+  proc getConvertKeycardAccountRestartRequired(self: View): bool {.slot.} =
+    return self.convertKeycardAccountRestartRequired
+  proc setConvertKeycardAccountRestartRequired*(self: View, value: bool) =
+    if self.convertKeycardAccountRestartRequired == value:
+      return
+    self.convertKeycardAccountRestartRequired = value
+    self.convertKeycardAccountRestartRequiredChanged()
+  QtProperty[bool] convertKeycardAccountRestartRequired:
+    read = getConvertKeycardAccountRestartRequired
+    notify = convertKeycardAccountRestartRequiredChanged
 
   proc keycardModuleChanged*(self: View) {.signal.}
   proc getKeycardModule(self: View): QVariant {.slot.} =

@@ -4607,8 +4607,16 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
         <translation>Re-cifrado completado</translation>
     </message>
     <message>
+        <source>Profile migration complete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Your data was successfully re-encrypted with your new password. You can now restart Status and log in to your profile using the password you just created.</source>
         <translation>Tus datos se volvieron a cifrar exitosamente con tu nueva contraseña. Ahora puedes reiniciar Status e iniciar sesión en tu perfil usando la contraseña que acabas de crear.</translation>
+    </message>
+    <message>
+        <source>Your profile no longer uses Keycard. You can now log in using the password you just created.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Re-encryption failed</source>

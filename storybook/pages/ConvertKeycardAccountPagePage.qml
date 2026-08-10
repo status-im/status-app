@@ -28,6 +28,7 @@ Item {
             SplitView.fillHeight: true
 
             convertKeycardAccountState: ctrlState.currentValue
+            restartRequired: ctrlRestartRequired.checked
             onRestartRequested: {
                 logs.logEvent("restartRequested")
             }
@@ -54,6 +55,15 @@ Item {
         textRole: "name"
         valueRole: "value"
         model: Onboarding.getModelFromEnum("ProgressState")
+    }
+
+    Switch {
+        id: ctrlRestartRequired
+        anchors.right: ctrlState.left
+        anchors.rightMargin: 8
+        anchors.verticalCenter: ctrlState.verticalCenter
+        text: "Restart required (legacy profile)"
+        checked: true
     }
 
     Settings {

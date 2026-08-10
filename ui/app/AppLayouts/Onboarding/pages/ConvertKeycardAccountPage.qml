@@ -14,6 +14,8 @@ OnboardingPage {
     readonly property bool backAvailableHint: false
     required property int convertKeycardAccountState
 
+    property bool restartRequired: true
+
     signal restartRequested()
     signal backToLoginRequested()
 
@@ -45,13 +47,18 @@ OnboardingPage {
                 when: root.convertKeycardAccountState === Onboarding.ProgressState.Success
 
                 PropertyChanges {
-                    root.title: qsTr("Re-encryption complete")
+                    target: root
+                    root.title: root.restartRequired ? qsTr("Re-encryption complete")
+                                                     : qsTr("Profile migration complete")
                 }
                 PropertyChanges {
                     iconLoader.sourceComponent: successIcon
                 }
                 PropertyChanges {
-                    subtitle.text: qsTr("Your data was successfully re-encrypted with your new password. You can now restart Status and log in to your profile using the password you just created.")
+                    target: subtitle
+                    subtitle.text: root.restartRequired
+                                   ? qsTr("Your data was successfully re-encrypted with your new password. You can now restart Status and log in to your profile using the password you just created.")
+                                   : qsTr("Your profile no longer uses Keycard. You can now log in using the password you just created.")
                 }
                 PropertyChanges {
                     warningText.visible: false
@@ -147,9 +154,16 @@ OnboardingPage {
 
                 visible: false
                 isOutline: false
-                text: qsTr("Restart Status and log in with new password")
+                text: root.restartRequired
+                      ? qsTr("Restart Status and log in with new password")
+                      : qsTr("Back to login")
                 Layout.alignment: Qt.AlignHCenter
-                onClicked: root.restartRequested()
+                onClicked: {
+                    if (root.restartRequired)
+                        root.restartRequested()
+                    else
+                        root.backToLoginRequested()
+                }
             }
 
             StatusButton {
