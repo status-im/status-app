@@ -6,6 +6,7 @@ ChannelsModel 1.0 ChannelsModel.qml
 ChatsModel 1.0 ChatsModel.qml
 ChatsSearchModel 1.0 ChatsSearchModel.qml
 CollectiblesModel 1.0 CollectiblesModel.qml
+CommunitySectionMock 1.0 CommunitySectionMock.qml
 DappsModel 1.0 DappsModel.qml
 FeesModel 1.0 FeesModel.qml
 FlatTokensModel 1.0 FlatTokensModel.qml

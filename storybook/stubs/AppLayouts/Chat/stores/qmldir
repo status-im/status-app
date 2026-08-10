@@ -1,4 +1,6 @@
+singleton ChatStoresConfig 1.0 ChatStoresConfig.qml
+CreateChatPropertiesStore 1.0 CreateChatPropertiesStore.qml
+MessageStore 1.0 MessageStore.qml
 RootStore 1.0 RootStore.qml
 StickersStore 1.0 StickersStore.qml
-MessageStore 1.0 MessageStore.qml
 UsersStore 1.0 UsersStore.qml
