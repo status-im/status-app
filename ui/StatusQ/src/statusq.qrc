@@ -264,6 +264,7 @@
         <file>StatusQ/Popups/StatusSimpleTextPopup.qml</file>
         <file>StatusQ/Popups/StatusStackModal.qml</file>
         <file>StatusQ/Popups/StatusSuccessAction.qml</file>
+        <file>StatusQ/Popups/StatusTextEditMenu.qml</file>
         <file>StatusQ/Popups/qmldir</file>
         <file>StatusQ/Popups/statusModal/StatusImageWithTitle.qml</file>
         <file>StatusQ/Popups/statusModal/StatusModalFooter.qml</file>

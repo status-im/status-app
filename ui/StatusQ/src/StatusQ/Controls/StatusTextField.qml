@@ -81,30 +81,17 @@ TextField {
     Loader {
         id: contextMenuLoader
         active: false
-        sourceComponent: StatusMenu {
-            hideDisabledItems: false
-    
-            StatusAction {
-                text: qsTr("Cut")
-                enabled: !root.noSelection
-                onTriggered: root.cut()
-            }
-            StatusAction {
-                text: qsTr("Copy")
-                enabled: !root.noSelection
-                onTriggered: root.copy()
-            }
-            StatusAction {
-                text: qsTr("Paste")
-                enabled: root.canPaste
-                onTriggered: root.paste()
-            }
-            StatusMenuSeparator {}
-            StatusAction {
-                text: qsTr("Select All")
-                enabled: !root.noSelection
-                onTriggered: root.selectAll()
-            }
+
+        sourceComponent: StatusTextEditMenu {
+            canCut: !root.noSelection
+            canCopy: !root.noSelection
+            canPaste: root.canPaste
+            canSelectAll: root.length > 0
+
+            onCutRequested: root.cut()
+            onCopyRequested: root.copy()
+            onPasteRequested: root.paste()
+            onSelectAllRequested: root.selectAll()
         }
     }
 

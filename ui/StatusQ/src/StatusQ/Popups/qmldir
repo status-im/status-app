@@ -17,3 +17,4 @@ StatusSearchPopupMenuItem 0.1 StatusSearchPopupMenuItem.qml
 StatusSimpleTextPopup 0.1 StatusSimpleTextPopup.qml
 StatusStackModal 0.1 StatusStackModal.qml
 StatusSuccessAction 0.1 StatusSuccessAction.qml
+StatusTextEditMenu 0.1 StatusTextEditMenu.qml

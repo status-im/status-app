@@ -880,33 +880,18 @@ Control {
 
                         // Edit context menu (Cut/Copy/Paste/Select All), driving the
                         // same public methods the Ctrl+C/X/V shortcuts use so the
-                        // two stay consistent. No `id` on the StatusMenu: ContextMenu.menu
+                        // two stay consistent. No `id` on the menu: ContextMenu.menu
                         // lazy-loads it on first open.
-                        ContextMenu.menu: StatusMenu {
-                            hideDisabledItems: false
-                            popupType: StatusQUtils.Utils.isIOS ? Popup.Native : Popup.Item
+                        ContextMenu.menu: StatusTextEditMenu {
+                            canCut: !messageInputField.noSelection
+                            canCopy: !messageInputField.noSelection
+                            canPaste: ClipboardUtils.hasText
+                            canSelectAll: messageInputField.length > 0
 
-                            StatusAction {
-                                text: qsTr("Cut")
-                                enabled: !messageInputField.noSelection
-                                onTriggered: messageInputField.cutSelection()
-                            }
-                            StatusAction {
-                                text: qsTr("Copy")
-                                enabled: !messageInputField.noSelection
-                                onTriggered: messageInputField.copySelection()
-                            }
-                            StatusAction {
-                                text: qsTr("Paste")
-                                enabled: ClipboardUtils.hasText
-                                onTriggered: messageInputField.pasteText()
-                            }
-                            StatusMenuSeparator {}
-                            StatusAction {
-                                text: qsTr("Select All")
-                                enabled: messageInputField.length > 0
-                                onTriggered: messageInputField.selectAll()
-                            }
+                            onCutRequested: messageInputField.cutSelection()
+                            onCopyRequested: messageInputField.copySelection()
+                            onPasteRequested: messageInputField.pasteText()
+                            onSelectAllRequested: messageInputField.selectAll()
                         }
 
                         StatusChatInputSelectionMarker {
