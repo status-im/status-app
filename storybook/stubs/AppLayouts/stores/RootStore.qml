@@ -1,6 +1,7 @@
 import QtQuick
 
 QtObject {
+    property bool isProduction: false
     property bool navToMsgDetails: false
     property bool navToMsgList: false
 

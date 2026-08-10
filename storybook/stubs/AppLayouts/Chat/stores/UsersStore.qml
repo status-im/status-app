@@ -1,7 +1,7 @@
 import QtQuick
 
 QtObject {
-    property var usersModel: null
+    property var usersModel: ChatStoresConfig.usersModel
 
     function groupMembersUpdateRequested(membersPubKeysList) {}
 }

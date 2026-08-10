@@ -15,6 +15,7 @@ QtObject {
     property var communityTokensStore
     property var networkConnectionStore
     property bool openCreateChat: false
+    property bool loadingHistoryMessagesInProgress: false
 
     // Surface read by the chat views
     property bool isDebugEnabled: false
@@ -22,11 +23,14 @@ QtObject {
     property bool isUserAllowedToSendMessage: true
     property string chatInputPlaceHolderText: "Message"
     property int activeChatType: 1
-    property var assetsModel: null
-    property var collectiblesModel: null
-    property var communityItemsModel: null
+    property var assetsModel: ChatStoresConfig.assetsModel
+    property var collectiblesModel: ChatStoresConfig.collectiblesModel
+    property var communityItemsModel: chatCommunitySectionModule ? chatCommunitySectionModule.model : null
+    property var communitiesModuleInst: null
 
-    readonly property var sectionDetails: QtObject {
+    readonly property var sectionDetails: ChatStoresConfig.sectionDetails ?? defaultSectionDetails
+
+    readonly property var defaultSectionDetails: QtObject {
         property bool joined: true
         property bool amIBanned: false
     }
@@ -52,4 +56,19 @@ QtObject {
 
     function sendSticker() {}
     function removeMemberFromGroupChat() {}
+
+    // Community mutators proxied to the section module, like the real store
+    function toggleCollapsedCommunityCategory(categoryId, collapsed) {
+        chatCommunitySectionModule?.toggleCollapsedCommunityCategory(categoryId, collapsed)
+    }
+    function reorderCommunityChat(categoryId, chatId, to) {
+        chatCommunitySectionModule?.reorderCommunityChat(categoryId, chatId, to)
+    }
+    function reorderCommunityCategories(categoryId, to) {
+        chatCommunitySectionModule?.reorderCommunityCategories(categoryId, to)
+    }
+    function removeCommunityChat(chatId) {}
+    function deleteCommunityCategory(categoryId) {}
+    function prepareEditCategoryModel(categoryId) {}
+    function leaveCommunity() {}
 }
