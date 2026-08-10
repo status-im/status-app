@@ -221,6 +221,7 @@ proc buildTransactionsFromRoute(self: Module) =
     self.clearTmpData()
 
 method authenticateAndTransfer*(self: Module, fromAddr: string, uuid: string) =
+  info "authenticateAndTransfer: initiating send", uuid
   self.tmpSendTransactionDetails.uuid = uuid
   self.tmpSendTransactionDetails.fromAddr = fromAddr
   self.tmpSendTransactionDetails.resolvedSignatures.clear()
@@ -234,6 +235,7 @@ proc sendSignedTransactions*(self: Module) =
       if r.len == 0 or s.len == 0 or v.len == 0:
         raise newException(CatchableError, "not all transactions are signed")
 
+    info "sendSignedTransactions: sending signed router transactions", uuid=self.tmpSendTransactionDetails.uuid
     let err = self.controller.sendRouterTransactionsWithSignatures(self.tmpSendTransactionDetails.uuid, self.tmpSendTransactionDetails.resolvedSignatures)
     if err.len > 0:
       raise newException(CatchableError, "sending transaction failed: " & err)
@@ -266,6 +268,8 @@ method onSigningResult*(self: Module, signature: string) =
 
 method prepareSignaturesForTransactions*(self:Module, txForSigning: RouterTransactionsForSigningDto) =
   if txForSigning.sendDetails.uuid != self.tmpSendTransactionDetails.uuid:
+    warn "prepareSignaturesForTransactions: ignoring response for unknown uuid",
+      receivedUuid=txForSigning.sendDetails.uuid, expectedUuid=self.tmpSendTransactionDetails.uuid
     return
   try:
     if txForSigning.signingDetails.hashes.len == 0:
