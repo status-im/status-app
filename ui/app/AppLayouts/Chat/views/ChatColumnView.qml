@@ -68,6 +68,7 @@ Item {
     property bool amIBanned: false
     property bool sendViaPersonalChatEnabled
     property bool messageLinkSharingEnabled
+    property bool threadsFeatureEnabled
     property string disabledTooltipText
     property bool paymentRequestFeatureEnabled
     property bool joined
@@ -493,6 +494,7 @@ Item {
                         isBlocked: model.blocked
                         sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
                         messageLinkSharingEnabled: root.messageLinkSharingEnabled
+                        threadsFeatureEnabled: root.threadsFeatureEnabled
                         disabledTooltipText: root.disabledTooltipText
                         areTestNetworksEnabled: root.areTestNetworksEnabled
                         extraLeftPadding: root.extraLeftPadding
@@ -514,6 +516,13 @@ Item {
                                         }
                         onEditMessageRequested: (messageId) => {
                             d.startEditMessage(messageId)
+                        }
+                        onOpenThread: (messageId) => {
+                            if (root.threadsFeatureEnabled
+                                    && root.activeChatType === Constants.chatType.communityChat
+                                    && !d.activeMessagesStore.threadId) {
+                                d.activeMessagesStore.createThread(messageId)
+                            }
                         }
                         onForceInputFocus: {
                             chatInput.forceInputActiveFocus()
@@ -671,7 +680,7 @@ Item {
                             return
                         }
 
-                        if (root.rootStore.sendMessage(d.activeChatContentModule.getMyChatId(),
+                        if (root.rootStore.sendMessage(root.activeChatId,
                                                     chatInput.getTextWithPublicKeys(),
                                                     chatInput.isReply? chatInput.replyMessageId : "",
                                                     chatInput.fileUrlsAndSources

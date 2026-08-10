@@ -294,7 +294,10 @@ QtObject {
                     return UrlUtils.convertUrlToLocalPath(file)
                 }
             })
-            chatContentModule.inputAreaModule.sendImages(JSON.stringify(convertedImagePaths), textMsg.trim(), replyMessageId)
+            chatContentModule.inputAreaModule.sendImages(
+                        JSON.stringify(convertedImagePaths),
+                        textMsg.trim(),
+                        replyMessageId)
             result = true
         } else {
             result = chatContentModule.inputAreaModule.sendMessage(

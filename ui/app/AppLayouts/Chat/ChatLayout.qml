@@ -106,6 +106,7 @@ StackLayout {
 
     property bool sendViaPersonalChatEnabled
     property bool messageLinkSharingEnabled
+    property bool threadsFeatureEnabled
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -327,6 +328,7 @@ StackLayout {
                                     root.communityPermissionsStore.viewOnlyPermissionsModel.count > 0
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
             messageLinkSharingEnabled: root.messageLinkSharingEnabled
+            threadsFeatureEnabled: root.threadsFeatureEnabled
             disabledTooltipText: root.disabledTooltipText
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
             extraLeftPadding: root.extraLeftPadding

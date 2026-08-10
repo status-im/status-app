@@ -4,9 +4,9 @@ import response_type
 
 export response_type
 
-proc fetchMessages*(chatId: string, cursorVal: string, limit: int): RpcResponse[JsonNode] =
-  let payload = %* [chatId, cursorVal, limit]
-  result = callPrivateRPC("chatMessages".prefix, payload)
+proc fetchMessages*(chatId: string, threadId: string = "", cursorVal: string, limit: int): RpcResponse[JsonNode] =
+  let payload = %* [chatId, threadId, cursorVal, limit]
+  result = callPrivateRPC("chatMessagesV2".prefix, payload)
 
 proc fetchPinnedMessages*(chatId: string, cursorVal: string, limit: int): RpcResponse[JsonNode] =
   let payload = %* [chatId, cursorVal, limit]

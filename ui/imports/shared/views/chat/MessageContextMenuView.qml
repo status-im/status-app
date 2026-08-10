@@ -30,6 +30,8 @@ StatusMenu {
     property string selectedText
 
     property bool pinMessageAllowedForMembers: false
+    property bool threadsFeatureEnabled: false
+    property bool hasThread: false
     property bool editRestricted: false
     property bool pinnedMessage: false
     property bool canPin: false
@@ -47,6 +49,7 @@ StatusMenu {
     signal unpinMessage()
     signal pinnedMessagesLimitReached()
     signal showReplyArea(string messageSenderId)
+    signal openThread()
     signal toggleReaction(string hexcode)
     signal deleteMessage()
     signal editClicked()
@@ -329,6 +332,17 @@ StatusMenu {
         icon.name: "reply"
         onTriggered: root.showReplyArea(root.messageSenderId)
         enabled: root.expanded && !root.disabledForChat
+    }
+
+    MsgCtxAction {
+        id: openThreadAction
+        objectName: "messageContextMenu_openThread"
+        text: root.hasThread ? qsTr("Open Thread") : qsTr("Create Thread")
+        icon.name: "chat"
+        onTriggered: root.openThread()
+        enabled: !root.disabledForChat &&
+                root.threadsFeatureEnabled &&
+                root.chatType === Constants.chatType.communityChat
     }
 
     MsgCtxAction {

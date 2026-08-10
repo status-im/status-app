@@ -1,8 +1,9 @@
 import nimqml, uuids
 
-import ../../../../../../app_service/service/message/dto/[message, reaction, pinned_message]
-import ../../../../../../app_service/service/community/dto/community
-import ../../../../../../app_service/common/types
+import app_service/service/message/dto/[message, reaction, pinned_message]
+import app_service/service/message/dto/thread
+import app_service/service/community/dto/community
+import app_service/common/types
 
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
@@ -105,6 +106,9 @@ method getSectionId*(self: AccessInterface): string {.base.} =
 method getChatId*(self: AccessInterface): string {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method getThreadId*(self: AccessInterface): string {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getChatType*(self: AccessInterface): int {.base.} =
   raise newException(ValueError, "No implementation available")
 
@@ -187,4 +191,19 @@ method onGetMessageById*(self: AccessInterface, requestId: UUID, messageId: stri
   raise newException(ValueError, "No implementation available")
 
 method forceLinkPreviewsLocalData*(self: AccessInterface, messageId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method createThread*(self: AccessInterface, parentMessageId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method closeThread*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method setThreadId*(self: AccessInterface, threadId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onThreadCreated*(self: AccessInterface, parentMessageId: string, threads: seq[ThreadDto]) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onChatThreadsLoaded*(self: AccessInterface, threads: seq[ThreadDto]) {.base.} =
   raise newException(ValueError, "No implementation available")

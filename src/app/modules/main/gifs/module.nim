@@ -84,7 +84,7 @@ method searchGifsError*(self: Module) =
   # Just setting loading to false works because the UI shows an error when there are no gifs
   self.view.setGifLoading(false)
 
-method serachGifsDone*(self: Module, gifs: seq[GifDto]) =
+method searchGifsDone*(self: Module, gifs: seq[GifDto]) =
   self.view.setGifLoading(false)
   self.view.updateGifColumns(gifs)
 

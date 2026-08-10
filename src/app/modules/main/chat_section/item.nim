@@ -42,6 +42,7 @@ type
     missingEncryptionKey: bool
     permissionsCheckOngoing: bool
     hidden: bool # cached: row hidden by its collapsed category (see recomputeHidden)
+    isThread: bool
 
 # Row is hidden by its collapsed category. Active, unmuted-unread and
 # notification-carrying chats stay visible so the list can surface them.
@@ -88,6 +89,7 @@ proc initChatItem*(
     hideIfPermissionsNotMet: bool = false,
     missingEncryptionKey: bool = false,
     permissionsCheckOngoing: bool = false,
+    isThread: bool = false,
     ): ChatItem =
   result = ChatItem()
   result.id = id
@@ -125,6 +127,7 @@ proc initChatItem*(
   result.missingEncryptionKey = missingEncryptionKey
   result.permissionsCheckOngoing = permissionsCheckOngoing
   result.recomputeHidden()
+  result.isThread = isThread
 
 proc `$`*(self: ChatItem): string =
   result = fmt"""chat_section/ChatItem(
@@ -410,3 +413,6 @@ proc permissionsCheckOngoing*(self: ChatItem): bool =
 
 proc `permissionsCheckOngoing=`*(self: var ChatItem, value: bool) =
   self.permissionsCheckOngoing = value
+
+proc isThread*(self: ChatItem): bool =
+  self.isThread
