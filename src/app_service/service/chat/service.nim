@@ -437,7 +437,8 @@ QtObject:
                    replyTo: string,
                    preferredUsername: string = "",
                    linkPreviews: seq[LinkPreview] = @[],
-                   paymentRequests: seq[PaymentRequest] = @[]) =
+                   paymentRequests: seq[PaymentRequest] = @[],
+                   threadId: string = "") =
     try:
       let (standardLinkPreviews, statusLinkPreviews) = extractLinkPreviewsLists(linkPreviews)
 
@@ -449,6 +450,7 @@ QtObject:
         imagePathsJson: imagePathsJson,
         msg: msg,
         replyTo: replyTo,
+        threadId: threadId,
         preferredUsername: preferredUsername,
         standardLinkPreviews: %standardLinkPreviews,
         statusLinkPreviews: %statusLinkPreviews,
@@ -486,7 +488,8 @@ QtObject:
       preferredUsername: string = "",
       linkPreviews: seq[LinkPreview] = @[],
       paymentRequests: seq[PaymentRequest] = @[],
-      communityId: string = "") =
+      communityId: string = "",
+      threadId: string = "") =
     try:
       let allKnownContacts = self.contactService.getContactsByGroup(ContactsGroup.AllKnownContacts)
       let processedMsg = message_common.replaceMentionsWithPubKeys(allKnownContacts, msg)
@@ -500,6 +503,7 @@ QtObject:
         chatId: chatId,
         processedMsg: processedMsg,
         replyTo: replyTo,
+        threadId: threadId,
         contentType: contentType,
         preferredUsername: preferredUsername,
         communityId: communityId, # Only send a community ID for the community invites

@@ -149,6 +149,8 @@ Loader {
 
     property bool sendViaPersonalChatEnabled
     property bool messageLinkSharingEnabled
+    property bool threadsFeatureEnabled
+    property bool hasThread: false
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -284,6 +286,8 @@ Loader {
             myPublicKey: userProfile.pubKey,
             amIChatAdmin: root.amIChatAdmin,
             pinMessageAllowedForMembers: messageStore.isPinMessageAllowedForMembers,
+            threadsFeatureEnabled: root.threadsFeatureEnabled,
+            hasThread: root.hasThread,
             chatType: messageStore.chatType,
 
             messageId: root.messageId,
@@ -363,6 +367,7 @@ Loader {
     }
 
     signal showReplyArea(string messageId, string author)
+    signal openThread(string messageId)
 
 
     function startMessageFoundAnimation() {
@@ -1324,6 +1329,9 @@ Loader {
             onEditClicked: root.messageStore.setEditModeOn(messageContextMenuView.messageId)
             onShowReplyArea: (senderId) => {
                 root.showReplyArea(messageContextMenuView.messageId, senderId)
+            }
+            onOpenThread: {
+                root.openThread(messageContextMenuView.messageId)
             }
             onCopyToClipboard: (text) => {
                 ClipboardUtils.setText(text)

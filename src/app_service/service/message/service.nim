@@ -1,4 +1,4 @@
-import nimqml, tables, json, regex, sequtils, std/strformat, strutils, chronicles, times, oids, uuids
+import nimqml, tables, json, regex, sequtils, std/strformat, strutils, chronicles, times, oids, uuids, sets
 import ../../common/utils as common_utils
 
 import ../../../app/core/tasks/[qt, threadpool]
@@ -15,6 +15,7 @@ import ../wallet_account/service as wallet_account_service
 import ./dto/message as message_dto
 import ./dto/pinned_message as pinned_msg_dto
 import ./dto/reaction as reaction_dto
+import ./dto/thread as thread_dto
 import ../chat/dto/chat as chat_dto
 import ./dto/pinned_message_update as pinned_msg_update_dto
 import ./dto/removed_message as removed_msg_dto
@@ -32,6 +33,7 @@ import web3/conversions
 export message_dto
 export pinned_msg_dto
 export reaction_dto
+export thread_dto
 
 logScope:
   topics = "messages-service"
@@ -41,6 +43,12 @@ const MESSAGES_PER_PAGE_MAX* = 40
 
 # Signals which may be emitted by this service:
 const SIGNAL_MESSAGES_LOADED* = "messagesLoaded"
+const SIGNAL_CHAT_THREADS_LOADED* = "chatThreadsLoaded"
+const SIGNAL_CHAT_THREADS_LOADING_FAILED* = "chatThreadsLoadingFailed"
+const SIGNAL_THREAD_MESSAGES_LOADED* = "threadMessagesLoaded"
+const SIGNAL_THREAD_MESSAGES_LOADING_FAILED* = "threadMessagesLoadingFailed"
+const SIGNAL_THREAD_CREATED* = "threadCreated"
+const SIGNAL_THREAD_CREATION_FAILED* = "threadCreationFailed"
 const SIGNAL_PINNED_MESSAGES_LOADED* = "pinnedMessagesLoaded"
 const SIGNAL_REACTIONS_FOR_MESSAGE_LOADED* = "signalReactionsForMessageLoaded"
 const SIGNAL_FIRST_UNSEEN_MESSAGE_LOADED* = "firstUnseenMessageLoaded"
@@ -82,6 +90,20 @@ type
     chatId*: string
     messages*: seq[MessageDto]
     reactions*: seq[ReactionDto]
+
+  ChatThreadsLoadedArgs* = ref object of Args
+    chatId*: string
+    threads*: seq[ThreadDto]
+
+  ThreadCreatedArgs* = ref object of Args
+    chatId*: string
+    parentMessageId*: string
+    threads*: seq[ThreadDto]
+
+  ThreadMessagesLoadedArgs* = ref object of Args
+    chatId*: string
+    threadId*: string
+    messages*: seq[MessageDto]
 
   PinnedMessagesLoadedArgs* = ref object of Args
     chatId*: string
@@ -184,8 +206,14 @@ QtObject:
     walletAccountService: wallet_account_service.Service
     networkService: network_service.Service
     msgCursor: Table[string, MessageCursor]
+    threadMsgCursor: Table[string, MessageCursor]
     pinnedMsgCursor: Table[string, MessageCursor]
     numOfPinnedMessagesPerChat: Table[string, int] # [chat_id, num_of_pinned_messages]
+    chatThreadsParentIdsByChat: Table[string, HashSet[string]]
+    chatThreadsLoadedChats: HashSet[string]
+    chatThreadsLoadingChats: HashSet[string]
+
+  proc asyncLoadChatThreads*(self: Service, chatId: string)
 
   proc delete*(self: Service)
   proc newService*(
@@ -207,7 +235,53 @@ QtObject:
     result.walletAccountService = walletAccountService
     result.networkService = networkService
     result.msgCursor = initTable[string, MessageCursor]()
+    result.threadMsgCursor = initTable[string, MessageCursor]()
     result.pinnedMsgCursor = initTable[string, MessageCursor]()
+    result.chatThreadsParentIdsByChat = initTable[string, HashSet[string]]()
+    result.chatThreadsLoadedChats = initHashSet[string]()
+    result.chatThreadsLoadingChats = initHashSet[string]()
+
+  proc replaceChatThreadsCache(self: Service, chatId: string, threads: seq[ThreadDto]) =
+    var parentIds = initHashSet[string]()
+    for thread in threads:
+      if thread.parentMessageId.len > 0:
+        parentIds.incl(thread.parentMessageId)
+    self.chatThreadsParentIdsByChat[chatId] = parentIds
+
+  proc cacheCreatedThreads(self: Service, chatId: string, threads: seq[ThreadDto]) =
+    if not self.chatThreadsParentIdsByChat.hasKey(chatId):
+      self.chatThreadsParentIdsByChat[chatId] = initHashSet[string]()
+
+    for thread in threads:
+      if thread.parentMessageId.len > 0:
+        self.chatThreadsParentIdsByChat[chatId].incl(thread.parentMessageId)
+
+  proc clearChatThreadsCacheForChat(self: Service, chatId: string) =
+    self.chatThreadsParentIdsByChat.del(chatId)
+    self.chatThreadsLoadedChats.excl(chatId)
+    self.chatThreadsLoadingChats.excl(chatId)
+
+  proc loadChatThreadsIfNeeded*(self: Service, chatId: string) =
+    if chatId.len == 0:
+      return
+
+    if self.chatThreadsLoadedChats.contains(chatId):
+      return
+
+    if self.chatThreadsLoadingChats.contains(chatId):
+      return
+
+    self.chatThreadsLoadingChats.incl(chatId)
+    self.asyncLoadChatThreads(chatId)
+
+  proc chatHasThreadForParentMessage*(self: Service, chatId: string, parentMessageId: string): bool =
+    if chatId.len == 0 or parentMessageId.len == 0:
+      return false
+
+    if not self.chatThreadsParentIdsByChat.hasKey(chatId):
+      return false
+
+    return self.chatThreadsParentIdsByChat[chatId].contains(parentMessageId)
 
   proc isChatCursorInitialized(self: Service, chatId: string): bool =
     return self.msgCursor.hasKey(chatId)
@@ -219,7 +293,25 @@ QtObject:
 
   proc resetAllMessageCursors*(self: Service) =
     self.msgCursor = initTable[string, MessageCursor]()
+    self.threadMsgCursor = initTable[string, MessageCursor]()
     self.pinnedMsgCursor = initTable[string, MessageCursor]()
+
+  proc getThreadMessageCursorKey(self: Service, chatId: string, threadId: string): string =
+    return chatId & ":" & threadId
+
+  proc initOrGetThreadMessageCursor(self: Service, chatId: string, threadId: string): MessageCursor =
+    let key = self.getThreadMessageCursorKey(chatId, threadId)
+    if not self.threadMsgCursor.hasKey(key):
+      self.threadMsgCursor[key] = initMessageCursor(value="", pending=false, mostRecent=false)
+    return self.threadMsgCursor[key]
+
+  proc resetThreadMessageCursorsForChat*(self: Service, chatId: string) =
+    var keys = newSeq[string]()
+    for key in self.threadMsgCursor.keys:
+      if key.startsWith(chatId & ":"):
+        keys.add(key)
+    for key in keys:
+      self.threadMsgCursor.del(key)
 
   proc initOrGetMessageCursor(self: Service, chatId: string): MessageCursor =
     if(not self.msgCursor.hasKey(chatId)):
@@ -280,6 +372,64 @@ QtObject:
 
     self.threadpool.start(arg)
     return true
+
+  proc asyncLoadChatThreads*(self: Service, chatId: string) =
+    if chatId.len == 0:
+      error "empty chat id", procName="asyncLoadChatThreads"
+      return
+
+    let arg = AsyncFetchChatThreadsTaskArg(
+      tptr: asyncFetchChatThreadsTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncLoadChatThreads",
+      chatId: chatId,
+    )
+
+    self.threadpool.start(arg)
+
+  proc asyncLoadMoreMessagesForThread*(self: Service, chatId: string, threadId: string,
+      limit = MESSAGES_PER_PAGE): bool =
+    if chatId.len == 0 or threadId.len == 0:
+      error "empty chat id or thread id", procName="asyncLoadMoreMessagesForThread"
+      return false
+
+    let msgCursor = self.initOrGetThreadMessageCursor(chatId, threadId)
+    if msgCursor.isPending():
+      return true
+
+    if msgCursor.isMostRecent():
+      return false
+
+    let msgCursorValue = msgCursor.getValue()
+    msgCursor.setPending()
+
+    let arg = AsyncFetchChatMessagesTaskArg(
+      tptr: asyncFetchChatMessagesTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncLoadMoreMessagesForThread",
+      chatId: chatId,
+      threadId: threadId,
+      msgCursor: msgCursorValue,
+      limit: if(limit <= MESSAGES_PER_PAGE_MAX): limit else: MESSAGES_PER_PAGE_MAX,
+    )
+
+    self.threadpool.start(arg)
+    return true
+
+  proc asyncCreateThread*(self: Service, chatId: string, parentMessageId: string) =
+    if chatId.len == 0 or parentMessageId.len == 0:
+      error "empty chat id or parent message id", procName="asyncCreateThread"
+      return
+
+    let arg = AsyncCreateThreadTaskArg(
+      tptr: asyncCreateThreadTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncCreateThread",
+      chatId: chatId,
+      parentMessageId: parentMessageId,
+    )
+
+    self.threadpool.start(arg)
 
   proc onAsyncLoadReactionsForMessage*(self: Service, response: string) {.slot.} =
     try:
@@ -476,11 +626,25 @@ QtObject:
       self.msgCursor.del(k)
 
     keys = @[]
+    for k in self.threadMsgCursor.keys:
+      if k.startsWith(communityId):
+        keys.add(k)
+    for k in keys:
+      self.threadMsgCursor.del(k)
+
+    keys = @[]
     for k in self.pinnedMsgCursor.keys:
       if k.startsWith(communityId):
         keys.add(k)
     for k in keys:
       self.pinnedMsgCursor.del(k)
+
+    keys = @[]
+    for k in self.chatThreadsParentIdsByChat.keys:
+      if k.startsWith(communityId):
+        keys.add(k)
+    for k in keys:
+      self.clearChatThreadsCacheForChat(k)
 
     self.events.emit(SIGNAL_RELOAD_MESSAGES, ReloadMessagesArgs(communityId: communityId))
 
@@ -550,6 +714,8 @@ QtObject:
     self.events.on(SIGNAL_CHAT_LEFT) do(e: Args):
       var chatArg = ChatArgs(e)
       self.resetMessageCursor(chatArg.chatId)
+      self.resetThreadMessageCursorsForChat(chatArg.chatId)
+      self.clearChatThreadsCacheForChat(chatArg.chatId)
 
     self.events.on(SignalType.LocalMessageBackupDone.event) do(e: Args):
       self.resetAllMessageCursors()
@@ -677,6 +843,106 @@ QtObject:
       error "Erorr load more messages for chat async", msg = e.msg
       # notify view, this is important
       self.events.emit(SIGNAL_MESSAGES_LOADED, MessagesLoadedArgs())
+
+  proc onAsyncLoadChatThreads*(self: Service, response: string) {.slot.} =
+    var chatId = ""
+    try:
+      let responseObj = response.parseJson
+      if responseObj.kind != JObject:
+        raise newException(CatchableError, "load chat threads response is not a json object")
+
+      discard responseObj.getProp("chatId", chatId)
+
+      let errorString = responseObj{"error"}.getStr()
+      if errorString != "":
+        raise newException(CatchableError, errorString)
+
+      var threads: seq[ThreadDto]
+      var threadsArr: JsonNode
+      if responseObj.getProp("threads", threadsArr):
+        threads = map(threadsArr.getElems(), proc(x: JsonNode): ThreadDto = x.toThreadDto())
+
+      self.replaceChatThreadsCache(chatId, threads)
+      self.chatThreadsLoadedChats.incl(chatId)
+      self.chatThreadsLoadingChats.excl(chatId)
+
+      self.events.emit(SIGNAL_CHAT_THREADS_LOADED, ChatThreadsLoadedArgs(chatId: chatId, threads: threads))
+    except Exception as e:
+      if chatId.len > 0:
+        self.chatThreadsLoadingChats.excl(chatId)
+        self.events.emit(SIGNAL_CHAT_THREADS_LOADING_FAILED, ChatThreadsLoadedArgs(chatId: chatId, threads: @[]))
+      error "error loading chat threads", msg = e.msg
+
+  proc onAsyncLoadMoreMessagesForThread*(self: Service, response: string) {.slot.} =
+    var threadId: string = ""
+    var chatId: string = ""
+    try:
+      let responseObj = response.parseJson
+      if responseObj.kind != JObject:
+        raise newException(CatchableError, "load thread messages response is not a json object")
+
+      discard responseObj.getProp("chatId", chatId)
+      discard responseObj.getProp("threadId", threadId)
+
+      let errorString = responseObj{"error"}.getStr()
+      if errorString != "":
+        raise newException(CatchableError, errorString)
+
+      let msgCursor = self.initOrGetThreadMessageCursor(chatId, threadId)
+
+      var msgCursorValue: string
+      if responseObj.getProp("messagesCursor", msgCursorValue):
+        msgCursor.setValue(msgCursorValue)
+
+      var messagesArr: JsonNode
+      var messages: seq[MessageDto]
+      if responseObj.getProp("messages", messagesArr):
+        messages = map(messagesArr.getElems(), proc(x: JsonNode): MessageDto = x.toMessageDto())
+
+      self.checkPaymentRequestsInMessages(messages)
+
+      self.events.emit(SIGNAL_THREAD_MESSAGES_LOADED,
+        ThreadMessagesLoadedArgs(chatId: chatId, threadId: threadId, messages: messages))
+    except Exception as e:
+      error "error loading thread messages", msg = e.msg
+      if chatId.len > 0 and threadId.len > 0:
+        let key = self.getThreadMessageCursorKey(chatId, threadId)
+        if self.threadMsgCursor.hasKey(key):
+          # Clear the cursor for this thread so that we can try to load it again later
+          self.threadMsgCursor.del(key)
+        self.events.emit(SIGNAL_THREAD_MESSAGES_LOADING_FAILED,
+          ThreadMessagesLoadedArgs(chatId: chatId, threadId: threadId, messages: @[]))
+
+  proc onAsyncCreateThread*(self: Service, response: string) {.slot.} =
+    var chatId: string = ""
+    var parentMessageId: string = ""
+    try:
+      let responseObj = response.parseJson
+      if responseObj.kind != JObject:
+        raise newException(CatchableError, "create thread response is not a json object")
+
+      discard responseObj.getProp("chatId", chatId)
+      discard responseObj.getProp("parentMessageId", parentMessageId)
+
+      let errorString = responseObj{"error"}.getStr()
+      if errorString != "":
+        raise newException(CatchableError, errorString)
+
+
+      var threads: seq[ThreadDto]
+      var threadsArr: JsonNode
+      if responseObj.getProp("threads", threadsArr):
+        threads = map(threadsArr.getElems(), proc(x: JsonNode): ThreadDto = x.toThreadDto())
+
+      self.cacheCreatedThreads(chatId, threads)
+
+      self.events.emit(SIGNAL_THREAD_CREATED,
+        ThreadCreatedArgs(chatId: chatId, parentMessageId: parentMessageId, threads: threads))
+    except Exception as e:
+      error "error creating thread", msg = e.msg
+      if chatId.len > 0:
+        self.events.emit(SIGNAL_THREAD_CREATION_FAILED,
+          ThreadCreatedArgs(chatId: chatId, parentMessageId: parentMessageId, threads: @[]))
 
   proc onAsyncLoadCommunityMemberAllMessages*(self: Service, response: string) {.slot.} =
     try:

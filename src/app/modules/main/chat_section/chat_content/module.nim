@@ -14,15 +14,15 @@ import input_area/module as input_area_module
 import messages/module as messages_module
 import users/module as users_module
 
-import ../../../../../app_service/service/settings/service as settings_service
-import ../../../../../app_service/service/node_configuration/service as node_configuration_service
-import ../../../../../app_service/service/contacts/service as contact_service
-import ../../../../../app_service/service/chat/service as chat_service
-import ../../../../../app_service/service/community/service as community_service
-import ../../../../../app_service/service/message/service as message_service
-import ../../../../../app_service/service/mailservers/service as mailservers_service
-import ../../../../../app_service/service/shared_urls/service as shared_urls_service
-import ../../../../../app_service/common/types
+import app_service/service/settings/service as settings_service
+import app_service/service/node_configuration/service as node_configuration_service
+import app_service/service/contacts/service as contact_service
+import app_service/service/chat/service as chat_service
+import app_service/service/community/service as community_service
+import app_service/service/message/service as message_service
+import app_service/service/mailservers/service as mailservers_service
+import app_service/service/shared_urls/service as shared_urls_service
+import app_service/common/types
 
 export io_interface
 
@@ -45,7 +45,8 @@ proc newModule*(delegate: delegate_interface.AccessInterface, events: EventEmitt
     nodeConfigurationService: node_configuration_service.Service, contactService: contact_service.Service,
     chatService: chat_service.Service, communityService: community_service.Service,
     messageService: message_service.Service,
-    mailserversService: mailservers_service.Service, sharedUrlsService: shared_urls_service.Service):
+    mailserversService: mailservers_service.Service, sharedUrlsService: shared_urls_service.Service,
+    threadId: string = ""):
   Module =
   result = Module()
   result.delegate = delegate
@@ -57,9 +58,9 @@ proc newModule*(delegate: delegate_interface.AccessInterface, events: EventEmitt
   result.moduleLoaded = false
 
   result.inputAreaModule = input_area_module.newModule(result, events, sectionId, chatId, belongsToCommunity,
-    chatService, communityService, contactService, messageService, settingsService)
+    chatService, communityService, contactService, messageService, settingsService, threadId = threadId)
   result.messagesModule = messages_module.newModule(result, events, sectionId, chatId, belongsToCommunity,
-    contactService, communityService, chatService, messageService, mailserversService, sharedUrlsService)
+    contactService, communityService, chatService, messageService, mailserversService, sharedUrlsService, threadId = threadId)
   result.usersModule = users_module.newModule(events, sectionId, chatId, belongsToCommunity,
     isUsersListAvailable, contactService, chat_service, communityService, messageService)
 
@@ -257,6 +258,15 @@ method onMessageEdited*(self: Module, message: MessageDto) =
 
 method getMyChatId*(self: Module): string =
   self.controller.getMyChatId()
+
+method openThreadAsChat*(self: Module, threadId: string, threadName: string, parentMessageId: string) =
+  self.delegate.openThreadAsChat(self.controller.getMyChatId(), threadId, threadName, parentMessageId, setActive = true)
+
+method onChatThreadsLoaded*(self: Module, threads: seq[ThreadDto]) =
+  for thread in threads:
+    if thread.parentMessageId.len > 0:
+      # Add the thread to the chat list so it appears as a sub-chat
+      self.delegate.openThreadAsChat(self.controller.getMyChatId(), thread.threadId, thread.name, thread.parentMessageId, setActive = false)
 
 method muteChat*(self: Module, interval: int) =
   self.controller.muteChat(interval)

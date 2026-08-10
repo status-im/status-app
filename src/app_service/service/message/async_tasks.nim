@@ -23,20 +23,29 @@ proc getCountAndCountWithMentionsFromResponse(chatId: string, seenAndUnseenMessa
 type
   AsyncFetchChatMessagesTaskArg = ref object of QObjectTaskArg
     chatId: string
+    threadId: string
     msgCursor: string
     limit: int
+
+  AsyncFetchChatThreadsTaskArg = ref object of QObjectTaskArg
+    chatId: string
+
+  AsyncCreateThreadTaskArg = ref object of QObjectTaskArg
+    chatId: string
+    parentMessageId: string
 
 proc asyncFetchChatMessagesTask(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncFetchChatMessagesTaskArg](argEncoded)
   try:
     var responseJson = %*{
-      "chatId": arg.chatId
+      "chatId": arg.chatId,
+      "threadId": arg.threadId,
     }
 
     # handle messages
     var messagesArr: JsonNode
     var messagesCursor: JsonNode
-    let msgsResponse = status_go.fetchMessages(arg.chatId, arg.msgCursor, arg.limit)
+    let msgsResponse = status_go.fetchMessages(arg.chatId, arg.threadId, arg.msgCursor, arg.limit)
 
     if not msgsResponse.error.isNil:
       raise newException(CatchableError, msgsResponse.error.message)
@@ -46,20 +55,70 @@ proc asyncFetchChatMessagesTask(argEncoded: string) {.gcsafe, nimcall.} =
     responseJson["messages"] = messagesArr
     responseJson["messagesCursor"] = messagesCursor
 
-    # handle reactions
-    var reactionsArr: JsonNode
-    let rResponse = status_go.fetchReactions(arg.chatId, arg.msgCursor, arg.limit)
-    if not rResponse.error.isNil:
-      raise newException(CatchableError, rResponse.error.message)
-
-    reactionsArr = rResponse.result
-    responseJson["reactions"] = reactionsArr
+    # handle reactions (only for base chats, not threads)
+    if arg.threadId == "":
+      var reactionsArr: JsonNode
+      let rResponse = status_go.fetchReactions(arg.chatId, arg.msgCursor, arg.limit)
+      if not rResponse.error.isNil:
+        raise newException(CatchableError, rResponse.error.message)
+      responseJson["reactions"] = rResponse.result
 
     arg.finish(responseJson)
 
   except Exception as e:
     arg.finish(%* {
       "chatId": arg.chatId,
+      "threadId": arg.threadId,
+      "error": e.msg,
+    })
+
+proc asyncFetchChatThreadsTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncFetchChatThreadsTaskArg](argEncoded)
+  try:
+    let response = status_go_chat.fetchChatThreads(arg.chatId)
+    if not response.error.isNil:
+      raise newException(CatchableError, response.error.message)
+
+    var responseJson = %*{
+      "chatId": arg.chatId,
+      "threads": %*[],
+      "error": "",
+    }
+
+    var threadsArr: JsonNode
+    if response.result.getProp("threads", threadsArr):
+      responseJson["threads"] = threadsArr
+
+    arg.finish(responseJson)
+  except Exception as e:
+    arg.finish(%* {
+      "chatId": arg.chatId,
+      "error": e.msg,
+    })
+
+proc asyncCreateThreadTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncCreateThreadTaskArg](argEncoded)
+  try:
+    let response = status_go_chat.createThread(arg.chatId, arg.parentMessageId)
+    if not response.error.isNil:
+      raise newException(CatchableError, response.error.message)
+
+    var responseJson = %*{
+      "chatId": arg.chatId,
+      "parentMessageId": arg.parentMessageId,
+      "threads": %*[],
+      "error": "",
+    }
+
+    var threadsArr: JsonNode
+    if response.result.getProp("threads", threadsArr):
+      responseJson["threads"] = threadsArr
+
+    arg.finish(responseJson)
+  except Exception as e:
+    arg.finish(%* {
+      "chatId": arg.chatId,
+      "parentMessageId": arg.parentMessageId,
       "error": e.msg,
     })
 

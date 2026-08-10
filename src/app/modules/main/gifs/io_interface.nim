@@ -45,7 +45,7 @@ method searchGifsStarted*(self: AccessInterface) {.base.} =
 method searchGifsError*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method serachGifsDone*(self: AccessInterface, gifs: seq[GifDto]) {.base.} =
+method searchGifsDone*(self: AccessInterface, gifs: seq[GifDto]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getFavoritesGifs*(self: AccessInterface): seq[GifDto] {.base.} =

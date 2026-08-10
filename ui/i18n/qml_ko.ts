@@ -11170,6 +11170,14 @@ to load</source>
         <translation>답장</translation>
     </message>
     <message>
+        <source>Open Thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create Thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Edit</source>
         <translation>편집</translation>
     </message>

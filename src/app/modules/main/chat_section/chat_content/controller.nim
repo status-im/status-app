@@ -198,6 +198,12 @@ proc init*(self: Controller) =
       return
     self.delegate.onMessageEdited(args.message)
 
+  self.events.on(SIGNAL_CHAT_THREADS_LOADED) do(e: Args):
+    let args = ChatThreadsLoadedArgs(e)
+    if self.chatId != args.chatId:
+      return
+    self.delegate.onChatThreadsLoaded(args.threads)
+
 proc getMyChatId*(self: Controller): string =
   return self.chatId
 
