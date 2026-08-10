@@ -131,7 +131,8 @@ proc sendImages*(self: Controller,
                  replyTo: string,
                  preferredUsername: string = "",
                  linkPreviews: seq[LinkPreview],
-                 paymentRequests: seq[PaymentRequest]) =
+                 paymentRequests: seq[PaymentRequest],
+                 threadId: string = "") =
   self.resetLinkPreviews()
   self.chatService.asyncSendImages(
     self.chatId,
@@ -140,7 +141,8 @@ proc sendImages*(self: Controller,
     replyTo,
     preferredUsername,
     linkPreviews,
-    paymentRequests
+    paymentRequests,
+    threadId
   )
 
 proc sendChatMessage*(self: Controller,
@@ -149,7 +151,8 @@ proc sendChatMessage*(self: Controller,
                       contentType: int,
                       preferredUsername: string = "",
                       linkPreviews: seq[LinkPreview],
-                      paymentRequests: seq[PaymentRequest]) =
+                      paymentRequests: seq[PaymentRequest],
+                      threadId: string) =
   self.resetLinkPreviews()
   self.chatService.asyncSendChatMessage(self.chatId,
     msg,
@@ -157,7 +160,8 @@ proc sendChatMessage*(self: Controller,
     contentType,
     preferredUsername,
     linkPreviews,
-    paymentRequests
+    paymentRequests,
+    threadId = threadId
   )
 
 proc getLinkPreviewEnabled*(self: Controller): bool =

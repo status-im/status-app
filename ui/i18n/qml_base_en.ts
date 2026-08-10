@@ -11209,6 +11209,14 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Open Thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create Thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Edit</source>
         <translation type="unfinished"></translation>
     </message>

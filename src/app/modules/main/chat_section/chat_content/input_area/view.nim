@@ -20,6 +20,7 @@ QtObject:
       urlsModelVariant: QVariant
       sendingInProgress: bool
       askToEnableLinkPreview: bool
+      threadId: string
 
   proc setSendingInProgress*(self: View, value: bool)
 
@@ -37,6 +38,7 @@ QtObject:
     result.urlsModel = newUrlsModel()
     result.urlsModelVariant = newQVariant(result.urlsModel)
     result.askToEnableLinkPreview = false
+    result.threadId = ""
 
   proc load*(self: View) =
     self.delegate.viewDidLoad()
@@ -59,6 +61,12 @@ QtObject:
     self.setSendingInProgress(true)
     self.delegate.setText(msg, false)
     self.delegate.sendImages(imagePathsJson, msg, replyTo, self.linkPreviewModel.getUnfuledLinkPreviews(), self.payment_request_model.getPaymentRequests())
+
+  proc getThreadId(self: View): string {.slot.} =
+    return self.delegate.getThreadId()
+
+  QtProperty[string] threadId:
+    read = getThreadId
 
   proc getPreservedProperties(self: View): QVariant {.slot.} =
     return self.preservedPropertiesVariant

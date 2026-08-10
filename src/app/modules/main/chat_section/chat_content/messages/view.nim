@@ -10,6 +10,7 @@ QtObject:
       delegate: io_interface.AccessInterface
       model: Model
       modelVariant: QVariant
+      threadId: string
       messageSearchOngoing: bool
       amIChatAdmin: bool
       isPinMessageAllowedForMembers: bool
@@ -26,6 +27,7 @@ QtObject:
     result.delegate = delegate
     result.model = newModel()
     result.modelVariant = newQVariant(result.model)
+    result.threadId = ""
     result.messageSearchOngoing = false
     result.amIChatAdmin = false
     result.isPinMessageAllowedForMembers = false
@@ -91,6 +93,32 @@ QtObject:
 
   proc getChatId*(self: View): string {.slot.} =
     return self.delegate.getChatId()
+
+  proc threadIdChanged*(self: View) {.signal.}
+  proc getThreadId*(self: View): string {.slot.} =
+    return self.threadId
+  proc setThreadId*(self: View, value: string) {.slot.} =
+    self.threadId = value
+    self.threadIdChanged()
+
+  QtProperty[string] threadId:
+    read = getThreadId
+    notify = threadIdChanged
+
+  proc createThread*(self: View, parentMessageId: string) {.slot.} =
+    self.delegate.createThread(parentMessageId)
+
+  # QML uses this to enter an existing thread; forward to the module so
+  # controller/view/model state stay in sync.
+  proc setThreadIdFromUI*(self: View, value: string) {.slot.} =
+    self.delegate.setThreadId(value)
+
+  proc closeThread*(self: View) {.slot.} =
+    self.delegate.closeThread()
+
+  proc threadCreated*(self: View, threadId: string, parentMessageId: string) {.signal.}
+  proc emitThreadCreatedSignal*(self: View, threadId: string, parentMessageId: string) =
+    self.threadCreated(threadId, parentMessageId)
 
   proc getNumberOfPinnedMessages*(self: View): int {.slot.} =
     return self.delegate.getNumberOfPinnedMessages()
