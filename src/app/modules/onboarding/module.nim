@@ -133,17 +133,7 @@ method cleanupAfterMainTransition*[T](self: Module[T]) =
 method onMainFailedToLoad*[T](self: Module[T]) =
   self.view.accountLoginError("Failed to load main module, please restart the app and try again.", wrongPassword = false)
 
-method load*[T](self: Module[T]) =
-  singletonInstance.engine.setRootContextProperty("onboardingModule", self.viewVariant)
-  self.controller.init()
-
-  let loggedInAccount = self.accountsService.fetchLoggedInAccount()
-  self.resumeLogin = loggedInAccount.isValid()
-  if self.resumeLogin:
-    self.controller.setLoggedInAccount(loggedInAccount)
-    self.finishAppLoading2()
-    return
-
+proc buildLoginAccountsModel[T](self: Module[T]): bool =
   var openedAccounts: seq[AccountDto]
   var accountsLoadFailed = false
   try:
@@ -168,6 +158,20 @@ method load*[T](self: Module[T]) =
       ))
 
     self.view.setLoginAccountsModelItems(items)
+  return accountsLoadFailed
+
+method load*[T](self: Module[T]) =
+  singletonInstance.engine.setRootContextProperty("onboardingModule", self.viewVariant)
+  self.controller.init()
+
+  let loggedInAccount = self.accountsService.fetchLoggedInAccount()
+  self.resumeLogin = loggedInAccount.isValid()
+  if self.resumeLogin:
+    self.controller.setLoggedInAccount(loggedInAccount)
+    self.finishAppLoading2()
+    return
+
+  let accountsLoadFailed = self.buildLoginAccountsModel()
 
   self.delegate.onboardingDidLoad()
   if accountsLoadFailed:
@@ -418,8 +422,15 @@ method onKeycardExportLoginKeysSuccess*[T](self: Module[T], exportedKeys: Keycar
 
 method onKeycardAccountConverted*[T](self: Module[T], success: bool) =
   let state = if success: ProgressState.Success else: ProgressState.Failed
+  let restartRequired = self.accountsService.isAppRestartRequiredAfterProfileConversion()
+  debug "keycard account converted", success, restartRequired
+  self.view.setConvertKeycardAccountRestartRequired(restartRequired)
   self.view.setConvertKeycardAccountState(state)
   self.generalService.logout()
+  if success and not restartRequired:
+    self.postLoginTasks = newSeq[PostOnboardingTask]()
+    self.accountsService.clearOpenedAccountsCache()
+    discard self.buildLoginAccountsModel()
 
 method getPostOnboardingTasks*[T](self: Module[T]): seq[PostOnboardingTask] =
   return self.postOnboardingTasks

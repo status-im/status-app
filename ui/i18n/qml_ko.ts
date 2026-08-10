@@ -4587,8 +4587,16 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <translation>재암호화 완료</translation>
     </message>
     <message>
+        <source>Profile migration complete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Your data was successfully re-encrypted with your new password. You can now restart Status and log in to your profile using the password you just created.</source>
         <translation>데이터가 새 비밀번호로 성공적으로 재암호화되었습니다. 이제 Status를 다시 시작하고, 방금 만든 비밀번호로 프로필에 로그인할 수 있어요.</translation>
+    </message>
+    <message>
+        <source>Your profile no longer uses Keycard. You can now log in using the password you just created.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Re-encryption failed</source>

@@ -71,7 +71,16 @@ QtObject:
     self.events.emit(SIGNAL_MESSENGER_STARTED, MessengerStartedArgs(error: startError))
 
   proc logout*(self: Service) =
-    discard status_general.logout()
+    try:
+      let response = status_general.logout()
+      let errMsg = response.result{"error"}.getStr
+      if errMsg.len > 0:
+        error "logout failed", errDescription=errMsg
+      else:
+        debug "logout succeeded"
+        self.messengerStartScheduled = false
+    except Exception as e:
+      error "logout failed", errName=e.name, errDescription=e.msg
 
   proc getWakuPeerCount*(self: Service): int =
     try:
