@@ -177,20 +177,27 @@ SplitView {
                 checked: true
             }
 
+            // The spinner/empty/error placeholders are only shown while there is
+            // nothing to display: switch both collectible types off to see them.
+            Text {
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+                text: "States below only show up on an empty list (switch both collectible types off)"
+            }
             CheckBox {
                 id: ctrlUpdatingCheckbox
                 checked: false
-                text: "isUpdating"
+                text: "isUpdating (spinner, ownership check)"
             }
             CheckBox {
                 id: ctrlFetchingCheckbox
                 checked: false
-                text: "isFetching"
+                text: "isFetching (spinner, loading)"
             }
             CheckBox {
                 id: ctrlErrorCheckbox
                 checked: false
-                text: "isError"
+                text: "isError (error placeholder)"
             }
             CheckBox {
                 id: buyBannerCheckbox

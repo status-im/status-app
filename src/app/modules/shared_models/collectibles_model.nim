@@ -22,7 +22,6 @@ type
     CollectionName
     CollectionSlug
     CollectionImageUrl
-    IsLoading
     Ownership
     # Community-related roles
     CommunityId
@@ -140,7 +139,6 @@ QtObject:
       CollectibleRole.CollectionName.int:"collectionName",
       CollectibleRole.CollectionSlug.int:"collectionSlug",
       CollectibleRole.CollectionImageUrl.int:"collectionImageUrl",
-      CollectibleRole.IsLoading.int:"isLoading",
       CollectibleRole.Ownership.int:"ownership",
       CollectibleRole.CommunityId.int:"communityId",
       CollectibleRole.CommunityPrivilegesLevel.int:"communityPrivilegesLevel",
@@ -183,8 +181,6 @@ QtObject:
         result = newQVariant(item.getCollectionSlug())
       of CollectibleRole.CollectionImageUrl:
         result = newQVariant(item.getCollectionImageURL())
-      of CollectibleRole.IsLoading:
-        result = newQVariant(false)
       of CollectibleRole.Ownership:
         result = item.getOwnershipModelAsVariant()
       of CollectibleRole.CommunityId:

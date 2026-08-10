@@ -30,7 +30,6 @@ ListModel {
             communityName: "",
             communityImage: "",
             imageUrl: ModelsData.collectibles.cryptoPunks,
-            isLoading: false,
             backgroundColor: "",
             permalink:"opensea.com",
             domain:"opensea",
@@ -80,7 +79,6 @@ ListModel {
             communityName: "",
             communityImage: "",
             imageUrl: "https://i.seadn.io/s/raw/files/ba2811bb5cd0bed67529d69fa92ef5aa.jpg?auto=format&dpr=1&w=1000",
-            isLoading: false,
             backgroundColor: "",
             permalink:"opensea.com",
             domain:"opensea",
@@ -125,7 +123,6 @@ ListModel {
             communityName: "",
             communityImage: "",
             imageUrl: "https://img.cryptokitties.co/0x06012c8cf97bead5deae237070f9587f8e7a266d/386.svg",
-            isLoading: true,
             backgroundColor: "",
             permalink:"opensea.com",
             domain:"opensea",
@@ -170,7 +167,6 @@ ListModel {
             communityName: "",
             communityImage: "",
             imageUrl: "https://img.cryptokitties.co/0x06012c8cf97bead5deae237070f9587f8e7a266d/3395.svg",
-            isLoading: false,
             backgroundColor: "",
             permalink:"opensea.com",
             domain:"opensea",
@@ -215,7 +211,6 @@ ListModel {
             communityName: "",
             communityImage: "",
             imageUrl: "https://img.cryptokitties.co/0x06012c8cf97bead5deae237070f9587f8e7a266d/163.png",
-            isLoading: false,
             backgroundColor: "",
             permalink:"opensea.com",
             domain:"opensea",
@@ -265,7 +260,6 @@ ListModel {
             communityName: "",
             communityImage: "",
             imageUrl: "https://i.seadn.io/s/raw/files/cfa559bb63e4378f17649c1e3b8f18fe.jpg?auto=format&dpr=1&w=1000",
-            isLoading: false,
             backgroundColor: "",
             permalink:"opensea.com",
             domain:"opensea",
@@ -302,7 +296,6 @@ ListModel {
             communityName: "",
             communityImage: "",
             imageUrl: "",
-            isLoading: false,
             backgroundColor: "ivory",
             permalink:"opensea.com",
             domain:"opensea",
@@ -339,7 +332,6 @@ ListModel {
             communityName: "",
             communityImage: "",
             imageUrl: "",
-            isLoading: false,
             backgroundColor: "",
             permalink:"",
             domain:"",
@@ -374,7 +366,6 @@ ListModel {
             communityName: "Frenly Pandas",
             communityImage: "https://pbs.twimg.com/profile_images/1599347398769143808/C6qG3RQv_400x400.jpg",
             imageUrl: "https://i.seadn.io/gae/qPfQjj4P1w0xVQXAmQJLmQ4ZtLFAJU6oiH69Lsny82LFbipLAgXhHKrcLBx2U09SmRnzeHY0ygz-3NIb-JegE_hWrZquFeL-qUPXPdw",
-            isLoading: false,
             backgroundColor: "pink",
             ownership: [
                 {
@@ -401,7 +392,6 @@ ListModel {
             communityName: "Bearz",
             communityImage: "https://i.seadn.io/gcs/files/4a875f997063f4f3772190852c1c44f0.png?w=128&auto=format",
             imageUrl: "https://assets.killabears.com/content/killabears/gif/691-e81f892696a8ae700e0dbc62eb072060679a2046d1ef5eb2671bdb1fad1f68e3.gif",
-            isLoading: true,
             backgroundColor: "navy",
             ownership: [
                 {
@@ -428,7 +418,6 @@ ListModel {
             communityName: "Bearz",
             communityImage: "https://i.seadn.io/gcs/files/4a875f997063f4f3772190852c1c44f0.png?w=128&auto=format",
             imageUrl: "https://assets.killabears.com/content/killabears/transparent-512/2385-86ba13cc6945ed0aea7c32a363a96be2f218898358745ae07b947452cb7e4e79.png",
-            isLoading: false,
             backgroundColor: "",
             ownership: [
                 {
@@ -457,7 +446,6 @@ ListModel {
             communityName: "Frenly Pandas",
             communityImage: "https://pbs.twimg.com/profile_images/1599347398769143808/C6qG3RQv_400x400.jpg",
             imageUrl: "https://i.seadn.io/s/raw/files/59ad1f2e3c5eb5d4b62c06e200076514.png",
-            isLoading: false,
             backgroundColor: "",
             ownership: [
                 {
@@ -484,7 +472,6 @@ ListModel {
             communityName: "Frenly Pandas",
             communityImage: "https://pbs.twimg.com/profile_images/1599347398769143808/C6qG3RQv_400x400.jpg",
             imageUrl: "https://i.seadn.io/gae/K4_vmYtXAqU6LTnGDliLtJZc4UPmf9jUlk09_FDbXvSKKyUARyyV9RQEgXdb5bjje5OE9j9ZryC5pzcwBwH7TDOIl8oq7D2tSJ7p",
-            isLoading: false,
             backgroundColor: "",
             ownership: [
                 {
@@ -511,7 +498,6 @@ ListModel {
             communityName: "Frenly Pandas",
             communityImage: "https://pbs.twimg.com/profile_images/1599347398769143808/C6qG3RQv_400x400.jpg",
             imageUrl: "https://i.seadn.io/gae/cR-Bjmb6DsrywCJMOqEBPkkrMHjbTzeRSAKIvLpd7i8ss6raYZ3-doh8oF2z8bJsnmfC1oR3kllz6UxMfFaYAKdXYzXlhfVsDHo6bg",
-            isLoading: false,
             backgroundColor: "",
             ownership: [
                 {
@@ -538,7 +524,6 @@ ListModel {
             communityName: "Lonely Bearz Community 0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240",
             communityImage: "",
             imageUrl: "",
-            isLoading: false,
             backgroundColor: "pink",
             ownership: [
                 {
@@ -570,7 +555,6 @@ ListModel {
             communityName: "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240",
             communityImage: "",
             imageUrl: "",
-            isLoading: false,
             backgroundColor: "pink",
             ownership: [
                 {

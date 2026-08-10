@@ -87,6 +87,9 @@ ColumnLayout {
         readonly property bool isCustomView: cmbTokenOrder.currentValue === SortOrderComboBox.TokenOrderCustom
 
         readonly property var sourceModel: root.controller.sourceModel
+
+        // A load is in progress: either an ownership check is running in status-go
+        // (isUpdating) or a page of collectibles is being fetched (isFetching).
         readonly property bool isLoading: root.isUpdating || root.isFetching
 
         function setSortByDateIsDisabled(disabled) {
@@ -96,68 +99,19 @@ ColumnLayout {
             cmbTokenOrder.modelChanged()
         }
 
-        onIsLoadingChanged: {
-            d.loadingItemsModel.refresh()
-        }
-
-        readonly property var loadingItemsModel: ListModel {
-            Component.onCompleted: {
-                refresh()
-            }
-
-            function refresh() {
-                clear()
-                if (d.isLoading) {
-                    for (let i = 0; i < 10; i++) {
-                        append({ isLoading: true, name: qsTr("Loading collectible...") })
-                    }
-                }
-            }
-        }
-
         readonly property var communityModel: CustomSFPM {
             isCommunity: true
-        }
-
-        readonly property var communityModelWithLoadingItems: ConcatModel {
-            sources: [
-                SourceModel {
-                    model: d.communityModel
-                    markerRoleValue: "communityModel"
-                },
-                SourceModel {
-                    model: d.loadingItemsModel
-                    markerRoleValue: "loadingItemsModel"
-                }
-            ]
-
-            markerRoleName: "sourceGroup"
         }
 
         readonly property var nonCommunityModel: CustomSFPM {
             isCommunity: false
         }
 
-        readonly property var nonCommunityModelWithLoadingItems: ConcatModel {
-            sources: [
-                SourceModel {
-                    model: d.nonCommunityModel
-                    markerRoleValue: "nonCommunityModel"
-                },
-                SourceModel {
-                    model: d.loadingItemsModel
-                    markerRoleValue: "loadingItemsModel"
-                }
-            ]
-
-            markerRoleName: "sourceGroup"
-        }
-
         readonly property var allCollectiblesModel: ConcatModel {
             sources: [
                 SourceModel {
                     model: d.communityModel
-                    markerRoleValue: "loadingItemsModel"
+                    markerRoleValue: "communityModel"
                 },
                 SourceModel {
                     model: d.nonCommunityModel
@@ -168,9 +122,17 @@ ColumnLayout {
         }
 
 
-        readonly property bool hasRegularCollectibles: d.nonCommunityModel.count || d.loadingItemsModel.count
-        readonly property bool hasCommunityCollectibles: d.communityModel.count || d.loadingItemsModel.count
+        readonly property bool hasRegularCollectibles: d.nonCommunityModel.count > 0
+        readonly property bool hasCommunityCollectibles: d.communityModel.count > 0
         readonly property bool onlyRegularCollectiblesType: hasRegularCollectibles && !hasCommunityCollectibles
+
+        readonly property bool isEmpty: !hasRegularCollectibles && !hasCommunityCollectibles
+
+        // Updates of an already populated list must be visually silent: the
+        // spinner/empty/error placeholders are only shown while there is nothing
+        // to display.
+        readonly property bool loadingPlaceholderVisible: isEmpty && isLoading
+        readonly property bool errorPlaceholderVisible: isEmpty && !isLoading && root.isError
 
         readonly property var addrFilters: root.addressFilters.split(":")
 
@@ -413,12 +375,47 @@ ColumnLayout {
         Layout.fillWidth: true
     }
 
+    RowLayout {
+        objectName: "collectiblesLoadingIndicator"
+
+        Layout.alignment: Qt.AlignHCenter
+        Layout.topMargin: Theme.padding
+        spacing: Theme.halfPadding
+
+        visible: d.loadingPlaceholderVisible
+
+        StatusLoadingIndicator {
+            color: Theme.palette.directColor4
+        }
+
+        StatusBaseText {
+            color: Theme.palette.baseColor1
+            font.pixelSize: Theme.additionalTextSize
+            text: root.isUpdating ? qsTr("Checking collectibles ownership…")
+                                  : qsTr("Loading collectibles…")
+        }
+    }
+
     ShapeRectangle {
+        objectName: "collectiblesEmptyPlaceholder"
+
         Layout.fillWidth: true
         Layout.preferredHeight: 44
         Layout.topMargin: Theme.padding
-        visible: !d.hasRegularCollectibles && !d.hasCommunityCollectibles
+        visible: d.isEmpty && !d.loadingPlaceholderVisible && !d.errorPlaceholderVisible
         text: qsTr("Collectibles will appear here")
+    }
+
+    ShapeRectangle {
+        objectName: "collectiblesErrorPlaceholder"
+
+        Layout.fillWidth: true
+        Layout.preferredHeight: 44
+        Layout.topMargin: Theme.padding
+        visible: d.errorPlaceholderVisible
+        icon: "warning"
+        textColor: Theme.palette.dangerColor1
+        text: qsTr("Collectibles could not be loaded")
     }
 
     DoubleFlickableWithFolding {
@@ -441,7 +438,7 @@ ColumnLayout {
             header: d.hasCommunityCollectibles ? communityHeaderComponent : null
             width: doubleFlickable.width
             cellHeight: d.communityCellHeight
-            model: d.communityModelWithLoadingItems
+            model: d.communityModel
 
             Component {
                 id: communityHeaderComponent
@@ -470,7 +467,7 @@ ColumnLayout {
             header: !d.hasRegularCollectibles || d.onlyRegularCollectiblesType ? null : regularHeaderComponent
             width: doubleFlickable.width
             cellHeight: d.cellHeight
-            model: d.nonCommunityModelWithLoadingItems
+            model: d.nonCommunityModel
 
             Component {
                 id: regularHeaderComponent
@@ -509,7 +506,6 @@ ColumnLayout {
             fallbackImageUrl: Utils.collectibleMediaSource(model.thumbnailUrl, model.imageUrl)
             allowAnimation: false
             backgroundColor: model.backgroundColor ? model.backgroundColor : Theme.palette.baseColor5
-            isLoading: !!model.isLoading
             privilegesLevel: model.communityPrivilegesLevel ?? Constants.TokenPrivilegesLevel.Community
             ornamentColor: model.communityColor ?? "transparent"
             communityId: model.communityId ?? ""

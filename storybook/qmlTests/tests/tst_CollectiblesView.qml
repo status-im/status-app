@@ -48,7 +48,6 @@ Item {
                     communityName: "Alpha Community",
                     communityImage: "",
                     imageUrl: "",
-                    isLoading: false,
                     backgroundColor: "",
                     ownership: [{
                         accountAddress: root.testAccount,
@@ -68,7 +67,6 @@ Item {
                     communityName: "Zeta Community",
                     communityImage: "",
                     imageUrl: "",
-                    isLoading: false,
                     backgroundColor: "",
                     ownership: [{
                         accountAddress: root.testAccount,
@@ -88,7 +86,6 @@ Item {
                     communityName: "",
                     communityImage: "",
                     imageUrl: "",
-                    isLoading: false,
                     backgroundColor: "",
                     ownership: [{
                         accountAddress: root.testAccount,
@@ -108,7 +105,6 @@ Item {
                     communityName: "",
                     communityImage: "",
                     imageUrl: "",
-                    isLoading: false,
                     backgroundColor: "",
                     ownership: [{
                         accountAddress: root.testAccount,
