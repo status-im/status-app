@@ -1,5 +1,7 @@
-import nimqml, std/json, sequtils, sugar, strutils
+import nimqml, std/json, sequtils, sugar, strutils, algorithm
 import stint, chronicles, tables
+from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop,
+    setInterval, isActive
 
 import app/modules/shared_models/collectibles_entry
 import app/modules/shared_models/collectibles_model
@@ -12,6 +14,11 @@ import backend/collectibles as backend_collectibles
 import app_service/service/network/service as network_service
 
 const FETCH_BATCH_COUNT_DEFAULT = 50
+
+# Ownership changes are reported by status-go per address and per chain, so a
+# single sync produces a burst of "something changed" events. Wait for the burst
+# to settle before refetching the list instead of refetching once per event.
+const OWNERSHIP_REFRESH_DEBOUNCE_MS = 1000
 
 type
   LoadType* {.pure.} = enum
@@ -49,9 +56,21 @@ QtObject:
       dataType: backend_collectibles.CollectibleDataType
       fetchCriteria: backend_collectibles.FetchCriteria
 
+      # A (re)fetch was requested while one was already in flight. It is executed
+      # once the in-flight one completes, so bursts of triggers result in a
+      # single trailing refetch instead of one reload each.
+      pendingReset: bool
+      # The in-flight fetch was made obsolete by a filter change: its results
+      # must not be applied to the model.
+      discardInFlightResponse: bool
+      # Debounces ownership-change driven refetches (seaqt QTimer, auto-destroyed
+      # via =destroy)
+      refreshTimer: QTimer
+
   proc setup(self: Controller)
   proc delete*(self: Controller)
   proc setupEventHandlers(self: Controller)
+  proc requestReset(self: Controller, clearItems: bool)
 
   proc doLoadMore(self: Controller) =
     if self.model.getIsFetching():
@@ -111,6 +130,17 @@ QtObject:
     result.addresses = @[]
     result.chainIds = @[]
     result.filter = backend_collectibles.newCollectibleFilterAllEntries()
+
+    result.refreshTimer = QTimer.create()
+    result.refreshTimer.setSingleShot(true)
+    result.refreshTimer.setInterval(cint(OWNERSHIP_REFRESH_DEBOUNCE_MS))
+    let ctrl = result
+    result.refreshTimer.onTimeout(proc() {.closure, raises: [].} =
+      try:
+        # Keep the current items visible: the refetch ends in a diff update.
+        ctrl.requestReset(clearItems = false)
+      except Exception as e:
+        error "error refreshing collectibles: ", error = e.msg)
 
     result.setup()
 
@@ -204,7 +234,16 @@ QtObject:
     self.tempItems.add(newItems)
 
   proc processGetOwnedCollectiblesResponse(self: Controller, response: JsonNode) =
-    try: 
+    if self.discardInFlightResponse:
+      # The filter changed after this fetch was started, its results don't match
+      # what has to be displayed anymore.
+      self.discardInFlightResponse = false
+      self.model.setIsFetching(false)
+      if self.pendingReset:
+        self.requestReset(clearItems = false)
+      return
+
+    try:
       let res = fromJson(response, backend_collectibles.GetOwnedCollectiblesResponse)
 
       let isError = res.errorCode != backend_collectibles.ErrorCodeSuccess
@@ -213,6 +252,8 @@ QtObject:
         error "error fetching collectibles entries: ", code = res.errorCode
         self.model.setIsError(true)
         self.model.setIsFetching(false)
+        if self.pendingReset:
+          self.requestReset(clearItems = false)
         return
 
       let items = res.collectibles.map(header => (block:
@@ -231,9 +272,15 @@ QtObject:
       self.model.setIsFetching(false)
       self.setOwnershipStatus(res.ownershipStatus)
 
+      if self.pendingReset:
+        # Triggers received while this fetch was running, collapsed into a
+        # single refetch.
+        self.requestReset(clearItems = false)
+        return
+
       if self.loadType.isAutoLoad() and res.hasMore:
         self.doLoadMore()
-      
+
     except Exception as e:
       error "Error converting activity entries: ", error = e.msg
 
@@ -256,12 +303,47 @@ QtObject:
       if not self.loadType.isPaginated():
         self.updateTempItems(collectibles)
 
-  proc resetModel(self: Controller) {.slot.} =
+  # Requests a fetch of the whole list from the start.
+  #
+  # `clearItems` == true drops what is currently displayed right away, because
+  # the data it shows is no longer valid (the address/chain or the item filter
+  # changed). Results of a fetch that is already in flight are discarded too.
+  #
+  # `clearItems` == false keeps the current items visible while the refetch runs.
+  # AutoLoadSingleUpdate accumulates the batches privately and applies them with
+  # a single diff update at the end, so only the collectibles that actually
+  # appeared/disappeared are touched — no flicker, no delegate rebuild.
+  # Paginated load types append every batch straight to the model, so for those
+  # the visible list still has to be dropped before restarting.
+  proc requestReset(self: Controller, clearItems: bool) =
+    let dropCurrentItems = clearItems or self.loadType.isPaginated()
+
+    if dropCurrentItems:
+      self.tempItems = @[]
+      self.model.setItems(@[], 0, true)
+
+    if self.model.getIsFetching():
+      # Coalesce: run a single fresh fetch once the in-flight one completes.
+      self.pendingReset = true
+      self.discardInFlightResponse = self.discardInFlightResponse or dropCurrentItems
+      return
+
+    self.pendingReset = false
+    self.discardInFlightResponse = false
     self.tempItems = @[]
-    self.model.setItems(@[], 0, true)
     self.fetchFromStart = true
     if self.loadType.isAutoLoad():
-      self.doLoadMore() 
+      self.doLoadMore()
+
+  proc resetModel(self: Controller) {.slot.} =
+    self.refreshTimer.stop()
+    self.requestReset(clearItems = true)
+
+  proc scheduleRefresh(self: Controller) =
+    # Debounce: the first event of a burst arms the timer, the ones following
+    # within the debounce window are absorbed by it.
+    if not self.refreshTimer.isActive():
+      self.refreshTimer.start()
 
   proc setupEventHandlers(self: Controller) =
     self.eventsHandler.onOwnedCollectiblesFilteringDone(proc (jsonObj: JsonNode) =
@@ -279,13 +361,13 @@ QtObject:
     self.eventsHandler.onCollectiblesOwnershipUpdatePartial(proc (address: string, chainID: int, changes: backend_collectibles.OwnershipUpdateMessage) =
       self.setOwnershipState(address, chainID, OwnershipStateUpdating)
       if changes.hasChanges():
-        self.resetModel() 
+        self.scheduleRefresh()
     )
 
     self.eventsHandler.onCollectiblesOwnershipUpdateFinished(proc (address: string, chainID: int, changes: backend_collectibles.OwnershipUpdateMessage) =
       self.setOwnershipState(address, chainID, OwnershipStateIdle)
       if changes.hasChanges():
-        self.resetModel()
+        self.scheduleRefresh()
     )
 
     self.eventsHandler.onCollectiblesOwnershipUpdateFinishedWithError(proc (address: string, chainID: int) =
@@ -296,8 +378,10 @@ QtObject:
     self.selectedAddress = address
     self.checkModelState()
 
-  proc setFilterAddressesAndChains*(self: Controller, addresses: seq[string], chainIds: seq[int]) = 
-    if chainIds == self.chainIds and addresses == self.addresses:
+  proc setFilterAddressesAndChains*(self: Controller, addresses: seq[string], chainIds: seq[int]) =
+    # Compare as sets: only the contents matter for the fetched list, so a mere
+    # reordering (e.g. accounts reordered by the user) must not trigger a reload.
+    if chainIds.sorted() == self.chainIds.sorted() and addresses.sorted() == self.addresses.sorted():
       return
 
     self.chainIds = chainIds
@@ -326,5 +410,7 @@ QtObject:
     self.QObject.setup
 
   proc delete*(self: Controller) =
+    if not self.refreshTimer.h.isNil:
+      self.refreshTimer.stop()
     self.QObject.delete
 
