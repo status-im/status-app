@@ -2501,6 +2501,25 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
 </context>
 <context>
+    <name>BrowserFormatSupportContext</name>
+    <message>
+        <source>Audio and video</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Documents and images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Text and HTML</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BrowserLandscapeToolbar</name>
     <message>
         <source>Back</source>
@@ -2690,6 +2709,10 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <message>
         <source>Downloads</source>
         <translation>Stažené soubory</translation>
+    </message>
+    <message>
+        <source>Supported formats</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Find in page</source>
@@ -11721,6 +11744,10 @@ selhalo</translation>
         <translation type="unfinished">Režim kompatibility</translation>
     </message>
     <message>
+        <source>Supported formats</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Force reload</source>
         <translation type="unfinished"></translation>
     </message>
@@ -16758,6 +16785,33 @@ selhalo</translation>
     <message>
         <source>(edited)</source>
         <translation type="unfinished">(upraveno)</translation>
+    </message>
+</context>
+<context>
+    <name>SupportedFormatsModal</name>
+    <message>
+        <source>Supported formats</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Files in these formats open in a browser tab. Everything else opens in another app.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Opens here</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Opens in another app</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Checked against this platform&apos;s media engine.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reported by this platform&apos;s browser engine.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

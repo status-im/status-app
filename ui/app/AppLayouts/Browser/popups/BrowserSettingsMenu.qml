@@ -18,6 +18,7 @@ StatusMenu {
 
     signal addNewTab()
     signal openDownloads()
+    signal openSupportedFormats()
     signal goIncognito(bool checked)
     signal zoomIn()
     signal zoomOut()
@@ -109,6 +110,12 @@ StatusMenu {
         icon.name: "downloads"
         shortcut: "Ctrl+D"
         onTriggered: openDownloads()
+    }
+
+    StatusAction {
+        text: qsTr("Supported formats")
+        icon.name: "info"
+        onTriggered: openSupportedFormats()
     }
 
     StatusAction {

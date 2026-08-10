@@ -227,6 +227,12 @@ StatusSectionLayout {
             onOpenTabsBookmarksOverviewRequested(TabsBookmarksOverviewModal.Mode.Downloads)
         }
 
+        function openSupportedFormats() {
+            // Ask the engine now; the answer refreshes the open dialog when it lands.
+            formatSupportContext.checkEngine()
+            supportedFormatsModal.createObject(root).open()
+        }
+
         function addNewTab(url, initialTitle, activate) {
             var tab = webViewContext.createEmptyTab(tabs.count !== 0 ? currentWebView.profileParams : browserConfig.defaultProfileParams, false, true, url, initialTitle);
             if (activate)
@@ -338,6 +344,12 @@ StatusSectionLayout {
         openUrlFn: (url) => root.openUrlInNewTab(url)
         openFileUrlFn: (fileUrl, readAccessUrl) => root.openFileUrlInNewTab(fileUrl, readAccessUrl)
         supportsPdfFn: () => BrowserBackendCapabilities.pdfViewerSupported
+    }
+
+    BrowserFormatSupportContext {
+        id: formatSupportContext
+        supportsPdf: BrowserBackendCapabilities.pdfViewerSupported
+        runJavaScriptFn: (script, callback) => root.runJsOnCurrentTab(script, callback)
     }
 
     BrowserWebViewContext {
@@ -742,6 +754,7 @@ StatusSectionLayout {
         onClearBrowsingData: root.clearBrowsingDataOnCurrentTab()
         onAddNewTab: _internal.addNewEmptyTab()
         onOpenDownloads: _internal.openDownloadsOverview()
+        onOpenSupportedFormats: _internal.openSupportedFormats()
         onGoIncognito: (checked) => root.applyIncognitoMode(checked)
         onZoomIn: webViewContext.changeZoomCurrent(0.1)
         onZoomOut: webViewContext.changeZoomCurrent(-0.1)
@@ -777,7 +790,17 @@ StatusSectionLayout {
         onToggleCompatibilityMode: (checked) => webViewContext.setCompatibilityMode(checked)
 
         onGoIncognito: checked => root.applyIncognitoMode(checked)
+        onSupportedFormatsRequested: _internal.openSupportedFormats()
         onSettingsRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings)
+    }
+
+    Component {
+        id: supportedFormatsModal
+        SupportedFormatsModal {
+            sections: formatSupportContext.sections
+            engineChecked: formatSupportContext.engineChecked
+            destroyOnClose: true
+        }
     }
 
     Component {

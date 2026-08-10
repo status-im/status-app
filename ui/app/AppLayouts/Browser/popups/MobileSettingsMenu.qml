@@ -33,6 +33,7 @@ StatusDialog {
     signal clearSiteData
     signal clearBrowsingData
     signal toggleCompatibilityMode(bool checked)
+    signal supportedFormatsRequested
     signal settingsRequested
 
     title: qsTr("Browser")
@@ -125,6 +126,14 @@ StatusDialog {
             ]
             onClicked: {
                 compatibilitySwitch.click()
+            }
+        }
+        SettingsListItem {
+            title: qsTr("Supported formats")
+            asset.name: "info"
+            onClicked: {
+                root.supportedFormatsRequested()
+                root.close()
             }
         }
         SettingsListItem {

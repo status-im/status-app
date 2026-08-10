@@ -7,3 +7,4 @@ BrowserSettingsMenu 1.0 BrowserSettingsMenu.qml
 AddFavoriteModal 1.0 AddFavoriteModal.qml
 FavoriteMenu 1.0 FavoriteMenu.qml
 BrowserWalletMenu 1.0 BrowserWalletMenu.qml
+SupportedFormatsModal 1.0 SupportedFormatsModal.qml

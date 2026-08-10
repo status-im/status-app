@@ -2484,6 +2484,25 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
 </context>
 <context>
+    <name>BrowserFormatSupportContext</name>
+    <message>
+        <source>Audio and video</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Documents and images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Text and HTML</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BrowserLandscapeToolbar</name>
     <message>
         <source>Back</source>
@@ -2669,6 +2688,10 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Zoom Fit</source>
         <translation>맞춤 확대</translation>
+    </message>
+    <message>
+        <source>Supported formats</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Find in page</source>
@@ -11612,6 +11635,10 @@ to load</source>
         <translation type="unfinished">호환 모드</translation>
     </message>
     <message>
+        <source>Supported formats</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Force reload</source>
         <translation type="unfinished"></translation>
     </message>
@@ -16609,6 +16636,33 @@ to load</source>
     <message>
         <source>(edited)</source>
         <translation type="unfinished">(수정됨)</translation>
+    </message>
+</context>
+<context>
+    <name>SupportedFormatsModal</name>
+    <message>
+        <source>Supported formats</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Files in these formats open in a browser tab. Everything else opens in another app.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Opens here</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Opens in another app</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Checked against this platform&apos;s media engine.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reported by this platform&apos;s browser engine.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
