@@ -39,6 +39,11 @@ StatusTextArea {
     // exceed characterLimit.
     signal attemptToExceedHardLimit()
 
+    // Emitted when a paste is attempted while the clipboard holds an image (desktop only).
+    // ChatTextArea does not handle images itself — it signals the intent and the host decides
+    // what to do (e.g. read ClipboardUtils.imageBase64 and add it to the input's image area).
+    signal pasteImageRequested()
+
     readonly property alias linksModel: highlighter.linksModel
     readonly property alias mentionsModel: highlighter.mentionsModel
 
@@ -151,6 +156,12 @@ StatusTextArea {
     // the hard character limit. Rejects the whole paste (inserts nothing) when it
     // would exceed the limit.
     function pasteText() {
+        // Image paste is desktop-only and handled by the host: signal the intent and stop
+        // (no text is pasted). Reading the clipboard image is left to the host.
+        if (!Utils.isMobile && ClipboardUtils.hasImage) {
+            root.pasteImageRequested()
+            return
+        }
         // The clipboard's plain text length is the character count; for an internal
         // mention paste this slightly over-counts (names vs 1-char pills), erring
         // toward stricter blocking.

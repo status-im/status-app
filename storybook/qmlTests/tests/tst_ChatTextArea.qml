@@ -52,6 +52,12 @@ Item {
         signalName: "attemptToExceedHardLimit"
     }
 
+    SignalSpy {
+        id: pasteImageSpy
+        target: testCase.control
+        signalName: "pasteImageRequested"
+    }
+
     TestCase {
         id: testCase
         name: "ChatTextArea"
@@ -674,6 +680,48 @@ Item {
             // Caret restored to the end of the originally-selected text ("bc"), not collapsed to
             // the document start.
             compare(control.cursorPosition, 3)
+        }
+
+        // ── image paste ─────────────────────────────────────────────────────────
+
+        // A valid PNG as a data URI, used to put a real image on the clipboard.
+        readonly property string testImage:
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ix"
+            + "AAAAlklEQVR4nOzW0QmDQBAG4SSkl7SUQlJGCrElq9F3QdjjVhh/5nv3cFhY9vUI"
+            + "YQiNITSG0BhCExPynn1gWf9bx498P7/nzPcxEzGExhBdJGYihtAYQlO+tUZvqrPb"
+            + "qeudo5iJGEJjCE15a3VtodH3q2ImYgiNITTlTdG1nUZ5a92VITQxITFiJmIIjSE0"
+            + "htAYQrMHAAD//+wwFVpz+yqXAAAAAElFTkSuQmCC"
+
+        // Pasting while the clipboard holds an image emits pasteImageRequested (desktop only) and
+        // inserts no text — the host is responsible for handling the image.
+        function test_pasteImage_emitsRequestAndInsertsNoText() {
+            ClipboardUtils.clear()
+            ClipboardUtils.setImageByUrl(testImage)
+            tryVerify(() => ClipboardUtils.hasImage)
+
+            control.text = ""
+            control.forceActiveFocus()
+            pasteImageSpy.clear()
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            compare(pasteImageSpy.count, 1)
+            compare(control.text, "") // no text inserted for an image paste
+        }
+
+        // A plain text paste must not emit the image signal.
+        function test_pasteText_doesNotEmitImageRequest() {
+            ClipboardUtils.setText("hello")
+            tryVerify(() => ClipboardUtils.hasText && !ClipboardUtils.hasImage)
+
+            control.text = ""
+            control.forceActiveFocus()
+            pasteImageSpy.clear()
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            compare(pasteImageSpy.count, 0)
+            tryCompare(control, "text", "hello")
         }
 
         // ── hard character limit ────────────────────────────────────────────────

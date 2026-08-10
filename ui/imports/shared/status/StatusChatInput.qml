@@ -854,6 +854,13 @@ Control {
                                 emojiSuggestions.close()
                         }
 
+                        // Pasting an image (Ctrl+V or the context menu) adds it to the image
+                        // area instead of inserting text, when image features are enabled.
+                        onPasteImageRequested: {
+                            if (root.imageFeaturesEnabled)
+                                root.validateImagesAndShowImageArea([ClipboardUtils.imageBase64])
+                        }
+
                         Shortcut {
                             enabled: messageInputField.activeFocus
                             sequences: ["Ctrl+Meta+Space", "Ctrl+E"]
@@ -886,6 +893,7 @@ Control {
                             canCut: !messageInputField.noSelection
                             canCopy: !messageInputField.noSelection
                             canPaste: ClipboardUtils.hasText
+                                      || (root.imageFeaturesEnabled && ClipboardUtils.hasImage)
                             canSelectAll: messageInputField.length > 0
 
                             onCutRequested: messageInputField.cutSelection()
