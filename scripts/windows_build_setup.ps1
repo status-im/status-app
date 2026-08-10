@@ -77,6 +77,7 @@ function Install-Dependencies {
     Scoop-Install 'status/inno-setup'    '6.7.0'
     Scoop-Install 'status/msys2'         '2025-12-13'
     Scoop-Install 'status/llvm'          '22.1.8'
+    Scoop-Install 'status/temurin17-jdk' '17.0.19-10'
 }
 
 function Install-MSYS2-Packages {
