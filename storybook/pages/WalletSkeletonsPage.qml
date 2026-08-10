@@ -72,4 +72,4 @@ SplitView {
     }
 }
 
-// category: Panels
+// category: Skeletons

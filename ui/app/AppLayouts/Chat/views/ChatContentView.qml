@@ -109,7 +109,42 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
 
+        // The messages view is the heavy part of a chat; incubate it off the
+        // switch path so the shell (header, input) appears instantly.
+        asynchronous: true
+
+        // The model may only attach once this chat is actually on screen:
+        // during section incubation this loader reaches Ready while the
+        // section is still behind its skeleton, and the message tail would
+        // build inside the time-sliced incubation window. Latched — hiding
+        // the chat later must not detach the model (scroll preserved).
+        readonly property bool shouldAttachModel: status === Loader.Ready
+                                                  && chatMessagesLoader.visible
+        property bool modelAttached: false
+        onShouldAttachModelChanged: {
+            if (shouldAttachModel)
+                modelAttached = true
+        }
+
+        // rows only: the real header and chat input frame this loader
+        MessageRowsSkeleton {
+            id: chatMessagesSkeleton
+            objectName: "chatMessagesSkeleton"
+            anchors.fill: parent
+            // covers both the view construction and the backend fetch
+            visible: chatMessagesLoader.status !== Loader.Ready
+                     || root.messageStore.loading
+        }
+
         sourceComponent: ChatMessagesView {
+            // async incubation parents the partially-built view into the
+            // scene early — keep it invisible until the skeleton drops
+            visible: !chatMessagesSkeleton.visible
+            // and keep the model detached until incubation is over AND the
+            // chat has been shown once, so the list only ever builds the
+            // visible tail, outside the section-incubation window
+            modelActive: chatMessagesLoader.modelAttached
+
             chatContentModule: root.chatContentModule
 
             rootStore: root.rootStore

@@ -96,7 +96,15 @@ Loader {
 
         CommunityChannelsSkeleton {
             anchors.fill: parent
-            anchors.margins: Theme.padding
+
+            // The community identity is known before the section loads, so
+            // the real header shows immediately above the skeleton rows
+            name: root.sectionItemModel?.name ?? ""
+            membersCount: root.sectionItemModel?.joinedMembersCount ?? 0
+            image: root.sectionItemModel?.image ?? ""
+            color: root.sectionItemModel?.color ?? "transparent"
+
+            onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.contactsStore.myPublicKey)
         }
     }
 
@@ -118,7 +126,6 @@ Loader {
 
         MembersListSkeleton {
             anchors.fill: parent
-            anchors.margins: Theme.padding
         }
     }
 

@@ -36,6 +36,11 @@ Item {
     property string channelEmoji
     property var formatBalance
 
+    // Hosts building this view asynchronously must keep this false until
+    // their Loader is Ready: a model attached mid-incubation costs one
+    // (mostly cancelled) delegate incubation per row of the whole history.
+    property bool modelActive: true
+
     // Users related data:
     property var usersModel
 
@@ -248,25 +253,9 @@ Item {
         }
     }
 
-    Loader {
-        id: loadingMessagesView
-
-        anchors.top: loadingMessagesIndicator.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        active: messageStore.loading
-        visible: active
-        sourceComponent: MessagesLoadingView {
-            anchors.margins: 16
-            anchors.fill: parent
-        }
-    }
-
     StatusListView {
         id: chatLogView
-        visible: !loadingMessagesView.visible
+        visible: !messageStore.loading
         objectName: "chatLogView"
         anchors.top: loadingMessagesIndicator.bottom
         anchors.bottom: parent.bottom
@@ -294,7 +283,13 @@ Item {
             restoreMode: Binding.RestoreBindingOrValue
         }
 
-        model: messageStore.messagesModel
+        // Detached until the view exists outside incubation AND the initial
+        // fetch is done. Attaching earlier is O(history): rows stream in at
+        // the viewport edge during the fetch, and a model attached while the
+        // view incubates makes the ListView visit every row through nested
+        // async delegate incubation. Attaching late builds only the visible
+        // tail.
+        model: (messageStore.loading || !root.modelActive) ? null : messageStore.messagesModel
 
         onContentYChanged: d.loadMoreMessagesIfScrollBelowThreshold()
 

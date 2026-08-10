@@ -1,7 +1,7 @@
+ChatContentView 1.0 ChatContentView.qml
 ChatHeaderContentView 1.0 ChatHeaderContentView.qml
 ContactsColumnView 1.0 ContactsColumnView.qml
 CreateChatView 1.0 CreateChatView.qml
 MembersEditSelectorView 1.0 MembersEditSelectorView.qml
 MembersModelAdaptor 1.0 MembersModelAdaptor.qml
 MembersSelectorView 1.0 MembersSelectorView.qml
-MessagesLoadingView 1.0 MessagesLoadingView.qml

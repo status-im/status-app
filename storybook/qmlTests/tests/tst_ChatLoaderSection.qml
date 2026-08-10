@@ -312,6 +312,217 @@ Item {
             d.contentModules = ({})
                     }
 
+        // Perf: the members panel must not be built with the section — only
+        // on first show, asynchronously behind a skeleton.
+        function test_membersPanelBuildsAsyncOnFirstShow() {
+            harness.active = true
+            const loader = harness.item
+            verify(!!loader)
+            tryVerify(() => loader.status === Loader.Ready, 60000)
+            tryVerify(() => loader.item.rightPanel !== null, 10000)
+
+            compare(findChild(loader, "userListPanel"), null,
+                    "members list must not be built before the panel is shown")
+
+            accountSettingsStoreMock.showUsersList = true
+
+            // synchronously after showing: skeleton covers the panel while
+            // the members list incubates
+            const skeleton = findChild(loader, "membersPanelSkeleton")
+            verify(!!skeleton)
+            verify(skeleton.visible)
+
+            tryVerify(() => !!findChild(loader, "userListPanel"), 10000)
+            tryVerify(() => !skeleton.visible)
+
+            accountSettingsStoreMock.showUsersList = false
+        }
+
+        // The incubating members list is parented into the scene before it
+        // is complete — it must stay invisible behind the skeleton.
+        function test_membersPanelHiddenWhileIncubating() {
+            harness.active = true
+            const loader = harness.item
+            verify(!!loader)
+            tryVerify(() => loader.status === Loader.Ready, 60000)
+            tryVerify(() => loader.item.rightPanel !== null, 10000)
+
+            accountSettingsStoreMock.showUsersList = true
+
+            const skeleton = findChild(loader, "membersPanelSkeleton")
+            verify(!!skeleton)
+
+            let sawVisiblePartial = false
+            while (skeleton.visible) {
+                const panel = findChild(loader, "userListPanel")
+                if (panel && panel.visible)
+                    sawVisiblePartial = true
+                wait(1)
+            }
+            verify(!sawVisiblePartial,
+                   "incubating members list must not be visible under the skeleton")
+
+            const panel = findChild(loader, "userListPanel")
+            verify(!!panel)
+            tryVerify(() => panel.visible, 10000,
+                      "members list must show once ready")
+
+            accountSettingsStoreMock.showUsersList = false
+        }
+
+        function findAllIn(item, name, out) {
+            if (!item)
+                return out
+            if (item.objectName === name)
+                out.push(item)
+            const list = item.children
+            for (let i = 0; i < list.length; ++i)
+                findAllIn(list[i], name, out)
+            return out
+        }
+
+        function totalMessageRows(loader) {
+            const views = findAllIn(loader, "chatLogView", [])
+            let total = 0
+            for (let i = 0; i < views.length; ++i)
+                total += views[i].contentItem.children.length
+            return total
+        }
+
+        function activeReadyLogView(loader) {
+            const views = findAllIn(loader, "chatLogView", [])
+            for (let i = 0; i < views.length; ++i) {
+                const lv = views[i]
+                if (lv.visible && lv.model && lv.count > 0
+                        && lv.contentItem.children.length > 0)
+                    return lv
+            }
+            return null
+        }
+
+        // Switching to a chat must cost the same whether its history holds
+        // 150 or 3000 messages: only the visible tail is built.
+        function test_chatSwitchCostIndependentOfHistorySize() {
+            harness.active = true
+            const loader = harness.item
+            verify(!!loader)
+            tryVerify(() => loader.status === Loader.Ready, 60000)
+            tryVerify(() => !!activeReadyLogView(loader), 10000)
+
+            function measureSwitch(chatId) {
+                const rowsBefore = totalMessageRows(loader)
+                const t0 = Date.now()
+                d.setActiveChat(chatId)
+                const syncMs = Date.now() - t0
+                tryVerify(() => {
+                    const lv = activeReadyLogView(loader)
+                    return !!lv && lv.parent.visible
+                }, 120000)
+                waitForRendering(loader)
+                return { ms: Date.now() - t0, syncMs: syncMs,
+                         rows: totalMessageRows(loader) - rowsBefore }
+            }
+
+            const small = measureSwitch("chat-1")
+
+            // fresh section with a big history — no residual layout work
+            // from the previous lists leaking into the measurement
+            harness.active = false
+            d.contentModules = ({})
+            d.buildMessages(3000)
+            harness.active = true
+            const loader2 = harness.item
+            tryVerify(() => loader2.status === Loader.Ready, 60000)
+            d.setActiveChat("chat-0")
+            tryVerify(() => !!activeReadyLogView(loader2), 120000)
+            waitForRendering(loader2)
+
+            const rowsBefore = totalMessageRows(loader2)
+            const t0 = Date.now()
+            d.setActiveChat("chat-2")
+            const syncMs = Date.now() - t0
+            tryVerify(() => {
+                const lv = activeReadyLogView(loader2)
+                return !!lv && lv.parent.visible
+            }, 120000)
+            waitForRendering(loader2)
+            const large = { ms: Date.now() - t0, syncMs: syncMs,
+                            rows: totalMessageRows(loader2) - rowsBefore }
+
+            console.info("chat switch cost: 150 msgs =", small.ms, "ms (sync",
+                         small.syncMs, ") /", small.rows,
+                         "rows; 3000 msgs =", large.ms, "ms (sync",
+                         large.syncMs, ") /", large.rows, "rows")
+
+            verify(small.rows < 100,
+                   "switch must build only the visible tail, built "
+                   + small.rows + " rows for a 150-message history")
+            verify(large.rows < 100,
+                   "switch must build only the visible tail, built "
+                   + large.rows + " rows for a 3000-message history")
+            // generous CI headroom; the point is switch cost must not grow
+            // with history size (regressions here are 10-100x, not 2x)
+            verify(large.ms < small.ms * 10 + 2000,
+                   "switch cost grew with history size: " + small.ms
+                   + " ms @150 vs " + large.ms + " ms @3000")
+        }
+
+        // Opening a chat must only build delegates for the messages that fit
+        // the viewport (plus cache) — never one per historic message.
+        function test_messagesListVirtualized() {
+            harness.active = true
+            const loader = harness.item
+            verify(!!loader)
+            tryVerify(() => loader.status === Loader.Ready, 60000)
+
+            const lv = findChild(loader, "chatLogView")
+            verify(!!lv)
+            tryVerify(() => lv.count === 150, 10000)
+            waitForRendering(lv)
+
+            const created = lv.contentItem.children.length
+            verify(created > 0, "some message rows must be built")
+            verify(created < 75,
+                   "only viewport+cache rows may be built, got " + created
+                   + " of " + lv.count)
+        }
+
+        // Loading the section must cost the same whether the chat list holds
+        // 300 or 2000 chats: only the visible rows are built.
+        function test_sectionLoadCostIndependentOfChatCount() {
+            function measureSectionLoad(chatCount) {
+                d.buildChats(chatCount)
+                d.setActiveChat("chat-0")
+                const t0 = Date.now()
+                harness.active = true
+                const loader = harness.item
+                tryVerify(() => loader.status === Loader.Ready, 120000)
+                tryVerify(() => !!findChild(loader, "ContactsColumnView_chatList"), 10000)
+                waitForRendering(loader)
+                const lv = findChild(loader, "ContactsColumnView_chatList").statusChatListItems
+                const result = { ms: Date.now() - t0,
+                                 rows: lv.contentItem.children.length }
+                harness.active = false
+                d.contentModules = ({})
+                return result
+            }
+
+            measureSectionLoad(300) // warmup: first load pays QML compilation
+
+            const small = measureSectionLoad(300)
+            const large = measureSectionLoad(2000)
+            console.info("section load cost: 300 chats =", small.ms, "ms /",
+                         small.rows, "rows; 2000 chats =", large.ms, "ms /",
+                         large.rows, "rows")
+
+            verify(large.rows < 100,
+                   "only visible chat rows may be built, got " + large.rows)
+            // generous CI headroom; a crawl regression is 5-50x, not 2x
+            verify(large.ms < small.ms * 3 + 2000,
+                   "section load cost grew with chat count: " + small.ms
+                   + " ms @300 vs " + large.ms + " ms @2000")
+        }
+
         function test_loadsRealSectionAfterSkeleton() {
             harness.active = true
             const loader = harness.item

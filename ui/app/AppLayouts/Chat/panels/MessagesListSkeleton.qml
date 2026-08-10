@@ -1,12 +1,13 @@
 import QtQuick
-import QtQuick.Layouts
 
 import StatusQ.Components
 import StatusQ.Core.Theme
 
 // Loading placeholder mimicking the messages chat list: the real header row
-// followed by skeleton chat rows (avatar, name, message preview, timestamp)
-ColumnLayout {
+// followed by skeleton chat rows (avatar + name). Plain positioners on
+// purpose — skeletons must stay near-free, QtQuick.Layouts polish is too
+// expensive here.
+Column {
     id: root
 
     property alias createChatOpened: header.createChatOpened
@@ -14,13 +15,16 @@ ColumnLayout {
     signal shareOwnProfileRequested()
     signal startChatClicked()
 
-    spacing: Theme.padding
+    // margins/spacing mirror ContactsColumnView so the swap doesn't shift
+    topPadding: Theme.smallPadding
+    spacing: Theme.halfPadding
 
     // The real header: invite and start-chat act app-globally, so they work
     // before the section exists; search needs the loaded list, so it is disabled
     MessagesListHeader {
         id: header
-        Layout.fillWidth: true
+        x: Theme.padding
+        width: parent.width - 2 * Theme.padding
         searchEnabled: false
 
         onShareOwnProfileRequested: root.shareOwnProfileRequested()
@@ -28,12 +32,13 @@ ColumnLayout {
     }
 
     LoadingSkeletonGroup {
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        implicitHeight: rowsLayout.implicitHeight
+        x: Theme.padding
+        width: parent.width - 2 * Theme.padding
+        height: root.height - y
+        // rows that don't fit must not bleed past the panel
+        clip: true
 
-        ColumnLayout {
-            id: rowsLayout
+        Column {
             anchors {
                 top: parent.top
                 left: parent.left
@@ -42,34 +47,25 @@ ColumnLayout {
             spacing: Theme.padding
 
             Repeater {
-                model: 9
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 48
-                    spacing: Theme.padding
+                model: 12
+                Row {
+                    id: chatRow
+
+                    required property int index
+
+                    width: parent.width
+                    spacing: Theme.halfPadding
 
                     LoadingSkeletonTile {
-                        implicitWidth: 40
-                        implicitHeight: 40
+                        implicitWidth: 30
+                        implicitHeight: 30
                         radius: width / 2
                     }
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: Theme.halfPadding
-
-                        LoadingSkeletonTile {
-                            implicitWidth: 120
-                            implicitHeight: 14
-                        }
-                        LoadingSkeletonTile {
-                            implicitWidth: 180
-                            implicitHeight: 12
-                        }
-                    }
                     LoadingSkeletonTile {
-                        Layout.alignment: Qt.AlignTop
-                        implicitWidth: 36
-                        implicitHeight: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        // chat names vary in length
+                        implicitWidth: 88 + (chatRow.index * 59) % 132
+                        implicitHeight: 14
                     }
                 }
             }

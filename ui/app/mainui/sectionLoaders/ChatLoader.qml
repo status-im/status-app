@@ -91,7 +91,6 @@ Loader {
         // remain functional while the section incubates
         MessagesListSkeleton {
             anchors.fill: parent
-            anchors.margins: Theme.padding
 
             createChatOpened: root.createChatViewOpened
 
@@ -124,7 +123,6 @@ Loader {
 
         MembersListSkeleton {
             anchors.fill: parent
-            anchors.margins: Theme.padding
         }
     }
 

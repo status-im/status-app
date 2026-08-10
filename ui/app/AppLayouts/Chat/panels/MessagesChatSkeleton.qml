@@ -1,58 +1,29 @@
 import QtQuick
-import QtQuick.Layouts
 
-import StatusQ.Components
 import StatusQ.Core.Theme
 
-// Loading placeholder mimicking an open chat: message bubbles and the input bar
-LoadingSkeletonGroup {
+// Loading placeholder for a whole chat center panel: message rows plus the
+// input area. For contexts where the real header/input are already on
+// screen use MessageRowsSkeleton alone.
+Item {
     id: root
 
-    ColumnLayout {
-        anchors.fill: parent
-        spacing: Theme.padding
-
-        Item { Layout.fillHeight: true }
-
-        Repeater {
-            model: 5
-            RowLayout {
-                readonly property bool own: index % 2 === 1
-
-                required property int index
-
-                Layout.fillWidth: true
-                spacing: Theme.halfPadding
-
-                LoadingSkeletonTile {
-                    visible: !parent.own
-                    Layout.alignment: Qt.AlignTop
-                    implicitWidth: 32
-                    implicitHeight: 32
-                    radius: width / 2
-                }
-                Item {
-                    visible: parent.own
-                    Layout.fillWidth: true
-                }
-                LoadingSkeletonTile {
-                    implicitWidth: 180 + (parent.index % 3) * 40
-                    implicitHeight: 44 + (parent.index % 2) * 16
-                    radius: Theme.radius
-                }
-                Item {
-                    visible: !parent.own
-                    Layout.fillWidth: true
-                }
-            }
+    ChatInputSkeleton {
+        id: inputSkeleton
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
         }
+    }
 
-        // input bar
-        LoadingSkeletonTile {
-            Layout.fillWidth: true
-            Layout.topMargin: Theme.padding
-            implicitHeight: 40
-            radius: 20
+    MessageRowsSkeleton {
+        anchors {
+            top: parent.top
+            left: parent.left
+            right: parent.right
+            bottom: inputSkeleton.top
+            bottomMargin: Theme.padding
         }
     }
 }
