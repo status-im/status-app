@@ -79,8 +79,9 @@ Item {
         }
 
         function verifyWalletOrder(expectedTitles) {
+            // the accounts list builds behind an asynchronous Loader
+            tryVerify(() => !!findChild(controlUnderTest, "walletAccountsListView"))
             const listView = findChild(controlUnderTest, "walletAccountsListView")
-            verify(!!listView)
             waitForRendering(listView)
             tryVerify(() => {
                 if (listView.count !== expectedTitles.length)

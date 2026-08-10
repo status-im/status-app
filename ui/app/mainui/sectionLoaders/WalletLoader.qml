@@ -1,5 +1,11 @@
+import QtCore
 import QtQml
 import QtQuick
+
+import StatusQ.Core.Theme
+import StatusQ.Layout
+
+import AppLayouts.Wallet.panels
 
 import utils
 
@@ -33,7 +39,62 @@ Loader {
     property bool appMainVisible: false
     property real leftPanelWidthOverride: 0
 
-    asynchronous: false
+    asynchronous: true
+
+    // The section chrome is owned by the loader: it shows instantly with
+    // skeleton panels and swaps in the real panels produced by WalletLayout
+    // (LayoutItemProxy retarget) once the section finishes incubating.
+    StatusSectionLayout {
+        id: sectionLayout
+
+        anchors.fill: parent
+        currentIndex: 1
+
+        // The privacy wall is a full-page item rendered by the Loader itself
+        visible: d.targetUrl !== d.privacyWallUrl
+
+        backButtonName: root.item?.backButtonName ?? ""
+        onBackButtonClicked: root.item?.handleBackButtonClicked()
+        subsectionHistory: root.item?.subsectionHistory ?? null
+
+        leftPanel: root.item?.leftPanel ?? accountsSkeleton
+        centerPanel: root.item?.centerPanel ?? centerSkeleton
+        headerBackground: root.item?.headerBackground ?? null
+        footer: root.item?.footer ?? null
+
+        leftPanelWidthOverride: root.leftPanelWidthOverride
+    }
+
+    // Skeleton slot items carry the same page paddings as the real panels
+    // (LeftTabView's internal padding, resp. the center StackView's margins)
+    Item {
+        id: accountsSkeleton
+        visible: root.status !== Loader.Ready
+
+        WalletAccountsSkeleton {
+            anchors.fill: parent
+            anchors.margins: Theme.padding
+        }
+    }
+
+    Item {
+        id: centerSkeleton
+        visible: root.status !== Loader.Ready
+
+        WalletCenterPanelSkeleton {
+            anchors.fill: parent
+            anchors.topMargin: Theme.padding
+            anchors.leftMargin: Theme.xlPadding * 2
+            anchors.rightMargin: Theme.xlPadding * 2
+        }
+    }
+
+    // Panel index persistence, kept under the same category/key WalletLayout
+    // used when it owned the chrome
+    Settings {
+        category: "WalletLocalSettings_%1".arg(root.contactsStore.myPublicKey)
+        property alias selectedPanelIndex: sectionLayout.currentIndex
+    }
 
     QtObject {
         id: d
@@ -62,6 +123,7 @@ Loader {
         setSource(d.realUrl, {
             visible:                false,
             objectName:             "walletLayoutReal",
+            sectionLayout:          sectionLayout,
             walletRootStore:        WalletStores.RootStore,
             sharedRootStore:        Qt.binding(() => root.sharedRootStore),
             store:                  Qt.binding(() => root.rootStore),
@@ -84,7 +146,6 @@ Loader {
                                             ? root.dappsServiceLoader.item.dappsModel
                                             : null),
             isKeycardEnabled:       Qt.binding(() => root.featureFlagsStore.keycardEnabled),
-            leftPanelWidthOverride: Qt.binding(() => root.leftPanelWidthOverride),
         })
     }
 

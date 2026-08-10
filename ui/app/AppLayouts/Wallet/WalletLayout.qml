@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtCore
 
 import StatusQ
 import StatusQ.Layout
@@ -34,13 +33,34 @@ import "popups/buy"
 Item {
     id: root
 
-    // --- Back-navigation contract, forwarded to the inner StatusSectionLayout
-    // (walletSectionLayout). This Item wrapper would otherwise be a dead-end
-    // for AppMain's Link 2 on desktop. See AppMain.tryGoBack().
+    // The section chrome (StatusSectionLayout) is owned by WalletLoader; it is
+    // injected here so the existing panel hook-ups keep their call sites.
+    property StatusSectionLayout sectionLayout
+
+    // --- Back-navigation contract, forwarded to the loader-owned chrome.
+    // This Item wrapper would otherwise be a dead-end for AppMain's Link 2 on
+    // desktop. See AppMain.tryGoBack().
     function tryGoBack() {
-        return walletSectionLayout.tryGoBack()
+        return root.sectionLayout?.tryGoBack() ?? false
     }
-    readonly property bool canGoBack: walletSectionLayout.canGoBack
+    readonly property bool canGoBack: root.sectionLayout?.canGoBack ?? false
+
+    // Consumed by the chrome in WalletLoader
+    readonly property string backButtonName: RootStore.backButtonName
+
+    function handleBackButtonClicked() {
+        if (rightPanelStackView.currentItem && !!rightPanelStackView.currentItem.resetStack) {
+            rightPanelStackView.currentItem.resetStack()
+        }
+    }
+
+    // Subsection back history keyed by the selected account. Navigates via
+    // d.displayAddress (not changeSelectedAccount, which advances the panel).
+    readonly property var subsectionHistory: StatusQUtils.SubsectionNavigationHistory {
+        currentKey: RootStore.selectedAddress
+        validateFn: (address) => StatusQUtils.ModelUtils.indexOf(RootStore.accounts, "address", address) >= 0
+        onNavigateRequested: (address) => d.displayAddress(address)
+    }
 
     property WalletStores.RootStore walletRootStore
     property SharedStores.RootStore sharedRootStore
@@ -73,17 +93,6 @@ Item {
     signal sendTokenRequested(string senderAddress, string groupKey, int tokenType)
 
     signal openSwapModalRequested(var swapFormData)
-
-    // Layout interaction:
-    /*!
-        \qmlproperty int StatusSectionLayoutLandscape::leftPanelWidthOverride
-        This property provides an external override for the left panel width.
-
-        When greater than 0, the layout uses this value to temporarily expand the
-        left panel area. When set to 0, the override is cleared and the layout
-        collapses the left panel back to its default width.
-    */
-    property int leftPanelWidthOverride: 0
 
     onAppMainVisibleChanged: {
         resetView()
@@ -183,7 +192,7 @@ Item {
         }
 
         // In portrait mode, it automatically swipes to the detailed content
-        walletSectionLayout.goToNextPanel()
+        root.sectionLayout?.goToNextPanel()
     }
 
     QtObject {
@@ -351,26 +360,9 @@ Item {
         accountBalanceNotAvailableText: root.networkConnectionStore.accountBalanceNotAvailableText
     }
 
-    StatusSectionLayout {
-        id: walletSectionLayout
-        currentIndex: 1
-        anchors.fill: parent
-        backButtonName: RootStore.backButtonName
-        onBackButtonClicked: {
-            if (rightPanelStackView.currentItem && !!rightPanelStackView.currentItem.resetStack) {
-                rightPanelStackView.currentItem.resetStack()
-            }
-        }
-
-        // Subsection back history keyed by the selected account. Navigates via
-        // d.displayAddress (not changeSelectedAccount, which advances the panel).
-        subsectionHistory: StatusQUtils.SubsectionNavigationHistory {
-            currentKey: RootStore.selectedAddress
-            validateFn: (address) => StatusQUtils.ModelUtils.indexOf(RootStore.accounts, "address", address) >= 0
-            onNavigateRequested: (address) => d.displayAddress(address)
-        }
-
-        leftPanel: LeftTabView {
+    // Panels are constructed and wired here, but presented by the loader-owned
+    // chrome (LayoutItemProxy targets); they have no visual parent until then.
+    readonly property Item leftPanel: LeftTabView {
             id: leftTab
             anchors.fill: parent
             viewState: leftPanelState
@@ -386,24 +378,24 @@ Item {
                 root.walletRootStore.authenticateLoggedInUser(requestedBy)
 
             onAccountSelected: address => {
-                walletSectionLayout.goToNextPanel()
+                root.sectionLayout?.goToNextPanel()
                 d.displayAddress(address)
             }
             onAllAccountsSelected: {
-                walletSectionLayout.goToNextPanel()
+                root.sectionLayout?.goToNextPanel()
                 d.displayAllAddresses()
             }
             onSavedAddressesSelected: {
-                walletSectionLayout.goToNextPanel()
+                root.sectionLayout?.goToNextPanel()
                 d.displaySavedAddresses()
             }
             onFollowingAddressesSelected: {
-                walletSectionLayout.goToNextPanel()
+                root.sectionLayout?.goToNextPanel()
                 d.displayFollowingAddresses()
             }
         }
 
-        centerPanel: StackView {
+    readonly property Item centerPanel: StackView {
             id: rightPanelStackView
             anchors.fill: parent
             anchors.leftMargin: Theme.xlPadding * 2
@@ -416,12 +408,12 @@ Item {
                 NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 400; easing.type: Easing.OutCubic }
             }
         }
-        headerBackground: AccountHeaderGradient {
+    readonly property Item headerBackground: AccountHeaderGradient {
             width: parent ? parent.width : 0
             overview: RootStore.overview
         }
 
-        footer: WalletFooter {
+    readonly property Item footer: WalletFooter {
             id: footer
 
             visible: anyActionAvailable
@@ -457,10 +449,6 @@ Item {
             onLaunchBuyCryptoModal: d.launchBuyCryptoModal()
         }
 
-        // Layout
-        leftPanelWidthOverride: root.leftPanelWidthOverride
-    }
-
     Loader {
         id: addAccount
         active: false
@@ -487,11 +475,5 @@ Item {
         onLoaded: {
             keypairImport.item.open()
         }
-    }
-
-    Settings {
-        id: walletLocalSettings
-        category: "WalletLocalSettings_%1".arg(userProfile.pubKey)
-        property alias selectedPanelIndex: walletSectionLayout.currentIndex
     }
 }
