@@ -213,9 +213,15 @@ Item {
             leftPadding: d.listContentLeftMargin
             rightPadding: d.scrollBarWidth + d.scrollBarSpacing
             contentWidth: availableWidth
-            contentHeight: communityChatListAndCategories.height
-                           + bannerColumn.height
-                           + bannerColumn.anchors.topMargin
+            // Members get a virtualized, self-scrolling channels list — this
+            // ScrollView then has nothing to scroll. Admins keep the expanded
+            // list (drag-reorder addresses rows across the whole list) with
+            // their banners below, scrolled by this ScrollView.
+            contentHeight: root.isSectionAdmin
+                           ? communityChatListAndCategories.height
+                             + bannerColumn.height
+                             + bannerColumn.anchors.topMargin
+                           : availableHeight
 
             ScrollBar.vertical.implicitWidth: d.scrollBarWidth
             ScrollBar.vertical.width: d.scrollBarWidth
@@ -223,6 +229,8 @@ Item {
             StatusChatListAndCategories {
                 id: communityChatListAndCategories
                 width: scrollView.availableWidth
+                virtualized: !root.isSectionAdmin
+                height: root.isSectionAdmin ? implicitHeight : scrollView.availableHeight
                 draggableItems: root.isSectionAdmin
                 draggableCategories: root.isSectionAdmin
 

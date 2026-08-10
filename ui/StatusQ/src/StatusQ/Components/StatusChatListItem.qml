@@ -36,6 +36,14 @@ Rectangle {
     property bool dragged: false
     property alias sensor: sensor
 
+    // Set by hosts that wrap the row in a drag container which delivers the
+    // row's input (see StatusChatList's draggable rows): the row's own tap
+    // handling must stand down — its passive grab would block the wrapper's
+    // drag areas underneath.
+    property bool clickHandledByWrapper: false
+    // driven by the wrapper while a drag is in progress
+    property bool dragActive: false
+
     readonly property int verticalPadding: 4
     readonly property int horizontalMargin: Math.max(Theme.halfPadding, 8)
 
@@ -82,7 +90,26 @@ Rectangle {
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-        onClicked: root.clicked(mouse)
+        // Left taps are handled by the TapHandler below: MouseArea.clicked
+        // requires the hover chain to point here, and a stale delivery-agent
+        // hover state (panel roundtrips reparent the proxied panels) keeps
+        // containsMouse false through the whole press, silently eating taps.
+        onClicked: {
+            if (mouse.button !== Qt.RightButton)
+                return
+            root.clicked(mouse)
+        }
+
+        TapHandler {
+            acceptedButtons: Qt.LeftButton
+            enabled: !root.clickHandledByWrapper
+            // default DragThreshold policy: passive grab, coexists with the
+            // MouseArea and has no hover-chain dependency
+            onTapped: (eventPoint, button) => {
+                root.clicked({ button: Qt.LeftButton, x: eventPoint.position.x,
+                               y: eventPoint.position.y, modifiers: 0, accepted: true })
+            }
+        }
 
         StatusSmartIdenticon {
             id: identicon
@@ -169,27 +196,33 @@ Rectangle {
             font.pixelSize: Theme.primaryTextFontSize
         }
 
-        StatusIcon {
+        // most rows are not muted — the icon, its sensor and tooltip only
+        // exist while the row actually is
+        Loader {
             id: mutedIcon
             anchors.right: statusBadge.visible ? statusBadgeContainer.left : parent.right
             anchors.rightMargin: root.horizontalMargin
             anchors.verticalCenter: parent.verticalCenter
-            width: 14
-            opacity: mutedIconSensor.containsMouse ? 1.0 : 0.2
-            icon: Theme.palette.name === "light" ? "tiny/muted" : "tiny/muted-white"
-            visible: root.muted
+            active: root.muted
+            visible: active
 
-            StatusMouseArea {
-                id: mutedIconSensor
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                anchors.fill: parent
-                onClicked: root.unmute()
-            }
+            sourceComponent: StatusIcon {
+                width: 14
+                opacity: mutedIconSensor.containsMouse ? 1.0 : 0.2
+                icon: Theme.palette.name === "light" ? "tiny/muted" : "tiny/muted-white"
 
-            StatusToolTip {
-                text: qsTr("Unmute")
-                visible: mutedIconSensor.containsMouse
+                StatusMouseArea {
+                    id: mutedIconSensor
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    anchors.fill: parent
+                    onClicked: root.unmute()
+                }
+
+                StatusToolTip {
+                    text: qsTr("Unmute")
+                    visible: mutedIconSensor.containsMouse
+                }
             }
         }
         Item {

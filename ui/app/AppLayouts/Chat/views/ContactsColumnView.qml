@@ -104,6 +104,7 @@ Item {
         StatusChatList {
             id: channelList
             objectName: "ContactsColumnView_chatList"
+            virtualized: true
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.leftMargin: d.listContentLeftMargin

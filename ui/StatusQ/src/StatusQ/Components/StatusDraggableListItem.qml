@@ -239,24 +239,59 @@ AbstractButton {
     property bool drawBackgroundBorder: true
 
     Drag.dragType: Drag.Automatic
-    Drag.hotSpot.x: dragHandler.mouseX
-    Drag.hotSpot.y: dragHandler.mouseY
+    Drag.hotSpot.x: pointerDrag.centroid.position.x
+    Drag.hotSpot.y: pointerDrag.centroid.position.y
     Drag.keys: ["x-status-draggable-list-item-internal"]
 
     /*!
        \qmlproperty readonly bool StatusDraggableListItem::dragActive
        This property holds whether a drag is currently in progress
     */
-    readonly property bool dragActive: dragHandler.drag.active
+    readonly property bool dragActive: pointerDrag.active
     onDragActiveChanged: {
         if (dragActive) {
+            d.freezeEnclosingFlickables()
             Drag.start()
             root.dragStarted()
             return
         }
         Drag.drop()
         root.dragFinished()
+        d.unfreezeEnclosingFlickables()
     }
+
+    QtObject {
+        id: d
+
+        // Enclosing Flickables force-cancel the drag's exclusive grab once
+        // real pointer movement crosses their flick threshold (their steal
+        // path never consults handler grabPermissions), so they are frozen
+        // for the drag's duration. Restoring writes the property back, which
+        // drops any host binding on `interactive` — hosts with a dynamic
+        // binding there must freeze themselves instead.
+        property var frozenFlickables: []
+
+        function freezeEnclosingFlickables() {
+            const frozen = []
+            for (let p = root.parent; p; p = p.parent) {
+                if (p instanceof Flickable && p.interactive) {
+                    p.interactive = false
+                    frozen.push(p)
+                }
+            }
+            frozenFlickables = frozen
+        }
+
+        function unfreezeEnclosingFlickables() {
+            for (const flickable of frozenFlickables)
+                flickable.interactive = true
+            frozenFlickables = []
+        }
+    }
+
+    // a dropped-on reorder can destroy this delegate before dragActive
+    // transitions — the frozen flickables outlive it and must be released
+    Component.onDestruction: d.unfreezeEnclosingFlickables()
 
     /*!
         \qmlsignal
@@ -310,8 +345,26 @@ AbstractButton {
 
         acceptedButtons: Qt.LeftButton | Qt.RightButton
 
+        // Left taps are handled by TapHandlers — MouseArea.clicked depends on
+        // the delivery agent's hover chain, which goes stale on panel
+        // roundtrips and silently eats taps (see StatusChatListItem). A
+        // TapHandler only coexists with the exclusive mouse grab when it sits
+        // on the grabbing item itself, so each grabbing area carries its own,
+        // gated by which one takes row presses in the current mode.
         onClicked: (mouse) => {
-            root.clicked(mouse)
+            if (mouse.button === Qt.RightButton)
+                root.clicked(mouse)
+        }
+
+        TapHandler {
+            acceptedButtons: Qt.LeftButton
+            // this area takes row presses when the full-row dragHandler is
+            // parented to the drag handle instead (mobile)
+            enabled: root.dragByHandleOnly
+            onTapped: (eventPoint, button) => {
+                root.clicked({ button: Qt.LeftButton, x: eventPoint.position.x,
+                               y: eventPoint.position.y, modifiers: 0, accepted: true })
+            }
         }
     }
 
@@ -322,10 +375,26 @@ AbstractButton {
         parent: root.dragByHandleOnly ? dragHandleIcon : root
 
         anchors.fill: parent
-        drag.target: root.dragEnabled ? root : null
-        drag.axis: root.dragAxis
-        preventStealing: true // otherwise DND is broken inside a Flickable/ScrollView
+        // the actual dragging lives in pointerDrag (DragHandler) — this area
+        // keeps the cursor, composed-click propagation and long-press. No
+        // preventStealing: it would also refuse the DragHandler's takeover.
         propagateComposedEvents: true // handle mouse click from MouseArea below
+
+        // The drag mechanics. A MouseArea's `drag` measures movement against
+        // its own (moving) item and barely moves a target it sits inside of;
+        // DragHandler computes in scene space and tracks the pointer exactly.
+        // It must live on the item that grabs the press — handlers of items
+        // below the grabber are never visited.
+        DragHandler {
+            id: pointerDrag
+            target: root.dragEnabled ? root : null
+            xAxis.enabled: root.dragAxis === Drag.XAxis || root.dragAxis === Drag.XAndYAxis
+            yAxis.enabled: root.dragAxis === Drag.YAxis || root.dragAxis === Drag.XAndYAxis
+            // may take the grab over from the pressing MouseArea, but
+            // approves no takeover — hosting flickables must not steal it
+            grabPermissions: PointerHandler.CanTakeOverFromItems
+                             | PointerHandler.CanTakeOverFromHandlersOfDifferentType
+        }
 
         cursorShape: {
             if (!root.enabled)
@@ -335,6 +404,16 @@ AbstractButton {
         }
 
         acceptedButtons: Qt.LeftButton | Qt.RightButton
+
+        TapHandler {
+            acceptedButtons: Qt.LeftButton
+            // full-row drag area takes row presses on desktop; cancels on drag
+            enabled: !root.dragByHandleOnly
+            onTapped: (eventPoint, button) => {
+                root.clicked({ button: Qt.LeftButton, x: eventPoint.position.x,
+                               y: eventPoint.position.y, modifiers: 0, accepted: true })
+            }
+        }
     }
 
     RowLayout {

@@ -13,6 +13,13 @@ Item {
 
     property alias highlightItem: statusChatList.highlightItem
 
+    // When true the inner list is bounded to this item's height and scrolls
+    // itself, building only viewport+cache delegates. When false (default)
+    // the list expands to its full content height — hosts embed it in their
+    // own scroll area (needed by drag-reorder, which addresses rows by index
+    // across the whole list).
+    property bool virtualized: false
+
     property var model: []
     property bool showCategoryActionButtons: false
     property bool showPopupMenu: true
@@ -48,6 +55,8 @@ Item {
             objectName: "statusChatListAndCategoriesChatList"
             id: statusChatList
             width: parent.width
+            height: root.virtualized ? sensor.height : implicitHeight
+            virtualized: root.virtualized
             visible: statusChatList.model.count > 0
             onChatItemSelected: root.chatItemSelected(categoryId, id)
             onChatItemClicked: root.chatItemClicked(id)
