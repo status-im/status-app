@@ -248,25 +248,9 @@ Item {
         }
     }
 
-    Loader {
-        id: loadingMessagesView
-
-        anchors.top: loadingMessagesIndicator.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        active: messageStore.loading
-        visible: active
-        sourceComponent: MessagesLoadingView {
-            anchors.margins: 16
-            anchors.fill: parent
-        }
-    }
-
     StatusListView {
         id: chatLogView
-        visible: !loadingMessagesView.visible
+        visible: !messageStore.loading
         objectName: "chatLogView"
         anchors.top: loadingMessagesIndicator.bottom
         anchors.bottom: parent.bottom

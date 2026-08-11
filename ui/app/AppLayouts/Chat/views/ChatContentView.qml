@@ -16,9 +16,6 @@ import shared.status
 import shared.controls
 import shared.views.chat
 
-import AppLayouts.Profile.stores
-import AppLayouts.stores as AppLayoutStores
-
 import AppLayouts.Chat.stores as ChatStores
 
 import "../helpers"
@@ -109,7 +106,25 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
 
+        // The messages view is the heavy part of a chat; incubate it off the
+        // switch path so the shell (header, input) appears instantly.
+        asynchronous: true
+
+        Loader {
+            id: chatMessagesSkeleton
+            anchors.fill: parent
+            // covers both the view construction and the backend fetch
+            active: chatMessagesLoader.status !== Loader.Ready
+                    || root.messageStore.loading
+            visible: active
+            sourceComponent: MessageRowsSkeleton {
+                objectName: "chatMessagesSkeleton"
+            }
+        }
+
         sourceComponent: ChatMessagesView {
+            visible: !chatMessagesSkeleton.visible
+
             chatContentModule: root.chatContentModule
 
             rootStore: root.rootStore
