@@ -14,6 +14,9 @@ Accepted
   codecs are a Capability too, so the allowlist is per Backend; needing the
   player page is a Capability as well, and Backends without it load the media
   file directly)
+- **Amended**: 2026-08-11 — §8 (a Tab displaying a downloaded file is isolated
+  from browsing: its own ephemeral profile, no scripts, no channel, and the only
+  profile that may reach `file://`; browsing profiles reach none)
 - **Amended**: 2026-08-11 — §7 (a re-issue carries a correlation token the
   Backend echoes, so it reattaches to the armed Record by identity; the desktop
   re-issue is viewless — the profile, not a Tab, owns the Backend — while mobile
@@ -204,8 +207,18 @@ library's Download object is a transient attachment to it.**
    **The desktop file action copies a path, and says so.** Where mobile shares the
    file itself through the system sheet, desktop has no file to hand anywhere — it
    can only name the file's location. The action is therefore "Copy file path" and
-   yields the plain filesystem path, which the address bar already resolves to a
-   local file, so the copied text works both in our browser and in a terminal.
+   yields the plain filesystem path, which a terminal or a file manager resolves.
+   Our own address bar does not, by the rule below.
+
+   **A Tab showing a downloaded file is not a browsing Tab.** It gets local-preview
+   profile params: an ephemeral profile of its own, no injected scripts, no web
+   channel, no connector — and it is the only profile allowed to reach `file://`,
+   under the downloads and player-page directories alone. Browsing profiles reach
+   no local file at all, so a path typed in the address bar dead-ends. Splitting
+   the profile is what makes that affordable: with one profile for both, opening a
+   downloaded file meant leaving a filesystem door open to every site the user
+   visits, and closing it meant not opening the file. The isolation is one flag on
+   the params, so a preview Tab's params can never seed a browsing Tab.
 
    The corollary: **state the Backend cannot report must not gate UI.** The seam
    can open and close the native find panel but is never told when the user

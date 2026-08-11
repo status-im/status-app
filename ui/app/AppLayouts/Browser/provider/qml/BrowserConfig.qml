@@ -47,4 +47,14 @@ QtObject {
         scripts: root.scriptPaths
         offTheRecord: true
     }
+
+    // Tabs opened to display a downloaded local file. No injected scripts: a
+    // local page must not meet site_utils or the dapp injectors (ADR 0006 §8).
+    readonly property ProfileParams localPreviewProfileParams: ProfileParams {
+        userId: root.userUID
+        userAgent: root.httpUserAgent
+        scripts: []
+        offTheRecord: true
+        localPreview: true
+    }
 }

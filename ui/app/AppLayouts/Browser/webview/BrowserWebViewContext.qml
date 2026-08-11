@@ -76,6 +76,13 @@ QtObject {
         return BrowserWebViewContext.ContentMode.WebContent
     }
 
+    /// The params a new browsing Tab inherits: the current Tab's, unless it is a
+    /// local preview — its isolated, script-free profile must never back browsing.
+    readonly property ProfileParams currentBrowsingProfileParams: {
+        const params = currentWebView?.profileParams ?? null
+        return params && !params.localPreview ? params : defaultProfileParams
+    }
+
     readonly property string currentClientId: currentWebView?.bridge?.clientId
                                               ?? ConnectorConstants.clientIdFor(currentWebView ? currentWebView.offTheRecord : false)
 
@@ -224,6 +231,10 @@ QtObject {
     function setIncognitoCurrent(checked) {
         if (!currentWebView)
             return
+        // The incognito toggle does not reach a local preview: swapping its
+        // params would hand the file it shows to a browsing profile.
+        if (currentWebView.profileParams.localPreview)
+            return
         const target = checked ? otrProfileParams : defaultProfileParams
         if (currentWebView.profileParams !== target)
             currentWebView.profileParams = target
@@ -260,10 +271,8 @@ QtObject {
             return
 
         var view = getWebView(index)
-        if (tabsModel.count <= 1) {
-            var fallbackProfileParams = root.currentWebView ? currentWebView.profileParams : root.defaultProfileParams
-            createEmptyTab(fallbackProfileParams, true)
-        }
+        if (tabsModel.count <= 1)
+            createEmptyTab(root.currentBrowsingProfileParams, true)
         tabsModel.removeTab(index)
         if (!view)
             return
@@ -384,8 +393,12 @@ QtObject {
             freeze: root.isMobile && (root.hasPopups || retained)
 
             readonly property ConnectorBridge bridge: ConnectorBridge {
-                connectorController: root.dappsEnabled ? root.connectorController : null
-                tabUrl: lazyView.url
+                // A local preview is outside the dapp world (ADR 0006 §8): no
+                // connector, no channel reaching the page (see WebViewAdapter),
+                // and the path of the file it shows is no dapp URL.
+                connectorController: root.dappsEnabled && !lazyView.profileParams.localPreview
+                                     ? root.connectorController : null
+                tabUrl: lazyView.profileParams.localPreview ? "" : lazyView.url
                 tabIncognito: lazyView.offTheRecord
                 tabTitle: lazyView.title
                 tabIconUrl: lazyView.icon
@@ -403,8 +416,8 @@ QtObject {
 
             onWindowCloseRequested: root.removeView(StackLayout.index)
             onNewWindowRequested: (makeCurrent, requestedUrl, callback) => {
-                var profileParams = root.currentWebView ? root.currentWebView.profileParams : root.defaultProfileParams
-                var tab = root.createEmptyTab(profileParams, false, makeCurrent, requestedUrl)
+                var tab = root.createEmptyTab(root.currentBrowsingProfileParams,
+                                              false, makeCurrent, requestedUrl)
                 // Born from a page, nothing loaded in it yet: the Tab is download-only
                 // until it commits a page of its own (ADR 0006 §6).
                 if (tab)

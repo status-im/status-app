@@ -163,7 +163,7 @@ FocusScope {
             property bool isStartPage: false
 
             readonly property var webView: root.fnGetWebView(tabButton.TabBar.index)
-            readonly property bool incognito: webView?.offTheRecord ?? false
+            readonly property bool incognito: webView?.incognito ?? false
 
             readonly property string tabTitle: SQUtils.StringUtils.escapeHtml(
                 root.savedSessionContext.displayTitle(webView, isStartPage)

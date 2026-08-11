@@ -32,12 +32,19 @@ public:
     // are not indexed until they are (re)set in the current session.
     Q_INVOKABLE void trackProfile(QObject *profile);
 
-    // Install the local-browsing policy on `profile`: file:// navigation is
-    // blocked except under the downloads location and the generated player-page
-    // directory (ADR 0006 §8). Call once per profile at creation, before the
-    // first navigation. Also (re)installs on the default profile, which backs
-    // views whose storage profile could not be created.
-    Q_INVOKABLE void installLocalUrlPolicy(QObject *profile);
+    // Install the browsing URL policy on `profile`: file:// navigation
+    // (main frame and sub-frames) is blocked outright (ADR 0006 §8). Call once
+    // per profile at creation, before the first navigation. Also (re)installs on
+    // the default profile, which backs views whose storage profile could not be
+    // created.
+    Q_INVOKABLE void installBrowsingUrlPolicy(QObject *profile);
+
+    // Install the local-preview policy on `profile`: file:// navigation is
+    // allowed under the downloads location and the generated player-page
+    // directory, and blocked everywhere else. Only for the profile backing tabs
+    // that display a downloaded file — never for a browsing profile. The default
+    // profile keeps the browsing policy (see installBrowsingUrlPolicy).
+    Q_INVOKABLE void installLocalPreviewUrlPolicy(QObject *profile);
 
     // Clears profile-wide browsing data: HTTP cache and all cookies.
     // `profile` must be a QML WebEngineProfile (QQuickWebEngineProfile);
@@ -79,8 +86,14 @@ private:
     struct TrackedStore;
     struct DownloadHelper;
 
-    // Stateless policy shared by every profile; owned by this singleton.
-    QWebEngineUrlRequestInterceptor *m_localUrlPolicy = nullptr;
+    // Stateless policies, one per profile role; shared and owned by this
+    // singleton (created on first use).
+    QWebEngineUrlRequestInterceptor *m_browsingUrlPolicy = nullptr;
+    QWebEngineUrlRequestInterceptor *m_localPreviewUrlPolicy = nullptr;
+
+    QWebEngineUrlRequestInterceptor *browsingUrlPolicy();
+    QWebEngineUrlRequestInterceptor *localPreviewUrlPolicy();
+    void installDefaultProfileFallback(QObject *installedOn);
 
     TrackedStore *trackedStoreFor(QObject *profile) const;
     DownloadHelper *helperFor(QObject *profile);

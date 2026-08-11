@@ -179,8 +179,15 @@ AbstractWebView {
         settings.pdfViewerEnabled: true
         settings.focusOnNavigationEnabled: true
         settings.forceDarkMode: Application.styleHints.colorScheme === Qt.ColorScheme.Dark
+        // A local page never talks to the network, so nothing it reads off the
+        // disk can leave the machine (ADR 0006 §8).
+        settings.localContentCanAccessRemoteUrls: false
+        // Only a preview reads local files: the generated player page loads the
+        // media next to it. Browsing tabs get no filesystem reach at all.
+        settings.localContentCanAccessFileUrls: !!root.profileParams?.localPreview
 
-        webChannel: root.webChannel
+        // A preview shows a downloaded file — the dapp bridge has no business there.
+        webChannel: root.profileParams?.localPreview ? null : root.webChannel
         // Never null: a view with no profile aborts the render path. ProfileManager
         // yields null only while a previous Browser still holds the data path, and
         // the default profile keeps this view renderable until it is torn down.

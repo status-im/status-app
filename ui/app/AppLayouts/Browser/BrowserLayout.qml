@@ -63,10 +63,18 @@ StatusSectionLayout {
         Qt.callLater(() => _internal.addNewTab(root.browserRootStore.determineRealURL(url), initialTitle, activate))
     }
 
-    /// Local file in a new tab, read-granted to a directory (ADR 0006 §8).
-    function openFileUrlInNewTab(fileUrl, readAccessUrl) {
+    /// A downloaded local file in a Tab of its own (ADR 0006 §8): local-preview
+    /// params keep it out of the browsing context — its own ephemeral profile,
+    /// no injected scripts, no web channel, and the only profile that may reach
+    /// file:// at all. `url` is a file URL, or the generated media player page.
+    function openLocalPreviewInNewTab(url) {
+        Qt.callLater(() => _internal.addLocalPreviewTab(url))
+    }
+
+    /// Local preview loaded through loadFileUrl, read-granted to a directory.
+    function openLocalPreviewFileInNewTab(fileUrl, readAccessUrl) {
         Qt.callLater(() => {
-            const tab = _internal.addNewTab("", "", false)
+            const tab = _internal.addLocalPreviewTab("")
             if (tab)
                 tab.loadFileUrl(fileUrl, readAccessUrl || "")
         })
@@ -181,7 +189,7 @@ StatusSectionLayout {
         id: _internal
 
         readonly property Item currentWebView: webViewContext.currentWebView
-        readonly property bool currentTabIncognito: currentWebView?.offTheRecord ?? false
+        readonly property bool currentTabIncognito: currentWebView?.incognito ?? false
         readonly property bool currentTabLoading: currentWebView?.loading ?? false
         property real lastScrollPos: 0
         property bool scrolledUp: true
@@ -271,10 +279,15 @@ StatusSectionLayout {
         }
 
         function addNewTab(url, initialTitle, activate) {
-            var tab = webViewContext.createEmptyTab(tabs.count !== 0 ? currentWebView.profileParams : browserConfig.defaultProfileParams, false, true, url, initialTitle);
+            var tab = webViewContext.createEmptyTab(webViewContext.currentBrowsingProfileParams, false, true, url, initialTitle);
             if (activate)
                 browserToolbarLoader.activateAddressBar()
             return tab;
+        }
+
+        function addLocalPreviewTab(url) {
+            return webViewContext.createEmptyTab(
+                browserConfig.localPreviewProfileParams, false, true, url, "")
         }
 
         function addNewEmptyTab() {
@@ -378,8 +391,10 @@ StatusSectionLayout {
             _internal.reissueDownload(wantOtr, url, fileName, token)
         onDownloadAttributed: (view) => _internal.closeDownloadOnlyTab(view)
         hideFindUiFn: () => _internal.hideFindBar()
-        openUrlFn: (url) => root.openUrlInNewTab(url)
-        openFileUrlFn: (fileUrl, readAccessUrl) => root.openFileUrlInNewTab(fileUrl, readAccessUrl)
+        // Both only ever carry local files (a downloaded file, a player page).
+        openUrlFn: (url) => root.openLocalPreviewInNewTab(url)
+        openFileUrlFn: (fileUrl, readAccessUrl) =>
+            root.openLocalPreviewFileInNewTab(fileUrl, readAccessUrl)
         supportsPdfFn: () => BrowserBackendCapabilities.pdfViewerSupported
     }
 

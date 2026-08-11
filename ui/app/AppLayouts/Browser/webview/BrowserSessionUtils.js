@@ -55,6 +55,11 @@ function displayTitle(webView, persistedRecord, labels) {
 function buildTabDto(webView, savedTabs, determineRealURL) {
     if (!webView || webView.offTheRecord)
         return null
+    // A local preview is not a browsing Tab (ADR 0006 §8): the file it shows is
+    // no page to restore to. Its params are off the record as well, so this is
+    // belt and braces — and deliberately so, rather than leaning on that.
+    if (webView.profileParams && webView.profileParams.localPreview)
+        return null
 
     const rawUrl = webView.url.toString()
     const normalizedUrl = determineRealURL(rawUrl)

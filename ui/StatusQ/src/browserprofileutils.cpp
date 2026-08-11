@@ -199,24 +199,33 @@ QString canonicalSubDir(const QString &parent, const QString &leaf)
     return root.isEmpty() ? QString() : root + QLatin1Char('/') + leaf;
 }
 
-// The Backend's local-browsing policy: file:// navigation is blocked except
-// inside the two directories the browser itself writes — the platform downloads
-// location (Download Targets) and the temp directory holding generated player
-// pages (ADR 0006 §8). Owned here rather than injected from QML so both Backends
-// keep the policy library-side; mobilewebview has the equivalent guard.
+// The Backend's local-browsing policy, split by what the profile is for
+// (ADR 0006 §8). A browsing profile reaches no file:// at all — typing a local
+// path in the address bar dead-ends. The local-preview profile, which backs
+// only the tabs that display a downloaded file, reaches the two directories the
+// browser itself writes: the platform downloads location (Download Targets) and
+// the temp directory holding generated player pages. Owned here rather than
+// injected from QML so both Backends keep the policy library-side; mobilewebview
+// has the equivalent guard.
 //
 // Scope: navigations only (main frame + subframes), matching what the QML
 // navigationRequested handler used to cover. Subresources are deliberately left
 // alone so a player page can load the media it points at; Chromium already
 // forbids web origins from reaching file:// subresources.
 //
-// Stateless after construction (two const roots computed on the UI thread), so
-// it is safe whichever thread WebEngine calls interceptRequest on.
+// Stateless after construction (a mode and two const roots computed on the UI
+// thread), so it is safe whichever thread WebEngine calls interceptRequest on.
 class LocalUrlPolicyInterceptor final : public QWebEngineUrlRequestInterceptor
 {
 public:
-    explicit LocalUrlPolicyInterceptor(QObject *parent = nullptr)
+    enum class Mode {
+        DenyLocalFiles,      // browsing profiles
+        AllowDownloadedFiles // the local-preview profile
+    };
+
+    explicit LocalUrlPolicyInterceptor(Mode mode, QObject *parent = nullptr)
         : QWebEngineUrlRequestInterceptor(parent)
+        , m_mode(mode)
         , m_downloadsDir(canonicalPath(
               QStandardPaths::writableLocation(QStandardPaths::DownloadLocation)))
         , m_playerDir(canonicalSubDir(
@@ -246,6 +255,8 @@ public:
 private:
     bool isAllowed(const QString &localFile) const
     {
+        if (m_mode == Mode::DenyLocalFiles)
+            return false;
         const QString path = canonicalPath(localFile);
         if (path.isEmpty())
             return false;
@@ -258,6 +269,7 @@ private:
         return !dir.isEmpty() && path.startsWith(dir + QLatin1Char('/'));
     }
 
+    const Mode m_mode;
     const QString m_downloadsDir;
     const QString m_playerDir;
 };
@@ -334,24 +346,55 @@ BrowserProfileUtils::~BrowserProfileUtils()
     m_downloadHelpers.clear();
 }
 
-void BrowserProfileUtils::installLocalUrlPolicy(QObject *profile)
+QWebEngineUrlRequestInterceptor *BrowserProfileUtils::browsingUrlPolicy()
+{
+    if (!m_browsingUrlPolicy)
+        m_browsingUrlPolicy = new LocalUrlPolicyInterceptor(
+            LocalUrlPolicyInterceptor::Mode::DenyLocalFiles, this);
+    return m_browsingUrlPolicy;
+}
+
+QWebEngineUrlRequestInterceptor *BrowserProfileUtils::localPreviewUrlPolicy()
+{
+    if (!m_localPreviewUrlPolicy)
+        m_localPreviewUrlPolicy = new LocalUrlPolicyInterceptor(
+            LocalUrlPolicyInterceptor::Mode::AllowDownloadedFiles, this);
+    return m_localPreviewUrlPolicy;
+}
+
+// A storage profile can fail to instantiate (one live profile per data path),
+// leaving the view on the default profile — so it carries a policy too. It backs
+// browsing views, hence the browsing one: a preview that lands there shows
+// nothing, rather than handing file access to a browsing context.
+void BrowserProfileUtils::installDefaultProfileFallback(QObject *installedOn)
+{
+    auto *fallback = QQuickWebEngineProfile::defaultProfile();
+    if (fallback && fallback != installedOn)
+        fallback->setUrlRequestInterceptor(browsingUrlPolicy());
+}
+
+void BrowserProfileUtils::installBrowsingUrlPolicy(QObject *profile)
 {
     auto *webProfile = qobject_cast<QQuickWebEngineProfile *>(profile);
     if (!webProfile) {
-        qWarning("BrowserProfileUtils::installLocalUrlPolicy: expected a WebEngineProfile");
+        qWarning("BrowserProfileUtils::installBrowsingUrlPolicy: expected a WebEngineProfile");
         return;
     }
 
-    if (!m_localUrlPolicy)
-        m_localUrlPolicy = new LocalUrlPolicyInterceptor(this);
+    webProfile->setUrlRequestInterceptor(browsingUrlPolicy());
+    installDefaultProfileFallback(webProfile);
+}
 
-    webProfile->setUrlRequestInterceptor(m_localUrlPolicy);
+void BrowserProfileUtils::installLocalPreviewUrlPolicy(QObject *profile)
+{
+    auto *webProfile = qobject_cast<QQuickWebEngineProfile *>(profile);
+    if (!webProfile) {
+        qWarning("BrowserProfileUtils::installLocalPreviewUrlPolicy: expected a WebEngineProfile");
+        return;
+    }
 
-    // A storage profile can fail to instantiate (one live profile per data path),
-    // leaving the view on the default profile — it must carry the policy too.
-    if (auto *fallback = QQuickWebEngineProfile::defaultProfile();
-        fallback && fallback != webProfile)
-        fallback->setUrlRequestInterceptor(m_localUrlPolicy);
+    webProfile->setUrlRequestInterceptor(localPreviewUrlPolicy());
+    installDefaultProfileFallback(webProfile);
 }
 
 BrowserProfileUtils::TrackedStore *BrowserProfileUtils::trackedStoreFor(QObject *profile) const

@@ -15,6 +15,11 @@ Item {
 
     readonly property bool offTheRecord: profileParams.offTheRecord
 
+    // The user-facing privacy mode. A local preview rides an OTR profile for
+    // containment, not privacy — it must not wear the incognito look.
+    readonly property bool incognito: profileParams.offTheRecord
+                                      && !profileParams.localPreview
+
     // === State Properties ===
     property url url: ""
     property string uid: ""

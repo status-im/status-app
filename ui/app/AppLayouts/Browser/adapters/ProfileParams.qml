@@ -8,5 +8,13 @@ QtObject {
     required property var scripts
     required property bool offTheRecord
 
-    readonly property string storageName: offTheRecord ? "" : "Profile_" + userId
+    /// Tabs that only display a downloaded local file (ADR 0006 §8). Orthogonal
+    /// to incognito: such a tab is isolated from browsing — a profile of its own
+    /// that never reaches disk, no injected scripts, no web channel, and file://
+    /// reachable only under the directories the browser itself wrote.
+    property bool localPreview: false
+
+    // A local preview is ephemeral whatever tab it was opened from.
+    readonly property string storageName:
+        (offTheRecord || localPreview) ? "" : "Profile_" + userId
 }
