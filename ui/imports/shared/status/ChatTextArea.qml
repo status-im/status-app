@@ -175,10 +175,6 @@ StatusTextArea {
         d.ensureCursorRectanglePosition()
     }
 
-    // no default menu, as default actions like copy/paste won't work correctly,
-    // custom routines must be used for handling such actions.
-    ContextMenu.menu: null
-
     wrapMode: TextEdit.Wrap
     background: null
 

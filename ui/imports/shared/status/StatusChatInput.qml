@@ -892,23 +892,6 @@ Control {
                             onActivated: toolBar.strikeThroughButton.click()
                         }
 
-                        // Edit context menu (Cut/Copy/Paste/Select All), driving the
-                        // same public methods the Ctrl+C/X/V shortcuts use so the
-                        // two stay consistent. No `id` on the menu: ContextMenu.menu
-                        // lazy-loads it on first open.
-                        ContextMenu.menu: StatusTextEditMenu {
-                            canCut: !messageInputField.noSelection
-                            canCopy: !messageInputField.noSelection
-                            canPaste: ClipboardUtils.hasText
-                                      || (root.imageFeaturesEnabled && ClipboardUtils.hasImage)
-                            canSelectAll: messageInputField.length > 0
-
-                            onCutRequested: messageInputField.cutSelection()
-                            onCopyRequested: messageInputField.copySelection()
-                            onPasteRequested: messageInputField.pasteText()
-                            onSelectAllRequested: messageInputField.selectAll()
-                        }
-
                         StatusChatInputSelectionMarker {
                             anchors.fill: parent
                             clip: true
@@ -925,6 +908,12 @@ Control {
                                 messageInputField.positionToRectangle(
                                             messageInputField.selectionEnd)
                             }
+                        }
+
+                        // Lazily instantiate context menu
+                        onActiveFocusChanged: {
+                            if (activeFocus && !StatusQUtils.Utils.isMobile)
+                                contextMenuLoader.active = true
                         }
                     }
                 }
@@ -1126,6 +1115,29 @@ Control {
                     suggestionsBox.shouldHide = true
                 }
             }
+        }
+    }
+
+    Loader {
+        id: contextMenuLoader
+        active: false
+
+        // Edit context menu (Cut/Copy/Paste/Select All), driving the
+        // same public methods the Ctrl+C/X/V shortcuts use so the
+        // two stay consistent.
+        sourceComponent: StatusTextEditMenu {
+            canCut: !messageInputField.noSelection
+            canCopy: !messageInputField.noSelection
+            canPaste: ClipboardUtils.hasText
+                      || (root.imageFeaturesEnabled && ClipboardUtils.hasImage)
+            canSelectAll: messageInputField.length > 0
+
+            onCutRequested: messageInputField.cutSelection()
+            onCopyRequested: messageInputField.copySelection()
+            onPasteRequested: messageInputField.pasteText()
+            onSelectAllRequested: messageInputField.selectAll()
+
+            Component.onCompleted: messageInputField.ContextMenu.menu = this
         }
     }
 }
