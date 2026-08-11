@@ -342,6 +342,7 @@ Loader {
     signal openGifPopupRequest(var params, var cbOnGifSelected, var cbOnClose)
 
     z: (typeof chatLogView === "undefined") ? 1 : (chatLogView.count - index)
+    height: root.status === Loader.Ready && root.item ? root.item.implicitHeight : 50
 
     sourceComponent: {
         if (root.deleted) {
