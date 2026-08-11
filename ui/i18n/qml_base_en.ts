@@ -2506,7 +2506,7 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Text and HTML</source>
+        <source>Plain text</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
