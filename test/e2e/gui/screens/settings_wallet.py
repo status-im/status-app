@@ -143,7 +143,7 @@ class WalletSettingsView(QObject):
 
 class AccountDetailsView(QObject):
     def __init__(self):
-        super().__init__(settings_names.settingsWallet_View)
+        super().__init__(settings_names.walletAccountViewDetailsLabel)
         self._back_button = Button(settings_names.main_toolBar_back_button)
         self._edit_account_button = Button(settings_names.walletAccountViewEditAccountButton)
         self._remove_account_button = Button(settings_names.walletAccountViewRemoveAccountButton)
@@ -157,6 +157,7 @@ class AccountDetailsView(QObject):
         self._wallet_account_derivation_path = QObject(settings_names.walletAccountViewDerivationPath)
         self._wallet_account_stored = TextLabel(settings_names.walletAccountViewStored)
         self._wallet_preferred_networks = QObject(settings_names.walletAccountViewPreferredNetworks)
+        self.scroll = Scroll(settings_names.settingsContentBase_ScrollView)
 
     @allure.step('Click Edit button')
     def open_edit_account_popup(self, attempts: int = 3):
@@ -189,6 +190,11 @@ class AccountDetailsView(QObject):
 
     @allure.step("Get account address value")
     def get_account_address_value(self):
+        self._wallet_account_details_label.wait_until_appears()
+        self.scroll.vertical_scroll_down(
+            self._wallet_account_address,
+            timeout_sec=configs.timeouts.UI_LOAD_TIMEOUT_MSEC // 1000,
+        )
         raw_value = str(getattr(self._wallet_account_address.object, 'subTitle'))
         address = raw_value.split(">")[-1]
         return address

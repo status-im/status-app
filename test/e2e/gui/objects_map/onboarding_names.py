@@ -32,6 +32,9 @@ keycardDetailsTitle = {"container": mainWindow_keycardDetailsPage, "objectName":
 onboardingKeycardDetailsImportNewKeypair = {"container": mainWindow_keycardDetailsPage,
                                             "objectName": "keycardDetailsImportNewKeypair", "type": "StatusListItem",
                                             "visible": True}
+onboardingKeycardDetailsImportSeedPhrase = {"container": mainWindow_keycardDetailsPage,
+                                            "objectName": "keycardDetailsImportSeedPhrase", "type": "StatusListItem",
+                                            "visible": True}
 
 # Log in view
 loginWithKeycardButton = {"container": statusDesktop_mainWindow, "objectName": "btnWithKeycard", "type": "ListItemButton",

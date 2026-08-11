@@ -52,3 +52,15 @@ keycardManagementSeedPhraseWord = {
 keycardManagementContinueButton = {"container": statusDesktop_mainWindow_overlay,
                                    "objectName": "keycardManagementContinueButton", "type": "StatusButton",
                                    "visible": True}
+keycardManagementSeedPhraseSwitchBar = {"container": statusDesktop_mainWindow_overlay,
+                                        "objectName": "enterSeedPhraseSwitchBar",
+                                        "type": "StatusSeedPhraseTabBar", "visible": True}
+keycardManagementSeedPhrase12Button = {"container": keycardManagementSeedPhraseSwitchBar,
+                                       "objectName": "12SeedButton", "type": "StatusSwitchTabButton"}
+keycardManagementSeedPhrase18Button = {"container": keycardManagementSeedPhraseSwitchBar,
+                                       "objectName": "18SeedButton", "type": "StatusSwitchTabButton"}
+keycardManagementSeedPhrase24Button = {"container": keycardManagementSeedPhraseSwitchBar,
+                                       "objectName": "24SeedButton", "type": "StatusSwitchTabButton"}
+keycardManagementSeedPhraseInputField = {"container": statusDesktop_mainWindow_overlay,
+                                         "objectName": "enterSeedPhraseInputField", "type": "TextField",
+                                         "visible": True}
