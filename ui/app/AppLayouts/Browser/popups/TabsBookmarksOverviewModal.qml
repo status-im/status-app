@@ -331,9 +331,11 @@ StatusDialog {
                     }
                 }
                 CustomSwitchButton {
+                    objectName: "overviewBookmarksTab"
                     icon.name: "bookmark"
                 }
                 CustomSwitchButton {
+                    objectName: "overviewDownloadsTab"
                     icon.name: "download"
                 }
             }

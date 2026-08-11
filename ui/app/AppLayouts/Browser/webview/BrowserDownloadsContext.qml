@@ -11,16 +11,25 @@ import AppLayouts.Browser.stores as BrowserStores
 /**
  * Orchestrates Download Requests and list/pill actions (ADR 0006).
  * Retry is a host-side re-issue via Backend downloadUrl on a matching profile —
- * not library retry() (live object is usually already gone). The next matching
- * downloadRequested reattaches onto the same Record (no duplicate History row).
+ * not library retry() (live object is usually already gone). The Backend echoes
+ * the token the store minted, so the re-issue reattaches onto the same Record
+ * (no duplicate History row) by identity rather than by URL and timing.
  */
 QtObject {
     id: root
 
     required property BrowserStores.DownloadsStore downloadsStore
-    required property var getWebViewFn
-    required property var getTabsCountFn
-    required property var removeViewFn
+
+    /// (wantOtr, url, fileName, token) -> bool — host-side Download re-issue on a
+    /// Backend matching the Record profile; returns true only when a Backend took
+    /// it. Anything else, an undefined return included, counts as a refusal.
+    /// Which Backend that is (a transient WebEngine page, a live mobile Tab) is
+    /// the host's business: Downloads need no Tab of their own.
+    required property var downloadUrlFn
+
+    /// A Download was attributed to `view`. The host decides what that means for
+    /// the Tab — a download-only popup has nothing left to show (ADR 0006 §6).
+    signal downloadAttributed(var view)
 
     // Mobile Find XOR strip: actively closes the Find UI when a new Download
     // starts. Closing Find is an action on the Find UI, not derivable state.
@@ -50,16 +59,6 @@ QtObject {
 
         readonly property bool stripVisible: !findOpen && !userDismissed
             && pillCount > 0
-    }
-
-    // One-shot Record armed by retryRecord for the reattach; consumed (or dropped)
-    // by the next downloadRequested and expired by timer so a failed retry can
-    // never capture a later unrelated download of the same URL.
-    property var _pendingRetry: null
-
-    readonly property Timer _pendingRetryExpiry: Timer {
-        interval: 10000
-        onTriggered: root._pendingRetry = null
     }
 
     property var openUrlFn: function(url) {
@@ -97,29 +96,15 @@ QtObject {
         stripPresenter.userDismissed = true
     }
 
-    /// hostView is the host Web View (LazyWebViewAdapter) that raised the request.
-    /// Prefer it over Backend download.view (missing on mobile; wrong identity on desktop).
-    function handleDownloadRequest(download, hostView) {
+    /// hostView is the host Web View (LazyWebViewAdapter) that raised the request,
+    /// null for a host-side re-issue no Tab initiated. Prefer it over Backend
+    /// download.view (missing on mobile; wrong identity on desktop).
+    /// token is the Backend echo of an armed Retry (empty for everything else).
+    function handleDownloadRequest(download, hostView, token) {
         if (!download)
             return
 
-        // One-shot: whatever this request is, the retry arm does not outlive it.
-        const pending = root._pendingRetry
-        root._pendingRetry = null
-        root._pendingRetryExpiry.stop()
-
-        let record = null
-        if (pending && root._urlsMatch(pending.url, download.url)
-                && typeof downloadsStore.reattachForRetry === "function") {
-            record = downloadsStore.reattachForRetry(pending, download, hostView)
-            // Reattach declined: track as new rather than accept untracked —
-            // a duplicate History row beats a lost Download.
-            if (!record)
-                record = downloadsStore.addDownload(download, hostView)
-        } else {
-            record = downloadsStore.addDownload(download, hostView)
-        }
-        downloadsStore.acceptLiveDownload(download, record)
+        const record = downloadsStore.attachDownload(download, hostView, token)
 
         // New download dismisses Find and re-shows the strip (Find XOR),
         // expressed as presenter input changes; hideFindUiFn additionally
@@ -129,22 +114,10 @@ QtObject {
         stripPresenter.findOpen = false
         stripPresenter.userDismissed = false
 
-        // Download-only Tab (target=_blank attachment): leave the strip via removeView,
-        // which retains the Web View on mobile while Downloads are non-terminal.
         const view = hostView || (record ? record.originatingView : null) || download.view
         if (!view)
             return
-
-        const count = getTabsCountFn()
-        for (var i = 0; i < count; ++i) {
-            var tab = getWebViewFn(i)
-            // Only a Tab a page opened that never committed a page of its own —
-            // marked at creation, never guessed from title or load state.
-            if (tab === view && tab.pristinePopup) {
-                removeViewFn(i)
-                break
-            }
-        }
+        root.downloadAttributed(view)
     }
 
     /// true if the file opened (caller closes the overview). false on retry.
@@ -216,21 +189,10 @@ QtObject {
         if (!url)
             return false
 
-        const webView = root._webViewForRetry(record)
-        if (!webView || !webView.downloadUrl) {
-            console.warn("BrowserDownloadsContext: no Backend available for retry")
-            return false
-        }
-        root._pendingRetry = record
-        root._pendingRetryExpiry.restart()
-        webView.downloadUrl(url, record.fileName || "")
-        return true
-    }
-
-    function _urlsMatch(a, b) {
-        const left = String(a || "")
-        const right = String(b || "")
-        return left.length > 0 && left === right
+        // Strictly true: a host that answers nothing has not taken the re-issue,
+        // and the Record must not be reported as retried.
+        return downloadUrlFn(!!record.offTheRecord, url, record.fileName || "",
+                             downloadsStore.armRetry(record)) === true
     }
 
     function refreshMissingFiles() {
@@ -267,24 +229,5 @@ QtObject {
             downloadsEntry: !!(options && options.showDownloadsEntry),
             useShareLabels: !!(downloadsStore.platform && downloadsStore.platform.preferShareSheet)
         }
-    }
-
-    /// Retry Backend must match the Record profile (ADR 0006 §7) and must be a
-    /// live Tab Web View — never a Retained View (ADR 0006 §6).
-    function _webViewForRetry(record) {
-        const count = getTabsCountFn ? getTabsCountFn() : 0
-        const wantOtr = !!record.offTheRecord
-        for (let i = 0; i < count; ++i) {
-            const tab = getWebViewFn(i)
-            if (!tab || !tab.downloadUrl)
-                continue
-            if (tab.retained)
-                continue
-            const otr = tab.offTheRecord !== undefined ? !!tab.offTheRecord
-                        : (tab.profileParams ? !!tab.profileParams.offTheRecord : false)
-            if (otr === wantOtr)
-                return tab
-        }
-        return null
     }
 }

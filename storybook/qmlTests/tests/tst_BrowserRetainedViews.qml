@@ -8,6 +8,10 @@ import AppLayouts.Browser.webview
  * Retained Views (ADR 0006 §6): closing a Tab that still owns non-terminal
  * Downloads keeps its Web View alive; only viewDownloadsCleared ends that.
  * Fake views suffice — the context touches just retained/focus/parent/detachView.
+ *
+ * Plus the two Tab-set lookups the same object owns, because Retention is what
+ * makes them subtle: removeViewFor (close the Tab backing a named Web View) and
+ * firstLiveDownloadBackend (the Tab a host-side re-issue may run on, §7).
  */
 Item {
     id: root
@@ -39,6 +43,39 @@ Item {
 
             Component.onDestruction: root.destroyedViewNames =
                 root.destroyedViewNames.concat([fakeView.viewName])
+        }
+    }
+
+    // A Tab whose Backend can take a Download re-issue (mobile shape).
+    Component {
+        id: fakeDownloadTabComponent
+
+        Item {
+            id: downloadTab
+
+            property string viewName: ""
+            property bool offTheRecord: false
+            property bool retained: false
+            property ProfileParams profileParams: null
+            property var downloadCalls: []
+
+            function detachView() {}
+            function downloadUrl(url, fileName, token) {
+                downloadTab.downloadCalls = downloadTab.downloadCalls.concat(
+                    [{ url: String(url), fileName: fileName || "", token: token || "" }])
+            }
+        }
+    }
+
+    Component {
+        id: previewParamsComponent
+
+        ProfileParams {
+            userId: "user-1"
+            userAgent: ""
+            scripts: []
+            offTheRecord: true
+            localPreview: true
         }
     }
 
@@ -224,6 +261,105 @@ Item {
                     "an unrelated view does not drop the Retained View")
             compare(webViewContext._retainedViews[0], firstView)
             compare(root.destroyedViewNames.length, 0)
+        }
+    }
+
+    /// The Tab set is the context's, so looking a Tab up in it is too — the host
+    /// names a Web View and never an index.
+    TestCase {
+        name: "BrowserTabSetLookups"
+        when: windowShown
+
+        property Item hostStack: null
+        property var tabsModel: null
+        property BrowserWebViewContext webViewContext: null
+
+        /// Builds one Tab per entry, in order, and a context over them.
+        /// `component` is fakeWebViewComponent (no Download Backend) unless the
+        /// entry names another.
+        function makeTabs(entries) {
+            root.destroyedViewNames = []
+
+            hostStack = createTemporaryObject(hostStackComponent, root)
+            tabsModel = createTemporaryObject(tabsModelComponent, root)
+
+            const views = []
+            for (let i = 0; i < entries.length; ++i) {
+                const entry = entries[i]
+                const component = entry.component || fakeDownloadTabComponent
+                const props = {}
+                for (const key in entry) {
+                    if (key !== "component")
+                        props[key] = entry[key]
+                }
+                views.push(createTemporaryObject(component, hostStack, props))
+            }
+            tabsModel.count = views.length
+
+            webViewContext = createTemporaryObject(browserWebViewContextComponent, root, {
+                hostStack: hostStack,
+                tabsModelRef: tabsModel,
+                downloadsStoreRef: createTemporaryObject(downloadsStoreComponent, root)
+            })
+            return views
+        }
+
+        function test_removeViewFor_closesTheTabBackingThatView() {
+            const views = makeTabs([{ viewName: "a" }, { viewName: "b" },
+                                    { viewName: "c" }])
+
+            verify(webViewContext.removeViewFor(views[1]))
+
+            compare(tabsModel.removedIndexes.length, 1)
+            compare(tabsModel.removedIndexes[0], 1, "the middle tab, not the current one")
+        }
+
+        function test_removeViewFor_ignoresAViewThatIsNoTab() {
+            const views = makeTabs([{ viewName: "a" }, { viewName: "b" }])
+            // A Retained View is alive but out of the Tab set (§6).
+            const stranger = createTemporaryObject(fakeDownloadTabComponent, root,
+                                                   { viewName: "retained" })
+
+            verify(!webViewContext.removeViewFor(stranger))
+            verify(!webViewContext.removeViewFor(null))
+            compare(tabsModel.removedIndexes.length, 0, "no tab closes on a miss")
+        }
+
+        function test_firstLiveDownloadBackend_skipsRetainedAndPreviewTabs() {
+            const preview = createTemporaryObject(previewParamsComponent, root)
+            // A local preview is always off the record, so it is exactly the
+            // Incognito re-issue it could capture.
+            const views = makeTabs([
+                // Alive, but finishing only what it already owns (§6).
+                { viewName: "retained", offTheRecord: true, retained: true },
+                // Isolated, script-free, and no browsing profile at all (§8).
+                { viewName: "preview", offTheRecord: true, profileParams: preview },
+                // Not a Download Backend — a fake with no downloadUrl.
+                { viewName: "plain", offTheRecord: true, component: fakeWebViewComponent },
+                { viewName: "live", offTheRecord: true }
+            ])
+
+            compare(webViewContext.firstLiveDownloadBackend(true), views[3])
+        }
+
+        function test_firstLiveDownloadBackend_matchesTheRequestedProfile() {
+            const views = makeTabs([{ viewName: "standard", offTheRecord: false },
+                                    { viewName: "incognito", offTheRecord: true }])
+
+            compare(webViewContext.firstLiveDownloadBackend(false), views[0])
+            compare(webViewContext.firstLiveDownloadBackend(true), views[1],
+                    "the profile match is mandatory, never best-effort (§7)")
+        }
+
+        // Rather than downgrade the re-issue onto the wrong profile (§7).
+        function test_firstLiveDownloadBackend_returnsNullWhenNothingMatches() {
+            const preview = createTemporaryObject(previewParamsComponent, root)
+            makeTabs([{ viewName: "retained", offTheRecord: true, retained: true },
+                      { viewName: "preview", offTheRecord: true,
+                        profileParams: preview },
+                      { viewName: "standard", offTheRecord: false }])
+
+            compare(webViewContext.firstLiveDownloadBackend(true), null)
         }
     }
 }

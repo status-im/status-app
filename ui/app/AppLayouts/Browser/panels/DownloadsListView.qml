@@ -55,6 +55,7 @@ Item {
             }
 
             contentItem: DownloadPill {
+                id: pill
                 download: row.modelData
 
                 // Flat-row chrome: the surrounding delegate owns hover and click.
@@ -67,7 +68,10 @@ Item {
                 nameFontSize: Theme.fontSize(14)
                 statusFontSize: Theme.fontSize(12)
 
-                onOptionsButtonClicked: anchor => root.optionsClicked(row.modelData, anchor)
+                // The pill's own Record, not row.modelData: a contentItem is
+                // reparented out of the delegate's scope while the menu is open,
+                // and a recycled row can already carry the next Record by then.
+                onOptionsButtonClicked: anchor => root.optionsClicked(pill.download, anchor)
             }
 
             onClicked: root.openDownloadClicked(row.modelData)

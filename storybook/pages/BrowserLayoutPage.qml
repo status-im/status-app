@@ -156,6 +156,13 @@ SplitView {
                 }
                 return target
             }
+            // Token-correlated attach seam (BrowserDownloadsContext.handleDownloadRequest).
+            function armRetry(record) { return "storybook-token" }
+            function attachDownload(download, hostView, token) {
+                const record = addDownload(download, hostView)
+                acceptLiveDownload(download, record)
+                return record
+            }
             // Record-vocabulary surface the shared Record menu binds against (ticket 09).
             function refreshMissingFiles() {}
             function canShareFile(record) {

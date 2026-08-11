@@ -72,6 +72,36 @@ Item {
                 downloadStripModel = [record].concat(downloadStripModel)
                 return record
             }
+            // Retry correlation lives in the store: armRetry mints the token the
+            // Backend echoes, attachDownload reattaches the Record it belongs to.
+            property var pendingByToken: ({})
+            property int lastToken: 0
+
+            function armRetry(record) {
+                const token = "retry-" + (++lastToken)
+                pendingByToken[token] = record
+                return token
+            }
+            function attachDownload(download, hostView, token) {
+                if (!download)
+                    return null
+                let record = null
+                const pending = token ? pendingByToken[token] : null
+                if (pending) {
+                    delete pendingByToken[token]
+                    record = reattachForRetry(pending, download, hostView)
+                }
+                if (!record)
+                    record = addDownload(download, hostView)
+                acceptLiveDownload(download, record)
+                return record
+            }
+            function pendingTokenCount() {
+                let n = 0
+                for (const token in pendingByToken)
+                    n += 1
+                return n
+            }
             function acceptLiveDownload(download, record) {}
             function clearDownloadStrip() { downloadStripModel = [] }
             // The one platform seam facts capabilitiesFor composes.
@@ -147,22 +177,8 @@ Item {
         id: fakeTabComponent
 
         QtObject {
-            // htmlPageLoaded/title stay on the stub on purpose: the close path must
-            // read pristinePopup only, so the tests can vary them freely.
-            property bool htmlPageLoaded: false
-            property string title: ""
             property bool pristinePopup: false
             property bool offTheRecord: false
-            property bool retained: false
-            property int downloadUrlCalls: 0
-            property string lastDownloadUrl: ""
-            property string lastSuggestedName: ""
-
-            function downloadUrl(url, suggestedFileName) {
-                downloadUrlCalls += 1
-                lastDownloadUrl = String(url)
-                lastSuggestedName = suggestedFileName || ""
-            }
         }
     }
 
@@ -196,8 +212,9 @@ Item {
         when: windowShown
 
         property int findHiddenCount: 0
-        property var tabs: []
-        property var removedIndexes: []
+        property var reissues: []
+        property bool hostTakesReissue: true
+        property var attributions: []
         property var openedUrls: []
         property var openedFileUrls: []
         property bool supportsPdf: false
@@ -208,8 +225,9 @@ Item {
 
         function createContext(store) {
             findHiddenCount = 0
-            tabs = []
-            removedIndexes = []
+            reissues = []
+            hostTakesReissue = true
+            attributions = []
             openedUrls = []
             openedFileUrls = []
             supportsPdf = false
@@ -217,9 +235,11 @@ Item {
             verify(component.status === Component.Ready, component.errorString())
             const ctx = createTemporaryObject(component, root, {
                 downloadsStore: store,
-                getWebViewFn: function(index) { return tabs[index] || null },
-                getTabsCountFn: function() { return tabs.length },
-                removeViewFn: function(index) { removedIndexes.push(index) },
+                downloadUrlFn: function(wantOtr, url, fileName, token) {
+                    reissues.push({ wantOtr: !!wantOtr, url: String(url),
+                                    fileName: fileName || "", token: token || "" })
+                    return hostTakesReissue
+                },
                 hideFindUiFn: function() { findHiddenCount += 1 },
                 openUrlFn: function(url) { openedUrls.push(String(url)) },
                 openFileUrlFn: function(fileUrl, readAccessUrl) {
@@ -233,6 +253,9 @@ Item {
             ctx._openContext.mediaPlayerDirectory = "/tmp/status-player"
             ctx._openContext.ensureDirectoryFn = function(path) { return true }
             ctx._openContext.writeTextFileFn = function(path, data) { return store.playerPageWritable }
+            ctx.downloadAttributed.connect(function(view) {
+                attributions.push(view)
+            })
             return ctx
         }
 
@@ -320,79 +343,47 @@ Item {
             verify(ctx.stripVisible)
         }
 
-        // ADR 0006 §6 — download-only Tab auto-close uses hostView
-        function test_downloadOnlyTab_autoCloses_viaHostView() {
+        // ADR 0006 §6 — the context reports who the Download belongs to; what a
+        // Tab does about it (a download-only popup closes) is the host's call.
+        function test_downloadAttributed_reportsHostView() {
             const store = createStore()
             const ctx = createContext(store)
             const host = createTemporaryObject(fakeTabComponent, root)
-            host.pristinePopup = true
-            tabs = [host]
 
             const live = createTemporaryObject(fakeDownloadComponent, root)
             // No Backend download.view (mobile-shaped)
             ctx.handleDownloadRequest(live, host)
 
-            compare(removedIndexes.length, 1)
-            compare(removedIndexes[0], 0)
+            compare(attributions.length, 1)
+            compare(attributions[0], host)
             compare(store.downloadModel[0].originatingView, host)
         }
 
-        function test_downloadOnlyTab_doesNotAutoClose_whenPageLoaded() {
+        // Desktop Backend downloads name their own view; a host-side re-issue
+        // names nobody, and then there is no Tab to report.
+        function test_downloadAttributed_fallsBackToBackendView_andSkipsViewless() {
             const store = createStore()
             const ctx = createContext(store)
-            const host = createTemporaryObject(fakeTabComponent, root)
-            host.pristinePopup = false
-            host.htmlPageLoaded = true
-            host.title = "Example"
-            tabs = [host]
+            const backendView = createTemporaryObject(fakeTabComponent, root)
 
             const live = createTemporaryObject(fakeDownloadComponent, root)
-            ctx.handleDownloadRequest(live, host)
+            live.view = backendView
+            ctx.handleDownloadRequest(live, null)
+            compare(attributions.length, 1)
+            compare(attributions[0], backendView)
 
-            compare(removedIndexes.length, 0)
+            const viewless = createTemporaryObject(fakeDownloadComponent, root)
+            viewless.url = "https://example.com/other.bin"
+            ctx.handleDownloadRequest(viewless, null)
+            compare(attributions.length, 1, "nothing to attribute a viewless Download to")
+            compare(store.downloadModel.length, 2, "…but it is still tracked")
         }
 
-        // A Tab doing a real navigation can raise a Download before its first
-        // title/load update — that Tab is the user's page, never download-only.
-        function test_downloadOnlyTab_doesNotAutoClose_whenNavigatingTabDownloadsBeforeTitle() {
+        // Which Backend runs the re-issue is the host's business; the context
+        // only says which profile it must match and hands over the arm token.
+        function test_retry_delegatesToHost_withProfileAndToken() {
             const store = createStore()
             const ctx = createContext(store)
-            const host = createTemporaryObject(fakeTabComponent, root)
-            host.pristinePopup = false
-            host.htmlPageLoaded = false
-            host.title = ""
-            tabs = [host]
-
-            const live = createTemporaryObject(fakeDownloadComponent, root)
-            ctx.handleDownloadRequest(live, host)
-
-            compare(removedIndexes.length, 0, "a navigating Tab must survive its own Download")
-        }
-
-        // A download-only popup whose blank document set a title is still a popup
-        // that never committed a page — the title must not keep it open.
-        function test_downloadOnlyTab_autoCloses_whenPopupHasStrayTitle() {
-            const store = createStore()
-            const ctx = createContext(store)
-            const host = createTemporaryObject(fakeTabComponent, root)
-            host.pristinePopup = true
-            host.title = "about:blank"
-            tabs = [host]
-
-            const live = createTemporaryObject(fakeDownloadComponent, root)
-            ctx.handleDownloadRequest(live, host)
-
-            compare(removedIndexes.length, 1, "a stray title must not keep a download-only Tab open")
-            compare(removedIndexes[0], 0)
-        }
-
-        function test_retry_requiresMatchingProfile_noFallback() {
-            const store = createStore()
-            const ctx = createContext(store)
-            const standardTab = createTemporaryObject(fakeTabComponent, root)
-            standardTab.offTheRecord = false
-            tabs = [standardTab]
-
             const record = {
                 url: "https://example.com/a.bin",
                 fileName: "a.bin",
@@ -401,24 +392,19 @@ Item {
                 isInline: false
             }
 
-            verify(!ctx.retryRecord(record))
-            compare(standardTab.downloadUrlCalls, 0)
-
-            const otrTab = createTemporaryObject(fakeTabComponent, root)
-            otrTab.offTheRecord = true
-            tabs = [standardTab, otrTab]
             verify(ctx.retryRecord(record))
-            compare(otrTab.downloadUrlCalls, 1)
-            compare(otrTab.lastDownloadUrl, "https://example.com/a.bin")
+            compare(reissues.length, 1)
+            compare(reissues[0].wantOtr, true)
+            compare(reissues[0].url, "https://example.com/a.bin")
+            compare(reissues[0].fileName, "a.bin")
+            verify(reissues[0].token.length > 0, "the store's arm token reaches the Backend")
+            compare(store.pendingByToken[reissues[0].token], record)
         }
 
-        function test_retry_skipsRetainedViews() {
+        function test_retry_reportsFailure_whenHostHasNoBackend() {
             const store = createStore()
             const ctx = createContext(store)
-            const retainedTab = createTemporaryObject(fakeTabComponent, root)
-            retainedTab.offTheRecord = false
-            retainedTab.retained = true
-            tabs = [retainedTab]
+            hostTakesReissue = false
 
             const record = {
                 url: "https://example.com/a.bin",
@@ -429,14 +415,35 @@ Item {
             }
 
             verify(!ctx.retryRecord(record))
-            compare(retainedTab.downloadUrlCalls, 0)
+            compare(reissues.length, 1)
+        }
+
+        // Only a plain true is a Backend taking the re-issue: a host that
+        // answers nothing has not retried anything.
+        function test_retry_treatsAnUndefinedHostAnswerAsFailure() {
+            const store = createStore()
+            const ctx = createContext(store)
+            ctx.downloadUrlFn = function(wantOtr, url, fileName, token) {
+                reissues.push({ wantOtr: !!wantOtr, url: String(url),
+                                fileName: fileName || "", token: token || "" })
+            }
+
+            const record = {
+                url: "https://example.com/a.bin",
+                fileName: "a.bin",
+                state: AbstractWebView.DownloadState.DownloadInterrupted,
+                offTheRecord: false,
+                isInline: false
+            }
+
+            verify(!ctx.retryRecord(record), "an undefined answer is not success")
+            compare(reissues.length, 1, "…and the host was still asked")
         }
 
         function test_retry_reattachesSameRecord_noDuplicate() {
             const store = createStore()
             const ctx = createContext(store)
             const tab = createTemporaryObject(fakeTabComponent, root)
-            tabs = [tab]
 
             const cancelledLive = createTemporaryObject(fakeDownloadComponent, root)
             cancelledLive.url = "https://example.com/clip.webm"
@@ -447,29 +454,29 @@ Item {
             compare(store.downloadModel.length, 1)
 
             verify(ctx.retryRecord(record))
-            compare(tab.downloadUrlCalls, 1)
-            compare(ctx._pendingRetry, record)
+            const token = reissues[0].token
 
             const retryLive = createTemporaryObject(fakeDownloadComponent, root)
             retryLive.url = "https://example.com/clip.webm"
             retryLive.downloadFileName = "clip.webm"
             retryLive.state = AbstractWebView.DownloadState.DownloadInProgress
-            ctx.handleDownloadRequest(retryLive, tab)
+            ctx.handleDownloadRequest(retryLive, tab, token)
 
             compare(store.downloadModel.length, 1)
             compare(store.downloadModel[0], record)
             compare(record.liveDownload, retryLive)
             compare(record.state, AbstractWebView.DownloadState.DownloadInProgress)
-            verify(!ctx._pendingRetry)
+            compare(store.pendingTokenCount(), 0, "the arm is consumed by its own re-issue")
             compare(store.downloadStripModel.length, 1)
             compare(store.downloadStripModel[0], record)
         }
 
-        function test_retry_armIsOneShot_droppedByUnrelatedRequest() {
+        // The token is why the arm survives traffic it does not belong to: an
+        // unrelated Download of the very same URL cannot capture it.
+        function test_retry_armIsNotCapturedByUnrelatedSameUrlDownload() {
             const store = createStore()
             const ctx = createContext(store)
             const tab = createTemporaryObject(fakeTabComponent, root)
-            tabs = [tab]
 
             const cancelledLive = createTemporaryObject(fakeDownloadComponent, root)
             cancelledLive.url = "https://example.com/clip.webm"
@@ -479,55 +486,37 @@ Item {
             record.state = AbstractWebView.DownloadState.DownloadCancelled
 
             verify(ctx.retryRecord(record))
-            compare(ctx._pendingRetry, record)
+            const token = reissues[0].token
 
-            // An unrelated download consumes the arm without matching…
+            // Same URL, no token: the page started this one, so it is a new Record.
             const otherLive = createTemporaryObject(fakeDownloadComponent, root)
-            otherLive.url = "https://example.com/other.bin"
-            otherLive.downloadFileName = "other.bin"
-            ctx.handleDownloadRequest(otherLive, tab)
-            verify(!ctx._pendingRetry)
+            otherLive.url = "https://example.com/clip.webm"
+            otherLive.downloadFileName = "clip.webm"
+            ctx.handleDownloadRequest(otherLive, tab, "")
             compare(store.downloadModel.length, 2)
-
-            // …so a later same-URL download is a fresh Record, not a reattach.
-            const laterLive = createTemporaryObject(fakeDownloadComponent, root)
-            laterLive.url = "https://example.com/clip.webm"
-            laterLive.downloadFileName = "clip.webm"
-            ctx.handleDownloadRequest(laterLive, tab)
-            compare(store.downloadModel.length, 3)
             compare(record.state, AbstractWebView.DownloadState.DownloadCancelled)
-            verify(record.liveDownload !== laterLive)
+            verify(record.liveDownload !== otherLive)
+
+            // The re-issue still lands on the original Record whenever it arrives.
+            const retryLive = createTemporaryObject(fakeDownloadComponent, root)
+            retryLive.url = "https://example.com/clip.webm"
+            retryLive.downloadFileName = "clip.webm"
+            retryLive.state = AbstractWebView.DownloadState.DownloadInProgress
+            ctx.handleDownloadRequest(retryLive, tab, token)
+            compare(store.downloadModel.length, 2)
+            compare(record.liveDownload, retryLive)
         }
 
-        function test_retry_armExpires_whenNoRequestArrives() {
+        // A stale token names a Record that is no longer armed: track the
+        // Download rather than lose it.
+        function test_unknownToken_startsANewRecord() {
             const store = createStore()
             const ctx = createContext(store)
-            const tab = createTemporaryObject(fakeTabComponent, root)
-            tabs = [tab]
+            const live = createTemporaryObject(fakeDownloadComponent, root)
 
-            const cancelledLive = createTemporaryObject(fakeDownloadComponent, root)
-            cancelledLive.url = "https://example.com/clip.webm"
-            cancelledLive.downloadFileName = "clip.webm"
-            cancelledLive.state = AbstractWebView.DownloadState.DownloadCancelled
-            const record = store.addDownload(cancelledLive, tab)
-            record.state = AbstractWebView.DownloadState.DownloadCancelled
-
-            verify(ctx.retryRecord(record))
-            compare(ctx._pendingRetry, record)
-
-            ctx._pendingRetryExpiry.stop()
-            ctx._pendingRetryExpiry.interval = 20
-            ctx._pendingRetryExpiry.start()
-            tryVerify(() => !ctx._pendingRetry, 1000,
-                      "retry arm should expire without a matching request")
-
-            // The download that finally arrives with the same URL is new.
-            const laterLive = createTemporaryObject(fakeDownloadComponent, root)
-            laterLive.url = "https://example.com/clip.webm"
-            laterLive.downloadFileName = "clip.webm"
-            ctx.handleDownloadRequest(laterLive, tab)
-            compare(store.downloadModel.length, 2)
-            verify(record.liveDownload !== laterLive)
+            ctx.handleDownloadRequest(live, null, "retry-does-not-exist")
+            compare(store.downloadModel.length, 1)
+            compare(store.downloadModel[0].liveDownload, live)
         }
 
         function test_openCompleted_prefersBrowser_forRenderableType() {

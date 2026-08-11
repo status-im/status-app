@@ -6,6 +6,20 @@ import StatusQ.Internal
 QtObject {
     id: root
     property var profiles: ({})
+
+    /// A Download re-issued through BrowserProfileUtils that no live Web View
+    /// initiated (host-side Retry needs no Tab — ADR 0006 §7). View-attributed
+    /// re-issues are delivered by the owning WebViewAdapter instead.
+    signal viewlessDownloadRequested(var download, string token)
+
+    readonly property Connections _profileUtilsDownloads: Connections {
+        target: BrowserProfileUtils
+        function onDownloadRequested(webEngineView, download, token) {
+            if (webEngineView)
+                return
+            root.viewlessDownloadRequested(download, token)
+        }
+    }
     // Chromium default UA (same for all profiles in a Qt build). Snapshot before
     // Binding override — httpUserAgent="" does not restore navigator.userAgent.
     property string defaultHttpUserAgent: ""

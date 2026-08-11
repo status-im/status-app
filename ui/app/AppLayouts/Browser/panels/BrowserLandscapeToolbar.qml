@@ -123,6 +123,7 @@ BrowserToolbarBase {
         }
 
         LandscapeToolbarButton {
+            objectName: "openTabsViewButton"
             incognitoMode: root.currentTabIncognito
             icon.name: "open-tabs"
             tooltip.text: qsTr("Open Tabs view")

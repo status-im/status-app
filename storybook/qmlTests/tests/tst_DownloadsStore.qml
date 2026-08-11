@@ -602,6 +602,79 @@ Item {
             compare(store.downloadsListModel[0], record)
         }
 
+        // The arm token is what makes a re-issue recognisable: it is minted here
+        // and only the Download Request carrying it back reattaches.
+        function test_armRetry_tokenReattachesOntoTheSameRecord() {
+            const store = createStore()
+            const cancelledLive = createTemporaryObject(fakeDownloadComponent, root)
+            cancelledLive.downloadFileName = "clip.webm"
+            cancelledLive.url = "https://example.com/clip.webm"
+            const record = store.addDownload(cancelledLive)
+            cancelledLive.cancel()
+
+            const token = store.armRetry(record)
+            verify(token.length > 0)
+
+            const retryLive = createTemporaryObject(fakeDownloadComponent, root)
+            retryLive.downloadFileName = "clip.webm"
+            retryLive.url = "https://example.com/clip.webm"
+            retryLive.state = AbstractWebView.DownloadState.DownloadInProgress
+
+            compare(store.attachDownload(retryLive, null, token), record)
+            compare(store.downloadModel.length, 1)
+            compare(record.liveDownload, retryLive)
+            verify(retryLive.accepted, "attachDownload accepts the live Download")
+
+            // Consumed: the same token cannot reattach a second time.
+            const laterLive = createTemporaryObject(fakeDownloadComponent, root)
+            laterLive.downloadFileName = "clip.webm"
+            laterLive.url = "https://example.com/clip.webm"
+            verify(store.attachDownload(laterLive, null, token) !== record)
+            compare(store.downloadModel.length, 2)
+        }
+
+        // No token, or one nobody armed: a new Record, never an untracked Download.
+        function test_attachDownload_withoutMatchingToken_startsANewRecord() {
+            const store = createStore()
+            const cancelledLive = createTemporaryObject(fakeDownloadComponent, root)
+            cancelledLive.url = "https://example.com/clip.webm"
+            const record = store.addDownload(cancelledLive)
+            cancelledLive.cancel()
+            store.armRetry(record)
+
+            // Same URL, no token — the page started this one.
+            const pageLive = createTemporaryObject(fakeDownloadComponent, root)
+            pageLive.url = "https://example.com/clip.webm"
+            const fresh = store.attachDownload(pageLive, null, "")
+            verify(fresh !== record)
+            compare(record.state, AbstractWebView.DownloadState.DownloadCancelled)
+
+            const stale = createTemporaryObject(fakeDownloadComponent, root)
+            verify(store.attachDownload(stale, null, "retry-nope") !== record)
+            compare(store.downloadModel.length, 3)
+        }
+
+        // A re-issue whose Record was cleared meanwhile must not resurrect it —
+        // a duplicate History row beats a lost Download.
+        function test_attachDownload_armedRecordDropped_fallsBackToNewRecord() {
+            const store = createStore()
+            const cancelledLive = createTemporaryObject(fakeDownloadComponent, root)
+            cancelledLive.url = "https://example.com/clip.webm"
+            const record = store.addDownload(cancelledLive)
+            cancelledLive.cancel()
+            const token = store.armRetry(record)
+
+            store.clearDownloadHistory()
+            compare(store.downloadModel.length, 0)
+
+            const retryLive = createTemporaryObject(fakeDownloadComponent, root)
+            retryLive.url = "https://example.com/clip.webm"
+            const fresh = store.attachDownload(retryLive, null, token)
+            verify(!!fresh)
+            compare(store.downloadModel.length, 1)
+            compare(store.downloadModel[0], fresh)
+        }
+
         function test_reattachForRetry_declinesRecordDroppedFromHistory() {
             const store = createStore()
             const cancelledLive = createTemporaryObject(fakeDownloadComponent, root)

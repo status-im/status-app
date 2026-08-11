@@ -119,6 +119,63 @@ QtObject {
         return record
     }
 
+    // Records armed for Retry, keyed by the token handed to the Backend. No
+    // expiry: an entry only ever matches the re-issue it was minted for, so an
+    // unanswered arm captures nothing — it is dropped when it goes stale.
+    readonly property var _pendingRetries: ({})
+    property int _lastRetryToken: 0
+
+    /// Arm a Retry for `record` and return the opaque token to pass to the
+    /// Backend's downloadUrl. The Download Request carrying it back reattaches
+    /// onto this Record instead of starting a new History row.
+    function armRetry(record) {
+        root._dropStaleRetries()
+        if (!record)
+            return ""
+        const token = "retry-" + (++_lastRetryToken)
+        _pendingRetries[token] = record
+        return token
+    }
+
+    /// Bind a live Backend download to a Record and accept it: the Record armed
+    /// under `token` when there is one, a new Record otherwise. Returns the Record.
+    function attachDownload(download, hostView, token) {
+        if (!download)
+            return null
+
+        let record = null
+        const pending = token ? _pendingRetries[token] : null
+        if (pending) {
+            delete _pendingRetries[token]
+            record = reattachForRetry(pending, download, hostView)
+        }
+        // No arm, or reattach declined (Record already dropped from History):
+        // track as new rather than accept untracked — a duplicate History row
+        // beats a lost Download.
+        if (!record)
+            record = addDownload(download, hostView)
+
+        acceptLiveDownload(download, record)
+        return record
+    }
+
+    // A Record that is running again, or no longer retryable, can no longer be
+    // the target of an arm; swept on the next armRetry.
+    function _dropStaleRetries() {
+        for (const token in _pendingRetries) {
+            const record = _pendingRetries[token]
+            if (!record || !canRetryFromMenu(record))
+                delete _pendingRetries[token]
+        }
+    }
+
+    function _forgetPendingRetry(record) {
+        for (const token in _pendingRetries) {
+            if (_pendingRetries[token] === record)
+                delete _pendingRetries[token]
+        }
+    }
+
     /// Retry: re-bind a new live Backend Download onto an existing Interrupted/Cancelled
     /// Record so History / overview keep one identity (no duplicate Cancelled + InProgress).
     function reattachForRetry(record, download, hostView) {
@@ -451,6 +508,7 @@ QtObject {
     function _destroyRecord(record) {
         if (!record || !record.isTerminal)
             return false
+        root._forgetPendingRetry(record)
         dismissRecordFromStrip(record)
         record.detach()
         record.destroy()

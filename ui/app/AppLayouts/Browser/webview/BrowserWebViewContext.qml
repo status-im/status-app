@@ -38,8 +38,18 @@ QtObject {
         source: "../adapters/ProfileManager.qml"
     }
 
+    readonly property Connections _viewlessDownloads: Connections {
+        target: root.profileManager
+        ignoreUnknownSignals: true
+        function onViewlessDownloadRequested(download, token) {
+            root.downloadRequestHandler(download, null, token)
+        }
+    }
+
     required property var determineRealURLFn
-    /// (download, hostView) — hostView is the LazyWebViewAdapter that raised the request.
+    /// (download, hostView, token) — hostView is the LazyWebViewAdapter that raised
+    /// the request, null for a host-side re-issue that no Tab initiated. token is
+    /// the correlation token echoed by the Backend (empty unless the host re-issued).
     required property var downloadRequestHandler
     /// (linkUrl, imageUrl, position, hostView) — long-press menu (mobile Backends).
     required property var linkLongPressHandler
@@ -281,6 +291,40 @@ QtObject {
         root._destroyWebView(view)
     }
 
+    /// Close the Tab backing `view`, whatever index it sits at. The host names
+    /// the Web View it got from a signal; the Tab set is ours, so the lookup is
+    /// too — no index arithmetic escapes this object.
+    function removeViewFor(view) {
+        if (!view)
+            return false
+        for (let i = 0; i < tabsModel.count; ++i) {
+            if (getWebView(i) === view) {
+                removeView(i)
+                return true
+            }
+        }
+        return false
+    }
+
+    /// A live Tab whose Backend can run a host-side Download re-issue on the
+    /// requested profile (ADR 0006 §7), or null when there is none.
+    /// Retained Views finish only what they already own (§6), and a local
+    /// preview is not a browsing profile at all — re-issuing on either would
+    /// break the mandatory profile match.
+    function firstLiveDownloadBackend(wantOtr) {
+        for (let i = 0; i < tabsModel.count; ++i) {
+            const view = getWebView(i)
+            if (!view || typeof view.downloadUrl !== "function")
+                continue
+            if (view.retained || view.profileParams?.localPreview)
+                continue
+            if (!!view.offTheRecord !== !!wantOtr)
+                continue
+            return view
+        }
+        return null
+    }
+
     function _destroyWebView(view) {
         if (!view)
             return
@@ -367,14 +411,14 @@ QtObject {
                     tab.pristinePopup = true
                 callback(tab)
             }
-            onDownloadRequested: (download) => {
+            onDownloadRequested: (download, token) => {
                 // Retained Views finish only the Downloads they already own (ADR 0006 §6).
                 if (lazyView.retained) {
                     if (download && download.cancel)
                         download.cancel()
                     return
                 }
-                root.downloadRequestHandler(download, lazyView)
+                root.downloadRequestHandler(download, lazyView, token)
             }
             onLinkLongPressed: (linkUrl, imageUrl, position) => {
                 if (!lazyView.retained)

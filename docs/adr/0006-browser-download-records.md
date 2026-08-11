@@ -14,6 +14,10 @@ Accepted
   codecs are a Capability too, so the allowlist is per Backend; needing the
   player page is a Capability as well, and Backends without it load the media
   file directly)
+- **Amended**: 2026-08-11 — §7 (a re-issue carries a correlation token the
+  Backend echoes, so it reattaches to the armed Record by identity; the desktop
+  re-issue is viewless — the profile, not a Tab, owns the Backend — while mobile
+  still needs a live Tab, and neither a Retained View nor a local preview is one)
 - **Owners**: Status Desktop (browser)
 
 ## Context
@@ -121,11 +125,11 @@ library's Download object is a transient attachment to it.**
      cancel from the Pill.
 
 7. **Retry is a host-side re-issue**, not the library's `retry()`: the Record's
-   URL is downloaded again via `downloadUrl(url, fileName)` on a Backend with a
-   matching profile. Offered from the Record menu for Interrupted and Cancelled
-   Records, and on tap for Interrupted only — tapping a download the user
-   cancelled must not restart it. Inline Downloads get no retry at all; their
-   payload is not reproducible from a URL.
+   URL is downloaded again via `downloadUrl(url, fileName, token)` on a Backend
+   owned by a matching profile. Offered from the Record menu for Interrupted and
+   Cancelled Records, and on tap for Interrupted only — tapping a download the
+   user cancelled must not restart it. Inline Downloads get no retry at all;
+   their payload is not reproducible from a URL.
 
    **The profile match is mandatory, never best-effort.** Re-issuing an Incognito
    Record on a Standard Backend would give the new Record standard mode, and so
@@ -133,6 +137,23 @@ library's Download object is a transient attachment to it.**
    register the file with the system Downloads UI, which the library refuses for
    Incognito precisely to keep those URLs out. If no Backend with a matching mode
    exists, retry is unavailable rather than downgraded.
+
+   **A re-issue is correlated by a token, not by URL and timing.** The store mints
+   a token when it arms the Retry, the Backend echoes it back on the Download
+   Request it raises, and the host attaches the new transfer to the armed Record
+   by that identity. Without it an unrelated Download of the same URL, arriving in
+   the same window, would capture the arm and the Retry would land on the wrong
+   Record — or a second History row. A Download Request carrying no token is an
+   ordinary one.
+
+   **Which Backend runs it is the host's business, and needs no Tab.** On desktop
+   the re-issue is viewless: `ProfileManager` resolves the profile from the
+   Record's mode and `downloadUrl` runs on a transient page that profile owns, so
+   a Retry survives closing every Tab. Mobile has no such page — there the
+   Backend *is* the native view — so it needs a live Tab on a matching profile:
+   never a Retained View, which finishes only the Downloads it already owns (§6),
+   and never a local preview, whose isolated profile (§8) is not a browsing
+   profile and would fail the match above.
 
 8. **Platform reach is reported, not assumed.** "Show in folder" exists on
    Android only (via the system downloads view; the library registers completed

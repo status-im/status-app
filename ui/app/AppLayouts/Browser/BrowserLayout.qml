@@ -223,6 +223,43 @@ StatusSectionLayout {
                 downloadsContext.setFindOpen(false)
         }
 
+        /// Host-side Download re-issue (Retry) on a Backend matching the Record
+        /// profile (ADR 0006 §7). Desktop runs it on a transient WebEngine page
+        /// owned by the profile, so no Tab is involved and a Retry survives
+        /// closing every Tab. Mobile has no such page — the Backend *is* the
+        /// native view — so it needs a live, non-Retained Tab (§6).
+        function reissueDownload(wantOtr, url, fileName, token) {
+            if (!SQUtils.Utils.isMobile) {
+                const profile = webViewContext.profileManager?.getProfile(
+                                  wantOtr ? browserConfig.otrProfileParams
+                                          : browserConfig.defaultProfileParams)
+                if (!profile) {
+                    console.warn("[Browser] no profile for the Download re-issue")
+                    return false
+                }
+                BrowserProfileUtils.downloadUrl(profile, null, url, fileName || "", token || "")
+                return true
+            }
+
+            const backend = webViewContext.firstLiveDownloadBackend(!!wantOtr)
+            if (!backend) {
+                console.warn("[Browser] no Backend available for the Download re-issue")
+                return false
+            }
+            backend.downloadUrl(url, fileName || "", token || "")
+            return true
+        }
+
+        /// A Tab a page opened that never committed a page of its own has nothing
+        /// left to show once its Download starts — pristinePopup is marked at
+        /// creation, never guessed from title or load state. removeView retains
+        /// the Web View on mobile while the Downloads are non-terminal.
+        function closeDownloadOnlyTab(view) {
+            if (!view || !view.pristinePopup)
+                return
+            webViewContext.removeViewFor(view)
+        }
+
         function openDownloadsOverview() {
             onOpenTabsBookmarksOverviewRequested(TabsBookmarksOverviewModal.Mode.Downloads)
         }
@@ -337,9 +374,9 @@ StatusSectionLayout {
     BrowserDownloadsContext {
         id: downloadsContext
         downloadsStore: root.downloadsStore
-        getWebViewFn: (index) => webViewContext.getWebView(index)
-        getTabsCountFn: () => tabs.count
-        removeViewFn: (index) => webViewContext.removeView(index)
+        downloadUrlFn: (wantOtr, url, fileName, token) =>
+            _internal.reissueDownload(wantOtr, url, fileName, token)
+        onDownloadAttributed: (view) => _internal.closeDownloadOnlyTab(view)
         hideFindUiFn: () => _internal.hideFindBar()
         openUrlFn: (url) => root.openUrlInNewTab(url)
         openFileUrlFn: (fileUrl, readAccessUrl) => root.openFileUrlInNewTab(fileUrl, readAccessUrl)
@@ -369,7 +406,8 @@ StatusSectionLayout {
         bookmarksStore: root.bookmarksStore
         downloadsStore: root.downloadsStore
         determineRealURLFn: (url) => root.browserRootStore.determineRealURL(url)
-        downloadRequestHandler: (download, hostView) => downloadsContext.handleDownloadRequest(download, hostView)
+        downloadRequestHandler: (download, hostView, token) =>
+            downloadsContext.handleDownloadRequest(download, hostView, token)
         linkLongPressHandler: (linkUrl, imageUrl, position, hostView) =>
             linkContextMenuInst.openAt(linkUrl, imageUrl, position, webStackView, hostView)
         sslErrorHandler: (error) => {
