@@ -36,16 +36,21 @@ SplitView {
                 property QtObject privacyModule: QtObject {
                     signal passwordChanged(success: bool, errorMsg: string)
                     signal saveBiometricsRequested(string keyUid, string credential)
+
+                    function changePassword(password, newPassword, rekey = false) {
+                        passwordChanged(ctrlChangePassSuccess.checked,
+                                        ctrlChangePassSuccess.checked ? "" : "Err changing password")
+                    }
+
+                    function isProfileMigratedToDEKEncryption() {
+                        return ctrlFastPasswordChange.checked
+                    }
                 }
 
                 readonly property string keyUid: keyUidInput.text
 
                 function tryStoreToKeyChain(errorDescription) {
                     privacyModule.saveBiometricsRequested(keyUid, passwordInput.text)
-                }
-
-                function changePassword(from, to) {
-                    privacyModule.passwordChanged(ctrlChangePassSuccess.checked, ctrlChangePassSuccess.checked ? "" : "Err changing password")
                 }
             }
 
@@ -97,6 +102,11 @@ SplitView {
                 Switch {
                     id: ctrlChangePassSuccess
                     text: "Password change will succeed"
+                    checked: true
+                }
+                Switch {
+                    id: ctrlFastPasswordChange
+                    text: "DEK / fast password change"
                     checked: true
                 }
             }

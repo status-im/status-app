@@ -24,6 +24,7 @@ SplitView {
 
             visible: true
             modal: false
+            fastPasswordChangePossible: fastPathCheckBox.checked
 
             onChangePasswordRequested: passwordChangedTimer.start()
 
@@ -50,9 +51,19 @@ SplitView {
 
         ColumnLayout {
             CheckBox {
+                id: fastPathCheckBox
+                text: "Fast password change possible (DEK)"
+                checked: true
+            }
+            CheckBox {
                 id: successFlow
                 text: "%1 in 2 seconds".arg(successFlow.checked ? "Success" : "Error")
                 checked: true
+            }
+            Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                text: "Use the modal rekey checkbox (DEK only) to force the deep restart path."
             }
         }
     }
