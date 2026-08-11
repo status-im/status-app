@@ -2,8 +2,12 @@
 #include <QObject>
 #include <QString>
 #include <QByteArray>
+#include <QBasicTimer>
+#include <QElapsedTimer>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlIncubator>
+#include <QTimerEvent>
 
 #include <StatusQ/networkaccessfactory.h>
 #include <StatusQ/typesregistration.h>
@@ -64,6 +68,94 @@ Q_DECL_EXPORT void statusq_initializeWebEngine() {
 #ifdef STATUSQ_HAS_QTWEBENGINE
     QtWebEngineQuick::initialize();
 #endif
+}
+
+// --- Boosted QML incubation --------------------------------------------------
+// The QQuickWindow default incubation controller only incubates for a few ms
+// per rendered frame, so a large asynchronously-loaded section (Loader
+// asynchronous:true) takes seconds of wall time on slow devices while the
+// running skeleton animation keeps the frame loop busy. This controller
+// drives incubation from the event loop with a fixed budget per tick
+// instead: loads finish several times faster and input events still get
+// processed between ticks.
+//
+// Every incubation burst starts with a gentle phase: small, paced bites that
+// leave the frame loop enough headroom to run the section-switch slide
+// animation at full rate. Once the gentle period is over (the transition is
+// done and only the loading skeleton is on screen) the throttle opens.
+class BoostedIncubationController : public QObject, public QQmlIncubationController {
+public:
+    BoostedIncubationController(int msPerTick, int gentlePeriodMs, QObject* parent)
+        : QObject(parent), m_msPerTick(msPerTick), m_gentlePeriodMs(gentlePeriodMs) {
+        // Liveness backstop: the timer never fully stops. Even if a count
+        // notification is missed (cancelled/chained incubations), pending
+        // incubators are picked up at most one idle tick later — a wedged
+        // controller stalls every async Loader in the app.
+        m_timer.start(kIdleIntervalMs, this);
+    }
+
+protected:
+    void incubatingObjectCountChanged(int count) override {
+        // fast path out of the idle cadence; phase management happens in
+        // timerEvent based on the actual count
+        if (count > 0 && m_interval == kIdleIntervalMs)
+            restart(kGentleIntervalMs);
+    }
+
+    void timerEvent(QTimerEvent* event) override {
+        if (event->timerId() != m_timer.timerId())
+            return;
+
+        if (incubatingObjectCount() == 0) {
+            m_inBurst = false;
+            if (m_interval != kIdleIntervalMs)
+                restart(kIdleIntervalMs);
+            return;
+        }
+
+        if (!m_inBurst) {
+            m_inBurst = true;
+            m_burstStart.start();
+        }
+
+        // gentle first: small paced bites leave the frame loop enough
+        // headroom for the section-switch transition; then open the throttle
+        const bool gentle = m_gentlePeriodMs > 0
+                            && m_burstStart.elapsed() < m_gentlePeriodMs;
+        const int wantedInterval = gentle ? kGentleIntervalMs : 0;
+        if (m_interval != wantedInterval)
+            restart(wantedInterval);
+
+        incubateFor(gentle ? kGentleBudgetMs : m_msPerTick);
+    }
+
+private:
+    void restart(int interval) {
+        m_interval = interval;
+        m_timer.start(interval, this);
+    }
+
+    // ~3ms every 12ms keeps a 60fps transition fluid while still incubating
+    static constexpr int kGentleBudgetMs = 3;
+    static constexpr int kGentleIntervalMs = 12;
+    // idle poll: cheap (one count check), bounds the wedge-recovery latency
+    static constexpr int kIdleIntervalMs = 128;
+
+    QBasicTimer m_timer;
+    QElapsedTimer m_burstStart;
+    bool m_inBurst = false;
+    int m_interval = kIdleIntervalMs;
+    const int m_msPerTick;
+    const int m_gentlePeriodMs;
+};
+
+// Must be installed before the root window is created (QQuickWindow only
+// installs its own controller when the engine has none).
+Q_DECL_EXPORT void statusq_installBoostedIncubationController(void* engine, int msPerTick,
+                                                              int gentlePeriodMs) {
+    auto* qmlEngine = static_cast<QQmlApplicationEngine*>(engine);
+    qmlEngine->setIncubationController(
+        new BoostedIncubationController(msPerTick, gentlePeriodMs, qmlEngine));
 }
 
 Q_DECL_EXPORT void* statusq_osnotification_create() {
