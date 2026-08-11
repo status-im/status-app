@@ -351,7 +351,34 @@ Item {
             tryVerify(() => controlUnderTest.getPlainText() === "Hello @0x0JohnDoe ")
         }
 
-        // ── typed emoji-shortcode flow (migrated from tst_StatusChatInput, re-enabled) ──
+        // Typing "@" + a name that matches no user (nor "everyone") must not open a
+        // visible-but-empty suggestion box. Otherwise Enter/Send would commit a
+        // non-existent row and insert an "@undefined" pill instead of sending;
+        // here it must send the text as-is.
+        function test_typedMention_noMatchSendsTextAsIs() {
+            appendContact("JohnDoe")
+            waitForRendering(controlUnderTest)
+
+            controlUnderTest.textInput.forceActiveFocus()
+            typeText("Hello @zzz")
+            waitForRendering(controlUnderTest)
+
+            // enteringSuggestion is true, but there are no matches, so the box stays hidden.
+            verify(controlUnderTest.textInput.enteringSuggestion)
+            const box = findChild(controlUnderTest, "suggestionsBox")
+            verify(!!box)
+            verify(!box.visible, "no suggestion box for a non-matching name")
+
+            signalSpy.setup(controlUnderTest, "sendMessageRequested")
+            keyClick(Qt.Key_Return) // send (NoModifier maps to send on desktop/offscreen)
+            waitForRendering(controlUnderTest)
+
+            verify(!controlUnderTest.getPlainText().includes("@undefined"))
+            compare(controlUnderTest.getPlainText(), "Hello @zzz")
+            compare(signalSpy.count, 1)
+        }
+
+        // ── typed emoji-shortcode flow
         //
         // Typing ":" + a shortcode makes ChatTextArea report enteringEmoji/emojiFilter, which
         // drives the emoji suggestion popup. Committing (Tab) replaces the shortcode with the emoji.

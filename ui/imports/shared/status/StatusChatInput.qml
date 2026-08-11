@@ -557,15 +557,22 @@ Control {
         height: Math.min(400, implicitHeight)
         z: parent.z + 100
 
+        // Only visible when there are actual matches. Otherwise the box would be
+        // visible-but-empty and hijack Enter/Send (checkTextInsert) into committing a
+        // non-existent row, inserting an "@undefined" pill instead of sending the text.
         visible: !shouldHide && messageInputField.enteringSuggestion
+                 && mentionsAdaptor.model.ModelCount.count > 0
 
         property bool shouldHide: false
 
         function selectItem(index: int) {
             InputMethod.commit()
 
+            if (index < 0)
+                return
+
             const item = StatusQUtils.ModelUtils.get(mentionsAdaptor.model, index)
-            if (!item)
+            if (!item || item.pubKey === undefined)
                 return
 
             messageInputField.forceActiveFocus()
