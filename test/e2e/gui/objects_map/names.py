@@ -878,8 +878,6 @@ change_password_menu_change_password_button = {"container": settingsContentBase_
 changePasswordPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "ConfirmChangePasswordModal", "type": "PopupItem", "visible": True}
 reEncryptRestartButton = {"container": statusDesktop_mainWindow_overlay,
                           "objectName": "changePasswordModalSubmitButton", "type": "StatusButton", "visible": True}
-reEncryptRekeyCheckbox = {"container": statusDesktop_mainWindow_overlay,
-                          "objectName": "changePasswordModalRekeyCheckBox", "type": "StatusCheckBox", "visible": True}
 reEncryptionComplete = {"container": statusDesktop_mainWindow_overlay, "objectName": "statusListItemSubTitle",
                         "type": "StatusTextWithLoadingState", "visible": True}
 
