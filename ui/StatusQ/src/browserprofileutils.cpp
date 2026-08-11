@@ -280,6 +280,14 @@ struct BrowserProfileUtils::TrackedStore
 // otherwise navigate/play). Helper does not share the tab's live cookies.
 struct BrowserProfileUtils::DownloadHelper
 {
+    // What downloadUrl() promised to hand back with the download it starts.
+    struct Origin
+    {
+        // QPointer so a destroyed view degrades to null rather than dangling.
+        QPointer<QObject> view;
+        QString token;
+    };
+
     // Owns the pages in pageViews and the coreProfile they live on; pages must
     // go first so their retire connections die before the helper does.
     ~DownloadHelper()
@@ -296,8 +304,8 @@ struct BrowserProfileUtils::DownloadHelper
     QMetaObject::Connection destroyedConn;
 
     // Live transient download pages (one per downloadUrl() call) mapped to the
-    // initiating view; QPointer so a destroyed view degrades to null.
-    QHash<QWebEnginePage *, QPointer<QObject>> pageViews;
+    // origin of that call.
+    QHash<QWebEnginePage *, Origin> pageViews;
 };
 
 BrowserProfileUtils::BrowserProfileUtils(QObject *parent)
@@ -489,11 +497,12 @@ BrowserProfileUtils::DownloadHelper *BrowserProfileUtils::helperFor(QObject *pro
             const auto it = helper->pageViews.constFind(page);
             if (it == helper->pageViews.cend()) {
                 qWarning("BrowserProfileUtils: downloadRequested from an unknown page");
-                emit downloadRequested(nullptr, download);
+                emit downloadRequested(nullptr, download, QString());
                 return;
             }
+            const DownloadHelper::Origin origin = it.value();
             retirePageWhenFinished(helper, page, download);
-            emit downloadRequested(it.value().data(), download);
+            emit downloadRequested(origin.view.data(), download, origin.token);
         });
 
     helper->destroyedConn = connect(
@@ -537,7 +546,8 @@ void BrowserProfileUtils::retirePageWhenFinished(DownloadHelper *helper,
 
 void BrowserProfileUtils::downloadUrl(QObject *profile, QObject *webEngineView,
                                       const QUrl &url,
-                                      const QString &suggestedFileName)
+                                      const QString &suggestedFileName,
+                                      const QString &token)
 {
     if (!url.isValid()) {
         qWarning("BrowserProfileUtils::downloadUrl: invalid url");
@@ -553,6 +563,7 @@ void BrowserProfileUtils::downloadUrl(QObject *profile, QObject *webEngineView,
     // One page per call: downloadRequested carries page(), so concurrent calls
     // are matched to their initiating view by identity, never by call order.
     auto *page = new QWebEnginePage(helper->coreProfile, this);
-    helper->pageViews.insert(page, QPointer<QObject>(webEngineView));
+    helper->pageViews.insert(page, DownloadHelper::Origin{
+                                       QPointer<QObject>(webEngineView), token});
     page->download(url, suggestedFileName);
 }

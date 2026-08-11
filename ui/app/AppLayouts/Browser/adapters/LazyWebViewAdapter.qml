@@ -142,10 +142,10 @@ AbstractWebView {
     }
 
     /// Host-side Retry — ensure the Backend is loaded, then forward.
-    function downloadUrl(url, suggestedFileName) {
+    function downloadUrl(url, suggestedFileName, token) {
         ensureLoaded()
         if (loader.item && loader.item.downloadUrl)
-            loader.item.downloadUrl(url, suggestedFileName || "")
+            loader.item.downloadUrl(url, suggestedFileName || "", token || "")
         else
             console.warn("LazyWebViewAdapter: downloadUrl unavailable")
     }
@@ -181,7 +181,7 @@ AbstractWebView {
         }
         function onLinkHovered(hoveredUrl)             { root.linkHovered(hoveredUrl) }
         function onWindowCloseRequested()              { root.windowCloseRequested() }
-        function onDownloadRequested(download)         { root.downloadRequested(download) }
+        function onDownloadRequested(download, token)  { root.downloadRequested(download, token) }
         function onLinkLongPressed(linkUrl, imageUrl, position) {
             root.linkLongPressed(linkUrl, imageUrl, position)
         }

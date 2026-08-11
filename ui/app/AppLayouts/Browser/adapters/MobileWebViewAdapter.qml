@@ -66,8 +66,8 @@ AbstractWebView {
         // clearSiteData reloads natively (cache-bypass); clearProfileData does not.
         function onClearProfileDataCompleted() { backend.reload() }
 
-        function onDownloadRequested(download) {
-            root.downloadRequested(download)
+        function onDownloadRequested(download, token) {
+            root.downloadRequested(download, token || "")
         }
 
         function onLinkLongPressed(linkUrl, imageUrl, position) {
@@ -99,9 +99,9 @@ AbstractWebView {
     }
 
     /// Host-side Retry (ADR 0006): re-issue via Backend downloadUrl on this profile.
-    function downloadUrl(url, suggestedFileName) {
+    function downloadUrl(url, suggestedFileName, token) {
         if (backend.downloadUrl)
-            backend.downloadUrl(url, suggestedFileName || "")
+            backend.downloadUrl(url, suggestedFileName || "", token || "")
         else
             console.warn("MobileWebViewAdapter: backend.downloadUrl unavailable")
     }

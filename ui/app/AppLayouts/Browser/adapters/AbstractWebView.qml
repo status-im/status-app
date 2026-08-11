@@ -101,7 +101,9 @@ Item {
 
     signal linkHovered(string hoveredUrl)
     signal windowCloseRequested()
-    signal downloadRequested(var download)
+    /// token is the opaque correlation token handed to downloadUrl and echoed by
+    /// the Backend; empty for every Download the host did not itself re-issue.
+    signal downloadRequested(var download, string token)
     /// Long-press on a link/image (mobile Backends; WebEngine has its own menu).
     /// Either URL may be empty, never both. position is view-local logical px.
     signal linkLongPressed(url linkUrl, url imageUrl, point position)
@@ -156,7 +158,8 @@ Item {
 
     /// Host-side re-issue of a Download (Retry). MobileWebView: backend.downloadUrl;
     /// WebEngine: BrowserProfileUtils → QWebEnginePage::download (not navigate).
-    function downloadUrl(url, suggestedFileName) {
+    /// token comes back on downloadRequested — see the signal.
+    function downloadUrl(url, suggestedFileName, token) {
         console.warn("AbstractWebView: downloadUrl not implemented")
     }
 }

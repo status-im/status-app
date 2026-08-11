@@ -57,17 +57,23 @@ public:
     // Force a Download via QWebEnginePage::download (QML WebEngineView has no
     // page.download). Used for Retry — navigating renderable media (video/audio)
     // would play in the tab instead of downloading. `webEngineView` is the
-    // initiating view so the matching adapter can forward downloadRequested.
-    // `profile` must be the view's QML WebEngineProfile.
+    // initiating view so the matching adapter can forward downloadRequested;
+    // null when no view initiated it (host-side Retry needs no live tab).
+    // `token` is opaque here — it is echoed back on downloadRequested so the
+    // caller can recognise its own re-issue by identity.
+    // `profile` must be a QML WebEngineProfile.
     Q_INVOKABLE void downloadUrl(QObject *profile, QObject *webEngineView,
                                  const QUrl &url,
-                                 const QString &suggestedFileName = {});
+                                 const QString &suggestedFileName = {},
+                                 const QString &token = {});
 
 signals:
     // Emitted for downloads started by downloadUrl(). `webEngineView` is the
-    // initiator passed to downloadUrl (null if it cannot be identified);
-    // `download` is a QWebEngineDownloadRequest.
-    void downloadRequested(QObject *webEngineView, QObject *download);
+    // initiator passed to downloadUrl (null when there was none, or when it has
+    // since been destroyed); `download` is a QWebEngineDownloadRequest; `token`
+    // is the one passed to downloadUrl (empty if the page is unknown).
+    void downloadRequested(QObject *webEngineView, QObject *download,
+                           const QString &token);
 
 private:
     struct TrackedStore;

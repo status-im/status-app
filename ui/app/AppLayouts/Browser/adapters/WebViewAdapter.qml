@@ -52,12 +52,13 @@ AbstractWebView {
 
     /// Host-side Retry: force Download via BrowserProfileUtils (QWebEnginePage::download).
     /// Navigating renderable media (video/audio) would play in the tab instead.
-    function downloadUrl(url, suggestedFileName) {
+    function downloadUrl(url, suggestedFileName, token) {
         if (!root.profile) {
             console.warn("WebViewAdapter: downloadUrl requires a profile")
             return
         }
-        BrowserProfileUtils.downloadUrl(root.profile, webView, url, suggestedFileName || "")
+        BrowserProfileUtils.downloadUrl(root.profile, webView, url,
+                                        suggestedFileName || "", token || "")
     }
 
     // Native per-site cookies, then site_utils.js for current-origin DOM + reload.
@@ -264,17 +265,20 @@ AbstractWebView {
             // For viewless downloads, only visible adapter forwards to avoid fan-out.
             if (!download?.view && !root.visible)
                 return
-            root.downloadRequested(download)
+            // Page-initiated: nothing on the host asked for it, so no token.
+            root.downloadRequested(download, "")
         }
     }
 
     // Retry downloads start on a helper Core profile (not this Quick profile).
+    // Only the initiating view forwards; a viewless re-issue is delivered by
+    // ProfileManager instead (it needs no live Tab).
     Connections {
         target: BrowserProfileUtils
-        function onDownloadRequested(webEngineView, download) {
+        function onDownloadRequested(webEngineView, download, token) {
             if (webEngineView !== webView)
                 return
-            root.downloadRequested(download)
+            root.downloadRequested(download, token)
         }
     }
 
