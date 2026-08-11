@@ -298,6 +298,8 @@ Item {
     }
 
     Component.onCompleted: {
+        if (root.showRightPanel)
+            rightPanelLoader.active = true
         if (root.navToMsgList) {
             root.navigateToMessageList()
         }
@@ -309,39 +311,63 @@ Item {
         root.navToMsgListRequested(false)
     }
 
-    readonly property Item rightPanel: UserListPanel {
-        chatType: root.chatContentModule?.chatDetails.type || Constants.chatType.unknown
-        isAdmin: root.chatContentModule?.amIChatAdmin() || false
+    readonly property Item rightPanel: Loader {
+        id: rightPanelLoader
 
-        label: qsTr("Members")
-        communityMemberReevaluationStatus: root.communityMemberReevaluationStatus
+        // Built on first show only (then kept), asynchronously behind the
+        // skeleton — the members list must never delay a chat switch.
+        active: false
+        asynchronous: true
 
-        usersModel: root.usersModel
-
-        onOpenProfileRequested: Global.openProfilePopup(pubKey, null)
-        onReviewContactRequestRequested: Global.openReviewContactRequestPopup(pubKey, null)
-        onSendContactRequestRequested: Global.openContactRequestPopup(pubKey, null)
-        onEditNicknameRequested: Global.openNicknamePopupRequested(pubKey, null)
-        onBlockContactRequested: Global.blockContactRequested(pubKey)
-        onUnblockContactRequested: Global.unblockContactRequested(pubKey)
-        onMarkAsUntrustedRequested: Global.markAsUntrustedRequested(pubKey)
-        onRemoveContactRequested: Global.removeContactRequested(pubKey)
-
-        onRemoveNicknameRequested: {
-            const oldName = ModelUtils.getByKey(usersModel, "pubKey", pubKey, "localNickname")
-            root.changeContactNicknameRequest(pubKey, "", oldName, true)
+        MembersListSkeleton {
+            objectName: "membersPanelSkeleton"
+            anchors.fill: parent
+            visible: rightPanelLoader.active && rightPanelLoader.status !== Loader.Ready
         }
 
-        onCreateOneToOneChatRequested: {
-            Global.changeAppSectionBySectionType(Constants.appSection.chat)
-            root.rootStore.chatCommunitySectionModule.createOneToOneChat("", pubKey, "")
+        sourceComponent: UserListPanel {
+            // async incubation parents the partially-built panel into the
+            // scene early — keep it invisible behind the skeleton
+            visible: rightPanelLoader.status === Loader.Ready
+
+            chatType: root.chatContentModule?.chatDetails.type || Constants.chatType.unknown
+            isAdmin: root.chatContentModule?.amIChatAdmin() || false
+
+            label: qsTr("Members")
+            communityMemberReevaluationStatus: root.communityMemberReevaluationStatus
+
+            usersModel: root.usersModel
+
+            onOpenProfileRequested: Global.openProfilePopup(pubKey, null)
+            onReviewContactRequestRequested: Global.openReviewContactRequestPopup(pubKey, null)
+            onSendContactRequestRequested: Global.openContactRequestPopup(pubKey, null)
+            onEditNicknameRequested: Global.openNicknamePopupRequested(pubKey, null)
+            onBlockContactRequested: Global.blockContactRequested(pubKey)
+            onUnblockContactRequested: Global.unblockContactRequested(pubKey)
+            onMarkAsUntrustedRequested: Global.markAsUntrustedRequested(pubKey)
+            onRemoveContactRequested: Global.removeContactRequested(pubKey)
+
+            onRemoveNicknameRequested: {
+                const oldName = ModelUtils.getByKey(usersModel, "pubKey", pubKey, "localNickname")
+                root.changeContactNicknameRequest(pubKey, "", oldName, true)
+            }
+
+            onCreateOneToOneChatRequested: {
+                Global.changeAppSectionBySectionType(Constants.appSection.chat)
+                root.rootStore.chatCommunitySectionModule.createOneToOneChat("", pubKey, "")
+            }
+
+            onRemoveTrustStatusRequested: root.removeTrustStatusRequest(pubKey)
+            onRemoveContactFromGroupRequested: root.rootStore.removeMemberFromGroupChat(pubKey)
+
+            onMarkAsTrustedRequested: Global.openMarkAsIDVerifiedPopup(pubKey, null)
+            onRemoveTrustedMarkRequested: Global.openRemoveIDVerificationDialog(pubKey, null)
         }
+    }
 
-        onRemoveTrustStatusRequested: root.removeTrustStatusRequest(pubKey)
-        onRemoveContactFromGroupRequested: root.rootStore.removeMemberFromGroupChat(pubKey)
-
-        onMarkAsTrustedRequested: Global.openMarkAsIDVerifiedPopup(pubKey, null)
-        onRemoveTrustedMarkRequested: Global.openRemoveIDVerificationDialog(pubKey, null)
+    onShowRightPanelChanged: {
+        if (root.showRightPanel)
+            rightPanelLoader.active = true
     }
 
     onChatContentModuleChanged: {

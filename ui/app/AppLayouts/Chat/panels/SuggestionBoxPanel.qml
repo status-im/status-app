@@ -17,6 +17,10 @@ Control {
     readonly property alias listView: listView
     property var inputField
 
+    // While true the panel renders skeleton rows instead of relying on the
+    // (still empty) model — shown until the members model is wired in.
+    property bool loading: false
+
     signal clicked(int index)
 
     padding: Theme.halfPadding
@@ -50,7 +54,52 @@ Control {
         id: listView
         objectName: "suggestionBoxList"
 
-        implicitHeight: contentHeight
+        implicitHeight: root.loading ? loadingSkeleton.implicitHeight
+                                     : contentHeight
+
+        LoadingSkeletonGroup {
+            id: loadingSkeleton
+            objectName: "suggestionsLoadingSkeleton"
+
+            visible: root.loading
+            width: listView.width
+            implicitHeight: skeletonRows.implicitHeight
+
+            Column {
+                id: skeletonRows
+                width: parent.width
+
+                Repeater {
+                    model: 3
+
+                    Item {
+                        width: skeletonRows.width
+                        height: 42
+
+                        Row {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.leftMargin: Theme.smallPadding
+                            spacing: Theme.smallPadding
+
+                            LoadingSkeletonTile {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 32
+                                height: 32
+                                radius: 16
+                            }
+
+                            LoadingSkeletonTile {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 96
+                                height: 12
+                                radius: 6
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         keyNavigationEnabled: true
         Keys.priority: Keys.AfterItem
