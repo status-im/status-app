@@ -66,6 +66,78 @@ Item {
             verify(!ctx.canOpenInBrowser(binRec, true))
             pngRec.missingFile = true
             verify(!ctx.canOpenInBrowser(pngRec, false))
+
+            // The rest of the enumerated raster set, plus plain text.
+            verify(ctx.canOpenInBrowser(completed("image/jpeg", "a.jpg"), false))
+            verify(ctx.canOpenInBrowser(completed("image/gif", "a.gif"), false))
+            verify(ctx.canOpenInBrowser(completed("image/webp", "a.webp"), false))
+            verify(ctx.canOpenInBrowser(completed("image/bmp", "a.bmp"), false))
+            verify(ctx.canOpenInBrowser(completed("", "a.jpeg"), false))
+            verify(ctx.canOpenInBrowser(completed("text/plain", "notes.txt"), false))
+        }
+
+        /// A Download opens in the isolated local-preview profile — no scripts
+        /// of ours, no web channel, no remote reach — but the allowlist is still
+        /// the first line of defense, so a format that can run a script never
+        /// gets on it. Enumerated for that reason: no image/* family match, no
+        /// extension character class — both used to let SVG and HTML through.
+        function test_canOpenInBrowser_refusesScriptableFormats() {
+            const ctx = createContext()
+
+            verify(!ctx.canOpenInBrowser(completed("image/svg+xml", "drawing"), true))
+            verify(!ctx.canOpenInBrowser(completed("", "a.svg"), true))
+            verify(!ctx.canOpenInBrowser(completed("image/svg+xml", "a.svg"), true))
+            verify(!ctx.canOpenInBrowser(completed("text/html", "page"), true))
+            verify(!ctx.canOpenInBrowser(completed("", "a.html"), true))
+            verify(!ctx.canOpenInBrowser(completed("text/html", "a.html"), true))
+            verify(!ctx.canOpenInBrowser(completed("", "a.htm"), true))
+            verify(!ctx.canOpenInBrowser(completed("application/xhtml+xml", "a.xhtml"), true))
+            verify(!ctx.canOpenInBrowser(completed("", "a.xhtml"), true))
+
+            // No unlisted image type rides in on the family either.
+            verify(!ctx.canOpenInBrowser(completed("image/tiff", "a.tiff"), true))
+            verify(!ctx.canOpenInBrowser(completed("image/x-icon", "a.ico"), true))
+
+            // And the refusal is the OS handoff, not a silent navigation.
+            verify(!ctx.openInBrowser(completed("image/svg+xml", "a.svg"), true))
+            verify(!ctx.openInBrowser(completed("text/html", "a.html"), true))
+            compare(openedUrls.length, 0)
+            compare(openedFileUrls.length, 0)
+        }
+
+        /// The Tab renders a file:// navigation by extension, so the extension
+        /// is what the allowlist judges: a safe MIME type cannot carry an
+        /// unlisted extension in behind it. A server picks both.
+        function test_canOpenInBrowser_extensionDecidesOverMimeType() {
+            const ctx = createContext()
+
+            // Safe MIME, scriptable extension — the page is what would render.
+            verify(!ctx.canOpenInBrowser(completed("image/png", "evil.html"), true))
+            verify(!ctx.canOpenInBrowser(completed("image/gif", "x.svg"), true))
+            verify(!ctx.canOpenInBrowser(completed("text/plain", "note.xhtml"), true))
+            verify(!ctx.canOpenInBrowser(completed("application/pdf", "report.htm"), true))
+            verify(!ctx.canOpenInBrowser(completed("audio/mpeg", "tune.html"), true))
+            // Windows drops trailing dots, so ".html." is still an .html there.
+            verify(!ctx.canOpenInBrowser(completed("image/png", "evil.html."), true))
+            // …and the same goes for a trailing space, and for any casing.
+            verify(!ctx.canOpenInBrowser(completed("image/png", "evil.html "), true))
+            verify(!ctx.canOpenInBrowser(completed("image/png", "EVIL.HTML"), true))
+
+            // A leading-dot name is all extension: ".html" is an .html, not a
+            // base name the MIME type gets to answer for.
+            verify(!ctx.canOpenInBrowser(completed("image/png", ".html"), true))
+            verify(ctx.canOpenInBrowser(completed("image/png", ".png"), false))
+
+            // No extension to judge: the exact MIME type answers alone.
+            verify(ctx.canOpenInBrowser(completed("image/png", "photo"), false))
+            verify(ctx.canOpenInBrowser(completed("text/plain", "notes"), false))
+            verify(!ctx.canOpenInBrowser(completed("text/html", "page"), false))
+
+            // A listed extension resolves on its own branch, whatever the
+            // server called it — PNG bytes are what a .png renders as.
+            verify(ctx.canOpenInBrowser(completed("image/svg+xml", "a.png"), false))
+            verify(ctx.canOpenInBrowser(completed("application/pdf", "report.pdf"), true))
+            verify(!ctx.canOpenInBrowser(completed("application/pdf", "report.pdf"), false))
         }
 
         function test_canOpenInBrowser_requiresCompleted() {

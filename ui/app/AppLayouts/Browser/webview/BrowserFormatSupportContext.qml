@@ -81,9 +81,14 @@ QtObject {
         { group: "document", name: "PDF", detail: ".pdf", mimeType: "application/pdf",
           probeType: "" },
         { group: "document", name: qsTr("Images"),
-          detail: ".png, .jpg, .gif, .webp, .bmp, .svg", mimeType: "image/png",
+          detail: ".png, .jpg, .gif, .webp, .bmp", mimeType: "image/png",
           probeType: "" },
-        { group: "document", name: qsTr("Text and HTML"), detail: ".txt, .html, .xhtml",
+        { group: "document", name: qsTr("Plain text"), detail: ".txt",
+          mimeType: "text/plain", probeType: "" },
+        // Listed so the report says where they go, never as an opt-in: the
+        // allowlist refuses scriptable formats, so these always read "opens in
+        // another app" (see DownloadFormatUtils.canOpenInBrowser).
+        { group: "document", name: "HTML and SVG", detail: ".html, .xhtml, .svg",
           mimeType: "text/html", probeType: "" }
     ]
 

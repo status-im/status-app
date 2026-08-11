@@ -8,10 +8,40 @@
 // mediaPlaybackSupported is the platform's in-page playback gate. Both are
 // passed in, never probed here.
 
+// The enumerated safe sets, one pair per branch of canOpenInBrowser. The
+// extensions are the operative half; the MIME types only answer for a name
+// that carries no extension at all.
+const _IMAGE_MIME_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp"]
+const _IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp", "bmp"]
+const _TEXT_MIME_TYPES = ["text/plain"]
+const _TEXT_EXTENSIONS = ["txt"]
+const _PDF_MIME_TYPES = ["application/pdf"]
+const _PDF_EXTENSIONS = ["pdf"]
+
 /// Open-in-Browser allowlist: types our Backends render (ADR 0006 §8).
-/// Images, plain text, HTML; PDF when the Backend supports it; media per
+/// Raster images and plain text; PDF when the Backend supports it; media per
 /// isPlayableMedia, gated by mediaPlaybackSupported. Everything else is handed
 /// to the OS.
+///
+/// Default-deny, and enumerated on purpose. A Download opens in an isolated
+/// local-preview profile — ephemeral, no injected scripts, no web channel, and
+/// unreachable from any browsing Tab — but that profile is containment, not
+/// permission: the allowlist stays the first line of defense, and only formats
+/// that cannot execute a script in a web view belong on it. No prefix match, no
+/// character-class extension pattern — a family match ("every image/*") lets the
+/// next scriptable member of that family in behind it.
+/// SVG, HTML and XHTML are deliberately absent: WebEngine runs their scripts.
+/// In-app viewing for those comes back through the native viewer follow-up,
+/// which renders them outside a web engine altogether — never by widening this
+/// list.
+///
+/// The extension decides, not the Record's MIME type, because that is what
+/// decides in the Tab: a file:// navigation is rendered by extension, so
+/// "evil.html" served as image/png is a page whatever the server called it. A
+/// name that carries an extension passes only on that extension; the MIME type
+/// answers alone only for a name that carries none. A leading-dot name carries
+/// one — ".html" is html, not a base name — or the MIME branch would answer for
+/// a file the Tab would still render as a page.
 ///
 /// Order matters and is behavior: a name ending in ".pdf" resolves on the
 /// PDF branch even if its MIME type would also match media.
@@ -19,15 +49,42 @@ function canOpenInBrowser(mimeType, fileName, supportsPdf, mediaPlaybackSupporte
                           proprietaryCodecs = false) {
     const mime = String(mimeType || "").toLowerCase()
     const name = String(fileName || "").toLowerCase()
+    const ext = _extensionOf(name)
 
-    if (mime.startsWith("image/") || /\.(png|jpe?g|gif|webp|bmp|svg)$/.test(name))
+    if (_allows(mime, ext, _IMAGE_MIME_TYPES, _IMAGE_EXTENSIONS))
         return true
-    if (mime === "text/plain" || mime === "text/html" || mime === "application/xhtml+xml"
-            || /\.(txt|html?|xhtml)$/.test(name))
+    if (_allows(mime, ext, _TEXT_MIME_TYPES, _TEXT_EXTENSIONS))
         return true
-    if (mime === "application/pdf" || name.endsWith(".pdf"))
+    if (_allows(mime, ext, _PDF_MIME_TYPES, _PDF_EXTENSIONS))
         return !!supportsPdf
-    return !!mediaPlaybackSupported && isPlayableMedia(mimeType, fileName, proprietaryCodecs)
+    // Media follows the same rule. Rather than restate its containers here,
+    // isPlayableMedia is asked about the name alone whenever there is an
+    // extension to answer with — its own enumeration stays the single one.
+    return !!mediaPlaybackSupported
+            && isPlayableMedia(ext ? "" : mime, name, proprietaryCodecs)
+}
+
+/// One branch of the allowlist: the name's extension must be one of the
+/// branch's own, or — for a name without an extension — the MIME type must be.
+function _allows(mime, ext, mimeTypes, extensions) {
+    if (ext)
+        return extensions.indexOf(ext) >= 0
+    return mimeTypes.indexOf(mime) >= 0
+}
+
+/// The extension of a (lowercased) file name, without its dot, or "" when the
+/// name carries none. Trailing dots and spaces come off first: Windows drops
+/// them when it opens the file, so "evil.html." is an .html there.
+/// A leading-dot name is all extension and no base: ".html" is html.
+function _extensionOf(name) {
+    let end = name.length
+    while (end > 0 && (name[end - 1] === "." || name[end - 1] === " "))
+        --end
+    const trimmed = name.substring(0, end)
+    const dot = trimmed.lastIndexOf(".")
+    if (dot < 0)
+        return ""
+    return trimmed.substring(dot + 1)
 }
 
 /// Media our Backends can decode — and only inside a page (WebEngine turns a

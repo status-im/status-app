@@ -84,6 +84,19 @@ Item {
             verify(formatNamed(ctx, "Images").supported)
         }
 
+        /// The report follows the allowlist, and the allowlist refuses formats
+        /// that run scripts in a Tab — so HTML and SVG are listed as going to
+        /// the OS, and the images row no longer advertises .svg.
+        function test_scriptableFormatsAreReportedAsOpeningElsewhere() {
+            const ctx = createContext()
+
+            verify(!formatNamed(ctx, "HTML and SVG").supported)
+            verify(formatNamed(ctx, "Plain text").supported)
+            verify(formatNamed(ctx, "Images").supported)
+            verify(formatNamed(ctx, "Images").detail.indexOf("svg") < 0)
+            compare(formatNamed(ctx, "Text and HTML"), null)
+        }
+
         function test_engineProbeTakesAwayWhatItCannotDecode() {
             const ctx = createContext({
                 "audio/mpeg": "probably",
