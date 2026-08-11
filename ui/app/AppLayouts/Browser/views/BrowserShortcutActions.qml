@@ -157,12 +157,14 @@ QObject {
         onActivated: root.resetZoomFactor()
     }
     Shortcut {
-        sequences: [StandardKey.NextChild]
+        // Ctrl maps to Cmd on macOS — Cmd+Option+arrows, the Safari tab chord;
+        // it never collides with text editing.
+        sequences: [StandardKey.NextChild, "Ctrl+Alt+Right"]
         enabled: !root.isMobile
         onActivated: root.nextTabRequested()
     }
     Shortcut {
-        sequences: [StandardKey.PreviousChild]
+        sequences: [StandardKey.PreviousChild, "Ctrl+Alt+Left"]
         enabled: !root.isMobile // Android Back matches PreviousChild; see isMobile
         onActivated: root.previousTabRequested()
     }
