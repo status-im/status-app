@@ -6,6 +6,7 @@ ChatPermissionQualificationPanel 1.0 ChatPermissionQualificationPanel.qml
 ColorPanel 1.0 ColorPanel.qml
 ColumnHeaderPanel 1.0 ColumnHeaderPanel.qml
 CommunityBannedMemberCenterPanel 1.0 CommunityBannedMemberCenterPanel.qml
+CommunityChannelsSkeleton 1.0 CommunityChannelsSkeleton.qml
 ControlNodeOfflineCenterPanel 1.0 ControlNodeOfflineCenterPanel.qml
 EditSettingsPanel 1.0 EditSettingsPanel.qml
 FeesBox 1.0 FeesBox.qml
