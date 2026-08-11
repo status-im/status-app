@@ -113,6 +113,7 @@ StatusDialog {
         spacing: 20
 
         StatusBaseText {
+            objectName: "changePasswordModalDescription"
             width: parent.width
             wrapMode: Text.WordWrap
             text: {
