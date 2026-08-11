@@ -72,22 +72,124 @@ QtObject {
         showInFolderSupported: !SQUtils.Utils.isIOS
     })
 
-    readonly property url _downloadRecordUrl: Qt.resolvedUrl("DownloadRecord.qml")
-
     /// Emitted when a host Web View no longer owns any non-terminal Downloads.
     /// BrowserWebViewContext destroys Retained Views on this signal (ADR 0006 §6).
     signal viewDownloadsCleared(var view)
 
-    readonly property Timer _historySaveTimer: Timer {
-        interval: Math.max(0, root.historySaveDebounceMs)
-        repeat: false
-        onTriggered: root.saveDownloadHistoryNow()
+    readonly property QtObject d: QtObject {
+
+        readonly property url downloadRecordUrl: Qt.resolvedUrl("DownloadRecord.qml")
+
+        readonly property Timer historySaveTimer: Timer {
+            interval: Math.max(0, root.historySaveDebounceMs)
+            repeat: false
+            onTriggered: root.saveDownloadHistoryNow()
+        }
+
+        // Records armed for Retry, keyed by the token handed to the Backend. No
+        // expiry: an entry only ever matches the re-issue it was minted for, so an
+        // unanswered arm captures nothing — it is dropped when it goes stale.
+        readonly property var pendingRetries: ({})
+        property int lastRetryToken: 0
+
+        // A Record that is running again, or no longer retryable, can no longer be
+        // the target of an arm; swept on the next armRetry.
+        function dropStaleRetries() {
+            for (const token in d.pendingRetries) {
+                const record = d.pendingRetries[token]
+                if (!record || !root.canRetryFromMenu(record))
+                    delete d.pendingRetries[token]
+            }
+        }
+
+        function forgetPendingRetry(record) {
+            for (const token in d.pendingRetries) {
+                if (d.pendingRetries[token] === record)
+                    delete d.pendingRetries[token]
+            }
+        }
+
+        function maybeEmitViewDownloadsCleared(view) {
+            if (!view)
+                return
+            if (!root.viewHasNonTerminalDownloads(view))
+                root.viewDownloadsCleared(view)
+        }
+
+        /// Sanitize a suggested file name and resolve a free Download Target under downloadsDirectory.
+        /// Collisions with existing files or in-session Records get "(1)", "(2)", … suffixes.
+        function resolveDownloadTarget(suggestedFileName) {
+            const dir = root.downloadsDirectory.replace(/[/\\]+$/, "")
+            if (root.platform && root.platform.ensureDirectory)
+                root.platform.ensureDirectory(dir)
+
+            let name = String(suggestedFileName || "").trim()
+            if (!name)
+                name = "download.bin"
+            name = name.replace(/[\\/]/g, "_")
+
+            let candidate = d.joinPath(dir, name)
+            let n = 1
+            while (d.pathTaken(candidate)) {
+                candidate = d.joinPath(dir, d.withCollisionSuffix(name, n))
+                n += 1
+                if (n > 1000)
+                    break
+            }
+            return candidate
+        }
+
+        /// Destroy a Record: as createObject(root) children they outlive removal
+        /// from downloadModel. Returns false for one still driving a Download.
+        function destroyRecord(record) {
+            if (!record || !record.isTerminal)
+                return false
+            d.forgetPendingRetry(record)
+            root.dismissRecordFromStrip(record)
+            record.detach()
+            record.destroy()
+            return true
+        }
+
+        function pathTaken(path) {
+            if (root.platform && root.platform.fileExists && root.platform.fileExists(path))
+                return true
+            for (let i = 0; i < root.downloadModel.length; ++i) {
+                const record = root.downloadModel[i]
+                if (record && record.targetPath === path)
+                    return true
+            }
+            return false
+        }
+
+        function joinPath(dir, fileName) {
+            if (!dir)
+                return fileName
+            if (dir.endsWith("/") || dir.endsWith("\\"))
+                return dir + fileName
+            return dir + "/" + fileName
+        }
+
+        function splitPath(path) {
+            const s = String(path)
+            const slash = Math.max(s.lastIndexOf("/"), s.lastIndexOf("\\"))
+            if (slash < 0)
+                return { dir: "", fileName: s }
+            return { dir: s.substring(0, slash), fileName: s.substring(slash + 1) }
+        }
+
+        function withCollisionSuffix(fileName, n) {
+            const dot = fileName.lastIndexOf(".")
+            if (dot <= 0)
+                return fileName + " (" + n + ")"
+            return fileName.substring(0, dot) + " (" + n + ")" + fileName.substring(dot)
+        }
     }
 
     /// hostView is the host Web View (LazyWebViewAdapter) that owns this Download.
     /// Required for Retained View ownership; Backend download.view is unreliable on mobile.
     function addDownload(download, hostView) {
-        const component = Qt.createComponent(_downloadRecordUrl)
+        const component = Qt.createComponent(d.downloadRecordUrl)
         if (component.status !== Component.Ready) {
             console.error("DownloadsStore: failed to load DownloadRecord:", component.errorString())
             return null
@@ -109,7 +211,7 @@ QtObject {
         }
         record.terminalReached.connect(function() {
             root.scheduleSaveDownloadHistory()
-            root._maybeEmitViewDownloadsCleared(record.originatingView)
+            d.maybeEmitViewDownloadsCleared(record.originatingView)
         })
         downloadModel = downloadModel.concat([record])
         // Newest pills first — strip shifts existing items right (animated in the view).
@@ -119,21 +221,15 @@ QtObject {
         return record
     }
 
-    // Records armed for Retry, keyed by the token handed to the Backend. No
-    // expiry: an entry only ever matches the re-issue it was minted for, so an
-    // unanswered arm captures nothing — it is dropped when it goes stale.
-    readonly property var _pendingRetries: ({})
-    property int _lastRetryToken: 0
-
     /// Arm a Retry for `record` and return the opaque token to pass to the
     /// Backend's downloadUrl. The Download Request carrying it back reattaches
     /// onto this Record instead of starting a new History row.
     function armRetry(record) {
-        root._dropStaleRetries()
+        d.dropStaleRetries()
         if (!record)
             return ""
-        const token = "retry-" + (++_lastRetryToken)
-        _pendingRetries[token] = record
+        const token = "retry-" + (++d.lastRetryToken)
+        d.pendingRetries[token] = record
         return token
     }
 
@@ -144,9 +240,9 @@ QtObject {
             return null
 
         let record = null
-        const pending = token ? _pendingRetries[token] : null
+        const pending = token ? d.pendingRetries[token] : null
         if (pending) {
-            delete _pendingRetries[token]
+            delete d.pendingRetries[token]
             record = reattachForRetry(pending, download, hostView)
         }
         // No arm, or reattach declined (Record already dropped from History):
@@ -157,23 +253,6 @@ QtObject {
 
         acceptLiveDownload(download, record)
         return record
-    }
-
-    // A Record that is running again, or no longer retryable, can no longer be
-    // the target of an arm; swept on the next armRetry.
-    function _dropStaleRetries() {
-        for (const token in _pendingRetries) {
-            const record = _pendingRetries[token]
-            if (!record || !canRetryFromMenu(record))
-                delete _pendingRetries[token]
-        }
-    }
-
-    function _forgetPendingRetry(record) {
-        for (const token in _pendingRetries) {
-            if (_pendingRetries[token] === record)
-                delete _pendingRetries[token]
-        }
     }
 
     /// Retry: re-bind a new live Backend Download onto an existing Interrupted/Cancelled
@@ -236,13 +315,6 @@ QtObject {
             }
         }
         return false
-    }
-
-    function _maybeEmitViewDownloadsCleared(view) {
-        if (!view)
-            return
-        if (!root.viewHasNonTerminalDownloads(view))
-            root.viewDownloadsCleared(view)
     }
 
     /// Remove a Record from the Download Pill strip only (History / downloadModel unchanged).
@@ -370,38 +442,16 @@ QtObject {
     // Formatting lives with the pill: elideFileName in
     // webview/DownloadFormatUtils.js, the status wording in DownloadPill.qml.
 
-    /// Sanitize a suggested file name and resolve a free Download Target under downloadsDirectory.
-    /// Collisions with existing files or in-session Records get "(1)", "(2)", … suffixes.
-    function _resolveDownloadTarget(suggestedFileName) {
-        const dir = root.downloadsDirectory.replace(/[/\\]+$/, "")
-        if (root.platform && root.platform.ensureDirectory)
-            root.platform.ensureDirectory(dir)
-
-        let name = String(suggestedFileName || "").trim()
-        if (!name)
-            name = "download.bin"
-        name = name.replace(/[\\/]/g, "_")
-
-        let candidate = _joinPath(dir, name)
-        let n = 1
-        while (_pathTaken(candidate)) {
-            candidate = _joinPath(dir, _withCollisionSuffix(name, n))
-            n += 1
-            if (n > 1000)
-                break
-        }
-        return candidate
-    }
-
     /// Accept the live Backend download into a resolved Download Target and update the Record.
     /// Mobile-shaped: accept(path). WebEngine-shaped: set downloadDirectory/fileName then accept().
+    /// Returns the resolved Download Target path.
     function acceptLiveDownload(download, record) {
         if (!download)
             return ""
 
         const suggested = download.suggestedFileName || download.downloadFileName || "download.bin"
-        const target = _resolveDownloadTarget(suggested)
-        const parts = _splitPath(target)
+        const target = d.resolveDownloadTarget(suggested)
+        const parts = d.splitPath(target)
 
         if (record) {
             record.downloadDirectory = parts.dir
@@ -431,7 +481,7 @@ QtObject {
             saveDownloadHistoryNow()
             return
         }
-        _historySaveTimer.restart()
+        d.historySaveTimer.restart()
     }
 
     function saveDownloadHistoryNow() {
@@ -469,7 +519,7 @@ QtObject {
         if (!Array.isArray(parsed))
             return
 
-        const component = Qt.createComponent(_downloadRecordUrl)
+        const component = Qt.createComponent(d.downloadRecordUrl)
         if (component.status !== Component.Ready) {
             console.error("DownloadsStore: failed to load DownloadRecord:", component.errorString())
             return
@@ -496,23 +546,11 @@ QtObject {
         const kept = []
         for (let i = 0; i < downloadModel.length; ++i) {
             const previous = downloadModel[i]
-            if (previous && !root._destroyRecord(previous))
+            if (previous && !d.destroyRecord(previous))
                 kept.push(previous)
         }
         downloadModel = restored.concat(kept)
         enforceHistoryCap()
-    }
-
-    /// Destroy a Record: as createObject(root) children they outlive removal
-    /// from downloadModel. Returns false for one still driving a Download.
-    function _destroyRecord(record) {
-        if (!record || !record.isTerminal)
-            return false
-        root._forgetPendingRetry(record)
-        dismissRecordFromStrip(record)
-        record.detach()
-        record.destroy()
-        return true
     }
 
     /// Clear Download History Records only — files on disk are left alone (ADR 0006).
@@ -521,7 +559,7 @@ QtObject {
         const kept = []
         for (let i = 0; i < downloadModel.length; ++i) {
             const record = downloadModel[i]
-            if (record && !root._destroyRecord(record))
+            if (record && !d.destroyRecord(record))
                 kept.push(record)
         }
         downloadModel = kept
@@ -551,7 +589,7 @@ QtObject {
         const next = []
         for (let i = 0; i < downloadModel.length; ++i) {
             if (drop[i])
-                root._destroyRecord(downloadModel[i])
+                d.destroyRecord(downloadModel[i])
             else
                 next.push(downloadModel[i])
         }
@@ -593,37 +631,4 @@ QtObject {
         record.liveDownload = null
     }
 
-    function _pathTaken(path) {
-        if (root.platform && root.platform.fileExists && root.platform.fileExists(path))
-            return true
-        for (let i = 0; i < downloadModel.length; ++i) {
-            const record = downloadModel[i]
-            if (record && record.targetPath === path)
-                return true
-        }
-        return false
-    }
-
-    function _joinPath(dir, fileName) {
-        if (!dir)
-            return fileName
-        if (dir.endsWith("/") || dir.endsWith("\\"))
-            return dir + fileName
-        return dir + "/" + fileName
-    }
-
-    function _splitPath(path) {
-        const s = String(path)
-        const slash = Math.max(s.lastIndexOf("/"), s.lastIndexOf("\\"))
-        if (slash < 0)
-            return { dir: "", fileName: s }
-        return { dir: s.substring(0, slash), fileName: s.substring(slash + 1) }
-    }
-
-    function _withCollisionSuffix(fileName, n) {
-        const dot = fileName.lastIndexOf(".")
-        if (dot <= 0)
-            return fileName + " (" + n + ")"
-        return fileName.substring(0, dot) + " (" + n + ")" + fileName.substring(dot)
-    }
 }

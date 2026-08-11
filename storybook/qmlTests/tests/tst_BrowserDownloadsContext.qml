@@ -250,9 +250,9 @@ Item {
             })
             // The internal open seam runs for real; keep its filesystem side
             // hermetic (playerPageWritable simulates a write failure).
-            ctx._openContext.mediaPlayerDirectory = "/tmp/status-player"
-            ctx._openContext.ensureDirectoryFn = function(path) { return true }
-            ctx._openContext.writeTextFileFn = function(path, data) { return store.playerPageWritable }
+            ctx.d.openContext.mediaPlayerDirectory = "/tmp/status-player"
+            ctx.d.openContext.ensureDirectoryFn = function(path) { return true }
+            ctx.d.openContext.writeTextFileFn = function(path, data) { return store.playerPageWritable }
             ctx.downloadAttributed.connect(function(view) {
                 attributions.push(view)
             })
@@ -635,7 +635,7 @@ Item {
                 targetPath: "/tmp/downloads/tune.mp3"
             })
 
-            ctx._openContext.mediaPlayerPageRequired = false
+            ctx.d.openContext.mediaPlayerPageRequired = false
             verify(ctx.openInBrowserRecord(record))
             compare(openedUrls.length, 0, "no player page navigation on this Backend")
             compare(openedFileUrls.length, 1)
@@ -643,7 +643,7 @@ Item {
             compare(openedFileUrls[0].readAccess, "", "empty grant = the file's own directory")
 
             // Flipping the Capability back restores the player-page route.
-            ctx._openContext.mediaPlayerPageRequired = true
+            ctx.d.openContext.mediaPlayerPageRequired = true
             verify(ctx.openInBrowserRecord(record))
             compare(openedFileUrls.length, 1)
             compare(openedUrls.length, 1)

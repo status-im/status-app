@@ -77,13 +77,76 @@ QtObject {
         return loc ? String(loc).replace("file://", "").replace(/[/\\]+$/, "") + "/status-browser-player" : ""
     }
 
-    // Player page assets, substituted and inlined by _mediaPlayerHtml.
+    // Player page assets, substituted and inlined by d.mediaPlayerHtml.
     readonly property url mediaPlayerTemplateUrl:
         Qt.resolvedUrl("player/media_player.html")
     readonly property url mediaPlayerScriptUrl:
         Qt.resolvedUrl("player/media_player.js")
 
-    property string _mediaPlayerTemplateCache: ""
+    readonly property QtObject d: QtObject {
+
+        property string mediaPlayerTemplateCache: ""
+
+        /// media_player.html with its placeholders filled in, or "" when the asset is
+        /// unreadable. Function replacements throughout: a file name may contain "$&".
+        function mediaPlayerHtml(record, path) {
+            const template = d.mediaPlayerTemplate()
+            if (!template)
+                return ""
+
+            const tag = DownloadFormatUtils.isVideoMedia(record.mimeType, record.fileName)
+                        ? "video" : "audio"
+            const name = StringUtils.escapeHtml(String(record.fileName || ""))
+            // Every path segment is percent-encoded, so the src carries no quote to escape.
+            const src = d.fileUrlForPage(path)
+            const failed = StringUtils.escapeHtml(
+                             qsTr("This file cannot be played here. Open it with another app."))
+
+            return template
+                .replace(/__TAG__/g, () => tag)
+                .replace(/__SRC__/g, () => src)
+                .replace(/__NAME__/g, () => name)
+                .replace(/__FAILED__/g, () => failed)
+        }
+
+        /// media_player.html with media_player.js inlined, read once per session.
+        /// One page beats a page plus a sibling script copied into the temp directory.
+        function mediaPlayerTemplate() {
+            if (d.mediaPlayerTemplateCache)
+                return d.mediaPlayerTemplateCache
+
+            const html = String(root.readTextFileFn(root.mediaPlayerTemplateUrl) || "")
+            if (!html)
+                return ""
+            const script = String(root.readTextFileFn(root.mediaPlayerScriptUrl) || "")
+            d.mediaPlayerTemplateCache = html.replace(/__SCRIPT__/g, () => script)
+            return d.mediaPlayerTemplateCache
+        }
+
+        /// Absolute path → file URL safe to inline in HTML. Drive letters keep their colon
+        /// so Windows targets stay valid ("C:/x" → "file:///C:/x").
+        function fileUrlForPage(path) {
+            const encoded = String(path).replace(/\\/g, "/").split("/")
+                .map(segment => /^[A-Za-z]:$/.test(segment) ? segment : encodeURIComponent(segment))
+                .join("/")
+            return encoded.startsWith("/") ? "file://" + encoded : "file:///" + encoded
+        }
+
+        function pathKey(path) {
+            let hash = 5381
+            for (let i = 0; i < path.length; ++i)
+                hash = ((hash << 5) + hash + path.charCodeAt(i)) >>> 0
+            return hash.toString(16)
+        }
+
+        function joinPath(dir, fileName) {
+            if (!dir)
+                return fileName
+            if (dir.endsWith("/") || dir.endsWith("\\"))
+                return dir + fileName
+            return dir + "/" + fileName
+        }
+    }
 
     /// Open-in-Browser gate for a Record: Completed, still on disk, and a type
     /// on the shared allowlist (DownloadFormatUtils / ADR 0006 §8). supportsPdf
@@ -151,74 +214,15 @@ QtObject {
         if (root.ensureDirectoryFn)
             root.ensureDirectoryFn(dir)
 
-        const html = _mediaPlayerHtml(record, path)
+        const html = d.mediaPlayerHtml(record, path)
         if (!html)
             return ""
 
         // One page per target path: replaying a file reuses it instead of piling up.
-        const pagePath = _joinPath(dir, "player-" + _pathKey(path) + ".html")
+        const pagePath = d.joinPath(dir, "player-" + d.pathKey(path) + ".html")
         if (!root.writeTextFileFn(pagePath, html))
             return ""
         return UrlUtils.urlFromUserInput(pagePath)
     }
 
-    /// media_player.html with its placeholders filled in, or "" when the asset is
-    /// unreadable. Function replacements throughout: a file name may contain "$&".
-    function _mediaPlayerHtml(record, path) {
-        const template = _mediaPlayerTemplate()
-        if (!template)
-            return ""
-
-        const tag = DownloadFormatUtils.isVideoMedia(record.mimeType, record.fileName)
-                    ? "video" : "audio"
-        const name = StringUtils.escapeHtml(String(record.fileName || ""))
-        // Every path segment is percent-encoded, so the src carries no quote to escape.
-        const src = _fileUrlForPage(path)
-        const failed = StringUtils.escapeHtml(
-                         qsTr("This file cannot be played here. Open it with another app."))
-
-        return template
-            .replace(/__TAG__/g, () => tag)
-            .replace(/__SRC__/g, () => src)
-            .replace(/__NAME__/g, () => name)
-            .replace(/__FAILED__/g, () => failed)
-    }
-
-    /// media_player.html with media_player.js inlined, read once per session.
-    /// One page beats a page plus a sibling script copied into the temp directory.
-    function _mediaPlayerTemplate() {
-        if (root._mediaPlayerTemplateCache)
-            return root._mediaPlayerTemplateCache
-
-        const html = String(root.readTextFileFn(root.mediaPlayerTemplateUrl) || "")
-        if (!html)
-            return ""
-        const script = String(root.readTextFileFn(root.mediaPlayerScriptUrl) || "")
-        root._mediaPlayerTemplateCache = html.replace(/__SCRIPT__/g, () => script)
-        return root._mediaPlayerTemplateCache
-    }
-
-    /// Absolute path → file URL safe to inline in HTML. Drive letters keep their colon
-    /// so Windows targets stay valid ("C:/x" → "file:///C:/x").
-    function _fileUrlForPage(path) {
-        const encoded = String(path).replace(/\\/g, "/").split("/")
-            .map(segment => /^[A-Za-z]:$/.test(segment) ? segment : encodeURIComponent(segment))
-            .join("/")
-        return encoded.startsWith("/") ? "file://" + encoded : "file:///" + encoded
-    }
-
-    function _pathKey(path) {
-        let hash = 5381
-        for (let i = 0; i < path.length; ++i)
-            hash = ((hash << 5) + hash + path.charCodeAt(i)) >>> 0
-        return hash.toString(16)
-    }
-
-    function _joinPath(dir, fileName) {
-        if (!dir)
-            return fileName
-        if (dir.endsWith("/") || dir.endsWith("\\"))
-            return dir + fileName
-        return dir + "/" + fileName
-    }
 }

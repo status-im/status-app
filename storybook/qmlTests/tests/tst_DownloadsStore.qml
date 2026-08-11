@@ -270,16 +270,19 @@ Item {
             compare(typeof store.downloadModel.append, "undefined")
         }
 
-        function test_resolveDownloadTarget_usesDownloadsDirAndSuggestedName() {
+        // Target resolution is observed where it is observable: the Download
+        // Target acceptLiveDownload settles on for a suggested file name.
+        function test_downloadTarget_usesDownloadsDirAndSuggestedName() {
             const store = createStore()
             store.downloadsDirectory = "/tmp/status-downloads"
             store.platform.fileExists = function(path) { return false }
 
-            compare(store._resolveDownloadTarget("report.pdf"),
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            compare(store.acceptLiveDownload(live, null),
                     "/tmp/status-downloads/report.pdf")
         }
 
-        function test_resolveDownloadTarget_addsCollisionSuffixes() {
+        function test_downloadTarget_addsCollisionSuffixes() {
             const store = createStore()
             store.downloadsDirectory = "/tmp/status-downloads"
             store.platform.fileExists = function(path) {
@@ -287,11 +290,12 @@ Item {
                     || path === "/tmp/status-downloads/report (1).pdf"
             }
 
-            compare(store._resolveDownloadTarget("report.pdf"),
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            compare(store.acceptLiveDownload(live, null),
                     "/tmp/status-downloads/report (2).pdf")
         }
 
-        function test_resolveDownloadTarget_skipsTargetsClaimedByRecords() {
+        function test_downloadTarget_skipsTargetsClaimedByRecords() {
             const store = createStore()
             store.downloadsDirectory = "/tmp/status-downloads"
             store.platform.fileExists = function(path) { return false }
@@ -301,7 +305,8 @@ Item {
             record.downloadDirectory = "/tmp/status-downloads"
             record.fileName = "report.pdf"
 
-            compare(store._resolveDownloadTarget("report.pdf"),
+            const second = createTemporaryObject(fakeDownloadComponent, root)
+            compare(store.acceptLiveDownload(second, null),
                     "/tmp/status-downloads/report (1).pdf")
         }
 

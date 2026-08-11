@@ -252,11 +252,12 @@ Item {
             compare(String(ctx.mediaPlayerPageUrl(gone)), "")
 
             // An unreadable page asset must not write a half-built page.
+            // A fresh context, so the template cache holds nothing yet.
+            const unreadable = createContext()
             let written = false
-            ctx.writeTextFileFn = function(path, text) { written = true; return true }
-            ctx._mediaPlayerTemplateCache = ""
-            ctx.readTextFileFn = function(path) { return "" }
-            compare(String(ctx.mediaPlayerPageUrl(completed("audio/mpeg", "b.mp3"))), "")
+            unreadable.writeTextFileFn = function(path, text) { written = true; return true }
+            unreadable.readTextFileFn = function(path) { return "" }
+            compare(String(unreadable.mediaPlayerPageUrl(completed("audio/mpeg", "b.mp3"))), "")
             verify(!written)
         }
 

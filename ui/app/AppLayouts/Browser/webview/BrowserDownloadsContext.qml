@@ -41,26 +41,6 @@ QtObject {
     /// its footer/strip to this — nothing writes visibility imperatively.
     readonly property bool stripVisible: stripPresenter.stripVisible
 
-    // Presenter over the three inputs. findOpen / userDismissed change only
-    // via setFindOpen, dismissStrip and handleDownloadRequest; model emptiness
-    // is observed from the store.
-    readonly property QtObject _stripPresenter: QtObject {
-        id: stripPresenter
-
-        property bool findOpen: false
-        property bool userDismissed: false
-
-        // A JS array today, possibly a QML model later: count for models,
-        // length for arrays. Both re-evaluate on change.
-        readonly property int pillCount: {
-            const model = root.downloadsStore?.downloadStripModel
-            return model?.ModelCount?.count ?? model?.length ?? 0
-        }
-
-        readonly property bool stripVisible: !findOpen && !userDismissed
-            && pillCount > 0
-    }
-
     property var openUrlFn: function(url) {
         console.warn("BrowserDownloadsContext: openUrlFn not set")
     }
@@ -75,13 +55,48 @@ QtObject {
     // BrowserBackendCapabilities.pdfViewerSupported; tests inject their own.
     property var supportsPdfFn: function() { return false }
 
-    /// The open-a-downloaded-file seam (ADR 0006 §8): format allowlist, player
-    /// pages, local-URL guard exception. Internal composition — BrowserLayout
-    /// talks to this context only; the seam sees narrow injected functions,
-    /// never the store.
-    readonly property BrowserDownloadOpenContext _openContext: BrowserDownloadOpenContext {
-        openUrlFn: (url) => root.openUrlFn(url)
-        openFileUrlFn: (fileUrl, readAccessUrl) => root.openFileUrlFn(fileUrl, readAccessUrl)
+    readonly property QtObject d: QtObject {
+
+        // Presenter over the three inputs. findOpen / userDismissed change only
+        // via setFindOpen, dismissStrip and handleDownloadRequest; model emptiness
+        // is observed from the store.
+        readonly property QtObject stripPresenter: QtObject {
+            id: stripPresenter
+
+            property bool findOpen: false
+            property bool userDismissed: false
+
+            // A JS array today, possibly a QML model later: count for models,
+            // length for arrays. Both re-evaluate on change.
+            readonly property int pillCount: {
+                const model = root.downloadsStore?.downloadStripModel
+                return model?.ModelCount?.count ?? model?.length ?? 0
+            }
+
+            readonly property bool stripVisible: !findOpen && !userDismissed
+                && pillCount > 0
+        }
+
+        /// The open-a-downloaded-file seam (ADR 0006 §8): format allowlist, player
+        /// pages, local-URL guard exception. Internal composition — BrowserLayout
+        /// talks to this context only; the seam sees narrow injected functions,
+        /// never the store.
+        readonly property BrowserDownloadOpenContext openContext: BrowserDownloadOpenContext {
+            id: downloadOpenContext
+
+            openUrlFn: (url) => root.openUrlFn(url)
+            openFileUrlFn: (fileUrl, readAccessUrl) => root.openFileUrlFn(fileUrl, readAccessUrl)
+        }
+
+        // Missing File markers go stale while the app is backgrounded (files can
+        // be removed externally); refresh when it returns to the foreground.
+        readonly property Connections appActiveRefresh: Connections {
+            target: Qt.application
+            function onStateChanged() {
+                if (Qt.application.state === Qt.ApplicationActive)
+                    root.refreshMissingFiles()
+            }
+        }
     }
 
     /// Find UI open/close hook (mobile call sites). Opening Find hides the
@@ -179,7 +194,7 @@ QtObject {
 
     function openInBrowserRecord(record) {
         downloadsStore.refreshMissingFiles()
-        return _openContext.openInBrowser(record, supportsPdfFn())
+        return downloadOpenContext.openInBrowser(record, supportsPdfFn())
     }
 
     function retryRecord(record) {
@@ -199,16 +214,6 @@ QtObject {
         downloadsStore.refreshMissingFiles()
     }
 
-    // Missing File markers go stale while the app is backgrounded (files can
-    // be removed externally); refresh when it returns to the foreground.
-    readonly property Connections _appActiveRefresh: Connections {
-        target: Qt.application
-        function onStateChanged() {
-            if (Qt.application.state === Qt.ApplicationActive)
-                root.refreshMissingFiles()
-        }
-    }
-
     /// The one capability vocabulary for a Download Record menu:
     /// store predicates + the open seam's canOpenInBrowser + the platform
     /// share-vs-copy fact. BIND it at the call site
@@ -220,7 +225,7 @@ QtObject {
     function capabilitiesFor(record, options) {
         downloadsStore.refreshMissingFiles()
         return {
-            openInBrowser: _openContext.canOpenInBrowser(record, supportsPdfFn()),
+            openInBrowser: downloadOpenContext.canOpenInBrowser(record, supportsPdfFn()),
             shareFile: downloadsStore.canShareFile(record),
             shareUrl: downloadsStore.canShareUrl(record),
             showInFolder: downloadsStore.canShowInFolder(record),
@@ -230,4 +235,5 @@ QtObject {
             useShareLabels: !!(downloadsStore.platform && downloadsStore.platform.preferShareSheet)
         }
     }
+
 }
