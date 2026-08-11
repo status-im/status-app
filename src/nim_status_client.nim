@@ -342,6 +342,11 @@ proc mainProc() =
     singletonInstance.engine.addImportPath("qrc:/./app");
 
   statusq_setupNetworkAccessManagerFactory(singletonInstance.engine.vptr, (TMPDIR & "netcache").cstring, NETWORK_DISK_CACHE_SIZE)
+  # Async section loads (Loader asynchronous:true) finish several times faster
+  # than with the render-loop-driven default incubation budget; input is still
+  # processed between 20ms incubation ticks. The first 300ms of every burst
+  # incubate gently so the section-switch slide animation stays fluid.
+  statusq_installBoostedIncubationController(singletonInstance.engine.vptr, 20, 300)
   singletonInstance.engine.setRootContextProperty("uiScaleFilePath", newQVariant(uiScaleFilePath))
   singletonInstance.engine.setRootContextProperty("singleInstance", newQVariant(singleInstance))
   singletonInstance.engine.setRootContextProperty("isExperimental", isExperimentalQVariant)
