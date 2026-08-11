@@ -25,7 +25,10 @@ StatusMenu {
 
     /// The Popup this was opened from; null for pill-strip opens. Actions that
     /// navigate away from it close it, as a plain row tap does.
-    property Popup hostPopup: null
+    // var, not Popup: the hosts are StatusQ dialogs, and a typed assignment
+    // resolves Popup against the StatusQ.Popups import, throwing mid-openAt and
+    // leaving the menu unopened. Only close() is ever called on it.
+    property var hostPopup: null
 
     /// Open right-aligned under the ⋮ `anchor` it was invoked from.
     /// popup(parent, x, y) both parents and position-fits: the menu follows the

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtTest
 
 import StatusQ.Popups
+import StatusQ.Popups.Dialog
 
 import AppLayouts.Browser.adapters
 import AppLayouts.Browser.popups
@@ -48,6 +49,17 @@ Item {
     Component {
         id: hostPopupComponent
         Popup {
+            width: 200
+            height: 200
+        }
+    }
+
+    /// The real host is a StatusDialog, not a QtQuick.Controls Popup — and this
+    /// file imports StatusQ.Popups, where a typed `Popup` property resolves to a
+    /// different type and refuses the assignment.
+    Component {
+        id: statusDialogHostComponent
+        StatusDialog {
             width: 200
             height: 200
         }
@@ -99,6 +111,20 @@ Item {
                     texts.push(item.text)
             }
             return texts
+        }
+
+        function test_openAt_opensOverAStatusDialogHost() {
+            const record = createTemporaryObject(recordComponent, root)
+            const host = createTemporaryObject(statusDialogHostComponent, root)
+            const menu = createTemporaryObject(menuComponent, root, {
+                capabilities: caps({ shareUrl: true, retry: true })
+            })
+
+            menu.openAt(record, anchorItem, { hostPopup: host })
+
+            compare(menu.record, record, "openAt must finish and keep the Record")
+            verify(menu.opened, "the menu must open when hosted by a StatusDialog")
+            menu.close()
         }
 
         function test_completed_desktop_copyLabels_andShowInFolder() {
