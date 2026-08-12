@@ -144,11 +144,6 @@ Item {
             }
         }
 
-        ChatsLoadingPanel {
-            Layout.fillWidth: true
-            visible: !root.communitySectionModule.chatsLoaded
-        }
-
         Component {
             id: adminPopupMenuComp
             StatusMenu {
