@@ -14,7 +14,6 @@ import shared
 import shared.controls
 import shared.popups
 import shared.views.chat
-import shared.panels
 
 import SortFilterProxyModel
 
@@ -129,12 +128,6 @@ Item {
                 clear()
                 if (visible) forceActiveFocus()
             }
-        }
-
-        // loading panel
-        ChatsLoadingPanel {
-            Layout.fillWidth: true
-            visible: !chatSectionModule.chatsLoaded
         }
 
         // chat list
