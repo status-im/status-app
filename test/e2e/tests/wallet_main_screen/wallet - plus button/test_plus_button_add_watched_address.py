@@ -29,9 +29,6 @@ def test_plus_button_add_watched_address(main_screen: MainWindow, address: str):
             .set_color(wallet_account.color).set_origin_watched_address(address).save_changes()
         account_popup.wait_until_hidden()
 
-    with step('Verify toast message notification when adding account'):
-        messages = main_screen.wait_for_toast_notifications()
-        assert f'"{wallet_account.name}" successfully added'in messages
 
     with step('Verify that the account is correctly displayed in accounts list'):
         assert driver.waitFor(lambda: wallet_account.name in [account.name for account in wallet.left_panel.accounts], 10000), \

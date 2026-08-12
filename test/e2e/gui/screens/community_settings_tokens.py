@@ -274,14 +274,58 @@ class EditOwnerTokenView(QObject):
 
 
 class MintedTokensView(QObject):
+    COMPLETED_STATUSES = frozenset({'∞', '1 of 1 (you hodl)'})
+    FAILED_STATUS = 'Minting failed'
+
     def __init__(self):
         super().__init__(communities_names.mainWindow_MintedTokensView)
-        self.minted_tokens_view = QObject(communities_names.mainWindow_MintedTokensView)
         self.collectible = QObject(communities_names.collectibleView_control)
 
-    def check_community_collectibles_statuses(self):
-        assert len(driver.findAllObjects(self.collectible.real_name)) == 2
-        assert self.wait_for(({'∞', '1 of 1 (you hodl)'} == set(
-            [str(getattr(collectible, 'subTitle', '')) for collectible in
-             driver.findAllObjects(self.collectible.wait_until_appears().real_name)]), 180000)), \
-            f"Token statuses were not changed within 3 minutes: {*[str(getattr(collectible, 'subTitle', '')) for collectible in driver.findAllObjects(self.collectible.real_name)],}"
+    def _collectibles(self):
+        return driver.findAllObjects(self.collectible.real_name)
+
+    def _collectible_titles(self):
+        return {str(getattr(item, 'title', '')) for item in self._collectibles()}
+
+    def _collectible_statuses(self):
+        return {str(getattr(item, 'subTitle', '')) for item in self._collectibles()}
+
+    @allure.step('Wait until Owner and TokenMaster collectibles appear')
+    def wait_for_owner_and_tokenmaster(self, community_name: str,
+                                       timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+        self.wait_until_appears(timeout_msec)
+        expected_titles = {
+            f'{MintOwnerTokensElements.OWNER_TOKEN_NAME.value}{community_name}',
+            f'{MintOwnerTokensElements.MASTER_TOKEN_NAME.value}{community_name}',
+        }
+        assert driver.waitFor(
+            lambda: len(self._collectibles()) == 2 and expected_titles <= self._collectible_titles(),
+            timeout_msec,
+        ), (
+            f'Expected collectibles {expected_titles}, '
+            f'got titles={self._collectible_titles()}, statuses={self._collectible_statuses()}'
+        )
+        return self
+
+    @allure.step('Verify Owner and TokenMaster mint completed')
+    def check_community_collectibles_statuses(self, community_name: str,
+                                               timeout_msec: int = 180000):
+        self.wait_for_owner_and_tokenmaster(community_name)
+
+        def mint_done_or_failed() -> bool:
+            statuses = self._collectible_statuses()
+            return self.FAILED_STATUS in statuses or (
+                len(self._collectibles()) == 2 and statuses == self.COMPLETED_STATUSES
+            )
+
+        driver.waitFor(mint_done_or_failed, timeout_msec)
+        statuses = self._collectible_statuses()
+        titles = self._collectible_titles()
+        if self.FAILED_STATUS in statuses:
+            raise AssertionError(
+                f'Minting failed for community collectibles: titles={titles}, statuses={statuses}'
+            )
+        assert statuses == self.COMPLETED_STATUSES and len(self._collectibles()) == 2, (
+            f'Token statuses were not completed within {timeout_msec} ms: '
+            f'titles={titles}, statuses={statuses}'
+        )

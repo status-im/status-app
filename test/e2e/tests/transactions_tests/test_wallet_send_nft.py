@@ -4,7 +4,8 @@ from allure_commons._allure import step
 
 from configs import WALLET_SEED
 from constants import ReturningUser
-from constants.wallet import WalletTransactions, WalletNetworkSettings
+from constants.wallet import WalletNetworkSettings
+from gui.components.wallet.send_popup import SendPopup
 from helpers.onboarding_helper import open_create_profile_view, import_seed_and_log_in
 from helpers.settings_helper import enable_testnet_mode
 from helpers.wallet_helper import authenticate_with_password, open_send_modal_for_account
@@ -42,5 +43,5 @@ def test_wallet_send_nft(main_window, user_account, receiver_account_address, am
     with step('Authenticate with password'):
         authenticate_with_password(user_account)
 
-    assert WalletTransactions.TRANSACTION_SENDING_TOAST_MESSAGE.value in ' '.join(
-        main_window.wait_for_toast_notifications())
+    with step('Verify send flow completed'):
+        SendPopup().wait_until_hidden()

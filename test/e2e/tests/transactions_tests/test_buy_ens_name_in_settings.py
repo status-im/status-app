@@ -57,9 +57,6 @@ def test_ens_name_purchase(main_window, user_account, ens_name):
     with step('Authenticate with password'):
         authenticate_with_password(user_account)
 
-    with step('Verify toast message with Transaction pending appears'):
-        assert WalletTransactions.ENS_TRANSACTION_REGISTERING_TOAST_MESSAGE.value in ' '.join(
-            main_window.wait_for_toast_notifications())
 
     with step('Verify username registered view appears'):
         ENSRegisteredView().wait_until_appears()

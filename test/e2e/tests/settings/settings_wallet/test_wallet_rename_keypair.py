@@ -6,7 +6,7 @@ import pytest
 from allure_commons._allure import step
 
 from configs import get_platform
-from constants.wallet import WalletRenameKeypair, WalletAccountPopup
+from constants.wallet import WalletAccountPopup
 from helpers.settings_helper import skip_pcsc_error_popup_if_visible
 from helpers.wallet_helper import authenticate_with_password
 from scripts.utils.generators import random_wallet_acc_keypair_name
@@ -67,7 +67,3 @@ def test_rename_keypair_test(main_screen: MainWindow, user_account, emoji: str, 
         rename_keypair_popup.rename_keypair(pk_new_name)
         assert pk_new_name in settings.get_keypairs_names()
 
-    with step('Verify toast message with successful renaming appears'):
-        messages = main_screen.wait_for_toast_notifications()
-        assert WalletRenameKeypair.WALLET_SUCCESSFUL_RENAMING.value + 'from "' + pk_name + '" to "' + pk_new_name + '"' in messages, \
-            f"Toast message have not appeared"

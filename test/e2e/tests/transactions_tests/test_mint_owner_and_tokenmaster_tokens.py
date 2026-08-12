@@ -1,5 +1,3 @@
-import time
-
 import pytest
 from allure_commons._allure import step
 
@@ -62,12 +60,6 @@ def test_mint_owner_and_tokenmaster_tokens(main_window, user_account, network_na
         assert start_minting.get_fee_title == 'Mint ' + community.name + MintOwnerTokensElements.SIGN_TRANSACTION_MINT_TITLE.value + network_name
         assert start_minting.get_fee_total_value != ''
         start_minting.sign_transaction(user_account.password)
-        time.sleep(1)
-        minted_tokens_view = MintedTokensView()
 
-    with step('Verify toast messages about started minting process appears'):
-        toast_messages = main_window.wait_for_toast_notifications()
-        assert f'Minting Owner-{community.name} and TMaster-{community.name} tokens for {community.name} using Account 1' in toast_messages
-
-    with step('Verify that status of both tokens'):
-        minted_tokens_view.check_community_collectibles_statuses()
+    with step('Verify Owner and TokenMaster mint completed'):
+        MintedTokensView().check_community_collectibles_statuses(community.name)

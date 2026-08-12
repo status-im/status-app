@@ -17,7 +17,6 @@ from gui.screens.market import MarketScreen
 from helpers.chat_helper import skip_message_backup_popup_if_visible, skip_intro_if_visible
 from gui.components.context_menu import ContextMenu
 from gui.components.splash_screen import SplashScreen
-from gui.components.toast_message import ToastMessage
 from gui.components.online_identifier import OnlineIdentifier
 from gui.elements.button import Button
 from gui.elements.object import QObject
@@ -270,32 +269,3 @@ class MainWindow(Window):
             return self.returning_log_in(user_account)
         else:
             return self.create_profile(user_account)
-
-    @allure.step('Wait for notification and get text')
-    def wait_for_toast_notifications(self, timeout_sec: int = configs.timeouts.PROCESS_TIMEOUT_SEC,
-                                     settle_time: float = 0.2) -> list[str]:
-        start_time = time.monotonic()
-        seen_messages = set()
-        last_new_time = start_time
-
-        while time.monotonic() - start_time < timeout_sec:
-            try:
-                current_toasts = set(ToastMessage().get_toast_messages())
-                new_toasts = current_toasts - seen_messages
-                if new_toasts:
-                    seen_messages.update(new_toasts)
-                    last_new_time = time.monotonic()
-            except LookupError:
-                pass  # No toasts at this moment
-
-            # If we've seen new toasts recently, keep waiting
-            if time.monotonic() - last_new_time < settle_time:
-                time.sleep(0.1)
-                continue
-            else:
-                # No new toasts for 'settle_time', assume done
-                break
-
-        if not seen_messages:
-            raise LookupError(f"No notifications found within {timeout_sec} seconds.")
-        return list(seen_messages)

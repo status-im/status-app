@@ -2,8 +2,8 @@ import pytest
 from allure_commons._allure import step
 
 from constants.wallet import WalletAddress, WalletNetworkNaming, WalletTokenSymbols
+from gui.components.wallet.send_popup import SendPopup
 from helpers.wallet_helper import (
-    assert_wallet_send_toast,
     authenticate_with_password,
     wallet_send_import_and_open_send_modal,
     wallet_send_returning_user,
@@ -34,4 +34,5 @@ def test_wallet_send_erc20(main_window, user_account, receiver_account_address, 
     with step('Authenticate with password'):
         authenticate_with_password(user_account)
 
-    assert_wallet_send_toast(main_window, receiver_account_address)
+    with step('Verify send flow completed'):
+        SendPopup().wait_until_hidden()

@@ -83,22 +83,6 @@ def open_network_settings(main_window):
     return main_window.left_panel.open_settings().left_panel.open_wallet_settings().open_networks()
 
 
-@allure.step('Verify toast notification contains message')
-def verify_toast_notification(main_window, expected_message):
-    """
-    Verify that a toast notification contains the expected message.
-    
-    Args:
-        main_window: MainWindow instance
-        expected_message: Expected message in the toast
-        
-    Returns:
-        bool: True if message is found in toast notifications
-    """
-    messages = main_window.wait_for_toast_notifications()
-    return expected_message in messages
-
-
 @allure.step('Skip Keycard error popup')
 def skip_pcsc_error_popup_if_visible():
     time.sleep(0.1)
@@ -107,5 +91,3 @@ def skip_pcsc_error_popup_if_visible():
     if popup.is_visible:
         Button(names.headerCloseButton_StatusFlatRoundButton).click()
         time.sleep(0.1)
-
-

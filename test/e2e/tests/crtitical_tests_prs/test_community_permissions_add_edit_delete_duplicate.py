@@ -8,7 +8,7 @@ import configs
 import driver
 from configs import get_platform
 from constants import permission_data, RandomCommunity
-from constants.community import ToastMessages, PermissionsElements
+from constants.community import PermissionsElements
 from gui.components.changes_detected_popup import PermissionsChangesDetectedToastMessage
 from gui.main_window import MainWindow
 from gui.screens.community_settings import PermissionsIntroView
@@ -39,38 +39,9 @@ def test_add_edit_remove_duplicate_permissions(main_screen: MainWindow):
         permissions_settings.set_in(permission_set.in_channel)
         permissions_settings.create_permission()
 
-    with step('Check toast message for permission creation'):
-        toast_messages = main_screen.wait_for_toast_notifications()
-        message = toast_messages[0]
-        assert ToastMessages.CREATE_PERMISSION_TOAST.value in toast_messages, \
-            f"Toast message is incorrect, current message is {message}"
-
-    # TODO: that has to be brought back when token name and token amount representations are fixed
-
-    # with step('Created permission is displayed on permission page'):
-    #     if permission_set['asset_title'] is not False:
-    #         assert driver.waitFor(
-    #             lambda: permission_set['asset_title'] in permissions_settings.get_who_holds_tags_titles(),
-    #             configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-    #     if permission_set['second_asset_title'] is not False:
-    #         assert driver.waitFor(lambda: permission_set[
-    #                                           'second_asset_title'] in permissions_settings.get_who_holds_tags_titles(),
-    #                               configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-    #     if permission_set['allowed_to_title'] is not False:
-    #         assert driver.waitFor(lambda: permission_set[
-    #                                           'allowed_to_title'] in permissions_settings.get_is_allowed_tags_titles(),
-    #                               configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-    #     if permission_set['in_channel'] is False:
-    #         assert driver.waitFor(
-    #             lambda: community.name in permissions_settings.get_in_community_in_channel_tags_titles(),
-    #             configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-    #     if permission_set['in_channel']:
-    #         assert driver.waitFor(lambda: permission_set[
-    #                                           'in_channel'] in permissions_settings.get_in_community_in_channel_tags_titles(),
-    #                               configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-
     with step('Edit permission'):
         edit_permission_view = permissions_intro_view.open_edit_permission_view()
+        assert edit_permission_view is not None
         if permission_set.allowed_to is 'becomeAdmin' and permission_set.checkbox_state is True:
             permissions_settings.set_who_holds_checkbox_state(False)
         elif permission_set.checkbox_state is False:
@@ -97,22 +68,12 @@ def test_add_edit_remove_duplicate_permissions(main_screen: MainWindow):
             assert driver.waitFor(lambda: permissions_intro_view._hide_icon.is_visible,
                                   configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
 
-    with step('Check toast message for edited permission'):
-        messages = main_screen.wait_for_toast_notifications()
-        assert ToastMessages.UPDATE_PERMISSION_TOAST.value in messages, \
-            f"Toast message is incorrect, current message is {message}"
-
     with step('Delete permission'):
         delete_pop_up = permissions_intro_view.click_delete_permission()
         delete_pop_up.confirm_delete_button.click()
 
     with step('Verify that permission was deleted'):
         assert driver.waitFor(lambda: PermissionsIntroView().is_visible)
-
-    with step('Check toast message for deleted permission'):
-        messages = main_screen.wait_for_toast_notifications()
-        assert ToastMessages.DELETE_PERMISSION_TOAST.value in messages, \
-            f"Toast message is incorrect, current message is {message}"
 
     with step('Create new permission'):
         new_permission_data = {

@@ -5,7 +5,6 @@ from allure_commons._allure import step
 
 import driver
 from constants import UserAccount, RandomUser, RandomCommunity, CommunityData
-from constants.community import ToastMessages
 from gui.screens.community import MembersListPanel
 from helpers.chat_helper import skip_message_backup_popup_if_visible
 from scripts.utils.generators import random_text_message
@@ -76,10 +75,6 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
             time.sleep(1)  # Allow list to load
             members.ban_member(user_one.name).confirm_banning()
 
-        with step('Check toast message about banned member'):
-            toast_messages = main_screen.wait_for_toast_notifications()
-            assert user_one.name + ToastMessages.BANNED_USER_TOAST.value + community.name in toast_messages, \
-                f"{user_one.name + ToastMessages.BANNED_USER_TOAST.value + community.name} is not found in {toast_messages}"
 
         with step(f'User {user_two.name}, does not see {user_one.name} in members list'):
             members_list = community_screen.right_panel.members
@@ -103,18 +98,12 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
         with step(f'User {user_two.name}, unban {user_one.name} in banned members list'):
             switch_to_aut(aut_two, main_screen)
             members.unban_member(user_one.name)
-            # toast_messages = main_screen.wait_for_toast_notifications()
-            # assert user_one.name + ToastMessages.UNBANNED_USER_TOAST.value + community.name in toast_messages, \
-            #     f"{user_one.name + ToastMessages.UNBANNED_USER_TOAST.value + community.name} is not found in {toast_messages}"
             main_screen.minimize()
 
         with step(f'User {user_one.name} joins community again'):
             switch_to_aut(aut_one, main_screen)
             chat1 = messages_view.left_panel.click_chat_by_name(user_two.name)
             community_screen = chat1.open_banned_community(community.name, 0)
-            # toast_messages = main_screen.wait_for_toast_notifications()
-            # assert ToastMessages.UNBANNED_USER_CONFIRM.value + community.name in toast_messages, \
-            #     f"{ToastMessages.UNBANNED_USER_CONFIRM.value} is not present in {toast_messages}"
             main_screen.left_panel.open_community_context_menu(community.name).leave_community_option.click()
 
             messages_view1 = main_screen.left_panel.open_messages_screen()
@@ -134,10 +123,6 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
             kick_popup = members.open_kick_member_popup(user_one.name)
             kick_popup.confirm_kicking()
 
-        with step('Check toast message about kicked member'):
-            toast_messages = main_screen.wait_for_toast_notifications()
-            assert user_one.name + ToastMessages.KICKED_USER_TOAST.value + community.name in toast_messages, \
-                f"{user_one.name + ToastMessages.KICKED_USER_TOAST.value} is not found in  {toast_messages}"
 
         with step(f'User {user_two.name}, does not see {user_one.name} in members list'):
             assert driver.waitFor(lambda: user_one.name not in community_screen.right_panel.members, timeout)

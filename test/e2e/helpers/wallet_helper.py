@@ -194,18 +194,3 @@ def wallet_send_import_and_open_send_modal(main_window, user_account):
     with step('Open wallet send popup after balances are loaded'):
         return open_send_modal_for_account(
             main_window, account_name=WalletNetworkSettings.STATUS_ACCOUNT_DEFAULT_NAME.value)
-
-
-def assert_wallet_send_toast(main_window, receiver_account_address):
-    toast_messages = ' '.join(main_window.wait_for_toast_notifications()).replace('×', 'x')
-    account_name = WalletNetworkSettings.STATUS_ACCOUNT_DEFAULT_NAME.value
-    address_start = receiver_account_address[:6]
-    normalized_toast = ' '.join(toast_messages.split())
-
-    has_sending_or_sent = ('Sending' in normalized_toast or 'Sent' in normalized_toast)
-    has_account_name = account_name in normalized_toast
-    has_address = address_start in normalized_toast
-
-    assert (has_sending_or_sent and has_account_name and has_address), (
-        f'Expected toast message with "Sending" or "Sent", account "{account_name}", '
-        f'and address starting with "{address_start}", but got: {toast_messages}')

@@ -140,6 +140,13 @@ class ContactsSettingsView(QObject):
                 pass
         raise LookupError('Contact requests are not found')
 
+    @allure.step('Get contact names')
+    def get_contact_names(self) -> typing.List[str]:
+        try:
+            return [str(contact) for contact in self.contact_items]
+        except LookupError:
+            return []
+
     @property
     @allure.step('Get title of list with sent pending requests')
     def pending_request_sent_list_title(self) -> str:
