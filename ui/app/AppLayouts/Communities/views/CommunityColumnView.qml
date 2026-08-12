@@ -91,7 +91,7 @@ Item {
         readonly property int listContentLeftMarginOffset: 1
         readonly property int listContentLeftMargin: SQUtils.Utils.swipeIndicatorWidth + listContentLeftMarginOffset
         readonly property int scrollBarWidth: Math.max(Theme.halfPadding, 8)
-        // Includes StatusScrollView's 1px scrollbar inset and 1px gap before it.
+        // 1px scrollbar inset and 1px gap before it
         readonly property int scrollBarSpacing: 2
     }
 
@@ -128,7 +128,7 @@ Item {
             id: searchField
             Layout.fillWidth: true
             Layout.leftMargin: Theme.halfPadding
-            Layout.rightMargin: scrollView.rightPadding
+            Layout.rightMargin: d.scrollBarWidth + d.scrollBarSpacing
             Layout.topMargin: 4
             Layout.bottomMargin: 4
             Layout.preferredHeight: 40
@@ -153,9 +153,8 @@ Item {
             id: adminPopupMenuComp
             StatusMenu {
                 hideDisabledItems: !showInviteButton
-                onClosed: destroy()
 
-                property bool showInviteButton
+                property bool showInviteButton: true
 
                 StatusAction {
                     objectName: "createCommunityChannelBtn"
@@ -201,30 +200,20 @@ Item {
             }
         }
 
-        StatusScrollView {
-            id: scrollView
-
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-
-            topPadding: 0
-            leftPadding: d.listContentLeftMargin
-            rightPadding: d.scrollBarWidth + d.scrollBarSpacing
-            contentWidth: availableWidth
-            contentHeight: communityChatListAndCategories.height
-                           + bannerColumn.height
-                           + bannerColumn.anchors.topMargin
-
-            ScrollBar.vertical.implicitWidth: d.scrollBarWidth
-            ScrollBar.vertical.width: d.scrollBarWidth
-
             StatusChatListAndCategories {
                 id: communityChatListAndCategories
-                width: scrollView.availableWidth
+                anchors.fill: parent
+                anchors.leftMargin: d.listContentLeftMargin
+                anchors.rightMargin: d.scrollBarWidth + d.scrollBarSpacing
                 draggableItems: root.isSectionAdmin
                 draggableCategories: root.isSectionAdmin
+
+                // banners live below the channels and scroll with them
+                footer: root.isSectionAdmin ? bannerFooterComponent : null
 
                 model: SortFilterProxyModel {
                     sourceModel: root.communitySectionModule.model
@@ -246,7 +235,7 @@ Item {
                 onChatItemClicked: id => root.chatItemClicked(id)
 
                 showCategoryActionButtons: root.isSectionAdmin
-                showPopupMenu: root.isSectionAdmin && communityData.canManageUsers
+                showPopupMenu: root.isSectionAdmin
 
                 onChatItemUnmuted: id => root.communitySectionModule.unmuteChat(id)
                 onChatItemReordered: function(categoryId, chatId, to) {
@@ -397,59 +386,54 @@ Item {
                 }
             }
 
-            Column {
-                id: bannerColumn
-                width: scrollView.availableWidth
-                anchors.top: communityChatListAndCategories.bottom
-                anchors.topMargin: Theme.padding
-                spacing: Theme.bigPadding
+            Component {
+                id: bannerFooterComponent
 
-                Settings {
-                    id: bannerSettings
-                    category: "BannerSettings_%1".arg(communityData.id)
-                    property bool hiddenCommunityWelcomeBanners
-                    property bool hiddenCommunityChannelAndCategoriesBanners
-                }
+                Column {
+                    width: ListView.view ? ListView.view.width : 0
+                    topPadding: Theme.padding
+                    spacing: Theme.bigPadding
 
-                Loader {
-                    active: root.isSectionAdmin && !bannerSettings.hiddenCommunityWelcomeBanners
-                    width: parent.width
-                    visible: active
-                    sourceComponent: Component {
-                        WelcomeBannerPanel {
-                            activeCommunity: communityData
-                            communitySectionModule: root.communitySectionModule
-                            onManageCommunityClicked: root.manageButtonClicked()
-                            onHideBannerRequested: bannerSettings.hiddenCommunityWelcomeBanners = true
+                    Settings {
+                        id: bannerSettings
+                        category: "BannerSettings_%1".arg(communityData.id)
+                        property bool hiddenCommunityWelcomeBanners
+                        property bool hiddenCommunityChannelAndCategoriesBanners
+                    }
+
+                    Loader {
+                        active: root.isSectionAdmin && !bannerSettings.hiddenCommunityWelcomeBanners
+                        width: parent.width
+                        visible: active
+                        sourceComponent: Component {
+                            WelcomeBannerPanel {
+                                activeCommunity: communityData
+                                communitySectionModule: root.communitySectionModule
+                                onManageCommunityClicked: root.manageButtonClicked()
+                                onHideBannerRequested: bannerSettings.hiddenCommunityWelcomeBanners = true
+                            }
+                        }
+                    }
+
+                    Loader {
+                        active: root.isSectionAdmin && !bannerSettings.hiddenCommunityChannelAndCategoriesBanners
+                        width: parent.width
+                        visible: active
+                        sourceComponent: Component {
+                            ChannelsAndCategoriesBannerPanel {
+                                id: channelsAndCategoriesBanner
+                                communityId: communityData.id
+                                onAddMembersClicked: {
+                                    Global.openPopup(createChannelPopup);
+                                }
+                                onAddCategoriesClicked: {
+                                    Global.openPopup(createCategoryPopup);
+                                }
+                                onHideBannerRequested: bannerSettings.hiddenCommunityChannelAndCategoriesBanners = true
+                            }
                         }
                     }
                 }
-
-                Loader {
-                    active: root.isSectionAdmin && !bannerSettings.hiddenCommunityChannelAndCategoriesBanners
-                    width: parent.width
-                    visible: active
-                    sourceComponent: Component {
-                        ChannelsAndCategoriesBannerPanel {
-                            id: channelsAndCategoriesBanner
-                            communityId: communityData.id
-                            onAddMembersClicked: {
-                                Global.openPopup(createChannelPopup);
-                            }
-                            onAddCategoriesClicked: {
-                                Global.openPopup(createCategoryPopup);
-                            }
-                            onHideBannerRequested: bannerSettings.hiddenCommunityChannelAndCategoriesBanners = true
-                        }
-                    }
-                }
-            }
-
-            TapHandler {
-                enabled: root.isSectionAdmin
-                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
-                acceptedButtons: Qt.RightButton
-                onTapped: adminPopupMenuComp.createObject(root, {showInviteButton: true}).popup()
             }
         }
 
@@ -466,7 +450,8 @@ Item {
                     text: qsTr("Create channel or category")
                     font.underline: true
                     onClicked: function(event) {
-                        const menu = adminPopupMenuComp.createObject(root)
+                        const menu = adminPopupMenuComp.createObject(root, { showInviteButton: false })
+                        menu.closed.connect(() => menu.destroy())
                         menu.popup(root.width/2 - menu.width/2, root.height - menu.height - createChannelOrCategoryBtn.height - 4)
                     }
                 }
