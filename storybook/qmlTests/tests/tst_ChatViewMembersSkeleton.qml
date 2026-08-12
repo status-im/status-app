@@ -3,20 +3,7 @@ import QtTest
 
 import utils
 
-import Models
-
-import shared.stores as SharedStores
-import shared.stores.send as SendStores
-
-import AppLayouts.stores as AppStores
-import AppLayouts.Chat.stores as ChatStores
-import AppLayouts.Communities.stores as CommunitiesStores
-import AppLayouts.Profile.stores as ProfileStores
-import AppLayouts.Wallet.stores as WalletStores
-import AppLayouts.stores.Messaging as MessagingStores
-
-import mainui.adaptors
-import mainui.sectionLoaders
+import "helpers"
 
 // The members panel is built once and shared across the section's channels.
 // These tests pin that a switch onto a channel with its own members model
@@ -29,76 +16,16 @@ Item {
     width: 1000
     height: 700
 
-    CommunitySectionMock { id: mock }
-
-    AppStores.RootStore { id: appRootStoreMock }
-    AppStores.ContactsStore { id: contactsStoreMock }
-    AppStores.AccountSettingsStore {
-        id: accountSettingsStoreMock
-        showUsersList: true
-    }
-    AppStores.FeatureFlagsStore { id: featureFlagsStoreMock }
-    SharedStores.RootStore { id: sharedRootStoreMock }
-    SharedStores.CurrenciesStore { id: currenciesStoreMock }
-    SharedStores.CommunityTokensStore { id: communityTokensStoreMock }
-    SharedStores.NetworkConnectionStore { id: networkConnectionStoreMock }
-    SharedStores.NetworksStore { id: networksStoreMock }
-    SendStores.TransactionStore { id: transactionStoreMock }
-    WalletStores.TokensStore { id: tokensStoreMock }
-    WalletStores.WalletAssetsStore { id: walletAssetsStoreMock }
-    ProfileStores.AdvancedStore { id: advancedStoreMock }
-    CommunitiesStores.CommunitiesStore { id: communitiesStoreMock }
-    MessagingStores.MessagingRootStore { id: messagingRootStoreMock }
-    ChatStores.CreateChatPropertiesStore { id: createChatPropertiesStoreMock }
-    ContactsModelAdaptor {
-        id: contactsAdaptorMock
-        allContacts: ListModel {}
-    }
-
-    Item {
-        visible: false
-        Loader { id: emojiPopupLoaderMock; active: false }
-        Loader { id: stickersPopupLoaderMock; active: false }
-    }
-
-    Loader {
+    CommunityChatSectionHarness {
         id: harness
         anchors.fill: parent
-        active: false
-
-        sourceComponent: CommunityChatLoader {
-            active: true
-
-            rootStore: appRootStoreMock
-            contactsStore: contactsStoreMock
-            accountSettingsStore: accountSettingsStoreMock
-            featureFlagsStore: featureFlagsStoreMock
-            sharedRootStore: sharedRootStoreMock
-            currencyStore: currenciesStoreMock
-            communityTokensStore: communityTokensStoreMock
-            networkConnectionStore: networkConnectionStoreMock
-            networksStore: networksStoreMock
-            transactionStore: transactionStoreMock
-            tokensStore: tokensStoreMock
-            walletAssetsStore: walletAssetsStoreMock
-            advancedStore: advancedStoreMock
-            communitiesStore: communitiesStoreMock
-            messagingRootStore: messagingRootStoreMock
-            createChatPropertiesStore: createChatPropertiesStoreMock
-            contactsAdaptor: contactsAdaptorMock
-            popupHandler: null
-            emojiPopupLoader: emojiPopupLoaderMock
-            stickersPopupLoader: stickersPopupLoaderMock
-            sectionId: mock.communityId
-            sectionItemModel: mock.sectionItemModel
-            createChatViewOpened: false
-            isPortraitMode: false
-        }
     }
 
     TestCase {
         name: "ChatViewMembersSkeleton"
         when: windowShown
+
+        readonly property var mock: harness.mock
 
         function init() {
             mock.joined = true
@@ -120,44 +47,19 @@ Item {
         }
 
         function cleanup() {
-            harness.active = false
+            harness.loader.active = false
             mock.uninstall()
-        }
-
-        function findChildByTypePrefix(item, prefix) {
-            if (!item)
-                return null
-            if (item.toString().indexOf(prefix) === 0)
-                return item
-            const list = item.children
-            for (let i = 0; i < list.length; ++i) {
-                const found = findChildByTypePrefix(list[i], prefix)
-                if (found)
-                    return found
-            }
-            return null
-        }
-
-        function findAllByTypePrefix(item, prefix, out) {
-            if (!item)
-                return out
-            if (item.toString().indexOf(prefix) === 0)
-                out.push(item)
-            const list = item.children
-            for (let i = 0; i < list.length; ++i)
-                findAllByTypePrefix(list[i], prefix, out)
-            return out
         }
 
         // Loads the section and waits until the members panel is up: the
         // skeleton has cleared and the real list holds the mock's members.
         function loadSectionWithMembers() {
-            harness.active = true
-            const loader = harness.item
+            harness.loader.active = true
+            const loader = harness.loader.item
             verify(!!loader)
             tryVerify(() => loader.status === Loader.Ready, 120000)
 
-            const view = findChildByTypePrefix(loader, "ChatView")
+            const view = harness.findChildByTypePrefix(loader, "ChatView")
             verify(!!view, "the section must load the paneled chat view")
 
             // Test seam: the re-arm delay lives in the view's private object
@@ -189,8 +91,8 @@ Item {
             const targetId = mock.firstPrivateChannelId()
             verify(!!targetId, "the mock must build a permissioned channel")
 
-            const rows = findAllByTypePrefix(lv.contentItem,
-                                             "StatusChatListItem_QMLTYPE", [])
+            const rows = harness.findAllByTypePrefix(lv.contentItem,
+                                                     "StatusChatListItem_QMLTYPE", [])
             for (let i = 0; i < rows.length; ++i) {
                 const row = rows[i]
                 if (row.chatId === targetId && row.visible && row.height > 0)
@@ -206,8 +108,8 @@ Item {
             waitForRendering(lv)
 
             const gatedId = mock.firstPrivateChannelId()
-            const rows = findAllByTypePrefix(lv.contentItem,
-                                             "StatusChatListItem_QMLTYPE", [])
+            const rows = harness.findAllByTypePrefix(lv.contentItem,
+                                                     "StatusChatListItem_QMLTYPE", [])
             for (let i = 0; i < rows.length; ++i) {
                 const row = rows[i]
                 if (row.chatId !== mock.activeChatId && row.chatId !== gatedId
@@ -249,8 +151,8 @@ Item {
 
             compare(ctx.list.count, 0,
                     "the members list must hold no rows while the switch is in flight")
-            compare(findAllByTypePrefix(ctx.list.contentItem,
-                                        "StatusMemberListItem_QMLTYPE", []).length, 0,
+            compare(harness.findAllByTypePrefix(ctx.list.contentItem,
+                                                "StatusMemberListItem_QMLTYPE", []).length, 0,
                     "no member delegate may be built while the switch is in flight")
         }
 
