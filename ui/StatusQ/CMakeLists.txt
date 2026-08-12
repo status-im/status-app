@@ -32,8 +32,12 @@ endif()
 
 find_package(QT 6.11 NAMES Qt6 REQUIRED COMPONENTS Core)
 
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
+find_package(Qt6 COMPONENTS
         Core CorePrivate Qml Gui GuiPrivate Quick QuickControls2 WebChannel Svg Network REQUIRED)
+
+if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT ANDROID)
+    find_package(Qt6 COMPONENTS DBus REQUIRED)
+endif()
 
 # --- QML test hooks flag and TestConfig generation ---
 option(STATUSQ_TESTMODE "Enable QML test hooks (TestConfig.testMode)" OFF)
@@ -73,7 +77,7 @@ qt_add_resources(STATUSQ_TESTCONFIG_RCC ${_gen_qrc})
 # --- END test hooks ---
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    find_package(Qt${QT_VERSION_MAJOR} COMPONENTS QuickTest REQUIRED)
+    find_package(Qt6 COMPONENTS QuickTest REQUIRED)
 endif()
 
 add_subdirectory(../../vendor/SortFilterProxyModel SortFilterProxyModel)
@@ -339,6 +343,10 @@ if(WIN32)
     target_link_libraries(StatusQ PRIVATE shell32 user32)
 endif()
 
+if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT ANDROID)
+    target_link_libraries(StatusQ PRIVATE Qt::DBus)
+endif()
+
 include(FetchContent)
 set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER)
 
@@ -425,7 +433,7 @@ target_link_libraries(StatusQ PRIVATE
         )
 
 if(NOT (IOS OR ANDROID))
-    find_package(Qt${QT_VERSION_MAJOR} COMPONENTS WebEngineQuick QUIET)
+    find_package(Qt6 COMPONENTS WebEngineQuick QUIET)
     if(TARGET Qt::WebEngineQuick)
         target_sources(StatusQ PRIVATE
             include/StatusQ/browserprofileutils.h

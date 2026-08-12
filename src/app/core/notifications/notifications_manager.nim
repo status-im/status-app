@@ -39,7 +39,6 @@ QtObject:
     events: EventEmitter
     settingsService: settings_service.Service
     osNotification: StatusOSNotification
-    notificationSetUp: bool
 
   proc processNotification(self: NotificationsManager, title: string, message: string, details: NotificationDetails)
 
@@ -215,8 +214,6 @@ QtObject:
     discard QObject.connect(singletonInstance.globalEvents, showCommunityMemberBannedNotification, self, onShowCommunityMemberBannedNotification, ConnectionType.QueuedConnection)
     discard QObject.connect(singletonInstance.globalEvents, showCommunityMemberUnbannedNotification, self, onShowCommunityMemberUnbannedNotification, ConnectionType.QueuedConnection)
     discard QObject.connect(singletonInstance.globalEvents, showNewsMessageNotification, self, onShowNewsMessageNotification, ConnectionType.QueuedConnection)
-
-    self.notificationSetUp = true
 
   proc init*(self: NotificationsManager) =
     discard

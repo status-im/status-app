@@ -10,16 +10,14 @@ import seaqt/QtCore/gen_qnamespace
 from seaqt/qqmlapplicationengine import rootObjects
 
 proc app_isActive*(): bool =
-  QGuiApplication.applicationState() == cint(ApplicationStateEnum.ApplicationActive)
+  QGuiApplication.applicationState() == ApplicationStateEnum.ApplicationActive
 
 proc app_makeItActive*(engine: QQmlApplicationEngine) =
   ## Brings the main QQuickWindow to the front and requests focus.
   let rootObjs = engine.seaqt.rootObjects()
-  if rootObjs.len == 0:
-    return
-  let topObj = rootObjs[0]
-  if topObj.objectName() == "mainWindow" and topObj.inherits("QQuickWindow"):
-    let win = gen_qquickwindow_types.QQuickWindow(h: topObj.h, owned: false)
-    win.show()
-    win.raiseX()
-    win.requestActivate()
+  for topObj in rootObjs:
+    if topObj.objectName() == "mainWindow" and topObj.inherits("QQuickWindow"):
+      let win = gen_qquickwindow_types.QQuickWindow(h: topObj.h, owned: false)
+      win.show()
+      win.raiseX()
+      win.requestActivate()

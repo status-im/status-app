@@ -2,13 +2,14 @@
 
 #include "StatusQ/osnotification.h"
 
+#include <QDebug>
+
 #ifdef Q_OS_WIN
 #include <shellapi.h>
 #include <stdlib.h>
 #include <string.h>
 #include <winuser.h>
 #include <comdef.h>
-#include <QDebug>
 
 using namespace Status;
 
@@ -16,10 +17,21 @@ static const UINT NOTIFYICONID = 0;
 static std::pair<HWND, OSNotification *> HWND_INSTANCE_PAIR;
 #endif
 
-#ifdef Q_OS_LINUX
-#include <QProcess>
-#include <QStandardPaths>
-#include <QDebug>
+using namespace Qt::Literals::StringLiterals;
+
+Q_LOGGING_CATEGORY(osNotification, "status.osNotification", QtInfoMsg)
+
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+#include <QDBusMessage>
+#include <QDBusConnection>
+#include <QDBusPendingCallWatcher>
+#include <QDBusPendingReply>
+
+constexpr auto kDbusService = "org.freedesktop.Notifications"_L1;
+constexpr auto kDbusPath = "/org/freedesktop/Notifications"_L1;
+constexpr auto kDbusInterface = "org.freedesktop.Notifications"_L1;
+
+constexpr auto kDefaultAction = "default"_L1;
 #endif
 
 using namespace Status;
@@ -31,6 +43,17 @@ OSNotification::OSNotification(QObject *parent)
     initNotificationWin();
 #elif defined Q_OS_MACOS
     initNotificationMacOs();
+#elif defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+    auto bus = QDBusConnection::sessionBus();
+    // NB see https://specifications.freedesktop.org/notification/latest-single/#signal-action-invoked
+    bus.connect(kDbusService, kDbusPath, kDbusInterface, "ActionInvoked"_L1,
+                this, SLOT(onActionInvoked(quint32, QString)));
+    // NB see https://specifications.freedesktop.org/notification/latest-single/#signal-activation-token
+    bus.connect(kDbusService, kDbusPath, kDbusInterface, "ActivationToken"_L1,
+                this, SLOT(onActivationToken(quint32, QString)));
+    // NB see https://specifications.freedesktop.org/notification/latest-single/#signal-notification-closed
+    bus.connect(kDbusService, kDbusPath, kDbusInterface, "NotificationClosed"_L1,
+                this, SLOT(onNotificationClosed(quint32, quint32)));
 #endif
 }
 
@@ -131,22 +154,85 @@ void OSNotification::showNotification(const QString& title,
 
 #elif defined Q_OS_MACOS
     showNotificationMacOs(title, message, identifier);
-#elif defined Q_OS_LINUX
-    static QString notifyExe = QStandardPaths::findExecutable(QStringLiteral("notify-send"));
-    if (notifyExe.isEmpty()) {
-        qWarning() << "'notify-send' not found; OS notifications will not work";
-        return;
-    }
-    QStringList args;
-    args << QStringLiteral("-a") << QCoreApplication::applicationName();
-    args << QStringLiteral("-c") << QStringLiteral("im");
-    args << title;
-    args << message;
-    QProcess::execute(notifyExe, args);
+#elif defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+    // NB see https://specifications.freedesktop.org/notification/latest-single/#protocol for the API
+    auto notifyMsg = QDBusMessage::createMethodCall(kDbusService, kDbusPath, kDbusInterface, "Notify"_L1);
+    notifyMsg << QCoreApplication::applicationName(); // STRING app_name
+    notifyMsg << quint32(0); // UINT32 replaces_id (0 == does not replace anything)
+    notifyMsg << QString(); // STRING app_icon (using the app icon as decoration by default)
+    notifyMsg << title; // STRING summary
+    notifyMsg << message; // STRING body
+    notifyMsg << QStringList{kDefaultAction, {}}; // AS actions ("default" == invoked on click)
+    notifyMsg << QVariantMap(); // A{SV} hints
+    notifyMsg << -1; // INT32 expire_timeout (-1 == impl dependent/default)
+
+    auto pendingCall = QDBusConnection::sessionBus().asyncCall(notifyMsg);
+    auto watcher = new QDBusPendingCallWatcher(pendingCall, this);
+
+    QObject::connect(watcher, &QDBusPendingCallWatcher::finished, this, [=](QDBusPendingCallWatcher *self) {
+        QDBusPendingReply<quint32> reply = *self;
+        if (reply.isValid()) {
+            quint32 notificationId = reply.value();
+            qCDebug(osNotification) << Q_FUNC_INFO << "Fired notification:" << notificationId << identifier;
+            m_identifiers.insert(notificationId, identifier);
+        } else {
+            qCWarning(osNotification) << Q_FUNC_INFO << reply.error().name() << reply.error().message();
+        }
+        self->deleteLater();
+    });
+
 #else
     Q_UNUSED(title) Q_UNUSED(message) Q_UNUSED(identifier)
 #endif
 }
+
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+void OSNotification::onActionInvoked(quint32 id, const QString& actionKey)
+{
+    // NB see https://specifications.freedesktop.org/notification/latest-single/#signal-action-invoked
+    // The "default" action is emitted when the user clicks the notification body itself.
+    if (actionKey != kDefaultAction)
+        return;
+    if (!m_identifiers.contains(id)) {
+        qCWarning(osNotification) << Q_FUNC_INFO << "Ignoring unknown notification with id:" << id;
+        return;
+    }
+
+    if (m_activationTokens.contains(id)) {
+        const auto token = m_activationTokens.take(id);
+        if (!token.isEmpty())
+            qputenv("XDG_ACTIVATION_TOKEN", token.toUtf8());
+    }
+
+    const auto identifier = m_identifiers.value(id);
+    qCDebug(osNotification) << Q_FUNC_INFO << "User clicked notification:" << id << identifier;
+    emit notificationClicked(identifier);
+}
+
+void OSNotification::onActivationToken(quint32 id, const QString& token)
+{
+    if (!m_identifiers.contains(id)) {
+        qCWarning(osNotification) << Q_FUNC_INFO << "Ignoring activation token for unknown notification id:" << id;
+        return;
+    }
+    qCDebug(osNotification) << Q_FUNC_INFO << "Got activation token for notification id:" << id;
+    m_activationTokens.insert(id, token);
+}
+
+void OSNotification::onNotificationClosed(quint32 id, quint32 reason)
+{
+    // NB see https://specifications.freedesktop.org/notification/latest-single/#signal-notification-closed
+    // Reason 1 = expired, 2 = dismissed by user, 3 = closed by CloseNotification call, 4 = undefined.
+    // We only clean up the identifier map here; actual click handling is done in onActionInvoked.
+    if (!m_identifiers.contains(id)) {
+        qCWarning(osNotification) << Q_FUNC_INFO << "Ignoring unknown notification with id:" << id;
+        return;
+    }
+    qCDebug(osNotification) << Q_FUNC_INFO << "Notification closed, id:" << id << "reason:" << reason;
+    m_identifiers.remove(id);
+    m_activationTokens.remove(id);
+}
+#endif
 
 void OSNotification::showIconBadgeNotification(int notificationsCount)
 {
