@@ -9,7 +9,6 @@ import QtQml.Models
 
 import AppLayouts.Chat
 import AppLayouts.Chat.views
-import AppLayouts.Chat.panels as ChatPanels
 import AppLayouts.Wallet
 import AppLayouts.Market.stores
 import AppLayouts.Wallet.services.dapps
@@ -2440,53 +2439,13 @@ Item {
                     z: 1
                     // ChatLoader and CommunityChatLoader own their skeleton chrome
                     // and paint it from the first frame, even while inactive, so the
-                    // overlay is only needed where nothing else paints yet: the
-                    // communities portal, and a community section whose repeater
-                    // delegate does not exist yet.
+                    // overlay is only needed for the communities portal. A community
+                    // section whose repeater delegate does not exist yet is left to
+                    // the currentIndex fallback, which shows another community's
+                    // loader — the right shape, unlike a chat-shaped overlay.
                     active: !appMain.mainReady
-                            && (d.activeSectionType === Constants.appSection.communitiesPortal
-                                || (d.activeSectionType === Constants.appSection.community
-                                    && communityRepeater.count === 0))
-                    sourceComponent: d.activeSectionType === Constants.appSection.communitiesPortal
-                                     ? communitiesPortalLoading
-                                     : chatLayoutLoading
-                }
-
-                Component {
-                    id: chatLayoutLoading
-
-                    // Composed from the section skeleton panels (the former
-                    // ChatLayoutLoading view is superseded by them)
-                    RowLayout {
-                        spacing: 0
-
-                        ChatPanels.MessagesListSkeleton {
-                            visible: !appMain.isPortraitMode
-                            Layout.fillHeight: true
-                            Layout.preferredWidth: Constants.chatSectionLeftColumnWidth
-                        }
-
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            spacing: 0
-
-                            ChatPanels.ChatHeaderSkeleton {
-                                Layout.fillWidth: true
-                            }
-
-                            ChatPanels.MessagesChatSkeleton {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                            }
-                        }
-
-                        ChatPanels.MembersListSkeleton {
-                            visible: appMain.accountSettingsStore.showUsersList && !appMain.isPortraitMode
-                            Layout.fillHeight: true
-                            Layout.preferredWidth: 280
-                        }
-                    }
+                            && d.activeSectionType === Constants.appSection.communitiesPortal
+                    sourceComponent: communitiesPortalLoading
                 }
 
                 Component {
