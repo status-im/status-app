@@ -8,10 +8,10 @@ import SortFilterProxyModel
 Item {
     id: root
 
-    implicitHeight: statusChatList.height
-    implicitWidth: statusChatList.width
+    implicitWidth: statusChatList.implicitWidth
 
     property alias highlightItem: statusChatList.highlightItem
+    property alias footer: statusChatList.footer
 
     property var model: []
     property bool showCategoryActionButtons: false
@@ -47,7 +47,7 @@ Item {
             objectName: "statusChatListAndCategoriesChatList"
             id: statusChatList
             width: parent.width
-            visible: statusChatList.model.count > 0
+            height: parent.height
             onChatItemSelected: root.chatItemSelected(categoryId, id)
             onChatItemClicked: root.chatItemClicked(id)
             onChatItemUnmuted: root.chatItemUnmuted(id)

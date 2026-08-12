@@ -22,6 +22,8 @@ SplitView {
         StatusChatListAndCategories {
             anchors.centerIn: parent
             width: ctrlWidth.value
+            // the list owns its viewport — the host must bound its height
+            height: parent.height
 
             draggableItems: ctrlDraggable.checked
             draggableCategories: ctrlDraggable.checked

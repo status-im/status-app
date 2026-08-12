@@ -42,7 +42,7 @@ Item {
         readonly property int listContentLeftMarginOffset: 1
         readonly property int listContentLeftMargin: SQUtils.Utils.swipeIndicatorWidth + listContentLeftMarginOffset
         readonly property int scrollBarWidth: Math.max(Theme.halfPadding, 8)
-        // Includes StatusScrollView's 1px scrollbar inset and 1px gap before it.
+        // 1px scrollbar inset and 1px gap before it
         readonly property int scrollBarSpacing: 2
     }
 
@@ -117,7 +117,7 @@ Item {
             id: searchInput
             Layout.fillWidth: true
             Layout.leftMargin: Theme.halfPadding
-            Layout.rightMargin: scrollView.rightPadding
+            Layout.rightMargin: d.scrollBarWidth + d.scrollBarSpacing
             Layout.topMargin: 4
             Layout.bottomMargin: 4
             Layout.preferredHeight: 40
@@ -138,113 +138,102 @@ Item {
         }
 
         // chat list
-        StatusScrollView {
-            id: scrollView
+        StatusChatList {
+            id: channelList
+            objectName: "ContactsColumnView_chatList"
             Layout.fillWidth: true
             Layout.fillHeight: true
-
-            topPadding: 0
-            leftPadding: d.listContentLeftMargin
-            rightPadding: d.scrollBarWidth + d.scrollBarSpacing
-            contentWidth: availableWidth
-
-            ScrollBar.vertical.implicitWidth: d.scrollBarWidth
-            ScrollBar.vertical.width: d.scrollBarWidth
-
-            StatusChatList {
-                id: channelList
-                objectName: "ContactsColumnView_chatList"
-                width: scrollView.availableWidth
-                model: SortFilterProxyModel {
-                    sourceModel: root.chatSectionModule.model
-                    filters: [
-                        SQUtils.SearchFilter {
-                            roleName: "name"
-                            searchPhrase: searchInput.text
-                            enabled: searchInput.visible && !!searchPhrase
-                        }
-                    ]
-                    sorters: RoleSorter {
-                        roleName: "lastMessageTimestamp"
-                        sortOrder: Qt.DescendingOrder
+            Layout.leftMargin: d.listContentLeftMargin
+            Layout.rightMargin: d.scrollBarWidth + d.scrollBarSpacing
+            model: SortFilterProxyModel {
+                sourceModel: root.chatSectionModule.model
+                filters: [
+                    SQUtils.SearchFilter {
+                        roleName: "name"
+                        searchPhrase: searchInput.text
+                        enabled: searchInput.visible && !!searchPhrase
                     }
+                ]
+                sorters: RoleSorter {
+                    roleName: "lastMessageTimestamp"
+                    sortOrder: Qt.DescendingOrder
+                }
+            }
+
+            highlightItem: !root.store.openCreateChat
+            onChatItemSelected: (categoryId, id) => {
+                Global.closeCreateChatView()
+                root.chatSectionModule.setActiveItem(id)
+            }
+            onChatItemClicked: (id) => root.chatItemClicked(id)
+            onChatItemUnmuted: (id) => root.chatSectionModule.unmuteChat(id)
+
+            popupMenu: ChatContextMenuView {
+                id: chatContextMenuView
+                showDebugOptions: root.store.isDebugEnabled
+
+                openHandler: function (id) {
+                    let jsonObj = root.chatSectionModule.getItemAsJson(id)
+                    let obj = JSON.parse(jsonObj)
+                    if (obj.error) {
+                        console.error("error parsing chat item json object, id: ", id, " error: ", obj.error)
+                        close()
+                        return
+                    }
+
+                    isCommunityChat = root.chatSectionModule.isCommunity()
+                    amIChatAdmin = obj.memberRole === Constants.memberRole.owner ||
+                            obj.memberRole === Constants.memberRole.admin ||
+                            obj.memberRole === Constants.memberRole.tokenMaster
+                    chatId = obj.itemId
+                    chatName = obj.name
+                    chatDescription = obj.description
+                    chatEmoji = obj.emoji
+                    chatColor = obj.color
+                    chatIcon = obj.icon
+                    chatType = obj.type
+                    chatMuted = obj.muted
                 }
 
-                highlightItem: !root.store.openCreateChat
-                onChatItemSelected: (categoryId, id) => {
-                    Global.closeCreateChatView()
-                    root.chatSectionModule.setActiveItem(id)
+                onMuteChat: {
+                    root.chatSectionModule.muteChat(chatId, interval)
                 }
-                onChatItemClicked: (id) => root.chatItemClicked(id)
-                onChatItemUnmuted: (id) => root.chatSectionModule.unmuteChat(id)
 
-                popupMenu: ChatContextMenuView {
-                    id: chatContextMenuView
-                    showDebugOptions: root.store.isDebugEnabled
+                onUnmuteChat: {
+                    root.chatSectionModule.unmuteChat(chatId)
+                }
 
-                    openHandler: function (id) {
-                        let jsonObj = root.chatSectionModule.getItemAsJson(id)
-                        let obj = JSON.parse(jsonObj)
-                        if (obj.error) {
-                            console.error("error parsing chat item json object, id: ", id, " error: ", obj.error)
-                            close()
-                            return
-                        }
+                onMarkAllMessagesRead: {
+                    root.chatSectionModule.markAllMessagesRead(chatId)
+                }
 
-                        isCommunityChat = root.chatSectionModule.isCommunity()
-                        amIChatAdmin = obj.memberRole === Constants.memberRole.owner ||
-                                obj.memberRole === Constants.memberRole.admin ||
-                                obj.memberRole === Constants.memberRole.tokenMaster
-                        chatId = obj.itemId
-                        chatName = obj.name
-                        chatDescription = obj.description
-                        chatEmoji = obj.emoji
-                        chatColor = obj.color
-                        chatIcon = obj.icon
-                        chatType = obj.type
-                        chatMuted = obj.muted
-                    }
+                onClearChatHistory: {
+                    root.chatSectionModule.clearChatHistory(chatId)
+                }
 
-                    onMuteChat: {
-                        root.chatSectionModule.muteChat(chatId, interval)
-                    }
+                onLeaveChat: {
+                    root.chatSectionModule.leaveChat(chatId)
+                }
 
-                    onUnmuteChat: {
-                        root.chatSectionModule.unmuteChat(chatId)
-                    }
+                onDeleteCommunityChat: {
+                    // Not Refactored Yet
+                }
 
-                    onMarkAllMessagesRead: {
-                        root.chatSectionModule.markAllMessagesRead(chatId)
-                    }
+                onDisplayProfilePopup: {
+                    Global.openProfilePopup(publicKey)
+                }
 
-                    onClearChatHistory: {
-                        root.chatSectionModule.clearChatHistory(chatId)
-                    }
+                onUpdateGroupChatDetails: {
+                    chatSectionModule.updateGroupChatDetails(
+                                chatId,
+                                groupName,
+                                groupColor,
+                                groupImage
+                                )
+                }
 
-                    onLeaveChat: {
-                        root.chatSectionModule.leaveChat(chatId)
-                    }
-
-                    onDeleteCommunityChat: {
-                        // Not Refactored Yet
-                    }
-
-                    onDisplayProfilePopup: {
-                        Global.openProfilePopup(publicKey)
-                    }
-
-                    onUpdateGroupChatDetails: {
-                        chatSectionModule.updateGroupChatDetails(
-                                    chatId,
-                                    groupName,
-                                    groupColor,
-                                    groupImage
-                                    )
-                    }
-
-                    onAddRemoveGroupMember: {
-                        root.addRemoveGroupMemberClicked()
-                    }
+                onAddRemoveGroupMember: {
+                    root.addRemoveGroupMemberClicked()
                 }
             }
         }

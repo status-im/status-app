@@ -11,7 +11,13 @@ Item {
     id: root
 
     implicitWidth: 288
-    implicitHeight: statusChatListItems.contentHeight
+
+    // Rows have fixed heights so the (virtualized) list never needs to build
+    // a delegate to know its geometry. Must match the implicit heights of
+    // StatusChatListItem (40 + 2*verticalPadding) and
+    // StatusChatListCategoryItem (34).
+    readonly property int chatRowHeight: 48
+    readonly property int categoryRowHeight: 34
 
     property string categoryId: ""
     property var model: null
@@ -20,6 +26,7 @@ Item {
     property bool showCategoryActionButtons: false
 
     property alias statusChatListItems: statusChatListItems
+    property alias footer: statusChatListItems.footer
 
     property alias popupMenu: popupMenuSlot.sourceComponent
     property alias categoryPopupMenu: categoryPopupMenuSlot.sourceComponent
@@ -39,13 +46,20 @@ Item {
         objectName: "chatListItems"
         model: root.model
         spacing: 0
-        interactive: height !== contentHeight
+        // only interactive when there is something to scroll — an interactive
+        // Flickable consumes clicks on its empty area, which must fall
+        // through to the hosts' empty-area handlers
+        interactive: contentHeight > height
 
         delegate: DropArea {
             id: chatListDelegate
             objectName: model.name
             width: ListView.view.width
-            height: isCategory ? statusChatListCategoryItem.height : statusChatListItem.height
+            height: {
+                if (isCategory)
+                    return root.categoryRowHeight
+                return rowVisible ? root.chatRowHeight : 0
+            }
             keys: ["x-status-draggable-chat-list-item-and-categories"]
 
             readonly property int visualIndex: index
@@ -54,6 +68,12 @@ Item {
             readonly property int position: model.position // needed for the DnD
             readonly property int categoryPosition: model.categoryPosition // needed for the DnD
             readonly property bool isCategory: model.isCategory
+            // chats hidden by their collapsed category (or muted without
+            // activity) keep a zero-height row
+            readonly property bool rowVisible: model.active ||
+                                               (!model.muted && model.hasUnreadMessages) ||
+                                               model.notificationsCount > 0 ||
+                                               model.categoryOpened
             readonly property Item item: isCategory ? draggableItem.actions[0] : draggableItem.actions[1]
 
             onEntered: function(drag) {
@@ -69,31 +89,30 @@ Item {
             onDropped: function(drop) {
                 statusChatListCategoryItem.highlighted = false;
                 statusChatListItem.highlighted = false;
-                const from = drop.source.visualIndex;
-                const to = chatListDelegate.visualIndex;
-                if (to === from)
+                if (drop.source.visualIndex === chatListDelegate.visualIndex)
                     return;
+                // read from the drag source and this delegate — itemAtIndex
+                // is nullable in a virtualized list
                 if (drop.source.isCategory) {
-                    root.categoryReordered(
-                        statusChatListItems.itemAtIndex(from).categoryId,
-                        statusChatListItems.itemAtIndex(to).categoryPosition
-                    );
-
+                    root.categoryReordered(drop.source.categoryId,
+                                           chatListDelegate.categoryPosition);
                 } else {
-                    root.chatItemReordered(
-                        statusChatListItems.itemAtIndex(to).categoryId,
-                        statusChatListItems.itemAtIndex(from).chatId,
-                        statusChatListItems.itemAtIndex(to).position,
-                    );
+                    root.chatItemReordered(chatListDelegate.categoryId,
+                                           drop.source.chatId,
+                                           chatListDelegate.position);
                 }
             }
 
             StatusDraggableListItem {
                 readonly property bool isCategory: model.isCategory
+                readonly property string chatId: chatListDelegate.chatId
+                readonly property string categoryId: chatListDelegate.categoryId
 
                 id: draggableItem
-                width: parent.width
-                height: visible ? (isCategory ? statusChatListCategoryItem.implicitHeight : statusChatListItem.implicitHeight) : 0
+                width: chatListDelegate.width
+                // bound to the delegate by id: the item reparents to the
+                // ListView while dragged, so parent.* would inflate it
+                height: chatListDelegate.height
                 dragParent: root.draggableItems ? statusChatListItems : null
                 visualIndex: chatListDelegate.visualIndex
                 draggable: (root.draggableItems && (statusChatListItems.count > 1))
@@ -178,13 +197,7 @@ Item {
                         objectName: model.name
                         Layout.fillWidth: true
                         height: visible ? implicitHeight : 0
-                        visible: !draggableItem.isCategory &&
-                            (
-                                model.active ||
-                                (!model.muted && model.hasUnreadMessages) || // Show channel if it has unread messages but not muted
-                                model.notificationsCount > 0 || // unless it's a notification (mentions, replies)
-                                model.categoryOpened
-                            )
+                        visible: !draggableItem.isCategory && chatListDelegate.rowVisible
                         chatId: model.itemId
                         categoryId: model.categoryId
                         name: model.name
