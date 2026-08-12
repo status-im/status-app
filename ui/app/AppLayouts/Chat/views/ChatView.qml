@@ -263,6 +263,7 @@ Item {
         // only to discard them once the proxy applies the real size.
         width: Constants.chatSectionLeftColumnWidth
         height: root.sectionLayout?.height ?? 0
+        asynchronous: true
         sourceComponent: root.rootStore.chatCommunitySectionModule.isCommunity()?
                              communtiyColumnComponent :
                              contactsColumnComponent
@@ -270,6 +271,7 @@ Item {
 
     readonly property Item centerPanel: Loader {
         id: centerPanelLoader
+        asynchronous: true
         active: d.shouldLoadCenterPanel
         sourceComponent: (root.allChannelsAreHiddenBecauseNotPermitted || root.contentLocked) ?
                              joinCommunityCenterPanelComponent : chatColumnViewComponent
