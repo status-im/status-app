@@ -1046,6 +1046,14 @@ Item {
             homePageLoader.item.focusSearch()
         }
 
+        function openSettingsRoot() {
+            profileLoader.settingsSubSubsection = -1
+            profileLoader.settingsSubsection = appMain.isPortraitMode ? -1 : Constants.settingsSubsection.profile
+            appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.profile)
+            if (profileLoader.item)
+                profileLoader.item.currentIndex = StatusSectionLayout.LeftPanel
+        }
+
         function maybeDisplayIntroduceYourselfPopup() {
             if (!appMainLocalSettings.introduceYourselfPopupSeen
                     && appMain.ownContactDetails?.displayName === "") {
@@ -2623,17 +2631,6 @@ Item {
 
                 communityPopupMenu: communityContextMenuComponent
 
-                profileSectionHasNotification: {
-                    if (contactsModelAdaptor?.pendingReceivedRequestContacts?.ModelCount.count > 0) // pending contact request
-                        return true
-                    if (appMain.mainReady
-                        && !appMain.privacyStore?.mnemonicBackedUp
-                        && !appMain.profileStore?.userDeclinedBackupBanner) // seedphrase not backed up (removed)
-                        return true
-                    if (d.syncingBadgeCount > 0) // sync entries
-                        return true
-                    return false
-                }
                 thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
                 profileLoading: !appMain.mainReady
 
@@ -2644,6 +2641,7 @@ Item {
                 onSetCurrentUserStatusRequested: status => appMain.rootStore.setCurrentUserStatus(status)
                 onViewProfileRequested: pubKey => Global.openProfilePopup(pubKey)
                 onShareOwnProfileRequested: Global.shareProfileDialogRequested(appMain.ownContactDetails.publicKey)
+                onSettingsRequested: d.openSettingsRoot()
 
                 onItemActivated: function(sectionType, sectionId) {
                     // Ensure Activity Center Panel is closed when manual navigation done

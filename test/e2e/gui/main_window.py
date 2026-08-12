@@ -45,7 +45,6 @@ class MainLeftPanel(QObject):
         self.messages_button = Button(names.chatButton)
         self.communities_portal_button = Button(names.communitiesPortalButton)
         self.community_template_button = Button(names.statusCommunityMainNavBarListView_CommunityNavBarButton)
-        self.settings_button = Button(names.settingsGearButton)
         self.wallet_button = Button(names.mainWalletButton)
         self.activity_center_button = Button(names.activityCenterButton)
         self.market_button = Button(names.marketButton)
@@ -91,10 +90,10 @@ class MainLeftPanel(QObject):
     def open_messages_screen(self):
         return self.messages_button
 
-    @allure.step('Click Gear button and open Settings screen')
-    @open_with_retries(SettingsScreen, attempts=3, delay=3.0)
-    def open_settings(self):
-        return self.settings_button
+    @allure.step('Open Settings screen from the profile context menu')
+    def open_settings(self) -> SettingsScreen:
+        self.open_online_identifier().settings_button.click()
+        return SettingsScreen().wait_until_appears()
 
     @allure.step('Click Activity center button and open Activity center panel')
     @open_with_retries(ActivityCenter)

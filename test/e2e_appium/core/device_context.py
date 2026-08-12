@@ -203,7 +203,7 @@ class DeviceContext:
                 max_taps = 5
                 for tap_attempt in range(1, max_taps + 1):
                     if not app.is_element_visible(
-                        app_locators.LEFT_NAV_SETTINGS, timeout=1
+                        app_locators.PROFILE_NAV_BUTTON, timeout=1
                     ):
                         self.logger.info(
                             "Drawer closed after %d tap(s)", tap_attempt - 1

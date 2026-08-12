@@ -248,7 +248,6 @@ SplitView {
             }
 
             thirdpartyServicesEnabled: ctrlThirdPartyServices.checked
-            profileSectionHasNotification: ctrlSettingsHasNotification.checked
 
             onItemActivated: function (sectionType, sectionId) {
                 logs.logEvent("onItemActivated", ["sectionType", "sectionId"], arguments)

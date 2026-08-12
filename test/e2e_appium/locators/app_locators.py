@@ -16,9 +16,6 @@ class AppLocators(BaseLocators):
     LEFT_NAV_COMMUNITIES = BaseLocators.xpath(
         "//*[contains(@resource-id, 'Communities Portal-navbar')]"
     )
-    LEFT_NAV_SETTINGS = BaseLocators.xpath(
-        "//*[contains(@resource-id, 'Settings-navbar')]"
-    )
 
     # Home dock (visible only on Home)
     HOME_DOCK_CONTAINER = BaseLocators.xpath(
@@ -44,6 +41,9 @@ class AppLocators(BaseLocators):
     )
     SHARE_PROFILE_ACTION = BaseLocators.xpath(
         "//*[contains(@resource-id,'userStatusShareProfileAction')]"
+    )
+    SETTINGS_ACTION = BaseLocators.xpath(
+        "//*[contains(@resource-id,'userStatusSettingsAction')]"
     )
     PROFILE_MENU_CONTAINER = BaseLocators.xpath(
         "//*[contains(@resource-id,'ProfileMenu')]"

@@ -24,7 +24,6 @@ class App(BasePage):
                 "market": self.locators.LEFT_NAV_MARKET,
                 "messaging": self.locators.LEFT_NAV_MESSAGES,
                 "communities": self.locators.LEFT_NAV_COMMUNITIES,
-                "settings": self.locators.LEFT_NAV_SETTINGS,
             }
             for name, locator in mapping.items():
                 el = self.find_element_safe(locator, timeout=1)
@@ -149,7 +148,7 @@ class App(BasePage):
         the app's QML picks layout based on width, so wide tablets in portrait
         still get the always-visible side-nav.
         """
-        if self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=2):
+        if self.is_element_visible(self.locators.PROFILE_NAV_BUTTON, timeout=2):
             return True
 
         from utils.screen_identity import dismiss_introduce_yourself
@@ -164,11 +163,11 @@ class App(BasePage):
                 return True
 
         if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=1):
-            return self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=5)
+            return self.is_element_visible(self.locators.PROFILE_NAV_BUTTON, timeout=5)
 
         # Phase 1: unwind deep navigation stack via back button
         for _ in range(5):
-            if self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=1):
+            if self.is_element_visible(self.locators.PROFILE_NAV_BUTTON, timeout=1):
                 return True
             if not self.is_element_visible(
                 self.locators.TOOLBAR_BACK_BUTTON, timeout=1
@@ -176,7 +175,7 @@ class App(BasePage):
                 break
             self.safe_click(self.locators.TOOLBAR_BACK_BUTTON, timeout=2)
 
-        if self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=1):
+        if self.is_element_visible(self.locators.PROFILE_NAV_BUTTON, timeout=1):
             return True
 
         # Phase 2: drag the drawer handle to open the nav drawer
@@ -185,7 +184,7 @@ class App(BasePage):
                 break
             self.logger.debug("Nav drawer open attempt %d did not reveal nav", attempt + 1)
 
-        return self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=5)
+        return self.is_element_visible(self.locators.PROFILE_NAV_BUTTON, timeout=5)
 
     # Locator for the drawer swipe-indicator handle visible in portrait mode.
     NAV_DRAWER_HANDLE = (
@@ -269,16 +268,36 @@ class App(BasePage):
             return False
 
     def click_settings_button(self) -> bool:
-        self.logger.info("Clicking Settings button")
-        if self.active_section() == "settings":
+        self.logger.info("Opening Settings from the profile menu")
+        from utils.screen_identity import SCREEN_ANCHORS
+        if self.is_element_visible(SCREEN_ANCHORS["settings"], timeout=1):
             self.logger.info("Already in Settings section — skipping nav")
             return True
-        from utils.screen_identity import SCREEN_ANCHORS
-        return self._click_drawer_nav_with_verify(
-            nav_locator=self.locators.LEFT_NAV_SETTINGS,
-            landmark_locator=SCREEN_ANCHORS["settings"],
-            nav_name="Settings",
-        )
+
+        for attempt in range(1, 4):
+            if not self._ensure_main_nav_visible():
+                self.logger.warning(
+                    "Nav not visible on Settings attempt %d", attempt
+                )
+                continue
+            if not self.safe_click(self.locators.PROFILE_NAV_BUTTON, timeout=5):
+                self.logger.warning(
+                    "Profile nav button tap failed on Settings attempt %d", attempt
+                )
+                continue
+            if not self.safe_click(self.locators.SETTINGS_ACTION, timeout=5):
+                self.logger.warning(
+                    "Settings menu item tap failed on attempt %d", attempt
+                )
+                continue
+            if self.is_element_visible(SCREEN_ANCHORS["settings"], timeout=15):
+                return True
+            self.logger.warning(
+                "Settings screen anchor not visible after attempt %d", attempt
+            )
+
+        self.dump_page_source("settings_nav_failed")
+        return False
 
     def _click_drawer_nav_with_verify(
         self,

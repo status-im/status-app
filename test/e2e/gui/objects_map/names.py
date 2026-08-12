@@ -59,12 +59,11 @@ chatButton = {"container": primaryNavSidebar, "objectName": "Messages-navbar", "
               "visible": True}
 marketButton = {"container": primaryNavSidebar, "objectName": "Market-navbar", "type": "RegularSectionButton", "visible": True}
 
-# Second half of left main panel: communities button, settings button
+# Second half of left main panel: communities button
 communitiesSettingsNavBarList = {"container": statusDesktop_mainWindow, "objectName": "statusMainNavBarListView",
                                  "type": "ListView", "visible": True}
 communitiesPortalButton = {"container": primaryNavSidebar, "objectName": "Communities Portal-navbar",
                            "type": "PrimaryNavSidebarButton", "visible": True}
-settingsGearButton = {"container": primaryNavSidebar, "objectName": "Settings-navbar", "type": "BottomSectionButton", "visible": True}
 activityCenterButton = {"container": statusDesktop_mainWindow, "objectName": "Activity Center-navbar", "type": "PrimaryNavSidebarButton", "visible": True}
 
 # Online identifier
@@ -177,6 +176,9 @@ userContextMenu_ViewMyProfileAction = {"container": statusDesktop_mainWindow_ove
 userContextMenu_CopyLinkToProfile = {"container": statusDesktop_mainWindow_overlay,
                                      "objectName": "userStatusCopyLinkAction", "type": "StatusMenuItem",
                                      "visible": True}
+userContextMenu_SettingsAction = {"container": statusDesktop_mainWindow_overlay,
+                                  "objectName": "userStatusSettingsAction", "type": "StatusMenuItem",
+                                  "visible": True}
 userStatusDisplayName = {"container": onlineIdentifier, "objectName": "userStatusDisplayName",
                          "type": "StatusBaseText", "visible": True}
 
