@@ -11,8 +11,9 @@ import utils
 
 import shared.views.chat
 
+import AppLayouts.Chat.stores as ChatStores
+
 import "../panels"
-import "../stores"
 
 RowLayout {
     id: root
@@ -21,7 +22,7 @@ RowLayout {
     property alias membersButton: membersButton
     property alias searchButton: searchButton
 
-    property RootStore rootStore
+    property ChatStores.RootStore rootStore
 
     property var mutualContactsModel
 
@@ -67,7 +68,7 @@ RowLayout {
         readonly property bool selectingMembers: root.state == stateMembersSelectorContent
     }
 
-    MessageStore {
+    ChatStores.MessageStore {
         id: messageStore
         messageModule: chatContentModule ? chatContentModule.messagesModule : null
         chatSectionModule: root.rootStore.chatCommunitySectionModule

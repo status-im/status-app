@@ -19,12 +19,13 @@ import shared.views.chat
 import AppLayouts.Profile.stores
 import AppLayouts.stores as AppLayoutStores
 
+import AppLayouts.Chat.stores as ChatStores
+
 import "../helpers"
 import "../controls"
 import "../popups"
 import "../panels"
 import "../../Wallet"
-import "../stores"
 
 ColumnLayout {
     id: root
@@ -33,7 +34,7 @@ ColumnLayout {
     property var chatContentModule
     property var chatSectionModule
 
-    property RootStore rootStore
+    property ChatStores.RootStore rootStore
     property string chatId
     property int chatType: Constants.chatType.unknown
     property var formatBalance
@@ -55,7 +56,7 @@ ColumnLayout {
     property bool stickersLoaded: false
     property bool joined
 
-    readonly property MessageStore messageStore: MessageStore {
+    readonly property ChatStores.MessageStore messageStore: ChatStores.MessageStore {
         messageModule: chatContentModule ? chatContentModule.messagesModule : null
         chatSectionModule: root.rootStore.chatCommunitySectionModule
     }
