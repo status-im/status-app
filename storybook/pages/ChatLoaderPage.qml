@@ -243,6 +243,7 @@ SplitView {
     QtObject {
         id: sectionModuleMock
 
+        property bool chatsLoaded: true
         property var model: chatsModel
         property var activeItem: ({ id: "" })
         property bool amIMember: true
