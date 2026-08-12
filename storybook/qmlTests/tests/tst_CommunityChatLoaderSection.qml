@@ -330,8 +330,47 @@ Item {
                       "clicking a category must collapse it")
         }
 
+        // Rows keep materializing while the panels incubate asynchronously;
+        // a drag choreographed against rows that then shift mid-gesture never
+        // crosses its reorder threshold. Settle = row count and the top row's
+        // scene position unchanged between two consecutive polls.
+        // The drag's synthesized mouse-move pacing collapses while the other
+        // panels are still incubating (event-loop starvation coalesces the
+        // moves); wait for every panel to be real before starting a gesture.
+        function waitForSectionReady(loader) {
+            tryVerify(() => !!loader.item
+                          && loader.item.headerReady
+                          && loader.item.leftPanelReady
+                          && loader.item.centerPanelReady
+                          && loader.item.rightPanelReady, 60000,
+                      "all panels must be ready before gesture tests")
+        }
+
+        function waitForStableRows(lv) {
+            let prevCount = -1
+            let prevY = -1e9
+            tryVerify(() => {
+                const rows = findAllByTypePrefix(lv.contentItem, "StatusChatListItem_QMLTYPE", [])
+                    .filter(r => r.visible && r.height > 0)
+                if (rows.length < 2) {
+                    prevCount = -1
+                    return false
+                }
+                rows.sort((a, b) => a.mapToItem(null, 0, 0).y - b.mapToItem(null, 0, 0).y)
+                const y = rows[0].mapToItem(null, 0, 0).y
+                const stable = rows.length === prevCount && y === prevY
+                prevCount = rows.length
+                prevY = y
+                return stable
+            }, 10000, "chat rows must settle before dragging")
+        }
+
         function test_adminDragReordersToAdjacentRow() {
             mock.memberRole = Constants.memberRole.owner
+            // gesture test: the message payload is irrelevant and its
+            // incubation churn under the drag destabilizes the synthesized
+            // mouse sequence
+            mock.messagesPerChannel = 1
             mock.install()
             mock.sectionModule.lastReorder = null
 
@@ -340,6 +379,8 @@ Item {
             verify(!!lv)
             tryVerify(() => lv.count > 0, 10000)
             waitForRendering(lv)
+            waitForSectionReady(loader)
+            waitForStableRows(lv)
 
             const rows = findAllByTypePrefix(lv.contentItem, "StatusChatListItem_QMLTYPE", [])
                 .filter(r => r.visible && r.height > 0)
@@ -357,6 +398,9 @@ Item {
             mousePress(lv, start.x, start.y)
             for (let step = 1; step <= 8; ++step)
                 mouseMove(lv, start.x, start.y + (rowH * 1.2 * step) / 8, 20)
+            // a frame between the last move and the release lets the drop
+            // target process the final position before the drop lands
+            waitForRendering(lv)
             mouseRelease(lv, start.x, start.y + rowH * 1.2)
             waitForRendering(lv)
 
@@ -370,6 +414,10 @@ Item {
 
         function test_adminDragReordersUpward() {
             mock.memberRole = Constants.memberRole.owner
+            // gesture test: the message payload is irrelevant and its
+            // incubation churn under the drag destabilizes the synthesized
+            // mouse sequence
+            mock.messagesPerChannel = 1
             // overflow the viewport: the list only tries to steal drags for
             // flicking when it has somewhere to scroll
             mock.categoriesCount = 4
@@ -382,6 +430,8 @@ Item {
             verify(!!lv)
             tryVerify(() => lv.count > 0, 10000)
             waitForRendering(lv)
+            waitForSectionReady(loader)
+            waitForStableRows(lv)
 
             const rows = findAllByTypePrefix(lv.contentItem, "StatusChatListItem_QMLTYPE", [])
                 .filter(r => r.visible && r.height > 0)
@@ -396,6 +446,9 @@ Item {
             mousePress(lv, start.x, start.y)
             for (let step = 1; step <= 8; ++step)
                 mouseMove(lv, start.x, start.y - (rowH * 1.2 * step) / 8, 20)
+            // a frame between the last move and the release lets the drop
+            // target process the final position before the drop lands
+            waitForRendering(lv)
             mouseRelease(lv, start.x, start.y - rowH * 1.2)
             waitForRendering(lv)
 
