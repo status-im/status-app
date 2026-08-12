@@ -18,9 +18,9 @@ import mainui.sectionLoaders
 Loader {
     id: root
 
+    required property string userUID
     required property AppStores.RootStore rootStore
     required property AppStores.FeatureFlagsStore featureFlagsStore
-    required property ProfileStores.ProfileStore profileStore
     required property ProfileStores.AdvancedStore advancedStore
     required property SharedStores.NetworksStore networksStore
     required property SharedStores.CurrenciesStore currencyStore
@@ -92,7 +92,7 @@ Loader {
             browserPreferencesStore:    browserPreferencesStore,
             browserWalletStore:         browserWalletStore,
             browserActivityStore:       browserActivityStore,
-            userUID:                    Qt.binding(() => root.profileStore.pubKey),
+            userUID:                    root.userUID,
             thirdpartyServicesEnabled:  Qt.binding(() => root.rootStore.thirdpartyServicesEnabled),
             dappsEnabled:               Qt.binding(() => root.featureFlagsStore.dappsEnabled),
             currencyStore:              Qt.binding(() => root.currencyStore),

@@ -1,3 +1,4 @@
+import QtCore
 import QtQuick
 
 import StatusQ
@@ -51,9 +52,18 @@ QtObject {
     required property ProfileStores.EnsUsernamesStore ensUsernamesStore
     required property ProfileStores.PrivacyStore privacyStore
     required property ProfileStores.NotificationsStore notificationsStore
+    required property ProfileStores.DevicesStore devicesStore
 
     required property Keychain keychain
 
+    readonly property var appMainLocalSettings: Settings {
+        id: appMainLocalSettings
+        category: "AppMainLocalSettings_%1".arg(userProfile.pubKey)
+        property bool enableMessageBackupPopupSeen
+        property bool enablePushNotificationsFreshInstallSeen
+        property bool enablePushNotificationsDontAskAgain
+        property string enablePushNotificationsLastShownVersion
+    }
 
     readonly property SwapModalHandler swapModalHandler: SwapModalHandler {
 
@@ -198,12 +208,12 @@ QtObject {
             visible: true
             destroyOnClose: true
             onClosed: appMainLocalSettings.enableMessageBackupPopupSeen = true
-            onAccepted: appMain.devicesStore.setMessagesBackupEnabled(true)
+            onAccepted: root.devicesStore.setMessagesBackupEnabled(true)
         }
     }
 
     function maybeDisplayEnableMessageBackupPopup() {
-        if (!appMainLocalSettings.enableMessageBackupPopupSeen && !appMain.devicesStore.messagesBackupEnabled) {
+        if (!appMainLocalSettings.enableMessageBackupPopupSeen && !root.devicesStore.messagesBackupEnabled) {
             enableMessageBackupPopupComponent.createObject(popupParent).open()
             return true
         }

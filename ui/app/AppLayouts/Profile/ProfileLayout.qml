@@ -357,7 +357,7 @@ StatusSectionLayout {
                 contactsStore: root.contactsStore
 
                 thirdpartyServicesEnabled: root.privacyStore.thirdpartyServicesEnabled
-                myPublicKey: root.contactsStore.myPublicKey
+                myPublicKey: userProfile.pubKey
                 currencySymbol: root.sharedRootStore.currencyStore.currentCurrency
                 emojiPopup: root.emojiPopup
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.wallet)

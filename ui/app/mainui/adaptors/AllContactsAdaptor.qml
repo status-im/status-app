@@ -5,7 +5,6 @@ import StatusQ.Core.Utils
 import utils
 
 import QtModelsToolkit
-import SortFilterProxyModel
 import AppLayouts.Profile.helpers
 
 /**
@@ -26,7 +25,7 @@ QObject {
         id: concatModel
 
         function hasUser(pubKey) {
-            return pubKey === root.selfContactDetails.publicKey || contactsModel.hasUser(pubKey)
+            return pubKey === root.selfContactDetails.publicKey || root.contactsModel.hasUser(pubKey)
         }
 
         expectedRoles: [

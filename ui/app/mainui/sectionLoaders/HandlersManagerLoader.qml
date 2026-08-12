@@ -33,6 +33,7 @@ Loader {
     required property WalletStores.TransactionStoreNew transactionStoreNew
     required property WalletStores.TokensStore tokensStore
     required property ProfileStores.NotificationsStore notificationsStore
+    required property ProfileStores.DevicesStore devicesStore
     
     required property ChatStores.RootStore rootChatStore
 
@@ -85,7 +86,8 @@ Loader {
             ensUsernamesStore:      Qt.binding(() => root.ensUsernamesStore),
             privacyStore:           Qt.binding(() => root.privacyStore),
             keychain:               Qt.binding(() => root.keychain),
-            notificationsStore:     Qt.binding(() => root.notificationsStore)
+            notificationsStore:     Qt.binding(() => root.notificationsStore),
+            devicesStore:           Qt.binding(() => root.devicesStore)
         })
     }
 

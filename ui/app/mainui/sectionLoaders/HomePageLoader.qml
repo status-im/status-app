@@ -63,7 +63,7 @@ Loader {
 
             searchPhrase: root.item ? root.item.searchPhrase : ""
 
-            profileId: root.profileStore.pubKey
+            profileId: userProfile.pubKey
 
             // no automatic propagation to QtObject, needs to be specified explicitely
             Theme.style: root.Theme.style

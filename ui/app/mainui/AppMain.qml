@@ -113,7 +113,7 @@ Item {
     readonly property var keycardNewStore: rootStore.profileSectionStore?.keycardNewStore ?? null
     readonly property var walletProfileStore: rootStore.profileSectionStore?.walletStore ?? null
     readonly property var ensUsernamesStore: rootStore.profileSectionStore?.ensUsernamesStore ?? null
-    readonly property ProfileStores.LogosNetworkStore logosNetworkStore: rootStore.profileSectionStore.logosNetworkStore
+    readonly property ProfileStores.LogosNetworkStore logosNetworkStore: rootStore.profileSectionStore?.logosNetworkStore ?? null
 
     // Messaging (just references from `rootStore`)
     readonly property MessagingStores.MessagingRootStore messagingRootStore: rootStore.messagingRootStore
@@ -909,6 +909,8 @@ Item {
     QtObject {
         id: d
 
+        readonly property string myPublicKey: userProfile.pubKey // we need it very soon, before all the stores
+
         property bool messagingNetworkDisconnected: !appMain.rootStore.isMessagingNetworkConnected
         property bool doShowMessagingBanner: false
         readonly property bool canShowMessagingBanner: d.messagingNetworkDisconnected
@@ -1002,7 +1004,7 @@ Item {
 
         function maybeDisplayIntroduceYourselfPopup() {
             if (!appMainLocalSettings.introduceYourselfPopupSeen
-                    && allContacsAdaptor?.selfDisplayName === "") {
+                    && appMain.ownContactDetails?.displayName === "") {
                 introduceYourselfPopupComponent.createObject(appMain).open()
                 return true
             }
@@ -1061,15 +1063,9 @@ Item {
 
     Settings {
         id: appMainLocalSettings
-        category: "AppMainLocalSettings_%1".arg(allContacsAdaptor?.selfContactDetails?.publicKey
-                                                  ?? appMain.profileStore?.pubKey
-                                                  ?? "")
+        category: "AppMainLocalSettings_%1".arg(d.myPublicKey)
         property var whitelistedUnfurledDomains: []
         property bool introduceYourselfPopupSeen
-        property bool enableMessageBackupPopupSeen
-        property bool enablePushNotificationsFreshInstallSeen
-        property bool enablePushNotificationsDontAskAgain
-        property string enablePushNotificationsLastShownVersion
         property int theme: ThemeUtils.Style.System
         property int fontSize: {
             if (appMain.isPortraitMode) {
@@ -1174,6 +1170,7 @@ Item {
         privacyStore: appMain.privacyStore
         keychain: appMain.keychain
         notificationsStore: appMain.notificationsStore
+        devicesStore: appMain.devicesStore
 
         Component.onCompleted: {
             if (appMain.mainReady)
@@ -1508,7 +1505,7 @@ Item {
         sourceComponent: StatusEmojiPopup {
             directParent: appMain.Window.window.contentItem
             height: 440
-            userUID: allContacsAdaptor.selfContactDetails.publicKey
+            userUID: d.myPublicKey
             emojiModel: SQUtils.Emoji.emojiModel
         }
     }
@@ -1957,7 +1954,7 @@ Item {
                 hasMembership: (appMain.activityCenterStore?.membershipCount ?? 0) > 0
                 hasSystem: (appMain.activityCenterStore?.systemCount ?? 0) > 0
                 hasNews: (appMain.activityCenterStore?.newsCount ?? 0) > 0
-                activeGroup: appMain.activityCenterStore?.activeNotificationGroup ?? ""
+                activeGroup: appMain.activityCenterStore?.activeNotificationGroup ?? ActivityCenterTypes.ActivityCenterGroup.All
 
                 hasUnreadNotifications: (appMain.activityCenterStore?.unreadNotificationsCount ?? 0) > 0
                 readNotificationsStatus: appMain.activityCenterStore?.activityCenterReadType ?? 0
@@ -2246,9 +2243,9 @@ Item {
                             restoreMode: Binding.RestoreNone
                         }
 
+                        userUID: d.myPublicKey
                         rootStore: appMain.rootStore
                         featureFlagsStore: appMain.featureFlagsStore
-                        profileStore: appMain.profileStore
                         advancedStore: appMain.advancedStore
                         networksStore: appMain.networksStore
                         currencyStore: appMain.currencyStore
@@ -2478,7 +2475,7 @@ Item {
                 acHasUnseenNotifications: appMain.activityCenterStore?.hasUnseenNotifications ?? false
                 acUnreadNotificationsCount: appMain.activityCenterStore?.unreadNotificationsCount ?? 0
 
-                selfContactDetails: ownContactDetails ?? loadingContactDetails
+                selfContactDetails: appMain.ownContactDetails ?? appMain.loadingContactDetails
                 getEmojiHashFn: appMain.utilsStore.getEmojiHash
                 getLinkToProfileFn: appMain.contactsStore?.getLinkToProfile
                                     ?? function() { return "" }
@@ -2505,7 +2502,7 @@ Item {
                 }
                 onSetCurrentUserStatusRequested: status => appMain.rootStore.setCurrentUserStatus(status)
                 onViewProfileRequested: pubKey => Global.openProfilePopup(pubKey)
-                onShareOwnProfileRequested: Global.shareProfileDialogRequested(ownContactDetails.publicKey)
+                onShareOwnProfileRequested: Global.shareProfileDialogRequested(appMain.ownContactDetails.publicKey)
 
                 onItemActivated: function(sectionType, sectionId) {
                     // Ensure Activity Center Panel is closed when manual navigation done

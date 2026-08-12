@@ -23,7 +23,7 @@ constexpr auto kHasSkins = "hasSkins";
 constexpr auto kSkinColor = "skinColor";
 constexpr auto kBaseColor = "base";
 
-const auto skinColors = std::array<const char*, 5>{"1f3fb", "1f3fc", "1f3fd", "1f3fe", "1f3ff"};
+constexpr auto skinColors = std::array<const char*, 5>{"1f3fb", "1f3fc", "1f3fd", "1f3fe", "1f3ff"};
 
 constexpr auto MAX_EMOJI_NUMBER = 36;
 

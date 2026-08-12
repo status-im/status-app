@@ -535,7 +535,7 @@ Item {
 
     Settings {
         id: walletLocalSettings
-        category: "WalletLocalSettings_%1".arg(root.contactsStore.myPublicKey)
+        category: "WalletLocalSettings_%1".arg(userProfile.pubKey)
         property alias selectedPanelIndex: walletSectionLayout.currentIndex
     }
 }

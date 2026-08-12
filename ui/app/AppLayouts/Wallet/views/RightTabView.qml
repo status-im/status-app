@@ -199,7 +199,7 @@ RightTabBaseView {
 
         Settings {
             id: walletSettings
-            category: "walletSettings-" + root.contactsStore.myPublicKey
+            category: "walletSettings-" + userProfile.pubKey
             property real collectiblesViewCustomOrderApplyTimestamp: 0
             property bool buyBannerEnabled: true
             property bool receiveBannerEnabled: true
@@ -352,7 +352,7 @@ RightTabBaseView {
 
                         readonly property var walletSettings: Settings { /* https://bugreports.qt.io/browse/QTBUG-135039 */
                             id: walletSettings
-                            category: "walletSettings-" + root.contactsStore.myPublicKey
+                            category: "walletSettings-" + userProfile.pubKey
                             property var assetsViewCustomOrderApplyTimestamp
                             onAssetsViewCustomOrderApplyTimestampChanged: walletAssetsView.refreshSortSettings()
                         }
