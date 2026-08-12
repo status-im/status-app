@@ -39,7 +39,6 @@ SplitView {
         Component {
             id: dlgComponent
             EnableMessageBackupPopup {
-                anchors.centerIn: parent
                 visible: true
                 modal: false
                 onAccepted: logs.logEvent("EnableMessageBackupPopup::onAccepted")

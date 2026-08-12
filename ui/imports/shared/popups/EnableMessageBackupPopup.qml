@@ -11,7 +11,7 @@ import StatusQ.Popups.Dialog
 
 import utils
 
-StatusDialog {
+StatusAdaptiveDialog {
     id: root
 
     title: {
@@ -22,11 +22,9 @@ StatusDialog {
         return qsTr("Enable on-device message backup?")
     }
 
-    padding: 20
-    width: 480
     closePolicy: Popup.NoAutoClose
 
-    contentItem: ColumnLayout {
+    contentComponent: ColumnLayout {
         spacing: Theme.padding
 
         StatusImage {
@@ -53,26 +51,24 @@ StatusDialog {
         }
     }
 
-    footer: StatusDialogFooter {
-        leftButtons: ObjectModel {
-            StatusFlatButton {
-                objectName: "backupMessageSkipStatusFlatButton"
-                text: qsTr("Skip")
-                onClicked: root.close()
-            }
+    footerLeftButtons: ObjectModel {
+        StatusFlatButton {
+            objectName: "backupMessageSkipStatusFlatButton"
+            text: qsTr("Skip")
+            onClicked: root.close()
         }
-        rightButtons: ObjectModel {
-            StatusButton {
-                objectName: "backupMessageEnableStatusFlatButton"
-                text: SQUtils.Utils.isAndroid ? qsTr("Go to settings") : qsTr("Enable")
-                onClicked: {
-                    if (SQUtils.Utils.isAndroid) {
-                        Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.backupSettings)
-                        root.close()
-                        return
-                    }
-                    root.accept()
+    }
+    footerRightButtons: ObjectModel {
+        StatusButton {
+            objectName: "backupMessageEnableStatusFlatButton"
+            text: SQUtils.Utils.isAndroid ? qsTr("Go to settings") : qsTr("Enable")
+            onClicked: {
+                if (SQUtils.Utils.isAndroid) {
+                    Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.backupSettings)
+                    root.close()
+                    return
                 }
+                root.accept()
             }
         }
     }
