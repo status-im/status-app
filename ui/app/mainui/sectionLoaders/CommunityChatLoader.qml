@@ -64,21 +64,24 @@ Loader {
 
     // The section chrome is owned by the loader: it shows instantly with
     // skeleton panels and swaps in the real panels produced by ChatView
-    // (LayoutItemProxy retarget) as each one finishes incubating. `root.item`
-    // is null until the section itself loads, so the whole-loader contract
-    // still acts as the floor for every slot. The chrome is hidden while
-    // ChatLayout shows a full-page view (join/banned/offline community view or
-    // the community settings page).
+    // (LayoutItemProxy retarget) as each one finishes incubating. Each slot is
+    // gated on its own readiness flag, not on `root.item`: ChatView's panels
+    // exist as soon as the section loads, but an asynchronous one is an empty
+    // Loader until it is ready, and retargeting the proxy to it releases the
+    // skeleton (setParentItem(null) + setVisible(false)) and paints nothing.
+    // The chrome is hidden while ChatLayout shows a full-page view
+    // (join/banned/offline community view or the community settings page).
     StatusSectionLayout {
         id: sectionLayout
+        objectName: "sectionChrome"
 
         anchors.fill: parent
         visible: !root.item || !root.item.ownsFullPage
 
-        headerContent: root.item?.headerContent ?? headerSkeleton
-        leftPanel: root.item?.leftPanel ?? channelsSkeleton
-        centerPanel: root.item?.centerPanel ?? chatSkeleton
-        rightPanel: root.item?.rightPanel ?? membersSkeleton
+        headerContent: (root.item?.headerReady ?? false) ? root.item.headerContent : headerSkeleton
+        leftPanel: (root.item?.leftPanelReady ?? false) ? root.item.leftPanel : channelsSkeleton
+        centerPanel: (root.item?.centerPanelReady ?? false) ? root.item.centerPanel : chatSkeleton
+        rightPanel: (root.item?.rightPanelReady ?? false) ? root.item.rightPanel : membersSkeleton
         showRightPanel: root.item?.showRightPanel ?? root.accountSettingsStore.showUsersList
         subsectionHistory: root.item?.viewSubsectionHistory ?? null
 
@@ -91,56 +94,51 @@ Loader {
     // resize for the lifetime of the section.
     Loader {
         id: headerSkeleton
+        objectName: "headerSkeleton"
         active: !(root.item?.headerReady ?? false)
         visible: active
         sourceComponent: ChatHeaderSkeleton {}
     }
 
-    Item {
+    Loader {
         id: channelsSkeleton
-        visible: !(root.item?.leftPanelReady ?? false)
+        objectName: "leftPanelSkeleton"
+        active: !(root.item?.leftPanelReady ?? false)
+        visible: active
 
-        Loader {
-            anchors.fill: parent
-            active: channelsSkeleton.visible
-            sourceComponent: CommunityChannelsSkeleton {
-                // The community identity is known before the section loads, so
-                // the real header shows immediately above the skeleton rows
-                name: root.sectionItemModel?.name ?? ""
-                membersCount: root.sectionItemModel?.joinedMembersCount ?? 0
-                image: root.sectionItemModel?.image ?? ""
-                color: root.sectionItemModel?.color ?? "transparent"
+        sourceComponent: CommunityChannelsSkeleton {
+            // The community identity is known before the section loads, so
+            // the real header shows immediately above the skeleton rows
+            name: root.sectionItemModel?.name ?? ""
+            membersCount: root.sectionItemModel?.joinedMembersCount ?? 0
+            image: root.sectionItemModel?.image ?? ""
+            color: root.sectionItemModel?.color ?? "transparent"
 
-                onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.contactsStore.myPublicKey)
-            }
+            onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.contactsStore.myPublicKey)
         }
     }
 
-    Item {
+    Loader {
         id: chatSkeleton
-        visible: !(root.item?.centerPanelReady ?? false)
+        objectName: "centerPanelSkeleton"
+        active: !(root.item?.centerPanelReady ?? false)
+        visible: active
 
-        Loader {
+        sourceComponent: MessagesChatSkeleton {
             anchors.fill: parent
-            active: chatSkeleton.visible
-            sourceComponent: MessagesChatSkeleton {
-                anchors.fill: parent
-                anchors.margins: Theme.padding
-                anchors.leftMargin: Theme.xlPadding
-                anchors.rightMargin: Theme.xlPadding
-            }
+            anchors.margins: Theme.padding
+            anchors.leftMargin: Theme.xlPadding
+            anchors.rightMargin: Theme.xlPadding
         }
     }
 
-    Item {
+    Loader {
         id: membersSkeleton
-        visible: !(root.item?.rightPanelReady ?? false)
+        objectName: "rightPanelSkeleton"
+        active: !(root.item?.rightPanelReady ?? false)
+        visible: active
 
-        Loader {
-            anchors.fill: parent
-            active: membersSkeleton.visible
-            sourceComponent: MembersListSkeleton {}
-        }
+        sourceComponent: MembersListSkeleton {}
     }
 
     onNavToMsgDetailsChanged: {
