@@ -52,7 +52,6 @@ Control {
 
     property Component communityPopupMenu // required property var model
 
-    required property bool profileSectionHasNotification
     required property bool thirdpartyServicesEnabled
     property bool profileLoading: false
 
@@ -74,6 +73,7 @@ Control {
     signal activityCenterRequested(bool shouldShow)
     signal viewProfileRequested(string pubKey)
     signal shareOwnProfileRequested
+    signal settingsRequested
     signal setCurrentUserStatusRequested(int status)
 
     Component.onCompleted: d.snapToMode()
@@ -293,6 +293,7 @@ Control {
                     onSetCurrentUserStatusRequested: (status) => root.setCurrentUserStatusRequested(status)
                     onViewProfileRequested: (pubKey) => root.viewProfileRequested(pubKey)
                     onShareOwnProfileRequested: root.shareOwnProfileRequested()
+                    onSettingsRequested: root.settingsRequested()
                 }
             }
         }
@@ -437,11 +438,7 @@ Control {
     }
 
     component BottomSectionButton: RegularSectionButton {
-        showBadge: {
-            if (model.sectionType === Constants.appSection.profile)
-                return root.profileSectionHasNotification
-            return model.hasNotification
-        }
+        showBadge: model.hasNotification
     }
 
     component SidebarListView: ListView {

@@ -57,7 +57,6 @@ Item {
                 return ["👨🏻‍🍼", "🏃🏿‍♂️", "🌇", "🤶🏿", "🏮"]
             }
 
-            profileSectionHasNotification: false
             thirdpartyServicesEnabled: true
 
             acVisible: false
@@ -193,10 +192,8 @@ Item {
             verify(!!walletBtn)
             tryCompare(walletBtn, "visible", true)
 
-            // Check for Settings button
-            const settingsBtn = findChild(controlUnderTest, "Settings-navbar")
-            verify(!!settingsBtn)
-            tryCompare(settingsBtn, "visible", true)
+            // Settings is not a nav item anymore, it lives in the profile menu
+            verify(!findChild(controlUnderTest, "Settings-navbar"))
         }
 
         function test_section_button_click() {
@@ -217,16 +214,9 @@ Item {
             verify(!!walletBtn)
             tryCompare(walletBtn, "checked", true)
 
-            // verify the Settings button is not checked
-            const settingsBtn = findChild(controlUnderTest, "Settings-navbar")
-            verify(!!settingsBtn)
-            tryCompare(settingsBtn, "checked", false)
-
             // simulate changing the active section from outside (via mock model update)
             sidebarAdaptor.sectionsModel.setActiveSection("id3") // "id" of Constants.appSection.profile
 
-            // verify that Settings is active, Wallet is not
-            tryCompare(settingsBtn, "checked", true)
             tryCompare(walletBtn, "checked", false)
         }
 
@@ -295,17 +285,6 @@ Item {
 
             // Now it might be present (depending on filter implementation)
             verify(true) // Basic validation
-        }
-
-        function test_profile_section_notification() {
-            controlUnderTest.profileSectionHasNotification = true
-
-            const settingsBtn = findChild(controlUnderTest, "Settings-navbar")
-            verify(!!settingsBtn)
-
-            // Settings button should show notification when profileSectionHasNotification is true
-            tryCompare(settingsBtn, "showBadge", true)
-            tryCompare(settingsBtn, "badgeVisible", true)
         }
 
         function test_community_buttons_have_object_name() {
