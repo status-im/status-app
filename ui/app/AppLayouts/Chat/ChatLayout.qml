@@ -50,6 +50,13 @@ StackLayout {
     readonly property bool showRightPanel: mainViewLoader.item?.showRightPanel ?? false
     readonly property var viewSubsectionHistory: mainViewLoader.item?.subsectionHistory ?? null
 
+    // Per-panel readiness of those panels, so the loader can retire each
+    // skeleton slot independently
+    readonly property bool headerReady: mainViewLoader.item?.headerReady ?? false
+    readonly property bool leftPanelReady: mainViewLoader.item?.leftPanelReady ?? false
+    readonly property bool centerPanelReady: mainViewLoader.item?.centerPanelReady ?? false
+    readonly property bool rightPanelReady: mainViewLoader.item?.rightPanelReady ?? false
+
     // True while a full-page view (join/banned/offline community view or the
     // community settings page) replaces the paneled chat view; the loader hides
     // its chrome and this StackLayout renders the full page instead.

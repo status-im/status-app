@@ -52,8 +52,6 @@ Loader {
     property real leftPanelWidthOverride: 0
     property bool navToMsgDetails: root.rootStore.navToMsgDetails
 
-    // Re-emitted so AppMain owns the spinner toggle.
-    signal ready()
     // Bridges the chat profile button to the global app-section navigation.
     signal openAppSearchRequested()
 
@@ -61,7 +59,9 @@ Loader {
 
     // The section chrome is owned by the loader: it shows instantly with
     // skeleton panels and swaps in the real panels produced by ChatView
-    // (LayoutItemProxy retarget) once the section finishes incubating.
+    // (LayoutItemProxy retarget) as each one finishes incubating. `root.item`
+    // is null until the section itself loads, so the whole-loader contract
+    // still acts as the floor for every slot.
     StatusSectionLayout {
         id: sectionLayout
 
@@ -80,12 +80,12 @@ Loader {
     // Skeleton slot items carry the same page paddings as the real panels
     ChatHeaderSkeleton {
         id: headerSkeleton
-        visible: root.status !== Loader.Ready
+        visible: !(root.item?.headerReady ?? false)
     }
 
     Item {
         id: listSkeleton
-        visible: root.status !== Loader.Ready
+        visible: !(root.item?.leftPanelReady ?? false)
 
         // The real header: invite and start-chat act app-globally, so they
         // remain functional while the section incubates
@@ -107,7 +107,7 @@ Loader {
 
     Item {
         id: chatSkeleton
-        visible: root.status !== Loader.Ready
+        visible: !(root.item?.centerPanelReady ?? false)
 
         MessagesChatSkeleton {
             anchors.fill: parent
@@ -119,16 +119,11 @@ Loader {
 
     Item {
         id: membersSkeleton
-        visible: root.status !== Loader.Ready
+        visible: !(root.item?.rightPanelReady ?? false)
 
         MembersListSkeleton {
             anchors.fill: parent
         }
-    }
-
-    onStatusChanged: {
-        if (status === Loader.Ready || status === Loader.Error)
-            ready()
     }
 
     onNavToMsgDetailsChanged: {

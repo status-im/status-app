@@ -58,16 +58,17 @@ Loader {
 
     property real leftPanelWidthOverride: 0
 
-    signal ready()
     signal openAppSearchRequested()
 
     asynchronous: true
 
     // The section chrome is owned by the loader: it shows instantly with
     // skeleton panels and swaps in the real panels produced by ChatView
-    // (LayoutItemProxy retarget) once the section finishes incubating. It is
-    // hidden while ChatLayout shows a full-page view (join/banned/offline
-    // community view or the community settings page).
+    // (LayoutItemProxy retarget) as each one finishes incubating. `root.item`
+    // is null until the section itself loads, so the whole-loader contract
+    // still acts as the floor for every slot. The chrome is hidden while
+    // ChatLayout shows a full-page view (join/banned/offline community view or
+    // the community settings page).
     StatusSectionLayout {
         id: sectionLayout
 
@@ -87,12 +88,12 @@ Loader {
     // Skeleton slot items carry the same page paddings as the real panels
     ChatHeaderSkeleton {
         id: headerSkeleton
-        visible: root.status !== Loader.Ready
+        visible: !(root.item?.headerReady ?? false)
     }
 
     Item {
         id: channelsSkeleton
-        visible: root.status !== Loader.Ready
+        visible: !(root.item?.leftPanelReady ?? false)
 
         CommunityChannelsSkeleton {
             anchors.fill: parent
@@ -110,7 +111,7 @@ Loader {
 
     Item {
         id: chatSkeleton
-        visible: root.status !== Loader.Ready
+        visible: !(root.item?.centerPanelReady ?? false)
 
         MessagesChatSkeleton {
             anchors.fill: parent
@@ -122,16 +123,11 @@ Loader {
 
     Item {
         id: membersSkeleton
-        visible: root.status !== Loader.Ready
+        visible: !(root.item?.rightPanelReady ?? false)
 
         MembersListSkeleton {
             anchors.fill: parent
         }
-    }
-
-    onStatusChanged: {
-        if (status === Loader.Ready || status === Loader.Error)
-            ready()
     }
 
     onNavToMsgDetailsChanged: {
