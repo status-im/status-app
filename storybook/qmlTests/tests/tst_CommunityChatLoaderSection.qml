@@ -166,7 +166,7 @@ Item {
             harness.active = true
             const loader = harness.item
             verify(!!loader)
-            tryVerify(() => loader.status === Loader.Ready, 120000)
+            tryVerify(() => loader.status === Loader.Ready, 10000)
             return loader
         }
 
@@ -182,7 +182,7 @@ Item {
             verify(!!skeleton)
             verify(skeleton.visible)
 
-            tryVerify(() => loader.status === Loader.Ready, 120000)
+            tryVerify(() => loader.status === Loader.Ready, 10000)
             verify(!loader.item.ownsFullPage,
                    "a joined member must get the paneled chat view")
             tryVerify(() => loader.item.leftPanel !== null, 10000)
@@ -212,7 +212,7 @@ Item {
             verify(!!loader)
             verify(findChildByTypePrefix(loader, "CommunityChannelsSkeleton").visible)
 
-            tryVerify(() => loader.status === Loader.Ready, 120000)
+            tryVerify(() => loader.status === Loader.Ready, 10000)
             const view = loader.item
             verify(view.leftPanel.asynchronous,
                    "the channels column must incubate asynchronously")
@@ -471,7 +471,7 @@ Item {
                 mock.install()
                 harness.active = true
                 const loader = harness.item
-                tryVerify(() => loader.status === Loader.Ready, 120000)
+                tryVerify(() => loader.status === Loader.Ready, 10000)
                 tryVerify(() => !!findChild(loader, "chatListItems"), 10000)
                 waitForRendering(loader)
                 const lv = findChild(loader, "chatListItems")
