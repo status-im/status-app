@@ -83,9 +83,9 @@ TextField {
         active: false
 
         sourceComponent: StatusTextEditMenu {
-            canCut: !root.noSelection
+            canCut: !root.readOnly && !root.noSelection
             canCopy: !root.noSelection
-            canPaste: root.canPaste
+            canPaste: !root.readOnly && root.canPaste
             canSelectAll: root.length > 0
 
             onCutRequested: root.cut()

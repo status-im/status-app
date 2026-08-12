@@ -1126,10 +1126,10 @@ Control {
         // same public methods the Ctrl+C/X/V shortcuts use so the
         // two stay consistent.
         sourceComponent: StatusTextEditMenu {
-            canCut: !messageInputField.noSelection
+            canCut: !messageInputField.readOnly && !messageInputField.noSelection
             canCopy: !messageInputField.noSelection
-            canPaste: ClipboardUtils.hasText
-                      || (root.imageFeaturesEnabled && ClipboardUtils.hasImage)
+            canPaste: !messageInputField.readOnly && (ClipboardUtils.hasText
+                      || (root.imageFeaturesEnabled && ClipboardUtils.hasImage))
             canSelectAll: messageInputField.length > 0
 
             onCutRequested: messageInputField.cutSelection()
