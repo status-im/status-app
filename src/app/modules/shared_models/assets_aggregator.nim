@@ -35,6 +35,8 @@ type
     logoUri*: string
     decimals*: int
     communityId*: string
+    soulbound*: bool
+    ownerToken*: bool
     marketPrice*: float
     marketChangePct24hour*: float
     marketDetailsLoading*: bool
@@ -107,6 +109,8 @@ proc buildAssetItems*(groups: seq[AggTokenGroup],
       marketDetailsAvailable: not hasCommunity,
       marketDetailsLoading: g.marketDetailsLoading,
       communityId: g.communityId,
+      soulbound: g.soulbound,
+      ownerToken: g.ownerToken,
       canBeHidden: g.symbol notin nativeSet,
       position: g.position,
       visible: visible,

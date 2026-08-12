@@ -134,8 +134,8 @@ Loader {
     function openSend() {
         invoke(() => root.item.openSend())
     }
-    function transferOwnership(tokenId, senderAddress) {
-        invoke(() => root.item.transferOwnership(tokenId, senderAddress))
+    function transferOwnership(tokenId, senderAddress, tokenName, tokenImage) {
+        invoke(() => root.item.transferOwnership(tokenId, senderAddress, tokenName, tokenImage))
     }
     function buyStickerPack(packId, price) {
         invoke(() => root.item.buyStickerPack(packId, price))

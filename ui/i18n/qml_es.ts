@@ -18773,16 +18773,16 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
 <context>
     <name>WalletFooter</name>
     <message>
-        <source>Send Owner token to transfer %1 Community ownership</source>
-        <translation></translation>
-    </message>
-    <message>
         <source>Send</source>
         <translation>Enviar</translation>
     </message>
     <message>
-        <source>Soulbound collectibles cannot be sent to another wallet</source>
-        <translation>Los coleccionables Soulbound no se pueden enviar a otra billetera</translation>
+        <source>Soulbound tokens cannot be sent to another wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Go to &quot;Manage community -&gt; Tokens&quot; page to send it</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Receive</source>

@@ -62,6 +62,8 @@ type
     MarketBalance
     Change1DayFiat
     ChainIds
+    Soulbound
+    OwnerToken
 
 QtObject:
   type
@@ -111,6 +113,8 @@ QtObject:
       ModelRole.MarketBalance.int: "marketBalance",
       ModelRole.Change1DayFiat.int: "change1DayFiat",
       ModelRole.ChainIds.int: "chainIds",
+      ModelRole.Soulbound.int: "soulbound",
+      ModelRole.OwnerToken.int: "ownerToken",
     }.toTable
 
   method data(self: AssetsAdaptorModel, index: QModelIndex, role: int): QVariant =
@@ -142,6 +146,8 @@ QtObject:
     # Contributing chain ids as a comma-separated string ("1,10,42161"); the
     # delegate splits it for chainsError. seaqt has no seq-of-int QVariant role.
     of ModelRole.ChainIds: return newQVariant(item.chainIds.mapIt($it).join(","))
+    of ModelRole.Soulbound: return newQVariant(item.soulbound)
+    of ModelRole.OwnerToken: return newQVariant(item.ownerToken)
 
   proc compareItems(self: AssetsAdaptorModel, a, b: AssetItem): int =
     # Primary: isCommunity ascending (regular tokens before community, matching
@@ -181,6 +187,8 @@ QtObject:
     if o.canBeHidden != n.canBeHidden: result.add(ModelRole.CanBeHidden.int)
     if o.position != n.position: result.add(ModelRole.Position.int)
     if o.chainIds != n.chainIds: result.add(ModelRole.ChainIds.int)
+    if o.soulbound != n.soulbound: result.add(ModelRole.Soulbound.int)
+    if o.ownerToken != n.ownerToken: result.add(ModelRole.OwnerToken.int)
     if o.communityId != n.communityId:
       result.add(ModelRole.CommunityId.int)
       result.add(ModelRole.IsCommunity.int)

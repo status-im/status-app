@@ -28,7 +28,7 @@ StatusDialog {
     property var token // Expected roles: accountAddress, key, chainId, name, artworkSource
 
     signal cancelClicked
-    signal transferOwnershipRequested(string tokenId, string senderAddress)
+    signal transferOwnershipRequested(string tokenId, string senderAddress, string tokenName, string tokenImage)
 
     width: 640 // by design
     padding: Theme.padding
@@ -111,7 +111,8 @@ StatusDialog {
                     // Pre-populated dialog with the relevant Owner token info:
                     const store = WalletStores.RootStore.currentActivityFiltersStore
                     const uid = store.collectiblesList.getUidForData("0", token.tokenAddress.toLowerCase(), token.chainId);
-                    root.transferOwnershipRequested(uid, token.accountAddress.toLowerCase())
+                    // Pass the token display data along: a freshly minted owner token may not be indexed in the wallet's owned collectibles yet
+                    root.transferOwnershipRequested(uid, token.accountAddress.toLowerCase(), token.name ?? "", token.artworkSource ?? "")
                     close()
                 }
             }

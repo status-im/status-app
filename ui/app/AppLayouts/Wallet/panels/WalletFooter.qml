@@ -3,6 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml
 
+import QtModelsToolkit
+
 import StatusQ
 import StatusQ.Popups
 import StatusQ.Controls
@@ -32,10 +34,6 @@ Rectangle {
     property bool swapEnabled
     property bool buyEnabled
 
-    // Community-token related properties:
-    required property bool isCommunityOwnershipTransfer
-    property string communityName: ""
-
     property real widthBreakpoint: 600 // Width at which the buttons will be displayed in a single row, with no text
 
     signal launchShareAddressModal()
@@ -50,11 +48,33 @@ Rectangle {
         id: d
         readonly property bool isCollectibleViewed: !!walletStore.currentViewedHoldingTokenGroupKey &&
                                                     (walletStore.currentViewedHoldingType === Constants.TokenType.ERC721 ||
-                                                    walletStore.currentViewedHoldingType === Constants.TokenType.ERC1155)
+                                                     walletStore.currentViewedHoldingType === Constants.TokenType.ERC1155)
 
         readonly property bool isCommunityAsset: !d.isCollectibleViewed && walletStore.currentViewedHoldingCommunityId !== ""
 
         readonly property bool isCollectibleSoulbound: isCollectibleViewed && !!walletStore.currentViewedCollectible && walletStore.currentViewedCollectible.soulbound
+
+        readonly property bool isCollectibleOwnerToken: isCollectibleViewed && !!walletStore.currentViewedCollectible &&
+                                                        walletStore.currentViewedCollectible.communityPrivilegesLevel === Constants.TokenPrivilegesLevel.Owner
+
+        readonly property var viewedAssetGroupEntry: ModelEntry {
+            sourceModel: walletStore.tokensStore.tokenGroupsModel ?? null
+            key: "key"
+            value: !d.isCollectibleViewed ? (walletStore.currentViewedHoldingTokenGroupKey ?? "") : ""
+        }
+
+        // Soulbound community tokens (e.g. TMaster) can never be sent
+        readonly property bool isAssetSoulbound: viewedAssetGroupEntry.available &&
+                                                 !!viewedAssetGroupEntry.item &&
+                                                 !!viewedAssetGroupEntry.item.soulbound
+
+        // The community owner token is sent only via "Manage community" -> "Tokens"
+        readonly property bool isAssetOwnerToken: viewedAssetGroupEntry.available &&
+                                                  !!viewedAssetGroupEntry.item &&
+                                                  !!viewedAssetGroupEntry.item.ownerToken
+
+        readonly property bool isSoulbound: isCollectibleSoulbound || isAssetSoulbound
+        readonly property bool isOwnerToken: isCollectibleOwnerToken || isAssetOwnerToken
 
         readonly property var collectibleOwnership: isCollectibleViewed && walletStore.currentViewedCollectible ?
                                                         walletStore.currentViewedCollectible.ownership : null
@@ -65,9 +85,9 @@ Rectangle {
 
         /// Actions available
         readonly property bool anyActionAvailable: sendActionAvailable
-                                                    || receiveActionAvailable
-                                                    || buyActionAvailable
-                                                    || swapActionAvailable
+                                                   || receiveActionAvailable
+                                                   || buyActionAvailable
+                                                   || swapActionAvailable
 
         readonly property bool sendActionAvailable: !walletStore.overview.isWatchOnlyAccount
                                                     && walletStore.overview.canSend
@@ -114,13 +134,15 @@ Rectangle {
             Layout.maximumWidth: implicitWidth
             objectName: "walletFooterSendButton"
             icon.name: "send"
-            text: root.isCommunityOwnershipTransfer ? qsTr("Send Owner token to transfer %1 Community ownership").arg(root.communityName) : qsTr("Send")
-            interactive: !d.isCollectibleSoulbound && networkConnectionStore.walletReadyForTransactionsEnabled
+            text: qsTr("Send")
+            interactive: !d.isSoulbound && !d.isOwnerToken && networkConnectionStore.walletReadyForTransactionsEnabled
             onClicked: {
                 root.transactionStore.setSenderAccount(root.walletStore.selectedAddress)
                 root.launchSendModal(d.isCollectibleViewed ? d.userOwnedAddressForCollectible: root.walletStore.selectedAddress)
             }
-            tooltip.text: d.isCollectibleSoulbound ? qsTr("Soulbound collectibles cannot be sent to another wallet") : networkConnectionStore.walletReadyForTransactionsToolTipText
+            tooltip.text: d.isSoulbound ? qsTr("Soulbound tokens cannot be sent to another wallet")
+                                        : d.isOwnerToken ? qsTr("Go to \"Manage community -> Tokens\" page to send it")
+                                                         : networkConnectionStore.walletReadyForTransactionsToolTipText
             visible: d.sendActionAvailable
             display: layout.showText ? StatusFlatButton.TextBesideIcon : StatusFlatButton.IconOnly
         }

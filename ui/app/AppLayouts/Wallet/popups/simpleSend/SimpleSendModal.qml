@@ -331,6 +331,7 @@ StatusDialog {
         onSelectedCollectibleEntryValidChanged: {
             if(selectedCollectibleEntryValid) {
                 root.selectedRawAmount = "1"
+                d.setRawValue()
             }
             else if(!selectedCollectibleEntryValid && root.selectedRawAmount === "1") {
                 amountToSend.clear()
@@ -369,8 +370,8 @@ StatusDialog {
         }
 
         readonly property var debounceResetTokenSelector: Backpressure.debounce(root, 200, function() {
-            if (!root.interactive) {
-                // non interactive flow should not be resetted, it should display what was requested
+            if (!root.interactive || root.transferOwnership) {
+                // non interactive and ownership-transfer flows should not be resetted, they should display what was requested
                 return
             }
             if(!selectedAssetEntryValid && !selectedCollectibleEntryValid) {

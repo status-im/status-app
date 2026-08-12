@@ -1,5 +1,6 @@
-import std/strformat, json_serialization
+import std/[strformat, options], json_serialization, json_serialization/std/options as json_options
 
+export options, json_options
 
 type CommunityDataDto* = object
   id* {.serializedFieldName("id").}: string
@@ -21,6 +22,8 @@ type TokenDto* = object
   logoUri* {.serializedFieldName("logoUri").}: string
   customToken* {.serializedFieldName("custom").}: bool
   communityData* {.serializedFieldName("communityData").}: CommunityDataDto
+  soulbound* {.serializedFieldName("soulbound").}: bool
+  privilegesLevel* {.serializedFieldName("privilegesLevel").}: Option[int] # community token privileges level (0 = owner, 1 = token master, 2 = regular community token), none when the token is not a known community token
 
 type TokenDtoSafe* = TokenDto
 
@@ -43,4 +46,6 @@ proc `$`*(self: TokenDto): string =
     logoUri: {self.logoUri},
     customToken: {self.customToken},
     communityData: {self.communityData},
+    soulbound: {self.soulbound},
+    privilegesLevel: {self.privilegesLevel},
     ]"""

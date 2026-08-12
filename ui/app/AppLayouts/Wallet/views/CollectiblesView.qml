@@ -523,7 +523,9 @@ ColumnLayout {
                 tokenContextMenu.createObject(this, {collectionUid: model.collectionUid, key: model.key, symbol: model.symbol, chainId: model.chainId, tokenName: model.name, tokenImage: model.imageUrl,
                                                   communityId: model.communityId, communityName: model.communityName,
                                                   communityImage: model.communityImage, tokenType: model.tokenType,
-                                                  soulbound: model.soulbound, userOwnedAddress}).popup(x, y)
+                                                  soulbound: model.soulbound,
+                                                  privilegesLevel: model.communityPrivilegesLevel ?? Constants.TokenPrivilegesLevel.Community,
+                                                  userOwnedAddress}).popup(x, y)
             }
             onSwitchToCommunityRequested: (communityId) => root.switchToCommunityRequested(communityId)
         }
@@ -548,13 +550,15 @@ ColumnLayout {
             property int tokenType
             property bool ownedByUser: !!userOwnedAddress
             property bool soulbound
+            property int privilegesLevel: Constants.TokenPrivilegesLevel.Community
 
             // Show send button for owned collectibles
-            // Disable send button for owned soulbound collectibles
+            // Disable send button for soulbound collectibles and the community owner token
             Instantiator {
                 model: tokenMenu.ownedByUser ? 1 : 0
                 delegate: StatusAction {
                     enabled: root.sendEnabled && !tokenMenu.soulbound
+                             && tokenMenu.privilegesLevel !== Constants.TokenPrivilegesLevel.Owner
                     visibleOnDisabled: true
                     icon.name: "send"
                     text: qsTr("Send")

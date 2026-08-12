@@ -506,19 +506,9 @@ RightTabBaseView {
                         }
                         onSendRequested: function (collectionUid, tokenType, fromAddress) {
                             const collectible = SQUtils.ModelUtils.getByKey(controller.sourceModel, "collectionUid", collectionUid)
-                            if (!!collectible && collectible.communityPrivilegesLevel === Constants.TokenPrivilegesLevel.Owner) {
-                                Global.openTransferOwnershipPopup(collectible.communityId,
-                                                                  collectible.communityName,
-                                                                  collectible.communityImage,
-                                                                  {
-                                                                      key: collectible.tokenId,
-                                                                      privilegesLevel: collectible.communityPrivilegesLevel,
-                                                                      chainId: collectible.chainId,
-                                                                      name: collectible.name,
-                                                                      artworkSource: collectible.communityImage,
-                                                                      accountAddress: fromAddress,
-                                                                      tokenAddress: collectible.contractAddress
-                                                                  })
+                            if (!!collectible &&
+                                    (collectible.soulbound ||
+                                     collectible.communityPrivilegesLevel === Constants.TokenPrivilegesLevel.Owner)) {
                                 return
                             }
 

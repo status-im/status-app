@@ -424,15 +424,6 @@ Item {
         footer: WalletFooter {
             id: footer
 
-            readonly property bool isHoldingSelected: {
-                if (!rightPanelStackView.currentItem || rightPanelStackView.currentItem.currentTabIndex !== WalletLayout.RightPanelSelection.Collectibles) {
-                    return false
-                }
-                return !!walletStore.currentViewedCollectible && walletStore.currentViewedHoldingTokenGroupKey !== ""
-            }
-            readonly property bool isCommunityCollectible: !!walletStore.currentViewedCollectible ? walletStore.currentViewedCollectible.communityId !== "" : false
-            readonly property bool isOwnerCommunityCollectible: isCommunityCollectible ? (walletStore.currentViewedCollectible.communityPrivilegesLevel === Constants.TokenPrivilegesLevel.Owner) : false
-
             visible: anyActionAvailable
             width: parent ? parent.width : 0
             height: visible ? implicitHeight: 0
@@ -441,40 +432,12 @@ Item {
             swapEnabled: root.swapEnabled
             buyEnabled: root.buyEnabled
             networkConnectionStore: root.networkConnectionStore
-            isCommunityOwnershipTransfer: footer.isHoldingSelected && footer.isOwnerCommunityCollectible
-            communityName: {
-                if (selectedCommunityForCollectible.available)
-                    return selectedCommunityForCollectible.item.name
-                if (isCommunityCollectible)
-                    return Utils.compactAddress(walletStore.currentViewedCollectible.communityId, 4)
-                return ""
-            }
 
             onLaunchShareAddressModal: Global.openShowQRPopup({
                                                                   switchingAccounsEnabled: true,
                                                                   hasFloatingButtons: true
                                                               })
             onLaunchSendModal: (fromAddress) => {
-                                   if(isCommunityOwnershipTransfer) {
-                                       const tokenItem = walletStore.currentViewedCollectible
-                                       const ownership = StatusQUtils.ModelUtils.get(tokenItem.ownership, 0)
-
-                                       Global.openTransferOwnershipPopup(tokenItem.communityId,
-                                                                         footer.communityName,
-                                                                         tokenItem.communityImage,
-                                                                         {
-                                                                             key: tokenItem.tokenId,
-                                                                             privilegesLevel: tokenItem.communityPrivilegesLevel,
-                                                                             chainId: tokenItem.chainId,
-                                                                             name: tokenItem.name,
-                                                                             artworkSource: tokenItem.artworkSource,
-                                                                             accountAddress: fromAddress,
-                                                                             tokenAddress: tokenItem.contractAddress
-                                                                         })
-                                       return
-                                   }
-
-                                   // Common send modal popup:
                                    root.sendTokenRequested(fromAddress,
                                                              walletStore.currentViewedHoldingTokenGroupKey,
                                                              walletStore.currentViewedHoldingType)
@@ -492,13 +455,6 @@ Item {
                 root.openSwapModalRequested(params)
             }
             onLaunchBuyCryptoModal: d.launchBuyCryptoModal()
-
-            ModelEntry {
-                id: selectedCommunityForCollectible
-                sourceModel: !!footer.walletStore.currentViewedCollectible && footer.isCommunityCollectible ? root.communitiesStore.communitiesList : null
-                key: "id"
-                value: footer.walletStore.currentViewedCollectible.communityId
-            }
         }
 
         // Layout

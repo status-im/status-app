@@ -20,6 +20,8 @@ type
     Tokens # list of tokens in the group
     # gorup is community token group if token/tokens have community id
     CommunityId
+    Soulbound
+    OwnerToken
     Type
     # additional roles
     WebsiteUrl
@@ -41,6 +43,8 @@ proc tokensContentEqual(a, b: seq[TokenItem]): bool =
        a[i].chainId != b[i].chainId or a[i].address != b[i].address or
        a[i].logoUri != b[i].logoUri or
        a[i].communityData.id != b[i].communityData.id or
+       a[i].soulbound != b[i].soulbound or
+       a[i].privilegesLevel != b[i].privilegesLevel or
        a[i].customToken != b[i].customToken or a[i].`type` != b[i].`type`:
       return false
   true
@@ -139,6 +143,8 @@ QtObject:
       ModelRole.LogoUri.int:"logoUri",
       ModelRole.Tokens.int:"tokens",
       ModelRole.CommunityId.int:"communityId",
+      ModelRole.Soulbound.int:"soulbound",
+      ModelRole.OwnerToken.int:"ownerToken",
       ModelRole.Type.int:"type",
       ModelRole.WebsiteUrl.int:"websiteUrl",
       ModelRole.Description.int:"description",
@@ -195,6 +201,10 @@ QtObject:
       of ModelRole.CommunityId:
         # since each token gorup item has at least one token, we're safe to use the first token's data
         return newQVariant(item.tokens[0].communityData.id)
+      of ModelRole.Soulbound:
+        return newQVariant(item.tokens.anyIt(it.soulbound))
+      of ModelRole.OwnerToken:
+        return newQVariant(item.tokens.anyIt(it.isOwnerToken))
       of ModelRole.Type:
         return newQVariant(ord(item.`type`))
       of ModelRole.WebsiteUrl:
@@ -282,6 +292,8 @@ QtObject:
       result.add(ModelRole.Tokens.int)
       result.add(ModelRole.MarketDetails.int)
       result.add(ModelRole.CommunityId.int)
+      result.add(ModelRole.Soulbound.int)
+      result.add(ModelRole.OwnerToken.int)
       # Description is community-branched (isCommunityTokenGroup); a community-status
       # flip is captured by communityData.id in the signature above, so re-read it.
       result.add(ModelRole.Description.int)

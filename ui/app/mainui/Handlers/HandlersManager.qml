@@ -343,8 +343,8 @@ QtObject {
     function openSend() {
         sendModalHandler.openSend()
     }
-    function transferOwnership(tokenId, senderAddress) {
-        sendModalHandler.transferOwnership(tokenId, senderAddress)
+    function transferOwnership(tokenId, senderAddress, tokenName, tokenImage) {
+        sendModalHandler.transferOwnership(tokenId, senderAddress, tokenName, tokenImage)
     }
     function buyStickerPack(packId, price) {
         sendModalHandler.buyStickerPack(packId, price)

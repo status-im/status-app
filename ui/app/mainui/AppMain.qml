@@ -1143,7 +1143,7 @@ Item {
                 Global.displaySuccessToastMessage(qsTr("%1 added to your trusted sites.").arg(domain))
             }
         }
-        onTransferOwnershipRequested: (tokenId, senderAddress) => popupRequestsHandler.transferOwnership(tokenId, senderAddress)
+        onTransferOwnershipRequested: (tokenId, senderAddress, tokenName, tokenImage) => popupRequestsHandler.transferOwnership(tokenId, senderAddress, tokenName, tokenImage)
         onWcUriScanned: uri => d.pairWalletConnectUri(uri)
         onNavigationEducationDialogSeenRequested: appMainGlobalSettings.newMenuEducationPopupSeen = true
     }

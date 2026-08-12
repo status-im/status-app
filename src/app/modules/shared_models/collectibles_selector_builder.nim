@@ -55,18 +55,27 @@ proc buildFlatCollectibles*(items: seq[CollectibleItem],
 
   result = newSeqOfCap[FlatCollectible](items.len)
   for item in items:
-    if chainSet.len > 0 and not chainSet.hasKey(item.chainId):
-      continue
-    if params.filterCommunityOwnerAndMasterTokens and item.communityId.len > 0 and
-        (item.communityPrivilegesLevel == PrivilegeOwner or
-         item.communityPrivilegesLevel == PrivilegeTMaster):
-      continue
-    let balance = item.balanceForAccount(accountLower)
-    if balance < 1:
-      continue
+    var balance: int
+    if params.pinnedKey.len > 0:
+      if cmpIgnoreCase(item.key, params.pinnedKey) != 0:
+        continue
+      balance = item.balanceForAccount(accountLower)
+      if balance < 1:
+        balance = item.balanceForAccount("")
+    else:
+      if chainSet.len > 0 and not chainSet.hasKey(item.chainId):
+        continue
+      if params.filterCommunityOwnerAndMasterTokens and item.communityId.len > 0 and
+          (item.communityPrivilegesLevel == PrivilegeOwner or
+           item.communityPrivilegesLevel == PrivilegeTMaster):
+        continue
+      balance = item.balanceForAccount(accountLower)
+      if balance < 1:
+        continue
     let net = netByChain.getOrDefault(item.chainId)
+    let rowKey = if params.pinnedKey.len > 0: params.pinnedKey else: item.key
     result.add(FlatCollectible(
-      key: item.key, chainId: item.chainId, collectionUid: item.collectionUid,
+      key: rowKey, chainId: item.chainId, collectionUid: item.collectionUid,
       contractAddress: item.contractAddress, tokenId: item.tokenId,
       tokenType: item.tokenType,
       name: item.name, collectionName: item.collectionName,
@@ -78,6 +87,21 @@ proc buildFlatCollectibles*(items: seq[CollectibleItem],
       communityPrivilegesLevel: item.communityPrivilegesLevel,
       balance: balance,
       groupingValue: if item.communityId.len > 0: item.communityId else: item.collectionUid))
+
+  if params.pinnedKey.len > 0 and result.len == 0:
+    let parts = params.pinnedKey.split('-')
+    if parts.len >= 3:
+      let chainId = try: parseInt(parts[0]) except ValueError: 0
+      let net = netByChain.getOrDefault(chainId)
+      result.add(FlatCollectible(
+        key: params.pinnedKey, chainId: chainId, collectionUid: "",
+        contractAddress: parts[1], tokenId: parts[2],
+        tokenType: 2, # Constants.TokenType.ERC721
+        name: params.pinnedName,
+        imageUrl: params.pinnedIcon, icon: params.pinnedIcon,
+        iconUrl: net.iconUrl, chainName: net.chainName,
+        communityPrivilegesLevel: PrivilegeOwner,
+        balance: 1))
 
   # Step 4: communityId desc, then collectionUid asc. Stable so equal keys keep
   # source order — puts community collectibles first, groups them consecutively.

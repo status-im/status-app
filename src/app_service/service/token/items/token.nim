@@ -1,4 +1,4 @@
-import strutils, tables, json
+import strutils, tables, json, options
 
 import app_service/common/wallet_constants as common_wallet_constants
 import app_service/common/utils as common_utils
@@ -12,6 +12,11 @@ export token
 type CommunityDataItem* = CommunityDataDto
 
 type TokenDetailsItem* = TokenDetailsDto
+
+const
+  PrivilegesLevelOwner* = 0
+  PrivilegesLevelTMaster* = 1
+  PrivilegesLevelCommunity* = 2
 
 # {.acyclic.}: TokenItem is tree-shaped (only value fields + a value CommunityDataItem,
 # no ref back-edges), so ORC must never treat it as a cycle candidate. Without this,
@@ -30,6 +35,8 @@ type TokenItemObj {.acyclic.} = object of RootObj
   logoUri: string
   customToken: bool
   communityData: CommunityDataItem
+  soulbound: bool
+  privilegesLevel: int
   `type`: common_types.TokenType
 
 # TokenItem creation is enforced using `createTokenItem`
@@ -46,7 +53,12 @@ proc chainId*(t: TokenItem): int = t.chainId
 proc logoUri*(t: TokenItem): string = t.logoUri
 proc customToken*(t: TokenItem): bool = t.customToken
 proc communityData*(t: TokenItem): CommunityDataItem = t.communityData
+proc soulbound*(t: TokenItem): bool = t.soulbound
+proc privilegesLevel*(t: TokenItem): int = t.privilegesLevel
 proc `type`*(t: TokenItem): common_types.TokenType = t.`type`
+
+proc isOwnerToken*(t: TokenItem): bool =
+  t.privilegesLevel == PrivilegesLevelOwner
 
 proc isNative(address: string): bool =
   return address == common_wallet_constants.ZERO_ADDRESS
@@ -82,6 +94,8 @@ proc createTokenItem*(dto: TokenDto, `type`: common_types.TokenType = common_typ
       color: dto.communityData.color,
       image: dto.communityData.image
     ),
+    soulbound: dto.soulbound,
+    privilegesLevel: dto.privilegesLevel.get(PrivilegesLevelCommunity),
     `type`: tokenType,
   )
 

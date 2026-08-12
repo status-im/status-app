@@ -18692,16 +18692,16 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
 <context>
     <name>WalletFooter</name>
     <message>
-        <source>Send Owner token to transfer %1 Community ownership</source>
-        <translation>커뮤니티 소유권의 %1을(를) 이전하려면 Owner 토큰을 보내세요</translation>
-    </message>
-    <message>
         <source>Send</source>
         <translation>보내기</translation>
     </message>
     <message>
-        <source>Soulbound collectibles cannot be sent to another wallet</source>
-        <translation>소울바운드 컬렉터블은 다른 지갑으로 보낼 수 없습니다</translation>
+        <source>Soulbound tokens cannot be sent to another wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Go to &quot;Manage community -&gt; Tokens&quot; page to send it</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Receive</source>

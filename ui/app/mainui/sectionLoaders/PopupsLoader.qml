@@ -50,7 +50,7 @@ Loader {
     signal openExternalLink(string link)
     signal saveDomainToUnfurledWhitelist(string domain)
     signal ownershipDeclined(string communityId, string communityName)
-    signal transferOwnershipRequested(string tokenId, string senderAddress)
+    signal transferOwnershipRequested(string tokenId, string senderAddress, string tokenName, string tokenImage)
     signal wcUriScanned(string uri)
     signal navigationEducationDialogSeenRequested()
 
@@ -334,8 +334,8 @@ Loader {
         function onOwnershipDeclined(communityId, communityName) {
             root.ownershipDeclined(communityId, communityName)
         }
-        function onTransferOwnershipRequested(tokenId, senderAddress) {
-            root.transferOwnershipRequested(tokenId, senderAddress)
+        function onTransferOwnershipRequested(tokenId, senderAddress, tokenName, tokenImage) {
+            root.transferOwnershipRequested(tokenId, senderAddress, tokenName, tokenImage)
         }
         function onWcUriScanned(uri) { root.wcUriScanned(uri) }
         function onNavigationEducationDialogSeenRequested() { root.navigationEducationDialogSeenRequested() }

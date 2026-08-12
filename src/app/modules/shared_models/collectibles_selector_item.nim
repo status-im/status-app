@@ -47,6 +47,9 @@ type
     accountKey*: string                     ## empty = any account
     enabledChainIds*: seq[int]              ## empty = any chain
     filterCommunityOwnerAndMasterTokens*: bool
+    pinnedKey*: string
+    pinnedName*: string
+    pinnedIcon*: string
 
   FlatCollectible* = object
     ## A row of the `filteredFlatModel` view: input-shaped, filtered to the

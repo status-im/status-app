@@ -18745,15 +18745,15 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
 <context>
     <name>WalletFooter</name>
     <message>
-        <source>Send Owner token to transfer %1 Community ownership</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Send</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Soulbound collectibles cannot be sent to another wallet</source>
+        <source>Soulbound tokens cannot be sent to another wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Go to &quot;Manage community -&gt; Tokens&quot; page to send it</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

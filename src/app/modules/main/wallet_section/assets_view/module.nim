@@ -1,4 +1,4 @@
-import nimqml, tables
+import nimqml, tables, sequtils
 
 import app/global/global_singleton
 import app/core/eventemitter
@@ -84,6 +84,8 @@ proc buildAndPush(self: Module) =
       logoUri: group.logoUri,
       decimals: group.decimals,
       communityId: community.id,
+      soulbound: group.tokens.anyIt(it.soulbound),
+      ownerToken: group.tokens.anyIt(it.isOwnerToken),
       marketPrice: price,
       marketChangePct24hour: change,
       marketDetailsLoading: detailsLoading,

@@ -1,4 +1,4 @@
-import nimqml, tables
+import nimqml, tables, sequtils
 
 import app/global/global_singleton
 import app/core/eventemitter
@@ -87,6 +87,8 @@ proc buildOwnedSource(self: Module): tuple[groups: seq[AggTokenGroup], networks:
   for group in self.controller.getTokenGroups():
     if group.tokens.len == 0:
       continue
+    if group.tokens.anyIt(it.soulbound or it.isOwnerToken):
+      continue
     var tokenRefs: seq[tuple[key: string, chainId: int]] = @[]
     for t in group.tokens:
       tokenRefs.add((key: t.key, chainId: t.chainId))
@@ -118,6 +120,8 @@ proc refreshModels(self: Module) =
 
 proc toPopularGroups(self: Module, groups: seq[TokenGroupItem]): seq[PopularGroup] =
   for g in groups:
+    if g.tokens.anyIt(it.soulbound or it.isOwnerToken):
+      continue
     let communityId = if g.tokens.len > 0: g.tokens[0].communityData.id else: ""
     var tokenRefs: seq[tuple[key: string, chainId: int]] = @[]
     for t in g.tokens:

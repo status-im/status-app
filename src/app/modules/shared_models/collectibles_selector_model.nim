@@ -1,4 +1,4 @@
-import nimqml, tables, sets, sequtils
+import nimqml, tables, sets, sequtils, json
 
 import app/modules/shared_models/model_utils
 import app/modules/shared/model_sync
@@ -54,6 +54,8 @@ QtObject:
       source: seq[CollectibleItem]
       networks: seq[CollectiblesNetworkInfo]
       params: CollectiblesSelectorParams
+      # raw pinned-token JSON as last received from QML (guards recompute)
+      pinnedJson: string
 
   proc delete(self: CollectiblesSelectorModel)
   proc setup(self: CollectiblesSelectorModel)
@@ -205,6 +207,28 @@ QtObject:
   QtProperty[bool] filterCommunityOwnerAndMasterTokens:
     read = getFilterCommunityOwnerAndMasterTokens
     write = setFilterCommunityOwnerAndMasterTokens
+
+  proc setPinnedTokenJson*(self: CollectiblesSelectorModel, value: string) {.slot.} =
+    if value == self.pinnedJson: return
+    self.pinnedJson = value
+    var key, name, icon: string
+    if value.len > 0:
+      try:
+        let parsed = parseJson(value)
+        key = parsed{"key"}.getStr("")
+        name = parsed{"name"}.getStr("")
+        icon = parsed{"icon"}.getStr("")
+      except CatchableError:
+        discard
+    self.params.pinnedKey = key
+    self.params.pinnedName = name
+    self.params.pinnedIcon = icon
+    self.recompute()
+  proc getPinnedTokenJson(self: CollectiblesSelectorModel): string {.slot.} =
+    self.pinnedJson
+  QtProperty[string] pinnedTokenJson:
+    read = getPinnedTokenJson
+    write = setPinnedTokenJson
 
   proc delete(self: CollectiblesSelectorModel) =
     # The nested subitems models + the flat model are new(_, delete), so ORC runs

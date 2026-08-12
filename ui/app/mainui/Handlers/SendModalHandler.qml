@@ -236,15 +236,19 @@ QtObject {
         openSend(params)
     }
 
-    function transferOwnership(tokenId, senderAddress) {
-        let selectedChainId =
+    function transferOwnership(tokenId, senderAddress, tokenName, tokenImage) {
+        let selectedChainId = parseInt(tokenId.split("-")[0])
+        if (isNaN(selectedChainId) || !selectedChainId)
+            selectedChainId =
                     SQUtils.ModelUtils.getByKey(root.collectiblesBySymbolModel, "key", tokenId, "chainId")
         let params = {
             sendType: Constants.SendType.ERC721Transfer,
             selectedAccountAddress: senderAddress,
             selectedGroupKey: tokenId,
             selectedChainId: selectedChainId,
-            transferOwnership: true
+            transferOwnership: true,
+            tokenName: tokenName ?? "",
+            tokenIcon: tokenImage ?? ""
         }
 
         openSend(params)
@@ -441,12 +445,19 @@ QtObject {
                         sendType === Constants.SendType.ERC721Transfer) {
                     const selectedCollectible =
                                               SQUtils.ModelUtils.getByKey(root.collectiblesBySymbolModel, "key", selectedGroupKey)
-                    if(!!selectedCollectible &&
-                            !!selectedCollectible.contractAddress &&
-                            !!selectedCollectible.tokenId) {
+                    let contractAddress = !!selectedCollectible ? selectedCollectible.contractAddress : ""
+                    let tokenId = !!selectedCollectible ? selectedCollectible.tokenId : ""
+                    if (!contractAddress) {
+                        const parts = selectedGroupKey.split("-")
+                        if (parts.length >= 3) {
+                            contractAddress = parts[1]
+                            tokenId = parts[2]
+                        }
+                    }
+                    if(!!contractAddress && !!tokenId) {
                         root.fnGetDetailedCollectible(simpleSendModal.selectedChainId ,
-                                                      selectedCollectible.contractAddress,
-                                                      selectedCollectible.tokenId)
+                                                      contractAddress,
+                                                      tokenId)
                     }
                 }
 
@@ -668,6 +679,16 @@ QtObject {
                     target: handler.collectiblesSelectorModel
                     property: "filterCommunityOwnerAndMasterTokens"
                     value: !simpleSendModal.transferOwnership
+                    restoreMode: Binding.RestoreNone
+                }
+                readonly property Binding _collectiblesPinnedBinding: Binding {
+                    target: handler.collectiblesSelectorModel
+                    property: "pinnedTokenJson"
+                    value: simpleSendModal.transferOwnership && !!simpleSendModal.selectedGroupKey
+                           ? JSON.stringify({ key: simpleSendModal.selectedGroupKey,
+                                              name: root.simpleSendParams.tokenName ?? "",
+                                              icon: root.simpleSendParams.tokenIcon ?? "" })
+                           : ""
                     restoreMode: Binding.RestoreNone
                 }
 

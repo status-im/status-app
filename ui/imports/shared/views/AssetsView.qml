@@ -55,6 +55,8 @@ Control {
             tokenAddress            [string]    - token's address
             balance                 [string]    - balance that the `account` has for token with `tokenKey`
         communityId                 [string]    - for community assets, unique identifier of a community, e.g. "0x6734235"
+        soulbound                   [bool]      - for community assets, true for non-transferable tokens (listed but never sendable)
+        ownerToken                  [bool]      - for community assets, true for the owner token (sent only via the ownership-transfer flow)
         communityName               [string]    - for community assets, name of a community e.g. "Crypto Kitties"
         communityIcon               [url]       - for community assets, community's icon url
         websiteUrl                  [string]    - token's website
@@ -383,6 +385,8 @@ Control {
 
             sendEnabled: root.sendEnabled
                          && (!isCommunity || root.communitySendEnabled)
+                         && !model.soulbound
+                         && !model.ownerToken
             swapEnabled: root.swapEnabled
             swapVisible: root.swapVisible && (!isCommunity || root.communitySwapVisible)
             hideVisible: model.canBeHidden

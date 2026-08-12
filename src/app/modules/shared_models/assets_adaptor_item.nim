@@ -24,6 +24,8 @@ type
     communityId*: string
     communityName*: string
     communityImage*: string
+    soulbound*: bool
+    ownerToken*: bool
     canBeHidden*: bool
     position*: int
     visible*: bool
