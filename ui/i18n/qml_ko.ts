@@ -13534,6 +13534,10 @@ to load</source>
 <context>
     <name>PrimaryNavSidebar</name>
     <message>
+        <source>Status Help Bot</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Activity Center</source>
         <translation type="unfinished">활동 센터</translation>
     </message>
@@ -18516,6 +18520,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Copy link to profile</source>
         <translation>프로필 링크 복사</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation type="unfinished">설정</translation>
     </message>
     <message>
         <source>Always online</source>
