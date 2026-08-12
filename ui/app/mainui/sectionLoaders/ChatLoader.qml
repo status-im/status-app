@@ -59,18 +59,21 @@ Loader {
 
     // The section chrome is owned by the loader: it shows instantly with
     // skeleton panels and swaps in the real panels produced by ChatView
-    // (LayoutItemProxy retarget) as each one finishes incubating. `root.item`
-    // is null until the section itself loads, so the whole-loader contract
-    // still acts as the floor for every slot.
+    // (LayoutItemProxy retarget) as each one finishes incubating. Each slot is
+    // gated on its own readiness flag, not on `root.item`: ChatView's panels
+    // exist as soon as the section loads, but an asynchronous one is an empty
+    // Loader until it is ready, and retargeting the proxy to it releases the
+    // skeleton (setParentItem(null) + setVisible(false)) and paints nothing.
     StatusSectionLayout {
         id: sectionLayout
+        objectName: "sectionChrome"
 
         anchors.fill: parent
 
-        headerContent: root.item?.headerContent ?? headerSkeleton
-        leftPanel: root.item?.leftPanel ?? listSkeleton
-        centerPanel: root.item?.centerPanel ?? chatSkeleton
-        rightPanel: root.item?.rightPanel ?? membersSkeleton
+        headerContent: (root.item?.headerReady ?? false) ? root.item.headerContent : headerSkeleton
+        leftPanel: (root.item?.leftPanelReady ?? false) ? root.item.leftPanel : listSkeleton
+        centerPanel: (root.item?.centerPanelReady ?? false) ? root.item.centerPanel : chatSkeleton
+        rightPanel: (root.item?.rightPanelReady ?? false) ? root.item.rightPanel : membersSkeleton
         showRightPanel: root.item?.showRightPanel ?? root.accountSettingsStore.showUsersList
         subsectionHistory: root.item?.viewSubsectionHistory ?? null
 
@@ -83,60 +86,55 @@ Loader {
     // resize for the lifetime of the section.
     Loader {
         id: headerSkeleton
+        objectName: "headerSkeleton"
         active: !(root.item?.headerReady ?? false)
         visible: active
         sourceComponent: ChatHeaderSkeleton {}
     }
 
-    Item {
+    Loader {
         id: listSkeleton
-        visible: !(root.item?.leftPanelReady ?? false)
+        objectName: "leftPanelSkeleton"
+        active: !(root.item?.leftPanelReady ?? false)
+        visible: active
 
         // The real header: invite and start-chat act app-globally, so they
         // remain functional while the section incubates
-        Loader {
-            anchors.fill: parent
-            active: listSkeleton.visible
-            sourceComponent: MessagesListSkeleton {
-                createChatOpened: root.createChatViewOpened
+        sourceComponent: MessagesListSkeleton {
+            createChatOpened: root.createChatViewOpened
 
-                onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.contactsStore.myPublicKey)
-                onStartChatClicked: {
-                    if (root.createChatViewOpened) {
-                        Global.closeCreateChatView()
-                    } else {
-                        Global.openCreateChatView()
-                    }
+            onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.contactsStore.myPublicKey)
+            onStartChatClicked: {
+                if (root.createChatViewOpened) {
+                    Global.closeCreateChatView()
+                } else {
+                    Global.openCreateChatView()
                 }
             }
         }
     }
 
-    Item {
+    Loader {
         id: chatSkeleton
-        visible: !(root.item?.centerPanelReady ?? false)
+        objectName: "centerPanelSkeleton"
+        active: !(root.item?.centerPanelReady ?? false)
+        visible: active
 
-        Loader {
+        sourceComponent: MessagesChatSkeleton {
             anchors.fill: parent
-            active: chatSkeleton.visible
-            sourceComponent: MessagesChatSkeleton {
-                anchors.fill: parent
-                anchors.margins: Theme.padding
-                anchors.leftMargin: Theme.xlPadding
-                anchors.rightMargin: Theme.xlPadding
-            }
+            anchors.margins: Theme.padding
+            anchors.leftMargin: Theme.xlPadding
+            anchors.rightMargin: Theme.xlPadding
         }
     }
 
-    Item {
+    Loader {
         id: membersSkeleton
-        visible: !(root.item?.rightPanelReady ?? false)
+        objectName: "rightPanelSkeleton"
+        active: !(root.item?.rightPanelReady ?? false)
+        visible: active
 
-        Loader {
-            anchors.fill: parent
-            active: membersSkeleton.visible
-            sourceComponent: MembersListSkeleton {}
-        }
+        sourceComponent: MembersListSkeleton {}
     }
 
     onNavToMsgDetailsChanged: {
