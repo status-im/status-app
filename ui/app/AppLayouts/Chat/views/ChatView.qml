@@ -63,8 +63,8 @@ Item {
     readonly property bool leftPanelReady: contactColumnLoader.status === Loader.Ready
     readonly property bool centerPanelReady: centerPanelLoader.status === Loader.Ready
                                              || !centerPanelLoader.active
-    // The members panel is not deferred here: it is instantiated with the view.
-    readonly property bool rightPanelReady: true
+    readonly property bool rightPanelReady: rightPanelLoader.status === Loader.Ready
+                                            || !rightPanelLoader.active
 
     property ChatStores.RootStore rootStore
     property ChatStores.CreateChatPropertiesStore createChatPropertiesStore
@@ -113,6 +113,11 @@ Item {
 
     property int extraLeftPadding: 0
     property bool isPortraitMode: false
+
+    // Delay between a chat switch and re-binding the members list. Sorting a
+    // large members model blocks the GUI thread; the delay keeps that work off
+    // the switch itself, behind MembersListSkeleton.
+    property int membersWireDelay: 100
 
     // Subsection back history keyed by the active chat/channel id.
     // Consumed by the chrome owner (bound to StatusSectionLayout.subsectionHistory).
@@ -180,6 +185,27 @@ Item {
         function requestCenterPanel() {
             centerPanelRequested = true
         }
+
+        // Dropped on every chat/channel switch: the members panel is shared
+        // across chats, so it would otherwise sort the incoming members model
+        // on the switch frame, showing the previous chat's members meanwhile.
+        property bool membersReady: true
+
+        readonly property string activeChatId: {
+            const m = root.rootStore.chatCommunitySectionModule
+            return m && m.activeItem ? m.activeItem.id : ""
+        }
+
+        onActiveChatIdChanged: {
+            membersReady = false
+            membersWireTimer.restart()
+        }
+    }
+
+    Timer {
+        id: membersWireTimer
+        interval: root.membersWireDelay
+        onTriggered: d.membersReady = true
     }
 
     // Users related signals
@@ -322,13 +348,15 @@ Item {
         MembersListSkeleton {
             objectName: "membersPanelSkeleton"
             anchors.fill: parent
-            visible: rightPanelLoader.active && rightPanelLoader.status !== Loader.Ready
+            visible: rightPanelLoader.active
+                     && (rightPanelLoader.status !== Loader.Ready || !d.membersReady)
         }
 
         sourceComponent: UserListPanel {
             // async incubation parents the partially-built panel into the
-            // scene early — keep it invisible behind the skeleton
-            visible: rightPanelLoader.status === Loader.Ready
+            // scene early — keep it invisible behind the skeleton. Hidden it
+            // also drops its users model, so a chat switch costs no sorting.
+            visible: rightPanelLoader.status === Loader.Ready && d.membersReady
 
             chatType: root.chatContentModule?.chatDetails.type || Constants.chatType.unknown
             isAdmin: root.chatContentModule?.amIChatAdmin() || false
