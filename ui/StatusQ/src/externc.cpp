@@ -153,7 +153,8 @@ private:
 // installs its own controller when the engine has none).
 Q_DECL_EXPORT void statusq_installBoostedIncubationController(void* engine, int msPerTick,
                                                               int gentlePeriodMs) {
-    auto* qmlEngine = static_cast<QQmlApplicationEngine*>(engine);
+    // QQmlEngine, not QQmlApplicationEngine: the test harness owns a plain one
+    auto* qmlEngine = static_cast<QQmlEngine*>(engine);
     qmlEngine->setIncubationController(
         new BoostedIncubationController(msPerTick, gentlePeriodMs, qmlEngine));
 }
