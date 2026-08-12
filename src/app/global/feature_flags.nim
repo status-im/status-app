@@ -23,6 +23,7 @@ const DEFAULT_FLAG_HOMEPAGE_ENABLED = true
 const DEFAULT_FLAG_LOCAL_BACKUP_ENABLED = true
 const DEFAULT_FLAG_PRIVACY_MODE_FEATURE_ENABLED = true
 const DEFAULT_FLAG_MESSAGE_LINK_SHARING_ENABLED = true
+const DEFAULT_FLAG_STATUS_SUPPORT_BOT_ENABLED = false
 
 # Compile time feature flags
 const DEFAULT_FLAG_DAPPS_ENABLED  = true
@@ -42,6 +43,7 @@ featureFlag("HOMEPAGE_ENABLED",               DEFAULT_FLAG_HOMEPAGE_ENABLED)
 featureFlag("LOCAL_BACKUP_ENABLED",           DEFAULT_FLAG_LOCAL_BACKUP_ENABLED)
 featureFlag("PRIVACY_MODE_FEATURE_ENABLED",   DEFAULT_FLAG_PRIVACY_MODE_FEATURE_ENABLED)
 featureFlag("MESSAGE_LINK_SHARING_ENABLED",   DEFAULT_FLAG_MESSAGE_LINK_SHARING_ENABLED)
+featureFlag("STATUS_SUPPORT_BOT_ENABLED",     DEFAULT_FLAG_STATUS_SUPPORT_BOT_ENABLED)
 
 featureFlag("DAPPS_ENABLED",                  DEFAULT_FLAG_DAPPS_ENABLED, true)
 featureFlag("BROWSER_ENABLED",                DEFAULT_FLAG_BROWSER_ENABLED, true)
@@ -96,6 +98,7 @@ QtObject:
     localBackupEnabled: bool
     privacyModeFeatureEnabled: bool
     messageLinkSharingEnabled: bool
+    statusSupportBotEnabled: bool
     buyEnabled: bool
 
   proc setup(self: FeatureFlags) =
@@ -112,6 +115,7 @@ QtObject:
     self.localBackupEnabled = LOCAL_BACKUP_ENABLED
     self.privacyModeFeatureEnabled = PRIVACY_MODE_FEATURE_ENABLED
     self.messageLinkSharingEnabled = MESSAGE_LINK_SHARING_ENABLED
+    self.statusSupportBotEnabled = STATUS_SUPPORT_BOT_ENABLED
     self.buyEnabled = BUY_ENABLED
 
   proc newFeatureFlags*(): FeatureFlags =
@@ -192,6 +196,12 @@ QtObject:
 
   QtProperty[bool] messageLinkSharingEnabled:
     read = getMessageLinkSharingEnabled
+
+  proc getStatusSupportBotEnabled*(self: FeatureFlags): bool {.slot.} =
+    return self.statusSupportBotEnabled
+
+  QtProperty[bool] statusSupportBotEnabled:
+    read = getStatusSupportBotEnabled
 
   QtProperty[bool] buyEnabled:
     read = getBuyEnabled

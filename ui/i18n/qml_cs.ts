@@ -13665,6 +13665,10 @@ selhalo</translation>
 <context>
     <name>PrimaryNavSidebar</name>
     <message>
+        <source>Status Help Bot</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Activity Center</source>
         <translation type="unfinished">Centrum aktivit</translation>
     </message>
@@ -18668,6 +18672,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Copy link to profile</source>
         <translation>Kopírovat odkaz na profil</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation type="unfinished">Nastavení</translation>
     </message>
     <message>
         <source>Always online</source>

@@ -13584,6 +13584,10 @@ to load</source>
 <context>
     <name>PrimaryNavSidebar</name>
     <message>
+        <source>Status Help Bot</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Activity Center</source>
         <translation type="unfinished"></translation>
     </message>
@@ -18567,6 +18571,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Copy link to profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

@@ -53,6 +53,7 @@ Control {
     property Component communityPopupMenu // required property var model
 
     required property bool thirdpartyServicesEnabled
+    property bool statusSupportBotEnabled: false
     property bool profileLoading: false
 
     // Set from AppMain: used on mobile so native overlay can dismiss the drawer over Browser WebView.
@@ -71,6 +72,7 @@ Control {
 
     signal itemActivated(int sectionType, string sectionId)
     signal activityCenterRequested(bool shouldShow)
+    signal supportBotChatRequested()
     signal viewProfileRequested(string pubKey)
     signal shareOwnProfileRequested
     signal settingsRequested
@@ -265,11 +267,29 @@ Control {
                     Layout.bottomMargin: Theme.defaultHalfPadding
                 }
 
-                // qr + settings
+                // qr code scanner
                 SidebarListView {
                     Layout.preferredHeight: contentHeight
                     model: root.bottomItemsModel
                     delegate: BottomSectionButton {}
+                }
+
+                // Status support bot
+                PrimaryNavSidebarButton {
+                    objectName: "Support-navbar"
+                    Layout.alignment: Qt.AlignHCenter
+                    visible: root.statusSupportBotEnabled
+
+                    icon.name: "chatbot"
+                    tooltipText: qsTr("Status Help Bot")
+
+                    thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
+
+                    onClicked: {
+                        root.supportBotChatRequested()
+                        if (root.interactive)
+                            root.close()
+                    }
                 }
 
                 // own profile

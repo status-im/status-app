@@ -2632,6 +2632,7 @@ Item {
                 communityPopupMenu: communityContextMenuComponent
 
                 thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
+                statusSupportBotEnabled: appMain.featureFlagsStore.statusSupportBotEnabled
                 profileLoading: !appMain.mainReady
 
                 onActivityCenterRequested: function(shouldShow) {
@@ -2642,6 +2643,15 @@ Item {
                 onViewProfileRequested: pubKey => Global.openProfilePopup(pubKey)
                 onShareOwnProfileRequested: Global.shareProfileDialogRequested(appMain.ownContactDetails.publicKey)
                 onSettingsRequested: d.openSettingsRoot()
+
+                onSupportBotChatRequested: {
+                    const publicKey = appMain.utilsStore.getDecompressedPk(Constants.statusSupportBotChatKey)
+                    if (!publicKey) {
+                        console.warn("Unable to resolve the Status support bot chat key")
+                        return
+                    }
+                    appMain.contactsStore.joinPrivateChat(publicKey)
+                }
 
                 onItemActivated: function(sectionType, sectionId) {
                     // Ensure Activity Center Panel is closed when manual navigation done

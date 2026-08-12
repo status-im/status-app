@@ -986,6 +986,10 @@ QtObject {
     readonly property string statusDiscussPageUrl: 'https://discuss.status.app/'
     readonly property string statusThirdpartyServicesArticle: 'https://status.app/help/getting-started/privacy-with-status-third-parties'
 
+    readonly property string statusSupportBotChatKey: typeof globalUtils !== "undefined"
+                                                      ? globalUtils.getStatusSupportBotChatKey()
+                                                      : ""
+
     readonly property int maxUploadFiles: 6
     readonly property double maxUploadFilesizeMB: 10
     readonly property int maxImgSizeBytes: maxUploadFilesizeMB * 1048576 /* 1 MB in bytes */

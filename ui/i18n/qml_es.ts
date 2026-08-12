@@ -13599,6 +13599,10 @@ al cargar</translation>
 <context>
     <name>PrimaryNavSidebar</name>
     <message>
+        <source>Status Help Bot</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Activity Center</source>
         <translation type="unfinished">Centro de actividad</translation>
     </message>
@@ -18596,6 +18600,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Copy link to profile</source>
         <translation>Copiar enlace al perfil</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation type="unfinished">Ajustes</translation>
     </message>
     <message>
         <source>Always online</source>

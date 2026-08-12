@@ -127,6 +127,15 @@ Item {
             tryCompare(profileBtn, "visible", true)
         }
 
+        function test_support_bot_button_feature_flag() {
+            const supportBotButton = findChild(controlUnderTest, "Support-navbar")
+            verify(!!supportBotButton)
+            tryCompare(supportBotButton, "visible", false)
+
+            controlUnderTest.statusSupportBotEnabled = true
+            tryCompare(supportBotButton, "visible", true)
+        }
+
         function test_activity_center_button() {
             controlUnderTest.acVisible = false
             controlUnderTest.acHasUnseenNotifications = true

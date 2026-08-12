@@ -26,6 +26,7 @@ QtObject:
 
   proc isCompressedPubKey*(self: Utils, publicKey: string): bool
   proc getDecompressedPk*(self: Utils, compressedKey: string): string
+  proc getStatusSupportBotChatKey*(self: Utils): string
 
   proc setup(self: Utils)
   proc delete*(self: Utils)
@@ -56,6 +57,9 @@ QtObject:
                   else:
                     "file://" & absPath
     return uriPath
+
+  proc getStatusSupportBotChatKey*(self: Utils): string {.slot.} =
+    return getEnv("STATUS_SUPPORT_BOT_CHAT_KEY")
 
   proc collectLogFilesJson*(self: Utils): string {.slot.} =
     ## Return a JSON array of absolute file paths for all "*.log" files under constants.DATADIR (recursive).

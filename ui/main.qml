@@ -53,6 +53,7 @@ Window {
         localBackupEnabled: featureFlags ? featureFlags.localBackupEnabled : false
         privacyModeFeatureEnabled: featureFlags ? featureFlags.privacyModeFeatureEnabled : false
         messageLinkSharingEnabled: featureFlags ? featureFlags.messageLinkSharingEnabled : false
+        statusSupportBotEnabled: featureFlags ? featureFlags.statusSupportBotEnabled : false
         buyEnabled: featureFlags ? featureFlags.buyEnabled : false
     }
 
