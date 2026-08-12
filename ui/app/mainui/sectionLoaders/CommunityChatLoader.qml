@@ -85,27 +85,34 @@ Loader {
         leftPanelWidthOverride: root.leftPanelWidthOverride
     }
 
-    // Skeleton slot items carry the same page paddings as the real panels
-    ChatHeaderSkeleton {
+    // Skeleton slot items carry the same page paddings as the real panels.
+    // Each skeleton lives behind a Loader gated on its slot: an alive
+    // invisible skeleton re-evaluates its tile geometry bindings on every
+    // resize for the lifetime of the section.
+    Loader {
         id: headerSkeleton
-        visible: !(root.item?.headerReady ?? false)
+        active: !(root.item?.headerReady ?? false)
+        visible: active
+        sourceComponent: ChatHeaderSkeleton {}
     }
 
     Item {
         id: channelsSkeleton
         visible: !(root.item?.leftPanelReady ?? false)
 
-        CommunityChannelsSkeleton {
+        Loader {
             anchors.fill: parent
+            active: channelsSkeleton.visible
+            sourceComponent: CommunityChannelsSkeleton {
+                // The community identity is known before the section loads, so
+                // the real header shows immediately above the skeleton rows
+                name: root.sectionItemModel?.name ?? ""
+                membersCount: root.sectionItemModel?.joinedMembersCount ?? 0
+                image: root.sectionItemModel?.image ?? ""
+                color: root.sectionItemModel?.color ?? "transparent"
 
-            // The community identity is known before the section loads, so
-            // the real header shows immediately above the skeleton rows
-            name: root.sectionItemModel?.name ?? ""
-            membersCount: root.sectionItemModel?.joinedMembersCount ?? 0
-            image: root.sectionItemModel?.image ?? ""
-            color: root.sectionItemModel?.color ?? "transparent"
-
-            onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.contactsStore.myPublicKey)
+                onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.contactsStore.myPublicKey)
+            }
         }
     }
 
@@ -113,11 +120,15 @@ Loader {
         id: chatSkeleton
         visible: !(root.item?.centerPanelReady ?? false)
 
-        MessagesChatSkeleton {
+        Loader {
             anchors.fill: parent
-            anchors.margins: Theme.padding
-            anchors.leftMargin: Theme.xlPadding
-            anchors.rightMargin: Theme.xlPadding
+            active: chatSkeleton.visible
+            sourceComponent: MessagesChatSkeleton {
+                anchors.fill: parent
+                anchors.margins: Theme.padding
+                anchors.leftMargin: Theme.xlPadding
+                anchors.rightMargin: Theme.xlPadding
+            }
         }
     }
 
@@ -125,8 +136,10 @@ Loader {
         id: membersSkeleton
         visible: !(root.item?.rightPanelReady ?? false)
 
-        MembersListSkeleton {
+        Loader {
             anchors.fill: parent
+            active: membersSkeleton.visible
+            sourceComponent: MembersListSkeleton {}
         }
     }
 
