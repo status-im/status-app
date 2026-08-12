@@ -2443,10 +2443,15 @@ Item {
                     id: sectionStartupLoading
                     anchors.fill: parent
                     z: 1
+                    // ChatLoader and CommunityChatLoader own their skeleton chrome
+                    // and paint it from the first frame, even while inactive, so the
+                    // overlay is only needed where nothing else paints yet: the
+                    // communities portal, and a community section whose repeater
+                    // delegate does not exist yet.
                     active: !appMain.mainReady
-                            && (d.activeSectionType === Constants.appSection.chat
-                                || d.activeSectionType === Constants.appSection.community
-                                || d.activeSectionType === Constants.appSection.communitiesPortal
+                            && (d.activeSectionType === Constants.appSection.communitiesPortal
+                                || (d.activeSectionType === Constants.appSection.community
+                                    && communityRepeater.count === 0)
                                 || d.activeSectionType === Constants.appSection.loadingSection)
                     sourceComponent: d.activeSectionType === Constants.appSection.communitiesPortal
                                      ? communitiesPortalLoading
