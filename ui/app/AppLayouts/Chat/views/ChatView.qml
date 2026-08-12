@@ -63,8 +63,11 @@ Item {
     readonly property bool leftPanelReady: contactColumnLoader.status === Loader.Ready
     readonly property bool centerPanelReady: centerPanelLoader.status === Loader.Ready
                                              || !centerPanelLoader.active
-    readonly property bool rightPanelReady: rightPanelLoader.status === Loader.Ready
-                                            || !rightPanelLoader.active
+    // The members panel is only ready once the latch is back up: until then it
+    // shows its own skeleton, so the chrome must keep showing one too.
+    readonly property bool rightPanelReady: !rightPanelLoader.active
+                                            || (rightPanelLoader.status === Loader.Ready
+                                                && d.membersReady)
 
     property ChatStores.RootStore rootStore
     property ChatStores.CreateChatPropertiesStore createChatPropertiesStore
@@ -113,11 +116,6 @@ Item {
 
     property int extraLeftPadding: 0
     property bool isPortraitMode: false
-
-    // Delay between a chat switch and re-binding the members list. Sorting a
-    // large members model blocks the GUI thread; the delay keeps that work off
-    // the switch itself, behind MembersListSkeleton.
-    property int membersWireDelay: 100
 
     // Subsection back history keyed by the active chat/channel id.
     // Consumed by the chrome owner (bound to StatusSectionLayout.subsectionHistory).
@@ -176,6 +174,7 @@ Item {
 
     QtObject {
         id: d
+        objectName: "chatViewInternal"
 
         readonly property bool shouldLoadCenterPanel: !root.isPortraitMode ||
                                                       centerPanelRequested ||
@@ -186,25 +185,29 @@ Item {
             centerPanelRequested = true
         }
 
-        // Dropped on every chat/channel switch: the members panel is shared
-        // across chats, so it would otherwise sort the incoming members model
-        // on the switch frame, showing the previous chat's members meanwhile.
+        // Dropped when the members model itself changes: the members panel is
+        // shared across chats, so it would otherwise sort the incoming model on
+        // the switch frame, showing the previous chat's members meanwhile. A
+        // switch that keeps the same model — every community channel without
+        // permissions — costs nothing and keeps showing the correct members.
         property bool membersReady: true
 
-        readonly property string activeChatId: {
-            const m = root.rootStore.chatCommunitySectionModule
-            return m && m.activeItem ? m.activeItem.id : ""
-        }
+        readonly property var activeUsersModel: root.usersModel
 
-        onActiveChatIdChanged: {
+        onActiveUsersModelChanged: {
             membersReady = false
             membersWireTimer.restart()
         }
+
+        // Delay between the model change and re-binding the members list.
+        // Sorting a large members model blocks the GUI thread; the delay keeps
+        // that work off the switch itself, behind MembersListSkeleton.
+        property int membersWireDelay: 100
     }
 
     Timer {
         id: membersWireTimer
-        interval: root.membersWireDelay
+        interval: d.membersWireDelay
         onTriggered: d.membersReady = true
     }
 
@@ -345,11 +348,13 @@ Item {
         active: false
         asynchronous: true
 
-        MembersListSkeleton {
+        Loader {
             objectName: "membersPanelSkeleton"
             anchors.fill: parent
-            visible: rightPanelLoader.active
-                     && (rightPanelLoader.status !== Loader.Ready || !d.membersReady)
+            active: rightPanelLoader.active
+                    && (rightPanelLoader.status !== Loader.Ready || !d.membersReady)
+            visible: active
+            sourceComponent: MembersListSkeleton {}
         }
 
         sourceComponent: UserListPanel {
