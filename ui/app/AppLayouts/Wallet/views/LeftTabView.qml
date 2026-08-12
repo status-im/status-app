@@ -250,15 +250,19 @@ Rectangle {
             Layout.fillHeight: true
             Layout.fillWidth: true
 
-            // Skeleton mimicking the accounts list, shown while the ListView incubates
-            WalletAccountsSkeleton {
+            // Skeleton mimicking the accounts list, shown while the ListView
+            // incubates and released afterwards: an alive invisible skeleton
+            // re-evaluates its tile geometry on every resize
+            Loader {
                 anchors {
                     top: parent.top
                     left: parent.left
                     right: parent.right
                     margins: Theme.padding
                 }
-                visible: walletAccountsListViewLoader.status !== Loader.Ready
+                active: walletAccountsListViewLoader.status !== Loader.Ready
+                visible: active
+                sourceComponent: WalletAccountsSkeleton {}
             }
 
             Loader {

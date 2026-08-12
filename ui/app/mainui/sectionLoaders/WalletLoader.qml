@@ -66,22 +66,27 @@ Loader {
     }
 
     // Skeleton slot items carry the same page paddings as the real panels
-    // (LeftTabView's internal padding, resp. the center StackView's margins)
-    Item {
+    // (LeftTabView's internal padding, resp. the center StackView's margins).
+    // Each lives behind a Loader gated on its slot: an alive invisible skeleton
+    // re-evaluates its tile geometry bindings on every resize for the lifetime
+    // of the section.
+    Loader {
         id: accountsSkeleton
-        visible: root.status !== Loader.Ready
+        active: root.status !== Loader.Ready
+        visible: active
 
-        WalletAccountsSkeleton {
+        sourceComponent: WalletAccountsSkeleton {
             anchors.fill: parent
             anchors.margins: Theme.padding
         }
     }
 
-    Item {
+    Loader {
         id: centerSkeleton
-        visible: root.status !== Loader.Ready
+        active: root.status !== Loader.Ready
+        visible: active
 
-        WalletCenterPanelSkeleton {
+        sourceComponent: WalletCenterPanelSkeleton {
             anchors.fill: parent
             anchors.topMargin: Theme.padding
             anchors.leftMargin: Theme.xlPadding * 2
