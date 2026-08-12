@@ -41,7 +41,10 @@ Control {
         Image {
             id: image
             Layout.alignment: Qt.AlignHCenter
+            Layout.fillHeight: true
+            Layout.minimumHeight: 0
             Layout.preferredHeight: Constants.keycard.shared.imageHeight
+            Layout.maximumHeight: Constants.keycard.shared.imageHeight
             Layout.preferredWidth: Constants.keycard.shared.imageWidth
             source: root.wrongPin ? Assets.png("keycard/pin/negative")
                                   : Assets.png("keycard/pin/in-progress")

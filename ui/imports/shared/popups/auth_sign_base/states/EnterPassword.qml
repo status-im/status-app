@@ -29,7 +29,10 @@ Control {
 
         Image {
             Layout.alignment: Qt.AlignHCenter
+            Layout.fillHeight: true
+            Layout.minimumHeight: 0
             Layout.preferredHeight: Constants.keycard.shared.imageHeight
+            Layout.maximumHeight: Constants.keycard.shared.imageHeight
             Layout.preferredWidth: Constants.keycard.shared.imageWidth
             source: Assets.png("keycard/authenticate")
             fillMode: Image.PreserveAspectFit
