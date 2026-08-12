@@ -1,0 +1,8 @@
+Status is your privacy companion for private, fully end-to-end encrypted messaging with friends, family, and business partners; a secure crypto wallet; a built-in browser for accessing websites and decentralized services; and decentralized, self-sovereign, censorship-resistant community spaces.
+
+- Anonymous user profiles: No phone number, email, or bank account required to create a Status profile.
+- Truly private messenger: Peer-to-peer, fully end-to-end encrypted messaging (no backdoors), built for secure and confidential communication.
+- Secure crypto wallet: A self-custodial, multi-chain wallet for sending, receiving, and managing digital assets. Only you hold the keys to your funds.
+- Browser: Access websites, apps, and decentralized services directly within Status, with your wallet seamlessly connected for secure and private interactions.
+- Decentralized communities: Self-sovereign, censorship-resistant community spaces for those who value privacy, freedom, and autonomy in their digital interactions.
+- Token market center: A fast and simple way to track token prices and volume at a glance.
