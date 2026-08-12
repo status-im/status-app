@@ -56,6 +56,16 @@ Item {
     }
     readonly property bool canGoBack: root.sectionLayout?.canGoBack ?? false
 
+    // --- Per-panel readiness, forwarded through ChatLayout to the section
+    // loader so each skeleton slot swaps out when its own panel exists, rather
+    // than all four waiting on the slowest one.
+    readonly property bool headerReady: headerContentLoader.status === Loader.Ready
+    readonly property bool leftPanelReady: contactColumnLoader.status === Loader.Ready
+    readonly property bool centerPanelReady: centerPanelLoader.status === Loader.Ready
+                                             || !centerPanelLoader.active
+    // The members panel is not deferred here: it is instantiated with the view.
+    readonly property bool rightPanelReady: true
+
     property ChatStores.RootStore rootStore
     property ChatStores.CreateChatPropertiesStore createChatPropertiesStore
     property CommunitiesStores.CommunitiesStore communitiesStore
