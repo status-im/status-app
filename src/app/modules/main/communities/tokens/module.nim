@@ -210,7 +210,9 @@ method prepareSignaturesForTransactions*(self:Module, txForSigning: RouterTransa
     self.tempAddressFrom = txForSigning.signingDetails.address
     self.tempAddressPath = txForSigning.signingDetails.addressPath
     for h in txForSigning.signingDetails.hashes:
-      self.tempResolvedSignatures[h] = ("", "", "")
+      if h.isPermit:
+        raise newException(CatchableError, "unexpected permit hash in community token transaction")
+      self.tempResolvedSignatures[h.hash] = ("", "", "")
     self.requestNextSignature()
   except Exception as e:
     error "prepareSignaturesForTransactions failed: ", msg=e.msg

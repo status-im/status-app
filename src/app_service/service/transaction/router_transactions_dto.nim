@@ -52,13 +52,32 @@ type
     packId*: string
     communityParams*: CommunityParamsDto
 
+const
+  HashKindTx* = "tx"
+  HashKindPermit* = "permit"
+
+type
+  ## HashToSign is a single hash the backend asks us to sign. `kind` says what signing it
+  ## actually authorises: a transaction the backend built, or an EIP-712 permit granting a
+  ## token allowance. They are indistinguishable as bare hashes, which is why the kind has
+  ## to be carried through to the confirmation UI.
+  HashToSign* = object
+    hash*: string
+    kind*: string
+    ## typedData is the EIP-712 payload as JSON, set for HashKindPermit only. It is what
+    ## the user must be shown instead of the opaque digest.
+    typedData*: string
+
+proc isPermit*(self: HashToSign): bool =
+  return self.kind == HashKindPermit
+
 type
   SigningDetails* = ref object
     address*: string
     addressPath*: string
     keyUid*: string
     signOnKeycard*: bool
-    hashes*: seq[string]
+    hashes*: seq[HashToSign]
 
 type
   RouterTransactionsForSigningDto* = ref object
@@ -156,6 +175,14 @@ proc toSendDetailsDto*(jsonObj: JsonNode): SendDetailsDto =
   if jsonObj.getProp("communityParams", tmpObj) and tmpObj.kind == JObject:
     result.communityParams = toCommunityParamsDto(tmpObj)
 
+proc toHashToSign*(jsonObj: JsonNode): HashToSign =
+  result = HashToSign()
+  discard jsonObj.getProp("hash", result.hash)
+  discard jsonObj.getProp("kind", result.kind)
+  discard jsonObj.getProp("typedData", result.typedData)
+  if result.kind.len == 0:
+    result.kind = HashKindTx
+
 proc toSigningDetails*(jsonObj: JsonNode): SigningDetails =
   result = SigningDetails()
   discard jsonObj.getProp("address", result.address)
@@ -165,7 +192,7 @@ proc toSigningDetails*(jsonObj: JsonNode): SigningDetails =
   var tmpObj: JsonNode
   if jsonObj.getProp("hashes", tmpObj) and tmpObj.kind == JArray:
     for tx in tmpObj:
-      result.hashes.add(tx.getStr)
+      result.hashes.add(toHashToSign(tx))
 
 proc toRouterTransactionsForSigningDto*(jsonObj: JsonNode): RouterTransactionsForSigningDto =
   result = RouterTransactionsForSigningDto()

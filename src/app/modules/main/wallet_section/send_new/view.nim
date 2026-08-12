@@ -81,9 +81,12 @@ QtObject:
   proc authenticateAndTransfer*(self: View, uuid: string, fromAddr: string) {.slot.} =
     self.delegate.authenticateAndTransfer(uuid, fromAddr)
 
-  proc signingRequested*(self: View, keyUid: string, txHash: string, path: string, address: string) {.signal.}
-  proc emitSigningRequested*(self: View, keyUid: string, txHash: string, path: string, address: string) =
-    self.signingRequested(keyUid, txHash, path, address)
+  ## typedData is the EIP-712 payload to display, non-empty for permits only.
+  proc signingRequested*(self: View, keyUid: string, txHash: string, path: string, address: string, hashKind: string,
+    typedData: string) {.signal.}
+  proc emitSigningRequested*(self: View, keyUid: string, txHash: string, path: string, address: string, hashKind: string,
+    typedData: string) =
+    self.signingRequested(keyUid, txHash, path, address, hashKind, typedData)
 
   proc onSigningResult*(self: View, signature: string) {.slot.} =
     self.delegate.onSigningResult(signature)

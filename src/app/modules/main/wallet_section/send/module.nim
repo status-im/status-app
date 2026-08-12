@@ -30,6 +30,20 @@ type TmpSendTransactionDetails = object
   fromAddrPath: string
   txHashBeingProcessed: string
   resolvedSignatures: TransactionsSignatures
+  # What each hash being signed authorises, keyed by hash, for the signing request to pass on.
+  hashDetails: Table[string, HashToSign]
+  signOnKeycard: bool
+  # Credential from the permit prompt. The transaction it authorises cannot be built, let
+  # alone hashed, until that signature is handed back, so its hash arrives in a second round
+  # -- which would prompt the user to authenticate twice for a single send. Password accounts
+  # only: keycard signing needs the card for every hash. Cleared with the rest of the state.
+  permitHashedPassword: string
+  # Set when the round of hashes we are currently collecting signatures for contains a
+  # permit. A permit signature is part of the transaction it authorises, so the backend
+  # cannot build (or hash) that transaction until we hand the signature back: this round
+  # ends with setPermitSignaturesAndBuildTransactions and a second round of hashes,
+  # rather than with sending.
+  awaitingPermitSignatures: bool
 
 type
   Module* = ref object of io_interface.AccessInterface
@@ -242,16 +256,55 @@ proc sendSignedTransactions*(self: Module) =
     self.transactionWasSent(uuid = self.tmpSendTransactionDetails.uuid, chainId = 0, approvalTx = false, txHash = "", error = e.msg)
     self.clearTmpData()
 
-proc requestNextSignature(self: Module) =
+proc setPermitSignatures*(self: Module) =
+  try:
+    let err = self.controller.setPermitSignaturesAndBuildTransactions(self.tmpSendTransactionDetails.uuid,
+      self.tmpSendTransactionDetails.resolvedSignatures)
+    if err.len > 0:
+      raise newException(CatchableError, "setting permit signatures failed: " & err)
+  except Exception as e:
+    error "setPermitSignatures failed: ", msg=e.msg
+    self.transactionWasSent(uuid = self.tmpSendTransactionDetails.uuid, chainId = 0, approvalTx = false, txHash = "", error = e.msg)
+    self.clearTmpData()
+
+proc hashesAwaitingSignature(self: Module): seq[string] =
   for h, (r, s, v) in self.tmpSendTransactionDetails.resolvedSignatures.pairs:
-    if r.len != 0 and s.len != 0 and v.len != 0:
-      continue
+    if r.len == 0 or s.len == 0 or v.len == 0:
+      result.add(h)
+
+proc requestNextSignature(self: Module) =
+  for h in self.hashesAwaitingSignature():
     self.tmpSendTransactionDetails.txHashBeingProcessed = h
+    if self.tmpSendTransactionDetails.permitHashedPassword.len > 0:
+      # The permit prompt already authenticated this send; sign what it unlocked with the
+      # same credential instead of asking again.
+      let (signature, err) = self.controller.signMessage(self.tmpSendTransactionDetails.fromAddr,
+        self.tmpSendTransactionDetails.permitHashedPassword, h)
+      if err.len == 0 and signature.len > 0:
+        self.tmpSendTransactionDetails.resolvedSignatures[h] = utils.getRSVFromSignature(signature)
+        continue
+      error "signing with the permit credential failed, asking the user again", msg=err
+      self.tmpSendTransactionDetails.permitHashedPassword = ""
+    let details = self.tmpSendTransactionDetails.hashDetails.getOrDefault(h, HashToSign(kind: HashKindTx))
     self.view.emitSigningRequested(self.tmpSendTransactionDetails.keyUid, h,
-      self.tmpSendTransactionDetails.fromAddrPath, self.tmpSendTransactionDetails.fromAddr)
+      self.tmpSendTransactionDetails.fromAddrPath, self.tmpSendTransactionDetails.fromAddr,
+      details.kind, details.typedData)
     return
   self.tmpSendTransactionDetails.txHashBeingProcessed = ""
+  if self.tmpSendTransactionDetails.awaitingPermitSignatures:
+    # The transactions themselves do not exist yet; hand the permits back and wait for the
+    # signRouterTransactions signal that carries the real transaction hashes.
+    self.tmpSendTransactionDetails.awaitingPermitSignatures = false
+    self.setPermitSignatures()
+    return
   self.sendSignedTransactions()
+
+method onAuthenticationPasswordProvided*(self: Module, keyUid: string, password: string) =
+  if not self.tmpSendTransactionDetails.awaitingPermitSignatures or
+      self.tmpSendTransactionDetails.signOnKeycard or
+      keyUid != self.tmpSendTransactionDetails.keyUid:
+    return
+  self.tmpSendTransactionDetails.permitHashedPassword = utils.hashPassword(password)
 
 method onSigningResult*(self: Module, signature: string) =
   if signature.len == 0:
@@ -276,8 +329,15 @@ method prepareSignaturesForTransactions*(self:Module, txForSigning: RouterTransa
     self.tmpSendTransactionDetails.keyUid = txForSigning.signingDetails.keyUid
     self.tmpSendTransactionDetails.fromAddr = txForSigning.signingDetails.address
     self.tmpSendTransactionDetails.fromAddrPath = txForSigning.signingDetails.addressPath
+    self.tmpSendTransactionDetails.signOnKeycard = txForSigning.signingDetails.signOnKeycard
+    self.tmpSendTransactionDetails.awaitingPermitSignatures = false
     for h in txForSigning.signingDetails.hashes:
-      self.tmpSendTransactionDetails.resolvedSignatures[h] = ("", "", "")
+      if self.tmpSendTransactionDetails.resolvedSignatures.hasKey(h.hash):
+        continue
+      if h.isPermit:
+        self.tmpSendTransactionDetails.awaitingPermitSignatures = true
+      self.tmpSendTransactionDetails.hashDetails[h.hash] = h
+      self.tmpSendTransactionDetails.resolvedSignatures[h.hash] = ("", "", "")
     self.requestNextSignature()
   except Exception as e:
     error "prepareSignaturesForTransactions failed: ", msg=e.msg

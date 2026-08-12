@@ -64,5 +64,8 @@ method prepareSignaturesForTransactions*(self:AccessInterface, txForSigning: Rou
 method onSigningResult*(self: AccessInterface, signature: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onAuthenticationPasswordProvided*(self: AccessInterface, keyUid: string, password: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method transactionSendingComplete*(self: AccessInterface, txHash: string, status: string) {.base.} =
   raise newException(ValueError, "No implementation available")
