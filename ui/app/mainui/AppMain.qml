@@ -2443,12 +2443,13 @@ Item {
                     // ChatLoader and CommunityChatLoader own their skeleton chrome
                     // and paint it from the first frame, even while inactive, so the
                     // overlay is only needed where nothing else paints yet: the
-                    // communities portal, and a community section whose repeater
-                    // delegate does not exist yet.
+                    // communities portal, and the transient loadingSection while the
+                    // persisted section is restored. A community section whose
+                    // repeater delegate does not exist yet is left to the
+                    // currentIndex fallback, which shows another community's
+                    // loader — the right shape, unlike a chat-shaped overlay.
                     active: !appMain.mainReady
                             && (d.activeSectionType === Constants.appSection.communitiesPortal
-                                || (d.activeSectionType === Constants.appSection.community
-                                    && communityRepeater.count === 0)
                                 || d.activeSectionType === Constants.appSection.loadingSection)
                     sourceComponent: d.activeSectionType === Constants.appSection.communitiesPortal
                                      ? communitiesPortalLoading
