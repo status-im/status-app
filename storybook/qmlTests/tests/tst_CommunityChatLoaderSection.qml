@@ -195,6 +195,37 @@ Item {
             tryCompare(chatList, "count", rows)
         }
 
+        // The channels column and the message view incubate off the critical
+        // path, so the loader-owned chrome keeps painting its skeletons while
+        // they build and each slot swaps on its own panel's readiness. Both
+        // panels finish within a single incubation slice here — virtualized
+        // lists and the latched message model are that cheap — so what is
+        // pinned is the contract, not a timing window.
+        function test_panelsIncubateAsynchronously() {
+            mock.categoriesCount = 10
+            mock.channelsPerCategory = 20
+            mock.messagesPerChannel = 2000
+            mock.install()
+
+            harness.active = true
+            const loader = harness.item
+            verify(!!loader)
+            verify(findChildByTypePrefix(loader, "CommunityChannelsSkeleton").visible)
+
+            tryVerify(() => loader.status === Loader.Ready, 120000)
+            const view = loader.item
+            verify(view.leftPanel.asynchronous,
+                   "the channels column must incubate asynchronously")
+            verify(view.centerPanel.asynchronous,
+                   "the message view must incubate asynchronously")
+
+            tryVerify(() => view.headerReady && view.leftPanelReady
+                            && view.centerPanelReady, 60000,
+                      "every panel must finish incubating")
+            tryVerify(() => !findChildByTypePrefix(loader, "CommunityChannelsSkeleton"),
+                      10000, "no slot may keep its skeleton once its panel is ready")
+        }
+
         function test_memberChannelsListVirtualized() {
             mock.categoriesCount = 10
             mock.channelsPerCategory = 20
