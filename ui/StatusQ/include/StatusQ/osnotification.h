@@ -2,9 +2,10 @@
 
 #include <QObject>
 #include <QString>
-#include <QHash>
 
 #ifdef Q_OS_WIN
+#include <QHash>
+
 #include "windows.h"
 #endif
 

@@ -304,6 +304,9 @@ proc init*(self: Controller) =
     var args = ClickedNotificationArgs(e)
     self.delegate.osNotificationClicked(args.details)
 
+  self.events.on(SIGNAL_CLOSE_POPUPS_REQUESTED) do(e: Args):
+    self.delegate.emitClosePopupsRequested()
+
   if defined(windows):
     self.events.on(SIGNAL_DISPLAY_WINDOWS_OS_NOTIFICATION) do(e: Args):
       var args = NotificationArgs(e)

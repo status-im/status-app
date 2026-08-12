@@ -164,6 +164,7 @@ QtObject {
     // Notifications related properties and functions that shall be moved to `NotificationsRootStore`
     readonly property var ephemeralNotificationModel: internal.mainModuleInst.ephemeralNotificationModel
 
+    signal closePopupsRequested()
     signal showEphemeralNewsNotification(string newsTitle, string notificationId)
     signal playNotificationSound()
     signal mailserverWorking()
@@ -193,6 +194,10 @@ QtObject {
 
     readonly property Connections _notificationsRelatedMainModuleConnections: Connections {
         target: internal.mainModuleInst
+
+        function onClosePopupsRequested() {
+            root.closePopupsRequested()
+        }
 
         function onNewsFeedEphemeralNotification(newsTitle: string, notificationId: string) {
             root.showEphemeralNewsNotification(newsTitle, notificationId)

@@ -1664,6 +1664,9 @@ method osNotificationClicked*[T](self: Module[T], details: NotificationDetails) 
   elif(details.notificationType == NotificationType.MyRequestToJoinCommunityRejected):
     warn "There is no particular action clicking on a notification informing you about rejection to join community"
 
+method emitClosePopupsRequested*[T](self: Module[T]) =
+  self.view.closePopupsRequested()
+
 method newCommunityMembershipRequestReceived*[T](self: Module[T], membershipRequest: CommunityMembershipRequestDto) =
   let (contactName, _, _) = self.controller.getContactNameAndImage(membershipRequest.publicKey)
   let community {.cursor.} = self.controller.getCommunityById(membershipRequest.communityId)
@@ -2118,6 +2121,9 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
   if not self.chatsLoaded:
     self.statusDeepLinkToActivate = statusDeepLink
     return
+
+  self.view.closePopupsRequested()
+
   if statusDeepLink.contains("/wc?"):
     self.view.wcLinkActivated(statusDeepLink)
     return
@@ -2141,8 +2147,10 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
   else:
     info "No generic navigation target found in deep link"
     discard
+
   if self.activateChatDeepLink(statusDeepLink):
     return
+
   let urlData = self.sharedUrlsModule.parseSharedUrl(statusDeepLink)
   if urlData.notASupportedStatusLink:
     # Just open it in the browser

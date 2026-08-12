@@ -211,6 +211,9 @@ method communityLeft*(self: AccessInterface, communityId: string) {.base.} =
 method resolvedENS*(self: AccessInterface, publicKey: string, address: string, uuid: string, reason: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method emitClosePopupsRequested*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method osNotificationClicked*(self: AccessInterface, details: NotificationDetails) {.base.} =
   raise newException(ValueError, "No implementation available")
 

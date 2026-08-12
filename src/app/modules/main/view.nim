@@ -128,6 +128,8 @@ QtObject:
   proc ephemeralNotificationClicked*(self: View, id: string) {.slot.} =
     self.delegate.ephemeralNotificationClicked(id.parseInt)
 
+  proc closePopupsRequested*(self: View) {.signal.}
+
   proc playNotificationSound*(self: View) {.signal.}
 
   proc openStoreToKeychainPopup*(self: View) {.signal.}

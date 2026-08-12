@@ -71,6 +71,8 @@ public:
     // (native) screen helper
     Q_INVOKABLE qreal nativeDpr(QQuickWindow *window) const;
 
+    Q_INVOKABLE void tryCloseActivePopups();
+
 signals:
     // Emitted when event of type QEvent::Quit is detected by event filter on
     // QGuiApplication. It's helpful to handle close requests on mac coming from

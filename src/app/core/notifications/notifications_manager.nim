@@ -17,6 +17,7 @@ logScope:
 const SIGNAL_DISPLAY_APP_NOTIFICATION* = "displayAppNotification"
 const SIGNAL_DISPLAY_WINDOWS_OS_NOTIFICATION* = "displayWindowsOsNotification"
 const SIGNAL_OS_NOTIFICATION_CLICKED* = "osNotificationClicked"
+const SIGNAL_CLOSE_POPUPS_REQUESTED* = "closePopupsRequested"
 const SIGNAL_PLAY_NOTIFICATION_SOUND* = "playNotificationSound"
 
 # Anonymous preferences
@@ -82,6 +83,8 @@ QtObject:
     if(details.notificationType == NotificationType.TestNotification):
       info "Test notification was clicked"
       return
+
+    self.events.emit(SIGNAL_CLOSE_POPUPS_REQUESTED, Args())
 
     if(details.notificationType == NotificationType.NewMessage or
       details.notificationType == NotificationType.NewMessageWithPersonalMention or

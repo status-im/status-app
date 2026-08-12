@@ -286,10 +286,13 @@ Item {
     Connections {
         target: rootStore
 
+        function onClosePopupsRequested() {
+            SystemUtils.tryCloseActivePopups()
+        }
+
         function onDisplayUserProfile(publicKey: string) {
             popups.openProfilePopup(publicKey)
         }
-
 
         function onPlayNotificationSound() {
             notificationSound.stop()

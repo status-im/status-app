@@ -138,7 +138,7 @@ void OSNotification::showNotification(const QString& title,
         return;
     }
     QStringList args;
-    args << QStringLiteral("-a") << QStringLiteral("nim-status");
+    args << QStringLiteral("-a") << QCoreApplication::applicationName();
     args << QStringLiteral("-c") << QStringLiteral("im");
     args << title;
     args << message;

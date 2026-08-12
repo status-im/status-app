@@ -29,6 +29,8 @@
 #include "ios_utils.h"
 #endif
 
+using namespace Qt::Literals::StringLiterals;
+
 class QuitFilter : public QObject
 {
     Q_OBJECT
@@ -714,6 +716,29 @@ qreal SystemUtilsInternal::nativeDpr(QQuickWindow *window) const
     qWarning() << Q_FUNC_INFO << "invalid native platform screen";
     return screen->devicePixelRatio();
 #endif
+}
+
+void SystemUtilsInternal::tryCloseActivePopups()
+{
+    qWarning() << "!!!" << Q_FUNC_INFO;
+    const auto windows = qGuiApp->topLevelWindows();
+    for (auto window: windows) {
+        const auto childrenList = window->findChildren<QObject *>();
+        for (auto child: childrenList) {
+            if (child && child->inherits("QQuickPopupItem")) {
+                auto popupObject = child->parent();
+
+                if (popupObject && !popupObject->inherits("QQuickToolTip")) {
+                    const auto opened = popupObject->property("opened").toBool();
+                    const auto closeable = popupObject->property("closePolicy").toInt() > 0; // Popup::NoAutoClose = 0x00
+                    if (opened && closeable) {
+                        qWarning() << "!!! CLOSING CHILD POPUP:" << child << child->property("title").toString();
+                        QMetaObject::invokeMethod(popupObject, "close");
+                    }
+                }
+            }
+        }
+    }
 }
 
 #ifdef Q_OS_IOS
