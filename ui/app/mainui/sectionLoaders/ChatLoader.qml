@@ -77,10 +77,15 @@ Loader {
         leftPanelWidthOverride: root.leftPanelWidthOverride
     }
 
-    // Skeleton slot items carry the same page paddings as the real panels
-    ChatHeaderSkeleton {
+    // Skeleton slot items carry the same page paddings as the real panels.
+    // Each skeleton lives behind a Loader gated on its slot: an alive
+    // invisible skeleton re-evaluates its tile geometry bindings on every
+    // resize for the lifetime of the section.
+    Loader {
         id: headerSkeleton
-        visible: !(root.item?.headerReady ?? false)
+        active: !(root.item?.headerReady ?? false)
+        visible: active
+        sourceComponent: ChatHeaderSkeleton {}
     }
 
     Item {
@@ -89,17 +94,19 @@ Loader {
 
         // The real header: invite and start-chat act app-globally, so they
         // remain functional while the section incubates
-        MessagesListSkeleton {
+        Loader {
             anchors.fill: parent
+            active: listSkeleton.visible
+            sourceComponent: MessagesListSkeleton {
+                createChatOpened: root.createChatViewOpened
 
-            createChatOpened: root.createChatViewOpened
-
-            onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.contactsStore.myPublicKey)
-            onStartChatClicked: {
-                if (root.createChatViewOpened) {
-                    Global.closeCreateChatView()
-                } else {
-                    Global.openCreateChatView()
+                onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.contactsStore.myPublicKey)
+                onStartChatClicked: {
+                    if (root.createChatViewOpened) {
+                        Global.closeCreateChatView()
+                    } else {
+                        Global.openCreateChatView()
+                    }
                 }
             }
         }
@@ -109,11 +116,15 @@ Loader {
         id: chatSkeleton
         visible: !(root.item?.centerPanelReady ?? false)
 
-        MessagesChatSkeleton {
+        Loader {
             anchors.fill: parent
-            anchors.margins: Theme.padding
-            anchors.leftMargin: Theme.xlPadding
-            anchors.rightMargin: Theme.xlPadding
+            active: chatSkeleton.visible
+            sourceComponent: MessagesChatSkeleton {
+                anchors.fill: parent
+                anchors.margins: Theme.padding
+                anchors.leftMargin: Theme.xlPadding
+                anchors.rightMargin: Theme.xlPadding
+            }
         }
     }
 
@@ -121,8 +132,10 @@ Loader {
         id: membersSkeleton
         visible: !(root.item?.rightPanelReady ?? false)
 
-        MembersListSkeleton {
+        Loader {
             anchors.fill: parent
+            active: membersSkeleton.visible
+            sourceComponent: MembersListSkeleton {}
         }
     }
 
