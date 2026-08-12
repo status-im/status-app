@@ -4,16 +4,8 @@ import QtTest
 
 import utils
 
-import shared.popups.keycard_new.states 1.0
+import shared.popups.keycard_new.states
 
-/*!
-    KeycardProgressState is a pure state machine with no fallback: `failure` is bound to
-    \c root.failure rather than acting as a catch-all, so a card state that matches no \c when
-    clause applies no PropertyChanges at all and the step renders blank.
-
-    The readKeycard flow pins both \c processing and \c failure to false and is therefore driven
-    solely by the card state, which makes every unmapped value visible to the user there.
-*/
 Item {
     id: root
 
@@ -54,9 +46,6 @@ Item {
                 {tag: "waiting-for-reader", keycardState: Constants.keycard.state.waitingForReader},
                 {tag: "waiting-for-card", keycardState: Constants.keycard.state.waitingForCard},
                 {tag: "ready", keycardState: Constants.keycard.state.ready},
-                // Reached while a retry restarts the operation with a newly supplied pairing
-                // password: the card still reports the previous failure until detection produces
-                // a fresh status.
                 {tag: "pairing-error", keycardState: Constants.keycard.state.pairingError},
             ]
         }
@@ -67,6 +56,39 @@ Item {
             verify(!!progress)
             verify(progress.contentItem.state !== "",
                    "no state matched '%1', so the step would render blank".arg(data.keycardState))
+        }
+
+        function test_blockedAndFailureStates_data() {
+            return [
+                {
+                    tag: "blocked-pin",
+                    props: {
+                        failure: true,
+                        keycardState: Constants.keycard.state.blockedPIN
+                    },
+                    expectedState: "blocked-pin",
+                    expectedTitle: "Keycard is blocked",
+                    expectedMessage: "Keycard is blocked due to three failed PIN input attempts"
+                },
+                {
+                    tag: "blocked-puk",
+                    props: {
+                        failure: true,
+                        keycardState: Constants.keycard.state.blockedPUK
+                    },
+                    expectedState: "blocked-puk",
+                    expectedTitle: "Keycard is blocked",
+                    expectedMessage: "Keycard is blocked due to five failed PUK input attempts"
+                },
+            ]
+        }
+
+        function test_blockedAndFailureStates(data) {
+            const progress = createTemporaryObject(componentUnderTest, root, data.props)
+            verify(!!progress)
+            compare(progress.contentItem.state, data.expectedState)
+            compare(findChild(progress, "keycardProgressTitle").text, data.expectedTitle)
+            compare(findChild(progress, "keycardProgressMessage").text, data.expectedMessage)
         }
     }
 }

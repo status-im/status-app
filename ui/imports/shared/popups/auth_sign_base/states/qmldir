@@ -1,0 +1,4 @@
+KeycardAuth 1.0 KeycardAuth.qml
+EnterPin 1.0 EnterPin.qml
+EnterPassword 1.0 EnterPassword.qml
+Biometrics 1.0 Biometrics.qml

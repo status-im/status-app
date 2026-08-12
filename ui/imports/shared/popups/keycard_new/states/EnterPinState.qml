@@ -73,6 +73,7 @@ Control {
         }
 
         StatusBaseText {
+            objectName: "keycardPinStepTitle"
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
@@ -103,6 +104,7 @@ Control {
         }
 
         StatusBaseText {
+            objectName: "keycardPinStepError"
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap

@@ -117,6 +117,7 @@ Control {
 
         StatusBaseText {
             id: infoText
+            objectName: "loginKeycardInfoText"
             Layout.fillWidth: true
             horizontalAlignment: Qt.AlignHCenter
             elide: Text.ElideRight

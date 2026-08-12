@@ -151,6 +151,7 @@ OnboardingPage {
                 }
 
                 StatusBaseText {
+                    objectName: "keycardDetailsInfoMessage"
                     Layout.fillWidth: true
                     Layout.topMargin: Theme.padding
                     visible: !!text
@@ -229,6 +230,7 @@ OnboardingPage {
 
                 StatusListItem {
                     Layout.fillWidth: true
+                    objectName: "keycardDetailsUnblockWithRecovery"
                     visible: stateInfo.isBlockedPIN
                              || stateInfo.isBlockedPUK
                     title: qsTr("Unblock with recovery phrase")
@@ -244,6 +246,7 @@ OnboardingPage {
 
                 StatusListItem {
                     Layout.fillWidth: true
+                    objectName: "keycardDetailsUnblockWithPuk"
                     visible: stateInfo.isBlockedPIN
                              && !stateInfo.isBlockedPUK
                     title: qsTr("Unblock with PUK")
@@ -259,6 +262,7 @@ OnboardingPage {
 
                 StatusListItem {
                     Layout.fillWidth: true
+                    objectName: "keycardDetailsLoginWithThisKeycard"
                     visible: stateInfo.hasKeyPair
                              && !stateInfo.isBlockedPIN
                              && !stateInfo.isBlockedPUK
@@ -277,6 +281,7 @@ OnboardingPage {
 
                 StatusListItem {
                     Layout.fillWidth: true
+                    objectName: "keycardDetailsGoBackToLogin"
                     visible: stateInfo.profileAlreadyExists
                              && !stateInfo.isBlockedPIN
                              && !stateInfo.isBlockedPUK
@@ -293,6 +298,7 @@ OnboardingPage {
 
                 StatusListItem {
                     Layout.fillWidth: true
+                    objectName: "keycardDetailsFactoryReset"
                     visible: stateInfo.hasKeyPair
                              || stateInfo.onlyPinSet
                              || stateInfo.noKnownAndNoAvailablePairingSlots

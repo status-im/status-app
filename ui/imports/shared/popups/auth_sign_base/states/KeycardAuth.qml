@@ -38,12 +38,14 @@ Control {
 
         StatusLoadingIndicator {
             id: loading
+            objectName: "keycardAuthLoadingIndicator"
             Layout.alignment: Qt.AlignCenter
             visible: root.keycardState === Constants.keycard.state.connectingCard
         }
 
         StatusBaseText {
             id: title
+            objectName: "keycardAuthTitle"
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
@@ -53,6 +55,7 @@ Control {
 
         StatusBaseText {
             id: message
+            objectName: "keycardAuthMessage"
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap

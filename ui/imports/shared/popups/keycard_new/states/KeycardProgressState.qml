@@ -70,6 +70,7 @@ Control {
 
             StatusBaseText {
                 id: title
+                objectName: "keycardProgressTitle"
                 wrapMode: Text.WordWrap
                 font.weight: Font.Bold
                 font.pixelSize: Theme.fontSize(22)
@@ -78,6 +79,7 @@ Control {
 
         StatusBaseText {
             id: message
+            objectName: "keycardProgressMessage"
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap

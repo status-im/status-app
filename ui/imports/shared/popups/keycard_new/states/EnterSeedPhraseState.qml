@@ -32,6 +32,7 @@ Control {
         spacing: Theme.padding
 
         StatusBaseText {
+            objectName: "keycardSeedPhraseStepTitle"
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap

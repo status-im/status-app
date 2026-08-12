@@ -5,17 +5,8 @@ import QtTest
 
 import utils
 
-import shared.popups.keycard_new 1.0
+import shared.popups.keycard_new
 
-/*!
-    Covers the custom pairing password flow: cards provisioned outside the app (e.g. on the
-    Keycard shell) reject the default pairing password, and the popup has to ask the user for
-    theirs and re-run the *same* operation with the *same* arguments rather than abandoning the
-    flow and sending the user back to re-reading the card.
-
-    The re-invocation is driven by a stored `d.lastInvocation` callable, so the assertion that
-    matters most is argument-for-argument equality between the original call and the retry.
-*/
 Item {
     id: root
 
@@ -39,7 +30,6 @@ Item {
         property string userProfilePubKey: "0xpub"
         property bool isProfileMigratedToColdWallet: false
 
-        // Every invocation, so a test can assert the retry matches the original call exactly.
         property var calls: []
 
         function record(name, args) {
@@ -116,8 +106,6 @@ Item {
         id: componentUnderTest
 
         KeycardManagementPopup {
-            // readKeycard launches its operation from a single PIN entry, which makes it the
-            // cheapest flow to drive end to end.
             flow: Constants.keycard.flow.readKeycard
             keycardUid: mockStore.keycardUid
             keyUid: mockStore.keyUid
@@ -141,8 +129,6 @@ Item {
         name: "KeycardManagementPopup_pairingPassword"
         when: windowShown
 
-        // What a composite operation returns when the card rejects the pairing password: the
-        // session state is embedded in the error text, which is how the popup recognises it.
         readonly property string pairingErrorText: "Card not ready (state: pairing-error)"
         readonly property string testPin: "123456"
 
@@ -169,14 +155,10 @@ Item {
             return findChild(popup, "enterPairingPasswordStep")
         }
 
-        // Submission is owned by the popup's shared primary footer button, which has no
-        // objectName to bind to, so drive the step's action directly — that is exactly what the
-        // footer button's onClicked does.
         function submitPairingPassword() {
             pairingStep().accepted()
         }
 
-        // Enters the PIN, which launches startGetMetadata after the popup's 500ms debounce.
         function launchReadKeycard() {
             const pinInput = findChild(popup, "keycardManagementPinInput")
             verify(!!pinInput, "expected the PIN step to be shown")
@@ -200,15 +182,11 @@ Item {
             tryVerify(() => !!pairingPasswordInput(), 3000,
                       "expected the pairing password step to be shown")
 
-            // Nothing typed yet, so the footer button this drives stays disabled.
             verify(!pairingStep().pairingPasswordValid,
                    "an empty pairing password must not be submittable")
         }
 
         function test_pairingErrorStateShowsPasswordStepEvenWhenOperationSucceeds() {
-            // Reading a card without a PIN can come back "successful" while the card was never
-            // paired; only the reported state says so. Leaving the popup then would strand the
-            // user on a details view built from an unpaired card.
             launchReadKeycard()
             mockStore.keycardState = "pairing-error"
             mockStore.keycardGetMetadataSuccess()
@@ -219,7 +197,6 @@ Item {
         }
 
         function test_pairingErrorStateDoesNotPromptBeforeAnyAttempt() {
-            // Nothing has been attempted yet, so there would be nothing to retry.
             mockStore.keycardState = "pairing-error"
             wait(50)
 
@@ -228,7 +205,6 @@ Item {
         }
 
         function test_wrongPinErrorDoesNotShowPasswordStep() {
-            // Guards against the new branch swallowing unrelated errors.
             launchReadKeycard()
             mockStore.keycardGetMetadataError("Wrong PIN")
             wait(50)
@@ -237,7 +213,6 @@ Item {
         }
 
         function test_noAvailablePairingSlotsDoesNotShowPasswordStep() {
-            // Not recoverable by entering a password, so it keeps its own terminal handling.
             launchReadKeycard()
             mockStore.keycardGetMetadataError("Card not ready (state: no-available-pairing-slots)")
             wait(50)
@@ -263,7 +238,6 @@ Item {
 
             const retry = mockStore.calls[1]
             compare(retry.name, firstCall.name)
-            // Everything but the pairing password must be identical to the original call.
             compare(retry.args[0], firstCall.args[0], "the retry must reuse the original PIN")
             compare(retry.args[1], "MyCustomPass", "the retry must carry the entered pairing password")
         }
@@ -274,8 +248,6 @@ Item {
             mockStore.keycardGetMetadataError(pairingErrorText)
             tryVerify(() => !!pairingPasswordInput(), 3000)
 
-            // User swaps the card while the prompt is up. The entered password belongs to the
-            // previous card and must not be sent to this one.
             mockStore.keycardUid = "keycard-uid-2"
 
             pairingPasswordInput().text = "MyCustomPass"
@@ -295,14 +267,442 @@ Item {
             submitPairingPassword()
             tryVerify(() => mockStore.calls.length === 2, 3000)
 
-            // The card rejects it again; the step must come back flagged as incorrect so the
-            // user sees the password was wrong rather than a silent no-op.
             mockStore.keycardGetMetadataError(pairingErrorText)
             tryVerify(() => !!findChild(popup, "enterPairingPasswordStep"), 3000)
 
             const step = findChild(popup, "enterPairingPasswordStep")
             verify(step.wrongPairingPassword,
                    "a repeated pairing error while holding a password means that password was wrong")
+        }
+    }
+
+    Component {
+        id: popupFactory
+
+        KeycardManagementPopup {
+            keycardUid: mockStore.keycardUid
+            keyUid: mockStore.keyUid
+            cardMetadataName: mockStore.cardMetadataName
+            cardMetadataWalletAccountsJson: mockStore.cardMetadataWalletAccountsJson
+            store: mockStore
+            closePolicy: Popup.NoAutoClose
+            passwordStrengthScoreFunction: (password) => 4
+        }
+    }
+
+    TestCase {
+        name: "KeycardManagementPopup_changePin"
+        when: windowShown
+
+        readonly property string currentPin: "123456"
+        readonly property string newPin: "654321"
+        readonly property string mismatchedPin: "111111"
+
+        function init() {
+            mockStore.calls = []
+            mockStore.keycardState = "ready"
+            mockStore.keycardUid = "keycard-uid-1"
+            popup = createTemporaryObject(popupFactory, root, {
+                                              flow: Constants.keycard.flow.changePin
+                                          })
+            verify(!!popup)
+            popup.open()
+        }
+
+        function cleanup() {
+            if (popup)
+                popup.close()
+        }
+
+        function pinInput() {
+            return findChild(popup, "keycardManagementPinInput")
+        }
+
+        function pinTitle() {
+            return findChild(popup, "keycardPinStepTitle")
+        }
+
+        function pinError() {
+            return findChild(popup, "keycardPinStepError")
+        }
+
+        function enterPin(pin) {
+            const input = pinInput()
+            verify(!!input, "expected a PIN step")
+            input.setPin(pin)
+        }
+
+        function test_startsOnEnterCurrentPin() {
+            compare(pinTitle().text, "Enter Keycard PIN")
+        }
+
+        function test_happyPathChangesPin() {
+            enterPin(currentPin)
+            tryVerify(() => pinTitle().text === "Enter new PIN", 3000)
+
+            enterPin(newPin)
+            tryVerify(() => pinTitle().text === "Repeat new PIN", 3000)
+
+            enterPin(newPin)
+            tryVerify(() => mockStore.calls.length === 1, 3000)
+
+            const call = mockStore.calls[0]
+            compare(call.name, "startChangeKeycardPIN")
+            compare(call.args[0], currentPin)
+            compare(call.args[1], newPin)
+            compare(call.args[2], "", "change PIN starts with the default pairing password")
+
+            mockStore.keycardChangePinSuccess()
+
+            tryVerify(() => {
+                          const title = findChild(popup, "keycardProgressTitle")
+                          return !!title && title.text === "Keycard PIN has been changed"
+                      }, 3000)
+            compare(findChild(popup, "keycardProgressMessage").text,
+                    "New PIN is required to interact with Keycard.")
+        }
+
+        function test_repeatPinMismatchShowsError() {
+            enterPin(currentPin)
+            tryVerify(() => pinTitle().text === "Enter new PIN", 3000)
+
+            enterPin(newPin)
+            tryVerify(() => pinTitle().text === "Repeat new PIN", 3000)
+
+            enterPin(mismatchedPin)
+
+            tryVerify(() => pinError().visible, 3000)
+            compare(pinError().text, "PIN doesn't match")
+            compare(mockStore.calls.length, 0, "mismatch must not start the change-PIN operation")
+        }
+    }
+
+    TestCase {
+        name: "KeycardManagementPopup_setOrChangePuk"
+        when: windowShown
+
+        readonly property string currentPin: "123456"
+        readonly property string newPuk: "123456789012"
+        readonly property string mismatchedPuk: "999999999999"
+
+        function init() {
+            mockStore.calls = []
+            mockStore.keycardState = "ready"
+            mockStore.keycardUid = "keycard-uid-1"
+            popup = createTemporaryObject(popupFactory, root, {
+                                              flow: Constants.keycard.flow.setOrChangePuk
+                                          })
+            verify(!!popup)
+            popup.open()
+        }
+
+        function cleanup() {
+            if (popup)
+                popup.close()
+        }
+
+        function pinInput() { return findChild(popup, "keycardManagementPinInput") }
+        function pukInput() { return findChild(popup, "keycardManagementPukInput") }
+        function pukTitle() { return findChild(popup, "keycardPukStepTitle") }
+        function nextButton() { return findChild(popup, "keycardManagementNextButton") }
+
+        function enterPin(pin) {
+            const input = pinInput()
+            verify(!!input)
+            input.setPin(pin)
+        }
+
+        function enterPukAndNext(puk) {
+            const input = pukInput()
+            verify(!!input, "expected a PUK step")
+            input.setPin(puk)
+            tryVerify(() => nextButton().enabled, 3000)
+            nextButton().clicked()
+        }
+
+        function test_happyPathSetsPuk() {
+            enterPin(currentPin)
+            tryVerify(() => !!pukTitle() && pukTitle().text === "Choose a Keycard PUK", 3000)
+
+            enterPukAndNext(newPuk)
+            tryVerify(() => pukTitle().text === "Repeat your Keycard PUK", 3000)
+
+            enterPukAndNext(newPuk)
+            tryVerify(() => mockStore.calls.length === 1, 3000)
+
+            const call = mockStore.calls[0]
+            compare(call.name, "startChangeKeycardPUK")
+            compare(call.args[0], currentPin)
+            compare(call.args[1], newPuk)
+            compare(call.args[2], "")
+
+            mockStore.keycardChangePukSuccess()
+            tryVerify(() => {
+                          const title = findChild(popup, "keycardProgressTitle")
+                          return !!title && title.text === "Keycard’s PUK successfully set"
+                      }, 3000)
+        }
+
+        function test_repeatPukMismatchShowsError() {
+            enterPin(currentPin)
+            tryVerify(() => !!pukTitle() && pukTitle().text === "Choose a Keycard PUK", 3000)
+
+            enterPukAndNext(newPuk)
+            tryVerify(() => pukTitle().text === "Repeat your Keycard PUK", 3000)
+
+            pukInput().setPin(mismatchedPuk)
+            tryVerify(() => findChild(popup, "keycardPukStepError").visible, 3000)
+            compare(findChild(popup, "keycardPukStepError").text, "PUK doesn't match")
+            compare(mockStore.calls.length, 0)
+        }
+    }
+
+    TestCase {
+        name: "KeycardManagementPopup_rename"
+        when: windowShown
+
+        readonly property string currentPin: "123456"
+        readonly property string newName: "Renamed Card"
+
+        function init() {
+            mockStore.calls = []
+            mockStore.keycardState = "ready"
+            mockStore.keycardUid = "keycard-uid-1"
+            mockStore.cardMetadataName = "My Keycard"
+            popup = createTemporaryObject(popupFactory, root, {
+                                              flow: Constants.keycard.flow.rename
+                                          })
+            verify(!!popup)
+            popup.open()
+        }
+
+        function cleanup() {
+            if (popup)
+                popup.close()
+        }
+
+        function test_happyPathRenamesKeycard() {
+            const pinInput = findChild(popup, "keycardManagementPinInput")
+            verify(!!pinInput)
+            pinInput.setPin(currentPin)
+
+            tryVerify(() => !!findChild(popup, "keycardKeyPairNameInput"), 3000)
+            const nameInput = findChild(popup, "keycardKeyPairNameInput")
+            nameInput.text = newName
+
+            const next = findChild(popup, "keycardManagementNextButton")
+            tryVerify(() => next.visible && next.enabled, 3000)
+            compare(next.text, "Rename")
+            next.clicked()
+
+            tryVerify(() => mockStore.calls.length === 1, 3000)
+            const call = mockStore.calls[0]
+            compare(call.name, "startRenameKeycard")
+            compare(call.args[0], currentPin)
+            compare(call.args[1], newName)
+            compare(call.args[2], mockStore.cardMetadataWalletAccountsJson)
+            compare(call.args[3], "")
+
+            mockStore.keycardRenameSuccess()
+            tryVerify(() => {
+                          const title = findChild(popup, "keycardProgressTitle")
+                          return !!title && title.text === "Keycard has been renamed"
+                      }, 3000)
+            compare(findChild(popup, "keycardProgressMessage").text, "New name: Renamed Card")
+        }
+    }
+
+    TestCase {
+        name: "KeycardManagementPopup_addKeyPairToStatus"
+        when: windowShown
+
+        readonly property string pin: "123456"
+
+        function init() {
+            mockStore.calls = []
+            mockStore.keycardState = "ready"
+            mockStore.keycardUid = "keycard-uid-1"
+            mockStore.keyUid = "profile-key-uid"
+            mockStore.cardMetadataName = "My Keycard"
+            popup = createTemporaryObject(popupFactory, root, {
+                                              flow: Constants.keycard.flow.addKeyPairToStatus
+                                          })
+            verify(!!popup)
+            popup.open()
+        }
+
+        function cleanup() {
+            if (popup)
+                popup.close()
+        }
+
+        function test_happyPathAddsKeyPair() {
+            findChild(popup, "keycardManagementPinInput").setPin(pin)
+
+            tryVerify(() => {
+                          const title = findChild(popup, "keycardKeyPairNameTitle")
+                          return !!title && title.text === "Name your key pair"
+                      }, 3000)
+            compare(findChild(popup, "keycardKeyPairNameInput").text, "My Keycard")
+
+            const next = findChild(popup, "keycardManagementNextButton")
+            tryVerify(() => next.enabled, 3000)
+            next.clicked()
+
+            tryVerify(() => !!findChild(popup, "keycardManageAccountNameInput"), 3000)
+            findChild(popup, "keycardManageAccountNameInput").text = "Account One"
+            tryVerify(() => next.enabled && next.text === "Continue", 3000)
+            next.clicked()
+
+            tryVerify(() => mockStore.calls.length === 1, 3000)
+            const call = mockStore.calls[0]
+            compare(call.name, "startAddingKeyPairToStatusFromKeycard")
+            compare(call.args[0], pin)
+            compare(call.args[1], "profile-key-uid")
+            compare(call.args[2], "My Keycard")
+            verify(call.args[3].indexOf("Account One") !== -1)
+            compare(call.args[4], "")
+
+            mockStore.keycardAddKeyPairSuccess()
+            tryVerify(() => {
+                          const title = findChild(popup, "keycardProgressTitle")
+                          return !!title && title.text === "Key pair has been added to Status"
+                      }, 3000)
+            compare(findChild(popup, "keycardProgressMessage").text,
+                    "Now you can sign with this key pair using Keycard.")
+        }
+    }
+
+    TestCase {
+        name: "KeycardManagementPopup_factoryReset"
+        when: windowShown
+
+        function init() {
+            mockStore.calls = []
+            mockStore.keycardState = "ready"
+            mockStore.keycardUid = "keycard-uid-1"
+            popup = createTemporaryObject(popupFactory, root, {
+                                              flow: Constants.keycard.flow.factoryReset
+                                          })
+            verify(!!popup)
+            popup.open()
+        }
+
+        function cleanup() {
+            if (popup)
+                popup.close()
+        }
+
+        function test_happyPathFactoryResets() {
+            const checkbox = findChild(popup, "keycardFactoryResetConfirmCheckbox")
+            const resetButton = findChild(popup, "keycardManagementFactoryResetButton")
+            verify(!!checkbox)
+            verify(!!resetButton)
+            verify(!resetButton.enabled)
+
+            checkbox.checked = true
+            tryVerify(() => resetButton.enabled, 3000)
+            resetButton.clicked()
+
+            tryVerify(() => mockStore.calls.length === 1, 3000)
+            compare(mockStore.calls[0].name, "startFactoryReset")
+            compare(mockStore.calls[0].args[0], "keycard-uid-1")
+
+            mockStore.keycardFactoryResetSuccess()
+            tryVerify(() => {
+                          const title = findChild(popup, "keycardProgressTitle")
+                          return !!title && title.text === "Keycard has been reset"
+                      }, 3000)
+            compare(findChild(popup, "keycardProgressMessage").text, "Keycard is now empty.")
+        }
+    }
+
+    TestCase {
+        name: "KeycardManagementPopup_unblockWithPuk"
+        when: windowShown
+
+        readonly property string newPin: "654321"
+        readonly property string puk: "123456789012"
+
+        function init() {
+            mockStore.calls = []
+            mockStore.keycardState = "blocked-pin"
+            mockStore.keycardUid = "keycard-uid-1"
+            popup = createTemporaryObject(popupFactory, root, {
+                                              flow: Constants.keycard.flow.unblockWithPuk
+                                          })
+            verify(!!popup)
+            popup.open()
+        }
+
+        function cleanup() {
+            if (popup)
+                popup.close()
+        }
+
+        function test_happyPathUnblocksWithPuk() {
+            tryVerify(() => findChild(popup, "keycardPinStepTitle").text === "Enter new PIN", 3000)
+            findChild(popup, "keycardManagementPinInput").setPin(newPin)
+
+            tryVerify(() => findChild(popup, "keycardPinStepTitle").text === "Repeat new PIN", 3000)
+            findChild(popup, "keycardManagementPinInput").setPin(newPin)
+
+            tryVerify(() => findChild(popup, "keycardPukStepTitle").text === "Enter PUK", 3000)
+            findChild(popup, "keycardManagementPukInput").setPin(puk)
+            const next = findChild(popup, "keycardManagementNextButton")
+            tryVerify(() => next.enabled, 3000)
+            next.clicked()
+
+            tryVerify(() => mockStore.calls.length === 1, 3000)
+            const call = mockStore.calls[0]
+            compare(call.name, "startUnblockKeycardUsingPuk")
+            compare(call.args[0], newPin)
+            compare(call.args[1], puk)
+            compare(call.args[2], "")
+
+            mockStore.keycardUnblockSuccess()
+            tryVerify(() => {
+                          const title = findChild(popup, "keycardProgressTitle")
+                          return !!title && title.text === "Keycard has been unblocked"
+                      }, 3000)
+            compare(findChild(popup, "keycardProgressMessage").text,
+                    "You can now use your Keycard again")
+        }
+    }
+
+    TestCase {
+        name: "KeycardManagementPopup_unblockWithRecoveryPhrase"
+        when: windowShown
+
+        readonly property string newPin: "654321"
+
+        function init() {
+            mockStore.calls = []
+            mockStore.keycardState = "blocked-pin"
+            mockStore.keycardUid = "keycard-uid-1"
+            popup = createTemporaryObject(popupFactory, root, {
+                                              flow: Constants.keycard.flow.unblockWithRecoveryPhrase
+                                          })
+            verify(!!popup)
+            popup.open()
+        }
+
+        function cleanup() {
+            if (popup)
+                popup.close()
+        }
+
+        function test_reachesRecoveryPhraseStep() {
+            findChild(popup, "keycardManagementPinInput").setPin(newPin)
+            tryVerify(() => findChild(popup, "keycardPinStepTitle").text === "Repeat new PIN", 3000)
+            findChild(popup, "keycardManagementPinInput").setPin(newPin)
+
+            tryVerify(() => {
+                          const title = findChild(popup, "keycardSeedPhraseStepTitle")
+                          return !!title && title.text === "Enter recovery phrase"
+                      }, 3000)
+            compare(mockStore.calls.length, 0,
+                    "must not start unblock until the recovery phrase is submitted")
         }
     }
 }

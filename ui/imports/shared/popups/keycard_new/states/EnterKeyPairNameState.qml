@@ -27,6 +27,7 @@ Control {
         spacing: Theme.padding
 
         StatusBaseText {
+            objectName: "keycardKeyPairNameTitle"
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
@@ -38,6 +39,7 @@ Control {
 
         StatusInput {
             id: nameInput
+            objectName: "keycardKeyPairNameInput"
             Layout.preferredWidth: Constants.keycard.general.keycardNameInputWidth
             Layout.alignment: Qt.AlignHCenter
             charLimit: Constants.keypair.nameLengthMax

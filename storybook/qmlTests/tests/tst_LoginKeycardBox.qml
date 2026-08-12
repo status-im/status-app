@@ -2,18 +2,11 @@ import QtQuick
 
 import QtTest
 
-import AppLayouts.Onboarding.components 1.0
-import AppLayouts.Onboarding.enums 1.0
+import StatusQ.Core.Theme
 
-/*!
-    Covers the custom pairing password step on the login screen: a card provisioned outside the
-    app (e.g. on the Keycard shell) rejects the default pairing password, and the box has to
-    collect the user's password and hand it back so the login can be re-run.
+import AppLayouts.Onboarding.components
+import AppLayouts.Onboarding.enums
 
-    Submitting is deliberately a separate signal from loginRequested(): every keycard login
-    failure is reported as a wrong PIN, which clears the PIN input, so the box has no PIN left to
-    re-send. The login screen keeps the last PIN and re-issues the login itself.
-*/
 Item {
     id: root
 
@@ -109,6 +102,57 @@ Item {
             passwordInput().accepted()
 
             compare(submittedSpy.count, 0)
+        }
+    }
+
+    TestCase {
+        name: "LoginKeycardBox_cardStates"
+        when: windowShown
+
+        function init() {
+            box = createTemporaryObject(componentUnderTest, root)
+            verify(!!box)
+        }
+
+        function infoText() {
+            return findChild(box, "loginKeycardInfoText")
+        }
+
+        function pinInput() {
+            return findChild(box, "pinInput")
+        }
+
+        function test_insertKeycardShowsWaitingForCard() {
+            box.keycardState = Onboarding.KeycardState.InsertKeycard
+
+            compare(box.state, "insert")
+            compare(infoText().text, "Tap or insert your Keycard...")
+            verify(!pinInput().visible, "PIN must stay hidden until a card is present")
+        }
+
+        function test_wrongKeycardShowsError() {
+            box.isWrongKeycard = true
+
+            compare(box.state, "wrongKeycard")
+            compare(infoText().text, "Wrong Keycard for this profile")
+            compare(infoText().color, Theme.palette.dangerColor1)
+            verify(pinInput().visible, "wrong-keycard extends notEmpty and keeps the PIN field")
+        }
+
+        function test_blockedShowsUnblock_data() {
+            return [
+                {tag: "blocked-pin", keycardState: Onboarding.KeycardState.BlockedPIN},
+                {tag: "blocked-puk", keycardState: Onboarding.KeycardState.BlockedPUK},
+            ]
+        }
+
+        function test_blockedShowsUnblock(data) {
+            box.keycardState = data.keycardState
+
+            compare(box.state, "blocked")
+            compare(infoText().text, "Keycard blocked")
+            verify(findChild(box, "btnUnblock").visible)
+            verify(!pinInput().visible)
         }
     }
 }

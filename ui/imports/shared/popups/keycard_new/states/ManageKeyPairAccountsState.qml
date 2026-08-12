@@ -181,6 +181,7 @@ Control {
 
         StatusInput {
             id: accountNameInput
+            objectName: "keycardManageAccountNameInput"
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
             charLimit: Constants.keycard.general.keycardNameLength

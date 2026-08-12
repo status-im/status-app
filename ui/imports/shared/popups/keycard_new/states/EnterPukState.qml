@@ -73,6 +73,7 @@ Control {
         }
 
         StatusBaseText {
+            objectName: "keycardPukStepTitle"
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
@@ -108,6 +109,7 @@ Control {
         }
 
         StatusBaseText {
+            objectName: "keycardPukStepError"
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
