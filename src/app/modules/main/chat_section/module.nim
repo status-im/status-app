@@ -405,8 +405,6 @@ method onChatsLoaded*(
       if chatId == activeChatId:
         cModule.onMadeActive()
 
-  self.view.chatsLoaded()
-
 proc checkIfModuleDidLoad(self: Module) =
   if self.moduleLoaded:
     return
@@ -574,7 +572,7 @@ method onActiveSectionChange*(self: Module, sectionId: string) =
     self.controller.setIsCurrentSectionActive(false)
     return
   var firstLoad = false
-  if not self.view.getChatsLoaded:
+  if not self.chatsLoaded:
     firstLoad = true
     self.controller.getChatsAndBuildUI()
 
