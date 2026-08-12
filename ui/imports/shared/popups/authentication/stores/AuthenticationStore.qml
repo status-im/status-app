@@ -66,8 +66,8 @@ QtObject {
         if (d.keycardAuthentication) {
             d.mainModuleInst.authenticationModule.stopKeycardAuthentication()
         }
-        d.mainModuleInst.destroyAuthenticationModule()
         d.ready = false
+        d.mainModuleInst.destroyAuthenticationModule()
         d.keycardAuthentication = false
     }
 

@@ -401,7 +401,10 @@ StatusDialog {
     }
 
     onClosed: {
-        root.keychain.cancelActiveRequest()
+        // Cancel the keychain request started from this popup, because the keychain is shared, and on success another flow
+        // (e.g. enabling biometrics) may have already started its own request by the time this popup closes.
+        if (d.biometricsInProgress)
+            root.keychain.cancelActiveRequest()
         if (root.closePopupAction)
             root.closePopupAction()
         destroy()
