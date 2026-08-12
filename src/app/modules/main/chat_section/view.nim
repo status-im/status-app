@@ -26,7 +26,6 @@ QtObject:
       allTokenRequirementsMet: bool
       requiresTokenPermissionToJoin: bool
       amIMember: bool
-      chatsLoaded: bool
       communityMetrics: string # NOTE: later this should be replaced with QAbstractListModel-based model
       permissionsCheckOngoing: bool
       isWaitingOnNewCommunityOwnerToConfirmRequestToRejoin: bool
@@ -59,7 +58,6 @@ QtObject:
     result.tokenPermissionsVariant = newQVariant(result.tokenPermissionsModel)
     result.amIMember = false
     result.requiresTokenPermissionToJoin = false
-    result.chatsLoaded = false
     result.communityMetrics = "[]"
     result.isWaitingOnNewCommunityOwnerToConfirmRequestToRejoin = false
     result.memberMessagesModel = member_msg_model.newModel()
@@ -86,18 +84,6 @@ QtObject:
 
   QtProperty[QVariant] model:
     read = getModel
-
-  proc chatsLoadedChanged(self: View) {.signal.}
-
-  proc chatsLoaded*(self: View) =
-    self.chatsLoaded = true
-    self.chatsLoadedChanged()
-
-  proc getChatsLoaded*(self: View): bool {.slot.} =
-    return self.chatsLoaded
-  QtProperty[bool] chatsLoaded:
-    read = getChatsLoaded
-    notify = chatsLoadedChanged
 
   proc editCategoryChannelsModel*(self: View): chats_model.Model =
     return self.editCategoryChannelsModel
