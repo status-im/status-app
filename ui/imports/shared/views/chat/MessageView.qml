@@ -808,6 +808,10 @@ Loader {
         ColumnLayout {
             spacing: 0
 
+            // Pinned to the hosting Loader: unanchored, the layout follows message
+            // content implicit-width echoes and layout hosts re-polish forever.
+            width: root.width
+
             function startMessageFoundAnimation() {
                 delegate.startMessageFoundAnimation();
             }
