@@ -276,6 +276,7 @@ Item {
         asynchronous: true
         visible: centerPanelLoader.status === Loader.Ready
         active: d.shouldLoadCenterPanel
+        visible: status === Loader.Ready
         sourceComponent: (root.allChannelsAreHiddenBecauseNotPermitted || root.contentLocked) ?
                              joinCommunityCenterPanelComponent : chatColumnViewComponent
         onLoaded: d.requestCenterPanel()
@@ -325,6 +326,8 @@ Item {
         // Loaded only while shown — hiding the members list discards it —
         // and asynchronously behind the skeleton: the members list must
         // never delay a chat switch.
+        // No Ready-gate on visible here: it would also hide the nested
+        // membersPanelSkeleton, whose whole purpose is that phase.
         active: root.showRightPanel
         asynchronous: true
 

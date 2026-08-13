@@ -6,9 +6,12 @@ import QtQuick.Layouts
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core
-import StatusQ.Core.Backpressure
 import StatusQ.Core.Theme
 import StatusQ.Popups.Dialog
+
+import SortFilterProxyModel 0.2
+
+import StatusQ.Core.Utils as SQUtils
 
 import utils
 import shared
@@ -95,18 +98,133 @@ Item {
 
     QtObject {
         id: d
+        objectName: "chatMessagesViewInternal"
 
-        readonly property real scrollY: chatLogView.visibleArea.yPosition * chatLogView.contentHeight
-        readonly property bool isMostRecentMessageInViewport: chatLogView.visibleArea.yPosition >= 0.99 - chatLogView.visibleArea.heightRatio
+        readonly property bool isMostRecentMessageInViewport: chatLogView.atNewest
         readonly property var chatDetails: chatContentModule && chatContentModule.chatDetails || null
         readonly property bool keepUnread: messageStore.keepUnread
 
-        // Tracks whether the user was at the bottom of the chat to know if we must scroll back there when coming back
-        property bool isAtBottom: false
+        // Sliding model window over messageStore.messagesModel (source row 0 =
+        // newest); the view only ever holds the window's rows, never the history.
+        // The initial size is derived from the viewport (assuming compact rows)
+        // so the placeholder cannot start on screen and fire paging on open.
+        readonly property int assumedMinRowHeight: 24
+        readonly property int estimatedViewportRows: Math.ceil(chatLogView.height / d.assumedMinRowHeight)
+        readonly property int initialWindowSize: Math.max(20, Math.min(d.maxWindowSize,
+                                                                       d.estimatedViewportRows))
+        readonly property int windowChunkSize: 30
+        readonly property int maxWindowSize: 140
 
-        readonly property var loadMoreMessagesIfScrollBelowThreshold: Backpressure.oneInTimeQueued(root, 100, function() {
-            if(scrollY < 1000) messageStore.loadMoreMessages()
-        })
+        property int windowStart: 0
+        property int windowEnd: initialWindowSize - 1
+
+        // Goals the live bounds walk towards a few rows per frame (windowDriver):
+        // admitting a whole window in one dispatch stalls slow devices for
+        // seconds. Shrinking only destroys rows and is applied at once.
+        readonly property int moveBudget: 8
+        property int windowStartGoal: 0
+        property int windowEndGoal: initialWindowSize - 1
+
+        // The chat identifier (clock -2) is the last row of every chat; the
+        // backend keeps a fetch-more row (clock -1) directly above it for as
+        // long as older messages can be requested. History is exhausted only
+        // when the identifier is not preceded by that row. The count heuristic
+        // alone never settles (fetch churn re-arms it).
+        property bool historyExhausted: false
+
+        function updateHistoryExhausted() {
+            const model = root.messageStore?.messagesModel ?? null
+            if (!model || model.count === 0) {
+                historyExhausted = false
+                return
+            }
+            const last = SQUtils.ModelUtils.get(model, model.count - 1, "contentType")
+            const beforeLast = model.count > 1
+                    ? SQUtils.ModelUtils.get(model, model.count - 2, "contentType")
+                    : undefined
+            historyExhausted = last === Constants.messageContentType.chatIdentifier
+                    && beforeLast !== Constants.messageContentType.fetchMoreMessagesButton
+        }
+
+        // The initial size is re-derived once the view has a height; growth
+        // only, shrinking would destroy rows the viewport may be showing.
+        property bool windowAtInitial: true
+
+        onInitialWindowSizeChanged: {
+            if (d.windowAtInitial && d.initialWindowSize - 1 > d.windowEndGoal)
+                d.windowEndGoal = d.initialWindowSize - 1
+        }
+
+        readonly property int historyCount: messageStore.messagesModel ? messageStore.messagesModel.count : 0
+
+        // History count at the last fetch: stops the placeholder once a fetch
+        // brings nothing, re-arms when history grows.
+        property int lastFetchHistoryCount: -1
+        readonly property bool mayFetchMoreHistory: d.historyCount !== d.lastFetchHistoryCount
+
+        readonly property bool olderMessagesAvailable: d.historyCount > 0
+                                                       && (d.windowEnd < d.historyCount - 1
+                                                           || (!d.historyExhausted
+                                                               && (d.mayFetchMoreHistory
+                                                                   || root.rootStore.loadingHistoryMessagesInProgress)))
+
+        function resetWindow() {
+            windowStart = 0
+            windowEnd = Math.min(initialWindowSize, moveBudget) - 1
+            windowStartGoal = 0
+            windowEndGoal = initialWindowSize - 1
+            windowAtInitial = true
+            lastFetchHistoryCount = -1
+        }
+
+        function slideWindowToHistory() {
+            if (d.windowEndGoal < d.historyCount - 1) {
+                d.windowAtInitial = false
+                d.windowEndGoal = Math.min(d.historyCount - 1, d.windowEndGoal + d.windowChunkSize)
+                if (d.windowEndGoal - d.windowStartGoal + 1 > d.maxWindowSize)
+                    d.windowStartGoal = d.windowEndGoal - d.maxWindowSize + 1
+                return
+            }
+
+            if (root.rootStore.loadingHistoryMessagesInProgress || d.historyExhausted
+                    || !d.mayFetchMoreHistory)
+                return
+
+            d.lastFetchHistoryCount = d.historyCount
+            messageStore.loadMoreMessages()
+        }
+
+        function slideWindowToRecent() {
+            if (d.windowStartGoal <= 0)
+                return
+
+            d.windowStartGoal = Math.max(0, d.windowStartGoal - d.windowChunkSize)
+            if (d.windowEndGoal - d.windowStartGoal + 1 > d.maxWindowSize)
+                d.windowEndGoal = d.windowStartGoal + d.maxWindowSize - 1
+        }
+
+        // QSFPM only re-evaluates inserted rows; nudge the bound so the filter
+        // re-checks all rows (deferred — the proxy may lag the source change).
+        function refilterWindow() {
+            const end = d.windowEnd
+            d.windowEnd = end + 1
+            d.windowEnd = end
+        }
+
+        // Moves the window so that a source index sits in the middle of it and
+        // can therefore be scrolled to.
+        function centerWindowOn(messageIndex) {
+            d.windowAtInitial = false
+            // a tiny instant window around the target so it can be positioned
+            // at once; growth happens on the history side only, keeping the
+            // target's window row stable while rows stream in below it
+            d.windowStart = Math.max(0, messageIndex - 2)
+            d.windowEnd = messageIndex + 2
+            d.windowStartGoal = d.windowStart
+            d.windowEndGoal = Math.max(d.windowEnd,
+                                       Math.min(d.historyCount - 1,
+                                                d.windowStart + d.maxWindowSize - 1))
+        }
 
         function markAllMessagesReadIfMostRecentMessageIsInViewport() {
             if (Qt.application.state != Qt.ApplicationActive || !isMostRecentMessageInViewport || !chatLogView.visible || keepUnread) {
@@ -119,19 +237,80 @@ Item {
         }
 
         function goToMessage(messageIndex) {
-            chatLogView.currentIndex = -1
-            chatLogView.currentIndex = messageIndex
-            // Reset isAtBottom since the new message may be up high
-            d.isAtBottom = d.isMostRecentMessageInViewport
+            d.centerWindowOn(messageIndex)
+            chatLogView.positionAtRow(messageIndex - d.windowStart)
         }
 
+        // Slides the window to the recent end without rebuilding it — a reset
+        // here would destroy and regrow the delegates on every sent message.
         function scrollToBottom() {
-            chatLogView.positionViewAtBeginning()
-            d.isAtBottom = true
+            if (d.windowStart > 0 || d.windowStartGoal > 0) {
+                d.windowStart = 0
+                d.windowStartGoal = 0
+                if (d.windowEndGoal - d.windowStartGoal + 1 > d.maxWindowSize)
+                    d.windowEndGoal = d.maxWindowSize - 1
+            }
+            chatLogView.positionAtNewest()
             markAllMessagesReadIfMostRecentMessageIsInViewport()
         }
 
         onIsMostRecentMessageInViewportChanged: markAllMessagesReadIfMostRecentMessageIsInViewport()
+    }
+
+    // Source-model inserts and removals below the window would otherwise shift
+    // which messages the index window selects; keep it pinned to the same rows.
+    Connections {
+        target: root.messageStore?.messagesModel ?? null
+
+        function onRowsInserted(parent, first, last) {
+            if (d.windowStart > 0 && first <= d.windowStart) {
+                const inserted = last - first + 1
+                d.windowStart += inserted
+                d.windowEnd += inserted
+                d.windowStartGoal += inserted
+                d.windowEndGoal += inserted
+            }
+            if (first <= d.windowEnd)
+                Qt.callLater(d.refilterWindow)
+            Qt.callLater(d.updateHistoryExhausted)
+        }
+
+        function onRowsRemoved(parent, first, last) {
+            if (d.windowStart > 0 && first < d.windowStart) {
+                const removed = Math.min(last, d.windowStart - 1) - first + 1
+                d.windowStart -= removed
+                d.windowEnd -= removed
+                d.windowStartGoal = Math.max(0, d.windowStartGoal - removed)
+                d.windowEndGoal = Math.max(d.windowEnd, d.windowEndGoal - removed)
+            }
+            if (first <= d.windowEnd)
+                Qt.callLater(d.refilterWindow)
+            Qt.callLater(d.updateHistoryExhausted)
+        }
+    }
+
+    // Walks the live window bounds towards their goals a few rows per frame,
+    // so a window move admits its delegates in small batches across frames
+    // instead of building them all inside a single dispatch.
+    Timer {
+        id: windowDriver
+
+        interval: 16
+        repeat: true
+        triggeredOnStart: true
+        running: d.windowEnd !== d.windowEndGoal || d.windowStart !== d.windowStartGoal
+
+        onTriggered: {
+            if (d.windowEnd > d.windowEndGoal)
+                d.windowEnd = d.windowEndGoal
+            else if (d.windowEnd < d.windowEndGoal)
+                d.windowEnd = Math.min(d.windowEndGoal, d.windowEnd + d.moveBudget)
+
+            if (d.windowStart < d.windowStartGoal)
+                d.windowStart = d.windowStartGoal
+            else if (d.windowStart > d.windowStartGoal)
+                d.windowStart = Math.max(d.windowStartGoal, d.windowStart - d.moveBudget)
+        }
     }
 
     Connections {
@@ -179,7 +358,7 @@ Item {
 
         function onLoadingChanged() {
             d.markAllMessagesReadIfMostRecentMessageIsInViewport()
-            if (!messageStore.loading && d.isAtBottom) {
+            if (!messageStore.loading && chatLogView.stickingToNewest) {
                 Qt.callLater(d.scrollToBottom)
             }
         }
@@ -189,12 +368,11 @@ Item {
         target: !!d.chatDetails ? d.chatDetails : null
 
         function onActiveChanged() {
-            if (active && d.isAtBottom) {
+            if (active && chatLogView.stickingToNewest) {
                 Qt.callLater(d.scrollToBottom)
             }
 
             d.markAllMessagesReadIfMostRecentMessageIsInViewport()
-            d.loadMoreMessagesIfScrollBelowThreshold()
         }
 
         function onHasUnreadMessagesChanged() {
@@ -202,21 +380,11 @@ Item {
                 return
             }
 
+            // The marker enters the view when the window slides over it.
             // HACK: we call `addNewMessagesMarker` later because messages model
             // may not be yet propagated with unread messages when this signal is emitted
             if (chatLogView.visible && (Qt.application.state != Qt.ApplicationActive || !d.isMostRecentMessageInViewport)) {
                 Qt.callLater(() => messageStore.addNewMessagesMarker())
-            }
-        }
-    }
-
-    Connections {
-        target: root.rootStore
-        enabled: d.chatDetails && d.chatDetails.active
-
-        function onLoadingHistoryMessagesInProgressChanged() {
-            if(!root.rootStore.loadingHistoryMessagesInProgress) {
-                d.loadMoreMessagesIfScrollBelowThreshold()
             }
         }
     }
@@ -242,7 +410,7 @@ Item {
         }
     }
 
-    StatusListView {
+    ChatMessagesFlickable {
         id: chatLogView
         visible: !messageStore.loading
         objectName: "chatLogView"
@@ -250,15 +418,25 @@ Item {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: 0
-        bottomMargin: Theme.halfPadding
-        verticalLayoutDirection: ListView.BottomToTop
-        cacheBuffer: height > 0 ? height * 2 : 0 // cache 2 screens worth of items
 
-        highlightRangeMode: ListView.ApplyRange
-        highlightMoveDuration: 200
-        preferredHighlightBegin: 0
-        preferredHighlightEnd: chatLogView.height / 2
+        contentBottomPadding: Theme.halfPadding
+
+        moreUpAvailable: d.olderMessagesAvailable
+        moreDownAvailable: d.windowStart > 0
+
+        onMoreUpRequested: d.slideWindowToHistory()
+        onMoreDownRequested: d.slideWindowToRecent()
+
+        onRowPositioned: row => {
+            const item = chatLogView.itemAtRow(row)
+            if (item && item.startMessageFoundAnimation)
+                item.startMessageFoundAnimation()
+        }
+
+        onMovementEnded: d.markAllMessagesReadIfMostRecentMessageIsInViewport()
+        onVisibleChanged: d.markAllMessagesReadIfMostRecentMessageIsInViewport()
+
+        placeholder: MessageRowsSkeleton {}
 
         Binding on flickDeceleration {
             when: localAppSettings.isCustomMouseScrollingEnabled
@@ -272,81 +450,55 @@ Item {
             restoreMode: Binding.RestoreBindingOrValue
         }
 
-        model: messageStore.messagesModel
+        // The view is handed only the [windowStart..windowEnd] slice. The
+        // source stays detached until the initial fetch is done — attaching
+        // earlier costs one incubation per row; the covering skeleton in
+        // ChatContentView hides both that phase and the view's incubation.
+        model: SortFilterProxyModel {
+            id: messagesWindow
 
-        onContentYChanged: d.loadMoreMessagesIfScrollBelowThreshold()
-
-        onMovementEnded: {
-            d.isAtBottom = d.isMostRecentMessageInViewport
-        }
-
-        onCountChanged: {
-            d.markAllMessagesReadIfMostRecentMessageIsInViewport()
-
-            // after inilial messages are loaded
-            // load as much messages as the view requires
-            if (!messageStore.loading) {
-                d.loadMoreMessagesIfScrollBelowThreshold()
+            sourceModel: messageStore.loading ? null : messageStore.messagesModel
+            onSourceModelChanged: {
+                d.resetWindow()
+                d.updateHistoryExhausted()
+                // whatever the paging timer did against the detached window,
+                // the view opens on the newest message
+                if (sourceModel)
+                    Qt.callLater(chatLogView.positionAtNewest)
             }
 
-            // When a new item is added (new message or new-messages marker) and
-            // the user was already at the bottom, snap back so the few pixels of
-            // upward drift caused by the item insertion are immediately corrected.
-            if (d.isAtBottom) {
-                Qt.callLater(d.scrollToBottom)
+            filters: IndexFilter {
+                minimumIndex: d.windowStart
+                maximumIndex: d.windowEnd
             }
-        }
 
-        onVisibleChanged: d.markAllMessagesReadIfMostRecentMessageIsInViewport()
-
-        onCurrentItemChanged: {
-            if(currentItem && currentIndex > 0) {
-                currentItem.startMessageFoundAnimation()
-            }
+            onCountChanged: d.markAllMessagesReadIfMostRecentMessageIsInViewport()
         }
 
         ScrollBar.vertical: StatusScrollBar {
-            visible: chatLogView.visibleArea.heightRatio < 1
-        }
-
-        ChatAnchorButtonsPanel {
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: Theme.padding
-            anchors.right: parent.right
-            anchors.rightMargin: Theme.padding
-
-            // Don't show the mention anchor in 1-1 chats, because all messages count as mentions
-            mentionsCount: d.chatDetails && d.chatDetails.type !== Constants.chatType.oneToOne ?
-                        d.chatDetails.notificationCount : 0
-            recentMessagesCount: root.messageStore.newMessagesCount
-            recentMessagesButtonVisible: {
-                chatLogView.contentY // trigger binding on contentY change
-                return chatLogView.contentHeight - (d.scrollY + chatLogView.height) > 400
-            }
-
-            onRecentMessagesButtonClicked: d.scrollToBottom()
-            onMentionsButtonClicked: {
-                let id = messageStore.firstUnseenMentionMessageId()
-                if (id !== "") {
-                    messageStore.jumpToMessage(id)
-                    chatContentModule.markMessageRead(id)
-                }
-            }
+            visible: chatLogView.contentHeight > chatLogView.height
         }
 
         delegate: MessageView {
             id: msgDelegate
 
-            width: ListView.view.width
-
             objectName: "chatMessageViewDelegate"
+
+            // Row 0 is the newest message and belongs at the bottom
+            Layout.row: root.chatLogView.rowCount - index
+            Layout.column: 0
+            // Hard-pin the cell width (as ListView did) instead of fillWidth:
+            // message implicit-width echoes livelock the GridLayout otherwise.
+            Layout.preferredWidth: root.chatLogView.width
+            Layout.minimumWidth: root.chatLogView.width
+            Layout.maximumWidth: root.chatLogView.width
 
             rootStore: root.rootStore
             messageStore: root.messageStore
             channelEmoji: root.channelEmoji
             emojiPopup: root.emojiPopup
             stickersPopup: root.stickersPopup
-            chatLogView: ListView.view
+            chatLogView: root.chatLogView
             chatContentModule: root.chatContentModule
             formatBalance: root.formatBalance
             usersModel: root.usersModel
@@ -476,7 +628,7 @@ Item {
                 root.spectateCommunityRequested(communityId)
             }
         }
-        header: {
+        bottomContent: {
             if (!root.isContactBlocked && root.isOneToOne && root.rootStore.oneToOneChatContact) {
                 switch (root.rootStore.oneToOneChatContact.contactRequestState) {
                 case Constants.ContactRequestState.None: // no break
@@ -492,20 +644,30 @@ Item {
             }
             return null
         }
+    }
 
-        property int prevHeight: height
+    ChatAnchorButtonsPanel {
+        anchors.bottom: chatLogView.bottom
+        anchors.bottomMargin: Theme.padding
+        anchors.right: chatLogView.right
+        anchors.rightMargin: Theme.padding
 
-        onHeightChanged: {
-            const heightDiff = prevHeight - height
+        visible: chatLogView.visible
 
-            // Keep position at the end on resize when it was at the end before.
-            // Without this workaround, when the keyboard opens or window is
-            // resized, the position is slightly changed and not at the end anymore.
-            if (d.isAtBottom && contentHeight - (d.scrollY + height) <= heightDiff) {
-                Qt.callLater(d.scrollToBottom)
+        // Don't show the mention anchor in 1-1 chats, because all messages count as mentions
+        mentionsCount: d.chatDetails && d.chatDetails.type !== Constants.chatType.oneToOne ?
+                    d.chatDetails.notificationCount : 0
+        recentMessagesCount: root.messageStore.newMessagesCount
+        recentMessagesButtonVisible: chatLogView.moreDownAvailable
+                                     || chatLogView.contentHeight - chatLogView.contentY - chatLogView.height > 400
+
+        onRecentMessagesButtonClicked: d.scrollToBottom()
+        onMentionsButtonClicked: {
+            let id = messageStore.firstUnseenMentionMessageId()
+            if (id !== "") {
+                messageStore.jumpToMessage(id)
+                chatContentModule.markMessageRead(id)
             }
-
-            prevHeight = height
         }
     }
 
