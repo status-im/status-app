@@ -163,18 +163,18 @@ QtObject:
     # If any address+chainID is error, then the whole model is error
     # Otherwise, if any address+chainID is updating, then the whole model is updating
     # Otherwise, the model is idle
-    for address, statusPerChainID in self.ownershipStatus.pairs:
-      if not self.addresses.contains(address) or (self.selectedAddress != "" and self.selectedAddress != address):
-        continue
-      for chainID, status in statusPerChainID:
-        if not self.chainIds.contains(chainID):
+    block aggregation:
+      for address, statusPerChainID in self.ownershipStatus.pairs:
+        if not self.addresses.contains(address) or (self.selectedAddress != "" and self.selectedAddress != address):
           continue
-        if status.state == OwnershipStateError:
-          overallState = OwnershipStateError
-          break
-        elif status.state == OwnershipStateUpdating:
-          overallState = OwnershipStateUpdating
-          break
+        for chainID, status in statusPerChainID:
+          if not self.chainIds.contains(chainID):
+            continue
+          if status.state == OwnershipStateError:
+            overallState = OwnershipStateError
+            break aggregation
+          elif status.state == OwnershipStateUpdating:
+            overallState = OwnershipStateUpdating
 
     case overallState:
       of OwnershipStateIdle, OwnershipStateDelayed:
