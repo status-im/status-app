@@ -237,7 +237,7 @@ Control {
             }
             PropertyChanges {
                 target: background
-                border.color: Theme.palette.primaryColor1
+                border.color: root.Theme.palette.primaryColor1
             }
             PropertyChanges {
                 target: pinInputField
