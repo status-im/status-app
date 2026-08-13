@@ -317,7 +317,8 @@ Control {
                                     objectName: "StatusMessage_imageAlbum"
                                     readonly property int effectiveAlbumCount: Math.max(1, root.messageDetails.albumCount)
 
-                                    width: messageLayout.width
+                                    // Deliberately no `width: messageLayout.width`: the Loader mirrors it
+                                    // back as implicitWidth, which livelocks QQuickLayout hosts.
                                     album: root.messageDetails.albumCount > 0 ? root.messageDetails.album : [root.messageDetails.messageContent]
                                     albumCount: effectiveAlbumCount
                                     imageWidth: Math.max(1, Math.min((messageLayout.width - 9 * (effectiveAlbumCount - 1)) / effectiveAlbumCount, 144))
