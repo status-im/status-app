@@ -37,6 +37,7 @@ StatusImageCropPanel 0.1 StatusImageCropPanel.qml
 StatusInfoBoxPanel 0.1 StatusInfoBoxPanel.qml
 StatusItemSelector 0.1 StatusItemSelector.qml
 StatusLanguageSelector 0.1 StatusLanguageSelector.qml
+StatusLazyToolTip 0.1 StatusLazyToolTip.qml
 StatusLetterIdenticon 0.1 StatusLetterIdenticon.qml
 StatusListItem 0.1 StatusListItem.qml
 StatusListItemBadge 0.1 StatusListItemBadge.qml

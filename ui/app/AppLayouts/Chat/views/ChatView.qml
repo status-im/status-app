@@ -265,6 +265,7 @@ Item {
         width: Constants.chatSectionLeftColumnWidth
         height: root.sectionLayout?.height ?? 0
         asynchronous: true
+        visible: contactColumnLoader.status === Loader.Ready
         sourceComponent: root.rootStore.chatCommunitySectionModule.isCommunity()?
                              communtiyColumnComponent :
                              contactsColumnComponent
@@ -273,6 +274,7 @@ Item {
     readonly property Item centerPanel: Loader {
         id: centerPanelLoader
         asynchronous: true
+        visible: centerPanelLoader.status === Loader.Ready
         active: d.shouldLoadCenterPanel
         sourceComponent: (root.allChannelsAreHiddenBecauseNotPermitted || root.contentLocked) ?
                              joinCommunityCenterPanelComponent : chatColumnViewComponent

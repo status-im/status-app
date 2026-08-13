@@ -92,10 +92,15 @@ Control {
         color: alwaysVisible ? Theme.palette.baseColor4 : Theme.palette.transparent
     }
 
+    // Deferred heavy work (first-time section model builds) waits for this
+    // slide to finish — see AppMain's transition-settled notification
+    readonly property alias slideAnimationRunning: slideAnimation.running
+
     // Animate snapping when not directly driven by a drag/swipe.
     Behavior on position {
         enabled: !d.dragActive && !root.alwaysVisible
         NumberAnimation {
+            id: slideAnimation
             duration: ThemeUtils.AnimationDuration.Fast
             easing.type: Easing.OutCubic
         }
