@@ -10,6 +10,7 @@ import subprocess
 from tests import test_data
 from configs.system import get_platform
 from fixtures.path import generate_test_info
+from scripts.utils.benchmark_report import finalize_structured_benchmark_result
 from scripts.utils.failure_screenshot import attach_failure_screenshot
 from scripts.utils.system_path import SystemPath
 
@@ -165,6 +166,14 @@ def pytest_runtest_makereport(item, call):
                 rep.longrepr = error_text
     elif rep.failed:
         test_data.error = rep.longreprtext
+
+    if rep.when == 'call' and item.get_closest_marker('benchmark') is not None:
+        finalize_structured_benchmark_result(
+            item.nodeid,
+            item.name,
+            status='passed' if rep.outcome == 'passed' else 'failed',
+            duration_seconds=rep.duration,
+        )
 
 
 def pytest_exception_interact(node, call, report):

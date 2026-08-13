@@ -1,3 +1,5 @@
+import hashlib
+import json
 import logging
 import os
 import time
@@ -15,6 +17,8 @@ from scripts.utils.process_metrics import ProcessSampleStats, ProcessMonitor, re
 LOG = logging.getLogger(__name__)
 
 T = TypeVar('T')
+BENCHMARK_RESULTS_ENV = 'BENCHMARK_RESULTS_DIR'
+BENCHMARK_SCHEMA_VERSION = 1
 
 
 @dataclass(frozen=True)
@@ -67,10 +71,89 @@ def attach_metric_report(
 
 
 def attach_benchmark_metrics(tmp_path: Path, metrics: list[BenchmarkMetricReport]) -> None:
+    record_structured_benchmark_metrics(metrics)
     for metric in metrics:
         report_lines = build_metric_report_lines(metric.line_subject, metric.unit, metric.values)
         with step(f'Attach {metric.attachment_prefix} to Allure'):
             attach_metric_report(tmp_path, report_lines, metric.attachment_prefix, metric.filename)
+
+
+def _current_test_identity() -> tuple[str, str]:
+    nodeid = os.environ.get('PYTEST_CURRENT_TEST', '').split(' (', 1)[0]
+    test_name = nodeid.rsplit('::', 1)[-1] if nodeid else 'unknown'
+    return nodeid, test_name
+
+
+def _result_path(nodeid: str) -> Path | None:
+    results_dir = os.environ.get(BENCHMARK_RESULTS_ENV, '').strip()
+    if not results_dir:
+        return None
+    digest = hashlib.sha256(nodeid.encode('utf-8')).hexdigest()[:16]
+    path = Path(results_dir)
+    path.mkdir(parents=True, exist_ok=True)
+    return path / f'{digest}.json'
+
+
+def _load_result(path: Path, nodeid: str, test_name: str) -> dict:
+    if path.exists():
+        return json.loads(path.read_text(encoding='utf-8'))
+    return {
+        'schema_version': BENCHMARK_SCHEMA_VERSION,
+        'nodeid': nodeid,
+        'test_name': test_name,
+        'status': 'unknown',
+        'duration_ms': 0,
+        'retries_count': 0,
+        'flaky': False,
+        'attempts': 0,
+        'metrics': [],
+    }
+
+
+def _write_result(path: Path, result: dict) -> None:
+    path.write_text(json.dumps(result, indent=2, sort_keys=True), encoding='utf-8')
+
+
+def record_structured_benchmark_metrics(metrics: list[BenchmarkMetricReport]) -> None:
+    """Write versioned raw samples independently of the Allure report."""
+    nodeid, test_name = _current_test_identity()
+    path = _result_path(nodeid)
+    if path is None:
+        return
+    result = _load_result(path, nodeid, test_name)
+    by_name = {metric['name']: metric for metric in result.get('metrics', [])}
+    for metric in metrics:
+        by_name[metric.attachment_prefix] = {
+            'name': metric.attachment_prefix,
+            'unit': metric.unit,
+            'values': metric.values,
+        }
+    result['metrics'] = list(by_name.values())
+    _write_result(path, result)
+
+
+def finalize_structured_benchmark_result(
+    nodeid: str,
+    test_name: str,
+    *,
+    status: str,
+    duration_seconds: float,
+) -> None:
+    """Record final pytest status and retries for a benchmark test attempt."""
+    path = _result_path(nodeid)
+    if path is None:
+        return
+    result = _load_result(path, nodeid, test_name)
+    previous_status = result.get('status', 'unknown')
+    attempts = int(result.get('attempts', 0)) + 1
+    result.update({
+        'status': status,
+        'duration_ms': round(float(result.get('duration_ms', 0)) + duration_seconds * 1000),
+        'attempts': attempts,
+        'retries_count': max(0, attempts - 1),
+        'flaky': status == 'passed' and previous_status in {'failed', 'broken'},
+    })
+    _write_result(path, result)
 
 
 def enable_benchmark_mode() -> None:

@@ -1,7 +1,15 @@
 #!/usr/bin/env groovy
 library 'status-jenkins-lib@v1.9.46'
 
+/* Windows benchmarks for nightly, pull requests, and release candidates.
+ *
+ * Two Jenkins jobs share this file:
+ *   - nightly-benchmark-windows-master — cron; empty CHANGE_ID/RELEASE_VERSION
+ *   - status-app/e2e/manual-benchmark-windows — parameterized PR/RC runs
+ */
+
 QT_VERSION = "6.11.0"
+NIGHTLY_BUILD_SOURCE = 'status-app/systems/windows/x86_64/package'
 
 pipeline {
   agent {
@@ -18,6 +26,16 @@ pipeline {
       name: 'BUILD_SOURCE',
       description: 'URL to tar.gz file OR path to Jenkins build.',
       defaultValue: 'status-app/systems/windows/x86_64/package'
+    )
+    string(
+      name: 'CHANGE_ID',
+      description: 'PR number. Set this for a pull-request run.',
+      defaultValue: ''
+    )
+    string(
+      name: 'RELEASE_VERSION',
+      description: 'Release or RC version, for example 2.39.0-rc.1. Set this for a release run.',
+      defaultValue: ''
     )
     string(
       name: 'TEST_NAME',
@@ -39,12 +57,17 @@ pipeline {
       description: 'Log level for pytest.',
       choices: ['INFO', 'DEBUG', 'TRACE', 'WARNING', 'CRITICAL']
     )
+    booleanParam(
+      name: 'PUBLISH_RESULTS',
+      description: 'Publish CSV/dashboard for PR/release runs. Nightly always publishes. Off by default for dry-runs.',
+      defaultValue: false
+    )
   }
 
   options {
     timestamps()
     /* Prevent Jenkins jobs from running forever */
-    timeout(time: 30, unit: 'MINUTES')
+    timeout(time: 120, unit: 'MINUTES')
     disableConcurrentBuilds()
     disableRestartFromStage()
     /* manage how many builds we keep */
@@ -56,7 +79,10 @@ pipeline {
   }
 
   environment {
-    PLATFORM = 'tests/e2e-windows'
+    // ghcmgr platform max length is 20 characters
+    PLATFORM = 'tests/win-benchmark'
+    CHANGE_ID = "${params.CHANGE_ID}"
+    RELEASE_VERSION = "${params.RELEASE_VERSION}"
 
     SQUISH_DIR = 'C:\\squish-runner-9.2.2-qt-6.11'
     PYTHONPATH = "${SQUISH_DIR}\\lib;${SQUISH_DIR}\\bin;${SQUISH_DIR}\\lib\\python;${PYTHONPATH}"
@@ -71,6 +97,7 @@ pipeline {
 
     /* To store user configuratiin files in temp dir */
     XDG_CONFIG_HOME = "${WORKSPACE_TMP}/config"
+    BENCHMARK_RESULTS_DIR = "${WORKSPACE}\\test\\e2e\\benchmark-results"
 
     TESTRAIL_URL = 'https://ethstatus.testrail.net'
     TESTRAIL_PROJECT_ID = 18
@@ -94,6 +121,41 @@ pipeline {
 
 
   stages {
+    stage('Validate Parameters') {
+      steps {
+        script {
+          def hasPr = params.CHANGE_ID?.trim() as boolean
+          def hasRelease = params.RELEASE_VERSION?.trim() as boolean
+          def isManualJob = env.JOB_NAME.toLowerCase().contains('manual-benchmark')
+
+          if (hasPr && hasRelease) {
+            error('Set CHANGE_ID or RELEASE_VERSION, not both')
+          }
+          if (hasPr && !(params.CHANGE_ID ==~ /^[0-9]+$/)) {
+            error('CHANGE_ID must be the PR number')
+          }
+          if (isManualJob && !hasPr && !hasRelease) {
+            error('Manual benchmarks job requires CHANGE_ID for a PR run, or RELEASE_VERSION for a release run')
+          }
+          if (hasPr || hasRelease) {
+            def buildSource = params.BUILD_SOURCE?.trim()
+            if (!buildSource || buildSource == NIGHTLY_BUILD_SOURCE) {
+              error('For PR/release runs, set BUILD_SOURCE to the package URL or Jenkins project for that build')
+            }
+          }
+
+          if (hasPr) {
+            env.CHANNEL = 'pr'
+          } else if (hasRelease) {
+            env.CHANNEL = 'release'
+          } else {
+            env.CHANNEL = 'nightly'
+          }
+          echo "Benchmark channel: ${env.CHANNEL}"
+        }
+      }
+    }
+
     stage('Cleanup Workspace') {
       steps {
         sh './scripts/clean-git.sh'
@@ -120,6 +182,8 @@ pipeline {
             url:            params.BUILD_SOURCE,
             targetFileName: 'StatusIm-Desktop.7z',
             targetLocation: './pkg/',
+            userName:       '',
+            password:       '',
           )
         ])
       } } } }
@@ -187,34 +251,63 @@ pipeline {
       script {
         dir('test/e2e') {
           archiveArtifacts(
-            artifacts: 'local_run_results/*.log',
+            artifacts: 'local_run_results/*.log,benchmark-results/*.json',
             allowEmptyArchive: true,
           )
 
-          sh 'cp ext/allure_files/categories.json allure-results'
-          sh 'cp ext/allure_files/environment.properties allure-results'
+          if (fileExists('allure-results')) {
+            sh 'cp ext/allure_files/categories.json allure-results'
+            sh 'cp ext/allure_files/environment.properties allure-results'
 
-          allure([
-            results: [[path: 'allure-results']],
-            reportBuildPolicy: 'ALWAYS',
-            properties: [],
-            jdk: '',
-          ])
-        }
-      }
-      script {
-        withCredentials([sshUserPrivateKey(
-          credentialsId: 'status-app-benchmarks-deploy-key',
-          keyFileVariable: 'SSH_KEY_FILE'
-        )]) {
-          sh '''
-              eval $(ssh-agent -s)
-              ssh-add $SSH_KEY_FILE
-              ./scripts/push_benchmark.sh
-            '''
+            allure([
+              results: [[path: 'allure-results']],
+              reportBuildPolicy: 'ALWAYS',
+              properties: [],
+              jdk: '',
+            ])
+          } else {
+            echo 'No allure-results directory; skipping Allure report'
+          }
         }
       }
     }
+    success { script {
+      def publishResults = params.PUBLISH_RESULTS == true || "${params.PUBLISH_RESULTS}" == 'true'
+      def shouldPublish = (env.CHANNEL == 'nightly') || publishResults
+      if (!shouldPublish) {
+        echo 'PUBLISH_RESULTS=false; benchmark artifacts will not be committed'
+      } else {
+        /* Serialize publish across nightly + manual jobs (disableConcurrentBuilds is per-job). */
+        lock(resource: 'status-app-benchmarks-publish') {
+          withCredentials([sshUserPrivateKey(
+            credentialsId: 'status-app-benchmarks-deploy-key',
+            keyFileVariable: 'SSH_KEY_FILE'
+          )]) {
+            sh '''
+                eval $(ssh-agent -s)
+                ssh-add $SSH_KEY_FILE
+                ./scripts/push_benchmark.sh
+              '''
+          }
+        }
+      }
+      if (params.CHANGE_ID ==~ /^[0-9]+$/) {
+        env.CHANGE_ID = params.CHANGE_ID
+        env.PKG_URL = shouldPublish
+          ? "https://status-im.github.io/status-app-benchmarks/desktop/pr/${params.CHANGE_ID}/"
+          : "${env.BUILD_URL}consoleText"
+        echo "Notifying PR ${env.CHANGE_ID}: PLATFORM=${env.PLATFORM} PKG_URL=${env.PKG_URL}"
+        github.notifyPR(true)
+      }
+    } }
+    failure { script {
+      if (params.CHANGE_ID ==~ /^[0-9]+$/) {
+        env.CHANGE_ID = params.CHANGE_ID
+        env.PKG_URL = "${env.BUILD_URL}consoleText"
+        echo "Notifying PR ${env.CHANGE_ID} of failure: PLATFORM=${env.PLATFORM} PKG_URL=${env.PKG_URL}"
+        github.notifyPR(false)
+      }
+    } }
     cleanup {
       script {
         powershell '''
@@ -240,6 +333,9 @@ def setBuildDescFromFile(fileNameOrPath) {
     currentBuild.description = utils.baseName(fileNameOrPath)
     return
   }
+  if (tokens.commit) {
+    env.SOURCE_COMMIT = tokens.commit
+  }
   if (tokens.build && tokens.build.startsWith('pr')) {
     currentBuild.displayName = tokens.build.replace(/^pr/, 'PR-')
   }
@@ -249,4 +345,10 @@ def setBuildDescFromFile(fileNameOrPath) {
     Commit: tokens.commit,
     Version: (tokens.tstamp ?: tokens.version),
   ])
+}
+
+def formatMap(Map data=[:]) {
+  def text = ''
+  data.each { key, val -> text += "<b>${key}</b>: ${val}</a><br>\n" }
+  return text
 }
