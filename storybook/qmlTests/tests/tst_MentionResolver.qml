@@ -3,141 +3,122 @@ import QtTest
 
 import shared.status
 
+/*
+ Configuration analysis for MentionResolver
+ ==========================================
+ Wire format (markdownparser.cpp): a mention is "@0x" + exactly 130 lowercase
+ hex chars (uncompressed key) or "@0x" + 5 digits with a non-zero last digit
+ (system tag; only 0x00001 = everyone exists).
+
+ The resolver's product contract:
+ - a message's mentions resolve to display names from the source model
+ - the "everyone" system tag always resolves
+ - unknown keys stay unresolved (renderer falls back to the raw key)
+ - display-name changes in the model are reflected (revision tracking)
+ - while `enabled` is false results are frozen; re-enabling catches up
+ - resolution cost scales with the mentions IN THE TEXT, not with the size
+   of the contacts model: no-mention messages (the common case) must not
+   iterate the model at all — hence resolveFor(text) instead of an eagerly
+   built full map (which also crossed to C++ as a 1000-entry QVariantMap per
+   toBlocks/plainText call)
+*/
 Item {
     id: root
-    width: 200
-    height: 200
+
+    readonly property string keyA: "0x" + "a".repeat(130)
+    readonly property string keyB: "0x" + "b".repeat(130)
+    readonly property string keyUnknown: "0x" + "c".repeat(130)
 
     ListModel {
         id: usersModel
+
+        Component.onCompleted: {
+            append({ pubKey: root.keyA, name: "Alice" })
+            append({ pubKey: root.keyB, name: "Bob" })
+        }
     }
 
-    MentionResolver {
-        id: resolver
-        sourceModel: usersModel
-    }
+    Component {
+        id: resolverComp
 
-    SignalSpy {
-        id: mapSpy
-        target: resolver
-        signalName: "mapChanged"
+        MentionResolver {
+            sourceModel: usersModel
+        }
     }
 
     TestCase {
         name: "MentionResolver"
-        when: windowShown
 
-        function init() {
-            usersModel.clear()
-            resolver.enabled = true
-            mapSpy.clear()
+        function test_noMentions() {
+            const r = createTemporaryObject(resolverComp, root)
+            compare(JSON.stringify(r.resolveFor("plain text, no mentions")), "{}")
+            compare(JSON.stringify(r.resolveFor("")), "{}")
         }
 
-        // The "everyone" system tag is always resolvable, even with no source rows.
-        function test_everyoneAlwaysPresent() {
-            compare(resolver.map["0x00001"], "everyone")
+        function test_resolvesKnownMention() {
+            const r = createTemporaryObject(resolverComp, root)
+            const m = r.resolveFor("hello @" + root.keyA + " !")
+            compare(m[root.keyA], "Alice")
+            compare(Object.keys(m).length, 1)
         }
 
-        // The map is built from the source model's pub-key/name roles.
-        function test_buildsFromModel() {
-            usersModel.append({ pubKey: "0xAAA", name: "Alice" })
-            usersModel.append({ pubKey: "0xBBB", name: "Bob" })
-
-            compare(resolver.map["0xAAA"], "Alice")
-            compare(resolver.map["0xBBB"], "Bob")
-            compare(resolver.map["0x00001"], "everyone")
+        function test_multipleAndDuplicateMentions() {
+            const r = createTemporaryObject(resolverComp, root)
+            const m = r.resolveFor("@" + root.keyA + " and @" + root.keyB + " and again @" + root.keyA)
+            compare(m[root.keyA], "Alice")
+            compare(m[root.keyB], "Bob")
+            compare(Object.keys(m).length, 2)
         }
 
-        // An unknown pub key is simply absent (renderer falls back to the raw key).
-        function test_unknownKeyAbsent() {
-            usersModel.append({ pubKey: "0xAAA", name: "Alice" })
-            verify(resolver.map["0xCCC"] === undefined)
+        function test_unknownKeyStaysUnresolved() {
+            const r = createTemporaryObject(resolverComp, root)
+            const m = r.resolveFor("hi @" + root.keyUnknown)
+            verify(!(root.keyUnknown in m))
         }
 
-        // A rename in the source model updates the map reactively.
-        function test_reactiveToNameChange() {
-            usersModel.append({ pubKey: "0xAAA", name: "Alice" })
-            compare(resolver.map["0xAAA"], "Alice")
+        function test_everyoneTag() {
+            const r = createTemporaryObject(resolverComp, root)
+            const m = r.resolveFor("hey @0x00001 !")
+            compare(m["0x00001"], "everyone")
+        }
 
+        function test_renameReflected() {
+            const r = createTemporaryObject(resolverComp, root)
+            compare(r.resolveFor("@" + root.keyA)[root.keyA], "Alice")
             usersModel.setProperty(0, "name", "Alicia")
-            compare(resolver.map["0xAAA"], "Alicia")
+            compare(r.resolveFor("@" + root.keyA)[root.keyA], "Alicia")
+            usersModel.setProperty(0, "name", "Alice")
         }
 
-        // Adding / removing rows updates the map reactively.
-        function test_reactiveToInsertAndRemove() {
-            usersModel.append({ pubKey: "0xAAA", name: "Alice" })
-            compare(resolver.map["0xAAA"], "Alice")
+        function test_frozenWhileDisabled() {
+            const r = createTemporaryObject(resolverComp, root)
+            compare(r.resolveFor("@" + root.keyA)[root.keyA], "Alice")
 
-            usersModel.remove(0)
-            verify(resolver.map["0xAAA"] === undefined)
-        }
-
-        // The map is rebuilt only when the display-name role changes, not for unrelated roles.
-        // (map is a `var` returning a fresh object per rebuild, so mapChanged fires per rebuild.)
-        function test_rebuildsOnlyForNameRole() {
-            usersModel.append({ pubKey: "0xAAA", name: "Alice", online: false })
-            compare(resolver.map["0xAAA"], "Alice") // force the initial build
-
-            mapSpy.clear()
-            usersModel.setProperty(0, "online", true)   // non-name role → no rebuild
-            compare(mapSpy.count, 0)
-
-            usersModel.setProperty(0, "name", "Alicia") // name role → rebuild
-            verify(mapSpy.count > 0)
-            compare(resolver.map["0xAAA"], "Alicia")
-        }
-
-        // Disabled: source-model changes don't rebuild the map; it holds the last value.
-        function test_disabledFreezesMap() {
-            usersModel.append({ pubKey: "0xAAA", name: "Alice" })
-            compare(resolver.map["0xAAA"], "Alice")
-
-            resolver.enabled = false
-            mapSpy.clear()
+            r.enabled = false
             usersModel.setProperty(0, "name", "Alicia")
-            compare(mapSpy.count, 0)
-            compare(resolver.map["0xAAA"], "Alice")   // frozen at the last value
+            compare(r.resolveFor("@" + root.keyA)[root.keyA], "Alice",
+                    "results are frozen while disabled")
+
+            r.enabled = true
+            compare(r.resolveFor("@" + root.keyA)[root.keyA], "Alicia",
+                    "re-enabling catches up with model changes")
+            usersModel.setProperty(0, "name", "Alice")
         }
 
-        // Re-enabling rebuilds once when the model changed while disabled.
-        function test_reEnableRebuildsWhenOutdated() {
-            usersModel.append({ pubKey: "0xAAA", name: "Alice" })
-            compare(resolver.map["0xAAA"], "Alice")
-
-            resolver.enabled = false
+        // the ChatMessagesView usage: a binding over resolveFor must re-evaluate
+        // when a display name changes
+        function test_bindingReactivity() {
+            const r = createTemporaryObject(resolverComp, root)
+            const holder = Qt.createQmlObject(
+                "import QtQml; QtObject { property var resolver; property var names: resolver ? resolver.resolveFor('@" + root.keyA + "') : ({}) }",
+                root)
+            holder.resolver = r
+            compare(holder.names[root.keyA], "Alice")
             usersModel.setProperty(0, "name", "Alicia")
-            mapSpy.clear()
-            resolver.enabled = true
-            verify(mapSpy.count > 0)
-            compare(resolver.map["0xAAA"], "Alicia")
-        }
-
-        // Re-enabling is a no-op when nothing changed while disabled.
-        function test_reEnableNoopWhenUpToDate() {
-            usersModel.append({ pubKey: "0xAAA", name: "Alice" })
-            compare(resolver.map["0xAAA"], "Alice")
-
-            resolver.enabled = false
-            mapSpy.clear()
-            resolver.enabled = true
-            compare(mapSpy.count, 0)
-        }
-
-        // Custom role names are honoured.
-        function test_customRoleNames() {
-            const m = createTemporaryObject(customResolverComp, root)
-            verify(m)
-            m.sourceModel.append({ id: "0xDDD", label: "Dave" })
-            compare(m.map["0xDDD"], "Dave")
-        }
-
-        Component {
-            id: customResolverComp
-            MentionResolver {
-                pubKeyRole: "id"
-                nameRole: "label"
-                sourceModel: ListModel {}
-            }
+            tryVerify(() => holder.names[root.keyA] === "Alicia", 2000,
+                      "binding over resolveFor must re-evaluate on rename")
+            usersModel.setProperty(0, "name", "Alice")
+            holder.destroy()
         }
     }
 }
