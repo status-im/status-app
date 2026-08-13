@@ -548,6 +548,17 @@ proc buildTransactionsFromRoute*(self: Service, uuid: string): string =
     return "unexpected transfer response"
   return ""
 
+proc setPermitSignaturesAndBuildTransactions*(self: Service, uuid: string, signatures: TransactionsSignatures): string =
+  var response: JsonNode
+  let err = transactions.setPermitSignaturesAndBuildTransactions(response, uuid, signatures)
+  if err.len > 0:
+    error "status-go - wallet_setPermitSignaturesAndBuildTransactions failed", err=err
+    return err
+  if response.kind != JNull:
+    error "unexpected set permit signatures response"
+    return "unexpected set permit signatures response"
+  return ""
+
 proc sendRouterTransactionsWithSignatures*(self: Service, uuid: string, signatures: TransactionsSignatures): string =
   var response: JsonNode
   let err = transactions.sendRouterTransactionsWithSignatures(response, uuid, signatures)

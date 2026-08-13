@@ -76,15 +76,32 @@ proc buildTransactionsFromRoute*(resultOut: var JsonNode, uuid: string): string 
     warn "error building transactions", err = e.msg
     return e.msg
 
-proc sendRouterTransactionsWithSignatures*(resultOut: var JsonNode, uuid: string, signatures: TransactionsSignatures): string =
-  try:
-    var jsonSignatures = %* {}
-    for key, value in signatures:
-      jsonSignatures[key] = %* { "r": value.r, "s": value.s, "v": value.v }
+proc signaturesToJson(signatures: TransactionsSignatures): JsonNode =
+  result = %* {}
+  for key, value in signatures:
+    result[key] = %* { "r": value.r, "s": value.s, "v": value.v }
 
+## Second phase of a swap that pulls its tokens with an off-chain permit. A permit
+## signature goes inside the transaction it authorises, so the transaction hash cannot
+## exist until the permit is signed: we hand the permit signatures back here and receive a
+## further signRouterTransactions signal carrying the actual transaction hashes.
+proc setPermitSignaturesAndBuildTransactions*(resultOut: var JsonNode, uuid: string, signatures: TransactionsSignatures): string =
+  try:
     var payload = %* [{
       "uuid": uuid,
-      "signatures": jsonSignatures
+      "signatures": signaturesToJson(signatures)
+    }]
+    let response = core.callPrivateRPC("wallet_setPermitSignaturesAndBuildTransactions", payload)
+    return prepareResponse(resultOut, response)
+  except Exception as e:
+    warn "error setting permit signatures", err = e.msg
+    return e.msg
+
+proc sendRouterTransactionsWithSignatures*(resultOut: var JsonNode, uuid: string, signatures: TransactionsSignatures): string =
+  try:
+    var payload = %* [{
+      "uuid": uuid,
+      "signatures": signaturesToJson(signatures)
     }]
     let response = core.callPrivateRPC("wallet_sendRouterTransactionsWithSignatures", payload)
     return prepareResponse(resultOut, response)

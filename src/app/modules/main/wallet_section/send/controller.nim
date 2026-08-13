@@ -49,6 +49,10 @@ proc delete*(self: Controller) =
   discard
 
 proc init*(self: Controller) =
+  self.events.on(SIGNAL_PASSWORD_PROVIDED) do(e: Args):
+    let args = AuthenticationArgs(e)
+    self.delegate.onAuthenticationPasswordProvided(args.keyUid, args.password)
+
   self.events.on(SIGNAL_TRANSACTION_SENT) do(e:Args):
     let args = TransactionArgs(e)
     var
@@ -143,6 +147,9 @@ proc buildTransactionsFromRoute*(self: Controller, uuid: string): string =
 
 proc signMessage*(self: Controller, address: string, hashedPassword: string, hashedMessage: string): tuple[res: string, err: string] =
   return self.transactionService.signMessage(address, hashedPassword, hashedMessage)
+
+proc setPermitSignaturesAndBuildTransactions*(self: Controller, uuid: string, signatures: TransactionsSignatures): string =
+  return self.transactionService.setPermitSignaturesAndBuildTransactions(uuid, signatures)
 
 proc sendRouterTransactionsWithSignatures*(self: Controller, uuid: string, signatures: TransactionsSignatures): string =
   return self.transactionService.sendRouterTransactionsWithSignatures(uuid, signatures)
