@@ -60,7 +60,7 @@ class MainLeftPanel(QObject):
 
         while time.time() - start_time < timeout_sec:
             try:
-                if wallet_screen.is_visible:
+                if wallet_screen.left_panel.accounts_list.is_visible:
                     LOG.info('WalletScreen: is visible')
                     break
             except Exception as e:
@@ -182,12 +182,12 @@ class MainLeftPanel(QObject):
         skip_message_backup_popup_if_visible()
         skip_intro_if_visible()
         community = CommunityScreen()
-        community.wait_for_content_loaded(configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
+        community.wait_for_content_loaded()
         return community
 
     @allure.step('Click community and record load time until community content is loaded')
     def open_community_and_record_load_time(
-        self, name: str, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC
+        self, name: str, timeout_msec: int = configs.timeouts.COMMUNITY_LOAD_TIMEOUT_MSEC
     ):
         start_time = time.time()
         self._get_community(name)

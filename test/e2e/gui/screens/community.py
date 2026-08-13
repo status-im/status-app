@@ -33,11 +33,15 @@ LOG = logging.getLogger(__name__)
 class CommunityScreen(QObject):
 
     def __init__(self):
-        super().__init__(communities_names.mainWindow_communityLoader_Loader)
+        super().__init__(communities_names.mainWindow_communityColumnView_CommunityColumnView)
         self.left_panel = CommunityLeftPanel()
         self.tool_bar = CommunityToolBar()
         self.chat = ChatView()
         self.right_panel = MembersListPanel()
+
+    def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC, check_interval=0.5):
+        super().wait_until_appears(timeout_msec, check_interval)
+        return self
 
     def is_content_loaded(self) -> bool:
         """True when the channel list and active channel UI are ready."""
@@ -57,7 +61,7 @@ class CommunityScreen(QObject):
     @allure.step('Wait until community content is loaded')
     def wait_for_content_loaded(
         self,
-        timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+        timeout_msec: int = configs.timeouts.COMMUNITY_LOAD_TIMEOUT_MSEC,
         check_interval: float = 0.1,
     ):
         timeout_sec = timeout_msec / 1000
@@ -130,7 +134,7 @@ class CommunityScreen(QObject):
 
 class BannedCommunityScreen(QObject):
     def __init__(self):
-        super().__init__(communities_names.mainWindow_communityLoader_Loader)
+        super().__init__(communities_names.mainWindow_CommunityBannedMemberPanel)
         self.community_header_button = Button(communities_names.mainWindow_communityHeaderButton_StatusChatInfoButton)
         self.community_start_chat_button = Button(messaging_names.mainWindow_startChatButton_StatusIconTabButton)
         self.community_banned_member_panel = QObject(communities_names.mainWindow_CommunityBannedMemberPanel)
@@ -252,7 +256,7 @@ class CommunityLeftPanel(QObject):
         self.add_members_button = Button(communities_names.welcomeBannerAddMembersButton)
         self.manage_community_button = Button(communities_names.welcomeBannerManageCommunityButton)
 
-        self._channels_scroll = Scroll(communities_names.mainWindow_scrollView_StatusScrollView)
+        self._channels_scroll = Scroll(communities_names.chatListItems)
 
     @property
     @allure.step('Get community logo')

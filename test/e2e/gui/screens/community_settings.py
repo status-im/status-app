@@ -34,14 +34,14 @@ from scripts.tools.image import Image
 class CommunitySettingsScreen(QObject):
 
     def __init__(self):
-        super().__init__(communities_names.mainWindow_communityLoader_Loader)
+        super().__init__(communities_names.mainWindow_communitySettingsBackToCommunityButton_StatusBaseText)
         self.left_panel = LeftPanel()
 
 
 class LeftPanel(QObject):
 
     def __init__(self):
-        super().__init__(communities_names.mainWindow_communityColumnView_CommunityColumnView)
+        super().__init__(communities_names.overview_StatusNavigationListItem)
         self._back_to_community_button = Button(
             communities_names.mainWindow_communitySettingsBackToCommunityButton_StatusBaseText)
         self._overview_button = Button(communities_names.overview_StatusNavigationListItem)

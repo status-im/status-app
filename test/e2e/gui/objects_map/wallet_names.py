@@ -3,8 +3,8 @@ from gui.objects_map.names import statusDesktop_mainWindow, statusDesktop_mainWi
 
 mainWindow_WalletLayout = {"container": statusDesktop_mainWindow, "objectName": "walletLayoutReal", "type": "WalletLayout", "visible": True}
 
-# Left Wallet Panel
-mainWallet_LeftTab = {"container": mainWindow_WalletLayout, "objectName": "walletLeftTab", "type": "LeftTabView", "visible": True}
+# Left Wallet Panel — proxied into WalletLoader chrome, not a WalletLayout child
+mainWallet_LeftTab = {"container": statusDesktop_mainWindow, "objectName": "walletLeftTab", "type": "LeftTabView", "visible": True}
 
 mainWallet_Saved_Addresses_Button = { "container": mainWallet_LeftTab, "objectName": "savedAddressesBtn", "type": "StatusFlatButton", "visible": True}
 walletAccounts_StatusListView = {"container": mainWallet_LeftTab, "objectName": "walletAccountsListView", "type": "StatusListView", "visible": True}
@@ -15,7 +15,7 @@ mainWallet_All_Accounts_Balance = {"container": mainWallet_All_Accounts_Button, 
 
 # Saved Address View
 mainWindow_SavedAddressesView = {"container": statusDesktop_mainWindow, "type": "SavedAddressesView", "unnamed": 1, "visible": True}
-mainWindow_SavedAddressesView_2 = {"container": mainWindow_WalletLayout, "type": "SavedAddressesView", "unnamed": 1, "visible": True}
+mainWindow_SavedAddressesView_2 = {"container": statusDesktop_mainWindow, "type": "SavedAddressesView", "unnamed": 1, "visible": True}
 mainWallet_Saved_Addresses_Add_Buttton = {"container": mainWindow_SavedAddressesView, "objectName": "walletHeaderButton", "type": "StatusButton"}
 mainWallet_Saved_Addresses_List = {"container": mainWindow_SavedAddressesView, "objectName": "SavedAddressesView_savedAddresses", "type": "StatusListView"}
 savedAddressView_Delegate = {"container": mainWallet_Saved_Addresses_List, "objectName": RegularExpression("savedAddressView_Delegate*"), "type": "SavedAddressesDelegate", "visible": True}
