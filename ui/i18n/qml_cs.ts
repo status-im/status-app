@@ -11155,6 +11155,20 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>MembersListSkeleton</name>
+    <message>
+        <source>Members</source>
+        <translation type="unfinished">Členové</translation>
+    </message>
+</context>
+<context>
+    <name>MembersPanelHeader</name>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Hledat</translation>
+    </message>
+</context>
+<context>
     <name>MembersSelectorBase</name>
     <message>
         <source>To:</source>
@@ -11404,6 +11418,25 @@ selhalo</translation>
     <message>
         <source>Unknown message. Trying to recover it</source>
         <translation>Neznámá zpráva. Obnovuje se</translation>
+    </message>
+</context>
+<context>
+    <name>MessagesListHeader</name>
+    <message>
+        <source>Messages</source>
+        <translation type="unfinished">Zprávy</translation>
+    </message>
+    <message>
+        <source>Invite contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Start chat</source>
+        <translation type="unfinished">Zahájit chat</translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Hledat</translation>
     </message>
 </context>
 <context>
@@ -18812,6 +18845,13 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Last refreshed %1</source>
         <translation>Poslední aktualizace %1</translation>
+    </message>
+</context>
+<context>
+    <name>WalletAccountsSkeleton</name>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished">Peněženka</translation>
     </message>
 </context>
 <context>
