@@ -11079,6 +11079,20 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>MembersListSkeleton</name>
+    <message>
+        <source>Members</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>MembersPanelHeader</name>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>MembersSelectorBase</name>
     <message>
         <source>To:</source>
@@ -11326,6 +11340,25 @@ to load</source>
     </message>
     <message>
         <source>Unknown message. Trying to recover it</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>MessagesListHeader</name>
+    <message>
+        <source>Messages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invite contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Start chat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -18683,6 +18716,13 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Last refreshed %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>WalletAccountsSkeleton</name>
+    <message>
+        <source>Wallet</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
