@@ -196,14 +196,14 @@ pipeline {
 
     stage('Test') {
       steps {
-        lock(resource: "e2e-linux-${env.NODE_NAME}", quantity: 1) {
           script {
             try {
               timeout(2) {
                 /* Clean up any leftover containers from a previous aborted run */
-                sh 'docker compose -p e2e-fleet -f docker-compose.waku.yml down --remove-orphans || true'
-                sh 'docker compose -p e2e-fleet -f docker-compose.waku.yml up -d'
+                sh "docker compose -p ${fleetProject()} -f docker-compose.waku.yml down --remove-orphans || true"
+                sh "docker compose -p ${fleetProject()} -f docker-compose.waku.yml up -d"
                 sh 'sleep 15'
+                sh "python3 test/e2e/scripts/scan_waku_fleet.py --project ${fleetProject()}"
               }
               timeout(time: getTestStageTimeout()) {
                 dir('test/e2e') {
@@ -240,8 +240,7 @@ pipeline {
               }
             } finally {
               /* Stop local waku fleet */
-              sh 'docker compose -p e2e-fleet -f docker-compose.waku.yml down --remove-orphans || true'
-            }
+              sh "docker compose -p ${fleetProject()} -f docker-compose.waku.yml down --remove-orphans || true"
           }
         }
       }
@@ -286,6 +285,10 @@ pipeline {
       dir(env.WORKSPACE_TMP) { deleteDir() }
     }
   }
+}
+
+def fleetProject() {
+  return "e2e-${env.BUILD_NUMBER}-${env.EXECUTOR_NUMBER}".toLowerCase()
 }
 
 def setNewBuildName() {

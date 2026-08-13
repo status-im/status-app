@@ -185,9 +185,10 @@ pipeline {
           script {
             try {
               timeout(2) {
-                sh 'docker compose -p e2e-fleet -f docker-compose.waku.yml down --remove-orphans || true'
-                sh 'docker compose -p e2e-fleet -f docker-compose.waku.yml up -d'
+                sh "docker compose -p ${fleetProject()} -f docker-compose.waku.yml down --remove-orphans || true"
+                sh "docker compose -p ${fleetProject()} -f docker-compose.waku.yml up -d"
                 sh 'sleep 15'
+                sh "python3 test/e2e/scripts/scan_waku_fleet.py --project ${fleetProject()}"
               }
               timeout(time: getTestStageTimeout()) {
                 dir('test/e2e') {
@@ -213,7 +214,7 @@ pipeline {
                 }
               }
             } finally {
-              sh 'docker compose -p e2e-fleet -f docker-compose.waku.yml down --remove-orphans || true'
+              sh "docker compose -p ${fleetProject()} -f docker-compose.waku.yml down --remove-orphans || true"
             }
           }
         }
@@ -276,6 +277,10 @@ pipeline {
       powershell "Remove-Item -Path '${env.WORKSPACE_TMP}' -Recurse -Force"
     }
   }
+}
+
+def fleetProject() {
+  return "e2e-${env.BUILD_NUMBER}-${env.EXECUTOR_NUMBER}".toLowerCase()
 }
 
 def setNewBuildName() {
