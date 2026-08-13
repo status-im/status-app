@@ -91,12 +91,15 @@ def run(
 
 
 @allure.step('Get pid by process name')
-def get_pid_by_process_name(name):
+def get_pid_by_process_name(name, command_line_argument=None):
     pid_list = []
     for proc in psutil.process_iter():
         try:
-            if proc.name() == name and proc.status() != 'zombie':
-                pid_list.append(proc.pid)
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            if proc.name() != name or proc.status() == 'zombie':
+                continue
+            if command_line_argument and command_line_argument not in ' '.join(proc.cmdline()):
+                continue
+            pid_list.append(proc.pid)
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
     return pid_list if len(pid_list) > 0 else None

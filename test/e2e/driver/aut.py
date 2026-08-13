@@ -1,5 +1,4 @@
 import os
-import time
 
 import allure
 import logging
@@ -133,44 +132,29 @@ class AUT:
     def stop(self):
         LOG.info('Stopping AUT: %s', self.path)
         self.detach_context()
-        if self.pid:
-            local_system.kill_process(self.pid)
-            # Wait for process to exit with timeout to avoid hanging on Windows CI
-            max_wait_seconds = 5
-            check_interval = 0.1
-            elapsed = 0
-            
-            while elapsed < max_wait_seconds:
-                try:
-                    # Check if process is still running using psutil
-                    if psutil:
-                        try:
-                            proc = psutil.Process(self.pid)
-                            if not proc.is_running():
-                                LOG.info('Process %d exited', self.pid)
-                                break
-                        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                            # Process doesn't exist or can't be checked
-                            LOG.info('Process %d no longer exists', self.pid)
-                            break
-                    else:
-                        # If psutil not available, use shorter wait
-                        elapsed = max_wait_seconds
-                        break
-                except Exception as e:
-                    LOG.debug('Error checking process status: %s', e)
-                    # Continue and let timeout handle it
-                
-                # Calculate sleep duration before incrementing elapsed, ensuring it's non-negative
-                remaining = max_wait_seconds - elapsed
-                sleep_duration = min(check_interval, max(0, remaining))
-                if sleep_duration > 0:
-                    time.sleep(sleep_duration)
-                
-                elapsed += check_interval
-            
-            if elapsed >= max_wait_seconds and psutil:
-                LOG.warning('Process %d may still be running after %d seconds', self.pid, max_wait_seconds)
+        if not self.pid:
+            return
+
+        app_pids = local_system.get_pid_by_process_name(
+            os.path.basename(str(self.path)),
+            str(self.app_data),
+        ) or []
+        pids = {self.pid, *app_pids}
+        processes = []
+        for pid in pids:
+            try:
+                processes.append(psutil.Process(pid))
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass
+            local_system.kill_process(pid)
+
+        _, alive = psutil.wait_procs(processes, timeout=5)
+        if alive:
+            LOG.warning(
+                'AUT processes may still be running: %s',
+                [proc.pid for proc in alive],
+            )
+        self.pid = None
 
     @allure.step("Start and attach AUT")
     def launch(self) -> 'AUT':

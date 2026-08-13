@@ -35,20 +35,12 @@ def resolve_monitored_pid(pid: int, app_path=None, app_data=None) -> int:
     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
         pass
 
-    candidate_pids = local_system.get_pid_by_process_name(exe_name) or []
     if app_data is not None:
-        datadir = str(app_data)
-        matched = []
-        for candidate_pid in candidate_pids:
-            try:
-                cmdline = ' '.join(psutil.Process(candidate_pid).cmdline())
-                if datadir in cmdline:
-                    matched.append(candidate_pid)
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                continue
+        matched = local_system.get_pid_by_process_name(exe_name, str(app_data))
         if matched:
             return matched[-1]
 
+    candidate_pids = local_system.get_pid_by_process_name(exe_name) or []
     if candidate_pids:
         return candidate_pids[-1]
     return pid
