@@ -11203,6 +11203,20 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>MembersListSkeleton</name>
+    <message>
+        <source>Members</source>
+        <translation type="unfinished">Miembros</translation>
+    </message>
+</context>
+<context>
+    <name>MembersPanelHeader</name>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Buscar</translation>
+    </message>
+</context>
+<context>
     <name>MembersSelectorBase</name>
     <message>
         <source>To:</source>
@@ -11455,6 +11469,25 @@ al cargar</translation>
     <message>
         <source>Unknown message. Trying to recover it</source>
         <translation>Mensaje desconocido. Intentando recuperarlo</translation>
+    </message>
+</context>
+<context>
+    <name>MessagesListHeader</name>
+    <message>
+        <source>Messages</source>
+        <translation type="unfinished">Mensajes</translation>
+    </message>
+    <message>
+        <source>Invite contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Start chat</source>
+        <translation type="unfinished">Iniciar chat</translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Buscar</translation>
     </message>
 </context>
 <context>
@@ -18842,6 +18875,13 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Last refreshed %1</source>
         <translation>Última actualización %1</translation>
+    </message>
+</context>
+<context>
+    <name>WalletAccountsSkeleton</name>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished">Billetera</translation>
     </message>
 </context>
 <context>
