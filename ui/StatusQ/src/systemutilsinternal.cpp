@@ -460,15 +460,21 @@ void SystemUtilsInternal::openAccessibilitySettings()
 #endif
 }
 
-void SystemUtilsInternal::synthetizeRightClick(QQuickItem* item, qreal x, qreal y, Qt::KeyboardModifiers modifiers) const
+void SystemUtilsInternal::synthetizeRightClick(QQuickItem* item, qreal x, qreal y,
+                                               Qt::KeyboardModifiers modifiers) const
 {
     if (!item)
         return;
 
-    // Synthesize a right click event on the given item
-    auto leftClickRelease = new QMouseEvent(QEvent::MouseButtonRelease, {x, y}, Qt::LeftButton, Qt::NoButton, modifiers);
-    auto rightClickPress = new QMouseEvent(QEvent::MouseButtonPress, {x, y}, Qt::RightButton, Qt::NoButton, modifiers);
-    auto rightClickRelease = new QMouseEvent(QEvent::MouseButtonRelease, {x, y}, Qt::RightButton, Qt::NoButton, modifiers);
+    const QPointF localPos(x, y);
+    const QPointF globalPos = item->mapToGlobal(localPos);
+
+    auto leftClickRelease = new QMouseEvent(
+        QEvent::MouseButtonRelease, localPos, globalPos, Qt::LeftButton, Qt::NoButton, modifiers);
+    auto rightClickPress = new QMouseEvent(
+        QEvent::MouseButtonPress, localPos, globalPos, Qt::RightButton, Qt::NoButton, modifiers);
+    auto rightClickRelease = new QMouseEvent(
+        QEvent::MouseButtonRelease, localPos, globalPos, Qt::RightButton, Qt::NoButton, modifiers);
     
     QCoreApplication::postEvent(item, leftClickRelease);
     QCoreApplication::postEvent(item, rightClickPress);

@@ -53,6 +53,6 @@ private:
 
     bool m_queuedInvalidate { false };
 
-    mutable QQmlPropertyMap m_modelLeftMap;
-    mutable QQmlPropertyMap m_modelRightMap;
+    QQmlPropertyMap* m_modelLeftMap = QQmlPropertyMap::create(this);
+    QQmlPropertyMap* m_modelRightMap = QQmlPropertyMap::create(this);
 };

@@ -56,8 +56,8 @@ private:
     QQmlScriptString m_fixupScriptString;
     QQmlScriptString m_validateScriptString;
 
-    mutable QQmlPropertyMap m_fixupScope;
-    mutable QQmlPropertyMap m_validateScope;
+    QQmlPropertyMap* m_fixupScope = QQmlPropertyMap::create(this);
+    QQmlPropertyMap* m_validateScope = QQmlPropertyMap::create(this);
 
     std::unique_ptr<QQmlExpression> m_fixupExpression;
     std::unique_ptr<QQmlExpression> m_validateExpression;

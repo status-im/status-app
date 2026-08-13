@@ -133,11 +133,11 @@ int FastExpressionSorter::compare(const QModelIndex& sourceLeft,
         if (!m_expectedRoles.contains(name))
             continue;
 
-        m_modelLeftMap.insert(name, proxyModel.sourceData(sourceLeft, role));
-        m_modelRightMap.insert(name, proxyModel.sourceData(sourceRight, role));
+        m_modelLeftMap->insert(name, proxyModel.sourceData(sourceLeft, role));
+        m_modelRightMap->insert(name, proxyModel.sourceData(sourceRight, role));
     }
-    m_modelLeftMap.insert(QStringLiteral("index"), sourceLeft.row());
-    m_modelRightMap.insert(QStringLiteral("index"), sourceRight.row());
+    m_modelLeftMap->insert(QStringLiteral("index"), sourceLeft.row());
+    m_modelRightMap->insert(QStringLiteral("index"), sourceRight.row());
 
     m_expression->setNotifyOnValueChanged(true);
 
@@ -159,14 +159,14 @@ void FastExpressionSorter::updateContext(const QQmlSortFilterProxyModel& proxyMo
         if (!m_expectedRoles.contains(name))
             continue;
 
-        m_modelLeftMap.insert(name, {});
-        m_modelRightMap.insert(name, {});
+        m_modelLeftMap->insert(name, {});
+        m_modelRightMap->insert(name, {});
     }
-    m_modelLeftMap.insert(QStringLiteral("index"), -1);
-    m_modelRightMap.insert(QStringLiteral("index"), -1);
+    m_modelLeftMap->insert(QStringLiteral("index"), -1);
+    m_modelRightMap->insert(QStringLiteral("index"), -1);
 
-    m_context->setContextProperty(QStringLiteral("modelLeft"), &m_modelLeftMap);
-    m_context->setContextProperty(QStringLiteral("modelRight"), &m_modelRightMap);
+    m_context->setContextProperty(QStringLiteral("modelLeft"), m_modelLeftMap);
+    m_context->setContextProperty(QStringLiteral("modelRight"), m_modelRightMap);
 
     m_expression->setNotifyOnValueChanged(true);
 }

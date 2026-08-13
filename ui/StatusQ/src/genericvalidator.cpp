@@ -43,7 +43,7 @@ void GenericValidator::setFixupScriptString(
 
     m_fixupScriptString = scriptString;
     m_fixupExpression = std::make_unique<QQmlExpression>(
-                m_fixupScriptString, qmlContext(this), &m_fixupScope);
+                m_fixupScriptString, qmlContext(this), m_fixupScope);
 
     emit fixupScriptStringChanged();
 }
@@ -62,7 +62,7 @@ void GenericValidator::setValidateScriptString(
     m_validateScriptString = scriptString;
 
     m_validateExpression = std::make_unique<QQmlExpression>(
-                m_validateScriptString, qmlContext(this), &m_validateScope);
+                m_validateScriptString, qmlContext(this), m_validateScope);
     m_validateExpression->setNotifyOnValueChanged(true);
 
     connect(m_validateExpression.get(), &QQmlExpression::valueChanged, this,
@@ -77,7 +77,7 @@ void GenericValidator::fixup(QString& input) const
     if (!m_fixupExpression)
         return;
 
-    m_fixupScope.insert("input", input);
+    m_fixupScope->insert("input", input);
 
     m_fixupExpression->clearError();
     QVariant value = m_fixupExpression->evaluate();
@@ -106,8 +106,8 @@ QValidator::State GenericValidator::validate(QString& input, int& pos) const
                 &QValidator::changed);
     });
 
-    m_validateScope.insert("input", input);
-    m_validateScope.insert("pos", pos);
+    m_validateScope->insert("input", input);
+    m_validateScope->insert("pos", pos);
 
     m_validateExpression->clearError();
     QVariant value = m_validateExpression->evaluate();
