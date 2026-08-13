@@ -169,27 +169,33 @@ Rectangle {
             font.pixelSize: Theme.primaryTextFontSize
         }
 
-        StatusIcon {
+        // most rows are not muted — the icon, its sensor and tooltip only
+        // exist while the row actually is
+        Loader {
             id: mutedIcon
             anchors.right: statusBadge.visible ? statusBadgeContainer.left : parent.right
             anchors.rightMargin: root.horizontalMargin
             anchors.verticalCenter: parent.verticalCenter
-            width: 14
-            opacity: mutedIconSensor.containsMouse ? 1.0 : 0.2
-            icon: Theme.palette.name === "light" ? "tiny/muted" : "tiny/muted-white"
-            visible: root.muted
+            active: root.muted
+            visible: active
 
-            StatusMouseArea {
-                id: mutedIconSensor
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                anchors.fill: parent
-                onClicked: root.unmute()
-            }
+            sourceComponent: StatusIcon {
+                width: 14
+                opacity: mutedIconSensor.containsMouse ? 1.0 : 0.2
+                icon: Theme.palette.name === "light" ? "tiny/muted" : "tiny/muted-white"
 
-            StatusToolTip {
-                text: qsTr("Unmute")
-                visible: mutedIconSensor.containsMouse
+                StatusMouseArea {
+                    id: mutedIconSensor
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    anchors.fill: parent
+                    onClicked: root.unmute()
+                }
+
+                StatusToolTip {
+                    text: qsTr("Unmute")
+                    visible: mutedIconSensor.containsMouse
+                }
             }
         }
         Item {

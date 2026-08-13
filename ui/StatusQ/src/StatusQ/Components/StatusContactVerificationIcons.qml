@@ -1,7 +1,7 @@
 import QtQuick
 
+import StatusQ.Components
 import StatusQ.Core
-import StatusQ.Controls
 import StatusQ.Core.Theme
 
 Row {
@@ -48,12 +48,11 @@ Row {
              root.isBlocked ||
              (root.trustIndicator !== StatusContactVerificationIcons.TrustedType.None)
 
-    HoverHandler {
-        id: hoverHandler
-    }
-
-    StatusToolTip {
-        text: {
+    // Created on first hover only — one of these per message row otherwise.
+    StatusLazyToolTip {
+        hoverTarget: root
+        tooltipObjectName: "verificationIconsTooltip"
+        textProvider: () => {
             if (root.isBlocked)
                 return qsTr("Blocked")
             if (root.isContact) {
@@ -67,8 +66,6 @@ Row {
                 return qsTr("Untrusted")
             return ""
         }
-
-        visible: hoverHandler.hovered && text
     }
 
     // blocked

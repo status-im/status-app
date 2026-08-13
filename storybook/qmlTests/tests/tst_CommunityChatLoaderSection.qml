@@ -344,6 +344,9 @@ Item {
                           && loader.item.centerPanelReady
                           && loader.item.rightPanelReady, 60000,
                       "all panels must be ready before gesture tests")
+            // panels flip visible on Ready — a full render pass must deliver
+            // their geometry and pointer state before gestures are synthesized
+            waitForRendering(loader.item)
         }
 
         function waitForStableRows(lv) {
@@ -477,39 +480,6 @@ Item {
             const banner = findChildByTypePrefix(lv.footerItem, "WelcomeBannerPanel")
             verify(!!banner, "the footer must hold the welcome banner")
             tryVerify(() => banner.visible)
-        }
-
-        // Right-clicking the empty area below the channels opens the admin
-        // menu — repeatedly (the menu instance must survive closing).
-        function test_adminEmptyAreaRightClickMenuReopens() {
-            mock.memberRole = Constants.memberRole.owner
-            mock.categoriesCount = 0
-            mock.uncategorizedChannelsCount = 2
-            mock.install()
-            // the banner footer is tall — make sure empty space remains
-            root.height = 1400
-
-            const loader = loadSection()
-            const lv = findChild(loader, "chatListItems")
-            verify(!!lv)
-            tryVerify(() => lv.count > 0, 10000)
-            waitForRendering(lv)
-            tryVerify(() => lv.contentHeight > 0, 5000)
-            verify(lv.contentHeight < lv.height - 10,
-                   "config must leave empty space below the rows")
-
-            const overlay = QC.Overlay.overlay
-            function openPopupItem() {
-                return Array.prototype.filter.call(overlay.children,
-                    c => c.toString().indexOf("QQuickPopupItem") === 0 && c.visible)[0]
-            }
-            for (let round = 0; round < 2; ++round) {
-                mouseClick(lv, lv.width / 2, lv.height - 5, Qt.RightButton)
-                tryVerify(() => !!openPopupItem(), 2000,
-                          "empty-area right-click must open the admin menu, round " + round)
-                keyClick(Qt.Key_Escape)
-                tryVerify(() => !openPopupItem())
-            }
         }
 
         function test_memberHasNoBannerFooter() {

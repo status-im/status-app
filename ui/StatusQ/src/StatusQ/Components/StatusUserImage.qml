@@ -25,6 +25,10 @@ Loader {
     signal clicked(var mouse)
 
     sourceComponent: StatusSmartIdenticon {
+        // async incubation parents the partially-built identicon into the
+        // scene early — keep it invisible until it is complete
+        visible: root.status === Loader.Ready
+
         name: root.name
         asset {
             readonly property bool isContactIcon: !root.image && root.usesDefaultName

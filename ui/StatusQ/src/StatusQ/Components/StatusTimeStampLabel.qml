@@ -1,7 +1,7 @@
 import QtQuick
 import QtQml
 
-import StatusQ.Controls
+import StatusQ.Components
 import StatusQ.Core
 import StatusQ.Core.Theme
 
@@ -34,18 +34,13 @@ StatusBaseText {
         }
     }
 
-    StatusToolTip {
-        id: tooltip
-        visible: hhandler.hovered && !!text
+    // The tooltip only matters on desktop hover; created on demand so message
+    // rows don't pay for it (never on touch devices).
+    StatusLazyToolTip {
+        hoverTarget: root
+        hoverEnabled: !root.showFullTimestamp
         maxWidth: 350
-    }
-    HoverHandler {
-        id: hhandler
-        enabled: !root.showFullTimestamp
-        onHoveredChanged: {
-            if(hhandler.hovered && root.timestamp) {
-                tooltip.text = LocaleUtils.formatDateTime(root.timestamp)
-            }
-        }
+        tooltipObjectName: "timestampTooltip"
+        textProvider: () => root.timestamp ? LocaleUtils.formatDateTime(root.timestamp) : ""
     }
 }

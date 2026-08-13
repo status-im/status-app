@@ -101,10 +101,14 @@ Flow {
                 }
             }
 
-            StatusToolTip {
-                visible: reactionDelegate.hovered
+            // Created on first hover — also defers the JSON parse of the
+            // reaction authors list out of row creation.
+            StatusLazyToolTip {
+                hoverTarget: reactionDelegate
                 maxWidth: 400
-                text: d.showReactionAuthors(model.jsonArrayOfUsersReactedWithThisEmoji, model.emoji) || ""
+                tooltipObjectName: "reactionAuthorsTooltip"
+                textProvider: () => d.showReactionAuthors(model.jsonArrayOfUsersReactedWithThisEmoji,
+                                                          model.emoji) || ""
             }
 
             HoverHandler {

@@ -55,6 +55,9 @@ method getSectionMemberList*(self: AccessInterface): QVariant {.base.} =
 method onActiveSectionChange*(self: AccessInterface, sectionId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onSectionTransitionSettled*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method chatsModel*(self: AccessInterface): chats_model.Model {.base.} =
   raise newException(ValueError, "No implementation available")
 

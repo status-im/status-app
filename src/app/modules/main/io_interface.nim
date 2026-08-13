@@ -265,6 +265,9 @@ method setActiveSection*(self: AccessInterface, item: SectionItem, skipSavingInS
 method setActiveSectionById*(self: AccessInterface, id: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method sectionTransitionSettled*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method onChatLeft*(self: AccessInterface, chatId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

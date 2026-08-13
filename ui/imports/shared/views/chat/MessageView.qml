@@ -191,10 +191,16 @@ Loader {
 
     signal emojiReactionToggled(string messageId, string hexcode)
 
-    property var senderContactEntry: ContactModelEntry {
-        publicKey: root.senderId
-        contactsModel: root.rootStore.contactsModel
-        onPopulateContactDetailsRequested: root.rootStore.populateContactDetailsRequested(root.senderId)
+    // Lazy: the sender's contact details are only needed when the profile
+    // context menu opens; resolving them at row creation costs an O(contacts)
+    // model lookup per visible message
+    property var senderContactEntry: Loader {
+        active: false
+        sourceComponent: ContactModelEntry {
+            publicKey: root.senderId
+            contactsModel: root.rootStore.contactsModel
+            onPopulateContactDetailsRequested: root.rootStore.populateContactDetailsRequested(root.senderId)
+        }
     }
 
     property var quotedMessageFromContactEntryLoader: Loader {
@@ -228,8 +234,11 @@ Loader {
         const isBridgedAccount = isReply ? (quotedMessageContentType === Constants.messageContentType.bridgeMessageType)
                                          : root.isBridgeMessage
 
+        if (!isReply)
+            root.senderContactEntry.active = true
+
         const contactDetails = isReply ? root.quotedMessageFromContactEntryLoader.item.contactDetails
-                                       : root.senderContactEntry.contactDetails
+                                       : root.senderContactEntry.item.contactDetails
         const isMe = pubKey === root.myPublicKey
 
         const profileType = Utils.getProfileType(isMe, isBridgedAccount, contactDetails.isBlocked)

@@ -1233,6 +1233,13 @@ method setActiveSectionById*[T](self: Module[T], id: string) =
   else:
     self.setActiveSection(item)
 
+method sectionTransitionSettled*[T](self: Module[T]) =
+  # UI reports the section-switch animation is over — deferred heavy work
+  # (first-time chats build) can run without janking the transition
+  let activeSectionId = self.controller.getActiveSectionId()
+  if self.chatSectionModules.contains(activeSectionId):
+    self.chatSectionModules[activeSectionId].onSectionTransitionSettled()
+
 proc notifySubModulesAboutChange[T](self: Module[T], sectionId: string) =
   for cModule in self.chatSectionModules.values:
     cModule.onActiveSectionChange(sectionId)

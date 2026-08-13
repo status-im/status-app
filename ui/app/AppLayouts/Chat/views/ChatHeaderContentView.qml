@@ -131,7 +131,7 @@ RowLayout {
             type: StatusFlatRoundButton.Type.Secondary
 
             // initializing the tooltip
-            tooltip.visible: !!tooltip.text && menuButton.hovered && !contextMenu.opened
+            tooltip.visible: !!tooltip.text && menuButton.hovered && !(contextMenuLoader.item?.opened ?? false)
             tooltip.text: qsTr("More")
             tooltip.orientation: StatusToolTip.Orientation.Bottom
             tooltip.y: parent.height + 12
@@ -139,6 +139,9 @@ RowLayout {
             property bool showMoreMenu: false
             onClicked: {
                 menuButton.highlighted = true
+
+                contextMenuLoader.active = true
+                const contextMenu = contextMenuLoader.item
 
                 let originalOpenHandler = contextMenu.openHandler
                 let originalCloseHandler = contextMenu.closeHandler
@@ -160,92 +163,100 @@ RowLayout {
                 contextMenu.popup(-contextMenu.width + menuButton.width, menuButton.height + 4)
             }
 
-            ChatContextMenuView {
-                id: contextMenu
-                objectName: "moreOptionsContextMenu"
-                showDebugOptions: root.rootStore.isDebugEnabled
-                openHandler: function () {
-                    if(!chatContentModule) {
-                        console.debug("error on open chat context menu handler - chat content module is not set")
-                        return
+            // Built on demand: the full menu tree is only needed once the
+            // More button is clicked
+            Loader {
+                id: contextMenuLoader
+                active: false
+
+                sourceComponent:
+                    ChatContextMenuView {
+                        id: contextMenu
+                        objectName: "moreOptionsContextMenu"
+                        showDebugOptions: root.rootStore.isDebugEnabled
+                        openHandler: function () {
+                            if(!chatContentModule) {
+                                console.debug("error on open chat context menu handler - chat content module is not set")
+                                return
+                            }
+                            isCommunityChat = chatContentModule.chatDetails.belongsToCommunity
+                            amIChatAdmin = chatContentModule.amIChatAdmin()
+                            chatId = chatContentModule.chatDetails.id
+                            chatName = chatContentModule.chatDetails.name
+                            chatDescription = chatContentModule.chatDetails.description
+                            chatEmoji = chatContentModule.chatDetails.emoji
+                            chatColor = chatContentModule.chatDetails.color
+                            chatIcon = chatContentModule.chatDetails.icon
+                            chatType = chatContentModule.chatDetails.type
+                            chatMuted = chatContentModule.chatDetails.muted
+                            channelPosition = chatContentModule.chatDetails.position
+                            hideIfPermissionsNotMet = chatContentModule.chatDetails.hideIfPermissionsNotMet
+                        }
+
+                        onMuteChat: {
+                            if(!chatContentModule) {
+                                console.debug("error on mute chat from context menu - chat content module is not set")
+                                return
+                            }
+                            chatContentModule.muteChat(interval)
+                        }
+
+                        onUnmuteChat: {
+                            if(!chatContentModule) {
+                                console.debug("error on unmute chat from context menu - chat content module is not set")
+                                return
+                            }
+                            chatContentModule.unmuteChat()
+                        }
+
+                        onMarkAllMessagesRead: {
+                            if(!chatContentModule) {
+                                console.debug("error on mark all messages read from context menu - chat content module is not set")
+                                return
+                            }
+                            chatContentModule.markAllMessagesRead()
+                        }
+
+                        onClearChatHistory: {
+                            if(!chatContentModule) {
+                                console.debug("error on clear chat history from context menu - chat content module is not set")
+                                return
+                            }
+                            chatContentModule.clearChatHistory()
+                        }
+
+                        onLeaveChat: {
+                            if(!chatContentModule) {
+                                console.debug("error on leave chat from context menu - chat content module is not set")
+                                return
+                            }
+                            chatContentModule.leaveChat()
+                        }
+
+                        onDeleteCommunityChat: root.rootStore.removeCommunityChat(chatId)
+
+                        onDisplayProfilePopup: {
+                            Global.openProfilePopup(publicKey)
+                        }
+                        onDisplayEditChannelPopup: {
+                            root.displayEditChannelPopup(chatId, chatName, chatDescription,
+                                                         chatEmoji, chatColor,
+                                                         chatCategoryId, channelPosition,
+                                                         contextMenu.deleteChatConfirmationDialog,
+                                                         hideIfPermissionsNotMet);
+                        }
+                        onAddRemoveGroupMember: {
+                            root.addRemoveGroupMember()
+                        }
+                        onUpdateGroupChatDetails: {
+                            root.rootStore.chatCommunitySectionModule.updateGroupChatDetails(
+                                        chatId,
+                                        groupName,
+                                        groupColor,
+                                        groupImage
+                                        )
+                        }
                     }
-                    isCommunityChat = chatContentModule.chatDetails.belongsToCommunity
-                    amIChatAdmin = chatContentModule.amIChatAdmin()
-                    chatId = chatContentModule.chatDetails.id
-                    chatName = chatContentModule.chatDetails.name
-                    chatDescription = chatContentModule.chatDetails.description
-                    chatEmoji = chatContentModule.chatDetails.emoji
-                    chatColor = chatContentModule.chatDetails.color
-                    chatIcon = chatContentModule.chatDetails.icon
-                    chatType = chatContentModule.chatDetails.type
-                    chatMuted = chatContentModule.chatDetails.muted
-                    channelPosition = chatContentModule.chatDetails.position
-                    hideIfPermissionsNotMet = chatContentModule.chatDetails.hideIfPermissionsNotMet
-                }
-
-                onMuteChat: {
-                    if(!chatContentModule) {
-                        console.debug("error on mute chat from context menu - chat content module is not set")
-                        return
-                    }
-                    chatContentModule.muteChat(interval)
-                }
-
-                onUnmuteChat: {
-                    if(!chatContentModule) {
-                        console.debug("error on unmute chat from context menu - chat content module is not set")
-                        return
-                    }
-                    chatContentModule.unmuteChat()
-                }
-
-                onMarkAllMessagesRead: {
-                    if(!chatContentModule) {
-                        console.debug("error on mark all messages read from context menu - chat content module is not set")
-                        return
-                    }
-                    chatContentModule.markAllMessagesRead()
-                }
-
-                onClearChatHistory: {
-                    if(!chatContentModule) {
-                        console.debug("error on clear chat history from context menu - chat content module is not set")
-                        return
-                    }
-                    chatContentModule.clearChatHistory()
-                }
-
-                onLeaveChat: {
-                    if(!chatContentModule) {
-                        console.debug("error on leave chat from context menu - chat content module is not set")
-                        return
-                    }
-                    chatContentModule.leaveChat()
-                }
-
-                onDeleteCommunityChat: root.rootStore.removeCommunityChat(chatId)
-
-                onDisplayProfilePopup: {
-                    Global.openProfilePopup(publicKey)
-                }
-                onDisplayEditChannelPopup: {
-                    root.displayEditChannelPopup(chatId, chatName, chatDescription,
-                                                 chatEmoji, chatColor,
-                                                 chatCategoryId, channelPosition,
-                                                 contextMenu.deleteChatConfirmationDialog,
-                                                 hideIfPermissionsNotMet);
-                }
-                onAddRemoveGroupMember: {
-                    root.addRemoveGroupMember()
-                }
-                onUpdateGroupChatDetails: {
-                    root.rootStore.chatCommunitySectionModule.updateGroupChatDetails(
-                                chatId,
-                                groupName,
-                                groupColor,
-                                groupImage
-                                )
-                }
             }
         }
     }

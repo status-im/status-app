@@ -130,6 +130,14 @@ QtObject {
         internal.mainModuleInst.setActiveSectionById(sectionId)
     }
 
+    // The section-switch animation is over: deferred backend work (first-time
+    // section model builds) may run without janking the transition
+    function notifySectionTransitionSettled() {
+        if(!internal.mainModuleInst)
+            return
+        internal.mainModuleInst.sectionTransitionSettled()
+    }
+
     function activateStatusDeepLink(link) {
         if(!internal.mainModuleInst)
             return

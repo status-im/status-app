@@ -48,7 +48,9 @@ Item {
         spacing: 4
         width: parent.width
 
-        TextEdit {
+        // Plain Text on purpose: a TextEdit's selection/input machinery is
+        // far heavier to create and the name is not selectable content.
+        Text {
             id: primaryDisplayName
             objectName: "StatusMessageHeader_DisplayName"
             verticalAlignment: Text.AlignVCenter
@@ -61,22 +63,12 @@ Item {
             font.pixelSize: Theme.primaryTextFontSize
             wrapMode: Text.WordWrap
             color: Theme.palette.primaryColor1
-            selectionColor: Theme.palette.primaryColor2
-            selectedTextColor: Theme.palette.primaryColor3
             text: root.amISender ? qsTr("You") : Emoji.parse(root.sender.displayName)
-            readOnly: true
-            selectByMouse: true
-            textFormat: TextEdit.AutoText
-
-            // to make the text easier to select, but w/o inflating the spacing with other items in the parent RowLayout
-            leftPadding: 4
-            rightPadding: 4
-            Layout.leftMargin: -4
-            Layout.rightMargin: -4
+            textFormat: Text.AutoText
 
             HoverHandler {
                 id: hhandler
-                cursorShape: !!parent.selectedText ? Qt.IBeamCursor : root.displayNameClickable ? Qt.PointingHandCursor : undefined
+                cursorShape: root.displayNameClickable ? Qt.PointingHandCursor : undefined
             }
             TapHandler {
                 enabled: root.displayNameClickable

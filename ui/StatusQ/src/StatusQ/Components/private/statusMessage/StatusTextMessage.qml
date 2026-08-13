@@ -90,23 +90,6 @@ Item {
         // Reuse the existing linkActivated contract: "//<pubkey>" opens the profile, a URL opens.
         onMentionClicked: (pubKey) => root.linkActivated("//" + pubKey)
         onLinkClicked: (url) => root.linkActivated(url)
-
-        // HoverHandler bloks external mouse events (e.g. for opening the context menu),
-        // so we use a MouseArea there
-        MouseArea {
-            id: hoverArea
-
-            acceptedButtons: Qt.NoButton
-            anchors.fill: parent
-            hoverEnabled: true
-        }
-
-        StatusToolTip {
-            text: root.disabledTooltipText
-            delay: 100
-            x: hoverArea.mouseX - 60
-            y: -height + hoverArea.mouseY - 10
-        }
     }
 
     // Vertical "show more" mask + button

@@ -30,7 +30,10 @@ QtObject {
             messagesModel = messageModule.model
     }
 
-    function loadMoreMessages() {}
+    function loadMoreMessages() {
+        if (messageModule && messageModule.loadMoreMessages)
+            messageModule.loadMoreMessages()
+    }
     function setKeepUnread(flag) {}
     function getMessageByIdAsJson(id) { return undefined }
     function getMessageByIndexAsJson(index) { return false }
