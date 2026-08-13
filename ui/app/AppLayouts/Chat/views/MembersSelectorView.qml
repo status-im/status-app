@@ -2,8 +2,10 @@ import QtQuick
 import QtQuick.Controls
 import QtQml.Models
 
+import StatusQ
 import StatusQ.Controls
 import StatusQ.Components
+import StatusQ.Core.Utils
 
 import AppLayouts.Profile.helpers
 
@@ -12,11 +14,17 @@ import "private"
 import shared.stores
 import utils
 
+import QtModelsToolkit
+import SortFilterProxyModel
+
 MembersSelectorBase {
     id: root
 
     property UtilsStore utilsStore
     property var allContactsModel
+
+    // Selected members carrying the full contact role set (unlike the plain `model`)
+    readonly property alias selectedContactsModel: selectedContacts
 
     signal resolveENS(string address)
     signal populateContactDetails(string pubkey)
@@ -73,6 +81,28 @@ MembersSelectorBase {
         elideMode: Text.ElideMiddle
 
         onClosed: root.entryRemoved(this)
+    }
+
+    SortFilterProxyModel {
+        id: selectedContacts
+
+        sourceModel: root.contactsModel
+
+        // Kept out of the expression below; singletons and attached types are not
+        // resolvable in its context
+        readonly property int selectedCount: root.model.ModelCount.count
+
+        function isMemberPredicate(pubKey) {
+            return ModelUtils.contains(root.model, "pubKey", pubKey)
+        }
+
+        filters: FastExpressionFilter {
+            expression: {
+                selectedContacts.selectedCount // ensure expression is reevaluated when members model changes
+                return selectedContacts.isMemberPredicate(model.pubKey)
+            }
+            expectedRoles: ["pubKey"]
+        }
     }
 
     QtObject {
