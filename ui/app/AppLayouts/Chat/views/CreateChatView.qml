@@ -37,7 +37,7 @@ Page {
         id: d
 
         function createChat() {
-            root.createChatPropertiesStore.createChatInitMessage = chatInput.textInput.text
+            root.createChatPropertiesStore.createChatInitMessage = chatInput.getTextWithPublicKeys()
             root.createChatPropertiesStore.createChatFileUrls = chatInput.fileUrlsAndSources
             membersSelector.createChat()
 
@@ -171,11 +171,11 @@ Page {
 
                 Layout.alignment: Qt.AlignBottom
                 Layout.fillWidth: true
-                visible: membersSelector.model.count > 0
+                visible: !membersSelector.model.ModelCount.empty
                 emojiPopup: root.emojiPopup
                 stickersPopup: root.stickersPopup
                 closeGifPopupAfterSelection: true
-                usersModel: membersSelector.model
+                usersModel: membersSelector.selectedContactsModel
                 paymentRequestFeatureEnabled: false
                 onStickerSelected: (hashId, packId, url) => {
                     root.createChatPropertiesStore.createChatStickerHashId = hashId;
@@ -184,7 +184,8 @@ Page {
                     membersSelector.createChat();
                 }
 
-                onOpenGifPopupRequest: root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
+                onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) =>
+                    root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
                 onSendMessageRequested: { d.createChat() }
             }
         }

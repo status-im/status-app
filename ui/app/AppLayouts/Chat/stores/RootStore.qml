@@ -154,7 +154,7 @@ QtObject {
         }
 
         exposedRoles: ["key", "symbol", "shortName", "name", "category"]
-        expectedRoles: ["symbol", "collectionName", "collectionUid"]
+        expectedRoles: ["collectionName", "collectionUid"]
     }
 
     readonly property var walletCollectiblesGroupingModel: GroupingModel {
