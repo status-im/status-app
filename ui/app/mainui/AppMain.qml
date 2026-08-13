@@ -2449,6 +2449,8 @@ Item {
 
                         emojiPopup: statusEmojiPopup.item
                         stickersPopup: statusStickersPopupLoader.item
+
+                        onOpenGifPopupRequest: popupRequestsHandler.openGifs(params, cbOnGifSelected, cbOnClose)
                     }
                 }
             }

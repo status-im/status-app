@@ -28,6 +28,8 @@ Page {
     property var mutualContactsModel
     property var allContactsModel
 
+    signal openGifPopupRequest(var params, var cbOnGifSelected, var cbOnClose)
+
     property var emojiPopup: null
     property var stickersPopup: null
 
@@ -182,6 +184,7 @@ Page {
                     membersSelector.createChat();
                 }
 
+                onOpenGifPopupRequest: root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
                 onSendMessageRequested: { d.createChat() }
             }
         }
