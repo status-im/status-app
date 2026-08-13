@@ -2,22 +2,22 @@
   "status-app.test": {
     "clusterId": 16,
     "wakuNodes": [
-      "enr:-K-4QCaLys0F9CWHiXr9igN3oYGf3iWW-S444Xt49rCTpyiQQwMyfjCX52UeXPVG8vPGSSkP0mISMw-an-0HMhlZ-C4BgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc4CCcnONABAFAAEAIABAAIABAIlzZWNwMjU2azGhA4YfRwZtCsMoYkplRF4RErG9ohxKT-lneUgtogv3SJkCg3RjcILqYYN1ZHCCv2iFd2FrdTIN"
+      "enr:-Lm4QCl4if4UH7E2MBHbYSvgbcVeJMrg0c_7NfITr7b3L-M-M68CMxScf31FU4gDWqDo8S81NG-2lKIPoWEwMP6Vl40CgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc4oACASsEgADBphZgnJzjQAQBQABACAAQACAAQCJc2VjcDI1NmsxoQOGH0cGbQrDKGJKZUReERKxvaIcSk_pZ3lILaIL90iZAoN0Y3CCmFmDdWRwgr9ohXdha3UyDQ"
     ],
     "discV5BootstrapNodes": [
-      "enr:-K-4QCaLys0F9CWHiXr9igN3oYGf3iWW-S444Xt49rCTpyiQQwMyfjCX52UeXPVG8vPGSSkP0mISMw-an-0HMhlZ-C4BgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc4CCcnONABAFAAEAIABAAIABAIlzZWNwMjU2azGhA4YfRwZtCsMoYkplRF4RErG9ohxKT-lneUgtogv3SJkCg3RjcILqYYN1ZHCCv2iFd2FrdTIN"
+      "enr:-Lm4QCl4if4UH7E2MBHbYSvgbcVeJMrg0c_7NfITr7b3L-M-M68CMxScf31FU4gDWqDo8S81NG-2lKIPoWEwMP6Vl40CgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc4oACASsEgADBphZgnJzjQAQBQABACAAQACAAQCJc2VjcDI1NmsxoQOGH0cGbQrDKGJKZUReERKxvaIcSk_pZ3lILaIL90iZAoN0Y3CCmFmDdWRwgr9ohXdha3UyDQ"
     ],
     "storeNodes": [
       {
         "id": "store-1",
-        "enr": "enr:-K-4QI3LQZZaLyS6kA5lvmIcroksqNBZ1fRozAT9t_3yBVT6Vu5VHeNKa9u4eST4yGJ7M8K7Py53ZH7Zb6S6g2WbFrUBgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc4CCcnONABAFAAEAIABAAIABAIlzZWNwMjU2azGhAo3JozGxzJ2AeSAtgU0YzmxURKi6sveikwnF2cvZAhY1g3RjcILqYoN1ZHCCv2mFd2FrdTID",
-        "addr": "/ip4/127.0.0.1/tcp/60002/p2p/16Uiu2HAm4y9o3GARfphq8jN1wsVhezCHPMmRuekHCCKJ1EsgzVBi",
+        "enr": "enr:-Lm4QPwCRYjiv1J1y8SRtvJMjdYwmtJ5LCMffRdUHtIJVq5UMKLlwdnF8jYltAeF0KEGDwOvzOraj3bosT6Wkxy_xzICgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc4oACASsEgACBphagnJzjQAQBQABACAAQACAAQCJc2VjcDI1NmsxoQKNyaMxscydgHkgLYFNGM5sVESourL3opMJxdnL2QIWNYN0Y3CCmFqDdWRwgr9phXdha3UyAw",
+        "addr": "/ip4/127.0.0.1/tcp/39002/p2p/16Uiu2HAm4y9o3GARfphq8jN1wsVhezCHPMmRuekHCCKJ1EsgzVBi",
         "fleet": "status-desktop.test"
       },
       {
         "id": "store-2",
-        "enr": "enr:-K-4QP3hbp7CDP7Gn6NuVAtrrYRdqIiq-vX-Ofp-DY3UiRehM1kY2irkHLCfrTMQAwU8imS2A1SSPDV6pIvDrnRsJFABgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc4CCcnONABAFAAEAIABAAIABAIlzZWNwMjU2azGhAl0GSz7dmpanBV_zsW3Jwlp4CAf7-Vh2SMU4-NZt23Cpg3RjcILqY4N1ZHCCv2qFd2FrdTID",
-        "addr": "/ip4/127.0.0.1/tcp/60003/p2p/16Uiu2HAm1goTmM1zjARKFw82u71Zxhj5gvQDXPFEPW9xea4Zt6dv",
+        "enr": "enr:-Lm4QLfu3Sr6alb9CyHvGZpNAVhzC6caUzca57-ffm2vz4E5CNNP7vDe0RA3lsERYBYAdrTRPcUErDtSXCg6xgdOtCQCgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc4oACASsEgAEBphbgnJzjQAQBQABACAAQACAAQCJc2VjcDI1NmsxoQJdBks-3ZqWpwVf87FtycJaeAgH-_lYdkjFOPjWbdtwqYN0Y3CCmFuDdWRwgr9qhXdha3UyAw",
+        "addr": "/ip4/127.0.0.1/tcp/39003/p2p/16Uiu2HAm1goTmM1zjARKFw82u71Zxhj5gvQDXPFEPW9xea4Zt6dv",
         "fleet": "status-desktop.test"
       }
     ]
