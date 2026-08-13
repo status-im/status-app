@@ -240,25 +240,33 @@ class DeviceContext:
                     # SHARE_PROFILE_BUTTON poll below.
                     time.sleep(2.0)
 
-                # Dismiss backup-recovery popup that may overlay
-                # Messages section. mobile:clickGesture with elementId
-                # — element.click() has the same BS-portrait mis-routing.
-                for dismiss_attempt in range(1, 4):
-                    skip_el = app.find_element_safe(chat_locators.BACKUP_SKIP_BUTTON, timeout=2)
-                    if skip_el is None:
-                        break
-                    self.logger.info(
-                        "Dismissing backup popup via clickGesture (attempt %d)",
-                        dismiss_attempt,
-                    )
-                    try:
-                        self.driver.execute_script(
-                            "mobile: clickGesture",
-                            {"elementId": skip_el.id},
+                # Dismiss the first-run popups that overlay the Messages
+                # section. Introduce-yourself comes first: AppMain shows it
+                # instead of the backup popup while the profile has no display
+                # name, which is always the case for e2e-created profiles.
+                # mobile:clickGesture with elementId — element.click() has the
+                # same BS-portrait mis-routing.
+                for popup_name, skip_locator in (
+                    ("introduce-yourself", chat_locators.INTRODUCE_SKIP_BUTTON),
+                    ("backup", chat_locators.BACKUP_SKIP_BUTTON),
+                ):
+                    for dismiss_attempt in range(1, 4):
+                        skip_el = app.find_element_safe(skip_locator, timeout=2)
+                        if skip_el is None:
+                            break
+                        self.logger.info(
+                            "Dismissing %s popup via clickGesture (attempt %d)",
+                            popup_name,
+                            dismiss_attempt,
                         )
-                    except Exception as exc:
-                        self.logger.debug("clickGesture on Skip suppressed: %s", exc)
-                    time.sleep(1.0)  # popup dismiss animation
+                        try:
+                            self.driver.execute_script(
+                                "mobile: clickGesture",
+                                {"elementId": skip_el.id},
+                            )
+                        except Exception as exc:
+                            self.logger.debug("clickGesture on Skip suppressed: %s", exc)
+                        time.sleep(1.0)  # popup dismiss animation
 
                 time.sleep(1.0)  # let any final overlay settle before polling
 

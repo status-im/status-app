@@ -175,6 +175,34 @@ class App(BasePage):
         self.logger.info("Backup banner dismissed: %s", gone)
         return gone
 
+    def dismiss_introduce_yourself_popup(self) -> bool:
+        """Skip the first-run "Introduce yourself" popup if it is showing.
+
+        AppMain opens it on the first navigation into a chat section whenever
+        the profile has no display name — always true for e2e-created profiles,
+        which never set one — and returns early when it does, so the backup
+        popup stays hidden until this one has been dismissed.
+        """
+        from locators.messaging.chat_locators import ChatLocators
+
+        skip = self.find_element_safe(ChatLocators.INTRODUCE_SKIP_BUTTON, timeout=1)
+        if skip is None:
+            return False
+        try:
+            self.driver.execute_script("mobile: clickGesture", {"elementId": skip.id})
+        except Exception as exc:
+            self.logger.debug("Introduce-yourself skip tap failed: %s", exc)
+            return False
+        gone = self.wait_for_condition(
+            lambda: not self.is_element_visible(
+                ChatLocators.INTRODUCE_SKIP_BUTTON, timeout=1
+            ),
+            timeout=5,
+            poll_interval=0.5,
+        )
+        self.logger.info("Introduce-yourself popup skipped: %s", gone)
+        return gone
+
     def _ensure_main_nav_visible(self) -> bool:
         """Ensure the left navigation bar is visible.
 
@@ -188,6 +216,7 @@ class App(BasePage):
         if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=1):
             return self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=5)
 
+        self.dismiss_introduce_yourself_popup()
         self.dismiss_backup_banner()
 
         # Phase 1: unwind deep navigation stack via back button
