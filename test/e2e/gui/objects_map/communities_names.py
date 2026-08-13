@@ -15,26 +15,23 @@ importCommunityPopup_KeyInput = {"container": statusDesktop_mainWindow_overlay, 
 importCommunityPopup_JoinButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "joinStatusDialogFooterButton", "type": "StatusButton", "visible": True}
 
 # Community View
-mainWindow_communityLoader_Loader = {"container": statusDesktop_mainWindow, "objectName": "SplitView", "type": "ContentItem", "visible": True}
+mainWindow_communityColumnView_CommunityColumnView = {"container": statusDesktop_mainWindow, "objectName": "communityColumnView", "type": "CommunityColumnView", "visible": True}
 
 # Left Panel
-mainWindow_communityColumnView_CommunityColumnView = {"container": mainWindow_communityLoader_Loader, "objectName": "communityColumnView", "type": "CommunityColumnView", "visible": True}
 mainWindow_communityHeaderButton_StatusChatInfoButton = {"checkable": False, "container": mainWindow_communityColumnView_CommunityColumnView, "objectName": "communityHeaderButton", "type": "StatusChatInfoButton", "visible": True}
 mainWindow_identicon_StatusSmartIdenticon = {"container": mainWindow_communityHeaderButton_StatusChatInfoButton, "id": "identicon", "type": "StatusSmartIdenticon", "unnamed": 1, "visible": True}
 mainWindow_statusChatInfoButtonNameText_TruncatedTextWithTooltip = {"container": mainWindow_communityHeaderButton_StatusChatInfoButton, "objectName": "statusChatInfoButtonNameText", "type": "TruncatedTextWithTooltip", "visible": True}
 mainWindow_Members_TruncatedTextWithTooltip = {"container": mainWindow_communityHeaderButton_StatusChatInfoButton, "type": "TruncatedTextWithTooltip", "unnamed": 1, "visible": True}
 mainWindow_startChatButton_StatusIconTabButton = {"checkable": True, "container": mainWindow_communityColumnView_CommunityColumnView, "objectName": "startChatButton", "type": "StatusIconTabButton", "visible": True}
 mainWindow_createChatOrCommunity_Loader = {"container": mainWindow_communityColumnView_CommunityColumnView, "id": "createChatOrCommunity", "type": "Loader", "unnamed": 1, "visible": True}
-mainWindow_scrollView_StatusScrollView = {"container": mainWindow_communityColumnView_CommunityColumnView, "id": "scrollView", "type": "StatusScrollView", "unnamed": 1, "visible": True}
-scrollView_Flickable = {"container": mainWindow_scrollView_StatusScrollView, "type": "Flickable", "unnamed": 1, "visible": True}
 
 # Welcome banner
-welcomeBannerPanel = {"container": mainWindow_scrollView_StatusScrollView, "type": "WelcomeBannerPanel", "unnamed": 1, "visible": True}
+welcomeBannerPanel = {"container": statusDesktop_mainWindow, "type": "WelcomeBannerPanel", "unnamed": 1, "visible": True}
 welcomeBannerAddMembersButton = {"container": welcomeBannerPanel, "objectName": "CommunityWelcomeBannerPanel_AddMembersButton", "type": "StatusButton", "visible": True}
 welcomeBannerManageCommunityButton = {"container": welcomeBannerPanel, "objectName": "CommunityWelcomeBannerPanel_ManageCommunity", "type": "StatusFlatButton", "visible": True}
 
 # Channels and categories
-communityChatListAndCategories = {"container": scrollView_Flickable, "id": "communityChatListAndCategories", "type": "StatusChatListAndCategories", "unnamed": 1, "visible": True}
+communityChatListAndCategories = {"container": mainWindow_communityColumnView_CommunityColumnView, "id": "communityChatListAndCategories", "type": "StatusChatListAndCategories", "unnamed": 1, "visible": True}
 channelAndCategoriesListItems = {"container": communityChatListAndCategories, "objectName": "statusChatListAndCategoriesChatList", "type": "StatusChatList"}
 chatListItems = {"container": channelAndCategoriesListItems, "objectName": "chatListItems", "type": "StatusListView", "visible": True}
 chatListItemDropAreaItem = {"container": chatListItems,  "id": "chatListDelegate", "type": "DropArea", "isCategory": False, "visible": True}
@@ -49,16 +46,16 @@ mainWindow_Join_Community_StatusButton = {"container": statusDesktop_mainWindow,
 mainWindow_CommunityBannedMemberPanel = {"container": statusDesktop_mainWindow, "objectName": "communityBannedMemberPanel", "type": "CommunityBannedMemberCenterPanel", "visible": True}
 mainWindow_CommunityBannedMemberPanel_UserInfo = {"container": statusDesktop_mainWindow, "objectName": "userInfoPanelBase", "type": "Rectangle", "visible": True}
 
-add_categories_StatusFlatButton = {"checkable": False, "container": mainWindow_scrollView_StatusScrollView, "id": "manageBtn", "type": "StatusFlatButton", "visible": True}
-categoryItem_StatusChatListCategoryItem = {"container": mainWindow_scrollView_StatusScrollView, "objectName": "categoryItem", "type": "StatusChatListCategoryItem", "visible": True}
+add_categories_StatusFlatButton = {"checkable": False, "container": statusDesktop_mainWindow, "text": "Add categories", "type": "StatusFlatButton", "visible": True}
+categoryItem_StatusChatListCategoryItem = {"container": chatListItems, "objectName": "categoryItem", "type": "StatusChatListCategoryItem", "visible": True}
 delete_Category_StatusMenuItem = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "deleteCategoryMenuItem", "type": "StatusMenuItem", "visible": True}
 create_category_StatusMenuItem = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "createCommunityCategoryBtn", "type": "StatusMenuItem", "visible": True}
 edit_Category_StatusMenuItem = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "editCategoryMenuItem", "type": "StatusMenuItem", "visible": True}
-scrollView_menuButton_StatusChatListCategoryItemButton = {"container": mainWindow_scrollView_StatusScrollView, "objectName": "categoryItemButtonMore", "type": "StatusChatListCategoryItemButton", "visible": True}
-scrollView_toggleButton_StatusChatListCategoryItemButton = {"container": mainWindow_scrollView_StatusScrollView, "objectName": "categoryItemButtonToggle", "type": "StatusChatListCategoryItemButton", "visible": True}
-scrollView_addButton_StatusChatListCategoryItemButton = {"container": mainWindow_scrollView_StatusScrollView, "objectName": "categoryItemButtonAdd", "type": "StatusChatListCategoryItemButton", "visible": True}
-add_channels_StatusButton = {"checkable": False, "container": mainWindow_scrollView_StatusScrollView, "id": "addMembersBtn", "type": "StatusButton", "unnamed": 1, "visible": True}
-scrollView_general_StatusChatListItem = {"container": mainWindow_scrollView_StatusScrollView, "objectName": "general", "type": "StatusChatListItem", "visible": True}
+scrollView_menuButton_StatusChatListCategoryItemButton = {"container": chatListItems, "objectName": "categoryItemButtonMore", "type": "StatusChatListCategoryItemButton", "visible": True}
+scrollView_toggleButton_StatusChatListCategoryItemButton = {"container": chatListItems, "objectName": "categoryItemButtonToggle", "type": "StatusChatListCategoryItemButton", "visible": True}
+scrollView_addButton_StatusChatListCategoryItemButton = {"container": chatListItems, "objectName": "categoryItemButtonAdd", "type": "StatusChatListCategoryItemButton", "visible": True}
+add_channels_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow, "text": "Add channels", "type": "StatusButton", "unnamed": 1, "visible": True}
+scrollView_general_StatusChatListItem = {"container": chatListItems, "objectName": "general", "type": "StatusChatListItem", "visible": True}
 invite_People_StatusMenuItem = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "invitePeople", "type": "StatusMenuItem", "visible": True}
 mute_Community_StatusMenuItem = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "StatusMenuItemDelegate", "type": "StatusMenuItem", "visible": True}
 leave_Community_StatusMenuItem = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "leaveCommunityMenuItem", "type": "StatusMenuItem", "visible": True}
@@ -76,7 +73,7 @@ statusToolBar_StatusChatInfo_pinText_TruncatedTextWithTooltip = {"container": ma
 
 # Chat
 mainWindow_ChatMessagesView = {"container": statusDesktop_mainWindow, "type": "ChatMessagesView", "unnamed": 1, "visible": True}
-mainWindow_ChatColumnView = {"container": mainWindow_communityLoader_Loader, "type": "ChatColumnView", "unnamed": 1, "visible": True}
+mainWindow_ChatColumnView = {"container": statusDesktop_mainWindow, "type": "ChatColumnView", "unnamed": 1, "visible": True}
 chatMessageViewDelegate_channelIdentifierNameText_StyledText = {"container": mainWindow_ChatColumnView, "objectName": "channelIdentifierNameText", "type": "StyledText", "visible": True}
 chatMessageViewDelegate_Welcome = {"container": mainWindow_ChatColumnView, "type": "StatusBaseText", "unnamed": 1, "visible": True}
 chatMessageViewDelegate_channelIdentifierSmartIdenticon_StatusSmartIdenticon = {"container": mainWindow_ChatMessagesView, "objectName": "channelIdentifierSmartIdenticon", "type": "StatusSmartIdenticon", "visible": True}
@@ -96,16 +93,16 @@ enableMessageBackupPopup = {"container": statusDesktop_mainWindow_overlay, "obje
 enableMessageBackupPopupSkipButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "objectName": "backupMessageSkipStatusFlatButton", "type": "StatusFlatButton", "visible": True}
 
 # Community Settings
-mainWindow_communitySettingsBackToCommunityButton_StatusBaseText = {"container": mainWindow_communityLoader_Loader, "objectName": "communitySettingsBackToCommunityButton", "type": "StatusBaseText", "visible": True}
-mainWindow_listView_StatusListView = {"container": mainWindow_communityLoader_Loader, "id": "listView", "type": "StatusListView", "unnamed": 1, "visible": True}
-overview_StatusNavigationListItem = {"container": mainWindow_listView_StatusListView, "objectName": "CommunitySettingsView_NavigationListItem_Overview", "type": "StatusNavigationListItem", "visible": True}
-members_StatusNavigationListItem = {"container": mainWindow_listView_StatusListView, "index": 1, "objectName": "CommunitySettingsView_NavigationListItem_Members", "type": "StatusNavigationListItem", "visible": True}
-permissions_StatusNavigationListItem = {"container": mainWindow_listView_StatusListView, "index": 2, "objectName": "CommunitySettingsView_NavigationListItem_Permissions", "type": "StatusNavigationListItem", "visible": True}
-tokens_StatusNavigationListItem = {"container": mainWindow_listView_StatusListView, "index": 3, "objectName": "CommunitySettingsView_NavigationListItem_Tokens", "type": "StatusNavigationListItem", "visible": True}
-airdrops_StatusNavigationListItem = {"container": mainWindow_listView_StatusListView, "index": 4, "objectName": "CommunitySettingsView_NavigationListItem_Airdrops", "type": "StatusNavigationListItem", "visible": True}
+mainWindow_communitySettingsBackToCommunityButton_StatusBaseText = {"container": statusDesktop_mainWindow, "objectName": "communitySettingsBackToCommunityButton", "type": "StatusBaseText", "visible": True}
+mainWindow_listView_StatusListView = {"container": statusDesktop_mainWindow, "id": "listView", "type": "StatusListView", "unnamed": 1, "visible": True}
+overview_StatusNavigationListItem = {"container": statusDesktop_mainWindow, "objectName": "CommunitySettingsView_NavigationListItem_Overview", "type": "StatusNavigationListItem", "visible": True}
+members_StatusNavigationListItem = {"container": statusDesktop_mainWindow, "objectName": "CommunitySettingsView_NavigationListItem_Members", "type": "StatusNavigationListItem", "visible": True}
+permissions_StatusNavigationListItem = {"container": statusDesktop_mainWindow, "objectName": "CommunitySettingsView_NavigationListItem_Permissions", "type": "StatusNavigationListItem", "visible": True}
+tokens_StatusNavigationListItem = {"container": statusDesktop_mainWindow, "objectName": "CommunitySettingsView_NavigationListItem_Tokens", "type": "StatusNavigationListItem", "visible": True}
+airdrops_StatusNavigationListItem = {"container": statusDesktop_mainWindow, "objectName": "CommunitySettingsView_NavigationListItem_Airdrops", "type": "StatusNavigationListItem", "visible": True}
 
 # Overview Settings View
-mainWindow_OverviewSettingsPanel = {"container": mainWindow_communityLoader_Loader, "type": "OverviewSettingsPanel", "unnamed": 1, "visible": True}
+mainWindow_OverviewSettingsPanel = {"container": statusDesktop_mainWindow, "type": "OverviewSettingsPanel", "unnamed": 1, "visible": True}
 communityOverviewSettingsCommunityName_StatusBaseText = {"container": mainWindow_OverviewSettingsPanel, "objectName": "communityOverviewSettingsCommunityName", "type": "StatusBaseText", "visible": True}
 communityOverviewSettingsCommunityDescription_StatusBaseText = {"container": mainWindow_OverviewSettingsPanel,  "objectName": "communityOverviewSettingsCommunityDescription", "type": "StatusBaseText", "visible": True}
 mainWindow_Edit_Community_StatusButton = {"container": statusDesktop_mainWindow, "objectName": "communityOverviewSettingsEditCommunityButton", "type": "StatusButton", "visible": True}

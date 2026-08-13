@@ -30,7 +30,6 @@ from gui.components.wallet.send_popup import SendPopup
 from gui.elements.button import Button
 from gui.elements.list import List
 from gui.elements.object import QObject
-from gui.elements.scroll import Scroll
 from gui.elements.text_edit import TextEdit
 from gui.elements.text_label import TextLabel
 from gui.objects_map import messaging_names, communities_names
@@ -63,21 +62,22 @@ def _find_named_descendant(parent, object_name: str):
 class LeftPanel(QObject):
 
     def __init__(self):
-        super().__init__(messaging_names.mainWindow_contactColumnLoader_Loader)
+        super().__init__(messaging_names.contactsColumnView_chatList)
         self._start_chat_button = Button(messaging_names.mainWindow_startChatButton_StatusIconTabButton)
         self._search_text_edit = TextEdit(messaging_names.mainWindow_search_edit_TextEdit)
-        self._scroll = Scroll(messaging_names.mainWindow_scrollView_StatusScrollView)
         self._chats_list = List(messaging_names.chatList_ListView)
-        self._chat_list_item = QObject(messaging_names.scrollView_StatusChatListItem)
-        self._chats_scroll = QObject(messaging_names.mainWindow_scrollView_StatusScrollView)
+        self._chat_list_item = QObject(dict(messaging_names.chatList_StatusChatListItem))
+        self._chats_scroll = QObject(messaging_names.chatList_ListView)
 
     @property
     @allure.step('Get chats by chats list')
     def get_chats_names(self) -> typing.List[str]:
+        self._chat_list_item.real_name.pop('objectName', None)
         chats_list = []
-        for child in walk_children(driver.waitForObjectExists(self._chats_list.real_name)):
-            if getattr(child, 'id', '') == 'statusChatListItem':
-                chats_list.append(str(child.objectName))
+        for item in driver.findAllObjects(self._chat_list_item.real_name):
+            name = str(getattr(item, 'objectName', ''))
+            if name:
+                chats_list.append(name)
         return chats_list
 
     @allure.step('Click chat item')
@@ -98,6 +98,7 @@ class LeftPanel(QObject):
 
     @allure.step('Click start chat button')
     def start_chat(self):
+        self.wait_until_appears()
         self._start_chat_button.click(x=1, y=1)
         return CreateChatView()
 
@@ -603,6 +604,11 @@ class ChatMessagesView(QObject):
         self._close_preview_button = QObject(messaging_names.mainWindow_closeLinkPreviewButton_StatusFlatRoundButton)
         self._send_message_button = Button(messaging_names.mainWindow_statusChatInputSendButton)
 
+    def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC, check_interval=0.5):
+        super().wait_until_appears(timeout_msec, check_interval)
+        self._chat_input.wait_until_appears(timeout_msec)
+        return self
+
     @property
     @allure.step('Get group name')
     def group_name(self) -> str:
@@ -871,9 +877,14 @@ class Members(QObject):
 class MessagesScreen(QObject):
 
     def __init__(self):
-        super().__init__(messaging_names.mainWindow_chatView_ChatView)
+        super().__init__(messaging_names.contactsColumnView_chatList)
         self.left_panel = LeftPanel()
         self.tool_bar = ToolBar()
         self.chat = ChatView()
         self.right_panel = Members()
         self.group_chat = ChatMessagesView()
+
+    def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC, check_interval=0.5):
+        super().wait_until_appears(timeout_msec, check_interval)
+        self.chat.wait_until_appears(timeout_msec, check_interval)
+        return self
