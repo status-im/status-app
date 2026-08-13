@@ -2,9 +2,9 @@ services:
   boot-1:
     image: wakuorg/nwaku:v0.38.1
     ports:
-      - "39001:39001"
-      - "8645:8645"
-      - "49000:49000/udp"
+      - "39001"
+      - "8645"
+      - "49000/udp"
     entrypoint: [
       "/usr/bin/wakunode",
       "--discv5-discovery=true",
@@ -45,9 +45,9 @@ services:
   store:
     image: wakuorg/nwaku:v0.38.1
     ports:
-      - "39002:39002"
-      - "8646:8646"
-      - "49001:49001/udp"
+      - "39002"
+      - "8646"
+      - "49001/udp"
     entrypoint: [
       "/usr/bin/wakunode",
       "--discv5-discovery=true",
@@ -88,9 +88,9 @@ services:
   store-2:
     image: wakuorg/nwaku:v0.38.1
     ports:
-      - "39003:39003"
-      - "8647:8647"
-      - "49002:49002/udp"
+      - "39003"
+      - "8647"
+      - "49002/udp"
     entrypoint: [
       "/usr/bin/wakunode",
       "--discv5-discovery=true",
