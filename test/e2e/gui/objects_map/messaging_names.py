@@ -5,24 +5,21 @@ from gui.objects_map.names import statusDesktop_mainWindow_overlay
 
 mainWindow_chatView_ChatView = {"container": statusDesktop_mainWindow, "objectName": "chatViewComponent", "type": "ChatView", "visible": True}
 
-# Left Panel
-mainWindow_contactColumnLoader_Loader = {"container": mainWindow_chatView_ChatView, "id": "contactColumnLoader", "type": "Loader", "unnamed": 1, "visible": True}
+contactsColumnView_chatList = {"container": statusDesktop_mainWindow, "objectName": "ContactsColumnView_chatList", "type": "StatusChatList", "visible": True}
 mainWindow_startChatButton_StatusIconTabButton = {"container": statusDesktop_mainWindow, "objectName": "startChatButton", "type": "HeaderButton", "visible": True}
-mainWindow_search_edit_TextEdit = {"container": mainWindow_contactColumnLoader_Loader, "id": "edit", "type": "TextEdit", "unnamed": 1, "visible": True}
-mainWindow_scrollView_StatusScrollView = {"container": mainWindow_contactColumnLoader_Loader, "id": "scrollView", "type": "StatusScrollView", "unnamed": 1, "visible": True}
-scrollView_Flickable = {"container": mainWindow_scrollView_StatusScrollView, "type": "Flickable", "unnamed": 1, "visible": True}
-scrollView_ContactsColumnView_chatList_StatusChatList = {"container": mainWindow_scrollView_StatusScrollView, "objectName": "ContactsColumnView_chatList", "type": "StatusChatList", "visible": True}
-chatList_ListView = {"container": statusDesktop_mainWindow, "objectName": "chatListItems", "type": "StatusListView", "visible": True}
+mainWindow_search_edit_TextEdit = {"container": statusDesktop_mainWindow, "id": "edit", "type": "TextEdit", "unnamed": 1, "visible": True}
+chatList_ListView = {"container": contactsColumnView_chatList, "objectName": "chatListItems", "type": "StatusListView", "visible": True}
+chatList_StatusChatListItem = {"container": chatList_ListView, "type": "StatusChatListItem", "visible": True}
 
-# Tool Bar
-mainWindow_statusToolBar_StatusToolBar = {"container": mainWindow_chatView_ChatView, "objectName": "statusToolBar", "type": "StatusToolBar", "visible": True}
+# Tool Bar lives in section chrome, not inside ChatView
+mainWindow_statusToolBar_StatusToolBar = {"container": statusDesktop_mainWindow, "objectName": "statusToolBar", "type": "StatusToolBar", "visible": True}
 statusToolBar_Confirm_StatusButton = {"checkable": False, "container": mainWindow_statusToolBar_StatusToolBar, "objectName": "inlineSelectorConfirmButton", "type": "StatusButton", "visible": True}
 statusToolBar_Cancel_StatusButton = {"checkable": False, "container": mainWindow_statusToolBar_StatusToolBar, "type": "StatusButton", "unnamed": 1, "visible": True}
 statusToolBar_StatusTagItem = {"container": mainWindow_statusToolBar_StatusToolBar, "type": "StatusTagItem", "visible": True}
 
 # Chat View
-mainWindow_ChatColumnView = {"container": mainWindow_chatView_ChatView, "type": "ChatColumnView", "unnamed": 1, "visible": True}
-mainWindow_chatLogView_StatusListView = {"container": mainWindow_ChatColumnView, "objectName": "chatLogView", "type": "StatusListView", "visible": True}
+mainWindow_ChatColumnView = {"container": statusDesktop_mainWindow, "type": "ChatColumnView", "unnamed": 1, "visible": True}
+mainWindow_chatLogView_StatusListView = {"container": statusDesktop_mainWindow, "objectName": "chatLogView", "type": "StatusListView", "visible": True}
 chatLogView_chatMessageViewDelegate_MessageView = {"container": mainWindow_chatLogView_StatusListView, "objectName": "chatMessageViewDelegate", "type": "MessageView", "visible": True, "enabled": True}
 
 # Create Chat View
@@ -47,12 +44,8 @@ edit_name_and_image_StatusMenuItem = {"checkable": False, "container": mainWindo
 leave_group_StatusMenuItem = {"checkable": False, "container": mainWindow_Overlay, "enabled": True, "objectName": "deleteOrLeaveMenuItem", "text": "Leave group", "type": "StatusMenuItem", "visible": True}
 mainWindow_inputScrollView_StatusScrollView = {"container": statusDesktop_mainWindow, "id": "inputScrollView", "type": "StatusScrollView", "unnamed": 1, "visible": True}
 inputScrollView_Message_PlaceholderText = {"container": mainWindow_inputScrollView_StatusScrollView, "text": "Type something", "type": "PlaceholderText", "unnamed": 1, "visible": True}
-mainWindow_scrollView_StatusScrollView = {"container": statusDesktop_mainWindow, "id": "scrollView", "type": "StatusScrollView", "unnamed": 1, "visible": True}
-mainWindow_ScrollView = {"container": statusDesktop_mainWindow, "type": "StatusScrollView", "unnamed": 1, "visible": True}
-scrollView_StatusChatListItem = {"container": mainWindow_ScrollView, "type": "StatusChatListItem", "visible": True}
 tiny_pin_icon_StatusIcon = {"container": chatLogView_chatMessageViewDelegate_MessageView, "objectName": "tiny/pin-icon", "type": "StatusIcon"}
 add_remove_from_group_StatusMenuItem = {"container": mainWindow_Overlay, "enabled": True, "objectName": "addRemoveFromGroupStatusAction", "type": "StatusMenuItem", "visible": True}
-mainWindow_inputScrollView_StatusScrollView = {"container": statusDesktop_mainWindow, "id": "inputScrollView", "type": "StatusScrollView", "unnamed": 1, "visible": True}
 inputScrollView_messageInputField_TextArea = {"container": mainWindow_inputScrollView_StatusScrollView, "objectName": "messageInputField", "type": "TextArea", "visible": True}
 mainWindow_statusChatInputEmojiButton_StatusFlatRoundButton = {"container": statusDesktop_mainWindow, "objectName": "statusChatInputEmojiButton", "type": "ChatIcon", "visible": True}
 mainWindow_imageBtn_StatusFlatRoundButton = {"container": statusDesktop_mainWindow, "id": "imageBtn", "type": "StatusFlatRoundButton", "unnamed": 1, "visible": True}
@@ -68,16 +61,13 @@ chatMessageViewDelegate_StatusEmoji = {"container": chatLogView_chatMessageViewD
 messageContextView = {"container": mainWindow_Overlay, "objectName": "MessageContextMenuView", "type": "PopupItem", "visible": True}
 
 # User List Panel
-mainWindow_UserListPanel = {"container": mainWindow_chatView_ChatView, "type": "UserListPanel", "unnamed": 1, "visible": True}
+mainWindow_UserListPanel = {"container": statusDesktop_mainWindow, "type": "UserListPanel", "unnamed": 1, "visible": True}
 userListPanel_StatusMemberListItem = {"container": mainWindow_UserListPanel, "type": "StatusMemberListItem", "unnamed": 1, "visible": True}
 
 # Group chat users list panel
 mainWindow_userListPanel_StatusListView = {"container": statusDesktop_mainWindow, "objectName": "userListPanel", "type": "StatusListView", "visible": True}
 groupUserListPanel_StatusMemberListItem = {"container": mainWindow_userListPanel_StatusListView, "type": "StatusMemberListItem", "unnamed": 1, "visible": True}
 
-# Message quick actions
-mainWindow_chatLogView_StatusListView = {"container":  statusDesktop_mainWindow, "objectName": "chatLogView", "type": "StatusListView", "visible": True}
-chatLogView_chatMessageViewDelegate_MessageView = {"container": mainWindow_chatLogView_StatusListView, "objectName": "chatMessageViewDelegate", "type": "MessageView", "visible": True}
 StatusTextMessage_chatTextMessage = {"container": chatLogView_chatMessageViewDelegate_MessageView, "objectName": "StatusTextMessage_chatText", "type": "ChatTextView", "visible": True}
 
 chatMessageViewDelegate_deletedMessage_RowLayout = {"container": chatLogView_chatMessageViewDelegate_MessageView, "id": "deletedMessage", "type": "RowLayout", "unnamed": 1, "visible": True}
