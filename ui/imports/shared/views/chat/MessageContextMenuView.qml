@@ -104,6 +104,9 @@ StatusMenu {
     closePolicy: (root.closeOnPressOutside ? Popup.CloseOnPressOutside : Popup.NoAutoClose) | Popup.CloseOnEscape
     topPadding: Math.max(8, Theme.halfPadding)
     bottomPadding: Math.max(8, Theme.halfPadding)
+    background: Rectangle {
+    color: "transparent"
+    }
     delegate: StatusMenuItem {
         visible: root.hideDisabledItems && !visibleOnDisabled ? enabled : true
         Layout.preferredHeight: visible ? implicitHeight : 0
