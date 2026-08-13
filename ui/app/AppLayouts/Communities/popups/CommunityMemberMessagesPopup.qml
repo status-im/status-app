@@ -92,7 +92,7 @@ StatusDialog {
                     amISender: model.amISender
                     messageText: model.messageText
                     unparsedText: model.unparsedText
-                    mentionsMap: root.mentionResolver.map
+                    mentionsMap: root.mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageText)
                     messageImage: model.messageImage
                     messageTimestamp: model.timestamp
                     messageOutgoingStatus: model.outgoingStatus

@@ -1,6 +1,7 @@
 module StatusQ.Components.private
 
 StatusImageMessage 0.1 statusMessage/StatusImageMessage.qml
+StatusMessageEmojiReactions 0.1 statusMessage/StatusMessageEmojiReactions.qml
 StatusMessageImageAlbum 0.1 statusMessage/StatusMessageImageAlbum.qml
 StatusComboboxBackground 0.1 StatusComboboxBackground.qml
 StatusComboboxIndicator 0.1 StatusComboboxIndicator.qml

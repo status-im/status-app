@@ -156,6 +156,10 @@ Item {
             controlUnderTest.asset.emoji = "💩"
             verify(buttonEmoji.visible)
 
+            // the on-demand emoji is sized by its Loader, not left at StatusEmoji's own 14px
+            tryCompare(buttonEmoji.item, "width", controlUnderTest.icon.width)
+            tryCompare(buttonEmoji.item, "height", controlUnderTest.icon.height)
+
             // unset the emoji, verify it's not visible
             controlUnderTest.asset.emoji = ""
             verify(!buttonEmoji.visible)
@@ -241,7 +245,7 @@ Item {
 
             const buttonEmoji = findChild(controlUnderTest, "buttonEmoji")
             verify(!!buttonEmoji)
-            compare(buttonEmoji.opacity, 0.4)
+            compare(buttonEmoji.item.opacity, 0.4) // the emoji is loaded on demand
 
             const buttonRipple = findChild(controlUnderTest, "buttonRipple")
             verify(!!buttonRipple)

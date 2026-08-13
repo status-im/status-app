@@ -350,7 +350,9 @@ Item {
             chatContentModule: root.chatContentModule
             formatBalance: root.formatBalance
             usersModel: root.usersModel
-            mentionsMap: mentionResolver.map
+            // covers the message body and the quoted reply, whose mentions
+            // also render through this map
+            mentionsMap: mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageText)
 
             isChatBlocked: root.isChatBlocked
             joined: root.joined

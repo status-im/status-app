@@ -4403,23 +4403,7 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
 <context>
     <name>ContactsColumnView</name>
     <message>
-        <source>Messages</source>
-        <translation>Zprávy</translation>
-    </message>
-    <message>
-        <source>Start chat</source>
-        <translation>Zahájit chat</translation>
-    </message>
-    <message>
-        <source>Search</source>
-        <translation type="unfinished">Hledat</translation>
-    </message>
-    <message>
         <source>Search contacts and groups...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Invite contacts</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

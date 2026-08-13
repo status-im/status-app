@@ -260,15 +260,17 @@ AbstractButton {
                 sourceComponent: root.isRoundIcon ? roundIcon : baseIcon
             }
 
-            // emoji
-            StatusEmoji {
+            Loader {
                 objectName: "buttonEmoji"
                 Layout.preferredWidth: root.icon.width
                 Layout.preferredHeight: root.icon.height
                 Layout.alignment: Qt.AlignCenter
-                visible: root.asset.emoji && root.display !== AbstractButton.TextOnly && !root.loadingWithText
-                emojiId: Emoji.iconId(root.asset.emoji, root.asset.emojiSize) || ""
-                opacity: !root.enabled || !root.interactive ? 0.4 : 1
+                active: root.asset.emoji && root.display !== AbstractButton.TextOnly && !root.loadingWithText
+                visible: active
+                sourceComponent: StatusEmoji {
+                    emojiId: Emoji.iconId(root.asset.emoji, root.asset.emojiSize) || ""
+                    opacity: !root.enabled || !root.interactive ? 0.4 : 1
+                }
             }
 
             // text right
