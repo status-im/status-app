@@ -3180,13 +3180,6 @@ Do you wish to override the security check and continue?</source>
     </message>
 </context>
 <context>
-    <name>ChatsLoadingPanel</name>
-    <message>
-        <source>Loading chats...</source>
-        <translation>채팅 불러오는 중...</translation>
-    </message>
-</context>
-<context>
     <name>CollectibleDetailView</name>
     <message>
         <source>Unknown</source>

@@ -3201,13 +3201,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
 </context>
 <context>
-    <name>ChatsLoadingPanel</name>
-    <message>
-        <source>Loading chats...</source>
-        <translation>Načítání chatů...</translation>
-    </message>
-</context>
-<context>
     <name>CollectibleDetailView</name>
     <message>
         <source>Unknown</source>
