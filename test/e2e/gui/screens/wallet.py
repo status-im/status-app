@@ -55,6 +55,11 @@ class WalletScreen(QObject):
         self.left_panel: WalletLeftPanel = WalletLeftPanel()
         self.main_wallet_layout = QObject(wallet_names.mainWindow_WalletLayout)
 
+    def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC, check_interval=0.5):
+        super().wait_until_appears(timeout_msec, check_interval)
+        self.left_panel.wait_until_appears(timeout_msec, check_interval)
+        return self
+
 
 class WalletLeftPanel(QObject):
 
@@ -62,9 +67,15 @@ class WalletLeftPanel(QObject):
         super(WalletLeftPanel, self).__init__(wallet_names.mainWallet_LeftTab)
         self.saved_addresses_button = Button(wallet_names.mainWallet_Saved_Addresses_Button)
         self.wallet_account_item = QObject(wallet_names.walletAccount_StatusListItem)
+        self.accounts_list = QObject(wallet_names.walletAccounts_StatusListView)
         self.add_account_button = Button(wallet_names.mainWallet_Add_Account_Button)
         self.all_accounts_button = Button(wallet_names.mainWallet_All_Accounts_Button)
         self.all_accounts_balance = TextLabel(wallet_names.mainWallet_All_Accounts_Balance)
+
+    def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC, check_interval=0.5):
+        super().wait_until_appears(timeout_msec, check_interval)
+        self.accounts_list.wait_until_appears(timeout_msec, check_interval)
+        return self
 
     @property
     @allure.step('Build and return list of wallet accounts on wallet main screen')
