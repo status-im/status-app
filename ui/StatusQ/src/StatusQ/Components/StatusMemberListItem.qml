@@ -181,7 +181,7 @@ ItemDelegate {
     }
 
     StatusSecondaryActionHandler {
-        onTriggered: pos => root.rightClicked(pos)
+        onTriggered: (pos, source) => root.rightClicked(pos)
     }
 
     contentItem: GridLayout {
