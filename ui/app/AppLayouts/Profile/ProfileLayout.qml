@@ -665,20 +665,4 @@ StatusSectionLayout {
         active: root.showRightPanel
         sourceComponent: profileContainer.currentItem.sideBySidePreviewComponent
     }
-
-    Component {
-        id: sharedModuleBusyPopupComponent
-        StatusDialog {
-            id: titleContentDialog
-            title: qsTr("Status Keycard")
-
-            StatusBaseText {
-                anchors.fill: parent
-                color: Theme.palette.directColor1
-                text: qsTr("The Keycard module is still busy, please try again")
-            }
-
-            standardButtons: Dialog.Ok
-        }
-    }
 }

@@ -73,7 +73,7 @@ StatusDialog {
                         Layout.bottomMargin: Theme.padding
                         visible: accountSettings.selectedBrowserSearchEngineId === SearchEnginesConfig.browserSearchEngineCustom &&
                                  model.engineId === SearchEnginesConfig.browserSearchEngineCustom
-                        placeholderText: qsTr("https://example.com/search?q=")
+                        placeholderText: "https://example.com/search?q="
                         label: qsTr("Custom search engine URL prefix")
                         text: accountSettings.customSearchEngineUrl
                         input.clearable: true

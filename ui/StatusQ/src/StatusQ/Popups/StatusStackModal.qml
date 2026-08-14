@@ -9,7 +9,7 @@ import StatusQ.Popups
 StatusModal {
     id: root
 
-    property string stackTitle: qsTr("StackModal")
+    property string stackTitle: "changeMe"
     property int subHeaderPadding: Theme.padding
 
     property alias stackItems: stackLayout.children

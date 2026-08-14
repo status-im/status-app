@@ -2456,13 +2456,6 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     </message>
 </context>
 <context>
-    <name>BloomSelectorButton</name>
-    <message>
-        <source>TODO</source>
-        <translation>PENDIENTE</translation>
-    </message>
-</context>
-<context>
     <name>BrowserAddressField</name>
     <message>
         <source>Search or enter address</source>
@@ -3338,7 +3331,7 @@ no compatible</translation>
     </message>
     <message>
         <source>Collectibles could not be loaded</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudieron cargar los coleccionables</translation>
     </message>
     <message>
         <source>Community minted</source>
@@ -4020,16 +4013,16 @@ no compatible</translation>
         <translation>¿Has anotado tu contraseña?</translation>
     </message>
     <message>
-        <source>You will never be able to recover your password if you loose it.</source>
+        <source>You will never be able to recover your password if you lose it.</source>
         <translation>Nunca podrá recuperar su contraseña si la pierde.</translation>
+    </message>
+    <message>
+        <source>If you lose your password you will lose access to your Status profile.</source>
+        <translation>Si pierdes tu contraseña, perderás el acceso a tu perfil de Status.</translation>
     </message>
     <message>
         <source>If you need to, write it using pen and paper and keep in a safe place.</source>
         <translation>Si es necesario, escríbela con lápiz y papel y guárdala en un lugar seguro.</translation>
-    </message>
-    <message>
-        <source>If you loose your password you will loose access to your Status profile.</source>
-        <translation>Si pierde su contraseña, perderá el acceso a su perfil de Status.</translation>
     </message>
     <message>
         <source>Confirm your password (again)</source>
@@ -4262,10 +4255,6 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     <message>
         <source>Continuing will require a transaction to connect the username with your current chat key.</source>
         <translation>Continuar requerirá una transacción para conectar el nombre de usuario con tu clave de chat actual.</translation>
-    </message>
-    <message>
-        <source>Temporarily unavailable, will be available in the next release.</source>
-        <translation>Temporalmente no disponible, estará disponible en la próxima versión.</translation>
     </message>
 </context>
 <context>
@@ -5870,10 +5859,6 @@ key pair. Keycard will be required for signing</source>
         <translation>La privacidad total de los metadatos significa que es imposible saber con quién estás hablando al vigilar tu tráfico de Internet.</translation>
     </message>
     <message>
-        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
-        <translation>Status utiliza el protocolo de mensajería p2p Waku, una evolución del protocolo Whisper original de la EF</translation>
-    </message>
-    <message>
         <source>Status is home to crypto&apos;s leading multi-chain self-custodial wallet</source>
         <translation>Status alberga una de las principales wallets multichain de autocustodia del ecosistema cripto</translation>
     </message>
@@ -5952,6 +5937,10 @@ key pair. Keycard will be required for signing</source>
     <message>
         <source>Status supports free communication without the approval or oversight of big tech</source>
         <translation>Status apoya la comunicación libre sin la aprobación o supervisión de las grandes tecnológicas</translation>
+    </message>
+    <message>
+        <source>Status uses the Logos Messaging p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
+        <translation>Status utiliza el protocolo de mensajería p2p Logos Messaging, una evolución del protocolo Whisper original de la EF</translation>
     </message>
     <message>
         <source>Status allows you to communicate freely without the threat of surveillance</source>
@@ -13707,14 +13696,6 @@ al cargar</translation>
         <source>Logos Network</source>
         <translation>Red de Logos</translation>
     </message>
-    <message>
-        <source>Status Keycard</source>
-        <translation>Status Keycard</translation>
-    </message>
-    <message>
-        <source>The Keycard module is still busy, please try again</source>
-        <translation>El módulo Keycard todavía está ocupado, por favor intenta de nuevo</translation>
-    </message>
 </context>
 <context>
     <name>ProfilePerspectiveSelector</name>
@@ -14629,7 +14610,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Checking collectibles ownership…</source>
-        <translation type="unfinished"></translation>
+        <translation>Verificación de la propiedad de los coleccionables...</translation>
     </message>
 </context>
 <context>
@@ -14776,10 +14757,6 @@ al cargar</translation>
     <message>
         <source>Search engine</source>
         <translation>Motor de búsqueda</translation>
-    </message>
-    <message>
-        <source>https://example.com/search?q=</source>
-        <translation>https://example.com/search?q=</translation>
     </message>
     <message>
         <source>Custom search engine URL prefix</source>
@@ -16474,10 +16451,6 @@ al cargar</translation>
 <context>
     <name>StatusStackModal</name>
     <message>
-        <source>StackModal</source>
-        <translation>StackModal</translation>
-    </message>
-    <message>
         <source>Next</source>
         <translation>Siguiente</translation>
     </message>
@@ -17582,8 +17555,8 @@ This action cannot be undone.</source>
         <translation>Tu backup de datos se restauró exitosamente</translation>
     </message>
     <message>
-        <source>Import failed. Make sure the backup file matches your profile name.</source>
-        <translation>Error en la importación. Asegúrate de que el archivo de backup coincida con el nombre de tu perfil.</translation>
+        <source>Import failed. Make sure the backup file matches your profile key.</source>
+        <translation>Error en la importación. Asegúrate de que el archivo de backup coincida con la llave de tu perfil.</translation>
     </message>
 </context>
 <context>

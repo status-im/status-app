@@ -29,6 +29,7 @@ Item {
         anchors.right: parent.right
 
         contentWidth: availableWidth
+        contentHeight: contentItem.height
 
         Item {
             id: contentItem

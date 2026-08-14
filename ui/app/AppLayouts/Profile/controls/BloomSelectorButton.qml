@@ -14,7 +14,7 @@ Rectangle {
     id: root
 
     property var buttonGroup
-    property string btnText: qsTr("TODO")
+    property string btnText: "change me"
     property bool checkedByDefault: false
 
     signal checked()

@@ -183,14 +183,14 @@ Item {
             color: Theme.palette.background
             radius: 50
             height: 30
-            width: 350
+            width: ensTypeRow.width + Theme.halfPadding*2
 
-            Item {
-                anchors.left: parent.left
-                anchors.right: parent.right
+            Row {
+                id: ensTypeRow
                 anchors.top: parent.top
                 anchors.topMargin: Theme.halfPadding
-                anchors.leftMargin: Theme.padding
+                leftPadding: Theme.padding
+                spacing: Theme.smallPadding
                 height: 20
 
                 StatusBaseText {
@@ -200,7 +200,6 @@ Item {
                         ".stateofus.eth"
                     font.weight: Font.Bold
                     font.pixelSize: Theme.tertiaryTextFontSize
-                    anchors.leftMargin: Theme.padding
                     color: Theme.palette.directColor1
                 }
 
@@ -211,8 +210,6 @@ Item {
                         qsTr("I own a name on another domain")
                     font.pixelSize: Theme.tertiaryTextFontSize
                     color: Theme.palette.primaryColor1
-                    anchors.right: parent.right
-                    anchors.rightMargin: Theme.padding
 
                     StatusMouseArea {
                         cursorShape: Qt.PointingHandCursor

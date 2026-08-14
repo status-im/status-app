@@ -2447,13 +2447,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
 </context>
 <context>
-    <name>BloomSelectorButton</name>
-    <message>
-        <source>TODO</source>
-        <translation>할 일</translation>
-    </message>
-</context>
-<context>
     <name>BrowserAddressField</name>
     <message>
         <source>Search or enter address</source>
@@ -4005,16 +3998,16 @@ file format</source>
         <translation type="unfinished">비밀번호를 기록해 두셨나요?</translation>
     </message>
     <message>
-        <source>You will never be able to recover your password if you loose it.</source>
-        <translation type="unfinished"></translation>
+        <source>You will never be able to recover your password if you lose it.</source>
+        <translation type="unfinished">비밀번호를 잃어버리면 복구할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>If you lose your password you will lose access to your Status profile.</source>
+        <translation type="unfinished">비밀번호를 잃어버리면 Status 프로필에 접근할 수 없게 됩니다.</translation>
     </message>
     <message>
         <source>If you need to, write it using pen and paper and keep in a safe place.</source>
         <translation type="unfinished">필요하다면 펜과 종이에 적어서 안전한 곳에 보관하세요.</translation>
-    </message>
-    <message>
-        <source>If you loose your password you will loose access to your Status profile.</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Confirm your password (again)</source>
@@ -4245,10 +4238,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     </message>
     <message>
         <source>Continuing will require a transaction to connect the username with your current chat key.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Temporarily unavailable, will be available in the next release.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -5851,10 +5840,6 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Status is home to crypto&apos;s leading multi-chain self-custodial wallet</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5933,6 +5918,10 @@ key pair. Keycard will be required for signing</source>
     <message>
         <source>Status supports free communication without the approval or oversight of big tech</source>
         <translation>Status는 빅테크의 승인이나 감시 없이 자유로운 소통을 지원합니다</translation>
+    </message>
+    <message>
+        <source>Status uses the Logos Messaging p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status allows you to communicate freely without the threat of surveillance</source>
@@ -13645,14 +13634,6 @@ to load</source>
         <source>Logos Network</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Status Keycard</source>
-        <translation>스테이터스 키카드</translation>
-    </message>
-    <message>
-        <source>The Keycard module is still busy, please try again</source>
-        <translation>Keycard 모듈이 아직 사용 중입니다. 다시 시도해 주세요</translation>
-    </message>
 </context>
 <context>
     <name>ProfilePerspectiveSelector</name>
@@ -14712,10 +14693,6 @@ to load</source>
     <message>
         <source>Search engine</source>
         <translation>검색 엔진</translation>
-    </message>
-    <message>
-        <source>https://example.com/search?q=</source>
-        <translation>https://example.com/search?q=</translation>
     </message>
     <message>
         <source>Custom search engine URL prefix</source>
@@ -16402,10 +16379,6 @@ to load</source>
 <context>
     <name>StatusStackModal</name>
     <message>
-        <source>StackModal</source>
-        <translation>스택 모달</translation>
-    </message>
-    <message>
         <source>Next</source>
         <translation>다음</translation>
     </message>
@@ -17507,8 +17480,8 @@ This action cannot be undone.</source>
         <translation>데이터 백업이 성공적으로 복원되었습니다</translation>
     </message>
     <message>
-        <source>Import failed. Make sure the backup file matches your profile name.</source>
-        <translation>가져오기 실패. 백업 파일이 프로필 이름과 일치하는지 확인하세요.</translation>
+        <source>Import failed. Make sure the backup file matches your profile key.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

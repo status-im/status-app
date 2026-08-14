@@ -9,7 +9,7 @@ QtObject {
                 qsTr("Full metadata privacy means it's impossible to tell who you are talking to by surveilling your internet traffic"),
                 qsTr("Status is truly private - none of your personal details (or any other information) are sent to us"),
                 qsTr("Messages sent using Status are end to end encrypted and can only be opened by the recipient"),
-                qsTr("Status uses the Waku p2p gossip messaging protocol — an evolution of the EF's original Whisper protocol"),
+                qsTr("Status uses the Logos Messaging p2p gossip messaging protocol — an evolution of the EF's original Whisper protocol"),
                 qsTr("Status is home to crypto's leading multi-chain self-custodial wallet"),
                 qsTr("Status removes intermediaries to keep your messages private and your assets secure"),
                 qsTr("Status uses the latest encryption and security tools to secure your messages and transactions"),
