@@ -2464,13 +2464,6 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
 </context>
 <context>
-    <name>BloomSelectorButton</name>
-    <message>
-        <source>TODO</source>
-        <translation>TODO</translation>
-    </message>
-</context>
-<context>
     <name>BrowserAddressField</name>
     <message>
         <source>Search or enter address</source>
@@ -4034,16 +4027,16 @@ formát souboru</translation>
         <translation type="unfinished">Zapsali jste si své heslo?</translation>
     </message>
     <message>
-        <source>You will never be able to recover your password if you loose it.</source>
-        <translation type="unfinished"></translation>
+        <source>You will never be able to recover your password if you lose it.</source>
+        <translation type="unfinished">Pokud heslo ztratíte, nikdy jej nebudete moci obnovit.</translation>
+    </message>
+    <message>
+        <source>If you lose your password you will lose access to your Status profile.</source>
+        <translation type="unfinished">Pokud ztratíte heslo, ztratíte přístup ke svému profilu Status.</translation>
     </message>
     <message>
         <source>If you need to, write it using pen and paper and keep in a safe place.</source>
         <translation type="unfinished">Pokud potřebujete, napište si ho tužkou na papír a uložte na bezpečné místo.</translation>
-    </message>
-    <message>
-        <source>If you loose your password you will loose access to your Status profile.</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Confirm your password (again)</source>
@@ -4276,10 +4269,6 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     </message>
     <message>
         <source>Continuing will require a transaction to connect the username with your current chat key.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Temporarily unavailable, will be available in the next release.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -5888,10 +5877,6 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Status is home to crypto&apos;s leading multi-chain self-custodial wallet</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5970,6 +5955,10 @@ key pair. Keycard will be required for signing</source>
     <message>
         <source>Status supports free communication without the approval or oversight of big tech</source>
         <translation>Status podporuje svobodnou komunikaci bez schválení nebo dohledu velkých technologických firem</translation>
+    </message>
+    <message>
+        <source>Status uses the Logos Messaging p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status allows you to communicate freely without the threat of surveillance</source>
@@ -13770,14 +13759,6 @@ selhalo</translation>
         <source>Logos Network</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Status Keycard</source>
-        <translation>Status Keycard</translation>
-    </message>
-    <message>
-        <source>The Keycard module is still busy, please try again</source>
-        <translation>Modul Keycard je stále zaneprázdněn, zkuste to prosím znovu</translation>
-    </message>
 </context>
 <context>
     <name>ProfilePerspectiveSelector</name>
@@ -14841,10 +14822,6 @@ selhalo</translation>
     <message>
         <source>Search engine</source>
         <translation>Vyhledávač</translation>
-    </message>
-    <message>
-        <source>https://example.com/search?q=</source>
-        <translation>https://example.com/search?q=</translation>
     </message>
     <message>
         <source>Custom search engine URL prefix</source>
@@ -16547,10 +16524,6 @@ selhalo</translation>
 <context>
     <name>StatusStackModal</name>
     <message>
-        <source>StackModal</source>
-        <translation>StackModal</translation>
-    </message>
-    <message>
         <source>Next</source>
         <translation>Další</translation>
     </message>
@@ -17659,8 +17632,8 @@ Tuto akci nelze vzít zpět.</translation>
         <translation>Záloha vašich dat byla úspěšně obnovena</translation>
     </message>
     <message>
-        <source>Import failed. Make sure the backup file matches your profile name.</source>
-        <translation>Import selhal. Ujistěte se, že soubor se zálohou odpovídá názvu vašeho profilu.</translation>
+        <source>Import failed. Make sure the backup file matches your profile key.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

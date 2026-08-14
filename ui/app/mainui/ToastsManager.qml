@@ -278,7 +278,7 @@ QtObject {
             if (success) {
                 Global.displaySuccessToastMessage(qsTr("Your data backup restored successfully"))
             } else {
-                Global.displayToastMessage(qsTr("Import failed. Make sure the backup file matches your profile name."),
+                Global.displayToastMessage(qsTr("Import failed. Make sure the backup file matches your profile key."),
                                        "",
                                        root.warningAssetName,
                                        false,

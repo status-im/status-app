@@ -155,7 +155,7 @@ Item {
             mockDevicesStore.localBackupImportCompleted(false)
             tryCompare(mockRootStore, "notificationCount", 1)
             compare(lastNotification().title,
-                    "Import failed. Make sure the backup file matches your profile name.")
+                    "Import failed. Make sure the backup file matches your profile key.")
             compare(lastNotification().icon, "warning")
             compare(lastNotification().ephNotifType, Constants.ephemeralNotificationType.danger)
         }

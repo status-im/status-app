@@ -2455,13 +2455,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
 </context>
 <context>
-    <name>BloomSelectorButton</name>
-    <message>
-        <source>TODO</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>BrowserAddressField</name>
     <message>
         <source>Search or enter address</source>
@@ -4017,15 +4010,15 @@ file format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>You will never be able to recover your password if you loose it.</source>
+        <source>You will never be able to recover your password if you lose it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you lose your password you will lose access to your Status profile.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>If you need to, write it using pen and paper and keep in a safe place.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>If you loose your password you will loose access to your Status profile.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4256,10 +4249,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     </message>
     <message>
         <source>Continuing will require a transaction to connect the username with your current chat key.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Temporarily unavailable, will be available in the next release.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -5859,10 +5848,6 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Status is home to crypto&apos;s leading multi-chain self-custodial wallet</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5940,6 +5925,10 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Status supports free communication without the approval or oversight of big tech</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status uses the Logos Messaging p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -13692,14 +13681,6 @@ to load</source>
         <source>Logos Network</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Status Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The Keycard module is still busy, please try again</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>ProfilePerspectiveSelector</name>
@@ -14760,10 +14741,6 @@ to load</source>
     <name>SearchEngineModal</name>
     <message>
         <source>Search engine</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>https://example.com/search?q=</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16458,10 +16435,6 @@ to load</source>
 <context>
     <name>StatusStackModal</name>
     <message>
-        <source>StackModal</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Next</source>
         <translation type="unfinished"></translation>
     </message>
@@ -17565,7 +17538,7 @@ This action cannot be undone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Import failed. Make sure the backup file matches your profile name.</source>
+        <source>Import failed. Make sure the backup file matches your profile key.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -42,7 +42,7 @@ Control {
             StatusBaseText {
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignHCenter
-                text: qsTr("You will never be able to recover your password if you loose it.")
+                text: qsTr("You will never be able to recover your password if you lose it.")
                 wrapMode: Text.WordWrap
                 color: Theme.palette.dangerColor1
             }
@@ -58,7 +58,7 @@ Control {
             StatusBaseText {
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignHCenter
-                text: qsTr("If you loose your password you will loose access to your Status profile.")
+                text: qsTr("If you lose your password you will lose access to your Status profile.")
                 wrapMode: Text.WordWrap
                 color: Theme.palette.baseColor1
             }
