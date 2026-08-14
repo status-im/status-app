@@ -292,7 +292,6 @@ Loader {
             editRestricted: root.editRestricted,
             selectedText,
             openExpanded,
-            collapsedSingleRow: !openExpanded && d.isLandscape,
             deferCloseOnPressOutside,
             closeOnPressOutsideRestoreDelay: deferCloseOnPressOutside && delegate?.isMobile ? 1000 : 350
         }
@@ -430,8 +429,6 @@ Loader {
 
         readonly property bool canPost: root.chatContentModule.chatDetails.canPost
         readonly property bool canView: canPost || root.chatContentModule.chatDetails.canView
-        readonly property var window: root.Window.window || root.item?.Window.window
-        readonly property bool isLandscape: !!d.window && d.window.width > d.window.height
         function getNextMessageHasHeader() {
             if (!root.nextMessageAsJsonObj) {
                 return false
