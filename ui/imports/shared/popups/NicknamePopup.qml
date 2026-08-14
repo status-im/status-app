@@ -37,7 +37,7 @@ CommonContactDialog {
         label: qsTr("Nickname")
         input.clearable: true
         text: root.nickname
-        charLimit: Constants.keypair.nameLengthMax
+        charLimit: Constants.displayName.nameLengthMax
         validators: [
             StatusValidator {
                 validatorObj: RXValidator { regularExpression: /^[\w\d_ -\.]*$/u }
@@ -45,7 +45,7 @@ CommonContactDialog {
                 errorMessage: qsTr("Invalid characters (use A-Z and 0-9, hyphens and underscores only)")
             },
             StatusMinLengthValidator {
-                minLength: Constants.keypair.nameLengthMin
+                minLength: Constants.displayName.nameLengthMin
                 errorMessage: qsTr("Nicknames must be at least %n character(s) long", "", minLength)
             },
             StatusValidator {

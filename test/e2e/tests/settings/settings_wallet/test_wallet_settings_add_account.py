@@ -31,9 +31,12 @@ def test_add_new_account_from_wallet_settings(
 
     with step('Add a new generated account from wallet settings screen'):
 
-        with step('Verify that error appears when name consists of less then 5 characters'):
-            add_account_popup.set_name(''.join(random.choices(string.ascii_letters +
-                                                              string.digits, k=4)))
+        with step('Verify that a one character name is accepted'):
+            add_account_popup.set_name(''.join(random.choices(string.ascii_letters + string.digits, k=1)))
+            assert add_account_popup.get_error_message() == ''
+
+        with step('Verify that error appears when name is empty'):
+            add_account_popup.set_name('')
             assert add_account_popup.get_error_message() == WalletAccountPopup.WALLET_ACCOUNT_NAME_MIN.value
 
         add_account_popup.set_name(wallet_account.name).save_changes()

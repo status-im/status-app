@@ -28,16 +28,16 @@ QtObject {
             errorMessage: qsTr("Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)")
         },
         StatusMinLengthValidator {
-            minLength: Constants.keypair.nameLengthMin
+            minLength: Constants.displayName.nameLengthMin
             errorMessage: qsTr("Display Names must be at least %n character(s) long",
-                               "", Constants.keypair.nameLengthMin)
+                               "", Constants.displayName.nameLengthMin)
         },
         // TODO: Create `StatusMaxLengthValidator` in StatusQ
         StatusValidator {
             name: "maxLengthValidator"
-            validate: t => t.length <= Constants.keypair.nameLengthMax
+            validate: t => t.length <= Constants.displayName.nameLengthMax
             errorMessage: qsTr("Display Names can’t be longer than %n character(s)",
-                               "", Constants.keypair.nameLengthMax)
+                               "", Constants.displayName.nameLengthMax)
         },
         StatusValidator {
             name: "endsWith-ethValidator"
