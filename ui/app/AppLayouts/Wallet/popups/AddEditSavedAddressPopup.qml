@@ -313,11 +313,12 @@ StatusDialog {
         property var contactsToProcess: []
 
         function processContactDetails(contactDetails) {
-            //Remove from list of contacts to process
             let index = d.contactsToProcess.indexOf(contactDetails.publicKey)
-            if (index > -1) {
-                d.contactsToProcess.splice(index, 1)
+            if (index === -1) {
+                return
             }
+            // Remove from the list
+            d.contactsToProcess.splice(index, 1)
             // Process by adding to cards model
             d.cardsModel.append({
                 type: AddEditSavedAddressPopup.CardType.Contact,
