@@ -8,6 +8,8 @@
         <string>nim_status_client</string>
         <key>CFBundleIconFile</key>
         <string>status-dev.icns</string>
+        <key>CFBundleIconName</key>
+        <string>StatusDev</string>
         <key>CFBundleIdentifier</key>
         <string>im.Status.NimStatusClientDev</string>
         <key>CFBundleInfoDictionaryVersion</key>

@@ -1,0 +1,24 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="1024" height="1024" fill="url(#paint0_linear)"/>
+<g filter="url(#blurf)">
+<circle cx="777.4" cy="246.6" r="720.5" fill="#1992D7"/>
+</g>
+<g filter="url(#blurf)">
+<circle cx="1156.6" cy="625.8" r="720.5" fill="#F6B03C"/>
+</g>
+<g filter="url(#blurf)">
+<circle cx="94.9" cy="1080.8" r="720.5" fill="#FF7D46"/>
+</g>
+<g filter="url(#blurf)">
+<circle cx="-360.2" cy="246.6" r="720.5" fill="#7140FD"/>
+</g>
+<defs>
+<filter id="blurf" x="-2200" y="-2200" width="5500" height="5500" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feGaussianBlur stdDeviation="178.8"/>
+</filter>
+<linearGradient id="paint0_linear" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+<stop stop-color="#30323B"/>
+<stop offset="0.617708" stop-color="#23242B"/>
+</linearGradient>
+</defs>
+</svg>
