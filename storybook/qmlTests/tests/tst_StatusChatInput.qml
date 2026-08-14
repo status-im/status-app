@@ -261,6 +261,25 @@ Item {
             verify(controlUnderTest.getPlainText().includes("@"))
         }
 
+        // Clicking the mention button inserts the "@" at the caret, not appended to the
+        // end of the input. Regression: with the caret moved off the end (e.g. before a
+        // code block) the "@" used to land at the very end of the text.
+        function test_editMode_mentionButton_insertsAtCaretNotEnd() {
+            const toolBar = getToolBar()
+            verify(!!toolBar)
+
+            controlUnderTest.textInput.forceActiveFocus()
+            typeText("hello world")
+            waitForRendering(controlUnderTest)
+
+            controlUnderTest.textInput.cursorPosition = 5 // just after "hello"
+
+            mouseClick(toolBar.mentionButton)
+            waitForRendering(controlUnderTest)
+
+            compare(controlUnderTest.getPlainText(), "hello@ world")
+        }
+
         function test_editMode_emojiButton_opensPopupAndSelectsEmoji() {
             const toolBar = getToolBar()
             verify(!!toolBar)
