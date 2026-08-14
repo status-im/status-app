@@ -308,9 +308,6 @@ Loader {
         let popupPoint = point
         if (options.positionProvider) {
             popupPoint = options.positionProvider(d.contextMenu)
-        } else if (deferCloseOnPressOutside && root.item && d.contextMenu) {
-            const menuWidth = d.contextMenu.maxImplicitWidth || d.contextMenu.implicitWidth
-            popupPoint = Qt.point(Math.max(0, root.item.width - menuWidth - Theme.padding), 0)
         }
         d.contextMenu.popup(popupPoint)
         d.contextMenu.aboutToHide.connect(() => {
@@ -1011,21 +1008,6 @@ Loader {
                     }
                 }
 
-                onContextMenuRequested: (pos, source) => {
-                    // StatusTextMessage can handle the gesture internally before the delegate-level
-                    // handler sees it, so keep its open mode aligned with StatusSecondaryActionHandler.
-                    if (delegate.isMobile && source !== StatusSecondaryActionHandler.LongPress)
-                        return
-
-                    const openCollapsed = source === StatusSecondaryActionHandler.LongPress
-                    root.openMessageContextMenu(delegate,
-                                                pos,
-                                                delegate.selectedText,
-                                                {
-                                                    openExpanded: !openCollapsed,
-                                                    deferCloseOnPressOutside: openCollapsed
-                                                })
-                }
                 StatusSecondaryActionHandler {
                     onTriggered: (pos, source) => {
                         if (delegate.isMobile && source !== StatusSecondaryActionHandler.LongPress)
