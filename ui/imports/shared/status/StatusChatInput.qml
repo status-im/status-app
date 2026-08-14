@@ -1110,7 +1110,7 @@ Control {
                     suggestionsBox.shouldHide = false
 
                     if (!messageInputField.enteringSuggestion)
-                        messageInputField.insert(messageInputField.length, "@")
+                        messageInputField.insert(messageInputField.cursorPosition, "@")
                 } else {
                     suggestionsBox.shouldHide = true
                 }
