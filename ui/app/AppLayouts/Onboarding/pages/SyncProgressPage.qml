@@ -62,7 +62,7 @@ OnboardingPage {
             name: "failed"
             when: root.syncState === Onboarding.LocalPairingState.Error
             PropertyChanges {
-                root.title: "<font color='%1'>".arg(Theme.palette.dangerColor1) + qsTr("Failed to pair devices") + "</font>"
+                root.title: "<font color='%1'>".arg(root.Theme.palette.dangerColor1) + qsTr("Failed to pair devices") + "</font>"
             }
             PropertyChanges {
                 subtitle.text: qsTr("Try again and double-check the instructions")

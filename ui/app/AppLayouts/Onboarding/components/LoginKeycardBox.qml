@@ -206,7 +206,7 @@ Control {
             when: root.keycardState === Onboarding.KeycardState.NotKeycard
             extend: "notEmpty"
             PropertyChanges {
-                infoText.color: Theme.palette.dangerColor1
+                infoText.color: root.Theme.palette.dangerColor1
                 infoText.text: qsTr("This isn't a Keycard.<br>Remove card and insert a Keycard.")
             }
         },
@@ -215,7 +215,7 @@ Control {
             when: root.isWrongKeycard
             extend: "notEmpty"
             PropertyChanges {
-                infoText.color: Theme.palette.dangerColor1
+                infoText.color: root.Theme.palette.dangerColor1
                 infoText.text: qsTr("Wrong Keycard for this profile")
             }
         },
@@ -224,7 +224,7 @@ Control {
             when: root.keycardState === Onboarding.KeycardState.NoPCSCService && !SQUtils.Utils.isMobile
             extend: "notEmpty"
             PropertyChanges {
-                infoText.color: Theme.palette.dangerColor1
+                infoText.color: root.Theme.palette.dangerColor1
                 infoText.text: qsTr("Issue detecting Keycard.<br>Re-scan Keycard.")
             }
         },
@@ -258,7 +258,7 @@ Control {
             when: root.keycardState === Onboarding.KeycardState.MaxPairingSlotsReached
             extend: "notEmpty"
             PropertyChanges {
-                infoText.color: Theme.palette.dangerColor1
+                infoText.color: root.Theme.palette.dangerColor1
                 infoText.text: qsTr("No free pairing slots on this Keycard.<br>You can use it with previously paired installations.")
             }
         },
@@ -267,7 +267,7 @@ Control {
             when: root.keycardState === Onboarding.KeycardState.BlockedPIN ||
                   root.keycardState === Onboarding.KeycardState.BlockedPUK
             PropertyChanges {
-                infoText.color: Theme.palette.dangerColor1
+                infoText.color: root.Theme.palette.dangerColor1
                 infoText.text: qsTr("Keycard blocked")
             }
             PropertyChanges {
@@ -283,7 +283,7 @@ Control {
             when: root.keycardState === Onboarding.KeycardState.Empty
             extend: "notEmpty"
             PropertyChanges {
-                infoText.color: Theme.palette.dangerColor1
+                infoText.color: root.Theme.palette.dangerColor1
                 infoText.text: qsTr("The scanned Keycard is empty.<br>Scan the correct Keycard for this profile.")
             }
         },
@@ -292,7 +292,7 @@ Control {
             extend: "notEmpty"
             when: root.keycardState === Onboarding.KeycardState.NotEmpty && d.wrongPin
             PropertyChanges {
-                infoText.color: Theme.palette.dangerColor1
+                infoText.color: root.Theme.palette.dangerColor1
                 infoText.text: qsTr("PIN incorrect. %n attempt(s) remaining.", "", root.keycardRemainingPinAttempts)
             }
         },
@@ -301,7 +301,7 @@ Control {
             when: !!root.loginError
             extend: "notEmpty"
             PropertyChanges {
-                infoText.color: Theme.palette.dangerColor1
+                infoText.color: root.Theme.palette.dangerColor1
                 infoText.text: qsTr("Login failed. %1").arg("<a href='#details'>" + qsTr("Show details.") + "</a>")
             }
         },
@@ -314,7 +314,7 @@ Control {
                 infoText.text: qsTr("Enter Keycard PIN")
             }
             PropertyChanges {
-                backgroundRect.border.color: Theme.palette.primaryColor1
+                backgroundRect.border.color: root.Theme.palette.primaryColor1
             }
             PropertyChanges {
                 pinInputField.visible: true
