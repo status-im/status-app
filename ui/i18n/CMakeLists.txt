@@ -25,6 +25,7 @@ qt6_add_lupdate(
         ${CMAKE_SOURCE_DIR}/qml_cs.ts
         ${CMAKE_SOURCE_DIR}/qml_ko.ts
         ${CMAKE_SOURCE_DIR}/qml_es.ts
+        ${CMAKE_SOURCE_DIR}/qml_fr.ts
     PLURALS_TS_FILE
         ${CMAKE_SOURCE_DIR}/qml_en.ts
     SOURCES ${COLLECTED_SOURCE_FILES}
@@ -38,6 +39,7 @@ qt6_add_lrelease(
         ${CMAKE_SOURCE_DIR}/qml_cs.ts
         ${CMAKE_SOURCE_DIR}/qml_ko.ts
         ${CMAKE_SOURCE_DIR}/qml_es.ts
+        ${CMAKE_SOURCE_DIR}/qml_fr.ts
     QM_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}
     MERGE_QT_TRANSLATIONS
     QT_TRANSLATION_CATALOGS qtbase qtmultimedia qtwebengine qtdeclarative
