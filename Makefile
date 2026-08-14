@@ -63,6 +63,7 @@ GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 	flatpak-install \
 	flatpak-run \
 	flatpak-clean \
+	macos-icon-assets \
 	platform-cleanup
 
 ifeq ($(NIM_PARAMS),)
@@ -896,6 +897,17 @@ flatpak-run: flatpak-install
 flatpak-clean:
 	rm -rf tmp/linux/flatpak pkg/*.flatpak
 
+# Regenerates the precompiled macOS app icons (resources/macos/*Assets.car) from the Icon Composer documents (resources/macos/*.icon)
+macos-icon-assets:
+	xcrun actool resources/macos/Status.icon --compile resources/macos \
+		--platform macosx --minimum-deployment-target 12.0 \
+		--app-icon Status --output-partial-info-plist /dev/null
+	rm -f resources/macos/Status.icns
+	xcrun actool resources/macos/StatusDev.icon --compile resources/macos/dev \
+		--platform macosx --minimum-deployment-target 12.0 \
+		--app-icon StatusDev --output-partial-info-plist /dev/null
+	rm -f resources/macos/dev/StatusDev.icns
+
 MACOS_OUTER_BUNDLE := tmp/macos/dist/Status.app
 MACOS_INNER_BUNDLE := $(MACOS_OUTER_BUNDLE)/Contents/Frameworks/QtWebEngineCore.framework/Versions/Current/Helpers/QtWebEngineProcess.app
 
@@ -910,6 +922,7 @@ $(STATUS_CLIENT_DMG): nim_status_client
 	cp Info.plist $(MACOS_OUTER_BUNDLE)/Contents/
 	cp bin/nim_status_client $(MACOS_OUTER_BUNDLE)/Contents/MacOS/
 	cp status.icns $(MACOS_OUTER_BUNDLE)/Contents/Resources/
+	cp resources/macos/Assets.car $(MACOS_OUTER_BUNDLE)/Contents/Resources/
 	cp status-macos.svg $(MACOS_OUTER_BUNDLE)/Contents/
 	cp -R resources.rcc $(MACOS_OUTER_BUNDLE)/Contents/
 
@@ -1057,6 +1070,7 @@ run-macos: nim_status_client
 	mkdir -p bin/StatusDev.app/Contents/{MacOS,Resources}
 	cp Info.dev.plist bin/StatusDev.app/Contents/Info.plist
 	cp status-dev.icns bin/StatusDev.app/Contents/Resources/
+	cp resources/macos/dev/Assets.car bin/StatusDev.app/Contents/Resources/
 	cp resources.rcc bin/StatusDev.app/Contents/
 	# Monitoring tool loads MONITORING_QML_ENTRY_POINT="/../monitoring/Main.qml" relative to the app
 	# binary dir (Contents/MacOS -> Contents/monitoring). Copy the QML into the bundle for MONITORING builds.
