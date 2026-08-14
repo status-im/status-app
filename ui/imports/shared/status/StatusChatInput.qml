@@ -1103,16 +1103,18 @@ Control {
                 }
             }
 
+            mentionButton.checkable: false
             mentionButton.checked: !suggestionsBox.shouldHide && messageInputField.enteringSuggestion
 
             mentionButton.onClicked: {
                 if (mentionButton.checked) {
+                    // A mention is in progress and its suggestions are shown → dismiss them.
+                    suggestionsBox.shouldHide = true
+                } else {
                     suggestionsBox.shouldHide = false
 
                     if (!messageInputField.enteringSuggestion)
                         messageInputField.insert(messageInputField.cursorPosition, "@")
-                } else {
-                    suggestionsBox.shouldHide = true
                 }
             }
         }
