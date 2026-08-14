@@ -82,8 +82,7 @@ SplitView {
             canPin: true,
             selectedText: "",
             hideDisabledItems: true,
-            openExpanded: ctrlExpanded.checked,
-            collapsedSingleRow: ctrlCollapsedOneRow.checked
+            openExpanded: ctrlExpanded.checked
         })
         contextMenu.popup(point)
     }
@@ -145,15 +144,8 @@ SplitView {
                 }
 
                 RadioButton {
-                    id: ctrlCollapsedTwoRows
-                    text: "Collapsed - 2 rows"
+                    text: "Collapsed"
                     checked: true
-                    ButtonGroup.group: menuStateGroup
-                }
-
-                RadioButton {
-                    id: ctrlCollapsedOneRow
-                    text: "Collapsed - 1 row"
                     ButtonGroup.group: menuStateGroup
                 }
             }
