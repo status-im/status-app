@@ -1683,11 +1683,13 @@ QtObject {
                 confirmationText: qsTr("Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.")
                 confirmButtonLabel: qsTr("Sign out & Quit")
 
-                // Async XPC round trip; signOutAndQuit ends in _exit(0) with no
-                // event-loop turn, so start it here. Idempotent, no-op off iOS.
-                Component.onCompleted: MobileUI.deleteAllDonatedInteractions()
-
-                onConfirmButtonClicked: mainModule.signOutAndQuit()
+                onConfirmButtonClicked: {
+                    // Ahead of signOutAndQuit, which ends in _exit(0) with no
+                    // event-loop turn for this async XPC round trip to use.
+                    // Idempotent, and a no-op off iOS.
+                    MobileUI.deleteAllDonatedInteractions()
+                    mainModule.signOutAndQuit()
+                }
             }
         },
 
