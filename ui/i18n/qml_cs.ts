@@ -714,22 +714,6 @@
         <translation type="unfinished">Zavřít</translation>
     </message>
     <message>
-        <source>Removing saved address</source>
-        <translation>Odstranění uložené adresy</translation>
-    </message>
-    <message>
-        <source>The account you&apos;re trying to add &lt;b&gt;%1&lt;/b&gt; is already saved under the name &lt;b&gt;%2&lt;/b&gt;.&lt;br/&gt;&lt;br/&gt;Do you want to remove it from saved addresses in favour of adding it to the Wallet?</source>
-        <translation>Účet, který se pokoušíte přidat &lt;b&gt;%1&lt;/b&gt;, je již uložen pod názvem &lt;b&gt;%2&lt;/b&gt;.&lt;br/&gt;&lt;br/&gt;Chcete jej odstranit z uložených adres a přidat do peněženky?</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation>Ano</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Ne</translation>
-    </message>
-    <message>
         <source>Save changes</source>
         <translation>Uložit změny</translation>
     </message>

@@ -16,7 +16,6 @@ const dummyUsage = account_constants.ZERO_ADDRESS # dummy usage to prevent false
 
 import app_service/service/accounts/service as accounts_service
 import app_service/service/wallet_account/service as wallet_account_service
-import app_service/service/saved_address/service as saved_address_service
 
 export io_interface
 
@@ -53,16 +52,14 @@ proc doAddAccount[T](self: Module[T])
 proc newModule*[T](delegate: T,
   events: EventEmitter,
   accountsService: accounts_service.Service,
-  walletAccountService: wallet_account_service.Service,
-  savedAddressService: saved_address_service.Service):
+  walletAccountService: wallet_account_service.Service):
   Module[T] =
   result = Module[T]()
   result.delegate = delegate
   result.events = events
   result.view = newView(result)
   result.viewVariant = newQVariant(result.view)
-  result.controller = controller.newController(result, events, accountsService, walletAccountService,
-    savedAddressService)
+  result.controller = controller.newController(result, events, accountsService, walletAccountService)
   result.authenticationReason = AuthenticationReason.AddingAccount
   result.fetchingAddressesIsInProgress = false
   result.addAccountRequested = false
@@ -635,11 +632,6 @@ proc doAddAccount[T](self: Module[T]) =
     publicKey = ""
     keyUid = ""
 
-  let savedAddressDto = self.controller.getSavedAddress(address)
-  if not savedAddressDto.isNil:
-    self.view.sendConfirmSavedAddressRemovalSignal(savedAddressDto.name, savedAddressDto.address)
-    return
-
   var success = false
   if addingNewKeyPair:
     if selectedOrigin.getPairType() == KeyPairType.PrivateKeyImport.int:
@@ -687,15 +679,6 @@ proc doAddAccount[T](self: Module[T]) =
       error "failed to store account", address=selectedAddrItem.getAddress()
 
   self.closeAddAccountPopup()
-
-method removingSavedAddressConfirmed[T](self: Module[T], address: string) =
-  self.controller.deleteSavedAddress(address)
-
-method savedAddressDeleted*[T](self: Module[T], address: string, errorMsg: string) =
-  if errorMsg.len > 0:
-    error "failed to delete saved address", address=address, err=errorMsg
-    return
-  self.doAddAccount()
 
 proc doEditAccount[T](self: Module[T]) =
   self.view.setDisablePopup(true)
