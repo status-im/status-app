@@ -81,25 +81,61 @@ Item {
             return false
         }
 
-        function test_collapsedModesUseExpectedWidthAndExpansionState() {
-            const twoRows = createMenu({ openExpanded: false, collapsedSingleRow: false })
-            twoRows.open()
-            compare(twoRows.expanded, false)
-            compare(twoRows.maxImplicitWidth, 234)
-            twoRows.close()
+        function singleRowAction(menu, objectName) {
+            const row = findChild(menu, "messageContextMenu_singleRowActions")
+            verify(!!row)
+            return findChild(row, objectName)
+        }
 
-            const oneRow = createMenu({ openExpanded: false, collapsedSingleRow: true })
+        function verifyNoHorizontalOverflow(menu) {
+            verify(menu.contentItem.contentWidth <= menu.contentItem.availableWidth)
+        }
+
+        function test_collapsedUsesSingleRow() {
+            const oneRow = createMenu({ openExpanded: false })
             oneRow.open()
             compare(oneRow.expanded, false)
             compare(oneRow.maxImplicitWidth, 328)
-            compare(findChild(oneRow, "messageContextMenu_landscapeReactionsRow").countLimit, 3)
+            compare(Math.round(oneRow.width), 328)
+            verifyNoHorizontalOverflow(oneRow)
+            compare(findChild(oneRow, "messageContextMenu_reactionsRow").countLimit, 3)
             oneRow.close()
 
-            const expanded = createMenu({ openExpanded: true, collapsedSingleRow: true })
+            const expanded = createMenu({ openExpanded: true })
             expanded.open()
             compare(expanded.expanded, true)
             compare(expanded.maxImplicitWidth, 234)
+            compare(Math.round(expanded.width), 234)
+            verifyNoHorizontalOverflow(expanded)
+            const expandedReactionsRow = findChild(expanded, "messageContextMenu_reactionsRow")
+            verify(!!expandedReactionsRow)
+            verify(expandedReactionsRow.visible)
+            verify(expandedReactionsRow.height > 0)
+            const expandedSeparator = findChild(expanded, "messageContextMenu_reactionsSeparator")
+            verify(!!expandedSeparator)
+            verify(expandedSeparator.visible)
             expanded.close()
+        }
+
+        function test_moreExpandsReactionsToFitWidth() {
+            const menu = createMenu({ openExpanded: false })
+            menu.open()
+
+            const reactionsRow = findChild(menu, "messageContextMenu_reactionsRow")
+            verify(!!reactionsRow)
+            compare(reactionsRow.countLimit, 3)
+
+            const moreButton = singleRowAction(menu, "messageContextMenu_expand")
+            verify(!!moreButton)
+            mouseClick(moreButton)
+
+            compare(menu.expanded, true)
+            compare(reactionsRow.countLimit, 0)
+            compare(menu.maxImplicitWidth, 328)
+            compare(Math.round(menu.width), 328)
+            verifyNoHorizontalOverflow(menu)
+
+            menu.close()
         }
 
         function test_expandedActionsExposeExpectedLabels() {
@@ -118,8 +154,8 @@ Item {
             menu.close()
         }
 
-        function test_expandedLandscapeReactionsUseAvailableWidth() {
-            const menu = createMenu({ openExpanded: true, collapsedSingleRow: true })
+        function test_expandedReactionsUseAvailableWidth() {
+            const menu = createMenu({ openExpanded: true })
             menu.open()
 
             const reactionsRow = findChild(menu, "messageContextMenu_reactionsRow")
@@ -127,28 +163,60 @@ Item {
             compare(reactionsRow.countLimit, 0)
 
             menu.close()
-
-            const regularMenu = createMenu({ openExpanded: true, collapsedSingleRow: false })
-            regularMenu.open()
-
-            const regularReactionsRow = findChild(regularMenu, "messageContextMenu_reactionsRow")
-            verify(!!regularReactionsRow)
-            compare(regularReactionsRow.countLimit, 4)
-
-            regularMenu.close()
         }
 
-        function test_collapsedEditActionIsDisabledWhenUnavailable() {
+        function test_collapsedEditActionIsHiddenWhenUnavailable() {
             const menu = createMenu({
                 openExpanded: false,
-                collapsedSingleRow: false,
                 messageSenderId: "someone-else"
             })
             menu.open()
 
-            const editButton = findChild(menu, "messageContextMenu_edit")
+            const editButton = singleRowAction(menu, "messageContextMenu_edit")
             verify(!!editButton)
-            verify(!editButton.enabled)
+            verify(!editButton.visible)
+            const pinButton = singleRowAction(menu, "messageContextMenu_pin")
+            verify(!!pinButton)
+            verify(pinButton.visible)
+
+            menu.close()
+        }
+
+        function test_singleRowPinMovesUpWhenEditIsUnavailable() {
+            const menu = createMenu({
+                openExpanded: false,
+                messageSenderId: "someone-else"
+            })
+            menu.open()
+
+            const editButton = singleRowAction(menu, "messageContextMenu_edit")
+            verify(!!editButton)
+            verify(!editButton.visible)
+            const copyButton = singleRowAction(menu, "messageContextMenu_copy")
+            verify(!!copyButton)
+            verify(copyButton.visible)
+            const pinButton = singleRowAction(menu, "messageContextMenu_pin")
+            verify(!!pinButton)
+            verify(pinButton.visible)
+            compare(menu.maxImplicitWidth, 328)
+
+            menu.close()
+        }
+
+        function test_singleRowPinStaysInOverflowWhenEditIsAvailable() {
+            const menu = createMenu({ openExpanded: false })
+            menu.open()
+
+            const editButton = singleRowAction(menu, "messageContextMenu_edit")
+            verify(!!editButton)
+            verify(editButton.visible)
+            const copyButton = singleRowAction(menu, "messageContextMenu_copy")
+            verify(!!copyButton)
+            verify(copyButton.visible)
+            const pinButton = singleRowAction(menu, "messageContextMenu_pin")
+            verify(!!pinButton)
+            verify(!pinButton.visible)
+            compare(menu.maxImplicitWidth, 328)
 
             menu.close()
         }

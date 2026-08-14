@@ -36,8 +36,7 @@ StatusMenu {
     property bool emojiReactionLimitReached: false
     property bool messageLinkSharingEnabled: false
     property bool openExpanded: false
-    property bool expanded: false
-    property bool collapsedSingleRow: false
+    property bool expanded: openExpanded
     property bool deferCloseOnPressOutside: false
     property int closeOnPressOutsideRestoreDelay: 350
     readonly property bool isMyMessage: {
@@ -68,18 +67,23 @@ StatusMenu {
         readonly property int rowWidth: Math.max(0, root.maxImplicitWidth - 2 * menuPadding)
         readonly property int defaultItemSpacing: Theme.padding
         readonly property int defaultActionSize: iconSize + 2 * compactPadding
-        readonly property int defaultReactionsCountLimit: 4
-        readonly property int singleRowWidth: Math.max(0, root.maxImplicitWidth - 2 * compactPadding)
         readonly property int singleRowActionSize: iconSize + 3 * compactPadding
-        readonly property int singleRowActionCount: 5
+        readonly property bool editActionVisible: root.isMyMessage && !root.editRestricted && !root.disabledForChat
+        readonly property bool compactPinActionVisible: !editActionVisible && d.canPinMessage
+        readonly property bool reactionsVisible: !root.emojiReactionLimitReached && (!root.disabledForChat || root.forceEnableEmojiReactions)
+        readonly property int singleRowActionCount: 1 +
+                                                    (!root.disabledForChat ? 2 : 0) +
+                                                    (editActionVisible ? 1 : 0) +
+                                                    ((!!root.selectedText || d.canCopyMessage) ? 1 : 0) +
+                                                    (compactPinActionVisible ? 1 : 0)
         readonly property int singleRowReactionsCountLimit: 3
         readonly property int singleRowReactionsWidth: (singleRowReactionsCountLimit + 1) * singleRowActionSize +
                                                        singleRowReactionsCountLimit * compactPadding
         readonly property int singleRowMenuWidth: 2 * compactPadding +
-                                                 singleRowReactionsWidth +
+                                                 (reactionsVisible ? singleRowReactionsWidth + compactPadding : 0) +
                                                  singleRowActionCount * singleRowActionSize +
-                                                 singleRowActionCount * compactPadding
-        readonly property int compactReactionsBottomMargin: 6
+                                                 (singleRowActionCount - 1) * compactPadding
+        readonly property int expandedMenuWidth: Math.max(defaultMenuWidth, singleRowMenuWidth)
         readonly property int expandIconRotation: 90
         readonly property bool canCopyMessage: (root.messageContentType === Constants.messageContentType.messageType ||
                                                 root.messageContentType === Constants.messageContentType.contactRequestType ||
@@ -112,7 +116,8 @@ StatusMenu {
                                                   root.messageContentType === Constants.messageContentType.audioType)
     }
 
-    maxImplicitWidth: root.collapsedSingleRow && !root.expanded ? d.singleRowMenuWidth : d.defaultMenuWidth
+    maxImplicitWidth: root.expanded ? (root.openExpanded ? d.defaultMenuWidth : d.expandedMenuWidth) : d.singleRowMenuWidth
+    width: maxImplicitWidth
     verticalPadding: 0
     closePolicy: (d.closeOnPressOutside ? Popup.CloseOnPressOutside : Popup.NoAutoClose) | Popup.CloseOnEscape
     topPadding: d.menuPadding
@@ -120,14 +125,15 @@ StatusMenu {
     delegate: StatusMenuItem {
         visible: root.hideDisabledItems && !visibleOnDisabled ? enabled : true
         Layout.preferredHeight: visible ? implicitHeight : 0
-        Layout.leftMargin: d.menuPadding
-        Layout.rightMargin: d.menuPadding
         horizontalPadding: d.menuPadding
         verticalPadding: d.menuPadding
         spacing: d.defaultItemSpacing
         backgroundRadius: Math.max(d.menuPadding, Theme.radius)
         visualizeShortcuts: root.visualizeShortcuts
         rippleOrigin: root.rippleOrigin
+        implicitWidth: root.maxImplicitWidth
+        leftInset: d.menuPadding
+        rightInset: d.menuPadding
     }
 
     onOpened: {
@@ -150,258 +156,165 @@ StatusMenu {
         onHoveredChanged: root.hoverChanged(hovered)
     }
 
-    MessageReactionsRow {
-        id: emojiRow
-        objectName: "messageContextMenu_reactionsRow"
+    Item {
+        objectName: "messageContextMenu_singleRowActions"
+        visible: d.reactionsVisible || !root.expanded
+        Layout.preferredWidth: root.maxImplicitWidth
+        Layout.maximumWidth: root.maxImplicitWidth
+        Layout.preferredHeight: root.expanded ? d.defaultActionSize : d.singleRowActionSize
+        Layout.bottomMargin: root.expanded ? d.menuPadding : 0
+        implicitWidth: Layout.preferredWidth
 
-        size: MessageReactionsRow.Size.Compact
-        addReactionIconColor: Theme.palette.primaryColor1
-        countLimit: root.collapsedSingleRow && root.expanded ? 0 : d.defaultReactionsCountLimit
-        reactionSize: d.defaultActionSize
-        spacing: d.defaultItemSpacing
-        implicitWidth: d.rowWidth
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: root.expanded ? d.menuPadding : d.compactPadding
+            anchors.rightMargin: root.expanded ? d.menuPadding : d.compactPadding
+            spacing: root.expanded ? d.defaultItemSpacing : d.compactPadding
 
-        Layout.topMargin: 0
-        Layout.bottomMargin: root.expanded ? d.menuPadding : d.compactReactionsBottomMargin
-        Layout.leftMargin: d.menuPadding
-        Layout.rightMargin: d.menuPadding
-        Layout.preferredWidth: d.rowWidth
-        Layout.maximumWidth: d.rowWidth
+            MessageReactionsRow {
+                id: emojiRow
+                objectName: "messageContextMenu_reactionsRow"
 
-        visible: (!root.emojiReactionLimitReached && (!root.disabledForChat || root.forceEnableEmojiReactions)) && (!root.collapsedSingleRow || root.expanded)
-        emojiModel: root.emojiModel
-        onToggleReaction: hexcode => {
-            root.toggleReaction(hexcode)
-            root.close()
-        }
-        onOpenEmojiPopup: (parent, mouse) => {
-            root.openEmojiPopup(parent, mouse)
-            root.close()
-        }
+                size: MessageReactionsRow.Size.Compact
+                addReactionIconColor: Theme.palette.primaryColor1
+                countLimit: root.expanded ? 0 : d.singleRowReactionsCountLimit
+                reactionSize: root.expanded ? d.defaultActionSize : d.singleRowActionSize
+                spacing: root.expanded ? d.defaultItemSpacing : d.compactPadding
 
-        HoverHandler {
-            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-            onHoveredChanged: root.hoverChanged(hovered)
+                Layout.preferredWidth: root.expanded ? d.rowWidth : d.singleRowReactionsWidth
+                Layout.maximumWidth: root.expanded ? d.rowWidth : d.singleRowReactionsWidth
+                Layout.preferredHeight: root.expanded ? d.defaultActionSize : d.singleRowActionSize
+                Layout.fillWidth: true
+                implicitWidth: Layout.preferredWidth
+
+                visible: d.reactionsVisible
+                emojiModel: root.emojiModel
+                onToggleReaction: hexcode => {
+                    root.toggleReaction(hexcode)
+                    root.close()
+                }
+                onOpenEmojiPopup: (parent, mouse) => {
+                    root.openEmojiPopup(parent, mouse)
+                    root.close()
+                }
+
+                HoverHandler {
+                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                    onHoveredChanged: root.hoverChanged(hovered)
+                }
+            }
+
+            StatusFlatRoundButton {
+                objectName: "messageContextMenu_replyTo"
+                visible: !root.expanded && !root.disabledForChat
+                Layout.preferredWidth: d.singleRowActionSize
+                Layout.preferredHeight: d.singleRowActionSize
+                type: StatusFlatRoundButton.Type.Quaternary
+                icon.name: "reply"
+                icon.width: d.iconSize
+                icon.height: d.iconSize
+                icon.color: Theme.palette.primaryColor1
+                onClicked: {
+                    root.showReplyArea(root.messageSenderId)
+                    root.close()
+                }
+                onHoveredChanged: root.hoverChanged(hovered)
+            }
+
+            StatusFlatRoundButton {
+                objectName: "messageContextMenu_edit"
+                visible: !root.expanded && d.editActionVisible
+                Layout.preferredWidth: d.singleRowActionSize
+                Layout.preferredHeight: d.singleRowActionSize
+                type: StatusFlatRoundButton.Type.Quaternary
+                icon.name: "edit_pencil"
+                icon.width: d.iconSize
+                icon.height: d.iconSize
+                icon.color: Theme.palette.primaryColor1
+                onClicked: {
+                    root.editClicked()
+                    root.close()
+                }
+                onHoveredChanged: root.hoverChanged(hovered)
+            }
+
+            StatusFlatRoundButton {
+                objectName: "messageContextMenu_markUnread"
+                visible: !root.expanded && !root.disabledForChat
+                Layout.preferredWidth: d.singleRowActionSize
+                Layout.preferredHeight: d.singleRowActionSize
+                type: StatusFlatRoundButton.Type.Quaternary
+                icon.name: "hide"
+                icon.width: d.iconSize
+                icon.height: d.iconSize
+                icon.color: Theme.palette.primaryColor1
+                onClicked: {
+                    root.markMessageAsUnread()
+                    root.close()
+                }
+                onHoveredChanged: root.hoverChanged(hovered)
+            }
+
+            StatusFlatRoundButton {
+                objectName: "messageContextMenu_copy"
+                visible: !root.expanded && (!!root.selectedText || d.canCopyMessage)
+                Layout.preferredWidth: d.singleRowActionSize
+                Layout.preferredHeight: d.singleRowActionSize
+                type: StatusFlatRoundButton.Type.Quaternary
+                icon.name: "copy"
+                icon.width: d.iconSize
+                icon.height: d.iconSize
+                icon.color: Theme.palette.primaryColor1
+                onClicked: {
+                    root.copyToClipboard(!!root.selectedText ? root.selectedText : root.unparsedText)
+                    root.close()
+                }
+                onHoveredChanged: root.hoverChanged(hovered)
+            }
+
+            StatusFlatRoundButton {
+                objectName: "messageContextMenu_pin"
+                visible: !root.expanded && d.compactPinActionVisible
+                Layout.preferredWidth: d.singleRowActionSize
+                Layout.preferredHeight: d.singleRowActionSize
+                type: StatusFlatRoundButton.Type.Quaternary
+                icon.name: root.pinnedMessage ? "unpin" : "pin"
+                icon.width: d.iconSize
+                icon.height: d.iconSize
+                icon.color: Theme.palette.primaryColor1
+                onClicked: {
+                    if (root.pinnedMessage) root.unpinMessage()
+                    else if (!root.canPin) root.pinnedMessagesLimitReached()
+                    else root.pinMessage()
+                    root.close()
+                }
+                onHoveredChanged: root.hoverChanged(hovered)
+            }
+
+            StatusFlatRoundButton {
+                objectName: "messageContextMenu_expand"
+                visible: !root.expanded
+                Layout.preferredWidth: d.singleRowActionSize
+                Layout.preferredHeight: d.singleRowActionSize
+                type: StatusFlatRoundButton.Type.Quaternary
+                icon.name: "more"
+                icon.width: d.iconSize
+                icon.height: d.iconSize
+                icon.color: Theme.palette.primaryColor1
+                icon.rotation: d.expandIconRotation
+                onClicked: root.expanded = true
+                onHoveredChanged: root.hoverChanged(hovered)
+            }
         }
     }
 
     StatusMenuSeparator {
-        visible: root.expanded && emojiRow.visible && !root.disabledForChat
+        objectName: "messageContextMenu_reactionsSeparator"
+        visible: root.expanded && d.reactionsVisible
+        horizontalPadding: d.menuPadding
         topPadding: 0
         bottomPadding: 0
-        horizontalPadding: 0
-    }
-
-    RowLayout {
-        visible: !root.expanded && root.collapsedSingleRow
-        Layout.leftMargin: d.compactPadding
-        Layout.rightMargin: d.compactPadding
-        Layout.preferredWidth: d.singleRowWidth
-        Layout.maximumWidth: d.singleRowWidth
-        Layout.bottomMargin: 0
-        spacing: d.compactPadding
-
-        MessageReactionsRow {
-            objectName: "messageContextMenu_landscapeReactionsRow"
-
-            size: MessageReactionsRow.Size.Compact
-            addReactionIconColor: Theme.palette.primaryColor1
-            countLimit: d.singleRowReactionsCountLimit
-            spacing: d.compactPadding
-
-            Layout.preferredWidth: d.singleRowReactionsWidth
-            Layout.maximumWidth: d.singleRowReactionsWidth
-
-            visible: (!root.emojiReactionLimitReached && (!root.disabledForChat || root.forceEnableEmojiReactions))
-            emojiModel: root.emojiModel
-            onToggleReaction: hexcode => {
-                root.toggleReaction(hexcode)
-                root.close()
-            }
-            onOpenEmojiPopup: (parent, mouse) => {
-                root.openEmojiPopup(parent, mouse)
-                root.close()
-            }
-
-            HoverHandler {
-                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-                onHoveredChanged: root.hoverChanged(hovered)
-            }
-        }
-
-        StatusFlatRoundButton {
-            objectName: "messageContextMenu_replyTo"
-            visible: !root.disabledForChat
-            Layout.preferredWidth: d.singleRowActionSize
-            Layout.preferredHeight: d.singleRowActionSize
-            type: StatusFlatRoundButton.Type.Quaternary
-            icon.name: "reply"
-            icon.width: d.iconSize
-            icon.height: d.iconSize
-            icon.color: Theme.palette.primaryColor1
-            onClicked: {
-                root.showReplyArea(root.messageSenderId)
-                root.close()
-            }
-            onHoveredChanged: root.hoverChanged(hovered)
-        }
-
-        StatusFlatRoundButton {
-            objectName: "messageContextMenu_edit"
-            enabled: (root.isMyMessage && !root.editRestricted && !root.disabledForChat)
-            Layout.preferredWidth: d.singleRowActionSize
-            Layout.preferredHeight: d.singleRowActionSize
-            type: StatusFlatRoundButton.Type.Quaternary
-            icon.name: "edit_pencil"
-            icon.width: d.iconSize
-            icon.height: d.iconSize
-            icon.color: Theme.palette.primaryColor1
-            onClicked: {
-                root.editClicked()
-                root.close()
-            }
-            onHoveredChanged: root.hoverChanged(hovered)
-        }
-
-        StatusFlatRoundButton {
-            objectName: "messageContextMenu_markUnread"
-            visible: !root.disabledForChat
-            Layout.preferredWidth: d.singleRowActionSize
-            Layout.preferredHeight: d.singleRowActionSize
-            type: StatusFlatRoundButton.Type.Quaternary
-            icon.name: "hide"
-            icon.width: d.iconSize
-            icon.height: d.iconSize
-            icon.color: Theme.palette.primaryColor1
-            onClicked: {
-                root.markMessageAsUnread()
-                root.close()
-            }
-            onHoveredChanged: root.hoverChanged(hovered)
-        }
-
-        StatusFlatRoundButton {
-            objectName: "messageContextMenu_copy"
-            visible: !!root.selectedText || d.canCopyMessage
-            Layout.preferredWidth: d.singleRowActionSize
-            Layout.preferredHeight: d.singleRowActionSize
-            type: StatusFlatRoundButton.Type.Quaternary
-            icon.name: "copy"
-            icon.width: d.iconSize
-            icon.height: d.iconSize
-            icon.color: Theme.palette.primaryColor1
-            onClicked: {
-                root.copyToClipboard(!!root.selectedText ? root.selectedText : root.unparsedText)
-                root.close()
-            }
-            onHoveredChanged: root.hoverChanged(hovered)
-        }
-
-        StatusFlatRoundButton {
-            objectName: "messageContextMenu_expand"
-            Layout.preferredWidth: d.singleRowActionSize
-            Layout.preferredHeight: d.singleRowActionSize
-            type: StatusFlatRoundButton.Type.Quaternary
-            icon.name: "more"
-            icon.width: d.iconSize
-            icon.height: d.iconSize
-            icon.color: Theme.palette.primaryColor1
-            icon.rotation: d.expandIconRotation
-            onClicked: root.expanded = true
-            onHoveredChanged: root.hoverChanged(hovered)
-        }
-    }
-
-    RowLayout {
-        visible: !root.expanded && !root.collapsedSingleRow
-        Layout.leftMargin: d.menuPadding
-        Layout.rightMargin: d.menuPadding
-        Layout.preferredWidth: d.rowWidth
-        Layout.maximumWidth: d.rowWidth
-        Layout.bottomMargin: 0
-        spacing: d.defaultItemSpacing
-
-        StatusFlatRoundButton {
-            objectName: "messageContextMenu_replyTo"
-            visible: !root.disabledForChat
-            Layout.preferredWidth: d.defaultActionSize
-            Layout.preferredHeight: d.defaultActionSize
-            type: StatusFlatRoundButton.Type.Quaternary
-            icon.name: "reply"
-            icon.width: d.iconSize
-            icon.height: d.iconSize
-            icon.color: Theme.palette.primaryColor1
-            onClicked: {
-                root.showReplyArea(root.messageSenderId)
-                root.close()
-            }
-            onHoveredChanged: root.hoverChanged(hovered)
-        }
-
-        StatusFlatRoundButton {
-            objectName: "messageContextMenu_edit"
-            enabled: (root.isMyMessage && !root.editRestricted && !root.disabledForChat)
-            Layout.preferredWidth: d.defaultActionSize
-            Layout.preferredHeight: d.defaultActionSize
-            type: StatusFlatRoundButton.Type.Quaternary
-            icon.name: "edit_pencil"
-            icon.width: d.iconSize
-            icon.height: d.iconSize
-            icon.color: Theme.palette.primaryColor1
-            onClicked: {
-                root.editClicked()
-                root.close()
-            }
-            onHoveredChanged: root.hoverChanged(hovered)
-        }
-
-        StatusFlatRoundButton {
-            objectName: "messageContextMenu_markUnread"
-            visible: !root.disabledForChat
-            Layout.preferredWidth: d.defaultActionSize
-            Layout.preferredHeight: d.defaultActionSize
-            type: StatusFlatRoundButton.Type.Quaternary
-            icon.name: "hide"
-            icon.width: d.iconSize
-            icon.height: d.iconSize
-            icon.color: Theme.palette.primaryColor1
-            onClicked: {
-                root.markMessageAsUnread()
-                root.close()
-            }
-            onHoveredChanged: root.hoverChanged(hovered)
-        }
-
-        StatusFlatRoundButton {
-            objectName: "messageContextMenu_copy"
-            visible: !!root.selectedText || d.canCopyMessage
-            Layout.preferredWidth: d.defaultActionSize
-            Layout.preferredHeight: d.defaultActionSize
-            type: StatusFlatRoundButton.Type.Quaternary
-            icon.name: "copy"
-            icon.width: d.iconSize
-            icon.height: d.iconSize
-            icon.color: Theme.palette.primaryColor1
-            onClicked: {
-                root.copyToClipboard(!!root.selectedText ? root.selectedText : root.unparsedText)
-                root.close()
-            }
-            onHoveredChanged: root.hoverChanged(hovered)
-        }
-
-        StatusFlatRoundButton {
-            objectName: "messageContextMenu_expand"
-            Layout.preferredWidth: d.defaultActionSize
-            Layout.preferredHeight: d.defaultActionSize
-            type: StatusFlatRoundButton.Type.Quaternary
-            icon.name: "more"
-            icon.width: d.iconSize
-            icon.height: d.iconSize
-            icon.color: Theme.palette.primaryColor1
-            icon.rotation: d.expandIconRotation
-            onClicked: root.expanded = true
-            onHoveredChanged: root.hoverChanged(hovered)
-        }
+        implicitWidth: root.maxImplicitWidth
     }
 
     Item {
@@ -430,7 +343,7 @@ StatusMenu {
         icon.width: d.iconSize
         icon.height: d.iconSize
         fontSettings.pixelSize: Theme.primaryTextFontSize
-        enabled: root.expanded && (root.isMyMessage && !root.editRestricted && !root.disabledForChat)
+        enabled: root.expanded && d.editActionVisible
     }
 
     StatusAction {
