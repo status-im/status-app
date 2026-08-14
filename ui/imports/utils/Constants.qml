@@ -412,13 +412,13 @@ QtObject {
                 validate: function (t) { return !t.startsWith(" ") }
                 errorMessage: qsTr("Key pair starting with whitespace are not allowed")
             },
-            StatusRegularExpressionValidator {
-                regularExpression: /^[a-zA-Z0-9\-_ ]+$/
-                errorMessage: errorMessages.alphanumericalExpandedRegExp
-            },
             StatusMinLengthValidator {
                 minLength: keypair.nameLengthMin
                 errorMessage: qsTr("Key pair must be at least %n character(s)", "", keypair.nameLengthMin)
+            },
+            StatusRegularExpressionValidator {
+                regularExpression: /^[a-zA-Z0-9\-_ ]+$/
+                errorMessage: errorMessages.alphanumericalExpandedRegExp
             }
         ]
     }
