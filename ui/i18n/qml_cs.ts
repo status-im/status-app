@@ -3322,10 +3322,6 @@ formát souboru</translation>
 <context>
     <name>CollectiblesView</name>
     <message>
-        <source>Loading collectible...</source>
-        <translation>Načítání sběratelského předmětu...</translation>
-    </message>
-    <message>
         <source>Sort by:</source>
         <translation>Třídit podle:</translation>
     </message>
@@ -3360,6 +3356,10 @@ formát souboru</translation>
     <message>
         <source>Collectibles will appear here</source>
         <translation>Sběratelské předměty se zobrazí zde</translation>
+    </message>
+    <message>
+        <source>Collectibles could not be loaded</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Community minted</source>
@@ -14690,6 +14690,10 @@ selhalo</translation>
     </message>
     <message>
         <source>History</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Checking collectibles ownership…</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

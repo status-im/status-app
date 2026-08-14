@@ -3309,10 +3309,6 @@ file format</source>
 <context>
     <name>CollectiblesView</name>
     <message>
-        <source>Loading collectible...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Sort by:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3346,6 +3342,10 @@ file format</source>
     </message>
     <message>
         <source>Collectibles will appear here</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Collectibles could not be loaded</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -14610,6 +14610,10 @@ to load</source>
     </message>
     <message>
         <source>History</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Checking collectibles ownership…</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

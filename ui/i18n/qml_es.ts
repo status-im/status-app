@@ -3317,10 +3317,6 @@ no compatible</translation>
         <translation>Ajustes</translation>
     </message>
     <message>
-        <source>Loading collectible...</source>
-        <translation>Cargando coleccionable...</translation>
-    </message>
-    <message>
         <source>Sort by:</source>
         <translation>Ordenar por:</translation>
     </message>
@@ -3355,6 +3351,10 @@ no compatible</translation>
     <message>
         <source>Collectibles will appear here</source>
         <translation>Los coleccionables aparecerán aquí</translation>
+    </message>
+    <message>
+        <source>Collectibles could not be loaded</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Community minted</source>
@@ -14625,6 +14625,10 @@ al cargar</translation>
     </message>
     <message>
         <source>History</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Checking collectibles ownership…</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -3301,10 +3301,6 @@ file format</source>
 <context>
     <name>CollectiblesView</name>
     <message>
-        <source>Loading collectible...</source>
-        <translation>콜렉터블 로딩 중...</translation>
-    </message>
-    <message>
         <source>Sort by:</source>
         <translation>정렬 기준:</translation>
     </message>
@@ -3339,6 +3335,10 @@ file format</source>
     <message>
         <source>Collectibles will appear here</source>
         <translation>수집품이 여기에 표시됩니다</translation>
+    </message>
+    <message>
+        <source>Collectibles could not be loaded</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Community minted</source>
@@ -14561,6 +14561,10 @@ to load</source>
     </message>
     <message>
         <source>History</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Checking collectibles ownership…</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
