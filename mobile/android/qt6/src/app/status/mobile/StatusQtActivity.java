@@ -6,8 +6,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.content.pm.PackageManager;
+import android.content.pm.ProviderInfo;
 import androidx.core.splashscreen.SplashScreen;
 import java.util.concurrent.atomic.AtomicBoolean;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.provider.Settings;
@@ -222,7 +225,7 @@ public class StatusQtActivity extends QtActivity {
 
         String[] imagePaths = isImageShare
                 ? copySharedImagesToCache(
-                        imagesOnly(extractStreamUris(intent, isSendMultiple), isWildcard))
+                        imagesOnly(extractStreamUris(this, intent, isSendMultiple), isWildcard))
                 : new String[0];
         if (text.isEmpty() && imagePaths.length == 0) {
             if (isImageShare) {
@@ -253,20 +256,52 @@ public class StatusQtActivity extends QtActivity {
         pendingIntakeShareText = null;
     }
 
-    private static List<Uri> extractStreamUris(Intent intent, boolean multiple) {
+    private static List<Uri> extractStreamUris(Context ctx, Intent intent, boolean multiple) {
         ArrayList<Uri> uris = new ArrayList<>();
         if (multiple) {
             ArrayList<Uri> streams = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
             if (streams != null) {
                 for (Uri stream : streams) {
-                    if (stream != null) uris.add(stream);
+                    if (isSharableStream(ctx, stream)) uris.add(stream);
                 }
             }
         } else {
             Uri stream = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-            if (stream != null) uris.add(stream);
+            if (isSharableStream(ctx, stream)) uris.add(stream);
         }
         return uris;
+    }
+
+    // The sender chooses the URI but we do the opening, so an unvetted stream
+    // makes us a confused deputy: openInputStream() resolves file:// directly,
+    // and a content:// URI on one of our OWN providers is readable by us
+    // regardless of what the sender can reach. Either lets a zero-permission
+    // app name a path in our private storage and have us copy it out.
+    // Accept only content:// from somebody else.
+    private static boolean isSharableStream(Context ctx, Uri uri) {
+        if (uri == null) return false;
+        if (!ContentResolver.SCHEME_CONTENT.equals(uri.getScheme())) {
+            Log.w(TAG, "share intake: rejecting non-content stream: " + uri.getScheme());
+            return false;
+        }
+        if (belongsToUs(ctx, uri)) {
+            Log.w(TAG, "share intake: rejecting stream on our own provider: " + uri.getAuthority());
+            return false;
+        }
+        return true;
+    }
+
+    // Resolved through PackageManager rather than compared against a literal:
+    // the authority carries applicationIdSuffix (".debug"), and this also
+    // covers any provider we add later.
+    private static boolean belongsToUs(Context ctx, Uri uri) {
+        final String authority = uri.getAuthority();
+        if (authority == null) return true; // unresolvable: treat as untrusted
+        final ProviderInfo info =
+                ctx.getPackageManager().resolveContentProvider(authority, 0);
+        // Unknown authority: not ours, and openInputStream would fail anyway.
+        if (info == null) return false;
+        return ctx.getPackageName().equals(info.packageName);
     }
 
     // Resolved before copying: the copy loop runs on the UI thread, so a
