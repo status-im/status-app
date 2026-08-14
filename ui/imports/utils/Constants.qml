@@ -377,9 +377,14 @@ QtObject {
         readonly property int rejectedReceivedContactRequest: 3
     }
 
-    readonly property QtObject keypair: QtObject {
+    readonly property QtObject displayName: QtObject {
         readonly property int nameLengthMax: 20
         readonly property int nameLengthMin: 5
+    }
+
+    readonly property QtObject keypair: QtObject {
+        readonly property int nameLengthMax: 20
+        readonly property int nameLengthMin: 1
 
         readonly property QtObject type: QtObject {
             readonly property int unknown: -1
@@ -620,7 +625,7 @@ QtObject {
         readonly property int importPrivateKeyWarningHeight: 86
         readonly property int footerButtonsHeight: 44
         readonly property int keyPairNameMaxLength: 20
-        readonly property int keyPairAccountNameMinLength: 5
+        readonly property int keyPairAccountNameMinLength: 1
         readonly property int stepperWidth: 242
 
         readonly property QtObject keyPairType: QtObject {

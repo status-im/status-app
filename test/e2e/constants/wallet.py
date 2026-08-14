@@ -162,9 +162,9 @@ class WalletSeedPhrase(Enum):
 
 
 class WalletAccountPopup(Enum):
-    WALLET_ACCOUNT_NAME_MIN = 'Account name must be at least 5 characters'
-    WALLET_KEYPAIR_NAME_MIN = 'Key pair name must be at least 5 characters'
-    WALLET_KEYPAIR_MIN = 'Key pair must be at least 5 character(s)'
+    WALLET_ACCOUNT_NAME_MIN = 'Account name must be at least 1 character'
+    WALLET_KEYPAIR_NAME_MIN = 'Key pair name must be at least 1 character'
+    WALLET_KEYPAIR_MIN = 'Key pair must be at least 1 character(s)'
 
 E2E_NETWORK_CHAIN_IDS: dict[str, int] = {
     "Hoodi": WalletNetworkNaming.HOODI_NETWORK_ID.value,

@@ -32,13 +32,13 @@ def test_rename_keypair_test(main_screen: MainWindow, user_account, emoji: str, 
         account_popup = wallet.left_panel.open_add_account_popup()
         account_popup.set_name(random_wallet_acc_keypair_name()).set_emoji(emoji)
 
-    with step('Enter private key name less than 5 characters and verify that error appears'):
-        pk_name_short = ''.join(random.choices(string.ascii_letters + string.digits, k=4))
+    with step('Enter empty private key name and verify that error appears'):
         new_account_popup = account_popup.open_add_new_account_popup()
-        new_account_popup.import_and_enter_private_key(address_pair.private_key).enter_private_key_name(pk_name_short)
+        new_account_popup.import_and_enter_private_key(address_pair.private_key).enter_private_key_name('a')
+        new_account_popup.enter_private_key_name('')
         assert new_account_popup.get_private_key_error_message() == WalletAccountPopup.WALLET_KEYPAIR_NAME_MIN.value
 
-    with step('Enter private key name more than 5 characters and continue creating of import private key account'):
+    with step('Enter private key name and continue creating of import private key account'):
         pk_name = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
         new_account_popup.enter_private_key_name(pk_name).click_continue()
         account_popup.save_changes()
