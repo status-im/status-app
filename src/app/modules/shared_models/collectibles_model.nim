@@ -237,6 +237,65 @@ QtObject:
     self.endRemoveRows()
     self.countChanged()
 
+  proc itemsDataUpdated*(self: Model) {.signal.}
+
+  proc sameOwnership(a, b: seq[backend_collectibles.AccountBalance]): bool =
+    if len(a) != len(b):
+      return false
+    for i in 0 ..< len(a):
+      if a[i].address != b[i].address or a[i].balance != b[i].balance or a[i].txTimestamp != b[i].txTimestamp:
+        return false
+    return true
+
+  # Refreshes the entry at `ind` from `update`, emitting dataChanged for the
+  # roles whose values actually changed. Returns whether anything changed.
+  proc updateEntryData(self: Model, ind: int, update: backend_collectibles.Collectible): bool =
+    let entry = self.items[ind]
+    let name = entry.getName()
+    let imageUrl = entry.getImageURL()
+    let mediaUrl = entry.getMediaURL()
+    let mediaType = entry.getMediaType()
+    let backgroundColor = entry.getBackgroundColor()
+    let collectionName = entry.getCollectionName()
+    let collectionSlug = entry.getCollectionSlug()
+    let collectionImageUrl = entry.getCollectionImageURL()
+    let communityId = entry.getCommunityId()
+    let communityPrivilegesLevel = entry.getCommunityPrivilegesLevel()
+    let tokenType = entry.getTokenType()
+    let soulbound = entry.getSoulbound()
+    let metadataAvailable = entry.getIsMetaDataValid()
+    let ownership = entry.getOwnership()
+
+    if not entry.updateDataIfSameID(update):
+      return false
+
+    var changedRoles: seq[int] = @[]
+    addChangedRole(changedRoles, name, entry.getName(), CollectibleRole.Name.int): discard
+    addChangedRole(changedRoles, imageUrl, entry.getImageURL(), CollectibleRole.ImageUrl.int): discard
+    addChangedRole(changedRoles, mediaUrl, entry.getMediaURL(), CollectibleRole.MediaUrl.int): discard
+    addChangedRole(changedRoles, mediaType, entry.getMediaType(), CollectibleRole.MediaType.int): discard
+    addChangedRole(changedRoles, backgroundColor, entry.getBackgroundColor(), CollectibleRole.BackgroundColor.int): discard
+    addChangedRole(changedRoles, collectionName, entry.getCollectionName(), CollectibleRole.CollectionName.int): discard
+    addChangedRole(changedRoles, collectionSlug, entry.getCollectionSlug(), CollectibleRole.CollectionSlug.int): discard
+    addChangedRole(changedRoles, collectionImageUrl, entry.getCollectionImageURL(), CollectibleRole.CollectionImageUrl.int): discard
+    addChangedRole(changedRoles, communityId, entry.getCommunityId(), CollectibleRole.CommunityId.int): discard
+    addChangedRole(changedRoles, communityPrivilegesLevel, entry.getCommunityPrivilegesLevel(), CollectibleRole.CommunityPrivilegesLevel.int): discard
+    addChangedRole(changedRoles, tokenType, entry.getTokenType(), CollectibleRole.TokenType.int): discard
+    addChangedRole(changedRoles, soulbound, entry.getSoulbound(), CollectibleRole.Soulbound.int): discard
+    # Must be part of the diff: this is the role that makes a tile stop
+    # rendering as loading once its metadata arrives, and it can flip even
+    # when every other role above happens to keep its value.
+    addChangedRole(changedRoles, metadataAvailable, entry.getIsMetaDataValid(), CollectibleRole.MetadataAvailable.int): discard
+    # Ownership is a submodel, compare by value: balances and owning accounts
+    # can change while the collectible ID stays the same.
+    if not sameOwnership(ownership, entry.getOwnership()):
+      changedRoles.add(CollectibleRole.Ownership.int)
+
+    if changedRoles.len > 0:
+      notifyRangeRolesChanged(ind, ind, changedRoles)
+      return true
+    return false
+
   proc updateCollectibleItems(self: Model, newItems: seq[CollectiblesEntry]) =
     if len(self.items) == 0:
       # Current list is empty, just replace with new list
@@ -253,6 +312,7 @@ QtObject:
       newTable[newItems[i].getIDAsString()] = i
 
     # Needs to be built in sequential index order
+    var anyKeptItemUpdated = false
     var oldIndicesToRemove: seq[int] = @[]
     for idx in 0 ..< len(self.items):
       let uid = self.items[idx].getIDAsString()
@@ -260,8 +320,12 @@ QtObject:
         # Item in old list but not in new -> Must remove
         oldIndicesToRemove.add(idx)
       else:
-        # Item both in old and new lists -> Nothing to do in the current list,
-        # remove from the new list so it only holds new items.
+        # Item both in old and new lists -> Keep the existing entry, but
+        # refresh its data: ownership (balances, owning accounts) can change
+        # while the collectible ID stays the same.
+        if self.updateEntryData(idx, newItems[newTable[uid]].getBackendCollectible()):
+          anyKeptItemUpdated = true
+        # Remove from the new list so it only holds new items.
         newTable.del(uid)
 
     if len(oldIndicesToRemove) > 0:
@@ -276,6 +340,9 @@ QtObject:
     for uid, idx in newTable:
       newItemsToAdd.add(newItems[idx])
     self.appendCollectibleItems(newItemsToAdd)
+
+    if anyKeptItemUpdated:
+      self.itemsDataUpdated()
 
   proc getItems*(self: Model): seq[CollectiblesEntry] =
     return self.items
@@ -304,57 +371,14 @@ QtObject:
     self.updateCollectibleItems(newItems)
     self.setHasMore(false)
 
-  proc itemsDataUpdated*(self: Model) {.signal.}
   proc updateItemsData*(self: Model, updates: seq[backend_collectibles.Collectible]) =
     var anyUpdated = false
-
-    proc updateEntry(ind: int, update: backend_collectibles.Collectible): bool =
-      let entry = self.items[ind]
-      let name = entry.getName()
-      let imageUrl = entry.getImageURL()
-      let mediaUrl = entry.getMediaURL()
-      let mediaType = entry.getMediaType()
-      let backgroundColor = entry.getBackgroundColor()
-      let collectionName = entry.getCollectionName()
-      let collectionSlug = entry.getCollectionSlug()
-      let collectionImageUrl = entry.getCollectionImageURL()
-      let communityId = entry.getCommunityId()
-      let communityPrivilegesLevel = entry.getCommunityPrivilegesLevel()
-      let tokenType = entry.getTokenType()
-      let soulbound = entry.getSoulbound()
-      let metadataAvailable = entry.getIsMetaDataValid()
-
-      if not entry.updateDataIfSameID(update):
-        return false
-
-      var changedRoles: seq[int] = @[]
-      addChangedRole(changedRoles, name, entry.getName(), CollectibleRole.Name.int): discard
-      addChangedRole(changedRoles, imageUrl, entry.getImageURL(), CollectibleRole.ImageUrl.int): discard
-      addChangedRole(changedRoles, mediaUrl, entry.getMediaURL(), CollectibleRole.MediaUrl.int): discard
-      addChangedRole(changedRoles, mediaType, entry.getMediaType(), CollectibleRole.MediaType.int): discard
-      addChangedRole(changedRoles, backgroundColor, entry.getBackgroundColor(), CollectibleRole.BackgroundColor.int): discard
-      addChangedRole(changedRoles, collectionName, entry.getCollectionName(), CollectibleRole.CollectionName.int): discard
-      addChangedRole(changedRoles, collectionSlug, entry.getCollectionSlug(), CollectibleRole.CollectionSlug.int): discard
-      addChangedRole(changedRoles, collectionImageUrl, entry.getCollectionImageURL(), CollectibleRole.CollectionImageUrl.int): discard
-      addChangedRole(changedRoles, communityId, entry.getCommunityId(), CollectibleRole.CommunityId.int): discard
-      addChangedRole(changedRoles, communityPrivilegesLevel, entry.getCommunityPrivilegesLevel(), CollectibleRole.CommunityPrivilegesLevel.int): discard
-      addChangedRole(changedRoles, tokenType, entry.getTokenType(), CollectibleRole.TokenType.int): discard
-      addChangedRole(changedRoles, soulbound, entry.getSoulbound(), CollectibleRole.Soulbound.int): discard
-      # Must be part of the diff: this is the role that makes a tile stop
-      # rendering as loading once its metadata arrives, and it can flip even
-      # when every other role above happens to keep its value.
-      addChangedRole(changedRoles, metadataAvailable, entry.getIsMetaDataValid(), CollectibleRole.MetadataAvailable.int): discard
-
-      if changedRoles.len > 0:
-        notifyRangeRolesChanged(ind, ind, changedRoles)
-        return true
-      return false
 
     for i in countdown(self.items.high, 0):
       for j in countdown(updates.high, 0):
         let update = updates[j]
         if self.items[i].getID() == update.id:
-          if updateEntry(i, update):
+          if self.updateEntryData(i, update):
             anyUpdated = true
           break
     if anyUpdated:

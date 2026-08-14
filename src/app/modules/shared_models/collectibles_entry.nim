@@ -89,6 +89,9 @@ QtObject:
   proc hasOwnership(self: CollectiblesEntry): bool =
     return self.data != nil and isSome(self.data.ownership)
 
+  proc getBackendCollectible*(self: CollectiblesEntry): backend.Collectible =
+    return self.data
+
   proc getOwnership*(self: CollectiblesEntry): seq[backend.AccountBalance] =
     if not self.hasOwnership():
       return @[]
