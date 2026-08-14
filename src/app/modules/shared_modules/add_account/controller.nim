@@ -4,7 +4,6 @@ import io_interface
 
 import app_service/service/accounts/service as accounts_service
 import app_service/service/wallet_account/service as wallet_account_service
-import app_service/service/saved_address/service as saved_address_service
 
 import app/core/eventemitter
 
@@ -17,7 +16,6 @@ type
     events: EventEmitter
     accountsService: accounts_service.Service
     walletAccountService: wallet_account_service.Service
-    savedAddressService: saved_address_service.Service
     connectionIds: seq[UUID]
     tmpAuthenticatedKeyUid: string
     tmpPassword: string
@@ -28,15 +26,13 @@ type
 proc newController*(delegate: io_interface.AccessInterface,
   events: EventEmitter,
   accountsService: accounts_service.Service,
-  walletAccountService: wallet_account_service.Service,
-  savedAddressService: saved_address_service.Service):
+  walletAccountService: wallet_account_service.Service):
   Controller =
   result = Controller()
   result.delegate = delegate
   result.events = events
   result.accountsService = accountsService
   result.walletAccountService = walletAccountService
-  result.savedAddressService = savedAddressService
 
 proc disconnectAll*(self: Controller) =
   for id in self.connectionIds:
@@ -74,11 +70,6 @@ proc init*(self: Controller) =
     self.delegate.updateDerivedAddresses(args.derivedAddresses, args.error, false)
   self.connectionIds.add(handlerId)
 
-  handlerId = self.events.onWithUUID(SIGNAL_SAVED_ADDRESS_DELETED) do(e:Args):
-    let args = SavedAddressArgs(e)
-    self.delegate.savedAddressDeleted(args.address, args.errorMsg)
-  self.connectionIds.add(handlerId)
-
 proc setAuthenticatedKeyUid*(self: Controller, value: string) =
   self.tmpAuthenticatedKeyUid = value
 
@@ -108,12 +99,6 @@ proc getKeypairs*(self: Controller): seq[KeypairDto] =
 
 proc getKeypairByKeyUid*(self: Controller, keyUid: string): KeypairDto =
   return self.walletAccountService.getKeypairByKeyUid(keyUid)
-
-proc getSavedAddress*(self: Controller, address: string): SavedAddressDto =
-  return self.savedAddressService.getSavedAddress(address)
-
-proc deleteSavedAddress*(self: Controller, address: string) =
-  self.savedAddressService.deleteSavedAddress(address)
 
 proc finalizeAction*(self: Controller) =
   self.delegate.finalizeAction()
