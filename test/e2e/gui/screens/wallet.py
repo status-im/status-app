@@ -338,8 +338,6 @@ class WalletAccountView(QObject):
         def assets_loaded():
             if not assets_tab_view.is_visible:
                 return False
-            if getattr(assets_tab_view.object, 'loading', True):
-                return False
             items = driver.findAllObjects(self._asset_item.real_name)
             if not items:
                 return False

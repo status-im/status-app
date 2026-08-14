@@ -4,6 +4,7 @@ import pyperclip
 import pytest
 from allure_commons._allure import step
 
+import configs
 import configs.testpath
 import driver
 from configs.timeouts import APP_LOAD_TIMEOUT_MSEC
@@ -65,6 +66,8 @@ def test_sync_devices_during_onboarding_change_settings_unpair(multiple_instance
 
         with step('Sign in to synced account'):
             profile_syncing_view.log_in_button.click()
+            if configs.system.get_platform() == "Darwin":
+                OnboardingBiometricsView().maybe_later()
             SplashScreen().wait_until_hidden(APP_LOAD_TIMEOUT_MSEC)
 
             with step('Verify user details are the same with user in first instance'):
