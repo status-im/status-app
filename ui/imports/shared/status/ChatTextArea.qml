@@ -262,18 +262,34 @@ StatusTextArea {
         readonly property var mentionContext: {
             root.text
             root.cursorPosition
+            root.preeditText
             return d.computeMentionContext()
         }
 
-        function computeMentionContext() {
-            const text = root.text
+        // Splices the IME preedit (composition) text into the committed text at the caret so
+        // filtering sees what the user visually typed. Returns { text, caret, cursor } where
+        // `cursor` is the committed caret (preedit sits there) — used to map effective-text
+        // indices back to the committed document for highlighter.isInsideCode. preeditText is
+        // "" when no IME composition is active, leaving text/caret equal to the committed ones.
+        function composeWithPreedit() {
+            const committed = root.text
             const cursor = root.cursorPosition
+            const preedit = root.preeditText
+            return {
+                text: committed.substring(0, cursor) + preedit + committed.substring(cursor),
+                caret: cursor + preedit.length,
+                cursor: cursor
+            }
+        }
+
+        function computeMentionContext() {
+            const { text, caret, cursor } = d.composeWithPreedit()
             const none = { entering: false, filter: "" }
 
             // Walk back from the caret: only non-whitespace may precede it, and we must
             // reach an "@". Whitespace before any "@" means no mention in progress.
             let at = -1
-            for (let i = cursor; i > 0; --i) {
+            for (let i = caret; i > 0; --i) {
                 const ch = text.charAt(i - 1)
                 if (ch === "@") { at = i - 1; break }
                 if (/\s/.test(ch)) return none
@@ -285,11 +301,13 @@ StatusTextArea {
             if (at > 0 && !/\s/.test(text.charAt(at - 1)))
                 return none
 
-            // Mentions are not allowed inside code spans/blocks.
-            if (highlighter.isInsideCode(at))
+            // Mentions are not allowed inside code spans/blocks. isInsideCode indexes the
+            // committed document; the preedit block sits at `cursor`, so map any index
+            // inside/after it back to the committed caret.
+            if (highlighter.isInsideCode(at <= cursor ? at : cursor))
                 return none
 
-            return { entering: true, filter: text.substring(at + 1, cursor) }
+            return { entering: true, filter: text.substring(at + 1, caret) }
         }
 
         // {entering, filter} for the emoji shortcode being typed at the caret. Recomputed on
@@ -297,18 +315,18 @@ StatusTextArea {
         readonly property var emojiContext: {
             root.text
             root.cursorPosition
+            root.preeditText
             return d.computeEmojiContext()
         }
 
         function computeEmojiContext() {
-            const text = root.text
-            const cursor = root.cursorPosition
+            const { text, caret, cursor } = d.composeWithPreedit()
             const none = { entering: false, filter: "" }
 
             // Walk back from the caret: only shortcode chars ([a-zA-Z0-9_]) may precede it, and
             // we must reach a ":". Any other char before a ":" means no emoji in progress.
             let colon = -1
-            for (let i = cursor; i > 0; --i) {
+            for (let i = caret; i > 0; --i) {
                 const ch = text.charAt(i - 1)
                 if (ch === ":") { colon = i - 1; break }
                 if (!/[a-zA-Z0-9_]/.test(ch)) return none
@@ -320,11 +338,13 @@ StatusTextArea {
             if (colon > 0 && !/\s/.test(text.charAt(colon - 1)))
                 return none
 
-            // Emoji shortcodes are not allowed inside code spans/blocks.
-            if (highlighter.isInsideCode(colon))
+            // Emoji shortcodes are not allowed inside code spans/blocks. isInsideCode indexes
+            // the committed document; the preedit block sits at `cursor`, so map any index
+            // inside/after it back to the committed caret.
+            if (highlighter.isInsideCode(colon <= cursor ? colon : cursor))
                 return none
 
-            const filter = text.substring(colon + 1, cursor)
+            const filter = text.substring(colon + 1, caret)
 
             // Trigger only after at least two shortcode chars have been typed.
             if (filter.length < 2)
