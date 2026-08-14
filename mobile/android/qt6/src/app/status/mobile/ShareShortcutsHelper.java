@@ -84,17 +84,25 @@ public class ShareShortcutsHelper {
 
             // setDynamicShortcuts would drop the conversation shortcuts too;
             // push (unlike add) evicts instead of throwing when the quota is full.
+            // Push before removing: push returns false while rate limiting is
+            // active (API 28/29), so removing first can leave no targets at all.
+            List<String> republished = new ArrayList<>();
+            for (ShortcutInfoCompat info : infos) {
+                if (ShortcutManagerCompat.pushDynamicShortcut(context, info)) {
+                    republished.add(info.getId());
+                } else {
+                    Log.w(TAG, "share shortcut not published (rate limited?): " + info.getId());
+                }
+            }
             List<String> stale = new ArrayList<>();
             for (ShortcutInfoCompat published : ShortcutManagerCompat.getDynamicShortcuts(context)) {
-                if (published.getId().startsWith(SHARE_ID_PREFIX)) {
-                    stale.add(published.getId());
+                final String id = published.getId();
+                if (id.startsWith(SHARE_ID_PREFIX) && !republished.contains(id)) {
+                    stale.add(id);
                 }
             }
             if (!stale.isEmpty()) {
                 ShortcutManagerCompat.removeDynamicShortcuts(context, stale);
-            }
-            for (ShortcutInfoCompat info : infos) {
-                ShortcutManagerCompat.pushDynamicShortcut(context, info);
             }
         } catch (Exception e) {
             Log.w(TAG, "failed to publish share shortcuts", e);
