@@ -36,6 +36,12 @@ dependencies {
     implementation 'androidx.documentfile:documentfile:1.0.1'
     
     implementation 'im.status:mobileui-android:0.0.0-local'
+
+    // Instrumentation tests (see src/androidTest). Run with:
+    //   ./gradlew connectedAndroidTest
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test:rules:1.5.0'
 }
 
 // Allow overriding qtAndroidDir via environment variable (for different Qt installations)
@@ -114,6 +120,7 @@ android {
         resValue "string", "app_name", buildVariant == 'release' ? "Status" : "Status PR"
         // lib_name must match TARGET in Status.pro (spaces cause weird issues in paths)
         resValue "string", "lib_name", buildVariant == 'release' ? "Status" : "StatusPR"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
