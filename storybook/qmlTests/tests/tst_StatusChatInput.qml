@@ -280,6 +280,29 @@ Item {
             compare(controlUnderTest.getPlainText(), "hello@ world")
         }
 
+        // Pressing "@" while the caret is inside a code span must not latch the mention
+        // button highlighted: mentions are disabled in code, so the button must stay
+        // unchecked and must not get stuck checked when the caret later moves elsewhere.
+        function test_editMode_mentionButton_notCheckedInsideCode() {
+            const toolBar = getToolBar()
+            verify(!!toolBar)
+
+            openFormattingToolbar(toolBar)
+
+            controlUnderTest.textInput.forceActiveFocus()
+            toolBar.codeButton.click() // empty caret → inserts a code span, caret inside it
+            waitForRendering(controlUnderTest)
+            verify(toolBar.codeButton.checked)
+
+            toolBar.mentionButton.click()
+            waitForRendering(controlUnderTest)
+            verify(!toolBar.mentionButton.checked)
+
+            controlUnderTest.textInput.cursorPosition = 0
+            waitForRendering(controlUnderTest)
+            verify(!toolBar.mentionButton.checked)
+        }
+
         function test_editMode_emojiButton_opensPopupAndSelectsEmoji() {
             const toolBar = getToolBar()
             verify(!!toolBar)
