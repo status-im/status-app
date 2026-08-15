@@ -13464,6 +13464,22 @@ selhalo</translation>
         <source>Sign out &amp; Quit</source>
         <translation type="unfinished">Odhlásit se a ukončit</translation>
     </message>
+    <message>
+        <source>Display zoom changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart</source>
+        <translation type="unfinished">Restartovat</translation>
+    </message>
+    <message>
+        <source>Not Now</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status to apply your new display zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>PrimaryNavSidebar</name>

@@ -45,13 +45,15 @@ public class StatusQtActivity extends QtActivity {
         // onboarding resume check queries the service immediately on startup.
         super.onCreate(savedInstanceState);
         sInstance = this;
-        
+
         if (Build.VERSION.SDK_INT >= 31) { // Android 12+
             SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
             splashScreen.setKeepOnScreenCondition(() -> !splashShouldHide.get());
         }
         // Set up shake detection (used for share-on-shake)
         ShakeDetector.start(this);
+        // Set up density change detection
+        DensityListener.start(this);
 
         handleDeepLink(getIntent());
     }

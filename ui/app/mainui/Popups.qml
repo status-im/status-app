@@ -98,6 +98,7 @@ QtObject {
     signal transferOwnershipRequested(string tokenId, string senderAddress, string tokenName, string tokenImage)
     signal wcUriScanned(string uri)
     signal navigationEducationDialogSeenRequested()
+    signal restartRequested()
 
     readonly property Connections imageSaveConnections: Connections {
         target: SystemUtils
@@ -626,6 +627,10 @@ QtObject {
 
     function openQRScannerPopup() {
         openPopup(qrCodeScannerDialogComponent)
+    }
+
+    function openDprChangedConfirmationPopup() {
+        openPopup(dprChangedConfirmationComponent)
     }
 
     readonly property list<Component> _components: [
@@ -1755,6 +1760,24 @@ QtObject {
                 standardButtons: Dialog.Ok
 
                 onClosed: destroy()
+            }
+        },
+
+        Component {
+            id: dprChangedConfirmationComponent
+            ConfirmationDialog {
+                title: qsTr("Display zoom changed")
+                destroyOnClose: true
+                confirmButtonLabel: qsTr("Restart")
+                cancelButtonLabel: qsTr("Not Now")
+                cancelBtnType: ""
+                showCancelButton: true
+                confirmationText: qsTr("Restart Status to apply your new display zoom")
+                onCancelButtonClicked: close()
+                onConfirmButtonClicked: {
+                    close()
+                    root.restartRequested()
+                }
             }
         }
     ]

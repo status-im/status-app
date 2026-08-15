@@ -932,6 +932,37 @@ Item {
         property string skipNextSectionHistoryRecordFor: ""
         property bool closeActivityCenterOnNextBack: false
 
+        // not bindings intentionally
+        property real nativeWindowDpr // baseline/native DPR of the respective Screen
+        property string screen
+
+        // refresh values when either the Window changes Screen, or the Screen OS settings have changed
+        readonly property var nativeWindowDprConn: Connections {
+            enabled: false
+            target: appMain.Window.window
+            function onDevicePixelRatioChanged() {
+                Backpressure.debounce(appMain, 1000, function() {
+                    const window = appMain.Window.window
+                    const currentScreen = window.screen.name
+                    const newDpr = SystemUtils.nativeDpr(window)
+                    if (!SystemUtils.fuzzyCompare(d.nativeWindowDpr, newDpr) && d.screen === currentScreen) {
+                        popups.openDprChangedConfirmationPopup()
+                    }
+                    d.nativeWindowDpr = newDpr
+                    d.screen = currentScreen
+                })()
+            }
+        }
+
+        readonly property var androidWindowDprConn: Connections {
+            enabled: false
+            target: SystemUtils
+            function onNativeDprChanged(value) {
+                popups.openDprChangedConfirmationPopup()
+                d.nativeWindowDpr = value
+            }
+        }
+
         function recordActivityCenterHistory() {
             d.skipNextSectionHistoryRecordFor = appMain.rootStore.activeSectionId
             sectionNavigationHistory.record(appMain.rootStore.activeSectionId)
@@ -1084,9 +1115,10 @@ Item {
         }
 
         Component.onCompleted: {
-            ThemeUtils.setTheme(appMain.Window.window, appMainLocalSettings.theme)
-            ThemeUtils.setFontSize(appMain.Window.window, appMainLocalSettings.fontSize)
-            ThemeUtils.setPaddingFactor(appMain.Window.window, appMainLocalSettings.paddingFactor)
+            const window = appMain.Window.window
+            ThemeUtils.setTheme(window, appMainLocalSettings.theme)
+            ThemeUtils.setFontSize(window, appMainLocalSettings.fontSize)
+            ThemeUtils.setPaddingFactor(window, appMainLocalSettings.paddingFactor)
 
             // Show the navigation education dialog the first time the app
             // is opened after the new menu is introduce, if the nav bar is in collapsed mode
@@ -1096,8 +1128,9 @@ Item {
         readonly property var _conn: Connections {
             target: appMain
             function onIsPortraitModeChanged() {
-                ThemeUtils.setFontSize(appMain.Window.window, appMainLocalSettings.fontSize)
-                ThemeUtils.setPaddingFactor(appMain.Window.window, appMainLocalSettings.paddingFactor)
+                const window = appMain.Window.window
+                ThemeUtils.setFontSize(window, appMainLocalSettings.fontSize)
+                ThemeUtils.setPaddingFactor(window, appMainLocalSettings.paddingFactor)
             }
         }
     }
@@ -1146,6 +1179,7 @@ Item {
         onTransferOwnershipRequested: (tokenId, senderAddress, tokenName, tokenImage) => popupRequestsHandler.transferOwnership(tokenId, senderAddress, tokenName, tokenImage)
         onWcUriScanned: uri => d.pairWalletConnectUri(uri)
         onNavigationEducationDialogSeenRequested: appMainGlobalSettings.newMenuEducationPopupSeen = true
+        onRestartRequested: SystemUtils.restartApplication()
     }
 
     HandlersManagerLoader {
@@ -1179,13 +1213,21 @@ Item {
             if (appMain.mainReady)
                 Qt.callLater(() => popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup())
         }
+    }
 
-        Connections {
-            target: appMain
+    Connections {
+        target: appMain
 
-            function onMainReadyChanged() {
-                if (appMain.mainReady)
-                    popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup()
+        function onMainReadyChanged() {
+            if (appMain.mainReady) {
+                popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup()
+
+                Backpressure.debounce(appMain, 50, function() {
+                    d.screen = appMain.Window.window.screen.name
+                    d.nativeWindowDpr = SystemUtils.nativeDpr(appMain.Window.window)
+                    d.nativeWindowDprConn.enabled = true
+                    d.androidWindowDprConn.enabled = true
+                })()
             }
         }
     }
@@ -2298,6 +2340,7 @@ Item {
                         isProduction: appMain.rootStore.isProduction
                         systemTrayIconAvailable: appMain.systemTrayIconAvailable
                         theme: appMainLocalSettings.theme
+                        nativeWindowDpr: d.nativeWindowDpr
                         whitelistedDomainsModel: appMainLocalSettings.whitelistedUnfurledDomains
                         leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
 

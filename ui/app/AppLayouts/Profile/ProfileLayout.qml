@@ -89,6 +89,7 @@ StatusSectionLayout {
     property var dismissedReceivedRequestContactsModel
 
     required property int theme // ThemeUtils.Style.xxx
+    required property real nativeWindowDpr // baseline/native DPR of the respective Screen
 
     required property var whitelistedDomainsModel
  
@@ -376,6 +377,7 @@ StatusSectionLayout {
                 implicitHeight: parent.height
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.appearance)
                 contentWidth: d.contentWidth
+                nativeWindowDpr: root.nativeWindowDpr
                 theme: root.theme
                 uiScaleFile: uiScaleFilePath
                 onThemeChangeRequested: (theme) => root.themeChangeRequested(theme)

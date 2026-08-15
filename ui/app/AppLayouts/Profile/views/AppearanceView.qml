@@ -18,6 +18,7 @@ SettingsContentBase {
     id: root
 
     required property int theme // ThemeUtils.Style.xxx
+    required property real nativeWindowDpr // baseline/native DPR of the respective Screen
     property string uiScaleFile: StandardPaths.writableLocation(StandardPaths.AppLocalDataLocation) + "/ui-scale"
 
     signal themeChangeRequested(int theme)
@@ -30,7 +31,6 @@ SettingsContentBase {
         property bool dirty
 
         property real windowDpr: root.Window.window?.screen.devicePixelRatio ?? root.Screen.devicePixelRatio // current DPR, based on the Screen where the Window currently is
-        property real nativeWindowDpr: SystemUtils.nativeDpr(root.Window.window) // baseline/native DPR of the respective Screen
 
         // refresh values when either the Window changes Screen, or the Screen OS settings have changed
         readonly property var _conn: Connections {
@@ -38,7 +38,6 @@ SettingsContentBase {
             function onDevicePixelRatioChanged() {
                 Backpressure.debounce(root, 1000, function() {
                     d.windowDpr = root.Window.window?.screen.devicePixelRatio ?? root.Screen.devicePixelRatio
-                    d.nativeWindowDpr = SystemUtils.nativeDpr(root.Window.window)
                 })()
             }
         }
@@ -77,7 +76,11 @@ SettingsContentBase {
         }
     }
 
-    Component.onCompleted: d.prevValue = slider.value
+    Component.onCompleted: {
+        Backpressure.debounce(root, 100, function() {
+            d.prevValue = slider.value
+        })()
+    }
 
     content: ColumnLayout {
         width: root.contentWidth - 2 * Theme.padding
@@ -185,7 +188,7 @@ SettingsContentBase {
                 id: slider
                 from: 0.75 // 3/4 of the baseline
                 to: 1.5 // 1.5x the baseline
-                value: d.windowDpr/d.nativeWindowDpr
+                value: d.windowDpr/root.nativeWindowDpr
                 stepSize: 0.05 // steps of 5%
                 snapMode: Slider.SnapAlways
                 onMoved: d.dirty = true
