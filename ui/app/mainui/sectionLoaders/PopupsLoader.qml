@@ -53,6 +53,7 @@ Loader {
     signal transferOwnershipRequested(string tokenId, string senderAddress, string tokenName, string tokenImage)
     signal wcUriScanned(string uri)
     signal navigationEducationDialogSeenRequested()
+    signal restartRequested()
 
     asynchronous: true
     active: false
@@ -118,7 +119,7 @@ Loader {
             callable()
             return
         }
-        if (root.active == false) {
+        if (!root.active) {
             root.active = true
         }
         d.pending.push(callable)
@@ -159,6 +160,9 @@ Loader {
     }
     function openLeaveCommunityPopup(community, communityId, outroMessage) {
         invoke(() => root.item.openLeaveCommunityPopup(community, communityId, outroMessage))
+    }
+    function openDprChangedConfirmationPopup() {
+        invoke(() => root.item.openDprChangedConfirmationPopup())
     }
 
     Connections {
@@ -339,5 +343,6 @@ Loader {
         }
         function onWcUriScanned(uri) { root.wcUriScanned(uri) }
         function onNavigationEducationDialogSeenRequested() { root.navigationEducationDialogSeenRequested() }
+        function onRestartRequested() { root.restartRequested() }
     }
 }

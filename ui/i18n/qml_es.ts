@@ -13402,6 +13402,22 @@ al cargar</translation>
         <source>Sign out &amp; Quit</source>
         <translation>Cerrar sesión y salir</translation>
     </message>
+    <message>
+        <source>Display zoom changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart</source>
+        <translation type="unfinished">Reiniciar</translation>
+    </message>
+    <message>
+        <source>Not Now</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status to apply your new display zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>PrimaryNavSidebar</name>

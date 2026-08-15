@@ -63,6 +63,7 @@ static void handleIOSFilePickerRejected();
 #ifdef Q_OS_ANDROID
 extern "C" {
 static void jni_nativeShakeDetected(JNIEnv*, jclass);
+static void jni_nativeDensityChanged(JNIEnv*, jclass, jfloat density);
 }
 #endif
 
@@ -77,6 +78,35 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
     QObject::connect(filter, &QuitFilter::quit, this, &SystemUtilsInternal::quit);
 
 #ifdef Q_OS_ANDROID
+    // Register native methods for density listener and start listening
+    static std::once_flag densityRegOnce;
+    std::call_once(densityRegOnce, []{
+        QJniEnvironment env;
+        jclass clazz = env->FindClass("app/status/mobile/DensityListener");
+        if (clazz) {
+            const JNINativeMethod methods[] = {
+                { const_cast<char*>("nativeOnDensityChanged"),
+                  const_cast<char*>("(F)V"),
+                  reinterpret_cast<void*>(jni_nativeDensityChanged) },
+            };
+            jint rc = env->RegisterNatives(clazz, methods, jint(std::size(methods)));
+            env->DeleteLocalRef(clazz);
+            if (rc != 0) {
+                qWarning() << "[Android Density] RegisterNatives failed:" << rc;
+            }
+        }
+
+        QJniObject activity = QNativeInterface::QAndroidApplication::context();
+        if (activity.isValid()) {
+            QJniObject::callStaticMethod<void>(
+                "app/status/mobile/DensityListener",
+                "start",
+                "(Landroid/app/Activity;)V",
+                activity.object<jobject>()
+            );
+        }
+    });
+
     // Poll keyboard state on Android and emit property change signals
     auto keyboardTimer = new QTimer(this);
     keyboardTimer->setInterval(50); // 20 FPS polling rate
@@ -793,7 +823,6 @@ qreal SystemUtilsInternal::nativeDpr(QQuickWindow *window) const
 
 void SystemUtilsInternal::tryCloseActivePopups()
 {
-    qWarning() << "!!!" << Q_FUNC_INFO;
     const auto windows = qGuiApp->topLevelWindows();
     for (auto window: windows) {
         const auto childrenList = window->findChildren<QObject *>();
@@ -805,13 +834,21 @@ void SystemUtilsInternal::tryCloseActivePopups()
                     const auto opened = popupObject->property("opened").toBool();
                     const auto closeable = popupObject->property("closePolicy").toInt() > 0; // Popup::NoAutoClose = 0x00
                     if (opened && closeable) {
-                        qWarning() << "!!! CLOSING CHILD POPUP:" << child << child->property("title").toString();
                         QMetaObject::invokeMethod(popupObject, "close");
                     }
                 }
             }
         }
     }
+}
+
+bool SystemUtilsInternal::fuzzyCompare(const QJSValue &lhs, const QJSValue &rhs) const
+{
+    if (!lhs.isNumber() || !rhs.isNumber()) {
+        qWarning() << Q_FUNC_INFO << ": param is not a JS Number";
+        return false;
+    }
+    return qFuzzyCompare(lhs.toNumber(), rhs.toNumber());
 }
 
 #ifdef Q_OS_IOS
@@ -854,6 +891,21 @@ static void jni_nativeShakeDetected(JNIEnv*, jclass)
         qInfo() << "[Android Shake] SystemUtilsInternal: shakeDetected signal emitted";
 #endif
         emit s_systemUtilsInternal->shakeDetected();
+    }, Qt::QueuedConnection);
+}
+
+static void jni_nativeDensityChanged(JNIEnv*, jclass, jfloat density)
+{
+    if (!s_systemUtilsInternal)
+        return;
+    QPointer<SystemUtilsInternal> weak(s_systemUtilsInternal);
+    QMetaObject::invokeMethod(s_systemUtilsInternal, [weak, density]() {
+        if (!weak)
+            return;
+#ifdef QT_DEBUG
+        qInfo() << "[Android Density] SystemUtilsInternal: nativeDprChanged signal emitted with" << density;
+#endif
+        emit weak->nativeDprChanged(static_cast<qreal>(density));
     }, Qt::QueuedConnection);
 }
 #endif

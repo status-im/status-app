@@ -35,6 +35,7 @@ nim_status_client.log
 *.csv
 .flatpak-builder
 /ui/StatusQ/sandbox/android/.gradle/
+mobile/android/qt6/.gradle/
 .qmake_previous
 # Used to track the simulated keycard mode changes via the USE_SIMULATED_KEYCARD build flag
 .use_simulated_keycard_previous
@@ -69,6 +70,8 @@ _deps
 build-*/
 # CMake default build directory
 build/
+# Zed default build directory
+builds/
 
 # https://github.com/github/gitignore/blob/master/C%2B%2B.gitignore
 # Prerequisites

@@ -190,8 +190,6 @@ proc enableHDPI(uiScaleFilePath: string) =
     echo "[Warning] ", scaleEnvVar, " already set, will NOT enable custom Status scaling"
     return
 
-  QGuiApplication.setHighDpiScaleFactorRoundingPolicy(HighDpiScaleFactorRoundingPolicyEnum.PassThrough)
-
   if fileExists(uiScaleFilePath):
     # Reads the file and strips any trailing/leading whitespace (like newlines)
     let scaleStr = readFile(uiScaleFilePath).strip()

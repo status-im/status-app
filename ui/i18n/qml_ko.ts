@@ -13341,6 +13341,22 @@ to load</source>
         <source>Sign out &amp; Quit</source>
         <translation type="unfinished">로그아웃 및 종료</translation>
     </message>
+    <message>
+        <source>Display zoom changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart</source>
+        <translation type="unfinished">다시 시작</translation>
+    </message>
+    <message>
+        <source>Not Now</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status to apply your new display zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>PrimaryNavSidebar</name>

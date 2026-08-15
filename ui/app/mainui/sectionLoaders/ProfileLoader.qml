@@ -58,6 +58,7 @@ Loader {
     required property bool systemTrayIconAvailable
     required property int theme
     required property var whitelistedDomainsModel
+    required property real nativeWindowDpr // baseline/native DPR of the respective Screen
 
     property int settingsSubsection: -1
     property int settingsSubSubsection: -1
@@ -145,6 +146,7 @@ Loader {
             privacyModeFeatureEnabled:              Qt.binding(() => root.featureFlagsStore.privacyModeFeatureEnabled),
             minimizeOnCloseOptionVisible:           Qt.binding(() => root.systemTrayIconAvailable),
             theme:                                  Qt.binding(() => root.theme),
+            nativeWindowDpr:                        Qt.binding(() => root.nativeWindowDpr),
             whitelistedDomainsModel:                Qt.binding(() => root.whitelistedDomainsModel),
             leftPanelWidthOverride:                 Qt.binding(() => root.leftPanelWidthOverride),
             settingsSubsection:                     Qt.binding(() => root.settingsSubsection),

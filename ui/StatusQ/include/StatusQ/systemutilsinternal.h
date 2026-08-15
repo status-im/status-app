@@ -80,6 +80,9 @@ public:
 
     Q_INVOKABLE void tryCloseActivePopups();
 
+    // exposes qFuzzyCompare(double, double) to QML
+    Q_INVOKABLE bool fuzzyCompare(const QJSValue &lhs, const QJSValue &rhs) const;
+
 signals:
     // Emitted when event of type QEvent::Quit is detected by event filter on
     // QGuiApplication. It's helpful to handle close requests on mac coming from
@@ -94,6 +97,7 @@ signals:
     void shakeDetected();
     void imageSavedToGallery(const QString& destination);
     void imageSaveToGalleryFailed();
+    void nativeDprChanged(qreal value);
 
 private:
     int m_androidKeyboardHeight = 0;
