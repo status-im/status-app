@@ -152,6 +152,17 @@ class App(BasePage):
         if self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=2):
             return True
 
+        from utils.screen_identity import dismiss_introduce_yourself
+
+        # Nav not immediately visible: the introduce-yourself sheet is one
+        # cause, and while it is up every a11y lookup below finds nothing.
+        if dismiss_introduce_yourself(self, timeout=1):
+            self.logger.warning(
+                "_ensure_main_nav_visible: dismissed introduce-yourself sheet"
+            )
+            if self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=2):
+                return True
+
         if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=1):
             return self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=5)
 

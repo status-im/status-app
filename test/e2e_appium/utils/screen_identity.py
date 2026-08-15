@@ -34,6 +34,8 @@ SCREEN_ANCHORS = {
 BACKUP_MODAL = BaseLocators.tid("EnableMessageBackupPopup")
 BACKUP_MODAL_SKIP = BaseLocators.tid("backupMessageSkipStatusFlatButton")
 
+INTRODUCE_MODAL_SKIP = BaseLocators.tid("introduceSkipStatusFlatButton")
+
 
 def dismiss_backup_modal(page, timeout: int = 2) -> bool:
     """Tap Skip on the on-device-backup popup if it is up. Returns True if a
@@ -49,6 +51,26 @@ def dismiss_backup_modal(page, timeout: int = 2) -> bool:
         return page.wait_for_invisibility(BACKUP_MODAL, timeout=5)
     except Exception as exc:
         page.logger.warning("Backup modal present but dismissal failed: %s", exc)
+        return False
+
+
+def dismiss_introduce_yourself(page, timeout: int = 2) -> bool:
+    """Tap Skip on the introduce-yourself sheet if it is up. Returns True if a
+    sheet was dismissed. It opens on the first entry to a messaging section
+    when the profile has no display name — which e2e profiles never set — and
+    while up it replaces the whole a11y tree, so nav lookups find nothing until
+    it is cleared. The app persists the seen-flag on close, so one dismissal
+    per profile suffices. Never raises: same guard-in-loop contract as
+    ``dismiss_backup_modal``."""
+    if not page.is_element_visible(INTRODUCE_MODAL_SKIP, timeout=timeout):
+        return False
+    try:
+        page.safe_click(INTRODUCE_MODAL_SKIP, timeout=5)
+        return page.wait_for_invisibility(INTRODUCE_MODAL_SKIP, timeout=5)
+    except Exception as exc:
+        page.logger.warning(
+            "Introduce-yourself sheet present but dismissal failed: %s", exc
+        )
         return False
 
 
