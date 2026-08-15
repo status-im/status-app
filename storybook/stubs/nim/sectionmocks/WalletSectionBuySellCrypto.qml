@@ -6,8 +6,10 @@ QtObject {
 
     readonly property string contextPropertyName: "walletSectionBuySellCrypto"
 
-    property ListModel model: ListModel {}
+    property ListModel model: emptyModel
     property bool isFetching: false
+
+    readonly property ListModel emptyModel: ListModel {}
 
     signal providerUrlReady(string uuid, string url)
 

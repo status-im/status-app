@@ -1,8 +1,10 @@
 AboutStore 1.0 AboutStore.qml
-LanguageStore 1.0 LanguageStore.qml
-ProfileSectionStore 1.0 ProfileSectionStore.qml
-WalletStore 1.0 WalletStore.qml
-DevicesStore 1.0 DevicesStore.qml
-PrivacyStore 1.0 PrivacyStore.qml
-ProfileStore 1.0 ProfileStore.qml
 AdvancedStore 1.0 AdvancedStore.qml
+DevicesStore 1.0 DevicesStore.qml
+EnsUsernamesStore 1.0 EnsUsernamesStore.qml
+LanguageStore 1.0 LanguageStore.qml
+NotificationsStore 1.0 NotificationsStore.qml
+PrivacyStore 1.0 PrivacyStore.qml
+ProfileSectionStore 1.0 ProfileSectionStore.qml
+ProfileStore 1.0 ProfileStore.qml
+WalletStore 1.0 WalletStore.qml

@@ -30,6 +30,7 @@ QtObject {
 
     readonly property ListModel emptyModel: ListModel {}
 
+    signal tokenHistoricalDataReady(string tokenDetails)
 
     function loadTokenLists() {}
     function buildGroupsForChain(chainId, mandatoryGroupKeysString) {}

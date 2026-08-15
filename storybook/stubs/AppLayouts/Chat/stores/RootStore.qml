@@ -31,6 +31,7 @@ QtObject {
     }
     readonly property string chatInputPlaceHolderText: qsTr("Type something")
     readonly property int activeChatType: chatCommunitySectionModule?.activeItem?.type ?? -1
+    readonly property string appNetworkId: mainModule.appNetworkId
     property var assetsModel: ChatStoresConfig.assetsModel
     property var collectiblesModel: ChatStoresConfig.collectiblesModel
     property var communityItemsModel: chatCommunitySectionModule ? chatCommunitySectionModule.model : null
