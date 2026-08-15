@@ -2,8 +2,11 @@
 #include <QGuiApplication>
 #include <QLibraryInfo>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 
 #include <StatusQ/typesregistration.h>
+
+#include <registration.h>
 
 using namespace Qt::Literals::StringLiterals;
 
@@ -38,6 +41,7 @@ int main(int argc, char *argv[])
             << QLibraryInfo::version().toString();
 
     registerStatusQTypes();
+
     
     for (const auto &fileInfo : files) {
         warnings.clear();
@@ -47,6 +51,13 @@ int main(int argc, char *argv[])
 
         for (const auto &path : additionalImportPaths)
             engine.addImportPath(path);
+
+        // Pages that drive the real wallet stores read their backend through
+        // root context properties; without these every wallet page fails on
+        // "walletSectionInst is not defined".
+        registerStorybookMocks(engine);
+        engine.rootContext()->setContextProperty(u"storybookSmallProfile"_s, true);
+        loadContextPropertiesMocks(engine, QString::fromLatin1(QML_IMPORT_ROOT));
 
         QObject::connect(&engine, &QQmlApplicationEngine::warnings, &app,
                          [&warnings](const QList<QQmlError> &qmlWarnings) {

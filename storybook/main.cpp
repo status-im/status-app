@@ -15,6 +15,8 @@
 #include <StatusQ/networkaccessfactory.h>
 #include <StatusQ/typesregistration.h>
 
+#include <registration.h>
+
 extern "C" void statusq_installBoostedIncubationController(void* engine, int msPerTick,
                                                            int gentlePeriodMs, int boostGapMs);
 
@@ -22,8 +24,6 @@ using namespace Qt::Literals::StringLiterals;
 
 // Mirrors NETWORK_DISK_CACHE_SIZE in src/constants.nim.
 constexpr qint64 networkDiskCacheSize = 512ll * 1024 * 1024;
-
-void loadContextPropertiesMocks(const char* storybookRoot, QQmlApplicationEngine& engine);
 
 int main(int argc, char *argv[])
 {
@@ -138,8 +138,13 @@ int main(int argc, char *argv[])
 
     StorybookSetup::configureEngine(&engine, mode == u"local"_s);
     registerStatusQTypes();
+    registerStorybookMocks(engine);
 
-    loadContextPropertiesMocks(QML_IMPORT_ROOT, engine);
+    // Full-size generated profiles in the interactive storybook; the pages
+    // validator flips this so its per-page instantiation stays cheap.
+    engine.rootContext()->setContextProperty(u"storybookSmallProfile"_s, false);
+
+    loadContextPropertiesMocks(engine, QString::fromLatin1(QML_IMPORT_ROOT));
 
     const QUrl url("qrc:/main.qml");
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
@@ -175,35 +180,4 @@ int main(int argc, char *argv[])
             << "; QPA:" << qApp->platformName();
 
     return QGuiApplication::exec();
-}
-
-void loadContextPropertiesMocks(const char* storybookRoot, QQmlApplicationEngine& engine) {
-    QDirIterator it(QML_IMPORT_ROOT u"/stubs/nim/sectionmocks"_s, QDirIterator::Subdirectories);
-
-    while (it.hasNext()) {
-        it.next();
-        if (it.fileInfo().isFile() && it.fileInfo().suffix() == u"qml"_s) {
-            auto component = std::make_unique<QQmlComponent>(&engine, QUrl::fromLocalFile(it.filePath()));
-            if (component->status() != QQmlComponent::Ready) {
-                qWarning() << "Failed to load mock for" << it.filePath() << component->errorString();
-                continue;
-            }
-
-            auto objPtr = std::unique_ptr<QObject>(component->create());
-            if(!objPtr) {
-                qWarning() << "Failed to create mock for" << it.filePath();
-                continue;
-            }
-
-            if(!objPtr->property("contextPropertyName").isValid()) {
-                qInfo() << "Not a mock, missing property name \"contextPropertyName\"";
-                continue;
-            }
-
-            auto contextPropertyName = objPtr->property("contextPropertyName").toString();
-            auto obj = objPtr.release();
-            obj->setParent(&engine);
-            engine.rootContext()->setContextProperty(contextPropertyName, obj);
-        }
-    }
 }

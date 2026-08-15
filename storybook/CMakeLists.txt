@@ -53,6 +53,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(QmlStorybook)
 
+add_subdirectory(mocks)
+
 file(GLOB_RECURSE CORE_QML_FILES
     "../ui/app/*.qml" "../ui/imports/*.qml"
     "../ui/app/*/qmldir" "../ui/imports/*/qmldir"
@@ -87,7 +89,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 
 target_link_libraries(
     ${PROJECT_NAME} PRIVATE Qt::Core Qt::Gui Qt::Quick Qt::QuickControls2
-    Qt::WebView StatusQ QmlStorybookLib)
+    Qt::WebView StatusQ QmlStorybookLib StorybookMocks)
 
 add_executable(
   QmlFilesServer
@@ -110,7 +112,7 @@ add_executable(
 )
 
 target_link_libraries(
-    PagesValidator PUBLIC Qt::Core Qt::Gui Qt::Quick Qt::QuickControls2 Qt::WebView StatusQ QmlStorybookLib)
+    PagesValidator PUBLIC Qt::Core Qt::Gui Qt::Quick Qt::QuickControls2 Qt::WebView StatusQ QmlStorybookLib StorybookMocks)
 
 target_compile_definitions(PagesValidator PRIVATE
         QML_IMPORT_ROOT="${CMAKE_CURRENT_LIST_DIR}"
@@ -129,7 +131,7 @@ target_compile_definitions(QmlTests PRIVATE
         QUICK_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/qmlTests")
 target_link_libraries(QmlTests PRIVATE
   Qt::QuickTest Qt::Qml Qt::Core Qt::Gui Qt::Quick Qt::QuickControls2
-  StatusQ SortFilterProxyModel QmlStorybookLib)
+  StatusQ SortFilterProxyModel QmlStorybookLib StorybookMocks)
 add_test(NAME QmlTests COMMAND QmlTests -platform offscreen)
 
 set(OVERRIDE_STORE_PATHS_WITH_STUBS_IN_QTCREATOR OFF CACHE BOOL

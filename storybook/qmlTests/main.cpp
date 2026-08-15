@@ -10,6 +10,8 @@
 
 #include <StatusQ/typesregistration.h>
 
+#include <registration.h>
+
 using namespace Qt::Literals::StringLiterals;
 
 extern "C" void statusq_installBoostedIncubationController(void* engine, int msPerTick,
@@ -50,29 +52,12 @@ public slots:
 
         registerStatusQTypes();
 
+        registerStorybookMocks(*engine);
+
         // Register the same context-property mocks the storybook app uses (e.g. userProfile),
         // so components that read them (via Utils) behave the same under test.
-        QDirIterator mocksIt(QML_IMPORT_ROOT u"/stubs/nim/sectionmocks"_s, QDirIterator::Subdirectories);
-        while (mocksIt.hasNext()) {
-            mocksIt.next();
-            if (!mocksIt.fileInfo().isFile() || mocksIt.fileInfo().suffix() != u"qml"_s)
-                continue;
-
-            QQmlComponent component(engine, QUrl::fromLocalFile(mocksIt.filePath()));
-            if (component.status() != QQmlComponent::Ready) {
-                qWarning() << "Failed to load mock for" << mocksIt.filePath() << component.errorString();
-                continue;
-            }
-
-            auto objPtr = std::unique_ptr<QObject>(component.create());
-            if (!objPtr || !objPtr->property("contextPropertyName").isValid())
-                continue;
-
-            const auto contextPropertyName = objPtr->property("contextPropertyName").toString();
-            auto obj = objPtr.release();
-            obj->setParent(engine);
-            engine->rootContext()->setContextProperty(contextPropertyName, obj);
-        }
+        engine->rootContext()->setContextProperty(u"storybookSmallProfile"_s, true);
+        loadContextPropertiesMocks(*engine, QString::fromLatin1(QML_IMPORT_ROOT));
 
         QStandardPaths::setTestModeEnabled(true);
 
