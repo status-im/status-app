@@ -350,7 +350,7 @@ Control {
             d.insertEmoji(emojiSuggestions.unicode)
             return true
         }
-        if (suggestionsBox.visible) {
+        if (suggestionsBox.visible && !suggestionsBox.loading) {
             suggestionsBox.selectCurrentItem()
             return true
         }
@@ -564,9 +564,13 @@ Control {
 
     // The input is shared across chats; a chat switch swaps usersModel and
     // must drop the latch or the new members model gets sorted right away.
+    // A swap mid-mention (late model delivery, permission re-evaluation) must
+    // re-arm the wiring itself: enteringSuggestion won't change again.
     onUsersModelChanged: {
         suggestionsWireTimer.stop()
         d.suggestionsModelWired = false
+        if (messageInputField.enteringSuggestion)
+            suggestionsWireTimer.restart()
     }
 
     Connections {
@@ -576,6 +580,8 @@ Control {
         function onEnteringSuggestionChanged() {
             if (messageInputField.enteringSuggestion)
                 suggestionsWireTimer.start()
+            else
+                suggestionsWireTimer.stop()
         }
     }
 
@@ -592,11 +598,12 @@ Control {
         height: Math.min(400, implicitHeight)
         z: parent.z + 100
 
-        // Only visible when there are actual matches. Otherwise the box would be
-        // visible-but-empty and hijack Enter/Send (checkTextInsert) into committing a
-        // non-existent row, inserting an "@undefined" pill instead of sending the text.
+        // Visible while loading (skeleton) or with actual matches, never
+        // visible-but-empty — that would hijack Enter/Send (checkTextInsert) into
+        // committing a non-existent row, inserting an "@undefined" pill instead of
+        // sending the text. During loading selectItem() bails on the empty model.
         visible: !shouldHide && messageInputField.enteringSuggestion
-                 && mentionsAdaptor.model.ModelCount.count > 0
+                 && (loading || mentionsAdaptor.model.ModelCount.count > 0)
 
         property bool shouldHide: false
 

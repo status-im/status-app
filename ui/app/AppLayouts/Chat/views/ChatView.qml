@@ -66,8 +66,7 @@ Item {
     // The members panel is only ready once the latch is back up: until then it
     // shows its own skeleton, so the chrome must keep showing one too.
     readonly property bool rightPanelReady: !rightPanelLoader.active
-                                            || (rightPanelLoader.status === Loader.Ready
-                                                && d.membersReady)
+                                            || rightPanelLoader.status === Loader.Ready
 
     property ChatStores.RootStore rootStore
     property ChatStores.CreateChatPropertiesStore createChatPropertiesStore
@@ -184,31 +183,6 @@ Item {
         function requestCenterPanel() {
             centerPanelRequested = true
         }
-
-        // Dropped when the members model itself changes: the members panel is
-        // shared across chats, so it would otherwise sort the incoming model on
-        // the switch frame, showing the previous chat's members meanwhile. A
-        // switch that keeps the same model — every community channel without
-        // permissions — costs nothing and keeps showing the correct members.
-        property bool membersReady: true
-
-        readonly property var activeUsersModel: root.usersModel
-
-        onActiveUsersModelChanged: {
-            membersReady = false
-            membersWireTimer.restart()
-        }
-
-        // Delay between the model change and re-binding the members list.
-        // Sorting a large members model blocks the GUI thread; the delay keeps
-        // that work off the switch itself, behind MembersListSkeleton.
-        property int membersWireDelay: 100
-    }
-
-    Timer {
-        id: membersWireTimer
-        interval: d.membersWireDelay
-        onTriggered: d.membersReady = true
     }
 
     // Users related signals
@@ -342,26 +316,29 @@ Item {
 
     readonly property Item rightPanel: Loader {
         id: rightPanelLoader
+        width: Constants.chatSectionRightColumnWidth
+        height: parent.height
 
         // Built on first show only (then kept), asynchronously behind the
         // skeleton — the members list must never delay a chat switch.
-        active: false
+        active: root.showRightPanel
         asynchronous: true
 
         Loader {
             objectName: "membersPanelSkeleton"
             anchors.fill: parent
             active: rightPanelLoader.active
-                    && (rightPanelLoader.status !== Loader.Ready || !d.membersReady)
+                    && rightPanelLoader.status !== Loader.Ready
             visible: active
             sourceComponent: MembersListSkeleton {}
         }
 
         sourceComponent: UserListPanel {
             // async incubation parents the partially-built panel into the
-            // scene early — keep it invisible behind the skeleton. Hidden it
-            // also drops its users model, so a chat switch costs no sorting.
-            visible: rightPanelLoader.status === Loader.Ready && d.membersReady
+            // scene early — keep it invisible behind the skeleton until ready.
+            // Binding the model eagerly is fine: it arrives pre-sorted from
+            // Nim, so a chat switch pays no sorting.
+            visible: rightPanelLoader.status === Loader.Ready
 
             chatType: root.chatContentModule?.chatDetails.type || Constants.chatType.unknown
             isAdmin: root.chatContentModule?.amIChatAdmin() || false
@@ -396,11 +373,6 @@ Item {
             onMarkAsTrustedRequested: Global.openMarkAsIDVerifiedPopup(pubKey, null)
             onRemoveTrustedMarkRequested: Global.openRemoveIDVerificationDialog(pubKey, null)
         }
-    }
-
-    onShowRightPanelChanged: {
-        if (root.showRightPanel)
-            rightPanelLoader.active = true
     }
 
     onChatContentModuleChanged: {

@@ -5,11 +5,12 @@ import utils
 
 import "helpers"
 
-// The members panel is built once and shared across the section's channels.
-// These tests pin that a switch onto a channel with its own members model
-// drops back to MembersListSkeleton instead of showing the previous channel's
-// members, that no member rows are built while that switch is in flight, and
-// that a switch which keeps the same model object costs neither.
+// The members panel is built once per section, asynchronously behind
+// MembersListSkeleton, and shared across the section's channels. These tests
+// pin that the skeleton covers only that initial incubation: channel switches
+// — whether they keep the members model or swap it (permissioned channels) —
+// must neither tear the panel down nor bring the skeleton back, because the
+// model arrives pre-sorted from Nim and rebinding it is cheap.
 Item {
     id: root
 
@@ -62,10 +63,6 @@ Item {
             const view = harness.findChildByTypePrefix(loader, "ChatView")
             verify(!!view, "the section must load the paneled chat view")
 
-            // Test seam: the re-arm delay lives in the view's private object
-            const internal = findChild(view, "chatViewInternal")
-            verify(!!internal, "the chat view's private object must be reachable")
-
             const skeleton = findChild(loader, "membersPanelSkeleton")
             verify(!!skeleton, "the members panel must have its skeleton")
             tryVerify(() => !skeleton.visible, 20000,
@@ -76,12 +73,12 @@ Item {
             tryVerify(() => list.count > 0, 20000,
                       "the members list must be populated before the switch")
 
-            return { loader, view, internal, skeleton, list }
+            return { loader, view, skeleton, list }
         }
 
         // The permissioned channel carries its own members model, so landing on
-        // it is the switch the latch exists for. A switch between unpermissioned
-        // channels keeps the very same model object and must cost nothing.
+        // it swaps the model under the panel. A switch between unpermissioned
+        // channels keeps the very same model object.
         function permissionedChannelRow(loader) {
             const lv = findChild(loader, "chatListItems")
             verify(!!lv)
@@ -119,50 +116,27 @@ Item {
             return null
         }
 
-        function test_membersSkeletonReturnsOnChannelSwitch() {
+        // Landing on a channel with its own members model swaps the model
+        // under the live panel: the rows follow, the skeleton stays gone.
+        function test_membersPanelSwapsModelWithoutSkeleton() {
             const ctx = loadSectionWithMembers()
-            // widen the re-arm window so the assertions do not race the timer
-            ctx.internal.membersWireDelay = 2000
 
             const row = permissionedChannelRow(ctx.loader)
             verify(!!row, "the permissioned channel row must exist")
             mouseClick(row)
             tryVerify(() => mock.activeChatId === row.chatId, 5000)
 
-            verify(ctx.skeleton.visible,
-                   "switching to a channel with its own members model must bring "
-                   + "the members skeleton back")
-
-            ctx.internal.membersWireDelay = 10
-            tryVerify(() => !ctx.skeleton.visible, 20000,
-                      "the members skeleton must clear again after the switch")
+            verify(!ctx.skeleton.visible,
+                   "a members-model swap must not bring the skeleton back")
             tryVerify(() => ctx.list.count > 0, 20000,
                       "the members list must repopulate after the switch")
         }
 
-        function test_userListBuildsNoMemberRowsDuringChannelSwitch() {
-            const ctx = loadSectionWithMembers()
-            ctx.internal.membersWireDelay = 2000
-
-            const row = permissionedChannelRow(ctx.loader)
-            verify(!!row, "the permissioned channel row must exist")
-            mouseClick(row)
-            tryVerify(() => mock.activeChatId === row.chatId, 5000)
-
-            compare(ctx.list.count, 0,
-                    "the members list must hold no rows while the switch is in flight")
-            compare(harness.findAllByTypePrefix(ctx.list.contentItem,
-                                                "StatusMemberListItem_QMLTYPE", []).length, 0,
-                    "no member delegate may be built while the switch is in flight")
-        }
-
         // The dominant path: community channels without permissions all share
-        // the section's members model, so the panel must not be torn down and
-        // re-sorted on those switches.
+        // the section's members model, so the panel must not be torn down on
+        // those switches.
         function test_membersPanelSurvivesSwitchWithUnchangedModel() {
             const ctx = loadSectionWithMembers()
-            // long enough that an erroneous latch drop would still be down here
-            ctx.internal.membersWireDelay = 2000
 
             const before = ctx.list.count
             const row = unpermissionedChannelRow(ctx.loader)

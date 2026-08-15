@@ -9,10 +9,10 @@ import utils
 
 /*
  Perf regression guard: chat-switch profile showed the members panel fully
- re-sorting the community members model (SFPM RoleSorter + StringSorter,
- 881ms on a low-end device) even while the right panel was hidden. A hidden
- panel must not materialize rows from usersModel; showing it populates the
- sorted list on demand.
+ re-sorting the community members model in QML (SFPM RoleSorter + StringSorter,
+ 881ms on a low-end device). The members model now arrives pre-sorted from Nim
+ (online first, then name), so the panel must render rows in source order and
+ never re-sort them.
 */
 Item {
     id: root
@@ -86,30 +86,19 @@ Item {
             return listView
         }
 
-        function test_hiddenPanelMaterializesNoRows() {
-            const panel = createTemporaryObject(panelComponent, root,
-                                                {visible: false})
+        // The model owns the order (sorted in Nim): rows must come out exactly
+        // as fed in, deliberately non-alphabetical here — a QML sorter sneaking
+        // back in would flip this to ["Alice", "bob", "charlie"].
+        function test_panelShowsRowsInModelOrder() {
+            const panel = createTemporaryObject(panelComponent, root)
             verify(!!panel)
-            wait(50)
-
-            compare(memberListView(panel).count, 0,
-                    "hidden panel must not pull rows from usersModel")
-        }
-
-        function test_showingPanelPopulatesSortedList() {
-            const panel = createTemporaryObject(panelComponent, root,
-                                                {visible: false})
-            verify(!!panel)
-
-            panel.visible = true
             const listView = memberListView(panel)
             tryCompare(listView, "count", 3)
 
-            // online first (RoleSorter desc), then name case-insensitive
             const order = []
             for (let i = 0; i < listView.count; i++)
                 order.push(SQUtils.ModelUtils.get(listView.model, i, "preferredDisplayName"))
-            compare(order, ["Alice", "bob", "charlie"])
+            compare(order, ["charlie", "Alice", "bob"])
         }
 
         function test_visiblePanelShowsRowsImmediately() {
@@ -118,15 +107,23 @@ Item {
             tryCompare(memberListView(panel), "count", 3)
         }
 
-        // Chrome inversion creates panels without a visual parent until the
-        // section chrome reparents them; that state must not sort either.
-        function test_unparentedPanelMaterializesNoRows() {
-            const panel = createTemporaryObject(panelComponent, null)
+        function test_searchFiltersMembers() {
+            const panel = createTemporaryObject(panelComponent, root)
             verify(!!panel)
-            wait(50)
+            const listView = memberListView(panel)
+            tryCompare(listView, "count", 3)
 
-            compare(memberListView(panel).count, 0,
-                    "unparented panel must not pull rows from usersModel")
+            mouseClick(findChild(panel, "membersSearchButton"))
+            const searchBox = findChild(panel, "membersSearchBox")
+            tryVerify(() => searchBox.visible)
+
+            searchBox.text = "ali"
+            tryCompare(listView, "count", 1)
+            compare(SQUtils.ModelUtils.get(listView.model, 0, "preferredDisplayName"),
+                    "Alice")
+
+            searchBox.text = ""
+            tryCompare(listView, "count", 3)
         }
 
         // The skeleton must look identical to the real panel header, so both
@@ -169,14 +166,5 @@ Item {
             tryVerify(() => searchBox.visible)
         }
 
-        function test_hidingPanelReleasesRows() {
-            const panel = createTemporaryObject(panelComponent, root)
-            verify(!!panel)
-            const listView = memberListView(panel)
-            tryCompare(listView, "count", 3)
-
-            panel.visible = false
-            tryCompare(listView, "count", 0)
-        }
     }
 }

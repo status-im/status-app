@@ -3,6 +3,7 @@ import QtQuick
 
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
+import StatusQ.Core.Backpressure
 import StatusQ.Layout
 
 import utils
@@ -200,6 +201,7 @@ Loader {
         property var newCommunityStore: null
         property int pendingSettingsSection: -1
         property int pendingSettingsSubsection: -1
+        property bool showUsersPanel: root.accountSettingsStore.showUsersList
         property int pendingViewIndex: -1
 
         // The view switch may arrive while the section still incubates —
@@ -263,7 +265,7 @@ Loader {
             isChatView:                     false,
             visible:                        false,
             sectionLayout:                  Qt.binding(() => chromeLoader.item),
-            showUsersList:                  Qt.binding(() => root.accountSettingsStore.showUsersList),
+            showUsersList:                  Qt.binding(() => d.showUsersPanel),
             emojiPopup:                     Qt.binding(() => root.emojiPopupLoader.item),
             stickersPopup:                  Qt.binding(() => root.stickersPopupLoader.item),
             sectionItemModel:               Qt.binding(() => root.sectionItemModel),
@@ -339,7 +341,10 @@ Loader {
         ignoreUnknownSignals: true
 
         function onShowUsersListRequested(show) {
-            root.accountSettingsStore.setShowUsersList(show)
+            d.showUsersPanel = show //optimistic; update settings after a short delay to avoid jank from the panel resize
+            Backpressure.setTimeout(root, 300, () => {
+                root.accountSettingsStore.setShowUsersList(show)
+            })
         }
         function onProfileButtonClicked() {
             Global.changeAppSectionBySectionType(Constants.appSection.profile)

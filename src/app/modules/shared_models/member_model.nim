@@ -1,11 +1,13 @@
-import nimqml, tables, std/strformat, sequtils, sugar
+import nimqml, tables, std/strformat, algorithm, sequtils, sets, sugar
 # TODO: use generics to remove duplication between user_model and member_model
 
 import ../../../app_service/common/types
 import ../../../app_service/service/contacts/dto/[contacts, contact_details]
 import member_item
-import contacts_utils
 import model_utils
+
+when defined(QT_MODEL_SPY):
+  import ../shared/qt_model_spy
 
 type
   ModelRole {.pure.} = enum
@@ -62,6 +64,43 @@ QtObject:
     for i, it in self.items:
       self.pubKeyIndex[it.pubKey] = i
 
+  # The model maintains the canonical member order (see cmpCanonicalOrder in
+  # user_item) as an invariant: sorted on population, kept sorted via granular
+  # inserts and moves on every mutation. Consumers bind directly — no proxy
+  # sorting above this model.
+  proc cmpMembers(a, b: MemberItem): int =
+    cmpCanonicalOrder(a, b)
+
+  # Move row `ind` to where the canonical order wants it. The O(n) scan is fine:
+  # every caller already paid an O(n)-class table update, and it runs once per
+  # member event.
+  proc repositionRow(self: Model, ind: int) =
+    if ind < 0 or ind >= self.items.len:
+      return
+    let item = self.items[ind]
+    var dest = 0
+    for i in 0 ..< self.items.len:
+      if i != ind and cmpMembers(self.items[i], item) < 0:
+        inc dest
+    if dest == ind:
+      return
+
+    # Qt wants destinationChild in pre-move coordinates: moving down, the
+    # target slot is past the row's own current position.
+    let destChild = if dest > ind: dest + 1 else: dest
+    let parentIndex = newQModelIndex()
+    defer: parentIndex.delete
+    when defined(QT_MODEL_SPY):
+      recordBeginMoveRows(ind, ind, destChild)
+    self.beginMoveRows(parentIndex, ind, ind, parentIndex, destChild)
+    self.items.delete(ind)
+    self.items.insert(item, dest)
+    for i in min(ind, dest) .. max(ind, dest):
+      self.pubKeyIndex[self.items[i].pubKey] = i
+    self.endMoveRows()
+    when defined(QT_MODEL_SPY):
+      recordEndMoveRows()
+
   proc applyPendingAirdropAddress(self: Model, item: MemberItem) =
     if not self.pendingAirdropAddresses.hasKey(item.pubKey):
       return
@@ -70,12 +109,18 @@ QtObject:
     self.pendingAirdropAddresses.del(item.pubKey)
 
   proc setItems*(self: Model, items: seq[MemberItem]) =
+    when defined(QT_MODEL_SPY):
+      recordBeginResetModel()
     self.beginResetModel()
-    self.items = items
+    var sortedItems = items
+    sortedItems.sort(cmpMembers)
+    self.items = sortedItems
     self.rebuildPubKeyIndex()
     for item in self.items:
       self.applyPendingAirdropAddress(item)
     self.endResetModel()
+    when defined(QT_MODEL_SPY):
+      recordEndResetModel()
     self.countChanged()
 
   proc getItems*(self: Model): seq[MemberItem] =
@@ -147,8 +192,7 @@ QtObject:
     of ModelRole.UsesDefaultName:
       result = newQVariant(item.usesDefaultName)
     of ModelRole.PreferredDisplayName:
-      return newQVariant(resolvePreferredDisplayName(
-        item.localNickname, item.ensName, item.displayName, item.alias))
+      result = newQVariant(item.preferredDisplayName)
     of ModelRole.EnsName:
       result = newQVariant(item.ensName)
     of ModelRole.IsEnsVerified:
@@ -192,15 +236,10 @@ QtObject:
     of ModelRole.EmojiHash:
       result = newQVariant(item.emojiHash)
 
+  proc addItems*(self: Model, items: seq[MemberItem])
+
   proc addItem*(self: Model, item: MemberItem) =
-    let modelIndex = newQModelIndex()
-    defer: modelIndex.delete
-    self.beginInsertRows(modelIndex, self.items.len, self.items.len)
-    self.pubKeyIndex[item.pubKey] = self.items.len
-    self.items.add(item)
-    self.applyPendingAirdropAddress(item)
-    self.endInsertRows()
-    self.countChanged()
+    self.addItems(@[item])
 
   proc findIndexForMember*(self: Model, pubKey: string): int =
     return self.pubKeyIndex.getOrDefault(pubKey, -1)
@@ -223,6 +262,8 @@ QtObject:
     defer: parentModelIndex.delete
 
     let removedPubKey = self.items[index].pubKey
+    when defined(QT_MODEL_SPY):
+      recordBeginRemoveRows(index, index)
     self.beginRemoveRows(parentModelIndex, index, index)
     self.items.delete(index)
     self.pubKeyIndex.del(removedPubKey)
@@ -232,16 +273,22 @@ QtObject:
       if v > index:
         dec v
     self.endRemoveRows()
+    when defined(QT_MODEL_SPY):
+      recordEndRemoveRows()
     self.countChanged()
 
   proc removeAllItems(self: Model) =
     if self.items.len <= 0:
       return
 
+    when defined(QT_MODEL_SPY):
+      recordBeginResetModel()
     self.beginResetModel()
     self.items = @[]
     self.pubKeyIndex.clear()
     self.endResetModel()
+    when defined(QT_MODEL_SPY):
+      recordEndResetModel()
     self.countChanged()
 
   # TODO: rename me to removeItemByPubkey
@@ -257,26 +304,42 @@ QtObject:
       return
 
     var newItems: seq[MemberItem] = @[]
-    let first = self.items.len
+    var batchKeys = initHashSet[string]()
     for it in items:
-      if self.pubKeyIndex.hasKey(it.pubKey):
+      if self.pubKeyIndex.hasKey(it.pubKey) or batchKeys.contains(it.pubKey):
         continue
-      self.pubKeyIndex[it.pubKey] = first + newItems.len
+      batchKeys.incl(it.pubKey)
+      self.applyPendingAirdropAddress(it)
       newItems.add(it)
 
     if newItems.len == 0:
       return
 
+    # Merge the sorted batch into the sorted model as contiguous insert runs —
+    # one beginInsertRows per run instead of one per item.
+    newItems.sort(cmpMembers)
+
     let modelIndex = newQModelIndex()
     defer: modelIndex.delete
 
-    let last = first + newItems.len - 1
+    var i = 0
+    while i < newItems.len:
+      let pos = self.items.lowerBound(newItems[i], cmpMembers)
+      var j = i + 1
+      while j < newItems.len and
+          (pos == self.items.len or cmpMembers(newItems[j], self.items[pos]) < 0):
+        inc j
 
-    self.beginInsertRows(modelIndex, first, last)
-    self.items.add(newItems)
-    for index in first ..< self.items.len:
-      self.applyPendingAirdropAddress(self.items[index])
-    self.endInsertRows()
+      when defined(QT_MODEL_SPY):
+        recordBeginInsertRows(pos, pos + (j - i) - 1)
+      self.beginInsertRows(modelIndex, pos, pos + (j - i) - 1)
+      self.items = concat(self.items[0 ..< pos], newItems[i ..< j], self.items[pos .. ^1])
+      self.endInsertRows()
+      when defined(QT_MODEL_SPY):
+        recordEndInsertRows()
+      i = j
+
+    self.rebuildPubKeyIndex()
     self.countChanged()
 
   proc isContactWithIdAdded*(self: Model, id: string): bool =
@@ -284,16 +347,17 @@ QtObject:
 
   proc setName*(self: Model, pubKey: string, displayName: string, ensName: string, localNickname: string) =
     updateItemRolesAndNotify self.findIndexForMember(pubKey):
-      let previousPreferredDisplayName = resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias)
-      let currentPreferredDisplayName = resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
-      let usesDefaultName = resolveUsesDefaultName(localNickname, ensName, displayName)
+      let previousPreferredDisplayName = self.items[ind].preferredDisplayName
+      let previousUsesDefaultName = self.items[ind].usesDefaultName
 
       updateRole(displayName)
       updateRole(ensName)
       updateRole(localNickname)
-      updateRole(usesDefaultName)
 
-      addChangedRole(roles, previousPreferredDisplayName, currentPreferredDisplayName, ModelRole.PreferredDisplayName.int): discard
+      addChangedRole(roles, previousPreferredDisplayName, self.items[ind].preferredDisplayName, ModelRole.PreferredDisplayName.int): discard
+      addChangedRole(roles, previousUsesDefaultName, self.items[ind].usesDefaultName, ModelRole.UsesDefaultName.int): discard
+    if roles.len > 0:
+      self.repositionRow(ind)
 
   proc setIcon*(self: Model, pubKey: string, icon: string) =
     updateItemRolesAndNotify self.findIndexForMember(pubKey):
@@ -317,54 +381,55 @@ QtObject:
       contactRequest: ContactRequest,
       callDataChanged: bool = true,
     ): seq[int] =
-    updateItemRolesAndNotify self.findIndexForMember(pubKey):
-      let previousPreferredDisplayName = resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias)
-      let currentPreferredDisplayName = resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
-      let previousTrustStatus = self.items[ind].trustStatus
-      let usesDefaultName = resolveUsesDefaultName(localNickname, ensName, displayName)
+    let ind = self.findIndexForMember(pubKey)
+    if ind == -1:
+      return
 
-      updateRole(displayName)
-      updateRole(usesDefaultName)
-      updateRole(ensName)
-      updateRole(localNickname)
-      updateRole(isEnsVerified)
-      # `alias` is deterministic from the pubkey — preserve any previously
-      # resolved value when the incoming alias is empty (typical for
-      # `getContactDetails` placeholders that haven't been enriched yet).
-      updateRolePreserveOnEmpty(alias, Alias)
-      updateRole(icon)
-      updateRole(isContact)
-      updateRole(memberRole)
-      updateRole(joined)
-      updateRole(trustStatus)
-      updateRole(isBlocked)
-      updateRole(contactRequest)
+    var roles: seq[int] = @[]
 
-      var updatedMembershipRequestState = membershipRequestState
-      if updatedMembershipRequestState == MembershipRequestState.None:
-        updatedMembershipRequestState = self.items[ind].membershipRequestState
+    let previousPreferredDisplayName = self.items[ind].preferredDisplayName
+    let previousUsesDefaultName = self.items[ind].usesDefaultName
+    let previousTrustStatus = self.items[ind].trustStatus
 
-      updateRoleWithValue(membershipRequestState, updatedMembershipRequestState)
+    updateRole(displayName)
+    updateRole(ensName)
+    updateRole(localNickname)
+    updateRole(isEnsVerified)
+    # `alias` is deterministic from the pubkey — preserve any previously
+    # resolved value when the incoming alias is empty (typical for
+    # `getContactDetails` placeholders that haven't been enriched yet).
+    updateRolePreserveOnEmpty(alias, Alias)
+    updateRole(icon)
+    updateRole(isContact)
+    updateRole(memberRole)
+    updateRole(joined)
+    updateRole(trustStatus)
+    updateRole(isBlocked)
+    updateRole(contactRequest)
 
-      addChangedRole(roles, previousPreferredDisplayName, currentPreferredDisplayName, ModelRole.PreferredDisplayName.int): discard
-      addChangedRole(roles, previousTrustStatus, trustStatus, ModelRole.IsUntrustworthy.int): discard
-      addChangedRole(roles, previousTrustStatus, trustStatus, ModelRole.IsVerified.int): discard
+    var updatedMembershipRequestState = membershipRequestState
+    if updatedMembershipRequestState == MembershipRequestState.None:
+      updatedMembershipRequestState = self.items[ind].membershipRequestState
 
-      if roles.len > 0:
-        if callDataChanged:
-          result = roles
-        else:
-          return roles
+    updateRoleWithValue(membershipRequestState, updatedMembershipRequestState)
+
+    addChangedRole(roles, previousPreferredDisplayName, self.items[ind].preferredDisplayName, ModelRole.PreferredDisplayName.int): discard
+    addChangedRole(roles, previousUsesDefaultName, self.items[ind].usesDefaultName, ModelRole.UsesDefaultName.int): discard
+    addChangedRole(roles, previousTrustStatus, trustStatus, ModelRole.IsUntrustworthy.int): discard
+    addChangedRole(roles, previousTrustStatus, trustStatus, ModelRole.IsVerified.int): discard
+
+    result = roles
+
+    if roles.len > 0:
+      if callDataChanged:
+        let modelIndex = self.createIndex(ind, 0, nil)
+        defer: modelIndex.delete
+        self.dataChanged(modelIndex, modelIndex, roles)
+      self.repositionRow(ind)
 
   proc updateItems*(self: Model, items: seq[MemberItem]) =
-    var startIndex = -1
-    var endIndex = -1
-    var allRoles: seq[int] = @[]
     for item in items:
-      let itemIndex = self.findIndexForMember(item.pubKey)
-      if itemIndex == -1:
-        continue
-      let roles = self.updateItem(
+      discard self.updateItem(
         item.pubKey,
         item.displayName,
         item.ensName,
@@ -379,19 +444,7 @@ QtObject:
         item.membershipRequestState,
         item.trustStatus,
         item.contactRequest,
-        callDataChanged = false,
       )
-
-      if roles.len > 0:
-        if startIndex == -1:
-          startIndex = itemIndex
-        endIndex = itemIndex
-        allRoles = concat(allRoles, roles)
-
-    if allRoles.len == 0:
-      return
-
-    notifyRangeRolesChanged(startIndex, endIndex, allRoles)
 
 
   proc updateToTheseItems*(self: Model, items: seq[MemberItem]) =
@@ -469,6 +522,8 @@ QtObject:
   proc setOnlineStatus*(self: Model, pubKey: string, onlineStatus: OnlineStatus) =
     updateItemRolesAndNotify self.findIndexForMember(pubKey):
       updateRole(onlineStatus)
+    if roles.len > 0:
+      self.repositionRow(ind)
 
   proc setAirdropAddress*(self: Model, pubKey: string, airdropAddress: string) =
     let ind = self.findIndexForMember(pubKey)
@@ -523,11 +578,6 @@ QtObject:
     return initMemberItem(
       pubKey = contactDetails.dto.id,
       displayName = contactDetails.dto.displayName,
-      usesDefaultName = resolveUsesDefaultName(
-        contactDetails.dto.localNickname,
-        contactDetails.dto.name,
-        contactDetails.dto.displayName,
-      ),
       ensName = contactDetails.dto.name,
       isEnsVerified = contactDetails.dto.ensVerified,
       localNickname = contactDetails.dto.localNickname,
