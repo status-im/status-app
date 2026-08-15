@@ -7,7 +7,6 @@ import StatusQ.Core.Theme
 import utils
 
 import shared.stores as SharedStores
-import shared.stores.send as SendStores
 
 import AppLayouts.stores as AppStores
 import AppLayouts.Communities.stores as CommunityStores
@@ -15,6 +14,7 @@ import AppLayouts.Wallet.stores as WalletStores
 
 import mainui.sectionLoaders
 
+import Mocks
 import Models
 import Storybook
 
@@ -75,14 +75,24 @@ SplitView {
         thirdpartyServicesEnabled: !ctrlPrivacyWall.checked
     }
     AppStores.ContactsStore { id: contactsStoreMock }
-    AppStores.FeatureFlagsStore { id: featureFlagsStoreMock }
+    AppStores.FeatureFlagsStore {
+        id: featureFlagsStoreMock
+
+        // On by default: the flags gate whole toolbar actions (swap, buy) and the
+        // keycard branch of the add-account flow, so off means "unreachable".
+        swapEnabled: ctrlSwap.checked
+        buyEnabled: ctrlBuy.checked
+        keycardEnabled: ctrlKeycard.checked
+    }
     SharedStores.RootStore { id: sharedRootStoreMock }
     SharedStores.NetworkConnectionStore { id: networkConnectionStoreMock }
     SharedStores.NetworksStore { id: networksStoreMock }
     CommunityStores.CommunitiesStore { id: communitiesStoreMock }
-    SendStores.TransactionStore { id: transactionStoreMock }
+    WalletSectionTransactionStoreMock { id: transactionStoreMock }
 
     Item {
+        id: sectionArea
+
         SplitView.fillWidth: true
         SplitView.fillHeight: true
 
@@ -91,6 +101,20 @@ SplitView {
             visible: false
             Loader { id: dappsServiceLoaderMock; active: false }
             Loader { id: emojiPopupLoaderMock; active: false }
+        }
+
+        WalletSectionPopupsMock {
+            id: popupsMock
+
+            popupParent: sectionArea
+
+            rootStore: appRootStoreMock
+            featureFlagsStore: featureFlagsStoreMock
+            contactsStore: contactsStoreMock
+            sharedRootStore: sharedRootStoreMock
+            networksStore: networksStoreMock
+            networkConnectionStore: networkConnectionStoreMock
+            transactionStore: transactionStoreMock
         }
 
         Rectangle {
@@ -118,9 +142,7 @@ SplitView {
                     communitiesStore: communitiesStoreMock
                     transactionStore: transactionStoreMock
 
-                    // Wiring the popup handler needs the whole HandlersManagerLoader
-                    // store set (chat + profile stores included); deferred.
-                    popupHandler: null
+                    popupHandler: popupsMock.popupHandler
                     dappsServiceLoader: dappsServiceLoaderMock
                     emojiPopupLoader: emojiPopupLoaderMock
 
@@ -264,6 +286,24 @@ SplitView {
                     id: ctrlPrivacyWall
                     objectName: "walletLoaderPrivacyWallSwitch"
                     text: "Privacy wall"
+                }
+                Switch {
+                    id: ctrlSwap
+                    objectName: "walletLoaderSwapSwitch"
+                    text: "Swap"
+                    checked: true
+                }
+                Switch {
+                    id: ctrlBuy
+                    objectName: "walletLoaderBuySwitch"
+                    text: "Buy"
+                    checked: true
+                }
+                Switch {
+                    id: ctrlKeycard
+                    objectName: "walletLoaderKeycardSwitch"
+                    text: "Keycard"
+                    checked: true
                 }
 
                 Button {

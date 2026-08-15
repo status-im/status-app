@@ -68,6 +68,13 @@ QtObject {
     readonly property ListModel accountsModel: ListModel {}
     readonly property ListModel communitiesModel: ListModel {}
 
+    // Static: the on-ramp provider list does not vary with the profile
+    readonly property OnRampProvidersModel buyProvidersModel: OnRampProvidersModel {}
+
+    readonly property AddAccountModuleMock addAccountModule: AddAccountModuleMock {
+        accountsModel: root.accountsModel
+    }
+
     // Terminal token-selector picker, built on demand when a modal opens.
     readonly property Component tokenSelectorModelComponent: Component {
         TokenSelectorModelMock {}
@@ -110,6 +117,10 @@ QtObject {
 
         walletSectionAllCollectibles.allCollectiblesModel = profile.collectiblesModel
 
+        walletSectionBuySellCrypto.model = root.buyProvidersModel
+
+        walletSection.addAccountModule = root.addAccountModule
+
         walletSectionFollowingAddresses.profile = profile
         _fill(walletSectionSavedAddresses.model, profile.savedAddresses())
 
@@ -145,6 +156,8 @@ QtObject {
         walletSectionAssetsView.profile = null
         walletSectionAllTokens.tokenGroupsModel = walletSectionAllTokens.emptyModel
         walletSectionAllCollectibles.allCollectiblesModel = walletSectionAllCollectibles.emptyModel
+        walletSectionBuySellCrypto.model = walletSectionBuySellCrypto.emptyModel
+        walletSection.addAccountModule = null
         walletSectionFollowingAddresses.profile = null
         walletSectionFollowingAddresses.model.clear()
         walletSectionSavedAddresses.model.clear()
@@ -161,6 +174,22 @@ QtObject {
     // the way LeftTabView's onAccountSelected does through the store.
     function selectAccount(index) {
         if (index < 0 || index >= root.accountsModel.count) {
+            walletSection.setFilterAllAddresses()
+            return
+        }
+        walletSection.setFilterAddress(root.accountsModel.get(index).address)
+    }
+
+    // Nim repoints the overview off the address filter, so clicking an account in
+    // the left panel is enough there. Here that happens on filterChanged, which
+    // both the page's switch button and LeftTabView end up in.
+    readonly property Connections _filterConnections: Connections {
+        target: walletSection
+        function onFilterChanged(address) { root._repointOverview(address) }
+    }
+
+    function _repointOverview(address) {
+        if (!address) {
             walletSectionOverview.isAllAccounts = true
             walletSectionOverview.name = qsTr("All accounts")
             walletSectionOverview.mixedcaseAddress = ""
@@ -168,10 +197,11 @@ QtObject {
             walletSectionOverview.colorIds = _allColorIds()
             walletSectionOverview.isWatchOnlyAccount = false
             walletSectionOverview.canSend = true
-            walletSection.setFilterAllAddresses()
             return
         }
-        const account = root.accountsModel.get(index)
+        const account = profile.accountByAddress(address)
+        if (!account || !account.address)
+            return
         walletSectionOverview.isAllAccounts = false
         walletSectionOverview.name = account.name
         walletSectionOverview.mixedcaseAddress = account.mixedcaseAddress
@@ -181,7 +211,6 @@ QtObject {
         walletSectionOverview.emoji = account.emoji
         walletSectionOverview.isWatchOnlyAccount = account.walletType === "watch"
         walletSectionOverview.canSend = account.canSend
-        walletSection.setFilterAddress(account.address)
     }
 
     // Token reload: the loading flags flip, balances move, the flags clear.
