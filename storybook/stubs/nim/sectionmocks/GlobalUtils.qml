@@ -18,4 +18,16 @@ QtObject {
     function getCompressedPk(publicKey) {
         return publicKey
     }
+
+    function qrCode(address) {
+        return ""
+    }
+
+    function wei2Eth(wei, decimals) {
+        return wei / Math.pow(10, decimals)
+    }
+
+    function eth2Wei(eth, decimals) {
+        return eth * Math.pow(10, decimals)
+    }
 }

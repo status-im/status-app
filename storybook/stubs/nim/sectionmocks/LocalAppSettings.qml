@@ -10,4 +10,7 @@ QtObject {
     // default behavior (testEnvironment pre-validates community forms)
     property bool testEnvironment: false
     property bool refreshTokenEnabled: false
+    // JSON arrays of chain ids the user has already been shown
+    property string seenNetworkChains: "[]"
+    property string seenManageNetworksChains: "[]"
 }
