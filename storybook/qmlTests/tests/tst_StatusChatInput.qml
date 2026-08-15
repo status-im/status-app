@@ -467,6 +467,22 @@ Item {
             tryVerify(() => memberSuggestionIndex("KateRoe") >= 0)
         }
 
+        // A model swap while the user is mid-mention (late member delivery,
+        // permission re-evaluation) gets no enteringSuggestion edge, so the
+        // wiring must re-arm itself or suggestions stay stuck on the skeleton.
+        function test_mentionSuggestions_modelSwapMidMentionRearms() {
+            appendContact("JohnDoe")
+            waitForRendering(controlUnderTest)
+
+            mouseClick(getToolBar().mentionButton)
+            tryVerify(() => memberSuggestionIndex("JohnDoe") >= 0)
+
+            // still in mention-entry mode; swap the model under it
+            appendContact("KateRoe")
+            tryVerify(() => memberSuggestionIndex("KateRoe") >= 0,
+                      5000, "the swapped-in model must wire without leaving mention mode")
+        }
+
         function test_editCancel_emitsSignal() {
             const cancelButton = findChild(controlUnderTest, "statusChatInputEditCloseButton")
             verify(!!cancelButton)
@@ -525,11 +541,12 @@ Item {
             typeText("Hello @zzz")
             waitForRendering(controlUnderTest)
 
-            // enteringSuggestion is true, but there are no matches, so the box stays hidden.
+            // once the members model wires in, "zzz" matches nothing: the box
+            // (a loading skeleton meanwhile) must hide, never sit visible-but-empty
             verify(controlUnderTest.textInput.enteringSuggestion)
             const box = findChild(controlUnderTest, "suggestionsBox")
             verify(!!box)
-            verify(!box.visible, "no suggestion box for a non-matching name")
+            tryVerify(() => !box.visible, 5000, "no suggestion box for a non-matching name")
 
             signalSpy.setup(controlUnderTest, "sendMessageRequested")
             keyClick(Qt.Key_Return) // send (NoModifier maps to send on desktop/offscreen)
@@ -538,6 +555,31 @@ Item {
             verify(!controlUnderTest.getPlainText().includes("@undefined"))
             compare(controlUnderTest.getPlainText(), "Hello @zzz")
             compare(signalSpy.count, 1)
+        }
+
+        // Enter inside the wiring window must still send: the box shows only a
+        // loading skeleton then — nothing committable — and must not swallow it.
+        function test_typedMention_enterDuringLoadingStillSends() {
+            appendContact("JohnDoe")
+            waitForRendering(controlUnderTest)
+
+            // hold the wiring so the loading window stays open
+            controlUnderTest.suggestionsModelWireDelay = 3600000
+
+            controlUnderTest.textInput.forceActiveFocus()
+            typeText("Hello @Jo")
+            waitForRendering(controlUnderTest)
+
+            const box = findChild(controlUnderTest, "suggestionsBox")
+            verify(!!box)
+            tryVerify(() => box.visible && box.loading)
+
+            signalSpy.setup(controlUnderTest, "sendMessageRequested")
+            keyClick(Qt.Key_Return)
+            waitForRendering(controlUnderTest)
+
+            compare(signalSpy.count, 1)
+            verify(!controlUnderTest.getPlainText().includes("@undefined"))
         }
 
         // ── typed emoji-shortcode flow

@@ -208,6 +208,7 @@ QtObject {
     }
 
     readonly property int chatSectionLeftColumnWidth: 304
+    readonly property int chatSectionRightColumnWidth: 250
 
     // has to match section_item.nim#SectionType
     readonly property QtObject appSection: QtObject {

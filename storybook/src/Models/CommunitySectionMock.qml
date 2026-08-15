@@ -455,11 +455,11 @@ QtObject {
             appendMember(root.membersModel, "0xdeadbeef", "Me", 0, root.memberRole)
             for (let i = 0; i < root.membersCount; ++i) {
                 const role = i === 0 ? Constants.memberRole.owner : Constants.memberRole.none
-                appendMember(root.membersModel, "0xmember-" + i, "Member " + i, i + 1, role)
+                appendMember(root.membersModel, memberKey(i), "Member " + i, i + 1, role)
             }
             appendMember(root.privateChannelMembersModel, "0xdeadbeef", "Me", 0, root.memberRole)
             for (let i = 0; i < root.privateChannelMembersCount; ++i)
-                appendMember(root.privateChannelMembersModel, "0xmember-" + i, "Member " + i, i + 1,
+                appendMember(root.privateChannelMembersModel, memberKey(i), "Member " + i, i + 1,
                              i === 0 ? Constants.memberRole.owner : Constants.memberRole.none)
         }
 
@@ -521,16 +521,33 @@ QtObject {
                 appendPermission(index++, Constants.permissionType.viewAndPost, gated)
         }
 
+        // Valid mention-grammar pub key ("0x" + 130 hex) for member i, so mock
+        // mentions parse and resolve exactly like production ones
+        function memberKey(i) {
+            return "0x04" + i.toString(16).padStart(128, "0")
+        }
+
         function fillMessages(model, chatId) {
             const now = Date.now()
             const count = root.messagesPerChannel
             const senderCount = Math.max(1, Math.min(root.membersCount, 20))
+            // Deterministic local photos: image rows must not hit the network
+            const photoA = "file:///private/tmp/claude-501/-Users-alexjbanca-Repos-status-desktop/367af37d-a18f-4e58-9856-5ecd5112f2cc/scratchpad/mock_photo_a.png"
+            const photoB = "file:///private/tmp/claude-501/-Users-alexjbanca-Repos-status-desktop/367af37d-a18f-4e58-9856-5ecd5112f2cc/scratchpad/mock_photo_b.png"
             // like the production model: index 0 is the newest message and
             // history grows towards higher indexes
             for (let i = 0; i < count; ++i) {
                 const own = i % 7 === 1
                 const senderIdx = i % senderCount
                 const ts = now - i * 60000
+                // Realistic content mix: every 4th message mentions a member,
+                // every 10th is a photo
+                const mention = !own && i % 4 === 2
+                const image = i % 10 === 7
+                const bodyText = mention
+                    ? "Hey @" + memberKey((senderIdx + 3) % senderCount) + " message " + (count - i) + " needs your eyes"
+                    : "Message " + (count - i) + " — the quick brown fox jumps over the lazy dog. "
+                      + (i % 5 === 0 ? "A somewhat longer paragraph to vary the bubble heights while measuring text. " : "")
                 model.append({
                     id: "msg-" + chatId + "-" + i,
                     prevMsgIndex: i + 1,
@@ -542,7 +559,7 @@ QtObject {
                     prevMsgDeleted: false,
                     timestamp: ts,
                     responseToMessageWithId: "",
-                    senderId: own ? "0xdeadbeef" : "0xmember-" + senderIdx,
+                    senderId: own ? "0xdeadbeef" : memberKey(senderIdx),
                     senderDisplayName: own ? "Me" : "Member " + senderIdx,
                     senderOptionalName: "",
                     senderIcon: "",
@@ -550,12 +567,12 @@ QtObject {
                     senderEnsVerified: false,
                     senderTrustStatus: 0,
                     amISender: own,
-                    messageText: "Message " + (count - i) + " — the quick brown fox jumps over the lazy dog. "
-                                 + (i % 5 === 0 ? "A somewhat longer paragraph to vary the bubble heights while measuring text. " : ""),
-                    unparsedText: "Message " + (count - i),
-                    messageImage: "",
+                    messageText: bodyText,
+                    unparsedText: bodyText,
+                    messageImage: image ? (i % 20 === 7 ? photoA : photoB) : "",
                     messageAttachments: "",
-                    contentType: Constants.messageContentType.messageType,
+                    contentType: image ? Constants.messageContentType.imageType
+                                       : Constants.messageContentType.messageType,
                     sticker: "",
                     stickerPack: -1,
                     outgoingStatus: own ? "sent" : "",
