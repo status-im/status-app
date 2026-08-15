@@ -120,8 +120,13 @@ Item {
             keyClickSequence(data.searchStr)
             tryCompare(searchField, "text", data.searchStr)
 
-            const gridBtn = findChild(grid, "homeGridItemLoader_" + data.key).item
-            tryVerify(() => !!gridBtn)
+            // the loader itself appears asynchronously, so retry the lookup too
+            let gridBtn = null
+            tryVerify(() => {
+                const loader = findChild(grid, "homeGridItemLoader_" + data.key)
+                gridBtn = loader ? loader.item : null
+                return !!gridBtn
+            })
 
             dynamicSpy.setup(controlUnderTest, "itemActivated") // signal itemActivated(string key, int sectionType, string itemId)
 

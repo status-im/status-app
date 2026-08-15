@@ -5,10 +5,16 @@ import StatusQ.Controls
 import StatusQ.Core.Theme
 
 StatusButton {
-    implicitWidth: 44
-    implicitHeight: 44
+    implicitWidth: 32
+    implicitHeight: 32
 
-    icon.name: hovered ? "arrow-up" : "arrow-down"
+    // A single up/down glyph that stays put: the previous arrow-down/arrow-up pair flipped
+    // direction on hover, which reads as the button having changed what it will do.
+    // The button is round, so rotating it only rotates the glyph.
+    rotation: 90
+    icon.name: "exchange"
+    icon.width: 16
+    icon.height: 16
     icon.color: Theme.palette.baseColor1
 
     focusPolicy: Qt.NoFocus

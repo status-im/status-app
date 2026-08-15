@@ -135,6 +135,10 @@ Item {
             formValuesChanged.clear()
         }
 
+        function approx(formatted) {
+            return qsTr("≈ %1").arg(formatted)
+        }
+
         function launchAndVerfyModal() {
             formValuesChanged.clear()
             verify(!!controlUnderTest)
@@ -595,7 +599,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("An error has occured, please try again"))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Confirm swap"))
+            compare(signButton.text, qsTr("Confirm swap + bridge"))
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -633,7 +637,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Insufficient funds for swap"))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Confirm swap"))
+            compare(signButton.text, qsTr("Confirm swap + bridge"))
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -671,7 +675,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Not enough ETH to pay gas fees"))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Confirm swap"))
+            compare(signButton.text, qsTr("Confirm swap + bridge"))
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -709,7 +713,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Fetching the price took longer than expected. Please, try again later."))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Confirm swap"))
+            compare(signButton.text, qsTr("Confirm swap + bridge"))
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -747,7 +751,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Not enough liquidity. Lower token amount or try again later."))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Confirm swap"))
+            compare(signButton.text, qsTr("Confirm swap + bridge"))
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -791,7 +795,7 @@ Item {
             compare(root.swapAdaptor.swapOutputData.hasError, false)
             verify(!errorTag.visible, "error tag visible with text: " + errorTag.text)
             verify(signButton.enabled)
-            compare(signButton.text, qsTr("Confirm swap"))
+            compare(signButton.text, qsTr("Confirm swap + bridge"))
 
             // verfy input and output panels
             waitForRendering(receivePanel)
@@ -905,7 +909,7 @@ Item {
             compare(amountToSendInput.text, "")
             verify(amountToSendInput.cursorVisible)
             compare(amountToSendInput.placeholderText, LocaleUtils.numberToLocaleString(0))
-            compare(bottomItemText.text, root.swapAdaptor.currencyStore.formatCurrencyAmount(0, root.swapAdaptor.currencyStore.currentCurrency))
+            compare(bottomItemText.text, approx(root.swapAdaptor.currencyStore.formatCurrencyAmount(0, root.swapAdaptor.currencyStore.currentCurrency)))
             compare(tokenSelectorContentItemText.text, defaultToken.symbol)
             verify(balanceLine.visible)
             compare(payPanel.selectedHoldingId, root.swapFormData.fromGroupKey)
@@ -959,7 +963,7 @@ Item {
             tryCompare(amountToSendInput, "text", valueToExchangeString)
             compare(amountToSendInput.placeholderText, LocaleUtils.numberToLocaleString(0))
             tryCompare(amountToSendInput, "cursorVisible", true)
-            tryCompare(bottomItemText, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(valueToExchange * expectedToken.cryptoPrice, root.swapAdaptor.currencyStore.currentCurrency))
+            tryCompare(bottomItemText, "text", approx(root.swapAdaptor.currencyStore.formatCurrencyAmount(valueToExchange * expectedToken.cryptoPrice, root.swapAdaptor.currencyStore.currentCurrency)))
             tryCompare(tokenSelectorContentItemText, "text", expectedToken.symbol)
             const expectedIconSource = expectedToken.logoUri || Constants.tokenIcon(expectedToken.symbol)
             compare(tokenSelectorIcon.image.source, expectedIconSource)
@@ -1008,7 +1012,7 @@ Item {
                 verify(amountToSendInput.interactive)
                 compare(amountToSendInput.placeholderText, LocaleUtils.numberToLocaleString(0))
                 verify(amountToSendInput.cursorVisible)
-                compare(bottomItemText.text, root.swapAdaptor.currencyStore.formatCurrencyAmount(0, root.swapAdaptor.currencyStore.currentCurrency))
+                compare(bottomItemText.text, approx(root.swapAdaptor.currencyStore.formatCurrencyAmount(0, root.swapAdaptor.currencyStore.currentCurrency)))
                 const tokenSelectorContentItemText = findChild(payPanel, "tokenSelectorContentItemText")
                 verify(!!tokenSelectorContentItemText)
                 const defaultTokenEntry = SQUtils.ModelUtils.getByKey(payTokenModel, "key", root.swapFormData.defaultFromGroupKey)
@@ -1064,7 +1068,7 @@ Item {
             compare(amountToSendInput.text, valueToExchangeString)
             compare(amountToSendInput.placeholderText, LocaleUtils.numberToLocaleString(0))
             tryCompare(amountToSendInput, "cursorVisible", true)
-            tryCompare(bottomItemText, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(valueToExchange * expectedToken.cryptoPrice, root.swapAdaptor.currencyStore.currentCurrency))
+            tryCompare(bottomItemText, "text", approx(root.swapAdaptor.currencyStore.formatCurrencyAmount(valueToExchange * expectedToken.cryptoPrice, root.swapAdaptor.currencyStore.currentCurrency)))
             compare(tokenSelectorContentItemText.text, expectedToken.symbol)
             const expectedIconSource = expectedToken.logoUri || Constants.tokenIcon(expectedToken.symbol)
             compare(tokenSelectorIcon.image.source, expectedIconSource)
@@ -1109,7 +1113,7 @@ Item {
             verify(!amountToSendInput.interactive)
             verify(!amountToSendInput.cursorVisible)
             compare(amountToSendInput.placeholderText, LocaleUtils.numberToLocaleString(0))
-            tryCompare(bottomItemText, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(0, root.swapAdaptor.currencyStore.currentCurrency))
+            tryCompare(bottomItemText, "text", approx(root.swapAdaptor.currencyStore.formatCurrencyAmount(0, root.swapAdaptor.currencyStore.currentCurrency)))
             compare(tokenSelectorContentItemText.text, Constants.ethToken)
             compare(receivePanel.selectedHoldingId, Constants.ethGroupKey)
             compare(receivePanel.value, 0)
@@ -1158,7 +1162,7 @@ Item {
             verify(!amountToSendInput.cursorVisible)
             compare(amountToSendInput.text, valueToReceive.toLocaleString(Qt.locale(), 'f', -128))
             compare(amountToSendInput.placeholderText, LocaleUtils.numberToLocaleString(0))
-            tryCompare(bottomItemText, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(valueToReceive * expectedToken.cryptoPrice, root.swapAdaptor.currencyStore.currentCurrency))
+            tryCompare(bottomItemText, "text", approx(root.swapAdaptor.currencyStore.formatCurrencyAmount(valueToReceive * expectedToken.cryptoPrice, root.swapAdaptor.currencyStore.currentCurrency)))
             compare(tokenSelectorContentItemText.text, expectedToken.symbol)
             const expectedIconSource = expectedToken.logoUri || Constants.tokenIcon(expectedToken.symbol)
             compare(tokenSelectorIcon.image.source, expectedIconSource)
@@ -1212,7 +1216,7 @@ Item {
             verify(amountToSendInput.cursorVisible)
             compare(amountToSendInput.text, "")
             compare(amountToSendInput.placeholderText, LocaleUtils.numberToLocaleString(0))
-            compare(bottomItemText.text, root.swapAdaptor.currencyStore.formatCurrencyAmount(0, root.swapAdaptor.currencyStore.currentCurrency))
+            compare(bottomItemText.text, approx(root.swapAdaptor.currencyStore.formatCurrencyAmount(0, root.swapAdaptor.currencyStore.currentCurrency)))
 
             payPanel.setAmount(payPanel.maxSafeCryptoValue)
             waitForItemPolished(payPanel)
@@ -1225,7 +1229,7 @@ Item {
                 fuzzyCompare(parseFloat(amountToSendInput.delocalized), maxPossibleValue, 1e-6)
             else
                 compare(amountToSendInput.text, "")
-            tryCompare(bottomItemText, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(maxPossibleValue * expectedToken.cryptoPrice, root.swapAdaptor.currencyStore.currentCurrency))
+            tryCompare(bottomItemText, "text", approx(root.swapAdaptor.currencyStore.formatCurrencyAmount(maxPossibleValue * expectedToken.cryptoPrice, root.swapAdaptor.currencyStore.currentCurrency)))
 
             closeAndVerfyModal()
         }
@@ -1588,7 +1592,7 @@ Item {
             verify(!errorTag.visible)
             verify(signButton.interactive)
             verify(!signButton.loadingWithText)
-            compare(signButton.text, qsTr("Confirm swap"))
+            compare(signButton.text, qsTr("Confirm swap + bridge"))
             tryCompare(strategyFees, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(
                         root.swapAdaptor.swapOutputData.txFeesInFiat,
                         root.swapAdaptor.currencyStore.currentCurrency))
@@ -1602,7 +1606,7 @@ Item {
             verify(!errorTag.visible)
             verify(signButton.enabled)
             verify(!signButton.loadingWithText)
-            compare(signButton.text, qsTr("Confirm swap"))
+            compare(signButton.text, qsTr("Confirm swap + bridge"))
             tryCompare(strategyFees, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(
                         root.swapAdaptor.swapOutputData.txFeesInFiat,
                         root.swapAdaptor.currencyStore.currentCurrency))
@@ -1965,6 +1969,39 @@ Item {
             chainFilter.chainSelected(-1)
 
             compare(store.builtChainIds, [payChainId], "\"All\" restores this side's catalog")
+
+            closeAndVerfyModal()
+        }
+
+        // Filtering the PAY list to another chain must not disturb the receive side.
+        // Reported against BSC, where it bites hardest: USDC has its own group key
+        // there (usd-coin-bsc), so a receive token carried over from another chain
+        // has no counterpart row in the BSC catalog to be found under.
+        function test_payChainFilterLeavesTheReceiveSelectionAlone() {
+            root.swapFormData.selectedNetworkChainId = 1
+            launchAndVerfyModal()
+
+            const payPanel = findChild(controlUnderTest, "payPanel")
+            const receivePanel = findChild(controlUnderTest, "receivePanel")
+            verify(!!payPanel && !!receivePanel)
+
+            // SNT lives on chain 1 but not on 11155420 — the same shape as the BSC
+            // report, where USDC's group key differs so the carried-over token has no
+            // row in the other chain's catalog.
+            root.swapFormData.toGroupKey = Constants.sntGroupKey
+            tryCompare(receivePanel, "selectedHoldingId", Constants.sntGroupKey)
+            const payHolding = payPanel.selectedHoldingId
+
+            const chainFilter = findChild(payPanel, "chainFilter")
+            verify(!!chainFilter)
+            chainFilter.chainSelected(11155420)
+            wait(100)
+
+            compare(receivePanel.selectedHoldingId, Constants.sntGroupKey,
+                    "the receive side does not follow the pay side's list filter")
+            compare(payPanel.selectedHoldingId, payHolding,
+                    "and filtering the list is not selecting a token")
+            compare(root.swapFormData.selectedNetworkChainId, 1)
 
             closeAndVerfyModal()
         }

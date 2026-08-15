@@ -113,6 +113,92 @@ Item {
             compare(networkSpy.count, 0)
         }
 
+        function test_popularRowBadgeFollowsTheListChain() {
+            const activeNetworks = d.adaptor.networksStore.activeNetworks
+            verify(activeNetworks.count > 1)
+            const ownChainId = ModelUtils.get(activeNetworks, 0, "chainId")
+            const otherChainId = ModelUtils.get(activeNetworks, 1, "chainId")
+            const ownIcon = ModelUtils.get(activeNetworks, 0, "iconUrl")
+            const otherIcon = ModelUtils.get(activeNetworks, 1, "iconUrl")
+            verify(!!ownIcon && !!otherIcon && ownIcon !== otherIcon)
+
+            controlUnderTest = createTemporaryObject(componentUnderTest, root,
+                                                     {selectedNetworkChainId: ownChainId})
+            verify(!!controlUnderTest)
+
+            const holdingSelector = findChild(controlUnderTest, "holdingSelector")
+            verify(!!holdingSelector)
+            compare(holdingSelector.defaultNetworkIcon, ownIcon)
+
+            controlUnderTest.listChainFilter = otherChainId
+
+            compare(holdingSelector.defaultNetworkIcon, otherIcon)
+            compare(controlUnderTest.selectedNetworkChainId, ownChainId)
+        }
+
+        function test_fiatDisplayModeKeepsTheCryptoAmount() {
+            // the panel's amount is a crypto one whatever unit the input displays
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})
+            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            verify(!!controlUnderTest)
+            tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
+
+            const amountToSendInput = findChild(controlUnderTest, "amountToSendInput")
+            verify(!!amountToSendInput)
+            const price = amountToSendInput.cryptoPrice
+            verify(price > 0)
+            verify(price !== 1) // a 1:1 price would hide the bug
+
+            const mouseArea = findChild(amountToSendInput, "amountToSend_mouseArea")
+            verify(!!mouseArea)
+            mouseClick(mouseArea)
+            compare(amountToSendInput.fiatMode, true)
+
+            controlUnderTest.tokenAmount = "1.42"
+
+            const expectedFiat = (1.42 * price).toFixed(2)
+            tryCompare(amountToSendInput, "text", expectedFiat)
+            fuzzyCompare(controlUnderTest.value, 1.42, 0.0001)
+
+            // SwapModal feeds the panel's own amount back as tokenAmount; that round
+            // trip must settle, not shrink the value
+            controlUnderTest.tokenAmount = String(controlUnderTest.value)
+            wait(50)
+            compare(amountToSendInput.text, expectedFiat)
+            fuzzyCompare(controlUnderTest.value, 1.42, 0.0001)
+        }
+
+        function test_selectionIsKeptUntilTheCatalogSettles() {
+            const store = d.adaptor.walletAssetsStore.walletTokensStore
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: sttGroupKey})
+            store.buildGroupsForChain(d.goOptChainId)
+            verify(!!controlUnderTest)
+            tryCompare(controlUnderTest, "selectedHoldingId", sttGroupKey)
+
+            // an empty list means "not loaded", not "not available on this chain"
+            const fresh = store.createTokenSelectorModel(3).model
+            verify(!!fresh)
+            compare(fresh.count, 0)
+
+            controlUnderTest.tokenSelectorModel = fresh
+            wait(50)
+            compare(controlUnderTest.selectedHoldingId, sttGroupKey)
+
+            // ...and neither is a list that is still loading
+            controlUnderTest.tokenSelectorLoading = true
+            fresh.sourceData = [{
+                key: ethGroupKey, name: "Ether", symbol: "ETH", logoUri: "", decimals: 18,
+                cryptoPrice: 1, currentBalance: 0, currencyBalance: 0, sectionName: "",
+                balances: [], tokens: [{ key: "1-native", chainId: d.goOptChainId }]
+            }]
+            wait(50)
+            compare(controlUnderTest.selectedHoldingId, sttGroupKey)
+
+            // once it settles the token really is absent, so the default takes over
+            controlUnderTest.tokenSelectorLoading = false
+            tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
+        }
+
         function test_basicSetupAndDefaults() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
             verify(!!controlUnderTest)

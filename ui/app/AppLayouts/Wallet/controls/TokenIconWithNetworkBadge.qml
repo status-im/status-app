@@ -38,12 +38,12 @@ Item {
 
         visible: !!root.networkIcon.toString()
 
-        StatusRoundedImage {
+        NetworkIcon {
             anchors.centerIn: parent
             width: root.badgeIconSize
             height: root.badgeIconSize
             radius: root.badgeIconRadius
-            image.source: root.networkIcon
+            source: root.networkIcon
         }
     }
 }

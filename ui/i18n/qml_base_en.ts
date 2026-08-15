@@ -16802,11 +16802,19 @@ to load</source>
         <source>Popular assets</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>≈ %1</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SwapModal</name>
     <message>
         <source>Swap</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Swap + Bridge</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16843,7 +16851,11 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Confirm swap</source>
+        <source>Fetching quote...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm swap + bridge</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

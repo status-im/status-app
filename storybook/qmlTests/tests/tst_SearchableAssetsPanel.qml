@@ -322,6 +322,32 @@ Item {
             compare(control.panel.selectedSpy.signalArguments[0][1], 42161)
         }
 
+        function test_nonInteractiveKeyOnlyExcludesItsOwnChain() {
+            const networks = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
+            networks.append(networksData)
+
+            const control = createTemporaryObject(panelCmp, root, { networksModel: networks })
+            control.panel.nonInteractiveKey = "stt_key"
+            control.panel.nonInteractiveChainId = 1
+
+            const listView = findChild(control, "assetsListView")
+            waitForRendering(listView)
+
+            // STT sits on 1, 42161 and 10; only the chain the caller excluded is a
+            // same-chain duplicate — the others are bridge destinations
+            const stt = listView.itemAtIndex(0)
+            verify(stt)
+            compare(stt.rowCount, 3)
+            compare(stt.rowAt(0).chainId, 1)
+            compare(stt.rowAt(0).enabled, false)
+            compare(stt.rowAt(1).enabled, true)
+            compare(stt.rowAt(2).enabled, true)
+
+            mouseClick(stt.rowAt(1))
+            compare(control.panel.selectedSpy.count, 1)
+            compare(control.panel.selectedSpy.signalArguments[0][1], 42161)
+        }
+
         function test_singleRowWhenChainFilterSet() {
             const networks = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
             networks.append(networksData)

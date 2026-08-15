@@ -20,6 +20,7 @@ ManageTokensGroupDelegate 1.0 ManageTokensGroupDelegate.qml
 MaxSendButton 1.0 MaxSendButton.qml
 NetworkChipFilter 1.0 NetworkChipFilter.qml
 NetworkFilter 1.0 NetworkFilter.qml
+NetworkIcon 1.0 NetworkIcon.qml
 NetworkSelectItemDelegate 1.0 NetworkSelectItemDelegate.qml
 SortOrderComboBox 1.0 SortOrderComboBox.qml
 StatusDateRangePicker 1.0 StatusDateRangePicker.qml

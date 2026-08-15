@@ -15,6 +15,7 @@ Control {
     property var model
 
     property string nonInteractiveKey
+    property int nonInteractiveChainId: -1
 
     property bool hasMoreItems: false
     property bool isLoadingMore: false
@@ -55,6 +56,8 @@ Control {
         button.selected = false
         searchableAssetsPanel.highlightedKey = ""
     }
+
+    property alias showDropdownIndicator: button.showDropdownIndicator
 
     QtObject {
         id: d
@@ -97,6 +100,7 @@ Control {
 
             model: root.model
             nonInteractiveKey: root.nonInteractiveKey
+            nonInteractiveChainId: root.nonInteractiveChainId
             hasMoreItems: root.hasMoreItems
             isLoadingMore: root.isLoadingMore
             formatCurrencyBalance: root.formatCurrencyBalance
