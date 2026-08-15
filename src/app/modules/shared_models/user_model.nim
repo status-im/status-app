@@ -2,7 +2,6 @@ import nimqml, tables, std/strformat, sequtils, sugar
 
 import app_service/common/types
 import app_service/service/contacts/dto/[contacts, contact_details]
-import contacts_utils
 import model_utils
 import user_item
 
@@ -136,10 +135,9 @@ QtObject:
     of ModelRole.DisplayName:
       result = newQVariant(item.displayName)
     of ModelRole.PreferredDisplayName:
-      return newQVariant(resolvePreferredDisplayName(
-        item.localNickname, item.ensName, item.displayName, item.alias))
+      result = newQVariant(item.preferredDisplayName)
     of ModelRole.UsesDefaultName:
-      result = newQVariant(resolveUsesDefaultName(item.localNickname, item.ensName, item.displayName))
+      result = newQVariant(item.usesDefaultName)
     of ModelRole.EnsName:
       result = newQVariant(item.ensName)
     of ModelRole.IsEnsVerified:
@@ -267,15 +265,15 @@ QtObject:
   proc setName*(self: Model, pubKey: string, displayName: string,
       ensName: string, localNickname: string) =
     updateItemRolesAndNotify self.findIndexByPubKey(pubKey):
-      let previousPreferredDisplayName = resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias)
-      let currentPreferredDisplayName = resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
+      let previousPreferredDisplayName = self.items[ind].preferredDisplayName
+      let previousUsesDefaultName = self.items[ind].usesDefaultName
 
       updateRole(displayName)
       updateRole(ensName)
       updateRole(localNickname)
 
-      addChangedRole(roles, previousPreferredDisplayName, currentPreferredDisplayName, ModelRole.PreferredDisplayName.int): discard
-      addChangedRole(roles, previousPreferredDisplayName, currentPreferredDisplayName, ModelRole.UsesDefaultName.int): discard
+      addChangedRole(roles, previousPreferredDisplayName, self.items[ind].preferredDisplayName, ModelRole.PreferredDisplayName.int): discard
+      addChangedRole(roles, previousUsesDefaultName, self.items[ind].usesDefaultName, ModelRole.UsesDefaultName.int): discard
 
   proc setIcon*(self: Model, pubKey: string, icon: string) =
     updateItemRolesAndNotify self.findIndexByPubKey(pubKey):
@@ -305,8 +303,8 @@ QtObject:
       isRemoved: bool,
     ) =
     updateItemRolesAndNotify self.findIndexByPubKey(pubKey):
-      let previousPreferredDisplayName = resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias)
-      let currentPreferredDisplayName = resolvePreferredDisplayName(localNickname, ensName, displayName, alias)
+      let previousPreferredDisplayName = self.items[ind].preferredDisplayName
+      let previousUsesDefaultName = self.items[ind].usesDefaultName
       let previousTrustStatus = self.items[ind].trustStatus
 
       updateRole(displayName)
@@ -329,8 +327,8 @@ QtObject:
       updateRole(isContactRequestSent)
       updateRole(isRemoved)
 
-      addChangedRole(roles, previousPreferredDisplayName, currentPreferredDisplayName, ModelRole.PreferredDisplayName.int): discard
-      addChangedRole(roles, previousPreferredDisplayName, currentPreferredDisplayName, ModelRole.UsesDefaultName.int): discard
+      addChangedRole(roles, previousPreferredDisplayName, self.items[ind].preferredDisplayName, ModelRole.PreferredDisplayName.int): discard
+      addChangedRole(roles, previousUsesDefaultName, self.items[ind].usesDefaultName, ModelRole.UsesDefaultName.int): discard
       addChangedRole(roles, previousTrustStatus, trustStatus, ModelRole.IsUntrustworthy.int): discard
       addChangedRole(roles, previousTrustStatus, trustStatus, ModelRole.IsVerified.int): discard
 
@@ -403,10 +401,6 @@ QtObject:
     return initUserItem(
       pubKey = contactDetails.dto.id,
       displayName = contactDetails.dto.displayName,
-      usesDefaultName = resolveUsesDefaultName(
-        contactDetails.dto.localNickname,
-        contactDetails.dto.name,
-        contactDetails.dto.displayName),
       ensName = contactDetails.dto.name,
       isEnsVerified = contactDetails.dto.ensVerified,
       localNickname = contactDetails.dto.localNickname,
