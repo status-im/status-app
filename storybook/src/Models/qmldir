@@ -1,41 +1,42 @@
+
 AddressesModel 1.0 AddressesModel.qml
 AssetsCollectiblesIconsModel 1.0 AssetsCollectiblesIconsModel.qml
 AssetsModel 1.0 AssetsModel.qml
 BannerModel 1.0 BannerModel.qml
+BaseGroupedAccountsAssetsModel 1.0 BaseGroupedAccountsAssetsModel.qml
 ChannelsModel 1.0 ChannelsModel.qml
 ChatsModel 1.0 ChatsModel.qml
 ChatsSearchModel 1.0 ChatsSearchModel.qml
 CollectiblesModel 1.0 CollectiblesModel.qml
+CommunitiesModel 1.0 CommunitiesModel.qml
 CommunitySectionMock 1.0 CommunitySectionMock.qml
 DappsModel 1.0 DappsModel.qml
 FeesModel 1.0 FeesModel.qml
 FlatTokensModel 1.0 FlatTokensModel.qml
+GroupedAccountsAssetsModel 1.0 GroupedAccountsAssetsModel.qml
 IconModel 1.0 IconModel.qml
 LinkPreviewModel 1.0 LinkPreviewModel.qml
 LoginAccountsModel 1.0 LoginAccountsModel.qml
-MintedTokensModel 1.0 MintedTokensModel.qml
 ManageCollectiblesModel 1.0 ManageCollectiblesModel.qml
+MarketTokensModel 1.0 MarketTokensModel.qml
+MintedTokensModel 1.0 MintedTokensModel.qml
 NotificationsModel 1.0 NotificationsModel.qml
+OnRampProvidersModel 1.0 OnRampProvidersModel.qml
+PaymentRequestModel 1.0 PaymentRequestModel.qml
 ReactionsModels 1.0 ReactionsModels.qml
 RecipientModel 1.0 RecipientModel.qml
-TokenListsModel 1.0 TokenListsModel.qml
-TokenHoldersModel 1.0 TokenHoldersModel.qml
+SectionsModel 1.0 SectionsModel.qml
+SwapTransactionRoutes 1.0 SwapTransactionRoutes.qml
+TokenGroupsModel 1.0 TokenGroupsModel.qml
 TokenHoldersJoinModel 1.0 TokenHoldersJoinModel.qml
+TokenHoldersModel 1.0 TokenHoldersModel.qml
+TokenListsModel 1.0 TokenListsModel.qml
 UsersModel 1.0 UsersModel.qml
-WalletSendAccountsModel 1.0 WalletSendAccountsModel.qml
 WalletAccountsModel 1.0 WalletAccountsModel.qml
 WalletKeyPairModel 1.0 WalletKeyPairModel.qml
+WalletSectionMock 1.0 WalletSectionMock.qml
+WalletSendAccountsModel 1.0 WalletSendAccountsModel.qml
 WalletTransactionsModel 1.0 WalletTransactionsModel.qml
-BaseGroupedAccountsAssetsModel 1.0 BaseGroupedAccountsAssetsModel.qml
-GroupedAccountsAssetsModel 1.0 GroupedAccountsAssetsModel.qml
-TokenGroupsModel 1.0 TokenGroupsModel.qml
-CommunitiesModel 1.0 CommunitiesModel.qml
-OnRampProvidersModel 1.0 OnRampProvidersModel.qml
-SwapTransactionRoutes 1.0 SwapTransactionRoutes.qml
-PaymentRequestModel 1.0 PaymentRequestModel.qml
-MarketTokensModel 1.0 MarketTokensModel.qml
-SectionsModel 1.0 SectionsModel.qml
-
 singleton ModelsData 1.0 ModelsData.qml
 singleton NetworksModel 1.0 NetworksModel.qml
 singleton PermissionsModel 1.0 PermissionsModel.qml
