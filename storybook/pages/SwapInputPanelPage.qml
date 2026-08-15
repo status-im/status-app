@@ -66,10 +66,8 @@ SplitView {
 
         readonly property SwapModalAdaptor adaptor: SwapModalAdaptor {
             swapStore: SwapStore {
-                accounts: WalletAccountsModel {}
-                signal suggestedRoutesReady(var txRoutes, string errCode, string errDescription)
-                signal transactionSent(var chainId, var txHash, var uuid, var error)
-                signal transactionSendingComplete(var txHash, var status)
+                // shadows the real store's readonly accounts (walletSectionAccounts.accounts)
+                readonly property var accounts: WalletAccountsModel {}
             }
             networksStore: NetworksStore {
                 readonly property var activeNetworks: NetworksModel.flatNetworks

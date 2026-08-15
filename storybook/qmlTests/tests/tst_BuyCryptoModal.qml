@@ -74,7 +74,6 @@ Item {
             readonly property var buyCryptoStore: BuyCryptoStore {
                 readonly property var providersModel: OnRampProvidersModel{}
                 property bool areProvidersLoading
-                signal providerUrlReady(string uuid ,string url)
 
                 function fetchProviders() {
                     console.warn("fetchProviders called >>")

@@ -18,7 +18,7 @@ import Mocks
 WalletAssetsStore {
     id: root
 
-    property var walletTokensStore: TokensStoreMock {}
+    walletTokensStore: TokensStoreMock {}
 
     property var baseGroupedAccountAssetModel: BaseGroupedAccountsAssetsModel {}
 

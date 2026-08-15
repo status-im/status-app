@@ -77,11 +77,9 @@ SplitView {
 
         SwapStore {
             id: dSwapStore
-            signal suggestedRoutesReady(var txRoutes, string errCode, string errDescription)
-            signal transactionSent(var chainId, var txHash, var uuid, var error)
-            signal transactionSendingComplete(var txHash, var status)
 
-            accounts: WalletAccountsModel {}
+            // shadows the real store's readonly accounts (walletSectionAccounts.accounts)
+            readonly property var accounts: WalletAccountsModel {}
 
             function fetchSuggestedRoutes(uuid, accountFrom, accountTo, amount, tokenFrom, tokenTo,
                                           fromChainID, toChainID, preferredChainIDs, sendType) {
@@ -315,7 +313,7 @@ SplitView {
                     Backpressure.debounce(this, 1500, () => {approveTxButton.clicked()})()
                     authenticateAndTransferSpy.wait()
                     Backpressure.debounce(this, 1000, () => {
-                                              dSwapStore.transactionSent(networksComboBox.currentValue, "0x877ffe47fc29340312611d4e833ab189fe4f4152b01cc9a05bb4125b81b2a89a", d.uuid, "")
+                                              dSwapStore.transactionSent(d.uuid, networksComboBox.currentValue, false, "0x877ffe47fc29340312611d4e833ab189fe4f4152b01cc9a05bb4125b81b2a89a", "")
                                           })()
                     Backpressure.debounce(this, 2000, () => {
                                               dSwapStore.transactionSendingComplete("0x877ffe47fc29340312611d4e833ab189fe4f4152b01cc9a05bb4125b81b2a89a", "Success")
@@ -355,7 +353,7 @@ SplitView {
                     Backpressure.debounce(this, 1500, () => {approveTxButton.clicked()})()
                     authenticateAndTransferSpy.wait()
                     Backpressure.debounce(this, 1000, () => {
-                                              dSwapStore.transactionSent(networksComboBox.currentValue, "0x877ffe47fc29340312611d4e833ab189fe4f4152b01cc9a05bb4125b81b2a89a", d.uuid, "")
+                                              dSwapStore.transactionSent(d.uuid, networksComboBox.currentValue, false, "0x877ffe47fc29340312611d4e833ab189fe4f4152b01cc9a05bb4125b81b2a89a", "")
                                           })()
                     Backpressure.debounce(this, 2000, () => {
                                               dSwapStore.transactionSendingComplete("0x877ffe47fc29340312611d4e833ab189fe4f4152b01cc9a05bb4125b81b2a89a", "Failed")
@@ -423,7 +421,7 @@ SplitView {
             Button {
                 text: "emit transactionSent successful"
                 onClicked: {
-                    dSwapStore.transactionSent(networksComboBox.currentValue, "0x877ffe47fc29340312611d4e833ab189fe4f4152b01cc9a05bb4125b81b2a89a", d.uuid, "")
+                    dSwapStore.transactionSent(d.uuid, networksComboBox.currentValue, false, "0x877ffe47fc29340312611d4e833ab189fe4f4152b01cc9a05bb4125b81b2a89a", "")
                 }
                 visible: advancedSignalsCheckBox.checked
             }
@@ -431,7 +429,7 @@ SplitView {
             Button {
                 text: "emit transactionSent failure"
                 onClicked: {
-                    dSwapStore.transactionSent(networksComboBox.currentValue, "", d.uuid, "no password given")
+                    dSwapStore.transactionSent(d.uuid, networksComboBox.currentValue, false, "", "no password given")
                 }
                 visible: advancedSignalsCheckBox.checked
             }

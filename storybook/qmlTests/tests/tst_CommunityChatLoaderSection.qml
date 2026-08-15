@@ -41,7 +41,10 @@ Item {
     SharedStores.NetworkConnectionStore { id: networkConnectionStoreMock }
     SharedStores.NetworksStore { id: networksStoreMock }
     SendStores.TransactionStore { id: transactionStoreMock }
-    WalletStores.TokensStore { id: tokensStoreMock }
+    WalletStores.TokensStore {
+        id: tokensStoreMock
+        networksStore: networksStoreMock
+    }
     WalletStores.WalletAssetsStore { id: walletAssetsStoreMock }
     ProfileStores.AdvancedStore { id: advancedStoreMock }
     CommunitiesStores.CommunitiesStore { id: communitiesStoreMock }

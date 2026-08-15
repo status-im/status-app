@@ -38,7 +38,7 @@ Item {
 
         readonly property SwapModalAdaptor adaptor: SwapModalAdaptor {
             swapStore: SwapStore {
-                accounts: WalletAccountsModel {}
+                readonly property var accounts: WalletAccountsModel {}
             }
             walletAssetsStore: WalletAssetsStoreMock {
                 walletTokensStore: TokensStoreMock {

@@ -1,7 +1,0 @@
-ActivityFiltersStore 1.0 ActivityFiltersStore.qml
-BuyCryptoStore 1.0 BuyCryptoStore.qml
-CollectiblesStore 1.0 CollectiblesStore.qml
-SwapStore 1.0 SwapStore.qml
-TokensStore 1.0 TokensStore.qml
-WalletAssetsStore 1.0 WalletAssetsStore.qml
-singleton RootStore 1.0 RootStore.qml

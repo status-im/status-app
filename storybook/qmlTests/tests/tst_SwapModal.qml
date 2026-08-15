@@ -30,11 +30,8 @@ Item {
     readonly property var dummySwapTransactionRoutes: SwapTransactionRoutes {}
 
     readonly property var swapStore: SwapStore {
-        signal suggestedRoutesReady(var txRoutes, string errCode, string errDescription)
-        signal transactionSent(var chainId,var txHash, var uuid, var error)
-        signal transactionSendingComplete(var txHash,  var status)
 
-        accounts: WalletAccountsModel {}
+        readonly property var accounts: WalletAccountsModel {}
         function getWei2Eth(wei, decimals) {
             return wei/(10**decimals)
         }
@@ -72,9 +69,7 @@ Item {
         swapStore: root.swapStore
         swapFormData: root.swapFormData
         swapOutputData: SwapOutputData{}
-        networksStore: NetworksStore {
-            areTestNetworksEnabled: true
-        }
+        networksStore: NetworksStore {}
     }
 
     property SwapInputParamsForm swapFormData: SwapInputParamsForm {}
@@ -121,6 +116,16 @@ Item {
         property SwapModal controlUnderTest: null
 
         // helper functions -------------------------------------------------------------
+
+        // The real NetworksStore reads the testnet flag off networksModule, so the
+        // suite has to set it there; it is engine-global, hence the restore.
+        function initTestCase() {
+            networksModule.areTestNetworksEnabled = true
+        }
+
+        function cleanupTestCase() {
+            networksModule.areTestNetworksEnabled = false
+        }
 
         function init() {
             root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(1)

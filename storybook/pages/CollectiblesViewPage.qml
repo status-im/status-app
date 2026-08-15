@@ -59,7 +59,8 @@ SplitView {
         rootStore: AppLayoutStores.RootStore {}
         communityTokensStore: SharedStores.CommunityTokensStore {}
         walletCollectiblesStore: CollectiblesStore {
-            collectiblesController: collectiblesView.controller
+            // shadows the real store's readonly controller
+            readonly property var collectiblesController: collectiblesView.controller
         }
         networksStore: SharedStores.NetworksStore {}
     }

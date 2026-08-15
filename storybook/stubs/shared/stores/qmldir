@@ -1,11 +1,11 @@
+BrowserConnectStore 1.0 BrowserConnectStore.qml
 CommunityTokensStore 1.0 CommunityTokensStore.qml
 CurrenciesStore 1.0 CurrenciesStore.qml
 DAppsStore 1.0 DAppsStore.qml
 GifStore 1.0 GifStore.qml
 NetworkConnectionStore 1.0 NetworkConnectionStore.qml
-NetworksStore 1.0 NetworksStore.qml
+NetworksStore 1.0 ../../../../ui/imports/shared/stores/NetworksStore.qml
 PermissionsStore 1.0 PermissionsStore.qml
 ProfileStore 1.0 ProfileStore.qml
 RootStore 1.0 RootStore.qml
 UtilsStore 1.0 UtilsStore.qml
-BrowserConnectStore 1.0 BrowserConnectStore.qml

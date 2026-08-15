@@ -4,10 +4,16 @@ import StatusQ.Core.Utils
 
 import QtModelsToolkit
 
+import shared.stores as SharedStores
+
 import AppLayouts.Wallet.stores
 
+// Derives from the real TokensStore now that the storybook stub is gone; the
+// properties below shadow the real ones so callers keep seeding them directly.
 TokensStore {
     id: root
+
+    networksStore: SharedStores.NetworksStore {}
 
     property var tokenGroupsModel
     property var tokenGroupsForChainModel
