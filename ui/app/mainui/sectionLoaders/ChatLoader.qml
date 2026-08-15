@@ -4,6 +4,7 @@ import QtQuick
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Layout
+import StatusQ.Core.Backpressure
 
 import AppLayouts.Chat.panels
 
@@ -177,6 +178,7 @@ Loader {
         id: d
 
         property ChatStores.RootStore chatRootStore: null
+        property bool showUsersPanel: root.accountSettingsStore.showUsersList
     }
 
     Component.onCompleted: {
@@ -195,7 +197,7 @@ Loader {
             visible: false,
             isChatView: true,
             sectionLayout: sectionLayout,
-            showUsersList:                  Qt.binding(() => root.accountSettingsStore.showUsersList),
+            showUsersList:                  Qt.binding(() => d.showUsersPanel),
             rootStore:                      Qt.binding(() => d.chatRootStore),
             createChatPropertiesStore:      Qt.binding(() => root.createChatPropertiesStore),
             tokensStore:                    Qt.binding(() => root.tokensStore),
@@ -246,7 +248,10 @@ Loader {
         ignoreUnknownSignals: true
 
         function onShowUsersListRequested(show) {
-            root.accountSettingsStore.setShowUsersList(show)
+            d.showUsersPanel = show //optimistic; update settings after a short delay to avoid jank from the panel resize
+            Backpressure.setTimeout(root, 300, () => {
+                root.accountSettingsStore.setShowUsersList(show)
+            })
         }
         function onProfileButtonClicked() {
             Global.changeAppSectionBySectionType(Constants.appSection.profile)

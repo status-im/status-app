@@ -39,6 +39,7 @@ NIM_TESTS_MODEL_SPY := \
 	assets_adaptor_model_test \
 	collectibles_selector_model_test \
 	grouped_account_assets_model_test \
+	member_model_test \
 	model_sync_move_test \
 	model_sync_unified_test \
 	token_groups_model_test \

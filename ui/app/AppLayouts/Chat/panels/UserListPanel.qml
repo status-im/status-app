@@ -108,25 +108,15 @@ ColumnLayout {
         verticalScrollBar.implicitWidth: d.scrollBarWidth
         verticalScrollBar.width: d.scrollBarWidth
 
+        // The members model maintains the canonical member order (online
+        // first, then name) in Nim — no sorters here, filtering only.
         model: SortFilterProxyModel {
-            // Sorting a large members model is expensive; a hidden (or not yet
-            // reparented) panel must not pay for it on every chat switch.
-            sourceModel: root.visible && root.parent ? root.usersModel : null
+            sourceModel: root.usersModel
             filters: [
                 SQUtils.SearchFilter {
                     roleName: "preferredDisplayName"
                     searchPhrase: searchField.text
-                    enabled: searchField.visible && !!searchPhrase
-                }
-            ]
-            sorters: [
-                RoleSorter {
-                    roleName: "onlineStatus"
-                    sortOrder: Qt.DescendingOrder
-                },
-                StringSorter {
-                    roleName: "preferredDisplayName"
-                    caseSensitivity: Qt.CaseInsensitive
+                    enabled: searchField.visible && !!searchField.text
                 }
             ]
         }

@@ -96,9 +96,21 @@ proc recordEndResetModel*() =
   if globalSpy != nil and globalSpy.enabled:
     globalSpy.calls.add(SignalCall(kind: EndResetModel))
 
-# The BeginMoveRows/EndMoveRows kinds are kept (without recorders): model_sync
-# never emits moves — reorders degrade to remove+insert — and model tests filter
-# on these kinds to assert exactly that.
+# model_sync never emits moves — reorders degrade to remove+insert — and its
+# tests filter on the move kinds to assert exactly that. Source-sorted models
+# (member_model) DO emit real moves and record them here.
+proc recordBeginMoveRows*(sourceFirst, sourceLast, destChild: int) =
+  if globalSpy != nil and globalSpy.enabled:
+    globalSpy.calls.add(SignalCall(
+      kind: BeginMoveRows,
+      sourceFirst: sourceFirst,
+      sourceLast: sourceLast,
+      destChild: destChild
+    ))
+
+proc recordEndMoveRows*() =
+  if globalSpy != nil and globalSpy.enabled:
+    globalSpy.calls.add(SignalCall(kind: EndMoveRows))
 
 # Query helpers
 proc countInserts*(self: QtModelSpy): int =
@@ -116,6 +128,14 @@ proc countDataChanged*(self: QtModelSpy): int =
 proc countResets*(self: QtModelSpy): int =
   ## Count number of beginResetModel calls
   self.calls.filterIt(it.kind == BeginResetModel).len
+
+proc countMoves*(self: QtModelSpy): int =
+  ## Count number of beginMoveRows calls
+  self.calls.filterIt(it.kind == BeginMoveRows).len
+
+proc getMoves*(self: QtModelSpy): seq[SignalCall] =
+  ## Get all beginMoveRows calls
+  self.calls.filterIt(it.kind == BeginMoveRows)
 
 proc getInserts*(self: QtModelSpy): seq[SignalCall] =
   ## Get all beginInsertRows calls
