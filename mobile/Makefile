@@ -41,6 +41,13 @@ $(STATUS_GO_LIB): FORCE | platform-cleanup
 	@echo "Building status-go mobile library"
 	@mkdir -p $(LIB_PATH)
 ifeq ($(OS),android)
+	# Reproducibility env for status-go. -toolexec makes cgo's per-package
+	# symbol hash derive from source content instead of the $WORK temp dir.
+	  GOFLAGS="-trimpath -buildvcs=false -toolexec=$(abspath $(SCRIPTS_PATH)/go-toolexec-wrapper.sh)" \
+	  GOMODCACHE="$(BUILD_PATH)/.gomodcache" \
+	  CGO_CFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
+	  CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
+	  CGO_LDFLAGS="-Wl,--build-id=none" \
 	  CC="$(CC)" $(MAKE) -C ../vendor/status-go statusgo-android-library \
 		ARCH=$(ARCH) \
 		ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" \
@@ -50,7 +57,15 @@ ifeq ($(OS),android)
 		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
 		GO_GENERATE_CMD="go generate" \
 		SHELL=/bin/sh
+	@$(ANDROID_NDK_ROOT)/toolchains/llvm/prebuilt/$(HOST_OS)-x86_64/bin/llvm-objcopy \
+		--remove-section=.note.gnu.build-id \
+		--remove-section=.note.go.buildid \
+		../vendor/status-go/build/bin/libstatus$(LIB_EXT)
 else ifeq ($(OS),ios)
+	GOFLAGS="-trimpath -buildvcs=false" \
+	GOMODCACHE="$(BUILD_PATH)/.gomodcache" \
+	CGO_CFLAGS="-ffile-prefix-map=$(HOME)=." \
+	CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=." \
 	$(MAKE) -C ../vendor/status-go statusgo-ios-library \
 		ARCH=$(ARCH) \
 		IPHONE_SDK="$(IPHONE_SDK)" \
