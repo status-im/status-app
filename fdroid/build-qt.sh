@@ -11,6 +11,11 @@ QT_VERSION="${QT_VERSION:-6.9.2}"
 QT_MODULES=qtbase,qtdeclarative,qt5compat,qtmultimedia,qtshadertools,qtimageformats,qtwebview,qtscxml,qtsvg,qtconnectivity,qtwebsockets,qtpositioning,qtlottie,qtwebchannel
 (cd "$QT_SRCDIR" && perl init-repository --module-subset="$QT_MODULES")
 
+# Remove de-registered and leftover submodules.
+git -C "$QT_SRCDIR" submodule status | grep '^-' | while read -r _ path _; do
+  rm -rf "${QT_SRCDIR:?}/$path"
+done
+
 # Strip .note.gnu.build-id from every .so and keep absolute paths out of them.
 QT5_CMAKELISTS="$QT_SRCDIR/CMakeLists.txt"
 if ! grep -q 'build-id=none' "$QT5_CMAKELISTS"; then
