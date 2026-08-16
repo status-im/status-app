@@ -42,6 +42,7 @@ LINK_PCRE=0 # nimbus-build-system links `pcre` by default which is not needed
 	tests-nim-linux \
 	benches-nim \
 	status-go \
+	qrcodegen \
 	status-keycard-qt \
 	keycard-simulator \
 	keycard-simulator-bundle \
@@ -616,6 +617,9 @@ $(QRCODEGEN): | deps platform-cleanup
 	echo -e $(BUILD_MSG) "QR-Code-generator"
 	+ cd vendor/QR-Code-generator/c && \
 	  $(MAKE) $(QRCODEGEN_MAKE_PARAMS) $(HANDLE_OUTPUT)
+
+# Named alias so callers (ci/Jenkinsfile.linux) don't hardcode the archive path.
+qrcodegen: $(QRCODEGEN)
 
 
 # When modifying files that are not tracked in UI_SOURCES (see below),
