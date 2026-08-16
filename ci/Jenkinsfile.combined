@@ -212,15 +212,13 @@ pipeline {
             )
           } }
         }
-        stage('MacOS/aarch64') { steps { script {
+        stage('MacOS and iOS/aarch64') { steps { script {
+          /* Single job builds both the macOS DMG and the iOS IPA. */
           macos_aarch64 = getArtifacts(
             'MacOS/aarch64', jenkins.Build('status-app/systems/macos/aarch64/package')
           )
-        } } }
-        stage('iOS/aarch64') { steps { script {
-          ios_aarch64 = getArtifacts(
-            'iOS/aarch64', jenkins.Build('status-app/systems/ios/aarch64/package')
-          )
+          urls['iOS/aarch64'] = utils.getEnv(macos_aarch64, 'IPA_URL')
+          jenkins.setBuildDesc(urls)
         } } }
         stage('Android/arm64 and E2E') {
           stages {

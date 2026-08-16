@@ -3,11 +3,15 @@ library 'status-jenkins-lib@v1.9.48'
 
 QT_VERSION = "6.11.0"
 
+/* Object to store public URLs for the build description. Both platforms append here */
+descLinks = [:]
+
+NIM_BIN = "/run/current-system/sw/bin"
+
 /* Options section can't access functions in objects. */
 def isPRBuild = utils.isPRBuild()
 
 pipeline {
-  /* This way we run the same Jenkinsfile on different platforms. */
   agent {
     label "${getAgentLabels().join(' && ')} && qt-${QT_VERSION} && go-1.26 && xcode-26.4"
   }
@@ -26,7 +30,7 @@ pipeline {
     choice(
       name: 'VERBOSE',
       description: 'Level of verbosity based on nimbus-build-system setup.',
-      choices: ['0', '1', '2']
+      choices: ['0', '1', '2', '3']
     )
     booleanParam(
       name: 'USE_SIMULATED_KEYCARD',
@@ -48,12 +52,32 @@ pipeline {
       description: 'Override vendor/status-go submodule to this SHA/ref.',
       defaultValue: ''
     )
+    string(
+      name: 'TESTFLIGHT_POLL_TIMEOUT',
+      description: 'TestFlight build polling timeout in minutes.',
+      defaultValue: '30'
+    )
+    string(
+      name: 'TESTFLIGHT_POLL_INTERVAL',
+      description: 'TestFlight build polling interval in seconds.',
+      defaultValue: '30'
+    )
+    booleanParam(
+      name: 'BUILD_MACOS',
+      description: 'Build and package the macOS desktop app.',
+      defaultValue: params.BUILD_MACOS != null ? params.BUILD_MACOS : true
+    )
+    booleanParam(
+      name: 'BUILD_IOS',
+      description: 'Build and package the iOS app after the macOS build.',
+      defaultValue: params.BUILD_IOS != null ? params.BUILD_IOS : true
+    )
   }
 
   options {
     timestamps()
-    /* Prevent Jenkins jobs from running forever */
-    timeout(time: 45, unit: 'MINUTES')
+    /* Prevent Jenkins jobs from running forever.*/
+    timeout(time: 100, unit: 'MINUTES')
     /* manage how many builds we keep */
     buildDiscarder(logRotator(
       numToKeepStr: '10',
@@ -71,15 +95,12 @@ pipeline {
   }
 
   environment {
-    PLATFORM = "macos/${getArch()}"
     /* Improve make performance */
-    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE}"
-    QMAKE = "/Users/admin/${QT_VERSION}/macos/bin/qmake"
-    /* QMAKE = sh(script: "which qmake", returnStdout: true).trim() */
-    QTDIR = sh(script:"${env.QMAKE} -query QT_INSTALL_PREFIX", returnStdout: true).trim()
-    /* Enforce Go version installed infra-role-golang. */
-    /* to fix missing rcc, since QT6 rcc is located at ${QTDIR}/libexec/rcc and nix */
-    PATH = "/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:${env.QTDIR}/bin:${env.QTDIR}/libexec:${env.HOME}/go/bin:/usr/local/go/bin:${env.PATH}"
+    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE} USE_SYSTEM_NIM=1"
+    NIMFLAGS = "${params.NIMFLAGS} --colors:off --nimcache:${env.WORKSPACE_TMP}/nimcache"
+    GOCACHE = "${env.WORKSPACE_TMP}/go-cache"
+    GOMODCACHE = "${env.WORKSPACE_TMP}/go-mod-cache"
+    GOTMPDIR = "${env.WORKSPACE_TMP}"
     /* Avoid weird bugs caused by stale cache. */
     QML_DISABLE_DISK_CACHE = "true"
     /* nim-sds source directory */
@@ -88,9 +109,6 @@ pipeline {
     VERSION = "${utils.getVersion()}"
     /* Control output the filename */
     APP_TYPE = "${utils.getAppType()}"
-    STATUS_CLIENT_DMG = "pkg/${utils.pkgFilename(ext: 'dmg', arch: getArch(), version: env.VERSION, type: env.APP_TYPE)}"
-    /* Apple Team ID for Notarization */
-    MACOS_NOTARIZE_TEAM_ID = "8B5X2M6H2Y"
     /* prevent sharing cache dir across different jobs */
     GO_GENERATE_FAST_DIR = "${env.WORKSPACE_TMP}/go-generate-fast"
     SENTRY_PRODUCTION = "${utils.isReleaseBuild() ? 'true' : 'false'}"
@@ -100,10 +118,10 @@ pipeline {
     INCLUDE_DEBUG_SYMBOLS =  "${params.INCLUDE_DEBUG_SYMBOLS}"
     VERBOSE =                "${params.VERBOSE}"
     USE_SIMULATED_KEYCARD =  "${params.USE_SIMULATED_KEYCARD}"
+    TESTFLIGHT_POLL_TIMEOUT = "${params.TESTFLIGHT_POLL_TIMEOUT}"
+    TESTFLIGHT_POLL_INTERVAL = "${params.TESTFLIGHT_POLL_INTERVAL}"
     /* FIXME: figure out why NIMFLAGS are not respected */
     XDG_CACHE_HOME = "${env.WORKSPACE_TMP}/.cache"
-    /* Ensure nimcache is not shared between builds. */
-    NIMFLAGS = "${params.NIMFLAGS} --colors:off --nimcache:${env.WORKSPACE_TMP}/nimcache"
     // Workaround for cmake 4.x dropping compatibility with cmake_minimum_required < 3.5
     // Required by vendor/QR-Code-generator (scodes) until upstream bumps their CMakeLists.txt
     CMAKE_POLICY_VERSION_MINIMUM = 3.5
@@ -117,68 +135,167 @@ pipeline {
     }
     stage('Fetch submodules') {
       steps {
-        sh 'git submodule update --init --recursive'
+        sh './scripts/ci-fetch-submodules.sh --mobile'
       }
     }
-    stage('Deps') {
-      steps {
-        sh 'make update'
-        withCredentials([
-          usernamePassword( /* For fetching HomeBrew bottles. */
-            credentialsId: "status-im-auto-pkgs",
-            usernameVariable: 'GITHUB_USER',
-            passwordVariable: 'GITHUB_TOKEN'
-          )
-        ]) {
-          sh 'make deps'
+    stage('macOS') {
+      when { expression { params.BUILD_MACOS } }
+      environment {
+        QMAKE = "/Users/admin/${QT_VERSION}/macos/bin/qmake"
+        QTDIR = "/Users/admin/${QT_VERSION}/macos"
+        PLATFORM = "macos/${getArch()}"
+        PATH = "${NIM_BIN}:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:${QTDIR}/bin:${QTDIR}/libexec:${env.HOME}/go/bin:/usr/local/go/bin:${env.PATH}"
+        STATUS_CLIENT_DMG = "pkg/${utils.pkgFilename(ext: 'dmg', arch: getArch(), version: env.VERSION, type: env.APP_TYPE)}"
+        MACOS_NOTARIZE_TEAM_ID = "8B5X2M6H2Y"
+      }
+      stages {
+        stage('Deps') {
+          steps { script {
+            sh 'make update'
+            withCredentials([
+              usernamePassword( /* For fetching HomeBrew bottles. */
+                credentialsId: "status-im-auto-pkgs",
+                usernameVariable: 'GITHUB_USER',
+                passwordVariable: 'GITHUB_TOKEN'
+              )
+            ]) {
+              sh 'make deps'
+            }
+          } }
+        }
+
+        stage('Override status-go ref') {
+          /* Must run after `make update`, which resets submodules. */
+          when { expression { params.STATUS_GO_REF?.trim() } }
+          steps {
+            sh "./scripts/override-status-go-ref.sh ${params.STATUS_GO_REF}"
+          }
+        }
+
+        stage('status-go') {
+          steps { script {
+            sh 'make status-go'
+          } }
+        }
+
+        stage('Package') {
+          steps { script {
+            status.buildSigned(platform='macos', target='pkg-macos')
+          } }
+        }
+
+        stage('Notarize') {
+          when { expression { utils.isReleaseBuild() } }
+          steps { script {
+            status.notarize()
+          } }
+        }
+
+        stage('Parallel Upload') {
+          parallel {
+            stage('Upload') {
+              steps { script {
+                env.PKG_URL = s5cmd.upload(env.STATUS_CLIENT_DMG)
+                descLinks.Dmg = env.PKG_URL
+              } }
+            }
+            stage('Archive') {
+              steps { script {
+                archiveArtifacts(env.STATUS_CLIENT_DMG)
+              } }
+            }
+          }
         }
       }
     }
 
-    stage('Override status-go ref') {
-      /* Must run after `make update`, which resets submodules. */
-      when { expression { params.STATUS_GO_REF?.trim() } }
-      steps {
-        sh "./scripts/override-status-go-ref.sh ${params.STATUS_GO_REF}"
+    stage('iOS') {
+      when { expression { params.BUILD_IOS } }
+      environment {
+        QMAKE = "/Users/admin/${QT_VERSION}/ios/bin/qmake"
+        QTDIR = "/Users/admin/${QT_VERSION}/ios"
+        QT_HOST_PATH = "/Users/admin/${QT_VERSION}/macos"
+        PLATFORM = "ios/arm64"
+        PATH = "${NIM_BIN}:${QTDIR}/bin:${QTDIR}/libexec:${env.HOME}/go/bin:/usr/local/go/bin:${env.PATH}:/run/current-system/sw/bin"
+        IPHONE_SDK = "iphoneos"
+        ARCH = "arm64"
+        QMAKE_EXTRA_CONFIG = "fastlane"
+        BUILD_VARIANT = "${utils.isReleaseBuild() ? 'release' : 'pr'}"
+        FLAG_BUY_ENABLED = "${utils.isReleaseBuild() ? 0 : 1}"
+        FLAG_SWAP_ENABLED = "${utils.isReleaseBuild() ? 0 : 1}"
+        FLAG_BRIDGE_ENABLED = "${utils.isReleaseBuild() ? 0 : 1}"
+        STATUS_BUILD_PROXY_STAGE_NAME = "${utils.isReleaseBuild() ? 'prod' : 'test'}"
       }
-    }
+      stages {
+        stage('Override status-go ref') {
+          when { expression { params.STATUS_GO_REF?.trim() } }
+          steps {
+            sh "./scripts/override-status-go-ref.sh ${params.STATUS_GO_REF}"
+          }
+        }
 
-    stage('status-go') {
-      steps {
-        sh 'make status-go'
-      }
-    }
-
-    stage('Package') {
-      steps { script {
-        status.buildSigned(platform='macos', target='pkg-macos')
-      } }
-    }
-
-    stage('Notarize') {
-      when { expression { utils.isReleaseBuild() } }
-      steps { script {
-        status.notarize()
-      } }
-    }
-
-    stage('Parallel Upload') {
-      parallel {
-        stage('Upload') {
+        stage('status-go') {
           steps { script {
-            env.PKG_URL = s5cmd.upload(env.STATUS_CLIENT_DMG)
-            jenkins.setBuildDesc(Dmg: env.PKG_URL)
+            sh 'make status-go'
           } }
         }
-        stage('Archive') {
+
+        stage('Build iOS App') {
           steps { script {
-            archiveArtifacts(env.STATUS_CLIENT_DMG)
+            status.buildSigned(platform='ios', target='mobile-build', verbose=params.VERBOSE)
           } }
+        }
+
+        stage('Package iOS App') {
+          steps { script {
+            sh 'mkdir -p pkg'
+            // Set as global env variable for upload stages
+            env.STATUS_IOS_APP_ARTIFACT = "pkg/${utils.pkgFilename(ext: 'ipa', arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}"
+            sh "cp ${WORKSPACE}/mobile/bin/ios/qt6/Status${utils.isReleaseBuild() ? '' : 'PR'}.ipa ${env.STATUS_IOS_APP_ARTIFACT}"
+            sh "ls -lh ${env.STATUS_IOS_APP_ARTIFACT}"
+          } }
+        }
+
+        stage('Parallel Upload') {
+          parallel {
+            stage('Upload to TestFlight') {
+              when { expression { utils.isReleaseBuild() } }
+              steps { script {
+                def changelog = sh(script: './scripts/generate-changelog.sh', returnStdout: true).trim()
+                status.uploadToTestFlight(
+                  ipaPath="${WORKSPACE}/${env.STATUS_IOS_APP_ARTIFACT}",
+                  changelog=changelog,
+                  pollTimeout=env.TESTFLIGHT_POLL_TIMEOUT,
+                  pollInterval=env.TESTFLIGHT_POLL_INTERVAL
+                )
+              } }
+            }
+            stage('Upload to Diawi') {
+              when { expression { !utils.isReleaseBuild() } }
+              steps { script {
+                def comment = "status-desktop PR build ${env.VERSION} ${git.commit(8)}"
+                env.DIAWI_URL = status.uploadToDiawi(env.STATUS_IOS_APP_ARTIFACT, comment)
+                descLinks.Ipa = env.DIAWI_URL
+              } }
+            }
+            stage('Upload to S3') {
+              steps { script {
+                env.IPA_URL = s5cmd.upload(env.STATUS_IOS_APP_ARTIFACT)
+              } }
+            }
+            stage('Archive') {
+              steps { script {
+                archiveArtifacts(env.STATUS_IOS_APP_ARTIFACT)
+              } }
+            }
+          }
         }
       }
     }
   }
+
   post {
+    always  { script { jenkins.setBuildDesc(descLinks) } }
     success { script { github.notifyPR(true) } }
     failure { script { github.notifyPR(false) } }
     cleanup {
@@ -186,6 +303,13 @@ pipeline {
       dir(env.WORKSPACE_TMP) { deleteDir() }
     }
   }
+}
+
+def getArch() {
+    def tokens = Thread.currentThread().getName().split('/')
+    for (def arch in ['x86_64', 'aarch64']) {
+      if (tokens.contains(arch)) { return arch }
+    }
 }
 
 /* This allows us to use one Jenkinsfile and run
@@ -202,12 +326,3 @@ def getAgentLabels() {
     }
     return labels
 }
-
-def getArch() {
-    def tokens = Thread.currentThread().getName().split('/')
-    for (def arch in ['x86_64', 'aarch64']) {
-      if (tokens.contains(arch)) { return arch }
-    }
-}
-
-

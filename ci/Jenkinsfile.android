@@ -14,7 +14,7 @@ pipeline {
     /* Image with Ubuntu 22.04, QT ${QT_VERSION}, Android SDK/NDK, Go, and Nim */
     docker {
       label 'linuxcontainer'
-      image "harbor.status.im/status-im/status-desktop-build:1.0.3-qt${QT_VERSION}-android"
+      image "harbor.status.im/status-im/status-desktop-build:20260829-qt${QT_VERSION}-android"
       alwaysPull true
       args '--entrypoint="" ' +
            '--volume=/nix:/nix ' +
@@ -73,7 +73,7 @@ pipeline {
     /* Control output the filename */
     APP_TYPE = "${utils.getAppType()}"
     PLATFORM = "android/arm64"
-    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE}"
+    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE} USE_SYSTEM_NIM=1"
     QT_VERSION = "${QT_VERSION}"
     QT_ANDROID_PATH = "/opt/qt/${QT_VERSION}/android_arm64_v8a"
     QMAKE = "/opt/qt/${QT_VERSION}/android_arm64_v8a/bin/qmake"
@@ -107,7 +107,7 @@ pipeline {
 
     stage('Fetch submodules') {
       steps {
-        sh 'git submodule update --init --recursive'
+        sh './scripts/ci-fetch-submodules.sh --mobile'
       }
     }
 

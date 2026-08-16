@@ -74,7 +74,7 @@ pipeline {
   environment {
     PLATFORM = "linux-flatpak/${getArch()}"
     /* Improve make performance */
-    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE}"
+    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE} USE_SYSTEM_NIM=1"
     /* Avoid weird bugs caused by stale cache. */
     QML_DISABLE_DISK_CACHE = "true"
     /* nim-sds source directory: writable, isolated per build, used by status-go's clone-nim-sds */
@@ -110,7 +110,7 @@ pipeline {
     }
     stage('Fetch submodules') {
       steps {
-        sh 'git submodule update --init --recursive'
+        sh './scripts/ci-fetch-submodules.sh'
       }
     }
     stage('Deps') {

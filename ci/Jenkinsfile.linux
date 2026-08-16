@@ -3,6 +3,8 @@ library 'status-jenkins-lib@v1.9.48'
 
 QT_VERSION = "6.11.0"
 
+STATUSQ_TESTS_BUILD_PATH = "ui/StatusQ/build/ci-tests-Qt${QT_VERSION}"
+
 /* Options section can't access functions in objects. */
 def isPRBuild = utils.isPRBuild()
 def isNightlyBuild = utils.isNightlyBuild()
@@ -12,7 +14,7 @@ pipeline {
     /* Image with Ubuntu 22.04 and QT ${QT_VERSION} */
     docker {
       label 'linuxcontainer'
-      image "harbor.status.im/status-im/status-desktop-build:1.0.13-qt${QT_VERSION}"
+      image "harbor.status.im/status-im/status-desktop-build:20260901-qt${QT_VERSION}"
       /* allows jenkins use cat and mounts '/dev/fuse' for linuxdeployqt */
       args '--entrypoint="" ' +
            '--cap-add=SYS_ADMIN ' +
@@ -54,12 +56,22 @@ pipeline {
       description: 'Override vendor/status-go submodule to this SHA/ref.',
       defaultValue: ''
     )
+    booleanParam(
+      name: 'RUN_NIM_TESTS',
+      description: 'Run the Nim unit tests and benchmarks alongside the package build.',
+      defaultValue: params.RUN_NIM_TESTS != null ? params.RUN_NIM_TESTS : true
+    )
+    booleanParam(
+      name: 'RUN_UI_TESTS',
+      description: 'Run QML lint, translation checks, StatusQ and Storybook tests alongside the package build.',
+      defaultValue: params.RUN_UI_TESTS != null ? params.RUN_UI_TESTS : true
+    )
   }
 
   options {
     timestamps()
-    /* Prevent Jenkins jobs from running forever */
-    timeout(time: 30, unit: 'MINUTES')
+    /* Prevent Jenkins jobs from running forever. */
+    timeout(time: 150, unit: 'MINUTES')
     /* manage how many builds we keep */
     buildDiscarder(logRotator(
       numToKeepStr: '10',
@@ -79,9 +91,11 @@ pipeline {
   environment {
     PLATFORM = "linux/${getArch()}"
     /* Improve make performance */
-    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE}"
+    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE} USE_SYSTEM_NIM=1"
     /* Avoid weird bugs caused by stale cache. */
     QML_DISABLE_DISK_CACHE = "true"
+    /* Needed for QGuiApplication in the UI tests. */
+    QT_QPA_PLATFORM = "offscreen"
     /* nim-sds source directory */
     NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
     /* sets App Version in Settings */
@@ -101,8 +115,8 @@ pipeline {
     USE_SIMULATED_KEYCARD =  "${params.USE_SIMULATED_KEYCARD}"
     /* FIXME: figure out why NIMFLAGS are not respected */
     XDG_CACHE_HOME = "${env.WORKSPACE_TMP}"
-    /* Ensure nimcache is not shared between builds. */
-    NIMFLAGS = "${params.NIMFLAGS} --colors:off --nimcache:${env.WORKSPACE_TMP}/nimcache"
+    /* Ensure nimcache is not shared between builds. Note: per-test nimcache is set in nim-tests.mk */
+    NIMFLAGS = "${params.NIMFLAGS} --colors:off"
   }
 
   stages {
@@ -113,7 +127,7 @@ pipeline {
     }
     stage('Fetch submodules') {
       steps {
-        sh 'git submodule update --init --recursive'
+        sh './scripts/ci-fetch-submodules.sh'
       }
     }
     stage('Deps') {
@@ -137,41 +151,75 @@ pipeline {
       }
     }
 
-    stage('Package') {
-      steps { script {
-        status.buildSigned(platform='linux', target='tgz-linux')
-      } }
-    }
-
-    stage('Parallel Upload') {
-      parallel {
-        stage('Upload') {
-          steps { script {
-            env.PKG_URL = s5cmd.upload(env.STATUS_CLIENT_TARBALL)
-            jenkins.setBuildDesc(AppImage: env.PKG_URL)
-          } }
-        }
-        stage('Archive') {
-          steps { script {
-            archiveArtifacts("${env.STATUS_CLIENT_TARBALL}*")
-          } }
-        }
+    stage('Shared artifacts') {
+      steps {
+        sh 'make statusq'
+        sh 'make qrcodegen'
       }
     }
 
-    stage('E2E') {
-      when { expression { utils.isPRBuild() } }
-      steps { script {
-        build(
-          job: 'status-app/e2e/prs',
-          wait: false,
-          parameters: jenkins.mapToParams([
-            GIT_REF: env.CHANGE_BRANCH ?: env.BRANCH_NAME,
-            BUILD_SOURCE: env.JOB_NAME,
-            SOURCE_BUILD_NUMBER: env.BUILD_NUMBER,
-          ]),
-        )
-      } }
+    stage('Build') {
+      parallel {
+        stage('Package') {
+          steps { script {
+            status.buildSigned(platform='linux', target='tgz-linux')
+            env.PKG_URL = s5cmd.upload(env.STATUS_CLIENT_TARBALL)
+            jenkins.setBuildDesc(AppImage: env.PKG_URL)
+            archiveArtifacts("${env.STATUS_CLIENT_TARBALL}*")
+            if (utils.isPRBuild()) {
+              build(
+                job: 'status-app/e2e/prs',
+                wait: false,
+                parameters: jenkins.mapToParams([
+                  GIT_REF: env.CHANGE_BRANCH ?: env.BRANCH_NAME,
+                  BUILD_SOURCE: env.JOB_NAME,
+                ]),
+              )
+            }
+          } }
+        }
+
+        stage('Nim Tests') {
+          when { expression { params.RUN_NIM_TESTS } }
+          steps { script {
+            sh 'make tests-nim-linux V=1'
+          } }
+        }
+
+        stage('UI Tests') {
+          when { expression { params.RUN_UI_TESTS } }
+          stages {
+            stage('Check Translations') {
+              steps { script { checkTranslations() } }
+            }
+            stage('QML Lint') {
+              steps { script {
+                sh 'make qml-lint'
+              } }
+            }
+            stage('Check StatusQ Tests') {
+              steps { script {
+                sh "make run-statusq-tests STATUSQ_BUILD_PATH=${STATUSQ_TESTS_BUILD_PATH}"
+              } }
+            }
+            stage('Check StatusQ Sanity Checker') {
+              steps { script {
+                sh "make run-statusq-sanity-checker STATUSQ_BUILD_PATH=${STATUSQ_TESTS_BUILD_PATH}"
+              } }
+            }
+            stage('Check Storybook Tests') {
+              steps { script {
+                sh 'make run-storybook-tests'
+              } }
+            }
+            stage('Check Storybook Pages Validator') {
+              steps { script {
+                sh 'make run-storybook-pages-validator'
+              } }
+            }
+          }
+        }
+      }
     }
   }
   post {
@@ -184,10 +232,17 @@ pipeline {
   }
 }
 
+def checkTranslations() {
+  sh 'make update-translations'
+  def changes = sh(script: 'git diff --name-only ui/i18n/*.ts', returnStdout: true).trim()
+  if (changes) {
+    error("Translation files out of date.\n\nModified files:\n${changes}\n\nTo fix: run 'make update-translations' and commit changes.")
+  }
+}
+
 def getArch() {
   def tokens = Thread.currentThread().getName().split('/')
   for (def arch in ['x86_64', 'aarch64']) {
     if (tokens.contains(arch)) { return arch }
   }
 }
-

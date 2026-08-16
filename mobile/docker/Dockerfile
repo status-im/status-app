@@ -9,7 +9,7 @@ ARG JAVA_VERSION=17
 ARG ANDROID_API_LEVEL=36
 ARG ANDROID_NDK_VERSION=27.2.12479018
 ARG GOLANG_VERSION="1.24.7"
-ARG NIM_VERSION="2.2.4"
+ARG NIM_VERSION="2.2.10"
 ARG NIX_VERSION="2.24.11"
 
 # =============================================================================

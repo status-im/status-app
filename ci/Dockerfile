@@ -3,7 +3,7 @@ ARG QT_MODULES="qtwebchannel qtwebview qtwebsockets qt5compat qtmultimedia qtweb
 ARG LINUXDEPLOYQT_VERSION="20250615-0393b84"
 ARG PCSCLITE_VERSION="2.2.3"
 ARG PCSCLITE_SHA256="6e0205a47ec0dd10c000965ee88e08e60c2f7f3ce7280ce0e624915821ea2402"
-ARG NIM_VERSION="2.2.4"
+ARG NIM_VERSION="2.2.10"
 
 # QT Installation Image --------------------------------------------------------
 FROM ubuntu:22.04 AS qt-install

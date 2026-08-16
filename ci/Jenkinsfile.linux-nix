@@ -89,7 +89,7 @@ pipeline {
     }
     stage('Fetch submodules') {
       steps {
-        sh 'git submodule update --init --recursive'
+        sh './scripts/ci-fetch-submodules.sh'
       }
     }
     stage('Deps') {

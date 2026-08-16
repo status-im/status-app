@@ -54,6 +54,10 @@ ifneq ($(mkspecs),win32)
 nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
 
+# Use per-test nimcache to avoid race conditions when tests build in parallel
+NIMCACHE_BASE ?= $(or $(WORKSPACE_TMP),build)/nimcache
+nim-test-run/%: NIM_PARAMS += --nimcache:$(NIMCACHE_BASE)-$(notdir $(basename $@))
+
 nim-test-run/%: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN)
 	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" $(ENV_SCRIPT) \
 	nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
