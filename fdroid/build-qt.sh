@@ -4,7 +4,10 @@ set -eo pipefail
 # Stable locale and timestamp for every cmake/ninja/moc/rcc run below.
 export LC_ALL=C
 export LANG=C
-export SOURCE_DATE_EPOCH="$(git -C "$BUILD_DIR" log -1 --pretty=%ct 2>/dev/null || echo 0)"
+if [ -z "${SOURCE_DATE_EPOCH:-}" ]; then
+    _RELEASE_TAG="$(git -C "$BUILD_DIR" describe --tags --abbrev=0 2>/dev/null)"
+    export SOURCE_DATE_EPOCH="$(git -C "$BUILD_DIR" log -1 --pretty=%ct "${_RELEASE_TAG:-HEAD}" 2>/dev/null || echo 0)"
+fi
 
 QT_VERSION="${QT_VERSION:-6.9.2}"
 
