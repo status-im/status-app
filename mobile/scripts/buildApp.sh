@@ -48,13 +48,19 @@ if [[ "${OS}" == "android" ]]; then
   export BUILD_VARIANT
   export BUNDLE_IDENTIFIER
 
-  if [[ "$GRADLE_TARGETS" == *"Fdroid"* ]]; then
-    # shellcheck source=../../fdroid/generate-keystore.sh
-    source "$REPO_ROOT/fdroid/generate-keystore.sh" "$REPO_ROOT/status-fdroid.keystore"
-  fi
-
+  # Drop .note.gnu.build-id and keep absolute paths out of the built objects.
+  QMAKE_REPRO_ARGS=(
+    "QMAKE_LFLAGS+=-Wl,--build-id=none"
+    "QMAKE_CFLAGS+=-ffile-prefix-map=${BUILD_DIR}=."
+    "QMAKE_CFLAGS+=-ffile-prefix-map=${REPO_ROOT}=."
+    "QMAKE_CFLAGS+=-ffile-prefix-map=${HOME}=."
+    "QMAKE_CXXFLAGS+=-ffile-prefix-map=${BUILD_DIR}=."
+    "QMAKE_CXXFLAGS+=-ffile-prefix-map=${REPO_ROOT}=."
+    "QMAKE_CXXFLAGS+=-ffile-prefix-map=${HOME}=."
+  )
   "$QMAKE_BIN" "$CWD/../wrapperApp/Status.pro" "${QMAKE_CONFIG[@]}" -spec android-clang \
-    ANDROID_ABIS="${ANDROID_ABI:-arm64-v8a}" VERSION="$VERSION" "${QMAKE_DEFINES[@]}" -after
+    ANDROID_ABIS="${ANDROID_ABI:-arm64-v8a}" VERSION="$VERSION" "${QMAKE_DEFINES[@]}" \
+    -after "${QMAKE_REPRO_ARGS[@]}"
 
   make -j"$(nproc)" apk_install_target
 
@@ -117,17 +123,13 @@ if [[ "${OS}" == "android" ]]; then
   echo "APK outputs:"
   find build/outputs/apk -name '*.apk' 2>/dev/null || echo "No APKs found"
 
-  # If Gradle produced an unsigned APK (e.g. fdroid build where signing configs
-  # are stripped by fdroid's remove_signing_keys), sign it via the dedicated script.
-  if [[ ! -f "$APK_OUT" && -f "$APK_OUT_UNSIGNED" && -n "${FDROID_STORE_FILE:-}" ]]; then
-    echo "Signing unsigned APK..."
-    "$REPO_ROOT/fdroid/sign-apk.sh"
-  fi
-
   # Copy whichever artifacts were built
   BUILT=""
   if [[ -f "$APK_OUT" ]]; then
     cp "$APK_OUT" "$BIN_DIR/${OUTPUT_NAME}.apk"
+    BUILT="$BIN_DIR/${OUTPUT_NAME}.apk"
+  elif [[ -f "$APK_OUT_UNSIGNED" ]]; then
+    cp "$APK_OUT_UNSIGNED" "$BIN_DIR/${OUTPUT_NAME}.apk"
     BUILT="$BIN_DIR/${OUTPUT_NAME}.apk"
   fi
   if [[ -f "$AAB_OUT" ]]; then
