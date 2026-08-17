@@ -1,4 +1,5 @@
 import QtQuick
+import Qt.labs.qmlmodels
 
 import StatusQ.Components
 import StatusQ.Core.Theme
@@ -35,59 +36,62 @@ LoadingSkeletonGroup {
                 { name: 0.2, lines: [0.88, 0.44] },
             ]
 
-            Item {
-                id: entry
+            delegate: DelegateChooser {
+                role: "separator"
 
-                required property var modelData
-
-                // available width for the text bars; derived from the stable
-                // root width, not the row itself, to avoid a sizing cycle
-                readonly property real textWidth:
-                    Math.max(0, root.width - 40 - Theme.halfPadding)
-
-                width: parent.width
-                height: childrenRect.height
-
-                LoadingSkeletonTile {
-                    visible: !!entry.modelData.separator
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    implicitWidth: 96
-                    implicitHeight: 12
-                }
-
-                Row {
-                    visible: !entry.modelData.separator
-                    width: parent.width
-                    spacing: Theme.halfPadding
+                DelegateChoice {
+                    roleValue: true
 
                     LoadingSkeletonTile {
-                        implicitWidth: 40
-                        implicitHeight: 40
-                        radius: width / 2
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        implicitWidth: 96
+                        implicitHeight: 12
                     }
-                    Column {
-                        spacing: 6
+                }
+                DelegateChoice {
+                    Row {
+                        id: entry
+
+                        required property var modelData
+
+                        // available width for the text bars; derived from the
+                        // stable root width, not the row itself, to avoid a
+                        // sizing cycle
+                        readonly property real textWidth:
+                            Math.max(0, root.width - 40 - Theme.halfPadding)
+
+                        width: parent.width
+                        spacing: Theme.halfPadding
 
                         LoadingSkeletonTile {
-                            implicitWidth: entry.textWidth * (entry.modelData.name ?? 0.2)
-                            implicitHeight: 12
+                            implicitWidth: 40
+                            implicitHeight: 40
+                            radius: width / 2
                         }
-                        Repeater {
-                            model: entry.modelData.lines ?? []
+                        Column {
+                            spacing: 6
 
                             LoadingSkeletonTile {
-                                required property real modelData
-
-                                implicitWidth: entry.textWidth * modelData
-                                implicitHeight: 14
+                                implicitWidth: entry.textWidth * (entry.modelData.name ?? 0.2)
+                                implicitHeight: 12
                             }
-                        }
-                        // attachment / link-preview card
-                        LoadingSkeletonTile {
-                            visible: !!entry.modelData.card
-                            implicitWidth: Math.min(320, entry.textWidth * 0.6)
-                            implicitHeight: 150
-                            radius: Theme.radius
+                            Repeater {
+                                model: entry.modelData.lines ?? []
+
+                                LoadingSkeletonTile {
+                                    required property real modelData
+
+                                    implicitWidth: entry.textWidth * modelData
+                                    implicitHeight: 14
+                                }
+                            }
+                            // attachment / link-preview card
+                            LoadingSkeletonTile {
+                                visible: !!entry.modelData.card
+                                implicitWidth: Math.min(320, entry.textWidth * 0.6)
+                                implicitHeight: 150
+                                radius: Theme.radius
+                            }
                         }
                     }
                 }
