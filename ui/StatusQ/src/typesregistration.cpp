@@ -1,6 +1,7 @@
 #include "StatusQ/audioutils.h"
 #include "StatusQ/browserbackendcapabilities.h"
 #include "StatusQ/clipboardutils.h"
+#include "StatusQ/incubationhints.h"
 #include "StatusQ/constantrole.h"
 #include "StatusQ/fastexpressionfilter.h"
 #include "StatusQ/fastexpressionrole.h"
@@ -106,6 +107,10 @@ void registerStatusQTypes() {
     qmlRegisterType<SBarcodeScanner>("com.scythestudio.scodes", 1, 0, "SBarcodeScanner");
 
     qmlRegisterSingletonType<ClipboardUtils>("StatusQ", 0, 1, "ClipboardUtils", &ClipboardUtils::qmlInstance);
+    qmlRegisterSingletonType<IncubationHints>("StatusQ", 0, 1, "IncubationHints",
+                                              [](QQmlEngine* engine, QJSEngine*) -> QObject* {
+        return new IncubationHints(engine);
+    });
     qmlRegisterSingletonType<HttpStats>("StatusQ", 0, 1, "HttpStats", &HttpStats::qmlInstance);
     qmlRegisterSingletonType<ImageEncoderUtils>("StatusQ", 0, 1, "ImageEncoderUtils",
                                                 [](QQmlEngine *engine, QJSEngine *scriptEngine) {
