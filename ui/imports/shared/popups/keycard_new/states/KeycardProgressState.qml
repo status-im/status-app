@@ -153,7 +153,7 @@ Control {
                           || root.keycardState === Constants.keycard.state.noReadersFound
                           || root.keycardState === Constants.keycard.state.unknownReaderState
                           || root.keycardState === Constants.keycard.state.pairingError
-                          || root.keycardState === "")
+                          || (root.keycardState === "" && !root.processing))
                 PropertyChanges {
                     target: image
                     source: Assets.png("keycard/wrong_card/something-went-wrong")

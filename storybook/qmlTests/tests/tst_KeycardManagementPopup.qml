@@ -175,6 +175,12 @@ Item {
             compare(call.args[1], "", "the first attempt must use the default pairing password")
         }
 
+        function test_readKeycardShowsReadingWhileMetadataIsInFlight() {
+            mockStore.keycardState = ""
+            launchReadKeycard()
+            compare(findChild(popup, "keycardProgressTitle").text, "Reading...")
+        }
+
         function test_pairingErrorShowsPasswordStep() {
             launchReadKeycard()
             mockStore.keycardGetMetadataError(pairingErrorText)

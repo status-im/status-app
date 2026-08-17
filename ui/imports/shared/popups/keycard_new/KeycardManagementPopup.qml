@@ -1489,8 +1489,7 @@ StatusDialog {
 
             keycardInteractionCompleted: d.keycardInteractionCompleted
 
-            processing: root.flow !== Constants.keycard.flow.readKeycard
-                        && d.processing
+            processing: d.processing
             processingImage: Assets.png("keycard/scanning/scanning")
             processingTitle: {
                 switch(root.flow) {

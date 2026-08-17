@@ -90,5 +90,12 @@ Item {
             compare(findChild(progress, "keycardProgressTitle").text, data.expectedTitle)
             compare(findChild(progress, "keycardProgressMessage").text, data.expectedMessage)
         }
+
+        function test_emptyStateShowsProcessingNotWaitingForReader() {
+            const progress = createTemporaryObject(componentUnderTest, root, {processing: true})
+            verify(!!progress)
+            compare(progress.contentItem.state, "processing")
+            compare(findChild(progress, "keycardProgressTitle").text, "Reading...")
+        }
     }
 }
