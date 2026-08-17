@@ -60,6 +60,17 @@ Loader {
 
     signal openAppSearchRequested()
 
+    // Back-navigation contract for AppMain's back chain. The chrome is
+    // interactive while the section item still incubates, so the loader must
+    // answer for it during that phase; once loaded, the item leads.
+    readonly property bool canGoBack: root.item?.canGoBack
+                                      ?? chromeLoader.item?.canGoBack ?? false
+    function tryGoBack() {
+        if (root.item && typeof root.item.tryGoBack === "function")
+            return root.item.tryGoBack()
+        return chromeLoader.item?.tryGoBack() ?? false
+    }
+
     asynchronous: true
 
     // Host-driven gate for the chrome and its skeletons: with one loader
