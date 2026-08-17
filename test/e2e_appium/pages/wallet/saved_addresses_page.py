@@ -25,7 +25,7 @@ class SavedAddressesPage(BasePage):
             self.locators.ADD_NEW_SAVED_ADDRESS_BUTTON_WALLET, timeout=4
         ):
             return True
-        return self.safe_click(self.locators.ADD_NEW_SAVED_ADDRESS_BUTTON_SETTINGS)
+        return self.try_click(self.locators.ADD_NEW_SAVED_ADDRESS_BUTTON_SETTINGS)
 
     def is_entry_visible(self, name: str, timeout: Optional[int] = 10) -> bool:
         return self.is_element_visible(self.locators.row_by_name(name), timeout=timeout)
@@ -79,12 +79,9 @@ class SavedAddressesPage(BasePage):
             self.locators.row_menu_by_name(name),
             self.locators.POPUP_MENU_BUTTON_GENERIC,
         ):
-            try:
-                if self.try_click(locator, timeout=4, max_attempts=2):
-                    return True
-            except Exception:
-                self.logger.debug("Popup kebab tap failed for '%s' using %s", name, locator)
-                continue
+            if self.try_click(locator, timeout=4, max_attempts=2):
+                return True
+            self.logger.debug("Popup kebab tap missed for '%s' using %s", name, locator)
 
         return False
 

@@ -2,7 +2,6 @@
 import time
 
 from locators.messaging.chat_locators import ChatLocators
-from utils.exceptions import ElementInteractionError
 
 from ..base_page import BasePage
 
@@ -22,7 +21,9 @@ class ChatPage(BasePage):
         if self._is_chat_list_visible(timeout=2):
             return True
         if self.is_portrait_mode():
-            self.safe_click(self.locators.TOOLBAR_BACK_BUTTON, timeout=2)
+            # try_click: a failed back-tap must not raise out of this
+            # bool-contract helper — the visibility re-check answers either way.
+            self.try_click(self.locators.TOOLBAR_BACK_BUTTON, timeout=2)
             return self._is_chat_list_visible(timeout=timeout)
         return False
 
@@ -32,7 +33,7 @@ class ChatPage(BasePage):
 
     def open_chat(self, display_name: str) -> bool:
         locator = self.locators.chat_list_item(display_name)
-        return self.safe_click(locator, max_attempts=2)
+        return self.try_click(locator, max_attempts=2)
 
     def has_any_chat(self, timeout: int = 5) -> bool:
         """Check if there are any chats in the chat list.
@@ -85,7 +86,7 @@ class ChatPage(BasePage):
         if not self.is_element_visible(self.locators.FIRST_CHAT_ITEM, timeout=timeout):
             self.logger.warning("No chats available in the list")
             return False
-        return self.safe_click(self.locators.FIRST_CHAT_ITEM, timeout=timeout)
+        return self.try_click(self.locators.FIRST_CHAT_ITEM, timeout=timeout)
 
     def _resolve_chat_locators(self, chat_identifier: str, display_name: str | None = None):
         """Locators for a chat row, in priority order.
@@ -112,17 +113,14 @@ class ChatPage(BasePage):
     ) -> bool:
         self._ensure_chat_list_visible()
         primary, *fallbacks = self._resolve_chat_locators(chat_identifier, display_name)
-        try:
-            return self.safe_click(
-                primary, fallback_locators=fallbacks, timeout=timeout, max_attempts=3,
-            )
-        except ElementInteractionError as exc:
-            self.logger.debug(
-                "Direct click chain failed (%s); attempting scroll in chat list", exc,
-            )
+        if self.try_click(
+            primary, fallback_locators=fallbacks, timeout=timeout, max_attempts=3,
+        ):
+            return True
+        self.logger.debug("Direct click chain failed; attempting scroll in chat list")
         for locator in (primary, *fallbacks):
             if self.scroll_to_element(locator, max_swipes=3, timeout=3):
-                return self.safe_click(locator, timeout=timeout, max_attempts=3)
+                return self.try_click(locator, timeout=timeout, max_attempts=3)
         # Diagnostic: dump page source so we can tell whether the chat list
         # is genuinely empty (status-go fresh-contact race) vs populated but
         # using AT names our locators don't match.
@@ -156,7 +154,7 @@ class ChatPage(BasePage):
 
     def tap_start_chat(self, timeout: int | None = 5) -> bool:
         self.dismiss_backup_prompt(timeout=2)
-        return self.safe_click(self.locators.START_CHAT_BUTTON, timeout=timeout)
+        return self.try_click(self.locators.START_CHAT_BUTTON, timeout=timeout)
 
     def send_message(self, message: str, timeout: int | None = None) -> bool:
         """Type, tap SEND_BUTTON, fall back to newline if the button
@@ -173,14 +171,9 @@ class ChatPage(BasePage):
         ):
             return False
 
-        button_clicked = False
-        try:
-            button_clicked = self.try_click(
-                self.locators.SEND_BUTTON, timeout=3, max_attempts=1
-            )
-        except Exception as exc:
-            self.logger.debug("Send-button click suppressed: %s", exc)
-
+        button_clicked = self.try_click(
+            self.locators.SEND_BUTTON, timeout=3, max_attempts=1
+        )
         if not button_clicked:
             self.logger.info("Send button not clickable — falling back to newline trigger")
             if not self.qt_safe_input(
@@ -225,7 +218,7 @@ class ChatPage(BasePage):
         except Exception as e:
             self.logger.debug(f"dismiss_introduce_prompt direct click failed: {e}")
             try:
-                return self.safe_click(self.locators.INTRODUCE_SKIP_BUTTON, timeout=timeout)
+                return self.try_click(self.locators.INTRODUCE_SKIP_BUTTON, timeout=timeout)
             except Exception as e2:
                 self.logger.debug(f"dismiss_introduce_prompt click also failed: {e2}")
                 return False
@@ -240,7 +233,7 @@ class ChatPage(BasePage):
         except Exception as e:
             self.logger.debug(f"dismiss_backup_prompt direct click failed: {e}")
             try:
-                return self.safe_click(self.locators.BACKUP_SKIP_BUTTON, timeout=timeout)
+                return self.try_click(self.locators.BACKUP_SKIP_BUTTON, timeout=timeout)
             except Exception as e2:
                 self.logger.debug(f"dismiss_backup_prompt click also failed: {e2}")
                 return False
@@ -261,7 +254,7 @@ class ChatPage(BasePage):
         except Exception as e:
             self.logger.debug(f"dismiss_push_notification_prompt direct click failed: {e}")
             try:
-                return self.safe_click(self.locators.PUSH_NOTIF_LATER_BUTTON, timeout=timeout)
+                return self.try_click(self.locators.PUSH_NOTIF_LATER_BUTTON, timeout=timeout)
             except Exception as e2:
                 self.logger.debug(f"dismiss_push_notification_prompt click also failed: {e2}")
                 return False
@@ -283,7 +276,7 @@ class ChatPage(BasePage):
         except Exception as e:
             self.logger.debug(f"dismiss_drawer_intro_prompt direct click failed: {e}")
             try:
-                return self.safe_click(self.locators.DIALOG_HEADER_CLOSE_BUTTON, timeout=timeout)
+                return self.try_click(self.locators.DIALOG_HEADER_CLOSE_BUTTON, timeout=timeout)
             except Exception as e2:
                 self.logger.debug(f"dismiss_drawer_intro_prompt click also failed: {e2}")
                 return False
@@ -384,7 +377,7 @@ class ChatPage(BasePage):
         """Cancel reply mode by tapping the close button."""
         if not self.is_reply_mode_active(timeout=2):
             return True  # Not in reply mode
-        return self.safe_click(self.locators.REPLY_CLOSE_BUTTON, timeout=timeout)
+        return self.try_click(self.locators.REPLY_CLOSE_BUTTON, timeout=timeout)
 
     # ===== Message State Verification =====
 
@@ -515,14 +508,14 @@ class ChatPage(BasePage):
             self.logger.error(f"Failed to tap emoji for '{search_term}'")
             return False
 
-        return self.safe_click(self.locators.SEND_BUTTON, timeout=5)
+        return self.try_click(self.locators.SEND_BUTTON, timeout=5)
 
     def open_image_dialog(self, timeout: int = 10) -> bool:
         """Open the image attachment dialog via the command menu."""
         if not self.try_click(self.locators.COMMAND_BUTTON, timeout=timeout):
             self.logger.error("Failed to click command button")
             return False
-        return self.safe_click(self.locators.ADD_IMAGE_ACTION, timeout=5)
+        return self.try_click(self.locators.ADD_IMAGE_ACTION, timeout=5)
 
     def open_chat_options_menu(self, timeout: int = 10) -> bool:
         """Open the chat header context menu (More options)."""

@@ -86,7 +86,7 @@ class App(BasePage):
         # wide tablets in portrait still render the side-nav which never
         # disappears, so the drawer-close wait below would never succeed.
         if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=1):
-            return self.safe_click(locator, timeout=timeout, max_attempts=2)
+            return self.try_click(locator, timeout=timeout, max_attempts=2)
 
         for attempt in range(1, 4):
             el = self.find_element_safe(locator, timeout=timeout)
@@ -408,7 +408,7 @@ class App(BasePage):
     def open_profile_menu(self) -> bool:
         self.logger.info("Opening profile menu from main navigation")
         self._ensure_main_nav_visible()
-        return self.safe_click(self.locators.PROFILE_NAV_BUTTON, timeout=5)
+        return self.try_click(self.locators.PROFILE_NAV_BUTTON, timeout=5)
 
     def copy_profile_link_from_menu(self, timeout: int = 5) -> str | None:
         if not self.open_profile_menu():

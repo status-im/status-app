@@ -118,7 +118,7 @@ class GroupChatPage(BasePage):
             "Picking next member (intent=%r, unfiltered first-row tap)",
             display_name,
         )
-        return self.safe_click(
+        return self.try_click(
             self.locators.ANY_MEMBER_LIST_ITEM,
             timeout=timeout,
             max_attempts=2,
@@ -126,7 +126,7 @@ class GroupChatPage(BasePage):
 
     def confirm_group_creation(self, *, timeout: int = UI_TIMEOUT) -> bool:
         """Tap the create-chat confirm footer button."""
-        return self.safe_click(
+        return self.try_click(
             self.locators.CREATE_CHAT_CONFIRM_BUTTON,
             timeout=timeout,
             max_attempts=2,
@@ -153,7 +153,7 @@ class GroupChatPage(BasePage):
             verify=False,
         ):
             return False
-        return self.safe_click(
+        return self.try_click(
             self.locators.RENAME_GROUP_SAVE_BUTTON, timeout=timeout,
         )
 
@@ -318,7 +318,7 @@ class GroupChatPage(BasePage):
             group_name, timeout=timeout, row_locator=row_locator,
         ):
             return False
-        return self.safe_click(
+        return self.try_click(
             self.locators.ADD_REMOVE_FROM_GROUP_ACTION, timeout=timeout,
         )
 
@@ -336,7 +336,7 @@ class GroupChatPage(BasePage):
         then this becomes a plain tid() tap.
         """
         if self.is_element_visible(self.locators.MEMBERS_BUTTON, timeout=2):
-            return self.safe_click(self.locators.MEMBERS_BUTTON, timeout=timeout)
+            return self.try_click(self.locators.MEMBERS_BUTTON, timeout=timeout)
         more = self.find_element_safe(
             self.locators.CHAT_TOOLBAR_MORE_OPTIONS_BUTTON, timeout=timeout,
         )
@@ -411,7 +411,7 @@ class GroupChatPage(BasePage):
             if self.is_element_visible(
                 self.locators.REMOVE_FROM_GROUP_ITEM, timeout=5,
             ):
-                return self.safe_click(
+                return self.try_click(
                     self.locators.REMOVE_FROM_GROUP_ITEM, timeout=timeout,
                 )
             self.logger.warning(
@@ -468,7 +468,7 @@ class GroupChatPage(BasePage):
             return False
         if not self.try_click(suggestion, timeout=self.UI_TIMEOUT):
             return False
-        return self.safe_click(
+        return self.try_click(
             self.locators.CREATE_CHAT_CONFIRM_BUTTON, timeout=self.UI_TIMEOUT,
         )
 
@@ -488,7 +488,7 @@ class GroupChatPage(BasePage):
             self.locators.DELETE_OR_LEAVE_MENU_ITEM, timeout=timeout,
         ):
             return False
-        return self.safe_click(
+        return self.try_click(
             self.locators.LEAVE_CONFIRM_BUTTON, timeout=timeout,
         )
 
@@ -578,7 +578,7 @@ class GroupChatPage(BasePage):
         if not self.is_element_visible(row, timeout=timeout):
             if not self.scroll_to_element(row, max_swipes=3, timeout=3):
                 return False
-        return self.safe_click(row, timeout=timeout)
+        return self.try_click(row, timeout=timeout)
 
     def get_group_name_from_header(
         self,

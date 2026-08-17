@@ -29,7 +29,8 @@ class WalletLeftPanel(BasePage):
             return False
         toolbar_back = BaseLocators.tid("toolBarBackButton")
         if self.is_element_visible(toolbar_back, timeout=2):
-            self.safe_click(toolbar_back, timeout=3)
+            # try_click: bool-contract helper — the panel re-check below answers.
+            self.try_click(toolbar_back, timeout=3)
         return self.is_element_visible(self.locators.ADD_ACCOUNT_BUTTON, timeout=3)
 
     def is_loaded(self, timeout: int = 15) -> bool:

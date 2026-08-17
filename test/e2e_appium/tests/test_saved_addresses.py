@@ -25,7 +25,7 @@ class TestSavedAddresses(StepMixin):
             # behind a closed drawer.
             assert app.click_wallet_button(), "Failed to open Wallet"
             loc = SavedAddressesLocators()
-            assert app.safe_click(loc.WALLET_SAVED_ADDRESSES_BUTTON), (
+            assert app.try_click(loc.WALLET_SAVED_ADDRESSES_BUTTON), (
                 "Failed to open Saved addresses from Wallet"
             )
             saved_addresses = SavedAddressesPage(self.device.driver)

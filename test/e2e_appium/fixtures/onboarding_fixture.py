@@ -450,8 +450,12 @@ class OnboardingFlow:
             if base_for_edu.try_click(nav_edu_locator, timeout=5):
                 actions.append("nav_education:dismissed")
             else:
+                # A dialog we saw but could not close is still covering the UI:
+                # that is a step failure, matching the pre-try_click behaviour
+                # where the failed tap aborted the fixture.
                 self.logger.warning("NavigationEducationDialog close-tap failed")
                 actions.append("nav_education:dismiss_failed")
+                success = False
         else:
             actions.append("nav_education:not_displayed")
 
