@@ -39,6 +39,29 @@ Loader {
     property bool appMainVisible: false
     property real leftPanelWidthOverride: 0
 
+    // Back-navigation contract for AppMain's back chain. The chrome is
+    // interactive while the section item still incubates, so the loader must
+    // answer for it during that phase; once loaded, the item leads.
+    readonly property bool canGoBack: root.item?.canGoBack ?? sectionLayout.canGoBack
+    function tryGoBack() {
+        if (root.item && typeof root.item.tryGoBack === "function")
+            return root.item.tryGoBack()
+        return sectionLayout.tryGoBack()
+    }
+
+    // Navigation into a specific wallet view may arrive (synchronously, from
+    // activity-center/toast redirects) while the section still incubates —
+    // queue it and replay once the real layout is up.
+    function openDesiredView(leftPanelSelection, rightPanelSelection, data) {
+        if (root.item && root.item.openDesiredView) {
+            root.item.openDesiredView(leftPanelSelection, rightPanelSelection, data)
+            return
+        }
+        d.pendingViewRequest = ({ left: leftPanelSelection,
+                                  right: rightPanelSelection,
+                                  data: data })
+    }
+
     asynchronous: true
 
     // The section chrome is owned by the loader: it shows instantly with
@@ -97,12 +120,14 @@ Loader {
     // Panel index persistence, kept under the same category/key WalletLayout
     // used when it owned the chrome
     Settings {
-        category: "WalletLocalSettings_%1".arg(root.contactsStore.myPublicKey)
+        category: "WalletLocalSettings_%1".arg(userProfile.pubKey)
         property alias selectedPanelIndex: sectionLayout.currentIndex
     }
 
     QtObject {
         id: d
+
+        property var pendingViewRequest: null
 
         readonly property url realUrl: QmlCompiler.walletUrl
         readonly property url privacyWallUrl: QmlCompiler.walletPrivacyWallUrl
@@ -166,6 +191,12 @@ Loader {
         if (root.item.resetView)
             root.item.resetView()
         root.item.visible = true
+        if (d.pendingViewRequest) {
+            const request = d.pendingViewRequest
+            d.pendingViewRequest = null
+            if (root.item.openDesiredView)
+                root.item.openDesiredView(request.left, request.right, request.data)
+        }
     }
 
     Connections {
