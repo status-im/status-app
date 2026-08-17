@@ -7,8 +7,9 @@ import AppLayouts.stores.Messaging as MessagingStores
 import AppLayouts.stores.Messaging.Community as CommunityStores
 
 /*!
-    Fully configurable mock community backing the CommunityChatLoader, shared
-    by the storybook page (benchmarks) and the qml tests (regression).
+    Fully configurable mock community backing the CommunityChatLoader, used
+    by the storybook page (benchmarks) and built for reuse by qml tests
+    (regression) added later in this PR stack.
 
     Configure the properties, then call install(); it wires the stub store
     hooks (ChatStoresConfig + MessagingStoresConfig) and builds:
@@ -121,15 +122,17 @@ QtObject {
         readonly property int access: root.access
         readonly property bool ensOnly: false
         readonly property bool muted: false
-        readonly property int allMembers: root.membersCount
-        readonly property int joinedMembersCount: root.membersCount
+        // counters follow the built model (membersCount + the current user)
+        // so UI counts never disagree with the members list
+        readonly property int allMembers: root.membersModel.count
+        readonly property int joinedMembersCount: root.membersModel.count
         readonly property bool historyArchiveSupportEnabled: false
         readonly property bool pinMessageAllMembersEnabled: false
         readonly property bool encrypted: root.requiresTokenPermissionToJoin
         readonly property var communityTokens: []
         readonly property bool amIBanned: root.amIBanned
         readonly property bool isPendingOwnershipRequest: false
-        readonly property int activeMembersCount: root.membersCount
+        readonly property int activeMembersCount: root.membersModel.count
         readonly property bool membersLoaded: true
         readonly property bool tokensLoading: false
     }
@@ -677,7 +680,14 @@ QtObject {
         ChatStores.ChatStoresConfig.assetsModel = assetsModel
         ChatStores.ChatStoresConfig.collectiblesModel = collectiblesModel
         MessagingStores.MessagingStoresConfig.communityRootStoreFactory =
-                (parent, communityId) => communityRootStoreComponent.createObject(parent)
+                (parent, communityId) => {
+                    // this mock backs exactly one community; a store built here
+                    // for any other id would be silently wrong
+                    if (communityId !== root.communityId)
+                        console.warn("CommunitySectionMock: communityRootStoreFactory asked for",
+                                     communityId, "but the mock is wired for", root.communityId)
+                    return communityRootStoreComponent.createObject(parent)
+                }
         const first = firstChannelId()
         if (first !== "")
             setActiveChat(first)

@@ -1,5 +1,7 @@
 import QtQuick
 
+import utils
+
 QtObject {
     id: root
 
@@ -17,12 +19,18 @@ QtObject {
     property bool openCreateChat: false
     property bool loadingHistoryMessagesInProgress: false
 
-    // Surface read by the chat views
+    // Surface read by the chat views. Derived like the real store so the
+    // injected content module's permissions (canPost, admin role) gate the
+    // input area instead of being hardcoded no-ops.
     property bool isDebugEnabled: false
     property bool joined: true
-    property bool isUserAllowedToSendMessage: true
-    property string chatInputPlaceHolderText: "Message"
-    property int activeChatType: 1
+    readonly property bool isUserAllowedToSendMessage: {
+        if (activeChatType === Constants.chatType.communityChat)
+            return !!(currentChatContentModule()?.chatDetails?.canPost ?? false)
+        return true
+    }
+    readonly property string chatInputPlaceHolderText: qsTr("Type something")
+    readonly property int activeChatType: chatCommunitySectionModule?.activeItem?.type ?? -1
     property var assetsModel: ChatStoresConfig.assetsModel
     property var collectiblesModel: ChatStoresConfig.collectiblesModel
     property var communityItemsModel: chatCommunitySectionModule ? chatCommunitySectionModule.model : null
@@ -43,7 +51,7 @@ QtObject {
     }
 
     function amIChatAdmin() {
-        return false
+        return currentChatContentModule()?.amIChatAdmin() ?? false
     }
 
     function cleanMessageText(text) {
