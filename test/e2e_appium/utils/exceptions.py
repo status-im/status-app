@@ -8,6 +8,12 @@ clear error handling throughout the test automation framework.
 from typing import Dict, Any, Optional
 
 
+from selenium.common.exceptions import InvalidSessionIdException
+
+# Session-fatal driver errors: the Appium session is gone and no recovery,
+# swallow, or retry at any layer is meaningful — these must always propagate.
+SESSION_FATAL = (InvalidSessionIdException,)
+
 class ProfileCreationFlowError(Exception):
     """
     Custom exception for profile creation and onboarding flow failures.
