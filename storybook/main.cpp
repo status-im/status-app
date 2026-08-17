@@ -16,7 +16,7 @@
 #include <StatusQ/typesregistration.h>
 
 extern "C" void statusq_installBoostedIncubationController(void* engine, int msPerTick,
-                                                           int gentlePeriodMs);
+                                                           int gentlePeriodMs, int boostGapMs);
 
 using namespace Qt::Literals::StringLiterals;
 
@@ -120,11 +120,18 @@ int main(int argc, char *argv[])
 
     // A/B hook for the app's boosted incubation controller (externc.cpp):
     // STORYBOOK_INCUBATION_MS=20 makes async section loads incubate with a
-    // fixed event-loop budget instead of the render-loop-driven default
-    if (qEnvironmentVariableIsSet("STORYBOOK_INCUBATION_MS"))
+    // fixed event-loop budget instead of the render-loop-driven default;
+    // STORYBOOK_INCUBATION_GENTLE_MS / STORYBOOK_INCUBATION_GAP_MS tune the
+    // gentle window and the pause between boosted bites. An unparsable or
+    // non-positive budget leaves the default controller in place.
+    bool incubationMsValid = false;
+    const int incubationMs =
+        qEnvironmentVariable("STORYBOOK_INCUBATION_MS").toInt(&incubationMsValid);
+    if (incubationMsValid && incubationMs > 0)
         statusq_installBoostedIncubationController(
-            &engine, qEnvironmentVariableIntValue("STORYBOOK_INCUBATION_MS"),
-            qEnvironmentVariableIntValue("STORYBOOK_INCUBATION_GENTLE_MS"));
+            &engine, incubationMs,
+            qEnvironmentVariableIntValue("STORYBOOK_INCUBATION_GENTLE_MS"),
+            qEnvironmentVariableIntValue("STORYBOOK_INCUBATION_GAP_MS"));
 
     for (auto& path : std::as_const(additionalImportPaths))
         engine.addImportPath(path);
