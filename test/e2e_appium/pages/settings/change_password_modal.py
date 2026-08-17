@@ -48,7 +48,7 @@ class ChangePasswordModal(BasePage):
                     label = ""
             if label.lower() == "close":
                 self.logger.info("Fast password change detected; closing modal, no restart")
-                self.safe_click(self.locators.PRIMARY_BUTTON, timeout=5)
+                self.click(self.locators.PRIMARY_BUTTON, timeout=5)
                 if user and new_password:
                     user.password = new_password
                 return True
@@ -72,7 +72,7 @@ class ChangePasswordModal(BasePage):
                         "Restart button still visible; tapping attempt %s", attempt + 1
                     )
                     try:
-                        self.safe_click(
+                        self.click(
                             self.locators.PRIMARY_BUTTON, timeout=5, max_attempts=1
                         )
                     except Exception as err:

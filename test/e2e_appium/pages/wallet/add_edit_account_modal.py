@@ -54,7 +54,7 @@ class AddEditAccountModal(BasePage):
         return True
 
     def save_changes(self) -> bool:
-        self.safe_click(self.locators.ADD_ACCOUNT_PRIMARY, timeout=10)
+        self.click(self.locators.ADD_ACCOUNT_PRIMARY, timeout=10)
         return True
 
     def wait_until_hidden(self, timeout: int | None = 10) -> bool:

@@ -59,7 +59,7 @@ class KeycardAuthenticationModal(BasePage):
                 self.dump_page_source("auth_button_not_enabled")
                 return False
 
-            self.safe_click(self.locators.KEYCARD_AUTHENTICATE_BUTTON, timeout=timeout)
+            self.click(self.locators.KEYCARD_AUTHENTICATE_BUTTON, timeout=timeout)
             if not self.wait_for_invisibility(self.locators.KEYCARD_POPUP, timeout=timeout):
                 self.logger.error("Auth popup did not close after clicking Authenticate")
                 self.dump_page_source("auth_popup_still_visible")
@@ -75,5 +75,5 @@ class KeycardAuthenticationModal(BasePage):
     def cancel(self) -> bool:
         if not self.is_displayed(timeout=2):
             return True
-        self.safe_click(self.locators.KEYCARD_CANCEL_BUTTON, timeout=5)
+        self.click(self.locators.KEYCARD_CANCEL_BUTTON, timeout=5)
         return self.wait_for_invisibility(self.locators.KEYCARD_POPUP, timeout=5)

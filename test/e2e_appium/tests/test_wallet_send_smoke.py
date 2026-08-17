@@ -93,7 +93,7 @@ class TestWalletSendSmoke(StepMixin):
                 "//*[contains(@resource-id,'headerActionsCloseButton')]")
             base_for_edu = BasePage(driver)
             if base_for_edu.is_element_visible(nav_edu, timeout=5):
-                base_for_edu.safe_click(nav_edu, timeout=5)
+                base_for_edu.click(nav_edu, timeout=5)
             PushNotificationsPage(driver).dismiss_if_present(timeout=5)
 
     @pytest.mark.smoke
@@ -149,7 +149,7 @@ class TestWalletSendSmoke(StepMixin):
                 if not base.is_element_visible(back_button, timeout=2):
                     break
                 try:
-                    base.safe_click(back_button, timeout=3, max_attempts=1)
+                    base.click(back_button, timeout=3, max_attempts=1)
                 except Exception:
                     break
                 time.sleep(0.3)

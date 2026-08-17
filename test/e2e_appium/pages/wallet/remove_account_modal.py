@@ -13,7 +13,7 @@ class RemoveAccountConfirmationModal(BasePage):
     def acknowledge_derivation_path(self) -> bool:
         if self._is_element_checked(self.locators.REMOVE_ACCOUNT_ACK_CHECKBOX):
             return True
-        self.safe_click(self.locators.REMOVE_ACCOUNT_ACK_CHECKBOX, timeout=5)
+        self.click(self.locators.REMOVE_ACCOUNT_ACK_CHECKBOX, timeout=5)
         return self._is_element_checked(self.locators.REMOVE_ACCOUNT_ACK_CHECKBOX)
 
     def confirm_removal(self, timeout: int = 15) -> bool:
@@ -29,5 +29,5 @@ class RemoveAccountConfirmationModal(BasePage):
             self.logger.error("Remove account confirm button did not become enabled")
             return False
 
-        self.safe_click(self.locators.REMOVE_ACCOUNT_CONFIRM_BUTTON, timeout=timeout)
+        self.click(self.locators.REMOVE_ACCOUNT_CONFIRM_BUTTON, timeout=timeout)
         return True

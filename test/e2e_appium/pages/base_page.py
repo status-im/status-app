@@ -147,7 +147,7 @@ class BasePage:
                 continue
         return False
 
-    def safe_click(
+    def click(
         self,
         locator: tuple,
         *,
@@ -237,14 +237,14 @@ class BasePage:
         max_attempts: int = 3,
         capture_evidence: bool = False,
     ) -> bool:
-        """safe_click that returns False instead of raising on exhaustion.
+        """click() that returns False instead of raising on exhaustion.
 
         No failure artifacts by default: try_click sites are probes and
         optional taps whose False branch handles the miss — pass
         capture_evidence=True where a screenshot/page dump is wanted.
         """
         try:
-            return self.safe_click(
+            return self.click(
                 locator,
                 timeout=timeout,
                 fallback_locators=fallback_locators,

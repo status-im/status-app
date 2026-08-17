@@ -685,3 +685,14 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         logger.info("Failure log artifacts:")
         for path in _saved_failure_logs:
             logger.info("  %s", path)
+
+
+def pytest_sessionstart(session):
+    """Click-contract lint at collection: a violation fails the session before
+    any device time is spent. Standalone: python3 scripts/check_click_contract.py"""
+    from scripts.check_click_contract import main as _click_contract_main
+
+    if _click_contract_main(str(session.config.rootpath)):
+        raise pytest.UsageError(
+            "click-contract violations (see above) — branch on try_click, never on click()"
+        )

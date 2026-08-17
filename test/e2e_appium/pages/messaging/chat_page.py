@@ -525,7 +525,7 @@ class ChatPage(BasePage):
     def open_chat_options_menu(self, timeout: int = 10) -> bool:
         """Open the chat header context menu (More options)."""
         try:
-            self.safe_click(self.locators.CHAT_MORE_OPTIONS_BUTTON, timeout=timeout)
+            self.click(self.locators.CHAT_MORE_OPTIONS_BUTTON, timeout=timeout)
             menu_visible = self.is_element_visible(
                 self.locators.CHAT_MORE_OPTIONS_MENU, timeout=5,
             )
@@ -552,8 +552,8 @@ class ChatPage(BasePage):
             return False
 
         try:
-            self.safe_click(self.locators.CLEAR_HISTORY_MENU_ITEM, timeout=timeout)
-            self.safe_click(self.locators.CLEAR_HISTORY_CONFIRM_BUTTON, timeout=timeout)
+            self.click(self.locators.CLEAR_HISTORY_MENU_ITEM, timeout=timeout)
+            self.click(self.locators.CLEAR_HISTORY_CONFIRM_BUTTON, timeout=timeout)
             return True
         except Exception as exc:
             self.logger.error("Failed to clear chat history: %s", exc)
@@ -566,8 +566,8 @@ class ChatPage(BasePage):
             return False
 
         try:
-            self.safe_click(self.locators.CLOSE_CHAT_MENU_ITEM, timeout=timeout)
-            self.safe_click(self.locators.CLOSE_CHAT_CONFIRM_BUTTON, timeout=timeout)
+            self.click(self.locators.CLOSE_CHAT_MENU_ITEM, timeout=timeout)
+            self.click(self.locators.CLOSE_CHAT_CONFIRM_BUTTON, timeout=timeout)
             return True
         except Exception as exc:
             self.logger.error("Failed to close chat: %s", exc)

@@ -406,7 +406,7 @@ class GroupChatPage(BasePage):
             self.long_press_element(element, duration=press_ms)
             time.sleep(1)
             self.driver.back()
-            # safe_click raises (not returns False) on exhaustion, so gate on
+            # click raises (not returns False) on exhaustion, so gate on
             # visibility first — else a missed long-press skips the retry below.
             if self.is_element_visible(
                 self.locators.REMOVE_FROM_GROUP_ITEM, timeout=5,
@@ -512,7 +512,7 @@ class GroupChatPage(BasePage):
         is NOT one of the known 1:1 chat names".
 
         Returns a (strategy, selector) locator tuple usable with
-        ``is_element_visible`` / ``safe_click`` / ``long_press_element``,
+        ``is_element_visible`` / ``click`` / ``long_press_element``,
         or None if no group row is found.
         """
         if not known_one_to_one_names:
