@@ -70,6 +70,11 @@ public class ShareShortcutsHelper {
                         .setRank(i)
                         .setIntent(launchIntent)
                         .setCategories(Collections.singleton(SHARE_CATEGORY))
+                        // Sharing shortcuts are meant to be long-lived so the
+                        // system can cache and rank them. It is also what lets
+                        // clear() reach them: FLAG_MATCH_CACHED only ever
+                        // matches long-lived shortcuts.
+                        .setLongLived(true)
                         .setPerson(new Person.Builder().setName(name).build());
 
                 String iconPath = shortcut.optString("iconPath");
