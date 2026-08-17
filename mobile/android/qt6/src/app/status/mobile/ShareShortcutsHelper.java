@@ -124,14 +124,37 @@ public class ShareShortcutsHelper {
         try {
             List<ShortcutInfoCompat> existing = ShortcutManagerCompat.getShortcuts(context,
                     ShortcutManagerCompat.FLAG_MATCH_DYNAMIC
-                            | ShortcutManagerCompat.FLAG_MATCH_CACHED);
+                            | ShortcutManagerCompat.FLAG_MATCH_CACHED
+                            | ShortcutManagerCompat.FLAG_MATCH_PINNED);
             List<String> ids = new ArrayList<>();
+            List<ShortcutInfoCompat> pinnedAnonymised = new ArrayList<>();
             for (ShortcutInfoCompat shortcut : existing) {
                 // FLAG_MATCH_CACHED also matches conversation shortcuts held
                 // for live notifications; uncaching those breaks them.
-                if (shortcut.getId().startsWith(SHARE_ID_PREFIX)) {
-                    ids.add(shortcut.getId());
+                if (!shortcut.getId().startsWith(SHARE_ID_PREFIX)) continue;
+                ids.add(shortcut.getId());
+                if (shortcut.isPinned()) {
+                    // A pinned shortcut lives on the user's launcher and
+                    // cannot be removed by us, only disabled — and a disabled
+                    // one keeps showing its label and icon. So overwrite the
+                    // chat name and avatar first; that is the part that must
+                    // not outlive the session.
+                    pinnedAnonymised.add(new ShortcutInfoCompat.Builder(context, shortcut.getId())
+                            .setShortLabel(context.getString(R.string.app_name))
+                            .setIntent(new Intent(Intent.ACTION_MAIN)
+                                    .setClass(context, StatusQtActivity.class)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                            .setIcon(IconCompat.createWithResource(
+                                    context, R.drawable.ic_notification_status_logo))
+                            .build());
                 }
+            }
+            if (!pinnedAnonymised.isEmpty()) {
+                ShortcutManagerCompat.updateShortcuts(context, pinnedAnonymised);
+                List<String> pinnedIds = new ArrayList<>();
+                for (ShortcutInfoCompat s : pinnedAnonymised) pinnedIds.add(s.getId());
+                ShortcutManagerCompat.disableShortcuts(context, pinnedIds,
+                        "Sign in to Status to use this shortcut");
             }
             if (!ids.isEmpty()) {
                 ShortcutManagerCompat.removeLongLivedShortcuts(context, ids);
