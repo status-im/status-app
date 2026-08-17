@@ -175,6 +175,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/browserbackendcapabilities.h
         include/StatusQ/chatinputhighlighter.h
         include/StatusQ/clipboardutils.h
+        include/StatusQ/incubationhints.h
         include/StatusQ/constantrole.h
         include/StatusQ/fastexpressionfilter.h
         include/StatusQ/fastexpressionrole.h
@@ -218,6 +219,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/browserbackendcapabilities.cpp
         src/chatinputhighlighter.cpp
         src/clipboardutils.cpp
+        src/incubationhints.cpp
         src/constantrole.cpp
         src/externc.cpp
         src/fastexpressionfilter.cpp

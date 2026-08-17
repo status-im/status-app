@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
+import StatusQ 0.1
 import StatusQ.Core.Theme
 
 /*!
@@ -265,6 +266,12 @@ LayoutChooser {
         slide starts one.
     */
     signal panelSwitchEnded()
+
+    // While the slide runs, keep QML incubation gentle so heavy async section
+    // loads don't steal the animation's frame budget. The signal pair is
+    // guaranteed balanced, so the hint can't leak.
+    onPanelSwitchStarted: IncubationHints.pushGentle()
+    onPanelSwitchEnded: IncubationHints.popGentle()
 
     // Landscape shows every panel at once — no slide — but consumers still
     // get each switch bracketed by the signal pair, back-to-back.
