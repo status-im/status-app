@@ -301,8 +301,6 @@ Item {
     }
 
     Component.onCompleted: {
-        if (root.showRightPanel)
-            rightPanelLoader.active = true
         if (root.navToMsgList) {
             root.navigateToMessageList()
         }
@@ -317,10 +315,11 @@ Item {
     readonly property Item rightPanel: Loader {
         id: rightPanelLoader
         width: Constants.chatSectionRightColumnWidth
-        height: parent.height
+        height: root.sectionLayout?.height ?? 0
 
-        // Built on first show only (then kept), asynchronously behind the
-        // skeleton — the members list must never delay a chat switch.
+        // Loaded only while shown — hiding the members list discards it —
+        // and asynchronously behind the skeleton: the members list must
+        // never delay a chat switch.
         active: root.showRightPanel
         asynchronous: true
 
