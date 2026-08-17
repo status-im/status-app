@@ -55,6 +55,16 @@ Loader {
     // Bridges the chat profile button to the global app-section navigation.
     signal openAppSearchRequested()
 
+    // Back-navigation contract for AppMain's back chain. The chrome is
+    // interactive while the section item still incubates, so the loader must
+    // answer for it during that phase; once loaded, the item leads.
+    readonly property bool canGoBack: root.item?.canGoBack ?? sectionLayout.canGoBack
+    function tryGoBack() {
+        if (root.item && typeof root.item.tryGoBack === "function")
+            return root.item.tryGoBack()
+        return sectionLayout.tryGoBack()
+    }
+
     asynchronous: true
 
     // The section chrome is owned by the loader: it shows instantly with
