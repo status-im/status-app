@@ -1300,7 +1300,7 @@ Item {
                 profileLoader.settingsSubSubsection = subSubsection
                 profileLoader.forceSubsectionNavigation()
             } else if (sectionType === Constants.appSection.wallet) {
-                appView.children[Constants.appViewStackIndex.wallet].item.openDesiredView(subsection, subSubsection, data)
+                appView.children[Constants.appViewStackIndex.wallet].openDesiredView(subsection, subSubsection, data)
             } else if (sectionType === Constants.appSection.swap) {
                 popupRequestsHandler.launchSwap()
             } else if (sectionType === Constants.appSection.chat) {
