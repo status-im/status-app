@@ -116,21 +116,28 @@ Control {
         textField.cursorPosition = 0
     }
 
+    /* Counterpart of `amount`: sets the value from base units. Those are always
+       crypto, so in fiat mode the equivalent fiat value is displayed instead.
+       Callers holding a crypto value must use this rather than setValue(),
+       whose argument is read in the currently displayed unit. */
     function setRawValue(valueString) {
-        if (!valueString)
-            valueString = "0"
+        const crypto = SQUtils.AmountsArithmetic.div(
+                         SQUtils.AmountsArithmetic.fromString(valueString || "0"),
+                         SQUtils.AmountsArithmetic.fromExponent(root.multiplierIndex))
 
-        if (d.fiatMode) {
-            setValue(valueString)
+        if (!d.fiatMode) {
+            setValue(crypto.toFixed(root.multiplierIndex))
             return
         }
 
-        const divisor = SQUtils.AmountsArithmetic.fromExponent(root.multiplierIndex)
-        const stringNumber = SQUtils.AmountsArithmetic.div(SQUtils.AmountsArithmetic.fromString(valueString), divisor).toFixed(root.multiplierIndex)
-        const trimmed = d.removeDecimalTrailingZeros(stringNumber)
+        const price = isNaN(root.cryptoPrice) ? 0 : root.cryptoPrice
+        if (!price) {
+            textField.clear()
+            return
+        }
 
-        textField.text = d.localize(trimmed)
-        textField.cursorPosition = 0
+        setValue(SQUtils.AmountsArithmetic.times(
+                     crypto, SQUtils.AmountsArithmetic.fromNumber(price)).toFixed())
     }
 
     function clear() {
@@ -156,6 +163,13 @@ Control {
         id: d
 
         property bool fiatMode: false
+
+        // Entering fiat mode needs a price to convert with; leaving it never does,
+        // so a token whose price disappears can still be switched back.
+        readonly property bool fiatToggleEnabled: root.fiatInputInteractive
+                                                  && (d.fiatMode || root.cryptoPrice > 0)
+
+        readonly property int amountFontSize: Theme.fontSize(34)
 
         readonly property var effectiveLocale: {
             const name = root.locale.name
@@ -201,7 +215,7 @@ Control {
                                 price * (10 ** root.fiatDecimalPlaces))).toFixed()
 
             if (!price) // prevent div by zero below
-                return 0
+                return "0"
 
             const multiplier = SQUtils.AmountsArithmetic.fromExponent(
                                  root.multiplierIndex)
@@ -263,7 +277,17 @@ Control {
                             + "0".repeat(root.fiatDecimalPlaces)
                 }
 
-                font.pixelSize: Theme.fontSize(34)
+                // A TextInput cannot elide, so a long amount is cut off mid-digit instead.
+                // Safe from feeding back into itself because Layout.maximumWidth below caps
+                // this item's contribution to the parent's width.
+                font.pixelSize: {
+                    const maxWidth = textField.Layout.maximumWidth
+                    if (maxWidth <= 0 || amountMetrics.width <= maxWidth)
+                        return d.amountFontSize
+                    // -1: hinting rounds glyph advances, so the scaled estimate lands a px over
+                    return Math.max(Theme.fontSize(13),
+                                    Math.floor(d.amountFontSize * (maxWidth - 1) / amountMetrics.width))
+                }
 
                 validator: AmountValidator {
                     id: validator
@@ -294,9 +318,19 @@ Control {
                     }
                 }
             }
+            TextMetrics {
+                id: amountMetrics
+                font.family: textField.font.family
+                font.weight: textField.font.weight
+                font.pixelSize: d.amountFontSize
+                text: textField.text
+            }
+
             LoadingComponent {
                 objectName: "topAmountToSendInputLoadingComponent"
-                Layout.preferredWidth: textField.width
+                // the field is content-width, so an empty one would give a stub of a skeleton
+                Layout.preferredWidth: Math.max(textField.width, 120)
+                Layout.maximumWidth: textField.Layout.maximumWidth
                 Layout.preferredHeight: textField.height
                 visible: root.mainInputLoading
             }
@@ -357,7 +391,7 @@ Control {
 
                     anchors.fill: parent
                     cursorShape: enabled ? Qt.PointingHandCursor : undefined
-                    enabled: root.fiatInputInteractive
+                    enabled: d.fiatToggleEnabled
 
                     onClicked: {
                         const secondaryValue = d.secondaryValue
@@ -395,7 +429,8 @@ Control {
                 icon: "swap"
                 rotation: 90
                 color: Theme.palette.directColor5
-                visible: hoverHandler.hovered && root.fiatInputInteractive
+                // no hover on touch, so a hover-gated affordance would never show there
+                visible: d.fiatToggleEnabled && (hoverHandler.hovered || SQUtils.Utils.isMobile)
             }
             Item { Layout.fillWidth: true }
             Loader {

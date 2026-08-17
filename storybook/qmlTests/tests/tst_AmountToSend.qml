@@ -169,6 +169,50 @@ Item {
             compare(amountToSend.amount, "8065")
         }
 
+        function test_setRawValueIsAlwaysCrypto() {
+            const textField = findChild(amountToSend, "amountToSend_textField")
+            const mouseArea = findChild(amountToSend, "amountToSend_mouseArea")
+
+            amountToSend.cryptoPrice = 0.5
+            amountToSend.multiplierIndex = 3
+
+            amountToSend.setRawValue("10500")
+            compare(textField.text, "10.5")
+            compare(amountToSend.amount, "10500")
+
+            mouseClick(mouseArea)
+            compare(amountToSend.fiatMode, true)
+
+            // base units are a crypto quantity, so fiat mode has to convert them;
+            // writing back the value already held must be a no-op, not another
+            // division by the price
+            amountToSend.setRawValue("10500")
+            compare(textField.text, "5.25")
+            compare(amountToSend.amount, "10500")
+
+            amountToSend.setRawValue("3000")
+            compare(textField.text, "1.50")
+            compare(amountToSend.amount, "3000")
+        }
+
+        function test_fiatModeNeedsAPriceToSwitchInto() {
+            const mouseArea = findChild(amountToSend, "amountToSend_mouseArea")
+
+            amountToSend.cryptoPrice = 0
+            verify(!mouseArea.enabled)
+            mouseClick(mouseArea)
+            compare(amountToSend.fiatMode, false)
+
+            // switching back out never needs one
+            amountToSend.cryptoPrice = 0.5
+            mouseClick(mouseArea)
+            compare(amountToSend.fiatMode, true)
+            amountToSend.cryptoPrice = 0
+            verify(mouseArea.enabled)
+            mouseClick(mouseArea)
+            compare(amountToSend.fiatMode, false)
+        }
+
         function test_clear() {
             const textField = findChild(amountToSend, "amountToSend_textField")
 

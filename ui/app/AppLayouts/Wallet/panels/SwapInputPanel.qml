@@ -67,7 +67,8 @@ Control {
     property real cryptoFeesToReserve: 0
 
     property int swapSide: SwapInputPanel.SwapSide.Pay
-    property bool fiatInputInteractive
+    // mirrors AmountToSend's own default
+    property bool fiatInputInteractive: interactive
     property bool mainInputLoading
     property bool bottomTextLoading
     property bool tokenSelectorLoading
@@ -83,6 +84,11 @@ Control {
     readonly property int listCatalogChainId: listChainFilter !== -1 ? listChainFilter
                                                                      : selectedNetworkChainId
 
+    /** Chain the picker model's rows were actually built for, when the owner tracks
+        it. A picker can be shared between the swap sides, so the rows may currently
+        belong to the other side's chain and say nothing about this one. -1 = untracked **/
+    property int catalogChainId: -1
+
     property string accountName
     property string accountEmoji
     property string accountColorId
@@ -91,6 +97,12 @@ Control {
     function reevaluateSelectedId() {
         // Ensure calculation after all bindings are evaluated
         Qt.callLater(d.reevaluateSelectedId)
+    }
+
+    // the catalog is built asynchronously — re-check when its rows change
+    Connections {
+        target: root.tokenSelectorModel
+        function onCountChanged() { root.reevaluateSelectedId() }
     }
 
     // output API
@@ -112,9 +124,11 @@ Control {
     readonly property double maxCryptoBalance: d.maxCryptoBalance
     readonly property double maxSafeCryptoValue: d.maxSafeCryptoValue
 
+    /** `value` is a crypto amount, also while the input displays fiat **/
     function setAmount(value) {
         if (value > 0)
-            amountToSendInput.setValue(SQUtils.AmountsArithmetic.fromNumber(value).toString())
+            amountToSendInput.setRawValue(SQUtils.AmountsArithmetic.fromNumber(
+                                              value, amountToSendInput.multiplierIndex).toFixed(0))
         else
             amountToSendInput.clear()
     }
@@ -159,11 +173,12 @@ Control {
         Receive = 1
     }
 
-    padding: Theme.padding
+    padding: Theme.bigPadding
 
     // by design
     implicitWidth: 492
-    implicitHeight: 138
+    // content-driven, with the design height as a floor
+    implicitHeight: Math.max(138, implicitContentHeight + topPadding + bottomPadding)
 
     QtObject {
         id: d
@@ -182,11 +197,21 @@ Control {
                 root.setAmount(d.maxSafeCryptoValue)
         }
 
+        // Only a settled list answers "is this token available here?": it is empty
+        // while the catalog is (re)built, holds search results while searching, and
+        // may hold another side's chain while a shared picker is scoped to it.
+        readonly property bool listSettled: !!root.tokenSelectorModel
+                                            && !root.tokenSelectorLoading
+                                            && root.tokenSelectorModel.count > 0
+                                            && root.tokenSelectorModel.searchString === ""
+                                            && (root.catalogChainId === -1
+                                                || root.catalogChainId === root.listCatalogChainId)
+        onListSettledChanged: if (listSettled) root.reevaluateSelectedId()
+
         function reevaluateSelectedId() {
-            if (!root.tokenSelectorModel)
+            if (!d.listSettled)
                 return
-            const entry = SQUtils.ModelUtils.getByKey(root.tokenSelectorModel, "key", d.selectedHoldingId)
-            if (!entry) {
+            if (!SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", d.selectedHoldingId)) {
                 // Token doesn't exist in destination chain
                 d.selectedHoldingId = root.defaultGroupKey
             }
@@ -217,10 +242,9 @@ Control {
                                              selectedHolding.item.key)
                 return
             }
-            // The terminal model swaps its rows to the search results while searching,
-            // so the selected token may not be present then; keep the current button
-            // rather than resetting it (it is restored once the search is cleared).
-            if (root.tokenSelectorModel.searchString === "")
+            // while unsettled the selected token may legitimately be absent, so keep
+            // the current button rather than resetting it
+            if (d.listSettled)
                 holdingSelector.reset()
         }
 
@@ -257,16 +281,20 @@ Control {
                 amountToSendInput.clear()
                 return
             }
-            let amountToSet = SQUtils.AmountsArithmetic.fromString(tokenAmount).toFixed()
             /* When deleting characters after a decimal point
             eg: 0.000001 being deleted we have 0.00000 and it should not be updated to 0
             and thats why we compare with toFixed()
             also when deleting a numbers last digit, we should not update the text to 0
             instead it should remain empty as entered by the user */
-            let currentInputTextAmount = SQUtils.AmountsArithmetic.fromString(amountToSendInput.delocalized).toFixed()
-            if (currentInputTextAmount !== amountToSet &&
-                    !(amountToSet === "0" && !amountToSendInput.text)) {
-                amountToSendInput.setValue(tokenAmount)
+            // tokenAmount is crypto, so compare and write in base units — the
+            // displayed value is fiat while the input is in fiat mode
+            const rawAmountToSet = SQUtils.AmountsArithmetic.times(
+                                     SQUtils.AmountsArithmetic.fromString(tokenAmount),
+                                     SQUtils.AmountsArithmetic.fromExponent(
+                                       amountToSendInput.multiplierIndex)).toFixed(0)
+            if (rawAmountToSet !== amountToSendInput.amount &&
+                    !(rawAmountToSet === "0" && !amountToSendInput.text)) {
+                amountToSendInput.setRawValue(rawAmountToSet)
             }
         }
     }
@@ -276,6 +304,14 @@ Control {
         sourceModel: root.flatNetworksModel
         key: "chainId"
         value: root.selectedNetworkChainId
+    }
+
+    // popular rows carry no balance, so they badge the catalog's chain, not this side's
+    ModelEntry {
+        id: catalogNetworkEntry
+        sourceModel: root.flatNetworksModel
+        key: "chainId"
+        value: root.listCatalogChainId
     }
 
     background: Shape {
@@ -385,12 +421,10 @@ Control {
                 spacing: Theme.halfPadding
                 visible: networkEntry.available
 
-                StatusRoundedImage {
-                    Layout.preferredWidth: 24
-                    Layout.preferredHeight: 24
+                NetworkIcon {
                     Layout.alignment: Qt.AlignVCenter
-                    image.source: !!networkEntry.item && !!networkEntry.item.iconUrl
-                                  ? Assets.svg(networkEntry.item.iconUrl) : ""
+                    source: !!networkEntry.item && !!networkEntry.item.iconUrl
+                            ? Assets.svg(networkEntry.item.iconUrl) : ""
                 }
 
                 StatusBaseText {
@@ -413,14 +447,16 @@ Control {
                 readonly property bool balanceExceeded:
                     SQUtils.AmountsArithmetic.fromNumber(d.maxSafeCryptoValue, multiplierIndex).cmp(amount) === -1
 
+                // from `amount` rather than the text: that is fiat in fiat mode
                 readonly property double asNumber: {
                     if (!valid)
                         return 0
 
-                    return parseFloat(delocalized)
+                    return SQUtils.AmountsArithmetic.toNumber(amount, multiplierIndex)
                 }
 
                 Layout.fillWidth: true
+                Layout.minimumWidth: 120 // so a long value has room to shrink into
                 Layout.alignment: Qt.AlignVCenter
                 id: amountToSendInput
                 objectName: "amountToSendInput"
@@ -429,8 +465,8 @@ Control {
                 fiatInputInteractive: root.fiatInputInteractive
                 multiplierIndex: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.decimals ? d.selectedHolding.item.decimals : 18
                 cryptoPrice: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.cryptoPrice ? d.selectedHolding.item.cryptoPrice : 0
-                formatFiat: amount => root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency)
-                formatBalance: amount => root.currencyStore.formatCurrencyAmount(amount, d.inputSymbol)
+                formatFiat: amount => qsTr("≈ %1").arg(root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency))
+                formatBalance: amount => qsTr("≈ %1").arg(root.currencyStore.formatCurrencyAmount(amount, d.inputSymbol))
 
                 mainInputLoading: root.mainInputLoading
                 bottomTextLoading: root.bottomTextLoading
@@ -446,16 +482,18 @@ Control {
                     objectName: "holdingSelector"
 
                     Layout.alignment: Qt.AlignRight
+                    showDropdownIndicator: false
 
                     model: root.tokenSelectorModel
                     hasMoreItems: !!root.tokenSelectorModel && root.tokenSelectorModel.hasMoreItems
                     isLoadingMore: root.tokenSelectorLoading || (!!root.tokenSelectorModel && root.tokenSelectorModel.isLoadingMore)
                     nonInteractiveKey: root.nonInteractiveGroupKey
+                    nonInteractiveChainId: root.selectedNetworkChainId
                     formatCurrencyBalance: (amount) => root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency)
 
                     selectedNetworkIcon: !!networkEntry.item && !!networkEntry.item.iconUrl
                                          ? Assets.svg(networkEntry.item.iconUrl) : ""
-                    defaultNetworkIcon: !!networkEntry.item ? (networkEntry.item.iconUrl ?? "") : ""
+                    defaultNetworkIcon: !!catalogNetworkEntry.item ? (catalogNetworkEntry.item.iconUrl ?? "") : ""
 
                     flatNetworksModel: root.flatNetworksModel
                     selectedChainId: root.listChainFilter
@@ -501,6 +539,8 @@ Control {
 
                     StatusBaseText {
                         objectName: "balanceCryptoText"
+                        Layout.minimumWidth: 0
+                        elide: Text.ElideRight
                         text: root.currencyStore.formatCurrencyAmount(
                                   d.maxCryptoBalance, d.balanceSymbol,
                                   { noSymbol: true, roundingMode: LocaleUtils.RoundingMode.Down })
@@ -517,6 +557,8 @@ Control {
 
                     StatusBaseText {
                         objectName: "balanceFiatText"
+                        Layout.minimumWidth: 0
+                        elide: Text.ElideRight
                         text: root.currencyStore.formatCurrencyAmount(
                                   d.maxFiatBalance, root.currencyStore.currentCurrency)
                         color: Theme.palette.directColor5

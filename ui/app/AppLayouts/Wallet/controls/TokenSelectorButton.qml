@@ -22,6 +22,9 @@ Control {
     /** optional network badge; when empty the button keeps its plain look (e.g. in Send) **/
     property url networkIcon
 
+    /* The chevron reads as a combobox affordance; the swap panels drop it. */
+    property bool showDropdownIndicator: true
+
     readonly property bool showChip: root.selected && !!root.networkIcon.toString()
 
     /** Sets size of the Token Selector Button **/
@@ -122,6 +125,7 @@ Control {
             StatusComboboxIndicator {
                 id: comboboxIndicator
 
+                visible: root.showDropdownIndicator
                 color: Theme.palette.primaryColor1
             }
         }

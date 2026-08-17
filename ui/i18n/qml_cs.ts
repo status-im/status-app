@@ -16894,12 +16894,20 @@ selhalo</translation>
         <source>Popular assets</source>
         <translation type="unfinished">Populární aktiva</translation>
     </message>
+    <message>
+        <source>≈ %1</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SwapModal</name>
     <message>
         <source>Swap</source>
         <translation>Směnit</translation>
+    </message>
+    <message>
+        <source>Swap + Bridge</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Add assets</source>
@@ -16935,7 +16943,11 @@ selhalo</translation>
         <translation>Schválit %1</translation>
     </message>
     <message>
-        <source>Confirm swap</source>
+        <source>Fetching quote...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm swap + bridge</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

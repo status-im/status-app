@@ -50,6 +50,8 @@ Control {
     /** chain of the highlighted holding; only used to disambiguate the per-chain rows **/
     property int highlightedChainId: -1
     property string nonInteractiveKey
+    /** chain nonInteractiveKey applies to; -1 excludes the holding on every chain **/
+    property int nonInteractiveChainId: -1
     property bool showSectionName: true
 
     // Formats the numeric `currencyBalance` role into the localized fiat string
@@ -251,6 +253,8 @@ Control {
                         highlighted: holding.key === root.highlightedKey
                                      && (rowChainId === -1 || rowChainId === root.highlightedChainId)
                         enabled: holding.key !== root.nonInteractiveKey
+                                 || (rowChainId !== -1
+                                     && rowChainId !== root.nonInteractiveChainId)
                         isAutoHovered: d.validSearchResultExists && holdingRows.index === 0
                                        && index === 0 && !listViewHoverHandler.hovered
 

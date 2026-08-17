@@ -16818,12 +16818,20 @@ al cargar</translation>
         <source>Popular assets</source>
         <translation>Activos populares</translation>
     </message>
+    <message>
+        <source>≈ %1</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SwapModal</name>
     <message>
         <source>Swap</source>
         <translation>Intercambio</translation>
+    </message>
+    <message>
+        <source>Swap + Bridge</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Add assets</source>
@@ -16859,8 +16867,12 @@ al cargar</translation>
         <translation>Aprobar %1</translation>
     </message>
     <message>
-        <source>Confirm swap</source>
-        <translation>Confirmar intercambio</translation>
+        <source>Fetching quote...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm swap + bridge</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Approving %1 spending cap to Swap</source>

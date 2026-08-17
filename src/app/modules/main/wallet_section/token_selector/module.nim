@@ -38,7 +38,8 @@ type
     # model (createModelForKind adds, releaseModel removes).
     models: Table[int, TokenSelectorModel]
     nextModelId: int
-    # freed one release late: QML tears list delegates down after this returns
+    # Retained until the next modal: QML tears the released list's delegates down
+    # after releaseModel returns, and a modal releases its whole batch at once.
     pendingRelease: seq[TokenSelectorModel]
 
 proc newModule*(
@@ -131,6 +132,9 @@ proc toPopularGroups(self: Module, groups: seq[TokenGroupItem]): seq[PopularGrou
       marketPrice: self.priceForGroup(g), tokens: tokenRefs))
 
 method createModelForKind*(self: Module, kind: int): tuple[id: int, model: TokenSelectorModel] =
+  # the previous modal is gone by now, so its retained models can go
+  self.pendingRelease.setLen(0)
+
   let atm = self.allTokensModule
   let searchModel = atm.getSearchResultModelObj()
 
@@ -187,7 +191,6 @@ method releaseModel*(self: Module, id: int) =
     return
   let model = self.models[id]
   self.models.del(id)
-  self.pendingRelease.setLen(0)
   self.pendingRelease.add(model)
 
 method load*(self: Module) =
