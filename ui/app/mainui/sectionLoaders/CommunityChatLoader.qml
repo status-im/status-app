@@ -62,6 +62,15 @@ Loader {
 
     asynchronous: true
 
+    // Host-driven gate for the chrome and its skeletons: with one loader
+    // instantiated per community, building the full chrome plus four live
+    // skeletons for never-visited sections is pure startup waste, but only
+    // the host knows which delegate is (or is about to become) the shown
+    // one — including during startup, while the app is still covered and
+    // nothing is effectively visible yet. Defaults to true so a standalone
+    // instance behaves like a plain, always-chromed loader.
+    property bool chromeNeeded: true
+
     // The section chrome is owned by the loader: it shows instantly with
     // skeleton panels and swaps in the real panels produced by ChatView
     // (LayoutItemProxy retarget) as each one finishes incubating. Each slot is
@@ -71,21 +80,26 @@ Loader {
     // skeleton (setParentItem(null) + setVisible(false)) and paints nothing.
     // The chrome is hidden while ChatLayout shows a full-page view
     // (join/banned/offline community view or the community settings page).
-    StatusSectionLayout {
-        id: sectionLayout
-        objectName: "sectionChrome"
+    Loader {
+        id: chromeLoader
 
         anchors.fill: parent
-        visible: !root.item || !root.item.ownsFullPage
+        active: root.chromeNeeded
 
-        headerContent: (root.item?.headerReady ?? false) ? root.item.headerContent : headerSkeleton
-        leftPanel: (root.item?.leftPanelReady ?? false) ? root.item.leftPanel : channelsSkeleton
-        centerPanel: (root.item?.centerPanelReady ?? false) ? root.item.centerPanel : chatSkeleton
-        rightPanel: (root.item?.rightPanelReady ?? false) ? root.item.rightPanel : membersSkeleton
-        showRightPanel: root.item?.showRightPanel ?? root.accountSettingsStore.showUsersList
-        subsectionHistory: root.item?.viewSubsectionHistory ?? null
+        sourceComponent: StatusSectionLayout {
+            objectName: "sectionChrome"
 
-        leftPanelWidthOverride: root.leftPanelWidthOverride
+            visible: !root.item || !root.item.ownsFullPage
+
+            headerContent: (root.item?.headerReady ?? false) ? root.item.headerContent : headerSkeleton
+            leftPanel: (root.item?.leftPanelReady ?? false) ? root.item.leftPanel : channelsSkeleton
+            centerPanel: (root.item?.centerPanelReady ?? false) ? root.item.centerPanel : chatSkeleton
+            rightPanel: (root.item?.rightPanelReady ?? false) ? root.item.rightPanel : membersSkeleton
+            showRightPanel: root.item?.showRightPanel ?? root.accountSettingsStore.showUsersList
+            subsectionHistory: root.item?.viewSubsectionHistory ?? null
+
+            leftPanelWidthOverride: root.leftPanelWidthOverride
+        }
     }
 
     // Skeleton slot items carry the same page paddings as the real panels.
@@ -95,7 +109,7 @@ Loader {
     Loader {
         id: headerSkeleton
         objectName: "headerSkeleton"
-        active: !(root.item?.headerReady ?? false)
+        active: root.chromeNeeded && !(root.item?.headerReady ?? false)
         visible: active
         sourceComponent: ChatHeaderSkeleton {}
     }
@@ -103,7 +117,7 @@ Loader {
     Loader {
         id: channelsSkeleton
         objectName: "leftPanelSkeleton"
-        active: !(root.item?.leftPanelReady ?? false)
+        active: root.chromeNeeded && !(root.item?.leftPanelReady ?? false)
         visible: active
 
         sourceComponent: CommunityChannelsSkeleton {
@@ -121,7 +135,7 @@ Loader {
     Loader {
         id: chatSkeleton
         objectName: "centerPanelSkeleton"
-        active: !(root.item?.centerPanelReady ?? false)
+        active: root.chromeNeeded && !(root.item?.centerPanelReady ?? false)
         visible: active
 
         sourceComponent: MessagesChatSkeleton {
@@ -135,7 +149,7 @@ Loader {
     Loader {
         id: membersSkeleton
         objectName: "rightPanelSkeleton"
-        active: !(root.item?.rightPanelReady ?? false)
+        active: root.chromeNeeded && !(root.item?.rightPanelReady ?? false)
         visible: active
 
         sourceComponent: MembersListSkeleton {}
@@ -225,7 +239,7 @@ Loader {
         setSource(d.url, {
             isChatView:                     false,
             visible:                        false,
-            sectionLayout:                  sectionLayout,
+            sectionLayout:                  Qt.binding(() => chromeLoader.item),
             showUsersList:                  Qt.binding(() => root.accountSettingsStore.showUsersList),
             emojiPopup:                     Qt.binding(() => root.emojiPopupLoader.item),
             stickersPopup:                  Qt.binding(() => root.stickersPopupLoader.item),
