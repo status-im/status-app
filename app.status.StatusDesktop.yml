@@ -1,36 +1,29 @@
-app-id: app.status.desktop
+app-id: app.status.StatusDesktop
 runtime: org.freedesktop.Platform
 runtime-version: '24.08'
 sdk: org.freedesktop.Sdk
 command: nim_status_client_wrapped
-appstream-compose: false
 
+# Static permissions.
 finish-args:
-  # Display
+  # Display: Wayland first, X11 only when there is no Wayland compositor.
   - --share=ipc
-  - --socket=x11
+  - --socket=fallback-x11
   - --socket=wayland
   - --device=dri
-  # Network, Audio & Camera
+  # Network & audio
   - --share=network
   - --socket=pulseaudio
-  # Hardware (smartcards, cameras)
+  # Keycard: pcscd runs inside the sandbox and talks to USB smartcard readers
+  # via libusb, which needs raw device nodes.
   - --device=all
-  # PipeWire (camera access on modern Linux)
+  # Camera via PipeWire (QR scanning); the camera portal is not usable from Qt yet.
   - --filesystem=xdg-run/pipewire-0:ro
-  # Filesystem
-  - --filesystem=xdg-download
-  - --filesystem=xdg-documents
-  - --filesystem=xdg-pictures
-  - --filesystem=xdg-videos
-  - --filesystem=~/.status-im:create
-  # D-Bus
+  # D-Bus: notifications, keyring, tray icon, battery status
   - --talk-name=org.freedesktop.Notifications
   - --talk-name=org.freedesktop.secrets
   - --talk-name=org.kde.StatusNotifierWatcher
   - --system-talk-name=org.freedesktop.UPower
-  # Environment
-  - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
 
 # Modules build inside the flatpak sandbox so they link against the
 # freedesktop runtime (org.freedesktop.Platform 24.08), not the host's
@@ -38,7 +31,6 @@ finish-args:
 # bundles for AppImage, where libs link against Ubuntu directly.
 modules:
   # libcanberra for GTK notification sounds.
-  # The patch teaches it not to assume a GdkX11Display under Wayland.
   - name: libcanberra
     buildsystem: autotools
     config-opts:
@@ -95,10 +87,6 @@ modules:
         url: https://github.com/LudovicRousseau/CCID/archive/refs/tags/1.7.0.tar.gz
         sha256: 4abe76010a72944e02e8d5d4d60ba665f941891eee2a35f77fd35cebc095e14b
 
-  # Our app. build-commands runs flatpak-copy-to-app.sh inside the sandbox.
-  # build-args grants the build sandbox read-only access to the host so the
-  # script can pull Qt directly from /opt/qt and our compiled native libs
-  # from /workspace, instead of needing a 600 MB pre-staging copy.
   - name: status-desktop
     buildsystem: simple
     build-options:
@@ -132,13 +120,19 @@ modules:
       - type: file
         path: flatpak-wrapper.sh
 
-      # Application icon (512x512 is the lowest size flatpak accepts here)
+      # Application icons: 512x512 hicolor icon + the in-app window/tray icon
       - type: file
         path: status-512.png
-
-      # Desktop entry, installed verbatim by flatpak-copy-to-app.sh
       - type: file
-        path: app.status.desktop.desktop
+        path: status.png
+
+      # Desktop entry, AppStream metainfo and license
+      - type: file
+        path: app.status.StatusDesktop.desktop
+      - type: file
+        path: app.status.StatusDesktop.metainfo.xml
+      - type: file
+        path: LICENSE.md
 
       # Qt location handed in from the host (see bundle-flatpak.sh)
       - type: file

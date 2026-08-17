@@ -2,6 +2,9 @@
 Name=Status
 Comment=Decentralised messaging, crypto wallet, and Web3 browser
 Exec=nim_status_client_wrapped
-Icon=app.status.desktop
+Icon=app.status.StatusDesktop
 Type=Application
+Terminal=false
 Categories=Network;InstantMessaging;Chat;
+Keywords=messenger;chat;ethereum;wallet;web3;crypto;
+StartupWMClass=nim_status_client

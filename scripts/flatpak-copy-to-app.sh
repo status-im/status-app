@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Runs inside the flatpak-builder sandbox as the status-desktop module's
-# build-commands step (see app.status.desktop.yml). It assembles /app/* from:
+# build-commands step (see app.status.StatusDesktop.yml). It assembles /app/* from:
 #   - this module's source dir:    nim_status_client, libStatusQ.so,
 #                                  resources.rcc, flatpak-wrapper.sh,
-#                                  status-512.png, native-libs/
+#                                  status-512.png, status.png, desktop entry,
+#                                  metainfo, LICENSE.md, native-libs/
 #   - the host's /opt/qt:          Qt 6 install
 #     (filesystem=host:ro)
 #   - the host's /usr:             krb5 + NSS PKCS#11 modules from /run/host/usr,
@@ -11,6 +12,7 @@
 set -eo pipefail
 
 PREFIX="/app"
+APP_ID="app.status.StatusDesktop"
 
 # Qt location, handed in via qt.env (QT_DIR=... make flatpak; see bundle-flatpak.sh).
 # Default kept in sync with ci/Dockerfile's QT_VERSION.
@@ -42,7 +44,7 @@ cp -r "$QT_SRC"/resources    "$PREFIX/resources"
 cp -r "$QT_SRC"/translations "$PREFIX/translations"
 
 # Native libs we built ourselves: status-go, keycard, sds. Brought in via
-# manifest sources (see app.status.desktop.yml), so they appear in
+# manifest sources (see app.status.StatusDesktop.yml), so they appear in
 # native-libs/ in this sandbox source dir.
 cp -P native-libs/*.so* "$PREFIX/lib/"
 
@@ -54,10 +56,13 @@ cp -P "$HOST_USR_LIB"/libgssapi_krb5.so* "$HOST_USR_LIB"/libkrb5.so*       \
       "$PREFIX/lib/"
 cp -r "$HOST_USR_LIB"/nss "$PREFIX/lib/"
 
-# Icon (512x512 is what flathub accepts as the primary size for this app).
 install -Dm644 status-512.png \
-  "$PREFIX/share/icons/hicolor/512x512/apps/app.status.desktop.png"
+  "$PREFIX/share/icons/hicolor/512x512/apps/${APP_ID}.png"
+install -Dm644 status.png "$PREFIX/status.png"
 
-# Desktop entry (checked-in repo file, staged into this dir by the manifest).
-install -Dm644 app.status.desktop.desktop \
-  "$PREFIX/share/applications/app.status.desktop.desktop"
+install -Dm644 "${APP_ID}.desktop" \
+  "$PREFIX/share/applications/${APP_ID}.desktop"
+install -Dm644 "${APP_ID}.metainfo.xml" \
+  "$PREFIX/share/metainfo/${APP_ID}.metainfo.xml"
+
+install -Dm644 LICENSE.md "$PREFIX/share/licenses/${APP_ID}/LICENSE.md"

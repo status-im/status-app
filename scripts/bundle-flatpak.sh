@@ -16,8 +16,8 @@ cd "$GIT_ROOT"
 : "${FLATPAK_REPO_DIR:?FLATPAK_REPO_DIR must be set}"
 : "${STATUS_CLIENT_FLATPAK:?STATUS_CLIENT_FLATPAK must be set}"
 
-FLATPAK_MANIFEST="${FLATPAK_MANIFEST:-app.status.desktop.yml}"
-APP_ID="app.status.desktop"
+APP_ID="app.status.StatusDesktop"
+FLATPAK_MANIFEST="${FLATPAK_MANIFEST:-${APP_ID}.yml}"
 
 # Required inputs from earlier targets
 [[ -f "bin/nim_status_client" ]] || { echo "ERROR: bin/nim_status_client missing. Run 'make nim_status_client' first."; exit 1; }

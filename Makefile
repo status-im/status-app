@@ -256,7 +256,7 @@ ifneq ($(mkspecs),win32)
   # system library paths
   NIM_PARAMS += --passL:"-Wl,-rpath-link,$(QT_LIBDIR)"
  endif
- QT_SEAQT_EXTRA_LIBS = $(shell PKG_CONFIG_PATH="$(QT_PCFILEDIR)" PKG_CONFIG_PREFIX_OVERRIDE="Qt*=$(QT_PC_PREFIX)" $(QT_PC_PKGCONFIG) --libs Qt"$(QT_MAJOR_VERSION)"Core Qt"$(QT_MAJOR_VERSION)"Qml Qt"$(QT_MAJOR_VERSION)"Gui Qt"$(QT_MAJOR_VERSION)"Quick Qt"$(QT_MAJOR_VERSION)"QuickControls2 Qt"$(QT_MAJOR_VERSION)"Widgets Qt"$(QT_MAJOR_VERSION)"Svg Qt"$(QT_MAJOR_VERSION)"Multimedia Qt"$(QT_MAJOR_VERSION)"WebView Qt"$(QT_MAJOR_VERSION)"WebChannel)
+ QT_SEAQT_EXTRA_LIBS = $(shell PKG_CONFIG_PATH="$(QT_PCFILEDIR)$(QT_PC_PATHSEP)$(PKG_CONFIG_PATH)" PKG_CONFIG_PREFIX_OVERRIDE="Qt*=$(QT_PC_PREFIX)" $(QT_PC_PKGCONFIG) --libs Qt"$(QT_MAJOR_VERSION)"Core Qt"$(QT_MAJOR_VERSION)"Qml Qt"$(QT_MAJOR_VERSION)"Gui Qt"$(QT_MAJOR_VERSION)"Quick Qt"$(QT_MAJOR_VERSION)"QuickControls2 Qt"$(QT_MAJOR_VERSION)"Widgets Qt"$(QT_MAJOR_VERSION)"Svg Qt"$(QT_MAJOR_VERSION)"Multimedia Qt"$(QT_MAJOR_VERSION)"WebView Qt"$(QT_MAJOR_VERSION)"WebChannel)
 else
  WIN_SYS_LIBS := --passL:"-luser32"
  NIM_EXTRA_PARAMS := $(WIN_SYS_LIBS)
@@ -514,9 +514,12 @@ $(STATUSGO): | deps status-go-deps $(NIMSDS_LIBFILE) platform-cleanup
 
 status-go: $(STATUSGO)
 
+GO_TOOLS_PREINSTALLED ?= 0
 status-go-deps: export GOPROXY ?= https://proxy.golang.org|direct
 status-go-deps:
+ifneq ($(GO_TOOLS_PREINSTALLED),1)
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.1
+endif
 
 status-go-clean:
 	echo -e "\033[92mCleaning:\033[39m status-go"
@@ -883,6 +886,7 @@ export FLATPAK_BUILD_DIR     ?= tmp/linux/flatpak/build-dir
 export FLATPAK_REPO_DIR      ?= tmp/linux/flatpak/repo
 
 flatpak: $(STATUS_CLIENT_FLATPAK)
+$(STATUS_CLIENT_FLATPAK): override RESOURCES_LAYOUT := $(PRODUCTION_PARAMETERS)
 $(STATUS_CLIENT_FLATPAK): nim_status_client
 	echo -e $(BUILD_MSG) "Flatpak"
 	scripts/bundle-flatpak.sh
@@ -891,7 +895,7 @@ flatpak-install: $(STATUS_CLIENT_FLATPAK)
 	flatpak install --user -y --reinstall $(STATUS_CLIENT_FLATPAK)
 
 flatpak-run: flatpak-install
-	flatpak run app.status.desktop
+	flatpak run app.status.StatusDesktop
 
 flatpak-clean:
 	rm -rf tmp/linux/flatpak pkg/*.flatpak

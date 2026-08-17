@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>app.status.desktop</id>
+  <id>app.status.StatusDesktop</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MPL-2.0</project_license>
-  <name>Status Desktop</name>
-  <summary>Desktop client for the Status Network</summary>
+  <name>Status</name>
+  <summary>Private messenger, crypto wallet and Web3 browser</summary>
   <description>
     <p>
       Status is a secure messaging app, crypto wallet, and Web3 browser built with state of the art technology.
@@ -20,20 +20,41 @@
       <li>Community-driven development</li>
     </ul>
   </description>
-  <launchable type="desktop-id">app.status.desktop.desktop</launchable>
+  <launchable type="desktop-id">app.status.StatusDesktop.desktop</launchable>
+  <provides>
+    <binary>nim_status_client_wrapped</binary>
+  </provides>
   <url type="homepage">https://status.app</url>
   <url type="bugtracker">https://github.com/status-im/status-app/issues</url>
   <url type="help">https://status.app/help</url>
+  <url type="vcs-browser">https://github.com/status-im/status-app</url>
   <developer id="app.status">
     <name>Status Research &amp; Development GmbH</name>
   </developer>
+  <branding>
+    <color type="primary" scheme_preference="light">#4360df</color>
+    <color type="primary" scheme_preference="dark">#1b273d</color>
+  </branding>
   <keywords>
     <keyword>messenger</keyword>
+    <keyword>chat</keyword>
     <keyword>ethereum</keyword>
     <keyword>wallet</keyword>
     <keyword>web3</keyword>
     <keyword>crypto</keyword>
   </keywords>
+  <categories>
+    <category>Network</category>
+    <category>InstantMessaging</category>
+    <category>Chat</category>
+  </categories>
+  <requires>
+    <display_length compare="ge">768</display_length>
+  </requires>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
   <screenshots>
     <screenshot type="default">
       <caption>Private encrypted messaging</caption>
@@ -55,6 +76,14 @@
     <content_attribute id="money-purchasing">intense</content_attribute>
   </content_rating>
   <releases>
-    <release version="2.37.0" date="2025-01-01"/>
+    <release version="2.38.2" date="2026-07-19">
+      <url type="details">https://github.com/status-im/status-app/releases/tag/2.38.2</url>
+    </release>
+    <release version="2.38.1" date="2026-06-19">
+      <url type="details">https://github.com/status-im/status-app/releases/tag/2.38.1</url>
+    </release>
+    <release version="2.38.0" date="2026-06-10">
+      <url type="details">https://github.com/status-im/status-app/releases/tag/2.38.0</url>
+    </release>
   </releases>
 </component>
