@@ -18369,10 +18369,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
 <context>
     <name>UserListPanel</name>
     <message>
-        <source>Search</source>
-        <translation>Buscar</translation>
-    </message>
-    <message>
         <source>Search members...</source>
         <translation>Buscar miembros...</translation>
     </message>
