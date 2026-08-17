@@ -176,6 +176,8 @@ USE_SIMULATED_KEYCARD=true make -j12
 
 **2. Packaged build** (`Status.app` / AppImage / .exe) — CI **Build with Parameters** → enable `USE_SIMULATED_KEYCARD` (on macOS also Squish entitlements as [above](#getting-a-mac-build-from-ci)). `AUT_PATH` → the packaged app.
 
+**CI (nightly):** the nightly job builds a separate Linux and Windows package with `USE_SIMULATED_KEYCARD=true` (not published as the nightly artifacts) and runs `tests-e2e` with `KEYCARD_TESTS=true` (`pytest -m keycard`). Manual run: same two parameters — package with `USE_SIMULATED_KEYCARD`, then e2e with `KEYCARD_TESTS` and `BUILD_SOURCE` pointing at that package. Windows e2e agents need a **JRE ≥ 11** on `PATH`.
+
 ---
 
 ## Logs
