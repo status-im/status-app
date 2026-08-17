@@ -13,7 +13,7 @@
 using namespace Qt::Literals::StringLiterals;
 
 extern "C" void statusq_installBoostedIncubationController(void* engine, int msPerTick,
-                                                           int gentlePeriodMs);
+                                                           int gentlePeriodMs, int boostGapMs);
 
 class Setup : public QObject
 {
@@ -32,7 +32,7 @@ public slots:
         // Without it async Loaders incubate on Qt's render-loop budget, which
         // under offscreen rendering makes a section load take tens of seconds —
         // tests would be pinning a configuration the app never runs.
-        statusq_installBoostedIncubationController(engine, 20, 300);
+        statusq_installBoostedIncubationController(engine, 20, 300, 0);
 
 
         const QStringList additionalImportPaths {

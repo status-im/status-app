@@ -5,6 +5,9 @@
 #include <QBasicTimer>
 #include <QElapsedTimer>
 #include <QGuiApplication>
+#include <QHash>
+#include <QPointer>
+#include <QScreen>
 #include <QQmlApplicationEngine>
 #include <QQmlIncubator>
 #include <QTimerEvent>
@@ -85,8 +88,18 @@ Q_DECL_EXPORT void statusq_initializeWebEngine() {
 // done and only the loading skeleton is on screen) the throttle opens.
 class BoostedIncubationController : public QObject, public QQmlIncubationController {
 public:
-    BoostedIncubationController(int msPerTick, int gentlePeriodMs, QObject* parent)
-        : QObject(parent), m_msPerTick(msPerTick), m_gentlePeriodMs(gentlePeriodMs) {
+    BoostedIncubationController(int msPerTick, int gentlePeriodMs, int boostGapMs, QObject* parent)
+        : QObject(parent), m_msPerTick(msPerTick), m_gentlePeriodMs(gentlePeriodMs),
+          m_boostGapMs(boostGapMs) {
+        // The gentle cadence follows the primary screen's frame period: one
+        // small bite per frame leaves the rest of the frame to the transition
+        // animation, on 60Hz and high-refresh displays alike.
+        const QScreen* screen = QGuiApplication::primaryScreen();
+        const qreal refreshRate = screen && screen->refreshRate() > 0.0
+                                  ? screen->refreshRate() : 60.0;
+        m_gentleIntervalMs = qMax(1, qRound(1000.0 / refreshRate));
+        m_gentleBudgetMs = qMax(1, m_gentleIntervalMs / 4);
+
         // Liveness backstop: the timer never fully stops. Even if a count
         // notification is missed (cancelled/chained incubations), pending
         // incubators are picked up at most one idle tick later — a wedged
@@ -94,12 +107,27 @@ public:
         m_timer.start(kIdleIntervalMs, this);
     }
 
+    // Explicit gentle hints from the UI (StatusQ.IncubationHints): while a
+    // transition animation runs, pacing stays gentle regardless of how long
+    // the current incubation burst has been going.
+    void pushGentleHint() {
+        ++m_gentleHints;
+    }
+
+    void popGentleHint() {
+        m_gentleHints = qMax(0, m_gentleHints - 1);
+    }
+
+    bool gentleHintActive() const {
+        return m_gentleHints > 0;
+    }
+
 protected:
     void incubatingObjectCountChanged(int count) override {
         // fast path out of the idle cadence; phase management happens in
         // timerEvent based on the actual count
         if (count > 0 && m_interval == kIdleIntervalMs)
-            restart(kGentleIntervalMs);
+            restart(m_gentleIntervalMs);
     }
 
     void timerEvent(QTimerEvent* event) override {
@@ -119,14 +147,17 @@ protected:
         }
 
         // gentle first: small paced bites leave the frame loop enough
-        // headroom for the section-switch transition; then open the throttle
-        const bool gentle = m_gentlePeriodMs > 0
-                            && m_burstStart.elapsed() < m_gentlePeriodMs;
-        const int wantedInterval = gentle ? kGentleIntervalMs : 0;
+        // headroom for the section-switch transition; then open the throttle.
+        // An active hint keeps the pacing gentle beyond the burst-start
+        // window — bursts can outlive it when incubation never drains.
+        const bool gentle = m_gentleHints > 0
+                            || (m_gentlePeriodMs > 0
+                                && m_burstStart.elapsed() < m_gentlePeriodMs);
+        const int wantedInterval = gentle ? m_gentleIntervalMs : m_boostGapMs;
         if (m_interval != wantedInterval)
             restart(wantedInterval);
 
-        incubateFor(gentle ? kGentleBudgetMs : m_msPerTick);
+        incubateFor(gentle ? m_gentleBudgetMs : m_msPerTick);
     }
 
 private:
@@ -135,9 +166,6 @@ private:
         m_timer.start(interval, this);
     }
 
-    // ~3ms every 12ms keeps a 60fps transition fluid while still incubating
-    static constexpr int kGentleBudgetMs = 3;
-    static constexpr int kGentleIntervalMs = 12;
     // idle poll: cheap (one count check), bounds the wedge-recovery latency
     static constexpr int kIdleIntervalMs = 128;
 
@@ -145,18 +173,45 @@ private:
     QElapsedTimer m_burstStart;
     bool m_inBurst = false;
     int m_interval = kIdleIntervalMs;
+    int m_gentleIntervalMs = 12;
+    int m_gentleBudgetMs = 3;
+    int m_gentleHints = 0;
     const int m_msPerTick;
     const int m_gentlePeriodMs;
+    const int m_boostGapMs;
 };
+
+namespace {
+// engine → its installed controller, for the gentle-hint entry points
+QHash<QQmlEngine*, QPointer<BoostedIncubationController>> s_incubationControllers;
+}
 
 // Must be installed before the root window is created (QQuickWindow only
 // installs its own controller when the engine has none).
 Q_DECL_EXPORT void statusq_installBoostedIncubationController(void* engine, int msPerTick,
-                                                              int gentlePeriodMs) {
+                                                              int gentlePeriodMs, int boostGapMs) {
     // QQmlEngine, not QQmlApplicationEngine: the test harness owns a plain one
     auto* qmlEngine = static_cast<QQmlEngine*>(engine);
-    qmlEngine->setIncubationController(
-        new BoostedIncubationController(msPerTick, gentlePeriodMs, qmlEngine));
+    auto* controller = new BoostedIncubationController(qMax(1, msPerTick),
+                                                       qMax(0, gentlePeriodMs),
+                                                       qMax(0, boostGapMs), qmlEngine);
+    qmlEngine->setIncubationController(controller);
+    s_incubationControllers.insert(qmlEngine, controller);
+}
+
+Q_DECL_EXPORT void statusq_incubationPushGentleHint(void* engine) {
+    if (auto controller = s_incubationControllers.value(static_cast<QQmlEngine*>(engine)))
+        controller->pushGentleHint();
+}
+
+Q_DECL_EXPORT void statusq_incubationPopGentleHint(void* engine) {
+    if (auto controller = s_incubationControllers.value(static_cast<QQmlEngine*>(engine)))
+        controller->popGentleHint();
+}
+
+Q_DECL_EXPORT bool statusq_incubationGentleHintActive(void* engine) {
+    auto controller = s_incubationControllers.value(static_cast<QQmlEngine*>(engine));
+    return controller && controller->gentleHintActive();
 }
 
 Q_DECL_EXPORT void* statusq_osnotification_create() {
