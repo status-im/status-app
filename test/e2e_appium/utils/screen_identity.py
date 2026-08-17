@@ -32,9 +32,9 @@ SCREEN_ANCHORS = {
 }
 
 BACKUP_MODAL = BaseLocators.tid("EnableMessageBackupPopup")
-BACKUP_MODAL_SKIP = BaseLocators.tid("backupMessageSkipStatusFlatButton")
+BACKUP_MODAL_SKIP = ChatLocators.BACKUP_SKIP_BUTTON
 
-INTRODUCE_MODAL_SKIP = BaseLocators.tid("introduceSkipStatusFlatButton")
+INTRODUCE_MODAL_SKIP = ChatLocators.INTRODUCE_SKIP_BUTTON
 
 
 def dismiss_backup_modal(page, timeout: int = 2) -> bool:
