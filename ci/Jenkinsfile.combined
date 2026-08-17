@@ -59,18 +59,58 @@ pipeline {
                 }
               }
             }
-            stage('Linux E2E') {
-              steps {
-                script {
-                  linux_e2e = build(
-                    job: 'status-app/systems/linux/x86_64/tests-e2e',
-                    parameters: jenkins.mapToParams([
-                      BUILD_SOURCE:       linux_x86_64.fullProjectName,
-                      TESTRAIL_RUN_NAME:  utils.pkgFilename(),
-                      TEST_SCOPE_FLAG:    utils.isReleaseBuild() ? '-m=critical' : '',
-                      GIT_REF:            env.BRANCH_NAME,
-                    ]),
-                  )
+            stage('Linux E2E and Keycard') {
+              parallel {
+                stage('Linux E2E') {
+                  steps {
+                    script {
+                      linux_e2e = build(
+                        job: 'status-app/systems/linux/x86_64/tests-e2e',
+                        parameters: jenkins.mapToParams([
+                          BUILD_SOURCE:       linux_x86_64.fullProjectName,
+                          TESTRAIL_RUN_NAME:  utils.pkgFilename(),
+                          TEST_SCOPE_FLAG:    utils.isReleaseBuild() ? '-m=critical' : '',
+                          GIT_REF:            env.BRANCH_NAME,
+                        ]),
+                      )
+                    }
+                  }
+                }
+                stage('Linux Keycard E2E') {
+                  when {
+                    expression {
+                      env.JOB_NAME.toLowerCase().contains('nightly')
+                    }
+                  }
+                  stages {
+                    stage('Linux simulated-keycard package') {
+                      steps {
+                        script {
+                          linux_keycard = build(
+                            job: 'status-app/systems/linux/x86_64/package',
+                            parameters: jenkins.mapToParams([
+                              USE_SIMULATED_KEYCARD: true,
+                            ]),
+                          )
+                        }
+                      }
+                    }
+                    stage('Linux Keycard tests') {
+                      steps {
+                        script {
+                          build(
+                            job: 'status-app/systems/linux/x86_64/tests-e2e',
+                            parameters: jenkins.mapToParams([
+                              BUILD_SOURCE:      linux_keycard.fullProjectName,
+                              TESTRAIL_RUN_NAME: utils.pkgFilename(),
+                              KEYCARD_TESTS:     true,
+                              GIT_REF:           env.BRANCH_NAME,
+                            ]),
+                          )
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -104,24 +144,59 @@ pipeline {
                 }
               }
             }
-            stage('Windows E2E Benchmark') {
+            stage('Windows E2E Benchmark and Keycard') {
               when {
                 expression {
                   env.JOB_NAME.toLowerCase().contains('nightly')
                 }
               }
-              steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                  script {
-                    benchmark_windows_e2e = build(
-                      job: 'status-app/e2e/nightly-benchmark-windows-master',
-                      parameters: jenkins.mapToParams([
-                        BUILD_SOURCE:      windows_x86_64.fullProjectName,
-                        TESTRAIL_RUN_NAME: utils.pkgFilename(),
-                        TEST_SCOPE_FLAG:   utils.isReleaseBuild() ? '-m=critical' : '',
-                        GIT_REF:           env.BRANCH_NAME
-                      ]),
-                    )
+              parallel {
+                stage('Windows E2E Benchmark') {
+                  steps {
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                      script {
+                        benchmark_windows_e2e = build(
+                          job: 'status-app/e2e/nightly-benchmark-windows-master',
+                          parameters: jenkins.mapToParams([
+                            BUILD_SOURCE:      windows_x86_64.fullProjectName,
+                            TESTRAIL_RUN_NAME: utils.pkgFilename(),
+                            TEST_SCOPE_FLAG:   utils.isReleaseBuild() ? '-m=critical' : '',
+                            GIT_REF:           env.BRANCH_NAME
+                          ]),
+                        )
+                      }
+                    }
+                  }
+                }
+                stage('Windows Keycard E2E') {
+                  stages {
+                    stage('Windows simulated-keycard package') {
+                      steps {
+                        script {
+                          windows_keycard = build(
+                            job: 'status-app/systems/windows/x86_64/package',
+                            parameters: jenkins.mapToParams([
+                              USE_SIMULATED_KEYCARD: true,
+                            ]),
+                          )
+                        }
+                      }
+                    }
+                    stage('Windows Keycard tests') {
+                      steps {
+                        script {
+                          build(
+                            job: 'status-app/systems/windows/x86_64/tests-e2e',
+                            parameters: jenkins.mapToParams([
+                              BUILD_SOURCE:      windows_keycard.fullProjectName,
+                              TESTRAIL_RUN_NAME: utils.pkgFilename(),
+                              KEYCARD_TESTS:     true,
+                              GIT_REF:           env.BRANCH_NAME,
+                            ]),
+                          )
+                        }
+                      }
+                    }
                   }
                 }
               }
