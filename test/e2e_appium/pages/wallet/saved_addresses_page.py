@@ -21,7 +21,7 @@ class SavedAddressesPage(BasePage):
         )
 
     def open_add_saved_address_modal(self) -> bool:
-        if self.safe_click(
+        if self.try_click(
             self.locators.ADD_NEW_SAVED_ADDRESS_BUTTON_WALLET, timeout=4
         ):
             return True
@@ -43,7 +43,7 @@ class SavedAddressesPage(BasePage):
 
     def open_row_menu(self, name: str) -> bool:
         try:
-            if self.safe_click(
+            if self.try_click(
                 self.locators.row_menu_by_name(name), timeout=5, max_attempts=3
             ):
                 return True
@@ -80,7 +80,7 @@ class SavedAddressesPage(BasePage):
             self.locators.POPUP_MENU_BUTTON_GENERIC,
         ):
             try:
-                if self.safe_click(locator, timeout=4, max_attempts=2):
+                if self.try_click(locator, timeout=4, max_attempts=2):
                     return True
             except Exception:
                 self.logger.debug("Popup kebab tap failed for '%s' using %s", name, locator)
@@ -95,9 +95,9 @@ class SavedAddressesPage(BasePage):
             self.locators.DELETE_SAVED_ADDRESS_ACTION, timeout=4
         ):
             return False
-        if not self.safe_click(self.locators.DELETE_SAVED_ADDRESS_ACTION):
+        if not self.try_click(self.locators.DELETE_SAVED_ADDRESS_ACTION):
             return False
-        if not self.safe_click(self.locators.CONFIRM_DELETE_BUTTON):
+        if not self.try_click(self.locators.CONFIRM_DELETE_BUTTON):
             return False
         self.wait_for_invisibility(self.locators.CONFIRM_DELETE_BUTTON, timeout=6)
         self.wait_for_invisibility(self.locators.SAVED_ADDRESS_DETAILS_POPUP, timeout=8)

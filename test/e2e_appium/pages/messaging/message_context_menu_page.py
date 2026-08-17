@@ -150,7 +150,7 @@ class MessageContextMenuPage(BasePage):
             self.logger.error(f"Context menu not visible when trying to tap {action_name}")
             return False
 
-        if not self.safe_click(locator, timeout=timeout):
+        if not self.try_click(locator, timeout=timeout):
             self.logger.error(f"Failed to tap {action_name}")
             return False
 
@@ -234,7 +234,7 @@ class MessageContextMenuPage(BasePage):
             bool: True if reaction was added.
         """
         locator = self.locators.quick_reaction_by_emoji(emoji)
-        if not self.safe_click(locator, timeout=timeout):
+        if not self.try_click(locator, timeout=timeout):
             self.logger.error(f"Failed to tap quick reaction '{emoji}'")
             return False
 
@@ -297,7 +297,7 @@ class MessageContextMenuPage(BasePage):
         Returns:
             bool: True if emoji picker opened.
         """
-        if not self.safe_click(self.locators.ADD_REACTION_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.ADD_REACTION_BUTTON, timeout=timeout):
             self.logger.error("Failed to tap Add reaction button")
             return False
 
@@ -319,7 +319,7 @@ class MessageContextMenuPage(BasePage):
             bool: True if emoji was selected.
         """
         locator = self.emoji_locators.emoji_by_character(emoji)
-        if not self.safe_click(locator, timeout=timeout):
+        if not self.try_click(locator, timeout=timeout):
             self.logger.error(f"Failed to select emoji '{emoji}' from picker")
             return False
 
@@ -407,7 +407,7 @@ class MessageContextMenuPage(BasePage):
             self.logger.warning("Delete confirmation dialog not visible")
             return False
 
-        if not self.safe_click(self.locators.DELETE_CONFIRMATION_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.DELETE_CONFIRMATION_BUTTON, timeout=timeout):
             self.logger.error("Failed to click delete confirmation button")
             return False
 

@@ -23,7 +23,7 @@ class SettingsPage(BasePage):
         return self.is_element_visible(self.locators.PROFILE_MENU_ITEM, timeout=timeout)
 
     def open_sign_out_and_quit(self) -> bool:
-        if self.safe_click(
+        if self.try_click(
             self.locators.SIGN_OUT_AND_QUIT,
             fallback_locators=[self.locators.SIGN_OUT_AND_QUIT_ALT], 
         ):
@@ -42,7 +42,7 @@ class SettingsPage(BasePage):
                 self.locators.BACKUP_RECOVERY_MENU_ITEM, timeout=10
             ):
                 return None
-            clicked = self.safe_click(
+            clicked = self.try_click(
                 self.locators.BACKUP_RECOVERY_MENU_ITEM, timeout=5
             )
         except Exception as e:
@@ -57,7 +57,7 @@ class SettingsPage(BasePage):
         if not self.is_loaded(timeout=10):
             return None
         try:
-            if not self.safe_click(
+            if not self.try_click(
                 self.locators.PASSWORD_MENU_ITEM,
                 timeout=5,
                 fallback_locators=[self.locators.PASSWORD_MENU_ITEM_TEXT],
@@ -86,7 +86,7 @@ class SettingsPage(BasePage):
         try:
             if not self.is_element_visible(locators.SAVED_ADDRESSES_ITEM, timeout=10):
                 return None
-            if not self.safe_click(locators.SAVED_ADDRESSES_ITEM):
+            if not self.try_click(locators.SAVED_ADDRESSES_ITEM):
                 return None
         except Exception as e:
             self.logger.debug(f"open_saved_addresses item click failed: {e}")
@@ -106,7 +106,7 @@ class SettingsPage(BasePage):
             WalletSettingsPage if opened successfully, None otherwise.
         """
         wallet_locators = WalletSettingsLocators()
-        if not self.safe_click(wallet_locators.WALLET_MENU_ITEM, timeout=timeout):
+        if not self.try_click(wallet_locators.WALLET_MENU_ITEM, timeout=timeout):
             self.logger.error("Failed to click Wallet menu item in settings")
             return None
         
@@ -117,7 +117,7 @@ class SettingsPage(BasePage):
         return None
 
     def open_messaging_settings(self) -> Optional[MessagingSettingsPage]:
-        if self.safe_click(
+        if self.try_click(
             self.locators.MESSAGING_MENU_ITEM,
             fallback_locators=[self.locators.CONTACTS_MENU_ITEM],
         ):
@@ -126,7 +126,7 @@ class SettingsPage(BasePage):
         return None
 
     def open_contacts_settings(self) -> Optional[ContactsSettingsPage]:
-        if self.safe_click(self.locators.CONTACTS_MENU_ITEM, max_attempts=1):
+        if self.try_click(self.locators.CONTACTS_MENU_ITEM, max_attempts=1):
             page = ContactsSettingsPage(self.driver)
             if page.is_loaded(timeout=8):
                 return page
@@ -136,7 +136,7 @@ class SettingsPage(BasePage):
         return messaging_page.open_contacts()
 
     def open_profile_settings(self) -> Optional[ProfileSettingsPage]:
-        if self.safe_click(self.locators.PROFILE_MENU_ITEM):
+        if self.try_click(self.locators.PROFILE_MENU_ITEM):
             page = ProfileSettingsPage(self.driver)
             return page if page.is_loaded(timeout=10) else None
         return None

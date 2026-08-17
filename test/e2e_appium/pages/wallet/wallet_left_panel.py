@@ -69,7 +69,7 @@ class WalletLeftPanel(BasePage):
         except Exception as exc:
             self.logger.debug("Unable to reset clipboard before copy: %s", exc)
 
-        if not self.safe_click(self.locators.ACCOUNT_MENU_COPY_ADDRESS, timeout=timeout):
+        if not self.try_click(self.locators.ACCOUNT_MENU_COPY_ADDRESS, timeout=timeout):
             self.logger.error("Failed to click Copy Address in context menu")
             return None
 
@@ -145,7 +145,7 @@ class WalletLeftPanel(BasePage):
                     self.locators.FOOTER_RECEIVE, max_swipes=3, timeout=2,
                 )
 
-        if not self.safe_click(
+        if not self.try_click(
             self.locators.FOOTER_RECEIVE,
             fallback_locators=[fallback],
             timeout=timeout,

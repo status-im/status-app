@@ -20,7 +20,7 @@ class ProfileSettingsPage(BasePage):
     def open_share_profile(self):
         from .share_profile_dialog import ShareProfileDialog
 
-        if not self.safe_click(self.locators.SHARE_PROFILE_BUTTON):
+        if not self.try_click(self.locators.SHARE_PROFILE_BUTTON):
             return None
         dialog = ShareProfileDialog(self.driver)
         return dialog if dialog.is_displayed(timeout=8) else None

@@ -269,7 +269,7 @@ class GroupChatPage(BasePage):
                 "open_group_context_menu_via_header: could not open group chat"
             )
             return False
-        if not self.safe_click(
+        if not self.try_click(
             self.locators.CHAT_TOOLBAR_MORE_OPTIONS_BUTTON, timeout=timeout,
         ):
             self.logger.error(
@@ -300,7 +300,7 @@ class GroupChatPage(BasePage):
             old_name, timeout=timeout, row_locator=row_locator,
         ):
             return False
-        if not self.safe_click(
+        if not self.try_click(
             self.locators.EDIT_GROUP_NAME_MENU_ITEM, timeout=timeout,
         ):
             return False
@@ -466,7 +466,7 @@ class GroupChatPage(BasePage):
                 "dump %s)", member_identity, token, timeout, _dump,
             )
             return False
-        if not self.safe_click(suggestion, timeout=self.UI_TIMEOUT):
+        if not self.try_click(suggestion, timeout=self.UI_TIMEOUT):
             return False
         return self.safe_click(
             self.locators.CREATE_CHAT_CONFIRM_BUTTON, timeout=self.UI_TIMEOUT,
@@ -484,7 +484,7 @@ class GroupChatPage(BasePage):
             group_name, timeout=timeout, row_locator=row_locator,
         ):
             return False
-        if not self.safe_click(
+        if not self.try_click(
             self.locators.DELETE_OR_LEAVE_MENU_ITEM, timeout=timeout,
         ):
             return False

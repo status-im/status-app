@@ -447,7 +447,7 @@ class OnboardingFlow:
         base_for_edu = _BasePage(self.driver)
         if base_for_edu.is_element_visible(nav_edu_locator, timeout=10):
             self.logger.info("NavigationEducationDialog detected, closing")
-            if base_for_edu.safe_click(nav_edu_locator, timeout=5):
+            if base_for_edu.try_click(nav_edu_locator, timeout=5):
                 actions.append("nav_education:dismissed")
             else:
                 self.logger.warning("NavigationEducationDialog close-tap failed")

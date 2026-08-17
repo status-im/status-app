@@ -173,7 +173,9 @@ class App(BasePage):
                 self.locators.TOOLBAR_BACK_BUTTON, timeout=1
             ):
                 break
-            self.safe_click(self.locators.TOOLBAR_BACK_BUTTON, timeout=2)
+            # try_click: a failed back-tap must not raise out of this
+            # bool-contract helper — the loop re-checks visibility either way.
+            self.try_click(self.locators.TOOLBAR_BACK_BUTTON, timeout=2)
 
         if self.is_element_visible(self.locators.PROFILE_NAV_BUTTON, timeout=1):
             return True
@@ -418,7 +420,7 @@ class App(BasePage):
         except Exception as exc:
             self.logger.debug("Unable to reset clipboard before copy: %s", exc)
 
-        if not self.safe_click(self.locators.COPY_PROFILE_LINK_ACTION, timeout=timeout):
+        if not self.try_click(self.locators.COPY_PROFILE_LINK_ACTION, timeout=timeout):
             self.logger.error("Failed to trigger copy-link action from profile menu")
             return None
 

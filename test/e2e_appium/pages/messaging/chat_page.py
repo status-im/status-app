@@ -175,7 +175,7 @@ class ChatPage(BasePage):
 
         button_clicked = False
         try:
-            button_clicked = self.safe_click(
+            button_clicked = self.try_click(
                 self.locators.SEND_BUTTON, timeout=3, max_attempts=1
             )
         except Exception as exc:
@@ -483,7 +483,7 @@ class ChatPage(BasePage):
 
         emoji_locators = EmojiPickerLocators()
 
-        if not self.safe_click(self.locators.EMOJI_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.EMOJI_BUTTON, timeout=timeout):
             self.logger.error("Failed to click emoji button")
             return False
 
@@ -511,7 +511,7 @@ class ChatPage(BasePage):
                 self.logger.error(f"No emoji results for search '{search_term}'")
                 return False
 
-        if not self.safe_click(target, timeout=5):
+        if not self.try_click(target, timeout=5):
             self.logger.error(f"Failed to tap emoji for '{search_term}'")
             return False
 
@@ -519,7 +519,7 @@ class ChatPage(BasePage):
 
     def open_image_dialog(self, timeout: int = 10) -> bool:
         """Open the image attachment dialog via the command menu."""
-        if not self.safe_click(self.locators.COMMAND_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.COMMAND_BUTTON, timeout=timeout):
             self.logger.error("Failed to click command button")
             return False
         return self.safe_click(self.locators.ADD_IMAGE_ACTION, timeout=5)

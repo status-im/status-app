@@ -17,7 +17,7 @@ class ContactsSettingsPage(BasePage):
     def open_send_contact_request_modal(self):
         from .send_contact_request_modal import SendContactRequestModal
 
-        if not self.safe_click(self.locators.SEND_CONTACT_REQUEST_BUTTON):
+        if not self.try_click(self.locators.SEND_CONTACT_REQUEST_BUTTON):
             return None
         modal = SendContactRequestModal(self.driver)
         return modal if modal.is_displayed(timeout=10) else None
