@@ -8,11 +8,29 @@ clear error handling throughout the test automation framework.
 from typing import Dict, Any, Optional
 
 
-from selenium.common.exceptions import InvalidSessionIdException
+from selenium.common.exceptions import (
+    InvalidSessionIdException,
+    NoSuchWindowException,
+)
 
 # Session-fatal driver errors: the Appium session is gone and no recovery,
 # swallow, or retry at any layer is meaningful — these must always propagate.
-SESSION_FATAL = (InvalidSessionIdException,)
+# A crashed UIA2 instrumentation serializes as a bare WebDriverException with
+# an instrumentation message, so it is matched by text, not type.
+SESSION_FATAL = (InvalidSessionIdException, NoSuchWindowException)
+
+_SESSION_FATAL_MARKERS = (
+    "instrumentation process is not running",
+    "instrumentation process cannot continue",
+    "cannot be proxied to uiautomator2 server",
+)
+
+
+def is_session_fatal(exc: BaseException) -> bool:
+    if isinstance(exc, SESSION_FATAL):
+        return True
+    msg = str(exc).lower()
+    return any(marker in msg for marker in _SESSION_FATAL_MARKERS)
 
 class ProfileCreationFlowError(Exception):
     """

@@ -435,7 +435,9 @@ class OnboardingFlow:
             else:
                 self.logger.error("Failed to dismiss push notifications dialog")
                 actions.append("push_notifications:dismiss_failed")
-                success = False
+                raise OnboardingFlowError(
+                    "Push notifications dialog visible but could not be dismissed"
+                )
         else:
             self.logger.warning(
                 "Push notifications dialog did not appear within 30s — unexpected"

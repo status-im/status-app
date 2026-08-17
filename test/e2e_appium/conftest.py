@@ -463,9 +463,11 @@ def _capture_failure_artifacts(item, rep):
                     except Exception as err:
                         log.warning(f"Failed to persist {log_type} log for {test_id}: {err}")
             if log_paths:
+                captured_any = True
                 global _saved_failure_logs
                 _saved_failure_logs.extend(log_paths)
 
+        setattr(item, "_failure_artifacts_attempted", True)
         if captured_any:
             setattr(item, "_failure_artifacts_saved", True)
         else:
@@ -486,7 +488,8 @@ def pytest_runtest_makereport(item, call):
 
     # Failure evidence is captured in the phase that failed, before any
     # stash gating or teardown mutation (single- and multi-device alike).
-    if rep.failed and not getattr(item, "_failure_artifacts_saved", False):
+    if rep.failed and not getattr(item, "_failure_artifacts_saved", False) \
+            and not getattr(item, "_failure_artifacts_attempted", False):
         _capture_failure_artifacts(item, rep)
 
     if rep.when == "call":

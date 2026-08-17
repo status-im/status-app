@@ -19,7 +19,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from config import get_config, log_element_action
-from utils.exceptions import SESSION_FATAL
+from urllib3.exceptions import HTTPError as _TransportError
+
+from utils.exceptions import SESSION_FATAL, is_session_fatal
 from utils.app_lifecycle_manager import AppLifecycleManager
 from utils.element_state_checker import ElementStateChecker
 from utils.exceptions import ElementInteractionError
@@ -261,10 +263,8 @@ class BasePage:
             )
         except ElementInteractionError:
             return False
-        except SESSION_FATAL:
-            raise
-        except WebDriverException as e:
-            if not catch_driver_errors:
+        except (WebDriverException, _TransportError) as e:
+            if is_session_fatal(e) or not catch_driver_errors:
                 raise
             self.logger.warning(
                 "try_click swallowed non-interaction error: %s: %s",

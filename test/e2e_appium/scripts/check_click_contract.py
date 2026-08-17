@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Click-contract checker v2 (AST, two-pass). DDR-001 enforcement.
+"""Click-contract checker v2 (AST, two-pass).
 
 Contract: click() raises on failure and only ever returns True (True = input
 dispatched, not UI reacted); try_click() returns bool and never raises for
@@ -15,7 +15,7 @@ bare raising click()); R-IGNORED (statement-level call of an indexed
 outcome-reporting bool method); R-CONFLICT (same method name indexed with
 conflicting contracts); safe_click token ban.
 
-Accepted false negatives (documented per DDR-001 §4): ``_ = x()`` discards;
+Accepted false negatives: ``_ = x()`` discards; await/dynamic edge cases below;
 dynamic dispatch/getattr; contracts of methods called through variables;
 bare raising clicks inside bool functions without a returning tail;
 decorator-altered return contracts.
@@ -38,6 +38,7 @@ BEST_EFFORT_PREFIXES = (
     "swipe_", "tap", "activation_", "activate_", "terminate_", "find_", "close",
     "_try_", "_is_", "_has_", "_wait_", "_ensure_", "_scroll_", "_dismiss_",
     "_hide_", "_swipe_", "_tap", "_activation_", "_activate_", "_close",
+    "_find_", "_terminate_",
 )
 BEST_EFFORT_NAMES = {
     "hide_keyboard", "element_tap", "double_tap", "long_press_element",
@@ -72,7 +73,6 @@ class Indexer(ast.NodeVisitor):
 
     def __init__(self):
         self.bool_methods = {}   # name -> True
-        self.always_true = {}    # name -> [locations]
         self.conflicts = {}      # name -> set of contract kinds seen
 
     def visit_FunctionDef(self, node):
@@ -84,18 +84,8 @@ class Indexer(ast.NodeVisitor):
     def _handle(self, node):
         kind = "bool" if is_bool_annotation(node.returns) else "other"
         self.conflicts.setdefault(node.name, set()).add(kind)
-        if kind != "bool":
-            return
-        self.bool_methods[node.name] = True
-        returns = [n for n in own_nodes(node) if isinstance(n, ast.Return)]
-        all_true = returns and all(
-            isinstance(r.value, ast.Constant) and r.value.value is True for r in returns
-        )
-        if all_true:
-            for n in own_nodes(node):
-                if isinstance(n, ast.Expr) and is_click_call(n.value) and has_args(n.value):
-                    self.always_true.setdefault(node.name, [])
-                    break
+        if kind == "bool":
+            self.bool_methods[node.name] = True
 
 
 def own_nodes(func):
@@ -134,7 +124,9 @@ class Checker(ast.NodeVisitor):
     def visit_Assert(self, n): self._check_value(n.test, "assert"); self.generic_visit(n)
     def visit_IfExp(self, n): self._check_value(n.test, "ternary condition"); self.generic_visit(n)
     def visit_comprehension(self, n):
-        for cond in n.ifs: self._check_value(cond, "comprehension condition")
+        for cond in n.ifs:
+            self._check_value(cond, "comprehension condition")
+        self.generic_visit(n)
 
     def visit_Assign(self, n):
         self._check_value(n.value, "bool assignment"); self.generic_visit(n)
@@ -149,9 +141,16 @@ class Checker(ast.NodeVisitor):
 
     def visit_Expr(self, n):
         v = n.value
-        if isinstance(v, ast.Call) and isinstance(v.func, ast.Attribute):
-            name = v.func.attr
-            if name in self.index.bool_methods and not best_effort(name) and name != CLICK:
+        if isinstance(v, ast.Await):
+            v = v.value
+        if isinstance(v, ast.Call):
+            name = None
+            if isinstance(v.func, ast.Attribute):
+                name = v.func.attr
+            elif isinstance(v.func, ast.Name):
+                name = v.func.id
+            if (name and name in self.index.bool_methods
+                    and not best_effort(name) and name != CLICK):
                 self.flag(n, "R-IGNORED",
                           f"result of bool method '{name}' ignored — assert or branch on it")
         self.generic_visit(n)
@@ -165,7 +164,12 @@ class Checker(ast.NodeVisitor):
                             self.flag(st, "R-WRAPPER",
                                       f"bool wrapper '{n.name}' returns raising click() — "
                                       "tail can raise; return try_click or catch")
-            if n.name in self.index.always_true:
+            returns = [st for st in own_nodes(n) if isinstance(st, ast.Return)]
+            all_true = returns and all(
+                isinstance(r.value, ast.Constant) and r.value.value is True
+                for r in returns
+            )
+            if all_true:
                 for st in own_nodes(n):
                     if isinstance(st, ast.Expr) and is_click_call(st.value) and has_args(st.value):
                         self.flag(st, "R-ALWAYS-TRUE",

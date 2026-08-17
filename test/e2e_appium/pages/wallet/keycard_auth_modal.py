@@ -60,7 +60,8 @@ class KeycardAuthenticationModal(BasePage):
                 return False
 
             if not self.try_click(
-                self.locators.KEYCARD_AUTHENTICATE_BUTTON, timeout=timeout
+                self.locators.KEYCARD_AUTHENTICATE_BUTTON, timeout=timeout,
+                catch_driver_errors=True,
             ):
                 self.logger.error("Failed to tap Authenticate")
                 self.dump_page_source("auth_button_tap_failed")

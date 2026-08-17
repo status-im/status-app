@@ -48,6 +48,12 @@ class App(BasePage):
             self.logger.info("Already in Messages section — skipping nav")
             return True
         from utils.screen_identity import SCREEN_ANCHORS
+        # Landmark early-return: active_section() reads 'unknown' with the
+        # drawer closed even when the chat list is on screen, and the drawer
+        # dance can wedge on exactly that state.
+        if self.is_element_visible(SCREEN_ANCHORS["messages"], timeout=1):
+            self.logger.info("Messages landmark already visible — skipping nav")
+            return True
         return self._click_drawer_nav_with_verify(
             nav_locator=self.locators.LEFT_NAV_MESSAGES,
             landmark_locator=SCREEN_ANCHORS["messages"],

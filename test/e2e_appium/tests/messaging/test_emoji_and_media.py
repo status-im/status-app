@@ -110,12 +110,15 @@ class TestEmojiAndMedia:
             display_name = (
                 self.primary.user.display_name if self.primary and self.primary.user else None
             )
-            assert secondary_chat.open_chat_by_suffix(
+            if not secondary_chat.open_chat_by_suffix(
                 self.primary_suffix,
                 display_name=display_name,
                 timeout=self.CROSS_DEVICE_TIMEOUT,
+            ):
+                self.logger.debug("open_chat_by_suffix reported a miss; checking arrival")
+            assert secondary_chat.wait_for_message_input(timeout=10), (
+                "Chat did not open on secondary device"
             )
-            secondary_chat.wait_for_message_input(timeout=10)
 
         secondary_count_before = secondary_chat.message_count()
 
