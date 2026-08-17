@@ -6,6 +6,11 @@ from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.window import Window
 from gui.objects_map import keycard_names
+from scripts.utils.wait_for_port import wait_for_port
+
+# Matches KEYCARD_SIMULATOR_DEFAULT_SIMULATOR_ADDRESS in keycardV2/test_controller.nim
+_KEYCARD_SIMULATOR_HOST = '127.0.0.1'
+_KEYCARD_SIMULATOR_PORT = 9025
 
 
 class KeycardSimulatorController(Window):
@@ -55,6 +60,7 @@ class KeycardSimulatorController(Window):
     def start_simulator(self):
         self._start_button.click()
         self._plug_reader_button.wait_until_enabled(configs.timeouts.KEYCARD_SIM_START_TIMEOUT_MSEC)
+        wait_for_port(_KEYCARD_SIMULATOR_HOST, _KEYCARD_SIMULATOR_PORT, timeout=1, retries=20)
         return self.background()
 
     @allure.step('Create empty keycard {card_id}')
