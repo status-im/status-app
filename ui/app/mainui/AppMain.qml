@@ -2254,7 +2254,6 @@ Item {
                     }
 
                     CommunitiesPortalLoader {
-                        asynchronous: true
                         active: appMain.mainReady
                                 && appView.currentIndex === Constants.appViewStackIndex.communitiesPortal
                         rootStore: appMain.rootStore
@@ -2394,6 +2393,13 @@ Item {
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                             Layout.fillHeight: true
+
+                            // build the chrome only for the selected community
+                            // (known before anything is visible, so the startup
+                            // section pre-builds its skeletons under the cover)
+                            // and keep it for every visited one
+                            chromeNeeded: active
+                                          || model.id === appMain.rootStore.activeSectionId
 
                             active: false
                             // Do not unload section data from the memory in order not
