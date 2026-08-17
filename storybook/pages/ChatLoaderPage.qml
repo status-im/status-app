@@ -136,13 +136,15 @@ SplitView {
 
         function fillMessages(model, count, peerIdx) {
             const now = Date.now()
+            // like message_model.nim: index 0 is the newest message and
+            // history grows towards higher indexes
             for (let i = 0; i < count; ++i) {
                 const own = i % 3 === 1
-                const ts = now - (count - i) * 60000
+                const ts = now - i * 60000
                 model.append({
                     id: "msg-" + peerIdx + "-" + i,
-                    prevMsgIndex: i - 1,
-                    nextMsgIndex: i + 1,
+                    prevMsgIndex: i + 1,
+                    nextMsgIndex: i - 1,
                     prevMsgTimestamp: ts - 60000,
                     nextMsgTimestamp: ts + 60000,
                     prevMsgSenderId: "",
@@ -158,9 +160,9 @@ SplitView {
                     senderEnsVerified: false,
                     senderTrustStatus: 0,
                     amISender: own,
-                    messageText: "Message " + i + " — the quick brown fox jumps over the lazy dog. "
+                    messageText: "Message " + (count - i) + " — the quick brown fox jumps over the lazy dog. "
                                  + (i % 5 === 0 ? "A somewhat longer paragraph to vary the bubble heights and make the layout work harder while measuring text. " : ""),
-                    unparsedText: "Message " + i,
+                    unparsedText: "Message " + (count - i),
                     messageImage: "",
                     messageAttachments: "",
                     contentType: Constants.messageContentType.messageType,
@@ -230,7 +232,7 @@ SplitView {
                     chatsModel.setProperty(i, "loaderActive", true)
             }
             d.activeChatId = id
-            sectionModuleMock.activeItem = ({ id: id })
+            sectionModuleMock.activeItem = ({ id: id, type: Constants.chatType.oneToOne })
             const module = contentModuleFor(id)
             if (module && !module.messagesModel) {
                 module.messagesModel = messagesModelComp.createObject(module)
@@ -245,7 +247,7 @@ SplitView {
 
         property bool chatsLoaded: true
         property var model: chatsModel
-        property var activeItem: ({ id: "" })
+        property var activeItem: ({ id: "", type: -1 })
         property bool amIMember: true
         property bool requiresTokenPermissionToJoin: false
         property bool isWaitingOnNewCommunityOwnerToConfirmRequestToRejoin: false
