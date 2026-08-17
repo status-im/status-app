@@ -200,10 +200,22 @@ Loader {
         property var newCommunityStore: null
         property int pendingSettingsSection: -1
         property int pendingSettingsSubsection: -1
+        property int pendingViewIndex: -1
+
+        // The view switch may arrive while the section still incubates —
+        // queue it and replay on load, like the settings subsection below
+        function openCommunityView(index) {
+            if (root.item) {
+                root.item.currentIndex = index
+                return
+            }
+            pendingViewIndex = index
+        }
 
         function clearStores() {
             pendingSettingsSection = -1
             pendingSettingsSubsection = -1
+            pendingViewIndex = -1
             if (d.chatRootStore) {
                 d.chatRootStore.destroy()
                 d.chatRootStore = null
@@ -283,6 +295,10 @@ Loader {
 
     onLoaded: {
         root.item.visible = true
+        if (d.pendingViewIndex !== -1) {
+            root.item.currentIndex = d.pendingViewIndex
+            d.pendingViewIndex = -1
+        }
         d.applyPendingCommunitySettingsSubsection()
     }
     
@@ -304,14 +320,12 @@ Loader {
         function onSwitchToCommunitySettings(communityId) {
             if (communityId !== root.sectionId)
                 return
-            if (root.item)
-                root.item.currentIndex = 1 // Settings
+            d.openCommunityView(1) // Settings
         }
         function onSwitchToCommunityChannelsView(communityId) {
             if (communityId !== root.sectionId)
                 return
-            if (root.item)
-                root.item.currentIndex = 0
+            d.openCommunityView(0) // Channels
         }
         function onSwitchToCommunitySettingsSubsection(communityId, subsection, subsectionItem) {
             if (communityId !== root.sectionId)
