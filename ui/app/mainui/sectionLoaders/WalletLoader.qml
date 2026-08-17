@@ -80,12 +80,29 @@ Loader {
         onBackButtonClicked: root.item?.handleBackButtonClicked()
         subsectionHistory: root.item?.subsectionHistory ?? null
 
-        leftPanel: root.item?.leftPanel ?? accountsSkeleton
-        centerPanel: root.item?.centerPanel ?? centerSkeleton
+        leftPanel: leftPanelGate.up ? root.item.leftPanel : accountsSkeleton
+        centerPanel: centerPanelGate.up ? root.item.centerPanel : centerSkeleton
         headerBackground: root.item?.headerBackground ?? null
         footer: root.item?.footer ?? null
 
         leftPanelWidthOverride: root.leftPanelWidthOverride
+
+        onPanelSwitchStarted: d.panelSwitchOngoing = true
+        onPanelSwitchEnded: d.panelSwitchOngoing = false
+    }
+
+    // One gate per chrome slot: skeleton→panel promotion waits out the
+    // chrome's panel-switch animation, or the swap frame stutters it.
+    PanelSwapGate {
+        id: leftPanelGate
+        ready: !!(root.item?.leftPanel ?? null)
+        switchOngoing: d.panelSwitchOngoing
+    }
+
+    PanelSwapGate {
+        id: centerPanelGate
+        ready: !!(root.item?.centerPanel ?? null)
+        switchOngoing: d.panelSwitchOngoing
     }
 
     // Skeleton slot items carry the same page paddings as the real panels
@@ -95,7 +112,9 @@ Loader {
     // of the section.
     Loader {
         id: accountsSkeleton
-        active: root.status !== Loader.Ready
+        // the privacy wall is a full-page item: no panels will ever arrive,
+        // so don't keep a skeleton alive behind the hidden chrome
+        active: !leftPanelGate.up && d.targetUrl !== d.privacyWallUrl
         visible: active
 
         sourceComponent: WalletAccountsSkeleton {
@@ -106,7 +125,7 @@ Loader {
 
     Loader {
         id: centerSkeleton
-        active: root.status !== Loader.Ready
+        active: !centerPanelGate.up && d.targetUrl !== d.privacyWallUrl
         visible: active
 
         sourceComponent: WalletCenterPanelSkeleton {
@@ -132,6 +151,11 @@ Loader {
         readonly property url realUrl: QmlCompiler.walletUrl
         readonly property url privacyWallUrl: QmlCompiler.walletPrivacyWallUrl
         readonly property url targetUrl: rootStore.thirdpartyServicesEnabled ? realUrl : privacyWallUrl
+
+        // The portrait chrome animates panel switches and brackets them with
+        // panelSwitchStarted/Ended: a panel that becomes ready mid-slide
+        // keeps its skeleton (via its PanelSwapGate) until the slide ends.
+        property bool panelSwitchOngoing: false
     }
 
     Component.onCompleted: {

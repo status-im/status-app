@@ -167,6 +167,33 @@ Item {
             }
         }
 
+        function test_panelSwapWaitsOutPanelSwitch_data() { return loaderCases() }
+
+        // A panel that becomes ready while the chrome's panel-switch
+        // animation runs must keep its skeleton until the switch ends —
+        // swapping mid-slide stutters the animation. Applies to every slot.
+        function test_panelSwapWaitsOutPanelSwitch(data) {
+            const loader = createLoaderWithStub(data.comp)
+            const stub = loader.item
+            const chrome = findChild(loader, "sectionChrome")
+            verify(!!chrome)
+
+            chrome.panelSwitchStarted()
+            for (const spec of slotSpecs) {
+                stub[spec.flag] = true
+                verify(chrome[spec.slot] === findChild(loader, spec.skeleton),
+                       spec.slot + " must hold its skeleton while a panel switch runs")
+            }
+
+            chrome.panelSwitchEnded()
+            for (const spec of slotSpecs) {
+                verify(chrome[spec.slot] === stub[spec.slot],
+                       spec.slot + " must swap in once the switch ends")
+                verify(!findChild(loader, spec.skeleton).active,
+                       spec.skeleton + " must be released after the deferred swap")
+            }
+        }
+
         function test_slotsAreIndependent_data() { return loaderCases() }
 
         // Retiring one slot must leave the other three on their skeletons.
