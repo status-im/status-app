@@ -5,12 +5,14 @@ import utils
 
 import "helpers"
 
-// The members panel is built once per section, asynchronously behind
-// MembersListSkeleton, and shared across the section's channels. These tests
-// pin that the skeleton covers only that initial incubation: channel switches
-// — whether they keep the members model or swap it (permissioned channels) —
-// must neither tear the panel down nor bring the skeleton back, because the
-// model arrives pre-sorted from Nim and rebinding it is cheap.
+// The members panel loads asynchronously behind the section chrome's members
+// skeleton (the loader-owned "rightPanelSkeleton" slot), which must hold until
+// the first viewport of member rows is actually built — swapping earlier makes
+// ListView build every row in one GUI-thread frame and freezes the shimmer
+// mid-sweep. Channel switches — whether they keep the members model or swap it
+// (permissioned channels) — must neither tear the panel down nor bring the
+// skeleton back, because the model arrives pre-sorted from Nim and rebinding
+// it is cheap.
 Item {
     id: root
 
@@ -63,10 +65,10 @@ Item {
             const view = harness.findChildByTypePrefix(loader, "ChatView")
             verify(!!view, "the section must load the paneled chat view")
 
-            const skeleton = findChild(loader, "membersPanelSkeleton")
-            verify(!!skeleton, "the members panel must have its skeleton")
-            tryVerify(() => !skeleton.visible, 20000,
-                      "the members skeleton must clear once the panel is built")
+            const skeleton = findChild(loader, "rightPanelSkeleton")
+            verify(!!skeleton, "the chrome must have its members skeleton slot")
+            tryVerify(() => !skeleton.active, 20000,
+                      "the members skeleton must clear once the rows are built")
 
             const list = findChild(loader, "userListPanel")
             verify(!!list)
@@ -114,6 +116,116 @@ Item {
                     return row
             }
             return null
+        }
+
+        // Counts the real member rows built at the exact instant `skeleton`
+        // deactivates; -1 if it never deactivated while armed.
+        function armRowsAtClearProbe(loader, skeleton) {
+            const probe = { builtAtClear: -1 }
+            skeleton.activeChanged.connect(() => {
+                if (!skeleton.active && probe.builtAtClear === -1) {
+                    const list = findChild(loader, "userListPanel")
+                    probe.builtAtClear = list
+                            ? harness.findAllByTypePrefix(
+                                  list.contentItem,
+                                  "StatusMemberListItem_QMLTYPE", []).length
+                            : 0
+                }
+            })
+            return probe
+        }
+
+        function expectedViewportRows(list) {
+            const expected = Math.min(list.count, Math.floor(list.height / 64))
+            verify(expected > 0, "the viewport must fit at least one member row")
+            return expected
+        }
+
+        // The swap frame is the freeze: if the skeleton clears before the
+        // initially-visible member rows exist, ListView builds them all in
+        // one GUI-thread frame and the shimmer stalls mid-sweep. The skeleton
+        // must hold until that first viewport of rows is actually built.
+        function test_membersSkeletonHoldsUntilRowsBuilt() {
+            harness.loader.active = true
+            const loader = harness.loader.item
+            verify(!!loader)
+
+            // the chrome skeleton exists (and covers) from the first frame,
+            // before the section view is even loaded — watch it from here
+            const skeleton = findChild(loader, "rightPanelSkeleton")
+            verify(!!skeleton)
+            verify(skeleton.active,
+                   "the members skeleton must cover the section load")
+            const probe = armRowsAtClearProbe(loader, skeleton)
+
+            tryVerify(() => !skeleton.active, 20000,
+                      "the members skeleton must eventually clear")
+
+            const list = findChild(loader, "userListPanel")
+            verify(!!list)
+            const expected = expectedViewportRows(list)
+            verify(probe.builtAtClear >= expected,
+                   "skeleton cleared with only " + probe.builtAtClear + " of "
+                   + expected + " visible member rows built")
+        }
+
+        // In portrait the chrome slides between panels and brackets the slide
+        // with panelSwitchStarted/panelSwitchEnded. A panel that becomes
+        // ready mid-slide must keep its skeleton until the end signal —
+        // swapping mid-slide stutters the animation.
+        function test_membersPanelPromotionWaitsOutPanelSwitch() {
+            harness.loader.active = true
+            const loader = harness.loader.item
+            verify(!!loader)
+
+            const chrome = findChild(loader, "sectionChrome")
+            verify(!!chrome)
+            const skeleton = findChild(loader, "rightPanelSkeleton")
+            verify(!!skeleton)
+
+            // a panel switch starts before the members panel is ready...
+            chrome.panelSwitchStarted()
+
+            tryVerify(() => loader.status === Loader.Ready, 120000)
+            const view = harness.findChildByTypePrefix(loader, "ChatView")
+            verify(!!view)
+            tryVerify(() => view.rightPanelReady, 20000,
+                      "the members panel must become ready underneath")
+            verify(skeleton.active,
+                   "the skeleton must hold while the panel switch is in flight")
+
+            chrome.panelSwitchEnded()
+            tryVerify(() => !skeleton.active, 5000,
+                      "the panel must swap in once the switch ends")
+            const list = findChild(loader, "userListPanel")
+            verify(!!list)
+            tryVerify(() => list.count > 0)
+        }
+
+        // The panel is loaded only while shown: hiding the members list
+        // discards it, and the next show re-incubates it behind the
+        // skeleton, held until the rows are back.
+        function test_membersPanelDiscardedWhenHidden() {
+            const ctx = loadSectionWithMembers()
+
+            ctx.view.showUsersList = false
+            tryVerify(() => findChild(ctx.loader, "userListPanel") === null,
+                      5000, "hiding the members panel must unload it")
+
+            const probe = armRowsAtClearProbe(ctx.loader, ctx.skeleton)
+            ctx.view.showUsersList = true
+            verify(ctx.skeleton.active,
+                   "re-showing the members panel must bring the skeleton up")
+
+            tryVerify(() => !ctx.skeleton.active, 20000,
+                      "the members skeleton must clear again after the re-show")
+
+            const list = findChild(ctx.loader, "userListPanel")
+            verify(!!list)
+            const expected = expectedViewportRows(list)
+            verify(probe.builtAtClear >= expected,
+                   "skeleton cleared with only " + probe.builtAtClear + " of "
+                   + expected + " visible member rows built on re-show")
         }
 
         // Landing on a channel with its own members model swaps the model
