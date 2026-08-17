@@ -995,10 +995,12 @@ Item {
         }
 
         // The active section's loaded item (appView's children stay in sync with
-        // currentIndex). May be null while a section is still loading.
+        // currentIndex). While a section is still loading this falls back to
+        // the loader itself: loaders owning interactive skeleton chrome
+        // forward the back contract (canGoBack/tryGoBack) for that phase.
         function activeSectionItem() {
             const loader = appView.children[appView.currentIndex]
-            return loader ? loader.item : null
+            return loader ? (loader.item ?? loader) : null
         }
 
         // True when the active section can step back internally (e.g. portrait
