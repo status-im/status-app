@@ -2678,9 +2678,11 @@ Item {
     Instantiator {
         model: 9
         delegate: Action {
+            id: delegateAction
+            required property int index
             shortcut: "Ctrl+" + (index + 1)
-            onTriggered: index => {
-                Global.setNthEnabledSectionActive(index)
+            onTriggered: {
+                Global.setNthEnabledSectionActive(delegateAction.index)
             }
         }
     }
