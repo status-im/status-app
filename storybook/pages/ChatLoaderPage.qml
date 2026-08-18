@@ -126,6 +126,7 @@ SplitView {
                     color: "",
                     colorId: i % 10,
                     categoryOpened: true,
+                    hidden: false,
                     usesDefaultName: false,
                     onlineStatus: i % 2,
                     requiresPermissions: false,
