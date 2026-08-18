@@ -65,10 +65,13 @@ SettingsContentBase {
                   .arg(Utils.getStyledLink(qsTr("Learn more"),
                                            d.logosMessagingDocsUrl,
                                            hoveredLink,
-                                           Theme.palette.isDark ? Theme.palette.directColor1 : Theme.palette.primaryColor1,
-                                           Theme.palette.isDark ? Theme.palette.directColor1 : Theme.palette.hoverColor(Theme.palette.primaryColor1)))
+                                           Theme.palette.primaryColor1,
+                                           Theme.palette.hoverColor(Theme.palette.primaryColor1), hoveredLink))
             textFormat: Text.RichText
             onLinkActivated: (link) => Global.requestOpenLink(link)
+            HoverHandler {
+                cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : undefined
+            }
         }
 
         Separator {
@@ -95,7 +98,9 @@ SettingsContentBase {
                 color: Theme.palette.primaryColor3
 
                 StatusBaseText {
-                    anchors.centerIn: parent
+                    anchors.fill: parent
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
                     text: root.peerCountLoading || root.peerCount < 0 ?
                               "..." :
                               root.peerCount
@@ -180,6 +185,7 @@ SettingsContentBase {
                 anchors.leftMargin: d.spacing
                 anchors.rightMargin: d.spacing
                 anchors.topMargin: Theme.padding
+                anchors.bottomMargin: Theme.padding
                 spacing: Theme.padding
 
                 StatusBaseText {
