@@ -1,5 +1,5 @@
 from locators.wallet.accounts_locators import WalletAccountsLocators
-from utils.exceptions import SESSION_FATAL
+from utils.exceptions import is_session_fatal
 
 from ..base_page import BasePage
 
@@ -72,9 +72,9 @@ class KeycardAuthenticationModal(BasePage):
                 return False
             return True
 
-        except SESSION_FATAL:
-            raise
         except Exception as exc:
+            if is_session_fatal(exc):
+                raise
             self.logger.error("Auth flow failed: %s", exc, exc_info=True)
             return False
 

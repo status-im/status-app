@@ -430,8 +430,8 @@ def _capture_failure_artifacts(item, rep):
                         name=f"page_source_{test_id}",
                         attachment_type=allure.attachment_type.XML,
                     )
-            except ImportError:
-                pass
+            except Exception as attach_err:
+                log.debug(f"Allure attach failed for {test_id}: {attach_err}")
 
             log_paths: List[Path] = []
             try:
@@ -467,8 +467,10 @@ def _capture_failure_artifacts(item, rep):
                 global _saved_failure_logs
                 _saved_failure_logs.extend(log_paths)
 
-        setattr(item, "_failure_artifacts_attempted", True)
+        state = getattr(item, "_failure_evidence_state", None)
         if captured_any:
+            if state is not None:
+                state["saved"] = True
             setattr(item, "_failure_artifacts_saved", True)
         else:
             log.warning(
@@ -488,9 +490,16 @@ def pytest_runtest_makereport(item, call):
 
     # Failure evidence is captured in the phase that failed, before any
     # stash gating or teardown mutation (single- and multi-device alike).
-    if rep.failed and not getattr(item, "_failure_artifacts_saved", False) \
-            and not getattr(item, "_failure_artifacts_attempted", False):
-        _capture_failure_artifacts(item, rep)
+    # Keyed per rerun execution (pytest-rerunfailures reuses the item), and a
+    # zero-capture attempt may retry in a later phase of the same execution.
+    if rep.failed:
+        execution = getattr(item, "execution_count", 0)
+        state = getattr(item, "_failure_evidence_state", None)
+        if state is None or state.get("execution") != execution:
+            state = {"execution": execution, "saved": False}
+            item._failure_evidence_state = state
+        if not state["saved"]:
+            _capture_failure_artifacts(item, rep)
 
     if rep.when == "call":
         logger = get_logger("conftest")

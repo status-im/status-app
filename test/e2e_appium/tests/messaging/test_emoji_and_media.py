@@ -115,7 +115,12 @@ class TestEmojiAndMedia:
                 display_name=display_name,
                 timeout=self.CROSS_DEVICE_TIMEOUT,
             ):
-                self.logger.debug("open_chat_by_suffix reported a miss; checking arrival")
+                # Dispatch can report a miss although the chat opened (W3C
+                # timeout race); on phone layouts an open chat replaces the
+                # list, so a retry would false-fail. Arrival is asserted on
+                # the composer; chat identity is not separately verifiable
+                # here (bubble titles are not in the a11y tree).
+                self.logger.warning("open_chat_by_suffix reported a miss; trusting arrival check")
             assert secondary_chat.wait_for_message_input(timeout=10), (
                 "Chat did not open on secondary device"
             )

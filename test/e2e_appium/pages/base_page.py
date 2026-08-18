@@ -21,7 +21,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from config import get_config, log_element_action
 from urllib3.exceptions import HTTPError as _TransportError
 
-from utils.exceptions import SESSION_FATAL, is_session_fatal
+from utils.exceptions import is_session_fatal
 from utils.app_lifecycle_manager import AppLifecycleManager
 from utils.element_state_checker import ElementStateChecker
 from utils.exceptions import ElementInteractionError
