@@ -456,8 +456,6 @@
         <file>icons/profile/signout.svg</file>
         <file>icons/profile/sound.svg</file>
         <file>icons/profile/sync.svg</file>
-        <file>icons/protocol/Protocol=Hop.svg</file>
-        <file>icons/protocol/Protocol=Uniswap.svg</file>
         <file>icons/transaction/confirmed.svg</file>
         <file>icons/transaction/failed.svg</file>
         <file>icons/transaction/finished.svg</file>
