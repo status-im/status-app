@@ -8,24 +8,24 @@ QtObject {
 
     readonly property int defaultDelegateHeight: 76
 
-    function displayName(nickName, ensName, displayName, aliasName)
+    function displayName(nickName: string, ensName: string, displayName: string, aliasName: string) : string
     {
         return nickName || ensName || displayName || aliasName
     }
 
     // social links utils
-    function addSocialLinkPrefix(link, type) {
+    function addSocialLinkPrefix(link: string, type: int) : string {
         const prefix = Constants.socialLinkPrefixesByType[type]
         if (link.startsWith(prefix))
             return link
         return prefix + link
     }
 
-    function stripSocialLinkPrefix(link, type) {
+    function stripSocialLinkPrefix(link: string, type: int) : string {
         return link.replace(Constants.socialLinkPrefixesByType[type], "")
     }
 
-    function linkTypeToText(linkType) {
+    function linkTypeToText(linkType: int) : string {
         if (linkType === Constants.socialLinkType.twitter) return qsTr("X (Twitter)")
         if (linkType === Constants.socialLinkType.personalSite) return qsTr("Personal site")
         if (linkType === Constants.socialLinkType.github) return qsTr("Github")
@@ -35,7 +35,7 @@ QtObject {
         return "" // "custom" link type allows for user defined text
     }
 
-    function linkTypeToShortText(linkType) {
+    function linkTypeToShortText(linkType: int) : string {
         if (linkType === Constants.socialLinkType.twitter) return qsTr("X (Twitter)")
         if (linkType === Constants.socialLinkType.personalSite) return qsTr("Personal")
         if (linkType === Constants.socialLinkType.github) return qsTr("Github")
@@ -45,7 +45,7 @@ QtObject {
         return "" // "custom" link type allows for user defined text
     }
 
-    function linkTypeColor(linkType: int, palette: ThemePalette) : color {
+    function linkTypeColor(linkType: int, palette: ThemePalette) : string {
         if (linkType === Constants.socialLinkType.twitter) return "#000000"
         if (linkType === Constants.socialLinkType.github) return "#000000"
         if (linkType === Constants.socialLinkType.youtube) return "#FF3000"
@@ -54,11 +54,11 @@ QtObject {
         return palette.primaryColor1
     }
 
-    function linkTypeBgColor(linkType:int, palette: ThemePalette) : color {
+    function linkTypeBgColor(linkType:int, palette: ThemePalette) : string {
         return StatusColors.getColor(linkTypeColor(linkType, palette), 0.1)
     }
 
-    function linkTypeToDescription(linkType) {
+    function linkTypeToDescription(linkType: int) : string {
         if (linkType === Constants.socialLinkType.twitter) return qsTr("Twitter username")
         if (linkType === Constants.socialLinkType.personalSite) return qsTr("Personal site")
         if (linkType === Constants.socialLinkType.github) return qsTr("Github")
@@ -68,7 +68,7 @@ QtObject {
         return ""
     }
 
-    function linkTextToType(text) {
+    function linkTextToType(text: string): int {
         if (text === "__twitter") return Constants.socialLinkType.twitter
         if (text === "__personal_site") return Constants.socialLinkType.personalSite
         if (text === "__github") return Constants.socialLinkType.github
@@ -78,7 +78,7 @@ QtObject {
         return Constants.socialLinkType.custom
     }
 
-    function linkTypeToIcon(linkType) {
+    function linkTypeToIcon(linkType: int) : string {
         if (linkType === Constants.socialLinkType.twitter) return "xtwitter"
         if (linkType === Constants.socialLinkType.personalSite) return "language"
         if (linkType === Constants.socialLinkType.github) return "github"
@@ -89,7 +89,7 @@ QtObject {
     }
 
     // showcase
-    function visibilityIcon(showcaseVisibility) {
+    function visibilityIcon(showcaseVisibility: int) : string {
         switch (showcaseVisibility) {
         case Constants.ShowcaseVisibility.IdVerifiedContacts:
             return "checkmark-circle"
@@ -104,7 +104,7 @@ QtObject {
     }
 
     // Member role names:
-    function getMemberRoleText(memberRole) {
+    function getMemberRoleText(memberRole: int) : string {
         switch(memberRole) {
         case Constants.memberRole.owner:
             return qsTr("Owner")
