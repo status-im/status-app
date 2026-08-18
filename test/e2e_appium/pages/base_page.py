@@ -262,6 +262,7 @@ class BasePage:
                 capture_evidence=capture_evidence,
             )
         except ElementInteractionError:
+            self.logger.debug("try_click miss: %s", locator[1] if len(locator) > 1 else locator)
             return False
         except (WebDriverException, _TransportError) as e:
             if is_session_fatal(e) or not catch_driver_errors:
