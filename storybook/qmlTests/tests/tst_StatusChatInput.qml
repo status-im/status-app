@@ -162,6 +162,21 @@ Item {
             })
         }
 
+        function test_sendButton_icon_data() {
+            return [
+                { tag: "edit", isEdit: true, iconName: "checkmark" },
+                { tag: "regular", isEdit: false, iconName: "arrow-up" },
+            ]
+        }
+
+        function test_sendButton_icon(data) {
+            const toolBar = getToolBar()
+            const sendButton = findChild(toolBar, "statusChatInputSendButton")
+            verify(!!sendButton)
+            controlUnderTest.isEdit = data.isEdit
+            compare(sendButton.iconName, data.iconName)
+        }
+
         function test_editMode_toolbarButtons() {
             const toolBar = getToolBar()
             const acceptButton = findChild(controlUnderTest, "statusChatInputEditAcceptButton")
