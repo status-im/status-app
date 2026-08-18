@@ -68,8 +68,10 @@ StackLayout {
 
     // WIP: This is the new store's structure, now used, `PermissionsStore` and `CommunityAccessStore`. More stores will be added in next steps
     property CommunityStores.CommunityRootStore newCommunityStore
-    readonly property CommunityStores.CommunityAccessStore communityAccessStore: newCommunityStore.communityAccessStore
-    readonly property CommunityStores.PermissionsStore communityPermissionsStore: newCommunityStore.communityPermissionsStore
+    // null for the personal chat section (ChatLoader passes no community store)
+    // and transiently while CommunityChatLoader swaps sections
+    readonly property CommunityStores.CommunityAccessStore communityAccessStore: newCommunityStore?.communityAccessStore ?? null
+    readonly property CommunityStores.PermissionsStore communityPermissionsStore: newCommunityStore?.communityPermissionsStore ?? null
 
     // Rest of stores references (to be reviewed)
     property ChatStores.CreateChatPropertiesStore createChatPropertiesStore

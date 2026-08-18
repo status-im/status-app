@@ -230,7 +230,10 @@ Item {
 
             readonly property var inputAreaModule: QtObject {
                 readonly property var preservedProperties: ({ text: "" })
+                function clearLinkPreviewCache() {}
             }
+
+            readonly property ListModel pinnedMessagesModel: ListModel {}
 
             function markAllMessagesRead() {}
             function markMessageRead(id) {}
