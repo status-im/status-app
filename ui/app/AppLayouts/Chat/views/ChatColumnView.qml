@@ -330,6 +330,11 @@ Item {
         }
 
         function restoreInputState(preservedText) {
+            // scheduled via Qt.callLater — it can fire while this view is
+            // tearing down (chat/section switch), when the dying context has
+            // already dropped its functions
+            if (typeof d.mentionNames !== "function")
+                return
 
             if (!d.activeChatContentModule) {
                 chatInput.clear()
