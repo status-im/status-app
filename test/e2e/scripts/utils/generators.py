@@ -8,6 +8,7 @@ from eth_account.hdaccount import generate_mnemonic, Mnemonic
 import configs
 from constants import WalletAccountColors
 from constants.messaging import STATUS_CAT_STICKERS, Sticker
+from constants.networks import WalletNetworkNaming
 
 COMMUNITY_TAGS = [
     'Activism', 'Art', 'Blockchain', 'Books & blogs', 'Career', 'Collaboration', 'Commerce', 'Culture',
@@ -39,11 +40,11 @@ def random_ens_string():
 
 
 def random_network():
-    return random.choice(['Hoodi'])
+    return WalletNetworkNaming.LAYER1_ETHEREUM_TESTNET.value
 
 
 def random_network_for_minting():
-    return random.choice(['Hoodi'])
+    return WalletNetworkNaming.LAYER1_ETHEREUM_HOODI.value
 
 
 def random_community_name():

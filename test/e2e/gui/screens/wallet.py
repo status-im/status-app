@@ -285,6 +285,8 @@ class WalletAccountView(QObject):
         self._activity_view = QObject(wallet_names.activity_view)
         self._asset_item_delegate = QObject(wallet_names.itemDelegate)
         self._asset_item = QObject(wallet_names.assets_viewTokenItem)
+        self._collectible_item = QObject(wallet_names.collectible_item)
+        self._collectibles_empty_placeholder = QObject(wallet_names.collectibles_empty_placeholder)
         self._arrow_icon = QObject(wallet_names.arrow_icon_StatusIcon)
         self.footer_swap_button = Button(wallet_names.mainWindow_Swap_Button)
 
@@ -350,12 +352,23 @@ class WalletAccountView(QObject):
     def wait_for_collectibles_tab_content_loaded(
         self,
         timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
-        loading_timeout_msec: int | None = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+        loading_timeout_msec: int | None = configs.timeouts.COLLECTIBLES_SYNC_TIMEOUT_MSEC,
     ):
         self._collectibles_view.wait_until_appears(timeout_msec)
+
+        def collectibles_loaded():
+            items = driver.findAllObjects(self._collectible_item.real_name)
+            if any(getattr(item, 'isLoading', False) for item in items):
+                return False
+            if items:
+                return True
+            try:
+                return self._collectibles_empty_placeholder.is_visible
+            except (LookupError, RuntimeError, AttributeError):
+                return False
+
         _wait_until(
-            lambda: not getattr(self._collectibles_view.object, 'isFetching', False)
-            and not getattr(self._collectibles_view.object, 'isUpdating', False),
+            collectibles_loaded,
             loading_timeout_msec,
             'Collectibles tab did not finish loading',
         )
@@ -395,7 +408,7 @@ class WalletAccountView(QObject):
         self,
         timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         wait_until_loaded: bool = True,
-        loading_timeout_msec: int | None = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+        loading_timeout_msec: int | None = configs.timeouts.COLLECTIBLES_SYNC_TIMEOUT_MSEC,
     ):
         self._collectibles_tab_button.click()
         assert driver.waitFor(
@@ -466,12 +479,3 @@ class WalletAccountView(QObject):
     def open_asset_context_menu(self, index: int):
         QObject(real_name=driver.objectMap.realName(self.get_list_of_assets()[index])).right_click()
         return AssetContextMenuPopup().wait_until_appears()
-
-    @allure.step('Get list of collectibles')
-    def get_list_of_collectibles(self) -> typing.List:
-        time.sleep(1)
-        token_list_items = []
-        for item in driver.findAllObjects(self._collectible_item.real_name):
-            token_list_items.append(item)
-        sorted(token_list_items, key=lambda item: item.x)
-        return token_list_items

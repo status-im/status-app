@@ -146,12 +146,8 @@ def is_activity_tab_content_loaded(activity_view) -> bool:
 def wait_for_account_assets_loaded(
         wallet_account_view,
         timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
-        open_tab: bool = True,
 ):
-    if open_tab:
         wallet_account_view.open_assets_tab(wait_until_loaded=True, loading_timeout_msec=timeout_msec)
-    else:
-        wallet_account_view.wait_for_assets_tab_content_loaded(timeout_msec)
 
 
 def authenticate_with_password(user_account):
@@ -165,12 +161,18 @@ def assert_authenticate_popup_not_appears(timeout_msec: int = 2000):
     AuthenticatePopup().assert_does_not_appear(timeout_msec)
 
 
-@step('Open wallet and send modal after balances are loaded')
-def open_send_modal_for_account(main_window, account_name):
+@step('Open wallet account after balances are loaded')
+def open_wallet_account(main_window, account_name):
     timeout_msec = configs.timeouts.WALLET_TRANSACTION_SYNC_TIMEOUT_MSEC
     wallet = main_window.left_panel.open_wallet()
     wait_for_wallet_balances_loaded(wallet.left_panel, timeout_msec=timeout_msec)
-    wallet_account = wallet.left_panel.select_account(account_name)
+    return wallet.left_panel.select_account(account_name)
+
+
+@step('Open wallet and send modal after balances are loaded')
+def open_send_modal_for_account(main_window, account_name):
+    timeout_msec = configs.timeouts.WALLET_TRANSACTION_SYNC_TIMEOUT_MSEC
+    wallet_account = open_wallet_account(main_window, account_name)
     wait_for_account_assets_loaded(wallet_account, timeout_msec=timeout_msec)
     return wallet_account.open_send_popup()
 
@@ -181,7 +183,7 @@ def wallet_send_returning_user():
         status_address='0x44ddd47a0c7681a5b0fa080a56cbb7701db4bb43')
 
 
-def wallet_send_import_and_open_send_modal(main_window, user_account):
+def wallet_send_import_user(main_window, user_account):
     with step('Import seed and log in'):
         with step('Open Create your profile view'):
             create_your_profile_view = open_create_profile_view()
@@ -190,6 +192,10 @@ def wallet_send_import_and_open_send_modal(main_window, user_account):
 
     with step('Set testnet mode'):
         enable_testnet_mode(main_window)
+
+
+def wallet_send_import_and_open_send_modal(main_window, user_account):
+    wallet_send_import_user(main_window, user_account)
 
     with step('Open wallet send popup after balances are loaded'):
         return open_send_modal_for_account(

@@ -3,47 +3,47 @@ import time
 
 import configs
 import driver
-from gui.components.base_popup import BasePopup
-from gui.components.wallet.send_popup import *
 from gui.elements.button import Button
 from gui.elements.object import QObject
-from gui.elements.text_edit import TextEdit
 from gui.objects_map import names
+
+
+def _is_erc721(item) -> bool:
+    # ERC-1155 with balance > 1 shows a number; ERC-721 does not.
+    return not str(getattr(item, 'balance', '') or '').strip()
+
+
+def _is_collection(item) -> bool:
+    return bool(getattr(item, 'goDeeperIconVisible', False))
+
+
+def _name(item) -> str:
+    return str(getattr(item, 'name', ''))
 
 
 class TokenSelectorPopup(QObject):
     def __init__(self):
         super().__init__(names.tokenSelectorPanel_TokenSelectorNew)
-        self.token_selector_panel = QObject(names.tokenSelectorPanel_TokenSelectorNew)
-        self.tab_bar = QObject(names.tokensTabBar_StatusTabBar)
         self.assets_tab = QObject(names.tokenSelectorPanel_AssetsTab)
         self.collectibles_tab = QObject(names.tokenSelectorPanel_CollectiblesTab)
         self.asset_list_item = QObject(names.tokenSelectorAssetDelegate_template)
-        self.amount_to_send_field = TextEdit(names.amountInput_TextEdit)
 
     def select_asset_from_list(self, asset_name: str):
         self.assets_tab.click()
-        # Wait for assets to appear and collect them (up to 10 seconds)
-        timeout_sec = 30
-        started_at = time.monotonic()
-        assets_list = []
-        while (time.monotonic() - started_at) < timeout_sec:
-            found_items = driver.findAllObjects(self.asset_list_item.real_name)
-            # Check if we found the target asset in newly found items
-            for item in found_items:
-                if getattr(item, 'symbol', '') == asset_name:
-                    QObject(item).click()
-                    return self
-            # Collect all found items for final check
-            if found_items:
-                assets_list = found_items
-            if not found_items:
-                time.sleep(0.2)
-            else:
-                time.sleep(0.1)  # Shorter sleep when items are appearing
-        assert assets_list, f'Assets are not displayed after {timeout_sec} seconds'
-        # If we didn't find the asset, raise an error
-        raise LookupError(f'Asset with symbol "{asset_name}" not found in the list')
+        found = []
+
+        def asset_found():
+            found[:] = [
+                item for item in driver.findAllObjects(self.asset_list_item.real_name)
+                if getattr(item, 'symbol', '') == asset_name
+            ]
+            return bool(found)
+
+        assert driver.waitFor(asset_found, configs.timeouts.LOADING_LIST_TIMEOUT_MSEC), (
+            f'Asset with symbol "{asset_name}" did not appear'
+        )
+        QObject(found[0]).click()
+        return self
 
     def open_collectibles_search_view(self):
         self.collectibles_tab.click()
@@ -52,43 +52,56 @@ class TokenSelectorPopup(QObject):
 
 class SearchableCollectiblesPanelView(TokenSelectorPopup):
     def __init__(self):
-        super(SearchableCollectiblesPanelView, self).__init__()
-        self.searchableCollectiblesPanel = QObject(names.searchableCollectiblesPanel)
+        super().__init__()
         self.search_bar = QObject(names.tokenSelectorSearchBar)
-        self.collectibles_list_view = QObject(names.collectiblesListView)
-        self.collectibles_inner_list_view = QObject(names.collectiblesInnerListView)
-
-        self.collectiblesListViewInnerItem = QObject(names.collectiblesListViewInnerItem)
-
         self.collectible_list_item = QObject(names.tokenSelectorCollectibleDelegate_template)
         self.back_button = Button(names.tokenSelectorBackButton)
-        self.search_bar_edit = TextEdit(names.tokenSelectorSearchBarTextEdit)
 
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
         self.search_bar.wait_until_appears(timeout_msec)
         return self
 
-    def get_list(self, list_view, list_item):
-        assert driver.waitForObject(list_view.real_name,
-                                    60000).count > 0, f'ListView of nested collectibles is empty'
-        return driver.findAllObjects(list_item.real_name)
+    def _collectibles(self):
+        return driver.findAllObjects(self.collectible_list_item.real_name)
+
+    def _click(self, item):
+        QObject(item).click()
+
+    def _go_back(self):
+        if self.back_button.is_visible:
+            self.back_button.click()
+            time.sleep(0.2)
 
     def select_random_collectible(self):
-        collectibles = self.get_list(self.collectibles_list_view, self.collectible_list_item)
-        collectibles_names = [str(getattr(collectible, 'name', '')) for collectible in collectibles]
-        random_name = random.choice(collectibles_names).removeprefix('Owner-')
-        time.sleep(3)
-        self.search_bar_edit.set_text_property(random_name)
-        time.sleep(3)
-        search_results = self.get_list(self.collectibles_list_view, self.collectible_list_item)
+        assert driver.waitFor(
+            lambda: bool(self._collectibles()),
+            configs.timeouts.COLLECTIBLES_SYNC_TIMEOUT_MSEC,
+        ), 'Collectibles list did not load in token selector'
 
-        for index, item in enumerate(search_results):
-            if str(getattr(item, 'name', '')).removeprefix('Owner-') == random_name:
-                QObject(search_results[index]).click()
-                if self.back_button.is_visible:
-                    inner_collectibles = self.get_list(self.collectibles_inner_list_view, self.collectible_list_item)
-                    item_to_select = random.choice(inner_collectibles)
-                    QObject(item_to_select).click()
-                    break
-                break
-        return self
+        opened_collections = set()
+        while True:
+            tokens, collections = [], []
+            for item in self._collectibles():
+                if _is_collection(item) and _name(item) not in opened_collections:
+                    collections.append(item)
+                elif _is_erc721(item):
+                    tokens.append(item)
+
+            pool = [('token', item) for item in tokens] + [
+                ('collection', item) for item in collections
+            ]
+            if not pool:
+                raise LookupError('No ERC-721 collectibles found in token selector')
+
+            kind, item = random.choice(pool)
+            self._click(item)
+            if kind == 'token':
+                return self
+
+            opened_collections.add(_name(item))
+            time.sleep(0.3)
+            nested = [inner for inner in self._collectibles() if _is_erc721(inner)]
+            if nested:
+                self._click(random.choice(nested))
+                return self
+            self._go_back()
