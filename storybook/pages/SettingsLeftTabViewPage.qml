@@ -29,7 +29,11 @@ SplitView {
             messagingBadgeCount: ctrlMessagingBadgeCount.value
             localBackupEnabled: ctrlLocalBackupEnabled.checked
         }
-        onMenuItemClicked: (event) => logs.logEvent("onMenuItemClicked", ["event"], [event])
+        onMenuItemClicked: function(subsection) {
+            settingsSubsection = subsection
+            logs.logEvent("onMenuItemClicked", ["subsection"], [subsection])
+        }
+
     }
 
     LogsAndControlsPanel {

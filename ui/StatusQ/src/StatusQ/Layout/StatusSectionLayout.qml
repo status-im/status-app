@@ -257,6 +257,8 @@ LayoutChooser {
         landscapeView
     ]
 
+    readonly property bool isPortrait: chosenLayout === portraitView
+
     StatusSectionLayoutLandscape {
         id: landscapeView
         anchors.fill: parent

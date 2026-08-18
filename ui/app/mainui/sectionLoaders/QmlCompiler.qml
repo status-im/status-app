@@ -21,11 +21,10 @@ QtObject {
     readonly property QtObject _d: QtObject {
         id: d
         property var precompiledUrls: new Set()
-        property var pinned: []
+        property var pinned: [] // prevent GC of the `precompiledUrls`
     }
 
     signal precompileFinished(url componentUrl, bool success)
-
 
     function precompile(componentUrl, async = true) {
         if (d.precompiledUrls.has(componentUrl))

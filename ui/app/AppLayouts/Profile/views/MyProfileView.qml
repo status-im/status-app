@@ -117,8 +117,8 @@ SettingsContentBase {
         }
     }
 
-    onVisibleChanged: if (visible) profileStore.requestProfileShowcasePreferences()
-    Component.onCompleted: profileStore.requestProfileShowcasePreferences()
+    onVisibleChanged: if (visible) Qt.callLater(() => profileStore.requestProfileShowcasePreferences())
+    Component.onCompleted: Qt.callLater(() => profileStore.requestProfileShowcasePreferences())
 
     property QObject priv: QObject {
         id: priv

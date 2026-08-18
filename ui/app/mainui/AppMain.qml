@@ -1293,8 +1293,8 @@ Item {
             }
 
             if (sectionType === Constants.appSection.profile) {
-                profileLoader.settingsSubsection = subsection || Constants.settingsSubsection.profile
                 profileLoader.settingsSubSubsection = subSubsection
+                profileLoader.settingsSubsection = subsection || Constants.settingsSubsection.profile
                 profileLoader.forceSubsectionNavigation()
             } else if (sectionType === Constants.appSection.wallet) {
                 appView.children[Constants.appViewStackIndex.wallet].item.openDesiredView(subsection, subSubsection, data)
@@ -2339,11 +2339,13 @@ Item {
                         emojiPopupLoader: statusEmojiPopup
                         keychain: appMain.keychain
 
+                        userUID: d.myPublicKey
                         isProduction: appMain.rootStore.isProduction
                         isPortraitMode: appMain.isPortraitMode
                         systemTrayIconAvailable: appMain.systemTrayIconAvailable
                         theme: appMainLocalSettings.theme
                         nativeWindowDpr: d.nativeWindowDpr
+                        syncingBadgeCount: d.syncingBadgeCount
                         whitelistedDomainsModel: appMainLocalSettings.whitelistedUnfurledDomains
                         leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
 

@@ -28,7 +28,7 @@ SettingsContentBase {
     signal removeWhitelistedDomain(int index)
 
     function resetStack() {
-            stackContainer.currentIndex = 0
+        stackContainer.currentIndex = 0
     }
 
     StackLayout {

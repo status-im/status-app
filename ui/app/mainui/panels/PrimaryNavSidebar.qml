@@ -301,6 +301,9 @@ Control {
             color: d.containerBgColor
             radius: d.containerBgRadius
 
+            // prevent badge peeking out when we're fully hidden
+            clip: root.position === 0
+
             PrimaryNavSidebarButton {
                 anchors.fill: parent
                 bgRadius: parent.radius

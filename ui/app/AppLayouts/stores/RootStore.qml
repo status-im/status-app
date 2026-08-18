@@ -83,6 +83,7 @@ QtObject {
             localBackupEnabled: root.localBackupEnabled
             palette: root.palette
         }
+        onLoaded: Qt.callLater(() => item.devicesStore.loadDevices())
     }
 
     readonly property var contactsStoreLoader: Loader {

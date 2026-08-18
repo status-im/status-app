@@ -40,8 +40,6 @@ Loader {
         id: adaptor
         active: root.active
         sourceComponent: HomePageAdaptor {
-            id: homePageAdaptor
-
             readonly property bool sectionsLoaded: root.rootStore.sectionsLoaded
 
             sectionsBaseModel: sectionsLoaded ? root.rootStore.sectionsModel : null
@@ -102,7 +100,7 @@ Loader {
         target: root.item
         ignoreUnknownSignals: true
 
-        function onItemActivated(key, sectionType, itemId) {
+        function onItemActivated(key: string, sectionType: int, itemId: string): void {
             adaptor.item.setTimestamp(key, new Date().valueOf())
 
             if (sectionType === -1) { // search
@@ -135,13 +133,13 @@ Loader {
             root.appSectionRequested(sectionType, subsection, subSubsection, data)
         }
 
-        function onItemPinRequested(key, pin) {
+        function onItemPinRequested(key: string, pin: bool): void {
             adaptor.item.setPinned(key, pin)
             if (pin)
                 adaptor.item.setTimestamp(key, new Date().valueOf())
         }
 
-        function onDappDisconnectRequested(dappUrl) {
+        function onDappDisconnectRequested(dappUrl: string): void {
             root.dappsServiceLoader.dappDisconnectRequested(dappUrl)
         }
     }

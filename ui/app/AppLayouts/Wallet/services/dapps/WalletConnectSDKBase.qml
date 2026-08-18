@@ -3,7 +3,7 @@ import QtQuick
 /// Abstract base for WC/BC SDK implementations (ConnectorWCSDK, DappsConnectorSDK)
 Item {
     required property string projectId
-    property bool enabled: true
+    enabled: true
 
     signal statusChanged(string message)
     signal sdkInit(bool success, var result)

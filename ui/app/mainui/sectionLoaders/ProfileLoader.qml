@@ -54,14 +54,16 @@ Loader {
     required property Keychain keychain
 
     // Inputs
+    required property string userUID
     required property bool isProduction
     required property bool isPortraitMode
     required property bool systemTrayIconAvailable
     required property int theme
     required property var whitelistedDomainsModel
     required property real nativeWindowDpr // baseline/native DPR of the respective Screen
+    required property int syncingBadgeCount
 
-    property int settingsSubsection: isPortraitMode ? -1 : Constants.settingsSubsection.profile // load and select Profile on desktop; nothing on mobile
+    property int settingsSubsection: isPortraitMode ? -1 : Constants.settingsSubsection.profile // load and select Profile on desktop; nothing on mobile, just the left panel list
     property int settingsSubSubsection: -1
     property real leftPanelWidthOverride: 0
 
@@ -69,24 +71,6 @@ Loader {
         if (root.item && root.item.forceSubsectionNavigation) {
             root.item.forceSubsectionNavigation()
         }
-    }
-
-    onSettingsSubsectionChanged: {
-        if (root.item && root.item.settingsSubsection !== root.settingsSubsection) {
-            root.item.settingsSubsection = root.settingsSubsection
-        }
-    }
-
-    onSettingsSubSubsectionChanged: {
-        if (root.item && root.item.settingsSubSubsection !== root.settingsSubSubsection) {
-            root.item.settingsSubSubsection = root.settingsSubSubsection
-        }
-    }
-
-    Binding {
-        when: !!root.item
-        root.settingsSubsection: root.item.settingsSubsection
-        root.settingsSubSubsection: root.item.settingsSubSubsection
     }
 
     // Signals re-emitted so AppMain can mutate appMainLocalSettings / Theme outside the loader
@@ -103,12 +87,14 @@ Loader {
     function loadSection() {
         if (!root.active)
             return
+        if (!!root.item)
+            return
         if (root.source === QmlCompiler.profileUrl)
             return
         setSource(QmlCompiler.profileUrl, {
             visible:                                false,
-            isProduction:                           Qt.binding(() => root.isProduction),
-            userUID:                                Qt.binding(() => root.profileStore.pubKey),
+            isProduction:                           root.isProduction,
+            userUID:                                root.userUID,
             sharedRootStore:                        Qt.binding(() => root.sharedRootStore),
             utilsStore:                             Qt.binding(() => root.utilsStore),
             aboutStore:                             Qt.binding(() => root.aboutStore),
@@ -134,13 +120,13 @@ Loader {
             currencyStore:                          Qt.binding(() => root.currencyStore),
             networksStore:                          Qt.binding(() => root.networksStore),
             messagingRootStore:                     Qt.binding(() => root.messagingRootStore),
-            keychain:                               Qt.binding(() => root.keychain),
-            emojiPopup:                             Qt.binding(() => root.emojiPopupLoader.item),
-            mutualContactsModel:                    Qt.binding(() => root.contactsAdaptor.mutualContacts),
-            blockedContactsModel:                   Qt.binding(() => root.contactsAdaptor.blockedContacts),
-            pendingContactsModel:                   Qt.binding(() => root.contactsAdaptor.pendingContacts),
+            keychain:                               root.keychain,
+            emojiPopup:                             root.emojiPopupLoader.item,
+            mutualContactsModel:                    root.contactsAdaptor.mutualContacts,
+            blockedContactsModel:                   root.contactsAdaptor.blockedContacts,
+            pendingContactsModel:                   root.contactsAdaptor.pendingContacts,
             pendingReceivedContactsCount:           Qt.binding(() => root.contactsAdaptor.pendingReceivedRequestContacts.count),
-            dismissedReceivedRequestContactsModel:  Qt.binding(() => root.contactsAdaptor.dismissedReceivedRequestContacts),
+            dismissedReceivedRequestContactsModel:  root.contactsAdaptor.dismissedReceivedRequestContacts,
             isKeycardEnabled:                       Qt.binding(() => root.featureFlagsStore.keycardEnabled),
             isBrowserEnabled:                       Qt.binding(() => root.featureFlagsStore.browserEnabled),
             messageLinkSharingFeatureEnabled:       Qt.binding(() => root.featureFlagsStore.messageLinkSharingEnabled),
@@ -148,15 +134,25 @@ Loader {
             minimizeOnCloseOptionVisible:           Qt.binding(() => root.systemTrayIconAvailable),
             theme:                                  Qt.binding(() => root.theme),
             nativeWindowDpr:                        Qt.binding(() => root.nativeWindowDpr),
+            syncingBadgeCount:                      Qt.binding(() => root.syncingBadgeCount),
             whitelistedDomainsModel:                Qt.binding(() => root.whitelistedDomainsModel),
             leftPanelWidthOverride:                 Qt.binding(() => root.leftPanelWidthOverride),
-            settingsSubsection:                     Qt.binding(() => root.settingsSubsection),
-            settingsSubSubsection:                  Qt.binding(() => root.settingsSubSubsection)
         })
     }
 
-    onActiveChanged: loadSection()
+    onActiveChanged: {
+        if (active)
+            loadSection()
+        else {
+            // reinit the bindings from scratch when unloading
+            root.settingsSubsection = Qt.binding(() => root.isPortraitMode ? -1 : Constants.settingsSubsection.profile)
+            root.settingsSubSubsection = -1
+        }
+    }
     onLoaded: {
+        // late bindings in order to re-eval when invoking Settings from outside
+        item.settingsSubsection = Qt.binding(() => root.settingsSubsection)
+        item.settingsSubSubsection = Qt.binding(() => root.settingsSubSubsection)
         item.visible = true
     }
 
@@ -164,9 +160,6 @@ Loader {
         target: root.item
         ignoreUnknownSignals: true
 
-        function onSettingsSubsectionChanged() {
-            root.settingsSubsection = root.item.settingsSubsection
-        }
         function onAddressWasShownRequested(address) {
             WalletStores.RootStore.addressWasShown(address)
         }

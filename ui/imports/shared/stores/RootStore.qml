@@ -23,6 +23,6 @@ QtObject {
     }
 
     function getPasswordStrengthScore(password) {
-        return root.privacyModule.getPasswordStrengthScore(password, "");
+        return root.privacyModule.getPasswordStrengthScore(password)
     }
 }
