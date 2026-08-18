@@ -405,6 +405,7 @@ SettingsContentBase {
             implicitHeight: root.availableHeight
             Layout.fillWidth: true
 
+            currentIndex: root.settingsSubSubsection - 2 // manageNetworks, manageAccounts
             tokensStore: root.tokensStore
             thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
             tokenListUpdatedAt: tokensStore.tokenListUpdatedAt

@@ -24,7 +24,7 @@ import StatusQ.Core.Utils
 StatusListView {
     id: root
 
-    property int currenctSubsection
+    property int currenctSubsection: -1
 
     signal clicked(int subsection)
 

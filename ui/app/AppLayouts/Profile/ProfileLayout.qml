@@ -39,8 +39,8 @@ StatusSectionLayout {
     required property bool isProduction
     required property string userUID
 
-    property alias settingsSubsection: leftPanel.settingsSubsection
-    property int settingsSubSubsection
+    property int settingsSubsection: -1
+    property int settingsSubSubsection: -1
 
     objectName: "profileStatusSectionLayout"
 
@@ -92,7 +92,9 @@ StatusSectionLayout {
     required property real nativeWindowDpr // baseline/native DPR of the respective Screen
 
     required property var whitelistedDomainsModel
- 
+
+    required property int syncingBadgeCount
+
     signal addressWasShownRequested(string address)
     signal connectUsernameRequested(string ensName, string ownerAddress)
     signal registerUsernameRequested(string ensName, int chainId)
@@ -118,13 +120,13 @@ StatusSectionLayout {
             Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.about)
             break;
         case Constants.settingsSubsection.wallet:
-            walletView.item.goBack()
+            profileContainer.currentItem.goBack()
             break;
         case Constants.settingsSubsection.privacyAndSecurity:
-            privacyAndSecurityView.item.resetStack()
+            profileContainer.currentItem.resetStack()
             break;
         case Constants.settingsSubsection.keycardNew:
-            keycardViewNew.item.handleBackAction()
+            profileContainer.currentItem.handleBackAction()
             break;
         }
 
@@ -135,20 +137,13 @@ StatusSectionLayout {
         root.goToNextPanel()
     }
 
-    Component.onCompleted: {
-        Qt.callLater(() => {
-                         profileContainer.currentIndexChanged()
-                         root.devicesStore.loadDevices() // Load devices to get non-paired number for badge
-                     })
-    }
-
     QtObject {
         id: d
 
         readonly property int contentWidth: Math.min(root.centerPanel.width, 560)
         readonly property int rightPanelWidth: Math.min(root.centerPanel.height, 768)
 
-        readonly property bool isProfilePanelActive: profileContainer.currentIndex === Constants.settingsSubsection.profile
+        readonly property bool isProfilePanelActive: root.settingsSubsection === Constants.settingsSubsection.profile
         readonly property bool sideBySidePreviewAvailable: root.Window.width >= 1840 // design
 
         // Used to alternatively add an error message to the dirty bubble if ephemeral notification
@@ -168,7 +163,7 @@ StatusSectionLayout {
         isKeycardEnabled: root.isKeycardEnabled
         localBackupEnabled: root.devicesStore.localBackupEnabled
 
-        syncingBadgeCount: root.devicesStore.totalDevicesCount - root.devicesStore.pairedDevicesCount
+        syncingBadgeCount: root.syncingBadgeCount
         messagingBadgeCount: root.pendingReceivedContactsCount
     }
 
@@ -176,59 +171,127 @@ StatusSectionLayout {
     subsectionHistory: SQUtils.SubsectionNavigationHistory {
         currentKey: root.settingsSubsection
         validateFn: (key) => SQUtils.ModelUtils.indexOf(settingsEntriesModel, "subsection", parseInt(key)) >= 0
-        onNavigateRequested: (key) => root.settingsSubsection = parseInt(key)
+        onNavigateRequested: (key) => {
+                                 Global.changeAppSectionBySectionType(Constants.appSection.profile, parseInt(key))
+                                 root.goToNextPanel()
+                             }
     }
 
     leftPanel: SettingsLeftTabView {
         id: leftPanel
         anchors.fill: parent
 
+        settingsSubsection: root.settingsSubsection
         model: settingsEntriesModel
 
-        onMenuItemClicked: function(event) {
-            if (profileContainer.currentItem.dirty && !profileContainer.currentItem.ignoreDirty) {
-                event.accepted = true;
+        onMenuItemClicked: function(subsection) {
+            if (profileContainer.currentItem?.dirty && !profileContainer.currentItem?.ignoreDirty) {
                 profileContainer.currentItem.notifyDirty();
+                return
             }
+            Global.changeAppSectionBySectionType(Constants.appSection.profile, subsection)
             root.goToNextPanel();
         }
     }
 
-    centerPanel: StackLayout {
-        id: profileContainer
+    function loadSection(section: int): void {
+        d.backButtonName = ""
+        if (section === -1) {
+            profileContainer.clear()
+            return
+        }
+        var componentToLoad = null
+        switch (section) {
+        case Constants.settingsSubsection.profile:
+            componentToLoad = myProfileViewComp
+            break
+        case Constants.settingsSubsection.password:
+            componentToLoad = changePasswordViewComp
+            break
+        case Constants.settingsSubsection.contacts:
+            d.backButtonName = settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.messaging)
+            componentToLoad = contactsViewComp
+            break
+        case Constants.settingsSubsection.ensUsernames:
+            componentToLoad = ensViewComp
+            break
+        case Constants.settingsSubsection.messaging:
+            componentToLoad = messagingViewComp
+            break
+        case Constants.settingsSubsection.wallet:
+            componentToLoad = walletViewComp
+            break
+        case Constants.settingsSubsection.appearance:
+            componentToLoad = appearanceViewComp
+            break
+        case Constants.settingsSubsection.language:
+            componentToLoad = languageViewComp
+            break
+        case Constants.settingsSubsection.notifications:
+            componentToLoad = notificationsViewComp
+            break
+        case Constants.settingsSubsection.syncingSettings:
+            componentToLoad = syncingViewComp
+            break
+        case Constants.settingsSubsection.browserSettings:
+            componentToLoad = browserViewComp
+            break
+        case Constants.settingsSubsection.advanced:
+            componentToLoad = advancedViewComp
+            break
+        case Constants.settingsSubsection.about:
+            componentToLoad = aboutViewComp
+            break
+        case Constants.settingsSubsection.communitiesSettings:
+            componentToLoad = communitiesViewComp
+            break
+        case Constants.settingsSubsection.keycardNew:
+            componentToLoad = keycardViewNewComp
+            break
+        case Constants.settingsSubsection.about_terms:
+            d.backButtonName = settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.about)
+            componentToLoad = termsOfUseComp
+            break
+        case Constants.settingsSubsection.about_privacy:
+            d.backButtonName = settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.about)
+            componentToLoad = privacyPolicyComp
+            break
+        case Constants.settingsSubsection.privacyAndSecurity:
+            componentToLoad = privacyAndSecurityViewComp
+            break
+        case Constants.settingsSubsection.backupSettings:
+            componentToLoad = backupViewComp
+            break
+        case Constants.settingsSubsection.logosNetworkSettings:
+            componentToLoad = logosNetworkViewComp
+            break
+        default:
+            console.warn("ProfileLayout.loadSection: unhandled settings subsection:", section)
+            break
+        }
+        if (!!componentToLoad) {
+            profileContainer.replaceCurrentItem(componentToLoad, {}, StackView.Immediate)
+        }
+    }
 
-        readonly property var currentItem: (currentIndex >= 0 && currentIndex < children.length) ? children[currentIndex].item : null
+    Connections {
+        target: root
+        function onSettingsSubsectionChanged(): void {
+            root.loadSection(root.settingsSubsection)
+        }
+    }
+
+    centerPanel: StackView {
+        id: profileContainer
 
         anchors.fill: parent
         anchors.leftMargin: root.Theme.xlPadding * 2
         anchors.rightMargin: root.Theme.xlPadding * 2
 
-        currentIndex: leftPanel.settingsSubsection
-        onCurrentIndexChanged: {
-            if (!!children[currentIndex] && !children[currentIndex].active)
-                children[currentIndex].active = true
-
-            d.backButtonName = ""
-
-            if (currentIndex === Constants.settingsSubsection.contacts) {
-                d.backButtonName = settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.messaging)
-            } else if (currentIndex === Constants.settingsSubsection.about_privacy || currentIndex === Constants.settingsSubsection.about_terms) {
-                d.backButtonName = settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.about)
-            } else if (currentIndex === Constants.settingsSubsection.wallet) {
-                walletView.item.initStack()
-            } else if (currentIndex === Constants.settingsSubsection.privacyAndSecurity) {
-                privacyAndSecurityView.item.resetStack()
-            } else if (currentIndex === Constants.settingsSubsection.keycardNew) {
-                keycardViewNew.item.handleBackAction()
-            }
-        }
-
-        Loader {
-            active: false
-            sourceComponent: MyProfileView {
-                id: myProfileView
-                implicitWidth: parent.width
-                implicitHeight: parent.height
+        Component {
+            id: myProfileViewComp
+            MyProfileView {
+                ignoreDirty: root.isPortrait
 
                 profileStore: root.profileStore
                 contactsStore: root.contactsStore
@@ -272,11 +335,9 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            active: false
-            sourceComponent: ChangePasswordView {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
+        Component {
+            id: changePasswordViewComp
+            ChangePasswordView {
                 privacyStore: root.privacyStore
                 keychain: root.keychain
                 passwordStrengthScoreFunction: root.sharedRootStore.getPasswordStrengthScore
@@ -285,13 +346,9 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            id: contactsView
-
-            active: false
-            sourceComponent: ContactsView {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
+        Component {
+            id: contactsViewComp
+            ContactsView {
                 contactsStore: root.contactsStore
                 utilsStore: root.utilsStore
                 sectionTitle: qsTr("Contacts")
@@ -305,16 +362,13 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            id: ensContainer
-            active: false
-            sourceComponent: EnsView {
+        Component {
+            id: ensViewComp
+            EnsView {
                 // TODO: we need to align structure for the entire this part using `SettingsContentBase` as root component
                 // TODO: handle structure for this subsection to match style used in onther sections
                 // using `SettingsContentBase` component as base.
 
-                implicitWidth: parent.width
-                implicitHeight: parent.height
                 ensUsernamesStore: root.ensUsernamesStore
                 walletAssetsStore: root.walletAssetsStore
                 networkConnectionStore: root.networkConnectionStore
@@ -325,11 +379,9 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            active: false
-            sourceComponent: MessagingView {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
+        Component {
+            id: messagingViewComp
+            MessagingView {
                 contentWidth: d.contentWidth
 
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.messaging)
@@ -338,12 +390,9 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            id: walletView
-            active: false
-            sourceComponent: WalletView {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
+        Component {
+            id: walletViewComp
+            WalletView {
                 contentWidth: d.contentWidth
 
                 settingsSubSubsection: root.settingsSubSubsection
@@ -366,15 +415,14 @@ StatusSectionLayout {
                 onAddressWasShownRequested: (address) => root.addressWasShownRequested(address)
 
                 onBackButtonNameChanged: d.backButtonName = backButtonName
+
+                Component.onCompleted: initStack()
             }
-            onLoaded: d.backButtonName = ""
         }
 
-        Loader {
-            active: false
-            sourceComponent: AppearanceView {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
+        Component {
+            id: appearanceViewComp
+            AppearanceView {
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.appearance)
                 contentWidth: d.contentWidth
                 nativeWindowDpr: root.nativeWindowDpr
@@ -385,12 +433,9 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            active: false
-            sourceComponent: LanguageView {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
-
+        Component {
+            id: languageViewComp
+            LanguageView {
                 currentLanguage: root.languageStore.currentLanguage
                 availableLanguages: root.languageStore.availableLanguages
                 currentCurrency: root.currencyStore.currentCurrency
@@ -408,12 +453,9 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            active: false
-            sourceComponent: NotificationsView {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
-
+        Component {
+            id: notificationsViewComp
+            NotificationsView {
                 privacyStore: root.privacyStore
                 notificationsStore: root.notificationsStore
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.notifications)
@@ -421,13 +463,10 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            active: false
-            sourceComponent: SyncingView {
+        Component {
+            id: syncingViewComp
+            SyncingView {
                 id: syncingView
-                implicitWidth: parent.width
-                implicitHeight: parent.height
-
                 profileStore: root.profileStore
                 devicesStore: root.devicesStore
                 privacyStore: root.privacyStore
@@ -443,12 +482,9 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            active: false
-            sourceComponent: BrowserView {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
-
+        Component {
+            id: browserViewComp
+            BrowserView {
                 userUID: root.userUID
                 accountSettings: localAccountSensitiveSettings
                 browserPreferencesStore: root.browserPreferencesStore
@@ -457,14 +493,9 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            id: advancedView
-
-            active: false
-            sourceComponent: AdvancedView {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
-
+        Component {
+            id: advancedViewComp
+            AdvancedView {
                 messagingSettingsStore: root.messagingSettingsStore
                 advancedStore: root.advancedStore
                 walletStore: root.walletStore
@@ -477,11 +508,9 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            active: false
-            sourceComponent: AboutView {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
+        Component {
+            id: aboutViewComp
+            AboutView {
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.about)
                 contentWidth: d.contentWidth
                 isProduction: root.isProduction
@@ -495,21 +524,13 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            id: communitiesView
-            
-            active: false
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            sourceComponent: CommunitiesView {
-
+        Component {
+            id: communitiesViewComp
+            CommunitiesView {
                 function getSpecificCommunityAccessStore(communityId: string) {
                     const communityRootStore = root.messagingRootStore.createCommunityRootStore(this, communityId)
                     return communityRootStore ? communityRootStore.communityAccessStore : null
                 }
-
-                implicitWidth: parent.width
-                implicitHeight: parent.height
 
                 rootStore: root.globalStore
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.communitiesSettings)
@@ -535,13 +556,9 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            id: keycardViewNew
-            active: false
-            sourceComponent: KeycardViewNew {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
-
+        Component {
+            id: keycardViewNewComp
+            KeycardViewNew {
                 keycardNewStore: root.keycardNewStore
                 areTestNetworksEnabled: root.networksStore.areTestNetworksEnabled
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.keycardNew)
@@ -551,16 +568,14 @@ StatusSectionLayout {
                 onBackButtonNameRequested: function(name) {
                     d.backButtonName = name
                 }
+
+                Component.onCompleted: handleBackAction()
             }
         }
 
-        Loader {
-            active: false
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            sourceComponent: SettingsContentBase {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
+        Component {
+            id: termsOfUseComp
+            SettingsContentBase {
                 sectionTitle: "Status Software - Terms of Use"
                 contentWidth: d.contentWidth
 
@@ -574,13 +589,9 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            active: false
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            sourceComponent: SettingsContentBase {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
+        Component {
+            id: privacyPolicyComp
+            SettingsContentBase {
                 sectionTitle: "Status Software - Privacy Policy"
                 contentWidth: d.contentWidth
 
@@ -594,17 +605,13 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            id: privacyAndSecurityView
-
-            active: false
-            sourceComponent: PrivacyAndSecurityView {
+        Component {
+            id: privacyAndSecurityViewComp
+            PrivacyAndSecurityView {
                 whitelistedDomainsModel: root.whitelistedDomainsModel
                 isStatusNewsViaRSSEnabled: root.privacyStore.isStatusNewsViaRSSEnabled
                 thirdpartyServicesEnabled: root.privacyStore.thirdpartyServicesEnabled
                 privacyModeFeatureEnabled: root.privacyModeFeatureEnabled
-                implicitWidth: parent.width
-                implicitHeight: parent.height
 
                 privacySectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.privacyAndSecurity)
                 contentWidth: d.contentWidth
@@ -617,14 +624,14 @@ StatusSectionLayout {
 
                 onBackButtonTextChanged: d.backButtonName = backButtonText
                 onRemoveWhitelistedDomain: index => root.removeWhitelistedDomain(index)
+
+                Component.onCompleted: resetStack()
             }
         }
 
-        Loader {
-            active: false
-            sourceComponent: BackupView {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
+        Component {
+            id: backupViewComp
+            BackupView {
                 contentWidth: d.contentWidth
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.backupSettings)
 
@@ -643,11 +650,9 @@ StatusSectionLayout {
             }
         }
 
-        Loader {
-            active: false
-            sourceComponent: LogosNetworkView {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
+        Component {
+            id: logosNetworkViewComp
+            LogosNetworkView {
                 contentWidth: d.contentWidth
                 sectionTitle: qsTr("Logos Network")
                 peerCount: root.logosNetworkStore.peerCount
@@ -663,6 +668,6 @@ StatusSectionLayout {
     rightPanelWidth: d.rightPanelWidth
     rightPanel: Loader {
         active: root.showRightPanel
-        sourceComponent: profileContainer.currentItem.sideBySidePreviewComponent
+        sourceComponent: profileContainer.currentItem?.sideBySidePreviewComponent
     }
 }

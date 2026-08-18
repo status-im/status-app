@@ -13,9 +13,9 @@ Item {
 
     property alias model: settingsList.model
 
-    signal menuItemClicked(var event)
+    signal menuItemClicked(string subsection)
 
-    property alias settingsSubsection: settingsList.currenctSubsection
+    property int settingsSubsection: -1
 
     StatusNavigationPanelHeadline {
         id: title
@@ -28,6 +28,8 @@ Item {
 
     SettingsList {
         id: settingsList
+
+        currenctSubsection: root.settingsSubsection
 
         anchors.right: parent.right
         anchors.left: parent.left
@@ -48,14 +50,7 @@ Item {
                 return
             }
 
-            const event = { accepted: false, item: subsection }
-
-            root.menuItemClicked(event)
-
-            if (event.accepted)
-                return
-
-            root.settingsSubsection = subsection
+            root.menuItemClicked(subsection)
         }
     }
 }

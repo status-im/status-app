@@ -18,7 +18,6 @@ Rectangle {
     height: 36
     property alias iconWidth: roundedIconImage.width
     property alias iconHeight: roundedIconImage.height
-    property alias rotation: roundedIconImage.rotation
     property color iconColor: StatusColors.transparent
 
     color: Theme.palette.primaryColor1
@@ -37,6 +36,7 @@ Rectangle {
             height: 12
             fillMode: Image.PreserveAspectFit
             source: Assets.svg("new_chat")
+            rotation: root.rotation
         }
         ColorOverlay {
             anchors.fill: roundedIconImage

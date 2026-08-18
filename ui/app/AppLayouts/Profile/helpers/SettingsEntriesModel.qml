@@ -191,19 +191,6 @@ SortFilterProxyModel {
         }
     ]
 
-    // Update model after retranslation
-    onEntriesChanged: {
-        if (baseModel.count === 0)
-            return
-
-        entries.forEach((elem, index) => {
-            baseModel.setProperty(index, "text", elem.text)
-
-            if (elem.group)
-                baseModel.setProperty(index, "group", elem.group)
-        })
-    }
-
     function getNameForSubsection(subsection) {
         const entry = root.entries.find(entry => entry.subsection === subsection)
         return entry ? entry.text : ""
@@ -217,9 +204,10 @@ SortFilterProxyModel {
         }
 
         delegate: QtObject {
-            readonly property string objectName: "settingsNav_" + model.subsection
+            readonly property int subsection: model.subsection
+            readonly property string objectName: "settingsNav_" + subsection
             readonly property bool visible: {
-                switch (model.subsection) {
+                switch (subsection) {
                     case Constants.settingsSubsection.ensUsernames:
                     case Constants.settingsSubsection.wallet:
                         return root.showWalletEntries
@@ -239,7 +227,7 @@ SortFilterProxyModel {
             }
 
             readonly property int badgeCount: {
-                switch (model.subsection) {
+                switch (subsection) {
                     case Constants.settingsSubsection.backUpSeed:
                         return root.backUpSeedBadgeCount
                     case Constants.settingsSubsection.syncingSettings:

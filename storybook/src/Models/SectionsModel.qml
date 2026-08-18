@@ -127,7 +127,7 @@ ListModel {
         description: "",
         allMembers: [],
         activeMembersCount: 0,
-        enabled: true,
+        enabled: false,
         hasNotification: false,
         notificationsCount: 0,
         active: false
