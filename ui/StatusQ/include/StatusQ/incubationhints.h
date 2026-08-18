@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QVariantMap>
 
 class QQmlEngine;
 
@@ -18,8 +19,18 @@ class IncubationHints : public QObject
 public:
     explicit IncubationHints(QQmlEngine* engine, QObject* parent = nullptr);
 
+    // Debug HUD: enabled with STATUS_INCUBATION_HUD=1 in the environment.
+    Q_PROPERTY(bool hudEnabled READ hudEnabled CONSTANT)
+
     Q_INVOKABLE void pushGentle();
     Q_INVOKABLE void popGentle();
+
+    // Live controller snapshot for the HUD: count, phase (0 idle / 1 gentle /
+    // 2 boost), hints, gentle cadence. `installed` is false when the engine
+    // runs the default incubation controller.
+    Q_INVOKABLE QVariantMap stats() const;
+
+    bool hudEnabled() const;
 
     bool gentleActive() const;
 

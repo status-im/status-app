@@ -728,4 +728,78 @@ Window {
             }
         }
     }
+
+    // High-frequency incubation HUD (run with STATUS_INCUBATION_HUD=1):
+    // live incubator count and pacing phase of the boosted incubation
+    // controller, pinned to the top-right corner above all content.
+    Loader {
+        active: IncubationHints.hudEnabled
+        z: 100000
+
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.rightMargin: 8
+        anchors.topMargin: 8 + parent.SafeArea.margins.top
+
+        sourceComponent: Rectangle {
+            id: hud
+
+            property var stats: ({ installed: false, count: 0, phase: 0, hints: 0 })
+            property int peak: 0
+
+            implicitWidth: hudColumn.implicitWidth + 16
+            implicitHeight: hudColumn.implicitHeight + 10
+            radius: 6
+            color: "#C0000000"
+
+            Timer {
+                interval: 16
+                running: true
+                repeat: true
+                onTriggered: {
+                    const s = IncubationHints.stats()
+                    if (s.count > hud.peak)
+                        hud.peak = s.count
+                    hud.stats = s
+                }
+            }
+
+            Timer {
+                interval: 1000
+                running: true
+                repeat: true
+                onTriggered: hud.peak = hud.stats.count
+            }
+
+            Column {
+                id: hudColumn
+                anchors.centerIn: parent
+                spacing: 1
+
+                Text {
+                    font.family: "Menlo"
+                    font.pixelSize: 12
+                    font.bold: true
+                    color: "#FFFFFF"
+                    text: "inc %1  pk %2".arg(hud.stats.count).arg(hud.peak)
+                }
+                Text {
+                    font.family: "Menlo"
+                    font.pixelSize: 11
+                    color: !hud.stats.installed ? "#FF6666"
+                           : hud.stats.phase === 2 ? "#FF5555"
+                           : hud.stats.phase === 1 ? "#FFB84D"
+                           : "#7FDB7F"
+                    text: {
+                        if (!hud.stats.installed)
+                            return "no boosted ctrl"
+                        const names = ["idle", "gentle", "boost"]
+                        return names[hud.stats.phase] + (hud.stats.hints > 0
+                               ? "  hints %1".arg(hud.stats.hints) : "")
+                    }
+                }
+            }
+        }
+    }
+
 }

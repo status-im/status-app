@@ -122,6 +122,13 @@ public:
         return m_gentleHints > 0;
     }
 
+    // Debug HUD introspection (see StatusQ.IncubationHints.stats())
+    int debugCount() { return incubatingObjectCount(); }
+    int debugPhase() const { return m_lastPhase; }   // 0 idle, 1 gentle, 2 boost
+    int debugHints() const { return m_gentleHints; }
+    int debugGentleIntervalMs() const { return m_gentleIntervalMs; }
+    int debugGentleBudgetMs() const { return m_gentleBudgetMs; }
+
 protected:
     void incubatingObjectCountChanged(int count) override {
         // fast path out of the idle cadence; phase management happens in
@@ -136,6 +143,7 @@ protected:
 
         if (incubatingObjectCount() == 0) {
             m_inBurst = false;
+            m_lastPhase = 0;
             if (m_interval != kIdleIntervalMs)
                 restart(kIdleIntervalMs);
             return;
@@ -157,6 +165,7 @@ protected:
         if (m_interval != wantedInterval)
             restart(wantedInterval);
 
+        m_lastPhase = gentle ? 1 : 2;
         incubateFor(gentle ? m_gentleBudgetMs : m_msPerTick);
     }
 
@@ -176,6 +185,7 @@ private:
     int m_gentleIntervalMs = 12;
     int m_gentleBudgetMs = 3;
     int m_gentleHints = 0;
+    int m_lastPhase = 0;
     const int m_msPerTick;
     const int m_gentlePeriodMs;
     const int m_boostGapMs;
@@ -212,6 +222,22 @@ Q_DECL_EXPORT void statusq_incubationPopGentleHint(void* engine) {
 Q_DECL_EXPORT bool statusq_incubationGentleHintActive(void* engine) {
     auto controller = s_incubationControllers.value(static_cast<QQmlEngine*>(engine));
     return controller && controller->gentleHintActive();
+}
+
+// Fills the debug-HUD snapshot; returns false when no boosted controller is
+// installed on the engine.
+Q_DECL_EXPORT bool statusq_incubationDebugStats(void* engine, int* count, int* phase,
+                                                int* hints, int* gentleIntervalMs,
+                                                int* gentleBudgetMs) {
+    auto controller = s_incubationControllers.value(static_cast<QQmlEngine*>(engine));
+    if (!controller)
+        return false;
+    *count = controller->debugCount();
+    *phase = controller->debugPhase();
+    *hints = controller->debugHints();
+    *gentleIntervalMs = controller->debugGentleIntervalMs();
+    *gentleBudgetMs = controller->debugGentleBudgetMs();
+    return true;
 }
 
 Q_DECL_EXPORT void* statusq_osnotification_create() {
