@@ -55,12 +55,13 @@ Loader {
 
     // Inputs
     required property bool isProduction
+    required property bool isPortraitMode
     required property bool systemTrayIconAvailable
     required property int theme
     required property var whitelistedDomainsModel
     required property real nativeWindowDpr // baseline/native DPR of the respective Screen
 
-    property int settingsSubsection: -1
+    property int settingsSubsection: isPortraitMode ? -1 : Constants.settingsSubsection.profile // load and select Profile on desktop; nothing on mobile
     property int settingsSubSubsection: -1
     property real leftPanelWidthOverride: 0
 

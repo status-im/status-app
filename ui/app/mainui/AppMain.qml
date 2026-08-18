@@ -2340,6 +2340,7 @@ Item {
                         keychain: appMain.keychain
 
                         isProduction: appMain.rootStore.isProduction
+                        isPortraitMode: appMain.isPortraitMode
                         systemTrayIconAvailable: appMain.systemTrayIconAvailable
                         theme: appMainLocalSettings.theme
                         nativeWindowDpr: d.nativeWindowDpr
