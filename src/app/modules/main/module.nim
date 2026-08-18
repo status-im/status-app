@@ -728,7 +728,7 @@ method load*[T](
       color = "",
       hasNotification = false,
       notificationsCount = 0,
-      active = true,
+      active = activeSectionId == HOMEPAGE_SECTION_ID,
       enabled = true,
     )
     self.view.model().addItem(homePageSectionItem)
@@ -913,10 +913,10 @@ method load*[T](
   #if homePageEnabled:
   #  activeSection = homePageSectionItem
 
-  # Set active section on app start
-  # If section is empty wait until chats are loaded
   if not activeSection.isEmpty():
     self.setActiveSection(activeSection)
+  else:
+    self.setActiveSection(loadingSectionItem, skipSavingInSettings = true)
 
 proc isEverythingLoaded[T](self: Module[T]): bool =
   return self.communityDataLoaded and self.chatsLoaded and self.contactsLoaded
@@ -943,8 +943,6 @@ method onChatsLoaded*[T](
   let myPubKey = singletonInstance.userProfile.getPubKey()
   var activeSection: SectionItem
   var activeSectionId = singletonInstance.localAccountSensitiveSettings.getActiveSection()
-
-  self.view.model().removeItem(LOADING_SECTION_ID)
 
   # Create personal chat section
   self.chatSectionModules[myPubKey] = chat_section_module.newModule(
@@ -1029,6 +1027,10 @@ method onChatsLoaded*[T](
   # Set active section if it is one of the channel sections
   if not activeSection.isEmpty():
     self.setActiveSection(activeSection)
+  elif self.getActiveSectionId() == LOADING_SECTION_ID:
+    self.setActiveSection(personalChatSectionItem)
+
+  self.view.model().removeItem(LOADING_SECTION_ID)
 
   self.view.sectionsLoaded()
 
