@@ -648,10 +648,17 @@ QtObject {
         return ids.length > 0 ? ids[0] : ""
     }
 
+    // mirrors the backend: categoryOpened + the recomputed "hidden" role
     function setCategoryOpened(categoryId, opened) {
         for (let i = 0; i < chatsModel.count; ++i) {
-            if (chatsModel.get(i).categoryId === categoryId)
-                chatsModel.setProperty(i, "categoryOpened", opened)
+            const item = chatsModel.get(i)
+            if (item.categoryId !== categoryId)
+                continue
+            chatsModel.setProperty(i, "categoryOpened", opened)
+            const hidden = !item.isCategory && !opened && !item.active &&
+                         (item.muted || !item.hasUnreadMessages) &&
+                         item.notificationsCount === 0
+            chatsModel.setProperty(i, "hidden", hidden)
         }
     }
 
