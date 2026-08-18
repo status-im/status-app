@@ -334,6 +334,7 @@ QtObject {
                 categoryPosition: categoryPosition,
                 highlight: false,
                 categoryOpened: true,
+                hidden: false,
                 trustStatus: 0,
                 onlineStatus: 1,
                 isCategory: isCategory,

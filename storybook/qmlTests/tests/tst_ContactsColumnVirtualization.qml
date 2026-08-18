@@ -64,6 +64,7 @@ Item {
                     color: "",
                     colorId: i % 10,
                     categoryOpened: true,
+                    hidden: false,
                     usesDefaultName: false,
                     onlineStatus: 1,
                     requiresPermissions: false,
