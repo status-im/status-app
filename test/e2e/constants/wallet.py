@@ -2,6 +2,7 @@ import random
 from dataclasses import dataclass
 from enum import Enum
 
+from constants.networks import WalletNetworkNaming
 from scripts.utils.generators import (
     random_emoji_with_unicode,
     random_wallet_acc_keypair_name,
@@ -124,21 +125,6 @@ class WalletAccountSettings(Enum):
     WATCHED_ADDRESSES_KEYPAIR_LABEL = 'Watched addresses'
 
 
-class WalletNetworkNaming(Enum):
-    LAYER1_ETHEREUM = 'Mainnet'
-    LAYER1_ETHEREUM_TESTNET = 'Hoodi'
-    LAYER2_OPTIMISIM = 'Optimism'
-    LAYER2_ARBITRUM = 'Arbitrum'
-    LAYER2_BASE = 'Base'
-    ETHEREUM_MAINNET_NETWORK_ID = 1
-    HOODI_NETWORK_ID = 560048
-    OPTIMISM_MAINNET_NETWORK_ID = 10
-    ARBITRUM_MAINNET_NETWORK_ID = 42161
-    BASE_MAINNET_NETWORK_ID = 8453
-    BINANCE_SMART_CHAIN_MAINNET_NETWORK_ID = 56
-    BINANCE_SMART_CHAIN_TESTNET_NETWORK_ID = 97
-
-
 class WalletOrigin(Enum):
     WATCHED_ADDRESS_ORIGIN = 'New watched address'
 
@@ -165,7 +151,3 @@ class WalletAccountPopup(Enum):
     WALLET_ACCOUNT_NAME_MIN = 'Account name must be at least 1 character'
     WALLET_KEYPAIR_NAME_MIN = 'Key pair name must be at least 1 character'
     WALLET_KEYPAIR_MIN = 'Key pair must be at least 1 character(s)'
-
-E2E_NETWORK_CHAIN_IDS: dict[str, int] = {
-    "Hoodi": WalletNetworkNaming.HOODI_NETWORK_ID.value,
-}

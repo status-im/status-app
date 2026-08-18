@@ -1,44 +1,52 @@
-import allure
 import pytest
 from allure_commons._allure import step
 
-from configs import WALLET_SEED
-from constants import ReturningUser
-from constants.wallet import WalletNetworkSettings
+from constants.networks import LAYER2_ETHEREUM_TESTNETS
+from constants.wallet import WalletAddress, WalletNetworkSettings
 from gui.components.wallet.send_popup import SendPopup
-from helpers.onboarding_helper import open_create_profile_view, import_seed_and_log_in
-from helpers.settings_helper import enable_testnet_mode
-from helpers.wallet_helper import authenticate_with_password, open_send_modal_for_account
+from helpers.wallet_helper import (
+    authenticate_with_password,
+    open_wallet_account,
+    wallet_send_import_user,
+    wallet_send_returning_user,
+)
 
 
 @pytest.mark.case(704602)
 @pytest.mark.transaction
-@pytest.mark.parametrize('receiver_account_address, amount, asset', [
-    pytest.param('0x44ddd47a0c7681a5b0fa080a56cbb7701db4bb43', 1, '')
+@pytest.mark.parametrize('receiver_account_address, network_name', [
+    pytest.param(
+        WalletAddress.RECEIVER_ADDRESS.value,
+        network.value,
+        id=f'{network.name.lower()}_erc721',
+    )
+    for network in LAYER2_ETHEREUM_TESTNETS
 ])
-@pytest.mark.timeout(timeout=120)
-@pytest.mark.skip(reason='https://github.com/status-im/status-desktop/issues/18071')
-def test_wallet_send_nft(main_window, user_account, receiver_account_address, amount, asset):
+@pytest.mark.timeout(timeout=180)
+@pytest.mark.skip(reason='https://github.com/status-im/status-app/issues/22017')
+def test_wallet_send_nft(
+    main_window,
+    user_account,
+    receiver_account_address,
+    network_name,
+):
+    user_account = wallet_send_returning_user()
 
-    user_account = ReturningUser(
-        seed_phrase=WALLET_SEED,
-        status_address='0x44ddd47a0c7681a5b0fa080a56cbb7701db4bb43')
+    wallet_send_import_user(main_window, user_account)
 
-    with step('Import seed and log in'):
-        with step('Open Create your profile view'):
-            create_your_profile_view = open_create_profile_view()
-        with step('Import seed and log in'):
-            import_seed_and_log_in(create_your_profile_view, user_account.seed_phrase, user_account)
+    with step('Open wallet send popup after collectibles are loaded'):
+        wallet_account = open_wallet_account(
+            main_window,
+            WalletNetworkSettings.STATUS_ACCOUNT_DEFAULT_NAME.value,
+        )
+        wallet_account.open_collectibles_tab()
+        send_popup = wallet_account.open_send_popup()
 
-    with step('Set testnet mode'):
-        enable_testnet_mode(main_window)
+    with step(f'Select {network_name} network'):
+        send_popup.select_network(network_name)
 
-    with step('Open wallet send popup'):
-        send_popup = open_send_modal_for_account(
-            main_window, account_name=WalletNetworkSettings.STATUS_ACCOUNT_DEFAULT_NAME.value)
-
-    with step('Sign and send transaction to blockchain'):
-        send_popup.sign_and_send(receiver_account_address, amount, asset)
+    with step('Sign and send ERC-721 NFT to blockchain'):
+        send_popup.sign_and_send(receiver_account_address, '', '')
 
     with step('Authenticate with password'):
         authenticate_with_password(user_account)

@@ -8,12 +8,15 @@ from constants import ReturningUser, RandomCommunity
 from helpers.onboarding_helper import open_create_profile_view, import_seed_and_log_in
 from helpers.settings_helper import enable_testnet_mode, enable_managing_communities_toggle
 from constants.community import MintOwnerTokensElements
+from constants.wallet import WalletNetworkNaming
 from gui.screens.community_settings_tokens import MintedTokensView
 
 
 @pytest.mark.case(727245)
 @pytest.mark.transaction
-@pytest.mark.parametrize('network_name', [pytest.param('Hoodi')])
+@pytest.mark.parametrize('network_name', [
+    pytest.param(WalletNetworkNaming.LAYER1_ETHEREUM_HOODI.value, id='hoodi'),
+])
 def test_mint_owner_and_tokenmaster_tokens(main_window, user_account, network_name):
 
     user_account = ReturningUser(

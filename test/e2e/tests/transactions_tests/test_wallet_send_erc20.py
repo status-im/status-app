@@ -17,7 +17,7 @@ from helpers.wallet_helper import (
         '1',
         WalletTokenSymbols.SNT.value,
         WalletNetworkNaming.LAYER1_ETHEREUM_TESTNET.value,
-        id='layer1_ethereum_testnet_stt',
+        id='sepolia_stt',
     ),
 ])
 def test_wallet_send_erc20(main_window, user_account, receiver_account_address, amount, token_symbol, network_name):
