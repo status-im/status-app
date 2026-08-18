@@ -276,7 +276,6 @@ Item {
         asynchronous: true
         visible: centerPanelLoader.status === Loader.Ready
         active: d.shouldLoadCenterPanel
-        visible: status === Loader.Ready
         sourceComponent: (root.allChannelsAreHiddenBecauseNotPermitted || root.contentLocked) ?
                              joinCommunityCenterPanelComponent : chatColumnViewComponent
         onLoaded: d.requestCenterPanel()
