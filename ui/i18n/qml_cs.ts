@@ -1065,6 +1065,14 @@
         <translation>Logy aplikace</translation>
     </message>
     <message>
+        <source>Logs (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh logs size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Experimental features</source>
         <translation>Experimentální funkce</translation>
     </message>
@@ -1109,6 +1117,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Choose a number between 1 and 50</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Number between 1 and 50</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Number needs to be between 1 and 50</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Debug</source>
         <translation>Ladění</translation>
     </message>
@@ -1127,10 +1147,6 @@
             <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
-    </message>
-    <message>
-        <source>Old logs</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Clearing...</source>
@@ -1185,24 +1201,8 @@
         <translation>Kolik souborů logů chcete uchovávat archivovaných?</translation>
     </message>
     <message>
-        <source>Choose a number between 1 and 100</source>
-        <translation>Vyberte číslo mezi 1 a 100</translation>
-    </message>
-    <message>
-        <source>Number of archives files</source>
-        <translation>Počet archivních souborů</translation>
-    </message>
-    <message>
-        <source>Number between 1 and 100</source>
-        <translation>Číslo mezi 1 a 100</translation>
-    </message>
-    <message>
-        <source>Number needs to be between 1 and 100</source>
-        <translation>Číslo musí být mezi 1 a 100</translation>
-    </message>
-    <message>
-        <source>This change will only come into action after a restart</source>
-        <translation>Tato změna se projeví až po restartu</translation>
+        <source>Number of archive files per group</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Cancel</source>

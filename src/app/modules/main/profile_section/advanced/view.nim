@@ -106,6 +106,16 @@ QtObject:
     read = getIsClearingOldLogs
     notify = isClearingOldLogsChanged
 
+  proc logsFolderSizeBytesChanged*(self: View) {.signal.}
+  proc getLogsFolderSizeBytes*(self: View): float {.slot.} =
+    return self.delegate.getLogsFolderSizeBytes()
+  QtProperty[float] logsFolderSizeBytes:
+    read = getLogsFolderSizeBytes
+    notify = logsFolderSizeBytesChanged
+
+  proc refreshLogsFolderSize*(self: View) {.slot.} =
+    self.delegate.refreshLogsFolderSize()
+
   proc oldLogsCleanupFinished*(self: View, deletedCount: int, failedCount: int, error: string) {.signal.}
   proc clearOldLogs*(self: View) {.slot.} =
     self.delegate.clearOldLogs()

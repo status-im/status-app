@@ -43,6 +43,15 @@ proc init*(self: Controller) =
     let args = advanced_service.AdvancedLogsCleanupFinishedArgs(e)
     self.onOldLogsCleanupFinished(args.deletedCount, args.failedCount, args.error)
 
+  self.events.on(node_configuration_service.SIGNAL_NODE_LOG_MAX_BACKUPS_UPDATE) do(e: Args):
+    let args = node_configuration_service.NodeLogMaxBackupsUpdatedArgs(e)
+    self.advancedService.cleanupLogFamilies(args.maxBackups)
+
+  self.events.on(advanced_service.SIGNAL_ADVANCED_LOGS_SIZE_UPDATED) do(e: Args):
+    self.delegate.onLogsFolderSizeChanged()
+
+  self.advancedService.refreshLogsFolderSize()
+
 proc getFleet*(self: Controller): string =
   return self.settingsService.getFleetAsString()
 
@@ -67,6 +76,12 @@ proc setMaxLogBackups*(self: Controller, value: int) =
 
 proc getIsClearingOldLogs*(self: Controller): bool =
   return self.advancedService.isClearingOldLogs()
+
+proc getLogsFolderSizeBytes*(self: Controller): float =
+  return self.advancedService.logsFolderSizeBytes()
+
+proc refreshLogsFolderSize*(self: Controller) =
+  self.advancedService.refreshLogsFolderSize()
 
 proc clearOldLogs*(self: Controller) =
   if self.advancedService.clearOldLogs():

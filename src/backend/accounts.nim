@@ -289,7 +289,7 @@ proc openedAccounts*(path: string): RpcResponse[JsonNode] =
       "mixpanelToken": MIXPANEL_TOKEN,
       "sentryDSN": SENTRY_DSN_STATUS_GO,
       "logEnabled": true,
-      "logDir": "", # Empty value defaults to `dataDir`
+      "logDir": status_const.LOGDIR,
       "logLevel": status_const.getStatusGoLogLevel(),
       "apiLoggingEnabled": status_const.API_LOGGING,
       "metricsEnabled": status_const.METRICS_ENABLED,

@@ -380,6 +380,11 @@ proc loginAccount*(requestJson: string): string =
   defer: go_shim.free(funcOut)
   return $funcOut
 
+proc setProfileLogMaxBackups*(requestJson: string): string =
+  var funcOut = go_shim.setProfileLogMaxBackups(requestJson.cstring)
+  defer: go_shim.free(funcOut)
+  return $funcOut
+
 proc createAccountAndLogin*(requestJSON: string): string =
   var funcOut = go_shim.createAccountAndLogin(requestJSON.cstring)
   defer: go_shim.free(funcOut)

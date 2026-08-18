@@ -188,6 +188,7 @@ QtObject:
         kdfIterations: KDF_ITERATIONS,
         customizationColor: DEFAULT_CUSTOMIZATION_COLOR,
         logLevel: some(main_constants.getStatusGoLogLevel()),
+        logFilePath: main_constants.LOGDIR,
         wakuV2LightClient: main_constants.IS_MOBILE,
         wakuV2Nameserver: if main_constants.IS_MOBILE: some(MOBILE_WAKU_V2_NAMESERVER) else: none(string),
         wakuV2EnableMissingMessageVerification: true,
@@ -437,6 +438,7 @@ QtObject:
       apiConfig: defaultApiConfig(),
       walletConnectProjectID: main_constants.WALLET_CONNECT_PROJECT_ID,
       wakuV2Nameserver: if main_constants.IS_MOBILE: MOBILE_WAKU_V2_NAMESERVER else: "",
+      logFilePath: main_constants.LOGDIR,
     )
 
     if main_constants.runtimeLogLevelSet():

@@ -22,6 +22,7 @@ type
     walletConfig*: WalletConfig
     apiConfig*: APIConfig
     walletConnectProjectID*: string
+    logFilePath*: string
 
 proc toJson*(self: LoginAccountRequest): JsonNode =
   result = %* {
@@ -36,6 +37,7 @@ proc toJson*(self: LoginAccountRequest): JsonNode =
     "mnemonic": self.mnemonic,
     "apiConfig": self.apiConfig,
     "walletConnectProjectID": self.walletConnectProjectID,
+    "logFilePath": self.logFilePath,
   }
   for key, value in self.walletSecretsConfig.toJson().pairs():
     result[key] = value
