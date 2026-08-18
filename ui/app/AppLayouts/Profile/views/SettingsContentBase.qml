@@ -184,6 +184,7 @@ FocusScope {
 
     Connections {
         target: scrollView.flickable
+        enabled: SQUtils.Utils.isMobile
 
         function scrollToFocusedItem() {
             const focusedItem = root.Window.activeFocusItem
