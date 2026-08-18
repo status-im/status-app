@@ -25,11 +25,15 @@ Item {
     QtObject {
         id: contentModuleMock
 
+        property int markAllMessagesReadCalls: 0
+        function markAllMessagesRead() { markAllMessagesReadCalls++ }
+
         readonly property var chatDetails: QtObject {
             readonly property string id: "chat-1"
             readonly property int type: Constants.chatType.oneToOne
             readonly property bool active: true
-            readonly property bool hasUnreadMessages: false
+            readonly property bool highlight: false
+            property bool hasUnreadMessages: false
             readonly property bool canPost: true
             readonly property bool canView: true
             readonly property bool canPostReactions: true
@@ -39,6 +43,7 @@ Item {
         readonly property var messagesModule: QtObject {
             readonly property var model: messagesModel
             property bool loading: false
+            property bool keepUnread: false
 
             signal messageSuccessfullySent()
             signal sendingMessageFailed(string error)
@@ -76,7 +81,30 @@ Item {
 
         function cleanup() {
             contentModuleMock.messagesModule.loading = false
+            contentModuleMock.markAllMessagesReadCalls = 0
+            contentModuleMock.chatDetails.hasUnreadMessages = false
             messagesModel.clear()
+        }
+
+        // chatDetails.active is set by the backend (onMadeActive) before the
+        // asynchronously incubated ChatMessagesView exists, so the view never
+        // receives activeChanged on a cold open. Marking the chat read must
+        // not depend on that signal — the state-driven triggers
+        // (visibleChanged/countChanged) have to cover the late-built view.
+        function test_unreadChatMarkedReadWhenViewIncubatesLate() {
+            contentModuleMock.chatDetails.hasUnreadMessages = true
+
+            const view = createTemporaryObject(contentViewComp, root)
+            verify(!!view)
+
+            // the bug precondition: the chat is already active while the
+            // messages view is still incubating
+            verify(contentModuleMock.chatDetails.active)
+            verify(view.chatMessagesLoader.status !== Loader.Ready,
+                   "view must still be incubating when active is already set")
+
+            tryVerify(() => contentModuleMock.markAllMessagesReadCalls > 0, 10000,
+                      "a cold-opened unread chat must still get marked read")
         }
 
         function test_messagesViewIncubatesAsynchronously() {
