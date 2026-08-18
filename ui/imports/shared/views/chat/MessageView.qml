@@ -513,7 +513,8 @@ Loader {
         }
 
         function addReactionClicked(mouseArea, mouse) {
-            if (!d.addReactionAllowed || d.emojiPopupOpened) return
+            // emojiPopup loads lazily after startup
+            if (!emojiPopup || !d.addReactionAllowed || d.emojiPopupOpened) return
 
             // Don't use mouseArea as parent, as it will be destroyed right after opening menu
             const point = mouseArea.mapToItem(root, mouse.x, mouse.y)
@@ -1325,7 +1326,8 @@ Loader {
         MessageContextMenuView {
             id: messageContextMenuView
             emojiReactionLimitReached: root.emojiReactionLimitReached
-            emojiModel: emojiPopup.fullModel
+            // the emoji popup loads lazily after startup — the menu can open first
+            emojiModel: emojiPopup?.fullModel ?? null
             disabledForChat: !root.rootStore.isUserAllowedToSendMessage
             forceEnableEmojiReactions: !root.rootStore.isUserAllowedToSendMessage && d.addReactionAllowed
             isDebugEnabled: root.rootStore && root.rootStore.isDebugEnabled
