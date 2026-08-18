@@ -603,6 +603,11 @@ proc onInitialChatsBuildTimeout(self: Module) =
     return
   # buildChatSectionUI activates the pending/restored chat itself
   self.controller.getChatsAndBuildUI()
+  # the persisted last-open chat may no longer exist — mirror the loaded
+  # path's fallback, and before completeActiveSectionChange so the
+  # active-chat notification carries the repaired id
+  if self.controller.getActiveChatId() == "":
+    self.setFirstChannelAsActive()
   self.completeActiveSectionChange()
 
 # Fallback only: the build normally runs when the UI reports the
