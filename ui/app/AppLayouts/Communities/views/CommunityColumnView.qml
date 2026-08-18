@@ -93,6 +93,7 @@ Item {
         readonly property int scrollBarWidth: Math.max(Theme.halfPadding, 8)
         // 1px scrollbar inset and 1px gap before it
         readonly property int scrollBarSpacing: 2
+
     }
 
     ColumnLayout {
@@ -148,6 +149,7 @@ Item {
             id: adminPopupMenuComp
             StatusMenu {
                 hideDisabledItems: !showInviteButton
+                onClosed: destroy()
 
                 property bool showInviteButton: true
 
@@ -203,7 +205,6 @@ Item {
                 id: communityChatListAndCategories
                 anchors.fill: parent
                 anchors.leftMargin: d.listContentLeftMargin
-                anchors.rightMargin: d.scrollBarWidth + d.scrollBarSpacing
                 draggableItems: root.isSectionAdmin
                 draggableCategories: root.isSectionAdmin
 
@@ -338,32 +339,32 @@ Item {
                         }
                     }
 
-                    onMuteChat: {
+                    onMuteChat: (chatId, interval) => {
                         root.communitySectionModule.muteChat(chatId, interval)
                     }
 
-                    onUnmuteChat: {
+                    onUnmuteChat: (chatId) => {
                         root.communitySectionModule.unmuteChat(chatId)
                     }
 
-                    onMarkAllMessagesRead: {
+                    onMarkAllMessagesRead: (chatId) => {
                         root.communitySectionModule.markAllMessagesRead(chatId)
                     }
 
-                    onClearChatHistory: {
+                    onClearChatHistory: (chatId) => {
                         root.communitySectionModule.clearChatHistory(chatId)
                     }
 
-                    onLeaveChat: {
+                    onLeaveChat: (chatId) => {
                         root.communitySectionModule.leaveChat(chatId)
                     }
 
-                    onDeleteCommunityChat:  root.store.removeCommunityChat(chatId)
+                    onDeleteCommunityChat: (chatId) => root.store.removeCommunityChat(chatId)
 
-                    onDisplayProfilePopup: {
+                    onDisplayProfilePopup: (publicKey) => {
                         Global.openProfilePopup(publicKey)
                     }
-                    onDisplayEditChannelPopup: {
+                    onDisplayEditChannelPopup: (chatId) => {
                         Global.openPopup(createChannelPopup, {
                                              isEdit: true,
                                              channelName: chatName,
@@ -385,7 +386,7 @@ Item {
                 id: bannerFooterComponent
 
                 Column {
-                    width: ListView.view ? ListView.view.width : 0
+                    width: ListView.view ? ListView.view.availableWidth : 0
                     topPadding: Theme.padding
                     spacing: Theme.bigPadding
 
@@ -446,7 +447,6 @@ Item {
                     font.underline: true
                     onClicked: function(event) {
                         const menu = adminPopupMenuComp.createObject(root, { showInviteButton: false })
-                        menu.closed.connect(() => menu.destroy())
                         menu.popup(root.width/2 - menu.width/2, root.height - menu.height - createChannelOrCategoryBtn.height - 4)
                     }
                 }
