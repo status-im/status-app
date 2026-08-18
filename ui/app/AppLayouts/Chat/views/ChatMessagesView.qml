@@ -3,6 +3,7 @@ import QtQml
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ 0.1
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core
@@ -96,6 +97,13 @@ Item {
     // Community access related requests:
     signal spectateCommunityRequested(string communityId)
 
+    // The hint singleton outlives this view: a chat switch mid-scroll must
+    // not leak the pushed hint.
+    Component.onDestruction: {
+        if (d.userScrolling)
+            IncubationHints.popGentle()
+    }
+
     QtObject {
         id: d
         objectName: "chatMessagesViewInternal"
@@ -118,12 +126,108 @@ Item {
         property int windowStart: 0
         property int windowEnd: initialWindowSize - 1
 
-        // Goals the live bounds walk towards a few rows per frame (windowDriver):
-        // admitting a whole window in one dispatch stalls slow devices for
-        // seconds. Shrinking only destroys rows and is applied at once.
-        readonly property int moveBudget: 8
-        property int windowStartGoal: 0
-        property int windowEndGoal: initialWindowSize - 1
+        // ---- Staged rows (PR review: no rows assembling on screen) ----
+        // A slide admits its whole chunk at once, but the rows enter as cheap
+        // shells whose content incubates asynchronously and holds no visual
+        // space — the placeholder keeps covering the region. Only when every
+        // row of the batch is built (or the safety timeout fires) does the
+        // batch reveal, in one frame: one relayout, one anchor restore, and
+        // the user never sees a chunk assemble row by row.
+        //
+        // Rows created outside a staged admit — the initial fill and live
+        // incoming messages — show as soon as they load: the initial fill
+        // grows above the bottom-stuck viewport, and a live message must
+        // never wait for an unrelated batch.
+        property var stagedShells: []
+        property int stagedCount: 0
+        property bool admittingStaged: false
+
+        // Running average of revealed row heights, for the placeholder size.
+        property real avgRowHeight: 0
+
+        // Scrolling competes with incubation for frame time on low-end
+        // devices: hold a gentle hint while the user scrolls so staged rows
+        // build in small paced bites and the flick stays smooth.
+        readonly property bool userScrolling: chatLogView.moving || verticalScrollBar.pressed
+
+        onUserScrollingChanged: {
+            if (userScrolling)
+                IncubationHints.pushGentle()
+            else
+                IncubationHints.popGentle()
+        }
+
+        function admitStaged(mutator) {
+            d.admittingStaged = true
+            mutator()
+            d.admittingStaged = false
+            if (d.stagedCount > 0)
+                revealTimeout.restart()
+        }
+
+        function stageShell(shell) {
+            d.stagedShells.push(shell)
+            d.stagedCount = d.stagedShells.length
+        }
+
+        function unstageShell(shell) {
+            const i = d.stagedShells.indexOf(shell)
+            if (i < 0)
+                return
+            d.stagedShells.splice(i, 1)
+            d.stagedCount = d.stagedShells.length
+            // the batch may have become complete by losing its last unbuilt row
+            d.checkStagedReady()
+        }
+
+        function checkStagedReady() {
+            if (d.stagedCount === 0) {
+                revealTimeout.stop()
+                return
+            }
+            for (let i = 0; i < d.stagedShells.length; ++i) {
+                if (!d.stagedShells[i].contentReady) {
+                    // called on every row completion, so this makes the
+                    // timeout a stall detector: it only fires after a full
+                    // interval with NO build progress. A slow-but-progressing
+                    // batch must never be flushed half-built — flushed rows
+                    // hold no space, so the placeholder would keep admitting
+                    // more rows and race the window into an endless
+                    // build-and-fetch loop the device can never catch up with
+                    revealTimeout.restart()
+                    return
+                }
+            }
+            d.revealStaged()
+        }
+
+        function clearStaging() {
+            d.stagedShells = []
+            d.stagedCount = 0
+            revealTimeout.stop()
+        }
+
+        // Reveals whatever is staged — normally a complete batch, on timeout
+        // a partial one (better than wedging paging on a pathological row).
+        function revealStaged() {
+            revealTimeout.stop()
+            const batch = d.stagedShells
+            d.stagedShells = []
+            d.stagedCount = 0
+            let sum = 0
+            let measured = 0
+            for (let i = 0; i < batch.length; ++i) {
+                batch[i].revealed = true
+                if (batch[i].height > 0) {
+                    sum += batch[i].height
+                    ++measured
+                }
+            }
+            if (measured > 0) {
+                const avg = sum / measured
+                d.avgRowHeight = d.avgRowHeight > 0 ? (d.avgRowHeight + avg) / 2 : avg
+            }
+        }
 
         // The chat identifier (clock -2) is the last row of every chat; the
         // backend keeps a fetch-more row (clock -1) directly above it for as
@@ -151,8 +255,8 @@ Item {
         property bool windowAtInitial: true
 
         onInitialWindowSizeChanged: {
-            if (d.windowAtInitial && d.initialWindowSize - 1 > d.windowEndGoal)
-                d.windowEndGoal = d.initialWindowSize - 1
+            if (d.windowAtInitial && d.initialWindowSize - 1 > d.windowEnd)
+                d.windowEnd = d.initialWindowSize - 1
         }
 
         readonly property int historyCount: messageStore.messagesModel ? messageStore.messagesModel.count : 0
@@ -169,20 +273,26 @@ Item {
                                                                    || root.rootStore.loadingHistoryMessagesInProgress)))
 
         function resetWindow() {
+            clearStaging()
             windowStart = 0
-            windowEnd = Math.min(initialWindowSize, moveBudget) - 1
-            windowStartGoal = 0
-            windowEndGoal = initialWindowSize - 1
+            windowEnd = initialWindowSize - 1
             windowAtInitial = true
             lastFetchHistoryCount = -1
         }
 
         function slideWindowToHistory() {
-            if (d.windowEndGoal < d.historyCount - 1) {
+            // one batch at a time: the paging timer keeps asking while the
+            // placeholder shows, and the next chunk must wait for this one
+            if (d.stagedCount > 0)
+                return
+
+            if (d.windowEnd < d.historyCount - 1) {
                 d.windowAtInitial = false
-                d.windowEndGoal = Math.min(d.historyCount - 1, d.windowEndGoal + d.windowChunkSize)
-                if (d.windowEndGoal - d.windowStartGoal + 1 > d.maxWindowSize)
-                    d.windowStartGoal = d.windowEndGoal - d.maxWindowSize + 1
+                d.admitStaged(function() {
+                    d.windowEnd = Math.min(d.historyCount - 1, d.windowEnd + d.windowChunkSize)
+                    if (d.windowEnd - d.windowStart + 1 > d.maxWindowSize)
+                        d.windowStart = d.windowEnd - d.maxWindowSize + 1
+                })
                 return
             }
 
@@ -195,35 +305,38 @@ Item {
         }
 
         function slideWindowToRecent() {
-            if (d.windowStartGoal <= 0)
+            if (d.stagedCount > 0 || d.windowStart <= 0)
                 return
 
-            d.windowStartGoal = Math.max(0, d.windowStartGoal - d.windowChunkSize)
-            if (d.windowEndGoal - d.windowStartGoal + 1 > d.maxWindowSize)
-                d.windowEndGoal = d.windowStartGoal + d.maxWindowSize - 1
+            d.admitStaged(function() {
+                d.windowStart = Math.max(0, d.windowStart - d.windowChunkSize)
+                if (d.windowEnd - d.windowStart + 1 > d.maxWindowSize)
+                    d.windowEnd = d.windowStart + d.maxWindowSize - 1
+            })
         }
 
         // QSFPM only re-evaluates inserted rows; nudge the bound so the filter
         // re-checks all rows (deferred — the proxy may lag the source change).
+        // Staged: the nudge can transiently admit an extra row, which must not
+        // pop in half-built.
         function refilterWindow() {
-            const end = d.windowEnd
-            d.windowEnd = end + 1
-            d.windowEnd = end
+            d.admitStaged(function() {
+                const end = d.windowEnd
+                d.windowEnd = end + 1
+                d.windowEnd = end
+            })
         }
 
         // Moves the window so that a source index sits in the middle of it and
-        // can therefore be scrolled to.
+        // can therefore be scrolled to. Only a tiny window around the target:
+        // it builds and reveals fast, and the placeholders then grow the
+        // window chunk by chunk through the ordinary paging path.
         function centerWindowOn(messageIndex) {
             d.windowAtInitial = false
-            // a tiny instant window around the target so it can be positioned
-            // at once; growth happens on the history side only, keeping the
-            // target's window row stable while rows stream in below it
-            d.windowStart = Math.max(0, messageIndex - 2)
-            d.windowEnd = messageIndex + 2
-            d.windowStartGoal = d.windowStart
-            d.windowEndGoal = Math.max(d.windowEnd,
-                                       Math.min(d.historyCount - 1,
-                                                d.windowStart + d.maxWindowSize - 1))
+            d.admitStaged(function() {
+                d.windowStart = Math.max(0, messageIndex - 2)
+                d.windowEnd = Math.min(Math.max(0, d.historyCount - 1), messageIndex + 2)
+            })
         }
 
         function markAllMessagesReadIfMostRecentMessageIsInViewport() {
@@ -241,14 +354,22 @@ Item {
             chatLogView.positionAtRow(messageIndex - d.windowStart)
         }
 
-        // Slides the window to the recent end without rebuilding it — a reset
-        // here would destroy and regrow the delegates on every sent message.
+        // Returns the view to the newest message. With the window already at
+        // the recent end (every sent message lands here) nothing is rebuilt —
+        // a teardown would flash the paging skeleton over the user's own
+        // messages. From deep in history it is a JUMP: the window collapses
+        // to a recent-end screenful instead of readmitting and unrolling
+        // every row in between.
         function scrollToBottom() {
-            if (d.windowStart > 0 || d.windowStartGoal > 0) {
-                d.windowStart = 0
-                d.windowStartGoal = 0
-                if (d.windowEndGoal - d.windowStartGoal + 1 > d.maxWindowSize)
-                    d.windowEndGoal = d.maxWindowSize - 1
+            if (d.windowStart > 0) {
+                d.windowAtInitial = false
+                d.admitStaged(function() {
+                    // end first: emptying the window before re-basing it at 0
+                    // avoids transiently admitting the whole span in between
+                    d.windowEnd = Math.min(Math.max(0, d.historyCount - 1),
+                                           d.initialWindowSize - 1)
+                    d.windowStart = 0
+                })
             }
             chatLogView.positionAtNewest()
             markAllMessagesReadIfMostRecentMessageIsInViewport()
@@ -267,8 +388,6 @@ Item {
                 const inserted = last - first + 1
                 d.windowStart += inserted
                 d.windowEnd += inserted
-                d.windowStartGoal += inserted
-                d.windowEndGoal += inserted
             }
             if (first <= d.windowEnd)
                 Qt.callLater(d.refilterWindow)
@@ -280,8 +399,6 @@ Item {
                 const removed = Math.min(last, d.windowStart - 1) - first + 1
                 d.windowStart -= removed
                 d.windowEnd -= removed
-                d.windowStartGoal = Math.max(0, d.windowStartGoal - removed)
-                d.windowEndGoal = Math.max(d.windowEnd, d.windowEndGoal - removed)
             }
             if (first <= d.windowEnd)
                 Qt.callLater(d.refilterWindow)
@@ -289,29 +406,19 @@ Item {
         }
     }
 
-    // Walks the live window bounds towards their goals a few rows per frame,
-    // so a window move admits its delegates in small batches across frames
-    // instead of building them all inside a single dispatch.
+    // Safety valve for staged batches: restarted on every row completion, so
+    // it fires only after a full interval without any build progress — a
+    // genuinely wedged batch, not a slow one. Whatever is built is shown;
+    // the stuck rows stay hidden and appear if they ever finish.
     Timer {
-        id: windowDriver
+        id: revealTimeout
 
-        interval: 16
-        repeat: true
-        triggeredOnStart: true
-        running: d.windowEnd !== d.windowEndGoal || d.windowStart !== d.windowStartGoal
+        objectName: "batchRevealTimeout"
+        interval: 1000
 
-        onTriggered: {
-            if (d.windowEnd > d.windowEndGoal)
-                d.windowEnd = d.windowEndGoal
-            else if (d.windowEnd < d.windowEndGoal)
-                d.windowEnd = Math.min(d.windowEndGoal, d.windowEnd + d.moveBudget)
-
-            if (d.windowStart < d.windowStartGoal)
-                d.windowStart = d.windowStartGoal
-            else if (d.windowStart > d.windowStartGoal)
-                d.windowStart = Math.max(d.windowStartGoal, d.windowStart - d.moveBudget)
-        }
+        onTriggered: d.revealStaged()
     }
+
 
     Connections {
         target: Qt.application
@@ -421,8 +528,24 @@ Item {
 
         contentBottomPadding: Theme.halfPadding
 
-        moreUpAvailable: d.olderMessagesAvailable
+        // A staged batch keeps the placeholder up: its rows hold no space
+        // until they reveal, and dropping the placeholder meanwhile would
+        // collapse the region they are about to fill.
+        moreUpAvailable: d.olderMessagesAvailable || d.stagedCount > 0
         moreDownAvailable: d.windowStart > 0
+
+        // Approximates the out-of-window content so the scrollbar stays
+        // roughly proportional across reveals: the rows a reveal adds are
+        // taken out of the placeholder, keeping the content height steady.
+        placeholderHeight: {
+            const remaining = Math.max(d.historyCount - 1 - d.windowEnd, d.windowStart)
+            const estimate = Math.min(remaining, 300) * (d.avgRowHeight || 48)
+            return Math.max(chatLogView.height, estimate)
+        }
+
+        // Page one viewport ahead of the scroll so a batch is usually
+        // revealed before its placeholder is ever seen.
+        prefetchMargin: chatLogView.height
 
         onMoreUpRequested: d.slideWindowToHistory()
         onMoreDownRequested: d.slideWindowToRecent()
@@ -476,16 +599,21 @@ Item {
         }
 
         ScrollBar.vertical: StatusScrollBar {
+            id: verticalScrollBar
+
             visible: chatLogView.contentHeight > chatLogView.height
         }
 
-        delegate: MessageView {
-            id: msgDelegate
+        // Shell + inline async Loader: the Repeater only ever builds the cheap
+        // shell synchronously; the actual MessageView incubates asynchronously
+        // (paced by the app's incubation controller). The component must stay
+        // inline — an external one would lose the model roles' context.
+        delegate: Loader {
+            id: shell
 
-            objectName: "chatMessageViewDelegate"
-
-            // Row 0 is the newest message and belongs at the bottom
-            Layout.row: root.chatLogView.rowCount - index
+            // Row 0 is the newest message and belongs at the bottom; +1
+            // keeps grid row 0 free as the spawn cell (see the view's docs)
+            Layout.row: root.chatLogView.rowCount - index + 1
             Layout.column: 0
             // Hard-pin the cell width (as ListView did) instead of fillWidth:
             // message implicit-width echoes livelock the GridLayout otherwise.
@@ -493,139 +621,186 @@ Item {
             Layout.minimumWidth: root.chatLogView.width
             Layout.maximumWidth: root.chatLogView.width
 
-            rootStore: root.rootStore
-            messageStore: root.messageStore
-            channelEmoji: root.channelEmoji
-            emojiPopup: root.emojiPopup
-            stickersPopup: root.stickersPopup
-            chatLogView: root.chatLogView
-            chatContentModule: root.chatContentModule
-            formatBalance: root.formatBalance
-            usersModel: root.usersModel
-            // covers the message body and the quoted reply, whose mentions
-            // also render through this map
-            mentionsMap: mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageText)
+            // Pinned while staged too (the layout ignores invisible items),
+            // so the message lays out its text at its final width and the
+            // reveal-frame polish only places pre-measured rows.
+            width: root.chatLogView.width
 
-            isChatBlocked: root.isChatBlocked
-            joined: root.joined
+            asynchronous: true
 
-            sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
-            messageLinkSharingEnabled: root.messageLinkSharingEnabled
-            createMessageLink: (chatId, messageId) => root.messageStore.createMessageLink(chatId, messageId)
-            disabledTooltipText: root.disabledTooltipText
-            areTestNetworksEnabled: root.areTestNetworksEnabled
-            extraLeftPadding: root.extraLeftPadding
+            // The shell being Ready only means the MessageView *instance*
+            // exists — MessageView is itself a Loader whose content keeps
+            // incubating (with a 50px fallback height). A row is only ready
+            // once that inner content is fully built and measured; a content
+            // type without a component (inner status Null) is ready as is.
+            readonly property bool contentReady: status === Loader.Ready && item
+                                                 && item.status !== Loader.Loading
 
-            chatId: root.chatId
-            messageId: model.id
-            communityId: model.communityId
-            responseToMessageWithId: model.responseToMessageWithId
-            senderId: model.senderId
-            senderDisplayName: model.senderDisplayName
-            usesDefaultName: model.usesDefaultName
-            senderOptionalName: model.senderOptionalName
-            senderIsEnsVerified: model.senderEnsVerified
-            senderIcon: model.senderIcon
-            senderIsAdded: model.senderIsAdded
-            senderTrustStatus: model.senderTrustStatus
-            compressedKey: model.compressedKey
-            amISender: model.amISender
-            messageText: model.messageText
-            unparsedText: model.unparsedText
-            messageImage: model.messageImage
-            album: model.albumMessageImages.split(" ")
-            albumCount: model.albumImagesCount
-            messageTimestamp: model.timestamp
-            messageOutgoingStatus: model.outgoingStatus
-            resendError: model.resendError
-            messageContentType: model.contentType
-            pinnedMessage: model.pinned
-            messagePinnedBy: model.pinnedBy
-            reactionsModel: model.reactions
-            sticker: model.sticker
-            stickerPack: model.stickerPack
-            editModeOn: model.editMode
-            onEditModeOnChanged: root.editModeChanged(editModeOn, model.id)
-            isEdited: model.isEdited
-            deleted: model.deleted
-            deletedBy: model.deletedBy
-            deletedByContactDisplayName: model.deletedByContactDisplayName
-            deletedByContactIcon: model.deletedByContactIcon
-            linkPreviewModel: model.linkPreviewModel
-            links: model.links
-            paymentRequestModel: model.paymentRequestModel
-            messageAttachments: model.messageAttachments
-            transactionParams: model.transactionParameters
-            hasMention: model.mentioned
-            quotedMessageText: model.quotedMessageParsedText
-            quotedMessageUnparsedText: model.quotedMessageText
-            quotedMessageFrom: model.quotedMessageFrom
-            quotedMessageContentType: model.quotedMessageContentType
-            quotedMessageDeleted: model.quotedMessageDeleted
-            quotedMessageAuthorDetailsName: model.quotedMessageAuthorName
-            quotedMessageAuthorDetailsDisplayName: model.quotedMessageAuthorDisplayName
-            quotedMessageAuthorDetailsThumbnailImage: model.quotedMessageAuthorThumbnailImage
-            quotedMessageAuthorDetailsEnsVerified: model.quotedMessageAuthorEnsVerified
-            quotedMessageAuthorDetailsIsContact: model.quotedMessageAuthorIsContact
-            quotedMessageAlbumMessageImages: model.quotedMessageAlbumMessageImages.split(" ")
-            quotedMessageAlbumImagesCount: model.quotedMessageAlbumImagesCount
-            bridgeName: model.bridgeName
+            // Rows admitted by a staged slide hold no visual space until the
+            // whole batch is ready; everything else shows as soon as it is
+            // ready itself. A row that is still loading is never shown.
+            property bool revealed: false
+            visible: revealed && contentReady
 
-            gapFrom: model.gapFrom
-            gapTo: model.gapTo
+            readonly property string messageId: model.id
 
-             // This is possible since we have all data loaded before we load qml.
-             // When we fetch messages to fulfill a gap we have to set them at once.
-             // Also one important thing here is that messages are set in descending order
-             // in terms of `timestamp` of a message, that means a message with the most
-             // recent time is added at index 0.
-            prevMessageIndex: model.prevMsgIndex
-            prevMessageTimestamp: model.prevMsgTimestamp
-            prevMessageSenderId: model.prevMsgSenderId
-            prevMessageContentType: model.prevMsgContentType
-            prevMessageDeleted: model.prevMsgDeleted
-            nextMessageIndex: model.nextMsgIndex
-            nextMessageTimestamp: model.nextMsgTimestamp
-
-            // Unfurling related data:
-            gifUnfurlingEnabled: root.gifUnfurlingEnabled
-            neverAskAboutUnfurlingAgain: root.neverAskAboutUnfurlingAgain
-
-            // Contacts related data:
-            myPublicKey: root.myPublicKey
-
-            onOpenStickerPackPopup: stickerPackId => root.openStickerPackPopup(stickerPackId)
-            onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
-
-            onShowReplyArea: (messageId, author) => root.showReplyArea(messageId, author)
-
-            stickersLoaded: root.stickersLoaded
-
-            onSendViaPersonalChatRequested: {
-                Global.sendToRecipientRequested(recipientAddress)
+            function startMessageFoundAnimation() {
+                if (item)
+                    item.startMessageFoundAnimation()
             }
 
-            onVisibleChanged: {
-                if(!visible && model.editMode)
-                    messageStore.setEditModeOff(model.id)
+            Component.onCompleted: {
+                if (d.admittingStaged)
+                    d.stageShell(this)
+                else
+                    revealed = true
+            }
+            Component.onDestruction: d.unstageShell(this)
+
+            onContentReadyChanged: {
+                if (contentReady && !revealed)
+                    d.checkStagedReady()
             }
 
-            onEmojiReactionToggled: (messageId, hexcode) => {
-                root.messageStore.toggleReaction(messageId, hexcode)
-            }
+            sourceComponent: MessageView {
+                id: msgDelegate
 
-            // Unfurling related requests:
-            onSetNeverAskAboutUnfurlingAgain: root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
+                objectName: "chatMessageViewDelegate"
 
-            onOpenGifPopupRequest: root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
+                rootStore: root.rootStore
+                messageStore: root.messageStore
+                channelEmoji: root.channelEmoji
+                emojiPopup: root.emojiPopup
+                stickersPopup: root.stickersPopup
+                chatLogView: root.chatLogView
+                chatContentModule: root.chatContentModule
+                formatBalance: root.formatBalance
+                usersModel: root.usersModel
+                // covers the message body and the quoted reply, whose mentions
+                // also render through this map
+                mentionsMap: mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageText)
 
-            // Contacts related requests:
-            onChangeContactNicknameRequest: root.changeContactNicknameRequest(pubKey, nickname, displayName, isEdit)
-            onRemoveTrustStatusRequest: root.removeTrustStatusRequest(pubKey)
+                isChatBlocked: root.isChatBlocked
+                joined: root.joined
 
-            // Community access related requests:
-            onSpectateCommunityRequested: (communityId) => {
-                root.spectateCommunityRequested(communityId)
+                sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
+                messageLinkSharingEnabled: root.messageLinkSharingEnabled
+                createMessageLink: (chatId, messageId) => root.messageStore.createMessageLink(chatId, messageId)
+                disabledTooltipText: root.disabledTooltipText
+                areTestNetworksEnabled: root.areTestNetworksEnabled
+                extraLeftPadding: root.extraLeftPadding
+
+                chatId: root.chatId
+                messageId: model.id
+                communityId: model.communityId
+                responseToMessageWithId: model.responseToMessageWithId
+                senderId: model.senderId
+                senderDisplayName: model.senderDisplayName
+                usesDefaultName: model.usesDefaultName
+                senderOptionalName: model.senderOptionalName
+                senderIsEnsVerified: model.senderEnsVerified
+                senderIcon: model.senderIcon
+                senderIsAdded: model.senderIsAdded
+                senderTrustStatus: model.senderTrustStatus
+                compressedKey: model.compressedKey
+                amISender: model.amISender
+                messageText: model.messageText
+                unparsedText: model.unparsedText
+                messageImage: model.messageImage
+                album: model.albumMessageImages.split(" ")
+                albumCount: model.albumImagesCount
+                messageTimestamp: model.timestamp
+                messageOutgoingStatus: model.outgoingStatus
+                resendError: model.resendError
+                messageContentType: model.contentType
+                pinnedMessage: model.pinned
+                messagePinnedBy: model.pinnedBy
+                reactionsModel: model.reactions
+                sticker: model.sticker
+                stickerPack: model.stickerPack
+                editModeOn: model.editMode
+                onEditModeOnChanged: root.editModeChanged(editModeOn, model.id)
+                isEdited: model.isEdited
+                deleted: model.deleted
+                deletedBy: model.deletedBy
+                deletedByContactDisplayName: model.deletedByContactDisplayName
+                deletedByContactIcon: model.deletedByContactIcon
+                linkPreviewModel: model.linkPreviewModel
+                links: model.links
+                paymentRequestModel: model.paymentRequestModel
+                messageAttachments: model.messageAttachments
+                transactionParams: model.transactionParameters
+                hasMention: model.mentioned
+                quotedMessageText: model.quotedMessageParsedText
+                quotedMessageUnparsedText: model.quotedMessageText
+                quotedMessageFrom: model.quotedMessageFrom
+                quotedMessageContentType: model.quotedMessageContentType
+                quotedMessageDeleted: model.quotedMessageDeleted
+                quotedMessageAuthorDetailsName: model.quotedMessageAuthorName
+                quotedMessageAuthorDetailsDisplayName: model.quotedMessageAuthorDisplayName
+                quotedMessageAuthorDetailsThumbnailImage: model.quotedMessageAuthorThumbnailImage
+                quotedMessageAuthorDetailsEnsVerified: model.quotedMessageAuthorEnsVerified
+                quotedMessageAuthorDetailsIsContact: model.quotedMessageAuthorIsContact
+                quotedMessageAlbumMessageImages: model.quotedMessageAlbumMessageImages.split(" ")
+                quotedMessageAlbumImagesCount: model.quotedMessageAlbumImagesCount
+                bridgeName: model.bridgeName
+
+                gapFrom: model.gapFrom
+                gapTo: model.gapTo
+
+                 // This is possible since we have all data loaded before we load qml.
+                 // When we fetch messages to fulfill a gap we have to set them at once.
+                 // Also one important thing here is that messages are set in descending order
+                 // in terms of `timestamp` of a message, that means a message with the most
+                 // recent time is added at index 0.
+                prevMessageIndex: model.prevMsgIndex
+                prevMessageTimestamp: model.prevMsgTimestamp
+                prevMessageSenderId: model.prevMsgSenderId
+                prevMessageContentType: model.prevMsgContentType
+                prevMessageDeleted: model.prevMsgDeleted
+                nextMessageIndex: model.nextMsgIndex
+                nextMessageTimestamp: model.nextMsgTimestamp
+
+                // Unfurling related data:
+                gifUnfurlingEnabled: root.gifUnfurlingEnabled
+                neverAskAboutUnfurlingAgain: root.neverAskAboutUnfurlingAgain
+
+                // Contacts related data:
+                myPublicKey: root.myPublicKey
+
+                onOpenStickerPackPopup: stickerPackId => root.openStickerPackPopup(stickerPackId)
+                onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
+
+                onShowReplyArea: (messageId, author) => root.showReplyArea(messageId, author)
+
+                stickersLoaded: root.stickersLoaded
+
+                onSendViaPersonalChatRequested: {
+                    Global.sendToRecipientRequested(recipientAddress)
+                }
+
+                onVisibleChanged: {
+                    if(!visible && model.editMode)
+                        messageStore.setEditModeOff(model.id)
+                }
+
+                onEmojiReactionToggled: (messageId, hexcode) => {
+                    root.messageStore.toggleReaction(messageId, hexcode)
+                }
+
+                // Unfurling related requests:
+                onSetNeverAskAboutUnfurlingAgain: root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
+
+                onOpenGifPopupRequest: root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
+
+                // Contacts related requests:
+                onChangeContactNicknameRequest: root.changeContactNicknameRequest(pubKey, nickname, displayName, isEdit)
+                onRemoveTrustStatusRequest: root.removeTrustStatusRequest(pubKey)
+
+                // Community access related requests:
+                onSpectateCommunityRequested: (communityId) => {
+                    root.spectateCommunityRequested(communityId)
+                }
             }
         }
         bottomContent: {
