@@ -2133,6 +2133,8 @@ Item {
                         switch (d.activeSectionType) {
                         case Constants.appSection.homePage:
                             return Constants.appViewStackIndex.homePage
+                        case Constants.appSection.loadingSection:
+                            return -1
                         case Constants.appSection.chat:
                             return Constants.appViewStackIndex.chat
                         case Constants.appSection.community:
@@ -2439,7 +2441,8 @@ Item {
                     active: !appMain.mainReady
                             && (d.activeSectionType === Constants.appSection.chat
                                 || d.activeSectionType === Constants.appSection.community
-                                || d.activeSectionType === Constants.appSection.communitiesPortal)
+                                || d.activeSectionType === Constants.appSection.communitiesPortal
+                                || d.activeSectionType === Constants.appSection.loadingSection)
                     sourceComponent: d.activeSectionType === Constants.appSection.communitiesPortal
                                      ? communitiesPortalLoading
                                      : chatLayoutLoading
