@@ -24,73 +24,87 @@ LoadingSkeletonGroup {
         }
         spacing: Theme.padding
 
-        // name/line widths are fractions of the available text width so the
-        // shape survives narrow and wide panels alike
+        // The pattern block is repeated to fill whatever height the skeleton
+        // is given — as a paging placeholder it can stand in for many screens
+        // of messages, and a fast fling must never reach blank space. The
+        // divisor is a safe underestimate of the block height; the surplus
+        // block is clipped at the top.
         Repeater {
-            model: [
-                { name: 0.22, lines: [0.95, 0.9, 0.86, 0.5] },
-                { separator: true },
-                { name: 0.18, lines: [0.6], card: true },
-                { name: 0.26, lines: [0.92, 0.35] },
-                { separator: true },
-                { name: 0.2, lines: [0.88, 0.44] },
-            ]
+            model: Math.max(1, Math.ceil(root.height / 500))
 
-            delegate: DelegateChooser {
-                role: "separator"
+            delegate: Column {
+                width: parent ? parent.width : 0
+                spacing: Theme.padding
 
-                DelegateChoice {
-                    roleValue: true
+                // name/line widths are fractions of the available text width
+                // so the shape survives narrow and wide panels alike
+                Repeater {
+                    model: [
+                        { name: 0.22, lines: [0.95, 0.9, 0.86, 0.5] },
+                        { separator: true },
+                        { name: 0.18, lines: [0.6], card: true },
+                        { name: 0.26, lines: [0.92, 0.35] },
+                        { separator: true },
+                        { name: 0.2, lines: [0.88, 0.44] },
+                    ]
 
-                    LoadingSkeletonTile {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        implicitWidth: 96
-                        implicitHeight: 12
-                    }
-                }
-                DelegateChoice {
-                    Row {
-                        id: entry
+                    delegate: DelegateChooser {
+                        role: "separator"
 
-                        required property var modelData
-
-                        // available width for the text bars; derived from the
-                        // stable root width, not the row itself, to avoid a
-                        // sizing cycle
-                        readonly property real textWidth:
-                            Math.max(0, root.width - 40 - Theme.halfPadding)
-
-                        width: parent.width
-                        spacing: Theme.halfPadding
-
-                        LoadingSkeletonTile {
-                            implicitWidth: 40
-                            implicitHeight: 40
-                            radius: width / 2
-                        }
-                        Column {
-                            spacing: 6
+                        DelegateChoice {
+                            roleValue: true
 
                             LoadingSkeletonTile {
-                                implicitWidth: entry.textWidth * (entry.modelData.name ?? 0.2)
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                implicitWidth: 96
                                 implicitHeight: 12
                             }
-                            Repeater {
-                                model: entry.modelData.lines ?? []
+                        }
+                        DelegateChoice {
+                            Row {
+                                id: entry
+
+                                required property var modelData
+
+                                // available width for the text bars; derived
+                                // from the stable root width, not the row
+                                // itself, to avoid a sizing cycle
+                                readonly property real textWidth:
+                                    Math.max(0, root.width - 40 - Theme.halfPadding)
+
+                                width: parent.width
+                                spacing: Theme.halfPadding
 
                                 LoadingSkeletonTile {
-                                    required property real modelData
-
-                                    implicitWidth: entry.textWidth * modelData
-                                    implicitHeight: 14
+                                    implicitWidth: 40
+                                    implicitHeight: 40
+                                    radius: width / 2
                                 }
-                            }
-                            // attachment / link-preview card
-                            LoadingSkeletonTile {
-                                visible: !!entry.modelData.card
-                                implicitWidth: Math.min(320, entry.textWidth * 0.6)
-                                implicitHeight: 150
-                                radius: Theme.radius
+                                Column {
+                                    spacing: 6
+
+                                    LoadingSkeletonTile {
+                                        implicitWidth: entry.textWidth * (entry.modelData.name ?? 0.2)
+                                        implicitHeight: 12
+                                    }
+                                    Repeater {
+                                        model: entry.modelData.lines ?? []
+
+                                        LoadingSkeletonTile {
+                                            required property real modelData
+
+                                            implicitWidth: entry.textWidth * modelData
+                                            implicitHeight: 14
+                                        }
+                                    }
+                                    // attachment / link-preview card
+                                    LoadingSkeletonTile {
+                                        visible: !!entry.modelData.card
+                                        implicitWidth: Math.min(320, entry.textWidth * 0.6)
+                                        implicitHeight: 150
+                                        radius: Theme.radius
+                                    }
+                                }
                             }
                         }
                     }
