@@ -1062,6 +1062,14 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Logs (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh logs size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Experimental features</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1106,6 +1114,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Choose a number between 1 and 50</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Number between 1 and 50</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Number needs to be between 1 and 50</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Debug</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1123,10 +1143,6 @@
             <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
-    </message>
-    <message>
-        <source>Old logs</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Clearing...</source>
@@ -1181,23 +1197,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Choose a number between 1 and 100</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Number of archives files</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Number between 1 and 100</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Number needs to be between 1 and 100</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This change will only come into action after a restart</source>
+        <source>Number of archive files per group</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

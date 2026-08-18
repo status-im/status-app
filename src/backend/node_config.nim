@@ -36,10 +36,15 @@ proc setLogLevel*(logLevel: LogLevel): RpcResponse[JsonNode] =
   result = core.callPrivateRPC("setLogLevel".prefix, payload)
 
 proc setMaxLogBackups*(maxLogBackups: int): RpcResponse[JsonNode] =
-  let payload = %*[{
+  let payload = %* {
     "maxLogBackups": maxLogBackups
-  }]
-  return core.callPrivateRPC("setMaxLogBackups".prefix, payload)
+  }
+  try:
+    let response = status_go.setProfileLogMaxBackups($payload)
+    result.result = response.parseJSON()
+  except Exception as e:
+    error "error doing rpc request", methodName = "setProfileLogMaxBackups", exception=e.msg
+    raise newException(RpcException, e.msg)
 
 proc setLightClient*(enabled: bool): RpcResponse[JsonNode] =
   let payload = %*[{

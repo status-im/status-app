@@ -162,6 +162,8 @@ proc inputConnectionStringForImportingKeypairsKeystores*(connectionString: cstri
 
 proc loginAccount*(requestJSON: cstring): cstring {.importc: "LoginAccount".}
 
+proc setProfileLogMaxBackups*(requestJSON: cstring): cstring {.importc: "SetProfileLogMaxBackups".}
+
 proc createAccountAndLogin*(requestJSON: cstring): cstring {.importc: "CreateAccountAndLogin".}
 
 proc restoreAccountAndLogin*(requestJSON: cstring): cstring {.importc: "RestoreAccountAndLogin".}

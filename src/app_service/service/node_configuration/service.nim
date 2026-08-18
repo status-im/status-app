@@ -1,7 +1,9 @@
+import std/json
 import chronicles, json_serialization
 
 import ./dto/node_config
 import ../../../app/core/eventemitter
+import ../../../app/global/log_cleanup
 import ../../../backend/node_config as status_node_config
 import ../../../constants as main_constants
 import ../../../app/core/signals/types
@@ -16,11 +18,16 @@ const WAKU_VERSION_2* = 2
 
 const
   SIGNAL_NODE_LOG_LEVEL_UPDATE* = "nodeLogLevelUpdated"
+  SIGNAL_NODE_LOG_MAX_BACKUPS_UPDATE* = "nodeLogMaxBackupsUpdated"
   DEBUG_LOG_LEVELS = @["DEBUG", "TRACE"]
 
 type
   NodeLogLevelUpdatedArgs* = ref object of Args
     logLevel*: LogLevel
+
+type
+  NodeLogMaxBackupsUpdatedArgs* = ref object of Args
+    maxBackups*: int
 
 type
   ArchiveProtocolMode* {.pure.} = enum
@@ -200,17 +207,21 @@ proc isFullNode*(self: Service): bool =
    return self.configuration.WakuConfig.FullNode
 
 proc getLogMaxBackups*(self: Service): int =
-  return self.configuration.LogMaxBackups
+  if self.configuration.LogMaxBackups <= 0:
+    return DefaultLogFamilyMaxFiles
+  return min(self.configuration.LogMaxBackups, MaxLogFamilyMaxFiles)
 
 proc setMaxLogBackups*(self: Service, value: int): bool =
+  let clamped = clamp(value, 1, MaxLogFamilyMaxFiles)
   try:
-    let response = status_node_config.setMaxLogBackups(value)
+    let response = status_node_config.setMaxLogBackups(clamped)
 
-    if response.error != nil:
-      let error = Json.decode($response.error, RpcError)
-      raise newException(RpcException, error.message)
+    let responseError = response.result{"error"}.getStr
+    if responseError != "":
+      raise newException(RpcException, responseError)
 
-    self.configuration.LogMaxBackups = value
+    self.configuration.LogMaxBackups = clamped
+    self.events.emit(SIGNAL_NODE_LOG_MAX_BACKUPS_UPDATE, NodeLogMaxBackupsUpdatedArgs(maxBackups: clamped))
     return true
   except Exception as e:
     error "failed to set max log backups", errDescription = e.msg

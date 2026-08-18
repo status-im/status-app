@@ -1059,6 +1059,14 @@
         <translation>애플리케이션 로그</translation>
     </message>
     <message>
+        <source>Logs (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh logs size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Experimental features</source>
         <translation>실험적 기능</translation>
     </message>
@@ -1103,6 +1111,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Choose a number between 1 and 50</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Number between 1 and 50</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Number needs to be between 1 and 50</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Debug</source>
         <translation>디버그</translation>
     </message>
@@ -1119,10 +1139,6 @@
         <translation type="unfinished">
             <numerusform></numerusform>
         </translation>
-    </message>
-    <message>
-        <source>Old logs</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Clearing...</source>
@@ -1177,24 +1193,8 @@
         <translation>보관할 로그 파일을 몇 개로 유지할까요?</translation>
     </message>
     <message>
-        <source>Choose a number between 1 and 100</source>
-        <translation>1부터 100 사이의 숫자를 선택하세요</translation>
-    </message>
-    <message>
-        <source>Number of archives files</source>
-        <translation>아카이브 파일 개수</translation>
-    </message>
-    <message>
-        <source>Number between 1 and 100</source>
-        <translation>1에서 100 사이의 숫자</translation>
-    </message>
-    <message>
-        <source>Number needs to be between 1 and 100</source>
-        <translation>숫자는 1과 100 사이여야 합니다</translation>
-    </message>
-    <message>
-        <source>This change will only come into action after a restart</source>
-        <translation>이 변경 사항은 재시작 후에만 적용됩니다</translation>
+        <source>Number of archive files per group</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Cancel</source>

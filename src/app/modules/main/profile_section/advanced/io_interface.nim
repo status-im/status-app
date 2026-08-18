@@ -90,6 +90,15 @@ method onLogMaxBackupsChanged*(self: AccessInterface) {.base.} =
 method getIsClearingOldLogs*(self: AccessInterface): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method getLogsFolderSizeBytes*(self: AccessInterface): float {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onLogsFolderSizeChanged*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method refreshLogsFolderSize*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method clearOldLogs*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 

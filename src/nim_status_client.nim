@@ -239,6 +239,12 @@ proc mainProc() =
   let logCleanupProcessStartedAt = getTime()
   initializeLogCleanup(logCleanupProcessStartedAt)
 
+  # Move log files from the status-go data dir to the logs dir, before status-go opens any of
+  # them. On Android status-go runs in a separate long-lived process that may still be writing
+  # its live (canonical-named) log files, so those are left in place there (handled by the
+  # StatusGoRunsOutOfProcess-based default).
+  discard migrateLegacyLogFiles(STATUSGODIR, LOGDIR, logCleanupProcessStartedAt)
+
   # Open the log file and set the log level before any subsystem starts logging.
   # On iOS the stdout sink is disabled (no valid stdout FILE*), so logs go to the
   # file sink only; opening it here guarantees every startup log has a valid sink

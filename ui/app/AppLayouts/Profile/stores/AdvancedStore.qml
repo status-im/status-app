@@ -20,6 +20,7 @@ QtObject {
     property bool isNimbusProxyEnabled: advancedModule? advancedModule.isNimbusProxyEnabled : false
     property bool isDebugEnabled: advancedModule? advancedModule.isDebugEnabled : false
     property int logMaxBackups: advancedModule ? advancedModule.logMaxBackups : 1
+    property real logsFolderSizeBytes: advancedModule ? advancedModule.logsFolderSizeBytes : 0
     property bool isRuntimeLogLevelSet: advancedModule ? advancedModule.isRuntimeLogLevelSet: false
     property bool isClearingOldLogs: advancedModule ? advancedModule.isClearingOldLogs : false
     readonly property int archiveProtocolMode: advancedModule ? advancedModule.archiveProtocolMode : AdvancedStore.ArchiveProtocolMode.Disabled
@@ -120,6 +121,13 @@ QtObject {
             return
 
         root.advancedModule.clearOldLogs()
+    }
+
+    function refreshLogsFolderSize() {
+        if(!root.advancedModule)
+            return
+
+        root.advancedModule.refreshLogsFolderSize()
     }
 
     function toggleExperimentalFeature(feature) {

@@ -133,6 +133,15 @@ method onLogMaxBackupsChanged*(self: Module) =
 method getIsClearingOldLogs*(self: Module): bool =
   return self.controller.getIsClearingOldLogs()
 
+method getLogsFolderSizeBytes*(self: Module): float =
+  return self.controller.getLogsFolderSizeBytes()
+
+method onLogsFolderSizeChanged*(self: Module) =
+  self.view.logsFolderSizeBytesChanged()
+
+method refreshLogsFolderSize*(self: Module) =
+  self.controller.refreshLogsFolderSize()
+
 method clearOldLogs*(self: Module) =
   self.controller.clearOldLogs()
 

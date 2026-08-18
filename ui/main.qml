@@ -576,7 +576,7 @@ Window {
                             try {
                                 const json = globalUtils.collectLogFilesJson()
                                 const paths = JSON.parse(json)
-                                if (!paths || paths.length === 1) {
+                                if (!paths || paths.length === 0) {
                                     exportLogFilesButton.enabled = false
                                     exportLogFilesButton.text = qsTr("No log files found")
                                     return

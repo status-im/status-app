@@ -1062,6 +1062,14 @@
         <translation>Registros de la aplicación</translation>
     </message>
     <message>
+        <source>Logs (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh logs size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Experimental features</source>
         <translation>Funciones experimentales</translation>
     </message>
@@ -1106,6 +1114,18 @@
         <translation>La aplicación se reiniciará si lo confirma.</translation>
     </message>
     <message>
+        <source>Choose a number between 1 and 50</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Number between 1 and 50</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Number needs to be between 1 and 50</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Debug</source>
         <translation>Depuración</translation>
     </message>
@@ -1123,10 +1143,6 @@
             <numerusform>Se borró %n archivo de registro antiguo</numerusform>
             <numerusform>Se borraron %n archivos de registro antiguos</numerusform>
         </translation>
-    </message>
-    <message>
-        <source>Old logs</source>
-        <translation>Registros antiguos</translation>
     </message>
     <message>
         <source>Clearing...</source>
@@ -1181,24 +1197,8 @@
         <translation>¿Cuántos archivos de registro quieres mantener archivados?</translation>
     </message>
     <message>
-        <source>Choose a number between 1 and 100</source>
-        <translation>Elige un número entre 1 y 100</translation>
-    </message>
-    <message>
-        <source>Number of archives files</source>
-        <translation>Número de archivos archivados</translation>
-    </message>
-    <message>
-        <source>Number between 1 and 100</source>
-        <translation>Número entre 1 y 100</translation>
-    </message>
-    <message>
-        <source>Number needs to be between 1 and 100</source>
-        <translation>El número debe estar entre 1 y 100</translation>
-    </message>
-    <message>
-        <source>This change will only come into action after a restart</source>
-        <translation>Este cambio solo entrará en acción después de un reinicio</translation>
+        <source>Number of archive files per group</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Cancel</source>

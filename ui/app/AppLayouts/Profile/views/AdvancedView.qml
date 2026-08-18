@@ -42,10 +42,11 @@ SettingsContentBase {
     property bool minimizeOnCloseOptionVisible
     property bool refetchTxHistoryClicked: false
     onVisibleChanged: {
-        // Reset the refetchTx button state when the user leaves the screen
         if (visible) {
+            root.advancedStore.refreshLogsFolderSize()
             return
         }
+        // Reset the refetchTx button state when the user leaves the screen
         root.refetchTxHistoryClicked = false
     }
 
@@ -173,15 +174,41 @@ SettingsContentBase {
                 spacing: Theme.padding
 
                 StatusBaseText {
-                    Layout.fillWidth: true
-                    text: qsTr("Old logs")
+                    text: qsTr("Logs (%1)").arg(Qt.locale().formattedDataSize(root.advancedStore.logsFolderSizeBytes, 2, Locale.DataSizeTraditionalFormat))
                     elide: Text.ElideRight
+                }
+
+                StatusButton {
+                    objectName: "refreshLogsFolderSizeButton"
+                    Layout.preferredWidth: 24
+                    Layout.preferredHeight: 24
+                    Layout.alignment: Qt.AlignVCenter
+                    size: StatusBaseButton.Size.Tiny
+                    icon.name: "refresh"
+                    icon.width: 16
+                    icon.height: 16
+                    Accessible.name: qsTr("Refresh logs size")
+                    tooltip.text: qsTr("Refresh logs size")
+                    onClicked: root.advancedStore.refreshLogsFolderSize()
+                }
+
+                Item {
+                    Layout.fillWidth: true
                 }
 
                 StatusButton {
                     text: root.advancedStore.isClearingOldLogs ? qsTr("Clearing...") : qsTr("Clear old logs")
                     enabled: !root.advancedStore.isClearingOldLogs
                     onClicked: clearOldLogsConfirmation.open()
+                }
+            }
+
+            StatusSettingsLineButton {
+                width: parent.width
+                text: qsTr("How many log files to keep archived")
+                currentValue: LocaleUtils.numberToLocaleString(root.advancedStore.logMaxBackups)
+                onClicked: {
+                    Global.openPopup(changeNumberOfLogsArchived)
                 }
             }
 
@@ -399,15 +426,6 @@ SettingsContentBase {
 
             StatusSettingsLineButton {
                 width: parent.width
-                text: qsTr("How many log files to keep archived")
-                currentValue: root.advancedStore.logMaxBackups.toString()
-                onClicked: {
-                    Global.openPopup(changeNumberOfLogsArchived)
-                }
-            }
-
-            StatusSettingsLineButton {
-                width: parent.width
                 id: rpcStatsButton
                 text: qsTr("RPC statistics")
                 onClicked: rpcStatsModal.open()
@@ -464,7 +482,7 @@ SettingsContentBase {
                         width: parent.width
                         padding: 15
                         wrapMode: Text.WordWrap
-                        text: qsTr("Choose a number between 1 and 100")
+                        text: qsTr("Choose a number between 1 and 50")
                     }
 
                     StatusAmountInput {
@@ -473,24 +491,17 @@ SettingsContentBase {
                         anchors.right: parent.right
                         anchors.leftMargin: Theme.padding
                         anchors.rightMargin: Theme.padding
-                        label: qsTr("Number of archives files")
+                        label: qsTr("Number of archive files per group")
                         input.text: root.advancedStore.logMaxBackups
-                        placeholderText: qsTr("Number between 1 and 100")
+                        placeholderText: qsTr("Number between 1 and 50")
                         validators: [
                             StatusIntValidator {
                                 bottom: 1
-                                top: 100
-                                errorMessage: qsTr("Number needs to be between 1 and 100")
+                                top: 50
+                                errorMessage: qsTr("Number needs to be between 1 and 50")
                                 locale: LocaleUtils.userInputLocale
                             }
                         ]
-                    }
-
-                    StatusBaseText {
-                        width: parent.width
-                        padding: 15
-                        wrapMode: Text.WordWrap
-                        text: qsTr("This change will only come into action after a restart")
                     }
                 }
 
@@ -505,6 +516,7 @@ SettingsContentBase {
                         id: banButton
                         text: qsTr("Change")
                         type: StatusBaseButton.Type.Normal
+                        enabled: numberInput.valid
                         onClicked: {
                             root.advancedStore.setMaxLogBackups(numberInput.input.text)
                             logChangerModal.close()

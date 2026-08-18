@@ -44,6 +44,8 @@ import app/modules/keycard_channel/module as keycard_channel_module
 import app/core/notifications/notifications_manager
 import app/global/global_singleton
 import app/global/app_signals
+import app/global/log_cleanup
+import app/global/log_cleanup_tasks
 import app/core/[main]
 
 import constants as main_constants
@@ -140,6 +142,7 @@ proc connect(self: AppController) =
         setLogLevel(chronicles.LogLevel.DEBUG)
       elif defined(production):
         setLogLevel(chronicles.LogLevel.INFO)
+
 
 proc newAppController*(statusFoundation: StatusFoundation): AppController =
   result = AppController()
@@ -433,6 +436,15 @@ proc load(self: AppController) =
   if not main_constants.runtimeLogLevelSet():
     if self.nodeConfigurationService.isDebugEnabled():
       setLogLevel(chronicles.LogLevel.DEBUG)
+
+  # Apply the user's per-family cap
+  scheduleLogFamilyCleanup(
+    self.statusFoundation.threadpool,
+    main_constants.LOGDIR,
+    main_constants.STATUSGODIR,
+    logCleanupProcessStartedAt(),
+    self.nodeConfigurationService.getLogMaxBackups()
+  )
 
   # load main module
   self.mainModule.load(

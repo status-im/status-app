@@ -59,7 +59,7 @@ let
   TMPDIR* = joinPath(baseDir, "tmp") & sep
   LOGDIR* = joinPath(baseDir, "logs") & sep
   KEYCARD_DATA_DIR* = joinPath(baseDir, "data", "keycard")
-  KEYCARD_LOG_FILE_PATH* = joinPath(KEYCARD_DATA_DIR, "keycard.log")
+  KEYCARD_LOG_FILE_PATH* = joinPath(LOGDIR, "keycard.log")
   KEYCARDPAIRINGDATAFILE* = joinPath(KEYCARD_DATA_DIR, "pairings.json")
 
   # runtime variables
