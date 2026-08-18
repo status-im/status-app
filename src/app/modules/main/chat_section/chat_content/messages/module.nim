@@ -590,6 +590,9 @@ method resetNewMessagesMarker*(self: Module) =
   self.firstUnseenMessageState.scrollToWhenFetched = false
   self.controller.getAsyncFirstUnseenMessageId()
 
+method resetKeepUnread*(self: Module) =
+  self.view.setKeepUnread(false)
+
 method resetAndScrollToNewMessagesMarker*(self: Module) =
   self.firstUnseenMessageState.fetching = true
   self.firstUnseenMessageState.scrollToWhenFetched = true
