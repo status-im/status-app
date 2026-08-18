@@ -131,7 +131,7 @@ npm install -g npm@latest
 Install required packages:
 
 ```bash
-sudo dnf install pcsc-lite-devel pcre-devel openssl-devel protobuf-devel protobuf-compiler
+sudo dnf install pcsc-lite-devel openssl-devel protobuf-devel protobuf-compiler
 ```
 
 Install **nvm** and Node.js as per the [Ubuntu instructions above](#ubuntu).
