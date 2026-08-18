@@ -1121,7 +1121,7 @@ Loader {
                         active: delegate.hovered && d.addReactionAllowed && !root.emojiReactionLimitReached
                         visible: active
                         sourceComponent: MessageReactionsRow {
-                            emojiModel: emojiPopup.fullModel
+                            emojiModel: emojiPopup?.fullModel ?? null
                             onToggleReaction: hexcode => root.emojiReactionToggled(root.messageId, hexcode)
                             onOpenEmojiPopup: (parent, mouse) => {
                                                   d.addReactionClicked(parent, mouse)
