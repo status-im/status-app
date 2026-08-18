@@ -957,7 +957,7 @@ Control {
             sendButton.limitText: messageInputField.length >= root.messageLimit - root.messageLimitSoft
                                   ? (root.messageLimit - messageInputField.length).toString()
                                   : ""
-            sendButton.iconName: root.isEdit ? "checkmark" : "send"
+            sendButton.iconName: root.isEdit ? "checkmark" : "arrow-up"
 
             sendButton.onClicked: {
                 InputMethod.commit()
