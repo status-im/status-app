@@ -114,3 +114,47 @@ suite "updating chat items":
     check(cat.categoryOpened == false)
     let chat = model.getItemById("0xc")
     check(chat.categoryOpened == false)
+
+suite "hidden role (chat list virtualization)":
+  setup:
+    # fresh items per test — ChatItem is a ref, shared globals leak state
+    let model = newModel()
+    model.setData(@[createTestChatItem("0xa"),
+                    createTestChatItem("0xcatA", catId = "0xcatA", isCategory = true)])
+    model.appendItem(createTestChatItem("0xc", catId = "0xcatA"))
+    check(model.rowCount() == 3)
+
+  test "chat in a closed category is hidden, category and uncategorized chats are not":
+    check(model.getItemById("0xc").hidden == false)
+
+    model.changeCategoryOpened("0xcatA", false)
+    check(model.getItemById("0xc").hidden == true)
+    check(model.getItemById("0xcatA").hidden == false)
+    check(model.getItemById("0xa").hidden == false)
+
+    model.changeCategoryOpened("0xcatA", true)
+    check(model.getItemById("0xc").hidden == false)
+
+  test "active chat stays visible in a closed category":
+    model.setActiveItem("0xc")
+    model.changeCategoryOpened("0xcatA", false)
+    check(model.getItemById("0xc").hidden == false)
+
+    # deactivating it while the category is closed hides it again
+    model.setActiveItem("0xa")
+    check(model.getItemById("0xc").hidden == true)
+
+  test "unread and notifications keep a closed-category chat visible, muted unread does not":
+    model.changeCategoryOpened("0xcatA", false)
+
+    model.updateNotificationsForItemById("0xc", hasUnreadMessages = true, notificationsCount = 0)
+    check(model.getItemById("0xc").hidden == false)
+
+    model.changeMutedOnItemById("0xc", muted = true)
+    check(model.getItemById("0xc").hidden == true)
+
+    model.updateNotificationsForItemById("0xc", hasUnreadMessages = true, notificationsCount = 1)
+    check(model.getItemById("0xc").hidden == false)
+
+    model.updateNotificationsForItemById("0xc", hasUnreadMessages = false, notificationsCount = 0)
+    check(model.getItemById("0xc").hidden == true)

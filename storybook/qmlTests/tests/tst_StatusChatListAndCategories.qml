@@ -29,6 +29,7 @@ Item {
             isCategory: true,
             categoryOpened: true,
             muted: false,
+            hidden: false,
             shouldBeHiddenBecausePermissionsAreNotMet: false
         },
         {
@@ -44,6 +45,7 @@ Item {
             muted: false,
             isCategory: false,
             categoryOpened: true,
+            hidden: false,
             shouldBeHiddenBecausePermissionsAreNotMet: false
         }
     ]
@@ -73,15 +75,23 @@ Item {
             muted: false,
             isCategory: false,
             categoryOpened: true,
+            hidden: false,
             shouldBeHiddenBecausePermissionsAreNotMet: false
         })
     }
 
+    // mirrors the backend: categoryOpened + the recomputed "hidden" role
     function applyCategoryCollapsed(categoryId, collapsed) {
         const opened = !collapsed
         for (let i = 0; i < chatsModel.count; ++i) {
-            if (chatsModel.get(i).categoryId === categoryId)
-                chatsModel.setProperty(i, "categoryOpened", opened)
+            const item = chatsModel.get(i)
+            if (item.categoryId !== categoryId)
+                continue
+            chatsModel.setProperty(i, "categoryOpened", opened)
+            const hidden = !item.isCategory && !opened && !item.active &&
+                         (item.muted || !item.hasUnreadMessages) &&
+                         item.notificationsCount === 0
+            chatsModel.setProperty(i, "hidden", hidden)
         }
     }
 
@@ -115,6 +125,7 @@ Item {
             } else if (!item.isCategory && item.categoryId === categoryId) {
                 chatsModel.setProperty(i, "categoryId", "")
                 chatsModel.setProperty(i, "categoryOpened", true)
+                chatsModel.setProperty(i, "hidden", false)
             }
         }
     }
@@ -254,12 +265,16 @@ Item {
 
         function verifyChannelVisible(channelName, expectedVisible) {
             channelName = channelName ?? root.testChannelName
-            const dropArea = getChannelDropArea(channelName)
             waitForRendering(controlUnderTest)
-            if (expectedVisible)
+            // hidden rows are filtered out of the view model, so the delegate
+            // must not exist at all
+            const dropArea = findChild(controlUnderTest, channelName)
+            if (expectedVisible) {
+                verify(!!dropArea, `Channel ${channelName} should be visible`)
                 verify(dropArea.height > 0, `Channel ${channelName} should be visible`)
-            else
-                compare(dropArea.height, 0)
+            } else {
+                verify(!dropArea, `Channel ${channelName} should be filtered out`)
+            }
         }
 
         function getToggleButton(categoryItem) {
@@ -423,6 +438,31 @@ Item {
             compare(root.findCategoryModelIndex(root.testCategoryId), -1)
             verify(!findChild(controlUnderTest, root.testCategoryName))
             verifyChannelVisible(root.testChannelName, true)
+        }
+
+        // A collapsed category must not cost delegates: its rows carry the
+        // model-computed "hidden" role and are filtered out of the view —
+        // zero-height rows would still all be instantiated by the ListView.
+        function test_large_collapsed_category_stays_virtualized() {
+            for (let i = 0; i < 300; ++i)
+                root.addChannelToCategory(root.testCategoryId, "bulk-ch-" + i, "ch_bulk" + i)
+
+            const chatList = findChild(controlUnderTest, "chatListItems")
+            verify(!!chatList)
+            tryCompare(chatList, "count", 302)
+
+            mouseClick(getCategoryDropArea())
+            tryCompare(toggleCollapsedSpy, "count", 1)
+            waitForRendering(controlUnderTest)
+
+            // only the category row survives the filter
+            tryCompare(chatList, "count", 1)
+            const created = chatList.contentItem.children.length
+            verify(created < 20,
+                   "collapsed category rows must not be instantiated, got " + created)
+
+            mouseClick(getCategoryDropArea())
+            tryCompare(chatList, "count", 302)
         }
     }
 }
