@@ -41,6 +41,17 @@ type
     hideIfPermissionsNotMet: bool
     missingEncryptionKey: bool
     permissionsCheckOngoing: bool
+    hidden: bool # cached: row hidden by its collapsed category (see recomputeHidden)
+
+# Row is hidden by its collapsed category. Active, unmuted-unread and
+# notification-carrying chats stay visible so the list can surface them.
+# Cached on every dependent-field write; data() must never compute.
+proc recomputeHidden(self: ChatItem) =
+  self.hidden = self.`type` != CATEGORY_TYPE and
+    not self.categoryOpened and
+    not self.active and
+    (self.muted or not self.hasUnreadMessages) and
+    self.notificationsCount == 0
 
 proc initChatItem*(
     id,
@@ -113,6 +124,7 @@ proc initChatItem*(
   result.hideIfPermissionsNotMet = hideIfPermissionsNotMet
   result.missingEncryptionKey = missingEncryptionKey
   result.permissionsCheckOngoing = permissionsCheckOngoing
+  result.recomputeHidden()
 
 proc `$`*(self: ChatItem): string =
   result = fmt"""chat_section/ChatItem(
@@ -243,6 +255,7 @@ proc hasUnreadMessages*(self: ChatItem): bool =
 
 proc `hasUnreadMessages=`*(self: var ChatItem, value: bool) =
   self.hasUnreadMessages = value
+  self.recomputeHidden()
 
 proc lastMessageTimestamp*(self: ChatItem): int =
   self.lastMessageTimestamp
@@ -261,12 +274,14 @@ proc notificationsCount*(self: ChatItem): int =
 
 proc `notificationsCount=`*(self: var ChatItem, value: int) =
   self.notificationsCount = value
+  self.recomputeHidden()
 
 proc muted*(self: ChatItem): bool =
   self.muted
 
 proc `muted=`*(self: ChatItem, value: bool) =
   self.muted = value
+  self.recomputeHidden()
 
 proc blocked*(self: ChatItem): bool =
   self.blocked
@@ -279,6 +294,7 @@ proc active*(self: ChatItem): bool =
 
 proc `active=`*(self: var ChatItem, value: bool) =
   self.active = value
+  self.recomputeHidden()
 
 proc position*(self: ChatItem): int =
   self.position
@@ -315,6 +331,7 @@ proc categoryOpened*(self: ChatItem): bool =
 
 proc `categoryOpened=`*(self: var ChatItem, value: bool) =
   self.categoryOpened = value
+  self.recomputeHidden()
 
 proc trustStatus*(self: ChatItem): TrustStatus =
   self.trustStatus
@@ -339,6 +356,9 @@ proc `loaderActive=`*(self: var ChatItem, value: bool) =
 
 proc isCategory*(self: ChatItem): bool =
   self.`type` == CATEGORY_TYPE
+
+proc hidden*(self: ChatItem): bool =
+  self.hidden
 
 proc locked*(self: ChatItem): bool =
   self.locked

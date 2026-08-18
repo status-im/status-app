@@ -43,6 +43,7 @@ SplitView {
                     isCategory: true
                     categoryOpened: true
                     muted: false
+                    hidden: false
                 }
                 ListElement {
                     itemId: "id1"
@@ -57,6 +58,7 @@ SplitView {
                     muted: false
                     isCategory: false
                     categoryOpened: true
+                    hidden: false
                 }
                 ListElement {
                     itemId: "id2"
@@ -71,6 +73,7 @@ SplitView {
                     isCategory: true
                     categoryOpened: false
                     muted: false
+                    hidden: false
                 }
                 ListElement {
                     itemId: "id3"
@@ -86,6 +89,7 @@ SplitView {
                     muted: false
                     isCategory: false
                     categoryOpened: true
+                    hidden: false
                 }
                 ListElement {
                     itemId: "id4"
@@ -100,6 +104,7 @@ SplitView {
                     muted: false
                     isCategory: false
                     categoryOpened: true
+                    hidden: false
                 }
                 ListElement {
                     itemId: "id5"
@@ -114,6 +119,7 @@ SplitView {
                     muted: false
                     isCategory: false
                     categoryOpened: true
+                    hidden: false
                 }
             }
 

@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 
+import SortFilterProxyModel
+
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils
@@ -44,7 +46,17 @@ Item {
         width: parent.width
         height: parent.height
         objectName: "chatListItems"
-        model: root.model
+        // Rows hidden by their collapsed category (model-computed "hidden"
+        // role) are filtered out entirely — a zero-height delegate would
+        // still be instantiated by the ListView. The "hidden" role is part
+        // of the model contract: rows without it are filtered out too.
+        model: SortFilterProxyModel {
+            sourceModel: root.model
+            filters: ValueFilter {
+                roleName: "hidden"
+                value: false
+            }
+        }
         spacing: 0
         // only interactive when there is something to scroll — an interactive
         // Flickable consumes clicks on its empty area, which must fall
@@ -55,11 +67,7 @@ Item {
             id: chatListDelegate
             objectName: model.name
             width: ListView.view.width
-            height: {
-                if (isCategory)
-                    return root.categoryRowHeight
-                return rowVisible ? root.chatRowHeight : 0
-            }
+            height: isCategory ? root.categoryRowHeight : root.chatRowHeight
             keys: ["x-status-draggable-chat-list-item-and-categories"]
 
             readonly property int visualIndex: index
@@ -68,12 +76,6 @@ Item {
             readonly property int position: model.position // needed for the DnD
             readonly property int categoryPosition: model.categoryPosition // needed for the DnD
             readonly property bool isCategory: model.isCategory
-            // chats hidden by their collapsed category (or muted without
-            // activity) keep a zero-height row
-            readonly property bool rowVisible: model.active ||
-                                               (!model.muted && model.hasUnreadMessages) ||
-                                               model.notificationsCount > 0 ||
-                                               model.categoryOpened
             readonly property Item item: isCategory ? draggableItem.actions[0] : draggableItem.actions[1]
 
             onEntered: function(drag) {
@@ -197,7 +199,7 @@ Item {
                         objectName: model.name
                         Layout.fillWidth: true
                         height: visible ? implicitHeight : 0
-                        visible: !draggableItem.isCategory && chatListDelegate.rowVisible
+                        visible: !draggableItem.isCategory
                         chatId: model.itemId
                         categoryId: model.categoryId
                         name: model.name

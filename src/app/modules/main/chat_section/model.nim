@@ -43,6 +43,8 @@ type
                                               #(MemberRole , HideIfPermissionsNotMet, canPost and canView)
     MissingEncryptionKey
     PermissionsCheckOngoing
+    Hidden # derived: chat hidden by its collapsed category
+           # (depends on CategoryOpened, Active, Muted, HasUnreadMessages, NotificationsCount)
 
 QtObject:
   type
@@ -140,6 +142,7 @@ QtObject:
       ModelRole.ShouldBeHiddenBecausePermissionsAreNotMet.int:"shouldBeHiddenBecausePermissionsAreNotMet",
       ModelRole.MissingEncryptionKey.int:"missingEncryptionKey",
       ModelRole.PermissionsCheckOngoing.int:"permissionsCheckOngoing",
+      ModelRole.Hidden.int:"hidden",
 
     }.toTable
 
@@ -222,6 +225,8 @@ QtObject:
       return newQVariant(item.missingEncryptionKey)
     of ModelRole.PermissionsCheckOngoing:
       return newQVariant(item.permissionsCheckOngoing)
+    of ModelRole.Hidden:
+      return newQVariant(item.hidden)
 
   proc getItemIdxById(items: seq[ChatItem], id: string): int =
     var idx = 0
@@ -274,6 +279,8 @@ QtObject:
       if self.items[ind].categoryId == categoryId:
         updateRolesAndNotify:
           updateRoleWithValue(categoryOpened, opened)
+          if roles.len > 0:
+            roles.add(ModelRole.Hidden.int) # depends on categoryOpened
 
   # This function only refreshes ShouldBeHiddenBecausePermissionsAreNotMet.
   # Then itemShouldBeHiddenBecauseNotPermitted() is used in data() to determined whether category is hidden or not.
@@ -334,6 +341,8 @@ QtObject:
           updateRoleWithValue(active, isChannelToSetActive)
           if isChannelToSetActive:
             updateRoleWithValue(loaderActive, true)
+          if roles.len > 0:
+            roles.add(ModelRole.Hidden.int) # depends on active
 
   proc activeItem*(self: Model): ChatItem =
     for i in 0 ..< self.items.len:
@@ -358,6 +367,8 @@ QtObject:
   proc changeMutedOnItemById*(self: Model, id: string, muted: bool) =
     updateItemRolesAndNotify self.getItemIdxById(id):
       updateRole(muted)
+      if roles.len > 0:
+        roles.add(ModelRole.Hidden.int) # depends on muted
 
   proc changeCanPostValues*(self: Model, id: string, canPost, canView, canPostReactions, viewersCanPostReactions: bool): seq[int] =
     updateItemRolesAndNotify self.getItemIdxById(id):
@@ -375,6 +386,8 @@ QtObject:
       if self.items[ind].categoryId == categoryId and self.items[ind].muted != muted:
         updateRolesAndNotify:
           updateRole(muted)
+          if roles.len > 0:
+            roles.add(ModelRole.Hidden.int) # depends on muted
 
   proc allChannelsAreHiddenBecauseNotPermitted*(self: Model): bool =
     for i in 0 ..< self.items.len:
@@ -456,6 +469,8 @@ QtObject:
           updateRoleWithValue(categoryPosition, targetCategoryPosition)
           if targetCategoryOpened:
             updateRoleWithValue(categoryOpened, true)
+          if roles.len > 0:
+            roles.add(ModelRole.Hidden.int) # depends on categoryOpened
         break
 
   proc removeCategory*(
@@ -480,6 +495,8 @@ QtObject:
           updateRoleWithValue(categoryId, "")
           updateRoleWithValue(categoryPosition, -1)
           updateRoleWithValue(categoryOpened, true)
+          if roles.len > 0:
+            roles.add(ModelRole.Hidden.int) # depends on categoryOpened
         break
 
   proc renameCategory*(self: Model, categoryId, name: string) =
@@ -501,6 +518,8 @@ QtObject:
     updateItemRolesAndNotify self.getItemIdxById(id):
       updateRole(hasUnreadMessages)
       updateRole(notificationsCount)
+      if roles.len > 0:
+        roles.add(ModelRole.Hidden.int) # depends on hasUnreadMessages/notificationsCount
 
   proc updateLastMessageOnItemById*(self: Model, id: string, lastMessageText: string, lastMessageTimestamp: int) =
     updateItemRolesAndNotify self.getItemIdxById(id):
