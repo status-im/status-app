@@ -21,6 +21,12 @@ Item {
     readonly property int chatRowHeight: 48
     readonly property int categoryRowHeight: 34
 
+    // Space reserved at the right edge for the overlaid scrollbar so it
+    // never covers row controls — the padding the hosts' outer ScrollView
+    // used to reserve, now owned by the list itself.
+    readonly property int scrollBarWidth: Math.max(Theme.halfPadding, 8)
+    readonly property int scrollBarSpacing: 2 // gap between rows and the scrollbar
+
     property string categoryId: ""
     property var model: null
     property bool draggableItems: false
@@ -41,6 +47,12 @@ Item {
     signal categoryAddButtonClicked(string id)
     signal toggleCollapsedCommunityCategory(string categoryId, bool collapsed)
 
+    Binding {
+        target: statusChatListItems.verticalScrollBar
+        property: "implicitWidth"
+        value: root.scrollBarWidth
+    }
+
     StatusListView {
         id: statusChatListItems
         width: parent.width
@@ -58,6 +70,9 @@ Item {
             }
         }
         spacing: 0
+        // content stops before the overlaid scrollbar; delegates and footer
+        // size to availableWidth
+        rightMargin: root.scrollBarWidth + root.scrollBarSpacing
         // only interactive when there is something to scroll — an interactive
         // Flickable consumes clicks on its empty area, which must fall
         // through to the hosts' empty-area handlers
@@ -66,7 +81,7 @@ Item {
         delegate: DropArea {
             id: chatListDelegate
             objectName: model.name
-            width: ListView.view.width
+            width: ListView.view.availableWidth
             height: isCategory ? root.categoryRowHeight : root.chatRowHeight
             keys: ["x-status-draggable-chat-list-item-and-categories"]
 

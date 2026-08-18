@@ -440,6 +440,10 @@ Item {
 
             onSearchButtonClicked: root.openAppSearch()
             onDisplayEditChannelPopup: {
+                // contactColumnLoader is asynchronous — drop the request if
+                // the panel is still incubating
+                if (!contactColumnLoader.item)
+                    return
                 Global.openPopup(contactColumnLoader.item.createChannelPopup, {
                     isEdit: true,
                     chatId: chatId,

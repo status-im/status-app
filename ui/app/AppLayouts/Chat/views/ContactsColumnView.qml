@@ -137,7 +137,6 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.leftMargin: d.listContentLeftMargin
-            Layout.rightMargin: d.scrollBarWidth + d.scrollBarSpacing
             model: SortFilterProxyModel {
                 sourceModel: root.chatSectionModule.model
                 filters: [
@@ -188,23 +187,23 @@ Item {
                     chatMuted = obj.muted
                 }
 
-                onMuteChat: {
+                onMuteChat: (chatId, interval) => {
                     root.chatSectionModule.muteChat(chatId, interval)
                 }
 
-                onUnmuteChat: {
+                onUnmuteChat: (chatId) => {
                     root.chatSectionModule.unmuteChat(chatId)
                 }
 
-                onMarkAllMessagesRead: {
+                onMarkAllMessagesRead: (chatId) => {
                     root.chatSectionModule.markAllMessagesRead(chatId)
                 }
 
-                onClearChatHistory: {
+                onClearChatHistory: (chatId) => {
                     root.chatSectionModule.clearChatHistory(chatId)
                 }
 
-                onLeaveChat: {
+                onLeaveChat: (chatId) => {
                     root.chatSectionModule.leaveChat(chatId)
                 }
 
@@ -212,12 +211,12 @@ Item {
                     // Not Refactored Yet
                 }
 
-                onDisplayProfilePopup: {
+                onDisplayProfilePopup: (publicKey) => {
                     Global.openProfilePopup(publicKey)
                 }
 
-                onUpdateGroupChatDetails: {
-                    chatSectionModule.updateGroupChatDetails(
+                onUpdateGroupChatDetails: (chatId, groupName, groupColor, groupImage) => {
+                    root.chatSectionModule.updateGroupChatDetails(
                                 chatId,
                                 groupName,
                                 groupColor,
