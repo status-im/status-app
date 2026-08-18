@@ -104,7 +104,7 @@ Item {
 
                 readonly property string rowText: model.text
 
-                Layout.row: flick.rowCount - index
+                Layout.row: flick.rowCount - index + 1
                 Layout.column: 0
                 Layout.fillWidth: true
                 Layout.preferredHeight: 20
@@ -520,7 +520,7 @@ Item {
             model: emptyHistory
             delegate: Rectangle {
                 objectName: "row"
-                Layout.row: emptyFlick.rowCount - index
+                Layout.row: emptyFlick.rowCount - index + 1
                 Layout.column: 0
                 Layout.fillWidth: true
                 Layout.preferredHeight: 20
