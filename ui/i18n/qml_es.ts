@@ -16901,10 +16901,6 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Confirm swap</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Approving %1 spending cap to Swap</source>
         <translation>Aprobando límite de gasto de %1 para Swap</translation>
     </message>
