@@ -421,6 +421,7 @@ proc load(self: AppController) =
   self.gifService.init()
   self.networkConnectionService.init()
   self.marketService.init()
+  self.advancedService.init()
 
   # Accessible after user login
   singletonInstance.engine.setRootContextProperty("appSettings", self.appSettingsVariant)

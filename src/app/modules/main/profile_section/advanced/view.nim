@@ -120,6 +120,31 @@ QtObject:
   proc clearOldLogs*(self: View) {.slot.} =
     self.delegate.clearOldLogs()
 
+  proc isCollectingStorageStatsChanged*(self: View) {.signal.}
+  proc getIsCollectingStorageStats*(self: View): bool {.slot.} =
+    return self.delegate.getIsCollectingStorageStats()
+  QtProperty[bool] isCollectingStorageStats:
+    read = getIsCollectingStorageStats
+    notify = isCollectingStorageStatsChanged
+
+  proc storageStatsProgress*(self: View, step: int, total: int) {.signal.}
+  proc storageStatsFinished*(self: View, data: string, snapshotPath: string,
+    error: string) {.signal.}
+
+  proc collectStorageStats*(self: View) {.slot.} =
+    self.delegate.collectStorageStats()
+
+  # Read from the module, not held here: a Loader rebuilds this view on every
+  # navigation.
+  proc lastStorageStatsData*(self: View): string {.slot.} =
+    return self.delegate.getLastStorageStatsData()
+
+  proc lastStorageStatsSnapshotPath*(self: View): string {.slot.} =
+    return self.delegate.getLastStorageStatsSnapshotPath()
+
+  proc lastStorageStatsAgeSeconds*(self: View): int {.slot.} =
+    return self.delegate.getLastStorageStatsAgeSeconds()
+
   proc delete*(self: View) =
     self.QObject.delete
 

@@ -1,3 +1,4 @@
+import json
 import unittest
 
 import app/core/eventemitter
@@ -5,6 +6,7 @@ import app/core/signals/signals_manager
 import app/core/signals/signal_type_scan
 import app/core/signals/remote_signals/signal_type
 import app/core/signals/remote_signals/mediaserver
+import app/core/signals/remote_signals/storage_stats
 
 # Exercises the real ManageSignals dispatch path (`processSignal`) to prove that
 # the cheap-triage guard skips unhandled types before parsing
@@ -98,3 +100,54 @@ suite "SignalsManager - unhandled signal-type skipping":
 
     check dispatched
     check unhandledSignalCount() == 0
+
+  test "storage-stats.progress carries a deterministic N of M":
+    # The Storage stats section shows a real "N of M" rather than a spinner, so
+    # both numbers have to survive the decode.
+    let emitter = createEventEmitter()
+    var step, total = -1
+    var requestId = ""
+    emitter.on(SignalType.StorageStatsProgress.event) do(a: Args):
+      let signal = StorageStatsProgressSignal(a)
+      requestId = signal.requestId
+      step = signal.step
+      total = signal.total
+
+    let manager = newSignalsManager(emitter)
+    manager.processSignal("""{"type":"storage-stats.progress","event":{"requestId":"abc","step":7,"total":160}}""")
+
+    check requestId == "abc"
+    check step == 7
+    check total == 160
+
+  test "storage-stats.result carries the profile":
+    # The profile is what the preview renders and what the user copies, so it
+    # has to survive the decode intact.
+    let emitter = createEventEmitter()
+    var profileVersion = 0
+    var messagesTotal = 0
+    emitter.on(SignalType.StorageStatsResult.event) do(a: Args):
+      let signal = StorageStatsResultSignal(a)
+      profileVersion = signal.data{"profileVersion"}.getInt()
+      messagesTotal = signal.data{"messaging"}{"messagesTotal"}.getInt()
+
+    let manager = newSignalsManager(emitter)
+    manager.processSignal("""{"type":"storage-stats.result","event":{"requestId":"abc","data":{"profileVersion":1,"messaging":{"messagesTotal":100000}}}}""")
+
+    check profileVersion == 1
+    check messagesTotal == 100000
+
+  test "a failed storage-stats.result reports the error and leaves data null":
+    let emitter = createEventEmitter()
+    var error = ""
+    var dataIsNull = false
+    emitter.on(SignalType.StorageStatsResult.event) do(a: Args):
+      let signal = StorageStatsResultSignal(a)
+      error = signal.error
+      dataIsNull = signal.data.kind == JNull
+
+    let manager = newSignalsManager(emitter)
+    manager.processSignal("""{"type":"storage-stats.result","event":{"requestId":"abc","error":"no account is logged in"}}""")
+
+    check error == "no account is logged in"
+    check dataIsNull

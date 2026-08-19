@@ -152,3 +152,29 @@ method onOldLogsCleanupFinished*(self: Module, deletedCount, failedCount: int,
     error: string) =
   self.view.isClearingOldLogsChanged()
   self.view.oldLogsCleanupFinished(deletedCount, failedCount, error)
+
+method getIsCollectingStorageStats*(self: Module): bool =
+  return self.controller.getIsCollectingStorageStats()
+
+method collectStorageStats*(self: Module) =
+  self.controller.collectStorageStats()
+
+method onStorageStatsCollectionStarted*(self: Module) =
+  self.view.isCollectingStorageStatsChanged()
+  self.view.storageStatsProgress(0, 0)
+
+method onStorageStatsProgress*(self: Module, step, total: int) =
+  self.view.storageStatsProgress(step, total)
+
+method onStorageStatsFinished*(self: Module, data, snapshotPath, error: string) =
+  self.view.isCollectingStorageStatsChanged()
+  self.view.storageStatsFinished(data, snapshotPath, error)
+
+method getLastStorageStatsData*(self: Module): string =
+  return self.controller.getLastStorageStatsData()
+
+method getLastStorageStatsSnapshotPath*(self: Module): string =
+  return self.controller.getLastStorageStatsSnapshotPath()
+
+method getLastStorageStatsAgeSeconds*(self: Module): int =
+  return self.controller.getLastStorageStatsAgeSeconds()

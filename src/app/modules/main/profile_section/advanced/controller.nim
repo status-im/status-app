@@ -52,6 +52,14 @@ proc init*(self: Controller) =
 
   self.advancedService.refreshLogsFolderSize()
 
+  self.events.on(advanced_service.SIGNAL_STORAGE_STATS_PROGRESS) do(e: Args):
+    let args = advanced_service.StorageStatsProgressArgs(e)
+    self.delegate.onStorageStatsProgress(args.step, args.total)
+
+  self.events.on(advanced_service.SIGNAL_STORAGE_STATS_FINISHED) do(e: Args):
+    let args = advanced_service.StorageStatsFinishedArgs(e)
+    self.delegate.onStorageStatsFinished(args.data, args.snapshotPath, args.error)
+
 proc getFleet*(self: Controller): string =
   return self.settingsService.getFleetAsString()
 
@@ -150,3 +158,25 @@ proc setCommunityHistoryArchiveProtocolMode*(self: Controller, mode: int): bool 
      return false
   let archiveProtocolMode = node_configuration_service.ArchiveProtocolMode(mode)
   self.nodeConfigurationService.setCommunityHistoryArchiveProtocolMode(archiveProtocolMode)
+
+proc getIsCollectingStorageStats*(self: Controller): bool =
+  return self.advancedService.isCollectingStorageStats()
+
+proc collectStorageStats*(self: Controller) =
+  if self.advancedService.collectStorageStats():
+    self.delegate.onStorageStatsCollectionStarted()
+
+proc getLastStorageStatsData*(self: Controller): string =
+  let last = self.advancedService.getLastStorageStats()
+  if last.isNil:
+    return ""
+  return last.data
+
+proc getLastStorageStatsSnapshotPath*(self: Controller): string =
+  let last = self.advancedService.getLastStorageStats()
+  if last.isNil:
+    return ""
+  return last.snapshotPath
+
+proc getLastStorageStatsAgeSeconds*(self: Controller): int =
+  return self.advancedService.lastStorageStatsAgeSeconds()

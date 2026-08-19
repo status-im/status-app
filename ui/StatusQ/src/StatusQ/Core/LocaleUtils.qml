@@ -83,6 +83,12 @@ QtObject {
         return num.toLocaleString(locale, 'f', precision)
     }
 
+    function formattedDataSize(bytes, precision = 2, locale = null) {
+        locale = locale || Qt.locale()
+
+        return locale.formattedDataSize(bytes || 0, precision, Locale.DataSizeTraditionalFormat)
+    }
+
     function currencyNumberToLocaleString(num, symbol = "", locale = null) {
         locale = locale || Qt.locale()
 

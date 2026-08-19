@@ -71,6 +71,100 @@ SettingsContentBase {
                             deletedCount > 0 ? qsTr("%n old log file(s) cleared", "", deletedCount) : qsTr("No old log files to clear"),
                             "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
             }
+
+            // --- Storage stats ---------------------------------------------
+            // Presentation state only; the artifact itself lives in the service.
+            property int storageStatsStep: 0
+            property int storageStatsTotal: 0
+            property var storageStatsData: null
+            // Pretty-printed JSON: parsed for the preview, copied verbatim.
+            property string storageStatsJson: ""
+            property string storageStatsSnapshotPath: ""
+            property string storageStatsError: ""
+            // Age of the profile on screen; -1 when there is none, 0 when fresh.
+            property int storageStatsAgeSeconds: -1
+
+            // A Loader rebuilds this page, so `d` starts empty on every visit;
+            // the service still holds the profile.
+            function restoreStorageStats() {
+                const last = root.advancedStore.lastStorageStats()
+                if (!last)
+                    return
+
+                d.storageStatsJson = last.data
+                d.storageStatsSnapshotPath = last.snapshotPath
+                d.storageStatsAgeSeconds = last.ageSeconds
+                d.setStorageStatsData(last.data)
+            }
+
+            function setStorageStatsData(data) {
+                d.storageStatsData = null
+                if (data === "")
+                    return
+                try {
+                    d.storageStatsData = JSON.parse(data)
+                } catch (e) {
+                    d.storageStatsError = qsTr("The collected profile could not be read: %1").arg(e.message)
+                }
+            }
+
+            function formatAge(seconds) {
+                if (seconds < 60)
+                    return qsTr("just now")
+                if (seconds < 3600)
+                    return qsTr("%n minute(s) ago", "", Math.floor(seconds / 60))
+                if (seconds < 86400)
+                    return qsTr("%n hour(s) ago", "", Math.floor(seconds / 3600))
+                return qsTr("%n day(s) ago", "", Math.floor(seconds / 86400))
+            }
+
+            // Clears progress and error only. The previous profile stays on
+            // screen until a new one replaces it.
+            function beginStorageStatsCollection() {
+                d.storageStatsStep = 0
+                d.storageStatsTotal = 0
+                d.storageStatsError = ""
+            }
+
+            readonly property var storageStatsHistogram:
+                !!d.storageStatsData && !!d.storageStatsData.messaging
+                    ? (d.storageStatsData.messaging.perChatHistogram || []) : []
+
+            // Bars are scaled against the fullest bucket.
+            readonly property int storageStatsHistogramPeak: {
+                let peak = 0
+                for (let i = 0; i < d.storageStatsHistogram.length; i++)
+                    peak = Math.max(peak, d.storageStatsHistogram[i].chats)
+                return peak
+            }
+
+            // Headline numbers only; the full profile is in the copied artifact.
+            readonly property var storageStatsSummary: {
+                const profile = d.storageStatsData
+                if (!profile)
+                    return []
+
+                const messaging = profile.messaging || {}
+                const chats = messaging.chats || {}
+                const sync = profile.sync || {}
+                const wallet = profile.wallet || {}
+                const db = profile.db || {}
+
+                const chatsTotal = (chats.oneToOne || 0) + (chats["public"] || 0)
+                                 + (chats.group || 0) + (chats.communityChannels || 0)
+                                 + (chats.other || 0)
+
+                return [
+                    { label: qsTr("Messages"), value: LocaleUtils.numberToLocaleString(messaging.messagesTotal || 0) },
+                    { label: qsTr("Chats"), value: LocaleUtils.numberToLocaleString(chatsTotal) },
+                    { label: qsTr("Communities"), value: LocaleUtils.numberToLocaleString(messaging.communities || 0) },
+                    { label: qsTr("Oldest message"), value: qsTr("%n day(s) ago", "", messaging.oldestMessageDays || 0) },
+                    { label: qsTr("Max sync gap"), value: qsTr("%n day(s)", "", sync.maxSyncGapDays || 0) },
+                    { label: qsTr("Collectibles"), value: LocaleUtils.numberToLocaleString(wallet.collectibles || 0) },
+                    { label: qsTr("App database"), value: LocaleUtils.formattedDataSize(db.appDbBytes) },
+                    { label: qsTr("Wallet database"), value: LocaleUtils.formattedDataSize(db.walletDbBytes) }
+                ]
+            }
         }
 
         Connections {
@@ -78,6 +172,22 @@ SettingsContentBase {
 
             function onOldLogsCleanupFinished(deletedCount, failedCount, error) {
                 d.showOldLogsCleanupResult(deletedCount, failedCount, error)
+            }
+
+            function onStorageStatsProgress(step, total) {
+                d.storageStatsStep = step
+                d.storageStatsTotal = total
+            }
+
+            function onStorageStatsFinished(data, snapshotPath, error) {
+                d.storageStatsError = error
+                if (data === "")
+                    return
+
+                d.storageStatsJson = data
+                d.storageStatsSnapshotPath = snapshotPath
+                d.storageStatsAgeSeconds = 0
+                d.setStorageStatsData(data)
             }
         }
 
@@ -436,6 +546,179 @@ SettingsContentBase {
                 id: httpStatsButton
                 text: qsTr("HTTP statistics")
                 onClicked: httpStatsModal.open()
+            }
+
+            Separator {
+                width: parent.width
+                visible: storageStatsSection.visible
+            }
+
+            StatusSectionHeadline {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: Theme.padding
+                anchors.rightMargin: Theme.padding
+                text: qsTr("Storage stats")
+                topPadding: Theme.bigPadding
+                bottomPadding: Theme.padding
+                visible: storageStatsSection.visible
+            }
+
+            ColumnLayout {
+                id: storageStatsSection
+                objectName: "storageStatsSection"
+
+                Component.onCompleted: if (visible) d.restoreStorageStats()
+                onVisibleChanged: if (visible) d.restoreStorageStats()
+
+                // Non-production and CI builds; in release only behind Debug.
+                visible: !production || TestConfig.testMode || root.advancedStore.isDebugEnabled
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: Theme.padding
+                anchors.rightMargin: Theme.padding
+                spacing: Theme.padding
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    wrapMode: Text.Wrap
+                    color: Theme.palette.baseColor1
+                    font.pixelSize: Theme.tertiaryTextFontSize
+                    text: qsTr("Describes the shape of this account's databases - how many messages, chats and wallet rows it holds, how far behind the sync state is, how large each table is - so that a developer can rebuild an equivalent account to reproduce a bug. Dates appear only as day counts, and no message, chat, contact or address is ever included. Nothing is collected until you press Collect data.")
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Theme.padding
+
+                    StatusButton {
+                        objectName: "collectStorageStatsButton"
+                        text: root.advancedStore.isCollectingStorageStats
+                              ? qsTr("Collecting...") : qsTr("Collect data")
+                        enabled: !root.advancedStore.isCollectingStorageStats
+                        onClicked: {
+                            d.beginStorageStatsCollection()
+                            root.advancedStore.collectStorageStats()
+                        }
+                    }
+
+                    CopyToClipBoardButton {
+                        objectName: "copyStorageStatsButton"
+                        visible: d.storageStatsJson !== ""
+                        textToCopy: d.storageStatsJson
+                        onCopyClicked: ClipboardUtils.setText(textToCopy)
+                    }
+
+                    StatusBaseText {
+                        objectName: "storageStatsStatusText"
+                        Layout.fillWidth: true
+                        elide: Text.ElideMiddle
+                        font.pixelSize: Theme.tertiaryTextFontSize
+                        color: d.storageStatsError !== ""
+                               ? Theme.palette.dangerColor1 : Theme.palette.baseColor1
+                        text: {
+                            if (d.storageStatsError !== "")
+                                return d.storageStatsError
+                            if (root.advancedStore.isCollectingStorageStats)
+                                return d.storageStatsTotal > 0
+                                        ? qsTr("%1 of %2").arg(d.storageStatsStep).arg(d.storageStatsTotal)
+                                        : qsTr("Starting...")
+                            if (d.storageStatsSnapshotPath !== "")
+                                return qsTr("Collected %1, saved to %2 and picked up by Application Logs")
+                                        .arg(d.formatAge(d.storageStatsAgeSeconds))
+                                        .arg(d.storageStatsSnapshotPath)
+                            if (d.storageStatsAgeSeconds >= 0)
+                                return qsTr("Collected %1").arg(d.formatAge(d.storageStatsAgeSeconds))
+                            return ""
+                        }
+                    }
+                }
+
+                StatusProgressBar {
+                    Layout.fillWidth: true
+                    visible: root.advancedStore.isCollectingStorageStats
+                    from: 0
+                    // Total is 0 until status-go reports the table count.
+                    to: Math.max(1, d.storageStatsTotal)
+                    value: d.storageStatsStep
+                    fillColor: Theme.palette.primaryColor1
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.topMargin: Theme.halfPadding
+                    spacing: Theme.halfPadding
+                    visible: !!d.storageStatsData
+
+                    StatusBaseText {
+                        text: qsTr("Chats by message count")
+                        font.pixelSize: Theme.tertiaryTextFontSize
+                        color: Theme.palette.baseColor1
+                    }
+
+                    Repeater {
+                        model: d.storageStatsHistogram
+
+                        delegate: RowLayout {
+                            required property var modelData
+
+                            Layout.fillWidth: true
+                            spacing: Theme.halfPadding
+
+                            StatusBaseText {
+                                Layout.preferredWidth: 64
+                                text: modelData.bucket
+                                font.pixelSize: Theme.tertiaryTextFontSize
+                            }
+
+                            Rectangle {
+                                Layout.preferredHeight: 10
+                                Layout.preferredWidth: d.storageStatsHistogramPeak > 0
+                                    ? Math.max(2, 220 * modelData.chats / d.storageStatsHistogramPeak) : 2
+                                radius: 2
+                                color: Theme.palette.primaryColor1
+                            }
+
+                            StatusBaseText {
+                                Layout.fillWidth: true
+                                text: modelData.chats
+                                font.pixelSize: Theme.tertiaryTextFontSize
+                                color: Theme.palette.baseColor1
+                            }
+                        }
+                    }
+
+                    Repeater {
+                        model: d.storageStatsSummary
+
+                        delegate: RowLayout {
+                            required property var modelData
+
+                            Layout.fillWidth: true
+                            spacing: Theme.halfPadding
+
+                            StatusBaseText {
+                                Layout.preferredWidth: 160
+                                text: modelData.label
+                                font.pixelSize: Theme.tertiaryTextFontSize
+                                color: Theme.palette.baseColor1
+                            }
+
+                            StatusBaseText {
+                                Layout.fillWidth: true
+                                text: modelData.value
+                                font.pixelSize: Theme.tertiaryTextFontSize
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Theme.bigPadding
+                }
             }
         }
 
