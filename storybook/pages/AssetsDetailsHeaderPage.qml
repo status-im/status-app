@@ -45,7 +45,6 @@ SplitView {
         formatBalance: function(balance){
             return LocaleUtils.currencyAmountToLocaleString(currencyStore.getCurrencyAmount(balance, "ETH"))
         }
-        communityTag.visible: false
     }
 
     ColumnLayout {

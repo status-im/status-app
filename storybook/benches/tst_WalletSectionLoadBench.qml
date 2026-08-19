@@ -184,7 +184,11 @@ Item {
             d.section = section
             const layout = section.item
             d.accountsListLoaders = d.asyncLoadersIn(layout.leftPanel)
+            // The center panel also holds the two deferred detail-view loaders
+            // (issues/0002), so the main view is addressed by objectName rather
+            // than by being the panel's only asynchronous Loader.
             d.mainViewLoaders = d.asyncLoadersIn(layout.centerPanel)
+                                 .filter(loader => loader.objectName === "walletMainViewLoader")
 
             d.accountsListLoader = d.accountsListLoaders.length === 1
                                  ? d.accountsListLoaders[0] : null
@@ -324,7 +328,7 @@ Item {
         readonly property int expectedAccountDelegates: 8
         readonly property int expectedAssetDelegates: 0
         readonly property int expectedLoadingAssetDelegates: 0
-        readonly property int expectedObjectsTotal: 3999
+        readonly property int expectedObjectsTotal: 3344
         readonly property int objectsTotalTolerance: 0
 
         // The settled counts are the ones that see the whole section: the

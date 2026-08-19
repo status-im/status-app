@@ -5,6 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 
 import utils
 
@@ -261,6 +262,32 @@ SplitView {
         // Restored settings assign the knobs before the first reload; without
         // this the page would generate the profile twice on startup.
         property bool initialized: false
+
+        // WalletLoader -> WalletLayout -> the right panel's current view.
+        function rightTabView() {
+            return harness.item?.item?.centerPanel?.currentItem ?? null
+        }
+
+        // The current tab's view, once its async Loader has produced it.
+        function mainView() {
+            const tab = d.rightTabView()
+            if (!tab)
+                return null
+            const loader = d.findByObjectName(tab, "walletMainViewLoader")
+            return loader ? loader.item : null
+        }
+
+        function findByObjectName(object, objectName) {
+            if (object.objectName === objectName)
+                return object
+            const kids = object.data ?? []
+            for (let i = 0; i < kids.length; i++) {
+                const found = d.findByObjectName(kids[i], objectName)
+                if (found)
+                    return found
+            }
+            return null
+        }
     }
 
     LogsAndControlsPanel {
@@ -428,6 +455,47 @@ SplitView {
                     onClicked: {
                         walletMock.loadMoreCollectibles()
                         logs.logEvent("loadMoreCollectibles")
+                    }
+                }
+
+                // The detail views are deferred behind async Loaders keyed on
+                // the stack index, and their rows are not in the accessibility
+                // tree, so these drive the production navigation signals for
+                // on-screen verification.
+                Button {
+                    objectName: "walletLoaderOpenAssetDetailButton"
+                    text: "Open asset detail"
+                    onClicked: {
+                        const view = d.mainView()
+                        if (!view || !view.assetClicked) {
+                            logs.logEvent("no AssetsView - open the Assets tab first")
+                            return
+                        }
+                        const key = SQUtils.ModelUtils.get(
+                                      WalletStores.RootStore.walletAssetsStore.assetsModel,
+                                      0, "key")
+                        view.assetClicked(key)
+                        logs.logEvent("assetClicked " + key)
+                    }
+                }
+
+                Button {
+                    objectName: "walletLoaderOpenCollectibleDetailButton"
+                    text: "Open collectible detail"
+                    onClicked: {
+                        const view = d.mainView()
+                        if (!view || !view.collectibleClicked) {
+                            logs.logEvent("no CollectiblesView - open the Collectibles tab first")
+                            return
+                        }
+                        const row = SQUtils.ModelUtils.get(view.controller.model, 0)
+                        if (!row) {
+                            logs.logEvent("no collectible to open")
+                            return
+                        }
+                        view.collectibleClicked(row.chainId, row.contractAddress, row.tokenId,
+                                                row.symbol, row.tokenType, row.communityId ?? "")
+                        logs.logEvent("collectibleClicked " + row.symbol)
                     }
                 }
 

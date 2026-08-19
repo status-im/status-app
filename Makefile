@@ -482,11 +482,11 @@ run-storybook: storybook-build
 
 run-storybook-tests: storybook-build
 	echo -e "\033[92mRunning:\033[39m Storybook Tests"
-	ctest -V --test-dir $(STORYBOOK_BUILD_PATH) -E "PagesValidator|WalletSectionLoadBench"
+	ctest -V --test-dir $(STORYBOOK_BUILD_PATH) -E "PagesValidator|LoadBench"
 
 run-storybook-bench: storybook-build
-	echo -e "\033[92mRunning:\033[39m Wallet section load bench"
-	ctest -V --test-dir $(STORYBOOK_BUILD_PATH) -R WalletSectionLoadBench ${ARGS}
+	echo -e "\033[92mRunning:\033[39m Wallet load benches"
+	ctest -V --test-dir $(STORYBOOK_BUILD_PATH) -R LoadBench ${ARGS}
 
 # repeat because of https://bugreports.qt.io/browse/QTBUG-92236 (Qt < 5.15.4)
 run-storybook-pages-validator: storybook-build

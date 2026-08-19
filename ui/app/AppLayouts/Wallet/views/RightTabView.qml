@@ -195,6 +195,11 @@ RightTabBaseView {
             ]
 
             readonly property var detailedCollectibleActivityController: RootStore.tmpActivityController0
+
+            // Held here rather than assigned into the view: the detail views are
+            // deferred, so the token to show is picked before anything to show it
+            // in exists.
+            property var assetDetailTokenGroup: null
         }
 
         Settings {
@@ -440,6 +445,7 @@ RightTabBaseView {
 
             Loader {
                 id: mainViewLoader
+                objectName: "walletMainViewLoader"
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.topMargin: Theme.padding
@@ -570,7 +576,7 @@ RightTabBaseView {
                             const tokenGroup = SQUtils.ModelUtils.getByKey(RootStore.walletAssetsStore.groupedAccountAssetsModel, "key", key)
                             const listAsset = SQUtils.ModelUtils.getByKey(RootStore.walletAssetsStore.assetsModel, "key", key)
 
-                            assetDetailView.tokenGroup = listAsset ? Object.assign({}, tokenGroup, {
+                            d.assetDetailTokenGroup = listAsset ? Object.assign({}, tokenGroup, {
                                 balance: listAsset.balance,
                                 balanceLoading: listAsset.balanceLoading,
                                 marketPrice: listAsset.marketPrice,
@@ -684,43 +690,61 @@ RightTabBaseView {
                 }
             }
         }
-        CollectibleDetailView {
-            id: collectibleDetailView
+        // Both detail views are built on navigation into their stack index and
+        // unloaded on the way out, so a section load never pays for a view the
+        // user has not opened. The reset that used to hang off `visible` now
+        // hangs off `active`: an unloaded view never sees a visibility change.
+        Loader {
+            id: collectibleDetailLoader
+            objectName: "collectibleDetailLoader"
 
-            visible : (stack.currentIndex === 1)
+            asynchronous: true
+            active: stack.currentIndex === 1
 
-            collectible: RootStore.collectiblesStore.detailedCollectible
-            isCollectibleLoading: RootStore.collectiblesStore.isDetailedCollectibleLoading
-            activityModel: d.detailedCollectibleActivityController.model
-            addressFilters: RootStore.addressFilters
-            rootStore: root.sharedRootStore
-            walletRootStore: RootStore
-            communitiesStore: root.communitiesStore
-            networksStore: root.networksStore
-
-            onVisibleChanged: {
-                if (!visible) {
+            onActiveChanged: {
+                if (!active) {
                     RootStore.resetCurrentViewedHolding(Constants.TokenType.ERC721)
                     RootStore.collectiblesStore.resetDetailedCollectible()
                 }
             }
+
+            sourceComponent: CollectibleDetailView {
+                objectName: "collectibleDetailView"
+
+                collectible: RootStore.collectiblesStore.detailedCollectible
+                isCollectibleLoading: RootStore.collectiblesStore.isDetailedCollectibleLoading
+                activityModel: d.detailedCollectibleActivityController.model
+                addressFilters: RootStore.addressFilters
+                rootStore: root.sharedRootStore
+                walletRootStore: RootStore
+                communitiesStore: root.communitiesStore
+                networksStore: root.networksStore
+            }
         }
-        AssetsDetailView {
-            id: assetDetailView
+        Loader {
+            id: assetDetailLoader
+            objectName: "assetDetailLoader"
 
-            visible: (stack.currentIndex === 2)
+            asynchronous: true
+            active: stack.currentIndex === 2
 
-            tokensStore: RootStore.tokensStore
-            allNetworksModel: root.networksStore.activeNetworks
-            address: RootStore.overview.mixedcaseAddress
-            currencyStore: RootStore.currencyStore
-            networkFilters: root.networksStore.networkFilters
-
-            networkConnectionStore: root.networkConnectionStore
-
-            onVisibleChanged: {
-                if (!visible)
+            onActiveChanged: {
+                if (!active)
                     RootStore.resetCurrentViewedHolding(Constants.TokenType.ERC20)
+            }
+
+            sourceComponent: AssetsDetailView {
+                objectName: "assetDetailView"
+
+                tokenGroup: d.assetDetailTokenGroup ?? ({})
+
+                tokensStore: RootStore.tokensStore
+                allNetworksModel: root.networksStore.activeNetworks
+                address: RootStore.overview.mixedcaseAddress
+                currencyStore: RootStore.currencyStore
+                networkFilters: root.networksStore.networkFilters
+
+                networkConnectionStore: root.networkConnectionStore
             }
         }
     }
