@@ -139,8 +139,18 @@ Item {
         // grows above the bottom-stuck viewport, and a live message must
         // never wait for an unrelated batch.
         property var stagedShells: []
+        // Rows admitted by a staged slide whose shells the engine has not
+        // created yet, keyed by message id. Shell creation is asynchronous
+        // whenever an ancestor is still incubating (AsynchronousIfNested), so
+        // admission is captured at row insertion — synchronous with the
+        // window mutation — never inferred from shell creation timing.
+        property var stagedIds: new Set()
         property int stagedCount: 0
         property bool admittingStaged: false
+
+        function syncStagedCount() {
+            stagedCount = stagedShells.length + stagedIds.size
+        }
 
         // Running average of revealed row heights, for the placeholder size.
         property real avgRowHeight: 0
@@ -165,9 +175,46 @@ Item {
                 revealTimeout.restart()
         }
 
+        // Rows entering the window during a staged admit, captured while they
+        // are inserted. Their shells may only be created later (async
+        // incubation) — the ids bridge that gap.
+        function captureStagedRows(first, last) {
+            if (!d.admittingStaged)
+                return
+            for (let i = first; i <= last; ++i) {
+                const id = SQUtils.ModelUtils.get(messagesWindow, i, "id")
+                if (id !== undefined && id !== null)
+                    d.stagedIds.add(id)
+            }
+            d.syncStagedCount()
+        }
+
+        // A staged row leaving the window before its shell was ever created
+        // must not hold the batch open.
+        function dropStagedRows(first, last) {
+            if (d.stagedIds.size === 0)
+                return
+            let dropped = false
+            for (let i = first; i <= last; ++i) {
+                const id = SQUtils.ModelUtils.get(messagesWindow, i, "id")
+                if (id !== undefined && id !== null && d.stagedIds.delete(id))
+                    dropped = true
+            }
+            if (dropped) {
+                d.syncStagedCount()
+                d.checkStagedReady()
+            }
+        }
+
+        // The shell for a captured row arrived: it joins the batch. Rows
+        // never captured (initial fill, live messages) reveal on their own.
+        function takeStagedId(id) {
+            return d.stagedIds.delete(id)
+        }
+
         function stageShell(shell) {
             d.stagedShells.push(shell)
-            d.stagedCount = d.stagedShells.length
+            d.syncStagedCount()
         }
 
         function unstageShell(shell) {
@@ -175,7 +222,7 @@ Item {
             if (i < 0)
                 return
             d.stagedShells.splice(i, 1)
-            d.stagedCount = d.stagedShells.length
+            d.syncStagedCount()
             // the batch may have become complete by losing its last unbuilt row
             d.checkStagedReady()
         }
@@ -183,6 +230,12 @@ Item {
         function checkStagedReady() {
             if (d.stagedCount === 0) {
                 revealTimeout.stop()
+                return
+            }
+            if (d.stagedIds.size > 0) {
+                // shells still to be created: progress is expected, keep the
+                // stall detector armed (see below)
+                revealTimeout.restart()
                 return
             }
             for (let i = 0; i < d.stagedShells.length; ++i) {
@@ -203,7 +256,8 @@ Item {
 
         function clearStaging() {
             d.stagedShells = []
-            d.stagedCount = 0
+            d.stagedIds.clear()
+            d.syncStagedCount()
             revealTimeout.stop()
         }
 
@@ -211,9 +265,12 @@ Item {
         // a partial one (better than wedging paging on a pathological row).
         function revealStaged() {
             revealTimeout.stop()
+            // stragglers whose shells never got created (timeout path) fall
+            // back to revealing individually on their own completion
+            d.stagedIds.clear()
             const batch = d.stagedShells
             d.stagedShells = []
-            d.stagedCount = 0
+            d.syncStagedCount()
             let sum = 0
             let measured = 0
             for (let i = 0; i < batch.length; ++i) {
@@ -595,6 +652,12 @@ Item {
                 maximumIndex: d.windowEnd
             }
 
+            // Declared on the model itself so these connections run before the
+            // Repeater's: a synchronously created shell must already find its
+            // id captured.
+            onRowsInserted: (parent, first, last) => d.captureStagedRows(first, last)
+            onRowsAboutToBeRemoved: (parent, first, last) => d.dropStagedRows(first, last)
+
             onCountChanged: d.markAllMessagesReadIfMostRecentMessageIsInViewport()
         }
 
@@ -649,8 +712,11 @@ Item {
                     item.startMessageFoundAnimation()
             }
 
+            // Membership in a staged batch is decided by the captured row id,
+            // not by creation timing: under a still-incubating ancestor the
+            // shell is created asynchronously, long after the admit returned.
             Component.onCompleted: {
-                if (d.admittingStaged)
+                if (d.takeStagedId(messageId))
                     d.stageShell(this)
                 else
                     revealed = true
