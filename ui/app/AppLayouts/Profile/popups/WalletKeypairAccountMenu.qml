@@ -80,7 +80,6 @@ StatusMenu {
 
     StatusAction {
         text: enabled? qsTr("Rename key pair") : ""
-        objectName: "renameKeypairMenuItem"
         enabled: !!root.keyPair &&
                  root.keyPair.pairType !== Constants.keypair.type.profile
         icon.name: "edit"
