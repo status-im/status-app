@@ -34,7 +34,16 @@ public slots:
         // Without it async Loaders incubate on Qt's render-loop budget, which
         // under offscreen rendering makes a section load take tens of seconds —
         // tests would be pinning a configuration the app never runs.
-        statusq_installBoostedIncubationController(engine, 20, 300, 0);
+        // A/B hook, same shape as the interactive storybook's (storybook/main.cpp):
+        // the load benches are sensitive to the controller's pacing, so it has to
+        // be changeable without a rebuild.
+        const auto envOr = [](const char* name, int fallback) {
+            return qEnvironmentVariableIsSet(name) ? qEnvironmentVariableIntValue(name) : fallback;
+        };
+        statusq_installBoostedIncubationController(engine,
+                                                   envOr("STORYBOOK_INCUBATION_MS", 20),
+                                                   envOr("STORYBOOK_INCUBATION_GENTLE_MS", 300),
+                                                   envOr("STORYBOOK_INCUBATION_GAP_MS", 0));
 
 
         const QStringList additionalImportPaths {

@@ -230,10 +230,11 @@ Item {
         readonly property int expectedChainTags: 4
         readonly property int expectedInformationTiles: 2
 
-        // Ratchet on the observed maximum over ten runs per phase on the merged
-        // tree (issues/0018): warm 2-6, cold 8-11. Lower it whenever a fix
-        // lowers the measured count; never raise it.
-        readonly property int maxStallsOver4ms: 11
+        // Ratchet on the observed maximum over twenty-two runs per phase with the
+        // issues/0016 incubation cadence: warm 1-3, cold 3-7. Most metered bites
+        // are now below the 4ms threshold, which is why this dropped from 11.
+        // Lower it whenever a fix lowers the measured count; never raise it.
+        readonly property int maxStallsOver4ms: 7
 
         function initTestCase() {
             WalletStores.RootStore.palette = Theme.palette
