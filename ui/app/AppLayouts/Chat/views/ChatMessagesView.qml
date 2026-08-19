@@ -41,6 +41,13 @@ Item {
     property string channelEmoji
     property var formatBalance
 
+    // Row pool (ADR 0007): app-owned reservoir of pre-built MessageViews the
+    // shells acquire row content from instead of building it. Null hosts
+    // (popups, storybook pages) build rows inline as before.
+    property DelegatePool rowPool: null
+    onRowPoolChanged: d.applyPoolTarget()
+    Component.onCompleted: d.applyPoolTarget()
+
     // Users related data:
     property var usersModel
 
@@ -98,11 +105,13 @@ Item {
     // Community access related requests:
     signal spectateCommunityRequested(string communityId)
 
-    // The hint singleton outlives this view: a chat switch mid-scroll must
-    // not leak the pushed hint.
+    // The hint singleton and the pool outlive this view: a chat switch
+    // mid-scroll must not leak the pushed hint or a pending demand boost.
     Component.onDestruction: {
         if (d.userScrolling)
             IncubationHints.popGentle()
+        if (rowPool)
+            rowPool.clearBoost(d.rowPoolKind)
     }
 
     QtObject {
@@ -122,10 +131,201 @@ Item {
         readonly property int initialWindowSize: Math.max(20, Math.min(d.maxWindowSize,
                                                                        d.estimatedViewportRows))
         readonly property int windowChunkSize: 30
+        // Fallback cap, pool-less hosts only: with a pool the cap is defined
+        // by what the pool can dress (see poolHeadroom below).
         readonly property int maxWindowSize: 140
 
         property int windowStart: 0
         property int windowEnd: initialWindowSize - 1
+
+        // ---- Dressed window (ADR 0007): in-window ⇔ holds a pooled item ----
+        readonly property bool usePool: !!root.rowPool
+        readonly property string rowPoolKind: "message"
+
+        // Only while visible does the view hold pooled items: there is one
+        // pool and at most one dressed view app-wide, and the inactive chats'
+        // views must not starve the active one.
+        readonly property bool dressActive: !d.usePool || root.visible
+
+        onDressActiveChanged: {
+            if (!d.usePool)
+                return
+            if (d.dressActive) {
+                d.resetWindow()
+                Qt.callLater(chatLogView.positionAtNewest)
+            } else {
+                d.clearStaging()
+                d.initialFillActive = false
+                if (root.rowPool)
+                    root.rowPool.clearBoost(d.rowPoolKind)
+                d.windowStart = 0
+                d.windowEnd = -1
+            }
+        }
+
+        // Every real message content type resolves to MessageView's single
+        // inner message component, so one pooled kind covers them all; the
+        // rest are rare by construction and stay on-demand rows.
+        function isPooledContentType(contentType) {
+            switch (contentType) {
+            case Constants.messageContentType.messageType:
+            case Constants.messageContentType.stickerType:
+            case Constants.messageContentType.emojiType:
+            case Constants.messageContentType.transactionType:
+            case Constants.messageContentType.imageType:
+            case Constants.messageContentType.audioType:
+            case Constants.messageContentType.communityInviteType:
+            case Constants.messageContentType.discordMessageType:
+            case Constants.messageContentType.contactRequestType:
+            case Constants.messageContentType.bridgeMessageType:
+                return true
+            default:
+                return false
+            }
+        }
+
+        // Pooled items this view currently holds; with the pool's readyCount
+        // it defines the window cap at any instant.
+        property int acquiredCount: 0
+        // The boost asks for readyCount, which every dressing drains — the
+        // need must ratchet down with each dressed row or the pool builds
+        // the whole shortfall again on top of it.
+        onAcquiredCountChanged: {
+            if (d.initialFillActive)
+                d.boostInitial()
+        }
+        // Shell asked for an item the pool could not hand out. Warm paging
+        // must never starve — a nonzero delta over a scroll session means the
+        // release-before-acquire ordering broke.
+        property int starvedCount: 0
+
+        function poolHeadroom() {
+            return root.rowPool ? root.rowPool.readyCount(d.rowPoolKind) : 0
+        }
+
+        // Pool sizing: two viewports' worth of rows at the observed row
+        // height (48px until measured), clamped; setTarget is grow-only.
+        readonly property int poolTarget: {
+            const rowHeight = d.avgRowHeight > 0 ? d.avgRowHeight : 48
+            return Math.min(80, Math.max(24, Math.ceil(chatLogView.height / rowHeight) * 2))
+        }
+        onPoolTargetChanged: d.applyPoolTarget()
+
+        function applyPoolTarget() {
+            if (root.rowPool)
+                root.rowPool.setTarget(d.rowPoolKind, d.poolTarget)
+        }
+
+        // Initial fill runs as one staged batch: the skeleton holds until a
+        // viewport-estimate's worth of rows are dressed, then everything
+        // admitted so far reveals in a single frame.
+        property bool initialFillActive: false
+        readonly property int initialRevealTarget: Math.max(1, Math.ceil(
+            chatLogView.height / (d.avgRowHeight > 0 ? d.avgRowHeight : 48)))
+
+        function stageExistingShells() {
+            for (let i = 0; i < chatLogView.count; ++i) {
+                const shell = chatLogView.itemAtRow(i)
+                if (!shell || d.stagedShells.indexOf(shell) >= 0)
+                    continue
+                shell.revealed = false
+                d.stageShell(shell)
+            }
+        }
+
+        function readyStagedCount() {
+            let n = 0
+            for (let i = 0; i < d.stagedShells.length; ++i) {
+                if (d.stagedShells[i].contentReady)
+                    ++n
+            }
+            return n
+        }
+
+        // Widens the opening window toward its initial size as the pool
+        // fills; every admitted row joins the initial batch.
+        function growInitialWindow() {
+            if (!d.initialFillActive || !d.dressActive)
+                return
+            const target = d.initialWindowSize - 1
+            const cap = d.windowStart
+                        + Math.max(1, d.acquiredCount + d.poolHeadroom()) - 1
+            const end = Math.min(target, cap)
+            if (end > d.windowEnd) {
+                d.admitStaged(function() {
+                    d.windowEnd = end
+                })
+            }
+        }
+
+        function boostInitial() {
+            if (!root.rowPool || !d.initialFillActive)
+                return
+            const wanted = Math.min(d.initialRevealTarget, Math.max(1, d.historyCount))
+            root.rowPool.boost(d.rowPoolKind, Math.max(0, wanted - d.acquiredCount))
+        }
+
+        function noteStarvedShell(shell) {
+            if (!root.rowPool)
+                return
+            d.starvedCount++
+            if (d.initialFillActive) {
+                d.boostInitial()
+                return
+            }
+            // a live row (outside any batch) must never wait on a dry pool:
+            // trimming the far end frees an item for it right now
+            if (shell.revealed)
+                Qt.callLater(d.trimFarEndForLiveRow)
+            root.rowPool.boost(d.rowPoolKind, 1)
+        }
+
+        function trimFarEndForLiveRow() {
+            if (d.poolHeadroom() > 0)
+                return
+            const trimmed = Math.min(d.windowEnd, d.historyCount - 1) - 1
+            if (trimmed >= d.windowStart)
+                d.windowEnd = trimmed
+        }
+
+        // Everything a pooled MessageView needs beyond its row data — the
+        // per-chat context the inline delegate used to bind. Set as bindings
+        // at acquire (several change live, e.g. joined, isChatBlocked) and
+        // broken again at release so no binding reaches back into this view
+        // from the app-wide pool.
+        readonly property var pooledViewContext: [
+            "rootStore", "messageStore", "channelEmoji", "emojiPopup",
+            "stickersPopup", "chatLogView", "chatContentModule",
+            "formatBalance", "usersModel", "isChatBlocked", "joined",
+            "sendViaPersonalChatEnabled", "messageLinkSharingEnabled",
+            "disabledTooltipText", "areTestNetworksEnabled",
+            "extraLeftPadding", "chatId", "myPublicKey",
+            "gifUnfurlingEnabled", "neverAskAboutUnfurlingAgain",
+            "stickersLoaded"]
+
+        function dressPooledView(view, shell) {
+            view.objectName = "chatMessageViewDelegate"
+            view.width = Qt.binding(() => shell.width)
+            for (let i = 0; i < d.pooledViewContext.length; ++i) {
+                const prop = d.pooledViewContext[i]
+                view[prop] = Qt.binding(() => root[prop])
+            }
+            view.createMessageLink = (chatId, messageId) =>
+                root.messageStore.createMessageLink(chatId, messageId)
+            view.mentionsMap = Qt.binding(() => mentionResolver.resolveFor(
+                view.unparsedText + " " + view.quotedMessageUnparsedText))
+        }
+
+        function undressPooledView(view) {
+            // a plain self-assignment breaks the binding without disturbing
+            // the value; the rebind on the next acquire is the reset
+            view.width = view.width
+            for (let i = 0; i < d.pooledViewContext.length; ++i) {
+                const prop = d.pooledViewContext[i]
+                view[prop] = view[prop]
+            }
+            view.mentionsMap = ({})
+        }
 
         // ---- Staged rows (PR review: no rows assembling on screen) ----
         // A slide admits its whole chunk at once, but the rows enter as cheap
@@ -216,6 +416,9 @@ Item {
         function stageShell(shell) {
             d.stagedShells.push(shell)
             d.syncStagedCount()
+            // a shell joining the batch is build progress: re-arm the stall
+            // detector (the initial fill has no admit call to arm it)
+            revealTimeout.restart()
         }
 
         function unstageShell(shell) {
@@ -231,6 +434,21 @@ Item {
         function checkStagedReady() {
             if (d.stagedCount === 0) {
                 revealTimeout.stop()
+                return
+            }
+            // the initial batch does not wait for the whole window: one
+            // atomic reveal at a viewport-worth of dressed rows, stragglers
+            // pop in on their own completion above the viewport. Never fall
+            // through to the all-staged-ready path — the window is still
+            // growing, so "all ready" holds trivially at any partial count
+            // (the stall detector below covers a pool that stops producing)
+            if (d.initialFillActive) {
+                const wanted = Math.min(d.initialRevealTarget,
+                                        Math.max(1, d.historyCount))
+                if (d.readyStagedCount() >= wanted)
+                    d.revealStaged()
+                else
+                    revealTimeout.restart()
                 return
             }
             if (d.stagedIds.size > 0) {
@@ -266,6 +484,11 @@ Item {
         // a partial one (better than wedging paging on a pathological row).
         function revealStaged() {
             revealTimeout.stop()
+            if (d.initialFillActive) {
+                d.initialFillActive = false
+                if (root.rowPool)
+                    root.rowPool.clearBoost(d.rowPoolKind)
+            }
             // stragglers whose shells never got created (timeout path) fall
             // back to revealing individually on their own completion
             d.stagedIds.clear()
@@ -313,7 +536,13 @@ Item {
         property bool windowAtInitial: true
 
         onInitialWindowSizeChanged: {
-            if (d.windowAtInitial && d.initialWindowSize - 1 > d.windowEnd)
+            if (!d.windowAtInitial)
+                return
+            if (d.usePool) {
+                d.growInitialWindow()
+                return
+            }
+            if (d.initialWindowSize - 1 > d.windowEnd)
                 d.windowEnd = d.initialWindowSize - 1
         }
 
@@ -333,7 +562,23 @@ Item {
         function resetWindow() {
             clearStaging()
             windowStart = 0
-            windowEnd = initialWindowSize - 1
+            initialFillActive = false
+            if (d.usePool) {
+                if (d.dressActive) {
+                    initialFillActive = true
+                    windowEnd = Math.min(initialWindowSize,
+                                         Math.max(1, d.acquiredCount + d.poolHeadroom())) - 1
+                    d.boostInitial()
+                    // shells born before this dress (construction-time window,
+                    // async creation) join the initial batch instead of
+                    // popping in one by one ahead of the atomic reveal
+                    d.stageExistingShells()
+                } else {
+                    windowEnd = -1
+                }
+            } else {
+                windowEnd = initialWindowSize - 1
+            }
             windowAtInitial = true
             lastFetchHistoryCount = -1
         }
@@ -341,10 +586,36 @@ Item {
         function slideWindowToHistory() {
             // one batch at a time: the paging timer keeps asking while the
             // placeholder shows, and the next chunk must wait for this one
-            if (d.stagedCount > 0)
+            if (d.stagedCount > 0 || d.initialFillActive || !d.dressActive)
                 return
 
             if (d.windowEnd < d.historyCount - 1) {
+                if (d.usePool) {
+                    // only as many rows as the pool can dress, and the recent
+                    // end releases before the history end acquires, so a
+                    // slide can never over-subscribe the pool; a viewport's
+                    // worth of rows always survives it, so what the user is
+                    // looking at never leaves the window mid-slide
+                    const headroom = d.poolHeadroom()
+                    const wanted = Math.min(d.historyCount - 1 - d.windowEnd,
+                                            d.windowChunkSize)
+                    const grow = Math.min(wanted, headroom)
+                    const size = d.windowEnd - d.windowStart + 1
+                    const slide = Math.min(wanted - grow,
+                                           Math.max(0, size - d.initialRevealTarget))
+                    if (grow + slide === 0) {
+                        // dry and nothing to trade: grow the pool instead of
+                        // spinning on the paging timer
+                        root.rowPool.boost(d.rowPoolKind, 1)
+                        return
+                    }
+                    d.windowAtInitial = false
+                    d.admitStaged(function() {
+                        d.windowStart += slide
+                        d.windowEnd += grow + slide
+                    })
+                    return
+                }
                 d.windowAtInitial = false
                 d.admitStaged(function() {
                     d.windowEnd = Math.min(d.historyCount - 1, d.windowEnd + d.windowChunkSize)
@@ -363,8 +634,27 @@ Item {
         }
 
         function slideWindowToRecent() {
-            if (d.stagedCount > 0 || d.windowStart <= 0)
+            if (d.stagedCount > 0 || d.windowStart <= 0
+                    || d.initialFillActive || !d.dressActive)
                 return
+
+            if (d.usePool) {
+                const headroom = d.poolHeadroom()
+                const wanted = Math.min(d.windowStart, d.windowChunkSize)
+                const grow = Math.min(wanted, headroom)
+                const size = d.windowEnd - d.windowStart + 1
+                const slide = Math.min(wanted - grow,
+                                       Math.max(0, size - d.initialRevealTarget))
+                if (grow + slide === 0) {
+                    root.rowPool.boost(d.rowPoolKind, 1)
+                    return
+                }
+                d.admitStaged(function() {
+                    d.windowEnd -= slide
+                    d.windowStart -= grow + slide
+                })
+                return
+            }
 
             d.admitStaged(function() {
                 d.windowStart = Math.max(0, d.windowStart - d.windowChunkSize)
@@ -461,6 +751,20 @@ Item {
             if (first <= d.windowEnd)
                 Qt.callLater(d.refilterWindow)
             Qt.callLater(d.updateHistoryExhausted)
+        }
+    }
+
+    // The opening window widens with the pool: every item the boosted pool
+    // finishes lets the initial batch admit one more row.
+    Connections {
+        target: root.rowPool
+
+        function onAvailabilityChanged(kind, readyCount) {
+            // deferred: a release fired from the window proxy's own
+            // rowsAboutToBeRemoved must not grow the window while the
+            // IndexFilter is mid-update (binding loop on maximumIndex)
+            if (kind === d.rowPoolKind && readyCount > 0)
+                Qt.callLater(d.growInitialWindow)
         }
     }
 
@@ -689,9 +993,18 @@ Item {
 
             // Declared on the model itself so these connections run before the
             // Repeater's: a synchronously created shell must already find its
-            // id captured.
+            // id captured. Leaving rows hand their pooled items back HERE —
+            // the Repeater destroys delegates through deleteLater, which
+            // would defer the release past the acquires of the same slide.
             onRowsInserted: (parent, first, last) => d.captureStagedRows(first, last)
-            onRowsAboutToBeRemoved: (parent, first, last) => d.dropStagedRows(first, last)
+            onRowsAboutToBeRemoved: (parent, first, last) => {
+                d.dropStagedRows(first, last)
+                for (let i = first; i <= last; ++i) {
+                    const shell = chatLogView.itemAtRow(i)
+                    if (shell && shell.retire)
+                        shell.retire()
+                }
+            }
 
             onCountChanged: d.markAllMessagesReadIfMostRecentMessageIsInViewport()
         }
@@ -702,11 +1015,13 @@ Item {
             visible: chatLogView.contentHeight > chatLogView.height
         }
 
-        // Shell + inline async Loader: the Repeater only ever builds the cheap
-        // shell synchronously; the actual MessageView incubates asynchronously
-        // (paced by the app's incubation controller). The component must stay
-        // inline — an external one would lose the model roles' context.
-        delegate: Loader {
+        // The shell never builds real message content: it acquires a
+        // pre-built MessageView from the row pool and RowBinder points it at
+        // the shell's row (in-window ⇔ holds a pooled item). Rare kinds and
+        // pool-less hosts fall back to the inline async Loader, whose
+        // component must stay inline — an external one would lose the model
+        // roles' context.
+        delegate: Item {
             id: shell
 
             // Row 0 is the newest message and belongs at the bottom; +1
@@ -723,16 +1038,29 @@ Item {
             // so the message lays out its text at its final width and the
             // reveal-frame polish only places pre-measured rows.
             width: root.chatLogView.width
+            implicitHeight: contentItem ? contentItem.height : 0
 
-            asynchronous: true
+            // Reactive on the deleted flag: a row deleted mid-life hands its
+            // pooled item back and turns into an on-demand row.
+            readonly property bool pooled: !!root.rowPool && !model.deleted
+                                           && d.isPooledContentType(model.messageContentType)
+            property Item pooledItem: null
+            readonly property Item contentItem: pooledItem ?? inlineLoader.item
 
-            // The shell being Ready only means the MessageView *instance*
+            // test seam (fallback mode): deactivating wedges the row's build
+            property alias active: inlineLoader.active
+
+            // Content being present only means the MessageView *instance*
             // exists — MessageView is itself a Loader whose content keeps
             // incubating (with a 50px fallback height). A row is only ready
             // once that inner content is fully built and measured; a content
             // type without a component (inner status Null) is ready as is.
-            readonly property bool contentReady: status === Loader.Ready && item
-                                                 && item.status !== Loader.Loading
+            readonly property bool contentReady: {
+                if (pooled)
+                    return !!pooledItem && pooledItem.status !== Loader.Loading
+                return inlineLoader.status === Loader.Ready && inlineLoader.item
+                       && inlineLoader.item.status !== Loader.Loading
+            }
 
             // Rows admitted by a staged slide hold no visual space until the
             // whole batch is ready; everything else shows as soon as it is
@@ -743,164 +1071,287 @@ Item {
             readonly property string messageId: model.messageId
 
             function startMessageFoundAnimation() {
-                if (item)
-                    item.startMessageFoundAnimation()
+                if (contentItem)
+                    contentItem.startMessageFoundAnimation()
+            }
+
+            // On its way out of the window: the item is already released and
+            // must not be re-acquired while the deferred destruction runs.
+            property bool retired: false
+
+            function retire() {
+                retired = true
+                releasePooled()
+            }
+
+            function tryAcquire() {
+                if (!pooled || pooledItem || retired || !root.rowPool)
+                    return
+                const item = root.rowPool.acquire(d.rowPoolKind)
+                if (!item) {
+                    d.noteStarvedShell(shell)
+                    return
+                }
+                d.dressPooledView(item, shell)
+                rowBinder.target = item
+                rowBinder.bind(messagesWindow, index)
+                item.parent = shell
+                // last: the signal relay below only attaches to a fully
+                // dressed and bound item, so the rebind writes cannot fire
+                // stale intent signals
+                pooledItem = item
+                d.acquiredCount++
+            }
+
+            function releasePooled() {
+                if (!pooledItem)
+                    return
+                const item = pooledItem
+                pooledItem = null
+                rowBinder.detach()
+                rowBinder.target = null
+                d.undressPooledView(item)
+                d.acquiredCount--
+                if (root.rowPool)
+                    root.rowPool.release(item)
+            }
+
+            onPooledChanged: {
+                if (pooled)
+                    tryAcquire()
+                else
+                    releasePooled()
+            }
+
+            RowBinder {
+                id: rowBinder
+            }
+
+            // A shell that found the pool dry dresses itself as soon as an
+            // item is released or built.
+            Connections {
+                target: root.rowPool
+                enabled: shell.pooled && !shell.pooledItem && !shell.retired
+
+                function onAvailabilityChanged(kind, readyCount) {
+                    if (kind === d.rowPoolKind && readyCount > 0)
+                        shell.tryAcquire()
+                }
+            }
+
+            // Intent relay for the pooled item — the inline component wires
+            // these declaratively; dying with the shell keeps the pooled item
+            // free of connections into this view after release.
+            Connections {
+                target: shell.pooledItem
+
+                function onOpenStickerPackPopup(stickerPackId) {
+                    root.openStickerPackPopup(stickerPackId)
+                }
+                function onTokenPaymentRequested(recipientAddress, tokenKey, rawAmount) {
+                    root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
+                }
+                function onShowReplyArea(messageId, author) {
+                    root.showReplyArea(messageId, author)
+                }
+                function onSendViaPersonalChatRequested(recipientAddress) {
+                    Global.sendToRecipientRequested(recipientAddress)
+                }
+                function onEmojiReactionToggled(messageId, hexcode) {
+                    root.messageStore.toggleReaction(messageId, hexcode)
+                }
+                function onSetNeverAskAboutUnfurlingAgain(neverAskAgain) {
+                    root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
+                }
+                function onOpenGifPopupRequest(params, cbOnGifSelected, cbOnClose) {
+                    root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
+                }
+                function onChangeContactNicknameRequest(pubKey, nickname, displayName, isEdit) {
+                    root.changeContactNicknameRequest(pubKey, nickname, displayName, isEdit)
+                }
+                function onRemoveTrustStatusRequest(pubKey) {
+                    root.removeTrustStatusRequest(pubKey)
+                }
+                function onSpectateCommunityRequested(communityId) {
+                    root.spectateCommunityRequested(communityId)
+                }
+                function onEditModeOnChanged() {
+                    root.editModeChanged(shell.pooledItem.editModeOn,
+                                         shell.pooledItem.messageId)
+                }
+                function onVisibleChanged() {
+                    if (!shell.pooledItem.visible && shell.pooledItem.editModeOn)
+                        root.messageStore.setEditModeOff(shell.pooledItem.messageId)
+                }
             }
 
             // Membership in a staged batch is decided by the captured row id,
             // not by creation timing: under a still-incubating ancestor the
             // shell is created asynchronously, long after the admit returned.
+            // The initial fill stages every row for its one atomic reveal.
             Component.onCompleted: {
-                if (d.takeStagedId(messageId))
+                if (d.takeStagedId(messageId) || d.initialFillActive)
                     d.stageShell(this)
                 else
                     revealed = true
+                tryAcquire()
             }
-            Component.onDestruction: d.unstageShell(this)
+            Component.onDestruction: {
+                d.unstageShell(this)
+                releasePooled()
+            }
 
             onContentReadyChanged: {
                 if (contentReady && !revealed)
                     d.checkStagedReady()
             }
 
-            sourceComponent: MessageView {
-                id: msgDelegate
+            Loader {
+                id: inlineLoader
 
-                objectName: "chatMessageViewDelegate"
+                width: shell.width
+                asynchronous: true
+                active: !shell.pooled
 
-                rootStore: root.rootStore
-                messageStore: root.messageStore
-                channelEmoji: root.channelEmoji
-                emojiPopup: root.emojiPopup
-                stickersPopup: root.stickersPopup
-                chatLogView: root.chatLogView
-                chatContentModule: root.chatContentModule
-                formatBalance: root.formatBalance
-                usersModel: root.usersModel
-                // covers the message body and the quoted reply, whose mentions
-                // also render through this map
-                mentionsMap: mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageUnparsedText)
+                sourceComponent: MessageView {
+                    id: msgDelegate
 
-                isChatBlocked: root.isChatBlocked
-                joined: root.joined
+                    objectName: "chatMessageViewDelegate"
 
-                sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
-                messageLinkSharingEnabled: root.messageLinkSharingEnabled
-                createMessageLink: (chatId, messageId) => root.messageStore.createMessageLink(chatId, messageId)
-                disabledTooltipText: root.disabledTooltipText
-                areTestNetworksEnabled: root.areTestNetworksEnabled
-                extraLeftPadding: root.extraLeftPadding
+                    rootStore: root.rootStore
+                    messageStore: root.messageStore
+                    channelEmoji: root.channelEmoji
+                    emojiPopup: root.emojiPopup
+                    stickersPopup: root.stickersPopup
+                    chatLogView: root.chatLogView
+                    chatContentModule: root.chatContentModule
+                    formatBalance: root.formatBalance
+                    usersModel: root.usersModel
+                    // covers the message body and the quoted reply, whose mentions
+                    // also render through this map
+                    mentionsMap: mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageUnparsedText)
 
-                chatId: root.chatId
-                messageId: model.messageId
-                communityId: model.communityId
-                responseToMessageWithId: model.responseToMessageWithId
-                senderId: model.senderId
-                senderDisplayName: model.senderDisplayName
-                usesDefaultName: model.usesDefaultName
-                senderOptionalName: model.senderOptionalName
-                senderIsEnsVerified: model.senderIsEnsVerified
-                senderIcon: model.senderIcon
-                senderIsAdded: model.senderIsAdded
-                senderTrustStatus: model.senderTrustStatus
-                compressedKey: model.compressedKey
-                amISender: model.amISender
-                messageText: model.messageText
-                unparsedText: model.unparsedText
-                messageImage: model.messageImage
-                albumMessageImages: model.albumMessageImages
-                albumCount: model.albumCount
-                messageTimestamp: model.messageTimestamp
-                messageOutgoingStatus: model.messageOutgoingStatus
-                resendError: model.resendError
-                messageContentType: model.messageContentType
-                pinnedMessage: model.pinnedMessage
-                messagePinnedBy: model.messagePinnedBy
-                reactionsModel: model.reactionsModel
-                sticker: model.sticker
-                stickerPack: model.stickerPack
-                editModeOn: model.editModeOn
-                onEditModeOnChanged: root.editModeChanged(editModeOn, model.messageId)
-                isEdited: model.isEdited
-                deleted: model.deleted
-                deletedBy: model.deletedBy
-                deletedByContactDisplayName: model.deletedByContactDisplayName
-                deletedByContactIcon: model.deletedByContactIcon
-                linkPreviewModel: model.linkPreviewModel
-                links: model.links
-                paymentRequestModel: model.paymentRequestModel
-                messageAttachments: model.messageAttachments
-                transactionParams: model.transactionParams
-                hasMention: model.hasMention
-                quotedMessageText: model.quotedMessageText
-                quotedMessageUnparsedText: model.quotedMessageUnparsedText
-                quotedMessageFrom: model.quotedMessageFrom
-                quotedMessageContentType: model.quotedMessageContentType
-                quotedMessageDeleted: model.quotedMessageDeleted
-                quotedMessageAuthorDetailsName: model.quotedMessageAuthorDetailsName
-                quotedMessageAuthorDetailsDisplayName: model.quotedMessageAuthorDetailsDisplayName
-                quotedMessageAuthorDetailsThumbnailImage: model.quotedMessageAuthorDetailsThumbnailImage
-                quotedMessageAuthorDetailsEnsVerified: model.quotedMessageAuthorDetailsEnsVerified
-                quotedMessageAuthorDetailsIsContact: model.quotedMessageAuthorDetailsIsContact
-                quotedMessageAlbumMessageImages: model.quotedMessageAlbumMessageImages
-                quotedMessageAlbumImagesCount: model.quotedMessageAlbumImagesCount
-                bridgeName: model.bridgeName
+                    isChatBlocked: root.isChatBlocked
+                    joined: root.joined
 
-                gapFrom: model.gapFrom
-                gapTo: model.gapTo
+                    sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
+                    messageLinkSharingEnabled: root.messageLinkSharingEnabled
+                    createMessageLink: (chatId, messageId) => root.messageStore.createMessageLink(chatId, messageId)
+                    disabledTooltipText: root.disabledTooltipText
+                    areTestNetworksEnabled: root.areTestNetworksEnabled
+                    extraLeftPadding: root.extraLeftPadding
 
-                 // This is possible since we have all data loaded before we load qml.
-                 // When we fetch messages to fulfill a gap we have to set them at once.
-                 // Also one important thing here is that messages are set in descending order
-                 // in terms of `timestamp` of a message, that means a message with the most
-                 // recent time is added at index 0.
-                prevMessageIndex: model.prevMessageIndex
-                prevMessageTimestamp: model.prevMessageTimestamp
-                prevMessageSenderId: model.prevMessageSenderId
-                prevMessageContentType: model.prevMessageContentType
-                prevMessageDeleted: model.prevMessageDeleted
-                nextMessageIndex: model.nextMessageIndex
-                nextMessageTimestamp: model.nextMessageTimestamp
+                    chatId: root.chatId
+                    messageId: model.messageId
+                    communityId: model.communityId
+                    responseToMessageWithId: model.responseToMessageWithId
+                    senderId: model.senderId
+                    senderDisplayName: model.senderDisplayName
+                    usesDefaultName: model.usesDefaultName
+                    senderOptionalName: model.senderOptionalName
+                    senderIsEnsVerified: model.senderIsEnsVerified
+                    senderIcon: model.senderIcon
+                    senderIsAdded: model.senderIsAdded
+                    senderTrustStatus: model.senderTrustStatus
+                    compressedKey: model.compressedKey
+                    amISender: model.amISender
+                    messageText: model.messageText
+                    unparsedText: model.unparsedText
+                    messageImage: model.messageImage
+                    albumMessageImages: model.albumMessageImages
+                    albumCount: model.albumCount
+                    messageTimestamp: model.messageTimestamp
+                    messageOutgoingStatus: model.messageOutgoingStatus
+                    resendError: model.resendError
+                    messageContentType: model.messageContentType
+                    pinnedMessage: model.pinnedMessage
+                    messagePinnedBy: model.messagePinnedBy
+                    reactionsModel: model.reactionsModel
+                    sticker: model.sticker
+                    stickerPack: model.stickerPack
+                    editModeOn: model.editModeOn
+                    onEditModeOnChanged: root.editModeChanged(editModeOn, model.messageId)
+                    isEdited: model.isEdited
+                    deleted: model.deleted
+                    deletedBy: model.deletedBy
+                    deletedByContactDisplayName: model.deletedByContactDisplayName
+                    deletedByContactIcon: model.deletedByContactIcon
+                    linkPreviewModel: model.linkPreviewModel
+                    links: model.links
+                    paymentRequestModel: model.paymentRequestModel
+                    messageAttachments: model.messageAttachments
+                    transactionParams: model.transactionParams
+                    hasMention: model.hasMention
+                    quotedMessageText: model.quotedMessageText
+                    quotedMessageUnparsedText: model.quotedMessageUnparsedText
+                    quotedMessageFrom: model.quotedMessageFrom
+                    quotedMessageContentType: model.quotedMessageContentType
+                    quotedMessageDeleted: model.quotedMessageDeleted
+                    quotedMessageAuthorDetailsName: model.quotedMessageAuthorDetailsName
+                    quotedMessageAuthorDetailsDisplayName: model.quotedMessageAuthorDetailsDisplayName
+                    quotedMessageAuthorDetailsThumbnailImage: model.quotedMessageAuthorDetailsThumbnailImage
+                    quotedMessageAuthorDetailsEnsVerified: model.quotedMessageAuthorDetailsEnsVerified
+                    quotedMessageAuthorDetailsIsContact: model.quotedMessageAuthorDetailsIsContact
+                    quotedMessageAlbumMessageImages: model.quotedMessageAlbumMessageImages
+                    quotedMessageAlbumImagesCount: model.quotedMessageAlbumImagesCount
+                    bridgeName: model.bridgeName
 
-                // Unfurling related data:
-                gifUnfurlingEnabled: root.gifUnfurlingEnabled
-                neverAskAboutUnfurlingAgain: root.neverAskAboutUnfurlingAgain
+                    gapFrom: model.gapFrom
+                    gapTo: model.gapTo
 
-                // Contacts related data:
-                myPublicKey: root.myPublicKey
+                     // This is possible since we have all data loaded before we load qml.
+                     // When we fetch messages to fulfill a gap we have to set them at once.
+                     // Also one important thing here is that messages are set in descending order
+                     // in terms of `timestamp` of a message, that means a message with the most
+                     // recent time is added at index 0.
+                    prevMessageIndex: model.prevMessageIndex
+                    prevMessageTimestamp: model.prevMessageTimestamp
+                    prevMessageSenderId: model.prevMessageSenderId
+                    prevMessageContentType: model.prevMessageContentType
+                    prevMessageDeleted: model.prevMessageDeleted
+                    nextMessageIndex: model.nextMessageIndex
+                    nextMessageTimestamp: model.nextMessageTimestamp
 
-                onOpenStickerPackPopup: stickerPackId => root.openStickerPackPopup(stickerPackId)
-                onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
+                    // Unfurling related data:
+                    gifUnfurlingEnabled: root.gifUnfurlingEnabled
+                    neverAskAboutUnfurlingAgain: root.neverAskAboutUnfurlingAgain
 
-                onShowReplyArea: (messageId, author) => root.showReplyArea(messageId, author)
+                    // Contacts related data:
+                    myPublicKey: root.myPublicKey
 
-                stickersLoaded: root.stickersLoaded
+                    onOpenStickerPackPopup: stickerPackId => root.openStickerPackPopup(stickerPackId)
+                    onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
 
-                onSendViaPersonalChatRequested: {
-                    Global.sendToRecipientRequested(recipientAddress)
-                }
+                    onShowReplyArea: (messageId, author) => root.showReplyArea(messageId, author)
 
-                onVisibleChanged: {
-                    if(!visible && model.editModeOn)
-                        messageStore.setEditModeOff(model.messageId)
-                }
+                    stickersLoaded: root.stickersLoaded
 
-                onEmojiReactionToggled: (messageId, hexcode) => {
-                    root.messageStore.toggleReaction(messageId, hexcode)
-                }
+                    onSendViaPersonalChatRequested: {
+                        Global.sendToRecipientRequested(recipientAddress)
+                    }
 
-                // Unfurling related requests:
-                onSetNeverAskAboutUnfurlingAgain: root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
+                    onVisibleChanged: {
+                        if(!visible && model.editModeOn)
+                            messageStore.setEditModeOff(model.messageId)
+                    }
 
-                onOpenGifPopupRequest: root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
+                    onEmojiReactionToggled: (messageId, hexcode) => {
+                        root.messageStore.toggleReaction(messageId, hexcode)
+                    }
 
-                // Contacts related requests:
-                onChangeContactNicknameRequest: root.changeContactNicknameRequest(pubKey, nickname, displayName, isEdit)
-                onRemoveTrustStatusRequest: root.removeTrustStatusRequest(pubKey)
+                    // Unfurling related requests:
+                    onSetNeverAskAboutUnfurlingAgain: root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
 
-                // Community access related requests:
-                onSpectateCommunityRequested: (communityId) => {
-                    root.spectateCommunityRequested(communityId)
+                    onOpenGifPopupRequest: root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
+
+                    // Contacts related requests:
+                    onChangeContactNicknameRequest: root.changeContactNicknameRequest(pubKey, nickname, displayName, isEdit)
+                    onRemoveTrustStatusRequest: root.removeTrustStatusRequest(pubKey)
+
+                    // Community access related requests:
+                    onSpectateCommunityRequested: (communityId) => {
+                        root.spectateCommunityRequested(communityId)
+                    }
                 }
             }
         }
