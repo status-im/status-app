@@ -65,15 +65,32 @@ ItemDelegate {
         color: root.highlighted ? root.highlightColor : "transparent"
         radius: root.radius
 
-        StatusRipple {
-            id: itemDelegateRipple
-            objectName: "statusItemDelegateRipple"
+        // The ripple only exists to animate a press, so nothing is built until
+        // the delegate is first pressed. AbstractButton sets `pressed` before it
+        // emits pressed(), so the ripple is connected in time to catch the very
+        // press that created it.
+        Loader {
+            id: rippleLoader
             anchors.fill: parent
-            enabled: root.enabled
-            color: d.contentColor
-            radius: parent.radius
-            origin: root.rippleOrigin
-            button: root
+            active: false
+
+            sourceComponent: StatusRipple {
+                objectName: "statusItemDelegateRipple"
+                enabled: root.enabled
+                color: d.contentColor
+                radius: root.radius
+                origin: root.rippleOrigin
+                button: root
+            }
+        }
+    }
+
+    onPressedChanged: {
+        if (root.pressed) {
+            if (root.enabled)
+                rippleLoader.active = true
+        } else if (rippleLoader.item) {
+            rippleLoader.item.release()
         }
     }
 

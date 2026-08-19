@@ -251,7 +251,8 @@ SplitView {
         // change in leaf volume shows up next to the staircase that pays for it.
         readonly property var censusTypes: [
             "StatusToolTip", "StatusRipple", "StatusFlatRoundButton",
-            "StatusScrollBar", "StatusScrollView", "StatusListView", "StatusListItem",
+            "StatusScrollBar", "StatusScrollView", "QQuickFlickable", "StatusListView",
+            "StatusListItem",
             "TokenDelegate", "StatusBaseText", "QQuickText", "StatusIcon",
             "QQuickColorImage", "StatusImage", "QQuickImage", "QQuickLoader",
             "QQuickMouseArea", "StatusMouseArea"
