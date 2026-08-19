@@ -261,7 +261,7 @@ Rectangle {
                     icon: root.titleTextIcon
                 }
 
-                StatusToolTip {
+                StatusDeferredToolTip {
                     id: statusListItemTitleTooltip
                     text: statusListItemTitle.text
                     delay: 0

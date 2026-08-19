@@ -175,9 +175,10 @@ Rectangle {
         onPressAndHold: mouse => root.pressAndHold(mouse)
     } // Sensor
 
-    StatusToolTip {
+    StatusDeferredToolTip {
         id: statusToolTip
+        target: root
+        centerArrowOnTarget: true
         visible: !!text && root.hovered
-        offset: -(x + width/2 - root.width/2)
     } // Tooltip
 } // Rectangle
