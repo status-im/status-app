@@ -40,9 +40,11 @@ import StorybookMocks
 // stable object count. `t_first_asset_row_ms` and the settled counts are what
 // carry the "no grey tiles left" meaning here.
 //
-// Timings and the max stall are recorded only; the instantiation counts and the
-// stall count are gated. All numbers are HOST units - the x10 low-end-Android
-// convention is applied by whoever reads them, never here.
+// Timings, the max stall and `stalls_over_4ms` are recorded only; the
+// instantiation counts and `stalls_over_8ms` are gated - 8ms because 4ms sits on
+// the incubation controller's own bite budget and so counted metered work as
+// stalls (see the ratchet comment). All numbers are HOST units - the x10
+// low-end-Android convention is applied by whoever reads them, never here.
 Item {
     id: root
 
@@ -163,6 +165,7 @@ Item {
         property var stallTimeline: []
         property var stampList: []
 
+        property int stallsOver8: -1
         property real firstAssetRowMs: -1
         property int objectsSettled: -1
         property int assetDelegatesSettled: -1
@@ -228,6 +231,7 @@ Item {
             d.assetDelegates = -1
             d.loadingAssetDelegates = -1
             d.firstAssetRowMs = -1
+            d.stallsOver8 = -1
             d.objectsSettled = -1
             d.assetDelegatesSettled = -1
             d.objectsPerAssetRow = -1
@@ -243,6 +247,7 @@ Item {
                 contentMs: probe.stampMs("t_content"),
                 firstAssetRowMs: d.firstAssetRowMs,
                 stalls: probe.stallCount,
+                stallsOver8: d.stallsOver8,
                 maxStallMs: probe.maxStallMs,
                 probeTicks: probe.stallTickCount,
                 objectsTotal: d.objectsTotal,
@@ -283,6 +288,10 @@ Item {
             const firstRow = probe.findByObjectNamePrefix(d.section, "AssetView_TokenListItem_")
             d.objectsPerAssetRow = firstRow ? probe.countObjects(firstRow) : -1
             d.stallTimeline = probe.stalls()
+            // Blocks the incubation controller failed to chop: the probe records
+            // every gap over 4ms, the gate counts only those a metered bite
+            // cannot account for. See the ratchet comment below.
+            d.stallsOver8 = d.stallTimeline.filter(stall => stall.gapMs > 8).length
             d.stampList = probe.stampTimeline()
             d.objectsSettled = current
             d.assetDelegatesSettled = d.assetRows()
@@ -300,7 +309,7 @@ Item {
             "utc_time", "profile", "phase",
             "t_skeleton_ms", "t_ready_ms", "t_content_ms",
             "t_first_asset_row_ms",
-            "stalls_over_4ms", "max_stall_ms", "probe_ticks",
+            "stalls_over_4ms", "stalls_over_8ms", "max_stall_ms", "probe_ticks",
             "objects_total", "account_delegates", "asset_delegates",
             "loading_asset_delegates",
             "objects_settled", "asset_delegates_settled"
@@ -324,20 +333,29 @@ Item {
         readonly property int expectedObjectsSettled: 9166
         readonly property int expectedAssetDelegatesSettled: 26
 
-        // Ratchets on the measured counts (warm 13-16, cold 16-17 over eight
-        // phase runs), not the 0 the host budget would want: the section blocks the
-        // GUI thread for most of its load, so 4ms-clean is several optimisations
-        // away. Lower these whenever a fix lowers the measured count.
+        // The gated stall counter is `stalls_over_8ms`, not `stalls_over_4ms`.
         //
-        // The count rose when the assets rows became preemptible (issues/0007)
-        // and the cold ratchet now has no headroom left. That is the metric, not
-        // the surface, misbehaving: the incubation controller's gentle bite is
-        // 4ms (printed per run below), exactly this gate's threshold, so every
-        // metered bite scores as a stall and chopping one 35ms block into eight
-        // 4ms bites counts as seven extra stalls. Whoever changes the controller
-        // budget (PR #21921) owns this.
-        readonly property int maxWarmStallsOver4ms: 16
-        readonly property int maxColdStallsOver4ms: 16
+        // 4ms was the wrong threshold, and it was wrong from the day the gate was
+        // written: it sits exactly on the incubation controller's gentle bite
+        // (`gentleInterval / 4`, printed per run below - 4ms at the 60Hz this
+        // process reports, 2ms on a 120Hz display). Every metered bite therefore
+        // scored as a stall, so chopping one 35ms block into eight 4ms bites -
+        // the outcome the budget wants - *raised* the count. The metric was
+        // anti-correlated with preemptibility and moved with the display's
+        // refresh rate.
+        //
+        // 8ms is above every observed bite - the largest gap anywhere in the
+        // incubated phase is 6.42ms over sixteen runs - and far below anything a
+        // user reads as smooth, so what it counts is exactly what we care about:
+        // **blocks the controller failed to chop**. `stalls_over_4ms` stays
+        // recorded in the TSV, ungated, so re-gating on it costs no history if
+        // PR #21921 lowers the controller's budget.
+        //
+        // Ratchets are the observed maximum over sixteen runs per phase, not the
+        // median - a ratchet that flakes is worse than no ratchet. Measured
+        // spread: warm 2-4, cold 3-6. Lower them whenever a fix lowers the count.
+        readonly property int maxWarmStallsOver8ms: 4
+        readonly property int maxColdStallsOver8ms: 6
 
         function initTestCase() {
             WalletStores.RootStore.palette = Theme.palette
@@ -385,8 +403,8 @@ Item {
             // the cold phase only, where it is exactly reproducible.
             countGate(cold, "objects_total", cold.objectsTotal, expectedObjectsTotal)
 
-            stallGate(warm, maxWarmStallsOver4ms)
-            stallGate(cold, maxColdStallsOver4ms)
+            stallGate(warm, maxWarmStallsOver8ms)
+            stallGate(cold, maxColdStallsOver8ms)
         }
 
         // One load of the section, from `active = true` to the settle point.
@@ -451,11 +469,13 @@ Item {
         }
 
         function stallGate(phase, allowed) {
-            verify(phase.stalls <= allowed,
-                   "GATE `stalls_over_4ms` [%1 load] = %2, baseline allows %3 (%4) - host ms, "
-                   .arg(phase.phase).arg(phase.stalls).arg(allowed)
-                   .arg(signed(phase.stalls - allowed))
-                   + "1ms probe, window is the whole load up to the settle point")
+            verify(phase.stallsOver8 <= allowed,
+                   "GATE `stalls_over_8ms` [%1 load] = %2, baseline allows %3 (%4) - host ms, "
+                   .arg(phase.phase).arg(phase.stallsOver8).arg(allowed)
+                   .arg(signed(phase.stallsOver8 - allowed))
+                   + "1ms probe, window is the whole load up to the settle point; "
+                   + "8ms is above the controller's metered bite, so this counts "
+                   + "blocks it failed to chop")
         }
 
         function signed(delta) {
@@ -473,8 +493,10 @@ Item {
                 row("t_first_asset_row_ms", warm.firstAssetRowMs, cold.firstAssetRowMs,
                     "recorded (HEADLINE: warm)"),
                 row("stalls_over_4ms", warm.stalls, cold.stalls,
-                    "gated (warm <= %1, cold <= %2)".arg(maxWarmStallsOver4ms)
-                    .arg(maxColdStallsOver4ms)),
+                    "recorded (= the controller's bite cadence, not a stall count)"),
+                row("stalls_over_8ms", warm.stallsOver8, cold.stallsOver8,
+                    "gated (warm <= %1, cold <= %2)".arg(maxWarmStallsOver8ms)
+                    .arg(maxColdStallsOver8ms)),
                 row("max_stall_ms", warm.maxStallMs, cold.maxStallMs, "recorded"),
                 row("probe_ticks", warm.probeTicks, cold.probeTicks, "recorded"),
                 row("objects_total", warm.objectsTotal, cold.objectsTotal, "gated (cold only)"),
@@ -540,6 +562,7 @@ Item {
                 probe.formatMs(phase.contentMs),
                 probe.formatMs(phase.firstAssetRowMs),
                 String(phase.stalls),
+                String(phase.stallsOver8),
                 probe.formatMs(phase.maxStallMs),
                 String(phase.probeTicks),
                 String(phase.objectsTotal), String(phase.accountDelegates),
