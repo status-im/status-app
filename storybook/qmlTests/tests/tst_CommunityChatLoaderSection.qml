@@ -370,6 +370,29 @@ Item {
             }, 10000, "chat rows must settle before dragging")
         }
 
+        // Drags `row` vertically by `dy` in the STATIC list's coordinates
+        // (the dragged row moves — item-relative coordinates would chase it),
+        // retrying: the automatic drag's nested loop occasionally misses the
+        // synthesized gesture on a loaded machine, killing it mid-flight.
+        function dragRowVertically(lv, row, dy) {
+            for (let attempt = 0; attempt < 3; ++attempt) {
+                const start = row.mapToItem(lv, row.width / 2, row.height / 2)
+                mousePress(lv, start.x, start.y)
+                for (let step = 1; step <= 8; ++step)
+                    mouseMove(lv, start.x, start.y + (dy * step) / 8, 20)
+                // a frame between the last move and the release lets the drop
+                // target process the final position before the drop lands
+                waitForRendering(lv)
+                mouseRelease(lv, start.x, start.y + dy)
+                waitForRendering(lv)
+
+                if (mock.sectionModule.lastReorder)
+                    return
+                // a dead gesture snaps the row back — let it settle and retry
+                waitForStableRows(lv)
+            }
+        }
+
         function test_adminDragReordersToAdjacentRow() {
             mock.memberRole = Constants.memberRole.owner
             // gesture test: the message payload is irrelevant and its
@@ -396,18 +419,8 @@ Item {
             const firstId = first.chatId
             const rowH = first.height
 
-            // press on the first row and drag to the middle of the second
-            // row, in the STATIC list's coordinates (the dragged row moves —
-            // item-relative coordinates would chase it)
-            const start = first.mapToItem(lv, first.width / 2, first.height / 2)
-            mousePress(lv, start.x, start.y)
-            for (let step = 1; step <= 8; ++step)
-                mouseMove(lv, start.x, start.y + (rowH * 1.2 * step) / 8, 20)
-            // a frame between the last move and the release lets the drop
-            // target process the final position before the drop lands
-            waitForRendering(lv)
-            mouseRelease(lv, start.x, start.y + rowH * 1.2)
-            waitForRendering(lv)
+            // press on the first row and drag to the middle of the second row
+            dragRowVertically(lv, first, rowH * 1.2)
 
             tryVerify(() => !!mock.sectionModule.lastReorder, 3000,
                       "drag one row down must trigger a reorder")
@@ -447,15 +460,7 @@ Item {
             const secondId = second.chatId
             const rowH = second.height
 
-            const start = second.mapToItem(lv, second.width / 2, second.height / 2)
-            mousePress(lv, start.x, start.y)
-            for (let step = 1; step <= 8; ++step)
-                mouseMove(lv, start.x, start.y - (rowH * 1.2 * step) / 8, 20)
-            // a frame between the last move and the release lets the drop
-            // target process the final position before the drop lands
-            waitForRendering(lv)
-            mouseRelease(lv, start.x, start.y - rowH * 1.2)
-            waitForRendering(lv)
+            dragRowVertically(lv, second, -rowH * 1.2)
 
             tryVerify(() => !!mock.sectionModule.lastReorder, 3000,
                       "drag one row up must trigger a reorder")
