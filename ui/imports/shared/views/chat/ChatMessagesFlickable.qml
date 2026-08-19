@@ -121,8 +121,39 @@ Flickable {
         d.releaseAnchor()
         d.seekingNewest = false
         d.stickToBottom = false
+        d.pendingRowOffset = NaN
         d.pendingRow = row
         d.restorePosition()
+    }
+
+    /*!
+       Place the viewport top \a offset px below the top of a window row —
+       the restore primitive of the window record. Applied as soon as the row
+       is laid out, then handed over to the anchor so later relayouts keep
+       the row in place.
+    */
+    function positionAtRowOffset(row, offset) {
+        d.releaseAnchor()
+        d.seekingNewest = false
+        d.stickToBottom = false
+        d.pendingRowOffset = offset
+        d.pendingRow = row
+        d.restorePosition()
+    }
+
+    /*!
+       The viewport top's offset below the top of a window row, or NaN while
+       the row holds no measurable geometry. Counterpart of
+       \c positionAtRowOffset.
+    */
+    function viewportOffsetToRow(row) {
+        // no visibility requirement: measured geometry outlives an
+        // ancestor's hide until the next layout polish, and capturing on a
+        // hide is this function's main use
+        const item = repeater.itemAt(row)
+        if (!item || item.height <= 0)
+            return NaN
+        return root.contentY - (d.freshContentTop() + item.y)
     }
 
     /*!
@@ -159,6 +190,10 @@ Flickable {
         // Row positionAtRow() was asked to show, kept until the user scrolls.
         property int pendingRow: -1
 
+        // Offset positionAtRowOffset() was asked to keep below the pending
+        // row's top; NaN means the pending row is centered instead.
+        property real pendingRowOffset: NaN
+
         readonly property bool placeholderUpVisible:
             topPlaceholder.active && content.y + topPlaceholder.y + topPlaceholder.height
                                      > root.contentY - root.prefetchMargin
@@ -170,6 +205,11 @@ Flickable {
         // onHeightChanged handler the binding still holds the pre-change value.
         function freshBottomY() {
             return Math.max(0, content.height - root.height)
+        }
+
+        // Same for content.y — its binding lags a height change too.
+        function freshContentTop() {
+            return Math.max(0, root.height - content.height)
         }
 
         function clampContentY(y) {
@@ -273,16 +313,31 @@ Flickable {
                 // visible + height > 0 keeps a staged or pre-polish item from
                 // being positioned on stale geometry
                 if (target && target.visible && target.height > 0) {
-                    d.apply(d.clampContentY(
-                                content.y + target.y + target.height / 2 - root.height / 2))
+                    const centered = isNaN(d.pendingRowOffset)
+                    const contentTop = d.freshContentTop()
+                    const wanted = centered
+                                 ? contentTop + target.y + target.height / 2 - root.height / 2
+                                 : contentTop + target.y + d.pendingRowOffset
+                    const applied = d.clampContentY(wanted)
+                    d.apply(applied)
+                    if (!centered && applied !== wanted) {
+                        // reveal-frame geometry: the layout has not absorbed
+                        // the freshly revealed rows yet — hold the request
+                        // and retry on the next relayout. Content that stays
+                        // genuinely too short keeps the view at the clamp,
+                        // which is the bottom fallback.
+                        return
+                    }
                     // hand over to the anchor: later content changes hold this
                     // row in place without re-firing the request — the window
                     // may slide meanwhile, making the row a different message
                     const row = d.pendingRow
                     d.anchorItem = target
-                    d.anchorOffset = content.y + target.y - root.contentY
+                    d.anchorOffset = contentTop + target.y - root.contentY
                     d.pendingRow = -1
-                    root.rowPositioned(row)
+                    d.pendingRowOffset = NaN
+                    if (centered)
+                        root.rowPositioned(row)
                     return
                 }
             }
