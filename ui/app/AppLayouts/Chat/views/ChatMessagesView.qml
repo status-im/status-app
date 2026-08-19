@@ -10,6 +10,7 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Popups.Dialog
 
+import QtModelsToolkit
 import SortFilterProxyModel 0.2
 
 import StatusQ.Core.Utils as SQUtils
@@ -182,7 +183,7 @@ Item {
             if (!d.admittingStaged)
                 return
             for (let i = first; i <= last; ++i) {
-                const id = SQUtils.ModelUtils.get(messagesWindow, i, "id")
+                const id = SQUtils.ModelUtils.get(messagesWindow, i, "messageId")
                 if (id !== undefined && id !== null)
                     d.stagedIds.add(id)
             }
@@ -196,7 +197,7 @@ Item {
                 return
             let dropped = false
             for (let i = first; i <= last; ++i) {
-                const id = SQUtils.ModelUtils.get(messagesWindow, i, "id")
+                const id = SQUtils.ModelUtils.get(messagesWindow, i, "messageId")
                 if (id !== undefined && id !== null && d.stagedIds.delete(id))
                     dropped = true
             }
@@ -637,14 +638,48 @@ Item {
         model: SortFilterProxyModel {
             id: messagesWindow
 
-            sourceModel: messageStore.loading ? null : messageStore.messagesModel
-            onSourceModelChanged: {
-                d.resetWindow()
-                d.updateHistoryExhausted()
-                // whatever the paging timer did against the detached window,
-                // the view opens on the newest message
-                if (sourceModel)
-                    Qt.callLater(chatLogView.positionAtNewest)
+            // Roles renamed to MessageView's property names, so pointing a
+            // pooled MessageView at a row is a plain per-role bulk assign
+            // (RowBinder) with no per-role glue.
+            sourceModel: RolesRenamingModel {
+                sourceModel: messageStore.loading ? null : messageStore.messagesModel
+                onSourceModelChanged: {
+                    d.resetWindow()
+                    d.updateHistoryExhausted()
+                    // whatever the paging timer did against the detached
+                    // window, the view opens on the newest message
+                    if (sourceModel)
+                        Qt.callLater(chatLogView.positionAtNewest)
+                }
+
+                mapping: [
+                    RoleRename { from: "id"; to: "messageId" },
+                    RoleRename { from: "timestamp"; to: "messageTimestamp" },
+                    RoleRename { from: "outgoingStatus"; to: "messageOutgoingStatus" },
+                    RoleRename { from: "contentType"; to: "messageContentType" },
+                    RoleRename { from: "pinned"; to: "pinnedMessage" },
+                    RoleRename { from: "pinnedBy"; to: "messagePinnedBy" },
+                    RoleRename { from: "reactions"; to: "reactionsModel" },
+                    RoleRename { from: "editMode"; to: "editModeOn" },
+                    RoleRename { from: "mentioned"; to: "hasMention" },
+                    RoleRename { from: "senderEnsVerified"; to: "senderIsEnsVerified" },
+                    RoleRename { from: "transactionParameters"; to: "transactionParams" },
+                    RoleRename { from: "quotedMessageParsedText"; to: "quotedMessageText" },
+                    RoleRename { from: "quotedMessageText"; to: "quotedMessageUnparsedText" },
+                    RoleRename { from: "quotedMessageAuthorName"; to: "quotedMessageAuthorDetailsName" },
+                    RoleRename { from: "quotedMessageAuthorDisplayName"; to: "quotedMessageAuthorDetailsDisplayName" },
+                    RoleRename { from: "quotedMessageAuthorThumbnailImage"; to: "quotedMessageAuthorDetailsThumbnailImage" },
+                    RoleRename { from: "quotedMessageAuthorEnsVerified"; to: "quotedMessageAuthorDetailsEnsVerified" },
+                    RoleRename { from: "quotedMessageAuthorIsContact"; to: "quotedMessageAuthorDetailsIsContact" },
+                    RoleRename { from: "albumImagesCount"; to: "albumCount" },
+                    RoleRename { from: "prevMsgIndex"; to: "prevMessageIndex" },
+                    RoleRename { from: "prevMsgTimestamp"; to: "prevMessageTimestamp" },
+                    RoleRename { from: "prevMsgSenderId"; to: "prevMessageSenderId" },
+                    RoleRename { from: "prevMsgContentType"; to: "prevMessageContentType" },
+                    RoleRename { from: "prevMsgDeleted"; to: "prevMessageDeleted" },
+                    RoleRename { from: "nextMsgIndex"; to: "nextMessageIndex" },
+                    RoleRename { from: "nextMsgTimestamp"; to: "nextMessageTimestamp" }
+                ]
             }
 
             filters: IndexFilter {
@@ -705,7 +740,7 @@ Item {
             property bool revealed: false
             visible: revealed && contentReady
 
-            readonly property string messageId: model.id
+            readonly property string messageId: model.messageId
 
             function startMessageFoundAnimation() {
                 if (item)
@@ -744,7 +779,7 @@ Item {
                 usersModel: root.usersModel
                 // covers the message body and the quoted reply, whose mentions
                 // also render through this map
-                mentionsMap: mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageText)
+                mentionsMap: mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageUnparsedText)
 
                 isChatBlocked: root.isChatBlocked
                 joined: root.joined
@@ -757,14 +792,14 @@ Item {
                 extraLeftPadding: root.extraLeftPadding
 
                 chatId: root.chatId
-                messageId: model.id
+                messageId: model.messageId
                 communityId: model.communityId
                 responseToMessageWithId: model.responseToMessageWithId
                 senderId: model.senderId
                 senderDisplayName: model.senderDisplayName
                 usesDefaultName: model.usesDefaultName
                 senderOptionalName: model.senderOptionalName
-                senderIsEnsVerified: model.senderEnsVerified
+                senderIsEnsVerified: model.senderIsEnsVerified
                 senderIcon: model.senderIcon
                 senderIsAdded: model.senderIsAdded
                 senderTrustStatus: model.senderTrustStatus
@@ -773,19 +808,19 @@ Item {
                 messageText: model.messageText
                 unparsedText: model.unparsedText
                 messageImage: model.messageImage
-                album: model.albumMessageImages.split(" ")
-                albumCount: model.albumImagesCount
-                messageTimestamp: model.timestamp
-                messageOutgoingStatus: model.outgoingStatus
+                albumMessageImages: model.albumMessageImages
+                albumCount: model.albumCount
+                messageTimestamp: model.messageTimestamp
+                messageOutgoingStatus: model.messageOutgoingStatus
                 resendError: model.resendError
-                messageContentType: model.contentType
-                pinnedMessage: model.pinned
-                messagePinnedBy: model.pinnedBy
-                reactionsModel: model.reactions
+                messageContentType: model.messageContentType
+                pinnedMessage: model.pinnedMessage
+                messagePinnedBy: model.messagePinnedBy
+                reactionsModel: model.reactionsModel
                 sticker: model.sticker
                 stickerPack: model.stickerPack
-                editModeOn: model.editMode
-                onEditModeOnChanged: root.editModeChanged(editModeOn, model.id)
+                editModeOn: model.editModeOn
+                onEditModeOnChanged: root.editModeChanged(editModeOn, model.messageId)
                 isEdited: model.isEdited
                 deleted: model.deleted
                 deletedBy: model.deletedBy
@@ -795,19 +830,19 @@ Item {
                 links: model.links
                 paymentRequestModel: model.paymentRequestModel
                 messageAttachments: model.messageAttachments
-                transactionParams: model.transactionParameters
-                hasMention: model.mentioned
-                quotedMessageText: model.quotedMessageParsedText
-                quotedMessageUnparsedText: model.quotedMessageText
+                transactionParams: model.transactionParams
+                hasMention: model.hasMention
+                quotedMessageText: model.quotedMessageText
+                quotedMessageUnparsedText: model.quotedMessageUnparsedText
                 quotedMessageFrom: model.quotedMessageFrom
                 quotedMessageContentType: model.quotedMessageContentType
                 quotedMessageDeleted: model.quotedMessageDeleted
-                quotedMessageAuthorDetailsName: model.quotedMessageAuthorName
-                quotedMessageAuthorDetailsDisplayName: model.quotedMessageAuthorDisplayName
-                quotedMessageAuthorDetailsThumbnailImage: model.quotedMessageAuthorThumbnailImage
-                quotedMessageAuthorDetailsEnsVerified: model.quotedMessageAuthorEnsVerified
-                quotedMessageAuthorDetailsIsContact: model.quotedMessageAuthorIsContact
-                quotedMessageAlbumMessageImages: model.quotedMessageAlbumMessageImages.split(" ")
+                quotedMessageAuthorDetailsName: model.quotedMessageAuthorDetailsName
+                quotedMessageAuthorDetailsDisplayName: model.quotedMessageAuthorDetailsDisplayName
+                quotedMessageAuthorDetailsThumbnailImage: model.quotedMessageAuthorDetailsThumbnailImage
+                quotedMessageAuthorDetailsEnsVerified: model.quotedMessageAuthorDetailsEnsVerified
+                quotedMessageAuthorDetailsIsContact: model.quotedMessageAuthorDetailsIsContact
+                quotedMessageAlbumMessageImages: model.quotedMessageAlbumMessageImages
                 quotedMessageAlbumImagesCount: model.quotedMessageAlbumImagesCount
                 bridgeName: model.bridgeName
 
@@ -819,13 +854,13 @@ Item {
                  // Also one important thing here is that messages are set in descending order
                  // in terms of `timestamp` of a message, that means a message with the most
                  // recent time is added at index 0.
-                prevMessageIndex: model.prevMsgIndex
-                prevMessageTimestamp: model.prevMsgTimestamp
-                prevMessageSenderId: model.prevMsgSenderId
-                prevMessageContentType: model.prevMsgContentType
-                prevMessageDeleted: model.prevMsgDeleted
-                nextMessageIndex: model.nextMsgIndex
-                nextMessageTimestamp: model.nextMsgTimestamp
+                prevMessageIndex: model.prevMessageIndex
+                prevMessageTimestamp: model.prevMessageTimestamp
+                prevMessageSenderId: model.prevMessageSenderId
+                prevMessageContentType: model.prevMessageContentType
+                prevMessageDeleted: model.prevMessageDeleted
+                nextMessageIndex: model.nextMessageIndex
+                nextMessageTimestamp: model.nextMessageTimestamp
 
                 // Unfurling related data:
                 gifUnfurlingEnabled: root.gifUnfurlingEnabled
@@ -846,8 +881,8 @@ Item {
                 }
 
                 onVisibleChanged: {
-                    if(!visible && model.editMode)
-                        messageStore.setEditModeOff(model.id)
+                    if(!visible && model.editModeOn)
+                        messageStore.setEditModeOff(model.messageId)
                 }
 
                 onEmojiReactionToggled: (messageId, hexcode) => {
