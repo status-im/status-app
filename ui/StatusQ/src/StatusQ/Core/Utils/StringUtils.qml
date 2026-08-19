@@ -39,7 +39,7 @@ QtObject {
     // kaomoji, returning any other text unchanged.
     function expandAsciiEmoticonShortcuts(text) {
         if (text.startsWith("/shrug"))
-            return text.replace("/shrug", "") + " ¯\\\\\\_(ツ)\\_/¯"
+            return text.replace("/shrug", "") + " ¯\\_(ツ)_/¯"
 
         if (text.startsWith("/tableflip"))
             return text.replace("/tableflip", "") + " (╯°□°）╯︵ ┻━┻"
