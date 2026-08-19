@@ -714,22 +714,6 @@
         <translation type="unfinished">Cerrar</translation>
     </message>
     <message>
-        <source>Removing saved address</source>
-        <translation>Eliminando dirección guardada</translation>
-    </message>
-    <message>
-        <source>The account you&apos;re trying to add &lt;b&gt;%1&lt;/b&gt; is already saved under the name &lt;b&gt;%2&lt;/b&gt;.&lt;br/&gt;&lt;br/&gt;Do you want to remove it from saved addresses in favour of adding it to the Wallet?</source>
-        <translation>La cuenta que intentas agregar &lt;b&gt;%1&lt;/b&gt; ya está guardada con el nombre &lt;b&gt;%2&lt;/b&gt;.&lt;br/&gt;&lt;br/&gt;¿Quieres eliminarla de las direcciones guardadas para agregarla a la Billetera?</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation>Sí</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>No</translation>
-    </message>
-    <message>
         <source>Save changes</source>
         <translation>Guardar cambios</translation>
     </message>
@@ -1263,10 +1247,6 @@
             <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
-    </message>
-    <message>
-        <source>Old logs</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Clearing...</source>
@@ -3409,10 +3389,6 @@ no compatible</translation>
         <source>Settings</source>
         <comment>Go to Settings</comment>
         <translation>Ajustes</translation>
-    </message>
-    <message>
-        <source>Loading collectible...</source>
-        <translation>Cargando coleccionable...</translation>
     </message>
     <message>
         <source>Sort by:</source>
@@ -14784,6 +14760,10 @@ al cargar</translation>
         <source>Checking collectibles ownership…</source>
         <translation>Verificación de la propiedad de los coleccionables...</translation>
     </message>
+    <message>
+        <source>Checking collectibles ownership…</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>RootStore</name>
@@ -17033,10 +17013,6 @@ al cargar</translation>
     </message>
     <message>
         <source>Confirm swap + bridge</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Confirm swap</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
