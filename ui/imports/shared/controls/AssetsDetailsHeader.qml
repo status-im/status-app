@@ -114,6 +114,8 @@ Control {
                     Layout.alignment: Qt.AlignRight
                     model: root.networksModel
                     delegate: InformationTag {
+                        objectName: "assetsDetailsHeaderChainTag_" + model.chainId
+
                         readonly property double aggregatedbalance: balancesAggregator.value/(10 ** root.decimals)
                         SortFilterProxyModel {
                             id: filteredBalances

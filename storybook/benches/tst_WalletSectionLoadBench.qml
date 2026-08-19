@@ -180,7 +180,11 @@ Item {
             d.section = section
             const layout = section.item
             d.accountsListLoaders = d.asyncLoadersIn(layout.leftPanel)
+            // The center panel also holds the two deferred detail-view loaders
+            // (issues/0002), so the main view is addressed by objectName rather
+            // than by being the panel's only asynchronous Loader.
             d.mainViewLoaders = d.asyncLoadersIn(layout.centerPanel)
+                                 .filter(loader => loader.objectName === "walletMainViewLoader")
 
             d.accountsListLoader = d.accountsListLoaders.length === 1
                                  ? d.accountsListLoaders[0] : null
@@ -314,13 +318,13 @@ Item {
         readonly property int expectedAccountDelegates: 8
         readonly property int expectedAssetDelegates: 0
         readonly property int expectedLoadingAssetDelegates: 0
-        readonly property int expectedObjectsTotal: 4602
+        readonly property int expectedObjectsTotal: 3344
         readonly property int objectsTotalTolerance: 0
 
         // The settled counts are the ones that see the whole section: the
         // layout pass after the loaders report Ready more than doubles the
         // object count and is where every assets row is built.
-        readonly property int expectedObjectsSettled: 9569
+        readonly property int expectedObjectsSettled: 8297
         readonly property int expectedAssetDelegatesSettled: 26
 
         // Ratchets on today's measured counts (warm 7-10, cold 10-11 over ten
