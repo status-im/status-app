@@ -54,6 +54,7 @@ GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 	storybook-build \
 	run-storybook \
 	run-storybook-tests \
+	run-storybook-bench \
 	update \
 	mobile-run \
 	mobile-build \
@@ -481,7 +482,11 @@ run-storybook: storybook-build
 
 run-storybook-tests: storybook-build
 	echo -e "\033[92mRunning:\033[39m Storybook Tests"
-	ctest -V --test-dir $(STORYBOOK_BUILD_PATH) -E PagesValidator
+	ctest -V --test-dir $(STORYBOOK_BUILD_PATH) -E "PagesValidator|WalletSectionLoadBench"
+
+run-storybook-bench: storybook-build
+	echo -e "\033[92mRunning:\033[39m Wallet section load bench"
+	ctest -V --test-dir $(STORYBOOK_BUILD_PATH) -R WalletSectionLoadBench ${ARGS}
 
 # repeat because of https://bugreports.qt.io/browse/QTBUG-92236 (Qt < 5.15.4)
 run-storybook-pages-validator: storybook-build

@@ -67,6 +67,8 @@ file(GLOB_RECURSE STORYBOOK_QML_FILES "stubs/*.qml" "mocks/*.qml" "pages/*.qml"
 
 file(GLOB_RECURSE TEST_QML_FILES "qmlTests/*.qml")
 
+file(GLOB_RECURSE BENCH_QML_FILES "benches/*.qml")
+
 qt_add_executable(
   ${PROJECT_NAME} MANUAL_FINALIZATION
   main.cpp
@@ -123,7 +125,8 @@ add_test(NAME PagesValidator COMMAND PagesValidator)
 
 add_executable(QmlTests
     qmlTests/main.cpp
-    ${TEST_QML_FILES})
+    ${TEST_QML_FILES}
+    ${BENCH_QML_FILES})
 
 target_compile_definitions(QmlTests PRIVATE
         QML_IMPORT_ROOT="${CMAKE_CURRENT_LIST_DIR}"
@@ -133,6 +136,11 @@ target_link_libraries(QmlTests PRIVATE
   Qt::QuickTest Qt::Qml Qt::Core Qt::Gui Qt::Quick Qt::QuickControls2
   StatusQ SortFilterProxyModel QmlStorybookLib StorybookMocks)
 add_test(NAME QmlTests COMMAND QmlTests -platform offscreen)
+
+# The load benches live outside QUICK_TEST_SOURCE_DIR so the functional suite
+# does not pay for a whale profile, nor append to their baseline TSVs.
+add_test(NAME WalletSectionLoadBench COMMAND QmlTests -platform offscreen
+    -input ${CMAKE_CURRENT_SOURCE_DIR}/benches/tst_WalletSectionLoadBench.qml)
 
 set(OVERRIDE_STORE_PATHS_WITH_STUBS_IN_QTCREATOR OFF CACHE BOOL
   "Resolve store components as stubs instead of actual ones in QtCreator")

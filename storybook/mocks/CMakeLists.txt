@@ -4,6 +4,7 @@ add_library(StorybookMocks STATIC
     generatedlistmodel.h generatedlistmodel.cpp
     mockimageprovider.h mockimageprovider.cpp
     walletmockprofile.h walletmockprofile.cpp
+    walletloadbenchprobe.h walletloadbenchprobe.cpp
     registration.h registration.cpp
 )
 
@@ -12,3 +13,7 @@ set_target_properties(StorybookMocks PROPERTIES AUTOMOC ON)
 target_include_directories(StorybookMocks PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(StorybookMocks PUBLIC Qt::Core Qt::Gui Qt::Qml Qt::Quick)
+
+# The load bench appends its baseline TSV into the checked-in storybook tree.
+get_filename_component(STORYBOOK_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR} DIRECTORY)
+target_compile_definitions(StorybookMocks PRIVATE STORYBOOK_SOURCE_DIR="${STORYBOOK_ROOT_DIR}")

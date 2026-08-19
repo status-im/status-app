@@ -2,6 +2,7 @@
 
 #include "generatedlistmodel.h"
 #include "mockimageprovider.h"
+#include "walletloadbenchprobe.h"
 #include "walletmockprofile.h"
 
 #include <QDebug>
@@ -27,6 +28,7 @@ void registerStorybookMockTypes()
     registered = true;
 
     qmlRegisterType<WalletMockProfile>(moduleUri, 1, 0, "WalletMockProfile");
+    qmlRegisterType<WalletLoadBenchProbe>(moduleUri, 1, 0, "WalletLoadBenchProbe");
     qmlRegisterUncreatableType<GeneratedListModel>(
         moduleUri, 1, 0, "GeneratedListModel",
         u"GeneratedListModel instances are produced by WalletMockProfile"_s);
