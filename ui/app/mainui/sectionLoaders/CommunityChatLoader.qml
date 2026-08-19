@@ -1,6 +1,7 @@
 import QtQml
 import QtQuick
 
+import StatusQ 0.1
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Backpressure
@@ -48,6 +49,7 @@ Loader {
     required property HandlersManagerLoader popupHandler
     required property Loader emojiPopupLoader
     required property Loader stickersPopupLoader
+    property DelegatePool rowPool: null
 
     // Per-community inputs
     required property string sectionId
@@ -327,6 +329,7 @@ Loader {
             myPublicKey:                    Qt.binding(() => root.contactsStore.myPublicKey),
             navToMsgDetails:                Qt.binding(() => root.rootStore.navToMsgDetails),
             leftPanelWidthOverride:         Qt.binding(() => root.leftPanelWidthOverride),
+            rowPool:                        Qt.binding(() => root.rowPool),
         })
     }
 
