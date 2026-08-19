@@ -314,13 +314,13 @@ Item {
         readonly property int expectedAccountDelegates: 8
         readonly property int expectedAssetDelegates: 0
         readonly property int expectedLoadingAssetDelegates: 0
-        readonly property int expectedObjectsTotal: 4284
+        readonly property int expectedObjectsTotal: 4220
         readonly property int objectsTotalTolerance: 0
 
         // The settled counts are the ones that see the whole section: the
         // layout pass after the loaders report Ready more than doubles the
         // object count and is where every assets row is built.
-        readonly property int expectedObjectsSettled: 8563
+        readonly property int expectedObjectsSettled: 8491
         readonly property int expectedAssetDelegatesSettled: 26
 
         // Ratchets on today's measured counts (warm 7-10, cold 10-11 over ten
