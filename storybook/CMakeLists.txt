@@ -141,6 +141,8 @@ add_test(NAME QmlTests COMMAND QmlTests -platform offscreen)
 # does not pay for a whale profile, nor append to their baseline TSVs.
 add_test(NAME WalletSectionLoadBench COMMAND QmlTests -platform offscreen
     -input ${CMAKE_CURRENT_SOURCE_DIR}/benches/tst_WalletSectionLoadBench.qml)
+add_test(NAME AssetDetailLoadBench COMMAND QmlTests -platform offscreen
+    -input ${CMAKE_CURRENT_SOURCE_DIR}/benches/tst_AssetDetailLoadBench.qml)
 
 set(OVERRIDE_STORE_PATHS_WITH_STUBS_IN_QTCREATOR OFF CACHE BOOL
   "Resolve store components as stubs instead of actual ones in QtCreator")
