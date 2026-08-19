@@ -26,6 +26,10 @@ class KeycardManagementPopup(QObject):
         self.tab_18_words_button = Button(keycard_names.keycardManagementSeedPhrase18Button)
         self.tab_24_words_button = Button(keycard_names.keycardManagementSeedPhrase24Button)
         self.seed_phrase_input = TextEdit(keycard_names.keycardManagementSeedPhraseInputField)
+        self.unknown_pin_button = Button(keycard_names.keycardManagementUnknownPinButton)
+        self.done_button = Button(keycard_names.keycardManagementDoneButton)
+        self.key_pair_name_input = QObject(keycard_names.keycardKeyPairNameInput)
+        self.account_name_input = QObject(keycard_names.keycardManageAccountNameInput)
 
     @allure.step('Enter Keycard PIN {pin}')
     def enter_keycard_pin(self, pin: str, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
@@ -40,8 +44,16 @@ class KeycardManagementPopup(QObject):
         self.wait_until_hidden(timeout_msec)
         return self
 
+    @allure.step('Skip PIN and wait until popup closes')
+    def skip_pin_and_close(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+        self.unknown_pin_button.wait_until_appears(timeout_msec)
+        self.unknown_pin_button.click()
+        self.wait_until_hidden(timeout_msec)
+        return self
+
     @allure.step('Enter new PIN {pin}')
     def enter_new_pin_and_confirm(self, pin: str, expect_reveal_seed: bool = True):
+        self.pin_input.wait_until_appears()
         self.pin_input.object.setPin(pin)
         self.pin_input.object.setPin(pin)
         if expect_reveal_seed:
@@ -98,6 +110,27 @@ class KeycardManagementPopup(QObject):
             time.sleep(0.2)
 
         self.next_button.click()
+        return self
+
+    def _fill_and_next(self, field: QObject, name: str):
+        field.wait_until_appears()
+        field.set_text_property(name)
+        self.next_button.click()
+        return self
+
+    @allure.step('Enter key pair name {name}')
+    def enter_key_pair_name(self, name: str):
+        return self._fill_and_next(self.key_pair_name_input, name)
+
+    @allure.step('Enter account name {name}')
+    def enter_account_name(self, name: str):
+        return self._fill_and_next(self.account_name_input, name)
+
+    @allure.step('Close popup after successful import')
+    def close_after_success(self, timeout_msec: int):
+        self.done_button.wait_until_appears(timeout_msec)
+        self.done_button.click()
+        self.wait_until_hidden(timeout_msec)
         return self
 
     @allure.step('Continue after key pair imported to Keycard')

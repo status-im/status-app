@@ -31,6 +31,9 @@ keycardSettingsDetailsTitle = {"container": mainWindow_KeycardView,
                                "visible": True}
 keycardSettingsKeyPairInfo = {"container": mainWindow_KeycardView, "objectName": "keyPairItemInfo",
                               "type": "StatusListItem", "visible": True}
+settingsKeycardDetailsImportSeedPhrase = {"container": mainWindow_KeycardView,
+                                          "objectName": "keycardDetailsImportSeedPhrase",
+                                          "type": "StatusListItem", "visible": True}
 
 # Keycard management popup
 
@@ -49,18 +52,13 @@ keycardManagementSeedPhraseWord = {
     "type": "StatusSeedPhraseInput",
     "visible": True,
 }
-keycardManagementContinueButton = {"container": statusDesktop_mainWindow_overlay,
-                                   "objectName": "keycardManagementContinueButton", "type": "StatusButton",
-                                   "visible": True}
-keycardManagementSeedPhraseSwitchBar = {"container": statusDesktop_mainWindow_overlay,
-                                        "objectName": "enterSeedPhraseSwitchBar",
-                                        "type": "StatusSeedPhraseTabBar", "visible": True}
-keycardManagementSeedPhrase12Button = {"container": keycardManagementSeedPhraseSwitchBar,
-                                       "objectName": "12SeedButton", "type": "StatusSwitchTabButton"}
-keycardManagementSeedPhrase18Button = {"container": keycardManagementSeedPhraseSwitchBar,
-                                       "objectName": "18SeedButton", "type": "StatusSwitchTabButton"}
-keycardManagementSeedPhrase24Button = {"container": keycardManagementSeedPhraseSwitchBar,
-                                       "objectName": "24SeedButton", "type": "StatusSwitchTabButton"}
-keycardManagementSeedPhraseInputField = {"container": statusDesktop_mainWindow_overlay,
-                                         "objectName": "enterSeedPhraseInputField", "type": "TextField",
-                                         "visible": True}
+keycardManagementContinueButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "keycardManagementContinueButton", "type": "StatusButton", "visible": True}
+keycardManagementSeedPhraseSwitchBar = {"container": statusDesktop_mainWindow_overlay, "objectName": "enterSeedPhraseSwitchBar", "type": "StatusSeedPhraseTabBar", "visible": True}
+keycardManagementSeedPhrase12Button = {"container": keycardManagementSeedPhraseSwitchBar, "objectName": "12SeedButton", "type": "StatusSwitchTabButton"}
+keycardManagementSeedPhrase18Button = {"container": keycardManagementSeedPhraseSwitchBar, "objectName": "18SeedButton", "type": "StatusSwitchTabButton"}
+keycardManagementSeedPhrase24Button = {"container": keycardManagementSeedPhraseSwitchBar, "objectName": "24SeedButton", "type": "StatusSwitchTabButton"}
+keycardManagementSeedPhraseInputField = {"container": statusDesktop_mainWindow_overlay, "objectName": "enterSeedPhraseInputField", "type": "TextField", "visible": True}
+keycardManagementUnknownPinButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "keycardManagementUnknownPinButton", "type": "StatusButton", "visible": True}
+keycardManagementDoneButton = {"container": keycardManagementPopup, "objectName": "keycardManagementDoneButton", "type": "StatusFlatButton", "visible": True}
+keycardKeyPairNameInput = {"container": statusDesktop_mainWindow_overlay, "objectName": "keycardKeyPairNameInput", "type": "StatusInput", "visible": True}
+keycardManageAccountNameInput = {"container": statusDesktop_mainWindow_overlay, "objectName": "keycardManageAccountNameInput", "type": "StatusInput","visible": True}
