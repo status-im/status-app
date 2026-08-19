@@ -1832,6 +1832,10 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
         <translation>Ce canal n’existe plus</translation>
     </message>
     <message>
+        <source>Send the Status Team bot a contact request to get useful Status tips, important updates, and share your feedback, ideas, or issues directly with the Status team.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Invite People</source>
         <translation>Inviter des personnes</translation>
     </message>

@@ -21,12 +21,15 @@ CommonContactDialog {
     property string labelText: qsTr("Why should they accept your contact request?")
     property string challengeText: qsTr("Write a short message telling them who you are...")
     property string buttonText: qsTr("Send contact request")
+    property string defaultMessage: ""
 
     signal accepted(string message)
 
     title: qsTr("Send contact request")
 
     onAboutToShow: {
+        if (root.defaultMessage)
+            messageInput.text = root.defaultMessage
         messageInput.input.edit.forceActiveFocus()
 
         // (request) update from mailserver

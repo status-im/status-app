@@ -357,9 +357,13 @@ QtObject {
         }, cb)
     }
 
-    function openContactRequestPopup(publicKey, cb) {
+    function openContactRequestPopup(publicKey, cb, defaultMessage = "") {
         const contactEntry = getContactModelEntry(publicKey)
-        const properties = { publicKey, contactDetails: contactEntry.contactDetails }
+        const properties = {
+            publicKey,
+            contactDetails: contactEntry.contactDetails,
+            defaultMessage: defaultMessage || ""
+        }
 
         openPopup(sendContactRequestPopupComponent, properties, cb)
     }
