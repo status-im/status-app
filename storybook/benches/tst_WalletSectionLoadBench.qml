@@ -316,22 +316,32 @@ Item {
             printStaircase()
             recordRow()
 
-            compare(d.accountDelegates, expectedAccountDelegates,
-                    "instantiation count `account_delegates` changed")
-            compare(d.assetDelegates, expectedAssetDelegates,
-                    "instantiation count `asset_delegates` changed")
-            compare(d.loadingAssetDelegates, expectedLoadingAssetDelegates,
-                    "instantiation count `loading_asset_delegates` changed")
-            verify(Math.abs(d.objectsTotal - expectedObjectsTotal) <= objectsTotalTolerance,
-                   "instantiation count `objects_total` changed: %1, expected %2 +/- %3"
-                   .arg(d.objectsTotal).arg(expectedObjectsTotal).arg(objectsTotalTolerance))
-            compare(d.objectsSettled, expectedObjectsSettled,
-                    "instantiation count `objects_settled` changed")
-            compare(d.assetDelegatesSettled, expectedAssetDelegatesSettled,
-                    "instantiation count `asset_delegates_settled` changed")
+            countGate("account_delegates", d.accountDelegates, expectedAccountDelegates)
+            countGate("asset_delegates", d.assetDelegates, expectedAssetDelegates)
+            countGate("loading_asset_delegates", d.loadingAssetDelegates,
+                      expectedLoadingAssetDelegates)
+            countGate("objects_total", d.objectsTotal, expectedObjectsTotal)
+            countGate("objects_settled", d.objectsSettled, expectedObjectsSettled)
+            countGate("asset_delegates_settled", d.assetDelegatesSettled,
+                      expectedAssetDelegatesSettled)
+
             verify(probe.stallCount <= maxStallsOver4ms,
-                   "stall probe: `stalls_over_4ms` is %1, over the allowed %2 (host ms, 1ms probe)"
-                   .arg(probe.stallCount).arg(maxStallsOver4ms))
+                   "GATE `stalls_over_4ms` = %1, baseline allows %2 (%3) - host ms, 1ms "
+                   .arg(probe.stallCount).arg(maxStallsOver4ms).arg(signed(probe.stallCount - maxStallsOver4ms))
+                   + "probe, window is the whole load up to the settle point")
+        }
+
+        // One line carrying metric, both numbers and the delta: a gate whose
+        // failure has to be reconstructed from the log gets rerun until it passes.
+        function countGate(metric, actual, expected) {
+            verify(actual === expected,
+                   "GATE `%1` = %2, baseline %3 (%4) - the wallet section instantiates a "
+                   .arg(metric).arg(actual).arg(expected).arg(signed(actual - expected))
+                   + "different set of objects than it did at baseline")
+        }
+
+        function signed(delta) {
+            return delta > 0 ? "+" + delta : String(delta)
         }
 
         function printStaircase() {
