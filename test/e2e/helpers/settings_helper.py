@@ -3,11 +3,7 @@ Helper functions for common settings operations.
 Reduces code duplication across test files.
 """
 import logging
-import time
 import allure
-from gui.elements.button import Button
-from gui.elements.object import QObject
-from gui.objects_map import keycard_names, names
 from gui.screens.settings_wallet import NetworkWalletSettings
 
 LOG = logging.getLogger(__name__)
@@ -81,13 +77,3 @@ def open_network_settings(main_window):
     
     # Navigate to Networks screen
     return main_window.left_panel.open_settings().left_panel.open_wallet_settings().open_networks()
-
-
-@allure.step('Skip Keycard error popup')
-def skip_pcsc_error_popup_if_visible():
-    time.sleep(0.1)
-
-    popup = QObject(keycard_names.keycardManagementPopup)
-    if popup.is_visible:
-        Button(names.headerCloseButton_StatusFlatRoundButton).click()
-        time.sleep(0.1)

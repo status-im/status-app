@@ -17,6 +17,7 @@ class KeycardSettingsView(QObject):
         self._read_keycard_button = Button(keycard_names.settings_Keycard_ReadKeycardButton)
         self._details_title = TextLabel(keycard_names.keycardSettingsDetailsTitle)
         self._key_pair_info = QObject(keycard_names.keycardSettingsKeyPairInfo)
+        self._import_seed_phrase_item = Button(keycard_names.settingsKeycardDetailsImportSeedPhrase)
 
     @property
     def is_read_keycard_button_visible(self) -> bool:
@@ -40,15 +41,26 @@ class KeycardSettingsView(QObject):
         self._read_keycard_button.click()
         return KeycardManagementPopup().wait_until_appears()
 
-    @allure.step('Wait until Keycard profile details appear')
-    def wait_until_details_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+    @allure.step('Wait until Keycard details appear')
+    def wait_until_details_appears(
+            self,
+            expected_title: str = constants.KEYCARD_PROFILE_DETAILS_TITLE,
+            timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+    ):
         assert driver.waitFor(
-            lambda: self.details_title == constants.KEYCARD_PROFILE_DETAILS_TITLE,
+            lambda: self.details_title == expected_title,
             timeout_msec,
-        ), f'Expected Keycard profile details title, got {self.details_title!r}'
+        ), f'Expected Keycard details title {expected_title!r}, got {self.details_title!r}'
+        if expected_title == constants.KEYCARD_EMPTY_TITLE:
+            return self
         self._key_pair_info.wait_until_appears(timeout_msec)
         assert driver.waitFor(
             lambda: constants.KEYCARD_ON_KEYCARD_LABEL in self.key_pair_location,
             timeout_msec,
         ), f'Expected On Keycard label, got {self.key_pair_location!r}'
         return self
+
+    @allure.step('Import a key pair from recovery phrase')
+    def import_from_recovery_phrase(self) -> KeycardManagementPopup:
+        self._import_seed_phrase_item.click()
+        return KeycardManagementPopup().wait_until_appears()

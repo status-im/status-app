@@ -91,10 +91,14 @@ main_toolBar_back_button = {"container": mainWindow_StatusToolBar, "objectName":
 settingsWalletAccountDelegate_Status_account = {"container": settingsContentBase_ScrollView, "objectName": "Status account", "type": "WalletAccountDelegate", "visible": True}
 settingsWalletAccountDelegate = {"container": settingsContentBase_ScrollView, "index": 0, "objectName": RegularExpression("*"), "type": "WalletAccountDelegate", "visible": True}
 settingsWalletKeyPairDelegate = {"container": settingsContentBase_ScrollView, "objectName": "walletKeyPairDelegate", "type": "StatusListItem", "visible": True}
+settingsWalletKeyPairDelegateMoreButton = {"container": settingsContentBase_ScrollView,
+                                           "objectName": "walletKeyPairDelegateMoreButton",
+                                           "type": "StatusFlatRoundButton", "visible": True}
 settingsWalletAccountTotalBalance = {"container": settingsContentBase_ScrollView, "objectName": "includeTotalBalanceListItem", "type": "StatusListItem", "visible": True}
 settingsWalletAccountTotalBalanceToggle = {"checkable": True, "container": settingsWalletAccountTotalBalance, "type": "StatusSwitch", "visible": True}
 settingsContentBaseScrollView_StatusFlatRoundButton = {"container": mainWindow_settingsContentBaseScrollView_StatusScrollView, "type": "StatusFlatRoundButton", "unnamed": 1, "visible": True}
 rename_keypair_StatusMenuItem = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "renameKeypairMenuItem", "type": "StatusMenuItem", "visible": True}
+walletKeypairAccountMenu = {"container": statusDesktop_mainWindow_overlay, "objectName": "walletKeypairAccountMenu", "visible": True}
 
 # Wallet Account Details view
 walletAccountViewEditAccountButton = {"container": statusDesktop_mainWindow, "objectName": "walletAccountViewEditAccountButton", "type": "StatusButton"}
@@ -103,8 +107,7 @@ walletAccountViewAccountEmoji = {"container": statusDesktop_mainWindow, "objectN
 walletAccountViewRemoveAccountButton = {"container": statusDesktop_mainWindow, "objectName": "deleteAccountButton", "type": "StatusButton"}
 walletAccountViewDetailsLabel = {"container": settingsContentBase_ScrollView, "objectName": "AccountDetails_TextLabel", "type": "StatusBaseText"}
 walletAccountViewBalance = {"container": settingsContentBase_ScrollView, "objectName": "Balance_ListItem", "type": "WalletAccountDetailsListItem"}
-walletAccountViewAddress = {"container": statusDesktop_mainWindow, "objectName": "Address_ListItem",
-                            "type": "WalletAccountDetailsListItem", "visible": True}
+walletAccountViewAddress = {"container": statusDesktop_mainWindow, "objectName": "Address_ListItem", "type": "WalletAccountDetailsListItem", "visible": True}
 walletAccountViewKeypairItem = {"container": settingsContentBase_ScrollView, "objectName": "KeyPair_Item", "type": "WalletAccountDetailsKeypairItem"}
 walletAccountViewOrigin = {"container": settingsContentBase_ScrollView, "objectName": "Origin_ListItem", "type": "WalletAccountDetailsListItem"}
 walletAccountViewDerivationPath = {"container": settingsContentBase_ScrollView, "objectName": "DerivationPath_ListItem", "type": "WalletAccountDetailsListItem"}
