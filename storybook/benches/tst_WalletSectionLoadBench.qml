@@ -328,13 +328,13 @@ Item {
         readonly property int expectedAccountDelegates: 8
         readonly property int expectedAssetDelegates: 0
         readonly property int expectedLoadingAssetDelegates: 0
-        readonly property int expectedObjectsTotal: 3344
+        readonly property int expectedObjectsTotal: 2813
         readonly property int objectsTotalTolerance: 0
 
         // The settled counts are the ones that see the whole section: the
         // layout pass after the loaders report Ready more than doubles the
         // object count and is where every assets row is built.
-        readonly property int expectedObjectsSettled: 7365
+        readonly property int expectedObjectsSettled: 6022
         readonly property int expectedAssetDelegatesSettled: 26
 
         // The gated stall counter is `stalls_over_8ms`, not `stalls_over_4ms`.
@@ -355,11 +355,12 @@ Item {
         // recorded in the TSV, ungated, so re-gating on it costs no history if
         // PR #21921 lowers the controller's budget.
         //
-        // Ratchets are the observed maximum over sixteen runs per phase, not the
-        // median - a ratchet that flakes is worse than no ratchet. Measured
-        // spread: warm 2-4, cold 3-6. Lower them whenever a fix lowers the count.
-        readonly property int maxWarmStallsOver8ms: 4
-        readonly property int maxColdStallsOver8ms: 6
+        // Ratchets are the observed maximum over nine runs per phase, not the
+        // median - a ratchet that flakes is worse than no ratchet. Measured on
+        // the merged tree (issues/0018): warm 1-3, cold 3 flat. Lower them
+        // whenever a fix lowers the count; never raise them.
+        readonly property int maxWarmStallsOver8ms: 3
+        readonly property int maxColdStallsOver8ms: 3
 
         function initTestCase() {
             WalletStores.RootStore.palette = Theme.palette

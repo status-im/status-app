@@ -225,15 +225,15 @@ Item {
         // catching here moves the count by hundreds, not by one.
         // `objects_at_ready` is recorded only: it races the layout pass that
         // follows Ready.
-        readonly property int expectedObjectsSettled: 918
+        readonly property int expectedObjectsSettled: 916
         readonly property int objectsSettledTolerance: 1
         readonly property int expectedChainTags: 4
         readonly property int expectedInformationTiles: 2
 
-        // Ratchet on today's measured count (4-10 over ten phase runs). The
-        // headroom absorbs a loaded build machine; lower it whenever a fix
-        // lowers the measured count.
-        readonly property int maxStallsOver4ms: 12
+        // Ratchet on the observed maximum over ten runs per phase on the merged
+        // tree (issues/0018): warm 2-6, cold 8-11. Lower it whenever a fix
+        // lowers the measured count; never raise it.
+        readonly property int maxStallsOver4ms: 11
 
         function initTestCase() {
             WalletStores.RootStore.palette = Theme.palette
