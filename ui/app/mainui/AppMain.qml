@@ -263,6 +263,20 @@ Item {
     readonly property var contactsModelAdaptor: contactInfrastructureLoader.item?.contactsAdaptor ?? null
 
     Loader {
+        id: supportBotContactLoader
+        active: appMain.mainReady
+                && appMain.featureFlagsStore.statusSupportBotEnabled
+                && !!appMain.contactsStore
+                && !!d.supportBotPublicKey
+
+        sourceComponent: ContactModelEntry {
+            publicKey: d.supportBotPublicKey
+            contactsModel: appMain.contactsStore.contactsModel
+            onPopulateContactDetailsRequested: appMain.contactsStore.populateContactDetails(d.supportBotPublicKey)
+        }
+    }
+
+    Loader {
         id: toastsManagerLoader
         active: appMain.mainReady
                 && !!appMain.contactsStore
@@ -914,6 +928,24 @@ Item {
         id: d
 
         readonly property string myPublicKey: userProfile.pubKey // we need it very soon, before all the stores
+        readonly property string supportBotPublicKey: {
+            const chatKey = Constants.statusSupportBotChatKey
+            return chatKey && appMain.utilsStore ? appMain.utilsStore.getDecompressedPk(chatKey) : ""
+        }
+        readonly property var supportBotContact: supportBotContactLoader.status === Loader.Ready
+                                                 ? supportBotContactLoader.item : null
+        readonly property bool supportBotConversationAvailable: {
+            const contact = d.supportBotContact
+            if (!contact?.available)
+                return false
+
+            const details = contact.contactDetails
+            return details.isBlocked
+                || details.isContact
+                || details.contactRequestState === Constants.ContactRequestState.Mutual
+                || details.contactRequestState === Constants.ContactRequestState.Sent
+                || details.contactRequestState === Constants.ContactRequestState.Received
+        }
 
         property bool messagingNetworkDisconnected: !appMain.rootStore.isMessagingNetworkConnected
         property bool doShowMessagingBanner: false
@@ -2645,12 +2677,19 @@ Item {
                 onSettingsRequested: d.openSettingsRoot()
 
                 onSupportBotChatRequested: {
-                    const publicKey = appMain.utilsStore.getDecompressedPk(Constants.statusSupportBotChatKey)
-                    if (!publicKey) {
+                    if (!d.supportBotPublicKey) {
                         console.warn("Unable to resolve the Status support bot chat key")
                         return
                     }
-                    appMain.contactsStore.joinPrivateChat(publicKey)
+                    if (d.supportBotConversationAvailable) {
+                        appMain.contactsStore.joinPrivateChat(d.supportBotPublicKey)
+                        return
+                    }
+                    Global.openContactRequestPopupWithDefaultMessage(
+                        d.supportBotPublicKey,
+                        null,
+                        qsTr("Send the Status Team bot a contact request to get useful Status tips, important updates, and share your feedback, ideas, or issues directly with the Status team.")
+                    )
                 }
 
                 onItemActivated: function(sectionType, sectionId) {

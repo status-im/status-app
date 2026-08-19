@@ -183,6 +183,9 @@ Loader {
         function onOpenContactRequestPopup(publicKey, cb) {
             root.invoke(() => root.item.openContactRequestPopup(publicKey, cb))
         }
+        function onOpenContactRequestPopupWithDefaultMessage(publicKey, cb, defaultMessage) {
+            root.invoke(() => root.item.openContactRequestPopup(publicKey, cb, defaultMessage))
+        }
         function onOpenReviewContactRequestPopup(publicKey, cb) {
             root.invoke(() => root.item.openReviewContactRequestPopup(publicKey, cb))
         }

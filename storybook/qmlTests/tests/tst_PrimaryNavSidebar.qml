@@ -134,6 +134,7 @@ Item {
 
             controlUnderTest.statusSupportBotEnabled = true
             tryCompare(supportBotButton, "visible", true)
+            compare(supportBotButton.showBadge, false)
         }
 
         function test_activity_center_button() {

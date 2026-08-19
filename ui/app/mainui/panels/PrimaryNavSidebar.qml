@@ -280,7 +280,7 @@ Control {
                     Layout.alignment: Qt.AlignHCenter
                     visible: root.statusSupportBotEnabled
 
-                    icon.name: "chatbot"
+                    icon.name: "status-flat"
                     tooltipText: qsTr("Status Help Bot")
 
                     thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
