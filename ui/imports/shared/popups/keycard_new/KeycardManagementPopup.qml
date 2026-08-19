@@ -1099,6 +1099,7 @@ StatusDialog {
 
         rightButtons: ObjectModel {
             StatusFlatButton {
+                objectName: (d.success || !!d.error) ? "keycardManagementDoneButton" : "keycardManagementCancelButton"
                 visible: d.currentStep !== KeycardManagementPopup.FlowStep.ManageAccounts
                          && d.currentStep !== KeycardManagementPopup.FlowStep.OnboardingMixedFlowSuccess
                 text: {
