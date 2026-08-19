@@ -1,3 +1,5 @@
+import QtCore
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -164,6 +166,10 @@ SplitView {
         id: d
 
         property double loadStartTime: 0
+
+        // Restored settings assign the knobs before the first reload; without
+        // this the page would generate the profile twice on startup.
+        property bool initialized: false
     }
 
     LogsAndControlsPanel {
@@ -339,6 +345,29 @@ SplitView {
         }
     }
 
+    // Knob state survives restarts so a configured profile can be reopened as-is.
+    // PagesValidator runs under a different application name, so its (empty)
+    // settings leave the small-profile defaults intact.
+    Settings {
+        category: "WalletLoaderPage"
+
+        property alias accounts: ctrlAccounts.value
+        property alias assetGroups: ctrlAssets.value
+        property alias collectibles: ctrlCollectibles.value
+        property alias savedAddresses: ctrlSavedAddresses.value
+        property alias communities: ctrlCommunities.value
+        property alias seed: ctrlSeed.value
+
+        property alias watchOnly: ctrlWatchOnly.checked
+        property alias singleAccount: ctrlSingleAccount.checked
+        property alias emptyWallet: ctrlEmptyWallet.checked
+        property alias testnets: ctrlTestnets.checked
+        property alias privacyWall: ctrlPrivacyWall.checked
+        property alias swap: ctrlSwap.checked
+        property alias buy: ctrlBuy.checked
+        property alias keycard: ctrlKeycard.checked
+    }
+
     function reload() {
         harness.active = false
         walletMock.uninstall()
@@ -364,6 +393,8 @@ SplitView {
 
     Connections {
         target: walletMock
+        enabled: d.initialized
+
         function onSeedChanged() { reloadTimer.restart() }
         function onAccountCountChanged() { reloadTimer.restart() }
         function onAssetGroupCountChanged() { reloadTimer.restart() }
@@ -379,6 +410,7 @@ SplitView {
     Component.onCompleted: {
         WalletStores.RootStore.palette = Theme.palette
         reload()
+        d.initialized = true
     }
 
     Component.onDestruction: walletMock.uninstall()
