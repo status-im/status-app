@@ -464,6 +464,7 @@ unclosed fence here (no closing triple-tick)
                             codeBackground: Theme.palette.baseColor4
                             quoteBarVisible: quoteBarSwitch.checked
                             imageEmojis: true
+                            asciiEmojiConversion: asciiEmojiSwitch.checked
 
                             characterLimit: limitSpinBox.value
                             onAttemptToExceedHardLimit: limitInfo.hitCount++
@@ -794,6 +795,12 @@ unclosed fence here (no closing triple-tick)
                     text: "Image emojis (Twemoji)"
                     checked: textArea.imageEmojis
                     onToggled: textArea.imageEmojis = checked
+                }
+                Switch {
+                    id: asciiEmojiSwitch
+
+                    text: "Convert ASCII emoticons"
+                    checked: true
                 }
                 Switch {
                     id: flushOnEnterSwitch

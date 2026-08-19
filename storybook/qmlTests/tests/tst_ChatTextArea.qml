@@ -957,6 +957,124 @@ Item {
             compare(control.textWithMentions(), emoji + emoji)
         }
 
+        // ── ASCII emoticon conversion ───────────────────────────────────────────
+
+        readonly property string slightlySmiling: "\u{1F642}" // :)
+        readonly property string smilingDevil: "\u{1F608}"    // >:)
+
+        // Completing an emoticon with a space converts it; the space still types.
+        function test_asciiEmoji_convertsOnSpace() {
+            control.asciiEmojiConversion = true
+            control.text = "hello :)"
+            control.cursorPosition = control.length
+            control.forceActiveFocus()
+
+            keyClick(Qt.Key_Space)
+
+            compare(control.textWithMentions(), "hello " + slightlySmiling + " ")
+        }
+
+        // Enter converts too, so "hi :)" + newline doesn't leave the emoticon behind.
+        function test_asciiEmoji_convertsOnEnter() {
+            control.asciiEmojiConversion = true
+            control.text = "hi :)"
+            control.cursorPosition = control.length
+            control.forceActiveFocus()
+
+            keyClick(Qt.Key_Return)
+
+            compare(control.textWithMentions(), "hi " + slightlySmiling + "\n")
+        }
+
+        // The longest emoticon wins: ">:)" must not be matched as ":)".
+        function test_asciiEmoji_longestMatchWins() {
+            control.asciiEmojiConversion = true
+            control.text = "hey >:)"
+            control.cursorPosition = control.length
+            control.forceActiveFocus()
+
+            keyClick(Qt.Key_Space)
+
+            compare(control.textWithMentions(), "hey " + smilingDevil + " ")
+        }
+
+        // Opt-in: nothing happens while the property is off (the default).
+        function test_asciiEmoji_disabledByDefault() {
+            compare(control.asciiEmojiConversion, false)
+            control.text = "hello :)"
+            control.cursorPosition = control.length
+            control.forceActiveFocus()
+
+            keyClick(Qt.Key_Space)
+
+            compare(control.textWithMentions(), "hello :) ")
+        }
+
+        // The emoticon must be a whole word — "hello:)" is left alone.
+        function test_asciiEmoji_requiresWordStart() {
+            control.asciiEmojiConversion = true
+            control.text = "hello:)"
+            control.cursorPosition = control.length
+            control.forceActiveFocus()
+
+            keyClick(Qt.Key_Space)
+
+            compare(control.textWithMentions(), "hello:) ")
+        }
+
+        // Emoticons inside a code span/block stay verbatim.
+        function test_asciiEmoji_notInsideCode() {
+            control.asciiEmojiConversion = true
+            control.text = "`:)`"
+            control.cursorPosition = 3 // between ":)" and the closing backtick
+            control.forceActiveFocus()
+
+            keyClick(Qt.Key_Space)
+
+            compare(control.textWithMentions(), "`:) `")
+        }
+
+        // convertAsciiEmoji() lets the host force the conversion (e.g. right before sending)
+        // without a completing keystroke.
+        function test_asciiEmoji_forcedConversion() {
+            control.asciiEmojiConversion = true
+            control.text = "hello :)"
+            control.cursorPosition = control.length
+
+            control.convertAsciiEmoji()
+
+            compare(control.textWithMentions(), "hello " + slightlySmiling)
+        }
+
+        // In image mode the emoji lands as an inline image object right away (no raw-Unicode step).
+        function test_asciiEmoji_imageMode() {
+            control.asciiEmojiConversion = true
+            control.imageEmojis = true
+            control.text = ":)"
+            control.cursorPosition = control.length
+
+            control.convertAsciiEmoji()
+
+            compare(control.length, 1) // single image ORC
+            compare(control.getText(0, 1).charCodeAt(0), 0xFFFC)
+            compare(control.textWithMentions(), slightlySmiling)
+        }
+
+        // Remove + insert form a single undo step, so one Ctrl+Z brings the emoticon back.
+        function test_asciiEmoji_undoIsOneStep() {
+            control.asciiEmojiConversion = true
+            control.text = "hello :)"
+            control.cursorPosition = control.length
+            control.forceActiveFocus()
+
+            control.convertAsciiEmoji()
+            compare(control.textWithMentions(), "hello " + slightlySmiling)
+
+            keyClick(Qt.Key_Z, Qt.ControlModifier)
+
+            compare(control.textWithMentions(), "hello :)")
+        }
+
         // ── nodeAt: AST-based caret formatting (delimiters belong to their node) ──────
 
         // Each sample is the document text with "|" marking the caret; "flags" lists exactly the

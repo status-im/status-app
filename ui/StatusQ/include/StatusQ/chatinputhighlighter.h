@@ -124,6 +124,10 @@ public:
     // In font mode it is a plain text insert. Used by paste/suggestion insertion paths.
     Q_INVOKABLE void insertTextWithEmojis(int position, const QString& text);
 
+    // Same as insertTextWithEmojis, but first removes `[start, end)`; both edits form a single
+    // undo step.
+    Q_INVOKABLE void replaceTextWithEmojis(int start, int end, const QString& text);
+
     // Number of inline emoji image objects in the document, counted by fragment — i.e. the number
     // of separately-rendered images. Adjacent identical emoji are kept in distinct fragments (via a
     // unique id) so each is counted/rendered; without that they would merge into one.

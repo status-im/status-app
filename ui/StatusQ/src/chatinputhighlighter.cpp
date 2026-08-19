@@ -1237,6 +1237,23 @@ void ChatInputHighlighter::insertTextWithEmojis(int position, const QString& tex
     cursor.endEditBlock();
 }
 
+void ChatInputHighlighter::replaceTextWithEmojis(int start, int end, const QString& text)
+{
+    if (!document())
+        return;
+    const int last = document()->characterCount() - 1;
+    const int from = qBound(0, qMin(start, end), last);
+    const int to = qBound(0, qMax(start, end), last);
+    QTextCursor cursor(document());
+    cursor.setPosition(from);
+    cursor.setPosition(to, QTextCursor::KeepAnchor);
+    cursor.beginEditBlock();
+    if (cursor.hasSelection())
+        cursor.removeSelectedText();
+    insertEmojiAwareText(cursor, text);
+    cursor.endEditBlock();
+}
+
 int ChatInputHighlighter::emojiImageCount() const
 {
     const QTextDocument* doc = document();
