@@ -14,6 +14,12 @@ Item {
 
     property string currentCurrency: "USD"
     property string addressFilters: ""
+
+    // The addresses "all accounts" resolves to, filled by WalletSectionMock.
+    // Nim joins the wallet's non-hidden addresses here, and the collectibles
+    // views read ownership balances through that list - an empty one hides
+    // every collectible.
+    property var allFilterAddresses: []
     property var keypairImportModule: null
     property var addAccountModule: null
     property bool isNonArchivalNode: false
@@ -67,20 +73,25 @@ Item {
         readonly property bool hasMore: false
     }
 
-    readonly property QtObject tmpActivityController0: QtObject {
+    // The filter slots are what RightTabView calls before it navigates to the
+    // collectible detail; missing ones threw out of the navigation handler and
+    // the detail never opened.
+    component TmpActivityController: QtObject {
         readonly property var model: root.emptyActivityModel
         readonly property QtObject status: QtObject {
             readonly property bool loadingData: false
             readonly property bool newDataAvailable: false
         }
+
+        function resetFilter() {}
+        function setFilterAddressesJson(addresses, allAddresses) {}
+        function setFilterChainsJson(chains, allChains) {}
+        function setFilterCollectibles(collectibles) {}
+        function updateFilter() {}
     }
-    readonly property QtObject tmpActivityController1: QtObject {
-        readonly property var model: root.emptyActivityModel
-        readonly property QtObject status: QtObject {
-            readonly property bool loadingData: false
-            readonly property bool newDataAvailable: false
-        }
-    }
+
+    readonly property TmpActivityController tmpActivityController0: TmpActivityController {}
+    readonly property TmpActivityController tmpActivityController1: TmpActivityController {}
 
     property var walletConnectController: null
     property var dappsConnectorController: null
@@ -89,14 +100,21 @@ Item {
         property var detailedEntry: null
         property bool isDetailedEntryLoading: false
 
+        // Set by WalletSectionMock; nim resolves the entry out of the wallet's
+        // own collectibles, which only the profile mock knows about here.
+        property var detailedEntryResolver: null
+
         readonly property QtObject status: QtObject {
             property bool loadingData: false
             property bool loadingCollectibles: false
             property bool newDataAvailable: false
         }
 
-        function getDetailedCollectible(chainId, contractAddress, tokenId) {}
-        function resetDetailedCollectible() {}
+        function getDetailedCollectible(chainId, contractAddress, tokenId) {
+            detailedEntry = !!detailedEntryResolver
+                    ? detailedEntryResolver(chainId, contractAddress, tokenId) : null
+        }
+        function resetDetailedCollectible() { detailedEntry = null }
     }
 
     signal filterChanged(string addresses)
@@ -108,7 +126,12 @@ Item {
     signal txDecoded(string txHash, string dataDecoded)
 
     function setFilterAddress(address) { root.addressFilters = address; root.filterChanged(address) }
-    function setFilterAllAddresses() { root.addressFilters = ""; root.filterChanged("") }
+    // Nim sets addressFilters to the joined address list but still signals ""
+    // for all-accounts (module.nim updateViewWithAddressFilterChanged).
+    function setFilterAllAddresses() {
+        root.addressFilters = root.allFilterAddresses.join(":")
+        root.filterChanged("")
+    }
     function canProfileProveOwnershipOfProvidedAddresses(addresses) { return true }
     function isChecksumValidForAddress(address) { return true }
     function reloadAccountTokens() {}

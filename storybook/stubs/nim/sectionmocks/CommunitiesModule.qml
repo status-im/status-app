@@ -14,6 +14,21 @@ QtObject {
     property ListModel model: ListModel {}
     property ListModel tags: ListModel {}
 
+    // CollectibleDetailView resolves the minting community through this; without
+    // it a community collectible renders as "Unknown community".
+    function getCommunityDetails(communityId) {
+        for (let i = 0; i < root.model.count; ++i) {
+            const community = root.model.get(i)
+            if (community.id !== communityId)
+                continue
+            return JSON.stringify({
+                id: community.id, name: community.name, image: community.image,
+                color: community.color, description: community.description
+            })
+        }
+        return "{}"
+    }
+
     function leaveCommunity(communityId) {}
     function setCommunityMuted(communityId, muted) {}
 }
