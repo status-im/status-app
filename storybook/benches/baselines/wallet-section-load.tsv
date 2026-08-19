@@ -1,0 +1,4 @@
+utc_time	profile	t_skeleton_ms	t_ready_ms	t_content_ms	stalls_over_4ms	max_stall_ms	probe_ticks	objects_total	account_delegates	asset_delegates	loading_asset_delegates
+2026-08-19T12:28:16Z	whale-8a-2000g-500c	180.16	495.79	496.53	6	343.53	67	4602	8	0	0
+2026-08-19T12:28:23Z	whale-8a-2000g-500c	181.26	508.18	508.87	6	345.73	80	4602	8	0	0
+2026-08-19T12:28:30Z	whale-8a-2000g-500c	184.64	507.47	508.16	6	348.13	77	4602	8	0	0
