@@ -1,5 +1,6 @@
 #include <QDebug>
 #include <QDirIterator>
+#include <QElapsedTimer>
 #include <QQmlComponent>
 #include <QQmlContext>
 #include <QQmlEngine>
@@ -14,6 +15,21 @@ using namespace Qt::Literals::StringLiterals;
 
 extern "C" void statusq_installBoostedIncubationController(void* engine, int msPerTick,
                                                            int gentlePeriodMs, int boostGapMs);
+
+// Monotonic sub-ms clock for QML benchmarks; Date.now() only has ms resolution
+class BenchTimer : public QObject
+{
+    Q_OBJECT
+
+public:
+    using QObject::QObject;
+
+    Q_INVOKABLE void start() { m_timer.start(); }
+    Q_INVOKABLE double elapsedMs() const { return m_timer.nsecsElapsed() / 1e6; }
+
+private:
+    QElapsedTimer m_timer;
+};
 
 class Setup : public QObject
 {
@@ -49,6 +65,8 @@ public slots:
             engine->addImportPath(path);
 
         registerStatusQTypes();
+
+        qmlRegisterType<BenchTimer>("Storybook.Benchmark", 1, 0, "BenchTimer");
 
         // Register the same context-property mocks the storybook app uses (e.g. userProfile),
         // so components that read them (via Utils) behave the same under test.
