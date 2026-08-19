@@ -77,6 +77,48 @@ Item {
         }
     }
 
+    // The chat as production mounts it: inside a subtree that is itself still
+    // incubating asynchronously (section loaders on a slow device). While the
+    // ancestor incubation is alive, every Repeater delegate resolves
+    // AsynchronousIfNested to asynchronous — shells are NOT created inside
+    // the window mutation. The heavy tail keeps that ancestor incubation
+    // alive long enough for the test to act within it.
+    property Item earlyChatView: null
+
+    Component {
+        id: incubatingHostComp
+
+        Loader {
+            asynchronous: true
+            sourceComponent: Item {
+                width: 800
+                height: 600
+
+                ChatContentView {
+                    id: hostedChatView
+
+                    width: 800
+                    height: 600
+
+                    rootStore: rootStoreMock
+                    chatContentModule: contentModuleMock
+                    chatId: "chat-1"
+                    chatType: Constants.chatType.oneToOne
+                    usersModel: ListModel {}
+                    joined: true
+
+                    Component.onCompleted: root.earlyChatView = hostedChatView
+                }
+
+                Repeater {
+                    model: 50000
+
+                    delegate: Item {}
+                }
+            }
+        }
+    }
+
     TestCase {
         name: "ChatContentView"
         when: windowShown
@@ -852,6 +894,59 @@ Item {
             fuzzyCompare(tracked.item.mapToItem(listView, 0, 0).y, tracked.y, 1)
             compare(internal.windowStart, 0)
             verify(!listView.stickingToNewest)
+        }
+
+        // Device livelock repro: with the chat inside a still-incubating
+        // ancestor, delegate shells are created asynchronously — AFTER the
+        // admit mutator returned. Staging keyed on creation timing never
+        // engages, so nothing throttles the paging timer: the window
+        // ping-pongs at timer rate, evicting rows faster than the starved
+        // incubator can build them, and the user watches the skeleton
+        // indefinitely. Staging must engage regardless of when the shells
+        // are created.
+        function test_slideStagesRowsWhileAncestorIncubationIsLive() {
+            for (let i = 0; i < 300; ++i)
+                appendMessage(i)
+
+            root.earlyChatView = null
+            const host = createTemporaryObject(incubatingHostComp, root)
+            verify(!!host)
+
+            tryVerify(() => root.earlyChatView !== null, 20000,
+                      "the hosted chat must complete inside the ancestor incubation")
+            const view = root.earlyChatView
+            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 20000)
+
+            const listView = findChild(view, "chatLogView")
+            verify(!!listView)
+            const internal = findChild(view, "chatMessagesViewInternal")
+            verify(!!internal)
+            tryVerify(() => listView.count > 0, 20000)
+
+            // the paging timer must not slide on its own mid-measurement
+            listView.moreUpAvailable = false
+            listView.moreDownAvailable = false
+
+            verify(host.status === Loader.Loading,
+                   "precondition lost: the ancestor incubation finished before the "
+                   + "slide — grow the incubation tail")
+
+            const endBefore = internal.windowEnd
+            internal.slideWindowToHistory()
+            compare(internal.windowEnd, endBefore + internal.windowChunkSize)
+            verify(internal.stagedCount > 0,
+                   "the slide must stage its rows even when the shells are "
+                   + "created asynchronously")
+
+            // and the staged batch must keep throttling: a second slide right
+            // behind the first must not move the window
+            internal.slideWindowToHistory()
+            compare(internal.windowEnd, endBefore + internal.windowChunkSize)
+
+            // the batch eventually builds and reveals even under the ancestor
+            // incubation
+            tryVerify(() => internal.stagedCount === 0, 60000,
+                      "the staged batch must reveal once its rows are built")
         }
     }
 }
