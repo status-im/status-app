@@ -81,6 +81,10 @@ add_executable(TestRowBinder src/tst_rowbinder.cpp)
 target_link_libraries(TestRowBinder PRIVATE Qt::Test Qt::Gui Qt::Qml StatusQ)
 add_test(NAME TestRowBinder COMMAND TestRowBinder)
 
+add_executable(TestDelegatePool src/tst_delegatepool.cpp)
+target_link_libraries(TestDelegatePool PRIVATE Qt::Test Qt::Gui Qt::Qml Qt::Quick StatusQ)
+add_test(NAME TestDelegatePool COMMAND TestDelegatePool)
+
 add_executable(TestNetworkAccessFactory src/tst_networkaccessfactory.cpp)
 target_link_libraries(TestNetworkAccessFactory PRIVATE Qt::Test Qt::Network Qt::Qml StatusQ)
 add_test(NAME TestNetworkAccessFactory COMMAND TestNetworkAccessFactory)
