@@ -125,6 +125,14 @@ Item {
         id: d
         readonly property var activeChatContentModule: d.getChatContentModule(root.activeChatId)
 
+        // the active chat's ChatContentView; hosts the shared messages view
+        property Item activeContentItem: null
+
+        // parks the shared view's model bindings while no chat is active
+        readonly property ChatStores.MessageStore fallbackMessageStore: ChatStores.MessageStore {
+            messageModule: null
+        }
+
         property bool sendingInProgress: !!d.activeChatContentModule? d.activeChatContentModule.inputAreaModule.sendingInProgress : false
 
         readonly property var urlsList: {
@@ -449,76 +457,31 @@ Item {
                 model: parentModule && parentModule.model
 
                 Loader {
+                    id: contentViewLoader
                     anchors.fill: parent
-                    // Only chats that have been activated get a content view;
-                    // loaderActive latches on first activation (see
-                    // chat_section/model.nim setActiveItem), preserving state
-                    // for visited chats without building one view per chat
+                    // Only the active chat holds a content view — a cheap
+                    // shell the shared messages view is reparented into.
                     active: model.type !== Constants.chatType.category && model.type !== Constants.chatType.unknown &&
-                            (model.loaderActive || model.active)
+                            model.active
+
+                    // the shared messages view follows the active chat's
+                    // content view (its slot); see sharedMessagesView.parent
+                    readonly property bool isActiveChat: model.active
+                    onIsActiveChatChanged: {
+                        if (isActiveChat && item)
+                            d.activeContentItem = item
+                    }
+                    onLoaded: {
+                        if (isActiveChat)
+                            d.activeContentItem = item
+                    }
+
                     sourceComponent: ChatContentView {
                         visible: !root.rootStore.openCreateChat && model.active
                         chatId: model.itemId
                         chatType: model.type
-                        chatMessagesLoader.active: model.loaderActive
                         rootStore: root.rootStore
-                        formatBalance: d.formatBalance
-                        emojiPopup: root.emojiPopup
-                        stickersPopup: root.stickersPopup
-                        rowPool: root.rowPool
-                        stickersLoaded: root.stickersLoaded
                         isBlocked: model.blocked
-                        sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
-                        messageLinkSharingEnabled: root.messageLinkSharingEnabled
-                        disabledTooltipText: root.disabledTooltipText
-                        areTestNetworksEnabled: root.areTestNetworksEnabled
-                        extraLeftPadding: root.extraLeftPadding
-                        joined: root.joined
-
-                        // Unfurling related data:
-                        gifUnfurlingEnabled: root.gifUnfurlingEnabled
-                        neverAskAboutUnfurlingAgain: root.neverAskAboutUnfurlingAgain
-
-                        usersModel: root.usersModel
-
-                        // Contacts related data:
-                        myPublicKey: root.myPublicKey
-
-                        onOpenStickerPackPopup: stickerPackId => root.openStickerPackPopup(stickerPackId)
-                        onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
-                        onShowReplyArea: (messageId) => {
-                                            d.showReplyArea(messageId)
-                                        }
-                        onEditMessageRequested: (messageId) => {
-                            d.startEditMessage(messageId)
-                        }
-                        onForceInputFocus: {
-                            chatInput.forceInputActiveFocus()
-                        }
-
-                        // Unfurling related requests:
-                        onSetNeverAskAboutUnfurlingAgain: root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
-
-                        onOpenGifPopupRequest: root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
-
-                        // Contacts related requests:
-                        onChangeContactNicknameRequest: (pubKey, nickname, displayName, isEdit) => {
-                            root.changeContactNicknameRequest(pubKey, nickname, displayName, isEdit)
-                        }
-                        onRemoveTrustStatusRequest: (pubKey) => {
-                            root.removeTrustStatusRequest(pubKey)
-                        }
-                        onDismissContactRequest: (chatId, contactRequestId) => {
-                            root.dismissContactRequest(chatId, contactRequestId)
-                        }
-                        onAcceptContactRequest: (chatId, contactRequestId) => {
-                            root.acceptContactRequest(chatId, contactRequestId)
-                        }
-
-                        // Community access related requests:
-                        onSpectateCommunityRequested: (communityId) => {
-                            root.spectateCommunityRequested(communityId)
-                        }
 
                         Component.onCompleted: {
                             chatContentModule = d.getChatContentModule(model.itemId)
@@ -527,6 +490,85 @@ Item {
                         }
                     }
                 }
+            }
+
+            // parking spot for the shared messages view while no chat is active
+            Item {
+                id: messagesViewHolder
+                anchors.fill: parent
+                visible: false
+            }
+
+            // THE messages view of this section: one live instance, reparented
+            // into the active chat's slot. A chat switch swaps the message
+            // model — the window resets and the shells re-acquire their rows
+            // from the pool as one staged batch — instead of rebuilding a
+            // view per chat.
+            ChatMessagesView {
+                id: sharedMessagesView
+
+                parent: d.activeContentItem ? d.activeContentItem.messagesSlot
+                                            : messagesViewHolder
+                anchors.fill: parent
+
+                chatContentModule: d.activeContentItem ? d.activeContentItem.chatContentModule : null
+                messageStore: d.activeContentItem ? d.activeContentItem.messageStore
+                                                  : d.fallbackMessageStore
+                chatId: d.activeContentItem ? d.activeContentItem.chatId : ""
+                isOneToOne: !!d.activeContentItem
+                            && d.activeContentItem.chatType === Constants.chatType.oneToOne
+                isChatBlocked: (!!d.activeContentItem && d.activeContentItem.isBlocked)
+                               || !root.rootStore.isUserAllowedToSendMessage
+                isContactBlocked: !!d.activeContentItem && d.activeContentItem.isBlocked
+                channelEmoji: {
+                    const module = d.activeContentItem ? d.activeContentItem.chatContentModule : null
+                    return module ? (module.chatDetails.emoji || "") : ""
+                }
+
+                rootStore: root.rootStore
+                rowPool: root.rowPool
+                formatBalance: d.formatBalance
+                emojiPopup: root.emojiPopup
+                stickersPopup: root.stickersPopup
+                stickersLoaded: root.stickersLoaded
+                sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
+                messageLinkSharingEnabled: root.messageLinkSharingEnabled
+                disabledTooltipText: root.disabledTooltipText
+                areTestNetworksEnabled: root.areTestNetworksEnabled
+                extraLeftPadding: root.extraLeftPadding
+                usersModel: root.usersModel
+                joined: root.joined
+
+                // Unfurling related data:
+                gifUnfurlingEnabled: root.gifUnfurlingEnabled
+                neverAskAboutUnfurlingAgain: root.neverAskAboutUnfurlingAgain
+
+                // Contacts related data:
+                myPublicKey: root.myPublicKey
+
+                onShowReplyArea: (messageId, senderId) => d.showReplyArea(messageId)
+                onOpenStickerPackPopup: stickerPackId => root.openStickerPackPopup(stickerPackId)
+                onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
+                onEditModeChanged: (editModeOn, messageId) => {
+                    if (editModeOn)
+                        d.startEditMessage(messageId)
+                    else
+                        chatInput.forceInputActiveFocus()
+                }
+
+                // Unfurling related requests:
+                onSetNeverAskAboutUnfurlingAgain: root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
+
+                onOpenGifPopupRequest: root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
+
+                // Contacts related requests:
+                onChangeContactNicknameRequest: root.changeContactNicknameRequest(pubKey, nickname, displayName, isEdit)
+                onRemoveTrustStatusRequest: root.removeTrustStatusRequest(pubKey)
+                onDismissContactRequest: root.dismissContactRequest(chatId, contactRequestId)
+                onAcceptContactRequest: root.acceptContactRequest(chatId, contactRequestId)
+
+                // Community access related requests:
+                onSpectateCommunityRequested: (communityId) => root.spectateCommunityRequested(communityId)
             }
         }
 

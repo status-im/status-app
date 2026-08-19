@@ -8,10 +8,10 @@ import AppLayouts.Chat.views
 import AppLayouts.Chat.stores as ChatStores
 
 /*
- Perf guard: switching chats must be instant. The heavy part of a chat —
- the messages view — must incubate asynchronously behind a skeleton while
- the shell (header, input) stays responsive. Building ChatMessagesView
- synchronously was the main remaining block of the switch freeze.
+ Perf guard: switching chats must be instant. Since issue 0006 the chat is a
+ cheap per-chat shell (banner + skeleton + slot) that the section's ONE
+ shared ChatMessagesView is reparented into — the harness below mirrors that
+ wiring. The window/staging mechanics under test live in the shared view.
 */
 Item {
     id: root
@@ -61,20 +61,46 @@ Item {
         function amIChatAdmin() { return false }
     }
 
-    Component {
-        id: contentViewComp
+    // Per-chat shell plus the shared messages view parented into its slot,
+    // wired as ChatColumnView wires production.
+    component ChatHarness: Item {
+        id: harness
+
+        width: 800
+        height: 600
+
+        readonly property alias shell: shell
+        readonly property alias messagesView: messagesView
 
         ChatContentView {
-            width: 800
-            height: 600
-
+            id: shell
+            anchors.fill: parent
             rootStore: rootStoreMock
             chatContentModule: contentModuleMock
             chatId: "chat-1"
             chatType: Constants.chatType.oneToOne
+        }
+
+        ChatMessagesView {
+            id: messagesView
+
+            parent: shell.messagesSlot
+            anchors.fill: parent
+
+            rootStore: rootStoreMock
+            messageStore: shell.messageStore
+            chatContentModule: contentModuleMock
+            chatId: "chat-1"
+            isOneToOne: true
             usersModel: ListModel {}
             joined: true
         }
+    }
+
+    Component {
+        id: contentViewComp
+
+        ChatHarness {}
     }
 
     // The chat as production mounts it: inside a subtree that is itself still
@@ -94,20 +120,13 @@ Item {
                 width: 800
                 height: 600
 
-                ChatContentView {
-                    id: hostedChatView
+                Loader {
+                    asynchronous: true
+                    sourceComponent: ChatHarness {
+                        id: hostedChatView
 
-                    width: 800
-                    height: 600
-
-                    rootStore: rootStoreMock
-                    chatContentModule: contentModuleMock
-                    chatId: "chat-1"
-                    chatType: Constants.chatType.oneToOne
-                    usersModel: ListModel {}
-                    joined: true
-
-                    Component.onCompleted: root.earlyChatView = hostedChatView
+                        Component.onCompleted: root.earlyChatView = hostedChatView
+                    }
                 }
 
                 Repeater {
@@ -132,21 +151,19 @@ Item {
         }
 
         // chatDetails.active is set by the backend (onMadeActive) before the
-        // asynchronously incubated ChatMessagesView exists, so the view never
+        // shared messages view ever binds to the chat, so the view never
         // receives activeChanged on a cold open. Marking the chat read must
         // not depend on that signal — the state-driven triggers
-        // (visibleChanged/countChanged) have to cover the late-built view.
-        function test_unreadChatMarkedReadWhenViewIncubatesLate() {
+        // (visibleChanged/countChanged) have to cover the late-bound view.
+        function test_unreadChatMarkedReadWhenViewBindsLate() {
             contentModuleMock.chatDetails.hasUnreadMessages = true
+
+            // the bug precondition: the chat is already active before the
+            // messages view exists
+            verify(contentModuleMock.chatDetails.active)
 
             const view = createTemporaryObject(contentViewComp, root)
             verify(!!view)
-
-            // the bug precondition: the chat is already active while the
-            // messages view is still incubating
-            verify(contentModuleMock.chatDetails.active)
-            verify(view.chatMessagesLoader.status !== Loader.Ready,
-                   "view must still be incubating when active is already set")
 
             tryVerify(() => contentModuleMock.markAllMessagesReadCalls > 0, 10000,
                       "a cold-opened unread chat must still get marked read")
@@ -235,29 +252,37 @@ Item {
             }
         }
 
-        function test_messagesViewIncubatesAsynchronously() {
+        // The shell's skeleton covers the slot whenever the shared messages
+        // view is not parented into it (no active chat, or parked while the
+        // section hands it to another chat).
+        function test_skeletonCoversUnoccupiedSlot() {
             const view = createTemporaryObject(contentViewComp, root)
             verify(!!view)
 
-            // synchronously after creation the messages view must not be
-            // built yet — the skeleton covers the area
-            verify(view.chatMessagesLoader.status !== Loader.Ready,
-                   "messages view must not be built synchronously with the chat shell")
-
-            const skeleton = findChild(view, "chatMessagesSkeleton")
-            verify(!!skeleton)
-            verify(skeleton.visible)
-
-            // the messages view arrives asynchronously and replaces the
-            // skeleton
-            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 10000)
-            verify(!!view.chatMessagesLoader.item)
             tryVerify(() => !findChild(view, "chatMessagesSkeleton"), 5000,
-                      "skeleton must be destroyed once the messages view is ready")
+                      "an occupied, non-loading slot must not show the skeleton")
+
+            view.messagesView.parent = view
+            tryVerify(() => !!findChild(view, "chatMessagesSkeleton"), 5000,
+                      "the skeleton must cover the slot once the shared view leaves it")
+
+            view.messagesView.parent = view.shell.messagesSlot
+            tryVerify(() => !findChild(view, "chatMessagesSkeleton"), 5000,
+                      "the skeleton must be released once the shared view returns")
         }
 
-        // The single skeleton covers BOTH phases: view construction and the
-        // backend messages fetch (there is no separate in-view skeleton).
+        // The blocked-state chrome stays with the per-chat shell.
+        function test_blockedChatShowsBanner() {
+            const view = createTemporaryObject(contentViewComp, root)
+            verify(!!view)
+
+            verify(!findChild(view, "blockedBannerLoader").visible)
+            view.shell.isBlocked = true
+            tryVerify(() => findChild(view, "blockedBannerLoader").visible, 5000,
+                      "the blocked banner must show for a blocked chat")
+        }
+
+        // The shell's skeleton covers the backend messages fetch.
         function test_skeletonCoversDataLoadingPhase() {
             contentModuleMock.messagesModule.loading = true
 
@@ -266,8 +291,6 @@ Item {
 
             const skeleton = findChild(view, "chatMessagesSkeleton")
             verify(!!skeleton)
-
-            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 10000)
             verify(skeleton.visible,
                    "skeleton must stay up while messages are still being fetched")
 
@@ -276,25 +299,22 @@ Item {
                       "skeleton must be released once the fetch is done")
         }
 
-        // The skeleton is not an overlay: whatever it covers must not paint
-        // underneath it — the real view stays invisible until it is ready
-        // AND its data is loaded.
+        // Nothing paints underneath the skeleton: the rows area stays
+        // invisible until the data is loaded.
         function test_messagesViewHiddenWhileSkeletonShown() {
             contentModuleMock.messagesModule.loading = true
 
             const view = createTemporaryObject(contentViewComp, root)
             verify(!!view)
 
-            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 10000)
-
             const skeleton = findChild(view, "chatMessagesSkeleton")
             verify(!!skeleton)
             verify(skeleton.visible)
-            verify(!view.chatMessagesLoader.item.visible,
-                   "messages view must be invisible while the skeleton shows")
+            verify(!findChild(view, "chatLogView").visible,
+                   "the rows area must be invisible while the skeleton shows")
 
             contentModuleMock.messagesModule.loading = false
-            tryVerify(() => view.chatMessagesLoader.item.visible)
+            tryVerify(() => findChild(view, "chatLogView").visible)
             tryVerify(() => !findChild(view, "chatMessagesSkeleton"), 5000,
                       "skeleton must be released once the view is shown")
         }
@@ -308,7 +328,6 @@ Item {
 
             const view = createTemporaryObject(contentViewComp, root)
             verify(!!view)
-            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 10000)
 
             // give the paging timer time to fire against the empty window
             wait(400)
@@ -338,7 +357,6 @@ Item {
 
             const view = createTemporaryObject(contentViewComp, root)
             verify(!!view)
-            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 10000)
 
             const listView = findChild(view, "chatLogView")
             verify(!!listView)
@@ -366,7 +384,6 @@ Item {
 
             const view = createTemporaryObject(contentViewComp, root)
             verify(!!view)
-            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 10000)
 
             const listView = findChild(view, "chatLogView")
             verify(!!listView)
@@ -386,7 +403,6 @@ Item {
 
             const view = createTemporaryObject(contentViewComp, root)
             verify(!!view)
-            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 10000)
 
             const listView = findChild(view, "chatLogView")
             verify(!!listView)
@@ -423,7 +439,6 @@ Item {
 
             const view = createTemporaryObject(contentViewComp, root)
             verify(!!view)
-            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 10000)
 
             const listView = findChild(view, "chatLogView")
             verify(!!listView)
@@ -463,7 +478,6 @@ Item {
 
             const view = createTemporaryObject(contentViewComp, root)
             verify(!!view)
-            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 10000)
 
             const listView = findChild(view, "chatLogView")
             verify(!!listView)
@@ -500,7 +514,6 @@ Item {
 
             const view = createTemporaryObject(contentViewComp, root)
             verify(!!view)
-            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 10000)
 
             const listView = findChild(view, "chatLogView")
             verify(!!listView)
@@ -525,7 +538,6 @@ Item {
 
             const view = createTemporaryObject(contentViewComp, root)
             verify(!!view)
-            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 10000)
 
             const listView = findChild(view, "chatLogView")
             verify(!!listView)
@@ -905,9 +917,6 @@ Item {
         // indefinitely. Staging must engage regardless of when the shells
         // are created.
         function test_slideStagesRowsWhileAncestorIncubationIsLive() {
-            for (let i = 0; i < 300; ++i)
-                appendMessage(i)
-
             root.earlyChatView = null
             const host = createTemporaryObject(incubatingHostComp, root)
             verify(!!host)
@@ -915,17 +924,22 @@ Item {
             tryVerify(() => root.earlyChatView !== null, 20000,
                       "the hosted chat must complete inside the ancestor incubation")
             const view = root.earlyChatView
-            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 20000)
 
             const listView = findChild(view, "chatLogView")
             verify(!!listView)
             const internal = findChild(view, "chatMessagesViewInternal")
             verify(!!internal)
-            tryVerify(() => listView.count > 0, 20000)
 
-            // the paging timer must not slide on its own mid-measurement
+            // the paging timer must not slide on its own mid-measurement:
+            // seams off while the model is still empty, THEN feed the rows —
+            // a timer slide can never sneak in ahead of the measurement
             listView.moreUpAvailable = false
             listView.moreDownAvailable = false
+
+            for (let i = 0; i < 300; ++i)
+                appendMessage(i)
+
+            tryVerify(() => listView.count > 0, 20000)
 
             verify(host.status === Loader.Loading,
                    "precondition lost: the ancestor incubation finished before the "
