@@ -1,4 +1,6 @@
-utc_time	profile	t_skeleton_ms	t_ready_ms	t_content_ms	stalls_over_4ms	max_stall_ms	probe_ticks	objects_total	account_delegates	asset_delegates	loading_asset_delegates
-2026-08-19T12:28:16Z	whale-8a-2000g-500c	180.16	495.79	496.53	6	343.53	67	4602	8	0	0
-2026-08-19T12:28:23Z	whale-8a-2000g-500c	181.26	508.18	508.87	6	345.73	80	4602	8	0	0
-2026-08-19T12:28:30Z	whale-8a-2000g-500c	184.64	507.47	508.16	6	348.13	77	4602	8	0	0
+utc_time	profile	t_skeleton_ms	t_ready_ms	t_content_ms	t_first_asset_row_ms	stalls_over_4ms	max_stall_ms	probe_ticks	objects_total	account_delegates	asset_delegates	loading_asset_delegates	objects_settled	asset_delegates_settled
+2026-08-19T12:44:54Z	whale-8a-2000g-500c	186.24	561.20	561.86	616.56	11	352.20	204	4602	8	0	0	9569	26
+2026-08-19T12:45:01Z	whale-8a-2000g-500c	185.79	508.69	509.37	560.71	10	355.56	150	4602	8	0	0	9569	26
+2026-08-19T12:45:12Z	whale-8a-2000g-500c	189.15	536.62	537.35	591.67	10	358.03	176	4602	8	0	0	9569	26
+2026-08-19T12:45:19Z	whale-8a-2000g-500c	179.64	496.06	496.79	547.87	10	339.39	155	4602	8	0	0	9569	26
+2026-08-19T12:45:25Z	whale-8a-2000g-500c	180.88	508.18	508.88	560.40	10	344.36	160	4602	8	0	0	9569	26

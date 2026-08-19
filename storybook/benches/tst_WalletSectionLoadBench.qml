@@ -22,6 +22,15 @@ import StorybookMocks
 // probe through the window, counts what the section instantiates, and appends a
 // row to the checked-in baselines TSV.
 //
+// Measured caveat on the top rung: on this surface the two nested async loaders
+// are already Ready when WalletLoader reports Ready - they complete inside the
+// outer incubation - so time-to-content lands 0.7ms after time-to-ready and
+// certifies only that the loaders reported Ready. Half of what the section
+// builds (and every assets row) arrives on the layout pass that follows, so the
+// window runs on to the settle point: the first realised assets row plus a
+// stable object count. `t_first_asset_row_ms` and the settled counts are what
+// carry the "no grey tiles left" meaning here.
+//
 // Timings and the max stall are recorded only; the instantiation counts and the
 // stall count are gated. All numbers are HOST units - the x10 low-end-Android
 // convention is applied by whoever reads them, never here.
@@ -141,6 +150,10 @@ Item {
         property int assetDelegates: -1
         property int loadingAssetDelegates: -1
 
+        property real firstAssetRowMs: -1
+        property int objectsSettled: -1
+        property int assetDelegatesSettled: -1
+
         // The section's panels have no visual parent until the chrome's swap
         // gates promote them, so they are reached through WalletLayout's own
         // panel properties rather than by walking the loader's item tree.
@@ -174,13 +187,11 @@ Item {
                 return
 
             probe.stamp("t_content")
-            probe.end()
             d.takeInstantiationCounts()
         }
 
-        // Taken at the t_content stamp rather than after it: anything the
-        // section keeps incubating afterwards would make the counts depend on
-        // when the test happened to look.
+        // Taken at the t_content stamp: what the section had built by the time
+        // it declared its loaders Ready.
         function takeInstantiationCounts() {
             const section = d.section
             d.objectsTotal = probe.countObjects(section)
@@ -188,6 +199,33 @@ Item {
             d.assetDelegates = probe.countByObjectNamePrefix(section, "AssetView_TokenListItem_")
             d.loadingAssetDelegates = probe.countByObjectNamePrefix(
                         section, "AssetView_LoadingTokenDelegate_")
+        }
+
+        function assetRows() {
+            return probe.countByObjectNamePrefix(d.section, "AssetView_TokenListItem_")
+        }
+
+        // Runs the loop on in 1ms slices to the first realised assets row, then
+        // drains until the object count holds still over two 50ms samples. Both
+        // stop conditions are observed, never waited out by a fixed delay.
+        function settle(timeoutMs) {
+            const deadline = probe.elapsedMs + timeoutMs
+
+            while (d.assetRows() === 0 && probe.elapsedMs < deadline)
+                probe.waitForStamp("never-stamped", 1)
+            d.firstAssetRowMs = probe.elapsedMs
+
+            let previous = -1
+            let current = probe.countObjects(d.section)
+            while (current !== previous && probe.elapsedMs < deadline) {
+                previous = current
+                probe.waitForStamp("never-stamped", 50)
+                current = probe.countObjects(d.section)
+            }
+
+            probe.end()
+            d.objectsSettled = current
+            d.assetDelegatesSettled = d.assetRows()
         }
     }
 
@@ -201,9 +239,11 @@ Item {
         readonly property var tsvHeader: [
             "utc_time", "profile",
             "t_skeleton_ms", "t_ready_ms", "t_content_ms",
+            "t_first_asset_row_ms",
             "stalls_over_4ms", "max_stall_ms", "probe_ticks",
             "objects_total", "account_delegates", "asset_delegates",
-            "loading_asset_delegates"
+            "loading_asset_delegates",
+            "objects_settled", "asset_delegates_settled"
         ]
 
         // Gates, all measured on this harness and stable across runs.
@@ -218,11 +258,17 @@ Item {
         readonly property int expectedObjectsTotal: 4602
         readonly property int objectsTotalTolerance: 0
 
-        // A ratchet on today's measured count (6-7 over ten runs, one tick of
-        // headroom), not the 0 the host budget would want: the section blocks
-        // the GUI thread for ~345ms of its ~500ms load, so 4ms-clean is several
-        // optimisations away. Lower this whenever a fix lowers the count.
-        readonly property int maxStallsOver4ms: 8
+        // The settled counts are the ones that see the whole section: the
+        // layout pass after the loaders report Ready more than doubles the
+        // object count and is where every assets row is built.
+        readonly property int expectedObjectsSettled: 9569
+        readonly property int expectedAssetDelegatesSettled: 26
+
+        // A ratchet on today's measured count, not the 0 the host budget would
+        // want: the section blocks the GUI thread for ~345ms of its ~560ms
+        // load, so 4ms-clean is several optimisations away. Lower this whenever
+        // a fix lowers the count.
+        readonly property int maxStallsOver4ms: 16
 
         function initTestCase() {
             WalletStores.RootStore.palette = Theme.palette
@@ -263,6 +309,10 @@ Item {
                    "time-to-content: the accounts list and the main view never both "
                    + "reached Loader.Ready")
 
+            d.settle(60000)
+            verify(d.firstAssetRowMs < 60000,
+                   "the assets list never realised a row after time-to-content")
+
             printStaircase()
             recordRow()
 
@@ -275,6 +325,10 @@ Item {
             verify(Math.abs(d.objectsTotal - expectedObjectsTotal) <= objectsTotalTolerance,
                    "instantiation count `objects_total` changed: %1, expected %2 +/- %3"
                    .arg(d.objectsTotal).arg(expectedObjectsTotal).arg(objectsTotalTolerance))
+            compare(d.objectsSettled, expectedObjectsSettled,
+                    "instantiation count `objects_settled` changed")
+            compare(d.assetDelegatesSettled, expectedAssetDelegatesSettled,
+                    "instantiation count `asset_delegates_settled` changed")
             verify(probe.stallCount <= maxStallsOver4ms,
                    "stall probe: `stalls_over_4ms` is %1, over the allowed %2 (host ms, 1ms probe)"
                    .arg(probe.stallCount).arg(maxStallsOver4ms))
@@ -288,6 +342,7 @@ Item {
                 "  t_skeleton_ms       %1  recorded".arg(pad(probe.stampMs("t_skeleton"))),
                 "  t_ready_ms          %1  recorded".arg(pad(probe.stampMs("t_ready"))),
                 "  t_content_ms        %1  recorded (headline)".arg(pad(probe.stampMs("t_content"))),
+                "  t_first_asset_row_ms %1  recorded".arg(pad(d.firstAssetRowMs)),
                 "  stalls_over_4ms     %1  gated (<= %2)".arg(pad(probe.stallCount)).arg(maxStallsOver4ms),
                 "  max_stall_ms        %1  recorded".arg(pad(probe.maxStallMs)),
                 "  probe_ticks         %1  recorded".arg(pad(probe.stallTickCount)),
@@ -295,6 +350,8 @@ Item {
                 "  account_delegates   %1  gated".arg(pad(d.accountDelegates)),
                 "  asset_delegates     %1  gated".arg(pad(d.assetDelegates)),
                 "  loading_asset_del.  %1  gated".arg(pad(d.loadingAssetDelegates)),
+                "  objects_settled     %1  gated".arg(pad(d.objectsSettled)),
+                "  asset_deleg_settled %1  gated".arg(pad(d.assetDelegatesSettled)),
                 ""
             ]
             for (const line of lines)
@@ -317,11 +374,13 @@ Item {
                 probe.formatMs(probe.stampMs("t_skeleton")),
                 probe.formatMs(probe.stampMs("t_ready")),
                 probe.formatMs(probe.stampMs("t_content")),
+                probe.formatMs(d.firstAssetRowMs),
                 String(probe.stallCount),
                 probe.formatMs(probe.maxStallMs),
                 String(probe.stallTickCount),
                 String(d.objectsTotal), String(d.accountDelegates),
-                String(d.assetDelegates), String(d.loadingAssetDelegates)
+                String(d.assetDelegates), String(d.loadingAssetDelegates),
+                String(d.objectsSettled), String(d.assetDelegatesSettled)
             ]
             verify(probe.appendTsvRow(tsvPath, tsvHeader, row),
                    "could not append the bench row to " + tsvPath)
