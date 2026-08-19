@@ -233,6 +233,28 @@ QtObject {
         return (/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}(\.[a-zA-Z0-9()]{1,6})?\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/.test(text))
     }
 
+    function isGifLink(url) {
+        if (typeof url !== "string" || !/^https?:\/\/\S+$/i.test(url))
+            return false
+        const suffixStart = url.search(/[?#]/)
+        const path = suffixStart === -1 ? url : url.slice(0, suffixStart)
+        return path.toLowerCase().endsWith(".gif")
+    }
+
+    function gifLinks(text) {
+        if (typeof text !== "string")
+            return []
+        const tokens = text.trim().split(/\s+/)
+        return tokens[0] === "" ? [] : tokens.filter(isGifLink)
+    }
+
+    function isGifOnlyText(text) {
+        if (text === null || text === undefined)
+            return false
+        const tokens = text.toString().trim().split(/\s+/)
+        return tokens.length > 0 && tokens[0] !== "" && tokens.every(isGifLink)
+    }
+
     function isURLWithOptionalProtocol(text) {
         return (/^(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/.test(text))
     }

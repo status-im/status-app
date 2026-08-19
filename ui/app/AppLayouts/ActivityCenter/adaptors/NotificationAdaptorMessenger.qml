@@ -42,7 +42,12 @@ NotificationAdaptorSender {
     // Content block related
     // -------------------------
 
-    content: notification && notification.message ? notification.message.messageText : ""
+    content: {
+        const message = notification?.message
+        if (!message)
+            return ""
+        return Utils.isGifOnlyText(message.unparsedText) ? qsTr("GIF") : message.messageText
+    }
     attachments: {
         const msg = notification && notification.message
         const images = msg && msg.albumMessageImages

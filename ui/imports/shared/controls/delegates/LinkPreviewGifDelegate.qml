@@ -15,6 +15,9 @@ CalloutCard {
     required property bool playAnimation
     required property bool isOnline
 
+    Accessible.role: Accessible.StaticText
+    Accessible.name: qsTr("Animated GIF")
+
     property int imageWidth: 300
 
     readonly property bool isPlaying: linkImage.playing

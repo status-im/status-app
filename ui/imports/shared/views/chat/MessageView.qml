@@ -93,12 +93,7 @@ Loader {
 
     // These 2 properties can be dropped when the new unfurling flow supports GIFs
     property var links
-    readonly property var gifLinks: {
-        if (!links)
-            return []
-        const arr = links.split(" ")
-        return arr.filter(value => value.toLowerCase().endsWith('.gif'))
-    }
+    readonly property var gifLinks: Utils.gifLinks(links)
 
     property string responseToMessageWithId: ""
     property string quotedMessageText: ""
@@ -387,6 +382,9 @@ Loader {
         id: d
 
         readonly property int chatButtonSize: 32
+        readonly property bool gifOnlyMessage: root.gifUnfurlingEnabled
+                                               && root.gifLinks.length > 0
+                                               && Utils.isGifOnlyText(root.unparsedText)
         property bool hideMessage: false
         property bool emojiPopupOpened: false
 
@@ -955,8 +953,8 @@ Loader {
                         }
                         return ""
                     }
-                    messageText: root.messageText
-                    unparsedText: root.unparsedText
+                    messageText: d.gifOnlyMessage ? "" : root.messageText
+                    unparsedText: d.gifOnlyMessage ? "" : root.unparsedText
                     mentionsMap: root.mentionsMap
                     messageContent: {
                         switch (delegate.contentType)
@@ -1023,6 +1021,8 @@ Loader {
                             return qsTr("Message deleted")
                         if (!root.quotedMessageText && !root.quotedMessageFrom)
                             return qsTr("Unknown message. Trying to recover it")
+                        if (Utils.isGifOnlyText(root.quotedMessageUnparsedText))
+                            return qsTr("GIF")
                         return root.quotedMessageText
                     }
                     unparsedText: {
@@ -1030,6 +1030,8 @@ Loader {
                             return qsTr("Message deleted")
                         if (!root.quotedMessageUnparsedText && !root.quotedMessageFrom)
                             return qsTr("Unknown message. Trying to recover it")
+                        if (Utils.isGifOnlyText(root.quotedMessageUnparsedText))
+                            return qsTr("GIF")
                         return root.quotedMessageUnparsedText
                     }
                     mentionsMap: root.mentionsMap
