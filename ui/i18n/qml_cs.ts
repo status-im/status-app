@@ -10122,6 +10122,13 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
 </context>
 <context>
+    <name>LinkPreviewGifDelegate</name>
+    <message>
+        <source>Animated GIF</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>LinkPreviewMiniCard</name>
     <message>
         <source>Generating preview...</source>
@@ -11367,6 +11374,10 @@ selhalo</translation>
         <translation>Smazaná zpráva</translation>
     </message>
     <message>
+        <source>GIF</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Reply</source>
         <translation>Odpovědět</translation>
     </message>
@@ -12234,6 +12245,13 @@ selhalo</translation>
     </message>
     <message>
         <source>Contact request declined</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>NotificationAdaptorMessenger</name>
+    <message>
+        <source>GIF</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

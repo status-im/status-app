@@ -93,4 +93,55 @@ Item {
             compare(Utils.collectibleMediaSource(thumbnail, image), thumbnail)
         }
     }
+
+    TestCase {
+        name: "Utils_gifLinks"
+
+        function test_isGifLink_data() {
+            return [
+                {tag: "Klipy", url: "https://static.klipy.com/ii/935d7ab9d8c6202580a668421940ec81/23/12/Baqa16H5.gif", expected: true},
+                {tag: "uppercase extension", url: "https://media.example.com/animation.GIF", expected: true},
+                {tag: "query string", url: "https://media.example.com/animation.gif?width=320", expected: true},
+                {tag: "fragment", url: "https://media.example.com/animation.gif#preview", expected: true},
+                {tag: "other image", url: "https://media.example.com/image.webp", expected: false},
+                {tag: "suffix only", url: "https://media.example.com/animation.gifx", expected: false},
+                {tag: "bare filename", url: "animation.gif", expected: false}
+            ]
+        }
+
+        function test_isGifLink(data) {
+            compare(Utils.isGifLink(data.url), data.expected)
+        }
+
+        function test_gifLinks_data() {
+            return [
+                {tag: "single GIF", text: "https://media.example.com/animation.gif", expected: 1},
+                {tag: "spaces", text: "https://media.example.com/one.gif  https://media.example.com/two.gif", expected: 2},
+                {tag: "newlines", text: "https://media.example.com/one.gif\nhttps://media.example.com/two.gif", expected: 2},
+                {tag: "mixed whitespace", text: "\thttps://media.example.com/one.gif\r\n https://media.example.com/two.gif ", expected: 2},
+                {tag: "non-GIF", text: "https://media.example.com/image.png", expected: 0},
+                {tag: "missing", text: undefined, expected: 0}
+            ]
+        }
+
+        function test_gifLinks(data) {
+            compare(Utils.gifLinks(data.text).length, data.expected)
+        }
+
+        function test_isGifOnlyText_data() {
+            return [
+                {tag: "single GIF", text: "https://media.example.com/animation.gif", expected: true},
+                {tag: "multiple GIFs", text: "https://media.example.com/one.gif\nhttps://media.example.com/two.gif", expected: true},
+                {tag: "surrounding whitespace", text: "  https://media.example.com/animation.gif  ", expected: true},
+                {tag: "text and GIF", text: "look at this https://media.example.com/animation.gif", expected: false},
+                {tag: "empty", text: "", expected: false},
+                {tag: "missing", text: undefined, expected: false},
+                {tag: "non-GIF", text: "https://media.example.com/image.png", expected: false}
+            ]
+        }
+
+        function test_isGifOnlyText(data) {
+            compare(Utils.isGifOnlyText(data.text), data.expected)
+        }
+    }
 }

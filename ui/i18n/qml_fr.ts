@@ -10079,6 +10079,13 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
 </context>
 <context>
+    <name>LinkPreviewGifDelegate</name>
+    <message>
+        <source>Animated GIF</source>
+        <translation>GIF animé</translation>
+    </message>
+</context>
+<context>
     <name>LinkPreviewMiniCard</name>
     <message>
         <source>Generating preview...</source>
@@ -11311,6 +11318,10 @@ chargement</translation>
         <translation>Message supprimé</translation>
     </message>
     <message>
+        <source>GIF</source>
+        <translation>GIF</translation>
+    </message>
+    <message>
         <source>Reply</source>
         <translation>Répondre</translation>
     </message>
@@ -12175,6 +12186,13 @@ chargement</translation>
     <message>
         <source>Contact request declined</source>
         <translation>Demande de contact refusée</translation>
+    </message>
+</context>
+<context>
+    <name>NotificationAdaptorMessenger</name>
+    <message>
+        <source>GIF</source>
+        <translation>GIF</translation>
     </message>
 </context>
 <context>
