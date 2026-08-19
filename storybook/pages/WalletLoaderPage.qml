@@ -19,6 +19,7 @@ import mainui.sectionLoaders
 import Mocks
 import Models
 import Storybook
+import StorybookMocks
 
 // Exercises the real WalletLoader against a large generated wallet profile:
 // loader-owned section chrome with skeleton panels, async incubation of the real
@@ -42,6 +43,78 @@ SplitView {
     // after the section loads, so an attached qmlprofiler saves its trace on
     // clean exit (storybook's CLI parser rejects unknown --options)
     readonly property bool profileExitMode: Qt.application.arguments.indexOf("profile-exit") >= 0
+
+    // On-screen calibration of the offscreen bench (issues/0006): with the extra
+    // "stall-report" positional argument the page runs the bench's stall probe
+    // through an on-screen load and prints the same timeline the bench prints.
+    readonly property bool stallReportMode: Qt.application.arguments.indexOf("stall-report") >= 0
+
+    WalletLoadBenchProbe { id: probe }
+
+    // Two loads in one process, like the bench: the first pays one-time
+    // warm-up, the second is the phase the bench calls warm.
+    Timer {
+        id: stallReportTimer
+        interval: 3000
+        onTriggered: {
+            if (d.stallReportPass === 0) {
+                d.stallReportPass = 1
+                harness.active = false
+                secondLoadTimer.restart()
+                return
+            }
+            probe.end()
+            console.info("")
+            console.info("on-screen warm stamp timeline (host ms)")
+            for (const stamp of probe.stampTimeline())
+                console.info("    %1  %2".arg(probe.formatMs(stamp.ms)).arg(stamp.name))
+            console.info("on-screen GUI-thread blocks over %1ms (host ms)"
+                         .arg(probe.stallThresholdMs))
+            for (const stall of probe.stalls())
+                console.info("    %1 -> %2   %3".arg(probe.formatMs(stall.startMs))
+                             .arg(probe.formatMs(stall.endMs))
+                             .arg(probe.formatMs(stall.gapMs)))
+            console.info("asset rows: %1, objects: %2"
+                         .arg(probe.countByObjectNamePrefix(harness.item,
+                                                            "AssetView_TokenListItem_"))
+                         .arg(probe.countObjects(harness.item)))
+            if (probe.samplingEnabled)
+                probe.dumpSamples(probe.sampleDumpPath)
+            Qt.exit(0)
+        }
+    }
+
+    // The section has to be gone for a frame before it is rebuilt, or the new
+    // tree never gets a polish pass and the assets list stays empty.
+    Timer {
+        id: secondLoadTimer
+        interval: 200
+        onTriggered: {
+            probe.begin()
+            harness.active = true
+            probe.stamp("t_skeleton")
+            firstRowWatcher.start()
+            stallReportTimer.restart()
+        }
+    }
+
+    // Polls for the first realised assets row. Frame-driven, so the stamp can
+    // land up to a frame late - on screen the row appears in a polish pass and
+    // the next tick follows the render that reveals it.
+    Timer {
+        id: firstRowWatcher
+        interval: 1
+        repeat: true
+        running: false
+        onTriggered: {
+            if (!harness.item)
+                return
+            if (probe.countByObjectNamePrefix(harness.item, "AssetView_TokenListItem_") > 0) {
+                probe.stamp("t_first_asset_row")
+                running = false
+            }
+        }
+    }
 
     Timer {
         id: profilerExitTimer
@@ -153,6 +226,8 @@ SplitView {
                             const ms = Date.now() - d.loadStartTime
                             logs.logEvent("WalletLoader READY in " + ms + " ms")
                             console.info("WalletLoader READY in", ms, "ms")
+                            if (root.stallReportMode)
+                                probe.stamp("t_ready")
                             if (root.profileExitMode)
                                 profilerExitTimer.start()
                         }
@@ -166,6 +241,7 @@ SplitView {
         id: d
 
         property double loadStartTime: 0
+        property int stallReportPass: 0
 
         // Restored settings assign the knobs before the first reload; without
         // this the page would generate the profile twice on startup.
@@ -373,7 +449,15 @@ SplitView {
         walletMock.uninstall()
         walletMock.install()
         d.loadStartTime = Date.now()
-        harness.active = true
+        if (root.stallReportMode) {
+            probe.begin()
+            harness.active = true
+            probe.stamp("t_skeleton")
+            firstRowWatcher.start()
+            stallReportTimer.restart()
+        } else {
+            harness.active = true
+        }
         const summary = "reload: %1 accounts, %2 asset groups, %3 collectibles (page 1 of %4)"
                         .arg(walletMock.accountsModel.count)
                         .arg(walletMock.profile.assetsModel.count)

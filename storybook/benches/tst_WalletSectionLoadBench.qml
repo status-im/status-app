@@ -158,6 +158,10 @@ Item {
         property int assetDelegates: -1
         property int loadingAssetDelegates: -1
 
+        property int objectsPerAssetRow: -1
+        property var stallTimeline: []
+        property var stampList: []
+
         property real firstAssetRowMs: -1
         property int objectsSettled: -1
         property int assetDelegatesSettled: -1
@@ -225,6 +229,9 @@ Item {
             d.firstAssetRowMs = -1
             d.objectsSettled = -1
             d.assetDelegatesSettled = -1
+            d.objectsPerAssetRow = -1
+            d.stallTimeline = []
+            d.stampList = []
         }
 
         function snapshot(phase) {
@@ -242,7 +249,10 @@ Item {
                 assetDelegates: d.assetDelegates,
                 loadingAssetDelegates: d.loadingAssetDelegates,
                 objectsSettled: d.objectsSettled,
-                assetDelegatesSettled: d.assetDelegatesSettled
+                assetDelegatesSettled: d.assetDelegatesSettled,
+                objectsPerAssetRow: d.objectsPerAssetRow,
+                stallTimeline: d.stallTimeline,
+                stampTimeline: d.stampList
             })
         }
 
@@ -269,6 +279,10 @@ Item {
             }
 
             probe.end()
+            const firstRow = probe.findByObjectNamePrefix(d.section, "AssetView_TokenListItem_")
+            d.objectsPerAssetRow = firstRow ? probe.countObjects(firstRow) : -1
+            d.stallTimeline = probe.stalls()
+            d.stampList = probe.stampTimeline()
             d.objectsSettled = current
             d.assetDelegatesSettled = d.assetRows()
         }
@@ -334,6 +348,13 @@ Item {
             const warm = loadPhase("warm")
 
             printStaircase(cold, warm)
+            printTimeline(cold)
+            printTimeline(warm)
+            if (probe.samplingEnabled) {
+                const dump = probe.sampleDumpPath
+                verify(probe.dumpSamples(dump), "could not write the sampler dump")
+                console.info("stack samples written to " + dump)
+            }
             recordRow(cold)
             recordRow(warm)
 
@@ -463,6 +484,25 @@ Item {
             ]
             for (const line of lines)
                 console.info(line)
+        }
+
+        // Attribution view (issues/0006): where the GUI-thread blocks sit inside
+        // the window, against the staircase stamps.
+        function printTimeline(phase) {
+            console.info("")
+            console.info("%1 phase - stamp timeline (host ms)".arg(phase.phase))
+            for (const stamp of phase.stampTimeline)
+                console.info("    %1  %2".arg(probe.formatMs(stamp.ms).padStart(10))
+                             .arg(stamp.name))
+            console.info("%1 phase - objects per realised assets row: %2"
+                         .arg(phase.phase).arg(phase.objectsPerAssetRow))
+            console.info("%1 phase - GUI-thread blocks over %2ms (host ms)"
+                         .arg(phase.phase).arg(probe.stallThresholdMs))
+            for (const stall of phase.stallTimeline)
+                console.info("    %1 -> %2   %3".arg(probe.formatMs(stall.startMs).padStart(10))
+                             .arg(probe.formatMs(stall.endMs).padStart(10))
+                             .arg(probe.formatMs(stall.gapMs).padStart(8)))
+            console.info("")
         }
 
         function row(metric, warmValue, coldValue, role) {

@@ -8,6 +8,11 @@
 #include <QStringList>
 #include <QVariantList>
 
+#include <array>
+#include <atomic>
+#include <thread>
+#include <vector>
+
 // Measurement hook for the wallet section load bench (issues/0001): a
 // high-resolution clock for the load staircase, a 1ms stall probe, subtree
 // object counters and a TSV appender.
@@ -31,9 +36,14 @@ class WalletLoadBenchProbe : public QObject
     // Absolute path of the storybook source dir, so a bench can address its
     // checked-in baseline TSV without knowing where the build tree lives.
     Q_PROPERTY(QString sourceDir READ sourceDir CONSTANT)
+    // Attribution only (issues/0006). Off by default: suspending the GUI thread
+    // ~2000x/s to walk its stack perturbs the very numbers the bench records.
+    Q_PROPERTY(bool samplingEnabled READ samplingEnabled CONSTANT)
+    Q_PROPERTY(QString sampleDumpPath READ sampleDumpPath CONSTANT)
 
 public:
     explicit WalletLoadBenchProbe(QObject* parent = nullptr);
+    ~WalletLoadBenchProbe() override;
 
     // Window control. begin() zeroes the clock, clears the stamps and starts
     // the stall probe; end() stops the probe.
@@ -49,6 +59,12 @@ public:
     // stall the section never caused.
     Q_INVOKABLE bool waitForStamp(const QString& name, int timeoutMs);
     Q_INVOKABLE double stampMs(const QString& name) const;
+    // Every stamp taken in the window, as {name, ms}, sorted by ms.
+    Q_INVOKABLE QVariantList stampTimeline() const;
+
+    // Every probe gap over the threshold as {startMs, endMs, gapMs}: where the
+    // GUI-thread blocks sit inside the window, not just how big the worst is.
+    Q_INVOKABLE QVariantList stalls() const;
 
     // Subtree instantiation counters. Both the QObject children and the
     // QQuickItem children are walked: a panel handed to the section chrome
@@ -58,6 +74,7 @@ public:
     Q_INVOKABLE int countByObjectNamePrefix(QObject* root, const QString& prefix) const;
 
     Q_INVOKABLE QObject* findByTypePrefix(QObject* root, const QString& prefix) const;
+    Q_INVOKABLE QObject* findByObjectNamePrefix(QObject* root, const QString& prefix) const;
     Q_INVOKABLE QVariantList findAllByTypePrefix(QObject* root, const QString& prefix) const;
     Q_INVOKABLE QString typeName(QObject* obj) const;
 
@@ -65,6 +82,9 @@ public:
     Q_INVOKABLE bool appendTsvRow(const QString& path, const QStringList& header,
                                   const QStringList& row) const;
     Q_INVOKABLE QString utcTimestamp() const;
+    // Writes every captured GUI-thread stack sample to `path`, symbolised via
+    // dladdr. One `sample <ms> <depth>` line per sample, one frame per line.
+    Q_INVOKABLE bool dumpSamples(const QString& path) const;
     // Fixed-precision formatting, so a recorded number never lands in the TSV
     // in exponential notation.
     Q_INVOKABLE QString formatMs(double value) const;
@@ -76,6 +96,8 @@ public:
     double maxStallMs() const { return m_maxStallMs; }
     int stallTickCount() const { return m_stallTickCount; }
     QString sourceDir() const;
+    bool samplingEnabled() const { return m_samplingEnabled; }
+    QString sampleDumpPath() const;
 
 signals:
     void stallThresholdMsChanged();
@@ -87,6 +109,27 @@ protected:
 private:
     QList<QObject*> collectSubtree(QObject* root) const;
 
+    // GUI-thread stack sampler: a watchdog thread suspends the GUI thread on a
+    // fixed cadence and walks its frame pointers. Raw addresses only - nothing
+    // allocates while the target is suspended, or a malloc lock held by the GUI
+    // thread would deadlock the sampler.
+    void startSampler();
+    void stopSampler();
+
+    static constexpr int kMaxFrames = 96;
+    static constexpr int kMaxSamples = 20000;
+
+    struct StackSample {
+        double ms = 0.0;
+        int depth = 0;
+        std::array<quintptr, kMaxFrames> frames {};
+    };
+
+    struct StallInterval {
+        double startMs = 0.0;
+        double endMs = 0.0;
+    };
+
     QElapsedTimer m_clock;
     QBasicTimer m_probeTimer;
     qint64 m_lastTickNs = 0;
@@ -97,4 +140,12 @@ private:
     QHash<QString, double> m_stamps;
     QString m_awaitedStamp;
     QEventLoop* m_awaitLoop = nullptr;
+    QList<StallInterval> m_stalls;
+
+    bool m_samplingEnabled = false;
+    std::thread m_samplerThread;
+    std::atomic<bool> m_samplerRunning { false };
+    std::atomic<int> m_sampleCount { 0 };
+    std::vector<StackSample> m_samples;
+    quintptr m_guiThreadPort = 0;
 };
