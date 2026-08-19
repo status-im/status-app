@@ -239,8 +239,9 @@ Item {
             tryCompare(lv, "count", rows)
             waitForRendering(lv)
 
+            tryVerify(() => lv.contentItem.children.length > 0, 10000,
+                      "some channel rows must be built")
             const created = lv.contentItem.children.length
-            verify(created > 0, "some channel rows must be built")
             verify(created < 60,
                    "member channels list must be virtualized, got " + created
                    + " of " + lv.count)
@@ -262,8 +263,9 @@ Item {
             tryCompare(lv, "count", rows)
             waitForRendering(lv)
 
+            tryVerify(() => lv.contentItem.children.length > 0, 10000,
+                      "some channel rows must be built")
             const created = lv.contentItem.children.length
-            verify(created > 0, "some channel rows must be built")
             verify(created < 60,
                    "admin channels list must be virtualized, got " + created
                    + " of " + lv.count)
