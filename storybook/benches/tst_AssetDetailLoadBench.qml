@@ -28,13 +28,15 @@ import StorybookMocks
 // the token group and moves the stack - to the settle point, exactly as the
 // section bench does.
 //
-// Two opens per run, for the same reason the section bench loads twice - but the
-// section's cold/warm ordering does not hold here. The *second* open is
-// consistently the slower one (71-126 vs 57-67 host ms): the section load ahead
-// of the first open has already warmed the leaf types, so there is no one-time
-// cost left for it to pay, and what the second open's window absorbs instead is
-// not yet attributed (the teardown of the first detail's graph is the suspect).
-// Both opens are recorded; neither is privileged as the headline.
+// Two opens per run, for the same reason the section bench loads twice. Neither
+// is privileged as the headline: on this surface the wall clock is quantised by
+// the incubation controller's gentle cadence (one ~4ms bite every ~17ms), so
+// t_content is `phase offset + bites x 17ms` and both phases land on a small set
+// of discrete values. The warm open starts from an idle controller and waits a
+// full gentle interval for its first bite; the cold open pays a synchronous
+// first-use block at t=0 but its bite train has already started. That, not
+// anything accumulating across the unload/reload cycle, is why the second open
+// can read slower than the first - see issues/0012.
 //
 // Budget: popup class, 400ms device / 40ms host (docs/investigations/
 // wallet-load-benchmarks.md). All numbers are HOST units.
@@ -212,21 +214,21 @@ Item {
         ]
 
         // Host budget for a popup-class surface: 400ms device / 10. Recorded,
-        // not gated: the surface does not meet it today (t_content 57-126ms over
-        // ten phase runs) and a gate nobody can pass is a disabled gate.
+        // not gated: the surface does not meet it (t_content 48-76ms over ten
+        // phase runs) and a gate nobody can pass is a disabled gate. 40ms is a
+        // two-bite budget on this cadence and the view needs three.
         readonly property real contentBudgetMs: 40
 
-        // Gated on both phases. `objects_settled` reads 1146 in 24 of 25 phase
-        // runs and 1147 in one: the drain loop's stability test can end one
-        // sample before a late tooltip lands, so it carries a documented
-        // tolerance of 1 rather than a rounder number - a regression worth
+        // Gated on both phases. `objects_settled` carries a documented tolerance
+        // of 1 rather than a rounder number: the drain loop's stability test can
+        // end one sample before a late tooltip lands. A regression worth
         // catching here moves the count by hundreds, not by one.
         // `objects_at_ready` is recorded only: it races the layout pass that
-        // follows Ready and reads 1141, 1142 or 1146.
-        readonly property int expectedObjectsSettled: 1146
+        // follows Ready.
+        readonly property int expectedObjectsSettled: 918
         readonly property int objectsSettledTolerance: 1
         readonly property int expectedChainTags: 4
-        readonly property int expectedInformationTiles: 3
+        readonly property int expectedInformationTiles: 2
 
         // Ratchet on today's measured count (4-10 over ten phase runs). The
         // headroom absorbs a loaded build machine; lower it whenever a fix

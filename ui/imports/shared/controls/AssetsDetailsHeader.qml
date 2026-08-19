@@ -21,7 +21,8 @@ Control {
     property alias primaryText: tokenName.text
     property alias secondaryText: cryptoBalance.text
     property alias tertiaryText: fiatBalance.text
-    property alias communityTag: communityTag
+    property string communityName
+    property string communityImage
     property var balances
     property int decimals
     property var networksModel
@@ -35,6 +36,22 @@ Control {
     property var formatBalance: function(balance){}
 
     topPadding: Theme.padding
+
+    // One Component shared by every chain tag: the button used to be built for
+    // each of them and hidden, and it carries a StatusToolTip.
+    Component {
+        id: chainErrorButton
+
+        StatusFlatRoundButton {
+            width: 14
+            height: 14
+            icon.width: 14
+            icon.height: 14
+            icon.name: "tiny/warning"
+            icon.color: Theme.palette.dangerColor1
+            tooltip.text: root.errorTooltipText
+        }
+    }
 
     contentItem: ColumnLayout {
         id: mainLayout
@@ -106,8 +123,15 @@ Control {
                 id: communityAndBalances
                 Layout.fillWidth: true
                 spacing: Theme.halfPadding
-                InformationTag {
-                    id: communityTag
+                Loader {
+                    active: !!root.communityName || !!root.communityImage
+                    visible: active
+                    sourceComponent: InformationTag {
+                        objectName: "assetsDetailsHeaderCommunityTag"
+                        tagPrimaryLabel.text: root.communityName
+                        asset.name: root.communityImage
+                        asset.isImage: true
+                    }
                 }
                 Repeater {
                     id: chainRepeater
@@ -143,16 +167,7 @@ Control {
                         asset.isImage: true
                         loading: root.isLoading
                         visible: balancesAggregator.value > 0
-                        rightComponent: StatusFlatRoundButton {
-                            width: visible ? 14 : 0
-                            height: visible ? 14 : 0
-                            icon.width: 14
-                            icon.height: 14
-                            icon.name: "tiny/warning"
-                            icon.color: Theme.palette.dangerColor1
-                            tooltip.text: root.errorTooltipText
-                            visible: !!root.errorTooltipText
-                        }
+                        rightComponent: !!root.errorTooltipText ? chainErrorButton : null
                     }
                 }
             }
