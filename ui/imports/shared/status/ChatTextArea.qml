@@ -64,6 +64,20 @@ StatusTextArea {
     // The partial shortcode typed after that ":" (up to the caret); "" when not entering one.
     readonly property string emojiFilter: d.emojiContext.filter
 
+    // When true, an ASCII emoticon (":)", ";P", "<3"…) typed as a whole word is replaced by the
+    // corresponding emoji once the word is completed with a space or a newline. The host can also
+    // force it (e.g. right before sending) via convertAsciiEmoji().
+    property bool asciiEmojiConversion: false
+
+    // Replaces the ASCII emoticon ending at the caret, if any, with its emoji. No-op when
+    // asciiEmojiConversion is off, when there is a selection, or when the word isn't an emoticon.
+    function convertAsciiEmoji() {
+        const match = d.asciiEmojiBeforeCaret()
+        if (!match)
+            return
+        highlighter.replaceTextWithEmojis(match.start, root.cursorPosition, match.emoji)
+    }
+
     function insertMention(pos, name, pubKey) {
         highlighter.insertMention(pos, name, pubKey)
     }
@@ -227,6 +241,8 @@ StatusTextArea {
     InputMethodEventFilter {
         target: root
         onInputMethodEventReceived: (imeEvent) => {
+            if (imeEvent.commitString === " " || imeEvent.commitString === "\n")
+                root.convertAsciiEmoji()
             if (imeEvent.commitString === "\n" && d.continueQuoteBlock())
                 imeEvent.accept()
         }
@@ -353,6 +369,35 @@ StatusTextArea {
             return { entering: true, filter: filter }
         }
 
+        // { start, emoji } for the ASCII emoticon ending at the caret, or null. The emoticon must
+        // be a whole word (text/line start or right after whitespace) and outside code.
+        function asciiEmojiBeforeCaret() {
+            if (!root.asciiEmojiConversion
+                    || root.selectionStart !== root.selectionEnd
+                    || root.preeditText.length > 0)
+                return null
+
+            const caret = root.cursorPosition
+            const from = Math.max(0, caret - Emoji.maxAsciiEmojiLength())
+            const chunk = root.getText(from, caret)
+
+            // Longest match first, so ">:)" wins over ":)".
+            for (let start = 0; start < chunk.length; ++start) {
+                if (start > 0 && !/\s/.test(chunk.charAt(start - 1)))
+                    continue
+                if (start === 0 && from > 0 && !/\s/.test(root.getText(from - 1, from)))
+                    continue
+
+                const emoji = Emoji.getAsciiEmoji(chunk.substring(start))
+                if (!emoji)
+                    continue
+
+                const pos = from + start
+                return highlighter.isInsideCode(pos) ? null : { start: pos, emoji: emoji }
+            }
+            return null
+        }
+
         // Triggers repainting the caret at the right place after an out-of-band
         // document edit (paste, or removing formatting). The highlighter mutates
         // the document and re-applies char formats as part of the same change —
@@ -471,6 +516,12 @@ StatusTextArea {
                 return
             }
         }
+
+        // Convert the ASCII emoticon completed by this key before its own insertion happens, so
+        // the caret still sits right at the end of the word. The key then types as usual.
+        if (event.key === Qt.Key_Space || event.key === Qt.Key_Return
+                || event.key === Qt.Key_Enter)
+            root.convertAsciiEmoji()
 
         // Intercept the 3rd backtick typed right after "``" and perform
         // the "``" -> "```" replacement ourselves, as a single joinable

@@ -626,6 +626,32 @@ Item {
             compare(signalSpy.count, 1)
         }
 
+        // ── ASCII emoticon conversion
+        //
+        // A trailing emoticon is converted on send, even though no space completed it.
+        function test_asciiEmoticon_convertedOnSend() {
+            signalSpy.setup(controlUnderTest, "sendMessageRequested")
+
+            controlUnderTest.textInput.forceActiveFocus()
+            typeText("hello :)")
+            waitForRendering(controlUnderTest)
+
+            keyClick(Qt.Key_Return) // send (NoModifier maps to send on desktop/offscreen)
+            waitForRendering(controlUnderTest)
+
+            compare(controlUnderTest.getPlainText(), "hello \u{1F642}")
+            compare(signalSpy.count, 1)
+        }
+
+        // Typing a space after an emoticon converts it in place.
+        function test_asciiEmoticon_convertedOnSpace() {
+            controlUnderTest.textInput.forceActiveFocus()
+            typeText("hello :) ")
+            waitForRendering(controlUnderTest)
+
+            compare(controlUnderTest.getPlainText(), "hello \u{1F642} ")
+        }
+
         function test_selectStickerForTest_emits_stickerSelected() {
             signalSpy.setup(controlUnderTest, "stickerSelected")
 

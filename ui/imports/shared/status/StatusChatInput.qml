@@ -368,6 +368,9 @@ Control {
         - hides extended area
       */
     function tryFinalizeMessage() {
+        // Convert a trailing ASCII emoticon ("hello :)") that was never completed with a space.
+        messageInputField.convertAsciiEmoji()
+
         // Count against the wire text (mentions expanded to @0xpubkey), not the pill-placeholder text.
         const messageLength = messageInputField.textWithMentions().length
         const wasEdit = root.isEdit
@@ -381,7 +384,6 @@ Control {
             return
         }
 
-        // Emojis are already plain unicode (no ":)" conversion needed).
         root.sendMessageRequested()
         if (!wasEdit)
             root.hideExtendedArea()
@@ -858,6 +860,7 @@ Control {
 
                         characterLimit: root.messageLimitHard
                         imageEmojis: true
+                        asciiEmojiConversion: true
 
                         // Paddings are used only for left/right sides because
                         // when used nn top/bottom they cause artificial cut-off
