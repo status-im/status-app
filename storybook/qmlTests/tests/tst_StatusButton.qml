@@ -208,8 +208,8 @@ Item {
             // verify the tooltip is visible in interactive or enabled when hovered
             const buttonTooltip = findChild(controlUnderTest, "buttonTooltip")
             verify(!!buttonTooltip)
+            verify(!buttonTooltip.item, "the tooltip must not be built before the first hover")
             mouseMove(controlUnderTest, controlUnderTest.width/2, controlUnderTest.height/2)
-            waitForItemPolished(buttonTooltip.contentItem)
             tryCompare(buttonTooltip, "opened", data.tooltip)
 
             // verify the click goes thru (or not) as expected
@@ -247,13 +247,13 @@ Item {
             verify(!!buttonEmoji)
             compare(buttonEmoji.item.opacity, 0.4) // the emoji is loaded on demand
 
-            const buttonRipple = findChild(controlUnderTest, "buttonRipple")
-            verify(!!buttonRipple)
-            verify(!buttonRipple.enabled)
+            verify(!findChild(controlUnderTest, "buttonRipple"),
+                   "a button that cannot react must not build a ripple")
 
             mousePress(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
             compare(buttonBackground.scale, 1)
-            verify(!buttonRipple.visible)
+            verify(!findChild(controlUnderTest, "buttonRipple"),
+                   "...not even when it is pressed")
             mouseRelease(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
             compare(signalSpy.count, 0)
 
@@ -262,7 +262,7 @@ Item {
                     .release(0, controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
                     .commit()
             compare(buttonBackground.scale, 1)
-            verify(!buttonRipple.visible)
+            verify(!findChild(controlUnderTest, "buttonRipple"))
             compare(signalSpy.count, 0)
         }
 
@@ -319,18 +319,20 @@ Item {
             controlUnderTest = createTemporaryObject(componentUnderTest, root, { text: "Hello" })
             verify(!!controlUnderTest)
 
-            const buttonRipple = findChild(controlUnderTest, "buttonRipple")
-            verify(!!buttonRipple)
-            verify(buttonRipple.enabled)
-            verify(!buttonRipple.visible)
             const buttonBackground = findChild(controlUnderTest, "buttonBackground")
             verify(!!buttonBackground)
             compare(buttonBackground.scale, 1)
             compare(controlUnderTest.contentItem.scale, 1)
+            verify(!findChild(controlUnderTest, "buttonRipple"),
+                   "the ripple must not be built before the first press")
 
             const pressX = controlUnderTest.width / 4
             const pressY = controlUnderTest.height * 3 / 4
             mousePress(controlUnderTest, pressX, pressY)
+
+            const buttonRipple = findChild(controlUnderTest, "buttonRipple")
+            verify(!!buttonRipple, "the press must build the ripple")
+            verify(buttonRipple.enabled)
             tryVerify(() => buttonRipple.visible)
             tryCompare(buttonBackground, "scale", controlUnderTest.pressedScale)
             compare(controlUnderTest.contentItem.scale, 1)

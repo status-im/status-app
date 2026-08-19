@@ -78,6 +78,10 @@ SplitView {
                          .arg(probe.countByObjectNamePrefix(harness.item,
                                                             "AssetView_TokenListItem_"))
                          .arg(probe.countObjects(harness.item)))
+            console.info("leaf census (instances alive at settle)")
+            for (const prefix of d.censusTypes)
+                console.info("    %1  %2".arg(probe.countByTypePrefix(harness.item, prefix))
+                             .arg(prefix))
             if (probe.samplingEnabled)
                 probe.dumpSamples(probe.sampleDumpPath)
             Qt.exit(0)
@@ -242,6 +246,17 @@ SplitView {
 
         property double loadStartTime: 0
         property int stallReportPass: 0
+
+        // Leaf tiers priced by issues/0008-0010; printed by the stall report so a
+        // change in leaf volume shows up next to the staircase that pays for it.
+        readonly property var censusTypes: [
+            "StatusToolTip", "StatusRipple", "StatusFlatRoundButton",
+            "StatusScrollBar", "StatusScrollView", "QQuickFlickable", "StatusListView",
+            "StatusListItem",
+            "TokenDelegate", "StatusBaseText", "QQuickText", "StatusIcon",
+            "QQuickColorImage", "StatusImage", "QQuickImage", "QQuickLoader",
+            "QQuickMouseArea", "StatusMouseArea"
+        ]
 
         // Restored settings assign the knobs before the first reload; without
         // this the page would generate the profile twice on startup.

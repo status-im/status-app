@@ -324,13 +324,13 @@ Item {
         readonly property int expectedAccountDelegates: 8
         readonly property int expectedAssetDelegates: 0
         readonly property int expectedLoadingAssetDelegates: 0
-        readonly property int expectedObjectsTotal: 4602
+        readonly property int expectedObjectsTotal: 3999
         readonly property int objectsTotalTolerance: 0
 
         // The settled counts are the ones that see the whole section: the
         // layout pass after the loaders report Ready more than doubles the
         // object count and is where every assets row is built.
-        readonly property int expectedObjectsSettled: 9166
+        readonly property int expectedObjectsSettled: 7365
         readonly property int expectedAssetDelegatesSettled: 26
 
         // The gated stall counter is `stalls_over_8ms`, not `stalls_over_4ms`.

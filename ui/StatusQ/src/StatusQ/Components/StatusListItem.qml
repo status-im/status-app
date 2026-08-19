@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import QtModelsToolkit
+
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
@@ -34,9 +36,15 @@ Rectangle {
     property alias components: statusListItemComponentsSlot.children
     property var bottomModel: []
     property Component bottomDelegate
-    property alias tagsModel: tagsRepeater.model
-    readonly property int tagsCount: tagsRepeater.count
+    property var tagsModel: null
+    readonly property int tagsCount: d.modelCount(root.tagsModel)
     property Component tagsDelegate
+    /*!
+       Spacing between the tags. Replaces the former
+       \c statusListItemInlineTagsSlot alias, which cannot survive the tags
+       row being built on demand.
+    */
+    property real tagsSpacing: 10
     property var inlineTagModel: []
     property Component inlineTagDelegate
     property bool forceDefaultCursor: false
@@ -88,7 +96,6 @@ Rectangle {
     property alias statusListItemTertiaryTitle: statusListItemTertiaryTitle
     property alias statusListItemComponentsSlot: statusListItemComponentsSlot
     property alias statusListItemTagsSlot: statusListItemTagsSlot
-    property alias statusListItemInlineTagsSlot: statusListItemTagsSlotInline
     property alias statusListItemLabel: statusListItemLabel
     property alias subTitleBadgeComponent: subTitleBadgeLoader.sourceComponent
     property alias errorIcon: errorIcon
@@ -133,30 +140,67 @@ Rectangle {
     }
     radius: Theme.radius
 
-    StatusRipple {
-        id: listItemRipple
-        objectName: "statusListItemRipple"
+    QtObject {
+        id: d
+
+        readonly property int inlineTagsCount: d.modelCount(root.inlineTagModel)
+        readonly property real tagsAvailableWidth: root.width - iconOrImage.width
+                                                 - root.rightPadding - 2 * root.leftPadding
+
+        // What a Repeater would report for the same model, without building one:
+        // the tag rows are deferred, so their counts have to be known first.
+        function modelCount(model) {
+            if (!model)
+                return 0
+            if (typeof model === "number")
+                return model
+            // A QVariantList reaches QML as a sequence wrapper, not a JS Array,
+            // so this asks for a length rather than for the exact type.
+            if (typeof model.length === "number")
+                return model.length
+            if (typeof model.count === "number")
+                return model.count
+            if (model.ModelCount !== undefined)
+                return model.ModelCount.count
+            return 1
+        }
+    }
+
+    // The ripple only exists to animate a press, so nothing is built until the
+    // item is first pressed. The press is delivered by hand here, so the item
+    // is loaded and pressed in the same call.
+    Loader {
+        id: rippleLoader
         anchors.fill: parent
-        enabled: root.enabled && sensor.enabled
-        color: root.type === StatusListItem.Type.Danger ? Theme.palette.dangerColor1
-                                                        : Theme.palette.directColor1
-        radius: root.radius
-        origin: root.rippleOrigin
+        active: false
+
+        sourceComponent: StatusRipple {
+            objectName: "statusListItemRipple"
+            enabled: rippleFeedback.rippleReactive
+            color: root.type === StatusListItem.Type.Danger ? Theme.palette.dangerColor1
+                                                            : Theme.palette.directColor1
+            radius: root.radius
+            origin: root.rippleOrigin
+        }
     }
 
     QtObject {
         id: rippleFeedback
 
+        readonly property bool rippleReactive: root.enabled && sensor.enabled
+
         function pressRipple(mouse, sourceItem) {
-            if (!listItemRipple.enabled || mouse.button !== Qt.LeftButton)
+            if (!rippleFeedback.rippleReactive || mouse.button !== Qt.LeftButton)
                 return
 
+            rippleLoader.active = true
             const ripplePoint = sourceItem.mapToItem(root, mouse.x, mouse.y)
-            listItemRipple.press(ripplePoint.x, ripplePoint.y)
+            rippleLoader.item.press(ripplePoint.x, ripplePoint.y)
         }
 
         function releaseRipple() {
-            listItemRipple.release()
+            if (rippleLoader.item)
+                rippleLoader.item.release()
         }
     }
 
@@ -261,7 +305,7 @@ Rectangle {
                     icon: root.titleTextIcon
                 }
 
-                StatusToolTip {
+                StatusDeferredToolTip {
                     id: statusListItemTitleTooltip
                     text: statusListItemTitle.text
                     delay: 0
@@ -340,7 +384,7 @@ Rectangle {
                     objectName: "statusListItemSubTitle"
 
                     Layout.alignment: Qt.AlignVCenter
-                    Layout.preferredWidth: inlineTagModelRepeater.count > 0 ? contentWidth : parent.width - subTitleBadgeLoader.width
+                    Layout.preferredWidth: d.inlineTagsCount > 0 ? contentWidth : parent.width - subTitleBadgeLoader.width
 
                     text: root.subTitle
                     font.pixelSize: Theme.primaryTextFontSize
@@ -364,24 +408,30 @@ Rectangle {
                     lineHeightMode: Text.FixedHeight
                     lineHeight: 24
 
-                    visible: inlineTagModelRepeater.count > 0
+                    visible: d.inlineTagsCount > 0
                 }
 
-                StatusScrollView {
-                    id: inlineTagModelRepeaterRow
+                // A scroll view is a Flickable and two scroll bars; an item with
+                // no inline tags builds none of it.
+                Loader {
+                    id: inlineTagsLoader
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
-                    padding: 0
+                    active: d.inlineTagsCount > 0
 
-                    ScrollBar.horizontal.policy: root.tagsScrollBarVisible ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
+                    sourceComponent: StatusScrollView {
+                        padding: 0
 
-                    Row {
-                        id: row
-                        spacing: 4
-                        Repeater {
-                            id: inlineTagModelRepeater
-                            model: inlineTagModel
-                            delegate: inlineTagDelegate
+                        ScrollBar.horizontal.policy: root.tagsScrollBarVisible ? ScrollBar.AsNeeded
+                                                                               : ScrollBar.AlwaysOff
+
+                        Row {
+                            spacing: 4
+
+                            Repeater {
+                                model: root.inlineTagModel
+                                delegate: root.inlineTagDelegate
+                            }
                         }
                     }
                 }
@@ -407,30 +457,43 @@ Rectangle {
                 implicitHeight: visible ? 22 : 0
             }
 
-            StatusScrollView {
-                id: tagsScrollView
-                visible: tagsRepeater.count > 0
+            // Same story as the inline tags: the scroll view only exists to let
+            // the tags overflow, so an item without tags never builds one. The
+            // sizes read the row's implicit size rather than the scroll view's
+            // content size, which would close a loop through the loader.
+            Loader {
+                id: tagsScrollViewLoader
+                objectName: "statusListItemTagsScrollView"
                 anchors.top: statusListItemTertiaryTitle.bottom
-                anchors.topMargin: visible ? 2 : 0
-                width: Math.min(statusListItemTagsSlotInline.width, statusListItemTagsSlotInline.availableWidth, parent.width)
-                height: visible ? contentHeight + 16 : 0
-                padding: 0
-                ScrollBar.horizontal.policy: root.tagsScrollBarVisible ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
+                anchors.topMargin: active ? 2 : 0
+                width: item ? Math.min(item.tagsWidth, d.tagsAvailableWidth,
+                                       statusListItemTitleArea.width)
+                            : 0
+                height: item ? item.tagsHeight + 16 : 0
+                active: root.tagsCount > 0
 
-                Row {
-                    id: statusListItemTagsSlotInline
-                    readonly property real availableWidth: root.width - iconOrImage.width - root.rightPadding - 2*root.leftPadding
-                    spacing: tagsRepeater.count > 0 ? 10 : 0
+                sourceComponent: StatusScrollView {
+                    readonly property alias tagsWidth: tagsRow.implicitWidth
+                    readonly property alias tagsHeight: tagsRow.implicitHeight
 
-                    Repeater {
-                        id: tagsRepeater
-                        delegate: root.tagsDelegate
+                    padding: 0
+                    ScrollBar.horizontal.policy: root.tagsScrollBarVisible ? ScrollBar.AsNeeded
+                                                                           : ScrollBar.AlwaysOff
+
+                    Row {
+                        id: tagsRow
+                        spacing: root.tagsSpacing
+
+                        Repeater {
+                            model: root.tagsModel
+                            delegate: root.tagsDelegate
+                        }
                     }
                 }
             }
 
             RowLayout {
-                anchors.top: tagsScrollView.bottom
+                anchors.top: tagsScrollViewLoader.bottom
                 anchors.topMargin: visible ? 4 : 0
                 width: parent.width
                 visible: !!root.beneathTagsIcon || !!root.beneathTagsTitle

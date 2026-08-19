@@ -112,6 +112,7 @@
         <file>StatusQ/Controls/StatusColorSelectorGrid.qml</file>
         <file>StatusQ/Controls/StatusComboBox.qml</file>
         <file>StatusQ/Controls/StatusCommunityTag.qml</file>
+        <file>StatusQ/Controls/StatusDeferredToolTip.qml</file>
         <file>StatusQ/Controls/StatusDropdown.qml</file>
         <file>StatusQ/Controls/StatusFeeOption.qml</file>
         <file>StatusQ/Controls/StatusFlatButton.qml</file>

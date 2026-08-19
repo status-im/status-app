@@ -171,6 +171,8 @@ MenuItem {
     }
 
     background: Rectangle {
+        id: menuItemBackground
+
         color: {
             if (!hoverHandler.hovered && !d.subMenuOpened)
                 return "transparent"
@@ -181,17 +183,34 @@ MenuItem {
             return Theme.palette.statusMenu.hoverBackgroundColor;
         }
 
-        StatusRipple {
-            id: menuItemRipple
-            objectName: "statusMenuItemRipple"
+        // The ripple only exists to animate a press, so nothing is built until
+        // the item is first pressed. AbstractButton sets `pressed` before it
+        // emits pressed(), so the ripple is connected in time to catch the very
+        // press that created it.
+        Loader {
+            id: rippleLoader
             anchors.fill: parent
-            enabled: root.enabled
-            color: d.isStatusDangerAction ? Theme.palette.dangerColor1
-                  : d.isStatusSuccessAction ? Theme.palette.successColor1
-                                            : Theme.palette.directColor1
-            radius: parent.radius
-            origin: root.rippleOrigin
-            button: root
+            active: false
+
+            sourceComponent: StatusRipple {
+                objectName: "statusMenuItemRipple"
+                enabled: root.enabled
+                color: d.isStatusDangerAction ? Theme.palette.dangerColor1
+                      : d.isStatusSuccessAction ? Theme.palette.successColor1
+                                                : Theme.palette.directColor1
+                radius: menuItemBackground.radius
+                origin: root.rippleOrigin
+                button: root
+            }
+        }
+    }
+
+    onPressedChanged: {
+        if (root.pressed) {
+            if (root.enabled)
+                rippleLoader.active = true
+        } else if (rippleLoader.item) {
+            rippleLoader.item.release()
         }
     }
 
