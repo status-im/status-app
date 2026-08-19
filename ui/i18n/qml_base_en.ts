@@ -1038,6 +1038,74 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>The collected profile could not be read: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>just now</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s) ago</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s) ago</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s) ago</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Messages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Chats</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Communities</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Oldest message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max sync gap</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Collectibles</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>App database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wallet database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Fleet</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1107,6 +1175,42 @@
     </message>
     <message>
         <source>Developer features</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Storage stats</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Describes the shape of this account&apos;s databases - how many messages, chats and wallet rows it holds, how far behind the sync state is, how large each table is - so that a developer can rebuild an equivalent account to reproduce a bug. Dates appear only as day counts, and no message, chat, contact or address is ever included. Nothing is collected until you press Collect data.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Collecting...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Collect data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 of %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Starting...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Collected %1, saved to %2 and picked up by Application Logs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Collected %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Chats by message count</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

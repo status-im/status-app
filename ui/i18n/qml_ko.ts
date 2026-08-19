@@ -1035,6 +1035,70 @@
         <translation>이 기능은 실험적이며 핵심 기여자와 커뮤니티의 테스트 목적으로 제공됩니다. 실제 사용을 위한 것이 아니며 자금이나 데이터의 보안 또는 무결성을 보장하지 않습니다. 본인 책임하에 사용하세요.</translation>
     </message>
     <message>
+        <source>The collected profile could not be read: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>just now</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s) ago</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s) ago</source>
+        <translation type="unfinished">
+            <numerusform>%n시간 전</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s) ago</source>
+        <translation type="unfinished">
+            <numerusform>%n일 전</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Messages</source>
+        <translation type="unfinished">메시지</translation>
+    </message>
+    <message>
+        <source>Chats</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Communities</source>
+        <translation type="unfinished">커뮤니티</translation>
+    </message>
+    <message>
+        <source>Oldest message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max sync gap</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Collectibles</source>
+        <translation type="unfinished">수집품</translation>
+    </message>
+    <message>
+        <source>App database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wallet database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Fleet</source>
         <translation>플릿</translation>
     </message>
@@ -1105,6 +1169,42 @@
     <message>
         <source>Developer features</source>
         <translation>개발자 기능</translation>
+    </message>
+    <message>
+        <source>Storage stats</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Describes the shape of this account&apos;s databases - how many messages, chats and wallet rows it holds, how far behind the sync state is, how large each table is - so that a developer can rebuild an equivalent account to reproduce a bug. Dates appear only as day counts, and no message, chat, contact or address is ever included. Nothing is collected until you press Collect data.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Collecting...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Collect data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 of %2</source>
+        <translation type="unfinished">%2 중 %1</translation>
+    </message>
+    <message>
+        <source>Starting...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Collected %1, saved to %2 and picked up by Application Logs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Collected %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Chats by message count</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>The app will restart if you confirm.</source>

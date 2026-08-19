@@ -108,3 +108,28 @@ method onOldLogsCleanupFinished*(self: AccessInterface, deletedCount, failedCoun
 
 method onOldLogsCleanupStarted*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
+
+method getIsCollectingStorageStats*(self: AccessInterface): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method collectStorageStats*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onStorageStatsCollectionStarted*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onStorageStatsProgress*(self: AccessInterface, step, total: int) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onStorageStatsFinished*(self: AccessInterface, data, snapshotPath,
+    error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method getLastStorageStatsData*(self: AccessInterface): string {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method getLastStorageStatsSnapshotPath*(self: AccessInterface): string {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method getLastStorageStatsAgeSeconds*(self: AccessInterface): int {.base.} =
+  raise newException(ValueError, "No implementation available")

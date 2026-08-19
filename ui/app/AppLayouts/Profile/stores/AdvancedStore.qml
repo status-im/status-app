@@ -23,6 +23,7 @@ QtObject {
     property real logsFolderSizeBytes: advancedModule ? advancedModule.logsFolderSizeBytes : 0
     property bool isRuntimeLogLevelSet: advancedModule ? advancedModule.isRuntimeLogLevelSet: false
     property bool isClearingOldLogs: advancedModule ? advancedModule.isClearingOldLogs : false
+    property bool isCollectingStorageStats: advancedModule ? advancedModule.isCollectingStorageStats : false
     readonly property int archiveProtocolMode: advancedModule ? advancedModule.archiveProtocolMode : AdvancedStore.ArchiveProtocolMode.Disabled
     readonly property string archiveProtocolModeLabel: {
         switch (root.archiveProtocolMode) {
@@ -51,6 +52,23 @@ QtObject {
         }
     }
 
+    // `data` is the profile as pretty-printed JSON; `snapshotPath` is the copy
+    // already written next to the application logs.
+    signal storageStatsProgress(int step, int total)
+    signal storageStatsFinished(string data, string snapshotPath, string error)
+
+    readonly property Connections storageStatsConnection: Connections {
+        target: root.advancedModule
+
+        function onStorageStatsProgress(step, total) {
+            root.storageStatsProgress(step, total)
+        }
+
+        function onStorageStatsFinished(data, snapshotPath, error) {
+            root.storageStatsFinished(data, snapshotPath, error)
+        }
+    }
+
     readonly property QtObject experimentalFeatures: QtObject {
         readonly property string browser: "browser"
         readonly property string communities: "communities"
@@ -66,6 +84,30 @@ QtObject {
     readonly property real scrollDeceleration: localAppSettings.scrollDeceleration
 
     readonly property bool refreshTokenEnabled: localAppSettings.refreshTokenEnabled ?? false
+
+    function collectStorageStats() {
+        if(!root.advancedModule)
+            return
+
+        root.advancedModule.collectStorageStats()
+    }
+
+    // Last profile, held by the Nim service so navigating away does not discard
+    // it. Null when nothing has been collected this session.
+    function lastStorageStats() {
+        if(!root.advancedModule)
+            return null
+
+        const ageSeconds = root.advancedModule.lastStorageStatsAgeSeconds()
+        if(ageSeconds < 0)
+            return null
+
+        return {
+            data: root.advancedModule.lastStorageStatsData(),
+            snapshotPath: root.advancedModule.lastStorageStatsSnapshotPath(),
+            ageSeconds: ageSeconds
+        }
+    }
 
     function logDir() {
         if(!root.advancedModule)

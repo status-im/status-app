@@ -77,6 +77,8 @@ type SignalType* {.pure.} = enum
   WCSessionDelete = "connector.wcSessionDelete"
   LocalMessageBackupDone = "local.message.backup.done"
   MediaServerStarted = "mediaserver.started"
+  StorageStatsProgress = "storage-stats.progress"
+  StorageStatsResult = "storage-stats.result"
   Unknown
 
 proc event*(self:SignalType):string =
