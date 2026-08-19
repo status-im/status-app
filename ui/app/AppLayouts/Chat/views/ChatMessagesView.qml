@@ -141,6 +141,134 @@ Item {
         property int windowStart: 0
         property int windowEnd: initialWindowSize - 1
 
+        // The empty window an undressed view holds. NEVER windowEnd = -1:
+        // the IndexFilter wraps negative indices from the model's end, so
+        // [0..-1] admits the entire history instead of nothing.
+        function closeWindow() {
+            windowStart = 1
+            windowEnd = 0
+        }
+
+        // ---- Window record (ADR 0007): the durable per-chat name of a
+        // viewing position, captured on switch-away and restored on return.
+        // {atBottom} or {oldestRowId, span, offset}: named by message id and
+        // measured from the window's own content top, never indices or
+        // absolute contentY — both rot while the chat is inactive.
+        property var windowRecords: ({})
+
+        // The chat the current window belongs to. Latched from the store at
+        // attach: root.chatId may still hold the previous chat while the
+        // bindings of a switch settle.
+        property string recordKey: ""
+
+        // A restore in flight: the window is rebuilding as one staged batch
+        // whose reveal applies the recorded position. Until it does, every
+        // automatic repositioning (the marker scroll, bottom-follows) is
+        // ignored — within a session the record wins over the marker.
+        property var pendingRestore: null
+
+        function captureWindowRecord() {
+            if (!d.recordKey)
+                return
+            // an entry that never revealed (or is still restoring) holds no
+            // position of its own — keep the previous record
+            if (d.initialFillActive || d.pendingRestore)
+                return
+            if (chatLogView.stickingToNewest || chatLogView.atNewest) {
+                d.windowRecords[d.recordKey] = ({ atBottom: true })
+                return
+            }
+            for (let i = chatLogView.count - 1; i >= 0; --i) {
+                // the shells' own reveal state, not visible: a section
+                // deactivation captures while the whole view is already
+                // effectively invisible, geometry still intact
+                const item = chatLogView.itemAtRow(i)
+                if (!item || !item.revealed || !item.contentReady
+                        || item.height <= 0)
+                    continue
+                const offset = chatLogView.viewportOffsetToRow(i)
+                if (isNaN(offset))
+                    return
+                d.windowRecords[d.recordKey] = ({
+                    oldestRowId: String(item.messageId),
+                    span: i + 1,
+                    offset: offset
+                })
+                return
+            }
+        }
+
+        // Opens the window for the chat the source model now carries:
+        // through its window record when one exists, at the newest message
+        // otherwise. The at-bottom exception restores to the CURRENT newest
+        // window — the ordinary open — never a frozen record.
+        function openWindow() {
+            d.recordKey = root.messageStore.getChatId()
+            const record = d.windowRecords[d.recordKey]
+            if (d.dressActive && record && !record.atBottom) {
+                const index = SQUtils.ModelUtils.indexOf(
+                            root.messageStore.messagesModel, "id",
+                            record.oldestRowId)
+                if (index >= 0) {
+                    d.restoreWindow(index, record)
+                    return
+                }
+                // deleted anchor or cleared history: the record names nothing
+                delete d.windowRecords[d.recordKey]
+            }
+            d.resetWindow()
+            d.schedulePositionAtNewest()
+        }
+
+        // Rebuilds the recorded window around the anchor as one staged batch:
+        // the skeleton holds until every row is dressed, one atomic reveal,
+        // then the recorded offset from the window's content top — the same
+        // rows at the same width reproduce the same layout exactly.
+        function restoreWindow(endIndex, record) {
+            clearStaging()
+            initialFillActive = false
+            if (root.rowPool)
+                root.rowPool.clearBoost(d.rowPoolKind)
+            d.pendingPositionAtNewest = false
+            d.windowAtInitial = false
+            d.lastFetchHistoryCount = -1
+            d.pendingRestore = ({ messageId: record.oldestRowId,
+                                  offset: record.offset })
+            const capacity = d.usePool
+                           ? Math.max(1, d.acquiredCount + d.poolHeadroom())
+                           : d.maxWindowSize
+            const start = Math.max(0, endIndex
+                                      - Math.min(record.span, capacity) + 1)
+            d.admitStaged(function() {
+                // start first: moving the start deeper never admits rows, so
+                // the span between the stale bounds and the target is never
+                // transiently admitted
+                d.windowStart = start
+                d.windowEnd = endIndex
+            })
+        }
+
+        function applyPendingRestore() {
+            const restore = d.pendingRestore
+            // cleared a turn later, not here: the pooled rebind makes the
+            // whole restore synchronous, and the marker scroll it must win
+            // over can arrive in the same turn, right after the reveal
+            Qt.callLater(function() {
+                if (d.pendingRestore === restore)
+                    d.pendingRestore = null
+            })
+            for (let i = chatLogView.count - 1; i >= 0; --i) {
+                const item = chatLogView.itemAtRow(i)
+                if (item && String(item.messageId) === restore.messageId) {
+                    chatLogView.positionAtRowOffset(i, restore.offset)
+                    return
+                }
+            }
+            // the anchor never made it into the batch (timeout reveal of a
+            // wedged row): the bottom is the only safe place left
+            chatLogView.positionAtNewest()
+        }
+
         // The window proxy's filters only engage at completion: a source
         // attached during creation would flash the ENTIRE unfiltered history
         // through the Repeater once. Hold the source off until then.
@@ -159,15 +287,16 @@ Item {
             if (!d.usePool)
                 return
             if (d.dressActive) {
-                d.resetWindow()
-                d.schedulePositionAtNewest()
+                d.openWindow()
             } else {
+                // capture BEFORE the un-dress collapses the window
+                d.captureWindowRecord()
                 d.clearStaging()
                 d.initialFillActive = false
+                d.pendingRestore = null
                 if (root.rowPool)
                     root.rowPool.clearBoost(d.rowPoolKind)
-                d.windowStart = 0
-                d.windowEnd = -1
+                d.closeWindow()
             }
         }
 
@@ -290,6 +419,21 @@ Item {
 
         function trimFarEndForLiveRow() {
             if (d.poolHeadroom() > 0)
+                return
+            // deferred, so re-check that a live row is still waiting: a stale
+            // trim (the shell was served or destroyed meanwhile) would evict
+            // the far end of a window someone else just rebuilt — a restore
+            // legitimately holds the whole pool
+            let waiting = false
+            for (let i = 0; i < chatLogView.count; ++i) {
+                const shell = chatLogView.itemAtRow(i)
+                if (shell && shell.revealed && shell.pooled
+                        && !shell.pooledItem && !shell.retired) {
+                    waiting = true
+                    break
+                }
+            }
+            if (!waiting)
                 return
             const trimmed = Math.min(d.windowEnd, d.historyCount - 1) - 1
             if (trimmed >= d.windowStart)
@@ -516,6 +660,8 @@ Item {
                 const avg = sum / measured
                 d.avgRowHeight = d.avgRowHeight > 0 ? (d.avgRowHeight + avg) / 2 : avg
             }
+            if (d.pendingRestore)
+                d.applyPendingRestore()
         }
 
         // The chat identifier (clock -2) is the last row of every chat; the
@@ -569,6 +715,7 @@ Item {
 
         function resetWindow() {
             clearStaging()
+            pendingRestore = null
             windowStart = 0
             initialFillActive = false
             if (d.usePool) {
@@ -582,7 +729,7 @@ Item {
                     // popping in one by one ahead of the atomic reveal
                     d.stageExistingShells()
                 } else {
-                    windowEnd = -1
+                    closeWindow()
                 }
             } else {
                 windowEnd = initialWindowSize - 1
@@ -741,6 +888,8 @@ Item {
         // to a recent-end screenful instead of readmitting and unrolling
         // every row in between.
         function scrollToBottom() {
+            // an explicit jump to the bottom outranks a restore in flight
+            d.pendingRestore = null
             if (d.windowStart > 0) {
                 d.windowAtInitial = false
                 d.admitStaged(function() {
@@ -846,6 +995,9 @@ Item {
         }
 
         function onScrollToMessage(messageIndex) {
+            // the marker scroll racing a restore: in-session the record wins
+            if (d.pendingRestore)
+                return
             d.goToMessage(messageIndex)
         }
     }
@@ -859,7 +1011,8 @@ Item {
 
         function onLoadingChanged() {
             d.markAllMessagesReadIfMostRecentMessageIsInViewport()
-            if (!messageStore.loading && chatLogView.stickingToNewest) {
+            if (!messageStore.loading && chatLogView.stickingToNewest
+                    && !d.pendingRestore) {
                 Qt.callLater(d.scrollToBottom)
             }
         }
@@ -869,7 +1022,7 @@ Item {
         target: !!d.chatDetails ? d.chatDetails : null
 
         function onActiveChanged() {
-            if (active && chatLogView.stickingToNewest) {
+            if (active && chatLogView.stickingToNewest && !d.pendingRestore) {
                 Qt.callLater(d.scrollToBottom)
             }
 
@@ -981,12 +1134,14 @@ Item {
                 sourceModel: d.viewCompleted && !messageStore.loading
                              ? messageStore.messagesModel : null
                 onSourceModelChanged: {
-                    d.resetWindow()
-                    d.updateHistoryExhausted()
                     // whatever the paging timer did against the detached
-                    // window, the view opens on the newest message
+                    // window, the view opens on the chat's window record —
+                    // or the newest message without one
                     if (sourceModel)
-                        d.schedulePositionAtNewest()
+                        d.openWindow()
+                    else
+                        d.resetWindow()
+                    d.updateHistoryExhausted()
                 }
 
                 mapping: [
@@ -1044,6 +1199,9 @@ Item {
             // availability connections and steal every item the dying
             // window releases, starving the incoming chat's shells for good.
             onModelAboutToBeReset: {
+                // the outgoing rows still hold their geometry: the window
+                // record must be taken before they retire
+                d.captureWindowRecord()
                 for (let i = 0; i < chatLogView.count; ++i) {
                     const shell = chatLogView.itemAtRow(i)
                     if (shell && shell.retire)
