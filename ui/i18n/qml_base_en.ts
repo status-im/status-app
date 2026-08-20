@@ -3252,10 +3252,6 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Couldn&apos;t load thread messages</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Couldn&apos;t create thread</source>
         <translation type="unfinished"></translation>
     </message>
