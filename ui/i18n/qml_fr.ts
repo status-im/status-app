@@ -18498,10 +18498,6 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
 <context>
     <name>UserListPanel</name>
     <message>
-        <source>Search</source>
-        <translation>Recherche</translation>
-    </message>
-    <message>
         <source>Search members...</source>
         <translation>Rechercher des membres...</translation>
     </message>
