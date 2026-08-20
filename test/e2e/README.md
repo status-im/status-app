@@ -230,6 +230,14 @@ From the **repo root** (`status-app/`):
 docker compose -f ./docker-compose.waku.yml up --build --remove-orphans
 ```
 
+Compose does not write the fleets JSON. Generate it from the repo root (`--project` must match compose; default is `e2e-fleet` if you passed `-p e2e-fleet`, otherwise usually `status-app`):
+
+```bash
+python3 test/e2e/scripts/scan_waku_fleet.py --project <compose-project>
+```
+
+That writes `assets/local-waku-fleets-config.json`.
+
 Leave this running. In another terminal, from `test/e2e` with your venv activated:
 
 ```bash
