@@ -86,22 +86,55 @@ pytest -m critical
 
 ## macOS
 
-Mac uses Squish’s own Python — not Homebrew. Run the setup script **once**; it creates `.venv` and configures Squish paths.
+Apple Silicon (M-series) needs a few extra pieces beyond Linux/Windows. Squish 9.2.2’s Python and `squishserver` are **x86_64** (Rosetta). A clean Mac has **no** Intel / python.org Python at `/Library/Frameworks/Python.framework` — do **not** install one. The setup script uses Squish’s bundled Python (`python3.10` with `@loader_path`). Do **not** create the venv from Homebrew, python.org, or Squish’s `python3.10-intel64` (that stub looks for the missing system framework and crashes).
 
 ### macOS — one-time setup
 
-1. Install **Squish 9.2.2** (`/Applications/Squish_9_2_2`).
-2. Get **Status.app** — CI build with Squish entitlements or local dev build (see [Mac CI build](#getting-a-mac-build-from-ci)).
-3. In Terminal:
+Do these in order on a clean Mac.
+
+1. **Rosetta 2** (required):
+
+```bash
+softwareupdate --install-rosetta --agree-to-license
+```
+
+2. **Xcode.app** from the [Mac App Store](https://apps.apple.com/app/xcode/id497799835) (not only Command Line Tools). Squish IDE / Inspector fail with “Xcode installation was not found” without it. Open Xcode once, then:
+
+```bash
+sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+sudo xcodebuild -license accept
+```
+
+3. Install **Squish 9.2.2** into `/Applications/Squish_9_2_2` and activate the license ([Qt Squish](https://www.qt.io/squish)).
+
+4. Install **the same Qt patch** Status and Squish were built with (a mismatch shows `StatusDialog unavailable` / `QtPrivate_6_11_0` in the AUT log). Point Squish at that kit’s `QtCore.framework` (path depends on how you installed Qt):
+
+```bash
+/Applications/Squish_9_2_2/bin/squishconfig --qt=/path/to/QtCore.framework
+```
+
+5. Get **Status.app** — CI DMG with Squish entitlements (see [Mac CI build](#getting-a-mac-build-from-ci)).
+
+6. **x86_64 OpenSSL** (Intel Homebrew — not `/opt/homebrew`). Needed to compile `scrypt`:
+
+```bash
+# Intel Homebrew once, if /usr/local/bin/brew is missing:
+#   arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+arch -x86_64 /usr/local/bin/brew install openssl@3
+```
+
+Always call Intel brew as `arch -x86_64 /usr/local/bin/brew`.
+
+7. From `test/e2e`:
 
 ```bash
 cd test/e2e
 ./scripts/setup_mac_squish.sh
-
-cp configs/_local.default.py configs/_local.py
 ```
 
-4. Edit `configs/_local.py`:
+The script creates `.venv` from Squish’s bundled Python (no system Intel Python needed), installs `requirements.txt`, and copies `configs/_local.py` / `.env` if they are missing. Override Squish path with `SQUISH_DIR=...` if needed. Do **not** put `SQUISH_DIR` or `PYTHONPATH` in `~/.zshrc`.
+
+8. Edit `configs/_local.py`:
 
 ```python
 AUT_PATH = "/Users/you/Downloads/Status.app"
@@ -109,30 +142,24 @@ AUT_PATH = "/Users/you/Downloads/Status.app"
 # AUT_PATH = "/Users/you/status-app/bin/nim_status_client"
 ```
 
-The setup script fixes Squish library paths, creates `.venv` from Squish’s Python, adds `SQUISH_DIR` / `PYTHONPATH` to `activate`, and installs `requirements.txt`. Override Squish path if needed:
-
-```bash
-SQUISH_DIR=/Applications/Squish_9_2_2 ./scripts/setup_mac_squish.sh
-```
-
 ### Run tests (Terminal)
 
 ```bash
 cd test/e2e
 source .venv/bin/activate
-pytest -m critical
+pytest tests/onboarding/test_language_selector_and_password_strength.py -v --maxfail=1
+# or the PR suite:
+# pytest -m critical
 ```
-
-Do **not** put `SQUISH_DIR` or `PYTHONPATH` in `~/.zshrc` — they are set when you activate `.venv`.
 
 ### Run tests (PyCharm)
 
 1. Complete [macOS one-time setup](#macos--one-time-setup) above.
-2. **Interpreter**: `test/e2e/.venv/bin/python` — select **existing**, do not create a new venv from Homebrew.
+2. **Interpreter**: `test/e2e/.venv/bin/python` — select **existing**, do not create a new venv from Homebrew or python.org.
 3. **Working directory**: `test/e2e`
-4. Copy [`.env.example`](.env.example) → `.env` (or paste those variables into the run config).
+4. Use [`.env`](.env.example) (`SQUISH_DIR` / `PYTHONPATH`) — the setup script copies `.env.example` → `.env` if needed.
 5. Set `AUT_PATH` in `configs/_local.py`.
-6. Run pytest, e.g. with `-m critical`.
+6. Run pytest, e.g. the onboarding file above or `-m critical`.
 
 ---
 
@@ -150,10 +177,9 @@ CI builds are usually more stable; local dev builds work on all platforms.
 macOS e2e runs **locally only** (Linux and Windows run in Jenkins). You need a DMG built with Squish entitlements:
 
 1. https://ci.status.im/job/status-desktop/job/systems/job/macos/
-2. **Build with Parameters** → pick architecture
-3. **Entitlements** → `resources/Entitlements_squish.plist`
-4. Download DMG, copy `Status.app` (e.g. `~/Downloads/Status.app`)
-5. `AUT_PATH = "/Users/you/Downloads/Status.app"` in `configs/_local.py`
+2. **Entitlements** → `resources/Entitlements_squish.plist`
+3. Download DMG, copy `Status.app` (e.g. `~/Downloads/Status.app`)
+4. `AUT_PATH = "/Users/you/Downloads/Status.app"` in `configs/_local.py`
 
 ### Keycard e2e (`@pytest.mark.keycard`)
 
@@ -236,10 +262,16 @@ pytest --markers        # list all marks
 |---------|-------------|
 | `SQUISH_DIR` error | Mac: `source .venv/bin/activate`. Linux/Windows: `export SQUISH_DIR=...`. PyCharm: use `.env`. |
 | Mac: Squish Python not found | `SQUISH_DIR=/Applications/Squish_9_2_2 ./scripts/setup_mac_squish.sh` |
+| Mac: `Library not loaded: .../Python.framework/Versions/3.10` / `Abort trap: 6` | Clean Mac has no python.org Intel Python — that is expected. Do not install it and do not use `python3.10-intel64` as the venv base. Re-run `./scripts/setup_mac_squish.sh`. |
+| Mac: `Failed building wheel for scrypt` | Install x86_64 OpenSSL: `arch -x86_64 /usr/local/bin/brew install openssl@3`, then re-run setup. ARM Homebrew (`/opt/homebrew`) will not work. |
+| Mac: `Segmentation fault` on `import squishtest` | Venv was using python.org’s framework. Re-run `./scripts/setup_mac_squish.sh`. |
 | Mac: `Python.framework` / `squishtest` | Re-run `./scripts/setup_mac_squish.sh` |
 | Mac: `EVP_DigestSqueeze` | `pip install -r requirements.txt` in activated `.venv` |
 | Mac: PyCharm wrong Python | Use existing `.venv/bin/python`, not Homebrew |
-| App won’t attach | Launch app manually first; Mac needs Squish-entitlements build |
+| Mac: PyCharm still shows a deleted `.venv` | Settings → Python Interpreter → Show All → remove the old interpreter, then add the new `.venv/bin/python` |
+| Mac: Squish IDE “Xcode installation was not found” | Install **Xcode.app**, then `sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer` |
+| Mac: `StatusDialog unavailable` / `QtPrivate_6_11_*` in `aut.log` | Squish Qt patch ≠ Status.app Qt. Point Squish at the matching kit: `squishconfig --qt=/path/to/QtCore.framework`. |
+| App won’t attach / segfault in `get_context` / `attachToApplication` | Use a Status.app built with Squish entitlements. Launch the app once from Finder if Gatekeeper blocks it. |
 | Mac: Python quit during test | Retry; check `local_run_results/aut.log` |
 | Test hangs | Try a CI build instead of local dev |
 | Docker: `docker.sock` not found | Start Docker Desktop (Mac/Windows) or the Docker daemon (Linux); verify with `docker ps` |
