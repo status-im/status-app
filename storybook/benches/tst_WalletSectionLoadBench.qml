@@ -40,11 +40,25 @@ import StorybookMocks
 // stable object count. `t_first_asset_row_ms` and the settled counts are what
 // carry the "no grey tiles left" meaning here.
 //
-// Timings, the max stall and `stalls_over_4ms` are recorded only; the
+// Timings, the max stall and `stalls_over_4ms` are recorded only; the settled
 // instantiation counts and `stalls_over_8ms` are gated - 8ms because 4ms sits on
 // the incubation controller's own bite budget and so counted metered work as
 // stalls (see the ratchet comment). All numbers are HOST units - the x10
 // low-end-Android convention is applied by whoever reads them, never here.
+//
+// `objects_total` is recorded but **not** gated. It is the count at the
+// loaders-Ready stop line, and it is bimodal by construction: it reads 2813, or
+// 2942 when the accounts skeleton the section is swapping out has not been
+// destroyed yet at that instant. The 129-object difference is exactly one
+// `WalletAccountsSkeleton` subtree (its root, 25 `LoadingSkeletonTile`s and
+// their layouts and attached objects) - verified by diffing the type histogram
+// of a 2942 run against a 2813 one. So the two modes are the same section: the
+// column counts objects the load has not freed yet as well as objects it built,
+// which makes it a teardown race rather than a construction-cost invariant.
+// Gating either the single value or the pair would gate garbage-collection
+// timing, and gating the pair would additionally hide any future 129-object
+// regression that landed in the upper mode. `objects_settled` is the gate - it
+// is taken after the swap has finished, and it has never moved off 6022.
 Item {
     id: root
 
@@ -211,7 +225,8 @@ Item {
         }
 
         // Taken at the t_content stamp: what the section had built by the time
-        // it declared its loaders Ready.
+        // it declared its loaders Ready - including the skeleton it is in the
+        // middle of swapping out, which is why `objects_total` is not gated.
         function takeInstantiationCounts() {
             const section = d.section
             d.objectsTotal = probe.countObjects(section)
@@ -328,12 +343,11 @@ Item {
         readonly property int expectedAccountDelegates: 8
         readonly property int expectedAssetDelegates: 0
         readonly property int expectedLoadingAssetDelegates: 0
-        readonly property int expectedObjectsTotal: 2813
-        readonly property int objectsTotalTolerance: 0
-
         // The settled counts are the ones that see the whole section: the
         // layout pass after the loaders report Ready more than doubles the
-        // object count and is where every assets row is built.
+        // object count and is where every assets row is built. They are also
+        // the only instantiation counts worth gating - `objects_total` is
+        // recorded but ungated, for the reason in the file header.
         readonly property int expectedObjectsSettled: 6022
         readonly property int expectedAssetDelegatesSettled: 26
 
@@ -402,11 +416,6 @@ Item {
                 countGate(phase, "loading_asset_delegates", phase.loadingAssetDelegates,
                           expectedLoadingAssetDelegates)
             }
-
-            // `objects_total` is the count at the loaders-Ready stop line, which
-            // on a warm load races the layout pass that follows it - gated on
-            // the cold phase only, where it is exactly reproducible.
-            countGate(cold, "objects_total", cold.objectsTotal, expectedObjectsTotal)
 
             stallGate(warm, maxWarmStallsOver8ms)
             stallGate(cold, maxColdStallsOver8ms)
@@ -504,7 +513,8 @@ Item {
                     .arg(maxColdStallsOver8ms)),
                 row("max_stall_ms", warm.maxStallMs, cold.maxStallMs, "recorded"),
                 row("probe_ticks", warm.probeTicks, cold.probeTicks, "recorded"),
-                row("objects_total", warm.objectsTotal, cold.objectsTotal, "gated (cold only)"),
+                row("objects_total", warm.objectsTotal, cold.objectsTotal,
+                    "recorded (bimodal - see the bench header)"),
                 row("account_delegates", warm.accountDelegates, cold.accountDelegates, "gated"),
                 row("asset_delegates", warm.assetDelegates, cold.assetDelegates, "gated"),
                 row("loading_asset_deleg.", warm.loadingAssetDelegates,
