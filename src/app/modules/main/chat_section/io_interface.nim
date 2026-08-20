@@ -95,7 +95,7 @@ method addOrUpdateChat*(self: AccessInterface,
   ): ChatItem {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onNewMessagesReceived*(self: AccessInterface, sectionIdMsgBelongsTo: string, chatIdMsgBelongsTo: string,
+method onNewMessagesReceived*(self: AccessInterface, sectionIdMsgBelongsTo: string, chatIdMsgBelongsTo: string, displayChatId: string,
   chatTypeMsgBelongsTo: ChatType, lastMessageTimestamp: int, unviewedMessagesCount: int, unviewedMentionsCount: int, message: MessageDto) {.base.} =
   raise newException(ValueError, "No implementation available")
 
@@ -171,7 +171,8 @@ method viewDidLoad*(self: AccessInterface) {.base.} =
 method setActiveItem*(self: AccessInterface, itemId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method openThreadAsChat*(self: AccessInterface, parentChatId: string, threadId: string, threadName: string, parentMessageId: string, setActive: bool = false) {.base.} =
+method openThreadAsChat*(self: AccessInterface, parentChatId: string, threadId: string, threadName: string, parentMessageId: string,
+    setActive: bool = false, hasUnreadMessages: bool = false, notificationsCount: int = 0) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method isChatThread*(self: AccessInterface, chatId: string): bool {.base.} =

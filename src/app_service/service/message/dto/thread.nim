@@ -7,6 +7,8 @@ type ThreadDto* = object
   chatId*: string
   parentMessageId*: string
   name*: string
+  unviewedMessagesCount*: int
+  unviewedMentionsCount*: int
 
 proc toThreadDto*(jsonObj: JsonNode): ThreadDto =
   result = ThreadDto()
@@ -14,3 +16,5 @@ proc toThreadDto*(jsonObj: JsonNode): ThreadDto =
   discard jsonObj.getProp("chatId", result.chatId)
   discard jsonObj.getProp("parentMessageId", result.parentMessageId)
   discard jsonObj.getProp("name", result.name)
+  discard jsonObj.getProp("unviewedMessagesCount", result.unviewedMessagesCount)
+  discard jsonObj.getProp("unviewedMentionsCount", result.unviewedMentionsCount)
