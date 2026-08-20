@@ -55,6 +55,7 @@ GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 	run-storybook \
 	run-storybook-tests \
 	run-storybook-bench \
+	run-storybook-interaction-bench \
 	update \
 	mobile-run \
 	mobile-build \
@@ -485,8 +486,14 @@ run-storybook-tests: storybook-build
 	ctest -V --test-dir $(STORYBOOK_BUILD_PATH) -E "PagesValidator|LoadBench"
 
 run-storybook-bench: storybook-build
-	echo -e "\033[92mRunning:\033[39m Wallet load benches"
-	ctest -V --test-dir $(STORYBOOK_BUILD_PATH) -R LoadBench ${ARGS}
+	echo -e "\033[92mRunning:\033[39m Surface load benches"
+	ctest -V --test-dir $(STORYBOOK_BUILD_PATH) -R LoadBench -E InteractionLoadBench ${ARGS}
+
+# Separate target: this one needs a display, because frame pacing is what it
+# measures (issues/0023).
+run-storybook-interaction-bench: storybook-build
+	echo -e "\033[92mRunning:\033[39m Interaction-during-incubation bench (needs a display)"
+	ctest -V --test-dir $(STORYBOOK_BUILD_PATH) -R InteractionLoadBench ${ARGS}
 
 # repeat because of https://bugreports.qt.io/browse/QTBUG-92236 (Qt < 5.15.4)
 run-storybook-pages-validator: storybook-build

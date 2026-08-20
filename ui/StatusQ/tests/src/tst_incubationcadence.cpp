@@ -2,12 +2,17 @@
 // other things depend on, so it is pinned here rather than left as a constant
 // nobody may touch without re-running a bench.
 //
-// Measured on the wallet section and asset detail load benches (issues/0016):
-//  - the bite bounds the stall floor, because a bite runs to the end of the
-//    object it is midway through creating;
+// Measured on the wallet section and asset detail load benches (issues/0016)
+// and on a scroll running against a section load (issues/0023):
+//  - the bite is the frame cost. At a fixed duty cycle, doubling it from 2 to
+//    4 ms raised the late-frame rate of a scroll running through an incubation
+//    from 10% to 15% and pushed the median frame interval past nominal. It is
+//    not the stall floor - a bite runs on to the end of the object it is midway
+//    through creating, so blocks sit at 4-7 ms whatever the budget is;
 //  - the duty cycle (bite / interval) is what a metered load's wall clock is
 //    divided by - at the old 4 ms every 16 ms, 76% of every load was the
-//    controller waiting for its next tick;
+//    controller waiting for its next tick - and it is nearly free on frames,
+//    which is the trade this cadence makes;
 //  - the interval is also the dead latency in front of a warm open, which finds
 //    the controller on its idle cadence.
 
@@ -38,15 +43,19 @@ private slots:
                  "the boosted controller must be introspectable");
 
         QVERIFY2(budgetMs <= 2,
-                 qPrintable(QStringLiteral("gentle bite is %1 ms: no surface can produce a "
-                                           "GUI-thread block shorter than one bite, so this is "
-                                           "the stall floor every surface budget sits above")
+                 qPrintable(QStringLiteral("gentle bite is %1 ms: the bite is what an "
+                                           "interaction pays, because a frame that comes due "
+                                           "inside one waits it out - 4 ms cost a scrolling "
+                                           "list half again as many late frames as 2 ms at the "
+                                           "same duty cycle")
                             .arg(budgetMs)));
 
         QVERIFY2(budgetMs * 2 >= intervalMs,
                  qPrintable(QStringLiteral("gentle duty cycle is %1/%2: metered work takes "
                                            "interval/bite times its own cost in wall clock, "
-                                           "which is the tax every preemptibility fix pays")
+                                           "which is the tax every preemptibility fix pays - "
+                                           "and lowering it does not buy an interaction back "
+                                           "the frames, only a longer window to lose them in")
                             .arg(budgetMs).arg(intervalMs)));
 
         QVERIFY2(intervalMs <= 8,
