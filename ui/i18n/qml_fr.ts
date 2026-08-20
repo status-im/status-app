@@ -3183,13 +3183,6 @@ Do you wish to override the security check and continue?</source>
     </message>
 </context>
 <context>
-    <name>ChatsLoadingPanel</name>
-    <message>
-        <source>Loading chats...</source>
-        <translation>Chargement des conversations...</translation>
-    </message>
-</context>
-<context>
     <name>CollectibleDetailView</name>
     <message>
         <source>Unknown</source>
