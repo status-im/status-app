@@ -331,13 +331,13 @@ Item {
         readonly property int expectedAccountDelegates: 8
         readonly property int expectedAssetDelegates: 0
         readonly property int expectedLoadingAssetDelegates: 0
-        readonly property int expectedObjectsTotal: 2813
+        readonly property int expectedObjectsTotal: 2869
         readonly property int objectsTotalTolerance: 0
 
         // The settled counts are the ones that see the whole section: the
         // layout pass after the loaders report Ready more than doubles the
         // object count and is where every assets row is built.
-        readonly property int expectedObjectsSettled: 6022
+        readonly property int expectedObjectsSettled: 6134
         readonly property int expectedAssetDelegatesSettled: 26
 
         // The gated stall counter is `stalls_over_8ms`, not `stalls_over_4ms`.
@@ -359,9 +359,16 @@ Item {
         // PR #21921 lowers the controller's budget.
         //
         // Ratchets are the observed maximum over nine runs per phase, not the
-        // median - a ratchet that flakes is worse than no ratchet. Measured on
-        // the merged tree (issues/0018): warm 1-3, cold 3 flat. Lower them
-        // whenever a fix lowers the count; never raise them.
+        // median - a ratchet that flakes is worse than no ratchet. Re-derived
+        // over fifty-four warm runs after issues/0017 gave the accounts list a
+        // shell delegate: warm 0-3 (was 1-4, i.e. this gate used to fail under
+        // a scheduling hiccup and no longer does), cold 2-3. The maximum did
+        // not fall far enough to lower the ratchet even though the median did,
+        // because what the counter measures has changed hands: the
+        // post-t_content pass cleared 8ms in 30 of 32 warm runs before and 0 of
+        // 38 after, and every block left over 8ms is now the t=0 chrome build
+        // or the StackView.initialItem region - issues/0011's, not this list's.
+        // Lower them whenever a fix lowers the count; never raise them.
         readonly property int maxWarmStallsOver8ms: 3
         readonly property int maxColdStallsOver8ms: 3
 
@@ -407,8 +414,12 @@ Item {
             }
 
             // `objects_total` is the count at the loaders-Ready stop line, which
-            // on a warm load races the layout pass that follows it - gated on
-            // the cold phase only, where it is exactly reproducible.
+            // races the layout pass that follows it - gated on the cold phase
+            // only, where it used to be exactly reproducible. It is not any
+            // more: both phases read this or this plus 129, and the faster the
+            // load gets the more often the layout pass wins the race. That is
+            // `issues/0022`, not this gate's business; `objects_settled` is the
+            // count that stays bit-identical run to run.
             countGate(cold, "objects_total", cold.objectsTotal, expectedObjectsTotal)
 
             stallGate(warm, maxWarmStallsOver8ms)
