@@ -169,6 +169,7 @@ Item {
         property real firstAssetRowMs: -1
         property int objectsSettled: -1
         property int assetDelegatesSettled: -1
+        property int accountDelegatesSettled: -1
 
         // The section's panels have no visual parent until the chrome's swap
         // gates promote them, so they are reached through WalletLayout's own
@@ -241,6 +242,7 @@ Item {
             d.stallsOver8 = -1
             d.objectsSettled = -1
             d.assetDelegatesSettled = -1
+            d.accountDelegatesSettled = -1
             d.objectsPerAssetRow = -1
             d.stallTimeline = []
             d.stampList = []
@@ -263,6 +265,7 @@ Item {
                 loadingAssetDelegates: d.loadingAssetDelegates,
                 objectsSettled: d.objectsSettled,
                 assetDelegatesSettled: d.assetDelegatesSettled,
+                accountDelegatesSettled: d.accountDelegatesSettled,
                 objectsPerAssetRow: d.objectsPerAssetRow,
                 stallTimeline: d.stallTimeline,
                 stampTimeline: d.stampList
@@ -271,6 +274,10 @@ Item {
 
         function assetRows() {
             return probe.countByObjectNamePrefix(d.section, "AssetView_TokenListItem_")
+        }
+
+        function accountRows() {
+            return probe.countByObjectNamePrefix(d.section, "walletAccountListItem")
         }
 
         // Runs the loop on in 1ms slices to the first realised assets row, then
@@ -302,6 +309,7 @@ Item {
             d.stampList = probe.stampTimeline()
             d.objectsSettled = current
             d.assetDelegatesSettled = d.assetRows()
+            d.accountDelegatesSettled = d.accountRows()
         }
     }
 
@@ -319,7 +327,8 @@ Item {
             "stalls_over_4ms", "stalls_over_8ms", "max_stall_ms", "probe_ticks",
             "objects_total", "account_delegates", "asset_delegates",
             "loading_asset_delegates",
-            "objects_settled", "asset_delegates_settled"
+            "objects_settled", "asset_delegates_settled",
+            "account_delegates_settled"
         ]
 
         // Gates, all measured on this harness and stable across runs.
@@ -327,8 +336,8 @@ Item {
         // The two zeros are the load-staircase invariant, not an absence of
         // data: at time-to-content the assets list must not have produced a
         // single row yet - the accounts list is the only list the section
-        // builds before it calls itself loaded.
-        readonly property int expectedAccountDelegates: 8
+        // builds before it calls itself loaded. They assert a zero, and a
+        // faster load makes a zero safer, so these two stay gated.
         readonly property int expectedAssetDelegates: 0
         readonly property int expectedLoadingAssetDelegates: 0
         readonly property int expectedObjectsTotal: 2869
@@ -337,8 +346,20 @@ Item {
         // The settled counts are the ones that see the whole section: the
         // layout pass after the loaders report Ready more than doubles the
         // object count and is where every assets row is built.
+        //
+        // `account_delegates` used to be gated here at 8 and is now recorded
+        // only, replaced by this pair's account half. It counted realised rows
+        // at the loaders-Ready stop line, which is a race, not an invariant:
+        // the accounts list needs a layout pass to refill and nothing
+        // guarantees one has happened by then. It read 0 on one warm run in 36
+        // on unmodified code - the fastest load in that set - and issues/0017
+        // makes that likelier, because a shell delegate deliberately changes
+        // what exists at the stop line and shortens the load. Same defect as
+        // `objects_total`'s, and the same treatment: gate what the section
+        // finished building, record what it happened to have reached.
         readonly property int expectedObjectsSettled: 6134
         readonly property int expectedAssetDelegatesSettled: 26
+        readonly property int expectedAccountDelegatesSettled: 16
 
         // The gated stall counter is `stalls_over_8ms`, not `stalls_over_4ms`.
         //
@@ -406,8 +427,8 @@ Item {
                 countGate(phase, "objects_settled", phase.objectsSettled, expectedObjectsSettled)
                 countGate(phase, "asset_delegates_settled", phase.assetDelegatesSettled,
                           expectedAssetDelegatesSettled)
-                countGate(phase, "account_delegates", phase.accountDelegates,
-                          expectedAccountDelegates)
+                countGate(phase, "account_delegates_settled", phase.accountDelegatesSettled,
+                          expectedAccountDelegatesSettled)
                 countGate(phase, "asset_delegates", phase.assetDelegates, expectedAssetDelegates)
                 countGate(phase, "loading_asset_delegates", phase.loadingAssetDelegates,
                           expectedLoadingAssetDelegates)
@@ -519,13 +540,16 @@ Item {
                 row("max_stall_ms", warm.maxStallMs, cold.maxStallMs, "recorded"),
                 row("probe_ticks", warm.probeTicks, cold.probeTicks, "recorded"),
                 row("objects_total", warm.objectsTotal, cold.objectsTotal, "gated (cold only)"),
-                row("account_delegates", warm.accountDelegates, cold.accountDelegates, "gated"),
+                row("account_delegates", warm.accountDelegates, cold.accountDelegates,
+                    "recorded (races the layout pass - see the gate comment)"),
                 row("asset_delegates", warm.assetDelegates, cold.assetDelegates, "gated"),
                 row("loading_asset_deleg.", warm.loadingAssetDelegates,
                     cold.loadingAssetDelegates, "gated"),
                 row("objects_settled", warm.objectsSettled, cold.objectsSettled, "gated"),
                 row("asset_delegates_settled", warm.assetDelegatesSettled,
                     cold.assetDelegatesSettled, "gated"),
+                row("account_deleg._settled", warm.accountDelegatesSettled,
+                    cold.accountDelegatesSettled, "gated"),
                 "",
                 "  warm = second load in the same process; cold = first. The app has paid",
                 "  most of the cold-only cost before a user reaches the wallet.",
@@ -586,7 +610,8 @@ Item {
                 String(phase.probeTicks),
                 String(phase.objectsTotal), String(phase.accountDelegates),
                 String(phase.assetDelegates), String(phase.loadingAssetDelegates),
-                String(phase.objectsSettled), String(phase.assetDelegatesSettled)
+                String(phase.objectsSettled), String(phase.assetDelegatesSettled),
+                String(phase.accountDelegatesSettled)
             ]
             verify(probe.appendTsvRow(tsvPath, tsvHeader, row),
                    "could not append the %1 bench row to %2".arg(phase.phase).arg(tsvPath))
