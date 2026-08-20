@@ -463,15 +463,12 @@ method onThreadCreated*(self: Module, parentMessageId: string, threads: seq[Thre
     self.view.model().setHasThread(selectedThread.parentMessageId, true)
 
   # Open the freshly created thread as a sub-channel chat
-  self.delegate.openThreadAsChat(selectedThread.threadId, selectedThread.name, selectedThread.parentMessageId)
+  self.delegate.openThreadAsChat(selectedThread.threadId, selectedThread.name, selectedThread.parentMessageId,
+    setActive = true, hasUnreadMessages = selectedThread.unviewedMessagesCount > 0,
+    notificationsCount = selectedThread.unviewedMentionsCount)
 
 method onChatThreadsLoadingFailed*(self: Module) =
   self.view.emitChatThreadsLoadingFailedSignal()
-
-method onThreadMessagesLoadingFailed*(self: Module) =
-  self.initialMessagesLoaded = true
-  self.reevaluateViewLoadingState()
-  self.view.emitThreadMessagesLoadingFailedSignal()
 
 method onThreadCreationFailed*(self: Module) =
   self.view.emitThreadCreationFailedSignal()
