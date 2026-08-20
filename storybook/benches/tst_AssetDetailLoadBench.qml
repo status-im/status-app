@@ -234,7 +234,7 @@ Item {
         //
         // `objects_built` - the settled count minus those attached objects - is
         // what the surface actually instantiates, and it is bit-identical: 809
-        // on 32 of 32 phases. That is the gate, at tolerance 0. `layout_attached`
+        // on 132 of 132 phases. That is the gate, at tolerance 0. `layout_attached`
         // is recorded alongside so the split stays visible.
         //
         // `objects_at_ready` is recorded only: it races the layout pass that
@@ -249,7 +249,7 @@ Item {
         // fix lowers the measured count; never raise it.
         //
         // Re-derived over sixty-six runs per phase on the merged tree
-        // (`issues/0024`): warm 1-7, cold 2-9. It cannot come down, and a
+        // (`issues/0024`): warm 0-7, cold 2-9. It cannot come down, and a
         // per-phase split was tried and reverted - warm looked like 1-5 over
         // fifty runs and then read 7 on the fifty-first, so a warm ratchet of 5
         // would flake, which is worse than no ratchet.
