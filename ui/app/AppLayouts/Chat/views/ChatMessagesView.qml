@@ -250,9 +250,8 @@ Item {
 
         function applyPendingRestore() {
             const restore = d.pendingRestore
-            // cleared a turn later, not here: the pooled rebind makes the
-            // whole restore synchronous, and the marker scroll it must win
-            // over can arrive in the same turn, right after the reveal
+            // cleared a turn later, not here: the marker scroll this restore
+            // must win over can arrive in the same turn as the reveal
             Qt.callLater(function() {
                 if (d.pendingRestore === restore)
                     d.pendingRestore = null
@@ -429,6 +428,53 @@ Item {
                 d.dressQueue.splice(i, 1)
         }
 
+        // Drain order: viewport-nearest-first, so the skeleton clears where
+        // the user is looking. Undressed shells hold no geometry (invisible,
+        // zero height), so distance is counted in rows from a reference row
+        // resolved fresh at every slice — never from insertion order.
+        function dressReferenceRow() {
+            if (d.pendingRestore) {
+                // restoring mid-history: the record's offset is the viewport
+                // top's distance below the window's top row (the highest
+                // proxy row); estimate the rows above the viewport center at
+                // the running average height
+                const rowHeight = d.avgRowHeight > 0 ? d.avgRowHeight : 48
+                const rowsAbove = (d.pendingRestore.offset
+                                   + chatLogView.height / 2) / rowHeight
+                return Math.max(0, Math.round(
+                                    d.windowEnd - d.windowStart - rowsAbove))
+            }
+            // fresh open and every bottom-pinned view: row 0 is the bottom
+            if (chatLogView.stickingToNewest)
+                return 0
+            // mid-history without a restore in flight: the dressed rows
+            // still on screen locate the viewport
+            const center = chatLogView.contentY + chatLogView.height / 2
+            let best = 0
+            let bestDistance = Number.MAX_VALUE
+            for (let i = 0; i < chatLogView.count; ++i) {
+                const item = chatLogView.itemAtRow(i)
+                if (!item || !item.visible || item.height <= 0)
+                    continue
+                const distance = Math.abs(center - item.mapToItem(
+                                     chatLogView.contentItem,
+                                     0, item.height / 2).y)
+                if (distance < bestDistance) {
+                    bestDistance = distance
+                    best = i
+                }
+            }
+            return best
+        }
+
+        function sortDressQueue() {
+            if (d.dressQueue.length < 2)
+                return
+            const ref = d.dressReferenceRow()
+            d.dressQueue.sort((a, b) => Math.abs(a.index - ref)
+                                        - Math.abs(b.index - ref))
+        }
+
         function drainDressQueue() {
             d.drainScheduled = false
             // an un-dressed view must never take items — whatever is queued
@@ -437,13 +483,17 @@ Item {
                 d.dressQueue = []
                 return
             }
-            const deadline = Date.now() + 8
+            // at most one dress per slice: a single dress already fills a
+            // frame on the devices this paces for, and the callLater chain
+            // yields to rendering between slices
+            d.sortDressQueue()
             while (d.dressQueue.length) {
                 const shell = d.dressQueue.shift()
-                if (shell && !shell.retired)
-                    shell.doAcquire()
-                if (Date.now() >= deadline)
-                    break
+                if (!shell || shell.retired || !shell.pooled
+                        || shell.pooledItem)
+                    continue
+                shell.doAcquire()
+                break
             }
             if (d.dressQueue.length)
                 d.scheduleDrain()
@@ -1357,18 +1407,16 @@ Item {
                 releasePooled()
             }
 
-            // Staged rows dress through the paced queue: a rebind rebuilds the
-            // message's inner content (text blocks, previews), and a whole
-            // window of them in one turn is a seconds-long freeze. Only a live
-            // row — already revealed, the user is looking at its spot — binds
-            // on the spot.
+            // Every dress goes through the paced queue: a rebind rebuilds the
+            // message's inner content (text blocks, previews), one costs a
+            // whole frame on a low-end device, and any trigger (availability,
+            // reveal, slide, restore, live insert) can fire for a window's
+            // worth of shells in one turn. The drain is doAcquire's only
+            // caller — nothing dresses inside a signal handler.
             function tryAcquire() {
                 if (!pooled || pooledItem || retired || !root.rowPool)
                     return
-                if (revealed)
-                    doAcquire()
-                else
-                    d.enqueueDress(shell)
+                d.enqueueDress(shell)
             }
 
             // Guards the pool's availability cascade re-entering THIS shell
