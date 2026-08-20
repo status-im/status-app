@@ -151,7 +151,13 @@ QQuickItem* DelegatePool::acquire(const QString& kind)
     auto* item = state.ready.takeLast();
     item->setVisible(true);
     item->setEnabled(true);
-    notifyAvailability(kindObject);
+    // deferred: a synchronous drop-notification re-enters the calling QML
+    // handler before it stored the returned item — the caller's own
+    // availability connection then acquires again, draining the pool into
+    // orphans one re-entrant frame at a time
+    QMetaObject::invokeMethod(this, [this, kindObject] {
+        notifyAvailability(kindObject);
+    }, Qt::QueuedConnection);
     return item;
 }
 
