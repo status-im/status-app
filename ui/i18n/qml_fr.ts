@@ -4382,24 +4382,8 @@ Vous resterez connecté et votre phrase de récupération sera entièrement entr
 <context>
     <name>ContactsColumnView</name>
     <message>
-        <source>Messages</source>
-        <translation>Messages</translation>
-    </message>
-    <message>
-        <source>Start chat</source>
-        <translation>Démarrer une conversation</translation>
-    </message>
-    <message>
-        <source>Search</source>
-        <translation>Rechercher</translation>
-    </message>
-    <message>
         <source>Search contacts and groups...</source>
         <translation>Rechercher des contacts et des groupes...</translation>
-    </message>
-    <message>
-        <source>Invite contacts</source>
-        <translation>Inviter des contacts</translation>
     </message>
 </context>
 <context>
