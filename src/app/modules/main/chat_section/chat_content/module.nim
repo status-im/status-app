@@ -54,7 +54,7 @@ proc newModule*(delegate: delegate_interface.AccessInterface, events: EventEmitt
   result.viewVariant = newQVariant(result.view)
   result.controller = controller.newController(result, events, sectionId, chatId, belongsToCommunity,
     isUsersListAvailable, settingsService, nodeConfigurationService, contactService, chatService, communityService,
-    messageService)
+    messageService, threadId = threadId)
   result.moduleLoaded = false
 
   result.inputAreaModule = input_area_module.newModule(result, events, sectionId, chatId, belongsToCommunity,

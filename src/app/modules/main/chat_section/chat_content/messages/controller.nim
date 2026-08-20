@@ -150,6 +150,8 @@ proc init*(self: Controller) =
     let args = MessagesMarkedAsReadArgs(e)
     if self.chatId != args.chatId:
       return
+    if self.threadId != args.threadId:
+      return
     if args.allMessagesMarked:
       self.delegate.markAllMessagesRead()
     else:

@@ -102,7 +102,7 @@ method onNewMessagesReceived*(self: AccessInterface, sectionIdMsgBelongsTo: stri
 method changeMutedOnChat*(self: AccessInterface, chatId: string, muted: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onMarkAllMessagesRead*(self: AccessInterface, chat: ChatDto) {.base.} =
+method onMarkAllMessagesRead*(self: AccessInterface, chat: ChatDto, threadId: string = "") {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onMarkMessageAsUnread*(self: AccessInterface, chat: ChatDto) {.base.} =

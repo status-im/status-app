@@ -357,18 +357,24 @@ proc asyncSearchMessagesInChatsAndCommunitiesTask(argEncoded: string) {.gcsafe, 
 type
   AsyncMarkAllMessagesReadTaskArg = ref object of QObjectTaskArg
     chatId: string
+    threadId: string
 
 proc asyncMarkAllMessagesReadTask(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncMarkAllMessagesReadTaskArg](argEncoded)
 
   try:
-    let rpcResponse =  status_go.markAllMessagesFromChatWithIdAsRead(arg.chatId)
+    let rpcResponse =
+      if arg.threadId.len > 0:
+        status_go.markAllMessagesFromThreadWithIdAsRead(arg.chatId, arg.threadId)
+      else:
+        status_go.markAllMessagesFromChatWithIdAsRead(arg.chatId)
 
     var activityCenterNotifications: JsonNode = newJObject()
     discard rpcResponse.result.getProp("activityCenterNotifications", activityCenterNotifications)
 
     arg.finish(%*{
       "chatId": arg.chatId,
+      "threadId": arg.threadId,
       "activityCenterNotifications": activityCenterNotifications,
       "error": rpcResponse.error,
     })
@@ -376,6 +382,7 @@ proc asyncMarkAllMessagesReadTask(argEncoded: string) {.gcsafe, nimcall.} =
   except Exception as e:
     arg.finish(%* {
       "chatId": arg.chatId,
+      "threadId": arg.threadId,
       "error": e.msg,
     })
 
