@@ -11089,6 +11089,20 @@ chargement</translation>
     </message>
 </context>
 <context>
+    <name>MembersListSkeleton</name>
+    <message>
+        <source>Members</source>
+        <translation type="unfinished">Membres</translation>
+    </message>
+</context>
+<context>
+    <name>MembersPanelHeader</name>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>MembersSelectorBase</name>
     <message>
         <source>To:</source>
@@ -11337,6 +11351,25 @@ chargement</translation>
     <message>
         <source>Unknown message. Trying to recover it</source>
         <translation>Message inconnu. Tentative de récupération.</translation>
+    </message>
+</context>
+<context>
+    <name>MessagesListHeader</name>
+    <message>
+        <source>Messages</source>
+        <translation type="unfinished">Messages</translation>
+    </message>
+    <message>
+        <source>Invite contacts</source>
+        <translation type="unfinished">Inviter des contacts</translation>
+    </message>
+    <message>
+        <source>Start chat</source>
+        <translation type="unfinished">Démarrer une conversation</translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18711,6 +18744,13 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     <message>
         <source>Last refreshed %1</source>
         <translation>Dernière mise à jour : %1</translation>
+    </message>
+</context>
+<context>
+    <name>WalletAccountsSkeleton</name>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished">Portefeuille</translation>
     </message>
 </context>
 <context>
