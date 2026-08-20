@@ -267,8 +267,8 @@ Item {
                       "the skeleton must cover the slot once the shared view leaves it")
 
             view.messagesView.parent = view.shell.messagesSlot
-            tryVerify(() => !findChild(view, "chatMessagesSkeleton"), 5000,
-                      "the skeleton must be released once the shared view returns")
+            tryVerify(() => !(findChild(view, "chatMessagesSkeleton")?.visible ?? false), 5000,
+                      "the skeleton must hide once the shared view returns (kept built, latched)")
         }
 
         // The blocked-state chrome stays with the per-chat shell.
@@ -295,8 +295,8 @@ Item {
                    "skeleton must stay up while messages are still being fetched")
 
             contentModuleMock.messagesModule.loading = false
-            tryVerify(() => !findChild(view, "chatMessagesSkeleton"), 5000,
-                      "skeleton must be released once the fetch is done")
+            tryVerify(() => !(findChild(view, "chatMessagesSkeleton")?.visible ?? false), 5000,
+                      "skeleton must hide once the fetch is done (kept built, latched)")
         }
 
         // Nothing paints underneath the skeleton: the rows area stays
@@ -315,8 +315,8 @@ Item {
 
             contentModuleMock.messagesModule.loading = false
             tryVerify(() => findChild(view, "chatLogView").visible)
-            tryVerify(() => !findChild(view, "chatMessagesSkeleton"), 5000,
-                      "skeleton must be released once the view is shown")
+            tryVerify(() => !(findChild(view, "chatMessagesSkeleton")?.visible ?? false), 5000,
+                      "skeleton must hide once the view is shown (kept built, latched)")
         }
 
         // Bug repro (device): the initial fetch runs with the model detached,

@@ -195,10 +195,10 @@ Flickable {
         property real pendingRowOffset: NaN
 
         readonly property bool placeholderUpVisible:
-            topPlaceholder.active && content.y + topPlaceholder.y + topPlaceholder.height
+            topPlaceholder.visible && content.y + topPlaceholder.y + topPlaceholder.height
                                      > root.contentY - root.prefetchMargin
         readonly property bool placeholderDownVisible:
-            bottomPlaceholder.active && content.y + bottomPlaceholder.y
+            bottomPlaceholder.visible && content.y + bottomPlaceholder.y
                                         < root.contentY + root.height + root.prefetchMargin
 
         // From live values, not the bottomContentY binding: inside an
@@ -266,7 +266,7 @@ Flickable {
                 // an unpolished row still sits at y 0 — a position no laid-out
                 // delegate can hold while the top placeholder occupies it —
                 // so its geometry cannot be measured yet
-                if (item.y === 0 && topPlaceholder.active) {
+                if (item.y === 0 && topPlaceholder.visible) {
                     fallback = item
                     continue
                 }
@@ -452,10 +452,14 @@ Flickable {
             Layout.row: 1
             Layout.column: 0
             Layout.fillWidth: true
-            Layout.preferredHeight: active ? root.placeholderHeight : 0
+            Layout.preferredHeight: visible ? root.placeholderHeight : 0
 
-            active: root.moreUpAvailable
-            visible: active
+            // built once, kept: the skeleton content is expensive and paging
+            // state toggles it constantly (invisible items leave the layout)
+            active: false
+            visible: root.moreUpAvailable
+            onVisibleChanged: if (visible) active = true
+            Component.onCompleted: if (visible) active = true
             sourceComponent: root.placeholder
         }
 
@@ -470,9 +474,14 @@ Flickable {
             // The row leaving the window may be the one the viewport is
             // measured against. The survivors still hold their pre-relayout
             // positions here, so the offset taken now is the one to keep.
+            // And the removed delegate must let go of everything it borrowed
+            // NOW: it keeps its index (no -1 renumbering) and dies deferred,
+            // and the destruction cascade would take borrowed children with it.
             onItemRemoved: (index, item) => {
                 if (item === d.anchorItem)
                     d.anchorAtViewportEdge(d.anchorAtTop, item)
+                if (item && item.retire)
+                    item.retire()
             }
         }
 
@@ -482,10 +491,12 @@ Flickable {
             Layout.row: repeater.count + 2
             Layout.column: 0
             Layout.fillWidth: true
-            Layout.preferredHeight: active ? root.placeholderHeight : 0
+            Layout.preferredHeight: visible ? root.placeholderHeight : 0
 
-            active: root.moreDownAvailable
-            visible: active
+            active: false
+            visible: root.moreDownAvailable
+            onVisibleChanged: if (visible) active = true
+            Component.onCompleted: if (visible) active = true
             sourceComponent: root.placeholder
         }
 

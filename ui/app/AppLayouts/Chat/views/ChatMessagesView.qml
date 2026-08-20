@@ -292,6 +292,7 @@ Item {
                 // capture BEFORE the un-dress collapses the window
                 d.captureWindowRecord()
                 d.clearStaging()
+                d.dressQueue = []
                 d.initialFillActive = false
                 d.pendingRestore = null
                 if (root.rowPool)
@@ -400,6 +401,52 @@ Item {
                 return
             const wanted = Math.min(d.initialRevealTarget, Math.max(1, d.historyCount))
             root.rowPool.boost(d.rowPoolKind, Math.max(0, wanted - d.acquiredCount))
+        }
+
+        // ---- Paced dressing: staged shells bind a few per event-loop turn,
+        // inside a frame budget, so a chat switch never rebinds the whole
+        // window inside one input event.
+        property var dressQueue: []
+        property bool drainScheduled: false
+
+
+        function enqueueDress(shell) {
+            if (d.dressQueue.indexOf(shell) === -1)
+                d.dressQueue.push(shell)
+            d.scheduleDrain()
+        }
+
+        function scheduleDrain() {
+            if (d.drainScheduled)
+                return
+            d.drainScheduled = true
+            Qt.callLater(d.drainDressQueue)
+        }
+
+        function dequeueDress(shell) {
+            const i = d.dressQueue.indexOf(shell)
+            if (i !== -1)
+                d.dressQueue.splice(i, 1)
+        }
+
+        function drainDressQueue() {
+            d.drainScheduled = false
+            // an un-dressed view must never take items — whatever is queued
+            // belongs to a closing window and dies with it
+            if (!d.dressActive) {
+                d.dressQueue = []
+                return
+            }
+            const deadline = Date.now() + 8
+            while (d.dressQueue.length) {
+                const shell = d.dressQueue.shift()
+                if (shell && !shell.retired)
+                    shell.doAcquire()
+                if (Date.now() >= deadline)
+                    break
+            }
+            if (d.dressQueue.length)
+                d.scheduleDrain()
         }
 
         function noteStarvedShell(shell) {
@@ -970,6 +1017,7 @@ Item {
     }
 
 
+
     Connections {
         target: Qt.application
         function onStateChanged() {
@@ -1305,14 +1353,37 @@ Item {
 
             function retire() {
                 retired = true
+                d.dequeueDress(shell)
                 releasePooled()
             }
 
+            // Staged rows dress through the paced queue: a rebind rebuilds the
+            // message's inner content (text blocks, previews), and a whole
+            // window of them in one turn is a seconds-long freeze. Only a live
+            // row — already revealed, the user is looking at its spot — binds
+            // on the spot.
             function tryAcquire() {
                 if (!pooled || pooledItem || retired || !root.rowPool)
                     return
+                if (revealed)
+                    doAcquire()
+                else
+                    d.enqueueDress(shell)
+            }
+
+            // Guards the pool's availability cascade re-entering THIS shell
+            // while its acquisition is mid-flight (pooledItem not yet set):
+            // unguarded, one shell drains the whole pool into orphans.
+            property bool acquiring: false
+
+            function doAcquire() {
+                if (acquiring || !pooled || pooledItem || retired
+                        || !root.rowPool || !d.dressActive)
+                    return
+                acquiring = true
                 const item = root.rowPool.acquire(d.rowPoolKind)
                 if (!item) {
+                    acquiring = false
                     d.noteStarvedShell(shell)
                     return
                 }
@@ -1324,6 +1395,7 @@ Item {
                 // dressed and bound item, so the rebind writes cannot fire
                 // stale intent signals
                 pooledItem = item
+                acquiring = false
                 d.acquiredCount++
             }
 
@@ -1332,12 +1404,18 @@ Item {
                     return
                 const item = pooledItem
                 pooledItem = null
-                rowBinder.detach()
-                rowBinder.target = null
-                d.undressPooledView(item)
+                // accounting and the pool hand-back first: on a shell dying in
+                // a destruction cascade the binder child may already be gone,
+                // and a throw past this point would leak the item for good
+                // (exceptions in onDestruction vanish silently)
                 d.acquiredCount--
+                d.undressPooledView(item)
                 if (root.rowPool)
                     root.rowPool.release(item)
+                if (rowBinder) {
+                    rowBinder.detach()
+                    rowBinder.target = null
+                }
             }
 
             onPooledChanged: {
@@ -1422,6 +1500,7 @@ Item {
             }
             Component.onDestruction: {
                 d.unstageShell(this)
+                d.dequeueDress(this)
                 releasePooled()
             }
 
