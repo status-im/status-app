@@ -140,41 +140,13 @@ QtObject {
         })
     }
 
-    // ASCII emoticon (":)", ";P", "<3"…) table, built on first use.
-    readonly property QtObject d: QtObject {
-        property var asciiEmojis: null // alias -> emoji character
-        property int maxAsciiEmojiLength: 0
-
-        function ensureAsciiEmojis() {
-            if (asciiEmojis)
-                return asciiEmojis
-
-            const map = {}
-            let max = 0
-            // The first entry declaring an alias wins, so base emojis take precedence over
-            // their skin-tone variants.
-            EmojiJSON.emoji_json.forEach(emoji => {
-                emoji.aliases_ascii.forEach(alias => {
-                    if (map[alias] === undefined) {
-                        map[alias] = emoji.emoji
-                        max = Math.max(max, alias.length)
-                    }
-                })
-            })
-            maxAsciiEmojiLength = max
-            asciiEmojis = map
-            return map
-        }
-    }
-
     // Length of the longest ASCII emoticon, to bound the look-back when matching one.
     function maxAsciiEmojiLength(): int {
-        d.ensureAsciiEmojis()
-        return d.maxAsciiEmojiLength
+        return emojiModel.maxAsciiEmojiAliasLength()
     }
 
     // Returns the emoji character for an ASCII emoticon, or "" when it isn't one.
     function getAsciiEmoji(text: string): string {
-        return d.ensureAsciiEmojis()[text] || ""
+        return emojiModel.getEmojiFromAsciiAlias(text)
     }
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QAbstractListModel>
+#include <QHash>
 #include <QJsonArray>
 
 class StatusEmojiModel : public QAbstractListModel
@@ -38,6 +39,8 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     Q_INVOKABLE QString getEmojiUnicodeFromShortname(const QString &shortname) const;
+    Q_INVOKABLE QString getEmojiFromAsciiAlias(const QString &alias) const;
+    Q_INVOKABLE int maxAsciiEmojiAliasLength() const;
     Q_INVOKABLE int getCategoryOffset(int categoryIndex) const;
 
     Q_INVOKABLE void addRecentEmoji(const QString &hexcode);
@@ -51,6 +54,7 @@ private:
     QJsonArray emojiJson() const;
     void setEmojiJson(const QJsonArray &newEmojiJson);
     QJsonArray m_emojiJson;
+    mutable int m_maxAsciiEmojiAliasLength = -1;
 
     QStringList categories() const;
     QStringList categoryIcons() const;
