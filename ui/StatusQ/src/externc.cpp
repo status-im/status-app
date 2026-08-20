@@ -85,7 +85,8 @@ Q_DECL_EXPORT void statusq_initializeWebEngine() {
 // Every incubation burst starts with a gentle phase: small, paced bites that
 // leave the frame loop enough headroom to run the section-switch slide
 // animation at full rate. Once the gentle period is over (the transition is
-// done and only the loading skeleton is on screen) the throttle opens.
+// done and only the loading skeleton is on screen) the burst drains the
+// whole queue synchronously, freezing the event loop until it completes.
 class BoostedIncubationController : public QObject, public QQmlIncubationController {
 public:
     BoostedIncubationController(int msPerTick, int gentlePeriodMs, int boostGapMs, QObject* parent)
@@ -166,7 +167,17 @@ protected:
             restart(wantedInterval);
 
         m_lastPhase = gentle ? 1 : 2;
-        incubateFor(gentle ? m_gentleBudgetMs : m_msPerTick);
+        if (gentle) {
+            incubateFor(m_gentleBudgetMs);
+            return;
+        }
+
+        // boost: drain the queue synchronously — the event loop stays frozen
+        // until every pending incubation (including ones chained mid-drain)
+        // has completed. Bail out if a gentle hint arrives from QML created
+        // during the drain so transitions regain their pacing.
+        while (incubatingObjectCount() > 0 && m_gentleHints == 0)
+            incubateFor(m_msPerTick);
     }
 
 private:
