@@ -28,7 +28,8 @@ method getModuleAsVariant*(self: AccessInterface): QVariant {.base.} =
 method onNotificationsUpdated*(self: AccessInterface, hasUnreadMessages: bool, notificationCount: int) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method openThreadAsChat*(self: AccessInterface, threadId: string, threadName: string, parentMessageId: string) {.base.} =
+method openThreadAsChat*(self: AccessInterface, threadId: string, threadName: string, parentMessageId: string,
+    setActive: bool = true, hasUnreadMessages: bool = false, notificationsCount: int = 0) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onChatThreadsLoaded*(self: AccessInterface, threads: seq[ThreadDto]) {.base.} =
