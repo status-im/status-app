@@ -112,10 +112,6 @@ QtObject:
   proc emitChatThreadsLoadingFailedSignal*(self: View) =
     self.chatThreadsLoadingFailed()
 
-  proc threadMessagesLoadingFailed*(self: View) {.signal.}
-  proc emitThreadMessagesLoadingFailedSignal*(self: View) =
-    self.threadMessagesLoadingFailed()
-
   proc threadCreationFailed*(self: View) {.signal.}
   proc emitThreadCreationFailedSignal*(self: View) =
     self.threadCreationFailed()

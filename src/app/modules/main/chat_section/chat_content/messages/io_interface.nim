@@ -205,9 +205,6 @@ method onThreadCreated*(self: AccessInterface, parentMessageId: string, threads:
 method onChatThreadsLoadingFailed*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onThreadMessagesLoadingFailed*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method onThreadCreationFailed*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 

@@ -472,13 +472,17 @@ method setActiveItem*(self: Module, itemId: string) =
 method isChatThread*(self: Module, chatId: string): bool =
   return self.threadChatIds.contains(chatId)
 
-method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, threadName: string, parentMessageId: string, setActive: bool = false) =
+method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, threadName: string, parentMessageId: string,
+    setActive: bool = false, hasUnreadMessages: bool = false, notificationsCount: int = 0) =
   if threadId.len == 0:
     return
 
-  # If the thread sub-channel already exists, just activate it.
-  if self.chatContentModules.contains(threadId) and setActive:
-    self.setActiveItem(threadId)
+  # If the thread sub-channel already exists, just activate it if needed.
+  if self.chatContentModules.contains(threadId):
+    self.view.chatsModel().updateNotificationsForItemById(threadId, hasUnreadMessages, notificationsCount)
+    self.chatContentModules[threadId].onNotificationsUpdated(hasUnreadMessages, notificationsCount)
+    if setActive:
+      self.setActiveItem(threadId)
     return
 
   let parentItem = self.view.chatsModel().getItemById(parentChatId)
@@ -516,8 +520,8 @@ method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, t
     parentItem.memberRole,
     lastMessageTimestamp = 0,
     lastMessageText = "",
-    hasUnreadMessages = false,
-    notificationsCount = 0,
+    hasUnreadMessages = hasUnreadMessages,
+    notificationsCount = notificationsCount,
     muted = false,
     blocked = false,
     active = false,
@@ -1322,10 +1326,10 @@ method onContactDetailsUpdated*(self: Module, publicKey: string) =
   )
   self.view.chatsModel().updateUserItemDetailsById(publicKey, chatName, usesUsedDefaultName, chatImage, trustStatus)
 
-method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatIdMsgBelongsTo: string,
+method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatIdMsgBelongsTo: string, displayChatId: string,
     chatTypeMsgBelongsTo: ChatType, lastMessageTimestamp: int, unviewedMessagesCount: int, unviewedMentionsCount: int,
     message: MessageDto) =
-  self.updateLastMessage(chatIdMsgBelongsTo, lastMessageTimestamp, message)
+  self.updateLastMessage(displayChatId, lastMessageTimestamp, message)
 
   # Any type of message coming from ourselves should never be shown as notification
   # and no need in badge notification update
@@ -1341,6 +1345,11 @@ method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatI
 
   if chatDetails.categoryId != "":
     self.view.chatsModel().setCategoryHasUnreadMessages(chatDetails.categoryId, true)
+
+  if displayChatId == chatIdMsgBelongsTo:
+    self.view.chatsModel().updateNotificationsForItemById(displayChatId, unviewedMessagesCount > 0, unviewedMentionsCount)
+    if self.chatContentModules.contains(displayChatId):
+      self.chatContentModules[displayChatId].onNotificationsUpdated(unviewedMessagesCount > 0, unviewedMentionsCount)
 
   # Prepare notification
   var notificationType = notification_details.NotificationType.NewMessage
