@@ -1249,7 +1249,14 @@ method onJoinedCommunity*(self: Module) =
   self.view.setWaitingOnNewCommunityOwnerToConfirmRequestToRejoin(false)
   self.view.setRequestToJoinState(RequestToJoinState.None)
 
-method onMarkAllMessagesRead*(self: Module, chat: ChatDto) =
+method onMarkAllMessagesRead*(self: Module, chat: ChatDto, threadId: string = "") =
+  if threadId.len > 0:
+    self.view.chatsModel().updateNotificationsForItemById(threadId, hasUnreadMessages=false, notificationsCount=0)
+    if self.chatContentModules.contains(threadId):
+      self.chatContentModules[threadId].onNotificationsUpdated(hasUnreadMessages=false, notificationCount=0)
+    self.updateParentBadgeNotifications()
+    return
+
   self.updateBadgeNotifications(chat, hasUnreadMessages=false, unviewedMentionsCount=0)
 
 method onMarkMessageAsUnread*(self: Module, chat: ChatDto) =
