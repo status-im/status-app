@@ -7,6 +7,7 @@ import StatusQ
 import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
+import StatusQ.Popups.Dialog
 
 import AppLayouts.Onboarding.stores
 import AppLayouts.Onboarding.enums
@@ -271,17 +272,24 @@ Page {
         }
     }
 
-    // error handler for the LoginScreen
+    StatusMessageDialog {
+        id: accountsLoadErrorDialog
+        objectName: "accountsLoadErrorDialog"
+        title: qsTr("Error loading accounts")
+        text: qsTr("Failed to load accounts. Please restart the app and try again.")
+        icon: StatusMessageDialog.StandardIcon.Critical
+    }
+
     Connections {
         target: root.onboardingStore
 
         function onAccountLoginError(error: string, wrongPassword: bool) : void {
             const loginScreen = onboardingFlow.loginScreen
-
-            if (!loginScreen)
+            if (loginScreen) {
+                loginScreen.setAccountLoginError(error, wrongPassword)
                 return
-
-            loginScreen.setAccountLoginError(error, wrongPassword)
+            }
+            accountsLoadErrorDialog.open()
         }
     }
 

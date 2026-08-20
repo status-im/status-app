@@ -12335,6 +12335,14 @@ to load</source>
         <translation>비밀번호 가져오기</translation>
     </message>
     <message>
+        <source>Error loading accounts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to load accounts. Please restart the app and try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Credentials not found.</source>
         <translation>자격 증명을 찾을 수 없습니다.</translation>
     </message>

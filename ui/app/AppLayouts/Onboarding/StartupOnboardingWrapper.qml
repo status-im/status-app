@@ -80,7 +80,8 @@ Item {
                     return
                 }
 
-                onboardingLayout.unwindToLoginScreen()
+                if (loginScreen)
+                    onboardingLayout.unwindToLoginScreen()
             }
             onSaveBiometricsRequested: (account, credential) => {
                 root.biometricFlowStarted()

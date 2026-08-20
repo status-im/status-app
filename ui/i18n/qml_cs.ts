@@ -12448,6 +12448,14 @@ selhalo</translation>
         <translation>získat heslo</translation>
     </message>
     <message>
+        <source>Error loading accounts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to load accounts. Please restart the app and try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Credentials not found.</source>
         <translation>Přihlašovací údaje nenalezeny.</translation>
     </message>
