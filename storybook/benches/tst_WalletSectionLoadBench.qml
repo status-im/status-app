@@ -183,7 +183,10 @@ Item {
         function watchNestedLoaders(section) {
             d.section = section
             const layout = section.item
+            // Every accounts row is a shell with its own asynchronous Loader
+            // (issues/0017), so the list's loader is addressed by objectName.
             d.accountsListLoaders = d.asyncLoadersIn(layout.leftPanel)
+                                     .filter(loader => loader.objectName === "walletAccountsListLoader")
             // The center panel also holds the two deferred detail-view loaders
             // (issues/0002), so the main view is addressed by objectName rather
             // than by being the panel's only asynchronous Loader.
