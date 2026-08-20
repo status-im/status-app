@@ -11,7 +11,7 @@ SHELL := bash # the shell used internally by Make
 BUILD_SYSTEM_DIR := vendor/nimbus-build-system
 
 GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
-
+LINK_PCRE=0 # nimbus-build-system links `pcre` by default which is not needed
 # we don't want an error here, so we can handle things later, in the ".DEFAULT" target
 -include $(BUILD_SYSTEM_DIR)/makefiles/variables.mk
 
