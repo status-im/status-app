@@ -384,7 +384,7 @@ Item {
         function growInitialWindow() {
             if (!d.initialFillActive || !d.dressActive)
                 return
-            const target = d.initialWindowSize - 1
+            const target = Math.min(d.initialWindowSize, Math.max(1, d.historyCount)) - 1
             const cap = d.windowStart
                         + Math.max(1, d.acquiredCount + d.poolHeadroom()) - 1
             const end = Math.min(target, cap)
@@ -721,8 +721,13 @@ Item {
             if (d.usePool) {
                 if (d.dressActive) {
                     initialFillActive = true
-                    windowEnd = Math.min(initialWindowSize,
-                                         Math.max(1, d.acquiredCount + d.poolHeadroom())) - 1
+                    // clamped to the history: an end past the last row makes
+                    // every later correction churn the tail row through
+                    // remove/reinsert, spawning dying shells
+                    windowEnd = Math.max(0, Math.min(
+                                    initialWindowSize,
+                                    Math.max(1, d.acquiredCount + d.poolHeadroom()),
+                                    Math.max(1, d.historyCount)) - 1)
                     d.boostInitial()
                     // shells born before this dress (construction-time window,
                     // async creation) join the initial batch instead of
@@ -959,7 +964,9 @@ Item {
         objectName: "batchRevealTimeout"
         interval: 1000
 
-        onTriggered: d.revealStaged()
+        onTriggered: {
+            d.revealStaged()
+        }
     }
 
 
@@ -1227,6 +1234,12 @@ Item {
         delegate: Item {
             id: shell
 
+            // Declared (not context-injected) so index carries a change
+            // signal: it dropping to -1 is the only removal signal a
+            // shrink-removed shell gets (see retire below)
+            required property int index
+            required property var model
+
             // Row 0 is the newest message and belongs at the bottom; +1
             // keeps grid row 0 free as the spawn cell (see the view's docs)
             Layout.row: root.chatLogView.rowCount - index + 1
@@ -1280,7 +1293,15 @@ Item {
 
             // On its way out of the window: the item is already released and
             // must not be re-acquired while the deferred destruction runs.
+            // Rows removed by a window shrink die the same deferred death as
+            // reset rows but never see retire() — the index dropping to -1 is
+            // their only signal, and without it they steal every released
+            // item through the still-armed availability connection.
             property bool retired: false
+            onIndexChanged: {
+                if (index < 0)
+                    retire()
+            }
 
             function retire() {
                 retired = true
