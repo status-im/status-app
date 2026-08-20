@@ -201,6 +201,50 @@ Item {
             verify(controlUnderTest.height > 0)
         }
 
+        function test_accountLoginError_showsDialogWhenNoLoginScreen_data() {
+            return [{ tag: "no login screen" }]
+        }
+
+        function test_accountLoginError_showsDialogWhenNoLoginScreen() {
+            getCurrentPage(controlUnderTest.stack, WelcomePage)
+
+            const dialog = findChild(controlUnderTest, "accountsLoadErrorDialog")
+            verify(!!dialog)
+            compare(dialog.opened, false)
+
+            controlUnderTest.onboardingStore.accountLoginError("ignored", false)
+
+            tryCompare(dialog, "opened", true)
+            compare(dialog.title, qsTr("Error loading accounts"))
+            compare(dialog.text, qsTr("Failed to load accounts. Please restart the app and try again."))
+            getCurrentPage(controlUnderTest.stack, WelcomePage)
+        }
+
+        function test_accountLoginError_usesLoginScreenWhenPresent_data() {
+            return [{ tag: "login screen present" }]
+        }
+
+        function test_accountLoginError_usesLoginScreenWhenPresent() {
+            controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+            controlUnderTest.restartFlow()
+
+            const page = getCurrentPage(controlUnderTest.stack, LoginScreen)
+            const userSelector = findChild(page, "loginUserSelector")
+            verify(!!userSelector)
+            userSelector.setSelection("uid_1")
+
+            const dialog = findChild(controlUnderTest, "accountsLoadErrorDialog")
+            verify(!!dialog)
+            compare(dialog.opened, false)
+
+            controlUnderTest.onboardingStore.accountLoginError("login failed", false)
+
+            compare(dialog.opened, false)
+            const passwordBox = findChild(page, "passwordBox")
+            verify(!!passwordBox)
+            compare(passwordBox.detailedError, "login failed")
+        }
+
         // FLOW: Create Profile -> Start fresh (create profile with new password)
         function test_flow_createProfile_withPassword(data) {
             verify(!!controlUnderTest)
