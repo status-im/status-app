@@ -118,6 +118,7 @@ void StatusEmojiModel::setEmojiJson(const QJsonArray &newEmojiJson)
 
     beginResetModel();
     m_emojiJson = newEmojiJson;
+    m_maxAsciiEmojiAliasLength = -1;
     emit emojiJsonChanged();
     endResetModel();
 }
@@ -134,6 +135,43 @@ QString StatusEmojiModel::getEmojiUnicodeFromShortname(const QString &shortname)
     if (it != m_emojiJson.cend())
         return it->toObject().value(kUnicode).toString();
     return {};
+}
+
+QString StatusEmojiModel::getEmojiFromAsciiAlias(const QString &alias) const
+{
+    const auto it = std::find_if(m_emojiJson.cbegin(),
+                                 m_emojiJson.cend(),
+                                 [&alias](const auto &emojiValue) {
+                                     if (!emojiValue.isObject())
+                                         return false;
+
+                                     const auto aliases = emojiValue.toObject()
+                                                              .value(kAliasesAscii)
+                                                              .toArray();
+                                     return std::any_of(aliases.cbegin(),
+                                                        aliases.cend(),
+                                                        [&alias](const auto &aliasValue) {
+                                                            return aliasValue.toString() == alias;
+                                                        });
+                                 });
+    return it == m_emojiJson.cend() ? QString() : it->toObject().value(kEmoji).toString();
+}
+
+int StatusEmojiModel::maxAsciiEmojiAliasLength() const
+{
+    if (m_maxAsciiEmojiAliasLength >= 0)
+        return m_maxAsciiEmojiAliasLength;
+
+    m_maxAsciiEmojiAliasLength = 0;
+    for (const auto &emojiValue : m_emojiJson) {
+        if (!emojiValue.isObject())
+            continue;
+
+        for (const auto &aliasValue : emojiValue.toObject().value(kAliasesAscii).toArray())
+            m_maxAsciiEmojiAliasLength = qMax(m_maxAsciiEmojiAliasLength,
+                                              aliasValue.toString().size());
+    }
+    return m_maxAsciiEmojiAliasLength;
 }
 
 int StatusEmojiModel::getCategoryOffset(int categoryIndex) const {
