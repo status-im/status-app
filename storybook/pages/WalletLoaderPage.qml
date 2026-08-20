@@ -165,7 +165,16 @@ SplitView {
         keycardEnabled: ctrlKeycard.checked
     }
     SharedStores.RootStore { id: sharedRootStoreMock }
-    SharedStores.NetworkConnectionStore { id: networkConnectionStoreMock }
+    SharedStores.NetworkConnectionStore {
+        id: networkConnectionStoreMock
+
+        // Optimism is active in both the mainnet and the testnet profile, so the
+        // tag has a network to name either way.
+        unsupportedCollectibleChains: ctrlUnsupportedCollectibleChain.checked
+                                      ? [Constants.chains.optimismChainId,
+                                         Constants.chains.optimismSepoliaChainId]
+                                      : []
+    }
     SharedStores.NetworksStore { id: networksStoreMock }
     CommunityStores.CommunitiesStore { id: communitiesStoreMock }
     WalletSectionTransactionStoreMock { id: transactionStoreMock }
@@ -292,214 +301,239 @@ SplitView {
 
     LogsAndControlsPanel {
         SplitView.minimumHeight: 160
-        SplitView.preferredHeight: 160
+        SplitView.preferredHeight: 240
         SplitView.fillWidth: true
 
         logsView.logText: logs.logText
 
-        ColumnLayout {
+        // Flows, not RowLayouts: a RowLayout pushed the buttons past the right
+        // edge of the pane, where they could not be pressed. The ScrollView
+        // keeps every control reachable when the pane is dragged smaller.
+        ScrollView {
+            id: controlsScroll
+
             anchors.fill: parent
+            contentWidth: availableWidth
+            clip: true
 
-            RowLayout {
-                spacing: Theme.bigPadding
+            ColumnLayout {
+                width: controlsScroll.availableWidth
+                spacing: Theme.padding
 
-                RowLayout {
-                    Label { text: "Accounts:" }
-                    SpinBox {
-                        id: ctrlAccounts
-                        objectName: "walletLoaderAccountsSpinBox"
-                        from: 0
-                        to: 80
-                        stepSize: 1
-                        value: root.smallProfile ? 2 : 8
-                        editable: true
-                    }
-                }
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: Theme.bigPadding
 
-                RowLayout {
-                    Label { text: "Asset groups:" }
-                    SpinBox {
-                        id: ctrlAssets
-                        objectName: "walletLoaderAssetsSpinBox"
-                        from: 0
-                        to: 20000
-                        stepSize: 100
-                        value: root.smallProfile ? 20 : 2000
-                        editable: true
-                    }
-                }
-
-                RowLayout {
-                    Label { text: "Collectibles:" }
-                    SpinBox {
-                        id: ctrlCollectibles
-                        objectName: "walletLoaderCollectiblesSpinBox"
-                        from: 0
-                        to: 5000
-                        stepSize: 50
-                        value: root.smallProfile ? 10 : 500
-                        editable: true
-                    }
-                }
-
-                RowLayout {
-                    Label { text: "Saved addrs:" }
-                    SpinBox {
-                        id: ctrlSavedAddresses
-                        objectName: "walletLoaderSavedAddressesSpinBox"
-                        from: 0
-                        to: 200
-                        stepSize: 5
-                        value: root.smallProfile ? 4 : 20
-                        editable: true
-                    }
-                }
-
-                RowLayout {
-                    Label { text: "Communities:" }
-                    SpinBox {
-                        id: ctrlCommunities
-                        objectName: "walletLoaderCommunitiesSpinBox"
-                        from: 0
-                        to: 50
-                        stepSize: 1
-                        value: root.smallProfile ? 1 : 5
-                        editable: true
-                    }
-                }
-
-                RowLayout {
-                    Label { text: "Seed:" }
-                    SpinBox {
-                        id: ctrlSeed
-                        objectName: "walletLoaderSeedSpinBox"
-                        from: 1
-                        to: 999
-                        value: 1
-                        editable: true
-                    }
-                }
-
-                Item { Layout.fillWidth: true }
-            }
-
-            RowLayout {
-                spacing: Theme.bigPadding
-
-                Switch {
-                    id: ctrlWatchOnly
-                    objectName: "walletLoaderWatchOnlySwitch"
-                    text: "Watch-only accounts"
-                }
-                Switch {
-                    id: ctrlSingleAccount
-                    objectName: "walletLoaderSingleAccountSwitch"
-                    text: "Single account"
-                }
-                Switch {
-                    id: ctrlEmptyWallet
-                    objectName: "walletLoaderEmptyWalletSwitch"
-                    text: "Empty wallet"
-                }
-                Switch {
-                    id: ctrlTestnets
-                    objectName: "walletLoaderTestnetsSwitch"
-                    text: "Testnets"
-                }
-                Switch {
-                    id: ctrlPrivacyWall
-                    objectName: "walletLoaderPrivacyWallSwitch"
-                    text: "Privacy wall"
-                }
-                Switch {
-                    id: ctrlSwap
-                    objectName: "walletLoaderSwapSwitch"
-                    text: "Swap"
-                    checked: true
-                }
-                Switch {
-                    id: ctrlBuy
-                    objectName: "walletLoaderBuySwitch"
-                    text: "Buy"
-                    checked: true
-                }
-                Switch {
-                    id: ctrlKeycard
-                    objectName: "walletLoaderKeycardSwitch"
-                    text: "Keycard"
-                    checked: true
-                }
-
-                Button {
-                    objectName: "walletLoaderSwitchAccountButton"
-                    text: "Switch account"
-                    onClicked: {
-                        d.selectedAccount = (d.selectedAccount + 1) % Math.max(1, walletMock.accountsModel.count + 1)
-                        walletMock.selectAccount(d.selectedAccount - 1)
-                        logs.logEvent("selectAccount " + (d.selectedAccount - 1))
-                    }
-                }
-
-                Button {
-                    objectName: "walletLoaderReloadTokensButton"
-                    text: "Reload tokens"
-                    onClicked: {
-                        walletMock.reloadTokens()
-                        logs.logEvent("reloadTokens")
-                    }
-                }
-
-                Button {
-                    objectName: "walletLoaderLoadMoreCollectiblesButton"
-                    text: "More collectibles"
-                    onClicked: {
-                        walletMock.loadMoreCollectibles()
-                        logs.logEvent("loadMoreCollectibles")
-                    }
-                }
-
-                // The detail views are deferred behind async Loaders keyed on
-                // the stack index, and their rows are not in the accessibility
-                // tree, so these drive the production navigation signals for
-                // on-screen verification.
-                Button {
-                    objectName: "walletLoaderOpenAssetDetailButton"
-                    text: "Open asset detail"
-                    onClicked: {
-                        const view = d.mainView()
-                        if (!view || !view.assetClicked) {
-                            logs.logEvent("no AssetsView - open the Assets tab first")
-                            return
+                    RowLayout {
+                        Label { text: "Accounts:" }
+                        SpinBox {
+                            id: ctrlAccounts
+                            objectName: "walletLoaderAccountsSpinBox"
+                            from: 0
+                            to: 80
+                            stepSize: 1
+                            value: root.smallProfile ? 2 : 8
+                            editable: true
                         }
-                        const key = SQUtils.ModelUtils.get(
-                                      WalletStores.RootStore.walletAssetsStore.assetsModel,
-                                      0, "key")
-                        view.assetClicked(key)
-                        logs.logEvent("assetClicked " + key)
+                    }
+
+                    RowLayout {
+                        Label { text: "Asset groups:" }
+                        SpinBox {
+                            id: ctrlAssets
+                            objectName: "walletLoaderAssetsSpinBox"
+                            from: 0
+                            to: 20000
+                            stepSize: 100
+                            value: root.smallProfile ? 20 : 2000
+                            editable: true
+                        }
+                    }
+
+                    RowLayout {
+                        Label { text: "Collectibles:" }
+                        SpinBox {
+                            id: ctrlCollectibles
+                            objectName: "walletLoaderCollectiblesSpinBox"
+                            from: 0
+                            to: 5000
+                            stepSize: 50
+                            value: root.smallProfile ? 10 : 500
+                            editable: true
+                        }
+                    }
+
+                    RowLayout {
+                        Label { text: "Saved addrs:" }
+                        SpinBox {
+                            id: ctrlSavedAddresses
+                            objectName: "walletLoaderSavedAddressesSpinBox"
+                            from: 0
+                            to: 200
+                            stepSize: 5
+                            value: root.smallProfile ? 4 : 20
+                            editable: true
+                        }
+                    }
+
+                    RowLayout {
+                        Label { text: "Communities:" }
+                        SpinBox {
+                            id: ctrlCommunities
+                            objectName: "walletLoaderCommunitiesSpinBox"
+                            from: 0
+                            to: 50
+                            stepSize: 1
+                            value: root.smallProfile ? 1 : 5
+                            editable: true
+                        }
+                    }
+
+                    RowLayout {
+                        Label { text: "Seed:" }
+                        SpinBox {
+                            id: ctrlSeed
+                            objectName: "walletLoaderSeedSpinBox"
+                            from: 1
+                            to: 999
+                            value: 1
+                            editable: true
+                        }
                     }
                 }
 
-                Button {
-                    objectName: "walletLoaderOpenCollectibleDetailButton"
-                    text: "Open collectible detail"
-                    onClicked: {
-                        const view = d.mainView()
-                        if (!view || !view.collectibleClicked) {
-                            logs.logEvent("no CollectiblesView - open the Collectibles tab first")
-                            return
-                        }
-                        const row = SQUtils.ModelUtils.get(view.controller.model, 0)
-                        if (!row) {
-                            logs.logEvent("no collectible to open")
-                            return
-                        }
-                        view.collectibleClicked(row.chainId, row.contractAddress, row.tokenId,
-                                                row.symbol, row.tokenType, row.communityId ?? "")
-                        logs.logEvent("collectibleClicked " + row.symbol)
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: Theme.bigPadding
+
+                    Switch {
+                        id: ctrlWatchOnly
+                        objectName: "walletLoaderWatchOnlySwitch"
+                        text: "Watch-only accounts"
+                    }
+                    Switch {
+                        id: ctrlSingleAccount
+                        objectName: "walletLoaderSingleAccountSwitch"
+                        text: "Single account"
+                    }
+                    Switch {
+                        id: ctrlEmptyWallet
+                        objectName: "walletLoaderEmptyWalletSwitch"
+                        text: "Empty wallet"
+                    }
+                    Switch {
+                        id: ctrlTestnets
+                        objectName: "walletLoaderTestnetsSwitch"
+                        text: "Testnets"
+                    }
+                    Switch {
+                        id: ctrlPrivacyWall
+                        objectName: "walletLoaderPrivacyWallSwitch"
+                        text: "Privacy wall"
+                    }
+                    Switch {
+                        id: ctrlSwap
+                        objectName: "walletLoaderSwapSwitch"
+                        text: "Swap"
+                        checked: true
+                    }
+                    Switch {
+                        id: ctrlBuy
+                        objectName: "walletLoaderBuySwitch"
+                        text: "Buy"
+                        checked: true
+                    }
+                    Switch {
+                        id: ctrlKeycard
+                        objectName: "walletLoaderKeycardSwitch"
+                        text: "Keycard"
+                        checked: true
+                    }
+                    // Drives CollectiblesNotSupportedTag, which only renders for
+                    // chains that are both unsupported and active.
+                    Switch {
+                        id: ctrlUnsupportedCollectibleChain
+                        objectName: "walletLoaderUnsupportedCollectibleChainSwitch"
+                        text: "Unsupported collectible chain"
+                        checked: true
                     }
                 }
 
-                Item { Layout.fillWidth: true }
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: Theme.bigPadding
+
+                    Button {
+                        objectName: "walletLoaderSwitchAccountButton"
+                        text: "Switch account"
+                        onClicked: {
+                            d.selectedAccount = (d.selectedAccount + 1) % Math.max(1, walletMock.accountsModel.count + 1)
+                            walletMock.selectAccount(d.selectedAccount - 1)
+                            logs.logEvent("selectAccount " + (d.selectedAccount - 1))
+                        }
+                    }
+
+                    Button {
+                        objectName: "walletLoaderReloadTokensButton"
+                        text: "Reload tokens"
+                        onClicked: {
+                            walletMock.reloadTokens()
+                            logs.logEvent("reloadTokens")
+                        }
+                    }
+
+                    Button {
+                        objectName: "walletLoaderLoadMoreCollectiblesButton"
+                        text: "More collectibles"
+                        onClicked: {
+                            walletMock.loadMoreCollectibles()
+                            logs.logEvent("loadMoreCollectibles")
+                        }
+                    }
+
+                    // The detail views are deferred behind async Loaders keyed on
+                    // the stack index, and their rows are not in the accessibility
+                    // tree, so these drive the production navigation signals for
+                    // on-screen verification.
+                    Button {
+                        objectName: "walletLoaderOpenAssetDetailButton"
+                        text: "Open asset detail"
+                        onClicked: {
+                            const view = d.mainView()
+                            if (!view || !view.assetClicked) {
+                                logs.logEvent("no AssetsView - open the Assets tab first")
+                                return
+                            }
+                            const key = SQUtils.ModelUtils.get(
+                                          WalletStores.RootStore.walletAssetsStore.assetsModel,
+                                          0, "key")
+                            view.assetClicked(key)
+                            logs.logEvent("assetClicked " + key)
+                        }
+                    }
+
+                    Button {
+                        objectName: "walletLoaderOpenCollectibleDetailButton"
+                        text: "Open collectible detail"
+                        onClicked: {
+                            const view = d.mainView()
+                            if (!view || !view.collectibleClicked) {
+                                logs.logEvent("no CollectiblesView - open the Collectibles tab first")
+                                return
+                            }
+                            // ManageTokensController has no `model`; the list is
+                            // built from its sourceModel.
+                            const row = SQUtils.ModelUtils.get(view.controller.sourceModel, 0)
+                            if (!row) {
+                                logs.logEvent("no collectible to open")
+                                return
+                            }
+                            view.collectibleClicked(row.chainId, row.contractAddress, row.tokenId,
+                                                    row.key, row.tokenType, row.communityId ?? "")
+                            logs.logEvent("collectibleClicked " + row.name)
+                        }
+                    }
+                }
             }
         }
     }
@@ -525,6 +559,7 @@ SplitView {
         property alias swap: ctrlSwap.checked
         property alias buy: ctrlBuy.checked
         property alias keycard: ctrlKeycard.checked
+        property alias unsupportedCollectibleChain: ctrlUnsupportedCollectibleChain.checked
     }
 
     function reload() {
@@ -576,6 +611,9 @@ SplitView {
 
     Component.onCompleted: {
         WalletStores.RootStore.palette = Theme.palette
+        // CollectiblesStore gates the detailed collectible on it, so the detail
+        // view renders "Unknown" for as long as the app is not marked ready.
+        Global.appIsReady = true
         reload()
         d.initialized = true
     }

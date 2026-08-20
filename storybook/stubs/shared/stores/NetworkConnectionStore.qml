@@ -11,6 +11,10 @@ QtObject {
     property string accountBalanceNotAvailableText: ""
     property bool collectiblesNetworkUnavailable: false
 
+    // Real store parses this out of networkConnectionModule's JSON, so it is
+    // always an array; leaving it unset made CollectiblesView's filter throw.
+    property var unsupportedCollectibleChains: []
+
     function getBlockchainNetworkDownText(chains) { return "" }
     function getBlockchainNetworkDownTextForToken(balances) { return "" }
     function getMarketNetworkDownText() { return "" }

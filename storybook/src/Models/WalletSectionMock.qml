@@ -1,5 +1,7 @@
 import QtQuick
 
+import StatusQ.Core.Utils
+
 import StorybookMocks
 
 import Mocks
@@ -117,6 +119,9 @@ QtObject {
 
         walletSectionAllCollectibles.allCollectiblesModel = profile.collectiblesModel
 
+        walletSection.allFilterAddresses = _allAddresses()
+        walletSection.collectibleDetailsController.detailedEntryResolver = root._resolveDetailedCollectible
+
         walletSectionBuySellCrypto.model = root.buyProvidersModel
 
         walletSection.addAccountModule = root.addAccountModule
@@ -140,6 +145,13 @@ QtObject {
         selectAccount(-1)
     }
 
+    function _allAddresses() {
+        const addresses = []
+        for (let i = 0; i < root.accountsModel.count; ++i)
+            addresses.push(root.accountsModel.get(i).address)
+        return addresses
+    }
+
     // ";"-separated, like overview/view.nim — the header gradient splits on it
     function _allColorIds() {
         const ids = []
@@ -149,6 +161,10 @@ QtObject {
     }
 
     function uninstall() {
+        walletSection.collectibleDetailsController.detailedEntryResolver = null
+        walletSection.collectibleDetailsController.detailedEntry = null
+        walletSection.allFilterAddresses = []
+        _dropDetailedCollectible()
         walletSectionAccounts.accounts = walletSectionAccounts.emptyAccounts
         walletSectionAccounts.profile = null
         walletSectionAssets.groupedAccountAssetsModel = walletSectionAssets.emptyModel
@@ -227,5 +243,113 @@ QtObject {
 
     function loadMoreCollectibles() {
         profile.loadMoreCollectibles()
+    }
+
+    // --- Collectible detail
+    //
+    // Mirrors CollectiblesEntry (src/app/modules/shared_models/collectibles_entry.nim),
+    // which nim resolves out of the wallet's own collectibles - so it is derived
+    // here from the generated row the list showed.
+    readonly property Component _detailedCollectibleComponent: Component {
+        QtObject {
+            property int chainId
+            property string contractAddress
+            property string tokenId
+            property string name
+            property string description
+            property string imageUrl
+            property string thumbnailUrl
+            property string mediaUrl
+            property string mediaType
+            property string backgroundColor
+            property string collectionSlug
+            property string collectionName
+            property string collectionImageUrl
+            property string communityId
+            property string communityName
+            property string communityColor
+            property string communityImage
+            property int communityPrivilegesLevel
+            property string networkShortName
+            property string networkColor
+            property string networkIconUrl
+            property int tokenType
+            property bool soulbound
+            property string website
+            property string twitterHandle
+            property bool isMetadataValid: true
+
+            readonly property ListModel traits: ListModel {}
+            readonly property ListModel ownership: ListModel {}
+        }
+    }
+
+    property QtObject _detailedCollectible: null
+
+    function _dropDetailedCollectible() {
+        if (!root._detailedCollectible)
+            return
+        root._detailedCollectible.destroy()
+        root._detailedCollectible = null
+    }
+
+    function _resolveDetailedCollectible(chainId, contractAddress, tokenId) {
+        const uid = "%1+%2+%3".arg(chainId).arg(contractAddress).arg(tokenId)
+        const row = ModelUtils.getByKey(profile.collectiblesModel, "uid", uid)
+        if (!row)
+            return null
+
+        const network = ModelUtils.getByKey(NetworksModel.flatNetworks, "chainId", chainId) ?? {}
+        const community = row.communityId
+                        ? ModelUtils.getByKey(root.communitiesModel, "id", row.communityId) : null
+
+        const entry = root._detailedCollectibleComponent.createObject(root, {
+            chainId: chainId,
+            contractAddress: contractAddress,
+            tokenId: tokenId,
+            name: row.name,
+            description: "Generated collectible %1 of collection %2.".arg(row.tokenId)
+                                                                     .arg(row.collectionName),
+            imageUrl: row.imageUrl,
+            thumbnailUrl: row.thumbnailUrl,
+            mediaUrl: row.mediaUrl,
+            mediaType: row.mediaType,
+            backgroundColor: row.backgroundColor,
+            collectionSlug: row.collectionSlug,
+            collectionName: row.collectionName,
+            collectionImageUrl: row.collectionImageUrl,
+            communityId: row.communityId,
+            communityName: community ? community.name : "",
+            communityColor: community ? community.color : "",
+            communityImage: community ? community.image : "",
+            communityPrivilegesLevel: row.communityPrivilegesLevel,
+            networkShortName: network.shortName ?? "",
+            networkColor: network.chainColor ?? "",
+            networkIconUrl: network.iconUrl ?? "",
+            tokenType: row.tokenType,
+            soulbound: row.soulbound,
+            website: "https://example.org/%1".arg(row.collectionSlug),
+            twitterHandle: row.collectionSlug
+        })
+
+        for (const trait of _traitsFor(row))
+            entry.traits.append(trait)
+        for (const owner of ModelUtils.modelToArray(
+                 ModelUtils.getByKey(profile.collectiblesModel, "uid", uid, "ownership")))
+            entry.ownership.append(owner)
+
+        _dropDetailedCollectible()
+        root._detailedCollectible = entry
+        return entry
+    }
+
+    function _traitsFor(row) {
+        const rarities = ["Common", "Rare", "Legendary"]
+        const tokenIndex = parseInt(row.tokenId, 10)
+        return [
+            { traitType: "Collection", value: row.collectionName },
+            { traitType: "Rarity", value: rarities[tokenIndex % rarities.length] },
+            { traitType: "Token ID", value: row.tokenId }
+        ]
     }
 }
