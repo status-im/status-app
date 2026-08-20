@@ -50,10 +50,6 @@ Item {
     // Dress hold (ADR 0007): raised while a view transition runs. Dress
     // triggers keep enqueuing; the drain waits and restarts on release.
     property bool dressHold: false
-    onDressHoldChanged: {
-        if (!dressHold && d.dressQueue.length)
-            d.scheduleDrain()
-    }
     Component.onCompleted: {
         d.applyPoolTarget()
         d.viewCompleted = true
@@ -416,6 +412,30 @@ Item {
         property var dressQueue: []
         property bool drainScheduled: false
 
+        // ---- Scroll gate (issue 0010 follow-up): a fast fling holds
+        // dressing exactly like a panel switch — a dress blows the frame
+        // when motion makes dropped frames most visible. Velocity-only:
+        // `moving` stays true through the whole deceleration tail and a
+        // resting finger mid-drag must dress. Hysteresis (enter high, exit
+        // low) keeps the gate from flapping around one threshold.
+        readonly property real fastScrollEnterVelocity: chatLogView.height
+        readonly property real fastScrollExitVelocity: chatLogView.height * 0.4
+        property bool fastScroll: false
+
+        function updateScrollGate(speed) {
+            if (!d.fastScroll && speed > d.fastScrollEnterVelocity)
+                d.fastScroll = true
+            else if (d.fastScroll && speed < d.fastScrollExitVelocity)
+                d.fastScroll = false
+        }
+
+        // Either hold input gates the drain; both must clear to dress.
+        readonly property bool dressHeld: root.dressHold || d.fastScroll
+        onDressHeldChanged: {
+            if (!d.dressHeld && d.dressQueue.length)
+                d.scheduleDrain()
+        }
+
 
         function enqueueDress(shell) {
             if (d.dressQueue.indexOf(shell) === -1)
@@ -492,7 +512,7 @@ Item {
                 return
             }
             // held: the queue keeps accumulating, release restarts the drain
-            if (root.dressHold)
+            if (d.dressHeld)
                 return
             // at most one dress per slice: a single dress already fills a
             // frame on the devices this paces for, and the callLater chain
@@ -1212,6 +1232,8 @@ Item {
 
         onMoreUpRequested: d.slideWindowToHistory(!chatLogView.stickingToNewest)
         onMoreDownRequested: d.slideWindowToRecent()
+
+        onVerticalVelocityChanged: d.updateScrollGate(Math.abs(verticalVelocity))
 
         onRowPositioned: row => {
             const item = chatLogView.itemAtRow(row)

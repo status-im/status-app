@@ -632,6 +632,122 @@ Item {
             compare(chat.internal.dressQueue.length, 0)
         }
 
+        // Scroll gate (0010 follow-up): fast-fling velocity holds dressing
+        // like a panel switch; the queue grows, and the drain resumes by
+        // itself once the velocity decays below the exit threshold.
+        function test_fastScrollHoldsDressingUntilVelocityDecays() {
+            const chat = openPooledChat(30, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+            severPaging(chat)
+
+            const probe = createTemporaryObject(dressOrderProbeComp, root,
+                                                { target: chat.internal,
+                                                  listView: chat.listView })
+            verify(!!probe)
+            probe.prime()
+
+            const enter = chat.internal.fastScrollEnterVelocity
+            const exit = chat.internal.fastScrollExitVelocity
+            chat.internal.updateScrollGate(enter * 1.5)
+            verify(chat.internal.fastScroll,
+                   "fast velocity must raise the gate")
+
+            const released = [0, 1, 2, 3]
+            for (let i = 0; i < released.length; ++i) {
+                const shell = chat.listView.itemAtRow(released[i])
+                verify(!!shell.pooledItem)
+                shell.releasePooled()
+            }
+
+            settle()
+            compare(probe.order.length, 0,
+                    "held by velocity: nothing may dress")
+            compare(chat.internal.dressQueue.length, released.length)
+
+            // a decaying fling still above the exit threshold keeps holding
+            chat.internal.updateScrollGate(exit * 1.2)
+            verify(chat.internal.fastScroll)
+            // dropping below exit resumes the drain, no explicit release
+            chat.internal.updateScrollGate(exit * 0.5)
+            verify(!chat.internal.fastScroll)
+            tryVerify(() => probe.order.length === released.length, 10000,
+                      "the drain must resume on its own, got "
+                      + JSON.stringify(probe.order))
+            compare(chat.internal.dressQueue.length, 0)
+        }
+
+        // Oscillation between the enter and exit thresholds must not thrash
+        // the gate: enter only above the high mark, exit only below the low.
+        function test_scrollGateHysteresis() {
+            const chat = openPooledChat(10, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+
+            const enter = chat.internal.fastScrollEnterVelocity
+            const exit = chat.internal.fastScrollExitVelocity
+            verify(exit < enter, "exit threshold must sit below enter")
+            const between = (enter + exit) / 2
+
+            verify(!chat.internal.fastScroll)
+            chat.internal.updateScrollGate(between)
+            verify(!chat.internal.fastScroll,
+                   "between thresholds: the gate must stay down")
+            chat.internal.updateScrollGate(enter * 1.1)
+            verify(chat.internal.fastScroll)
+            chat.internal.updateScrollGate(between)
+            verify(chat.internal.fastScroll,
+                   "between thresholds: the gate must stay up")
+            chat.internal.updateScrollGate(between)
+            verify(chat.internal.fastScroll)
+            chat.internal.updateScrollGate(exit * 0.5)
+            verify(!chat.internal.fastScroll)
+            chat.internal.updateScrollGate(between)
+            verify(!chat.internal.fastScroll,
+                   "between thresholds: the gate must stay down")
+        }
+
+        // The two hold inputs compose: either alone holds the drain, and
+        // dressing resumes only when both have cleared.
+        function test_holdInputsCompose() {
+            const chat = openPooledChat(30, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+            severPaging(chat)
+
+            const probe = createTemporaryObject(dressOrderProbeComp, root,
+                                                { target: chat.internal,
+                                                  listView: chat.listView })
+            verify(!!probe)
+            probe.prime()
+
+            chat.view.dressHold = true
+            chat.internal.updateScrollGate(
+                chat.internal.fastScrollEnterVelocity * 2)
+
+            const released = [0, 1, 2]
+            for (let i = 0; i < released.length; ++i) {
+                const shell = chat.listView.itemAtRow(released[i])
+                verify(!!shell.pooledItem)
+                shell.releasePooled()
+            }
+
+            settle()
+            compare(probe.order.length, 0, "both up: nothing may dress")
+
+            chat.view.dressHold = false
+            settle()
+            compare(probe.order.length, 0,
+                    "velocity alone must keep holding")
+            compare(chat.internal.dressQueue.length, released.length)
+
+            chat.internal.updateScrollGate(0)
+            tryVerify(() => probe.order.length === released.length, 10000,
+                      "both cleared: the drain must run, got "
+                      + JSON.stringify(probe.order))
+            compare(chat.internal.dressQueue.length, 0)
+        }
+
         // A restored mid-history window dresses the rows nearest the restored
         // viewport position first, spreading outward.
         function test_restoreDressesNearestRestoredPositionFirst() {
