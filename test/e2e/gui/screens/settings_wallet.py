@@ -29,7 +29,7 @@ from gui.objects_map import settings_names, wallet_names
 class WalletSettingsView(QObject):
 
     def __init__(self):
-        super().__init__(settings_names.mainWindow_WalletView)
+        super().__init__(settings_names.settingsWallet_View)
         self.scroll = Scroll(settings_names.settingsContentBase_ScrollView)
         self.wallet_settings_add_new_account_button = Button(
             settings_names.settings_Wallet_MainView_AddNewAccountButton)
