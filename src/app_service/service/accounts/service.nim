@@ -123,9 +123,14 @@ QtObject:
 
     except Exception as e:
       error "error: ", procName="openedAccounts", errName = e.name, errDesription = e.msg
+      raise
 
   proc openedAccountsContainsKeyUid*(self: Service, keyUid: string): bool =
-    return (keyUID in self.openedAccounts().mapIt(it.keyUid))
+    try:
+      return (keyUID in self.openedAccounts().mapIt(it.keyUid))
+    except Exception as e:
+      error "error: ", procName="openedAccountsContainsKeyUid", errName = e.name, errDesription = e.msg
+      return false
 
   proc getAccountByKeyUid*(self: Service, keyUid: string): AccountDto =
     for account in self.openedAccounts():

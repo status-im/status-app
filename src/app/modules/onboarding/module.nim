@@ -144,7 +144,14 @@ method load*[T](self: Module[T]) =
     self.finishAppLoading2()
     return
 
-  let openedAccounts = self.controller.getOpenedAccounts()
+  var openedAccounts: seq[AccountDto]
+  var accountsLoadFailed = false
+  try:
+    openedAccounts = self.controller.getOpenedAccounts()
+  except Exception as e:
+    error "failed to load opened accounts", msg = e.msg
+    accountsLoadFailed = true
+
   if openedAccounts.len > 0:
     var items: seq[login_acc_item.Item]
     for i in 0..<openedAccounts.len:
@@ -163,6 +170,9 @@ method load*[T](self: Module[T]) =
     self.view.setLoginAccountsModelItems(items)
 
   self.delegate.onboardingDidLoad()
+  if accountsLoadFailed:
+    self.view.accountLoginError("Failed to load accounts. Please restart the app and try again.",
+      wrongPassword = false)
 
 method loginKeycard*[T](self: Module[T], keyUid: string, pin: string, pairingPassword: string) =
   self.controller.loginKeycard(keyUid, pin, pairingPassword)
