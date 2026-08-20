@@ -4249,10 +4249,6 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
         <source>Continuing will require a transaction to connect the username with your current chat key.</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Temporarily unavailable, will be available in the next release.</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>ContactPanel</name>
@@ -5837,10 +5833,6 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Full metadata privacy means it&apos;s impossible to tell who you are talking to by surveilling your internet traffic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status uses the Waku p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -14629,10 +14621,6 @@ al cargar</translation>
     <message>
         <source>Checking collectibles ownership…</source>
         <translation>Verificación de la propiedad de los coleccionables...</translation>
-    </message>
-    <message>
-        <source>Checking collectibles ownership…</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
