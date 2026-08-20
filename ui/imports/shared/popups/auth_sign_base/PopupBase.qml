@@ -127,6 +127,7 @@ StatusDialog {
     footer: StatusDialogFooter {
         rightButtons: ObjectModel {
             StatusFlatButton {
+                objectName: "useBiometricsButton"
                 visible: d.usingBiometrics && !d.biometricsInProgress && !d.verifying
                 text: qsTr("Use biometrics")
                 onClicked: d.startBiometrics()
@@ -216,8 +217,22 @@ StatusDialog {
 
         readonly property bool usingBiometrics: root.keychain.available
                                                 && !root.externalAuthorization // the authentication popup runs its own biometrics
-                                                && root.useKeyUid === root.userProfileKeyUid
+                                                && (!root.isKeycardKeyPair || root.keyUid === root.userProfileKeyUid)
                                                 && keychain.hasCredential(root.useKeyUid) === Keychain.StatusSuccess
+
+        onUsingBiometricsChanged: d.tryAutoStartBiometrics()
+
+        property bool constructionDone: false
+        property bool autoBiometricsAttempted: false
+
+        function tryAutoStartBiometrics() {
+            if (!d.constructionDone || !d.usingBiometrics || d.autoBiometricsAttempted)
+                return
+            d.autoBiometricsAttempted = true
+            if (d.biometricsInProgress || d.verifying || d.success)
+                return
+            d.startBiometrics()
+        }
 
         property bool biometricsInProgress: false
         property bool credentialMismatchAfterBiometrics: false
@@ -381,6 +396,8 @@ StatusDialog {
         errorText: d.error
     }
 
+    readonly property string lastUsedPin: d.lastPin
+
     // Public API for concrete popups to drive state
     function handleKeycardSuccess() {
         d.handleKeycardSuccess()
@@ -395,9 +412,8 @@ StatusDialog {
     }
 
     Component.onCompleted: {
-        if (d.usingBiometrics) {
-            d.startBiometrics()
-        }
+        d.constructionDone = true
+        d.tryAutoStartBiometrics()
     }
 
     onClosed: {

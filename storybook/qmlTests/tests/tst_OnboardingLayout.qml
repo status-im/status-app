@@ -645,7 +645,7 @@ Item {
                 verify(!!keycardBox)
 
                 if (data.biometrics) { // biometrics + PIN
-                    mockDriver.keycardState = Onboarding.KeycardState.NotEmpty // triggers biometrics request
+                    mockDriver.keycardState = Onboarding.KeycardState.NotEmpty // shows PIN input, biometrics is requested on profile selection
                     waitForRendering(keycardBox)
                     waitForItemPolished(keycardBox)
 

@@ -54,7 +54,7 @@ PopupBase {
 
         function onKeycardAuthSuccess(encryptionPublicKey, chatPrivateKey) {
             root.handleKeycardSuccess()
-            root.authenticationSuccess(root.reason, encryptionPublicKey, "", root.keyUid, chatPrivateKey)
+            root.authenticationSuccess(root.reason, encryptionPublicKey, root.lastUsedPin, root.keyUid, chatPrivateKey)
             root.close()
         }
 
