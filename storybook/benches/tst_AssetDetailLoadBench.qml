@@ -141,6 +141,7 @@ Item {
         property real settledMs: -1
         property int objectsAtReady: -1
         property int objectsSettled: -1
+        property int layoutAttached: -1
         property int chainTags: -1
         property int informationTiles: -1
         property var stallTimeline: []
@@ -173,6 +174,7 @@ Item {
             d.settledMs = -1
             d.objectsAtReady = -1
             d.objectsSettled = -1
+            d.layoutAttached = -1
             d.chainTags = -1
             d.informationTiles = -1
             d.stallTimeline = []
@@ -190,6 +192,8 @@ Item {
                 probeTicks: probe.stallTickCount,
                 objectsAtReady: d.objectsAtReady,
                 objectsSettled: d.objectsSettled,
+                layoutAttached: d.layoutAttached,
+                objectsBuilt: d.objectsSettled - d.layoutAttached,
                 chainTags: d.chainTags,
                 informationTiles: d.informationTiles,
                 stallTimeline: d.stallTimeline,
@@ -209,8 +213,8 @@ Item {
             "utc_time", "profile", "phase",
             "t_ready_ms", "t_content_ms", "t_settled_ms",
             "stalls_over_4ms", "max_stall_ms", "probe_ticks",
-            "objects_at_ready", "objects_settled",
-            "chain_tags", "information_tiles"
+            "objects_at_ready", "objects_settled", "layout_attached",
+            "objects_built", "chain_tags", "information_tiles"
         ]
 
         // Host budget for a popup-class surface: 400ms device / 10. Recorded,
@@ -219,21 +223,42 @@ Item {
         // two-bite budget on this cadence and the view needs three.
         readonly property real contentBudgetMs: 40
 
-        // Gated on both phases. `objects_settled` carries a documented tolerance
-        // of 1 rather than a rounder number: the drain loop's stability test can
-        // end one sample before a late tooltip lands. A regression worth
-        // catching here moves the count by hundreds, not by one.
+        // `objects_settled` is recorded, not gated: it reads 916, 917 or 918,
+        // and the whole of that spread is `QQuickLayoutAttached`. Qt allocates a
+        // Layout attached object lazily, per item, the first time a layout pass
+        // needs one, so the count depends on which layout passes have run - and
+        // it does not converge: the census holds still for 2s past the settle
+        // point in every mode (`issues/0024`). It is not the `createHighlight`
+        // pair `issues/0011` found on the wallet section, and it is not the stop
+        // line firing early.
+        //
+        // `objects_built` - the settled count minus those attached objects - is
+        // what the surface actually instantiates, and it is bit-identical: 809
+        // on 32 of 32 phases. That is the gate, at tolerance 0. `layout_attached`
+        // is recorded alongside so the split stays visible.
+        //
         // `objects_at_ready` is recorded only: it races the layout pass that
         // follows Ready.
-        readonly property int expectedObjectsSettled: 916
-        readonly property int objectsSettledTolerance: 1
+        readonly property int expectedObjectsBuilt: 809
         readonly property int expectedChainTags: 4
         readonly property int expectedInformationTiles: 2
 
         // Ratchet on the observed maximum over twenty-two runs per phase with the
-        // issues/0016 incubation cadence: warm 1-3, cold 3-7. Most metered bites
-        // are now below the 4ms threshold, which is why this dropped from 11.
-        // Lower it whenever a fix lowers the measured count; never raise it.
+        // issues/0016 incubation cadence. Most metered bites are now below the
+        // 4ms threshold, which is why this dropped from 11. Lower it whenever a
+        // fix lowers the measured count; never raise it.
+        //
+        // Re-derived over sixty-six runs per phase on the merged tree
+        // (`issues/0024`): warm 1-7, cold 2-9. It cannot come down, and a
+        // per-phase split was tried and reverted - warm looked like 1-5 over
+        // fifty runs and then read 7 on the fifty-first, so a warm ratchet of 5
+        // would flake, which is worse than no ratchet.
+        //
+        // Cold is **known to flake at this value**: it read 8 five times and 9
+        // twice over those sixty-six runs. The ratchet was derived from a quiet
+        // subset and sits below its own distribution, so it fails ~10% of cold
+        // runs. It may not be raised; the fix is to remove the marginal blocks,
+        // not to move the line.
         readonly property int maxStallsOver4ms: 7
 
         function initTestCase() {
@@ -261,8 +286,7 @@ Item {
             recordRow(warm)
 
             for (const phase of [cold, warm]) {
-                countGate(phase, "objects_settled", phase.objectsSettled, expectedObjectsSettled,
-                          objectsSettledTolerance)
+                countGate(phase, "objects_built", phase.objectsBuilt, expectedObjectsBuilt)
                 countGate(phase, "chain_tags", phase.chainTags, expectedChainTags)
                 countGate(phase, "information_tiles", phase.informationTiles,
                           expectedInformationTiles)
@@ -356,6 +380,7 @@ Item {
             probe.end()
 
             d.objectsSettled = current
+            d.layoutAttached = probe.countByTypePrefix(d.detailItem(), "QQuickLayoutAttached")
             d.chainTags = probe.countByObjectNamePrefix(d.detailItem(), "assetsDetailsHeaderChainTag_")
             d.informationTiles = probe.countByTypePrefix(d.detailItem(), "InformationTileAssetDetails")
             d.stallTimeline = probe.stalls()
@@ -393,7 +418,10 @@ Item {
                 row("max_stall_ms", warm.maxStallMs, cold.maxStallMs, "recorded"),
                 row("probe_ticks", warm.probeTicks, cold.probeTicks, "recorded"),
                 row("objects_at_ready", warm.objectsAtReady, cold.objectsAtReady, "recorded"),
-                row("objects_settled", warm.objectsSettled, cold.objectsSettled, "gated"),
+                row("objects_settled", warm.objectsSettled, cold.objectsSettled,
+                    "recorded (lazy Layout attached objects move it)"),
+                row("layout_attached", warm.layoutAttached, cold.layoutAttached, "recorded"),
+                row("objects_built", warm.objectsBuilt, cold.objectsBuilt, "gated"),
                 row("chain_tags", warm.chainTags, cold.chainTags, "gated"),
                 row("information_tiles", warm.informationTiles, cold.informationTiles, "gated"),
                 "",
@@ -448,6 +476,7 @@ Item {
                 probe.formatMs(phase.maxStallMs),
                 String(phase.probeTicks),
                 String(phase.objectsAtReady), String(phase.objectsSettled),
+                String(phase.layoutAttached), String(phase.objectsBuilt),
                 String(phase.chainTags), String(phase.informationTiles)
             ]
             verify(probe.appendTsvRow(tsvPath, tsvHeader, row),

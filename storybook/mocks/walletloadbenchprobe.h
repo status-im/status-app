@@ -96,6 +96,10 @@ public:
     Q_INVOKABLE QVariantList findAllByTypePrefix(QObject* root, const QString& prefix) const;
     Q_INVOKABLE QVariantList findAllByObjectNamePrefix(QObject* root, const QString& prefix) const;
     Q_INVOKABLE QString typeName(QObject* obj) const;
+    // QObject::parent(), which QML does not expose for non-Item types. Attached
+    // objects are parented to what they are attached to, so this is how a census
+    // says which item an attached object belongs to.
+    Q_INVOKABLE QObject* parentObject(QObject* obj) const;
 
     // Appends one row, writing `header` first when the file does not exist yet.
     Q_INVOKABLE bool appendTsvRow(const QString& path, const QStringList& header,

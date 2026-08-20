@@ -403,6 +403,16 @@ Item {
         // post-t_content pass cleared 8ms in 30 of 32 warm runs before and 0 of
         // 38 after, and every block left over 8ms is now the t=0 chrome build
         // or the StackView.initialItem region - issues/0011's, not this list's.
+        //
+        // Re-derived again on a quiet-as-available machine over forty runs per
+        // phase (`issues/0024`): warm 0-3, cold 2-4. Neither may come down. Cold
+        // is **known to flake** - it read 4 in 4 of those 40 runs, and the
+        // committed history carries a 5 - so the ratchet sits below its own
+        // distribution and fails ~10% of cold runs. It was derived from a quiet
+        // subset and may not be raised; the marginal block is one of a cluster
+        // of 4-12ms blocks after t_ready that straddles the threshold, and
+        // removing it is the fix, not moving the line.
+        //
         // Lower them whenever a fix lowers the count; never raise them.
         readonly property int maxWarmStallsOver8ms: 3
         readonly property int maxColdStallsOver8ms: 3

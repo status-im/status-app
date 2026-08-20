@@ -320,6 +320,11 @@ QString WalletLoadBenchProbe::typeName(QObject* obj) const
     return obj ? QString::fromLatin1(obj->metaObject()->className()) : QString();
 }
 
+QObject* WalletLoadBenchProbe::parentObject(QObject* obj) const
+{
+    return obj ? obj->parent() : nullptr;
+}
+
 QString WalletLoadBenchProbe::utcTimestamp() const
 {
     return QDateTime::currentDateTimeUtc().toString(u"yyyy-MM-ddTHH:mm:ssZ"_s);
