@@ -123,6 +123,7 @@ type
 
   MessagesMarkedAsReadArgs* = ref object of Args
     chatId*: string
+    threadId*: string
     allMessagesMarked*: bool
     messagesIds*: seq[string]
     messagesCount*: int
@@ -1310,13 +1311,16 @@ QtObject:
       var chatId: string
       discard responseObj.getProp("chatId", chatId)
 
-      let data = MessagesMarkedAsReadArgs(chatId: chatId, allMessagesMarked: true)
+      var threadId: string
+      discard responseObj.getProp("threadId", threadId)
+
+      let data = MessagesMarkedAsReadArgs(chatId: chatId, threadId: threadId, allMessagesMarked: true)
       self.events.emit(SIGNAL_MESSAGES_MARKED_AS_READ, data)
       checkAndEmitACNotificationsFromResponse(self.events, responseObj{"activityCenterNotifications"})
     except Exception as e:
       error "error: ", procName="onMarkAllMessagesRead", errDesription = e.msg
 
-  proc markAllMessagesRead*(self: Service, chatId: string) =
+  proc markAllMessagesRead*(self: Service, chatId: string, threadId: string = "") =
     if (chatId.len == 0):
       error "empty chat id", procName="markAllMessagesRead"
       return
@@ -1325,7 +1329,8 @@ QtObject:
       tptr: asyncMarkAllMessagesReadTask,
       vptr: cast[uint](self.vptr),
       slot: "onMarkAllMessagesRead",
-      chatId: chatId
+      chatId: chatId,
+      threadId: threadId
     )
 
     self.threadpool.start(arg)
