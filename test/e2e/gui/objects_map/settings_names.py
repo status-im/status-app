@@ -26,7 +26,7 @@ settingsWalletOption = {"container": mainWindow_settingsList_SettingsList, "obje
 settingsSignOutQuitOption = {"container": LeftTabProfileMenu, "objectName": "17-ExtraMenuItem", "type": "StatusNavigationListItem", "visible": True}
 
 # Communities View
-mainWindow_CommunitiesView = {"container": statusDesktop_mainWindow, "id": "communitiesView", "type": "Loader", "unnamed": 1}
+mainWindow_CommunitiesView = {"container": statusDesktop_mainWindow, "type": "CommunitiesView", "unnamed": 1, "visible": True}
 mainWindow_settingsContentBaseScrollView_StatusScrollView = {"container": statusDesktop_mainWindow, "objectName": "settingsContentBaseScrollView", "type": "StatusScrollView", "visible": True}
 settingsContentBaseScrollView_listItem_StatusListItem = {"container": mainWindow_settingsContentBaseScrollView_StatusScrollView, "id": "listItem", "type": "StatusListItem", "unnamed": 1, "visible": True}
 
@@ -47,7 +47,7 @@ always_show_radioButton_StatusRadioButton = {"container": settingsContentBase_Sc
 never_show_radioButton_StatusRadioButton = {"container": settingsContentBase_ScrollView, "objectName": "MessagingView_NeverShow_RadioButton", "type": "SettingsRadioButton", "visible": True}
 
 # Contacts View
-mainWindow_ContactsView = {"container": statusDesktop_mainWindow, "id": "contactsView", "type": "Loader", "unnamed": 1, "visible": True}
+mainWindow_ContactsView = {"container": statusDesktop_mainWindow, "type": "ContactsView", "unnamed": 1, "visible": True}
 mainWindow_Send_contact_request_to_chat_key_StatusButton = {"checkable": False, "container": mainWindow_ContactsView, "objectName": "ContactsView_ContactRequest_Button", "type": "StatusButton", "visible": True}
 contactsTabBar_Pending_Requests_StatusTabButton = {"container": mainWindow_ContactsView, "objectName": "ContactsView_PendingRequest_Button", "type": "StatusTabButton", "visible": True}
 settingsContentBaseScrollView_ContactListPanel = {"container": settingsContentBase_ScrollView, "objectName": "ContactListPanel_ListView", "type": "ContactsListPanel", "visible": True}
@@ -71,7 +71,6 @@ unblock_user_StatusMenuItem = {"container": statusDesktop_mainWindow_overlay, "e
 block_user_StatusMenuItem = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "blockUser_StatusItem", "type": "StatusMenuItem", "visible": True}
 
 # Wallet Settings View
-mainWindow_WalletView = {"container": statusDesktop_mainWindow, "id": "walletView", "type": "Loader", "unnamed": 1, "visible": True}
 settingsWallet_View = {"container": statusDesktop_mainWindow, "type": "WalletView", "unnamed": 1, "visible": True}
 settings_Wallet_MainView_Networks = {"container": statusDesktop_mainWindow, "objectName": "networksItem", "type": "StatusListItem"}
 settings_Wallet_MainView_Manage_Tokens = {"container": settingsContentBase_ScrollView, "objectName": "manageTokensItem", "type": "StatusListItem", "visible": True}
