@@ -13,6 +13,8 @@
 #include <thread>
 #include <vector>
 
+class QQuickItem;
+
 // Measurement hook for the wallet section load bench (issues/0001): a
 // high-resolution clock for the load staircase, a 1ms stall probe, subtree
 // object counters and a TSV appender.
@@ -66,6 +68,22 @@ public:
     // GUI-thread blocks sit inside the window, not just how big the worst is.
     Q_INVOKABLE QVariantList stalls() const;
 
+    // Per-frame beat of the GUI thread (issues/0023). QQuickWindow::afterAnimating
+    // fires on the GUI thread once per rendered frame, so a gap between two of
+    // them is a frame the loop did not get to run - which is what "the user is
+    // interacting" costs when something else holds the thread.
+    Q_INVOKABLE void watchFrames(QQuickItem* itemInWindow);
+    Q_INVOKABLE void clearFrames();
+    // macOS stops rendering an occluded window, which silently empties the frame
+    // record; the bench window has to be on top for the whole run.
+    Q_INVOKABLE void raiseWindow(QQuickItem* itemInWindow) const;
+    Q_INVOKABLE QVariantList frameTimes() const;
+    // Occupies the GUI thread for `ms` without sleeping: a calibrated stand-in
+    // for a frame's own work, so the interaction bench can sweep frame cost.
+    Q_INVOKABLE void burnMs(double ms) const;
+    // Bench knobs come from the environment: one process per arm, no rebuild.
+    Q_INVOKABLE QString env(const QString& name) const;
+
     // Subtree instantiation counters. Both the QObject children and the
     // QQuickItem children are walked: a panel handed to the section chrome
     // keeps its QObject parent while its visual parent moves.
@@ -76,6 +94,7 @@ public:
     Q_INVOKABLE QObject* findByTypePrefix(QObject* root, const QString& prefix) const;
     Q_INVOKABLE QObject* findByObjectNamePrefix(QObject* root, const QString& prefix) const;
     Q_INVOKABLE QVariantList findAllByTypePrefix(QObject* root, const QString& prefix) const;
+    Q_INVOKABLE QVariantList findAllByObjectNamePrefix(QObject* root, const QString& prefix) const;
     Q_INVOKABLE QString typeName(QObject* obj) const;
 
     // Appends one row, writing `header` first when the file does not exist yet.
@@ -141,6 +160,8 @@ private:
     QString m_awaitedStamp;
     QEventLoop* m_awaitLoop = nullptr;
     QList<StallInterval> m_stalls;
+    QList<double> m_frameTimes;
+    QMetaObject::Connection m_frameConnection;
 
     bool m_samplingEnabled = false;
     std::thread m_samplerThread;

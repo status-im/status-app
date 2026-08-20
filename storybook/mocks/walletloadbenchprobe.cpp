@@ -7,6 +7,7 @@
 #include <QFileInfo>
 #include <QQmlEngine>
 #include <QQuickItem>
+#include <QQuickWindow>
 #include <QSet>
 #include <QTextStream>
 #include <QTimer>
@@ -241,6 +242,73 @@ QVariantList WalletLoadBenchProbe::findAllByTypePrefix(QObject* root, const QStr
             continue;
         // Without this the engine would take ownership of a live section object
         // and collect it while the bench still holds it.
+        QQmlEngine::setObjectOwnership(obj, QQmlEngine::CppOwnership);
+        found.append(QVariant::fromValue(obj));
+    }
+    return found;
+}
+
+void WalletLoadBenchProbe::watchFrames(QQuickItem* itemInWindow)
+{
+    QObject::disconnect(m_frameConnection);
+    m_frameTimes.clear();
+    if (itemInWindow == nullptr || itemInWindow->window() == nullptr)
+        return;
+    m_frameConnection = QObject::connect(itemInWindow->window(), &QQuickWindow::afterAnimating,
+                                         this, [this] { m_frameTimes.append(elapsedMs()); });
+}
+
+void WalletLoadBenchProbe::raiseWindow(QQuickItem* itemInWindow) const
+{
+    if (itemInWindow == nullptr || itemInWindow->window() == nullptr)
+        return;
+    QQuickWindow* window = itemInWindow->window();
+    // Occlusion, not focus, is what stops the rendering; the stays-on-top hint
+    // is the only thing that reliably keeps a bench window out from under
+    // whatever else the machine is running.
+    window->setFlag(Qt::WindowStaysOnTopHint, true);
+    window->raise();
+    window->requestActivate();
+}
+
+void WalletLoadBenchProbe::clearFrames()
+{
+    m_frameTimes.clear();
+}
+
+QVariantList WalletLoadBenchProbe::frameTimes() const
+{
+    QVariantList out;
+    out.reserve(m_frameTimes.size());
+    for (double ms : m_frameTimes)
+        out.append(ms);
+    return out;
+}
+
+void WalletLoadBenchProbe::burnMs(double ms) const
+{
+    if (ms <= 0.0)
+        return;
+    QElapsedTimer timer;
+    timer.start();
+    volatile double sink = 0.0;
+    while (timer.nsecsElapsed() < static_cast<qint64>(ms * kNsPerMs))
+        sink += 1.0;
+    Q_UNUSED(sink)
+}
+
+QString WalletLoadBenchProbe::env(const QString& name) const
+{
+    return qEnvironmentVariable(name.toUtf8().constData());
+}
+
+QVariantList WalletLoadBenchProbe::findAllByObjectNamePrefix(QObject* root,
+                                                             const QString& prefix) const
+{
+    QVariantList found;
+    for (QObject* obj : collectSubtree(root)) {
+        if (!obj->objectName().startsWith(prefix))
+            continue;
         QQmlEngine::setObjectOwnership(obj, QQmlEngine::CppOwnership);
         found.append(QVariant::fromValue(obj));
     }
