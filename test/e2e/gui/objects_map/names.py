@@ -467,8 +467,6 @@ cancel_StatusFlatButton_unblock = {"checkable": False, "container": statusDeskto
                                    "objectName": "cancelButton", "type": "StatusFlatButton", "visible": True}
 
 """ Common """
-renameKeypairPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "RenameKeypairPopup",
-                      "type": "PopupItem", "visible": True}
 edit_TextEdit = {"container": statusDesktop_mainWindow_overlay, "type": "TextEdit", "unnamed": 1, "visible": True}
 
 # Select Color Popup
@@ -1146,13 +1144,6 @@ statusListView = {"container": statusDesktop_mainWindow_overlay, "type": "Status
                   "visible": True}
 activityCenterContactRequest = {"container": statusDesktop_mainWindow_overlay,
                                 "type": "ActivityNotificationContactRequest", "unnamed": 1, "visible": True}
-
-# Rename keypair popup
-save_changes_rename_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
-                                    "objectName": "saveRenameKeypairChangesButton", "type": "StatusButton",
-                                    "visible": True}
-nameInput_StatusInput = {"container": statusDesktop_mainWindow_overlay, "id": "nameInput", "type": "StatusInput",
-                         "unnamed": 1, "visible": True}
 
 # Link preview options popup
 linkPreviewCardMenu = {"container": statusDesktop_mainWindow_overlay, "objectName": "LinkPreviewSettingsCardMenu",

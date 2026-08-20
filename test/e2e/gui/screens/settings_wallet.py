@@ -11,7 +11,6 @@ from constants.wallet import (
 from driver import objects_access
 from driver.objects_access import walk_children
 from gui.components.context_menu import ContextMenu
-from gui.components.settings.rename_keypair_popup import RenameKeypairPopup
 from gui.components.wallet.remove_saved_address_popup import RemoveSavedAddressPopup
 from gui.components.wallet.add_saved_address_popup import AddEditSavedAddressPopup
 from gui.components.wallet.delete_account_confirmation_popup import RemoveAccountWithConfirmation
@@ -42,11 +41,8 @@ class WalletSettingsView(QObject):
         self.status_account_in_keypair = QObject(settings_names.settingsWalletAccountDelegate_Status_account)
         self.wallet_account_from_keypair = QObject(settings_names.settingsWalletAccountDelegate)
         self.wallet_settings_keypair_item = QObject(settings_names.settingsWalletKeyPairDelegate)
-        self.wallet_settings_keypair_more_button = Button(settings_names.settingsWalletKeyPairDelegateMoreButton)
         self.wallet_settings_total_balance_item = QObject(settings_names.settingsWalletAccountTotalBalance)
         self.wallet_settings_total_balance_toggle = CheckBox(settings_names.settingsWalletAccountTotalBalanceToggle)
-        self.rename_keypair_menu_item = QObject(settings_names.rename_keypair_StatusMenuItem)
-        self.keypair_account_menu = QObject(settings_names.walletKeypairAccountMenu)
 
     @allure.step('Open add account pop up in wallet settings')
     def open_add_account_pop_up(self, attempts: int = 3) -> 'AccountPopup':
@@ -125,25 +121,6 @@ class WalletSettingsView(QObject):
     @allure.step('Interact with the total balance toggle')
     def toggle_total_balance(self, value: bool):
         self.wallet_settings_total_balance_toggle.set(value)
-
-    @allure.step('Click open menu button')
-    def click_open_menu_button(self, title: str):
-        self.wallet_settings_keypair_more_button.real_name['objectName'] = (
-            f'walletKeyPairDelegateMoreButton-{title}'
-        )
-        self.scroll.vertical_scroll_down(self.wallet_settings_keypair_more_button)
-        self.wallet_settings_keypair_more_button.click()
-        self.keypair_account_menu.wait_until_appears()
-
-    @allure.step('Close keypair context menu')
-    def close_keypair_menu(self):
-        self.keypair_account_menu.close()
-
-    @allure.step('Choose rename keypair option')
-    def click_rename_keypair(self):
-        self.rename_keypair_menu_item.wait_until_appears()
-        self.rename_keypair_menu_item.click()
-        return RenameKeypairPopup().wait_until_appears()
 
 
 class AccountDetailsView(QObject):
