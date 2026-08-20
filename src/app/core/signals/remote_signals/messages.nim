@@ -2,7 +2,7 @@ import json, chronicles, tables
 
 import base
 
-import app_service/service/message/dto/[message, pinned_message_update, reaction, removed_message]
+import app_service/service/message/dto/[message, pinned_message_update, reaction, removed_message, thread]
 import app_service/service/chat/dto/[chat]
 import app_service/service/bookmarks/dto/[bookmark]
 import app_service/service/community/dto/[community]
@@ -19,6 +19,7 @@ include app_service/common/json_utils
 type MessageSignal* = ref object of Signal
   bookmarks*: seq[BookmarkDto]
   messages*: seq[MessageDto]
+  threads*: seq[ThreadDto]
   pinnedMessages*: seq[PinnedMessageUpdateDto]
   chats*: seq[ChatDto]
   contacts*: seq[ContactsDto]
@@ -81,6 +82,10 @@ proc fromEvent*(T: type MessageSignal, event: JsonNode): MessageSignal =
       var message = jsonMsg.toMessageDto()
       signal.messages.add(message)
       info "received", signal="messages.new", messageID=message.id
+
+  if e.contains("threads"):
+    for jsonThread in e["threads"]:
+      signal.threads.add(jsonThread.toThreadDto())
 
   if e.contains("chats"):
     for jsonChat in e["chats"]:

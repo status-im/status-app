@@ -466,14 +466,18 @@ method onThreadCreated*(self: Module, parentMessageId: string, threads: seq[Thre
     self.view.model().setHasThread(selectedThread.parentMessageId, true)
 
   # Open the freshly created thread as a sub-channel chat
-  self.delegate.openThreadAsChat(selectedThread.threadId, selectedThread.name, selectedThread.parentMessageId)
+  self.delegate.openThreadAsChat(selectedThread.threadId, selectedThread.name, selectedThread.parentMessageId,
+    setActive = true, hasUnreadMessages = selectedThread.unviewedMessagesCount > 0,
+    notificationsCount = selectedThread.unviewedMentionsCount)
 
 method onChatThreadsLoaded*(self: Module, threads: seq[ThreadDto]) =
   for thread in threads:
     if thread.parentMessageId.len > 0:
       self.view.model().setHasThread(thread.parentMessageId, true)
       # Add the thread to the chat list so it appears as a sub-chat
-      self.delegate.openThreadAsChat(thread.threadId, thread.name, thread.parentMessageId)
+      self.delegate.openThreadAsChat(thread.threadId, thread.name, thread.parentMessageId,
+        setActive = false, hasUnreadMessages = thread.unviewedMessagesCount > 0,
+        notificationsCount = thread.unviewedMentionsCount)
 
 method getChatType*(self: Module): int =
   let chatDto = self.controller.getChatDetails()
