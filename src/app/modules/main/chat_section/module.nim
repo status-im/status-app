@@ -1,4 +1,5 @@
 import nimqml, tables, chronicles, json, sequtils, std/strformat, sugar, marshal
+from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop, isActive
 
 import io_interface
 import ../io_interface as delegate_interface
@@ -52,6 +53,9 @@ type
     moduleLoaded: bool
     chatsLoaded: bool
     membersListModule: users_module.AccessInterface
+    # defers the first-activation model build off the tap handler (seaqt
+    # QTimer, auto-destroyed via =destroy)
+    initialBuildTimer: QTimer
 
 # Forward declaration
 proc buildChatSectionUI(
@@ -264,7 +268,11 @@ proc buildChatSectionUI(
     sharedUrlsService: shared_urls_service.Service,
   ) =
   var selectedItemId = ""
-  let sectionLastOpenChat = singletonInstance.localAccountSensitiveSettings.getSectionLastOpenChat(self.controller.getMySectionId())
+  # a chat requested before the build (deep link / switchTo while the build
+  # was still pending) wins over the restored last-open chat
+  var sectionLastOpenChat = self.controller.getActiveChatId()
+  if sectionLastOpenChat == "":
+    sectionLastOpenChat = singletonInstance.localAccountSensitiveSettings.getSectionLastOpenChat(self.controller.getMySectionId())
   var items: seq[ChatItem] = @[]
   let community {.cursor.} = self.controller.getCommunityById(communityId)
   for categoryDto in community.categories:
@@ -454,6 +462,11 @@ method activeItemSet*(self: Module, itemId: string) =
     singletonInstance.localAccountSensitiveSettings.removeSectionChatRecord(mySectionId)
     return
 
+  # requested before the deferred first build — the pending id is picked up
+  # by buildChatSectionUI when it runs
+  if not self.chatsLoaded:
+    return
+
   let chat_item = self.view.chatsModel().getItemById(itemId)
   if chat_item.isNil:
     # Should never be here
@@ -567,22 +580,8 @@ method updateLastMessage*(self: Module, chatId: string, lastMessageTimestamp: in
     lastMessageTimestamp,
   )
 
-method onActiveSectionChange*(self: Module, sectionId: string) =
-  if sectionId != self.controller.getMySectionId():
-    self.controller.setIsCurrentSectionActive(false)
-    return
-  var firstLoad = false
-  if not self.chatsLoaded:
-    firstLoad = true
-    self.controller.getChatsAndBuildUI()
-
-  self.controller.setIsCurrentSectionActive(true)
-  let activeChatId = self.controller.getActiveChatId()
-  if activeChatId == "":
-    self.setFirstChannelAsActive()
-  else:
-    self.setActiveItem(activeChatId)
-
+# permission checks and delegate notification shared by both activation paths
+proc completeActiveSectionChange(self: Module) =
   if self.isCommunity():
     let community {.cursor.} = self.controller.getMyCommunity()
     if not community.isPrivilegedUser:
@@ -595,6 +594,69 @@ method onActiveSectionChange*(self: Module, sectionId: string) =
         ))
 
   self.delegate.onActiveChatChange(self.controller.getMySectionId(), self.controller.getActiveChatId())
+
+proc onInitialChatsBuildTimeout(self: Module) =
+  if self.chatsLoaded:
+    return
+  # switched away before the timer fired; the build runs on next activation
+  if not self.controller.getIsCurrentSectionActive():
+    return
+  # buildChatSectionUI activates the pending/restored chat itself
+  self.controller.getChatsAndBuildUI()
+  # the persisted last-open chat may no longer exist — mirror the loaded
+  # path's fallback, and before completeActiveSectionChange so the
+  # active-chat notification carries the repaired id
+  if self.controller.getActiveChatId() == "":
+    self.setFirstChannelAsActive()
+  self.completeActiveSectionChange()
+
+# Fallback only: the build normally runs when the UI reports the
+# section-switch animation settled (onSectionTransitionSettled). The timer
+# covers hosts that never send the notification.
+const INITIAL_CHATS_BUILD_DELAY_MS = 700
+
+proc scheduleInitialChatsBuild(self: Module) =
+  if self.initialBuildTimer.h.isNil:
+    self.initialBuildTimer = QTimer.create()
+    self.initialBuildTimer.setSingleShot(true)
+    let m = self
+    self.initialBuildTimer.onTimeout(proc() {.closure, raises: [].} =
+      try:
+        m.onInitialChatsBuildTimeout()
+      except Exception as e:
+        error "initial chats build failed", msg = e.msg)
+  self.initialBuildTimer.start(INITIAL_CHATS_BUILD_DELAY_MS)
+
+method onSectionTransitionSettled*(self: Module) =
+  # the section-switch animation is over — run the deferred first build now
+  # instead of waiting for the fallback timer
+  if self.chatsLoaded:
+    return
+  if self.initialBuildTimer.h.isNil or not self.initialBuildTimer.isActive():
+    return
+  self.initialBuildTimer.stop()
+  self.onInitialChatsBuildTimeout()
+
+method onActiveSectionChange*(self: Module, sectionId: string) =
+  if sectionId != self.controller.getMySectionId():
+    self.controller.setIsCurrentSectionActive(false)
+    return
+  self.controller.setIsCurrentSectionActive(true)
+
+  if not self.chatsLoaded:
+    # First activation: defer the model build off the tap handler so the
+    # section chrome (and the switch animation) appear instantly; the chats
+    # arrive one timer tick later behind the loading state the views handle.
+    self.scheduleInitialChatsBuild()
+    return
+
+  let activeChatId = self.controller.getActiveChatId()
+  if activeChatId == "":
+    self.setFirstChannelAsActive()
+  else:
+    self.setActiveItem(activeChatId)
+
+  self.completeActiveSectionChange()
 
 method chatsModel*(self: Module): chats_model.Model =
   return self.view.chatsModel()

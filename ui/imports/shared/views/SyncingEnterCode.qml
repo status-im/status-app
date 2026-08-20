@@ -63,19 +63,25 @@ ColumnLayout {
         Layout.topMargin: Theme.bigPadding
         currentIndex: switchTabBar.currentIndex
 
-        QRCodeScanner {
+        Loader {
             id: syncQr
             Layout.preferredHeight: 440
             Layout.preferredWidth: 440
-            validators: [
-                StatusValidator {
-                    name: "isSyncQrCode"
-                    errorMessage: root.syncQrErrorMessage
-                    validate: root.validateConnectionString
+            // Destroy the scanner (and release the camera) whenever this tab is not
+            // shown — e.g. on the "Enter code" tab or with the sync-progress page
+            // pushed over this one, where it would keep decoding at a full core.
+            active: visible
+            sourceComponent: QRCodeScanner {
+                validators: [
+                    StatusValidator {
+                        name: "isSyncQrCode"
+                        errorMessage: root.syncQrErrorMessage
+                        validate: root.validateConnectionString
+                    }
+                ]
+                onValidTagFound: tag => {
+                    root.proceed(tag)
                 }
-            ]
-            onValidTagFound: tag => {
-                root.proceed(tag)
             }
         }
 

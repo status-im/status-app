@@ -191,10 +191,16 @@ Loader {
 
     signal emojiReactionToggled(string messageId, string hexcode)
 
-    property var senderContactEntry: ContactModelEntry {
-        publicKey: root.senderId
-        contactsModel: root.rootStore.contactsModel
-        onPopulateContactDetailsRequested: root.rootStore.populateContactDetailsRequested(root.senderId)
+    // Lazy: the sender's contact details are only needed when the profile
+    // context menu opens; resolving them at row creation costs an O(contacts)
+    // model lookup per visible message
+    property var senderContactEntry: Loader {
+        active: false
+        sourceComponent: ContactModelEntry {
+            publicKey: root.senderId
+            contactsModel: root.rootStore.contactsModel
+            onPopulateContactDetailsRequested: root.rootStore.populateContactDetailsRequested(root.senderId)
+        }
     }
 
     property var quotedMessageFromContactEntryLoader: Loader {
@@ -228,8 +234,11 @@ Loader {
         const isBridgedAccount = isReply ? (quotedMessageContentType === Constants.messageContentType.bridgeMessageType)
                                          : root.isBridgeMessage
 
+        if (!isReply)
+            root.senderContactEntry.active = true
+
         const contactDetails = isReply ? root.quotedMessageFromContactEntryLoader.item.contactDetails
-                                       : root.senderContactEntry.contactDetails
+                                       : root.senderContactEntry.item.contactDetails
         const isMe = pubKey === root.myPublicKey
 
         const profileType = Utils.getProfileType(isMe, isBridgedAccount, contactDetails.isBlocked)
@@ -506,7 +515,8 @@ Loader {
         }
 
         function addReactionClicked(mouseArea, mouse) {
-            if (!d.addReactionAllowed || d.emojiPopupOpened) return
+            // emojiPopup loads lazily after startup
+            if (!emojiPopup || !d.addReactionAllowed || d.emojiPopupOpened) return
 
             // Don't use mouseArea as parent, as it will be destroyed right after opening menu
             const point = mouseArea.mapToItem(root, mouse.x, mouse.y)
@@ -797,6 +807,10 @@ Loader {
 
         ColumnLayout {
             spacing: 0
+
+            // Pinned to the hosting Loader: unanchored, the layout follows message
+            // content implicit-width echoes and layout hosts re-polish forever.
+            width: root.width
 
             function startMessageFoundAnimation() {
                 delegate.startMessageFoundAnimation();
@@ -1107,7 +1121,7 @@ Loader {
                         active: delegate.hovered && d.addReactionAllowed && !root.emojiReactionLimitReached
                         visible: active
                         sourceComponent: MessageReactionsRow {
-                            emojiModel: emojiPopup.fullModel
+                            emojiModel: emojiPopup?.fullModel ?? null
                             onToggleReaction: hexcode => root.emojiReactionToggled(root.messageId, hexcode)
                             onOpenEmojiPopup: (parent, mouse) => {
                                                   d.addReactionClicked(parent, mouse)
@@ -1314,7 +1328,8 @@ Loader {
         MessageContextMenuView {
             id: messageContextMenuView
             emojiReactionLimitReached: root.emojiReactionLimitReached
-            emojiModel: emojiPopup.fullModel
+            // the emoji popup loads lazily after startup — the menu can open first
+            emojiModel: emojiPopup?.fullModel ?? null
             disabledForChat: !root.rootStore.isUserAllowedToSendMessage
             forceEnableEmojiReactions: !root.rootStore.isUserAllowedToSendMessage && d.addReactionAllowed
             isDebugEnabled: root.rootStore && root.rootStore.isDebugEnabled

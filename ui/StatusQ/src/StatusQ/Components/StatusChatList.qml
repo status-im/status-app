@@ -163,6 +163,7 @@ Item {
                         visible: draggableItem.isCategory
 
                         function setupPopup() {
+                            categoryPopupMenuSlot.active = true
                             categoryPopupMenuSlot.item.categoryItem = model
                         }
                         Connections {
@@ -255,6 +256,7 @@ Item {
                             if (mouse.button === Qt.RightButton && !!root.popupMenu) {
                                 statusChatListItem.highlighted = true
 
+                                popupMenuSlot.active = true
                                 const originalOpenHandler = popupMenuSlot.item.openHandler
                                 const originalCloseHandler = popupMenuSlot.item.closeHandler
 
@@ -292,13 +294,14 @@ Item {
         }
     }
 
+    // Menus are built on first use — see setupPopup and the right-click handler
     Loader {
         id: popupMenuSlot
-        active: !!sourceComponent
+        active: false
     }
 
     Loader {
         id: categoryPopupMenuSlot
-        active: !!sourceComponent
+        active: false
     }
 }

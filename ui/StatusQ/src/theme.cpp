@@ -367,15 +367,19 @@ void Theme::attachedParentChange(QQuickAttachedPropertyPropagator* newParent,
     auto selfItem = qobject_cast<QQuickItem*>(parent());
 
     if (attachedParentTheme) {
-        // apply style immediately to avoid a light->dark visual flash.
-        // the style is usually safe (as this is already implemented and tested by qt default themes)
-        // the geometry change seems to pose problems 
-        inheritStyle(attachedParentTheme->style());
-
+        // A detached item (no window) must not restyle: unparenting re-links
+        // the attached chain to the engine-level fallback node, and inheriting
+        // its style here would round-trip the whole subtree through Light and
+        // back on every LayoutItemProxy handoff (section switches), re-firing
+        // every Theme.palette binding in the subtree. Defer to the window
+        // landing instead — it happens before anything is rendered, so there
+        // is no visual flash either.
         if (selfItem && !selfItem->window()) {
             attachWindowReadySync(selfItem);
             return;
         }
+
+        inheritStyle(attachedParentTheme->style());
 
         if (m_windowChangedConnection) {
             QObject::disconnect(m_windowChangedConnection);

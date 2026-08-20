@@ -1,5 +1,7 @@
 import QtQuick
 
+import StatusQ.Core.Theme
+
 import utils
 
 import AppLayouts.Chat.stores as ChatStores
@@ -532,9 +534,10 @@ QtObject {
             const now = Date.now()
             const count = root.messagesPerChannel
             const senderCount = Math.max(1, Math.min(root.membersCount, 20))
-            // Deterministic local photos: image rows must not hit the network
-            const photoA = "file:///private/tmp/claude-501/-Users-alexjbanca-Repos-status-desktop/367af37d-a18f-4e58-9856-5ecd5112f2cc/scratchpad/mock_photo_a.png"
-            const photoB = "file:///private/tmp/claude-501/-Users-alexjbanca-Repos-status-desktop/367af37d-a18f-4e58-9856-5ecd5112f2cc/scratchpad/mock_photo_b.png"
+            // Deterministic repo-local photos: image rows must not hit the
+            // network or depend on files outside the checkout
+            const photoA = Assets.png("chat/chat@2x")
+            const photoB = Assets.png("chat/request_payment_banner")
             // like the production model: index 0 is the newest message and
             // history grows towards higher indexes
             for (let i = 0; i < count; ++i) {
@@ -648,10 +651,17 @@ QtObject {
         return ids.length > 0 ? ids[0] : ""
     }
 
+    // mirrors the backend: categoryOpened + the recomputed "hidden" role
     function setCategoryOpened(categoryId, opened) {
         for (let i = 0; i < chatsModel.count; ++i) {
-            if (chatsModel.get(i).categoryId === categoryId)
-                chatsModel.setProperty(i, "categoryOpened", opened)
+            const item = chatsModel.get(i)
+            if (item.categoryId !== categoryId)
+                continue
+            chatsModel.setProperty(i, "categoryOpened", opened)
+            const hidden = !item.isCategory && !opened && !item.active &&
+                         (item.muted || !item.hasUnreadMessages) &&
+                         item.notificationsCount === 0
+            chatsModel.setProperty(i, "hidden", hidden)
         }
     }
 

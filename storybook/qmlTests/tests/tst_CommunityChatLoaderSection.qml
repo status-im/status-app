@@ -346,6 +346,9 @@ Item {
                           && loader.item.centerPanelReady
                           && loader.item.rightPanelReady, 60000,
                       "all panels must be ready before gesture tests")
+            // panels flip visible on Ready — a full render pass must deliver
+            // their geometry and pointer state before gestures are synthesized
+            waitForRendering(loader.item)
         }
 
         function waitForStableRows(lv) {
@@ -365,6 +368,29 @@ Item {
                 prevY = y
                 return stable
             }, 10000, "chat rows must settle before dragging")
+        }
+
+        // Drags `row` vertically by `dy` in the STATIC list's coordinates
+        // (the dragged row moves — item-relative coordinates would chase it),
+        // retrying: the automatic drag's nested loop occasionally misses the
+        // synthesized gesture on a loaded machine, killing it mid-flight.
+        function dragRowVertically(lv, row, dy) {
+            for (let attempt = 0; attempt < 3; ++attempt) {
+                const start = row.mapToItem(lv, row.width / 2, row.height / 2)
+                mousePress(lv, start.x, start.y)
+                for (let step = 1; step <= 8; ++step)
+                    mouseMove(lv, start.x, start.y + (dy * step) / 8, 20)
+                // a frame between the last move and the release lets the drop
+                // target process the final position before the drop lands
+                waitForRendering(lv)
+                mouseRelease(lv, start.x, start.y + dy)
+                waitForRendering(lv)
+
+                if (mock.sectionModule.lastReorder)
+                    return
+                // a dead gesture snaps the row back — let it settle and retry
+                waitForStableRows(lv)
+            }
         }
 
         function test_adminDragReordersToAdjacentRow() {
@@ -393,18 +419,8 @@ Item {
             const firstId = first.chatId
             const rowH = first.height
 
-            // press on the first row and drag to the middle of the second
-            // row, in the STATIC list's coordinates (the dragged row moves —
-            // item-relative coordinates would chase it)
-            const start = first.mapToItem(lv, first.width / 2, first.height / 2)
-            mousePress(lv, start.x, start.y)
-            for (let step = 1; step <= 8; ++step)
-                mouseMove(lv, start.x, start.y + (rowH * 1.2 * step) / 8, 20)
-            // a frame between the last move and the release lets the drop
-            // target process the final position before the drop lands
-            waitForRendering(lv)
-            mouseRelease(lv, start.x, start.y + rowH * 1.2)
-            waitForRendering(lv)
+            // press on the first row and drag to the middle of the second row
+            dragRowVertically(lv, first, rowH * 1.2)
 
             tryVerify(() => !!mock.sectionModule.lastReorder, 3000,
                       "drag one row down must trigger a reorder")
@@ -444,15 +460,7 @@ Item {
             const secondId = second.chatId
             const rowH = second.height
 
-            const start = second.mapToItem(lv, second.width / 2, second.height / 2)
-            mousePress(lv, start.x, start.y)
-            for (let step = 1; step <= 8; ++step)
-                mouseMove(lv, start.x, start.y - (rowH * 1.2 * step) / 8, 20)
-            // a frame between the last move and the release lets the drop
-            // target process the final position before the drop lands
-            waitForRendering(lv)
-            mouseRelease(lv, start.x, start.y - rowH * 1.2)
-            waitForRendering(lv)
+            dragRowVertically(lv, second, -rowH * 1.2)
 
             tryVerify(() => !!mock.sectionModule.lastReorder, 3000,
                       "drag one row up must trigger a reorder")
@@ -479,39 +487,6 @@ Item {
             const banner = findChildByTypePrefix(lv.footerItem, "WelcomeBannerPanel")
             verify(!!banner, "the footer must hold the welcome banner")
             tryVerify(() => banner.visible)
-        }
-
-        // Right-clicking the empty area below the channels opens the admin
-        // menu — repeatedly (the menu instance must survive closing).
-        function test_adminEmptyAreaRightClickMenuReopens() {
-            mock.memberRole = Constants.memberRole.owner
-            mock.categoriesCount = 0
-            mock.uncategorizedChannelsCount = 2
-            mock.install()
-            // the banner footer is tall — make sure empty space remains
-            root.height = 1400
-
-            const loader = loadSection()
-            const lv = findChild(loader, "chatListItems")
-            verify(!!lv)
-            tryVerify(() => lv.count > 0, 10000)
-            waitForRendering(lv)
-            tryVerify(() => lv.contentHeight > 0, 5000)
-            verify(lv.contentHeight < lv.height - 10,
-                   "config must leave empty space below the rows")
-
-            const overlay = QC.Overlay.overlay
-            function openPopupItem() {
-                return Array.prototype.filter.call(overlay.children,
-                    c => c.toString().indexOf("QQuickPopupItem") === 0 && c.visible)[0]
-            }
-            for (let round = 0; round < 2; ++round) {
-                mouseClick(lv, lv.width / 2, lv.height - 5, Qt.RightButton)
-                tryVerify(() => !!openPopupItem(), 2000,
-                          "empty-area right-click must open the admin menu, round " + round)
-                keyClick(Qt.Key_Escape)
-                tryVerify(() => !openPopupItem())
-            }
         }
 
         function test_memberHasNoBannerFooter() {

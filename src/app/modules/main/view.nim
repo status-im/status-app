@@ -184,6 +184,9 @@ QtObject:
   proc setActiveSectionById*(self: View, sectionId: string) {.slot.} =
     self.delegate.setActiveSectionById(sectionId)
 
+  proc sectionTransitionSettled*(self: View) {.slot.} =
+    self.delegate.sectionTransitionSettled()
+
   proc setActiveSectionBySectionType*(self: View, sectionType: int) {.slot.} =
     ## This will try to set a section with passed sectionType to active one, in case of communities the first community
     ## will be set as active one.

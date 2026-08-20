@@ -20,6 +20,8 @@ import mainui.sectionLoaders
 import Models
 import Storybook
 
+import "ChatBenchmarkComponents"
+
 // Exercises the real ChatLoader: loader-owned section chrome with skeleton
 // panels, async incubation of the real ChatLayout/ChatView, and the
 // skeleton → real panel swap. Refresh recreates the whole loader.
@@ -37,10 +39,44 @@ SplitView {
     // clean exit (storybook's CLI parser rejects unknown --options)
     readonly property bool profileExitMode: Qt.application.arguments.indexOf("profile-exit") >= 0
 
+    // Optional "messages=N" / "contacts=N" positional arguments override the
+    // corresponding spinboxes for headless benchmark runs
+    function argValue(name, fallback) {
+        const prefix = name + "="
+        for (const arg of Qt.application.arguments) {
+            if (arg.indexOf(prefix) === 0)
+                return parseInt(arg.substring(prefix.length))
+        }
+        return fallback
+    }
+
+    readonly property int cliMessages: argValue("messages", -1)
+    readonly property int cliContacts: argValue("contacts", -1)
+
     Timer {
         id: profilerExitTimer
         interval: 4000
         onTriggered: Qt.exit(0)
+    }
+
+    MessageViewCensus {
+        id: census
+
+        harnessItem: harness.item
+        label: "ChatLoader"
+        loadStartTime: d.loadStartTime
+
+        onRefreshRequested: root.refresh()
+
+        onMessagesShown: ms => {
+            logs.logEvent("ChatLoader MESSAGES in " + ms + " ms")
+            if (root.profileExitMode) {
+                profilerExitTimer.interval = census.scrollUpMode ? 24000
+                    : (census.rerefreshMode && census.pass === "fresh") ? 12000
+                    : (census.censusMode ? 3000 : 2000)
+                profilerExitTimer.restart()
+            }
+        }
     }
 
     ListModel { id: chatsModel }
@@ -58,6 +94,9 @@ SplitView {
 
         property double loadStartTime: 0
         property var contentModules: ({})
+        // unserved rows per chat, consumed by loadMoreMessages
+        property var backlogs: ({})
+        property int loadMoreCallCount: 0
         readonly property var mockState: ({ preparedChatId: "" })
         property string activeChatId: ""
 
@@ -123,6 +162,7 @@ SplitView {
                     color: "",
                     colorId: i % 10,
                     categoryOpened: true,
+                    hidden: false,
                     usesDefaultName: false,
                     onlineStatus: i % 2,
                     requiresPermissions: false,
@@ -134,14 +174,20 @@ SplitView {
             }
         }
 
-        function fillMessages(model, count, peerIdx) {
+        function fillMessages(model, count, peerIdx, offset) {
+            offset = offset || 0
             const now = Date.now()
-            // like message_model.nim: index 0 is the newest message and
-            // history grows towards higher indexes
-            for (let i = 0; i < count; ++i) {
-                const own = i % 3 === 1
-                const ts = now - i * 60000
-                model.append({
+            // like message_model.nim: logical index 0 is the newest message
+            // and history grows towards higher indexes; pages appended via
+            // `offset` continue into older history
+            for (let j = 0; j < count; ++j) {
+                const i = offset + j
+                model.append(messageRow(peerIdx, i, now - i * 60000, i % 3 === 1, offset + count - i))
+            }
+        }
+
+        function messageRow(peerIdx, i, ts, own, seq) {
+            return ({
                     id: "msg-" + peerIdx + "-" + i,
                     prevMsgIndex: i + 1,
                     nextMsgIndex: i - 1,
@@ -160,9 +206,9 @@ SplitView {
                     senderEnsVerified: false,
                     senderTrustStatus: 0,
                     amISender: own,
-                    messageText: "Message " + (count - i) + " — the quick brown fox jumps over the lazy dog. "
+                    messageText: "Message " + seq + " — the quick brown fox jumps over the lazy dog. "
                                  + (i % 5 === 0 ? "A somewhat longer paragraph to vary the bubble heights and make the layout work harder while measuring text. " : ""),
-                    unparsedText: "Message " + (count - i),
+                    unparsedText: "Message " + seq,
                     messageImage: "",
                     messageAttachments: "",
                     contentType: Constants.messageContentType.messageType,
@@ -205,7 +251,105 @@ SplitView {
                     albumImagesCount: 0,
                     usesDefaultName: false
                 })
+        }
+
+        property int injectedCounter: 0
+
+        function injectedRow() {
+            injectedCounter++
+            const row = messageRow(0, injectedCounter, Date.now(), false, injectedCounter)
+            row.id = "msg-injected-" + injectedCounter
+            row.senderDisplayName = "Injected"
+            row.messageText = "Injected message #" + injectedCounter
+            row.unparsedText = row.messageText
+            return row
+        }
+
+        function activeMessagesModel() {
+            const module = contentModuleFor(activeChatId)
+            return module ? module.messagesModel : null
+        }
+
+        // The window bounds live in the active ChatMessagesView's private
+        // object; the visible chatLogView identifies which chat's view that is
+        function activeWindowBounds() {
+            const stack = [harness]
+            while (stack.length) {
+                const item = stack.pop()
+                if (!item || item.visible === false)
+                    continue
+                if (item.objectName === "chatLogView") {
+                    // the private object is a resource, not a visual child —
+                    // StorybookUtils.findChild walks children only, so scan
+                    // the view root's data list directly
+                    const data = item.parent ? item.parent.data : []
+                    for (let i = 0; i < data.length; ++i) {
+                        if (data[i].objectName === "chatMessagesViewInternal")
+                            return { start: data[i].windowStart,
+                                     end: data[i].windowEnd }
+                    }
+                    return null
+                }
+                const kids = item.children
+                for (let i = 0; i < (kids ? kids.length : 0); ++i)
+                    stack.push(kids[i])
             }
+            return null
+        }
+
+        // Source index 0 = newest = view bottom; count-1 = oldest = view top.
+        // The window covers source rows [start..end].
+        function modelOp(op) {
+            const model = activeMessagesModel()
+            if (!model) {
+                logs.logEvent("model op '" + op + "': no active chat")
+                return
+            }
+            const bounds = activeWindowBounds()
+            const needsBounds = op.indexOf("Window") !== -1
+            if (needsBounds && !bounds) {
+                logs.logEvent("model op '" + op + "': window bounds not reachable")
+                return
+            }
+            const mid = bounds ? Math.floor((bounds.start + bounds.end) / 2) : -1
+            const n = ctrlOpRows.value
+            switch (op) {
+            case "removeTop":
+                model.remove(Math.max(0, model.count - n), Math.min(n, model.count))
+                break
+            case "removeBottom":
+                model.remove(0, Math.min(n, model.count))
+                break
+            case "addTop":
+                for (let i = 0; i < n; ++i)
+                    model.append(injectedRow())
+                break
+            case "addBottom":
+                for (let i = 0; i < n; ++i)
+                    model.insert(0, injectedRow())
+                break
+            case "addAboveWindow":
+                for (let i = 0; i < n; ++i)
+                    model.insert(Math.min(model.count, bounds.end + 1), injectedRow())
+                break
+            case "addBelowWindow":
+                // with the window at the recent end there is no "below" —
+                // the row lands inside the window as the new newest
+                for (let i = 0; i < n; ++i)
+                    model.insert(Math.min(model.count, bounds.start), injectedRow())
+                break
+            case "addMidWindow":
+                for (let i = 0; i < n; ++i)
+                    model.insert(Math.min(model.count, Math.max(0, mid)), injectedRow())
+                break
+            case "removeMidWindow":
+                if (mid >= 0 && mid < model.count)
+                    model.remove(mid, Math.min(n, model.count - mid))
+                break
+            }
+            logs.logEvent(op + " ×" + n + " → count=" + model.count
+                          + (bounds ? " window=[" + bounds.start + ".." + bounds.end + "]"
+                                    : ""))
         }
 
         // The message history is filled only when a chat becomes active —
@@ -236,7 +380,12 @@ SplitView {
             const module = contentModuleFor(id)
             if (module && !module.messagesModel) {
                 module.messagesModel = messagesModelComp.createObject(module)
-                fillMessages(module.messagesModel, ctrlMessages.value, id.split("-")[1])
+                // paged like the real backend: first page now, the rest served
+                // through loadMoreMessages 20 rows at a time
+                const total = ctrlMessages.value
+                const firstPage = Math.min(20, total)
+                fillMessages(module.messagesModel, firstPage, id.split("-")[1])
+                d.backlogs[id] = total - firstPage
             }
             ChatStores.ChatStoresConfig.currentChatContentModule = module
         }
@@ -309,7 +458,22 @@ SplitView {
                 signal scrollToMessage(string messageId)
 
                 function getChatId() { return contentModule.chatId }
-                function loadMoreMessages() {}
+                function loadMoreMessages() {
+                    d.loadMoreCallCount++
+                    console.info("loadMoreMessages call #" + d.loadMoreCallCount,
+                                 "chat", contentModule.chatId,
+                                 "t=" + (Date.now() - d.loadStartTime) + "ms",
+                                 "backlog", d.backlogs[contentModule.chatId] || 0)
+                    const remaining = d.backlogs[contentModule.chatId] || 0
+                    if (remaining <= 0)
+                        return
+                    const page = Math.min(20, remaining)
+                    d.backlogs[contentModule.chatId] = remaining - page
+                    const total = ctrlMessages.value
+                    Qt.callLater(() => d.fillMessages(contentModule.messagesModel, page,
+                                                      contentModule.chatId.split("-")[1],
+                                                      total - remaining + 20))
+                }
                 function updateKeepUnread(flag) {}
             }
 
@@ -399,8 +563,12 @@ SplitView {
                             const ms = Date.now() - d.loadStartTime
                             logs.logEvent("ChatLoader READY in " + ms + " ms")
                             console.info("ChatLoader READY in", ms, "ms")
-                            if (root.profileExitMode)
-                                profilerExitTimer.start()
+                            if (root.profileExitMode) {
+                                // long fallback; the messages probe shortens
+                                // it once the message area is actually built
+                                profilerExitTimer.interval = 30000
+                                profilerExitTimer.restart()
+                            }
                         }
                     }
                 }
@@ -415,8 +583,11 @@ SplitView {
 
         logsView.logText: logs.logText
 
-        RowLayout {
+        ColumnLayout {
             anchors.fill: parent
+
+            RowLayout {
+            Layout.fillWidth: true
             spacing: Theme.bigPadding
 
             Button {
@@ -433,7 +604,7 @@ SplitView {
                     from: 0
                     to: 5000
                     stepSize: 50
-                    value: 1000
+                    value: root.cliContacts >= 0 ? root.cliContacts : 1000
                     editable: true
                 }
             }
@@ -444,9 +615,11 @@ SplitView {
                     id: ctrlMessages
                     objectName: "chatLoaderMessagesSpinBox"
                     from: 0
-                    to: 10000
+                    // High enough that the scaling benchmarks are not silently
+                    // clamped to the spinbox maximum
+                    to: 1000000
                     stepSize: 100
-                    value: 2000
+                    value: root.cliMessages >= 0 ? root.cliMessages : 2000
                     editable: true
                 }
             }
@@ -457,6 +630,35 @@ SplitView {
             }
 
             Item { Layout.fillWidth: true }
+            }
+
+            // Live model surgery on the active chat, in view-visual terms:
+            // top = oldest (source count-1), bottom = newest (source 0)
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.halfPadding
+
+                Label { text: "Model:" }
+                SpinBox {
+                    id: ctrlOpRows
+                    objectName: "modelOpRowsSpinBox"
+                    from: 1
+                    to: 100000
+                    stepSize: 1
+                    value: 1
+                    editable: true
+                }
+                Button { objectName: "modelOp_addTop"; text: "Add top"; onClicked: d.modelOp("addTop") }
+                Button { objectName: "modelOp_removeTop"; text: "Del top"; onClicked: d.modelOp("removeTop") }
+                Button { objectName: "modelOp_addBottom"; text: "Add bottom"; onClicked: d.modelOp("addBottom") }
+                Button { objectName: "modelOp_removeBottom"; text: "Del bottom"; onClicked: d.modelOp("removeBottom") }
+                Button { objectName: "modelOp_addAboveWindow"; text: "Add above win"; onClicked: d.modelOp("addAboveWindow") }
+                Button { objectName: "modelOp_addBelowWindow"; text: "Add below win"; onClicked: d.modelOp("addBelowWindow") }
+                Button { objectName: "modelOp_addMidWindow"; text: "Add mid win"; onClicked: d.modelOp("addMidWindow") }
+                Button { objectName: "modelOp_removeMidWindow"; text: "Del mid win"; onClicked: d.modelOp("removeMidWindow") }
+
+                Item { Layout.fillWidth: true }
+            }
         }
     }
 
@@ -473,10 +675,22 @@ SplitView {
             d.contentModules[key].destroy()
         d.contentModules = {}
         d.mockState.preparedChatId = ""
+
+        // Mock construction is measured separately: the ListModel.append loop
+        // that builds the history is page cost, not message-view cost, and it
+        // runs before the harness is activated so it is outside loadStartTime.
+        const tChats = Date.now()
         d.buildChats(ctrlChats.value)
+        const tMessages = Date.now()
         d.setActiveChat(chatsModel.count > 0 ? "chat-0" : "")
+        const tDone = Date.now()
+        console.info("ChatLoader MOCK chats", tMessages - tChats, "ms, messages",
+                     tDone - tMessages, "ms for", ctrlMessages.value, "rows")
+        logs.logEvent("mock: chats %1 ms, messages %2 ms".arg(tMessages - tChats).arg(tDone - tMessages))
+
         d.loadStartTime = Date.now()
         harness.active = true
+        census.restart()
         logs.logEvent("refresh: %1 contacts, %2 messages each".arg(chatsModel.count).arg(ctrlMessages.value))
     }
 

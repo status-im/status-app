@@ -330,6 +330,11 @@ Item {
         }
 
         function restoreInputState(preservedText) {
+            // scheduled via Qt.callLater — it can fire while this view is
+            // tearing down (chat/section switch), when the dying context has
+            // already dropped its functions
+            if (typeof d.mentionNames !== "function")
+                return
 
             if (!d.activeChatContentModule) {
                 chatInput.clear()
@@ -444,7 +449,12 @@ Item {
 
                 Loader {
                     anchors.fill: parent
-                    active: model.type !== Constants.chatType.category && model.type !== Constants.chatType.unknown
+                    // Only chats that have been activated get a content view;
+                    // loaderActive latches on first activation (see
+                    // chat_section/model.nim setActiveItem), preserving state
+                    // for visited chats without building one view per chat
+                    active: model.type !== Constants.chatType.category && model.type !== Constants.chatType.unknown &&
+                            (model.loaderActive || model.active)
                     sourceComponent: ChatContentView {
                         visible: !root.rootStore.openCreateChat && model.active
                         chatId: model.itemId

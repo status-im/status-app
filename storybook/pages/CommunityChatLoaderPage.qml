@@ -22,6 +22,8 @@ import mainui.sectionLoaders
 import Models
 import Storybook
 
+import "ChatBenchmarkComponents"
+
 // Exercises the real CommunityChatLoader against a fully configurable mock
 // community (CommunitySectionMock): membership/join state, member role,
 // categories, private channels and their members, token permissions and
@@ -53,6 +55,26 @@ SplitView {
         id: profilerExitTimer
         interval: 4000
         onTriggered: Qt.exit(0)
+    }
+
+    MessageViewCensus {
+        id: census
+
+        harnessItem: harness.item
+        label: "CommunityChatLoader"
+        loadStartTime: d.loadStartTime
+
+        onRefreshRequested: root.refresh()
+
+        onMessagesShown: ms => {
+            logs.logEvent("CommunityChatLoader MESSAGES in " + ms + " ms")
+            if (root.profileExitMode) {
+                profilerExitTimer.interval = census.scrollUpMode ? 24000
+                    : (census.rerefreshMode && census.pass === "fresh") ? 12000
+                    : (census.censusMode ? 3000 : 2000)
+                profilerExitTimer.restart()
+            }
+        }
     }
 
     QtObject {
@@ -183,8 +205,12 @@ SplitView {
                             const ms = Date.now() - d.loadStartTime
                             logs.logEvent("CommunityChatLoader READY in " + ms + " ms")
                             console.info("CommunityChatLoader READY in", ms, "ms")
-                            if (root.profileExitMode)
-                                profilerExitTimer.start()
+                            if (root.profileExitMode) {
+                                // long fallback; the census shortens it once
+                                // the message view is actually built
+                                profilerExitTimer.interval = 30000
+                                profilerExitTimer.restart()
+                            }
                         }
                     }
                 }
@@ -308,7 +334,9 @@ SplitView {
                     SpinBox {
                         id: ctrlMessages
                         objectName: "communityLoaderMessagesSpinBox"
-                        from: 0; to: 10000; stepSize: 100; editable: true
+                        // High enough that the scaling benchmarks are not
+                        // silently clamped to the spinbox maximum
+                        from: 0; to: 1000000; stepSize: 100; editable: true
                         value: root.argValue("messages", 500)
                     }
                 }
@@ -328,6 +356,7 @@ SplitView {
         console.info("mock: applyConfig", t1 - t0, "ms, install", Date.now() - t1, "ms")
         d.loadStartTime = Date.now()
         harness.active = true
+        census.restart()
         logs.logEvent("refresh: %1 (%2) — %3 members, %4 channels, %5 msgs each"
                       .arg(d.joinStates[ctrlJoinState.currentIndex].name)
                       .arg(d.memberRoles[ctrlRole.currentIndex].name)

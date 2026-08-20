@@ -50,13 +50,6 @@ Item {
     signal addRemoveGroupMemberClicked()
     signal chatItemClicked(string id)
 
-    component HeaderButton: StatusFlatButton {
-        icon.color: hovered || checked ? Theme.palette.primaryColor1 : Theme.palette.directColor1
-        isRoundIcon: true
-        tooltip.orientation: StatusToolTip.Orientation.Bottom
-        tooltip.y: parent.height + Theme.padding
-    }
-
     // main layout
     ColumnLayout {
         anchors {
@@ -66,48 +59,22 @@ Item {
         spacing: Theme.halfPadding
 
         // Chat headline row
-        RowLayout {
+        MessagesListHeader {
+            id: header
+
             Layout.fillWidth: true
             Layout.leftMargin: Theme.padding
             Layout.rightMargin: Theme.padding
 
-            StatusNavigationPanelHeadline {
-                objectName: "ContactsColumnView_MessagesHeadline"
-                text: qsTr("Messages")
-            }
+            createChatOpened: root.store.openCreateChat
 
-            Item {
-                Layout.fillWidth: true
-            }
-
-            HeaderButton {
-                objectName: "shareProfileButton"
-                icon.name: "add-contact"
-                tooltip.text: qsTr("Invite contacts")
-                onClicked: root.shareOwnProfileRequested()
-            }
-
-            HeaderButton {
-                objectName: "startChatButton"
-                icon.name: "chat-commands"
-                checkable: true
-                checked: root.store.openCreateChat
-                tooltip.text: qsTr("Start chat")
-                onClicked: {
-                    if (root.store.openCreateChat) {
-                        Global.closeCreateChatView()
-                    } else {
-                        Global.openCreateChatView()
-                    }
+            onShareOwnProfileRequested: root.shareOwnProfileRequested()
+            onStartChatClicked: {
+                if (root.store.openCreateChat) {
+                    Global.closeCreateChatView()
+                } else {
+                    Global.openCreateChatView()
                 }
-            }
-
-            HeaderButton {
-                id: searchBtn
-                objectName: "searchButton"
-                icon.name: "search"
-                tooltip.text: qsTr("Search")
-                checkable: true
             }
         }
 
@@ -121,9 +88,9 @@ Item {
             Layout.bottomMargin: 4
             Layout.preferredHeight: 40
             KeyNavigation.tab: channelList
-            Keys.onEscapePressed: searchBtn.checked = false
+            Keys.onEscapePressed: header.searchChecked = false
             placeholderText: qsTr("Search contacts and groups...")
-            visible: searchBtn.checked
+            visible: header.searchChecked
             onVisibleChanged: {
                 clear()
                 if (visible) forceActiveFocus()

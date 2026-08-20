@@ -226,7 +226,14 @@ Control {
 
                 StatusUserImage {
                     id: profileImage
+                    objectName: "messageProfileImage"
                     Layout.alignment: Qt.AlignTop
+                    // The avatar stack (identicon/image + mask effect) is one
+                    // of the heaviest parts of a row; incubate it off the
+                    // creation path behind a fixed-size skeleton.
+                    asynchronous: true
+                    Layout.preferredWidth: imageWidth
+                    Layout.preferredHeight: imageHeight
                     active: root.showHeader
                     visible: active
                     name: root.messageDetails.sender.displayName
@@ -238,6 +245,13 @@ Control {
                     imageHeight: root.messageDetails.sender.profileImage.assetSettings.height
                     isBridgedAccount: root.messageDetails.contentType === StatusMessage.ContentType.BridgeMessage
                     onClicked: (mouse) => root.profilePictureClicked(this, mouse)
+
+                    LoadingSkeletonTile {
+                        objectName: "avatarLoadingSkeleton"
+                        anchors.fill: parent
+                        radius: width / 2
+                        visible: profileImage.active && profileImage.status !== Loader.Ready
+                    }
                 }
 
                 ColumnLayout {
@@ -303,7 +317,8 @@ Control {
                                     objectName: "StatusMessage_imageAlbum"
                                     readonly property int effectiveAlbumCount: Math.max(1, root.messageDetails.albumCount)
 
-                                    width: messageLayout.width
+                                    // Deliberately no `width: messageLayout.width`: the Loader mirrors it
+                                    // back as implicitWidth, which livelocks QQuickLayout hosts.
                                     album: root.messageDetails.albumCount > 0 ? root.messageDetails.album : [root.messageDetails.messageContent]
                                     albumCount: effectiveAlbumCount
                                     imageWidth: Math.max(1, Math.min((messageLayout.width - 9 * (effectiveAlbumCount - 1)) / effectiveAlbumCount, 144))
