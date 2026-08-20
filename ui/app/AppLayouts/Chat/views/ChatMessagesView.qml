@@ -46,6 +46,14 @@ Item {
     // (popups, storybook pages) build rows inline as before.
     property DelegatePool rowPool: null
     onRowPoolChanged: d.applyPoolTarget()
+
+    // Dress hold (ADR 0007): raised while a view transition runs. Dress
+    // triggers keep enqueuing; the drain waits and restarts on release.
+    property bool dressHold: false
+    onDressHoldChanged: {
+        if (!dressHold && d.dressQueue.length)
+            d.scheduleDrain()
+    }
     Component.onCompleted: {
         d.applyPoolTarget()
         d.viewCompleted = true
@@ -483,6 +491,9 @@ Item {
                 d.dressQueue = []
                 return
             }
+            // held: the queue keeps accumulating, release restarts the drain
+            if (root.dressHold)
+                return
             // at most one dress per slice: a single dress already fills a
             // frame on the devices this paces for, and the callLater chain
             // yields to rendering between slices

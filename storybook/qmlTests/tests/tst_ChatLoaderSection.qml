@@ -526,6 +526,37 @@ Item {
 
 
 
+        // The chrome's panel-switch state must reach the shared messages
+        // view as its dress hold (issue 0010): held while a switch runs,
+        // released when it ends.
+        function test_panelSwitchStateReachesDressHold() {
+            harness.active = true
+            const loader = harness.item
+            verify(!!loader)
+            tryVerify(() => loader.status === Loader.Ready, 60000)
+            tryVerify(() => !!activeReadyLogView(loader), 120000)
+
+            const lv = findChild(loader, "chatLogView")
+            verify(!!lv)
+            let messagesView = lv
+            while (messagesView
+                   && typeof messagesView.dressHold === "undefined") {
+                messagesView = messagesView.parent
+            }
+            verify(!!messagesView,
+                   "the messages view must be an ancestor of the log view")
+
+            const chrome = findChild(loader, "sectionChrome")
+            verify(!!chrome)
+
+            compare(messagesView.dressHold, false,
+                    "no switch running: the hold must be down")
+            chrome.panelSwitchStarted()
+            tryCompare(messagesView, "dressHold", true)
+            chrome.panelSwitchEnded()
+            tryCompare(messagesView, "dressHold", false)
+        }
+
         // The message context menu opens for a rendered message (the input
         // simulation variants live in tst_MessageLongTapMenu, where the
         // fixture geometry is faithful)

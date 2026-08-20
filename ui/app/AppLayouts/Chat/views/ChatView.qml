@@ -83,6 +83,7 @@ Item {
     property var emojiPopup
     property var stickersPopup
     property DelegatePool rowPool: null
+    property bool dressHold: false
     property bool stickersLoaded: false
 
     readonly property var chatContentModule: rootStore.currentChatContentModule() || null
@@ -491,6 +492,7 @@ Item {
             emojiPopup: root.emojiPopup
             stickersPopup: root.stickersPopup
             rowPool: root.rowPool
+            dressHold: root.dressHold
             viewAndPostHoldingsModel: root.viewAndPostPermissionsModel
             canPost: !root.rootStore.chatCommunitySectionModule.isCommunity() || root.canPost
             amISectionAdmin: root.amISectionAdmin
