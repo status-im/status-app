@@ -105,7 +105,8 @@ proc init*(self: Controller) =
     let args = MessagesArgs(e)
     if (self.sectionId != args.sectionId or args.messages.len == 0):
       return
-    self.delegate.onNewMessagesReceived(args.sectionId, args.chatId, args.chatType, args.lastMessageTimestamp,
+    let displayChatId = if args.threadId.len > 0: args.threadId else: args.chatId
+    self.delegate.onNewMessagesReceived(args.sectionId, args.chatId, displayChatId, args.chatType, args.lastMessageTimestamp,
       args.unviewedMessagesCount, args.unviewedMentionsCount, args.messages[0])
 
   self.events.on(chat_service.SIGNAL_CHAT_MUTED) do(e:Args):
