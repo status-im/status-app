@@ -157,17 +157,6 @@ OnboardingPage {
         }
     }
 
-    onKeycardStateChanged: {
-        Qt.callLater(() => {
-            if (!isBiometricsLogin || !d.currentProfileIsKeycard
-                || root.keycardState !== Onboarding.KeycardState.NotEmpty)
-                return
-
-            root.biometricsRequested(loginUserSelector.selectedProfileKeyId)
-        })
-    }
-
-
     // login errors reporting
     function setAccountLoginError(error: string, wrongPassword: bool) : void {
         if (!error && !wrongPassword) {
@@ -264,9 +253,6 @@ OnboardingPage {
 
                     Qt.callLater(() => {
                         if (!root || !root.isBiometricsLogin)
-                            return
-
-                        if (d.currentProfileIsKeycard && root.keycardState !== Onboarding.KeycardState.NotEmpty)
                             return
 
                         root.biometricsRequested(loginUserSelector.selectedProfileKeyId)
