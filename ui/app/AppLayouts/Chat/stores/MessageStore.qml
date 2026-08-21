@@ -24,6 +24,11 @@ QtObject {
     readonly property string chatIcon: messageModule ? messageModule.chatIcon : ""
     readonly property bool keepUnread: messageModule ? messageModule.keepUnread : false
 
+    // The middleware's fetch page size (MESSAGES_PER_PAGE). The view sizes its
+    // window chunk from this so one slide never asks for more rows than one
+    // fetch delivers; 0 until the module attaches.
+    readonly property int messagesPerPage: messageModule ? messageModule.messagesPerPage : 0
+
     onMessageModuleChanged: {
         if(!messageModule)
             return

@@ -21,6 +21,16 @@ const COUNT_UNKNOWN* = -1
 const MAX_MESSAGES_WINDOW_LIMIT* = 1000
   ## `MaxMessagesWindowLimit` in status-go; a larger limit fails validation.
 
+const MESSAGES_PER_PAGE* = 30
+  ## Rows in one history page. Lives here, not in the service, because the view
+  ## reads it too: it is also the view's window chunk (`windowChunkSize`), so a
+  ## slide never asks for more rows than one fetch delivers. Changing it moves
+  ## both ends at once — see issue 0017 for the assimilation cost per row.
+
+const MESSAGES_PER_PAGE_MAX* = 40
+  ## Ceiling on an escalated page request (the pager grows its page after a
+  ## short page).
+
 type
   MessagePageMeta* = object
     ## The scalar half of the enriched `ApplicationMessagesResponse`. The
@@ -137,6 +147,52 @@ proc parseMessagePageMeta*(responseObj: JsonNode): MessagePageMeta =
   result.totalCount = readCount(responseObj, "totalCount")
   result.firstRank = readRank(responseObj, "firstRank")
   result.anchorRank = readRank(responseObj, "anchorRank")
+
+# ------------------------------------------------------ worker -> GUI payload
+
+type
+  MessagePagePayload* = ref object of RootObj
+    ## A finished message page, handed to the GUI slot BY HANDLE (`finishTyped`)
+    ## instead of as a serialized string. The worker parses the RPC response and
+    ## reads its scalars, so the completion slot re-parses nothing and no
+    ## multi-KB string crosses the queued-invoke bridge.
+    ##
+    ## `messages` and `reactions` stay as JSON on purpose. Decoding them builds
+    ## link-preview QObjects (`dto/link_preview` -> `StandardLinkPreview` and
+    ## friends), which would take the *worker* thread's affinity; the DTO decode
+    ## therefore stays on the GUI thread, where it is ~8% of a page's cost
+    ## against the parse's ~60% (see issue 0017's measurement).
+    ##
+    ## Ownership: built by the worker, moved through the typed-handoff registry,
+    ## owned by the GUI thread from `takeTyped` on. Never shared.
+    meta*: MessagePageMeta
+    messages*: JsonNode
+    reactions*: JsonNode
+    messageId*: string    ## the around-message anchor this page answered
+    requestedRank*: int   ## the at-rank anchor this page answered
+
+proc initMessagePagePayload*(chatId = ""): MessagePagePayload =
+  MessagePagePayload(
+    meta: initMessagePageMeta(chatId),
+    messages: newJArray(),
+    reactions: newJArray(),
+    requestedRank: RANK_NOT_APPLICABLE,
+  )
+
+proc newErrorPagePayload*(chatId, error: string): MessagePagePayload =
+  ## The shape every failed page takes: same transport as a good one, so a slot
+  ## always has a payload to read and can never be handed a stale string.
+  result = initMessagePagePayload(chatId)
+  result.meta.error = error
+
+proc buildWindowPayload*(chatId: string, rpcResult: JsonNode, reactions: JsonNode): MessagePagePayload =
+  ## Worker-side: everything the GUI slot used to do to the response string
+  ## except decoding the DTOs.
+  let flat = buildWindowResponse(chatId, rpcResult, reactions)
+  result = initMessagePagePayload()
+  result.meta = parseMessagePageMeta(flat)
+  result.messages = flat["messages"]
+  result.reactions = flat["reactions"]
 
 proc lastRank*(meta: MessagePageMeta, messageCount: int): int =
   ## Rank of the oldest row of the page, or -1 when the page carries no rank.

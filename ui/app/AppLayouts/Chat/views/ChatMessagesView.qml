@@ -138,7 +138,15 @@ Item {
         readonly property int estimatedViewportRows: Math.ceil(chatLogView.height / d.assumedMinRowHeight)
         readonly property int initialWindowSize: Math.max(20, Math.min(d.maxWindowSize,
                                                                        d.estimatedViewportRows))
-        readonly property int windowChunkSize: 30
+        // One fetch = one window chunk: the chunk IS the middleware's page size
+        // (MESSAGES_PER_PAGE, forwarded by the store), so a slide never outruns
+        // what a single page delivers. The literal covers only the instant
+        // before the message module has attached and reported it.
+        readonly property int windowChunkSize: {
+            if (messageStore.messagesPerPage > 0)
+                return messageStore.messagesPerPage
+            return 30
+        }
         // Fallback cap, pool-less hosts only: with a pool the cap is defined
         // by what the pool can dress (see poolHeadroom below).
         readonly property int maxWindowSize: 140

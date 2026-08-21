@@ -39,9 +39,6 @@ export reaction_dto
 logScope:
   topics = "messages-service"
 
-const MESSAGES_PER_PAGE* = 20
-const MESSAGES_PER_PAGE_MAX* = 40
-
 # Signals which may be emitted by this service:
 const SIGNAL_MESSAGES_LOADED* = "messagesLoaded"
 const SIGNAL_PINNED_MESSAGES_LOADED* = "pinnedMessagesLoaded"
@@ -670,20 +667,24 @@ QtObject:
       # notify view, this is important
       self.events.emit(SIGNAL_PINNED_MESSAGES_LOADED, PinnedMessagesLoadedArgs())
 
-  proc decodePageMessages(responseObj: JsonNode): seq[MessageDto] =
-    var messagesArr: JsonNode
-    if responseObj.getProp("messages", messagesArr) and messagesArr.kind == JArray:
+  proc decodePageMessages(messagesArr: JsonNode): seq[MessageDto] =
+    ## The one stage of assimilation that stays on the GUI thread: a decoded
+    ## message may own link-preview QObjects, which must belong to this thread.
+    if not messagesArr.isNil and messagesArr.kind == JArray:
       result = map(messagesArr.getElems(), proc(x: JsonNode): MessageDto = x.toMessageDto())
 
-  proc decodePageReactions(responseObj: JsonNode): seq[ReactionDto] =
-    var reactionsArr: JsonNode
-    if responseObj.getProp("reactions", reactionsArr) and reactionsArr.kind == JArray:
+  proc decodePageReactions(reactionsArr: JsonNode): seq[ReactionDto] =
+    if not reactionsArr.isNil and reactionsArr.kind == JArray:
       result = map(reactionsArr.getElems(), proc(x: JsonNode): ReactionDto = x.toReactionDto())
 
   proc onAsyncLoadMoreMessagesForChat*(self: Service, response: string) {.slot.} =
+    # The worker parsed the page and read its scalars; claim the finished
+    # payload by handle. Nil only if the handoff was drained at shutdown.
+    let payload = takeTyped[MessagePagePayload](response)
+    if payload.isNil:
+      return
     try:
-      let responseObj = response.parseJson
-      let meta = parseMessagePageMeta(responseObj)
+      let meta = payload.meta
       if meta.error != "":
         raise newException(CatchableError, meta.error)
 
@@ -695,7 +696,7 @@ QtObject:
 
       msgCursor.setValue(meta.cursor)
 
-      var messages = decodePageMessages(responseObj)
+      var messages = decodePageMessages(payload.messages)
       self.checkPaymentRequestsInMessages(messages)
 
       if meta.totalCount != COUNT_UNKNOWN:
@@ -705,7 +706,7 @@ QtObject:
       self.events.emit(SIGNAL_MESSAGES_LOADED, newMessagesLoadedArgs(
         chatId = meta.chatId,
         messages = messages,
-        reactions = decodePageReactions(responseObj),
+        reactions = decodePageReactions(payload.reactions),
         totalCount = meta.totalCount,
         firstRank = meta.firstRank,
       ))
@@ -714,13 +715,13 @@ QtObject:
       # notify view, this is important
       self.events.emit(SIGNAL_MESSAGES_LOADED, newMessagesLoadedArgs(""))
 
-  proc emitWindowLoaded(self: Service, responseObj: JsonNode, messageId: string, requestedRank: int) =
-    let meta = parseMessagePageMeta(responseObj)
+  proc emitWindowLoaded(self: Service, payload: MessagePagePayload) =
+    let meta = payload.meta
     var messages: seq[MessageDto]
     var reactions: seq[ReactionDto]
     if meta.error == "":
-      messages = decodePageMessages(responseObj)
-      reactions = decodePageReactions(responseObj)
+      messages = decodePageMessages(payload.messages)
+      reactions = decodePageReactions(payload.reactions)
       self.checkPaymentRequestsInMessages(messages)
       if meta.totalCount != COUNT_UNKNOWN:
         self.events.emit(SIGNAL_CHAT_MESSAGES_COUNT_UPDATED,
@@ -728,8 +729,8 @@ QtObject:
 
     self.events.emit(SIGNAL_MESSAGES_WINDOW_LOADED, MessagesWindowLoadedArgs(
       chatId: meta.chatId,
-      messageId: messageId,
-      requestedRank: requestedRank,
+      messageId: payload.messageId,
+      requestedRank: payload.requestedRank,
       messages: messages,
       reactions: reactions,
       totalCount: meta.totalCount,
@@ -739,14 +740,15 @@ QtObject:
     ))
 
   proc onAsyncLoadMessagesAroundMessage*(self: Service, response: string) {.slot.} =
+    let payload = takeTyped[MessagePagePayload](response)
+    if payload.isNil:
+      return
     try:
-      let responseObj = response.parseJson
-      var messageId: string
-      discard responseObj.getProp("messageId", messageId)
-      self.emitWindowLoaded(responseObj, messageId, RANK_NOT_APPLICABLE)
+      self.emitWindowLoaded(payload)
     except Exception as e:
       error "Error loading the message window around a message", msg = e.msg
       self.events.emit(SIGNAL_MESSAGES_WINDOW_LOADED, MessagesWindowLoadedArgs(
+        messageId: payload.messageId,
         requestedRank: RANK_NOT_APPLICABLE,
         totalCount: COUNT_UNKNOWN,
         firstRank: RANK_NOT_APPLICABLE,
@@ -755,15 +757,15 @@ QtObject:
       ))
 
   proc onAsyncLoadMessagesAtRank*(self: Service, response: string) {.slot.} =
+    let payload = takeTyped[MessagePagePayload](response)
+    if payload.isNil:
+      return
     try:
-      let responseObj = response.parseJson
-      var requestedRank = RANK_NOT_APPLICABLE
-      discard responseObj.getProp("requestedRank", requestedRank)
-      self.emitWindowLoaded(responseObj, "", requestedRank)
+      self.emitWindowLoaded(payload)
     except Exception as e:
       error "Error loading the message window at a rank", msg = e.msg
       self.events.emit(SIGNAL_MESSAGES_WINDOW_LOADED, MessagesWindowLoadedArgs(
-        requestedRank: RANK_NOT_APPLICABLE,
+        requestedRank: payload.requestedRank,
         totalCount: COUNT_UNKNOWN,
         firstRank: RANK_NOT_APPLICABLE,
         anchorRank: RANK_NOT_APPLICABLE,

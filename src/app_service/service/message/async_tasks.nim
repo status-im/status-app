@@ -37,13 +37,13 @@ proc asyncFetchChatMessagesTask(argEncoded: string) {.gcsafe, nimcall.} =
     if not rResponse.error.isNil:
       raise newException(CatchableError, rResponse.error.message)
 
-    arg.finish(buildWindowResponse(arg.chatId, msgsResponse.result, rResponse.result))
+    # Typed completion: the page is parsed and its scalars read HERE, on the
+    # worker. The GUI slot claims the finished payload by handle and only
+    # decodes the DTOs (see MessagePagePayload for why those stay GUI-side).
+    arg.finishTyped(buildWindowPayload(arg.chatId, msgsResponse.result, rResponse.result))
 
   except Exception as e:
-    arg.finish(%* {
-      "chatId": arg.chatId,
-      "error": e.msg,
-    })
+    arg.finishTyped(newErrorPagePayload(arg.chatId, e.msg))
 
 #################################################
 # Async load a window of messages (around a message / at a rank)
@@ -86,17 +86,15 @@ proc asyncFetchChatMessagesAroundMessageTask(argEncoded: string) {.gcsafe, nimca
       raise newException(CatchableError, msgsResponse.error.message)
 
     let messagesArr = msgsResponse.result{"messages"}
-    var responseJson = buildWindowResponse(arg.chatId, msgsResponse.result,
+    var payload = buildWindowPayload(arg.chatId, msgsResponse.result,
       fetchReactionsForPage(arg.chatId, messagesArr))
-    responseJson["messageId"] = %arg.messageId
-    arg.finish(responseJson)
+    payload.messageId = arg.messageId
+    arg.finishTyped(payload)
 
   except Exception as e:
-    arg.finish(%* {
-      "chatId": arg.chatId,
-      "messageId": arg.messageId,
-      "error": e.msg,
-    })
+    var payload = newErrorPagePayload(arg.chatId, e.msg)
+    payload.messageId = arg.messageId
+    arg.finishTyped(payload)
 
 proc asyncFetchChatMessagesAtRankTask(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncFetchChatMessagesAtRankTaskArg](argEncoded)
@@ -106,17 +104,15 @@ proc asyncFetchChatMessagesAtRankTask(argEncoded: string) {.gcsafe, nimcall.} =
       raise newException(CatchableError, msgsResponse.error.message)
 
     let messagesArr = msgsResponse.result{"messages"}
-    var responseJson = buildWindowResponse(arg.chatId, msgsResponse.result,
+    var payload = buildWindowPayload(arg.chatId, msgsResponse.result,
       fetchReactionsForPage(arg.chatId, messagesArr))
-    responseJson["requestedRank"] = %arg.rank
-    arg.finish(responseJson)
+    payload.requestedRank = arg.rank
+    arg.finishTyped(payload)
 
   except Exception as e:
-    arg.finish(%* {
-      "chatId": arg.chatId,
-      "requestedRank": arg.rank,
-      "error": e.msg,
-    })
+    var payload = newErrorPagePayload(arg.chatId, e.msg)
+    payload.requestedRank = arg.rank
+    arg.finishTyped(payload)
 
 proc asyncFetchChatMessagesCountTask(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncFetchChatMessagesCountTaskArg](argEncoded)

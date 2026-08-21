@@ -24,6 +24,8 @@ QtObject {
     readonly property string chatIcon: ""
     readonly property bool keepUnread: false
     readonly property bool isChatActive: true
+    readonly property int messagesPerPage: messageModule && messageModule.messagesPerPage > 0 ?
+                                               messageModule.messagesPerPage : 30
 
     onMessageModuleChanged: {
         if (messageModule)

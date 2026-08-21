@@ -4,6 +4,7 @@ import ../../../../shared_models/message_item
 import ../../../../shared_models/dense_message_model
 import ../../../../../global/feature_flags
 import ../../../../../../app_service/service/chat/dto/chat
+from ../../../../../../app_service/service/message/message_window import MESSAGES_PER_PAGE
 import io_interface
 
 QtObject:
@@ -263,6 +264,14 @@ QtObject:
   proc setChatType*(self: View, value: int) =
     self.chatType = value
     self.chatTypeChanged()
+
+  proc getMessagesPerPage*(self: View): int {.slot.} =
+    ## The middleware's fetch page size, so the view can size its window chunk
+    ## from the same number instead of keeping its own copy of it.
+    return MESSAGES_PER_PAGE
+
+  QtProperty[int] messagesPerPage:
+    read = getMessagesPerPage
 
   proc loadingChanged*(self: View) {.signal.}
   proc isLoading*(self: View): bool {.slot.} =
