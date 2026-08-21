@@ -929,7 +929,7 @@ Loader {
 
                 onProfilePictureClicked: (sender, mouse) => root.openProfileContextMenu(mouse.x, mouse.y)
                 onReplyProfileClicked: (sender, mouse) => root.openProfileContextMenu(mouse.x, mouse.y, true)
-                onReplyMessageClicked: (mouse) => root.messageStore.messageModule.jumpToMessage(root.responseToMessageWithId)
+                onReplyMessageClicked: (mouse) => root.messageStore.jumpToMessage(root.responseToMessageWithId)
                 onSenderNameClicked: (sender) => root.openProfileContextMenu(sender.x, sender.y)
 
                 onToggleReactionClicked: (hexcode) => {

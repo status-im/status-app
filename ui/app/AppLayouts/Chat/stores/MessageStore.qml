@@ -56,6 +56,15 @@ QtObject {
         messageModule.setDenseWindow(firstIndex, lastIndex, margin)
     }
 
+    // Model index of a loaded message, -1 when it is not fetched. Costs the
+    // loaded-row count, not the history count: a scan on the QML side would
+    // walk every row of a 100k-row model across the QVariant boundary.
+    function indexOfMessage(messageId) {
+        if (!messageModule || !messageModule.indexOfMessageId)
+            return -1
+        return messageModule.indexOfMessageId(messageId)
+    }
+
     onMessageModuleChanged: {
         if(!messageModule)
             return

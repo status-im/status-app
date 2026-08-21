@@ -63,6 +63,9 @@ Item {
             property bool keepUnread: false
 
             property int loadMoreCalls: 0
+            property int aroundCalls: 0
+            property string lastAroundId: ""
+            property int indexLookups: 0
             property int rankFetchCalls: 0
             property int lastRankFetched: -1
             property int lastWindowFirst: -1
@@ -73,12 +76,34 @@ Item {
             signal sendingMessageFailed(string error)
             signal reactionActionFailed()
             signal scrollToMessage(int messageIndex)
-            signal messagesWindowLoaded(int anchorIndex, string error)
+            signal messagesWindowLoaded(string anchorId, int anchorIndex, string error)
+            signal scrollToMessageId(string messageId)
 
             function getChatId() { return moduleMock.mockChatId }
             function loadMoreMessages() { loadMoreCalls++ }
             function updateKeepUnread(flag) {}
-            function loadMessagesAroundMessage(messageId) {}
+            function loadMessagesAroundMessage(messageId) {
+                aroundCalls++
+                lastAroundId = messageId
+            }
+            function jumpToMessage(messageId) {
+                scrollToMessageId(messageId)
+            }
+            // What the real view answers from the dense store's islands: the
+            // loaded rows only. The stub walks the model because it has no
+            // island bookkeeping, but the contract is the same - a dummy
+            // answers -1.
+            function indexOfMessageId(messageId) {
+                indexLookups++
+                if (!messageId)
+                    return -1
+                for (let i = 0; i < denseSource.count; ++i) {
+                    const row = denseSource.get(i)
+                    if (row.loaded === true && row.key === messageId)
+                        return i
+                }
+                return -1
+            }
             function loadMessagesAtRank(rank) {
                 rankFetchCalls++
                 lastRankFetched = rank
@@ -158,6 +183,9 @@ Item {
         function cleanup() {
             contentModuleMock.messagesModule.loading = false
             contentModuleMock.messagesModule.loadMoreCalls = 0
+            contentModuleMock.messagesModule.aroundCalls = 0
+            contentModuleMock.messagesModule.lastAroundId = ""
+            contentModuleMock.messagesModule.indexLookups = 0
             contentModuleMock.messagesModule.rankFetchCalls = 0
             contentModuleMock.messagesModule.lastRankFetched = -1
             contentModuleMock.messagesModule.lastWindowFirst = -1
@@ -426,7 +454,7 @@ Item {
                 fillRows(internal.windowStart,
                          internal.windowEnd - internal.windowStart + 1)
                 contentModuleMock.messagesModule.messagesWindowLoaded(
-                            internal.windowEnd, "")
+                            "", internal.windowEnd, "")
                 tryVerify(() => internal.stagedCount === 0, 30000)
             }
 
@@ -740,7 +768,7 @@ Item {
             // and the page dresses when it arrives
             fillRows(internal.windowStart,
                      internal.windowEnd - internal.windowStart + 1)
-            contentModuleMock.messagesModule.messagesWindowLoaded(expected, "")
+            contentModuleMock.messagesModule.messagesWindowLoaded("", expected, "")
             tryVerify(() => internal.acquiredCount > 0, 30000,
                       "the filled rows must dress")
         }

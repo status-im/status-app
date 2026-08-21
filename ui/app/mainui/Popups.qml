@@ -940,7 +940,7 @@ QtObject {
                 onSetNeverAskAboutUnfurlingAgain: neverAskAgain => root.sharedRootStore.setNeverAskAboutUnfurlingAgain(neverAskAgain)
                 onPinMessageRequested: messageId => messageStore.pinMessage(messageId)
                 onUnpinMessageRequested: messageId => messageStore.unpinMessage(messageId)
-                onJumpToMessageRequested: messageId => messageStore.messageModule.jumpToMessage(messageId)
+                onJumpToMessageRequested: messageId => messageStore.jumpToMessage(messageId)
             }
         },
 

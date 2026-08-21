@@ -47,6 +47,11 @@ QtObject {
         if (messageModule && messageModule.setDenseWindow)
             messageModule.setDenseWindow(firstIndex, lastIndex, margin)
     }
+    function indexOfMessage(messageId) {
+        if (messageModule && messageModule.indexOfMessageId)
+            return messageModule.indexOfMessageId(messageId)
+        return -1
+    }
 
     function loadMoreMessages() {
         if (messageModule && messageModule.loadMoreMessages)
@@ -72,7 +77,10 @@ QtObject {
     function leaveChat() {}
     function addNewMessagesMarker() {}
     function firstUnseenMentionMessageId() { return "" }
-    function jumpToMessage(id) {}
+    function jumpToMessage(id) {
+        if (messageModule && messageModule.jumpToMessage)
+            messageModule.jumpToMessage(id)
+    }
     function createMessageLink(chatId, messageId) { return "" }
     function resendMessage(messageId) {}
 }

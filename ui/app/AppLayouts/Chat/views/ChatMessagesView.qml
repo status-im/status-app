@@ -263,9 +263,7 @@ Item {
             d.recordKey = root.messageStore.getChatId()
             const record = d.windowRecords[d.recordKey]
             if (d.dressActive && record && !record.atBottom) {
-                const index = SQUtils.ModelUtils.indexOf(
-                            d.windowSource, d.denseMode ? "key" : "id",
-                            record.oldestRowId)
+                const index = d.indexOfRow(record.oldestRowId)
                 if (index >= 0) {
                     d.restoreWindow(index, record)
                     return
@@ -290,7 +288,8 @@ Item {
             d.windowAtInitial = false
             d.lastFetchHistoryCount = -1
             d.pendingRestore = ({ messageId: record.oldestRowId,
-                                  offset: record.offset })
+                                  offset: record.offset,
+                                  pinIndex: record.pinIndex })
             const capacity = d.usePool
                            ? Math.max(1, d.acquiredCount + d.poolHeadroom())
                            : d.maxWindowSize
@@ -351,6 +350,7 @@ Item {
                 d.dressQueue = []
                 d.initialFillActive = false
                 d.pendingRestore = null
+                d.pendingGoToId = ""
                 if (root.rowPool)
                     root.rowPool.clearBoost(d.rowPoolKind)
                 d.closeWindow()
@@ -674,6 +674,136 @@ Item {
             return true
         }
 
+        // ---- goTo (issue 0023) ----
+        // The single jump primitive behind every jump: reply-quote click,
+        // pinned message, search hit, first-unseen landing. A loaded target
+        // teleports straight there; an unfetched one is fetched around first
+        // and teleports when its page lands, skeleton until it dresses.
+
+        // The message a jump is waiting on an around-message fetch for, ""
+        // when none is in flight. A second goTo replaces it: only the newest
+        // target is still wanted, and the superseded page answers under its
+        // own anchor id, which no longer matches.
+        property string pendingGoToId: ""
+
+        // The last jump that could not land, and how many have not. Read by
+        // tests; the user-visible half is the toast in failGoTo.
+        property string lastGoToFailure: ""
+        property int goToFailureCount: 0
+
+        function goToMessageId(messageId) {
+            if (!messageId)
+                return
+            // an explicit jump outranks a restore in flight and any bottom
+            // reposition still scheduled
+            d.pendingPositionAtNewest = false
+            d.pendingRestore = null
+            const index = d.indexOfRow(messageId)
+            if (index >= 0) {
+                d.pendingGoToId = ""
+                d.teleportToMessage(index, messageId)
+                return
+            }
+            if (!d.denseMode) {
+                // the legacy model holds only what was paged in: the
+                // middleware hunts for the row and answers with an index
+                // (onScrollToMessage above)
+                return
+            }
+            d.pendingGoToId = messageId
+            root.messageStore.loadMessagesAroundMessage(messageId)
+        }
+
+        // Model index of a message, -1 when it is not loaded. Dense mode asks
+        // the model, which answers from its loaded rows alone; scanning here
+        // would walk up to 100k rows across the QVariant boundary on every
+        // chat open. The legacy model holds only what was paged in and has no
+        // such lookup, so it is walked.
+        function indexOfRow(messageId) {
+            if (!messageId || !d.windowSource)
+                return -1
+            if (d.denseMode)
+                return root.messageStore.indexOfMessage(messageId)
+            return SQUtils.ModelUtils.indexOf(d.windowSource, "id", messageId)
+        }
+
+        // Teleports the window onto a message and pins the viewport to it,
+        // centred - which is also what runs the message-found highlight, as
+        // the flickable reports a positioned row only for a centred request.
+        //
+        // Pinned by MESSAGE ID, never by the key read out of the row: a
+        // dummy's key is positional (dummy:<rank>) and a backfill landing in
+        // the same turn renames it, leaving the pin naming nothing. A goTo
+        // only ever pins on a loaded row, whose key IS its message id.
+        function teleportToMessage(index, messageId) {
+            const capacity = d.usePool
+                           ? Math.max(1, d.acquiredCount + d.poolHeadroom())
+                           : d.maxWindowSize
+            const span = Math.max(1, Math.min(d.windowEnd - d.windowStart + 1,
+                                              capacity))
+            // rows on both sides of the target, so the centred pin has
+            // content to sit in the middle of
+            const half = Math.min(Math.floor(span / 2),
+                                  Math.max(0, d.historyCount - 1 - index))
+            d.windowAtInitial = false
+            // same chat, same session: a fetch already fired for this history
+            // count must not repeat until the history actually grows
+            const lastFetch = d.lastFetchHistoryCount
+            d.restoreWindow(index + half, { oldestRowId: messageId,
+                                            pinIndex: index,
+                                            span: span, offset: NaN })
+            d.lastFetchHistoryCount = lastFetch
+            // the target was already inside the window: nothing was admitted,
+            // so no batch reveal will ever apply the pin. Those rows are
+            // dressed already - position and highlight straight away.
+            if (d.stagedCount === 0)
+                Qt.callLater(d.applyGoToWithoutBatch)
+        }
+
+        function applyGoToWithoutBatch() {
+            if (d.pendingRestore && d.stagedCount === 0)
+                d.applyPendingRestore()
+        }
+
+        // A window page answered. Only the page for the jump still wanted
+        // lands it: a superseded jump's page carries its own anchor id, and
+        // an at-rank page carries none at all - both are assimilated by the
+        // model like any other page and move nothing here.
+        function applyGoToAnswer(anchorId, error) {
+            if (!d.pendingGoToId || anchorId !== d.pendingGoToId)
+                return
+            const messageId = d.pendingGoToId
+            d.pendingGoToId = ""
+            if (error) {
+                d.failGoTo(messageId)
+                return
+            }
+            // resolved by id against the model the page has already been
+            // applied to, never from the reported anchor index: a backfill in
+            // the same turn shifts every index, and pinning on a row that is
+            // not the target lands the view somewhere arbitrary
+            const index = d.indexOfRow(messageId)
+            if (index < 0) {
+                d.failGoTo(messageId)
+                return
+            }
+            d.teleportToMessage(index, messageId)
+        }
+
+        // A jump that cannot land: the target was deleted meanwhile, is
+        // hidden, or belongs to another chat. The view stays exactly where it
+        // is - moving it somewhere arbitrary is worse than not moving - and
+        // the user is told.
+        function failGoTo(messageId) {
+            d.lastGoToFailure = messageId
+            d.goToFailureCount++
+            Global.displayToastMessage(
+                        qsTr("Couldn't go to that message"),
+                        qsTr("It may have been deleted"),
+                        "warning", false,
+                        Constants.ephemeralNotificationType.danger, "")
+        }
+
         // ---- Holes (issue 0022) ----
         // The rank whose page is being fetched, -1 when none is. One request
         // at a time: a scrub through a long hole would otherwise fire one per
@@ -787,6 +917,12 @@ Item {
         // resolved fresh at every slice — never from insertion order.
         function dressReferenceRow() {
             if (d.pendingRestore) {
+                // a jump names the row it lands on outright: dress that one
+                // first, so the skeleton clears at the target before anywhere
+                // else. Also the only usable reference for a centred pin,
+                // whose offset is NaN by construction.
+                if (d.pendingRestore.pinIndex !== undefined)
+                    return Math.max(0, d.pendingRestore.pinIndex - d.windowStart)
                 // restoring mid-history: the record's offset is the viewport
                 // top's distance below the window's top row (the highest
                 // proxy row); estimate the rows above the viewport center at
@@ -1492,8 +1628,16 @@ Item {
         target: d.denseMode ? root.messageStore.messageModule : null
         ignoreUnknownSignals: true
 
-        function onMessagesWindowLoaded(anchorIndex, error) {
+        function onMessagesWindowLoaded(anchorId, anchorIndex, error) {
             d.pendingRankFetch = -1
+            d.applyGoToAnswer(anchorId, error)
+        }
+
+        // The dense build's jump signal: named by message id, because an
+        // index into the legacy model means nothing to a window running over
+        // the dense one.
+        function onScrollToMessageId(messageId) {
+            d.goToMessageId(messageId)
         }
     }
 
@@ -1636,6 +1780,9 @@ Item {
                 sourceModel: d.viewCompleted && !messageStore.loading
                              ? d.windowSource : null
                 onSourceModelChanged: {
+                    // a jump still in flight belongs to the chat being left:
+                    // its page must never land in the one being entered
+                    d.pendingGoToId = ""
                     // whatever the paging timer did against the detached
                     // window, the view opens on the chat's window record —
                     // or the newest message without one
