@@ -1717,6 +1717,7 @@ Item {
         ScrollBar.vertical: StatusScrollBar {
             id: verticalScrollBar
 
+            objectName: "chatLogScrollBar"
             visible: chatLogView.contentHeight > chatLogView.height
         }
 

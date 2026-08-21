@@ -572,6 +572,16 @@ Item {
             waitForFullPool(chat)
             waitForQuietWindow(chat)
 
+            // off the recent end first: a window still pinned at index 0 is
+            // shifted by nothing, so it could not tell a correct backfill
+            // from one that wrongly moved the bounds
+            for (let i = 0; i < 12 && internal.windowStart === 0; ++i) {
+                internal.slideWindowToHistory()
+                tryVerify(() => internal.stagedCount === 0, 20000,
+                          "slide " + i + " must reveal")
+            }
+            verify(internal.windowStart > 0, "the window must leave the recent end")
+
             const before = keysOf(internal, listView)
             const start = internal.windowStart
             const end = internal.windowEnd
@@ -760,6 +770,38 @@ Item {
             tryVerify(() => internal.windowStart === 0, 15000,
                       "the release must land back on the newest row, at "
                       + internal.windowStart)
+        }
+
+        // The scrollbar's own drag is what the freeze must cover: the
+        // Flickable reports no motion at all while it is held, so the view
+        // has to declare it.
+        function test_scrollbarPressCountsAsMotion() {
+            const chat = openDenseChat(1500, 1500)
+            const listView = chat.listView
+            const internal = chat.internal
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+
+            const scrollBar = findChild(chat.view, "chatLogScrollBar")
+            verify(!!scrollBar, "the message view must expose its scrollbar")
+            verify(scrollBar.visible)
+
+            compare(listView.externallyMoving, false)
+            compare(internal.viewMoving, false)
+
+            // the native macOS scrollbar style reads a transition duration
+            // off a style item that offscreen never creates
+            ignoreWarning(new RegExp("Unable to assign \\[undefined\\] to int"))
+            mousePress(scrollBar, scrollBar.width / 2, scrollBar.height - 4)
+            verify(scrollBar.pressed, "the press must reach the scrollbar")
+            compare(listView.externallyMoving, true)
+            compare(internal.viewMoving, true)
+            compare(listView.moving, false,
+                    "the Flickable itself sees no motion — that is the point")
+
+            mouseRelease(scrollBar, scrollBar.width / 2, scrollBar.height - 4)
+            compare(listView.externallyMoving, false)
+            compare(internal.viewMoving, false)
         }
 
         // ---- the backend is told which rows to keep ----
