@@ -2999,6 +2999,10 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Zrušit</translation>
     </message>
     <message>
+        <source>Biometric login disabled — re-enable it in Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Change</source>
         <translation>Změnit</translation>
     </message>
@@ -13440,6 +13444,10 @@ selhalo</translation>
     <message>
         <source>Continue</source>
         <translation type="unfinished">Pokračovat</translation>
+    </message>
+    <message>
+        <source>Please enter your password — biometrics cannot be used for this action</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Failed to update stored credentials</source>

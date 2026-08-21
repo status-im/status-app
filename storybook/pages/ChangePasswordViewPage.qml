@@ -47,6 +47,18 @@ SplitView {
                     }
                 }
 
+                // The view invokes these on the store itself (the storybook stub is empty,
+                // so they are defined on the instance)
+                function getBiometricCredentialForStorage(keyUid, password) {
+                    // mimics the backend rule: DEK-migrated profiles store the tagged DEK,
+                    // legacy ones the raw password
+                    return ctrlFastPasswordChange.checked ? "dek:mocked-dek-hex" : password
+                }
+
+                function setBiometricPreferenceNotNow() {
+                    logs.logEvent("privacyStore::setBiometricPreferenceNotNow")
+                }
+
                 readonly property string keyUid: keyUidInput.text
 
                 function tryStoreToKeyChain(errorDescription) {

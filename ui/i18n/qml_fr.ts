@@ -2985,6 +2985,10 @@ Do you wish to override the security check and continue?</source>
         <translation>Annuler</translation>
     </message>
     <message>
+        <source>Biometric login disabled — re-enable it in Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Change</source>
         <translation>Changer</translation>
     </message>
@@ -13373,6 +13377,10 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <message>
         <source>Continue</source>
         <translation>Continuer</translation>
+    </message>
+    <message>
+        <source>Please enter your password — biometrics cannot be used for this action</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Failed to update stored credentials</source>

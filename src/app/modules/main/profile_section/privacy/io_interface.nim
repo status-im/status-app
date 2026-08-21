@@ -31,6 +31,9 @@ method changePassword*(self: AccessInterface, password: string, newPassword: str
 method getBiometricCredentialForStorage*(self: AccessInterface, keyUid: string, password: string): string {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method setBiometricPreferenceNotNow*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method isProfileMigratedToDEKEncryption*(self: AccessInterface): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 

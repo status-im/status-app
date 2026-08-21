@@ -205,6 +205,8 @@ QtObject {
             readonly property string notNow: "notNow"
             readonly property string never: "never"
         }
+
+        readonly property string dekPrefix: "dek:"
     }
 
     readonly property int chatSectionLeftColumnWidth: 304

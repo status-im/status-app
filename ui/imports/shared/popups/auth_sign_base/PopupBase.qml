@@ -47,6 +47,14 @@ StatusDialog {
 
     property bool externalAuthorization: false // when set, the credential is not collected here, instead an "Authorize" buutton is shown, emitting authorizeRequested signal
 
+    property var getCredentialForStorage: null // (keyUid: string, password: string) => string - value to store in the OS keychain, if "" signals failure
+
+    // Set for flows that need the actual password and cannot accept the profile's DEK
+    // (e.g. device syncing, where the password itself is validated against and transferred
+    // with the keystore). When the biometric secret turns out to be a DEK, the popup falls
+    // back to manual password entry instead.
+    property bool requirePlainCredential: false
+
     signal authorizeRequested()
 
     // buttons
@@ -207,7 +215,25 @@ StatusDialog {
             d.biometricsInProgress = false
             if (!contentLoader.item)
                 return
-            contentLoader.item.password = secret
+
+            let value = secret
+            d.lastSecretWasLegacy = true
+            if (value.startsWith(Constants.keychain.dekPrefix)) {
+                value = value.slice(Constants.keychain.dekPrefix.length)
+                d.lastSecretWasLegacy = false
+                if (root.requirePlainCredential) {
+                    d.credentialCameFromBiometrics = false
+                    Global.displayToastMessage(
+                                qsTr("Please enter your password — biometrics cannot be used for this action"),
+                                "",
+                                "warning",
+                                false,
+                                Constants.ephemeralNotificationType.danger,
+                                "")
+                    return
+                }
+            }
+            contentLoader.item.password = value
             d.performPasswordActionInternal()
         }
     }
@@ -237,18 +263,30 @@ StatusDialog {
         property bool biometricsInProgress: false
         property bool credentialMismatchAfterBiometrics: false
         property bool credentialCameFromBiometrics: false
+        property bool lastSecretWasLegacy: false
         property bool verifying: false
         property bool success: false
         property string error: ""
         property string lastPin: ""
 
-        function updateKeychainCredentialIfNeeded(credential) {
-            if (!d.credentialMismatchAfterBiometrics) {
+        function updateKeychainCredentialIfNeeded(credential, isPin) {
+            // If successful action:
+            // - biometrics produced a stale credential, the user typed a working one
+            // - biometrics produced a legacy (untagged) credential - refresh it so DEK-migrated profiles store the wrapped DEK instead of the raw password
+            const upgrade = d.credentialCameFromBiometrics && d.lastSecretWasLegacy && !isPin
+            if (!d.credentialMismatchAfterBiometrics && !upgrade) {
                 return
             }
 
-            const status = root.keychain.updateCredential(root.useKeyUid, credential)
-            if (status !== Keychain.StatusSuccess) {
+            let toStore = credential
+            if (!isPin) {
+                if (!root.getCredentialForStorage)
+                    return
+                toStore = root.getCredentialForStorage(root.useKeyUid, credential)
+            }
+
+            if (toStore === ""
+                    || root.keychain.updateCredential(root.useKeyUid, toStore) !== Keychain.StatusSuccess) {
                 Global.displayToastMessage(qsTr("Failed to update stored credentials"), "", "warning", false, Constants.ephemeralNotificationType.danger, "")
             }
         }
@@ -282,6 +320,7 @@ StatusDialog {
             d.error = ""
             d.credentialCameFromBiometrics = false
             d.credentialMismatchAfterBiometrics = false
+            d.lastSecretWasLegacy = false
             root.keychain.requestGetCredential("authenticate", root.useKeyUid)
         }
 
@@ -306,7 +345,7 @@ StatusDialog {
                 return
             }
 
-            d.updateKeychainCredentialIfNeeded(password)
+            d.updateKeychainCredentialIfNeeded(password, false)
             d.success = true
         }
 
@@ -334,7 +373,7 @@ StatusDialog {
         function handleKeycardSuccess() {
             d.verifying = false
             d.success = true
-            d.updateKeychainCredentialIfNeeded(d.lastPin)
+            d.updateKeychainCredentialIfNeeded(d.lastPin, true)
         }
 
         // Called by the concrete popup when keycard action fails
