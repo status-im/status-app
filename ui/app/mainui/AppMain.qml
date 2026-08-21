@@ -2492,6 +2492,7 @@ Item {
                         ChatPanels.MessagesListSkeleton {
                             anchors.fill: parent
                             visible: appMain.isPortraitMode
+                            sectionKnown: false
                         }
 
                         RowLayout {
@@ -2504,7 +2505,10 @@ Item {
                                 Layout.preferredWidth: Constants.chatSectionLeftColumnWidth
                                 color: Theme.palette.baseColor4
 
-                                ChatPanels.MessagesListSkeleton { anchors.fill: parent }
+                                ChatPanels.MessagesListSkeleton {
+                                    anchors.fill: parent
+                                    sectionKnown: false
+                                }
                             }
 
                             ColumnLayout {
