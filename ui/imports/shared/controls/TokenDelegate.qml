@@ -56,7 +56,7 @@ StatusListItem {
     asset.isImage: true
     asset.width: 32
     asset.height: 32
-    errorIcon.tooltip.maxWidth: 300
+    errorTooltipMaxWidth: 300
     height: implicitHeight
 
     // Both warning buttons are latched off rather than merely hidden: a button
