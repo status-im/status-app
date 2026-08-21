@@ -72,6 +72,10 @@ ApplicationWindow {
                 d.cardIds = d.cardIds.filter(id => id !== d.pendingCardId)
             }
             d.pendingCardId = ""
+            // createKeycardWithSeed unplugs and removes the card when Load finishes.
+            d.readerPlugged = false
+            d.cardInserted = false
+            cardSelector.currentIndex = -1
         }
     }
 
@@ -260,6 +264,7 @@ ApplicationWindow {
             }
         }
         StatusBaseText {
+            objectName: "keycardSimCreationStatus"
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
             font.pixelSize: 12
@@ -286,7 +291,7 @@ ApplicationWindow {
             id: cardSelector
             objectName: "keycardSimCardSelector"
             Layout.fillWidth: true
-            enabled: d.simulatorStarted && !d.cardInserted && d.cardIds.length > 0
+            enabled: d.simulatorStarted && !d.creatingCard && !d.cardInserted && d.cardIds.length > 0
             model: d.cardIds
             displayText: d.selectedCardId === "" ? qsTr("<no keycard selected>")
                                                  : d.selectedCardId
@@ -307,7 +312,7 @@ ApplicationWindow {
                 text: qsTr("Insert keycard")
                 ToolTip.text: qsTr("Inserts the selected keycard")
                 ToolTip.visible: hovered
-                enabled: d.simulatorStarted && d.readerPlugged
+                enabled: d.simulatorStarted && !d.creatingCard && d.readerPlugged
                          && d.selectedCardId !== "" && !d.cardInserted
                 onClicked: {
                     root.controller.insertCard(d.selectedCardId)
@@ -329,7 +334,7 @@ ApplicationWindow {
             StatusButton {
                 objectName: "keycardSimPlugReaderButton"
                 text: qsTr("Plug reader")
-                enabled: d.simulatorStarted && !d.readerPlugged
+                enabled: d.simulatorStarted && !d.creatingCard && !d.readerPlugged
                 onClicked: {
                     root.controller.plugReader()
                     d.readerPlugged = true
