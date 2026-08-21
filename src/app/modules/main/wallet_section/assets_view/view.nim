@@ -21,9 +21,9 @@ QtObject:
     self.delegate.viewDidLoad()
 
   proc assetsModelChanged(self: View) {.signal.}
-  proc getAssetsModel*(self: View): QVariant {.slot.} =
-    return newQVariant(self.assetsModel)
-  QtProperty[QVariant] assetsModel:
+  proc getAssetsModel*(self: View): QAbstractListModel {.slot.} =
+    return self.assetsModel
+  QtProperty[QAbstractListModel] assetsModel:
     read = getAssetsModel
     notify = assetsModelChanged
 

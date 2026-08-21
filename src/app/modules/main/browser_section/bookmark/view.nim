@@ -8,7 +8,6 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       model: Model
-      modelVariant: QVariant
 
   proc setup(self: View)
   proc delete*(self: View)
@@ -16,7 +15,6 @@ QtObject:
     new(result, delete)
     result.delegate = delegate
     result.model = newModel()
-    result.modelVariant = newQVariant(result.model)
     result.setup()
 
   proc load*(self: View) =
@@ -27,10 +25,10 @@ QtObject:
 
   proc modelChanged*(self: View) {.signal.}
 
-  proc getModel(self: View): QVariant {.slot.} =
-    return self.modelVariant
+  proc getModel(self: View): QAbstractListModel {.slot.} =
+    return self.model
 
-  QtProperty[QVariant] model:
+  QtProperty[QAbstractListModel] model:
     read = getModel
     notify = modelChanged
 
@@ -54,6 +52,5 @@ QtObject:
 
   proc delete*(self: View) =
     self.model.delete
-    self.modelVariant.delete
     self.QObject.delete
 

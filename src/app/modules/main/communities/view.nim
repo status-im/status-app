@@ -17,23 +17,15 @@ QtObject:
       communityTags: QVariant
       delegate: io_interface.AccessInterface
       model: SectionModel
-      modelVariant: QVariant
       spectatedCommunityPermissionModel: TokenPermissionsModel
-      spectatedCommunityPermissionModelVariant: QVariant
       curatedCommunitiesModel: CuratedCommunityModel
-      curatedCommunitiesModelVariant: QVariant
       curatedCommunitiesLoading: bool
       tokenListLoading: bool
       tokenListModel: TokenListModel
-      tokenListModelVariant: QVariant
       collectiblesListModel: TokenListModel
-      collectiblesListModelVariant: QVariant
       discordFileListModel: DiscordFileListModel
-      discordFileListModelVariant: QVariant
       discordCategoriesModel: DiscordCategoriesModel
-      discordCategoriesModelVariant: QVariant
       discordChannelsModel: DiscordChannelsModel
-      discordChannelsModelVariant: QVariant
       discordOldestMessageTimestamp: int
       discordImportErrorsCount: int
       discordImportWarningsCount: int
@@ -44,7 +36,6 @@ QtObject:
       discordImportProgressTotalChunksCount: int
       discordImportProgressCurrentChunk: int
       discordImportTasksModel: DiscordImportTasksModel
-      discordImportTasksModelVariant: QVariant
       discordDataExtractionInProgress: bool
       discordImportCommunityId: string
       discordImportCommunityName: string
@@ -70,18 +61,12 @@ QtObject:
     result.communityTags = newQVariant("")
     result.delegate = delegate
     result.model = newModel()
-    result.modelVariant = newQVariant(result.model)
     result.spectatedCommunityPermissionModel = newTokenPermissionsModel()
-    result.spectatedCommunityPermissionModelVariant = newQVariant(result.spectatedCommunityPermissionModel)
     result.curatedCommunitiesModel = newCuratedCommunityModel()
-    result.curatedCommunitiesModelVariant = newQVariant(result.curatedCommunitiesModel)
     result.curatedCommunitiesLoading = false
     result.discordFileListModel = newDiscordFileListModel()
-    result.discordFileListModelVariant = newQVariant(result.discordFileListModel)
     result.discordCategoriesModel = newDiscordCategoriesModel()
-    result.discordCategoriesModelVariant = newQVariant(result.discordCategoriesModel)
     result.discordChannelsModel = newDiscordChannelsModel()
-    result.discordChannelsModelVariant = newQVariant(result.discordChannelsModel)
     result.discordOldestMessageTimestamp = 0
     result.discordDataExtractionInProgress = false
     result.discordImportWarningsCount = 0
@@ -92,12 +77,9 @@ QtObject:
     result.discordImportProgressStopped = false
     result.discordImportHasCommunityImage = false
     result.discordImportTasksModel = newDiscordDiscordImportTasksModel()
-    result.discordImportTasksModelVariant = newQVariant(result.discordImportTasksModel)
     result.downloadingCommunityHistoryArchives = false
     result.tokenListModel = newTokenListModel()
-    result.tokenListModelVariant = newQVariant(result.tokenListModel)
     result.collectiblesListModel = newTokenListModel()
-    result.collectiblesListModelVariant = newQVariant(result.collectiblesListModel)
     result.checkingPermissionsInProgress = false
     result.joinPermissionsCheckCompletedWithoutErrors = false
     result.channelsPermissionsCheckSuccessful = false
@@ -311,10 +293,10 @@ QtObject:
     read = getTags
     notify = communityTagsChanged
 
-  proc getModel(self: View): QVariant {.slot.} =
-    return self.modelVariant
+  proc getModel(self: View): QAbstractListModel {.slot.} =
+    return self.model
 
-  QtProperty[QVariant] model:
+  QtProperty[QAbstractListModel] model:
     read = getModel
 
   proc spectatedCommunityPermissionModel*(self: View): TokenPermissionsModel =
@@ -346,19 +328,19 @@ QtObject:
     except Exception as e:
       echo "Error updating token model with addresses: ", e.msg
 
-  proc getSpectatedCommunityPermissionModel(self: View): QVariant {.slot.} =
-    return self.spectatedCommunityPermissionModelVariant
+  proc getSpectatedCommunityPermissionModel(self: View): QAbstractListModel {.slot.} =
+    return self.spectatedCommunityPermissionModel
 
-  QtProperty[QVariant] spectatedCommunityPermissionModel:
+  QtProperty[QAbstractListModel] spectatedCommunityPermissionModel:
     read = getSpectatedCommunityPermissionModel
 
   proc curatedCommunitiesModel*(self: View): CuratedCommunityModel =
     result = self.curatedCommunitiesModel
 
-  proc getCuratedCommunitiesModel(self: View): QVariant {.slot.} =
-    return self.curatedCommunitiesModelVariant
+  proc getCuratedCommunitiesModel(self: View): QAbstractListModel {.slot.} =
+    return self.curatedCommunitiesModel
 
-  QtProperty[QVariant] curatedCommunities:
+  QtProperty[QAbstractListModel] curatedCommunities:
     read = getCuratedCommunitiesModel
 
   proc curatedCommunitiesLoadingChanged*(self: View) {.signal.}
@@ -378,37 +360,37 @@ QtObject:
   proc discordFileListModel*(self: View): DiscordFileListModel =
     result = self.discordFileListModel
 
-  proc getDiscordFileListModel(self: View): QVariant{.slot.} =
-    return self.discordFileListModelVariant
+  proc getDiscordFileListModel(self: View): QAbstractListModel{.slot.} =
+    return self.discordFileListModel
 
-  QtProperty[QVariant] discordFileList:
+  QtProperty[QAbstractListModel] discordFileList:
     read = getDiscordFileListModel
 
   proc discordCategoriesModel*(self: View): DiscordCategoriesModel =
     result = self.discordCategoriesModel
 
-  proc getDiscordCategoriesModel*(self: View): QVariant {.slot.} =
-    return self.discordCategoriesModelVariant
+  proc getDiscordCategoriesModel*(self: View): QAbstractListModel {.slot.} =
+    return self.discordCategoriesModel
 
-  QtProperty[QVariant] discordCategories:
+  QtProperty[QAbstractListModel] discordCategories:
     read = getDiscordCategoriesModel
 
   proc discordChannelsModel*(self: View): DiscordChannelsModel =
     result = self.discordChannelsModel
 
-  proc getDiscordChannelsModel*(self: View): QVariant {.slot.} =
-    return self.discordChannelsModelVariant
+  proc getDiscordChannelsModel*(self: View): QAbstractListModel {.slot.} =
+    return self.discordChannelsModel
 
-  QtProperty[QVariant] discordChannels:
+  QtProperty[QAbstractListModel] discordChannels:
     read = getDiscordChannelsModel
 
   proc discordImportTasksModel*(self: View): DiscordImportTasksModel =
     result = self.discordImportTasksModel
 
-  proc getDiscordImportTasksModel(self: View): QVariant {.slot.} =
-    return self.discordImportTasksModelVariant
+  proc getDiscordImportTasksModel(self: View): QAbstractListModel {.slot.} =
+    return self.discordImportTasksModel
 
-  QtProperty[QVariant] discordImportTasks:
+  QtProperty[QAbstractListModel] discordImportTasks:
     read = getDiscordImportTasksModel
 
   proc discordDataExtractionInProgressChanged*(self: View) {.signal.}
@@ -727,10 +709,10 @@ QtObject:
   proc tokenListModel*(self: View): TokenListModel =
     result = self.tokenListModel
 
-  proc getTokenListModel(self: View): QVariant{.slot.} =
-    return self.tokenListModelVariant
+  proc getTokenListModel(self: View): QAbstractListModel{.slot.} =
+    return self.tokenListModel
 
-  QtProperty[QVariant] tokenList:
+  QtProperty[QAbstractListModel] tokenList:
     read = getTokenListModel
 
   proc tokenListLoadingChanged*(self: View) {.signal.}
@@ -751,10 +733,10 @@ QtObject:
   proc collectiblesListModel*(self: View): TokenListModel =
     result = self.collectiblesListModel
 
-  proc getCollectiblesListModel(self: View): QVariant{.slot.} =
-    return self.collectiblesListModelVariant
+  proc getCollectiblesListModel(self: View): QAbstractListModel{.slot.} =
+    return self.collectiblesListModel
 
-  QtProperty[QVariant] collectiblesModel:
+  QtProperty[QAbstractListModel] collectiblesModel:
     read = getCollectiblesListModel
 
   proc shareCommunityUrlWithChatKey*(self: View, communityId: string): string {.slot.} =

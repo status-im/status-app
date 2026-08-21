@@ -9,7 +9,6 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       model: Model
-      modelVariant: QVariant
       messageSearchOngoing: bool
       amIChatAdmin: bool
       isPinMessageAllowedForMembers: bool
@@ -25,7 +24,6 @@ QtObject:
     result.QObject.setup
     result.delegate = delegate
     result.model = newModel()
-    result.modelVariant = newQVariant(result.model)
     result.messageSearchOngoing = false
     result.amIChatAdmin = false
     result.isPinMessageAllowedForMembers = false
@@ -41,9 +39,9 @@ QtObject:
   proc model*(self: View): Model =
     return self.model
 
-  proc getModel(self: View): QVariant {.slot.} =
-    return self.modelVariant
-  QtProperty[QVariant] model:
+  proc getModel(self: View): QAbstractListModel {.slot.} =
+    return self.model
+  QtProperty[QAbstractListModel] model:
     read = getModel
 
   proc toggleReaction*(self: View, messageId: string, emoji: string) {.slot.} =

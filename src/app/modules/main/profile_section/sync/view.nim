@@ -12,7 +12,6 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       model: Model
-      modelVariant: QVariant
       backupImportState: BackupImportState
       backupDataState: BackupImportState
       backupImportError: string
@@ -24,7 +23,6 @@ QtObject:
     result.QObject.setup
     result.delegate = delegate
     result.model = newModel()
-    result.modelVariant = newQVariant(result.model)
     result.backupImportState = BackupImportState.None
     result.backupDataState = BackupImportState.None
     result.backupImportError = ""
@@ -37,10 +35,10 @@ QtObject:
     return self.model
 
   proc modelChanged*(self: View) {.signal.}
-  proc getModel(self: View): QVariant {.slot.} =
-    return self.modelVariant
+  proc getModel(self: View): QAbstractListModel {.slot.} =
+    return self.model
 
-  QtProperty[QVariant] model:
+  QtProperty[QAbstractListModel] model:
     read = getModel
     notify = modelChanged
 

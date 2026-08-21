@@ -77,7 +77,7 @@ method isLoaded*(self: Module): bool =
 method getModuleAsVariant*(self: Module): QVariant =
   return self.viewVariant
 
-method getCollectiblesModel*(self: Module): QVariant =
+method getCollectiblesModel*(self: Module): QAbstractListModel =
   return self.accountsModule.getCollectiblesModel()
 
 proc checkIfModuleDidLoad(self: Module) =

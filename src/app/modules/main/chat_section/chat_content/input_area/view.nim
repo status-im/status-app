@@ -13,11 +13,8 @@ QtObject:
       preservedProperties: PreservedProperties
       preservedPropertiesVariant: QVariant
       linkPreviewModel: link_preview_model.Model
-      linkPreviewModelVariant: QVariant
       paymentRequestModel: payment_request_model.Model
-      paymentRequestModelVariant: QVariant
       urlsModel: urls_model.Model
-      urlsModelVariant: QVariant
       sendingInProgress: bool
       askToEnableLinkPreview: bool
 
@@ -31,11 +28,8 @@ QtObject:
     result.preservedProperties = newPreservedProperties()
     result.preservedPropertiesVariant = newQVariant(result.preservedProperties)
     result.linkPreviewModel = newLinkPreviewModel()
-    result.linkPreviewModelVariant = newQVariant(result.linkPreviewModel)
     result.paymentRequestModel = newPaymentRequestModel()
-    result.paymentRequestModelVariant = newQVariant(result.paymentRequestModel)
     result.urlsModel = newUrlsModel()
-    result.urlsModelVariant = newQVariant(result.urlsModel)
     result.askToEnableLinkPreview = false
 
   proc load*(self: View) =
@@ -63,16 +57,16 @@ QtObject:
   QtProperty[QVariant] preservedProperties:
     read = getPreservedProperties
 
-  proc getPaymentRequestModel*(self: View): QVariant {.slot.} =
-    return self.paymentRequestModelVariant
+  proc getPaymentRequestModel*(self: View): QAbstractListModel {.slot.} =
+    return self.paymentRequestModel
 
-  QtProperty[QVariant] paymentRequestModel:
+  QtProperty[QAbstractListModel] paymentRequestModel:
     read = getPaymentRequestModel
 
-  proc getLinkPreviewModel*(self: View): QVariant {.slot.} =
-    return self.linkPreviewModelVariant
+  proc getLinkPreviewModel*(self: View): QAbstractListModel {.slot.} =
+    return self.linkPreviewModel
 
-  QtProperty[QVariant] linkPreviewModel:
+  QtProperty[QAbstractListModel] linkPreviewModel:
     read = getLinkPreviewModel
 
   proc askToEnableLinkPreviewChanged(self: View) {.signal.}
@@ -138,13 +132,13 @@ QtObject:
     self.paymentRequestModel.clearItems()
 
   proc urlsModelChanged(self: View) {.signal.}
-  proc getUrlsModel*(self: View): QVariant {.slot.} =
-    return self.urlsModelVariant
+  proc getUrlsModel*(self: View): QAbstractListModel {.slot.} =
+    return self.urlsModel
 
   proc setUrls*(self: View, urls: seq[string]) =
     self.urlsModel.setUrls(urls)
 
-  QtProperty[QVariant] urlsModel:
+  QtProperty[QAbstractListModel] urlsModel:
     read = getUrlsModel
     notify = urlsModelChanged
 

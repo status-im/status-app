@@ -91,22 +91,22 @@ QtObject:
 
     result.setupEventHandlers(events)
 
-  proc getModel*(self: Controller): QVariant {.slot.} =
-    return newQVariant(self.model)
+  proc getModel*(self: Controller): QAbstractListModel {.slot.} =
+    return self.model
 
-  QtProperty[QVariant] model:
+  QtProperty[QAbstractListModel] model:
     read = getModel
 
-  proc getRecipientsModel*(self: Controller): QVariant {.slot.} =
-    return newQVariant(self.recipientsModel)
+  proc getRecipientsModel*(self: Controller): QAbstractListModel {.slot.} =
+    return self.recipientsModel
 
-  QtProperty[QVariant] recipientsModel:
+  QtProperty[QAbstractListModel] recipientsModel:
     read = getRecipientsModel
 
-  proc getCollectiblesModel*(self: Controller): QVariant {.slot.} =
-    return newQVariant(self.collectiblesModel)
+  proc getCollectiblesModel*(self: Controller): QAbstractListModel {.slot.} =
+    return self.collectiblesModel
 
-  QtProperty[QVariant] collectiblesModel:
+  QtProperty[QAbstractListModel] collectiblesModel:
     read = getCollectiblesModel
 
   proc backendToPresentation(self: Controller, backendEntities: seq[backend_activity.ActivityEntry]): seq[entry.ActivityEntry] =

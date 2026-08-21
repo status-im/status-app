@@ -13,14 +13,12 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       model: section_model.SectionModel
-      modelVariant: QVariant
       online: bool
       sectionsLoaded: bool
       notificationAvailable: bool
       activeSection: SectionDetails
       activeSectionVariant: QVariant
       ephemeralNotificationModel: ephemeralNotification_model.Model
-      ephemeralNotificationModelVariant: QVariant
       tmpCommunityId: string # shouldn't be used anywhere except in prepareCommunitySectionModuleForCommunityId/getCommunitySectionModule procs
       mainLoaded: bool
 
@@ -36,11 +34,9 @@ QtObject:
     result.online = false
     result.sectionsLoaded = false
     result.notificationAvailable = false
-    result.modelVariant = newQVariant(result.model)
     result.activeSection = newActiveSection()
     result.activeSectionVariant = newQVariant(result.activeSection)
     result.ephemeralNotificationModel = ephemeralNotification_model.newModel()
-    result.ephemeralNotificationModelVariant = newQVariant(result.ephemeralNotificationModel)
     result.mainLoaded = false
 
   proc load*(self: View) =
@@ -80,10 +76,10 @@ QtObject:
 
   proc modelChanged*(self: View) {.signal.}
 
-  proc getModel(self: View): QVariant {.slot.} =
-    return self.modelVariant
+  proc getModel(self: View): QAbstractListModel {.slot.} =
+    return self.model
 
-  QtProperty[QVariant] sectionsModel:
+  QtProperty[QAbstractListModel] sectionsModel:
     read = getModel
     notify = modelChanged
 
@@ -91,9 +87,9 @@ QtObject:
     return self.ephemeralNotificationModel
 
   proc ephemeralNotificationModelChanged*(self: View) {.signal.}
-  proc getEphemeralNotificationModel(self: View): QVariant {.slot.} =
-    return self.ephemeralNotificationModelVariant
-  QtProperty[QVariant] ephemeralNotificationModel:
+  proc getEphemeralNotificationModel(self: View): QAbstractListModel {.slot.} =
+    return self.ephemeralNotificationModel
+  QtProperty[QAbstractListModel] ephemeralNotificationModel:
     read = getEphemeralNotificationModel
     notify = ephemeralNotificationModelChanged
 

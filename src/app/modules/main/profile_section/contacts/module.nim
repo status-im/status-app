@@ -306,7 +306,7 @@ method onProfileShowcaseAccountsByAddressFetched*(self: Module, accounts: seq[Pr
   let jsonObj = % accounts
   self.view.emitProfileShowcaseAccountsByAddressFetchedSignal($jsonObj)
 
-method getShowcaseCollectiblesModel*(self: Module): QVariant =
+method getShowcaseCollectiblesModel*(self: Module): QAbstractListModel =
   return self.collectiblesController.getModelAsVariant()
 
 method isShowcaseForAContactLoading*(self: Module): bool =

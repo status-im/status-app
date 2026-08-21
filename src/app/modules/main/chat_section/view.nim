@@ -12,17 +12,13 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       model: chats_model.Model
-      modelVariant: QVariant
       activeItem: ActiveItem
       activeItemVariant: QVariant
       tmpChatId: string # shouldn't be used anywhere except in prepareChatContentModuleForChatId/getChatContentModule procs
       contactRequestsModel: user_model.Model
-      contactRequestsModelVariant: QVariant
       editCategoryChannelsModel: chats_model.Model
-      editCategoryChannelsVariant: QVariant
       loadingHistoryMessagesInProgress: bool
       tokenPermissionsModel: TokenPermissionsModel
-      tokenPermissionsVariant: QVariant
       allTokenRequirementsMet: bool
       requiresTokenPermissionToJoin: bool
       amIMember: bool
@@ -32,7 +28,6 @@ QtObject:
       isWaitingOnNewCommunityOwnerToConfirmRequestToRejoin: bool
       allChannelsAreHiddenBecauseNotPermitted: bool
       memberMessagesModel: member_msg_model.Model
-      memberMessagesModelVariant: QVariant
       requestToJoinState: RequestToJoinState
       communityMemberReevaluationStatus: int
       permissionSaveInProgress: bool
@@ -47,23 +42,18 @@ QtObject:
     result.QObject.setup
     result.delegate = delegate
     result.model = chats_model.newModel()
-    result.modelVariant = newQVariant(result.model)
     result.editCategoryChannelsModel = chats_model.newModel()
-    result.editCategoryChannelsVariant = newQVariant(result.editCategoryChannelsModel)
     result.activeItem = newActiveItem()
     result.activeItemVariant = newQVariant(result.activeItem)
     result.contactRequestsModel = user_model.newModel()
-    result.contactRequestsModelVariant = newQVariant(result.contactRequestsModel)
     result.loadingHistoryMessagesInProgress = false
     result.tokenPermissionsModel = newTokenPermissionsModel()
-    result.tokenPermissionsVariant = newQVariant(result.tokenPermissionsModel)
     result.amIMember = false
     result.requiresTokenPermissionToJoin = false
     result.chatsLoaded = false
     result.communityMetrics = "[]"
     result.isWaitingOnNewCommunityOwnerToConfirmRequestToRejoin = false
     result.memberMessagesModel = member_msg_model.newModel()
-    result.memberMessagesModelVariant = newQVariant(result.memberMessagesModel)
     result.requestToJoinState = RequestToJoinState.None
     result.communityMemberReevaluationStatus = 0
     result.permissionSaveInProgress = false
@@ -81,10 +71,10 @@ QtObject:
   proc chatsModel*(self: View): chats_model.Model =
     return self.model
 
-  proc getModel(self: View): QVariant {.slot.} =
-    return self.modelVariant
+  proc getModel(self: View): QAbstractListModel {.slot.} =
+    return self.model
 
-  QtProperty[QVariant] model:
+  QtProperty[QAbstractListModel] model:
     read = getModel
 
   proc chatsLoadedChanged(self: View) {.signal.}
@@ -102,18 +92,18 @@ QtObject:
   proc editCategoryChannelsModel*(self: View): chats_model.Model =
     return self.editCategoryChannelsModel
 
-  proc getEditCategoryChannels(self: View): QVariant {.slot.} =
-    return self.editCategoryChannelsVariant
+  proc getEditCategoryChannels(self: View): QAbstractListModel {.slot.} =
+    return self.editCategoryChannelsModel
 
-  QtProperty[QVariant] editCategoryChannelsModel:
+  QtProperty[QAbstractListModel] editCategoryChannelsModel:
     read = getEditCategoryChannels
 
   proc contactRequestsModel*(self: View): user_model.Model =
     return self.contactRequestsModel
 
-  proc getContactRequestsModel(self: View): QVariant {.slot.} =
-    return self.contactRequestsModelVariant
-  QtProperty[QVariant] contactRequestsModel:
+  proc getContactRequestsModel(self: View): QAbstractListModel {.slot.} =
+    return self.contactRequestsModel
+  QtProperty[QAbstractListModel] contactRequestsModel:
     read = getContactRequestsModel
 
   proc activeItemChanged*(self:View) {.signal.}
@@ -337,10 +327,10 @@ QtObject:
   proc tokenPermissionsModel*(self: View): TokenPermissionsModel =
     result = self.tokenPermissionsModel
 
-  proc getTokenPermissionsModel(self: View): QVariant{.slot.} =
-    return self.tokenPermissionsVariant
+  proc getTokenPermissionsModel(self: View): QAbstractListModel{.slot.} =
+    return self.tokenPermissionsModel
 
-  QtProperty[QVariant] permissionsModel:
+  QtProperty[QAbstractListModel] permissionsModel:
     read = getTokenPermissionsModel
 
   proc createOrEditCommunityTokenPermission*(self: View, permissionId: string, permissionType: int, tokenCriteriaJson: string, channelIDs: string, isPrivate: bool) {.slot.} =
@@ -464,10 +454,10 @@ QtObject:
   proc getMemberMessagesModel*(self: View): member_msg_model.Model =
     return self.memberMessagesModel
 
-  proc getMemberMessagesModelVariant(self: View): QVariant {.slot.} =
-    return self.memberMessagesModelVariant
+  proc getMemberMessagesModelVariant(self: View): QAbstractListModel {.slot.} =
+    return self.memberMessagesModel
 
-  QtProperty[QVariant] memberMessagesModel:
+  QtProperty[QAbstractListModel] memberMessagesModel:
     read = getMemberMessagesModelVariant
 
   proc loadCommunityMemberMessages*(self: View, communityId: string, memberPubKey: string) {.slot.} =

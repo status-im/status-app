@@ -7,7 +7,6 @@ QtObject:
       delegate: io_interface.AccessInterface
       exemptionsLoaded: bool
       exemptionsModel: Model
-      exemptionsModelVariant: QVariant
       
   proc delete*(self: View)
   proc newView*(delegate: io_interface.AccessInterface): View =
@@ -16,7 +15,6 @@ QtObject:
     result.delegate = delegate
     result.exemptionsLoaded = false
     result.exemptionsModel = newModel()
-    result.exemptionsModelVariant = newQVariant(result.exemptionsModel)
     
   proc load*(self: View) =
     self.delegate.viewDidLoad()
@@ -33,9 +31,9 @@ QtObject:
   proc exemptionsModel*(self: View): Model =
     return self.exemptionsModel
 
-  proc getExemptionsModel(self: View): QVariant {.slot.} =
-    return self.exemptionsModelVariant
-  QtProperty[QVariant] exemptionsModel:
+  proc getExemptionsModel(self: View): QAbstractListModel {.slot.} =
+    return self.exemptionsModel
+  QtProperty[QAbstractListModel] exemptionsModel:
     read = getExemptionsModel
 
   proc saveExemptions*(self: View, itemId: string, muteAllMessages: bool, personalMentions: string, 

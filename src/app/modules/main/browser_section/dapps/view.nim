@@ -8,7 +8,6 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       dappsModel: DappsModel
-      dappsModelVariant: QVariant
 
   proc setup(self: View)
   proc delete*(self: View)
@@ -17,7 +16,6 @@ QtObject:
     new(result, delete)
     result.delegate = delegate
     result.dappsModel = newDappsModel()
-    result.dappsModelVariant = newQVariant(result.dappsModel)
     result.setup()
 
   proc setup(self: View) =
@@ -25,7 +23,6 @@ QtObject:
 
   proc delete*(self: View) =
     self.dappsModel.delete
-    self.dappsModelVariant.delete
     self.QObject.delete
 
   proc load*(self: View) =
@@ -36,10 +33,10 @@ QtObject:
 
   proc modelChanged*(self: View) {.signal.}
 
-  proc getDappsModel(self: View): QVariant {.slot.} =
-    return self.dappsModelVariant
+  proc getDappsModel(self: View): QAbstractListModel {.slot.} =
+    return self.dappsModel
 
-  QtProperty[QVariant] dapps:
+  QtProperty[QAbstractListModel] dapps:
     read = getDappsModel
     notify = modelChanged
 

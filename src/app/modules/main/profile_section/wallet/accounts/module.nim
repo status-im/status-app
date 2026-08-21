@@ -62,7 +62,7 @@ method delete*(self: Module) =
 method getModuleAsVariant*(self: Module): QVariant =
   return self.viewVariant
 
-method getCollectiblesModel*(self: Module): QVariant =
+method getCollectiblesModel*(self: Module): QAbstractListModel =
   return self.collectiblesController.getModelAsVariant()
 
 proc convertWalletAccountDtoToKeyPairAccountItem(self: Module, account: WalletAccountDto): KeyPairAccountItem =

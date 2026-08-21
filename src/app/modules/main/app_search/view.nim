@@ -9,7 +9,6 @@ QtObject:
       searchResultModel: result_model.Model
       locationMenuModel: location_menu_model.Model
       chatSearchModel: chat_search_model.Model
-      chatSearchModelVariant: QVariant
 
   proc delete*(self: View)
   proc newView*(delegate: io_interface.AccessInterface): View =
@@ -19,7 +18,6 @@ QtObject:
     result.searchResultModel = result_model.newModel()
     result.locationMenuModel = location_menu_model.newModel()
     result.chatSearchModel = chat_search_model.newModel(delegate)
-    result.chatSearchModelVariant = newQVariant(result.chatSearchModel)
 
   proc load*(self: View) =
     self.delegate.viewDidLoad()
@@ -30,16 +28,16 @@ QtObject:
   proc locationMenuModel*(self: View): location_menu_model.Model =
     return self.locationMenuModel
 
-  proc getSearchResultModel*(self: View): QVariant {.slot.} =
-    return newQVariant(self.searchResultModel)
+  proc getSearchResultModel*(self: View): QAbstractListModel {.slot.} =
+    return self.searchResultModel
 
-  QtProperty[QVariant] resultModel:
+  QtProperty[QAbstractListModel] resultModel:
     read = getSearchResultModel
 
-  proc getLocationMenuModel*(self: View): QVariant {.slot.} =
-    newQVariant(self.locationMenuModel)
+  proc getLocationMenuModel*(self: View): QAbstractListModel {.slot.} =
+    return self.locationMenuModel
 
-  QtProperty[QVariant] locationMenuModel:
+  QtProperty[QAbstractListModel] locationMenuModel:
     read = getLocationMenuModel
 
   proc prepareLocationMenuModel*(self: View) {.slot.} =
@@ -64,9 +62,9 @@ QtObject:
   proc chatSearchModel*(self: View): chat_search_model.Model =
     return self.chatSearchModel
 
-  proc getChatSearchModel(self: View): QVariant {.slot.} =
-    return self.chatSearchModelVariant
-  QtProperty[QVariant] chatSearchModel:
+  proc getChatSearchModel(self: View): QAbstractListModel {.slot.} =
+    return self.chatSearchModel
+  QtProperty[QAbstractListModel] chatSearchModel:
     read = getChatSearchModel
 
   proc delete*(self: View) =

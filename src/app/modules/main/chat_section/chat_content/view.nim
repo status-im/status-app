@@ -11,7 +11,6 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       pinnedMessagesModel: pinned_msg_model.Model
-      pinnedMessagesModelVariant: QVariant
       chatDetails: ChatDetails
       chatDetailsVariant: QVariant
 
@@ -22,7 +21,6 @@ QtObject:
     result.QObject.setup
     result.delegate = delegate
     result.pinnedMessagesModel = pinned_msg_model.newModel()
-    result.pinnedMessagesModelVariant = newQVariant(result.pinnedMessagesModel)
     result.chatDetails = newChatDetails()
     result.chatDetailsVariant = newQVariant(result.chatDetails)
 
@@ -49,9 +47,9 @@ QtObject:
   QtProperty[QVariant] usersModule:
     read = getUsersModule
 
-  proc getPinnedMessagesModel(self: View): QVariant {.slot.} =
-    return self.pinnedMessagesModelVariant
-  QtProperty[QVariant] pinnedMessagesModel:
+  proc getPinnedMessagesModel(self: View): QAbstractListModel {.slot.} =
+    return self.pinnedMessagesModel
+  QtProperty[QAbstractListModel] pinnedMessagesModel:
     read = getPinnedMessagesModel
 
   proc unpinMessage*(self: View, messageId: string) {.slot.} =

@@ -9,7 +9,6 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       model: Model
-      modelVariant: QVariant
       groupCounters: Table[ActivityCenterGroup, int]
       unreadCount: int
       hasUnseen: bool
@@ -20,7 +19,6 @@ QtObject:
     result.QObject.setup
     result.delegate = delegate
     result.model = newModel()
-    result.modelVariant = newQVariant(result.model)
     result.groupCounters = initTable[ActivityCenterGroup, int]()
     result.unreadCount = 0
     result.hasUnseen = false
@@ -30,10 +28,10 @@ QtObject:
 
   proc activityNotificationsChanged*(self: View) {.signal.}
 
-  proc getActivityNotificationModel(self: View): QVariant {.slot.} =
-    return newQVariant(self.modelVariant)
+  proc getActivityNotificationModel(self: View): QAbstractListModel {.slot.} =
+    return self.model
 
-  QtProperty[QVariant] activityNotificationsModel:
+  QtProperty[QAbstractListModel] activityNotificationsModel:
     read = getActivityNotificationModel
     notify = activityNotificationsChanged
 

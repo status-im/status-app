@@ -8,7 +8,6 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       model: Model
-      modelVariant: QVariant
       devicesLoading: bool
       devicesLoadingError: bool
       localPairingStatus: LocalPairingStatus
@@ -21,7 +20,6 @@ QtObject:
     result.devicesLoading = false
     result.devicesLoadingError = false
     result.model = newModel()
-    result.modelVariant = newQVariant(result.model)
     result.localPairingStatus = newLocalPairingStatus(PairingType.AppSync, LocalPairingMode.Receiver)
 
   proc load*(self: View) =
@@ -31,9 +29,9 @@ QtObject:
     return self.model
 
   proc modelChanged*(self: View) {.signal.}
-  proc getModel(self: View): QVariant {.slot.} =
-    return self.modelVariant
-  QtProperty[QVariant] model:
+  proc getModel(self: View): QAbstractListModel {.slot.} =
+    return self.model
+  QtProperty[QAbstractListModel] model:
     read = getModel
     notify = modelChanged
 

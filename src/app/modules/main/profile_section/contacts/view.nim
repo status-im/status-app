@@ -12,17 +12,11 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       contactsModel: Model
-      contactsModelVariant: QVariant
       showcaseContactCommunitiesModel: ShowcaseContactGenericModel
-      showcaseContactCommunitiesModelVariant: QVariant
       showcaseContactAccountsModel: ShowcaseContactAccountModel
-      showcaseContactAccountsModelVariant: QVariant
       showcaseContactCollectiblesModel: ShowcaseContactGenericModel
-      showcaseContactCollectiblesModelVariant: QVariant
       showcaseContactAssetsModel: ShowcaseContactGenericModel
-      showcaseContactAssetsModelVariant: QVariant
       showcaseContactSocialLinksModel: ShowcaseContactSocialLinkModel
-      showcaseContactSocialLinksModelVariant: QVariant
 
 
   proc delete*(self: View)
@@ -31,17 +25,11 @@ QtObject:
     result.QObject.setup
     result.delegate = delegate
     result.contactsModel = newModel()
-    result.contactsModelVariant = newQVariant(result.contactsModel)
     result.showcaseContactCommunitiesModel = newShowcaseContactGenericModel()
-    result.showcaseContactCommunitiesModelVariant = newQVariant(result.showcaseContactCommunitiesModel)
     result.showcaseContactAccountsModel = newShowcaseContactAccountModel()
-    result.showcaseContactAccountsModelVariant = newQVariant(result.showcaseContactAccountsModel)
     result.showcaseContactCollectiblesModel = newShowcaseContactGenericModel()
-    result.showcaseContactCollectiblesModelVariant = newQVariant(result.showcaseContactCollectiblesModel)
     result.showcaseContactAssetsModel = newShowcaseContactGenericModel()
-    result.showcaseContactAssetsModelVariant = newQVariant(result.showcaseContactAssetsModel)
     result.showcaseContactSocialLinksModel = newShowcaseContactSocialLinkModel()
-    result.showcaseContactSocialLinksModelVariant = newQVariant(result.showcaseContactSocialLinksModel)
 
   proc load*(self: View) =
     self.delegate.viewDidLoad()
@@ -50,9 +38,9 @@ QtObject:
     return self.contactsModel
 
   proc contactsModelChanged(self: View) {.signal.}
-  proc getContactsModel(self: View): QVariant {.slot.} =
-    return self.contactsModelVariant
-  QtProperty[QVariant] contactsModel:
+  proc getContactsModel(self: View): QAbstractListModel {.slot.} =
+    return self.contactsModel
+  QtProperty[QAbstractListModel] contactsModel:
     read = getContactsModel
     notify = contactsModelChanged
 
@@ -117,36 +105,36 @@ QtObject:
     self.contactInfoRequestFinished(publicKey, ok)
 
   # Showcase models for a contact
-  proc getShowcaseContactCommunitiesModel(self: View): QVariant {.slot.} =
-    return self.showcaseContactCommunitiesModelVariant
-  QtProperty[QVariant] showcaseContactCommunitiesModel:
+  proc getShowcaseContactCommunitiesModel(self: View): QAbstractListModel {.slot.} =
+    return self.showcaseContactCommunitiesModel
+  QtProperty[QAbstractListModel] showcaseContactCommunitiesModel:
     read = getShowcaseContactCommunitiesModel
 
-  proc getShowcaseContactAccountsModel(self: View): QVariant {.slot.} =
-    return self.showcaseContactAccountsModelVariant
-  QtProperty[QVariant] showcaseContactAccountsModel:
+  proc getShowcaseContactAccountsModel(self: View): QAbstractListModel {.slot.} =
+    return self.showcaseContactAccountsModel
+  QtProperty[QAbstractListModel] showcaseContactAccountsModel:
     read = getShowcaseContactAccountsModel
 
-  proc getShowcaseContactCollectiblesModel(self: View): QVariant {.slot.} =
-    return self.showcaseContactCollectiblesModelVariant
-  QtProperty[QVariant] showcaseContactCollectiblesModel:
+  proc getShowcaseContactCollectiblesModel(self: View): QAbstractListModel {.slot.} =
+    return self.showcaseContactCollectiblesModel
+  QtProperty[QAbstractListModel] showcaseContactCollectiblesModel:
     read = getShowcaseContactCollectiblesModel
 
-  proc getShowcaseContactAssetsModel(self: View): QVariant {.slot.} =
-    return self.showcaseContactAssetsModelVariant
-  QtProperty[QVariant] showcaseContactAssetsModel:
+  proc getShowcaseContactAssetsModel(self: View): QAbstractListModel {.slot.} =
+    return self.showcaseContactAssetsModel
+  QtProperty[QAbstractListModel] showcaseContactAssetsModel:
     read = getShowcaseContactAssetsModel
 
-  proc getShowcaseContactSocialLinksModel(self: View): QVariant {.slot.} =
-    return self.showcaseContactSocialLinksModelVariant
-  QtProperty[QVariant] showcaseContactSocialLinksModel:
+  proc getShowcaseContactSocialLinksModel(self: View): QAbstractListModel {.slot.} =
+    return self.showcaseContactSocialLinksModel
+  QtProperty[QAbstractListModel] showcaseContactSocialLinksModel:
     read = getShowcaseContactSocialLinksModel
 
   # Support models for showcase for a contact
   proc showcaseCollectiblesModelChanged*(self: View) {.signal.}
-  proc getShowcaseCollectiblesModel(self: View): QVariant {.slot.} =
+  proc getShowcaseCollectiblesModel(self: View): QAbstractListModel {.slot.} =
     return self.delegate.getShowcaseCollectiblesModel()
-  QtProperty[QVariant] showcaseCollectiblesModel:
+  QtProperty[QAbstractListModel] showcaseCollectiblesModel:
     read = getShowcaseCollectiblesModel
     notify = showcaseCollectiblesModelChanged
 

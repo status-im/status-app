@@ -13,7 +13,6 @@ QtObject:
       keycardEvent: KeycardEventDto
       syncState: LocalPairingState
       loginAccountsModel: login_acc_model.Model
-      loginAccountsModelVariant: QVariant
       convertKeycardAccountState: ProgressState
       keycardModule: QVariant
 
@@ -23,7 +22,6 @@ QtObject:
     result.QObject.setup
     result.delegate = delegate
     result.loginAccountsModel = login_acc_model.newModel()
-    result.loginAccountsModelVariant = newQVariant(result.loginAccountsModel)
     result.keycardModule = newQVariant()
 
   ### QtSignals ###
@@ -114,11 +112,11 @@ QtObject:
     read = getKeycardCardMetadataWalletAccountsJson
     notify = keycardEventChanged
 
-  proc getLoginAccountsModel(self: View): QVariant {.slot.} =
-    return self.loginAccountsModelVariant
+  proc getLoginAccountsModel(self: View): QAbstractListModel {.slot.} =
+    return self.loginAccountsModel
   proc setLoginAccountsModelItems*(self: View, accounts: seq[login_acc_item.Item]) =
     self.loginAccountsModel.setItems(accounts)
-  QtProperty[QVariant] loginAccountsModel:
+  QtProperty[QAbstractListModel] loginAccountsModel:
     read = getLoginAccountsModel
 
   proc removeLoginAccountItem*(self: View, keyUid: string) =

@@ -151,10 +151,10 @@ QtObject:
   proc getModel*(self: Controller): Model =
     return self.model
 
-  proc getModelAsVariant*(self: Controller): QVariant {.slot.} =
-    return newQVariant(self.model)
+  proc getModelAsVariant*(self: Controller): QAbstractListModel {.slot.} =
+    return self.model
 
-  QtProperty[QVariant] model:
+  QtProperty[QAbstractListModel] model:
     read = getModelAsVariant
 
   proc checkModelState(self: Controller) =

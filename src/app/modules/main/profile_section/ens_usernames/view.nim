@@ -10,7 +10,6 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       model: Model
-      modelVariant: QVariant
       etherscanTxLink: string
       etherscanAddressLink: string
       ensRegisteredAddress: string
@@ -20,7 +19,6 @@ QtObject:
     new(result, delete)
     result.QObject.setup
     result.model = newModel()
-    result.modelVariant = newQVariant(result.model)
     result.delegate = delegate
 
   proc load*(self: View, txLink, addressLink: string) =
@@ -32,9 +30,9 @@ QtObject:
     return self.model
 
   proc modelChanged*(self: View) {.signal.}
-  proc getModel(self: View): QVariant {.slot.} =
-    return self.modelVariant
-  QtProperty[QVariant] model:
+  proc getModel(self: View): QAbstractListModel {.slot.} =
+    return self.model
+  QtProperty[QAbstractListModel] model:
     read = getModel
     notify = modelChanged
 

@@ -96,37 +96,37 @@ QtObject:
     self.tokenHistoricalDataReady(tokenDetails)
 
   proc tokenListsModelChanged*(self: View) {.signal.}
-  proc getTokenListsModel(self: View): QVariant {.slot.} =
-    return newQVariant(self.tokenListsModel)
-  QtProperty[QVariant] tokenListsModel:
+  proc getTokenListsModel(self: View): QAbstractListModel {.slot.} =
+    return self.tokenListsModel
+  QtProperty[QAbstractListModel] tokenListsModel:
     read = getTokenListsModel
     notify = tokenListsModelChanged
 
   proc tokenGroupsForChainModelChanged*(self: View) {.signal.}
-  proc getTokenGroupsForChainModel(self: View): QVariant {.slot.} =
-    return newQVariant(self.tokenGroupsForChainModel)
-  QtProperty[QVariant] tokenGroupsForChainModel:
+  proc getTokenGroupsForChainModel(self: View): QAbstractListModel {.slot.} =
+    return self.tokenGroupsForChainModel
+  QtProperty[QAbstractListModel] tokenGroupsForChainModel:
     read = getTokenGroupsForChainModel
     notify = tokenGroupsForChainModelChanged
 
   proc tokenGroupsForChainToModelChanged*(self: View) {.signal.}
-  proc getTokenGroupsForChainToModel(self: View): QVariant {.slot.} =
-    return newQVariant(self.tokenGroupsForChainToModel)
-  QtProperty[QVariant] tokenGroupsForChainToModel:
+  proc getTokenGroupsForChainToModel(self: View): QAbstractListModel {.slot.} =
+    return self.tokenGroupsForChainToModel
+  QtProperty[QAbstractListModel] tokenGroupsForChainToModel:
     read = getTokenGroupsForChainToModel
     notify = tokenGroupsForChainToModelChanged
 
   proc searchResultModelChanged*(self: View) {.signal.}
-  proc getSearchResultModel(self: View): QVariant {.slot.} =
-    return newQVariant(self.searchResultModel)
-  QtProperty[QVariant] searchResultModel:
+  proc getSearchResultModel(self: View): QAbstractListModel {.slot.} =
+    return self.searchResultModel
+  QtProperty[QAbstractListModel] searchResultModel:
     read = getSearchResultModel
     notify = searchResultModelChanged
 
   proc tokenGroupsModelChanged*(self: View) {.signal.}
-  proc getTokenGroupsModel(self: View): QVariant {.slot.} =
-    return newQVariant(self.tokenGroupsModel)
-  QtProperty[QVariant] tokenGroupsModel:
+  proc getTokenGroupsModel(self: View): QAbstractListModel {.slot.} =
+    return self.tokenGroupsModel
+  QtProperty[QAbstractListModel] tokenGroupsModel:
     read = getTokenGroupsModel
     notify = tokenGroupsModelChanged
 

@@ -19,9 +19,9 @@ QtObject:
   QtProperty[QVariant] accountsModule:
     read = getAccountsModule
 
-  proc getCollectiblesModel(self: View): QVariant {.slot.} =
+  proc getCollectiblesModel(self: View): QAbstractListModel {.slot.} =
     return self.delegate.getCollectiblesModel()
-  QtProperty[QVariant] collectiblesModel:
+  QtProperty[QAbstractListModel] collectiblesModel:
     read = getCollectiblesModel
 
   proc runKeypairImportPopup*(self: View, keyUid: string, mode: int) {.slot.} =

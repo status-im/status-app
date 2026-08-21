@@ -24,9 +24,9 @@ QtObject:
     self.delegate.viewDidLoad()
 
   proc groupedAccountAssetsModelChanged(self: View) {.signal.}
-  proc getGroupedAccountAssetsModel*(self: View): QVariant {.slot.} =
-    return newQVariant(self.groupedAccountAssetsModel)
-  QtProperty[QVariant] groupedAccountAssetsModel:
+  proc getGroupedAccountAssetsModel*(self: View): QAbstractListModel {.slot.} =
+    return self.groupedAccountAssetsModel
+  QtProperty[QAbstractListModel] groupedAccountAssetsModel:
     read = getGroupedAccountAssetsModel
     notify = groupedAccountAssetsModelChanged
 

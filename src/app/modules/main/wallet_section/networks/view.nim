@@ -38,16 +38,16 @@ QtObject:
     self.delegate.toggleTestNetworksEnabled()
 
   proc flatNetworksChanged*(self: View) {.signal.}
-  proc getFlatNetworks(self: View): QVariant {.slot.} =
-    return newQVariant(self.flatNetworks)
-  QtProperty[QVariant] flatNetworks:
+  proc getFlatNetworks(self: View): QAbstractListModel {.slot.} =
+    return self.flatNetworks
+  QtProperty[QAbstractListModel] flatNetworks:
     read = getFlatNetworks
     notify = flatNetworksChanged
 
   proc rpcProvidersChanged*(self: View) {.signal.}
-  proc getRpcProviders(self: View): QVariant {.slot.} =
-    return newQVariant(self.rpcProvidersModel)
-  QtProperty[QVariant] rpcProviders:
+  proc getRpcProviders(self: View): QAbstractListModel {.slot.} =
+    return self.rpcProvidersModel
+  QtProperty[QAbstractListModel] rpcProviders:
     read = getRpcProviders
     notify = rpcProvidersChanged
 

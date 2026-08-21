@@ -49,9 +49,9 @@ QtObject:
     notify = currentPageChanged
 
   proc marketLeaderboardModelChanged*(self: View) {.signal.}
-  proc getMarketLeaderboardModel(self: View): QVariant {.slot.} =
-    return newQVariant(self.marketLeaderboardModel)
-  QtProperty[QVariant] marketLeaderboardModel:
+  proc getMarketLeaderboardModel(self: View): QAbstractListModel {.slot.} =
+    return self.marketLeaderboardModel
+  QtProperty[QAbstractListModel] marketLeaderboardModel:
     read = getMarketLeaderboardModel
     notify = marketLeaderboardModelChanged
 

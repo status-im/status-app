@@ -31,7 +31,7 @@ method accountsModuleDidLoad*(self: AccessInterface) {.base.} =
 method getAccountsModule*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method getCollectiblesModel*(self: AccessInterface): QVariant {.base.} =
+method getCollectiblesModel*(self: AccessInterface): QAbstractListModel {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getKeypairImportModule*(self: AccessInterface): QVariant {.base.} =

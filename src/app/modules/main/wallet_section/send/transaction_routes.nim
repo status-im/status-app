@@ -49,9 +49,9 @@ QtObject:
     notify = uuidChanged
 
   proc suggestedRoutesChanged*(self: TransactionRoutes) {.signal.}
-  proc getSuggestedRoutes*(self: TransactionRoutes): QVariant {.slot.} =
-    return newQVariant(self.suggestedRoutes)
-  QtProperty[QVariant] suggestedRoutes:
+  proc getSuggestedRoutes*(self: TransactionRoutes): QAbstractListModel {.slot.} =
+    return self.suggestedRoutes
+  QtProperty[QAbstractListModel] suggestedRoutes:
     read = getSuggestedRoutes
     notify = suggestedRoutesChanged
 
@@ -70,9 +70,9 @@ QtObject:
     notify = amountToReceiveChanged
 
   proc toNetworksChanged*(self: TransactionRoutes) {.signal.}
-  proc getToNetworks*(self: TransactionRoutes): QVariant {.slot.} =
-    return newQVariant(self.toNetworksRouteModel)
-  QtProperty[QVariant] toNetworksRouteModel:
+  proc getToNetworks*(self: TransactionRoutes): QAbstractListModel {.slot.} =
+    return self.toNetworksRouteModel
+  QtProperty[QAbstractListModel] toNetworksRouteModel:
     read = getToNetworks
     notify = toNetworksChanged
 

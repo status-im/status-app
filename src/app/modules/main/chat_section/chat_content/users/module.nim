@@ -64,7 +64,7 @@ method getModuleAsVariant*(self: Module): QVariant =
   return self.viewVariant
 
 method getUsersListVariant*(self: Module): QVariant =
-  self.view.getModel()
+  return newQVariant(self.view.getModel())
 
 method contactNicknameChanged*(self: Module, publicKey: string) =
   if self.isPublicCommunityChannel:

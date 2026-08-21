@@ -102,9 +102,9 @@ QtObject:
     return self.keyPairModel
 
   proc keyPairModelChanged*(self: View) {.signal.}
-  proc getKeyPairModel(self: View): QVariant {.slot.} =
-    return newQVariant(self.keyPairModel)
-  QtProperty[QVariant] keyPairModel:
+  proc getKeyPairModel(self: View): QAbstractListModel {.slot.} =
+    return self.keyPairModel
+  QtProperty[QAbstractListModel] keyPairModel:
     read = getKeyPairModel
     notify = keyPairModelChanged
 

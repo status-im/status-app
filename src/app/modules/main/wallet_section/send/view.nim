@@ -67,16 +67,16 @@ QtObject:
     notify = selectedReceiveAccountAddressChanged
 
   proc fromNetworksRouteModelChanged*(self: View) {.signal.}
-  proc getfromNetworksRouteModel(self: View): QVariant {.slot.} =
-    return newQVariant(self.fromNetworksRouteModel)
-  QtProperty[QVariant] fromNetworksRouteModel:
+  proc getfromNetworksRouteModel(self: View): QAbstractListModel {.slot.} =
+    return self.fromNetworksRouteModel
+  QtProperty[QAbstractListModel] fromNetworksRouteModel:
     read = getfromNetworksRouteModel
     notify = fromNetworksRouteModelChanged
 
   proc toNetworksRouteModelChanged*(self: View) {.signal.}
-  proc gettoNetworksRouteModel(self: View): QVariant {.slot.} =
-    return newQVariant(self.toNetworksRouteModel)
-  QtProperty[QVariant] toNetworksRouteModel:
+  proc gettoNetworksRouteModel(self: View): QAbstractListModel {.slot.} =
+    return self.toNetworksRouteModel
+  QtProperty[QAbstractListModel] toNetworksRouteModel:
     read = gettoNetworksRouteModel
     notify = toNetworksRouteModelChanged
 

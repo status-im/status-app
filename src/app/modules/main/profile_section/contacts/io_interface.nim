@@ -119,7 +119,7 @@ method fetchProfileShowcaseAccountsByAddress*(self: AccessInterface, address: st
 method onProfileShowcaseAccountsByAddressFetched*(self: AccessInterface, accounts: seq[ProfileShowcaseAccount]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method getShowcaseCollectiblesModel*(self: AccessInterface): QVariant {.base.} =
+method getShowcaseCollectiblesModel*(self: AccessInterface): QAbstractListModel {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method isShowcaseForAContactLoading*(self: AccessInterface): bool {.base.} =

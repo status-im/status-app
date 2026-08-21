@@ -43,7 +43,7 @@ method viewDidLoad*(self: AccessInterface) {.base.} =
 method getModuleAsVariant*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method getCollectiblesModel*(self: AccessInterface): QVariant {.base.} =
+method getCollectiblesModel*(self: AccessInterface): QAbstractListModel {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method updateWatchAccountHiddenFromTotalBalance*(self: AccessInterface, address: string, hideFromTotalBalance: bool) {.base.} =

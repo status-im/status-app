@@ -27,24 +27,24 @@ QtObject:
 
   proc gifLoaded*(self: View) {.signal.}
 
-  proc getGifColumnA*(self: View): QVariant {.slot.} =
-    result = newQVariant(self.gifColumnAModel)
+  proc getGifColumnA*(self: View): QAbstractListModel {.slot.} =
+    result = self.gifColumnAModel
 
-  QtProperty[QVariant] gifColumnA:
+  QtProperty[QAbstractListModel] gifColumnA:
     read = getGifColumnA
     notify = gifLoaded
 
-  proc getGifColumnB*(self: View): QVariant {.slot.} =
-    result = newQVariant(self.gifColumnBModel)
+  proc getGifColumnB*(self: View): QAbstractListModel {.slot.} =
+    result = self.gifColumnBModel
 
-  QtProperty[QVariant] gifColumnB:
+  QtProperty[QAbstractListModel] gifColumnB:
     read = getGifColumnB
     notify = gifLoaded
 
-  proc getGifColumnC*(self: View): QVariant {.slot.} =
-    result = newQVariant(self.gifColumnCModel)
+  proc getGifColumnC*(self: View): QAbstractListModel {.slot.} =
+    result = self.gifColumnCModel
 
-  QtProperty[QVariant] gifColumnC:
+  QtProperty[QAbstractListModel] gifColumnC:
     read = getGifColumnC
     notify = gifLoaded
 
