@@ -80,17 +80,22 @@ Item {
                 controlUnderTest.destroy()
         }
 
+        // Asserts both halves of the deferral: nothing is built before the
+        // first press, and the ripple that press builds reacts to that same
+        // press - the press signal must reach it after it exists.
         function verifyRippleFeedback(item, rippleObjectName, followsPointer, expectClick) {
-            const ripple = findChild(item, rippleObjectName)
-            verify(!!ripple)
-            verify(ripple.enabled)
-            verify(!ripple.visible)
+            verify(!findChild(item, rippleObjectName),
+                   "the ripple must not be built before the first press")
 
             const pressX = item.width / 4
             const pressY = item.height / 2
             const clickCount = expectClick ? item.clickCount : 0
 
             mousePress(item, pressX, pressY)
+
+            const ripple = findChild(item, rippleObjectName)
+            verify(!!ripple, "the press must build the ripple")
+            verify(ripple.enabled)
             tryVerify(() => ripple.visible)
             verify(ripple.pressed)
             compare(ripple.pressX, followsPointer ? pressX : item.width / 2)
@@ -101,6 +106,14 @@ Item {
             verify(!ripple.pressed)
             if (expectClick)
                 compare(item.clickCount, clickCount + 1)
+        }
+
+        // The colour bindings live on the deferred item, so a press is what
+        // makes them observable.
+        function pressedRipple(item, rippleObjectName) {
+            mousePress(item, item.width / 4, item.height / 2)
+            mouseRelease(item, item.width / 4, item.height / 2)
+            return findChild(item, rippleObjectName)
         }
 
         function test_comboBoxRipple() {
@@ -140,7 +153,7 @@ Item {
             verify(!!controlUnderTest)
 
             const textItem = controlUnderTest.contentItem.children[1]
-            const ripple = findChild(controlUnderTest, "statusItemDelegateRipple")
+            const ripple = pressedRipple(controlUnderTest, "statusItemDelegateRipple")
             verify(!!textItem)
             verify(!!ripple)
             compare(textItem.color, Theme.palette.directColor1)
@@ -155,7 +168,7 @@ Item {
             verify(!!controlUnderTest)
 
             const textItem = controlUnderTest.contentItem.children[1]
-            const ripple = findChild(controlUnderTest, "statusItemDelegateRipple")
+            const ripple = pressedRipple(controlUnderTest, "statusItemDelegateRipple")
             verify(!!textItem)
             verify(!!ripple)
             compare(textItem.color, StatusColors.white)
@@ -192,6 +205,43 @@ Item {
             verify(!!controlUnderTest)
 
             verifyRippleFeedback(controlUnderTest, "statusMenuItemRipple", false, true)
+        }
+
+        function test_disabledControlsBuildNoRipple_data() {
+            return [
+                { tag: "comboBox", component: comboBoxComponent,
+                  rippleObjectName: "statusComboBoxRipple" },
+                { tag: "itemDelegate", component: itemDelegateComponent,
+                  rippleObjectName: "statusItemDelegateRipple" },
+                { tag: "listItem", component: listItemComponent,
+                  rippleObjectName: "statusListItemRipple" },
+                { tag: "menuItem", component: menuItemComponent,
+                  rippleObjectName: "statusMenuItemRipple" },
+                { tag: "roundButton", component: roundButtonComponent,
+                  rippleObjectName: "buttonRipple" }
+            ]
+        }
+
+        function test_disabledControlsBuildNoRipple(data) {
+            controlUnderTest = createTemporaryObject(data.component, root, { enabled: false })
+            verify(!!controlUnderTest)
+
+            mousePress(controlUnderTest, controlUnderTest.width / 4, controlUnderTest.height / 2)
+            mouseRelease(controlUnderTest, controlUnderTest.width / 4, controlUnderTest.height / 2)
+
+            verify(!findChild(controlUnderTest, data.rippleObjectName),
+                   "a control that cannot react must not build a ripple")
+        }
+
+        function test_nonInteractiveComboBoxBuildsNoRipple() {
+            controlUnderTest = createTemporaryObject(comboBoxComponent, root, { interactive: false })
+            verify(!!controlUnderTest)
+
+            const comboBox = controlUnderTest.control
+            mousePress(comboBox, comboBox.width / 4, comboBox.height / 2)
+            mouseRelease(comboBox, comboBox.width / 4, comboBox.height / 2)
+
+            verify(!findChild(controlUnderTest, "statusComboBoxRipple"))
         }
 
         function test_roundButtonRipple() {
