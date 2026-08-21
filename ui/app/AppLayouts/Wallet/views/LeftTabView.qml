@@ -331,8 +331,8 @@ Rectangle {
                             color: sensor.containsMouse || highlighted ? Theme.palette.baseColor3 : "transparent"
                             statusListItemSubTitle.loading: !!model.assetsLoading
                             errorMode: viewState.accountBalanceNotAvailable
-                            errorIcon.tooltip.maxWidth: 300
-                            errorIcon.tooltip.text: viewState.accountBalanceNotAvailableText
+                            errorTooltipMaxWidth: 300
+                            errorTooltipText: viewState.accountBalanceNotAvailableText
                             onClicked: function(itemId, mouse) {
                                 if (mouse.button === Qt.RightButton) {
                                     walletAccountContextMenu.active = true
