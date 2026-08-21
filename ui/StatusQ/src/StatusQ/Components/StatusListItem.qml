@@ -51,6 +51,19 @@ Rectangle {
     property bool loading: false
     property bool loadingSubTitle: loading
     property bool errorMode: false
+
+    /*!
+       Text of the tooltip on the error warning icon. Replaces the former
+       \c errorIcon alias: the icon is built on demand, so nothing outside can
+       hold a reference to it. Empty text keeps the icon from being built at
+       all, which is also what the old \c visible guard meant.
+    */
+    property string errorTooltipText: ""
+    /*!
+       Maximum width of that tooltip. Negative keeps StatusToolTip's own default.
+    */
+    property int errorTooltipMaxWidth: -1
+
     property int rippleOrigin: StatusRipple.RippleOrigin.Pointer
 
     property StatusAssetSettings asset: StatusAssetSettings {
@@ -86,7 +99,6 @@ Rectangle {
     }
 
     property alias sensor: sensor
-    property alias badge: statusListItemBadge
     property alias statusListItemIcon: iconOrImage
     property alias statusListItemTitle: statusListItemTitle
     property alias statusListItemTitleAside: statusListItemTitleAsideText
@@ -97,7 +109,12 @@ Rectangle {
     property alias statusListItemComponentsSlot: statusListItemComponentsSlot
     property alias statusListItemLabel: statusListItemLabel
     property alias subTitleBadgeComponent: subTitleBadgeLoader.sourceComponent
-    property alias errorIcon: errorIcon
+    /*!
+       Badge shown beneath the tertiary title, typically a StatusListItemBadge.
+       Replaces the former \c badge alias to a live item, so that a row which
+       needs no badge builds none.
+    */
+    property alias badgeComponent: badgeLoader.sourceComponent
     property alias statusListItemTagsRowLayout: statusListItemSubtitleTagsRow
 
     property bool showLoadingIndicator: false
@@ -359,16 +376,25 @@ Rectangle {
                 anchors.leftMargin: 4
             }
 
-            StatusFlatRoundButton {
-                id: errorIcon
+            // A whole StatusFlatRoundButton per row for a warning that only
+            // shows in errorMode. The guard used to read the button's own
+            // tooltip text, so the button had to exist to decide whether it
+            // should exist; it reads root.errorTooltipText now.
+            Loader {
+                id: errorIconLoader
                 anchors.top: statusListItemTitle.bottom
                 width: 14
-                height: visible ? 14 : 0
-                icon.width: 14
-                icon.height: 14
-                icon.name: "tiny/warning"
-                icon.color: Theme.palette.dangerColor1
-                visible: root.errorMode && !!errorIcon.tooltip.text
+                height: active ? 14 : 0
+                active: root.errorMode && !!root.errorTooltipText
+
+                sourceComponent: StatusFlatRoundButton {
+                    icon.width: 14
+                    icon.height: 14
+                    icon.name: "tiny/warning"
+                    icon.color: Theme.palette.dangerColor1
+                    tooltip.text: root.errorTooltipText
+                    tooltip.maxWidth: root.errorTooltipMaxWidth
+                }
             }
 
             RowLayout {
@@ -455,11 +481,14 @@ Rectangle {
                 loading: root.loading
             }
 
-            StatusListItemBadge {
-                id: statusListItemBadge
+            // A StatusListItemBadge is a Control with a background, a rounded
+            // image, a letter identicon, two texts and an icon. Only the search
+            // results carry one, so it is supplied as a Component now and every
+            // other row builds nothing. The loader takes its size from the item,
+            // which is what the badge's own implicit size already gave.
+            Loader {
+                id: badgeLoader
                 anchors.top: statusListItemTertiaryTitle.bottom
-                width: contentItem.width
-                implicitHeight: visible ? 22 : 0
             }
 
             // Same story as the inline tags: the scroll view only exists to let
@@ -533,8 +562,8 @@ Rectangle {
         // The bottom slot only ever holds bottomDelegate instances, so a row
         // with an empty bottomModel builds neither the Row nor its Repeater.
         // The former `width: statusListItemBadge.width` is gone with it: it tied
-        // this slot's width to an unrelated subtree, and a Row sizes itself from
-        // its children.
+        // this slot's width to an unrelated subtree that is itself deferred now,
+        // and a Row sizes itself from its children.
         Loader {
             id: bottomSlotLoader
             anchors.topMargin: 16
