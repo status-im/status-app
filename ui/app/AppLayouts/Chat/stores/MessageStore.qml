@@ -29,6 +29,33 @@ QtObject {
     // fetch delivers; 0 until the module attaches.
     readonly property int messagesPerPage: messageModule ? messageModule.messagesPerPage : 0
 
+    // Dense message model (issues 0020/0021): one row per stored message,
+    // unfetched rows as dummies. Built only under
+    // FLAG_DENSE_MESSAGE_MODEL_ENABLED — null otherwise, which is how the
+    // view knows which model it is talking to.
+    readonly property var denseMessagesModel: messageModule && messageModule.denseModel
+                                              ? messageModule.denseModel : null
+
+    function loadMessagesAroundMessage(messageId) {
+        if (!messageModule)
+            return
+        messageModule.loadMessagesAroundMessage(messageId)
+    }
+
+    function loadMessagesAtRank(rank) {
+        if (!messageModule)
+            return
+        messageModule.loadMessagesAtRank(rank)
+    }
+
+    // The rows the dense model must keep loaded: the window plus a margin on
+    // each side. Everything outside is free to be evicted back to dummies.
+    function setDenseWindow(firstIndex, lastIndex, margin) {
+        if (!messageModule)
+            return
+        messageModule.setDenseWindow(firstIndex, lastIndex, margin)
+    }
+
     onMessageModuleChanged: {
         if(!messageModule)
             return

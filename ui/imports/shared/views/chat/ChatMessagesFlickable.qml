@@ -69,6 +69,19 @@ Flickable {
     property bool moreUpAvailable: false
     property bool moreDownAvailable: false
 
+    /*!
+       Motion the Flickable cannot see. A scrollbar drag writes \c contentY
+       directly and emits no movement signal at all, so the owner declares it
+       here and the freeze covers it like any other move.
+    */
+    property bool externallyMoving: false
+
+    /*!
+       The view is being moved, by the user or by its own physics — the state
+       the scroll freeze gates on.
+    */
+    readonly property bool inMotion: root.moving || root.externallyMoving
+
     readonly property alias count: repeater.count
 
     /*!
@@ -180,6 +193,20 @@ Flickable {
         const bottomEdge = content.y + topPlaceholder.y + topPlaceholder.height
         return Math.max(0, Math.min(topPlaceholder.height,
                                     bottomEdge - root.contentY))
+    }
+
+    /*!
+       How deep the viewport bottom sits inside the bottom placeholder, in px
+       from the placeholder's top edge, clamped to [0, placeholder height]:
+       the counterpart of \c viewportDepthIntoTopPlaceholder for the recent
+       end of the history.
+    */
+    function viewportDepthIntoBottomPlaceholder() {
+        if (!bottomPlaceholder.visible || bottomPlaceholder.height <= 0)
+            return 0
+        const topEdge = content.y + bottomPlaceholder.y
+        return Math.max(0, Math.min(bottomPlaceholder.height,
+                                    root.contentY + root.height - topEdge))
     }
 
     QtObject {
@@ -412,7 +439,7 @@ Flickable {
     Timer {
         interval: 150
         repeat: true
-        running: !root.moving
+        running: !root.inMotion
                  && ((root.moreUpAvailable && d.placeholderUpVisible)
                      || (root.moreDownAvailable && d.placeholderDownVisible))
         triggeredOnStart: true

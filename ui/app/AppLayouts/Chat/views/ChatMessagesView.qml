@@ -130,6 +130,19 @@ Item {
         readonly property var chatDetails: chatContentModule && chatContentModule.chatDetails || null
         readonly property bool keepUnread: messageStore.keepUnread
 
+        // ---- Dense model (issue 0022) ----
+        // The dense model's row count IS the chat's stored-message count, so
+        // an index is an absolute history position and the rows the window
+        // has not fetched yet are dummies. It exists only under
+        // FLAG_DENSE_MESSAGE_MODEL_ENABLED; without it the window runs over
+        // the legacy model, which holds only what was paged in, and every
+        // dense-only path below is skipped.
+        readonly property bool denseMode: !!root.messageStore?.denseMessagesModel
+
+        readonly property var windowSource: d.denseMode
+                                          ? root.messageStore.denseMessagesModel
+                                          : (root.messageStore?.messagesModel ?? null)
+
         // Sliding model window over messageStore.messagesModel (source row 0 =
         // newest); the view only ever holds the window's rows, never the history.
         // The initial size is derived from the viewport (assuming compact rows)
@@ -153,6 +166,35 @@ Item {
 
         property int windowStart: 0
         property int windowEnd: initialWindowSize - 1
+
+        // The index-shift invariant, in one place. Row 0 is the newest
+        // message, so the only changes that move the window's rows are the
+        // ones below it — inserts and removals at lower (newer) indices; a
+        // backfill arriving at the older end never moves it, and neither
+        // does a hole fill, which is dataChanged over a fixed row count.
+        // A window still pinned at the newest end (windowStart 0) is the one
+        // exception: it deliberately follows the newest message rather than
+        // shifting away from it.
+        // Bounds are written narrow-first — the same release-before-acquire
+        // ordering every slide uses, so the transient state can never
+        // over-subscribe the pool.
+        function applyIndexShift(first, last, inserted) {
+            if (d.windowStart <= 0)
+                return
+            if (inserted) {
+                if (first > d.windowStart)
+                    return
+                const delta = last - first + 1
+                d.windowStart += delta
+                d.windowEnd += delta
+                return
+            }
+            if (first >= d.windowStart)
+                return
+            const removed = Math.min(last, d.windowStart - 1) - first + 1
+            d.windowEnd -= removed
+            d.windowStart -= removed
+        }
 
         // The empty window an undressed view holds. NEVER windowEnd = -1:
         // the IndexFilter wraps negative indices from the model's end, so
@@ -196,14 +238,16 @@ Item {
                 // deactivation captures while the whole view is already
                 // effectively invisible, geometry still intact
                 const item = chatLogView.itemAtRow(i)
+                // a dummy's key is positional and rots the moment the
+                // history shifts: only a loaded row can name a position
                 if (!item || !item.revealed || !item.contentReady
-                        || item.height <= 0)
+                        || !item.rowLoaded || item.height <= 0)
                     continue
                 const offset = chatLogView.viewportOffsetToRow(i)
                 if (isNaN(offset))
                     return
                 d.windowRecords[d.recordKey] = ({
-                    oldestRowId: String(item.messageId),
+                    oldestRowId: item.rowKey,
                     span: i + 1,
                     offset: offset
                 })
@@ -220,7 +264,7 @@ Item {
             const record = d.windowRecords[d.recordKey]
             if (d.dressActive && record && !record.atBottom) {
                 const index = SQUtils.ModelUtils.indexOf(
-                            root.messageStore.messagesModel, "id",
+                            d.windowSource, d.denseMode ? "key" : "id",
                             record.oldestRowId)
                 if (index >= 0) {
                     d.restoreWindow(index, record)
@@ -271,7 +315,7 @@ Item {
             })
             for (let i = chatLogView.count - 1; i >= 0; --i) {
                 const item = chatLogView.itemAtRow(i)
-                if (item && String(item.messageId) === restore.messageId) {
+                if (item && item.rowKey === restore.messageId) {
                     chatLogView.positionAtRowOffset(i, restore.offset)
                     return
                 }
@@ -452,7 +496,12 @@ Item {
         // free. Deliberately broader than the velocity gate above: any
         // programmatic contentY correction cancels an active flick, so the
         // geometry underneath the physics must simply not change.
-        readonly property bool viewMoving: chatLogView.moving
+        // Includes the scrollbar drag (issue 0022): dragging the scrollbar
+        // scrubs through placeholder space exactly like a fling does, so the
+        // same freeze must cover it and the release must settle — including
+        // the teleport. The Flickable itself never reports a scrollbar drag
+        // as motion, hence externallyMoving below.
+        readonly property bool viewMoving: chatLogView.inMotion
 
         onViewMovingChanged: {
             if (!d.viewMoving)
@@ -468,14 +517,27 @@ Item {
         // what made the bottom placeholder pop into the viewport mid-fling
         // and ping-pong the window). Floored at a viewport only while that
         // side pages, because the height doubles as the paging trigger depth.
+        // The rows a placeholder stands for. Dense mode knows the real count
+        // — the model holds one row per stored message — so each placeholder
+        // covers exactly the rows on its own side and the scrollbar is
+        // proportionally honest across the whole history. The legacy model
+        // holds only what was paged in, so its span stays capped: an
+        // uncapped estimate over a history it cannot see would be a guess
+        // dressed up as a measurement.
+        readonly property int placeholderSpanCap: d.denseMode ? d.historyCount : 300
+
+        function placeholderRows(remaining) {
+            return Math.min(Math.max(0, remaining), d.placeholderSpanCap)
+        }
+
         readonly property real liveTopPlaceholderHeight: {
-            const remaining = Math.max(0, d.historyCount - 1 - d.windowEnd)
-            const estimate = Math.min(remaining, 300) * (d.avgRowHeight || 48)
+            const rows = d.placeholderRows(d.historyCount - 1 - d.windowEnd)
+            const estimate = rows * (d.avgRowHeight || 48)
             const active = d.olderMessagesAvailable || d.stagedCount > 0
             return Math.max(active ? chatLogView.height : 0, estimate)
         }
         readonly property real liveBottomPlaceholderHeight: {
-            const estimate = Math.min(Math.max(0, d.windowStart), 300)
+            const estimate = d.placeholderRows(d.windowStart)
                              * (d.avgRowHeight || 48)
             return Math.max(d.windowStart > 0 ? chatLogView.height : 0,
                             estimate)
@@ -507,9 +569,36 @@ Item {
                 return -1
             if (depth >= d.topPlaceholderHeight - 1)
                 return d.historyCount - 1
+            if (d.denseMode) {
+                // rank-exact: the placeholder stands for a known number of
+                // rows, so the fraction of it above the viewport IS the
+                // index, whatever the pixel extent turned out to be. Only
+                // the extent is estimated, never which row.
+                const rows = Math.max(0, d.historyCount - 1 - d.windowEnd)
+                const span = Math.max(1, d.topPlaceholderHeight)
+                return Math.min(d.historyCount - 1,
+                                d.windowEnd + Math.round(depth / span * rows))
+            }
             const rowHeight = d.avgRowHeight > 0 ? d.avgRowHeight : 48
             return Math.min(d.historyCount - 1,
                             d.windowEnd + Math.round(depth / rowHeight))
+        }
+
+        // The same mapping for the recent end: the viewport bottom inside the
+        // bottom placeholder names an index below the window. Dense only —
+        // the legacy bottom placeholder is capped and cannot be read this
+        // way. -1 outside the placeholder.
+        function scrollTargetRowBelow() {
+            if (!d.denseMode || d.windowStart <= 0)
+                return -1
+            const depth = chatLogView.viewportDepthIntoBottomPlaceholder()
+            if (depth <= 0)
+                return -1
+            if (depth >= d.bottomPlaceholderHeight - 1)
+                return 0
+            const span = Math.max(1, d.bottomPlaceholderHeight)
+            return Math.max(0, d.windowStart
+                               - Math.round(depth / span * d.windowStart))
         }
 
         // Settle: everything motion deferred happens here. Capture first,
@@ -517,10 +606,20 @@ Item {
         // geometry before the placeholder heights unlatch.
         function settleAfterMotion() {
             const target = d.scrollTargetRow()
+            const targetBelow = d.scrollTargetRowBelow()
             d.updatePlaceholderHeights()
-            if (target > d.windowEnd + d.windowChunkSize
-                    && d.dressActive && !d.initialFillActive
-                    && !d.pendingRestore && d.teleportToRow(target)) {
+            const mayTeleport = d.dressActive && !d.initialFillActive
+                              && !d.pendingRestore
+            if (mayTeleport && target > d.windowEnd + d.windowChunkSize
+                    && d.teleportToRow(target)) {
+                d.revealOnRest = false
+                return
+            }
+            // the recent side: scrubbing back down out-runs the window just
+            // as readily as scrolling up out of it
+            if (mayTeleport && targetBelow >= 0
+                    && targetBelow < d.windowStart - d.windowChunkSize
+                    && d.teleportToRow(targetBelow)) {
                 d.revealOnRest = false
                 return
             }
@@ -536,10 +635,16 @@ Item {
         // record restore path, which pins the viewport to the target row at
         // the atomic reveal — never a raw contentY write.
         function teleportToRow(targetIndex) {
-            const id = SQUtils.ModelUtils.get(root.messageStore.messagesModel,
-                                              targetIndex, "id")
+            // the row is named by its key, which every row has: a dummy's key
+            // is positional, which is exactly what a landing inside a hole
+            // needs to pin on until the fill replaces it
+            const id = SQUtils.ModelUtils.get(d.windowSource, targetIndex,
+                                              d.denseMode ? "key" : "id")
             if (id === undefined || id === null)
                 return false
+            // landing inside a hole: the window admits the dummies (skeleton
+            // until they dress) and the page for that rank is requested
+            d.fetchAtRankIfHole(targetIndex)
             const span = Math.max(1, d.windowEnd - d.windowStart + 1)
             d.windowAtInitial = false
             // same chat, same session: the restore's fetch-guard reset does
@@ -551,6 +656,46 @@ Item {
             d.lastFetchHistoryCount = lastFetch
             return true
         }
+
+        // ---- Holes (issue 0022) ----
+        // The rank whose page is being fetched, -1 when none is. One request
+        // at a time: a scrub through a long hole would otherwise fire one per
+        // settle. Released by messagesWindowLoaded, whatever its outcome.
+        property int pendingRankFetch: -1
+
+        function fetchAtRankIfHole(targetIndex) {
+            if (!d.denseMode || d.pendingRankFetch >= 0)
+                return
+            if (SQUtils.ModelUtils.get(d.windowSource, targetIndex, "loaded"))
+                return
+            const rank = d.historyCount - 1 - targetIndex
+            if (rank < 0)
+                return
+            d.pendingRankFetch = rank
+            root.messageStore.loadMessagesAtRank(rank)
+        }
+
+        // The rows the dense model must keep loaded. Deferred, so a slide
+        // that writes both bounds publishes once.
+        property bool denseWindowPublishScheduled: false
+
+        function scheduleDenseWindowPublish() {
+            if (!d.denseMode || d.denseWindowPublishScheduled)
+                return
+            d.denseWindowPublishScheduled = true
+            Qt.callLater(d.publishDenseWindow)
+        }
+
+        function publishDenseWindow() {
+            d.denseWindowPublishScheduled = false
+            if (!d.denseMode)
+                return
+            root.messageStore.setDenseWindow(d.windowStart, d.windowEnd,
+                                             d.windowChunkSize)
+        }
+
+        onWindowStartChanged: d.scheduleDenseWindowPublish()
+        onWindowEndChanged: d.scheduleDenseWindowPublish()
 
         // Rows a trade may evict: rows fully outside the viewport on the
         // evicted side. The "a viewport's worth survives" size cap assumes
@@ -799,6 +944,11 @@ Item {
         // Running average of revealed row heights, for the placeholder size.
         property real avgRowHeight: 0
 
+        // The space a dummy row holds. Follows the same running average, and
+        // that average only moves at rest (reveals are frozen during motion),
+        // so dummy rows never resize mid-fling.
+        readonly property real dummyRowHeight: d.avgRowHeight > 0 ? d.avgRowHeight : 48
+
         // Scrolling competes with incubation for frame time on low-end
         // devices: hold a gentle hint while the user scrolls so staged rows
         // build in small paced bites and the flick stays smooth.
@@ -826,11 +976,23 @@ Item {
             if (!d.admittingStaged)
                 return
             for (let i = first; i <= last; ++i) {
-                const id = SQUtils.ModelUtils.get(messagesWindow, i, "messageId")
+                const id = d.stagedRowId(i)
                 if (id !== undefined && id !== null)
                     d.stagedIds.add(id)
             }
             d.syncStagedCount()
+        }
+
+        // What a staged row is tracked by. Dense rows are named by their key
+        // (message ids are empty until a hole fills), and a dummy is not
+        // staged at all: it has nothing to build, so it must never hold a
+        // batch open — it shows its skeleton the moment it is admitted.
+        function stagedRowId(row) {
+            if (!d.denseMode)
+                return SQUtils.ModelUtils.get(messagesWindow, row, "messageId")
+            if (!SQUtils.ModelUtils.get(messagesWindow, row, "loaded"))
+                return null
+            return SQUtils.ModelUtils.get(messagesWindow, row, "key")
         }
 
         // A staged row leaving the window before its shell was ever created
@@ -840,7 +1002,7 @@ Item {
                 return
             let dropped = false
             for (let i = first; i <= last; ++i) {
-                const id = SQUtils.ModelUtils.get(messagesWindow, i, "messageId")
+                const id = d.stagedRowId(i)
                 if (id !== undefined && id !== null && d.stagedIds.delete(id))
                     dropped = true
             }
@@ -998,7 +1160,7 @@ Item {
                 d.windowEnd = d.initialWindowSize - 1
         }
 
-        readonly property int historyCount: messageStore.messagesModel ? messageStore.messagesModel.count : 0
+        readonly property int historyCount: d.windowSource ? d.windowSource.count : 0
 
         // History count at the last fetch: stops the placeholder once a fetch
         // brings nothing, re-arms when history grows.
@@ -1214,28 +1376,23 @@ Item {
         onIsMostRecentMessageInViewportChanged: markAllMessagesReadIfMostRecentMessageIsInViewport()
     }
 
-    // Source-model inserts and removals below the window would otherwise shift
-    // which messages the index window selects; keep it pinned to the same rows.
+    // Index-shift invariant (issue 0022): the window's bounds move with every
+    // source insert or removal that shifts the rows the window selects, in the
+    // same event-loop turn as the model change, so the window's CONTENT — its
+    // message ids — never changes implicitly. Only slide, teleport and admit
+    // change content. The single place this is applied is d.applyIndexShift.
     Connections {
-        target: root.messageStore?.messagesModel ?? null
+        target: d.windowSource
 
         function onRowsInserted(parent, first, last) {
-            if (d.windowStart > 0 && first <= d.windowStart) {
-                const inserted = last - first + 1
-                d.windowStart += inserted
-                d.windowEnd += inserted
-            }
+            d.applyIndexShift(first, last, true)
             if (first <= d.windowEnd)
                 Qt.callLater(d.refilterWindow)
             Qt.callLater(d.updateHistoryExhausted)
         }
 
         function onRowsRemoved(parent, first, last) {
-            if (d.windowStart > 0 && first < d.windowStart) {
-                const removed = Math.min(last, d.windowStart - 1) - first + 1
-                d.windowStart -= removed
-                d.windowEnd -= removed
-            }
+            d.applyIndexShift(first, last, false)
             if (first <= d.windowEnd)
                 Qt.callLater(d.refilterWindow)
             Qt.callLater(d.updateHistoryExhausted)
@@ -1309,6 +1466,20 @@ Item {
             if (d.pendingRestore)
                 return
             d.goToMessage(messageIndex)
+        }
+    }
+
+    // A window page answered (issue 0021): the rows arrive as dataChanged on
+    // the dense model and dress through the paced queue from there — all this
+    // has to do is let the next hole be requested. Its own block because the
+    // signal only exists on the dense-model build of the message module;
+    // every other host legitimately has no such signal to connect to.
+    Connections {
+        target: d.denseMode ? root.messageStore.messageModule : null
+        ignoreUnknownSignals: true
+
+        function onMessagesWindowLoaded(anchorIndex, error) {
+            d.pendingRankFetch = -1
         }
     }
 
@@ -1402,6 +1573,12 @@ Item {
         // revealed before its placeholder is ever seen.
         prefetchMargin: chatLogView.height
 
+        // A scrollbar drag is a move the Flickable cannot see. Dense only:
+        // the legacy placeholder is capped, so its scrollbar position does
+        // not name a history position and a settle there would teleport to a
+        // row the user never aimed at.
+        externallyMoving: d.denseMode && verticalScrollBar.pressed
+
         onMoreUpRequested: d.slideWindowToHistory(!chatLogView.stickingToNewest)
         onMoreDownRequested: d.slideWindowToRecent()
 
@@ -1443,7 +1620,7 @@ Item {
             // (RowBinder) with no per-role glue.
             sourceModel: RolesRenamingModel {
                 sourceModel: d.viewCompleted && !messageStore.loading
-                             ? messageStore.messagesModel : null
+                             ? d.windowSource : null
                 onSourceModelChanged: {
                     // whatever the paging timer did against the detached
                     // window, the view opens on the chat's window record —
@@ -1558,11 +1735,28 @@ Item {
             // so the message lays out its text at its final width and the
             // reveal-frame polish only places pre-measured rows.
             width: root.chatLogView.width
-            implicitHeight: contentItem ? contentItem.height : 0
+            implicitHeight: {
+                if (showsSkeleton)
+                    return d.dummyRowHeight
+                return contentItem ? contentItem.height : 0
+            }
+
+            // Dense mode: a row the window admitted before its data was
+            // fetched. It holds a row of skeleton — never an empty gap, or
+            // the fill would move everything below it — and dresses through
+            // the ordinary paced queue the moment its roles arrive.
+            readonly property bool rowLoaded: !d.denseMode || model.loaded === true
+
+            // Held from the fill until the dress produces content, so the
+            // hole closing costs no geometry beyond the row's own height.
+            property bool skeletonHeld: false
+            readonly property bool showsSkeleton: d.denseMode
+                                                  && (!rowLoaded || skeletonHeld)
 
             // Reactive on the deleted flag: a row deleted mid-life hands its
             // pooled item back and turns into an on-demand row.
-            readonly property bool pooled: !!root.rowPool && !model.deleted
+            readonly property bool pooled: rowLoaded && !!root.rowPool
+                                           && !model.deleted
                                            && d.isPooledContentType(model.messageContentType)
             property Item pooledItem: null
             readonly property Item contentItem: pooledItem ?? inlineLoader.item
@@ -1576,6 +1770,10 @@ Item {
             // once that inner content is fully built and measured; a content
             // type without a component (inner status Null) is ready as is.
             readonly property bool contentReady: {
+                // a dummy is complete as it stands — its skeleton is what it
+                // has to show — so it never holds a staged batch open
+                if (!rowLoaded)
+                    return true
                 if (pooled)
                     return !!pooledItem && pooledItem.status !== Loader.Loading
                 return inlineLoader.status === Loader.Ready && inlineLoader.item
@@ -1586,9 +1784,15 @@ Item {
             // whole batch is ready; everything else shows as soon as it is
             // ready itself. A row that is still loading is never shown.
             property bool revealed: false
-            visible: revealed && contentReady
+            visible: revealed && (contentReady || showsSkeleton)
 
             readonly property string messageId: model.messageId
+
+            // What names this row across a rebuild. Dense rows have a key of
+            // their own — positional while the row is a dummy — so a teleport
+            // into a hole still has something to pin on.
+            readonly property string rowKey: d.denseMode ? String(model.key)
+                                                         : String(model.messageId)
 
             function startMessageFoundAnimation() {
                 if (contentItem)
@@ -1746,7 +1950,8 @@ Item {
             // shell is created asynchronously, long after the admit returned.
             // The initial fill stages every row for its one atomic reveal.
             Component.onCompleted: {
-                if (d.takeStagedId(messageId) || d.initialFillActive)
+                // a dummy never joins a batch: it is ready as it stands
+                if (rowLoaded && (d.takeStagedId(rowKey) || d.initialFillActive))
                     d.stageShell(this)
                 else
                     revealed = true
@@ -1759,8 +1964,29 @@ Item {
             }
 
             onContentReadyChanged: {
+                if (contentReady && rowLoaded)
+                    skeletonHeld = false
                 if (contentReady && !revealed)
                     d.checkStagedReady()
+            }
+
+            // The hole closed under this row. Its content is built through
+            // the paced queue like every other dress (pooled flips with
+            // rowLoaded, which enqueues); the skeleton keeps the row's space
+            // until that content is there.
+            onRowLoadedChanged: {
+                if (rowLoaded && d.denseMode && !contentReady)
+                    skeletonHeld = true
+            }
+
+            Loader {
+                id: dummySkeleton
+
+                width: shell.width
+                height: d.dummyRowHeight
+                active: shell.showsSkeleton
+                visible: active
+                sourceComponent: MessageRowSkeleton {}
             }
 
             Loader {
@@ -1768,7 +1994,9 @@ Item {
 
                 width: shell.width
                 asynchronous: true
-                active: !shell.pooled
+                // a dummy has no content type yet: building the fallback row
+                // for it would render an empty message and then throw it away
+                active: !shell.pooled && shell.rowLoaded
 
                 sourceComponent: MessageView {
                     id: msgDelegate
