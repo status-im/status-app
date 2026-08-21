@@ -11408,30 +11408,6 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Reply</source>
-        <translation>답장</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>편집</translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation>고정 해제</translation>
-    </message>
-    <message>
-        <source>Pin</source>
-        <translation>고정</translation>
-    </message>
-    <message>
-        <source>Mark as unread</source>
-        <translation>읽지 않은 것으로 표시</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>삭제</translation>
-    </message>
-    <message>
         <source>Unknown message. Trying to recover it</source>
         <translation type="unfinished"></translation>
     </message>

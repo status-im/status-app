@@ -118,7 +118,7 @@ Loader {
     // External behavior changers
     property bool isInPinnedPopup: false // The pinned popup limits the number of buttons shown
     property bool isViewMemberMessagesePopup: false // The view member messages popup limits the number of buttons
-    property bool disableHover: false // Used to force the HoverHandler to be active (useful for messages in popups)
+    property bool disableHover: StatusQUtils.Utils.isMobile // Used to force the HoverHandler to be active (useful for messages in popups)
     property bool placeholderMessage: false
 
     property int gapFrom: 0
@@ -868,7 +868,7 @@ Loader {
                 }
 
                 pinnedMsgInfoText: root.isDiscordMessage ? qsTr("Pinned") : qsTr("Pinned by")
-
+                messageId: root.messageId
                 timestamp: root.messageTimestamp
                 editMode: root.editModeOn
                 isAReply: root.responseToMessageWithId !== ""
@@ -974,45 +974,36 @@ Loader {
                     root.messageStore.resendMessage(root.messageId)
                 }
 
-                HoverHandler {
-                    id: hoverHandler
-                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-                    enabled: !delegate.disableHover && !delegate.isMobile
-
-                    onHoveredChanged: {
-                        d.messageHovered = hovered
-                        if (hovered) {
-                            if (delegate.hideQuickActions || root.isViewMemberMessagesePopup)
-                                return
-
-                            if (d.contextMenu?.opened && d.contextMenuOpenedFromHover && d.contextMenuHoverAnchor === delegate)
-                                return
-
-                            d.contextMenu?.close()
-                            d.contextMenuHoverAnchor = delegate
-                            root.openMessageContextMenu(delegate, Qt.point(0, 0), delegate.selectedText, {
-                                positionProvider: contextMenu => {
-                                    if (!root.item)
-                                        return Qt.point(0, 0)
-
-                                    const menuWidth = contextMenu?.maxImplicitWidth || 234
-                                    const menuHeight = contextMenu?.implicitHeight || 0
-                                    const x = Math.max(0, delegate.width - menuWidth - Theme.padding)
-                                    return delegate.mapToItem(root.item, x, -menuHeight / 2)
-                                },
-                                closeOnHoverExit: true
-                            })
+                onHoverChanged: function(messageId, hovered) {
+                    d.messageHovered = hovered
+                    if (hovered) {
+                        if (delegate.hideQuickActions || root.isViewMemberMessagesePopup)
                             return
-                        }
-                        hoverMessageContextMenuCloseTimer.restart()
+
+                        if (d.contextMenu?.opened && d.contextMenuOpenedFromHover && d.contextMenuHoverAnchor === delegate)
+                            return
+
+                        d.contextMenu?.close()
+                        d.contextMenuHoverAnchor = delegate
+                        root.openMessageContextMenu(delegate, Qt.point(0, 0), delegate.selectedText, {
+                                                        positionProvider: contextMenu => {
+                                                            if (!root.item)
+                                                            return Qt.point(0, 0)
+
+                                                            const menuWidth = contextMenu?.maxImplicitWidth || 234
+                                                            const menuHeight = contextMenu?.implicitHeight || 0
+                                                            const x = Math.max(0, delegate.width - menuWidth - Theme.padding)
+                                                            return delegate.mapToItem(root.item, x, -menuHeight / 2)
+                                                        },
+                                                        closeOnHoverExit: true
+                                                    })
+                        return
                     }
+                    hoverMessageContextMenuCloseTimer.restart()
                 }
 
                 StatusSecondaryActionHandler {
                     onTriggered: (pos, source) => {
-                        if (delegate.isMobile && source !== StatusSecondaryActionHandler.LongPress)
-                            return
-
                         const openCollapsed = source === StatusSecondaryActionHandler.LongPress
                         root.openMessageContextMenu(delegate,
                                                     pos,
@@ -1183,7 +1174,6 @@ Loader {
                         }
                     }
                 }
-
             }
         }
     }
@@ -1247,13 +1237,13 @@ Loader {
             id: messageContextMenuView
             emojiReactionLimitReached: root.emojiReactionLimitReached
             // the emoji popup loads lazily after startup — the menu can open first
-            emojiModel: emojiPopup?.fullModel ?? null
+            emojiModel: root.emojiPopup?.fullModel ?? null
             disabledForChat: !root.rootStore.isUserAllowedToSendMessage
             forceEnableEmojiReactions: !root.rootStore.isUserAllowedToSendMessage && d.addReactionAllowed
             messageLinkSharingEnabled: root.messageLinkSharingEnabled
             onPinMessage: root.messageStore.pinMessage(messageContextMenuView.messageId)
             onUnpinMessage: root.messageStore.unpinMessage(messageContextMenuView.messageId)
-            onPinnedMessagesLimitReached: () => {
+            onPinnedMessagesLimitReached: {
                 if (!root.chatContentModule) {
                     console.warn("error on open pinned messages limit reached from message context menu - chat content module is not set")
                     return
@@ -1274,7 +1264,7 @@ Loader {
             onCopyToClipboard: (text) => {
                 ClipboardUtils.setText(text)
             }
-            onCopyMessageLink: () => {
+            onCopyMessageLink: {
                 const url = root.getMessageLinkUrl()
                 if (url)
                     ClipboardUtils.setText(url)

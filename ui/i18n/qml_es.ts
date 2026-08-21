@@ -11464,30 +11464,6 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Reply</source>
-        <translation>Responder</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>Editar</translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation>Desfijar</translation>
-    </message>
-    <message>
-        <source>Pin</source>
-        <translation>Fijar</translation>
-    </message>
-    <message>
-        <source>Mark as unread</source>
-        <translation>Marcar como no leído</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>Eliminar</translation>
-    </message>
-    <message>
         <source>Unknown message. Trying to recover it</source>
         <translation type="unfinished"></translation>
     </message>
