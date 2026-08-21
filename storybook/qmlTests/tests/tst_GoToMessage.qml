@@ -655,6 +655,33 @@ Item {
             compare(chat.spy.hits, 0)
         }
 
+        // ---- the marker landing ----
+        // The first-unseen landing arrives on the same signal as every
+        // explicit jump, so it inherits the in-session rule: a window record
+        // restoring must not be yanked away by it.
+        function test_windowRecordBeatsAMarkerJump() {
+            const chat = openDenseChat(2000, 400)
+            waitForFullPool(chat)
+            settle(chat)
+
+            const hits0 = chat.spy.hits
+            jump(chat, "msg-300")
+            tryVerify(() => chat.spy.hits > hits0, 20000)
+            settle(chat)
+
+            chat.view.visible = false
+            contentModuleMock.messagesModule.aroundCalls = 0
+            chat.view.visible = true
+            verify(!!chat.internal.pendingRestore,
+                   "the record restore must be in flight for this to bite")
+
+            contentModuleMock.messagesModule.scrollToMessageId("msg-1500")
+
+            compare(contentModuleMock.messagesModule.aroundCalls, 0,
+                    "the marker must not outrank the record")
+            compare(chat.internal.pendingGoToId, "")
+        }
+
         // ---- the window record's lookup ----
         // Opening a chat with a window record resolves the record's anchor
         // through the model, which answers from its loaded rows. Walking the

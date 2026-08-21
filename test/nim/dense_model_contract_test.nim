@@ -247,8 +247,26 @@ suite "the view's QML-facing dense API":
   test "the id-based jump signal exists and is what the dense path emits":
     check("scrollToMessageId" in viewSignals)
     check(viewSignals.getOrDefault("scrollToMessageId") == @["messageId"])
-    # the dense branch must skip the legacy loadMore-until-found hunt
     check(moduleSrc.contains("emitScrollToMessageIdSignal"))
+
+  test "the dense branch returns before the legacy page hunt":
+    # `checkIfMessageLoadedAndScroll` walks the legacy model and pages until
+    # the message shows up. The dense model knows every message's position,
+    # so the dense branch must leave scrollToMessage before any of that
+    # bookkeeping starts.
+    let start = moduleSrc.find("method scrollToMessage*(self: Module")
+    check(start >= 0)
+    let body = moduleSrc[start ..< moduleSrc.len]
+    let denseBranch = body.find("emitScrollToMessageIdSignal")
+    let hunt = body.find("setSearchedMessageId")
+    check(denseBranch >= 0)
+    check(hunt >= 0)
+    check(denseBranch < hunt)
+    # ordering alone would still pass with the branch falling through: the
+    # emit has to be the last thing the dense path does
+    check(body.contains("self.view.emitScrollToMessageIdSignal(messageId)\n    return\n"))
+    # and the hunt itself must still be reached only through that method
+    check(moduleSrc.count("increaseLoadingMessagesPerPageFactor") == 1)
 
   test "the stub declares the same API the view exposes":
     let stubFns = qmlMembers(stubSrc, "function")
@@ -268,3 +286,21 @@ suite "the view's QML-facing dense API":
                  "setDenseWindow", "indexOfMessage", "jumpToMessage"]:
       check(storeSrc.contains("function " & name & "("))
       check(stubStoreSrc.contains("function " & name & "("))
+
+suite "every jump reaches the primitive":
+  test "no QML calls the message module's jump behind the store":
+    # goTo is one primitive: the store's jumpToMessage. A call straight to
+    # messageModule bypasses it - and the store layer with it.
+    var offenders: seq[string] = @[]
+    for path in walkDirRec(repoRoot / "ui"):
+      if not path.endsWith(".qml"):
+        continue
+      let src = readFile(path)
+      if src.contains("messageModule.jumpToMessage") and
+          not path.endsWith("stores/MessageStore.qml"):
+        offenders.add path.relativePath(repoRoot)
+      if src.contains("messageModule.scrollToMessage("):
+        offenders.add path.relativePath(repoRoot)
+    check(offenders.len == 0)
+    if offenders.len > 0:
+      echo "QML reaching past the store's jump primitive: ", offenders

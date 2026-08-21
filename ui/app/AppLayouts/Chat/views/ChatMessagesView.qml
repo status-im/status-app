@@ -1635,8 +1635,13 @@ Item {
 
         // The dense build's jump signal: named by message id, because an
         // index into the legacy model means nothing to a window running over
-        // the dense one.
+        // the dense one. Carries the first-unseen landing as well as every
+        // explicit jump, so it keeps the legacy path's guard: in-session a
+        // window record beats the marker, and a restore in flight must not be
+        // yanked away by it.
         function onScrollToMessageId(messageId) {
+            if (d.pendingRestore)
+                return
             d.goToMessageId(messageId)
         }
     }
