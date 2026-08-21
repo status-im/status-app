@@ -1,14 +1,19 @@
+import time
+
 import pytest
 from allure_commons._allure import step
 
 import configs
 import driver
-from configs import WALLET_SEED
-from constants import ReturningUser, RandomCommunity
-from helpers.onboarding_helper import open_create_profile_view, import_seed_and_log_in
-from helpers.settings_helper import enable_testnet_mode, enable_managing_communities_toggle
+from constants import RandomCommunity
+from helpers.settings_helper import enable_managing_communities_toggle
+from helpers.wallet_helper import (
+    open_wallet_account,
+    wallet_send_import_user,
+    wallet_send_returning_user,
+)
 from constants.community import MintOwnerTokensElements
-from constants.wallet import WalletNetworkNaming
+from constants.wallet import WalletHistoryTitles, WalletNetworkNaming
 from gui.screens.community_settings_tokens import MintedTokensView
 
 
@@ -18,19 +23,8 @@ from gui.screens.community_settings_tokens import MintedTokensView
     pytest.param(WalletNetworkNaming.LAYER1_ETHEREUM_HOODI.value, id='hoodi'),
 ])
 def test_mint_owner_and_tokenmaster_tokens(main_window, user_account, network_name):
-
-    user_account = ReturningUser(
-        seed_phrase=WALLET_SEED,
-        status_address='0x44ddd47a0c7681a5b0fa080a56cbb7701db4bb43')
-
-    with step('Import seed and log in'):
-        with step('Open Create your profile view'):
-            create_your_profile_view = open_create_profile_view()
-        with step('Import seed and log in'):
-            import_seed_and_log_in(create_your_profile_view, user_account.seed_phrase, user_account)
-
-    with step('Set testnet mode'):
-        enable_testnet_mode(main_window)
+    user_account = wallet_send_returning_user()
+    wallet_send_import_user(main_window, user_account)
 
     with step('Switch manage community on testnet option'):
         enable_managing_communities_toggle(main_window)
@@ -63,6 +57,15 @@ def test_mint_owner_and_tokenmaster_tokens(main_window, user_account, network_na
         assert start_minting.get_fee_title == 'Mint ' + community.name + MintOwnerTokensElements.SIGN_TRANSACTION_MINT_TITLE.value + network_name
         assert start_minting.get_fee_total_value != ''
         start_minting.sign_transaction(user_account.password)
+        sent_at = time.time()
 
     with step('Verify Owner and TokenMaster mint completed'):
         MintedTokensView().check_community_collectibles_statuses(community.name)
+
+    with step('Verify mint transaction appears in History'):
+        wallet_account = open_wallet_account(main_window)
+        wallet_account.wait_for_new_history_transaction(
+            titles=WalletHistoryTitles.MINT,
+            network_name=network_name,
+            sent_at=sent_at,
+        )
