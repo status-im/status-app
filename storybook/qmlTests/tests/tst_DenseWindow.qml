@@ -353,6 +353,7 @@ Item {
             let downwardJumps = 0
             let maxTrackedContentShift = 0
             let teleports = 0
+            let sampledRounds = 0
 
             for (let round = 0; round < 6; ++round) {
                 let tracked = null
@@ -376,11 +377,18 @@ Item {
 
                 let lastCy = listView.contentY
                 let lastCh = listView.contentHeight
+                // whether the sampler ever caught the flick in flight: under
+                // load a single wait() can outlast the whole fling, and a
+                // sampler that saw nothing must not vote on whether it was
+                // cancelled
+                let sawFlicking = false
                 for (let t = 0; t < 400; ++t) {
                     wait(16)
-                    if (!listView.flickingVertically)
-                        break
+                    const flicking = listView.flickingVertically
                     const cy = listView.contentY
+                    if (!flicking)
+                        break
+                    sawFlicking = true
                     const ch = listView.contentHeight
                     if (Math.abs(ch - lastCh) > 0.5)
                         contentHeightChanges++
@@ -398,7 +406,9 @@ Item {
                     lastCy = cy
                     lastCh = ch
                 }
-                if (travel < 4000 && listView.contentY > 1)
+                if (sawFlicking)
+                    ++sampledRounds
+                if (sawFlicking && travel < 4000 && listView.contentY > 1)
                     flickCancels++
 
                 internal.updateScrollGate(0)
@@ -426,8 +436,12 @@ Item {
                          + " downwardJumps=" + downwardJumps
                          + " maxTrackedContentShift=" + maxTrackedContentShift.toFixed(0)
                          + " teleports=" + teleports
+                         + " sampledRounds=" + sampledRounds
                          + " window " + startWindowEnd + " -> " + internal.windowEnd)
 
+            verify(sampledRounds >= 4,
+                   "the sampler must have caught most flings in flight, saw "
+                   + sampledRounds + " of 6")
             compare(flickCancels, 0)
             compare(topTouches, 0)
             compare(contentHeightChanges, 0)
@@ -695,7 +709,6 @@ Item {
             contentModuleMock.messagesModule.rankFetchCalls = 0
 
             // park deep inside the placeholder and settle there
-            const avg = internal.avgRowHeight > 0 ? internal.avgRowHeight : 48
             const span = internal.topPlaceholderHeight
             const rowsAbove = 2000 - 1 - internal.windowEnd
             const depth = span * 0.5

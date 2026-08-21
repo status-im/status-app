@@ -83,12 +83,10 @@ Item {
             compare(chain.window.count, 30)
 
             // a slide: the window walks one 30-row chunk deeper into history
-            let slides = 0
             const slide = measure(() => {
                 for (let i = 0; i < 10; ++i) {
                     chain.windowStart += 30
                     chain.windowEnd += 30
-                    slides += chain.window.count
                 }
             }) / 10
             compare(chain.window.count, 30)
