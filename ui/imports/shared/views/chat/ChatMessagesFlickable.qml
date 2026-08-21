@@ -40,10 +40,13 @@ Flickable {
     property Component placeholder
 
     /*!
-       Height given to the placeholder. It doubles as the depth of the region
-       in which scrolling asks for more rows, so it must stay well above zero.
+       Heights given to the placeholders, one per side: each side stands in
+       for its own out-of-window span, so a window slide resizes only the end
+       it moved. A height doubles as the depth of the region in which
+       scrolling asks for more rows, so it must stay well above zero.
     */
-    property real placeholderHeight: root.height
+    property real topPlaceholderHeight: root.height
+    property real bottomPlaceholderHeight: root.height
 
     /*!
        Distance beyond the viewport within which a placeholder already asks
@@ -162,6 +165,21 @@ Flickable {
     */
     function itemAtRow(row) {
         return repeater.itemAt(row)
+    }
+
+    /*!
+       How deep the viewport top sits inside the top placeholder, in px from
+       the placeholder's bottom edge, clamped to [0, placeholder height]: 0
+       when the viewport is below the placeholder, the full height at its far
+       edge (the oldest loaded row). The owner maps this depth to an estimated
+       history row for the teleport slide and the eager history prefetch.
+    */
+    function viewportDepthIntoTopPlaceholder() {
+        if (!topPlaceholder.visible || topPlaceholder.height <= 0)
+            return 0
+        const bottomEdge = content.y + topPlaceholder.y + topPlaceholder.height
+        return Math.max(0, Math.min(topPlaceholder.height,
+                                    bottomEdge - root.contentY))
     }
 
     QtObject {
@@ -388,12 +406,15 @@ Flickable {
 
     // Level-triggered while a placeholder is in the viewport: one request per
     // tick until the window covers it or the owner reports nothing more to
-    // show. The owner is expected to guard backend fetches.
+    // show. The owner is expected to guard backend fetches. Gated on rest
+    // (scroll freeze): no slide may start while the view is in motion — a
+    // mid-motion geometry change is what cancels an active flick.
     Timer {
         interval: 150
         repeat: true
-        running: (root.moreUpAvailable && d.placeholderUpVisible)
-                 || (root.moreDownAvailable && d.placeholderDownVisible)
+        running: !root.moving
+                 && ((root.moreUpAvailable && d.placeholderUpVisible)
+                     || (root.moreDownAvailable && d.placeholderDownVisible))
         triggeredOnStart: true
 
         onTriggered: {
@@ -452,7 +473,7 @@ Flickable {
             Layout.row: 1
             Layout.column: 0
             Layout.fillWidth: true
-            Layout.preferredHeight: visible ? root.placeholderHeight : 0
+            Layout.preferredHeight: visible ? root.topPlaceholderHeight : 0
 
             // built once, kept: the skeleton content is expensive and paging
             // state toggles it constantly (invisible items leave the layout)
@@ -491,7 +512,7 @@ Flickable {
             Layout.row: repeater.count + 2
             Layout.column: 0
             Layout.fillWidth: true
-            Layout.preferredHeight: visible ? root.placeholderHeight : 0
+            Layout.preferredHeight: visible ? root.bottomPlaceholderHeight : 0
 
             active: false
             visible: root.moreDownAvailable

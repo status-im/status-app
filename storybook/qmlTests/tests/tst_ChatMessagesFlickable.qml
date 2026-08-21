@@ -80,7 +80,8 @@ Item {
 
             anchors.fill: parent
 
-            placeholderHeight: 100
+            topPlaceholderHeight: 100
+            bottomPlaceholderHeight: 100
 
             moreUpAvailable: window.end < history.count - 1
             moreDownAvailable: window.start > 0
@@ -512,7 +513,8 @@ Item {
 
             id: emptyFlick
 
-            placeholderHeight: 100
+            topPlaceholderHeight: 100
+            bottomPlaceholderHeight: 100
             moreUpAvailable: true
 
             placeholder: Rectangle { color: "transparent" }
