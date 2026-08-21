@@ -133,30 +133,41 @@ Rectangle {
     }
     radius: Theme.radius
 
-    StatusRipple {
-        id: listItemRipple
-        objectName: "statusListItemRipple"
+    // The ripple only exists to animate a press, so nothing is built until the
+    // item is first pressed. The press is delivered by hand here, so the item
+    // is loaded and pressed in the same call.
+    Loader {
+        id: rippleLoader
         anchors.fill: parent
-        enabled: root.enabled && sensor.enabled
-        color: root.type === StatusListItem.Type.Danger ? Theme.palette.dangerColor1
-                                                        : Theme.palette.directColor1
-        radius: root.radius
-        origin: root.rippleOrigin
+        active: false
+
+        sourceComponent: StatusRipple {
+            objectName: "statusListItemRipple"
+            enabled: rippleFeedback.rippleReactive
+            color: root.type === StatusListItem.Type.Danger ? Theme.palette.dangerColor1
+                                                            : Theme.palette.directColor1
+            radius: root.radius
+            origin: root.rippleOrigin
+        }
     }
 
     QtObject {
         id: rippleFeedback
 
+        readonly property bool rippleReactive: root.enabled && sensor.enabled
+
         function pressRipple(mouse, sourceItem) {
-            if (!listItemRipple.enabled || mouse.button !== Qt.LeftButton)
+            if (!rippleFeedback.rippleReactive || mouse.button !== Qt.LeftButton)
                 return
 
+            rippleLoader.active = true
             const ripplePoint = sourceItem.mapToItem(root, mouse.x, mouse.y)
-            listItemRipple.press(ripplePoint.x, ripplePoint.y)
+            rippleLoader.item.press(ripplePoint.x, ripplePoint.y)
         }
 
         function releaseRipple() {
-            listItemRipple.release()
+            if (rippleLoader.item)
+                rippleLoader.item.release()
         }
     }
 
