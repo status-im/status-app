@@ -330,7 +330,7 @@ method messagesAdded*(self: Module, messages: seq[MessageDto]) =
   self.checkIfMessageLoadedAndScroll()
 
 method onMessagesWindowLoaded*(self: Module, messages: seq[MessageDto], reactions: seq[ReactionDto],
-    firstRank, totalCount, anchorRank: int, errorMsg: string) =
+    firstRank, totalCount, anchorRank: int, anchorId, errorMsg: string) =
   if self.denseRouter.isNil:
     return
   if errorMsg == "":
@@ -338,7 +338,7 @@ method onMessagesWindowLoaded*(self: Module, messages: seq[MessageDto], reaction
       self.createDenseMessageItems(messages, reactions), firstRank, totalCount)
   else:
     error "message window fetch failed", chatId = self.controller.getMyChatId(), msg = errorMsg
-  self.view.messagesWindowLoaded(self.denseRouter.anchorIndex(anchorRank), errorMsg)
+  self.view.messagesWindowLoaded(anchorId, self.denseRouter.anchorIndex(anchorRank), errorMsg)
 
 method onChatMessagesCountUpdated*(self: Module, totalCount: int) =
   if self.denseRouter.isNil:
@@ -594,6 +594,14 @@ proc switchToMessage*(self: Module, messageId: string) =
 
 method scrollToMessage*(self: Module, messageId: string) =
   if messageId == "":
+    return
+
+  if not self.denseRouter.isNil:
+    # The dense path knows every message's position without paging to it: the
+    # view resolves a loaded row directly and asks for an around-message
+    # window when it is not. None of the search-ongoing bookkeeping below
+    # applies - there is no hunt to be ongoing.
+    self.view.emitScrollToMessageIdSignal(messageId)
     return
 
   if self.view.getMessageSearchOngoing():

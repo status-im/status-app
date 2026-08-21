@@ -76,7 +76,21 @@ QtObject:
     if not self.denseModel.isNil:
       self.denseModel.setWindow(firstIndex, lastIndex, margin)
 
-  proc messagesWindowLoaded*(self: View, anchorIndex: int, error: string) {.signal.}
+  proc indexOfMessageId*(self: View, messageId: string): int {.slot.} =
+    ## Model index of a loaded row, `-1` when the message is not fetched (or
+    ## not in this chat). Answered from the store's islands - the loaded rows
+    ## only - so it costs the loaded-row cap, never the history count. QML's
+    ## `ModelUtils.indexOf` would walk every one of up to 100k rows across the
+    ## QVariant boundary instead.
+    if self.denseModel.isNil:
+      return -1
+    return self.denseModel.findIndexForMessageId(messageId)
+
+  proc messagesWindowLoaded*(self: View, anchorId: string, anchorIndex: int, error: string) {.signal.}
+
+  proc scrollToMessageId*(self: View, messageId: string) {.signal.}
+  proc emitScrollToMessageIdSignal*(self: View, messageId: string) =
+    self.scrollToMessageId(messageId)
 
   proc toggleReaction*(self: View, messageId: string, emoji: string) {.slot.} =
     self.delegate.toggleReaction(messageId, emoji)

@@ -69,7 +69,7 @@ proc init*(self: Controller) =
     if self.chatId != args.chatId:
       return
     self.delegate.onMessagesWindowLoaded(args.messages, args.reactions, args.firstRank, args.totalCount,
-      args.anchorRank, args.error)
+      args.anchorRank, args.messageId, args.error)
 
   self.events.on(SIGNAL_CHAT_MESSAGES_COUNT_UPDATED) do(e:Args):
     let args = ChatMessagesCountArgs(e)

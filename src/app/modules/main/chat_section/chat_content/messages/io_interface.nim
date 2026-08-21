@@ -31,7 +31,7 @@ method newMessagesLoaded*(self: AccessInterface, messages: seq[MessageDto], reac
   raise newException(ValueError, "No implementation available")
 
 method onMessagesWindowLoaded*(self: AccessInterface, messages: seq[MessageDto], reactions: seq[ReactionDto],
-  firstRank, totalCount, anchorRank: int, errorMsg: string) {.base.} =
+  firstRank, totalCount, anchorRank: int, anchorId, errorMsg: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onChatMessagesCountUpdated*(self: AccessInterface, totalCount: int) {.base.} =
