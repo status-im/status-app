@@ -528,25 +528,25 @@ Item {
         // A staged batch that completed mid-motion; revealed at settle.
         property bool revealOnRest: false
 
-        // Per-side placeholder estimates: top covers the history above the
-        // window, bottom the recent rows below it — never each other, so a
-        // slide resizes only the end it moved (the coupled max() height is
-        // what made the bottom placeholder pop into the viewport mid-fling
-        // and ping-pong the window). Floored at a viewport only while that
-        // side pages, because the height doubles as the paging trigger depth.
-        // The rows a placeholder stands for. Dense mode knows the real count
-        // — the model holds one row per stored message — so each placeholder
-        // covers exactly the rows on its own side and the scrollbar is
-        // proportionally honest across the whole history. The legacy model
-        // holds only what was paged in, so its span stays capped: an
-        // uncapped estimate over a history it cannot see would be a guess
-        // dressed up as a measurement.
+        // The rows a placeholder may stand for. Dense mode knows the real
+        // count — the model holds one row per stored message — so each
+        // placeholder covers exactly the rows on its own side and the
+        // scrollbar is proportionally honest across the whole history. The
+        // legacy model holds only what was paged in, so its span stays
+        // capped: an uncapped estimate over a history it cannot see would be
+        // a guess dressed up as a measurement.
         readonly property int placeholderSpanCap: d.denseMode ? d.historyCount : 300
 
         function placeholderRows(remaining) {
             return Math.min(Math.max(0, remaining), d.placeholderSpanCap)
         }
 
+        // Per-side placeholder estimates: top covers the history above the
+        // window, bottom the recent rows below it — never each other, so a
+        // slide resizes only the end it moved (the coupled max() height is
+        // what made the bottom placeholder pop into the viewport mid-fling
+        // and ping-pong the window). Floored at a viewport only while that
+        // side pages, because the height doubles as the paging trigger depth.
         readonly property real liveTopPlaceholderHeight: {
             const rows = d.placeholderRows(d.historyCount - 1 - d.windowEnd)
             const estimate = rows * (d.avgRowHeight || 48)
