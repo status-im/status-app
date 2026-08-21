@@ -482,6 +482,9 @@ Item {
         ChatColumnView {
             parentModule: root.rootStore.chatCommunitySectionModule
             rootStore: root.rootStore
+
+            messagesViewEnabled: centerPanelLoader.status === Loader.Ready
+
             areTestNetworksEnabled: root.areTestNetworksEnabled
             createChatPropertiesStore: root.createChatPropertiesStore
             stickersLoaded: root.stickersLoaded
