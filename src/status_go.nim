@@ -149,6 +149,11 @@ proc getProfileEncryptionInfo*(paramsJSON: string): string =
   defer: go_shim.free(funcOut)
   return $funcOut
 
+proc exportProfileDEK*(paramsJSON: string): string =
+  var funcOut = go_shim.exportProfileDEK(paramsJSON.cstring)
+  defer: go_shim.free(funcOut)
+  return $funcOut
+
 proc validateMnemonic*(mnemonic: string): string =
   var funcOut = go_shim.validateMnemonic(mnemonic.cstring)
   defer: go_shim.free(funcOut)

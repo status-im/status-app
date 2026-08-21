@@ -34,3 +34,15 @@ proc getProfileEncryptionInfo*(keyUID: string): RpcResponse[JsonNode] =
   except RpcException as e:
     error "error", methodName = "getProfileEncryptionInfo", exception=e.msg
     raise newException(RpcException, e.msg)
+
+proc exportProfileDEK*(keyUID: string, hashedPassword: string): RpcResponse[JsonNode] =
+  try:
+    let request = %* {
+      "keyUID": keyUID,
+      "password": hashedPassword,
+    }
+    let response = status_go.exportProfileDEK($request)
+    result.result = Json.decode(response, JsonNode)
+  except RpcException as e:
+    error "error", methodName = "exportProfileDEK", exception=e.msg
+    raise newException(RpcException, e.msg)

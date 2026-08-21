@@ -52,6 +52,9 @@ proc changePassword*(self: Controller, password: string, newPassword: string, re
 proc isProfileMigratedToDEKEncryption*(self: Controller): bool =
   return self.privacyService.isProfileMigratedToDEKEncryption()
 
+proc getBiometricCredentialForStorage*(self: Controller, keyUid: string, password: string): string =
+  return self.privacyService.getBiometricCredentialForStorage(keyUid, password)
+
 proc getMnemonic*(self: Controller): string =
   return self.privacyService.getMnemonic()
 

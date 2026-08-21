@@ -321,7 +321,7 @@ method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string)
     # SaveBiometrics task should be scheduled after any other tasks
     if saveBiometrics:
       let credential = if pin.len > 0: pin else: password
-      self.postLoginTasks.add(newSaveBiometricsTask(credential))
+      self.postLoginTasks.add(newSaveBiometricsTask(credential, isPin = pin.len > 0))
     if backupImportFileUrl != "":
       self.postLoginTasks.add(newLocalBackupTask(backupImportFileUrl))
 
@@ -335,12 +335,21 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
     self.tmpKeyUid = keyUid
     self.loginFlow = LoginMethod(loginFlow)
 
+    # drop any queued tasks by previous (failed) attempts so a stale credential can never be saved
+    self.postLoginTasks = self.postLoginTasks.filterIt(it.kind != kPostOnboardingTaskSaveBiometrics)
+
     let data = parseJson(dataJson)
     let account = self.controller.getAccountByKeyUid(keyUid)
 
     case self.loginFlow:
       of LoginMethod.Password:
-        self.controller.login(account, data["password"].str)
+        let dek = data{"dek"}.getStr
+        if dek.len > 0:
+          self.controller.loginWithDEK(account, dek)
+        else:
+          if data{"updateBiometrics"}.getBool(false):
+            self.postLoginTasks.add(newSaveBiometricsTask(data["password"].str, isPin = false, keyUid = keyUid))
+          self.controller.login(account, data["password"].str)
       of LoginMethod.Keycard:
         self.loginKeycard(keyUid, data["pin"].str, data{"pairingPassword"}.getStr)
       of LoginMethod.Mnemonic:
