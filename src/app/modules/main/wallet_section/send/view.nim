@@ -209,7 +209,7 @@ QtObject:
       selectedFromChain,
       selectedToChain,
       slippagePercentage,
-      extraParamsTable
+      extraParamsTable = extraParamsTable
     )
 
   proc updateRoutePreferredChains*(self: View, chainIds: string) {.slot.} =
@@ -255,7 +255,8 @@ QtObject:
     fromChainID: int,
     toChainID: int,
     sendType: int,
-    slippagePercentageString: string) {.slot.} =
+    slippagePercentageString: string,
+    routeOrder: string = "") {.slot.} =
 
     var slippagePercentage: float
     if sendType == ord(transaction_dto.SendType.Swap):
@@ -276,7 +277,8 @@ QtObject:
       amountOut,
       fromChainID,
       toChainID,
-      slippagePercentage
+      slippagePercentage,
+      routeOrder
     )
 
   proc transactionSendingComplete*(self: View, txHash: string, status: string) {.signal.}

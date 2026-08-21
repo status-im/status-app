@@ -131,9 +131,10 @@ proc suggestedRoutes*(self: Controller,
     fromChainID: int = 0,
     toChainID: int = 0,
     slippagePercentage: float = 0.0,
+    routeOrder: string = "",
     extraParamsTable: Table[string, string] = initTable[string, string]()) =
   self.transactionService.suggestedRoutes(uuid, sendType, accountFrom, accountTo, token, tokenIsOwnerToken, amountIn, toToken, amountOut,
-    fromChainID, toChainID, slippagePercentage, extraParamsTable)
+    fromChainID, toChainID, slippagePercentage, routeOrder, extraParamsTable)
 
 proc stopSuggestedRoutesAsyncCalculation*(self: Controller) =
   self.transactionService.stopSuggestedRoutesAsyncCalculation()

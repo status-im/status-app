@@ -1470,6 +1470,11 @@ QtObject {
 
         readonly property string paraswapProcessorName: "Paraswap"
         readonly property string lifiProcessorName: "LiFi"
+
+        // How the provider ranks routes; sent verbatim as LI.FI's `order` parameter.
+        readonly property string routeOrderBestReturn: "RECOMMENDED"
+        readonly property string routeOrderFastest: "FASTEST"
+        readonly property string routeOrderLowestFee: "CHEAPEST"
     }
 
     // Mirrors src/app_service/service/transaction/service.nim -> EstimatedTime

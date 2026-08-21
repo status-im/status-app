@@ -56,7 +56,8 @@ StatusDialog {
     }
 
     implicitWidth: 556
-    topPadding: Theme.xlPadding
+    padding: Theme.smallPadding
+    topPadding: Theme.bigPadding
     backgroundColor: Theme.palette.baseColor3
 
     QtObject {
@@ -163,6 +164,14 @@ StatusDialog {
             // otherwise build a picker for the modal being destroyed.
             if (isBridge && d.pickersInitialized && root.opened)
                 d.ensureBridgePicker()
+        }
+
+        readonly property string routeOrderName: {
+            switch (root.swapInputParamsForm.selectedRouteOrder) {
+            case Constants.swap.routeOrderFastest: return qsTr("Fastest")
+            case Constants.swap.routeOrderLowestFee: return qsTr("Lowest fee")
+            default: return qsTr("Best return")
+            }
         }
 
         readonly property bool swapViaLiFi: root.swapAdaptor.swapOutputData.txProviderName === Constants.swap.lifiProcessorName
@@ -325,7 +334,7 @@ StatusDialog {
         anchors.fill: parent
         contentWidth: availableWidth
         topPadding: 0
-        bottomPadding: Theme.xlPadding
+        bottomPadding: 0
 
         focus: true
         Keys.onPressed: event => d.handleBackKey(event)
@@ -352,8 +361,9 @@ StatusDialog {
                     Layout.preferredWidth: 32
                     Layout.preferredHeight: 32
                     icon.name: "close"
-                    icon.width: 16
-                    icon.height: 16
+                    icon.color: Theme.palette.directColor1
+                    icon.width: 24
+                    icon.height: 24
                     type: StatusFlatRoundButton.Type.Secondary
                     onClicked: root.closeHandler()
                 }
@@ -560,7 +570,7 @@ StatusDialog {
 
         // match the content inset: dialog padding + scroll view padding + card margin
         horizontalPadding: root.padding + contentScrollView.leftPadding + d.panelMargin
-        topPadding: Theme.padding
+        topPadding: 0
         // StatusDialog only insets the safe area when there's no footer; a custom one must
         // do it itself or the buttons land under the Android navigation bar.
         bottomPadding: Theme.padding + root.parent.SafeArea.margins.bottom
@@ -597,12 +607,6 @@ StatusDialog {
 
         background: Rectangle {
             color: Theme.palette.baseColor3
-            Rectangle {
-                width: parent.width
-                height: 1
-                anchors.top: parent.top
-                color: Theme.palette.baseColor2
-            }
         }
 
         Timer {
@@ -652,7 +656,7 @@ StatusDialog {
                     }
                     StatusBaseText {
                         anchors.centerIn: parent
-                        text: qsTr("%1 s", "short for seconds").arg(swapFooter.secondsLeft)
+                        text: qsTr("%1s", "short for seconds").arg(swapFooter.secondsLeft)
                         font.pixelSize: 10
                         font.weight: Font.Medium
                         color: Theme.palette.primaryColor1
@@ -714,9 +718,24 @@ StatusDialog {
                         color: Theme.palette.directColor4
                     }
                     StatusBaseText {
-                        text: qsTr("Best return")
+                        objectName: "routeOrderButton"
+                        text: d.routeOrderName
                         font.weight: Font.Medium
+                        font.underline: routeOrderMouseArea.containsMouse
                         color: Theme.palette.directColor1
+
+                        StatusToolTip {
+                            visible: routeOrderMouseArea.containsMouse
+                            text: qsTr("Choose route")
+                        }
+
+                        StatusMouseArea {
+                            id: routeOrderMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: swapRoutePopupComponent.createObject(root).open()
+                        }
                     }
                     StatusBaseText {
                         text: qsTr("by %1").arg(d.serviceProviderName)
@@ -865,6 +884,15 @@ StatusDialog {
                     onClicked: swapFooter.refresh()
                 }
             }
+        }
+    }
+
+    Component {
+        id: swapRoutePopupComponent
+        SwapRoutePopup {
+            destroyOnClose: true
+            routeOrder: root.swapInputParamsForm.selectedRouteOrder
+            onRouteOrderSelected: order => root.swapInputParamsForm.selectedRouteOrder = order
         }
     }
 
