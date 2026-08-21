@@ -22,6 +22,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 
 import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 
 /**
@@ -134,7 +135,22 @@ public final class SecureAndroidAuthentication {
     public boolean beginSaveCredential(String account, String password) {
         if (Build.VERSION.SDK_INT < 28) { nativeCredentialError(-10, "BiometricPrompt requires API 28"); return false; }
         try {
-            Cipher enc = newEncryptCipher();
+            Cipher enc;
+            try {
+                enc = newEncryptCipher();
+            } catch (KeyPermanentlyInvalidatedException e) {
+                // Biometric enrollment changed: the old key (and everything it encrypted) is
+                // permanently dead. For a SAVE that is recoverable — wipe the dead state and
+                // encrypt the new credential under a freshly generated key.
+                Log.w(TAG, "beginSave: key invalidated by enrollment change, regenerating", e);
+                if (!handleInvalidatedKey()) {
+                    // Inconsistent cleanup would leave stale ciphertext under a new key;
+                    // the invalidated alias is untouched, so the next attempt retries.
+                    nativeCredentialError(-1, "beginSave: invalidated-key cleanup failed");
+                    return false;
+                }
+                enc = newEncryptCipher();
+            }
             pending = PendingType.SAVE;
             pendingAccount = account;
             pendingPlain = password;
@@ -161,7 +177,25 @@ public final class SecureAndroidAuthentication {
             byte[] ct = loadCT(account);
             if (iv == null || ct == null) { nativeCredentialLoaded(account, null); return true; }
 
-            Cipher dec = newDecryptCipher(iv);
+            Cipher dec;
+            try {
+                dec = newDecryptCipher(iv);
+            } catch (KeyPermanentlyInvalidatedException e) {
+                // Biometric enrollment changed: the stored ciphertext is permanently
+                // unreadable. Wipe the dead key and blobs so hasCredential() stops lying,
+                // and report the credential as gone (callers fall back to password entry
+                // and can re-enable biometrics, which generates a fresh key).
+                Log.w(TAG, "beginGet: key invalidated by enrollment change, wiping stored credentials", e);
+                if (!handleInvalidatedKey()) {
+                    // State is unchanged (alias intact): the next attempt re-triggers the
+                    // invalidation and retries the cleanup. Report a plain error, not
+                    // not-found — the blobs are still there.
+                    nativeCredentialError(-2, "beginGet: invalidated-key cleanup failed");
+                    return false;
+                }
+                nativeCredentialError(-12, "Key invalidated by biometric enrollment change");
+                return false;
+            }
             pending = PendingType.GET;
             pendingAccount = account;
             pendingPlain = null;
@@ -234,6 +268,36 @@ public final class SecureAndroidAuthentication {
         }
         KeyStore.SecretKeyEntry e = (KeyStore.SecretKeyEntry) ks.getEntry(KC_ALIAS, null);
         return e.getSecretKey();
+    }
+
+    /**
+     * Removes every stored blob and then the invalidated AES key. All accounts share the
+     * one key, so after an enrollment change every ciphertext is undecryptable dead data.
+     *
+     * Order matters: the blobs are cleared first (synchronously, result checked), because
+     * if the alias were deleted first and the process stopped before the prefs write, the
+     * next use would silently generate a fresh key and the leftover ciphertext would turn
+     * into permanent ghost entries — hasCredential() true, decryption always failing.
+     *
+     * @return true when the state is consistent again (blobs verifiably gone). Alias
+     *         removal afterwards is best-effort: with the blobs gone no ghosts are
+     *         possible, and a surviving invalidated alias merely re-triggers this cleanup
+     *         on the next use.
+     */
+    private boolean handleInvalidatedKey() {
+        // The prefs file holds nothing but our iv_/ct_ blobs — clear it entirely.
+        if (!prefs().edit().clear().commit()) {
+            Log.w(TAG, "handleInvalidatedKey: failed to clear credential blobs");
+            return false;
+        }
+        try {
+            KeyStore ks = KeyStore.getInstance("AndroidKeyStore");
+            ks.load(null);
+            if (ks.containsAlias(KC_ALIAS)) ks.deleteEntry(KC_ALIAS);
+        } catch (Exception e) {
+            Log.w(TAG, "handleInvalidatedKey: failed to delete key alias", e);
+        }
+        return true;
     }
 
     private Cipher newEncryptCipher() throws Exception {

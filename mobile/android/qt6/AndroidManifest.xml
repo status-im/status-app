@@ -44,6 +44,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.AppSplash"
         android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:hasFragileUserData="true"
         android:fullBackupOnly="false">
         <activity
