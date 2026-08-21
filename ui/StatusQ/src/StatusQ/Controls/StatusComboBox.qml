@@ -37,6 +37,8 @@ Item {
     property int rippleOrigin: StatusRipple.RippleOrigin.Pointer
 
     readonly property Component defaultBackgroundComponent: Rectangle {
+        id: comboBoxBackgroundRect
+
         color: root.type === StatusComboBox.Type.Secondary ? "transparent" : Theme.palette.baseColor2
         radius: Theme.radius
         border.width: (!!root.validationError || root.forceError
@@ -61,23 +63,35 @@ Item {
             return "transparent"
         }
 
-        StatusRipple {
-            id: comboBoxRipple
-            objectName: "statusComboBoxRipple"
+        // The ripple only exists to animate a press, so nothing is built until
+        // the combo box is first pressed. The press is delivered by hand here,
+        // so the item is loaded and pressed in the same call.
+        Loader {
+            id: comboBoxRippleLoader
             anchors.fill: parent
-            enabled: comboBox.enabled
-            color: root.type === StatusComboBox.Type.Secondary ? Theme.palette.baseColor1
-                                                               : Theme.palette.directColor1
-            radius: parent.radius
-            origin: root.rippleOrigin
+            active: false
+
+            sourceComponent: StatusRipple {
+                objectName: "statusComboBoxRipple"
+                enabled: comboBox.enabled
+                color: root.type === StatusComboBox.Type.Secondary ? Theme.palette.baseColor1
+                                                                   : Theme.palette.directColor1
+                radius: comboBoxBackgroundRect.radius
+                origin: root.rippleOrigin
+            }
         }
 
         function pressRipple(x, y) {
-            comboBoxRipple.press(x, y)
+            if (!comboBox.enabled)
+                return
+
+            comboBoxRippleLoader.active = true
+            comboBoxRippleLoader.item.press(x, y)
         }
 
         function releaseRipple() {
-            comboBoxRipple.release()
+            if (comboBoxRippleLoader.item)
+                comboBoxRippleLoader.item.release()
         }
 
         HoverHandler {
