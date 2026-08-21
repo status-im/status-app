@@ -346,6 +346,54 @@ Item {
             waitForRendering(chat.listView)
         }
 
+        // Where the view is, in terms that survive paging: the window keeps
+        // sliding mid-history, but the flickable's anchor holds the same
+        // message at the same offset while it does. Window bounds are not a
+        // usable "did the view move" reference here; this is.
+        function topmostVisibleRow(listView) {
+            for (let i = listView.count - 1; i >= 0; --i) {
+                const item = listView.itemAtRow(i)
+                if (!item || !item.visible || item.height <= 0)
+                    continue
+                const y = item.mapToItem(listView.contentItem, 0, 0).y
+                if (y + item.height > listView.contentY)
+                    return { key: String(item.rowKey),
+                             offset: y - listView.contentY }
+            }
+            return null
+        }
+
+        function builtCount(chat) {
+            return chat.internal.acquiredCount + chat.kind.readyCount
+        }
+
+        // A half-built pool caps the window so tightly that paging never
+        // settles mid-history: it slides older, the viewport ends up at the
+        // recent edge, and it slides back.
+        function waitForFullPool(chat) {
+            tryVerify(() => builtCount(chat) >= chat.kind.target, 60000,
+                      "the pool must reach its target, built "
+                      + builtCount(chat) + " of " + chat.kind.target)
+        }
+
+        // Paging keeps widening the window after an open or a teleport; a
+        // test that needs to know no batch is coming has to wait it out.
+        function waitForQuietWindow(chat) {
+            const internal = chat.internal
+            tryVerify(() => internal.stagedCount === 0, 30000,
+                      "staged rows must all reveal")
+            let last = ""
+            let stable = 0
+            for (let i = 0; i < 400 && stable < 8; ++i) {
+                wait(25)
+                const now = internal.windowStart + ".." + internal.windowEnd
+                stable = (now === last) ? stable + 1 : 0
+                last = now
+            }
+            verify(stable >= 8, "the window must stop moving, at " + last)
+            waitForRendering(chat.listView)
+        }
+
         // The row the viewport was pinned to, by the key of the item the
         // flickable reported positioned. That report is what runs the
         // message-found highlight (onRowPositioned ->
@@ -385,21 +433,38 @@ Item {
                    "the window must have left the newest end")
         }
 
-        // A target already inside the window admits nothing, so no batch
-        // reveal ever runs - the pin has to be applied on its own.
-        function test_jumpInsideTheWindowStillPositionsAndHighlights() {
+        // A jump onto the row the window is ALREADY centred on changes no
+        // bounds at all: no rows are admitted, no batch is ever staged, and
+        // the paging that would eventually produce one is quiet. Nothing but
+        // the pin's own application can position the view - which is the
+        // point, because a jump that silently does nothing is the failure
+        // mode this guards.
+        function test_jumpOntoTheWindowsOwnCentrePositionsWithoutABatch() {
             const chat = openDenseChat(2000, 400)
-            settle(chat)
+            waitForQuietWindow(chat)
 
-            const target = Math.min(chat.internal.windowEnd,
-                                    chat.internal.windowStart + 3)
-            verify(target >= chat.internal.windowStart)
+            // the index a teleport would compute the current bounds for:
+            // teleportToMessage centres the span it already has
+            const internal = chat.internal
+            const span = internal.windowEnd - internal.windowStart + 1
+            const target = internal.windowEnd - Math.floor(span / 2)
+            verify(target >= internal.windowStart && target <= internal.windowEnd)
+
+            const startBefore = internal.windowStart
+            const endBefore = internal.windowEnd
+            const before = chat.spy.hits
+
             jump(chat, "msg-" + target)
 
-            tryVerify(() => chat.spy.hits > 0, 20000,
-                      "an in-window jump must still position the row")
-            compare(positionedKey(chat), "msg-" + target)
             compare(contentModuleMock.messagesModule.aroundCalls, 0)
+            compare(internal.windowStart, startBefore,
+                    "the window must not move for this to prove anything")
+            compare(internal.windowEnd, endBefore)
+            compare(internal.stagedCount, 0, "nothing may be admitted")
+
+            tryVerify(() => chat.spy.hits > before, 10000,
+                      "the pin must land with no batch to ride")
+            compare(positionedKey(chat), "msg-" + target)
         }
 
         // ---- a target in a hole: fetch, fill, teleport, highlight ----
@@ -501,12 +566,22 @@ Item {
         // ---- a jump that cannot land ----
 
         function test_failedJumpLeavesTheViewInPlace() {
-            const chat = openDenseChat(2000, 120)
+            const chat = openDenseChat(2000, 400)
+            waitForFullPool(chat)
             settle(chat)
 
-            const startBefore = chat.internal.windowStart
-            const endBefore = chat.internal.windowEnd
-            const contentYBefore = chat.listView.contentY
+            // somewhere other than the bottom first: staying put is only an
+            // assertion worth making from a position the fallback would
+            // change
+            const hits0 = chat.spy.hits
+            jump(chat, "msg-300")
+            tryVerify(() => chat.spy.hits > hits0, 20000)
+            settle(chat)
+            verify(!chat.listView.stickingToNewest)
+
+            const where = topmostVisibleRow(chat.listView)
+            verify(!!where)
+            const hitsBefore = chat.spy.hits
 
             jump(chat, "msg-1500")
             contentModuleMock.messagesModule.messagesWindowLoaded(
@@ -517,20 +592,30 @@ Item {
             compare(chat.internal.lastGoToFailure, "msg-1500")
             compare(toastSpy.count, 1, "the user must be told")
 
-            compare(chat.internal.windowStart, startBefore)
-            compare(chat.internal.windowEnd, endBefore)
-            verify(Math.abs(chat.listView.contentY - contentYBefore) <= 1,
-                   "the viewport must not move")
-            compare(chat.spy.hits, 0, "nothing may be positioned")
+            const now = topmostVisibleRow(chat.listView)
+            verify(!!now)
+            compare(now.key, where.key, "the view must not move")
+            verify(Math.abs(now.offset - where.offset) <= 1)
+            verify(!chat.listView.stickingToNewest,
+                   "a failed jump must not fall back to the bottom")
+            compare(chat.spy.hits, hitsBefore, "nothing may be positioned")
         }
 
         // The page lands clean but the target is not in it: deleted between
         // the click and the fetch. Same graceful stop, no arbitrary landing.
         function test_jumpToADeletedTargetFailsInPlace() {
-            const chat = openDenseChat(2000, 120)
+            const chat = openDenseChat(2000, 400)
+            waitForFullPool(chat)
             settle(chat)
 
-            const startBefore = chat.internal.windowStart
+            const hits0 = chat.spy.hits
+            jump(chat, "msg-300")
+            tryVerify(() => chat.spy.hits > hits0, 20000)
+            settle(chat)
+
+            const where = topmostVisibleRow(chat.listView)
+            verify(!!where)
+            const hitsBefore = chat.spy.hits
 
             jump(chat, "msg-1500")
             // the page around it arrives - without it
@@ -540,8 +625,12 @@ Item {
 
             compare(chat.internal.goToFailureCount, 1)
             compare(chat.internal.lastGoToFailure, "msg-1500")
-            compare(chat.internal.windowStart, startBefore)
-            compare(chat.spy.hits, 0)
+            const now = topmostVisibleRow(chat.listView)
+            verify(!!now)
+            compare(now.key, where.key, "the view must not move")
+            verify(Math.abs(now.offset - where.offset) <= 1)
+            verify(!chat.listView.stickingToNewest)
+            compare(chat.spy.hits, hitsBefore)
         }
 
         // ---- a chat switch cancels ----
