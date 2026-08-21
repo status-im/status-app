@@ -27,9 +27,25 @@ QtObject {
     readonly property int messagesPerPage: messageModule && messageModule.messagesPerPage > 0 ?
                                                messageModule.messagesPerPage : 30
 
+    readonly property var denseMessagesModel: messageModule && messageModule.denseModel
+                                              ? messageModule.denseModel : null
+
     onMessageModuleChanged: {
         if (messageModule)
             messagesModel = messageModule.model
+    }
+
+    function loadMessagesAroundMessage(messageId) {
+        if (messageModule && messageModule.loadMessagesAroundMessage)
+            messageModule.loadMessagesAroundMessage(messageId)
+    }
+    function loadMessagesAtRank(rank) {
+        if (messageModule && messageModule.loadMessagesAtRank)
+            messageModule.loadMessagesAtRank(rank)
+    }
+    function setDenseWindow(firstIndex, lastIndex, margin) {
+        if (messageModule && messageModule.setDenseWindow)
+            messageModule.setDenseWindow(firstIndex, lastIndex, margin)
     }
 
     function loadMoreMessages() {

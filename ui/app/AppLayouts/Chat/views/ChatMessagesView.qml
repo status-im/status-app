@@ -397,6 +397,18 @@ Item {
             return root.rowPool ? root.rowPool.readyCount(d.rowPoolKind) : 0
         }
 
+        // How many more rows the window may hold. In-window ⇔ holds a pooled
+        // item, so the cap is what the pool can dress — but a dense dummy
+        // holds no item while it waits for its data and would otherwise let
+        // the window grow without ever draining the pool, leaving the rows
+        // starved the moment their hole fills. Counting the window's own size
+        // against the capacity covers both.
+        function windowRoom() {
+            const size = d.windowEnd - d.windowStart + 1
+            const capacity = Math.max(1, d.acquiredCount + d.poolHeadroom())
+            return Math.max(0, capacity - size)
+        }
+
         // Pool sizing: two viewports' worth of rows at the observed row
         // height (48px until measured), clamped; setTarget is grow-only.
         readonly property int poolTarget: {
@@ -983,16 +995,13 @@ Item {
             d.syncStagedCount()
         }
 
-        // What a staged row is tracked by. Dense rows are named by their key
-        // (message ids are empty until a hole fills), and a dummy is not
-        // staged at all: it has nothing to build, so it must never hold a
-        // batch open — it shows its skeleton the moment it is admitted.
+        // What a staged row is tracked by: its key in dense mode, because a
+        // dummy's message id is empty and every dummy would collide. A dummy
+        // still joins its batch — it is ready as it stands, so it never holds
+        // one open, and its skeleton is revealed atomically with the rest.
         function stagedRowId(row) {
-            if (!d.denseMode)
-                return SQUtils.ModelUtils.get(messagesWindow, row, "messageId")
-            if (!SQUtils.ModelUtils.get(messagesWindow, row, "loaded"))
-                return null
-            return SQUtils.ModelUtils.get(messagesWindow, row, "key")
+            return SQUtils.ModelUtils.get(messagesWindow, row,
+                                          d.denseMode ? "key" : "messageId")
         }
 
         // A staged row leaving the window before its shell was ever created
@@ -1225,7 +1234,7 @@ Item {
                     const headroom = d.poolHeadroom()
                     const wanted = Math.min(d.historyCount - 1 - d.windowEnd,
                                             d.windowChunkSize)
-                    const grow = Math.min(wanted, headroom)
+                    const grow = Math.min(wanted, headroom, d.windowRoom())
                     const size = d.windowEnd - d.windowStart + 1
                     const slide = allowTrade
                                 ? Math.min(wanted - grow,
@@ -1270,7 +1279,7 @@ Item {
             if (d.usePool) {
                 const headroom = d.poolHeadroom()
                 const wanted = Math.min(d.windowStart, d.windowChunkSize)
-                const grow = Math.min(wanted, headroom)
+                const grow = Math.min(wanted, headroom, d.windowRoom())
                 const size = d.windowEnd - d.windowStart + 1
                 const slide = Math.min(wanted - grow,
                                        Math.max(0, size - d.initialRevealTarget),
@@ -1747,11 +1756,12 @@ Item {
             // the ordinary paced queue the moment its roles arrive.
             readonly property bool rowLoaded: !d.denseMode || model.loaded === true
 
-            // Held from the fill until the dress produces content, so the
-            // hole closing costs no geometry beyond the row's own height.
-            property bool skeletonHeld: false
+            // A dense row shows skeleton whenever it has no content to show:
+            // while it is a dummy, and from the fill that closed its hole
+            // until the paced dress produces the row. It holds a row of space
+            // throughout, so neither transition moves anything below it.
             readonly property bool showsSkeleton: d.denseMode
-                                                  && (!rowLoaded || skeletonHeld)
+                                                  && (!rowLoaded || !contentReady)
 
             // Reactive on the deleted flag: a row deleted mid-life hands its
             // pooled item back and turns into an on-demand row.
@@ -1935,13 +1945,17 @@ Item {
                 function onSpectateCommunityRequested(communityId) {
                     root.spectateCommunityRequested(communityId)
                 }
+                // Read through a local: a released item can still emit while
+                // the shell is being torn down, with pooledItem already null.
                 function onEditModeOnChanged() {
-                    root.editModeChanged(shell.pooledItem.editModeOn,
-                                         shell.pooledItem.messageId)
+                    const item = shell.pooledItem
+                    if (item)
+                        root.editModeChanged(item.editModeOn, item.messageId)
                 }
                 function onVisibleChanged() {
-                    if (!shell.pooledItem.visible && shell.pooledItem.editModeOn)
-                        root.messageStore.setEditModeOff(shell.pooledItem.messageId)
+                    const item = shell.pooledItem
+                    if (item && !item.visible && item.editModeOn)
+                        root.messageStore.setEditModeOff(item.messageId)
                 }
             }
 
@@ -1950,8 +1964,7 @@ Item {
             // shell is created asynchronously, long after the admit returned.
             // The initial fill stages every row for its one atomic reveal.
             Component.onCompleted: {
-                // a dummy never joins a batch: it is ready as it stands
-                if (rowLoaded && (d.takeStagedId(rowKey) || d.initialFillActive))
+                if (d.takeStagedId(rowKey) || d.initialFillActive)
                     d.stageShell(this)
                 else
                     revealed = true
@@ -1964,19 +1977,8 @@ Item {
             }
 
             onContentReadyChanged: {
-                if (contentReady && rowLoaded)
-                    skeletonHeld = false
                 if (contentReady && !revealed)
                     d.checkStagedReady()
-            }
-
-            // The hole closed under this row. Its content is built through
-            // the paced queue like every other dress (pooled flips with
-            // rowLoaded, which enqueues); the skeleton keeps the row's space
-            // until that content is there.
-            onRowLoadedChanged: {
-                if (rowLoaded && d.denseMode && !contentReady)
-                    skeletonHeld = true
             }
 
             Loader {
