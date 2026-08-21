@@ -327,7 +327,7 @@ Control {
                     errorTooltipText_2: root.marketDataError
 
                     errorMode: !!root.balanceError
-                    errorIcon.tooltip.text: root.balanceError
+                    errorTooltipText: root.balanceError
 
                     onClicked: function (itemId, mouse) {
                         if (mouse.button === Qt.LeftButton)
