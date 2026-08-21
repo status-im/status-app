@@ -336,6 +336,7 @@ method suggestedRoutes*(self: Module,
   fromChainID: int = 0,
   toChainID: int = 0,
   slippagePercentage: float = 0.0,
+  routeOrder: string = "",
   extraParamsTable: Table[string, string] = initTable[string, string]()) =
   self.clearTmpData()
   self.controller.suggestedRoutes(
@@ -351,6 +352,7 @@ method suggestedRoutes*(self: Module,
     fromChainID,
     toChainID,
     slippagePercentage,
+    routeOrder,
     extraParamsTable
   )
 

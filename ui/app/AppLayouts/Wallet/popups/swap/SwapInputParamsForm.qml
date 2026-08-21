@@ -22,6 +22,8 @@ QtObject {
     property string toGroupKey: root.defaultToGroupKey
     property string toTokenAmount: ""
     property double selectedSlippage: 0.5
+    // how the provider should rank routes; see Constants.swap.routeOrder*
+    property string selectedRouteOrder: Constants.swap.routeOrderBestReturn
 
     // default to token key
     property string defaultToGroupKey: root.getDefaultToGroupKey(root.toNetworkChainId)
@@ -47,6 +49,7 @@ QtObject {
     onToGroupKeyChanged: root.formValuesChanged()
     onToTokenAmountChanged: root.formValuesChanged()
     onSelectedSlippageChanged: root.formValuesChanged()
+    onSelectedRouteOrderChanged: root.formValuesChanged()
 
     function resetFormData() {
         root.selectedAccountAddress = ""
@@ -54,6 +57,7 @@ QtObject {
         root.selectedNetworkChainId = -1
         root.toNetworkChainId = -1
         root.selectedSlippage = 0.5
+        root.selectedRouteOrder = Constants.swap.routeOrderBestReturn
         root.resetFromTokenValues()
         root.resetToTokenValues()
     }

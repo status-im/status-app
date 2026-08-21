@@ -384,6 +384,7 @@ QtObject:
     fromChainID: int = 0,
     toChainID: int = 0, # if empty, it means the same chain id as the from chain id (same chain)
     slippagePercentage: float = 0.0,
+    routeOrder: string = "",
     extraParamsTable: Table[string, string] = initTable[string, string]()) =
 
     self.lastRequestForSuggestedRoutes = (uuid, sendType)
@@ -428,7 +429,7 @@ QtObject:
         toTokenKey = toToken.key
 
       let err = wallet.suggestedRoutesAsync(uuid, ord(sendType), accountFrom, accountTo, amountInHex, amountOutHex, fromTokenKey,
-        tokenIsOwnerToken, toTokenKey, fromChainID, toChainID, slippagePercentage, mutableParamsTable)
+        tokenIsOwnerToken, toTokenKey, fromChainID, toChainID, slippagePercentage, routeOrder, mutableParamsTable)
       if err.len > 0:
         raise newException(CatchableError, "err fetching the best route: " & err)
     except CatchableError as e:

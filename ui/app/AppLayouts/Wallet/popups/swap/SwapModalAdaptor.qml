@@ -242,7 +242,8 @@ QObject {
             root.swapStore.fetchSuggestedRoutes(d.uuid, accountAddress, toAccountAddress,
                                                 cryptoValueInRaw, "0", root.swapFormData.fromGroupKey, root.swapFormData.toGroupKey,
                                                 fromChainId, toChainId,
-                                                sendType, root.swapFormData.selectedSlippage)
+                                                sendType, root.swapFormData.selectedSlippage,
+                                                root.swapFormData.selectedRouteOrder)
         } else {
             root.swapProposalLoading = false
             root.swapOutputData.reset()

@@ -199,6 +199,25 @@ Item {
             tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
         }
 
+        function test_fiatEquivalentAndBalanceLineShareALine() {
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})
+            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            verify(!!controlUnderTest)
+            waitForRendering(controlUnderTest)
+
+            const fiatText = findChild(controlUnderTest, "bottomItemText")
+            const balanceLine = findChild(controlUnderTest, "balanceLine")
+            verify(!!fiatText && !!balanceLine)
+            verify(balanceLine.visible)
+
+            // the two columns are sized differently, so only a shared bottom edge
+            // keeps these on one line
+            const fiatY = fiatText.mapToItem(controlUnderTest, 0, 0).y
+            const balanceY = balanceLine.mapToItem(controlUnderTest, 0, 0).y
+            compare(balanceY, fiatY)
+            compare(balanceLine.height, fiatText.height)
+        }
+
         function test_basicSetupAndDefaults() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
             verify(!!controlUnderTest)

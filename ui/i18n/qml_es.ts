@@ -17011,6 +17011,14 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Fastest</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Lowest fee</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Add assets</source>
         <translation>Agregar activos</translation>
     </message>
@@ -17019,12 +17027,16 @@ al cargar</translation>
         <translation>Agregar %1</translation>
     </message>
     <message>
-        <source>%1 s</source>
+        <source>Best return</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1s</source>
         <comment>short for seconds</comment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Best return</source>
+        <source>Choose route</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -17120,6 +17132,37 @@ al cargar</translation>
     <message>
         <source>Terms &amp; Conditions</source>
         <translation>Términos y condiciones</translation>
+    </message>
+</context>
+<context>
+    <name>SwapRoutePopup</name>
+    <message>
+        <source>Swap route</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Best return</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Best received amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fastest</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Shortest execution time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Lowest fee</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Lowest network cost</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -173,7 +173,7 @@ Control {
         Receive = 1
     }
 
-    padding: Theme.bigPadding
+    padding: Theme.padding
 
     // by design
     implicitWidth: 492
@@ -457,7 +457,9 @@ Control {
 
                 Layout.fillWidth: true
                 Layout.minimumWidth: 120 // so a long value has room to shrink into
-                Layout.alignment: Qt.AlignVCenter
+                // bottom-aligned with the selector column so the fiat equivalent and
+                // the balance line sit on one line
+                Layout.alignment: Qt.AlignBottom
                 id: amountToSendInput
                 objectName: "amountToSendInput"
                 interactive: root.interactive
@@ -473,7 +475,7 @@ Control {
             }
 
             ColumnLayout {
-                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignRight | Qt.AlignBottom
                 spacing: Theme.halfPadding
 
                 AssetSelector {

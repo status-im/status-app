@@ -17010,6 +17010,14 @@ avec un retour à la ligne</translation>
         <translation>Ajouter des actifs</translation>
     </message>
     <message>
+        <source>Fastest</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Lowest fee</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap + Bridge</source>
         <translation>Échange + Bridge</translation>
     </message>
@@ -17018,13 +17026,17 @@ avec un retour à la ligne</translation>
         <translation>Ajouter %1</translation>
     </message>
     <message>
-        <source>%1 s</source>
-        <comment>short for seconds</comment>
-        <translation>%1 sec</translation>
-    </message>
-    <message>
         <source>Best return</source>
         <translation>Meilleur rendement</translation>
+    </message>
+    <message>
+        <source>%1s</source>
+        <comment>short for seconds</comment>
+        <translation type="unfinished">%1&#xa0;s</translation>
+    </message>
+    <message>
+        <source>Choose route</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>by %1</source>
@@ -17119,6 +17131,37 @@ avec un retour à la ligne</translation>
     <message>
         <source>Terms &amp; Conditions</source>
         <translation>Conditions générales</translation>
+    </message>
+</context>
+<context>
+    <name>SwapRoutePopup</name>
+    <message>
+        <source>Swap route</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Best return</source>
+        <translation type="unfinished">Meilleur rendement</translation>
+    </message>
+    <message>
+        <source>Best received amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fastest</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Shortest execution time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Lowest fee</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Lowest network cost</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -33,6 +33,7 @@ method suggestedRoutes*(self: AccessInterface,
   fromChainID: int = 0,
   toChainID: int = 0,
   slippagePercentage: float = 0.0,
+  routeOrder: string = "",
   extraParamsTable: Table[string, string] = initTable[string, string]()) {.base.} =
     raise newException(ValueError, "No implementation available")
 

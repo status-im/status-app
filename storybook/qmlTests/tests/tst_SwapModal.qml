@@ -1977,6 +1977,42 @@ Item {
         // Reported against BSC, where it bites hardest: USDC has its own group key
         // there (usd-coin-bsc), so a receive token carried over from another chain
         // has no counterpart row in the BSC catalog to be found under.
+        function test_routeOrderPickerDrivesTheRouterParam() {
+            launchAndVerfyModal()
+
+            // the route metrics only render once a proposal is in
+            root.swapAdaptor.validSwapProposalReceived = true
+
+            compare(root.swapFormData.selectedRouteOrder, Constants.swap.routeOrderBestReturn)
+
+            const trigger = findChild(controlUnderTest, "routeOrderButton")
+            verify(!!trigger)
+            compare(trigger.text, qsTr("Best return"))
+
+            waitForRendering(trigger)
+            mouseClick(trigger)
+
+            // the dialog reparents to the overlay, so search from there
+            let fastest = null
+            tryVerify(() => {
+                fastest = findChild(popupSearchRoot(),
+                                    "routeOrderOption_" + Constants.swap.routeOrderFastest)
+                return !!fastest
+            }, 2000, "SwapRoutePopup did not open")
+
+            // mouseClick on a nested delegate doesn't register here, same as the
+            // slippage buttons above
+            fastest.clicked()
+
+            // the choice is what the router is asked for, and the footer follows it
+            compare(root.swapFormData.selectedRouteOrder, Constants.swap.routeOrderFastest)
+            tryCompare(trigger, "text", qsTr("Fastest"))
+
+            closeAndVerfyModal()
+            // and it goes back to the default with the rest of the form
+            compare(root.swapFormData.selectedRouteOrder, Constants.swap.routeOrderBestReturn)
+        }
+
         function test_payChainFilterLeavesTheReceiveSelectionAlone() {
             root.swapFormData.selectedNetworkChainId = 1
             launchAndVerfyModal()
