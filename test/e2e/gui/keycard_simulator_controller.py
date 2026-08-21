@@ -1,3 +1,5 @@
+import socket
+
 import allure
 
 import configs
@@ -6,11 +8,11 @@ from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.window import Window
 from gui.objects_map import keycard_names
-from scripts.utils.wait_for_port import wait_for_port
 
 # Matches KEYCARD_SIMULATOR_DEFAULT_SIMULATOR_ADDRESS in keycardV2/test_controller.nim
 _KEYCARD_SIMULATOR_HOST = '127.0.0.1'
 _KEYCARD_SIMULATOR_PORT = 9025
+_CREATING_KEYCARD_TEXT = 'Creating Keycard...'
 
 
 class KeycardSimulatorController(Window):
@@ -25,6 +27,10 @@ class KeycardSimulatorController(Window):
         self._remove_button = Button(keycard_names.keycardSimRemoveButton)
         self._card_id_field = QObject(keycard_names.keycardSimCardId)
         self._card_selector = QObject(keycard_names.keycardSimCardSelector)
+        self._seed_field = QObject(keycard_names.keycardSimSeed)
+        self._pin_field = QObject(keycard_names.keycardSimPin)
+        self._puk_field = QObject(keycard_names.keycardSimPuk)
+        self._create_with_seed_button = Button(keycard_names.keycardSimCreateWithSeedButton)
 
     def prepare(self) -> 'KeycardSimulatorController':
         # Skip Window.prepare() maximize/focus so Status stays in front during e2e.
@@ -56,11 +62,27 @@ class KeycardSimulatorController(Window):
         except (LookupError, RuntimeError, AttributeError):
             return False
 
+    def _create_with_seed_text(self) -> str:
+        try:
+            obj = driver.waitForObjectExists(self._create_with_seed_button.real_name, 200)
+            return str(getattr(obj, 'text', '') or '')
+        except (LookupError, RuntimeError, AttributeError):
+            return ''
+
     @allure.step('Click Start Keycard Simulator')
     def start_simulator(self):
         self._start_button.click()
         self._plug_reader_button.wait_until_enabled(configs.timeouts.KEYCARD_SIM_START_TIMEOUT_MSEC)
-        wait_for_port(_KEYCARD_SIMULATOR_HOST, _KEYCARD_SIMULATOR_PORT, timeout=1, retries=20)
+        # Restart kills a leftover JVM on 9025. PING to that leftover is a false ready —
+        # wait until it drops, then until the new server answers PING.
+        driver.waitFor(
+            lambda: not self._simulator_ping_ok(),
+            configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        )
+        assert driver.waitFor(
+            self._simulator_ping_ok,
+            configs.timeouts.KEYCARD_SIM_START_TIMEOUT_MSEC,
+        ), 'Keycard simulator did not accept PING'
         return self.background()
 
     @allure.step('Create empty keycard {card_id}')
@@ -73,6 +95,30 @@ class KeycardSimulatorController(Window):
             configs.timeouts.KEYCARD_SIM_START_TIMEOUT_MSEC,
         ), f'Keycard {card_id!r} was not created in simulator'
         return self.select_card(card_id)
+
+    @allure.step('Create keycard {card_id} from seed')
+    def create_card_with_seed(self, card_id: str, seed_phrase: str, pin: str, puk: str):
+        self._card_id_field.set_text_property(card_id)
+        self._seed_field.set_text_property(seed_phrase)
+        self._pin_field.set_text_property(pin)
+        self._puk_field.set_text_property(puk)
+        self._create_with_seed_button.wait_until_enabled()
+        self._create_with_seed_button.click()
+        # Load is async and unplugs when done. Plug during Load → APDU 6985.
+        driver.waitFor(
+            lambda: self._create_with_seed_text() == _CREATING_KEYCARD_TEXT,
+            2000,
+        )
+        driver.waitFor(
+            lambda: self._create_with_seed_text() != _CREATING_KEYCARD_TEXT,
+            configs.timeouts.KEYCARD_SIM_START_TIMEOUT_MSEC,
+        )
+        return self.select_card(card_id)
+
+    def _click_sim_button(self, button: Button):
+        button.wait_until_enabled()
+        button.object.click()
+        return self
 
     @allure.step('Wait until keycard reader is plugged in simulator')
     def wait_until_reader_plugged(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
@@ -92,8 +138,7 @@ class KeycardSimulatorController(Window):
     def plug_reader(self):
         if self.is_reader_plugged:
             return self.background()
-        self._plug_reader_button.wait_until_enabled()
-        self._plug_reader_button.click()
+        self._click_sim_button(self._plug_reader_button)
         self.wait_until_reader_plugged()
         return self.background()
 
@@ -101,8 +146,7 @@ class KeycardSimulatorController(Window):
     def insert_card(self):
         if self.is_card_inserted:
             return self.background()
-        self._insert_button.wait_until_enabled()
-        self._insert_button.click()
+        self._click_sim_button(self._insert_button)
         self.wait_until_card_inserted()
         return self.background()
 
@@ -145,3 +189,15 @@ class KeycardSimulatorController(Window):
         if combo.currentIndex < 0:
             return ''
         return str(combo.textAt(combo.currentIndex))
+
+    def _simulator_ping_ok(self) -> bool:
+        try:
+            with socket.create_connection(
+                (_KEYCARD_SIMULATOR_HOST, _KEYCARD_SIMULATOR_PORT), timeout=1
+            ) as sock:
+                sock.sendall(b'PING\n')
+                sock.settimeout(1)
+                data = sock.recv(64)
+            return data.decode('utf-8', errors='replace').strip().startswith('OK')
+        except OSError:
+            return False

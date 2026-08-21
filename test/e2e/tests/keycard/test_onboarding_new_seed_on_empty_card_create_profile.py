@@ -1,25 +1,37 @@
 import allure
 import pytest
 
-from constants import DEFAULT_PIN, KEYCARD_EMPTY_TITLE
+from configs.timeouts import APP_LOAD_TIMEOUT_MSEC
+from constants import (
+    DEFAULT_PIN,
+    DEFAULT_PUK,
+    KEYCARD_EMPTY_TITLE,
+    KEYCARD_PROFILE_DETAILS_TITLE,
+)
+from driver.aut import AUT
+from gui.screens.onboarding import KeycardLoginView
+from helpers.keycard_helper import (
+    assert_status_account_matches_seed,
+    read_keycard_details,
+)
 from helpers.onboarding_helper import (
     open_create_profile_view,
     wait_until_logged_in,
-    skip_biometrics_popup_if_visible,
-    skip_education_popup_if_visible,
+    skip_post_login_popups_if_visible,
 )
 from scripts.utils.generators import keycard_card_id
 
 
 @pytest.mark.keycard
-@pytest.mark.timeout(300)
-@allure.title('Onboarding — create profile with new key pair on empty Keycard')
+@pytest.mark.timeout(400)
+@allure.title('Onboarding — create profile on empty Keycard, restart, login with PIN')
 @allure.description(
     'Empty card → Create profile → Use Keycard → PIN → Import new key pair → '
     'Reveal and confirm seed → Continue on success → land in app → Keycard settings → '
-    'Read Keycard → PIN → Keycard stores Status profile key pair with On Keycard label'
+    'Read Keycard shows profile key pair → restart → provision the same card in simulator → '
+    'login with PIN → land in the same profile (wallet address matches seed, Read Keycard still profile)'
 )
-def test_onboarding_empty_keycard_log_in(keycard_simulator, main_window):
+def test_onboarding_empty_keycard_log_in(keycard_simulator, main_window, aut: AUT):
     card_id = keycard_card_id()
     keycard_simulator.create_empty_card(card_id=card_id)
     keycard_simulator.plug_reader()
@@ -30,13 +42,28 @@ def test_onboarding_empty_keycard_log_in(keycard_simulator, main_window):
 
     keycard_mng_popup = keycard_dtls_view.import_a_new_keypair()
     keycard_mng_popup.enter_new_pin_and_confirm(pin=DEFAULT_PIN)
-    keycard_mng_popup.back_up_seed_phrase_and_confirm()
+    keycard_mng_popup.reveal_recovery_phrase()
+    seed_words = keycard_mng_popup.write_down_recovery_phrase()
+    keycard_mng_popup.open_confirm_recovery_phrase().fill_the_grid_and_continue(seed_words)
     keycard_mng_popup.continue_after_key_pair_imported()
     wait_until_logged_in(main_window)
-    skip_biometrics_popup_if_visible()
-    skip_education_popup_if_visible()
+    skip_post_login_popups_if_visible()
 
-    keycard_settings = main_window.left_panel.open_settings().left_panel.open_keycard_settings()
-    assert keycard_settings.is_read_keycard_button_visible
-    keycard_settings.open_read_keycard().enter_keycard_pin_and_close(DEFAULT_PIN)
-    keycard_settings.wait_until_details_appears()
+    read_keycard_details(main_window, DEFAULT_PIN, KEYCARD_PROFILE_DETAILS_TITLE)
+
+    aut.restart()
+    main_window.prepare()
+    KeycardLoginView().wait_until_appears(APP_LOAD_TIMEOUT_MSEC)
+
+    keycard_simulator.wait_until_appears(APP_LOAD_TIMEOUT_MSEC).start_simulator()
+    keycard_simulator.create_card_with_seed(
+        card_id, ' '.join(seed_words), DEFAULT_PIN, DEFAULT_PUK
+    )
+    keycard_simulator.plug_reader()
+    keycard_simulator.insert_card()
+    KeycardLoginView().log_in_with_pin(DEFAULT_PIN)
+    wait_until_logged_in(main_window)
+    skip_post_login_popups_if_visible()
+
+    assert_status_account_matches_seed(main_window, seed_words)
+    read_keycard_details(main_window, DEFAULT_PIN, KEYCARD_PROFILE_DETAILS_TITLE)

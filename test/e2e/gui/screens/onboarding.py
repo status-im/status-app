@@ -728,3 +728,16 @@ class ReturningLoginView(QObject):
     def select_user_by_name(self, user_name):
         users_popup = OnboardingLoginUsersPopup()
         users_popup.select_user_by_name(user_name)
+
+
+class KeycardLoginView(QObject):
+
+    def __init__(self):
+        super().__init__(onboarding_names.loginView_keycardBox)
+        self.pin_input = QObject(onboarding_names.loginView_keycardPinInput)
+
+    @allure.step('Log in with Keycard PIN')
+    def log_in_with_pin(self, pin: str, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC):
+        self.pin_input.wait_until_appears(timeout_msec)
+        self.pin_input.object.setPin(pin)
+        return self

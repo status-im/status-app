@@ -14,6 +14,7 @@ def open_create_profile_view():
 @allure.step('Wait until user is logged in')
 def wait_until_logged_in(main_window):
     SplashScreen().wait_until_appears().wait_until_hidden(APP_LOAD_TIMEOUT_MSEC)
+    skip_post_login_popups_if_visible()
     main_window.left_panel.messages_button.wait_until_appears(APP_LOAD_TIMEOUT_MSEC)
 
 
@@ -49,3 +50,9 @@ def skip_biometrics_popup_if_visible(timeout_msec: int = UI_LOAD_TIMEOUT_MSEC):
         EnableBiometricsPopup().skip(timeout_msec)
     except TimeoutError:
         return
+
+
+@allure.step('Skip post-login popups if visible')
+def skip_post_login_popups_if_visible():
+    skip_biometrics_popup_if_visible()
+    skip_education_popup_if_visible()
