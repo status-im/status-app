@@ -9,6 +9,7 @@ import configs
 import constants
 import driver
 from constants import WalletAccount
+from constants.wallet import WalletNetworkSettings
 from driver.objects_access import walk_children
 from gui.components.context_menu import ContextMenu
 from gui.components.wallet.add_saved_address_popup import AddEditSavedAddressPopup
@@ -278,6 +279,65 @@ class SavedAddressesView(QObject):
         return ContextMenu().wait_until_appears()
 
 
+def _qml_str(obj, name: str) -> str:
+    try:
+        value = getattr(obj, name, '')
+        return '' if value is None else str(value)
+    except (RuntimeError, AttributeError, TypeError):
+        return ''
+
+
+def _qml_int(obj, name: str) -> int:
+    try:
+        return int(getattr(obj, name, 0) or 0)
+    except (RuntimeError, AttributeError, TypeError, ValueError):
+        return 0
+
+
+def compact_address(addr: str, chars: int = 4) -> str:
+    if len(addr) <= 5 + chars * 2:
+        return addr
+    return f'{addr[:2 + chars]}...{addr[-chars:]}'
+
+
+_HISTORY_TIMESTAMP_SKEW_SEC = 180
+
+
+class TransactionRecord:
+
+    def __init__(self, obj):
+        self.object = obj
+        self.fromAddress = _qml_str(obj, 'fromAddress')
+        self.networkName = _qml_str(obj, 'networkName')
+        self.title = _qml_str(obj, 'title')
+        self.toAddress = _qml_str(obj, 'toAddress')
+        self.transactionValue = _qml_str(obj, 'transactionValue')
+        self.timestamp = _qml_int(obj, 'timestamp')
+
+    def __repr__(self):
+        return f'{self.title} | {self.toAddress} | {self.networkName} | {self.timestamp}'
+
+    @property
+    def failed(self) -> bool:
+        return 'failed' in self.title.lower()
+
+    def matches(
+        self,
+        network_name: str,
+        from_address: str,
+        sent_at: float,
+        to_address: str | None = None,
+        amount: str | None = None,
+    ) -> bool:
+        if self.networkName != network_name or self.fromAddress != from_address:
+            return False
+        if to_address is not None and self.toAddress != compact_address(to_address):
+            return False
+        if amount is not None and amount not in self.transactionValue:
+            return False
+        return sent_at - _HISTORY_TIMESTAMP_SKEW_SEC <= self.timestamp <= time.time()
+
+
 class WalletAccountView(QObject):
 
     def __init__(self):
@@ -294,6 +354,8 @@ class WalletAccountView(QObject):
         self._activity_tab_button = Button(wallet_names.rightSideWalletTabBar_Activity_StatusTabButton)
         self._collectibles_view = QObject(wallet_names.collectibles_view)
         self._activity_view = QObject(wallet_names.activity_view)
+        self._activity_delegate = QObject(wallet_names.activity_delegate)
+        self._new_transactions_button = Button(wallet_names.activity_new_transactions_button)
         self._asset_item_delegate = QObject(wallet_names.itemDelegate)
         self._asset_item = QObject(wallet_names.assets_viewTokenItem)
         self._collectible_item = QObject(wallet_names.collectible_item)
@@ -391,7 +453,7 @@ class WalletAccountView(QObject):
         timeout_msec: int | None = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
     ):
         _wait_until(
-            lambda: is_activity_tab_content_loaded(self._activity_view),
+            is_activity_tab_content_loaded,
             timeout_msec,
             'History tab did not finish loading',
         )
@@ -448,6 +510,54 @@ class WalletAccountView(QObject):
         else:
             self._activity_view.wait_until_appears(timeout_msec)
         return self
+
+    @allure.step('Collect transactions in History')
+    def collect_history_records(self) -> typing.List[TransactionRecord]:
+        if self._new_transactions_button.exists:
+            self._new_transactions_button.click()
+        return [
+            TransactionRecord(item)
+            for item in driver.findAllObjects(self._activity_delegate.real_name)
+        ]
+
+    @allure.step('Wait for new History transaction')
+    def wait_for_new_history_transaction(
+        self,
+        titles: typing.Sequence[str],
+        network_name: str,
+        sent_at: float,
+        from_address: str = WalletNetworkSettings.STATUS_ACCOUNT_DEFAULT_NAME.value,
+        to_address: str | None = None,
+        amount: str | None = None,
+        timeout_msec: int = configs.timeouts.WALLET_HISTORY_TX_TIMEOUT_MSEC,
+    ) -> TransactionRecord:
+        records: typing.List[TransactionRecord] = []
+        matched: TransactionRecord | None = None
+        failed: TransactionRecord | None = None
+        self.open_activity_tab()
+
+        def _found() -> bool:
+            nonlocal records, matched, failed
+            records = self.collect_history_records()
+            for record in records:
+                if not record.matches(network_name, from_address, sent_at, to_address, amount):
+                    continue
+                if record.failed:
+                    failed = record
+                    return True
+                if record.title in titles:
+                    matched = record
+                    return True
+            return False
+
+        found = driver.waitFor(_found, timeout_msec)
+        if failed is not None:
+            raise AssertionError(f'History transaction failed: {failed!r}')
+        assert found and matched is not None, (
+            f'New History transaction not found. Seen: {records}'
+        )
+        return matched
+
 
     @allure.step('Click filter button')
     def click_filter_button(self):

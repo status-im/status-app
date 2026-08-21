@@ -11,6 +11,8 @@ FAST_PASSWORD_TIMEOUT_MSEC = 5000
 WALLET_SYNC_TIMEOUT_MSEC = APP_LOAD_TIMEOUT_MSEC
 # Wallet balance sync after import/testnet toggle can exceed the default wallet sync timeout.
 WALLET_TRANSACTION_SYNC_TIMEOUT_MSEC = 120_000
+# History: Sending -> Sent on testnets can exceed wallet sync timeout on CI.
+WALLET_HISTORY_TX_TIMEOUT_MSEC = 180_000
 COLLECTIBLES_SYNC_TIMEOUT_MSEC = 120_000
 ROUTES_TIMEOUT_MSEC = 30000
 MESSAGING_TIMEOUT_SEC = 60

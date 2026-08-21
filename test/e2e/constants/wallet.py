@@ -1,6 +1,6 @@
 import random
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, IntEnum
 
 from constants.networks import WalletNetworkNaming
 from scripts.utils.generators import (
@@ -132,6 +132,28 @@ class WalletOrigin(Enum):
 class WalletTransactions(Enum):
     TRANSACTION_SENDING_TOAST_MESSAGE = 'Sending'
     ENS_TRANSACTION_REGISTERING_TOAST_MESSAGE = 'Registering'
+
+
+# Mirrors Constants.TransactionType in ui/imports/utils/Constants.qml
+class WalletTransactionType(IntEnum):
+    SEND = 0
+    RECEIVE = 1
+    BUY = 2
+    SWAP = 3
+    BRIDGE = 4
+    CONTRACT_DEPLOYMENT = 5
+    MINT = 6
+    APPROVE = 7
+    CONTRACT_INTERACTION = 8
+    UNKNOWN = 9
+    SELL = 10
+    DESTROY = 11
+
+
+class WalletHistoryTitles:
+    SEND = ('Sent',)
+    ENS = ('Interaction', 'Contract deployed')
+    MINT = ('Interaction', 'Token minted', 'Collectible minted', 'Contract deployed')
 
 
 class WalletScreensHeaders(Enum):
