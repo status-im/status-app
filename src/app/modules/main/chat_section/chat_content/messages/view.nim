@@ -283,7 +283,5 @@ QtObject:
 
   proc delete*(self: View) =
     self.denseModelVariant.delete
-    if not self.denseModel.isNil:
-      self.denseModel.delete
     self.QObject.delete
 
