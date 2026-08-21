@@ -4,6 +4,7 @@ import ../../app_service/common/utils as common_utils
 import ./html_utils
 import stew/byteutils
 import ./utils/qrcodegen
+import ./utils/pubkey_memo
 import std/json
 import chronicles
 
@@ -23,6 +24,8 @@ logScope:
 
 QtObject:
   type Utils* = ref object of QObject
+    colorIdCache: PubkeyMemo[int]
+    emojiHashCache: PubkeyMemo[string]
 
   proc isCompressedPubKey*(self: Utils, publicKey: string): bool
   proc getDecompressedPk*(self: Utils, compressedKey: string): string
@@ -35,6 +38,8 @@ QtObject:
 
   proc setup(self: Utils) =
     self.QObject.setup
+    self.colorIdCache = newPubkeyMemo[int]()
+    self.emojiHashCache = newPubkeyMemo[string]()
 
   proc delete*(self: Utils) =
     self.QObject.delete
@@ -156,17 +161,18 @@ QtObject:
   proc escapeHtml*(self: Utils, text: string): string {.slot.} =
     result = common_utils.escape_html(text)
 
-  proc getEmojiHashAsJson*(self: Utils, publicKey: string): string {.slot.} =
-    var pk = publicKey
+  proc decompressedPk(self: Utils, publicKey: string): string =
     if self.isCompressedPubKey(publicKey):
-      pk = self.getDecompressedPk(publicKey)
-    procs_from_visual_identity_service.getEmojiHashAsJson(pk)
+      return self.getDecompressedPk(publicKey)
+    publicKey
+
+  proc getEmojiHashAsJson*(self: Utils, publicKey: string): string {.slot.} =
+    self.emojiHashCache.get(publicKey, proc(key: string): string =
+      procs_from_visual_identity_service.getEmojiHashAsJson(self.decompressedPk(key)))
 
   proc getColorId*(self: Utils, publicKey: string): int {.slot.} =
-    var pk = publicKey
-    if self.isCompressedPubKey(publicKey):
-      pk = self.getDecompressedPk(publicKey)
-    int(procs_from_visual_identity_service.colorIdOf(pk))
+    self.colorIdCache.get(publicKey, proc(key: string): int =
+      int(procs_from_visual_identity_service.colorIdOf(self.decompressedPk(key))))
 
   proc getCompressedPk*(self: Utils, publicKey: string): string {.slot.} =
     compressPk(publicKey)
