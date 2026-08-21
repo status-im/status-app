@@ -1,6 +1,7 @@
 import logging
 import os
 import signal
+import socket
 import subprocess
 import typing
 
@@ -25,10 +26,17 @@ def find_process_by_port(port: int) -> typing.List[int]:
     return pid_list
 
 
-def find_free_port(start: int, step: int):
-    while find_process_by_port(start):
-        start += step
-    return start
+def _port_is_listening(port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(0.2)
+        return sock.connect_ex(('127.0.0.1', port)) == 0
+
+
+def find_free_port(start: int, step: int) -> int:
+    for port in range(start, start + step * 100, step):
+        if not _port_is_listening(port):
+            return port
+    raise RuntimeError(f'No free TCP port found from {start}')
 
 
 @allure.step('Kill process')
