@@ -170,13 +170,19 @@ type
     reactions*: JsonNode
     messageId*: string    ## the around-message anchor this page answered
     requestedRank*: int   ## the at-rank anchor this page answered
+    builtOnThreadId*: int ## thread that assembled this page; the off-thread witness
 
 proc initMessagePagePayload*(chatId = ""): MessagePagePayload =
+  ## `builtOnThreadId` is stamped at assembly, not at claim: comparing it with
+  ## the claiming thread's id is what proves a page was assembled off the GUI
+  ## thread, and it is the only thing that would notice a future regression
+  ## moving assembly back into a completion slot.
   MessagePagePayload(
     meta: initMessagePageMeta(chatId),
     messages: newJArray(),
     reactions: newJArray(),
     requestedRank: RANK_NOT_APPLICABLE,
+    builtOnThreadId: getThreadId(),
   )
 
 proc newErrorPagePayload*(chatId, error: string): MessagePagePayload =
