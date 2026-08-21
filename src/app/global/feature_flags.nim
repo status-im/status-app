@@ -23,6 +23,7 @@ const DEFAULT_FLAG_HOMEPAGE_ENABLED = true
 const DEFAULT_FLAG_LOCAL_BACKUP_ENABLED = true
 const DEFAULT_FLAG_PRIVACY_MODE_FEATURE_ENABLED = true
 const DEFAULT_FLAG_MESSAGE_LINK_SHARING_ENABLED = true
+const DEFAULT_FLAG_DENSE_MESSAGE_MODEL_ENABLED = false
 
 # Compile time feature flags
 const DEFAULT_FLAG_DAPPS_ENABLED  = true
@@ -42,6 +43,7 @@ featureFlag("HOMEPAGE_ENABLED",               DEFAULT_FLAG_HOMEPAGE_ENABLED)
 featureFlag("LOCAL_BACKUP_ENABLED",           DEFAULT_FLAG_LOCAL_BACKUP_ENABLED)
 featureFlag("PRIVACY_MODE_FEATURE_ENABLED",   DEFAULT_FLAG_PRIVACY_MODE_FEATURE_ENABLED)
 featureFlag("MESSAGE_LINK_SHARING_ENABLED",   DEFAULT_FLAG_MESSAGE_LINK_SHARING_ENABLED)
+featureFlag("DENSE_MESSAGE_MODEL_ENABLED",    DEFAULT_FLAG_DENSE_MESSAGE_MODEL_ENABLED)
 
 featureFlag("DAPPS_ENABLED",                  DEFAULT_FLAG_DAPPS_ENABLED, true)
 featureFlag("BROWSER_ENABLED",                DEFAULT_FLAG_BROWSER_ENABLED, true)
@@ -97,6 +99,7 @@ QtObject:
     privacyModeFeatureEnabled: bool
     messageLinkSharingEnabled: bool
     buyEnabled: bool
+    denseMessageModelEnabled: bool
 
   proc setup(self: FeatureFlags) =
     self.QObject.setup()
@@ -113,6 +116,7 @@ QtObject:
     self.privacyModeFeatureEnabled = PRIVACY_MODE_FEATURE_ENABLED
     self.messageLinkSharingEnabled = MESSAGE_LINK_SHARING_ENABLED
     self.buyEnabled = BUY_ENABLED
+    self.denseMessageModelEnabled = DENSE_MESSAGE_MODEL_ENABLED
 
   proc newFeatureFlags*(): FeatureFlags =
     new(result)
@@ -198,3 +202,9 @@ QtObject:
 
   proc getBuyEnabled*(self: FeatureFlags): bool {.slot.} =
     return self.buyEnabled
+
+  proc getDenseMessageModelEnabled*(self: FeatureFlags): bool {.slot.} =
+    return self.denseMessageModelEnabled
+
+  QtProperty[bool] denseMessageModelEnabled:
+    read = getDenseMessageModelEnabled

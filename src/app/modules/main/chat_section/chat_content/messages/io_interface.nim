@@ -1,6 +1,7 @@
 import nimqml, uuids
 
 import ../../../../../../app_service/service/message/dto/[message, reaction, pinned_message]
+import ../../../../../../app_service/service/message/message_window
 import ../../../../../../app_service/service/community/dto/community
 import ../../../../../../app_service/common/types
 
@@ -25,7 +26,21 @@ method updateChatIdentifier*(self: AccessInterface) {.base.} =
 method updateChatFetchMoreMessages*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method newMessagesLoaded*(self: AccessInterface, messages: seq[MessageDto], reactions: seq[ReactionDto]) {.base.} =
+method newMessagesLoaded*(self: AccessInterface, messages: seq[MessageDto], reactions: seq[ReactionDto],
+  firstRank = RANK_NOT_APPLICABLE, totalCount = COUNT_UNKNOWN) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onMessagesWindowLoaded*(self: AccessInterface, messages: seq[MessageDto], reactions: seq[ReactionDto],
+  firstRank, totalCount, anchorRank: int, errorMsg: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onChatMessagesCountUpdated*(self: AccessInterface, totalCount: int) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method loadMessagesAroundMessage*(self: AccessInterface, messageId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method loadMessagesAtRank*(self: AccessInterface, rank: int) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onReactionAdded*(self: AccessInterface, messageId: string, emoji: string, reactionId: string) {.base.} =
@@ -126,7 +141,7 @@ method getNumberOfPinnedMessages*(self: AccessInterface): int {.base.} =
 method deleteMessage*(self: AccessInterface, messageId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onMessageRemoved*(self: AccessInterface, messageId, removedBy: string) {.base.} =
+method onMessageRemoved*(self: AccessInterface, messageId, removedBy: string, clock: int64 = 0) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onMessagesDeleted*(self: AccessInterface, messageIds: seq[string]) {.base.} =

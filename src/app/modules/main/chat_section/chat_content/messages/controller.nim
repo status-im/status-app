@@ -62,7 +62,20 @@ proc init*(self: Controller) =
     let args = MessagesLoadedArgs(e)
     if self.chatId != args.chatId:
       return
-    self.delegate.newMessagesLoaded(args.messages, args.reactions)
+    self.delegate.newMessagesLoaded(args.messages, args.reactions, args.firstRank, args.totalCount)
+
+  self.events.on(SIGNAL_MESSAGES_WINDOW_LOADED) do(e:Args):
+    let args = MessagesWindowLoadedArgs(e)
+    if self.chatId != args.chatId:
+      return
+    self.delegate.onMessagesWindowLoaded(args.messages, args.reactions, args.firstRank, args.totalCount,
+      args.anchorRank, args.error)
+
+  self.events.on(SIGNAL_CHAT_MESSAGES_COUNT_UPDATED) do(e:Args):
+    let args = ChatMessagesCountArgs(e)
+    if self.chatId != args.chatId:
+      return
+    self.delegate.onChatMessagesCountUpdated(args.totalCount)
 
   self.events.on(SIGNAL_NEW_MESSAGE_RECEIVED) do(e: Args):
     var args = MessagesArgs(e)
@@ -189,7 +202,7 @@ proc init*(self: Controller) =
     let args = MessageRemovedArgs(e)
     if self.chatId != args.chatId:
       return
-    self.delegate.onMessageRemoved(args.messageId, args.deletedBy)
+    self.delegate.onMessageRemoved(args.messageId, args.deletedBy, args.clock)
 
   self.events.on(SIGNAL_MESSAGES_DELETED) do(e: Args):
     let args = MessagesDeletedArgs(e)
@@ -265,6 +278,15 @@ proc belongsToCommunity*(self: Controller): bool =
 proc loadMoreMessages*(self: Controller): bool =
   let limit = self.loadingMessagesPerPageFactor * MESSAGES_PER_PAGE
   return self.messageService.asyncLoadMoreMessagesForChat(self.chatId, limit)
+
+proc loadMessagesAroundMessage*(self: Controller, messageId: string) =
+  self.messageService.asyncLoadMessagesAroundMessage(self.chatId, messageId)
+
+proc loadMessagesAtRank*(self: Controller, rank: int) =
+  self.messageService.asyncLoadMessagesAtRank(self.chatId, rank)
+
+proc loadMessagesCount*(self: Controller) =
+  self.messageService.asyncLoadMessagesCountForChat(self.chatId)
 
 proc addReaction*(self: Controller, messageId: string, emoji: string) =
   self.messageService.addReactionAsync(self.chatId, messageId, emoji)

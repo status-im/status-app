@@ -4,6 +4,9 @@ import ../io_interface as delegate_interface
 import view, controller
 import ../../../../shared_models/[message_model, message_item, contacts_utils]
 import ../../../../shared_models/link_preview_model
+import ../../../../shared_models/dense_message_model
+import ../../../../shared_models/dense_message_routing
+import ../../../../../global/feature_flags
 import ../../../../../global/global_singleton
 import ../../../../../core/eventemitter
 import ../../../../../../app_service/service/contacts/dto/contacts
@@ -43,6 +46,10 @@ type
     initialMessagesLoaded: bool
     firstUnseenMessageState: FirstUnseenMessageState
     getMessageRequestId: UUID
+    # Nil unless FLAG_DENSE_MESSAGE_MODEL_ENABLED is set. The legacy model is
+    # always fed; the dense one is fed alongside it so the new path can be
+    # exercised without taking the chat away from the model that works.
+    denseRouter: DenseChatRouter[DenseModel]
 
 proc newModule*(delegate: delegate_interface.AccessInterface, events: EventEmitter, sectionId: string, chatId: string,
     belongsToCommunity: bool, contactService: contact_service.Service, communityService: community_service.Service,
@@ -58,8 +65,11 @@ proc newModule*(delegate: delegate_interface.AccessInterface, events: EventEmitt
   result.moduleLoaded = false
   result.initialMessagesLoaded = false
   result.firstUnseenMessageState = (false, false, false)
+  if DENSE_MESSAGE_MODEL_ENABLED:
+    result.denseRouter = newDenseChatRouter(chatId, result.view.denseModel())
 
 # Forward declaration
+proc buildMessageItem(self: Module, message: MessageDto, reactions: seq[ReactionDto]): Item
 proc createChatIdentifierItem(self: Module): Item
 proc createFetchMoreMessagesItem(self: Module): Item
 proc setChatDetails(self: Module, chatDetails: ChatDto)
@@ -87,6 +97,8 @@ method viewDidLoad*(self: Module) =
     self.view.model().insertItemBasedOnClock(self.createFetchMoreMessagesItem())
 
   self.updateChatIdentifier()
+  if not self.denseRouter.isNil:
+    self.controller.loadMessagesCount()
   self.view.setAmIChatAdmin(self.amIChatAdmin())
   self.view.setIsPinMessageAllowedForMembers(self.pinMessageAllowedForMembers())
   self.moduleLoaded = true
@@ -112,6 +124,15 @@ proc createMessageItemsFromMessageDtos(self: Module, messages: seq[MessageDto], 
       if (self.updateItemsByAlbum(result, message)):
         continue
 
+    # remove a message which has replace parameters filled
+    let index = self.view.model().findIndexForMessageId(message.replace)
+    if(index != -1):
+      self.view.model().removeItem(message.replace)
+
+    result.add(self.buildMessageItem(message, reactions))
+
+
+proc buildMessageItem(self: Module, message: MessageDto, reactions: seq[ReactionDto]): Item =
     let sender = self.controller.getContactDetails(message.`from`)
 
     var quotedMessageAuthorDetails = ContactDetails()
@@ -127,11 +148,6 @@ proc createMessageItemsFromMessageDtos(self: Module, messages: seq[MessageDto], 
         deletedByContactDetails = sender
       else:
         deletedByContactDetails = self.controller.getContactDetails(message.deletedBy)
-
-    # remove a message which has replace parameters filled
-    let index = self.view.model().findIndexForMessageId(message.replace)
-    if(index != -1):
-      self.view.model().removeItem(message.replace)
 
     var renderedMessageText = self.controller.getRenderedText(message.parsedText, self.controller.getCommunityDetails().chats)
 
@@ -176,7 +192,16 @@ proc createMessageItemsFromMessageDtos(self: Module, messages: seq[MessageDto], 
       item.gapFrom = message.gapParameters.`from`
       item.gapTo = message.gapParameters.to
 
-    result.add(item)
+    return item
+
+
+proc createDenseMessageItems(self: Module, messages: seq[MessageDto], reactions: seq[ReactionDto]): seq[Item] =
+  ## One item per stored message, in the order status-go returned them. The
+  ## dense model's rows are ranks, so nothing may be collapsed away here — an
+  ## album merged into its predecessor or a `deletedForMe` row skipped would
+  ## shift every rank in the page by one.
+  for message in messages:
+    result.add(self.buildMessageItem(message, reactions))
 
 
 proc createFetchMoreMessagesItem(self: Module): Item =
@@ -270,7 +295,12 @@ method reevaluateViewLoadingState*(self: Module) =
                 self.view.getMessageSearchOngoing()
   self.view.setLoading(loading)
 
-method newMessagesLoaded*(self: Module, messages: seq[MessageDto], reactions: seq[ReactionDto]) =
+method newMessagesLoaded*(self: Module, messages: seq[MessageDto], reactions: seq[ReactionDto],
+    firstRank = RANK_NOT_APPLICABLE, totalCount = COUNT_UNKNOWN) =
+  if not self.denseRouter.isNil:
+    self.denseRouter.onMessagePageLoaded(self.controller.getMyChatId(),
+      self.createDenseMessageItems(messages, reactions), firstRank, totalCount)
+
   if messages.len > 0:
     var viewItems = self.createMessageItemsFromMessageDtos(messages, reactions)
 
@@ -290,10 +320,36 @@ method newMessagesLoaded*(self: Module, messages: seq[MessageDto], reactions: se
   self.reevaluateViewLoadingState()
 
 method messagesAdded*(self: Module, messages: seq[MessageDto]) =
+  if not self.denseRouter.isNil:
+    self.denseRouter.onIncomingMessages(self.controller.getMyChatId(),
+      self.createDenseMessageItems(messages, @[]))
+
   let items = self.createMessageItemsFromMessageDtos(messages)
 
   self.view.model().insertItemsBasedOnClock(items)
   self.checkIfMessageLoadedAndScroll()
+
+method onMessagesWindowLoaded*(self: Module, messages: seq[MessageDto], reactions: seq[ReactionDto],
+    firstRank, totalCount, anchorRank: int, errorMsg: string) =
+  if self.denseRouter.isNil:
+    return
+  if errorMsg == "":
+    self.denseRouter.onMessagePageLoaded(self.controller.getMyChatId(),
+      self.createDenseMessageItems(messages, reactions), firstRank, totalCount)
+  else:
+    error "message window fetch failed", chatId = self.controller.getMyChatId(), msg = errorMsg
+  self.view.messagesWindowLoaded(self.denseRouter.anchorIndex(anchorRank), errorMsg)
+
+method onChatMessagesCountUpdated*(self: Module, totalCount: int) =
+  if self.denseRouter.isNil:
+    return
+  self.denseRouter.onChatMessageCount(self.controller.getMyChatId(), totalCount)
+
+method loadMessagesAroundMessage*(self: Module, messageId: string) =
+  self.controller.loadMessagesAroundMessage(messageId)
+
+method loadMessagesAtRank*(self: Module, rank: int) =
+  self.controller.loadMessagesAtRank(rank)
 
 method removeNewMessagesMarker*(self: Module)
 
@@ -459,7 +515,10 @@ method onMediaServerStarted*(self: Module, port: int) =
 method deleteMessage*(self: Module, messageId: string) =
   self.controller.deleteMessage(messageId)
 
-method onMessageRemoved*(self: Module, messageId, removedBy: string) =
+method onMessageRemoved*(self: Module, messageId, removedBy: string, clock: int64 = 0) =
+  if not self.denseRouter.isNil:
+    self.denseRouter.onMessageRemoved(self.controller.getMyChatId(), messageId, clock)
+
   var removedByValue = removedBy
   if removedBy == "":
     # removedBy is empty if it was removed by the sender

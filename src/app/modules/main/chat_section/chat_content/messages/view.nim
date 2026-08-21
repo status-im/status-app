@@ -1,6 +1,8 @@
 import nimqml, json
 import ../../../../shared_models/message_model
 import ../../../../shared_models/message_item
+import ../../../../shared_models/dense_message_model
+import ../../../../../global/feature_flags
 import ../../../../../../app_service/service/chat/dto/chat
 import io_interface
 
@@ -10,6 +12,10 @@ QtObject:
       delegate: io_interface.AccessInterface
       model: Model
       modelVariant: QVariant
+      # Built only under FLAG_DENSE_MESSAGE_MODEL_ENABLED; a null variant
+      # otherwise, so QML can tell which model it is talking to.
+      denseModel: DenseModel
+      denseModelVariant: QVariant
       messageSearchOngoing: bool
       amIChatAdmin: bool
       isPinMessageAllowedForMembers: bool
@@ -26,6 +32,11 @@ QtObject:
     result.delegate = delegate
     result.model = newModel()
     result.modelVariant = newQVariant(result.model)
+    if DENSE_MESSAGE_MODEL_ENABLED:
+      result.denseModel = newDenseModel()
+      result.denseModelVariant = newQVariant(result.denseModel)
+    else:
+      result.denseModelVariant = newQVariant()
     result.messageSearchOngoing = false
     result.amIChatAdmin = false
     result.isPinMessageAllowedForMembers = false
@@ -45,6 +56,26 @@ QtObject:
     return self.modelVariant
   QtProperty[QVariant] model:
     read = getModel
+
+  proc denseModel*(self: View): DenseModel =
+    return self.denseModel
+
+  proc getDenseModel(self: View): QVariant {.slot.} =
+    return self.denseModelVariant
+  QtProperty[QVariant] denseModel:
+    read = getDenseModel
+
+  proc loadMessagesAroundMessage*(self: View, messageId: string) {.slot.} =
+    self.delegate.loadMessagesAroundMessage(messageId)
+
+  proc loadMessagesAtRank*(self: View, rank: int) {.slot.} =
+    self.delegate.loadMessagesAtRank(rank)
+
+  proc setDenseWindow*(self: View, firstIndex: int, lastIndex: int, margin: int) {.slot.} =
+    if not self.denseModel.isNil:
+      self.denseModel.setWindow(firstIndex, lastIndex, margin)
+
+  proc messagesWindowLoaded*(self: View, anchorIndex: int, error: string) {.signal.}
 
   proc toggleReaction*(self: View, messageId: string, emoji: string) {.slot.} =
     self.delegate.toggleReaction(messageId, emoji)
@@ -251,5 +282,8 @@ QtObject:
     self.delegate.forceLinkPreviewsLocalData(messageId)
 
   proc delete*(self: View) =
+    self.denseModelVariant.delete
+    if not self.denseModel.isNil:
+      self.denseModel.delete
     self.QObject.delete
 
