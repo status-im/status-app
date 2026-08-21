@@ -29,33 +29,106 @@ type
 proc asyncFetchChatMessagesTask(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncFetchChatMessagesTaskArg](argEncoded)
   try:
-    var responseJson = %*{
-      "chatId": arg.chatId
-    }
-
-    # handle messages
-    var messagesArr: JsonNode
-    var messagesCursor: JsonNode
     let msgsResponse = status_go.fetchMessages(arg.chatId, arg.msgCursor, arg.limit)
-
     if not msgsResponse.error.isNil:
       raise newException(CatchableError, msgsResponse.error.message)
 
-    discard msgsResponse.result.getProp("cursor", messagesCursor)
-    discard msgsResponse.result.getProp("messages", messagesArr)
-    responseJson["messages"] = messagesArr
-    responseJson["messagesCursor"] = messagesCursor
-
-    # handle reactions
-    var reactionsArr: JsonNode
     let rResponse = status_go.fetchReactions(arg.chatId, arg.msgCursor, arg.limit)
     if not rResponse.error.isNil:
       raise newException(CatchableError, rResponse.error.message)
 
-    reactionsArr = rResponse.result
-    responseJson["reactions"] = reactionsArr
+    arg.finish(buildWindowResponse(arg.chatId, msgsResponse.result, rResponse.result))
 
+  except Exception as e:
+    arg.finish(%* {
+      "chatId": arg.chatId,
+      "error": e.msg,
+    })
+
+#################################################
+# Async load a window of messages (around a message / at a rank)
+#################################################
+type
+  AsyncFetchChatMessagesAroundMessageTaskArg = ref object of QObjectTaskArg
+    chatId: string
+    messageId: string
+    limit: int
+
+  AsyncFetchChatMessagesAtRankTaskArg = ref object of QObjectTaskArg
+    chatId: string
+    rank: int
+    limit: int
+
+  AsyncFetchChatMessagesCountTaskArg = ref object of QObjectTaskArg
+    chatId: string
+
+proc fetchReactionsForPage(chatId: string, messagesArr: JsonNode): JsonNode =
+  # The window calls answer with an empty cursor, so the cursor-paged reactions
+  # query cannot be aimed at them; reactions are collected per message instead,
+  # the way the pinned-messages task already does it. Worker thread only.
+  result = newJArray()
+  if messagesArr.isNil or messagesArr.kind != JArray:
+    return
+  for messageJson in messagesArr:
+    if messageJson.kind != JObject or not messageJson.hasKey("id"):
+      continue
+    let rResponse = status_go.fetchReactionsForMessageWithId(chatId, messageJson["id"].getStr)
+    if not rResponse.error.isNil:
+      raise newException(CatchableError, rResponse.error.message)
+    for reactionJson in rResponse.result.getElems():
+      result.add(reactionJson)
+
+proc asyncFetchChatMessagesAroundMessageTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncFetchChatMessagesAroundMessageTaskArg](argEncoded)
+  try:
+    let msgsResponse = status_go.fetchMessagesAroundMessage(arg.chatId, arg.messageId, arg.limit)
+    if not msgsResponse.error.isNil:
+      raise newException(CatchableError, msgsResponse.error.message)
+
+    let messagesArr = msgsResponse.result{"messages"}
+    var responseJson = buildWindowResponse(arg.chatId, msgsResponse.result,
+      fetchReactionsForPage(arg.chatId, messagesArr))
+    responseJson["messageId"] = %arg.messageId
     arg.finish(responseJson)
+
+  except Exception as e:
+    arg.finish(%* {
+      "chatId": arg.chatId,
+      "messageId": arg.messageId,
+      "error": e.msg,
+    })
+
+proc asyncFetchChatMessagesAtRankTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncFetchChatMessagesAtRankTaskArg](argEncoded)
+  try:
+    let msgsResponse = status_go.fetchMessagesAtRank(arg.chatId, arg.rank, arg.limit)
+    if not msgsResponse.error.isNil:
+      raise newException(CatchableError, msgsResponse.error.message)
+
+    let messagesArr = msgsResponse.result{"messages"}
+    var responseJson = buildWindowResponse(arg.chatId, msgsResponse.result,
+      fetchReactionsForPage(arg.chatId, messagesArr))
+    responseJson["requestedRank"] = %arg.rank
+    arg.finish(responseJson)
+
+  except Exception as e:
+    arg.finish(%* {
+      "chatId": arg.chatId,
+      "requestedRank": arg.rank,
+      "error": e.msg,
+    })
+
+proc asyncFetchChatMessagesCountTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncFetchChatMessagesCountTaskArg](argEncoded)
+  try:
+    let response = status_go.fetchMessagesCount(arg.chatId)
+    if not response.error.isNil:
+      raise newException(CatchableError, response.error.message)
+
+    arg.finish(%* {
+      "chatId": arg.chatId,
+      "totalCount": response.result.getInt,
+    })
 
   except Exception as e:
     arg.finish(%* {

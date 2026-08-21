@@ -1,12 +1,22 @@
 import json
 import core, ../app_service/common/utils
 import response_type
+import ../app_service/service/message/message_window
 
 export response_type
 
 proc fetchMessages*(chatId: string, cursorVal: string, limit: int): RpcResponse[JsonNode] =
   let payload = %* [chatId, cursorVal, limit]
   result = callPrivateRPC("chatMessages".prefix, payload)
+
+proc fetchMessagesAroundMessage*(chatId: string, messageId: string, limit: int): RpcResponse[JsonNode] =
+  result = callPrivateRPC("chatMessagesAroundMessage".prefix, aroundMessageParams(chatId, messageId, limit))
+
+proc fetchMessagesAtRank*(chatId: string, rank: int, limit: int): RpcResponse[JsonNode] =
+  result = callPrivateRPC("chatMessagesAtRank".prefix, atRankParams(chatId, rank, limit))
+
+proc fetchMessagesCount*(chatId: string): RpcResponse[JsonNode] =
+  result = callPrivateRPC("chatMessagesCount".prefix, messagesCountParams(chatId))
 
 proc fetchPinnedMessages*(chatId: string, cursorVal: string, limit: int): RpcResponse[JsonNode] =
   let payload = %* [chatId, cursorVal, limit]

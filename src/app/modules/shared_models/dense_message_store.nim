@@ -119,6 +119,14 @@ proc isLoaded*(self: DenseStore, index: int): bool =
     return false
   self.islandOfRank(self.indexToRank(index)) != -1
 
+proc newestLoadedClock*(self: DenseStore): int64 =
+  ## Clock of the newest loaded row, or `int64.low` when nothing is loaded.
+  ## Used to tell a live message from a backfilled one.
+  if self.islands.len == 0:
+    return int64.low
+  let newest = self.islands[^1]
+  newest.rows[^1].clock
+
 proc contains*(self: DenseStore, id: string): bool {.inline.} =
   self.ids.contains(id)
 

@@ -21,6 +21,9 @@ import ./dto/removed_message as removed_msg_dto
 import ./dto/urls_unfurling_plan
 import ./dto/link_preview
 import ./message_cursor
+import ./message_window
+
+export message_window
 
 import app_service/common/activity_center
 import app_service/common/message as message_common
@@ -65,6 +68,8 @@ const SIGNAL_GET_MESSAGE_FINISHED* = "getMessageFinished"
 const SIGNAL_URLS_UNFURLING_PLAN_READY* = "urlsUnfurlingPlanReady"
 const SIGNAL_MESSAGE_MARKED_AS_UNREAD* = "messageMarkedAsUnread"
 const SIGNAL_COMMUNITY_MEMBER_ALL_MESSAGES* = "communityMemberAllMessages"
+const SIGNAL_MESSAGES_WINDOW_LOADED* = "messagesWindowLoaded"
+const SIGNAL_CHAT_MESSAGES_COUNT_UPDATED* = "chatMessagesCountUpdated"
 
 include async_tasks
 
@@ -82,6 +87,26 @@ type
     chatId*: string
     messages*: seq[MessageDto]
     reactions*: seq[ReactionDto]
+    # Enriched page fields; both carry the "not applicable" sentinel, never 0.
+    totalCount*: int
+    firstRank*: int
+
+  MessagesWindowLoadedArgs* = ref object of Args
+    chatId*: string
+    # The anchor the window was asked for: a message id for an around-message
+    # fetch, a rank for an at-rank fetch. Only one of them is meaningful.
+    messageId*: string
+    requestedRank*: int
+    messages*: seq[MessageDto]
+    reactions*: seq[ReactionDto]
+    totalCount*: int
+    firstRank*: int
+    anchorRank*: int
+    error*: string
+
+  ChatMessagesCountArgs* = ref object of Args
+    chatId*: string
+    totalCount*: int
 
   PinnedMessagesLoadedArgs* = ref object of Args
     chatId*: string
@@ -130,6 +155,7 @@ type
     chatId*: string
     messageId*: string
     deletedBy*: string
+    clock*: int64
 
   MessagesDeletedArgs* =  ref object of Args
     communityId*: string
@@ -173,6 +199,15 @@ type
   CommunityMemberMessagesArgs* = ref object of Args
     communityId*: string
     messages*: seq[MessageDto]
+
+proc newMessagesLoadedArgs*(chatId: string, messages: seq[MessageDto] = @[],
+    reactions: seq[ReactionDto] = @[], totalCount = COUNT_UNKNOWN,
+    firstRank = RANK_NOT_APPLICABLE): MessagesLoadedArgs =
+  ## Always construct through this: the zero value of `totalCount`/`firstRank`
+  ## would read as "the chat is empty" / "this page starts at the oldest
+  ## message" instead of "not applicable".
+  MessagesLoadedArgs(chatId: chatId, messages: messages, reactions: reactions,
+    totalCount: totalCount, firstRank: firstRank)
 
 QtObject:
   type Service* = ref object of QObject
@@ -353,9 +388,7 @@ QtObject:
 
   proc asyncLoadInitialMessagesForChat*(self: Service, chatId: string) =
     if self.isChatCursorInitialized(chatId):
-      let data = MessagesLoadedArgs(chatId: chatId,
-        messages: @[],
-        reactions: @[])
+      let data = newMessagesLoadedArgs(chatId)
 
       self.events.emit(SIGNAL_MESSAGES_LOADED, data)
       return
@@ -454,8 +487,20 @@ QtObject:
 
   proc handleRemovedMessagesUpdate(self: Service, removedMessages: seq[RemovedMessageDto]) =
     for rm in removedMessages:
-      let data = MessageRemovedArgs(chatId: rm.chatId, messageId: rm.messageId, deletedBy: rm.deletedBy)
+      let data = MessageRemovedArgs(chatId: rm.chatId, messageId: rm.messageId, deletedBy: rm.deletedBy,
+        clock: rm.clock)
       self.events.emit(SIGNAL_MESSAGE_REMOVED, data)
+
+  proc handleChatMessageCounts(self: Service, chatMessageCounts: Table[string, int]) =
+    # Fanned out one signal per chat so the per-chat consumers can filter on
+    # chatId the way they filter every other message signal. Emitted after the
+    # batch's own message/removal signals: the count is the truth *after* the
+    # whole batch, so a consumer that applied it per removal would shrink twice.
+    for chatId, totalCount in chatMessageCounts:
+      if chatId.len == 0 or totalCount < 0:
+        continue
+      self.events.emit(SIGNAL_CHAT_MESSAGES_COUNT_UPDATED,
+        ChatMessagesCountArgs(chatId: chatId, totalCount: totalCount))
 
   proc handleDeletedMessagesUpdate(self: Service, deletedMessages: Table[string, seq[string]], communityId: string) =
       let data = MessagesDeletedArgs(deletedMessages: deletedMessages, communityId: communityId)
@@ -509,11 +554,7 @@ QtObject:
 
         self.checkPaymentRequestsInMessages(messages)
 
-        self.events.emit(SIGNAL_MESSAGES_LOADED, MessagesLoadedArgs(
-          chatId: args.chatId,
-          messages: messages,
-          reactions: @[],
-        ))
+        self.events.emit(SIGNAL_MESSAGES_LOADED, newMessagesLoadedArgs(args.chatId, messages))
 
     self.events.on(SignalType.Message.event) do(e: Args):
       var receivedData = MessageSignal(e)
@@ -533,6 +574,10 @@ QtObject:
       # Handling emoji reactions updates
       if (receivedData.emojiReactions.len > 0):
         self.handleEmojiReactionsUpdate(receivedData.emojiReactions)
+      # Handling per-chat stored-message counts, last: they describe the state
+      # after everything else in this batch was applied
+      if (receivedData.chatMessageCounts.len > 0):
+        self.handleChatMessageCounts(receivedData.chatMessageCounts)
 
     self.events.on(SignalType.DownloadingHistoryArchivesFinished.event) do(e: Args):
       var receivedData = HistoryArchivesSignal(e)
@@ -625,58 +670,168 @@ QtObject:
       # notify view, this is important
       self.events.emit(SIGNAL_PINNED_MESSAGES_LOADED, PinnedMessagesLoadedArgs())
 
+  proc decodePageMessages(responseObj: JsonNode): seq[MessageDto] =
+    var messagesArr: JsonNode
+    if responseObj.getProp("messages", messagesArr) and messagesArr.kind == JArray:
+      result = map(messagesArr.getElems(), proc(x: JsonNode): MessageDto = x.toMessageDto())
+
+  proc decodePageReactions(responseObj: JsonNode): seq[ReactionDto] =
+    var reactionsArr: JsonNode
+    if responseObj.getProp("reactions", reactionsArr) and reactionsArr.kind == JArray:
+      result = map(reactionsArr.getElems(), proc(x: JsonNode): ReactionDto = x.toReactionDto())
+
   proc onAsyncLoadMoreMessagesForChat*(self: Service, response: string) {.slot.} =
     try:
       let responseObj = response.parseJson
-      if responseObj.kind != JObject:
-        raise newException(CatchableError, "load more messages response is not a json object")
+      let meta = parseMessagePageMeta(responseObj)
+      if meta.error != "":
+        raise newException(CatchableError, meta.error)
 
+      let msgCursor = self.initOrGetMessageCursor(meta.chatId)
+      if msgCursor.getValue() == "":
+        # this is the first time we load messages for this chat
+        # we need to load pinned messages as well
+        self.asyncLoadPinnedMessagesForChat(meta.chatId)
+
+      msgCursor.setValue(meta.cursor)
+
+      var messages = decodePageMessages(responseObj)
+      self.checkPaymentRequestsInMessages(messages)
+
+      if meta.totalCount != COUNT_UNKNOWN:
+        self.events.emit(SIGNAL_CHAT_MESSAGES_COUNT_UPDATED,
+          ChatMessagesCountArgs(chatId: meta.chatId, totalCount: meta.totalCount))
+
+      self.events.emit(SIGNAL_MESSAGES_LOADED, newMessagesLoadedArgs(
+        chatId = meta.chatId,
+        messages = messages,
+        reactions = decodePageReactions(responseObj),
+        totalCount = meta.totalCount,
+        firstRank = meta.firstRank,
+      ))
+    except Exception as e:
+      error "Erorr load more messages for chat async", msg = e.msg
+      # notify view, this is important
+      self.events.emit(SIGNAL_MESSAGES_LOADED, newMessagesLoadedArgs(""))
+
+  proc emitWindowLoaded(self: Service, responseObj: JsonNode, messageId: string, requestedRank: int) =
+    let meta = parseMessagePageMeta(responseObj)
+    var messages: seq[MessageDto]
+    var reactions: seq[ReactionDto]
+    if meta.error == "":
+      messages = decodePageMessages(responseObj)
+      reactions = decodePageReactions(responseObj)
+      self.checkPaymentRequestsInMessages(messages)
+      if meta.totalCount != COUNT_UNKNOWN:
+        self.events.emit(SIGNAL_CHAT_MESSAGES_COUNT_UPDATED,
+          ChatMessagesCountArgs(chatId: meta.chatId, totalCount: meta.totalCount))
+
+    self.events.emit(SIGNAL_MESSAGES_WINDOW_LOADED, MessagesWindowLoadedArgs(
+      chatId: meta.chatId,
+      messageId: messageId,
+      requestedRank: requestedRank,
+      messages: messages,
+      reactions: reactions,
+      totalCount: meta.totalCount,
+      firstRank: meta.firstRank,
+      anchorRank: meta.anchorRank,
+      error: meta.error,
+    ))
+
+  proc onAsyncLoadMessagesAroundMessage*(self: Service, response: string) {.slot.} =
+    try:
+      let responseObj = response.parseJson
+      var messageId: string
+      discard responseObj.getProp("messageId", messageId)
+      self.emitWindowLoaded(responseObj, messageId, RANK_NOT_APPLICABLE)
+    except Exception as e:
+      error "Error loading the message window around a message", msg = e.msg
+      self.events.emit(SIGNAL_MESSAGES_WINDOW_LOADED, MessagesWindowLoadedArgs(
+        requestedRank: RANK_NOT_APPLICABLE,
+        totalCount: COUNT_UNKNOWN,
+        firstRank: RANK_NOT_APPLICABLE,
+        anchorRank: RANK_NOT_APPLICABLE,
+        error: e.msg,
+      ))
+
+  proc onAsyncLoadMessagesAtRank*(self: Service, response: string) {.slot.} =
+    try:
+      let responseObj = response.parseJson
+      var requestedRank = RANK_NOT_APPLICABLE
+      discard responseObj.getProp("requestedRank", requestedRank)
+      self.emitWindowLoaded(responseObj, "", requestedRank)
+    except Exception as e:
+      error "Error loading the message window at a rank", msg = e.msg
+      self.events.emit(SIGNAL_MESSAGES_WINDOW_LOADED, MessagesWindowLoadedArgs(
+        requestedRank: RANK_NOT_APPLICABLE,
+        totalCount: COUNT_UNKNOWN,
+        firstRank: RANK_NOT_APPLICABLE,
+        anchorRank: RANK_NOT_APPLICABLE,
+        error: e.msg,
+      ))
+
+  proc onAsyncLoadMessagesCountForChat*(self: Service, response: string) {.slot.} =
+    try:
+      let responseObj = response.parseJson
       let errorString = responseObj{"error"}.getStr()
       if errorString != "":
         raise newException(CatchableError, errorString)
 
       var chatId: string
       discard responseObj.getProp("chatId", chatId)
+      var totalCount = COUNT_UNKNOWN
+      discard responseObj.getProp("totalCount", totalCount)
+      if chatId.len == 0 or totalCount == COUNT_UNKNOWN:
+        return
 
-      let msgCursor = self.initOrGetMessageCursor(chatId)
-      if msgCursor.getValue() == "":
-        # this is the first time we load messages for this chat
-        # we need to load pinned messages as well
-        self.asyncLoadPinnedMessagesForChat(chatId)
-
-      # handling messages
-      var msgCursorValue: string
-      if responseObj.getProp("messagesCursor", msgCursorValue):
-        msgCursor.setValue(msgCursorValue)
-
-      var messagesArr: JsonNode
-      var messages: seq[MessageDto]
-      if responseObj.getProp("messages", messagesArr):
-        messages = map(messagesArr.getElems(), proc(x: JsonNode): MessageDto = x.toMessageDto())
-
-      self.checkPaymentRequestsInMessages(messages)
-
-      # handling reactions
-      var reactionsArr: JsonNode
-      var reactions: seq[ReactionDto]
-      if responseObj.getProp("reactions", reactionsArr):
-        reactions = map(
-          reactionsArr.getElems(),
-          proc(x: JsonNode): ReactionDto =
-            result = x.toReactionDto()
-        )
-
-      let data = MessagesLoadedArgs(
-        chatId: chatId,
-        messages: messages,
-        reactions: reactions,
-      )
-
-      self.events.emit(SIGNAL_MESSAGES_LOADED, data)
+      self.events.emit(SIGNAL_CHAT_MESSAGES_COUNT_UPDATED,
+        ChatMessagesCountArgs(chatId: chatId, totalCount: totalCount))
     except Exception as e:
-      error "Erorr load more messages for chat async", msg = e.msg
-      # notify view, this is important
-      self.events.emit(SIGNAL_MESSAGES_LOADED, MessagesLoadedArgs())
+      error "Error loading the stored message count for a chat", msg = e.msg
+
+  proc asyncLoadMessagesAroundMessage*(self: Service, chatId: string, messageId: string,
+      limit = MESSAGES_PER_PAGE_MAX) =
+    if chatId.len == 0 or messageId.len == 0:
+      error "empty chat id or message id", procName="asyncLoadMessagesAroundMessage"
+      return
+
+    self.threadpool.start(AsyncFetchChatMessagesAroundMessageTaskArg(
+      tptr: asyncFetchChatMessagesAroundMessageTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncLoadMessagesAroundMessage",
+      chatId: chatId,
+      messageId: messageId,
+      limit: limit,
+    ))
+
+  proc asyncLoadMessagesAtRank*(self: Service, chatId: string, rank: int, limit = MESSAGES_PER_PAGE_MAX) =
+    if chatId.len == 0:
+      error "empty chat id", procName="asyncLoadMessagesAtRank"
+      return
+    if rank < 0:
+      error "negative rank", procName="asyncLoadMessagesAtRank", rank
+      return
+
+    self.threadpool.start(AsyncFetchChatMessagesAtRankTaskArg(
+      tptr: asyncFetchChatMessagesAtRankTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncLoadMessagesAtRank",
+      chatId: chatId,
+      rank: rank,
+      limit: limit,
+    ))
+
+  proc asyncLoadMessagesCountForChat*(self: Service, chatId: string) =
+    if chatId.len == 0:
+      error "empty chat id", procName="asyncLoadMessagesCountForChat"
+      return
+
+    self.threadpool.start(AsyncFetchChatMessagesCountTaskArg(
+      tptr: asyncFetchChatMessagesCountTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncLoadMessagesCountForChat",
+      chatId: chatId,
+    ))
 
   proc onAsyncLoadCommunityMemberAllMessages*(self: Service, response: string) {.slot.} =
     try:
@@ -1322,12 +1477,20 @@ proc deleteMessage*(self: Service, messageId: string) =
       error "error: ", procName="removeMessage", errDesription = "there is no set chat id or message id in response"
       return
 
+    var clock: int64
+    discard removedMessageObj.getProp("clock", clock)
+
     let data = MessageRemovedArgs(
       chatId: chat_Id,
       messageId: message_Id,
       deletedBy: singletonInstance.userProfile.getPubKey(),
+      clock: clock,
     )
     self.events.emit(SIGNAL_MESSAGE_REMOVED, data)
+
+    var counts: JsonNode
+    if response.result.getProp("chatMessageCounts", counts):
+      self.handleChatMessageCounts(counts.toChatMessageCounts())
 
   except Exception as e:
     error "error: ", procName="deleteMessage", errName = e.name, errDesription = e.msg

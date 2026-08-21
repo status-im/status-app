@@ -489,6 +489,9 @@ QtObject:
   proc totalCount*(self: DenseModel): int =
     self.store.totalCount
 
+  proc newestLoadedClock*(self: DenseModel): int64 =
+    self.store.newestLoadedClock
+
   proc holes*(self: DenseModel): seq[Hole] =
     self.store.holes()
 

@@ -3,6 +3,7 @@ import json, chronicles, tables
 import base
 
 import app_service/service/message/dto/[message, pinned_message_update, reaction, removed_message]
+import app_service/service/message/message_window
 import app_service/service/chat/dto/[chat]
 import app_service/service/bookmarks/dto/[bookmark]
 import app_service/service/community/dto/[community]
@@ -31,6 +32,7 @@ type MessageSignal* = ref object of Signal
   statusUpdates*: seq[StatusUpdateDto]
   removedMessages*: seq[RemovedMessageDto]
   deletedMessages*: Table[string, seq[string]]
+  chatMessageCounts*: Table[string, int] # [chat_id, stored_messages_after_the_batch]
   removedChats*: seq[string]
   currentStatus*: seq[StatusUpdateDto]
   settings*: seq[SettingsFieldDto]
@@ -116,6 +118,9 @@ proc fromEvent*(T: type MessageSignal, event: JsonNode): MessageSignal =
   if e.contains("requestsToJoinCommunity"):
     for jsonCommunity in e["requestsToJoinCommunity"]:
       signal.membershipRequests.add(jsonCommunity.toCommunityMembershipRequestDto())
+
+  if e.contains("chatMessageCounts"):
+    signal.chatMessageCounts = e["chatMessageCounts"].toChatMessageCounts()
 
   if e.contains("removedMessages"):
     for jsonRemovedMessage in e["removedMessages"]:
