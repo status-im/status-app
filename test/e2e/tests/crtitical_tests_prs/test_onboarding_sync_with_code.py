@@ -12,8 +12,8 @@ from constants import UserAccount, RandomUser
 from constants.syncing import SyncingSettings
 from gui.components.splash_screen import SplashScreen
 from gui.main_window import MainWindow
-from gui.screens.onboarding import OnboardingWelcomeToStatusView, SyncResultView, OnboardingProfileSyncedView, \
-    OnboardingBiometricsView
+from gui.screens.onboarding import OnboardingWelcomeToStatusView, SyncResultView, OnboardingProfileSyncedView
+from helpers.onboarding_helper import skip_biometrics_popup_if_visible
 
 
 @pytest.mark.case(703592, 738760)
@@ -66,9 +66,8 @@ def test_sync_devices_during_onboarding_change_settings_unpair(multiple_instance
 
         with step('Sign in to synced account'):
             profile_syncing_view.log_in_button.click()
-            if configs.system.get_platform() == "Darwin":
-                OnboardingBiometricsView().maybe_later()
             SplashScreen().wait_until_hidden(APP_LOAD_TIMEOUT_MSEC)
+            skip_biometrics_popup_if_visible()
 
             with step('Verify user details are the same with user in first instance'):
                 online_identifier = main_window.left_panel.open_online_identifier()

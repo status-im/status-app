@@ -108,9 +108,15 @@ class WalletSettingsView(QObject):
 
     @allure.step('Open account view in wallet settings by name')
     def open_account_in_settings(self, name: str, index: int, attempts: int = 3):
+        self.wallet_account_from_keypair.real_name = dict(
+            settings_names.settingsWalletAccountDelegate)
         self.wallet_account_from_keypair.real_name['objectName'] = name
         self.wallet_account_from_keypair.real_name['index'] = index
         for _ in range(attempts):
+            try:
+                self.scroll.vertical_scroll_down(self.wallet_account_from_keypair)
+            except LookupError:
+                pass
             try:
                 self.wallet_account_from_keypair.click()
                 return AccountDetailsView().wait_until_appears()
@@ -125,13 +131,12 @@ class WalletSettingsView(QObject):
 
 class AccountDetailsView(QObject):
     def __init__(self):
-        super().__init__(settings_names.walletAccountViewDetailsLabel)
+        super().__init__(settings_names.walletAccountViewAddress)
         self._back_button = Button(settings_names.main_toolBar_back_button)
         self._edit_account_button = Button(settings_names.walletAccountViewEditAccountButton)
         self._remove_account_button = Button(settings_names.walletAccountViewRemoveAccountButton)
         self._wallet_account_title = TextLabel(settings_names.walletAccountViewAccountName)
         self._wallet_account_emoji = QObject(settings_names.walletAccountViewAccountEmoji)
-        self._wallet_account_details_label = TextLabel(settings_names.walletAccountViewDetailsLabel)
         self._wallet_account_balance = QObject(settings_names.walletAccountViewBalance)
         self._wallet_account_keypair_item = QObject(settings_names.walletAccountViewKeypairItem)
         self._wallet_account_address = QObject(settings_names.walletAccountViewAddress)
@@ -172,14 +177,8 @@ class AccountDetailsView(QObject):
 
     @allure.step("Get account address value")
     def get_account_address_value(self):
-        self._wallet_account_details_label.wait_until_appears()
-        self.scroll.vertical_scroll_down(
-            self._wallet_account_address,
-            timeout_sec=configs.timeouts.UI_LOAD_TIMEOUT_MSEC // 1000,
-        )
         raw_value = str(getattr(self._wallet_account_address.object, 'subTitle'))
-        address = raw_value.split(">")[-1]
-        return address
+        return raw_value.split(">")[-1]
 
     @allure.step('Get account color value')
     def get_account_color_value(self):

@@ -487,7 +487,7 @@ o_StatusCommunityTag = {"container": statusDesktop_mainWindow_overlay, "objectNa
 confirm_Community_Tags_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
                                        "objectName": "confirmCommunityTagsButton", "type": "StatusButton",
                                        "visible": True}
-tags_edit_TextEdit = {"container": statusDesktop_mainWindow_overlay, "id": "edit", "type": "TextEdit", "unnamed": 1,
+tags_edit_TextEdit = {"container": statusStackModal, "id": "edit", "type": "TextEdit", "unnamed": 1,
                       "visible": True}
 selected_tags_text = {"container": statusDesktop_mainWindow_overlay, "type": "StatusBaseText", "unnamed": 1,
                       "visible": True}

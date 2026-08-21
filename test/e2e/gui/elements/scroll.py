@@ -89,10 +89,44 @@ def _element_center_x_in_scroll_viewport(
     return left <= cx <= right
 
 
+def _flickable(obj):
+    try:
+        inner = obj.flickable
+        inner.contentY
+        return inner
+    except (AttributeError, RuntimeError, TypeError):
+        pass
+    try:
+        obj.contentY
+        return obj
+    except (AttributeError, RuntimeError, TypeError):
+        return None
+
+
 class Scroll(QObject):
+
+    def _scroll_flickable(self, element: QObject, timeout_sec: int, dy: int, extra_scrolls_after: int = 0) -> bool:
+        flickable = _flickable(self.object)
+        if flickable is None:
+            return False
+        started_at = time.monotonic()
+        while time.monotonic() - started_at <= timeout_sec:
+            if _element_center_y_in_scroll_viewport(element, flickable):
+                break
+            flickable.contentY += dy * max(48, int(flickable.height * 0.6))
+            time.sleep(0.05)
+        else:
+            return False
+        for _ in range(extra_scrolls_after):
+            flickable.contentY += dy * 40
+            time.sleep(0.1)
+        return True
 
     @allure.step('Scroll vertical down to object {1}')
     def vertical_scroll_down(self, element: QObject, timeout_sec: int = 5, extra_scrolls_after: int = 0):
+        if self._scroll_flickable(element, timeout_sec, 1, extra_scrolls_after):
+            return
+
         # First wait for element to exist (UI might need time to update after authentication)
         started_at = time.monotonic()
         while not element.exists:
@@ -118,6 +152,9 @@ class Scroll(QObject):
 
     @allure.step('Scroll vertical up to object {1}')
     def vertical_scroll_up(self, element: QObject, timeout_sec: int = 5):
+        if self._scroll_flickable(element, timeout_sec, -1):
+            return
+
         scroll_obj = self.object
         sx = max(1, int(scroll_obj.width / 2))
         sy = max(1, int(scroll_obj.height / 2))
