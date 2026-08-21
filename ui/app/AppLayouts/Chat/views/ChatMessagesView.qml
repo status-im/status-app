@@ -397,13 +397,18 @@ Item {
             return root.rowPool ? root.rowPool.readyCount(d.rowPoolKind) : 0
         }
 
-        // How many more rows the window may hold. In-window ⇔ holds a pooled
-        // item, so the cap is what the pool can dress — but a dense dummy
-        // holds no item while it waits for its data and would otherwise let
-        // the window grow without ever draining the pool, leaving the rows
-        // starved the moment their hole fills. Counting the window's own size
-        // against the capacity covers both.
+        // How many more rows the window may hold, over and above what the
+        // pool has ready. Dense only: a dummy holds no pooled item while it
+        // waits for its data, so it drains no headroom and the window would
+        // grow past what the pool can ever dress — leaving every one of those
+        // rows starved the moment its hole filled. Counting the window's own
+        // size against the capacity is what stops that. The legacy window
+        // needs no such cap (every admitted row acquires) and would read a
+        // transient shortfall — rows admitted but not yet dressed — as a
+        // reason to grow the pool.
         function windowRoom() {
+            if (!d.denseMode)
+                return Number.MAX_SAFE_INTEGER
             const size = d.windowEnd - d.windowStart + 1
             const capacity = Math.max(1, d.acquiredCount + d.poolHeadroom())
             return Math.max(0, capacity - size)
