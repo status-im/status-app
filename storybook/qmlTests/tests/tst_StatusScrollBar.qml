@@ -55,6 +55,22 @@ Item {
         }
     }
 
+    // A horizontally overflowing StatusListView: the horizontal bar is the one
+    // that has to appear, the vertical one has to stay away.
+    Component {
+        id: horizontallyOverflowingListView
+        StatusListView {
+            width: 200
+            height: 60
+            orientation: ListView.Horizontal
+            model: 50
+            delegate: Item {
+                width: 40
+                height: 60
+            }
+        }
+    }
+
     TestCase {
         name: "StatusScrollBar"
         when: windowShown
@@ -156,6 +172,64 @@ Item {
             // ...but nobody has scrolled yet, so the thumb is still not built.
             verify(!findChild(bar, "scrollBarThumb"),
                    "thumb stays lazy for a visible-but-untouched AsNeeded bar")
+        }
+
+        // --- Cycle 6: an attached bar resolves its own policy ---
+        // Neither StatusListView nor StatusScrollView assigns `visible` any more,
+        // so the bar has to honour the policy on its own - a bare T.ScrollBar has
+        // no style to do it for it.
+        function test_attachedBarHonoursPolicyWithoutAnExplicitVisible() {
+            const view = createTemporaryObject(overflowingListView, root)
+            verify(!!view)
+
+            const bar = view.verticalScrollBar
+            tryCompare(bar, "visible", true, 1000,
+                       "AsNeeded shows an overflowing bar")
+
+            bar.policy = ScrollBar.AlwaysOff
+            tryCompare(bar, "visible", false, 1000,
+                       "AlwaysOff hides it even though the content overflows")
+
+            bar.policy = ScrollBar.AlwaysOn
+            tryCompare(bar, "visible", true, 1000)
+
+            // The unused axis stays hidden for the same reason it did before.
+            tryCompare(view.horizontalScrollBar, "visible", false, 1000,
+                       "a vertical list needs no horizontal bar")
+        }
+
+        function test_alwaysOnShowsABarWhoseContentFits() {
+            const view = createTemporaryObject(nonOverflowingScrollView, root)
+            verify(!!view)
+
+            const bar = view.ScrollBar.vertical
+            tryCompare(bar, "visible", false, 1000)
+
+            bar.policy = ScrollBar.AlwaysOn
+            tryCompare(bar, "visible", true, 1000,
+                       "AlwaysOn shows the bar even when the content fits")
+        }
+
+        function test_horizontalOverflowShowsTheHorizontalBarOnly() {
+            const view = createTemporaryObject(horizontallyOverflowingListView, root)
+            verify(!!view)
+
+            tryCompare(view.horizontalScrollBar, "visible", true, 1000,
+                       "horizontally overflowing content needs the horizontal bar")
+            tryCompare(view.verticalScrollBar, "visible", false, 1000,
+                       "...and no vertical one")
+        }
+
+        // Bars decorating a Flickable they are not attached to have no `size` to
+        // read, so the helper the app uses for them has to keep its contract.
+        function test_resolveVisibilityContractIsUnchanged() {
+            const bar = createTemporaryObject(alwaysOnBar, root)
+            verify(!!bar)
+
+            verify(bar.resolveVisibility(ScrollBar.AsNeeded, 100, 200))
+            verify(!bar.resolveVisibility(ScrollBar.AsNeeded, 200, 100))
+            verify(bar.resolveVisibility(ScrollBar.AlwaysOn, 200, 100))
+            verify(!bar.resolveVisibility(ScrollBar.AlwaysOff, 100, 200))
         }
     }
 }
