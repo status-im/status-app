@@ -41,14 +41,22 @@ STATUS_GO_ROOT = APP_ROOT / "vendor" / "status-go"
 # registered set is the union of both files. test_wakuext_namespace_wiring
 # asserts the embed and the namespace, so a status-go refactor that breaks
 # either fails here instead of silently invalidating the union.
-_GO_API_RELPATHS = ("services/ext/api.go", "services/wakuv2ext/api.go")
+#
+# status-go f9cc782a6 moved RPC services from services/ to pkg/services/.
+# Keep _mini_status_go and the wiring test on this same prefix.
+_GO_SERVICES_DIR = "pkg/services"
+_GO_API_RELPATHS = (
+    f"{_GO_SERVICES_DIR}/ext/api.go",
+    f"{_GO_SERVICES_DIR}/wakuv2ext/api.go",
+)
 
 # Scan the whole tree so a call site in a new location (e.g. mobile/ios) can't
 # silently drop out; over-scanning only risks a false FAIL.
 _APP_SRC_SUFFIXES = {".nim", ".java", ".kt", ".swift", ".m", ".mm", ".qml",
                      ".js", ".jsx", ".mjs", ".ts", ".tsx", ".cpp", ".cc",
                      ".h", ".hpp"}
-_SCAN_SKIP_DIRS = {"vendor", ".git", "build", "node_modules", "result", ".cache"}
+_SCAN_SKIP_DIRS = {"vendor", ".git", "build", "node_modules", "result", ".cache",
+                     ".claude"}
 
 _GO_METHOD_RE = re.compile(r"^func \(\w+ \*PublicAPI\) ([A-Z][A-Za-z0-9]*)\(", re.M)
 _LITERAL_RE = re.compile(r'"wakuext_([A-Za-z0-9_]+)"')
@@ -248,11 +256,11 @@ def collect(app_root: Path = APP_ROOT):
 
 @pytest.mark.gate
 def test_wakuext_namespace_wiring():
-    api = STATUS_GO_ROOT / "services" / "wakuv2ext" / "api.go"
-    svc = STATUS_GO_ROOT / "services" / "wakuv2ext" / "service.go"
+    api = STATUS_GO_ROOT / _GO_SERVICES_DIR / "wakuv2ext" / "api.go"
+    svc = STATUS_GO_ROOT / _GO_SERVICES_DIR / "wakuv2ext" / "service.go"
     assert api.is_file() and svc.is_file(), (
-        f"wakuv2ext sources missing under {STATUS_GO_ROOT} — is the status-go "
-        f"submodule checked out?"
+        f"wakuv2ext sources missing under {STATUS_GO_ROOT / _GO_SERVICES_DIR} — "
+        f"is the status-go submodule checked out, or did the layout move?"
     )
     assert re.search(r"type PublicAPI struct \{[^}]*\*ext\.PublicAPI", api.read_text(), re.S), (
         "wakuv2ext.PublicAPI no longer embeds ext.PublicAPI — the registered-"
@@ -354,10 +362,10 @@ def _write(root: Path, rel: str, text: str):
 def _mini_status_go(tmp_path: Path, methods=("KeptMethod",)) -> Path:
     go_root = tmp_path / "status-go"
     ext = "\n".join(f"func (api *PublicAPI) {m}(ctx context.Context) {{}}" for m in methods)
-    _write(go_root, "services/ext/api.go", ext + "\n")
-    _write(go_root, "services/wakuv2ext/api.go",
+    _write(go_root, f"{_GO_SERVICES_DIR}/ext/api.go", ext + "\n")
+    _write(go_root, f"{_GO_SERVICES_DIR}/wakuv2ext/api.go",
            "type PublicAPI struct {\n\t*ext.PublicAPI\n\tservice *Service\n}\n")
-    _write(go_root, "services/wakuv2ext/service.go", 'Namespace: "wakuext",\n')
+    _write(go_root, f"{_GO_SERVICES_DIR}/wakuv2ext/service.go", 'Namespace: "wakuext",\n')
     return go_root
 
 
@@ -468,7 +476,7 @@ def test_selftest_include_and_block_import_resolve_prefix(tmp_path):
 
 def test_selftest_go_receiver_name_is_not_hardcoded(tmp_path):
     go_root = tmp_path / "status-go"
-    _write(go_root, "services/ext/api.go",
+    _write(go_root, f"{_GO_SERVICES_DIR}/ext/api.go",
            "func (a *PublicAPI) RenamedReceiverMethod(ctx context.Context) {}\n")
     assert registered_methods(go_root) == {"renamedReceiverMethod"}
 
