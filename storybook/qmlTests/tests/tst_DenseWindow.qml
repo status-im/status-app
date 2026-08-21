@@ -324,6 +324,123 @@ Item {
             waitForRendering(chat.listView)
         }
 
+        // ---- the fling gate, over the dense model ----
+        // The 0013 invariant must survive everything the dense model adds:
+        // holes in the window, dummy rows resizing as they fill, and settles
+        // that teleport into unfetched history. Across six flings no flick is
+        // cancelled, content geometry never moves mid-motion, and the window
+        // still advances.
+        function test_flingContinuityOverHoles() {
+            const chat = openDenseChat(4000, 120)
+            const listView = chat.listView
+            const internal = chat.internal
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+
+            // hard enough to out-run the window every time: at this
+            // deceleration the fling covers ~12,000px, a hundred-odd rows,
+            // so every settle lands deep inside unfetched history
+            listView.maximumFlickVelocity = 6000
+            listView.flickDeceleration = 1500
+            listView.contentY = listView.contentHeight - listView.height
+            waitForRendering(listView)
+
+            const startWindowEnd = internal.windowEnd
+
+            let flickCancels = 0
+            let topTouches = 0
+            let contentHeightChanges = 0
+            let downwardJumps = 0
+            let maxTrackedContentShift = 0
+            let teleports = 0
+
+            for (let round = 0; round < 6; ++round) {
+                let tracked = null
+                for (let i = 0; i < listView.count; ++i) {
+                    const it = listView.itemAtRow(i)
+                    if (it && it.visible && it.height > 0) {
+                        tracked = it
+                        break
+                    }
+                }
+                verify(!!tracked, "round " + round + " needs a visible row to track")
+                let lastContentPos = tracked.y
+
+                const startCy = listView.contentY
+                const endBefore = internal.windowEnd
+                let travel = 0
+                listView.flick(0, 5000)
+                internal.updateScrollGate(listView.height * 2)
+                tryVerify(() => listView.flickingVertically, 1000,
+                          "round " + round + " flick must start")
+
+                let lastCy = listView.contentY
+                let lastCh = listView.contentHeight
+                for (let t = 0; t < 400; ++t) {
+                    wait(16)
+                    if (!listView.flickingVertically)
+                        break
+                    const cy = listView.contentY
+                    const ch = listView.contentHeight
+                    if (Math.abs(ch - lastCh) > 0.5)
+                        contentHeightChanges++
+                    if (cy - lastCy > 0.5)
+                        downwardJumps++
+                    if (cy <= 1)
+                        topTouches++
+                    if (!tracked.retired) {
+                        const shift = Math.abs(tracked.y - lastContentPos)
+                        if (shift > maxTrackedContentShift)
+                            maxTrackedContentShift = shift
+                        lastContentPos = tracked.y
+                    }
+                    travel = startCy - cy
+                    lastCy = cy
+                    lastCh = ch
+                }
+                if (travel < 4000 && listView.contentY > 1)
+                    flickCancels++
+
+                internal.updateScrollGate(0)
+                tryVerify(() => !listView.moving, 5000)
+                tryVerify(() => internal.stagedCount === 0, 30000,
+                          "round " + round + " settle batch must reveal")
+                waitForRendering(listView)
+                // a slide can only ever grow the window by one chunk; more
+                // than that in one settle is the teleport
+                if (internal.windowEnd - endBefore > internal.windowChunkSize)
+                    teleports++
+
+                // the page for the rank the settle landed on arrives, so the
+                // next fling starts from a window that is dressing
+                fillRows(internal.windowStart,
+                         internal.windowEnd - internal.windowStart + 1)
+                contentModuleMock.messagesModule.messagesWindowLoaded(
+                            internal.windowEnd, "")
+                tryVerify(() => internal.stagedCount === 0, 30000)
+            }
+
+            console.info("[DENSE FLING] flickCancels=" + flickCancels
+                         + " topTouches=" + topTouches
+                         + " contentHeightChanges=" + contentHeightChanges
+                         + " downwardJumps=" + downwardJumps
+                         + " maxTrackedContentShift=" + maxTrackedContentShift.toFixed(0)
+                         + " teleports=" + teleports
+                         + " window " + startWindowEnd + " -> " + internal.windowEnd)
+
+            compare(flickCancels, 0)
+            compare(topTouches, 0)
+            compare(contentHeightChanges, 0)
+            compare(downwardJumps, 0)
+            verify(maxTrackedContentShift <= 2,
+                   "rows must hold their content position mid-motion, shifted "
+                   + maxTrackedContentShift)
+            verify(teleports > 0, "the sequence must include a teleport")
+            verify(internal.windowEnd > startWindowEnd + 30,
+                   "the window must advance across the fling sequence, still at "
+                   + internal.windowEnd)
+        }
+
         // ---- placeholders span the real counts ----
 
         function test_placeholderHeightsFollowRealCounts() {
