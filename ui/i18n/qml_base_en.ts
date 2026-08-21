@@ -8159,25 +8159,6 @@ Are you sure you want to do this?</source>
     </message>
 </context>
 <context>
-    <name>GeneratorPage</name>
-    <message>
-        <source>Input</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Generate</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Save</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>GetSyncCodeDesktopInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
@@ -14253,34 +14234,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>Qt5ScannerOverlay</name>
-    <message>
-        <source>Scan barcode</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>Qt5ScannerPage</name>
-    <message>
-        <source>Scan again</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>Qt6ScannerOverlay</name>
-    <message>
-        <source>Scan barcode</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>Qt6ScannerPage</name>
-    <message>
-        <source>Scan again</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>RPCStatsModal</name>
     <message>
         <source>Total</source>
@@ -14637,21 +14590,6 @@ to load</source>
     </message>
     <message>
         <source>Save changes</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>RenderingScreen</name>
-    <message>
-        <source>Freeze test</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>While open, the WebView uses freeze (native view hidden, last frame in scene). Below: a platform snapshot for this dialog.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Capturing preview…</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -19464,82 +19402,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
 </context>
 <context>
-    <name>ZXingQt5CamReader</name>
-    <message>
-        <source>Format: 	 %1 
-Text: 	 %2 
-Type: 	 %3 
-Time: 	 %4 ms</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Camera: </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Try Rotate</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Try Harder</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Try Invert</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Try Downscale</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Linear Codes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Matrix Codes</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ZXingQt6CamReader</name>
-    <message>
-        <source>Format: 	 %1 
-Text: 	 %2 
-Type: 	 %3 
-Time: 	 %4 ms</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Camera: </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Try Rotate</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Try Harder</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Try Invert</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Try Downscale</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Linear Codes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Matrix Codes</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>main</name>
     <message>
         <source>Status Desktop</source>
@@ -19559,10 +19421,6 @@ Time: 	 %4 ms</source>
     </message>
     <message>
         <source>Report a bug on GitHub</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
