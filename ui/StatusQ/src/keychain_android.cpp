@@ -286,6 +286,13 @@ static void jni_nativeCredentialError(JNIEnv*, jobject, jint code, jstring jMsg)
         return;
     }
 
+    if (code == -12) { // Key invalidated by biometric enrollment change; stored blobs were wiped
+        QMetaObject::invokeMethod(s_keychain, [msg]{
+            emit s_keychain->getCredentialRequestCompleted(Keychain::StatusNotFound, QString());
+        }, Qt::QueuedConnection);
+        return;
+    }
+
     QMetaObject::invokeMethod(s_keychain, [msg]{
         emit s_keychain->getCredentialRequestCompleted(Keychain::StatusGenericError, QString());
     }, Qt::QueuedConnection);
