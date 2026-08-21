@@ -10,6 +10,7 @@ import ../../../app/core/tasks/[qt, threadpool]
 import ../../../backend/privacy as status_privacy
 
 import ../../common/utils as common_utils
+import ../../common/keychain_credential as keychain_credential
 
 include ./async_tasks
 
@@ -100,6 +101,9 @@ QtObject:
     except Exception as e:
       error "error: ", procName="isProfileMigratedToDEKEncryption", errName = e.name, errDesription = e.msg
       return false
+
+  proc getBiometricCredentialForStorage*(self: Service, keyUid: string, password: string): string =
+    return keychain_credential.biometricCredentialForPasswordProfile(keyUid, password)
 
   proc isMnemonicBackedUp*(self: Service): bool =
     return self.settingsService.getMnemonic().len == 0

@@ -10,6 +10,7 @@ export api_config
 type
   LoginAccountRequest* = object
     passwordHash*: string
+    dek*: string
     keyUID*: string
     kdfIterations*: int
     runtimeLogLevel*: string
@@ -27,6 +28,7 @@ type
 proc toJson*(self: LoginAccountRequest): JsonNode =
   result = %* {
     "password": self.passwordHash,
+    "dek": self.dek,
     "keyUid": self.keyUID,
     "kdfIterations": self.kdfIterations,
     "runtimeLogLevel": self.runtimeLogLevel,
