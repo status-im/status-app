@@ -4,9 +4,10 @@
 ## against `DenseModel`: the model shell needs nimqml, which cannot be linked in
 ## a host unit test, while every rule here is exactly the kind that breaks
 ## silently — a `-1` that becomes rank 0, an empty page applied as if it were a
-## real one, a backfilled message appended as if it were live. Instantiated
-## against `DenseModel`/`Item` in production and against a recording stub in the
-## tests, so both run the same code.
+## real one, a backfilled message appended as if it were live, a signal for a
+## different chat applied to this one. Instantiated against `DenseModel`/`Item`
+## in production and against a recording stub in the tests, so both run the same
+## code.
 
 {.used.}
 
@@ -16,6 +17,8 @@ export message_window
 
 const NO_CLOCK* = int64.low
   ## "the model knows of no message yet" — distinct from clock 0.
+
+# --------------------------------------------------------- application rules
 
 proc applyMessagePage*[M, I](model: M, items: seq[I], firstRank: int,
     totalCount = COUNT_UNKNOWN) =
@@ -68,3 +71,47 @@ proc applyChatMessageCount*[M](model: M, totalCount: int) =
 proc applyChatReset*[M](model: M, totalCount: int) =
   ## Chat switch. An unknown count means an empty model until the count arrives.
   model.resetToChat(max(0, totalCount))
+
+# ---------------------------------------------------------------- the router
+
+type
+  DenseChatRouter*[M] = ref object
+    ## One per chat view. Every message signal is broadcast to all chats, so
+    ## the chatId check is the first thing each entry point does.
+    chatId*: string
+    model*: M
+
+proc newDenseChatRouter*[M](chatId: string, model: M): DenseChatRouter[M] =
+  DenseChatRouter[M](chatId: chatId, model: model)
+
+proc handles*[M](self: DenseChatRouter[M], chatId: string): bool =
+  self.chatId.len > 0 and self.chatId == chatId
+
+proc onChatReset*[M](self: DenseChatRouter[M], totalCount: int) =
+  self.model.applyChatReset(totalCount)
+
+proc onMessagePageLoaded*[M, I](self: DenseChatRouter[M], chatId: string,
+    items: seq[I], firstRank: int, totalCount = COUNT_UNKNOWN) =
+  if not self.handles(chatId):
+    return
+  self.model.applyMessagePage(items, firstRank, totalCount)
+
+proc onIncomingMessages*[M, I](self: DenseChatRouter[M], chatId: string,
+    items: seq[I], totalCount = COUNT_UNKNOWN) =
+  if not self.handles(chatId):
+    return
+  self.model.applyIncomingMessages(items, self.model.newestLoadedClock, totalCount)
+
+proc onMessageRemoved*[M](self: DenseChatRouter[M], chatId, messageId: string, clock: int64) =
+  if not self.handles(chatId):
+    return
+  self.model.applyMessageRemoval(messageId, clock)
+
+proc onChatMessageCount*[M](self: DenseChatRouter[M], chatId: string, totalCount: int) =
+  if not self.handles(chatId):
+    return
+  self.model.applyChatMessageCount(totalCount)
+
+proc anchorIndex*[M](self: DenseChatRouter[M], anchorRank: int): int =
+  ## Rank -> model index at the boundary; `-1` in stays `-1` out.
+  rankToIndex(self.model.totalCount, anchorRank)
