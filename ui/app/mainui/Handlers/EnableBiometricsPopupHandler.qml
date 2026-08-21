@@ -49,8 +49,10 @@ QtObject {
                         return
                     popup.enablingBiometrics = false
 
-                    const credential = pin !== "" ? pin : password
-                    // If credential not retrieved (cancelled or failed)
+                    const credential = pin !== "" ?
+                                         pin
+                                       : root.privacyStore.getBiometricCredentialForStorage(keyUid, password)
+                    // If credential not retrieved (cancelled, failed, or could not be prepared)
                     if (keyUid === "" || credential === "") {
                         popup.loading = false
                         popup.errorText = qsTr("Biometric setup failed. Try again.")

@@ -2999,6 +2999,10 @@ Do you wish to override the security check and continue?</source>
         <translation>Скасувати</translation>
     </message>
     <message>
+        <source>Biometric login disabled — re-enable it in Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Change</source>
         <translation>Змінити</translation>
     </message>
@@ -13443,6 +13447,10 @@ to load</source>
     <message>
         <source>Continue</source>
         <translation>Продовжити</translation>
+    </message>
+    <message>
+        <source>Please enter your password — biometrics cannot be used for this action</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Failed to update stored credentials</source>

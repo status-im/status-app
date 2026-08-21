@@ -79,6 +79,11 @@ OnboardingPage {
 
         if (d.currentProfileIsKeycard) {
             keycardBox.setPin(secret) // automatic login, emits loginRequested() already
+        } else if (secret.startsWith(Constants.keychain.dekPrefix)) {
+            passwordBox.validationError = ""
+            root.loginRequested(root.selectedProfileKeyId, Onboarding.LoginMethod.Password,{
+                                    dek: secret.slice(Constants.keychain.dekPrefix.length)
+                                })
         } else {
             passwordBox.validationError = ""
             passwordBox.password = secret
@@ -127,7 +132,10 @@ OnboardingPage {
             if (password.length === 0)
                 return
 
-            root.loginRequested(root.selectedProfileKeyId, Onboarding.LoginMethod.Password, { password })
+            root.loginRequested(root.selectedProfileKeyId, Onboarding.LoginMethod.Password,{
+                                    password,
+                                    updateBiometrics: root.isBiometricsLogin
+                                })
         }
 
         property string lastPin: ""
@@ -140,8 +148,7 @@ OnboardingPage {
 
             root.loginRequested(root.selectedProfileKeyId, Onboarding.LoginMethod.Keycard, {
                                     pin,
-                                    pairingPassword:
-                                    keycardBox.pairingPassword
+                                    pairingPassword: keycardBox.pairingPassword
                                 })
         }
 
@@ -151,8 +158,7 @@ OnboardingPage {
 
             root.loginRequested(root.selectedProfileKeyId, Onboarding.LoginMethod.Keycard, {
                                     pin: d.lastPin,
-                                    pairingPassword:
-                                    keycardBox.pairingPassword
+                                    pairingPassword: keycardBox.pairingPassword
                                 })
         }
     }

@@ -44,6 +44,12 @@ Keychain {
         return Keychain.StatusSuccess
     }
 
+    function updateCredential(account, password) {
+        if (d.store[account] === undefined)
+            return Keychain.StatusSuccess
+        return saveCredential(account, password)
+    }
+
     function requestGetCredential(reason, account) {
         if (!root.available) {
             root.getCredentialRequestCompleted(Keychain.StatusUnavailable, "")

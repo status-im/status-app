@@ -46,6 +46,7 @@ Item {
         // Shadows the C++ members so no real OS keychain/biometrics is touched
         Keychain {
             property int requestCount: 0
+            property var updatedCredentials: []
             readonly property bool available: true
             function hasCredential(account) {
                 return account === "key-uid-1" ? Keychain.StatusSuccess
@@ -53,6 +54,10 @@ Item {
             }
             function requestGetCredential(reason, account) {
                 requestCount++
+                return Keychain.StatusSuccess
+            }
+            function updateCredential(account, credential) {
+                updatedCredentials.push({ account, credential })
                 return Keychain.StatusSuccess
             }
         }
@@ -124,6 +129,101 @@ Item {
             const bioButton = findChild(popup, "useBiometricsButton")
             verify(!!bioButton)
             verify(!bioButton.visible)
+        }
+    }
+
+    TestCase {
+        name: "AuthSignPopupBase_dekCredential"
+        when: windowShown
+
+        property var popup: null
+        property var mockKeychain: null
+
+        function init() {
+            mockKeychain = createTemporaryObject(mockedKeychainComponent, root)
+            verify(!!mockKeychain)
+        }
+
+        function cleanup() {
+            if (popup) {
+                popup.destroy()
+                popup = null
+            }
+        }
+
+        function createPasswordPopup(extraProperties) {
+            const properties = Object.assign({
+                                                 keychain: mockKeychain,
+                                                 isKeycardKeyPair: false,
+                                                 userProfileMigratedToColdWallet: false
+                                             }, extraProperties || {})
+            const created = createTemporaryObject(componentUnderTest, root, properties)
+            verify(!!created)
+            return created
+        }
+
+        // A dek-tagged biometric secret is stripped and used on the password rails;
+        // the stored item is already current, so no keychain update happens.
+        function test_dekSecretIsStrippedAndUsedAsPassword() {
+            let capturedPassword = ""
+            popup = createPasswordPopup()
+            popup.performPasswordAction = (password) => {
+                capturedPassword = password
+                return true
+            }
+            popup.open()
+            tryCompare(popup, "opened", true)
+            tryCompare(mockKeychain, "requestCount", 1)
+
+            mockKeychain.getCredentialRequestCompleted(Keychain.StatusSuccess, "dek:aabbcc001122")
+
+            tryCompare(popup, "lastUsedPin", "") // password path, not keycard
+            compare(capturedPassword, "aabbcc001122")
+            compare(mockKeychain.updatedCredentials.length, 0)
+        }
+
+        // A legacy (untagged) biometric secret that authenticates successfully is refreshed
+        // in the keychain through the injected transform (upgrade to the wrapped DEK).
+        function test_legacySecretUpgradesStoredCredential() {
+            let capturedPassword = ""
+            popup = createPasswordPopup({
+                                            getCredentialForStorage: (keyUid, password) => "dek:transformed-" + password
+                                        })
+            popup.performPasswordAction = (password) => {
+                capturedPassword = password
+                return true
+            }
+            popup.open()
+            tryCompare(popup, "opened", true)
+            tryCompare(mockKeychain, "requestCount", 1)
+
+            mockKeychain.getCredentialRequestCompleted(Keychain.StatusSuccess, "legacy-password")
+
+            compare(capturedPassword, "legacy-password")
+            tryCompare(mockKeychain.updatedCredentials, "length", 1)
+            compare(mockKeychain.updatedCredentials[0].account, "key-uid-1")
+            compare(mockKeychain.updatedCredentials[0].credential, "dek:transformed-legacy-password")
+        }
+
+        // Flows that transfer the password itself (device syncing) cannot accept a DEK:
+        // the popup must fall back to manual password entry without running the action.
+        function test_requirePlainCredentialFallsBackToManualEntry() {
+            let actionRuns = 0
+            popup = createPasswordPopup({ requirePlainCredential: true })
+            popup.performPasswordAction = (password) => {
+                actionRuns++
+                return true
+            }
+            popup.open()
+            tryCompare(popup, "opened", true)
+            tryCompare(mockKeychain, "requestCount", 1)
+
+            mockKeychain.getCredentialRequestCompleted(Keychain.StatusSuccess, "dek:aabbcc001122")
+
+            waitForRendering(popup.contentItem)
+            compare(actionRuns, 0)
+            compare(mockKeychain.updatedCredentials.length, 0)
+            verify(popup.opened) // stays open for manual entry
         }
     }
 

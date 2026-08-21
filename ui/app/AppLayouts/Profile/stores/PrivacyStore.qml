@@ -27,6 +27,14 @@ QtObject {
         return root.privacyModule.isProfileMigratedToDEKEncryption()
     }
 
+    function getBiometricCredentialForStorage(keyUid, password) {
+        return root.privacyModule.getBiometricCredentialForStorage(keyUid, password)
+    }
+
+    function setBiometricPreferenceNotNow() {
+        root.privacyModule.setBiometricPreferenceNotNow()
+    }
+
     function getMnemonic() {
         return root.privacyModule.getMnemonic()
     }

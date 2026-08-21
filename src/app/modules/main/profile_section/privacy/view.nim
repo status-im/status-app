@@ -25,6 +25,9 @@ QtObject:
   proc getBiometricCredentialForStorage*(self: View, keyUid: string, password: string): string {.slot.} =
     return self.delegate.getBiometricCredentialForStorage(keyUid, password)
 
+  proc setBiometricPreferenceNotNow*(self: View) {.slot.} =
+    self.delegate.setBiometricPreferenceNotNow()
+
   proc passwordChanged(self: View, success: bool, errorMsg: string) {.signal.}
   proc emitPasswordChangedSignal*(self: View, success: bool, errorMsg: string) =
     self.passwordChanged(success, errorMsg)
