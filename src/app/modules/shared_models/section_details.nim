@@ -63,6 +63,7 @@ QtObject:
 
   proc setup(self: SectionDetails) =
     self.QObject.setup
+    self.sectionType = SectionType.LoadingSection
 
   proc delete*(self: SectionDetails) =
     self.QObject.delete

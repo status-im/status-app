@@ -2206,7 +2206,7 @@ Item {
                         id: homePageLoader
                         focus: active
                         active: appMain.featureFlagsStore.homePageEnabled
-                                && appView.currentIndex === Constants.appViewStackIndex.homePage
+                                && d.activeSectionType === Constants.appSection.homePage
 
                         rootStore: appMain.rootStore
                         rootChatStore: appMain.rootChatStore
@@ -2481,34 +2481,48 @@ Item {
 
                     // Composed from the section skeleton panels (the former
                     // ChatLayoutLoading view is superseded by them)
-                    RowLayout {
-                        spacing: 0
-
-                        ChatPanels.MessagesListSkeleton {
-                            visible: !appMain.isPortraitMode
-                            Layout.fillHeight: true
-                            Layout.preferredWidth: Constants.chatSectionLeftColumnWidth
+                    Item {
+                        Rectangle {
+                            anchors.fill: parent
+                            color: Theme.palette.statusAppLayout.backgroundColor
                         }
 
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
+                        RowLayout {
+                            anchors.fill: parent
                             spacing: 0
 
-                            ChatPanels.ChatHeaderSkeleton {
-                                Layout.fillWidth: true
+                            Rectangle {
+                                visible: !appMain.isPortraitMode
+                                Layout.fillHeight: true
+                                Layout.preferredWidth: Constants.chatSectionLeftColumnWidth
+                                color: Theme.palette.secondaryMenuBackground
+
+                                ChatPanels.MessagesListSkeleton { anchors.fill: parent }
                             }
 
-                            ChatPanels.MessagesChatSkeleton {
+                            ColumnLayout {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
-                            }
-                        }
+                                spacing: 0
 
-                        ChatPanels.MembersListSkeleton {
-                            visible: appMain.accountSettingsStore.showUsersList && !appMain.isPortraitMode
-                            Layout.fillHeight: true
-                            Layout.preferredWidth: 280
+                                ChatPanels.ChatHeaderSkeleton {
+                                    Layout.fillWidth: true
+                                }
+
+                                ChatPanels.MessagesChatSkeleton {
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                }
+                            }
+
+                            Rectangle {
+                                visible: appMain.accountSettingsStore.showUsersList && !appMain.isPortraitMode
+                                Layout.fillHeight: true
+                                Layout.preferredWidth: 280
+                                color: Theme.palette.secondaryMenuBackground
+
+                                ChatPanels.MembersListSkeleton { anchors.fill: parent }
+                            }
                         }
                     }
                 }
