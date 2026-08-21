@@ -1,5 +1,7 @@
 #include "generatedlistmodel.h"
 
+#include <QVarLengthArray>
+
 #include <algorithm>
 
 namespace {
@@ -20,10 +22,11 @@ GeneratedListModel::GeneratedListModel(QObject* parent)
 {
 }
 
-void GeneratedListModel::setRoles(const QStringList& roles)
+void GeneratedListModel::setRoles(const MockRoles& roles)
 {
     beginResetModel();
-    m_roles = roles;
+    m_roles = roles.names;
+    m_nimSource = roles.nimSource;
     m_roleNames.clear();
     for (int i = 0; i < m_roles.size(); ++i)
         m_roleNames.insert(FirstRole + i, m_roles.at(i).toUtf8());
@@ -32,6 +35,33 @@ void GeneratedListModel::setRoles(const QStringList& roles)
     endResetModel();
     emit countChanged();
     emit hasMoreChanged();
+}
+
+QVariantList GeneratedListModel::makeRow(
+        std::initializer_list<std::pair<const char*, QVariant>> values) const
+{
+    QVariantList row(m_roles.size());
+    QVarLengthArray<bool, 32> assigned(m_roles.size(), false);
+
+    for (const auto& [name, value] : values) {
+        const int index = m_roles.indexOf(QLatin1StringView(name));
+        if (index < 0)
+            qFatal("mock row for %s: role \"%s\" is not declared; the Nim model no longer has it",
+                   m_nimSource, name);
+        if (assigned[index])
+            qFatal("mock row for %s: role \"%s\" given twice", m_nimSource, name);
+
+        row[index] = value;
+        assigned[index] = true;
+    }
+
+    for (int i = 0; i < m_roles.size(); ++i) {
+        if (!assigned[i])
+            qFatal("mock row for %s: role \"%s\" has no value; the Nim model declares it",
+                   m_nimSource, qPrintable(m_roles.at(i)));
+    }
+
+    return row;
 }
 
 void GeneratedListModel::resetRows(std::vector<QVariantList>&& rows)

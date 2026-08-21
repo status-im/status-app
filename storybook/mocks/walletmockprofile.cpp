@@ -88,7 +88,11 @@ constexpr std::array<CuratedToken, 40> curatedTokens{{
     {"ZRX", "0x Protocol", 18, 0.33},
 }};
 
-const QStringList assetRoles{
+// Mirrors TokenType in src/app_service/common/types.nim; the type roles carry
+// the enum ordinal, not a display string.
+enum class TokenType { Native = 0, Erc20 = 1, Erc721 = 2, Erc1155 = 3, Unknown = 4, Ens = 5 };
+
+const MockRoles assetRoles{"src/app/modules/shared_models/assets_adaptor_model.nim", {
     QStringLiteral("key"), QStringLiteral("name"), QStringLiteral("symbol"),
     QStringLiteral("logoUri"), QStringLiteral("balance"), QStringLiteral("balanceText"),
     QStringLiteral("balanceLoading"), QStringLiteral("error"), QStringLiteral("marketPrice"),
@@ -98,41 +102,46 @@ const QStringList assetRoles{
     QStringLiteral("canBeHidden"), QStringLiteral("position"), QStringLiteral("visible"),
     QStringLiteral("isCommunity"), QStringLiteral("marketBalance"),
     QStringLiteral("change1DayFiat"), QStringLiteral("chainIds"), QStringLiteral("soulbound"),
-    QStringLiteral("ownerToken")};
+    QStringLiteral("ownerToken")}};
 
-const QStringList tokenGroupRoles{
+const MockRoles tokenGroupRoles{
+    "src/app/modules/main/wallet_section/all_tokens/token_groups_model.nim", {
     QStringLiteral("key"), QStringLiteral("name"), QStringLiteral("symbol"),
     QStringLiteral("decimals"), QStringLiteral("logoUri"), QStringLiteral("tokens"),
     QStringLiteral("communityId"), QStringLiteral("soulbound"), QStringLiteral("ownerToken"),
     QStringLiteral("type"), QStringLiteral("websiteUrl"), QStringLiteral("description"),
     QStringLiteral("marketDetails"), QStringLiteral("detailsLoading"),
-    QStringLiteral("marketDetailsLoading"), QStringLiteral("visible"), QStringLiteral("position")};
+    QStringLiteral("marketDetailsLoading"), QStringLiteral("visible"), QStringLiteral("position")}};
 
-const QStringList tokenRoles{
+const MockRoles tokenRoles{"src/app/modules/main/wallet_section/all_tokens/tokens_model.nim", {
     QStringLiteral("key"), QStringLiteral("groupKey"), QStringLiteral("crossChainId"),
     QStringLiteral("address"), QStringLiteral("name"), QStringLiteral("symbol"),
     QStringLiteral("decimals"), QStringLiteral("chainId"), QStringLiteral("image"),
-    QStringLiteral("customToken"), QStringLiteral("communityId")};
+    QStringLiteral("customToken"), QStringLiteral("communityId"), QStringLiteral("type")}};
 
-const QStringList groupedAssetRoles{QStringLiteral("key"), QStringLiteral("balances")};
+const MockRoles groupedAssetRoles{
+    "src/app/modules/main/wallet_section/assets/grouped_account_assets_model.nim",
+    {QStringLiteral("key"), QStringLiteral("balances")}};
 
-const QStringList balanceRoles{
+const MockRoles balanceRoles{"src/app/modules/main/wallet_section/assets/balances_model.nim", {
     QStringLiteral("account"), QStringLiteral("groupKey"), QStringLiteral("tokenKey"),
     QStringLiteral("chainId"), QStringLiteral("tokenAddress"), QStringLiteral("balance"),
-    QStringLiteral("loading")};
+    QStringLiteral("loading")}};
 
-const QStringList collectibleRoles{
+const MockRoles collectibleRoles{"src/app/modules/shared_models/collectibles_model.nim", {
     QStringLiteral("uid"), QStringLiteral("chainId"), QStringLiteral("contractAddress"),
     QStringLiteral("tokenId"), QStringLiteral("name"), QStringLiteral("mediaUrl"),
     QStringLiteral("mediaType"), QStringLiteral("imageUrl"), QStringLiteral("thumbnailUrl"),
     QStringLiteral("backgroundColor"), QStringLiteral("collectionUid"),
     QStringLiteral("collectionName"), QStringLiteral("collectionSlug"),
-    QStringLiteral("collectionImageUrl"), QStringLiteral("isLoading"), QStringLiteral("ownership"),
-    QStringLiteral("communityId"), QStringLiteral("communityPrivilegesLevel"),
-    QStringLiteral("tokenType"), QStringLiteral("soulbound")};
+    QStringLiteral("collectionImageUrl"), QStringLiteral("metadataAvailable"),
+    QStringLiteral("ownership"), QStringLiteral("communityId"),
+    QStringLiteral("communityPrivilegesLevel"), QStringLiteral("tokenType"),
+    QStringLiteral("soulbound")}};
 
-const QStringList ownershipRoles{QStringLiteral("accountAddress"), QStringLiteral("balance"),
-                                 QStringLiteral("txTimestamp")};
+const MockRoles ownershipRoles{"src/app/modules/shared_models/collectible_ownership_model.nim",
+                               {QStringLiteral("accountAddress"), QStringLiteral("balance"),
+                                QStringLiteral("txTimestamp")}};
 
 QVariantMap currencyAmount(double amount, int displayDecimals)
 {
@@ -356,8 +365,18 @@ void WalletMockProfile::generateTokens()
             const QString tokenKey = QStringLiteral("%1-%2").arg(chainId).arg(tokenAddress);
             chainIdStrings.append(QString::number(chainId));
 
-            tokenRows.push_back({tokenKey, groupKey, groupKey, tokenAddress, name, symbol, decimals,
-                                 chainId, logoUri, false, communityId});
+            tokenRows.push_back(tokens->makeRow({{"key", tokenKey},
+                                                 {"groupKey", groupKey},
+                                                 {"crossChainId", groupKey},
+                                                 {"address", tokenAddress},
+                                                 {"name", name},
+                                                 {"symbol", symbol},
+                                                 {"decimals", decimals},
+                                                 {"chainId", chainId},
+                                                 {"image", logoUri},
+                                                 {"customToken", false},
+                                                 {"communityId", communityId},
+                                                 {"type", int(TokenType::Erc20)}}));
 
             for (int a = 0; a < holders; ++a) {
                 const int accountIndex = int((h >> (20 + a)) % quint64(accountCount));
@@ -370,7 +389,13 @@ void WalletMockProfile::generateTokens()
                 totalBalance += units;
                 // Balances travel as raw big-integer strings, like the backend.
                 const auto raw = QString::number(qint64(units * 1e6)) + QStringLiteral("000000000000");
-                balanceRows.push_back({account, groupKey, tokenKey, chainId, tokenAddress, raw, false});
+                balanceRows.push_back(balances->makeRow({{"account", account},
+                                                         {"groupKey", groupKey},
+                                                         {"tokenKey", tokenKey},
+                                                         {"chainId", chainId},
+                                                         {"tokenAddress", tokenAddress},
+                                                         {"balance", raw},
+                                                         {"loading", false}}));
             }
         }
 
@@ -393,22 +418,55 @@ void WalletMockProfile::generateTokens()
             {QStringLiteral("currencyPrice"), currencyAmount(price, price < 1.0 ? 6 : 2)},
         };
 
-        groupRows.push_back({groupKey, name, symbol, decimals, logoUri,
-                             QVariant::fromValue(static_cast<QObject*>(tokens)), communityId,
-                             soulbound, ownerToken, isCommunityAsset ? QStringLiteral("community")
-                                                                     : QStringLiteral("erc20"),
-                             QStringLiteral("https://status.app"),
-                             QStringLiteral("Generated token used by the storybook wallet harness."),
-                             marketDetails, false, false, true, i});
+        groupRows.push_back(m_tokenGroupsModel->makeRow(
+                {{"key", groupKey},
+                 {"name", name},
+                 {"symbol", symbol},
+                 {"decimals", decimals},
+                 {"logoUri", logoUri},
+                 {"tokens", QVariant::fromValue(static_cast<QObject*>(tokens))},
+                 {"communityId", communityId},
+                 {"soulbound", soulbound},
+                 {"ownerToken", ownerToken},
+                 {"type", int(TokenType::Erc20)},
+                 {"websiteUrl", QStringLiteral("https://status.app")},
+                 {"description",
+                  QStringLiteral("Generated token used by the storybook wallet harness.")},
+                 {"marketDetails", marketDetails},
+                 {"detailsLoading", false},
+                 {"marketDetailsLoading", false},
+                 {"visible", true},
+                 {"position", i}}));
 
-        groupedRows.push_back({groupKey, QVariant::fromValue(static_cast<QObject*>(balances))});
+        groupedRows.push_back(m_groupedAccountAssetsModel->makeRow(
+                {{"key", groupKey},
+                 {"balances", QVariant::fromValue(static_cast<QObject*>(balances))}}));
 
-        assetRows.push_back({groupKey, name, symbol, logoUri, totalBalance, QString(), false,
-                             QString(), price, changePct, true, false, communityId, communityName,
-                             communityImage, !curated, i, true,
-                             isCommunityAsset ? QStringLiteral("community") : QString(),
-                             marketBalance, change1DayFiat, chainIdStrings.join(QLatin1Char(',')),
-                             soulbound, ownerToken});
+        assetRows.push_back(m_assetsModel->makeRow(
+                {{"key", groupKey},
+                 {"name", name},
+                 {"symbol", symbol},
+                 {"logoUri", logoUri},
+                 {"balance", totalBalance},
+                 {"balanceText", QString()},
+                 {"balanceLoading", false},
+                 {"error", QString()},
+                 {"marketPrice", price},
+                 {"marketChangePct24hour", changePct},
+                 {"marketDetailsAvailable", true},
+                 {"marketDetailsLoading", false},
+                 {"communityId", communityId},
+                 {"communityName", communityName},
+                 {"communityImage", communityImage},
+                 {"canBeHidden", !curated},
+                 {"position", i},
+                 {"visible", true},
+                 {"isCommunity", isCommunityAsset ? QStringLiteral("community") : QString()},
+                 {"marketBalance", marketBalance},
+                 {"change1DayFiat", change1DayFiat},
+                 {"chainIds", chainIdStrings.join(QLatin1Char(','))},
+                 {"soulbound", soulbound},
+                 {"ownerToken", ownerToken}}));
     }
 
     m_tokenGroupsModel->resetRows(std::move(groupRows));
@@ -455,21 +513,35 @@ void WalletMockProfile::generateCollectibles()
                     ? QString()
                     : m_accounts.at(accountIndex).toMap()
                               .value(QStringLiteral("address")).toString();
-            ownershipRows.push_back({account, QStringLiteral("1"), 1700000000 + i});
+            ownershipRows.push_back(ownership->makeRow({{"accountAddress", account},
+                                                        {"balance", QStringLiteral("1")},
+                                                        {"txTimestamp", 1700000000 + i}}));
         }
         ownership->resetRows(std::move(ownershipRows));
 
-        rows.push_back({uid, chainId, contractAddress, tokenId,
-                        QStringLiteral("Mock Collectible #%1").arg(i), art,
-                        QStringLiteral("image/png"), art, art,
-                        QStringLiteral("#%1").arg(h % 0xffffffULL, 6, 16, QLatin1Char('0')),
-                        QStringLiteral("%1+%2").arg(chainId).arg(contractAddress),
-                        QStringLiteral("Mock Collection %1").arg(collectionIndex),
-                        QStringLiteral("mock-collection-%1").arg(collectionIndex),
-                        QStringLiteral("image://walletmock/collection-%1").arg(collectionIndex),
-                        false, QVariant::fromValue(static_cast<QObject*>(ownership)), communityId,
-                        privilegesLevel, isCommunityCollectible ? 2 : 1,
-                        isCommunityCollectible && privilegesLevel == 3});
+        rows.push_back(m_collectiblesModel->makeRow(
+                {{"uid", uid},
+                 {"chainId", chainId},
+                 {"contractAddress", contractAddress},
+                 {"tokenId", tokenId},
+                 {"name", QStringLiteral("Mock Collectible #%1").arg(i)},
+                 {"mediaUrl", art},
+                 {"mediaType", QStringLiteral("image/png")},
+                 {"imageUrl", art},
+                 {"thumbnailUrl", art},
+                 {"backgroundColor",
+                  QStringLiteral("#%1").arg(h % 0xffffffULL, 6, 16, QLatin1Char('0'))},
+                 {"collectionUid", QStringLiteral("%1+%2").arg(chainId).arg(contractAddress)},
+                 {"collectionName", QStringLiteral("Mock Collection %1").arg(collectionIndex)},
+                 {"collectionSlug", QStringLiteral("mock-collection-%1").arg(collectionIndex)},
+                 {"collectionImageUrl",
+                  QStringLiteral("image://walletmock/collection-%1").arg(collectionIndex)},
+                 {"metadataAvailable", true},
+                 {"ownership", QVariant::fromValue(static_cast<QObject*>(ownership))},
+                 {"communityId", communityId},
+                 {"communityPrivilegesLevel", privilegesLevel},
+                 {"tokenType", isCommunityCollectible ? 2 : 1},
+                 {"soulbound", isCommunityCollectible && privilegesLevel == 3}}));
     }
 
     m_collectiblesModel->resetRows(std::move(rows));

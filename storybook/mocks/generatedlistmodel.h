@@ -2,7 +2,20 @@
 
 #include <QAbstractListModel>
 #include <QVariantList>
+
+#include <initializer_list>
+#include <utility>
 #include <vector>
+
+// The role set of one mocked backend model, next to the Nim model it mirrors.
+// check_role_parity.py reads these declarations and fails when the Nim model
+// gained or lost a role, so the mock cannot drift unnoticed.
+struct MockRoles
+{
+    // Repo-relative path of the Nim model whose roleNames() this mirrors.
+    const char* nimSource;
+    QStringList names;
+};
 
 // Storybook-only list model filled in bulk from C++, used where generating the
 // rows in JS would dominate the measurement (assets, collectibles). Rows are
@@ -23,8 +36,13 @@ public:
     explicit GeneratedListModel(QObject* parent = nullptr);
 
     // Must be called before any row is added; resets the model.
-    void setRoles(const QStringList& roles);
+    void setRoles(const MockRoles& roles);
     const QStringList& roles() const { return m_roles; }
+
+    // Builds a row from named values, in role-declaration order. Every declared
+    // role must be given exactly once; anything else aborts, because a row that
+    // silently skips a role shifts every later value one role to the left.
+    QVariantList makeRow(std::initializer_list<std::pair<const char*, QVariant>> values) const;
 
     void resetRows(std::vector<QVariantList>&& rows);
     void clearRows();
@@ -72,6 +90,7 @@ private:
     int roleIndex(const QString& roleName) const;
 
     QStringList m_roles;
+    const char* m_nimSource = "";
     QHash<int, QByteArray> m_roleNames;
     std::vector<QVariantList> m_rows;
     int m_visibleCount = 0;
