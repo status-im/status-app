@@ -11363,14 +11363,6 @@ chargement</translation>
 <context>
     <name>MessageContextMenuView</name>
     <message>
-        <source>Reply to</source>
-        <translation>Répondre à</translation>
-    </message>
-    <message>
-        <source>Edit message</source>
-        <translation>Modifier le message</translation>
-    </message>
-    <message>
         <source>Copy</source>
         <translation>Copier</translation>
     </message>
@@ -11379,8 +11371,12 @@ chargement</translation>
         <translation>Copier le message</translation>
     </message>
     <message>
-        <source>Copy Message Id</source>
-        <translation>Copier l’ID du message</translation>
+        <source>Reply</source>
+        <translation type="unfinished">Répondre</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation type="unfinished">Modifier</translation>
     </message>
     <message>
         <source>Copy link to message</source>
@@ -11395,12 +11391,12 @@ chargement</translation>
         <translation>Épingler</translation>
     </message>
     <message>
-        <source>Mark as unread</source>
-        <translation>Marquer comme non lu</translation>
+        <source>Delete</source>
+        <translation type="unfinished">Supprimer</translation>
     </message>
     <message>
-        <source>Delete message</source>
-        <translation>Supprimer le message</translation>
+        <source>Mark as unread</source>
+        <translation>Marquer comme non lu</translation>
     </message>
 </context>
 <context>
@@ -11467,30 +11463,6 @@ chargement</translation>
     <message>
         <source>GIF</source>
         <translation>GIF</translation>
-    </message>
-    <message>
-        <source>Reply</source>
-        <translation>Répondre</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>Modifier</translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation>Dépingler</translation>
-    </message>
-    <message>
-        <source>Pin</source>
-        <translation>Épingler</translation>
-    </message>
-    <message>
-        <source>Mark as unread</source>
-        <translation>Marquer comme non lu</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>Supprimer</translation>
     </message>
     <message>
         <source>Unknown message. Trying to recover it</source>

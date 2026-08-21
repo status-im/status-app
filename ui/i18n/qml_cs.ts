@@ -11525,30 +11525,6 @@ selhalo</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Reply</source>
-        <translation>Odpovědět</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>Upravit</translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation>Odepnout</translation>
-    </message>
-    <message>
-        <source>Pin</source>
-        <translation>Připnout</translation>
-    </message>
-    <message>
-        <source>Mark as unread</source>
-        <translation>Označit jako nepřečtěné</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>Smazat</translation>
-    </message>
-    <message>
         <source>Unknown message. Trying to recover it</source>
         <translation>Neznámá zpráva. Obnovuje se</translation>
     </message>
