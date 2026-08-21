@@ -2484,18 +2484,25 @@ Item {
                     Item {
                         Rectangle {
                             anchors.fill: parent
-                            color: Theme.palette.statusAppLayout.backgroundColor
+                            color: appMain.isPortraitMode
+                                   ? Theme.palette.baseColor4
+                                   : Theme.palette.statusAppLayout.rightPanelBackgroundColor
+                        }
+
+                        ChatPanels.MessagesListSkeleton {
+                            anchors.fill: parent
+                            visible: appMain.isPortraitMode
                         }
 
                         RowLayout {
                             anchors.fill: parent
                             spacing: 0
+                            visible: !appMain.isPortraitMode
 
                             Rectangle {
-                                visible: !appMain.isPortraitMode
                                 Layout.fillHeight: true
                                 Layout.preferredWidth: Constants.chatSectionLeftColumnWidth
-                                color: Theme.palette.secondaryMenuBackground
+                                color: Theme.palette.baseColor4
 
                                 ChatPanels.MessagesListSkeleton { anchors.fill: parent }
                             }
@@ -2516,10 +2523,10 @@ Item {
                             }
 
                             Rectangle {
-                                visible: appMain.accountSettingsStore.showUsersList && !appMain.isPortraitMode
+                                visible: appMain.accountSettingsStore.showUsersList
                                 Layout.fillHeight: true
                                 Layout.preferredWidth: 280
-                                color: Theme.palette.secondaryMenuBackground
+                                color: Theme.palette.baseColor4
 
                                 ChatPanels.MembersListSkeleton { anchors.fill: parent }
                             }
