@@ -111,9 +111,11 @@ AbstractButton {
         }
 
         readonly property bool iconOnly: root.display === AbstractButton.IconOnly || root.text === ""
-        readonly property bool pressFeedbackActive: root.pressed && root.enabled && root.interactive
-                                                 && !root.loading && !root.loadingWithText
+        readonly property bool pressFeedbackActive: root.pressed && d.rippleReactive
                                                  && root.scaleOnPressEnabled
+
+        readonly property bool rippleReactive: root.enabled && root.interactive
+                                            && !root.loading && !root.loadingWithText
         readonly property int iconSize: {
             switch(root.size) {
             case StatusBaseButton.Size.XSmall:
@@ -203,21 +205,33 @@ AbstractButton {
             }
         }
 
-        StatusRipple {
-            id: ripple
-            objectName: "buttonRipple"
+        // The ripple only exists to animate a press, so nothing is built until
+        // the button is first pressed. AbstractButton sets `pressed` before it
+        // emits pressed(), so the ripple is connected in time to catch the very
+        // press that created it.
+        Loader {
+            id: rippleLoader
             anchors.fill: parent
-            enabled: root.rippleEnabled && root.enabled && root.interactive && !root.loading && !root.loadingWithText
-            color: root.rippleColor
-            radius: root.radius
-            origin: root.rippleOrigin
-            button: root
+            active: false
+
+            sourceComponent: StatusRipple {
+                objectName: "buttonRipple"
+                enabled: root.rippleEnabled && d.rippleReactive
+                color: root.rippleColor
+                radius: root.radius
+                origin: root.rippleOrigin
+                button: root
+            }
         }
     }
 
     onPressedChanged: {
-        if (!pressed)
-            ripple.release()
+        if (root.pressed) {
+            if (root.rippleEnabled && d.rippleReactive)
+                rippleLoader.active = true
+        } else if (rippleLoader.item) {
+            rippleLoader.item.release()
+        }
     }
 
     contentItem: Item {
