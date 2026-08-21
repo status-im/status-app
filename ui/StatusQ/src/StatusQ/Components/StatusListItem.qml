@@ -95,7 +95,6 @@ Rectangle {
     property alias statusListItemSubTitle: statusListItemSubTitle
     property alias statusListItemTertiaryTitle: statusListItemTertiaryTitle
     property alias statusListItemComponentsSlot: statusListItemComponentsSlot
-    property alias statusListItemTagsSlot: statusListItemTagsSlot
     property alias statusListItemLabel: statusListItemLabel
     property alias subTitleBadgeComponent: subTitleBadgeLoader.sourceComponent
     property alias errorIcon: errorIcon
@@ -295,14 +294,20 @@ Rectangle {
                 }
                 loading: root.loading
 
-                StatusIcon {
-                    width: visible ? 12 : 0
-                    height: visible ? 12 : 0
-                    visible: !!root.titleTextIcon
+                // A ColorImage per row, for a decoration only the keypair rows
+                // ever ask for.
+                Loader {
+                    id: titleTextIconLoader
+                    width: active ? 12 : 0
+                    height: active ? 12 : 0
+                    active: !!root.titleTextIcon
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: parent.left
                     anchors.leftMargin: statusListItemTitle.contentWidth + 6
-                    icon: root.titleTextIcon
+
+                    sourceComponent: StatusIcon {
+                        icon: root.titleTextIcon
+                    }
                 }
 
                 StatusLazyToolTip {
@@ -492,47 +497,60 @@ Rectangle {
                 }
             }
 
-            RowLayout {
+            // Only the keypair and keycard rows set beneathTagsIcon /
+            // beneathTagsTitle, so every other row built a layout, an icon and
+            // a text that could never become visible.
+            Loader {
+                id: beneathTagsLoader
                 anchors.top: tagsScrollViewLoader.bottom
-                anchors.topMargin: visible ? 4 : 0
+                anchors.topMargin: active ? 4 : 0
                 width: parent.width
-                visible: !!root.beneathTagsIcon || !!root.beneathTagsTitle
-                spacing: 4
+                active: !!root.beneathTagsIcon || !!root.beneathTagsTitle
 
-                StatusIcon {
-                    id: statusListItemBeneathTagsIcon
-                    Layout.preferredWidth: visible ? 16 : 0
-                    Layout.preferredHeight: visible ? 16 : 0
-                    visible: !!root.beneathTagsIcon
-                    icon: root.beneathTagsIcon
-                    color: root.beneathTagsIconColor
-                }
+                sourceComponent: RowLayout {
+                    spacing: 4
 
-                StatusTextWithLoadingState {
-                    id: statusListItemBeneathTagsTitle
-                    Layout.fillWidth: true
-                    visible: !!root.beneathTagsTitle
-                    text: root.beneathTagsTitle
-                    customColor: Theme.palette.baseColor1
-                    font.pixelSize: Theme.additionalTextSize
-                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                    StatusIcon {
+                        Layout.preferredWidth: visible ? 16 : 0
+                        Layout.preferredHeight: visible ? 16 : 0
+                        visible: !!root.beneathTagsIcon
+                        icon: root.beneathTagsIcon
+                        color: root.beneathTagsIconColor
+                    }
+
+                    StatusTextWithLoadingState {
+                        Layout.fillWidth: true
+                        visible: !!root.beneathTagsTitle
+                        text: root.beneathTagsTitle
+                        customColor: Theme.palette.baseColor1
+                        font.pixelSize: Theme.additionalTextSize
+                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                    }
                 }
             }
         }
 
-        Row {
-            id: statusListItemTagsSlot
+        // The bottom slot only ever holds bottomDelegate instances, so a row
+        // with an empty bottomModel builds neither the Row nor its Repeater.
+        // The former `width: statusListItemBadge.width` is gone with it: it tied
+        // this slot's width to an unrelated subtree, and a Row sizes itself from
+        // its children.
+        Loader {
+            id: bottomSlotLoader
             anchors.topMargin: 16
             anchors.top: iconOrImage.bottom
             anchors.left: parent.left
             anchors.leftMargin: 16
-            width: statusListItemBadge.width
-            spacing: 10
             anchors.verticalCenter: parent.verticalCenter
+            active: d.modelCount(root.bottomModel) > 0
 
-            Repeater {
-                model: bottomModel
-                delegate: bottomDelegate
+            sourceComponent: Row {
+                spacing: 10
+
+                Repeater {
+                    model: root.bottomModel
+                    delegate: root.bottomDelegate
+                }
             }
         }
 
