@@ -24,13 +24,12 @@ class SettingsLeftPanel(QObject):
     def __init__(self):
         super().__init__(settings_names.mainWindow_LeftTabView)
         self.settings_section_template = QObject(settings_names.mainWindow_settingsList_SettingsListItem)
-        self.scroll = Scroll(settings_names.mainWindow_settingsList_VerticalScroll)
+        self.scroll = Scroll(settings_names.mainWindow_settingsList_SettingsList)
         self.settings_section_back_up_seed_option = QObject(settings_names.settingsBackUpSeedPhraseOption)
 
     def _open_settings(self, object_name: str):
         self.settings_section_template.real_name['objectName'] = object_name
-        if not self.settings_section_template.is_visible:
-            self.scroll.vertical_scroll_down(self.settings_section_template)
+        self.scroll.vertical_scroll_down(self.settings_section_template)
         self.settings_section_template.click()
 
     @allure.step('Choose back up seed phrase in settings')

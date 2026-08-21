@@ -684,7 +684,7 @@ class OnboardingBiometricsView(OnboardingView):
 
     @allure.step('Select maybe later option')
     def maybe_later(self):
-        self.maybe_later_button.click()
+        self.object.enableBiometricsRequested(False)
         self.wait_until_hidden()
 
 

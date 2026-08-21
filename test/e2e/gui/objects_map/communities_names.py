@@ -160,6 +160,7 @@ optimism_StatusRadioButton = {"checkable": True, "container": statusDesktop_main
 mainnet_StatusRadioButton = {"checkable": True, "container": statusDesktop_mainWindow_overlay, "objectName": "networkSelectionRadioButton_Mainnet", "type": "StatusRadioButton", "visible": True}
 arbitrum_StatusRadioButton = {"checkable": True, "container": statusDesktop_mainWindow_overlay, "objectName": "networkSelectionRadioButton_Arbitrum", "type": "StatusRadioButton", "visible": True}
 networkItem_StatusRadioButton = {"checkable": True, "container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("networkSelectionRadioButton*"), "type": "StatusRadioButton", "visible": True}
+networkSelectorDelegate = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("networkSelectorDelegate_*"), "type": "NetworkSelectItemDelegate", "visible": True}
 
 editOwnerTokenView_Mint_StatusButton = {"checkable": False, "container": mainWindow_editOwnerTokenView_EditOwnerTokenView, "objectName": "mintButton", "type": "StatusButton", "visible": True}
 editOwnerTokenView_FeeRow = {"container": mainWindow_editOwnerTokenView_EditOwnerTokenView, "type": "FeeRow", "unnamed": 1, "visible": True}

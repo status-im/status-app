@@ -1,4 +1,3 @@
-import logging
 import time
 import typing
 
@@ -13,8 +12,6 @@ from gui.elements.object import QObject
 from gui.elements.text_label import TextLabel
 from gui.objects_map import settings_names
 from gui.screens.community_settings import CommunitySettingsScreen
-
-LOG = logging.getLogger(__name__)
 
 
 class CommunitiesSettingsView(QObject):
@@ -46,7 +43,6 @@ class CommunitiesSettingsView(QObject):
             name = str(name_members_labels[0].text)
             members = str(name_members_labels[1].text)
             image = self._community_template_image.image
-
             _communities.append(CommunityData(name, description, members, image))
         return _communities
 

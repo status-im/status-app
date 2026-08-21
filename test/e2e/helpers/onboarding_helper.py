@@ -1,5 +1,6 @@
 import allure
 
+import configs
 from configs.timeouts import APP_LOAD_TIMEOUT_MSEC, UI_LOAD_TIMEOUT_MSEC
 from gui.components.education_popup import EducationPopup
 from gui.components.enable_biometrics_popup import EnableBiometricsPopup
@@ -46,6 +47,8 @@ def skip_education_popup_if_visible(attempts=4):
 
 @allure.step('Skip Enable biometrics popup if visible')
 def skip_biometrics_popup_if_visible(timeout_msec: int = UI_LOAD_TIMEOUT_MSEC):
+    if configs.system.get_platform() != 'Darwin':
+        return
     try:
         EnableBiometricsPopup().skip(timeout_msec)
     except TimeoutError:

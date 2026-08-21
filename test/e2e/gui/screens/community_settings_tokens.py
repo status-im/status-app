@@ -1,4 +1,3 @@
-import time
 import typing
 
 import allure
@@ -27,6 +26,7 @@ class TokensView(QObject):
         self.welcome_checklist_3 = TextLabel(communities_names.checkListText_2_Tokens)
         self.get_started_infobox = QObject(communities_names.mint_Owner_Tokens_InfoBoxPanel)
         self.mint_owner_token_button = Button(communities_names.mint_Owner_Tokens_StatusButton)
+        self._scroll = Scroll(communities_names.mainWindow_MintedTokensView)
 
     @property
     @allure.step('Get mint token button enable state')
@@ -68,6 +68,7 @@ class TokensView(QObject):
 
     @allure.step('Click mint owner button')
     def click_mint_owner_button(self):
+        self._scroll.vertical_scroll_down(self.mint_owner_token_button)
         self.mint_owner_token_button.click()
         return TokensOwnerTokenSettingsView().wait_until_appears()
 
@@ -149,6 +150,7 @@ class EditOwnerTokenView(QObject):
         self.optimism_network_item = CheckBox(communities_names.optimism_StatusRadioButton)
         self.arbitrum_network_item = CheckBox(communities_names.arbitrum_StatusRadioButton)
         self.network_item = CheckBox(communities_names.networkItem_StatusRadioButton)
+        self.network_delegate = QObject(communities_names.networkSelectorDelegate)
         self._mint_button = Button(communities_names.editOwnerTokenView_Mint_StatusButton)
         self._fees_text_object = TextLabel(communities_names.editOwnerTokenView_fees_StatusBaseText)
         self._crown_icon = QObject(communities_names.editOwnerTokenView_crown_icon_StatusIcon)
@@ -248,17 +250,25 @@ class EditOwnerTokenView(QObject):
         destructible_box = self.get_destructible_boxes()[index]
         return str(destructible_box.value)
 
+    @allure.step('Select network {1}')
     def select_network(self, network_name):
-        if not self._fees_box.is_visible:
-            self._scroll.vertical_scroll_down(self._fees_box)
+        self._scroll.vertical_scroll_down(self._select_network_filter)
         self._select_network_filter.click()
-        network_options = driver.findAllObjects(self.network_item.real_name)
-        assert network_options, f'Network options are not displayed'
-        for item in network_options:
-            if str(getattr(item, 'objectName', '')).endswith(network_name):
-                QObject(item).click()
-                time.sleep(0.5)  # allow network selector component to hide
-                break
+        options = list(driver.findAllObjects(self.network_delegate.real_name)) or list(
+            driver.findAllObjects(self.network_item.real_name))
+        assert options, 'Network options are not displayed'
+        option_names = [str(getattr(item, 'objectName', '')) for item in options]
+        matched = next((item for item, name in zip(options, option_names) if name.endswith(network_name)), None)
+        assert matched is not None, f'Network {network_name!r} not found in {option_names}'
+        toggled = getattr(matched, 'toggled', None)
+        if callable(toggled):
+            toggled()
+        else:
+            QObject(matched).click()
+        assert driver.waitFor(
+            lambda: network_name in self.get_fee_title,
+            configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        ), f'feeLabel did not include {network_name!r}: {self.get_fee_title!r}'
         return self
 
     @allure.step('Click mint button')

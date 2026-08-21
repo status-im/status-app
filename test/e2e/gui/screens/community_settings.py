@@ -583,6 +583,7 @@ class PermissionsSettingsView(QObject):
         self.who_holds_plus_button = Button(communities_names.whoHoldsPlusButton)
         self.is_allowed_to_plus_button = Button(communities_names.isAllowedPlusButton)
         self.in_plus_button = Button(communities_names.inPlusButton)
+        self._scroll = Scroll(communities_names.mainWindow_editPermissionView_EditPermissionView)
 
     @allure.step('Get text from warning panel')
     def get_warning_text(self):
@@ -707,11 +708,13 @@ class PermissionsSettingsView(QObject):
 
     @allure.step('Click create permission')
     def create_permission(self):
+        self._scroll.vertical_scroll_down(self._create_permission_button)
         self._create_permission_button.click()
         self._create_permission_button.wait_until_hidden()
 
     @allure.step('Switch hide permission checkbox')
     def switch_hide_permission_checkbox(self, state):
+        self._scroll.vertical_scroll_down(self._hide_permission_checkbox)
         self._hide_permission_checkbox.set(state)
 
     @allure.step('Change allowed to option from permission')
