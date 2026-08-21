@@ -376,7 +376,6 @@ Control {
                         Layout.fillWidth: true
                         Layout.bottomMargin: root.editMode ? Theme.halfPadding : 0
                         sourceComponent: StatusMessageEmojiReactions {
-                            id: emojiReactionsPanel
                             enabled: !root.disableEmojis
                             reactionsModel: root.reactionsModel
                             limitReached: !!root.reactionsModel && root.reactionsModel.ModelCount.count >= root.maxEmojiReactionsPerMessage
