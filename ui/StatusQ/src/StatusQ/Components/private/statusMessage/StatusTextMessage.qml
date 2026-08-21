@@ -114,9 +114,9 @@ Item {
             start: Qt.point(0, 0)
             end: Qt.point(0, chatTextView.height)
             gradient: Gradient {
-                GradientStop { position: 0.0; color: "white" }
-                GradientStop { position: 0.85; color: "white" }
-                GradientStop { position: 1; color: "transparent" }
+                GradientStop { position: 0.0; color: StatusColors.white }
+                GradientStop { position: 0.85; color: StatusColors.white }
+                GradientStop { position: 1; color: StatusColors.transparent }
             }
         }
     }
@@ -141,7 +141,7 @@ Item {
             type: StatusBaseButton.Type.Primary
             size: StatusBaseButton.Size.Small
             spacing: 1
-            icon.name: d.readMore ? "chevron-up":  "chevron-down"
+            icon.name: d.readMore ? "chevron-up": "chevron-down"
             onClicked: {
                 d.readMore = !d.readMore
             }

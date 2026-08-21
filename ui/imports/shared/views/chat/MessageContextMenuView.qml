@@ -62,10 +62,10 @@ StatusMenu {
 
         readonly property int iconSize: 20
         readonly property int defaultMenuWidth: 234
-        readonly property int menuPadding: Theme.halfPadding
+        readonly property int menuPadding: root.Theme.halfPadding
         readonly property int compactPadding: menuPadding / 2
         readonly property int rowWidth: Math.max(0, root.maxImplicitWidth - 2 * menuPadding)
-        readonly property int defaultItemSpacing: Theme.padding
+        readonly property int defaultItemSpacing: root.Theme.padding
         readonly property int defaultActionSize: iconSize + 2 * compactPadding
         readonly property int singleRowActionSize: iconSize + 3 * compactPadding
         readonly property bool editActionVisible: root.isMyMessage && !root.editRestricted && !root.disabledForChat
@@ -322,86 +322,65 @@ StatusMenu {
         Layout.preferredHeight: d.menuPadding
     }
 
-    StatusAction {
+    MsgCtxAction {
         id: replyToMenuItem
         objectName: "messageContextMenu_replyTo"
         text: qsTr("Reply")
         icon.name: "reply"
-        icon.width: d.iconSize
-        icon.height: d.iconSize
-        fontSettings.pixelSize: Theme.primaryTextFontSize
         onTriggered: root.showReplyArea(root.messageSenderId)
         enabled: root.expanded && !root.disabledForChat
     }
 
-    StatusAction {
+    MsgCtxAction {
         id: editMessageAction
         objectName: "messageContextMenu_edit"
         text: qsTr("Edit")
         onTriggered: root.editClicked()
         icon.name: "edit_pencil"
-        icon.width: d.iconSize
-        icon.height: d.iconSize
-        fontSettings.pixelSize: Theme.primaryTextFontSize
         enabled: root.expanded && d.editActionVisible
     }
 
-    StatusAction {
+    MsgCtxAction {
         id: markMessageAsUnreadAction
         objectName: "messageContextMenu_markUnread"
         text: qsTr("Mark as unread")
         icon.name: "hide"
-        icon.width: d.iconSize
-        icon.height: d.iconSize
-        fontSettings.pixelSize: Theme.primaryTextFontSize
         enabled: root.expanded && !root.disabledForChat
         onTriggered: root.markMessageAsUnread()
     }
 
-    StatusAction {
+    MsgCtxAction {
         id: copySelectedTextItem
         objectName: "messageContextMenu_copySelection"
         text: qsTr("Copy")
         icon.name: "copy"
-        icon.width: d.iconSize
-        icon.height: d.iconSize
-        fontSettings.pixelSize: Theme.primaryTextFontSize
         enabled: root.expanded && !!root.selectedText
         onTriggered: root.copyToClipboard(root.selectedText)
     }
 
-    StatusAction {
+    MsgCtxAction {
         id: copyMessageMenuItem
         objectName: "messageContextMenu_copy"
         text: qsTr("Copy message")
         icon.name: "copy"
-        icon.width: d.iconSize
-        icon.height: d.iconSize
-        fontSettings.pixelSize: Theme.primaryTextFontSize
         onTriggered: root.copyToClipboard(root.unparsedText)
         enabled: root.expanded && d.canCopyMessage
     }
 
-    StatusAction {
+    MsgCtxAction {
         id: copyMessageLinkAction
         objectName: "messageContextMenu_copyLink"
         text: qsTr("Copy link to message")
         icon.name: "copy"
-        icon.width: d.iconSize
-        icon.height: d.iconSize
-        fontSettings.pixelSize: Theme.primaryTextFontSize
         enabled: root.expanded && root.messageLinkSharingEnabled
         onTriggered: root.copyMessageLink()
     }
 
-    StatusAction {
+    MsgCtxAction {
         id: pinAction
         objectName: "messageContextMenu_pin"
         text: root.pinnedMessage ? qsTr("Unpin") : qsTr("Pin")
         icon.name: root.pinnedMessage ? "unpin" : "pin"
-        icon.width: d.iconSize
-        icon.height: d.iconSize
-        fontSettings.pixelSize: Theme.primaryTextFontSize
         onTriggered: {
             if (root.pinnedMessage) return root.unpinMessage()
             if (!root.canPin) return root.pinnedMessagesLimitReached()
@@ -410,16 +389,19 @@ StatusMenu {
         enabled: root.expanded && d.canPinMessage
     }
 
-    StatusAction {
+    MsgCtxAction {
         id: deleteMessageAction
         objectName: "messageContextMenu_delete"
         enabled: root.expanded && d.canDeleteMessage
         text: qsTr("Delete")
         icon.name: "delete"
+        type: StatusAction.Danger
+        onTriggered: root.deleteMessage()
+    }
+
+    component MsgCtxAction: StatusAction {
         icon.width: d.iconSize
         icon.height: d.iconSize
         fontSettings.pixelSize: Theme.primaryTextFontSize
-        assetSettings.color: Theme.palette.dangerColor1
-        onTriggered: root.deleteMessage()
     }
 }

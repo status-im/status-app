@@ -11307,30 +11307,6 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Reply</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Pin</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mark as unread</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Unknown message. Trying to recover it</source>
         <translation type="unfinished"></translation>
     </message>

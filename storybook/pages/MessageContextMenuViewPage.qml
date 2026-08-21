@@ -11,13 +11,11 @@ import Storybook
 import utils
 import shared.views.chat
 
-import SortFilterProxyModel
-
 SplitView {
     id: root
 
     Logs { id: logs }
-    property var contextMenu
+    property MessageContextMenuView contextMenu
 
     SplitView {
         orientation: Qt.Vertical
@@ -93,9 +91,9 @@ SplitView {
         MessageContextMenuView {
             id: messageContextMenuView
 
-            emojiModel: SortFilterProxyModel {
-                sourceModel: StatusQUtils.Emoji.emojiModel
-            }
+            emojiModel: StatusQUtils.Emoji.emojiModel
+
+            messageLinkSharingEnabled: ctrlMessageLinkSharingEnabled.checked
 
             onPinMessage: logs.logEvent(`onPinMessage: ${messageContextMenuView.messageId}`)
             onUnpinMessage: logs.logEvent(`onUnpinMessage: ${messageContextMenuView.messageId}`)
@@ -106,6 +104,7 @@ SplitView {
             onEditClicked: logs.logEvent(`onEditClicked: ${messageContextMenuView.messageId}`)
             onShowReplyArea: (senderId) => logs.logEvent("onShowReplyArea", ["senderId"], [senderId])
             onCopyToClipboard: (text) => logs.logEvent("onCopyToClipboard", ["text"], [text])
+            onCopyMessageLink: logs.logEvent(`onCopyMessageLink: ${messageContextMenuView.messageId}`)
             onOpenEmojiPopup: logs.logEvent("onOpenEmojiPopup")
             onClosed: destroy()
         }
@@ -169,6 +168,11 @@ SplitView {
                 CheckBox {
                     id: ctrlPinned
                     text: "Pinned message"
+                }
+
+                CheckBox {
+                    id: ctrlMessageLinkSharingEnabled
+                    text: "Message link sharing enabled"
                 }
             }
         }
