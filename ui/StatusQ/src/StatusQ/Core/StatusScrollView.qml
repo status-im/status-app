@@ -221,6 +221,7 @@ T.ScrollView {
         root.ScrollBar.vertical.increase()
     }
 
+    // No `visible`: an attached StatusScrollBar resolves the policy itself.
     ScrollBar.vertical: StatusScrollBar {
         parent: root
         x: root.mirrored ? 1 : root.width - width - 1
@@ -228,7 +229,6 @@ T.ScrollView {
         height: root.availableHeight
         active: root.ScrollBar.horizontal.active
         policy: ScrollBar.AsNeeded
-        visible: resolveVisibility(policy, root.availableHeight, root.contentHeight)
     }
 
     ScrollBar.horizontal: StatusScrollBar {
@@ -238,6 +238,5 @@ T.ScrollView {
         width: root.availableWidth
         active: root.ScrollBar.vertical.active
         policy: ScrollBar.AsNeeded
-        visible: resolveVisibility(policy, root.availableWidth, root.contentWidth)
     }
 }
