@@ -7,9 +7,10 @@ import configs
 from gui.components.confirm_recovery_phrase import ConfirmRecoveryPhrase
 from gui.elements.button import Button
 from gui.elements.object import QObject
+from gui.elements.scroll import Scroll
 from gui.elements.text_edit import TextEdit
-from gui.objects_map import keycard_names
-from gui.screens.keycard_details_view import KeycardDetailsView
+from gui.elements.text_label import TextLabel
+from gui.objects_map import keycard_names, onboarding_names
 
 
 class KeycardManagementPopup(QObject):
@@ -26,6 +27,7 @@ class KeycardManagementPopup(QObject):
         self.tab_18_words_button = Button(keycard_names.keycardManagementSeedPhrase18Button)
         self.tab_24_words_button = Button(keycard_names.keycardManagementSeedPhrase24Button)
         self.seed_phrase_input = TextEdit(keycard_names.keycardManagementSeedPhraseInputField)
+        self._seed_phrase_scroll = Scroll(keycard_names.keycardManagementSeedPhraseScrollView)
         self.unknown_pin_button = Button(keycard_names.keycardManagementUnknownPinButton)
         self.done_button = Button(keycard_names.keycardManagementDoneButton)
         self.key_pair_name_input = QObject(keycard_names.keycardKeyPairNameInput)
@@ -106,6 +108,7 @@ class KeycardManagementPopup(QObject):
 
         for index, word in enumerate(seed_phrase_words, start=1):
             self.seed_phrase_input.real_name['objectName'] = f'enterSeedPhraseInputField{index}'
+            self._seed_phrase_scroll.vertical_scroll_down(self.seed_phrase_input)
             self.seed_phrase_input.text = word
             time.sleep(0.2)
 
@@ -140,3 +143,22 @@ class KeycardManagementPopup(QObject):
         self.continue_button.wait_until_appears(timeout_msec)
         self.continue_button.click()
         return self
+
+
+class KeycardDetailsView(QObject):
+    def __init__(self):
+        super().__init__(onboarding_names.mainWindow_keycardDetailsPage)
+
+        self.keycard_view_title = TextLabel(onboarding_names.keycardDetailsTitle)
+        self.keycard_view_import_new_keypair = Button(onboarding_names.onboardingKeycardDetailsImportNewKeypair)
+        self.keycard_view_import_seed_phrase = Button(onboarding_names.onboardingKeycardDetailsImportSeedPhrase)
+
+    @allure.step('Import a new keypair to Keycard and create new profile')
+    def import_a_new_keypair(self):
+        self.keycard_view_import_new_keypair.click()
+        return KeycardManagementPopup().wait_until_appears()
+
+    @allure.step('Import a key pair from recovery phrase')
+    def import_from_recovery_phrase(self):
+        self.keycard_view_import_seed_phrase.click()
+        return KeycardManagementPopup().wait_until_appears()

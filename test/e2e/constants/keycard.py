@@ -1,4 +1,5 @@
 DEFAULT_PIN = '111111'
+DEFAULT_PUK = '000000000000'
 
 KEYCARD_EMPTY_TITLE = 'Keycard is empty'
 KEYCARD_PROFILE_DETAILS_TITLE = 'Keycard stores Status profile key pair'

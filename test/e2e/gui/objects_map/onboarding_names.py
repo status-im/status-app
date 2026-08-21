@@ -181,6 +181,10 @@ loginView_addNewUserItem_AccountMenuItemPanel = {"container": statusDesktop_main
 loginView_addExistingUserItem_AccountMenuItemPanel = {"container": statusDesktop_mainWindow_overlay, "objectName": "LoginView_addExistingUserItem", "type": "AccountMenuItemPanel", "visible": True}
 mainWindowUsePasswordInsteadStatusBaseText = {"container": statusDesktop_mainWindow, "text": "Use password instead", "type": "StatusBaseText", "unnamed": 1, "visible": True}
 loginView_passwordBox = {"container": statusDesktop_mainWindow, "objectName": "passwordBox", "type": "LoginPasswordBox", "visible": True}
+loginView_keycardBox = {"container": mainWindow_LoginView, "objectName": "keycardBox", "type": "LoginKeycardBox",
+                        "visible": True}
+loginView_keycardPinInput = {"container": loginView_keycardBox, "objectName": "pinInput", "type": "StatusPinInput",
+                             "visible": True}
 
 # new Login view
 userSelectorButton = {"container": mainWindow_LoginView, "id": "userSelectorButton", "type": "LoginUserSelectorDelegate", "unnamed": 1, "visible": True}
