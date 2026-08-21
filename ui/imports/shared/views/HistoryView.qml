@@ -5,7 +5,6 @@ import QtQuick.Layouts
 
 import StatusQ
 import StatusQ.Core
-import StatusQ.Core.Utils as SQUtils
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core.Theme
@@ -46,6 +45,8 @@ ColumnLayout {
     property alias bannerComponent: banner.sourceComponent
 
     property real yPosition: transactionListRoot.visibleArea.yPosition * transactionListRoot.contentHeight
+
+    readonly property bool contentLoaded: !d.isInitialLoading
 
     function resetView() {
         if (!!filterPanelLoader.item) {
@@ -326,6 +327,7 @@ ColumnLayout {
             }
 
             TransactionDelegate {
+                objectName: "walletActivityDelegate_" + transactionDelegate.index
                 Layout.fillWidth: true
                 modelData: transactionDelegate.model.activityEntry
                 timeStampText: isModelDataValid ? LocaleUtils.formatRelativeTimestamp(modelData.timestamp * 1000, true) : ""

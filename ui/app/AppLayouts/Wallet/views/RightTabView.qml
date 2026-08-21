@@ -672,6 +672,7 @@ RightTabBaseView {
                 Component {
                     id: historyView
                     HistoryView {
+                        objectName: "walletAccountHistoryView"
                         overview: RootStore.overview
                         activityStore: RootStore
                         communitiesStore: root.communitiesStore

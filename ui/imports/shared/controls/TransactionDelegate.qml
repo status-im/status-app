@@ -45,6 +45,8 @@ StatusListItem {
 
     property var modelData
     property string timeStampText: isModelDataValid ? LocaleUtils.formatRelativeTimestamp(modelData.timestamp * 1000) : ""
+    // Unix seconds from the activity model; exposed so e2e/Squish can read it (nested modelData is not visible).
+    readonly property int timestamp: isModelDataValid ? modelData.timestamp : 0
     property bool showAllAccounts: false
     property bool displayValues: true
 
