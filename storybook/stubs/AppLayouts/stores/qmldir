@@ -1,3 +1,5 @@
+AccountSettingsStore 1.0 AccountSettingsStore.qml
 ActivityCenterStore 1.0 ActivityCenterStore.qml
-RootStore 1.0 RootStore.qml
 ContactsStore 1.0 ContactsStore.qml
+FeatureFlagsStore 1.0 FeatureFlagsStore.qml
+RootStore 1.0 RootStore.qml
