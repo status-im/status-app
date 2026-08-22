@@ -9,6 +9,7 @@ import QtQml.Models
 
 import AppLayouts.Chat
 import AppLayouts.Chat.views
+import AppLayouts.Chat.panels as ChatPanels
 import AppLayouts.Wallet
 import AppLayouts.Market.stores
 import AppLayouts.Wallet.services.dapps
@@ -994,10 +995,12 @@ Item {
         }
 
         // The active section's loaded item (appView's children stay in sync with
-        // currentIndex). May be null while a section is still loading.
+        // currentIndex). While a section is still loading this falls back to
+        // the loader itself: loaders owning interactive skeleton chrome
+        // forward the back contract (canGoBack/tryGoBack) for that phase.
         function activeSectionItem() {
             const loader = appView.children[appView.currentIndex]
-            return loader ? loader.item : null
+            return loader ? (loader.item ?? loader) : null
         }
 
         // True when the active section can step back internally (e.g. portrait
@@ -2393,6 +2396,13 @@ Item {
                             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                             Layout.fillHeight: true
 
+                            // build the chrome only for the selected community
+                            // (known before anything is visible, so the startup
+                            // section pre-builds its skeletons under the cover)
+                            // and keep it for every visited one
+                            chromeNeeded: active
+                                          || model.id === appMain.rootStore.activeSectionId
+
                             active: false
                             // Do not unload section data from the memory in order not
                             // to reset scroll, not send text input and etc during the
@@ -2441,10 +2451,16 @@ Item {
                     id: sectionStartupLoading
                     anchors.fill: parent
                     z: 1
+                    // ChatLoader and CommunityChatLoader own their skeleton chrome
+                    // and paint it from the first frame, even while inactive, so the
+                    // overlay is only needed where nothing else paints yet: the
+                    // communities portal, and the transient loadingSection while the
+                    // persisted section is restored. A community section whose
+                    // repeater delegate does not exist yet is left to the
+                    // currentIndex fallback, which shows another community's
+                    // loader — the right shape, unlike a chat-shaped overlay.
                     active: !appMain.mainReady
-                            && (d.activeSectionType === Constants.appSection.chat
-                                || d.activeSectionType === Constants.appSection.community
-                                || d.activeSectionType === Constants.appSection.communitiesPortal
+                            && (d.activeSectionType === Constants.appSection.communitiesPortal
                                 || d.activeSectionType === Constants.appSection.loadingSection)
                     sourceComponent: d.activeSectionType === Constants.appSection.communitiesPortal
                                      ? communitiesPortalLoading
@@ -2454,8 +2470,37 @@ Item {
                 Component {
                     id: chatLayoutLoading
 
-                    ChatLayoutLoading {
-                        showMembersPanel: appMain.accountSettingsStore.showUsersList
+                    // Composed from the section skeleton panels (the former
+                    // ChatLayoutLoading view is superseded by them)
+                    RowLayout {
+                        spacing: 0
+
+                        ChatPanels.MessagesListSkeleton {
+                            visible: !appMain.isPortraitMode
+                            Layout.fillHeight: true
+                            Layout.preferredWidth: Constants.chatSectionLeftColumnWidth
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            spacing: 0
+
+                            ChatPanels.ChatHeaderSkeleton {
+                                Layout.fillWidth: true
+                            }
+
+                            ChatPanels.MessagesChatSkeleton {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                            }
+                        }
+
+                        ChatPanels.MembersListSkeleton {
+                            visible: appMain.accountSettingsStore.showUsersList && !appMain.isPortraitMode
+                            Layout.fillHeight: true
+                            Layout.preferredWidth: 280
+                        }
                     }
                 }
 

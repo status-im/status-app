@@ -37,8 +37,34 @@ import "../helpers"
 import "../panels"
 import "../popups"
 
-StatusSectionLayout {
+Item {
     id: root
+
+    // The section chrome (StatusSectionLayout) is owned by the section loader
+    // (ChatLoader / CommunityChatLoader) and injected through ChatLayout; the
+    // panels declared below are proxied into it. The panel hook-ups keep their
+    // call sites here.
+    property StatusSectionLayout sectionLayout
+
+    // Marks this view as a paneled view feeding the loader-owned chrome, as
+    // opposed to the full-page community views (join/banned/offline/settings)
+    readonly property bool usesSectionChrome: true
+
+    // --- Back-navigation contract, forwarded to the loader-owned chrome
+    function tryGoBack() {
+        return root.sectionLayout?.tryGoBack() ?? false
+    }
+    readonly property bool canGoBack: root.sectionLayout?.canGoBack ?? false
+
+    // --- Per-panel readiness, forwarded through ChatLayout to the section
+    // loader so each skeleton slot swaps out when its own panel exists, rather
+    // than all four waiting on the slowest one.
+    readonly property bool headerReady: headerContentLoader.status === Loader.Ready
+    readonly property bool leftPanelReady: contactColumnLoader.status === Loader.Ready
+    readonly property bool centerPanelReady: centerPanelLoader.status === Loader.Ready
+                                             || !centerPanelLoader.active
+    // The members panel is not deferred here: it is instantiated with the view.
+    readonly property bool rightPanelReady: true
 
     property ChatStores.RootStore rootStore
     property ChatStores.CreateChatPropertiesStore createChatPropertiesStore
@@ -89,7 +115,8 @@ StatusSectionLayout {
     property bool isPortraitMode: false
 
     // Subsection back history keyed by the active chat/channel id.
-    subsectionHistory: SubsectionNavigationHistory {
+    // Consumed by the chrome owner (bound to StatusSectionLayout.subsectionHistory).
+    readonly property var subsectionHistory: SubsectionNavigationHistory {
         currentKey: {
             const m = root.rootStore.chatCommunitySectionModule
             return m && m.activeItem ? m.activeItem.id : ""
@@ -147,7 +174,7 @@ StatusSectionLayout {
 
         readonly property bool shouldLoadCenterPanel: !root.isPortraitMode ||
                                                       centerPanelRequested ||
-                                                      root.currentIndex !== StatusSectionLayout.LeftPanel
+                                                      (root.sectionLayout?.currentIndex ?? StatusSectionLayout.LeftPanel) !== StatusSectionLayout.LeftPanel
         property bool centerPanelRequested: false
 
         function requestCenterPanel() {
@@ -218,29 +245,35 @@ StatusSectionLayout {
         }
     }
 
-    headerContent: Loader {
+    readonly property Item headerContent: Loader {
         visible: !root.allChannelsAreHiddenBecauseNotPermitted
         id: headerContentLoader
         sourceComponent: root.contentLocked ? joinCommunityHeaderPanelComponent : chatHeaderContentViewComponent
     }
 
-    leftPanel: Loader {
+    readonly property Item leftPanel: Loader {
         id: contactColumnLoader
+        // The panel incubates before it is proxied into the chrome, i.e. with
+        // no visual parent. Bound it with the chrome geometry for that phase —
+        // otherwise the loader falls back to the chat list's implicit height
+        // (its full content height), which builds a delegate for every chat
+        // only to discard them once the proxy applies the real size.
+        width: Constants.chatSectionLeftColumnWidth
+        height: root.sectionLayout?.height ?? 0
         sourceComponent: root.rootStore.chatCommunitySectionModule.isCommunity()?
                              communtiyColumnComponent :
                              contactsColumnComponent
     }
 
-    centerPanel: Loader {
+    readonly property Item centerPanel: Loader {
         id: centerPanelLoader
-        anchors.fill: parent
         active: d.shouldLoadCenterPanel
         sourceComponent: (root.allChannelsAreHiddenBecauseNotPermitted || root.contentLocked) ?
                              joinCommunityCenterPanelComponent : chatColumnViewComponent
         onLoaded: d.requestCenterPanel()
     }
 
-    showRightPanel: {
+    readonly property bool showRightPanel: {
         if (root.contentLocked || root.rootStore.openCreateChat ||
                 !root.showUsersList || !root.chatContentModule)
             return false
@@ -252,7 +285,8 @@ StatusSectionLayout {
     onNavToMsgDetailsChanged: {
         if (root.navToMsgDetails) {
             d.requestCenterPanel()
-            root.currentIndex = StatusSectionLayout.CentralPanel
+            if (root.sectionLayout)
+                root.sectionLayout.currentIndex = StatusSectionLayout.CentralPanel
             root.navToMsgDetailsRequested(false)
         }
     }
@@ -270,13 +304,12 @@ StatusSectionLayout {
     }
 
     function navigateToMessageList() {
-        root.currentIndex = StatusSectionLayout.LeftPanel
+        if (root.sectionLayout)
+            root.sectionLayout.currentIndex = StatusSectionLayout.LeftPanel
         root.navToMsgListRequested(false)
     }
 
-    rightPanel: UserListPanel {
-        anchors.fill: parent
-
+    readonly property Item rightPanel: UserListPanel {
         chatType: root.chatContentModule?.chatDetails.type || Constants.chatType.unknown
         isAdmin: root.chatContentModule?.amIChatAdmin() || false
 
@@ -322,14 +355,41 @@ StatusSectionLayout {
         // NOTE: It only affects behavior in portrait mode
         if(root.navToMsgDetails) {
             d.requestCenterPanel()
-            root.currentIndex = StatusSectionLayout.CentralPanel
+            if (root.sectionLayout)
+                root.sectionLayout.currentIndex = StatusSectionLayout.CentralPanel
             root.navToMsgDetailsRequested(false)
         }
     }
 
-    onCurrentIndexChanged: {
-        if (root.currentIndex !== StatusSectionLayout.LeftPanel)
-            d.requestCenterPanel()
+    Connections {
+        target: root.sectionLayout
+
+        function onCurrentIndexChanged() {
+            if (root.sectionLayout.currentIndex !== StatusSectionLayout.LeftPanel)
+                d.requestCenterPanel()
+        }
+
+        function onSwiped(previous, current) {
+            // showUsersList is normally cleared by swiping back, but may
+            // remain true e.g. by closing app with user list open or in
+            // case of dynamic layout change. In that case the flag should be
+            // cleared for consistency.
+            if (previous === StatusSectionLayout.LeftPanel
+                && current === StatusSectionLayout.CentralPanel
+                && root.showUsersList) {
+                Qt.callLater(() => root.showUsersListRequested(false))
+            }
+
+            if (previous !== StatusSectionLayout.RightPanel)
+                return
+
+            // Setting timeout to let the swipe animation to complete. The workaround
+            // is needed because SwipeView doesn't expose any API to detect completed
+            // swipe action
+            Backpressure.setTimeout(root, 300, () => {
+                root.showUsersListRequested(false)
+            })
+        }
     }
 
     Component {
@@ -472,7 +532,7 @@ StatusSectionLayout {
             }
             onChatItemClicked: (id) => {
                 d.requestCenterPanel()
-                root.goToNextPanel()
+                root.sectionLayout?.goToNextPanel()
             }
         }
     }
@@ -497,7 +557,7 @@ StatusSectionLayout {
             onFinaliseOwnershipClicked: root.finaliseOwnershipClicked()
             onChatItemClicked: (id) => {
                 d.requestCenterPanel()
-                root.goToNextPanel()
+                root.sectionLayout?.goToNextPanel()
             }
             onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.myPublicKey)
 
@@ -509,33 +569,11 @@ StatusSectionLayout {
         }
     }
 
-    onSwiped: (previous, current) => {
-        // showUsersList is normally cleared by swiping back, but may
-        // remain true e.g. by closing app with user list open or in
-        // case of dynamic layout change. In that case the flag should be
-        // cleared for consistency.
-        if (previous === StatusSectionLayout.LeftPanel
-            && current === StatusSectionLayout.CentralPanel
-            && root.showUsersList) {
-            Qt.callLater(() => root.showUsersListRequested(false))
-        }
-
-        if (previous !== StatusSectionLayout.RightPanel)
-            return
-
-        // Setting timeout to let the swipe animation to complete. The workaround
-        // is needed because SwipeView doesn't expose any API to detect completed
-        // swipe action
-        Backpressure.setTimeout(this, 300, () => {
-            root.showUsersListRequested(false)
-        })
-    }
-
     onShowUsersListChanged: {
         Qt.callLater(() => {
             if (root.showUsersList) {
                 d.requestCenterPanel()
-                goToNextPanel()
+                root.sectionLayout?.goToNextPanel()
             }
         })
     }

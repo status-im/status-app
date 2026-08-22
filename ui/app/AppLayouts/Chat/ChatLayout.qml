@@ -23,6 +23,7 @@ import AppLayouts.stores.Messaging.Community as CommunityStores
 
 import StatusQ
 import StatusQ.Core.Utils
+import StatusQ.Layout
 
 import QtModelsToolkit
 import SortFilterProxyModel
@@ -35,6 +36,32 @@ StackLayout {
     // will be used on this view to determine specific UI view flows in case of need so that it allows to identify if a certain store
     // value is now separated between `chat` and `community` specific
     required property bool isChatView
+
+    // The section chrome (StatusSectionLayout) is owned by the section loader
+    // and injected here; it is passed down to the inner ChatView, whose panels
+    // are forwarded back to the loader through the properties below.
+    property StatusSectionLayout sectionLayout
+
+    // Panels of the inner chat view, proxied into the loader-owned chrome
+    readonly property Item leftPanel: mainViewLoader.item?.leftPanel ?? null
+    readonly property Item centerPanel: mainViewLoader.item?.centerPanel ?? null
+    readonly property Item rightPanel: mainViewLoader.item?.rightPanel ?? null
+    readonly property Item headerContent: mainViewLoader.item?.headerContent ?? null
+    readonly property bool showRightPanel: mainViewLoader.item?.showRightPanel ?? false
+    readonly property var viewSubsectionHistory: mainViewLoader.item?.subsectionHistory ?? null
+
+    // Per-panel readiness of those panels, so the loader can retire each
+    // skeleton slot independently
+    readonly property bool headerReady: mainViewLoader.item?.headerReady ?? false
+    readonly property bool leftPanelReady: mainViewLoader.item?.leftPanelReady ?? false
+    readonly property bool centerPanelReady: mainViewLoader.item?.centerPanelReady ?? false
+    readonly property bool rightPanelReady: mainViewLoader.item?.rightPanelReady ?? false
+
+    // True while a full-page view (join/banned/offline community view or the
+    // community settings page) replaces the paneled chat view; the loader hides
+    // its chrome and this StackLayout renders the full page instead.
+    readonly property bool ownsFullPage: currentIndex !== 0 ||
+                                         !(mainViewLoader.item?.usesSectionChrome ?? false)
 
     // WIP: It will be refactored step by step (now community permissions and community access logic is not part of this store)
     property ChatStores.RootStore rootStore
@@ -267,6 +294,7 @@ StackLayout {
 
             objectName: "chatViewComponent"
 
+            sectionLayout: root.sectionLayout
             rootStore: root.rootStore
             createChatPropertiesStore: root.createChatPropertiesStore
             communitiesStore: root.communitiesStore
@@ -366,9 +394,6 @@ StackLayout {
             // Navigation:
             navToMsgDetails: root.navToMsgDetails
             navToMsgList: root.navToMsgList
-
-            // Layout
-            leftPanelWidthOverride: root.leftPanelWidthOverride
 
             onGroupMembersUpdateRequested: root.groupMembersUpdateRequested(membersPubKeysList)
 

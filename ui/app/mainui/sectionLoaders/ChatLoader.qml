@@ -1,7 +1,11 @@
 import QtQml
 import QtQuick
 
+import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
+import StatusQ.Layout
+
+import AppLayouts.Chat.panels
 
 import utils
 
@@ -9,7 +13,6 @@ import shared.stores as SharedStores
 import shared.stores.send
 
 import AppLayouts.stores as AppStores
-import AppLayouts.Chat
 import AppLayouts.Chat.stores as ChatStores
 import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Wallet.stores as WalletStores
@@ -49,16 +52,99 @@ Loader {
     property real leftPanelWidthOverride: 0
     property bool navToMsgDetails: root.rootStore.navToMsgDetails
 
-    // Re-emitted so AppMain owns the spinner toggle.
-    signal ready()
     // Bridges the chat profile button to the global app-section navigation.
     signal openAppSearchRequested()
 
-    asynchronous: false
+    // Back-navigation contract for AppMain's back chain. The chrome is
+    // interactive while the section item still incubates, so the loader must
+    // answer for it during that phase; once loaded, the item leads.
+    readonly property bool canGoBack: root.item?.canGoBack ?? sectionLayout.canGoBack
+    function tryGoBack() {
+        if (root.item && typeof root.item.tryGoBack === "function")
+            return root.item.tryGoBack()
+        return sectionLayout.tryGoBack()
+    }
 
-    onStatusChanged: {
-        if (status === Loader.Ready || status === Loader.Error)
-            ready()
+    asynchronous: true
+
+    // The section chrome is owned by the loader: it shows instantly with
+    // skeleton panels and swaps in the real panels produced by ChatView
+    // (LayoutItemProxy retarget) as each one finishes incubating. Each slot is
+    // gated on its own readiness flag, not on `root.item`: ChatView's panels
+    // exist as soon as the section loads, but an asynchronous one is an empty
+    // Loader until it is ready, and retargeting the proxy to it releases the
+    // skeleton (setParentItem(null) + setVisible(false)) and paints nothing.
+    StatusSectionLayout {
+        id: sectionLayout
+        objectName: "sectionChrome"
+
+        anchors.fill: parent
+
+        headerContent: (root.item?.headerReady ?? false) ? root.item.headerContent : headerSkeleton
+        leftPanel: (root.item?.leftPanelReady ?? false) ? root.item.leftPanel : listSkeleton
+        centerPanel: (root.item?.centerPanelReady ?? false) ? root.item.centerPanel : chatSkeleton
+        rightPanel: (root.item?.rightPanelReady ?? false) ? root.item.rightPanel : membersSkeleton
+        showRightPanel: root.item?.showRightPanel ?? root.accountSettingsStore.showUsersList
+        subsectionHistory: root.item?.viewSubsectionHistory ?? null
+
+        leftPanelWidthOverride: root.leftPanelWidthOverride
+    }
+
+    // Skeleton slot items carry the same page paddings as the real panels.
+    // Each skeleton lives behind a Loader gated on its slot: an alive
+    // invisible skeleton re-evaluates its tile geometry bindings on every
+    // resize for the lifetime of the section.
+    Loader {
+        id: headerSkeleton
+        objectName: "headerSkeleton"
+        active: !(root.item?.headerReady ?? false)
+        visible: active
+        sourceComponent: ChatHeaderSkeleton {}
+    }
+
+    Loader {
+        id: listSkeleton
+        objectName: "leftPanelSkeleton"
+        active: !(root.item?.leftPanelReady ?? false)
+        visible: active
+
+        // The real header: invite and start-chat act app-globally, so they
+        // remain functional while the section incubates
+        sourceComponent: MessagesListSkeleton {
+            createChatOpened: root.createChatViewOpened
+
+            onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.contactsStore.myPublicKey)
+            onStartChatClicked: {
+                if (root.createChatViewOpened) {
+                    Global.closeCreateChatView()
+                } else {
+                    Global.openCreateChatView()
+                }
+            }
+        }
+    }
+
+    Loader {
+        id: chatSkeleton
+        objectName: "centerPanelSkeleton"
+        active: !(root.item?.centerPanelReady ?? false)
+        visible: active
+
+        sourceComponent: MessagesChatSkeleton {
+            anchors.fill: parent
+            anchors.margins: Theme.padding
+            anchors.leftMargin: Theme.xlPadding
+            anchors.rightMargin: Theme.xlPadding
+        }
+    }
+
+    Loader {
+        id: membersSkeleton
+        objectName: "rightPanelSkeleton"
+        active: !(root.item?.rightPanelReady ?? false)
+        visible: active
+
+        sourceComponent: MembersListSkeleton {}
     }
 
     onNavToMsgDetailsChanged: {
@@ -95,6 +181,7 @@ Loader {
 
     Component.onCompleted: {
         Qt.callLater(() => QmlCompiler.precompile(QmlCompiler.chatUrl))
+        loadSection()
     }
 
     function loadSection() {
@@ -107,6 +194,7 @@ Loader {
         setSource(QmlCompiler.chatUrl, {
             visible: false,
             isChatView: true,
+            sectionLayout: sectionLayout,
             showUsersList:                  Qt.binding(() => root.accountSettingsStore.showUsersList),
             rootStore:                      Qt.binding(() => d.chatRootStore),
             createChatPropertiesStore:      Qt.binding(() => root.createChatPropertiesStore),
@@ -144,6 +232,7 @@ Loader {
 
     onActiveChanged: {
         if (root.active) {
+            loadSection()
             return
         }
         if (!!d.chatRootStore) {
@@ -194,15 +283,5 @@ Loader {
         function onNavToMsgListRequested(navigate) {
             root.rootStore.setNavToMsgListFlag(navigate)
         }
-    }
-
-    Loader {
-        id: chatLayoutLoading
-        anchors.fill: parent
-        active: root.active && root.status !== Loader.Ready
-        sourceComponent: ChatLayoutLoading {
-            showMembersPanel: root.accountSettingsStore.showUsersList
-        }
-        onLoaded: Qt.callLater(root.loadSection)
     }
 }
