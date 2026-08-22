@@ -3,7 +3,7 @@
 ## positional args, and every rank/count field carries a `-1` sentinel that must
 ## never be read as a position or as an empty chat.
 
-import std/[json, tables]
+import std/[json, os, strutils, tables]
 import unittest
 
 import app_service/service/message/message_window
@@ -63,6 +63,7 @@ suite "rank and index conversion":
 suite "worker-side response assembly":
   let rpcResult = %*{
     "messages": [{"id": "0xc"}, {"id": "0xb"}, {"id": "0xa"}],
+    "reactions": [{"id": "r1", "messageId": "0xb"}],
     "cursor": "next-page",
     "totalCount": 1240,
     "firstRank": 1239,
@@ -70,7 +71,7 @@ suite "worker-side response assembly":
   }
 
   test "the enriched fields survive the hand-over to the GUI thread":
-    let response = buildWindowResponse("chat-1", rpcResult, %*[{"id": "r1"}])
+    let response = buildWindowResponse("chat-1", rpcResult)
     check(response["chatId"].getStr == "chat-1")
     check(response["messages"].len == 3)
     check(response["messagesCursor"].getStr == "next-page")
@@ -81,7 +82,7 @@ suite "worker-side response assembly":
 
   test "a response without the enriched fields reports the sentinels":
     let plain = %*{"messages": [], "cursor": ""}
-    let response = buildWindowResponse("chat-1", plain, nil)
+    let response = buildWindowResponse("chat-1", plain)
     check(response["totalCount"].getInt == COUNT_UNKNOWN)
     check(response["firstRank"].getInt == RANK_NOT_APPLICABLE)
     check(response["anchorRank"].getInt == RANK_NOT_APPLICABLE)
@@ -90,9 +91,100 @@ suite "worker-side response assembly":
 
   test "a page past the end of the chat keeps its count and drops its rank":
     let pastEnd = %*{"messages": [], "cursor": "", "totalCount": 1240, "firstRank": -1, "anchorRank": -1}
-    let response = buildWindowResponse("chat-1", pastEnd, nil)
+    let response = buildWindowResponse("chat-1", pastEnd)
     check(response["totalCount"].getInt == 1240)
     check(response["firstRank"].getInt == RANK_NOT_APPLICABLE)
+
+suite "page reactions":
+  # status-go embeds the page's reactions in the page response, so the whole
+  # page costs one call. The array is flat and unordered: a reaction names its
+  # message through `messageId`, never through its position in the array.
+  let pageWithReactions = %*{
+    "messages": [{"id": "0xc"}, {"id": "0xb"}, {"id": "0xa"}],
+    "reactions": [
+      {"id": "r-a1", "messageId": "0xa", "emojiId": 1},
+      {"id": "r-c1", "messageId": "0xc", "emojiId": 2},
+      {"id": "r-c2", "messageId": "0xc", "emojiId": 3},
+    ],
+    "cursor": "",
+    "totalCount": 1240,
+    "firstRank": 1239,
+    "anchorRank": -1,
+  }
+
+  proc byMessageId(reactions: JsonNode): Table[string, seq[string]] =
+    result = initTable[string, seq[string]]()
+    for reaction in reactions.getElems():
+      result.mgetOrPut(reaction["messageId"].getStr, @[]).add(reaction["id"].getStr)
+
+  test "the page's own reactions are what the payload carries":
+    let payload = buildWindowPayload("chat-1", pageWithReactions)
+    check(payload.reactions.kind == JArray)
+    check(payload.reactions.len == 3)
+    check(payload.reactions == pageWithReactions["reactions"])
+
+  test "reactions group by messageId, several on one row and none on another":
+    let grouped = byMessageId(buildWindowPayload("chat-1", pageWithReactions).reactions)
+    check(grouped.len == 2)
+    check(grouped["0xc"] == @["r-c1", "r-c2"])
+    check(grouped["0xa"] == @["r-a1"])
+    check(not grouped.hasKey("0xb"))
+
+  test "a reaction belongs to the message it names, not to the row it lines up with":
+    # The fixture is deliberately misaligned: pairing reactions[i] with
+    # messages[i] would hand 0xc's reactions to 0xa. If a future edit makes the
+    # two arrays line up, this check fails and the misalignment must be restored.
+    let messages = pageWithReactions["messages"]
+    let reactions = pageWithReactions["reactions"]
+    require(reactions.len <= messages.len)
+    check(reactions[0]["messageId"].getStr != messages[0]["id"].getStr)
+
+    let grouped = byMessageId(buildWindowPayload("chat-1", pageWithReactions).reactions)
+    check(not grouped.hasKey("0xb"))
+    for i in 0 ..< reactions.len:
+      let named = reactions[i]["messageId"].getStr
+      check(reactions[i]["id"].getStr in grouped[named])
+
+  test "no reactions on the page is an empty array, never nil":
+    let empty = buildWindowPayload("chat-1", %*{"messages": [{"id": "0xa"}], "reactions": []})
+    check(empty.reactions.kind == JArray)
+    check(empty.reactions.len == 0)
+
+  test "a response without the field, or with a null one, reads as no reactions":
+    # A page from a status-go that predates the embedded field must read as
+    # "nobody reacted", not as a nil array the GUI slot would trip over.
+    for rpcResult in [%*{"messages": []}, %*{"messages": [], "reactions": newJNull()}]:
+      let payload = buildWindowPayload("chat-1", rpcResult)
+      check(payload.reactions.kind == JArray)
+      check(payload.reactions.len == 0)
+    check(pageReactions(newJArray()).kind == JArray)
+    check(pageReactions(newJArray()).len == 0)
+
+suite "the page path never fetches reactions per message":
+  # A source-text guard, not a behavioural one: the worker tasks call the RPC
+  # transport, which cannot be linked here. It fails if the per-message loop
+  # that made a 40-row page cost 40 sequential calls comes back.
+  let asyncTasks = readFile(currentSourcePath.parentDir.parentDir.parentDir /
+    "src/app_service/service/message/async_tasks.nim")
+
+  proc sliceBetween(text, first, last: string): string =
+    let start = text.find(first)
+    let stop = text.find(last, start + 1)
+    require(start >= 0)
+    require(stop > start)
+    text[start ..< stop]
+
+  test "the three page tasks issue no reaction call of their own":
+    let pagePath = sliceBetween(asyncTasks,
+      "proc asyncFetchChatMessagesTask", "proc asyncFetchChatMessagesCountTask")
+    check("asyncFetchChatMessagesAroundMessageTask" in pagePath)
+    check("asyncFetchChatMessagesAtRankTask" in pagePath)
+    check(not pagePath.contains("fetchReactions"))
+
+  test "the single-message and pinned-message paths keep their own fetch":
+    # Reacting to a message refreshes just that message, and pinned messages are
+    # not a page; neither is served by the embedded array.
+    check(asyncTasks.contains("fetchReactionsForMessageWithId"))
 
 suite "GUI-side response parsing":
   test "a full page parses into meta":

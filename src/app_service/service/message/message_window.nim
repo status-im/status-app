@@ -111,10 +111,22 @@ proc readCount(node: JsonNode, prop: string): int =
   let value = node[prop].getInt
   if value < 0: COUNT_UNKNOWN else: value
 
-proc buildWindowResponse*(chatId: string, rpcResult: JsonNode, reactions: JsonNode): JsonNode =
-  ## Worker-side: flattens an `ApplicationMessagesResponse` plus the reactions
-  ## fetched alongside it into the JSON the task hands to the GUI thread. Runs
-  ## off the GUI thread; the GUI side only re-reads these named fields.
+proc pageReactions*(rpcResult: JsonNode): JsonNode =
+  ## Every `ApplicationMessagesResponse` carries the reactions posted on the
+  ## messages it returns, so a page costs one RPC and never one per message.
+  ## The array is flat and unordered — a reaction names its message through its
+  ## own `messageId`, never through its position. A response that predates the
+  ## field, or one that is not chat-scoped, reads as no reactions rather than
+  ## as nil.
+  if rpcResult.kind == JObject and rpcResult.hasKey("reactions") and
+      rpcResult["reactions"].kind == JArray:
+    return rpcResult["reactions"]
+  newJArray()
+
+proc buildWindowResponse*(chatId: string, rpcResult: JsonNode): JsonNode =
+  ## Worker-side: flattens an `ApplicationMessagesResponse`, reactions included,
+  ## into the JSON the task hands to the GUI thread. Runs off the GUI thread;
+  ## the GUI side only re-reads these named fields.
   result = %*{
     "chatId": chatId,
     "messages": (if rpcResult.kind == JObject and rpcResult.hasKey("messages"): rpcResult["messages"] else: newJArray()),
@@ -122,7 +134,7 @@ proc buildWindowResponse*(chatId: string, rpcResult: JsonNode, reactions: JsonNo
     "totalCount": readCount(rpcResult, "totalCount"),
     "firstRank": readRank(rpcResult, "firstRank"),
     "anchorRank": readRank(rpcResult, "anchorRank"),
-    "reactions": (if reactions.isNil: newJArray() else: reactions),
+    "reactions": pageReactions(rpcResult),
   }
 
 proc parseMessagePageMeta*(responseObj: JsonNode): MessagePageMeta =
@@ -191,10 +203,10 @@ proc newErrorPagePayload*(chatId, error: string): MessagePagePayload =
   result = initMessagePagePayload(chatId)
   result.meta.error = error
 
-proc buildWindowPayload*(chatId: string, rpcResult: JsonNode, reactions: JsonNode): MessagePagePayload =
+proc buildWindowPayload*(chatId: string, rpcResult: JsonNode): MessagePagePayload =
   ## Worker-side: everything the GUI slot used to do to the response string
   ## except decoding the DTOs.
-  let flat = buildWindowResponse(chatId, rpcResult, reactions)
+  let flat = buildWindowResponse(chatId, rpcResult)
   result = initMessagePagePayload()
   result.meta = parseMessagePageMeta(flat)
   result.messages = flat["messages"]

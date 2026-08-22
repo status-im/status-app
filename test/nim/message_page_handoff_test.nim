@@ -16,6 +16,12 @@ import unittest
 import app/core/tasks/typed_handoff
 import app_service/service/message/message_window
 
+proc reactionsFor(rows: int): JsonNode =
+  result = newJArray()
+  for i in 0 ..< rows:
+    if i mod 2 == 0:
+      result.add(%*{"id": "0xr" & $i, "messageId": "0xm" & $i, "emojiId": 1})
+
 proc rpcResult(rows: int, firstRank = 8000, totalCount = 12000): JsonNode =
   var messages = newJArray()
   for i in 0 ..< rows:
@@ -28,17 +34,13 @@ proc rpcResult(rows: int, firstRank = 8000, totalCount = 12000): JsonNode =
     })
   %*{
     "messages": messages,
+    "reactions": reactionsFor(rows),
     "cursor": "cursor-" & $rows,
     "totalCount": totalCount,
     "firstRank": firstRank,
     "anchorRank": -1,
   }
 
-proc reactionsFor(rows: int): JsonNode =
-  result = newJArray()
-  for i in 0 ..< rows:
-    if i mod 2 == 0:
-      result.add(%*{"id": "0xr" & $i, "messageId": "0xm" & $i, "emojiId": 1})
 
 # --- the worker half ----------------------------------------------------------
 
@@ -50,7 +52,7 @@ type PageSpec = tuple[rows: int, outHandle: ptr TaskHandle, outThreadId: ptr int
 proc workerBuildPage(spec: PageSpec) {.thread.} =
   spec.outThreadId[] = getThreadId()
   spec.outHandle[] = parkHandoff(
-    buildWindowPayload("chat-1", rpcResult(spec.rows), reactionsFor(spec.rows)))
+    buildWindowPayload("chat-1", rpcResult(spec.rows)))
 
 proc workerBuildError(spec: PageSpec) {.thread.} =
   spec.outThreadId[] = getThreadId()
@@ -135,11 +137,12 @@ suite "payload shapes":
 
   test "the arrays are the ones the rpc returned, not copies re-encoded":
     let rpc = rpcResult(3)
-    let payload = buildWindowPayload("chat-1", rpc, reactionsFor(3))
+    let payload = buildWindowPayload("chat-1", rpc)
     check payload.messages == rpc["messages"]
+    check payload.reactions == rpc["reactions"]
 
   test "a response with no messages field yields an empty page, not a nil array":
-    let payload = buildWindowPayload("chat-1", %*{"cursor": "c"}, nil)
+    let payload = buildWindowPayload("chat-1", %*{"cursor": "c"})
     check payload.messages.kind == JArray
     check payload.messages.len == 0
     check payload.reactions.kind == JArray
@@ -149,7 +152,7 @@ suite "payload shapes":
     check payload.meta.firstRank == RANK_NOT_APPLICABLE
 
   test "a non-object rpc result is a page-shaped error, not a crash":
-    let payload = buildWindowPayload("chat-1", newJArray(), nil)
+    let payload = buildWindowPayload("chat-1", newJArray())
     check payload.messages.len == 0
     check payload.meta.firstRank == RANK_NOT_APPLICABLE
     check payload.meta.totalCount == COUNT_UNKNOWN

@@ -125,11 +125,12 @@ proc syntheticPage(count: int): JsonNode =
 
   buildWindowResponse(chatId, %*{
     "messages": messages,
+    "reactions": reactions,
     "cursor": "cursor-" & $count,
     "totalCount": 12000,
     "firstRank": 8000,
     "anchorRank": -1,
-  }, reactions)
+  })
 
 template timeIt(body: untyped): float =
   ## Best-of-`Reps` wall milliseconds — the floor, so a stray GC or scheduler

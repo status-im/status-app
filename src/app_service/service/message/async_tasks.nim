@@ -33,14 +33,10 @@ proc asyncFetchChatMessagesTask(argEncoded: string) {.gcsafe, nimcall.} =
     if not msgsResponse.error.isNil:
       raise newException(CatchableError, msgsResponse.error.message)
 
-    let rResponse = status_go.fetchReactions(arg.chatId, arg.msgCursor, arg.limit)
-    if not rResponse.error.isNil:
-      raise newException(CatchableError, rResponse.error.message)
-
     # Typed completion: the page is parsed and its scalars read HERE, on the
     # worker. The GUI slot claims the finished payload by handle and only
     # decodes the DTOs (see MessagePagePayload for why those stay GUI-side).
-    arg.finishTyped(buildWindowPayload(arg.chatId, msgsResponse.result, rResponse.result))
+    arg.finishTyped(buildWindowPayload(arg.chatId, msgsResponse.result))
 
   except Exception as e:
     arg.finishTyped(newErrorPagePayload(arg.chatId, e.msg))
@@ -62,22 +58,6 @@ type
   AsyncFetchChatMessagesCountTaskArg = ref object of QObjectTaskArg
     chatId: string
 
-proc fetchReactionsForPage(chatId: string, messagesArr: JsonNode): JsonNode =
-  # The window calls answer with an empty cursor, so the cursor-paged reactions
-  # query cannot be aimed at them; reactions are collected per message instead,
-  # the way the pinned-messages task already does it. Worker thread only.
-  result = newJArray()
-  if messagesArr.isNil or messagesArr.kind != JArray:
-    return
-  for messageJson in messagesArr:
-    if messageJson.kind != JObject or not messageJson.hasKey("id"):
-      continue
-    let rResponse = status_go.fetchReactionsForMessageWithId(chatId, messageJson["id"].getStr)
-    if not rResponse.error.isNil:
-      raise newException(CatchableError, rResponse.error.message)
-    for reactionJson in rResponse.result.getElems():
-      result.add(reactionJson)
-
 proc asyncFetchChatMessagesAroundMessageTask(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncFetchChatMessagesAroundMessageTaskArg](argEncoded)
   try:
@@ -85,9 +65,7 @@ proc asyncFetchChatMessagesAroundMessageTask(argEncoded: string) {.gcsafe, nimca
     if not msgsResponse.error.isNil:
       raise newException(CatchableError, msgsResponse.error.message)
 
-    let messagesArr = msgsResponse.result{"messages"}
-    var payload = buildWindowPayload(arg.chatId, msgsResponse.result,
-      fetchReactionsForPage(arg.chatId, messagesArr))
+    var payload = buildWindowPayload(arg.chatId, msgsResponse.result)
     payload.messageId = arg.messageId
     arg.finishTyped(payload)
 
@@ -103,9 +81,7 @@ proc asyncFetchChatMessagesAtRankTask(argEncoded: string) {.gcsafe, nimcall.} =
     if not msgsResponse.error.isNil:
       raise newException(CatchableError, msgsResponse.error.message)
 
-    let messagesArr = msgsResponse.result{"messages"}
-    var payload = buildWindowPayload(arg.chatId, msgsResponse.result,
-      fetchReactionsForPage(arg.chatId, messagesArr))
+    var payload = buildWindowPayload(arg.chatId, msgsResponse.result)
     payload.requestedRank = arg.rank
     arg.finishTyped(payload)
 
