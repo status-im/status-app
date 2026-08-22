@@ -12,6 +12,9 @@
 
 using namespace Qt::Literals::StringLiterals;
 
+extern "C" void statusq_installBoostedIncubationController(void* engine, int msPerTick,
+                                                           int gentlePeriodMs, int boostGapMs);
+
 class Setup : public QObject
 {
     Q_OBJECT
@@ -24,7 +27,14 @@ public slots:
         QGuiApplication::setOrganizationDomain(u"status.im"_s);
 
         qputenv("QT_QUICK_CONTROLS_HOVER_ENABLED", "1"_ba);
-        
+
+        // Same controller the application installs (src/nim_status_client.nim).
+        // Without it async Loaders incubate on Qt's render-loop budget, which
+        // under offscreen rendering makes a section load take tens of seconds —
+        // tests would be pinning a configuration the app never runs.
+        statusq_installBoostedIncubationController(engine, 20, 300, 0);
+
+
         const QStringList additionalImportPaths {
             STATUSQ_MODULE_IMPORT_PATH,
             u"qrc:/"_s,

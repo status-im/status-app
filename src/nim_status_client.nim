@@ -342,6 +342,14 @@ proc mainProc() =
     singletonInstance.engine.addImportPath("qrc:/./app");
 
   statusq_setupNetworkAccessManagerFactory(singletonInstance.engine.vptr, (TMPDIR & "netcache").cstring, NETWORK_DISK_CACHE_SIZE)
+  # Async section loads (Loader asynchronous:true) finish several times faster
+  # than with the render-loop-driven default incubation budget. Each event-loop
+  # tick incubates for up to a 12ms budget with a 2ms pause between ticks, so
+  # input stays under ~12ms of added latency and the render loop gets sync
+  # windows. The first 300ms of every burst — and any window bracketed by the
+  # chrome's panel-switch signals (StatusQ.IncubationHints) — incubate gently
+  # so slide animations stay fluid.
+  statusq_installBoostedIncubationController(singletonInstance.engine.vptr, 12, 300, 2)
   singletonInstance.engine.setRootContextProperty("uiScaleFilePath", newQVariant(uiScaleFilePath))
   singletonInstance.engine.setRootContextProperty("singleInstance", newQVariant(singleInstance))
   singletonInstance.engine.setRootContextProperty("isExperimental", isExperimentalQVariant)

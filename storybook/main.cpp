@@ -15,6 +15,9 @@
 #include <StatusQ/networkaccessfactory.h>
 #include <StatusQ/typesregistration.h>
 
+extern "C" void statusq_installBoostedIncubationController(void* engine, int msPerTick,
+                                                           int gentlePeriodMs, int boostGapMs);
+
 using namespace Qt::Literals::StringLiterals;
 
 // Mirrors NETWORK_DISK_CACHE_SIZE in src/constants.nim.
@@ -114,6 +117,21 @@ int main(int argc, char *argv[])
     Status::setupNetworkAccessManagerFactory(
         &engine, QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + u"/netcache"_s,
         networkDiskCacheSize);
+
+    // A/B hook for the app's boosted incubation controller (externc.cpp):
+    // STORYBOOK_INCUBATION_MS=20 makes async section loads incubate with a
+    // fixed event-loop budget instead of the render-loop-driven default;
+    // STORYBOOK_INCUBATION_GENTLE_MS / STORYBOOK_INCUBATION_GAP_MS tune the
+    // gentle window and the pause between boosted bites. An unparsable or
+    // non-positive budget leaves the default controller in place.
+    bool incubationMsValid = false;
+    const int incubationMs =
+        qEnvironmentVariable("STORYBOOK_INCUBATION_MS").toInt(&incubationMsValid);
+    if (incubationMsValid && incubationMs > 0)
+        statusq_installBoostedIncubationController(
+            &engine, incubationMs,
+            qEnvironmentVariableIntValue("STORYBOOK_INCUBATION_GENTLE_MS"),
+            qEnvironmentVariableIntValue("STORYBOOK_INCUBATION_GAP_MS"));
 
     for (auto& path : std::as_const(additionalImportPaths))
         engine.addImportPath(path);
