@@ -80,3 +80,7 @@ add_test(NAME TestHttpStats COMMAND TestHttpStats)
 add_executable(TestNetworkAccessFactory src/tst_networkaccessfactory.cpp)
 target_link_libraries(TestNetworkAccessFactory PRIVATE Qt::Test Qt::Network Qt::Qml StatusQ)
 add_test(NAME TestNetworkAccessFactory COMMAND TestNetworkAccessFactory)
+
+add_executable(TestIncubationController src/tst_incubationcontroller.cpp)
+target_link_libraries(TestIncubationController PRIVATE Qt::Test Qt::Gui Qt::Qml Qt::Quick StatusQ)
+add_test(NAME TestIncubationController COMMAND TestIncubationController)
