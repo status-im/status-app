@@ -17,4 +17,4 @@ beautifulsoup4==4.12.3
 requests==2.31.0
 mnemonic==0.21
 zpywallet==0.6.2
-web3==7.7.0
+web3==7.15.0
