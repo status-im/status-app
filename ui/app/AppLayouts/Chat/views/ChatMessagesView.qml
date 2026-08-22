@@ -260,7 +260,10 @@ Item {
         // otherwise. The at-bottom exception restores to the CURRENT newest
         // window — the ordinary open — never a frozen record.
         function openWindow() {
-            d.recordKey = root.messageStore.getChatId()
+            const key = root.messageStore.getChatId()
+            if (key !== d.recordKey)
+                d.forgetRowHeights()
+            d.recordKey = key
             const record = d.windowRecords[d.recordKey]
             if (d.dressActive && record && !record.atBottom) {
                 const index = d.indexOfRow(record.oldestRowId)
@@ -1094,12 +1097,68 @@ Item {
             stagedCount = stagedShells.length + stagedIds.size
         }
 
-        // Running average of revealed row heights, for the placeholder size.
+        // Row-height estimate, in two parts: the evidence, and the figure
+        // geometry is allowed to read.
+        //
+        // Evidence is a decaying sample of every revealed row's height. It is
+        // capped and halved on overflow, so it stays weighted towards what
+        // was measured recently and no single batch can swing it far: 24 rows
+        // against a full sample move the mean under 5% even when every one of
+        // them is twice the mean.
+        property real rowHeightSampleSum: 0
+        property real rowHeightSampleCount: 0
+        readonly property int rowHeightSampleCap: 512
+
+        // Rows the sample needs before the estimate stops following it. Under
+        // this the estimate is still being established — the chat has just
+        // opened, or just been switched — and tracks the mean batch by batch.
+        readonly property int rowHeightSettleCount: 24
+
+        // How wrong the evidence has to say the estimate is before it moves
+        // again. Everything the estimate feeds is multiplied by the rows
+        // outside the window, thousands of them in dense mode, so an estimate
+        // that re-averaged on every reveal rescaled the whole history once a
+        // second and walked the content out from under the drag. It holds
+        // instead, and re-latches onto the measured mean only when that mean
+        // is a quarter away: a chat of one-line rows scrolled into an
+        // image-heavy stretch still re-estimates, after ~90-170 such rows.
+        readonly property real rowHeightRelatchRatio: 0.25
+
+        // The published estimate. Placeholders, dummy rows, the pool target
+        // and the scroll mapping read this and nothing else, so they change
+        // only when it re-latches — never once per batch.
         property real avgRowHeight: 0
 
-        // The space a dummy row holds. Follows the same running average, and
-        // that average only moves at rest (reveals are frozen during motion),
-        // so dummy rows never resize mid-fling.
+        function observeRowHeights(sum, count) {
+            if (count <= 0 || sum <= 0)
+                return
+            d.rowHeightSampleSum += sum
+            d.rowHeightSampleCount += count
+            if (d.rowHeightSampleCount > d.rowHeightSampleCap) {
+                d.rowHeightSampleSum /= 2
+                d.rowHeightSampleCount /= 2
+            }
+            const mean = d.rowHeightSampleSum / d.rowHeightSampleCount
+            if (d.avgRowHeight <= 0
+                    || d.rowHeightSampleCount < d.rowHeightSettleCount) {
+                d.avgRowHeight = mean
+                return
+            }
+            if (Math.abs(mean - d.avgRowHeight)
+                    >= d.avgRowHeight * d.rowHeightRelatchRatio)
+                d.avgRowHeight = mean
+        }
+
+        // A different chat is a different row shape: its first rows must
+        // establish the estimate rather than argue with the last chat's.
+        function forgetRowHeights() {
+            d.rowHeightSampleSum = 0
+            d.rowHeightSampleCount = 0
+        }
+
+        // The space a dummy row holds. Follows the published estimate, which
+        // moves only on a re-latch and only at rest (reveals are frozen
+        // during motion), so dummy rows never resize mid-fling.
         readonly property real dummyRowHeight: d.avgRowHeight > 0 ? d.avgRowHeight : 48
 
         // Scrolling competes with incubation for frame time on low-end
@@ -1266,10 +1325,7 @@ Item {
                     ++measured
                 }
             }
-            if (measured > 0) {
-                const avg = sum / measured
-                d.avgRowHeight = d.avgRowHeight > 0 ? (d.avgRowHeight + avg) / 2 : avg
-            }
+            d.observeRowHeights(sum, measured)
             if (d.pendingRestore)
                 d.applyPendingRestore()
         }

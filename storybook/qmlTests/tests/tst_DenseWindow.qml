@@ -845,6 +845,258 @@ Item {
             compare(internal.viewMoving, false)
         }
 
+        // ---- the row-height estimate settles ----
+
+        // Tops the sample up to the point where the estimate is allowed to
+        // hold, without moving it: every row fed here is exactly the height
+        // the estimate already says rows are.
+        function establishRowHeight(internal) {
+            verify(internal.rowHeightSampleCount > 0,
+                   "the reveals that already happened must have fed the sample")
+            for (let i = 0; i < 200
+                 && internal.rowHeightSampleCount < internal.rowHeightSettleCount; ++i)
+                internal.observeRowHeights(internal.avgRowHeight * 8, 8)
+            verify(internal.rowHeightSampleCount >= internal.rowHeightSettleCount,
+                   "the sample must reach the settle count")
+        }
+
+        // Batch means wander either side of the truth — message heights
+        // differ, batch to batch — and the estimate must not follow them.
+        // Dense mode multiplies it by the rows outside the window, thousands
+        // of them, so a per-batch re-average turned a two-pixel drift into a
+        // several-thousand-pixel content-height change on every reveal.
+        function test_rowHeightEstimateHoldsUnderVaryingBatches() {
+            const chat = openDenseChat(4000, 4000)
+            const internal = chat.internal
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+            establishRowHeight(internal)
+
+            const base = internal.avgRowHeight
+            verify(base > 0)
+            const basePlaceholder = internal.topPlaceholderHeight
+            verify(4000 - 1 - internal.windowEnd > 3000,
+                   "the placeholder must stand for thousands of rows")
+            verify(basePlaceholder > 100000,
+                   "and so must be worth thousands of pixels, is "
+                   + basePlaceholder)
+
+            const wobble = [0.85, 1.14, 0.9, 1.12, 0.88, 1.15, 0.93, 1.08,
+                            0.86, 1.11, 0.95, 1.05, 0.87, 1.13, 0.91, 1.09,
+                            0.89, 1.1, 0.94, 1.06]
+            let worstEstimate = 0
+            let worstGeometry = 0
+            for (let i = 0; i < wobble.length; ++i) {
+                internal.observeRowHeights(base * wobble[i] * 20, 20)
+                worstEstimate = Math.max(
+                            worstEstimate,
+                            Math.abs(internal.avgRowHeight - base) / base)
+                worstGeometry = Math.max(
+                            worstGeometry,
+                            Math.abs(internal.topPlaceholderHeight - basePlaceholder))
+            }
+
+            verify(worstEstimate < 0.02,
+                   "the estimate must hold across wobbling batches, drifted "
+                   + (worstEstimate * 100).toFixed(1) + "%")
+            verify(worstGeometry < 1,
+                   "and the geometry it feeds must not move, moved "
+                   + worstGeometry.toFixed(0) + "px")
+        }
+
+        // The escape hatch: an estimate that could never move again would be
+        // a constant, and a chat of one-line rows scrolled into an
+        // image-heavy stretch would size its placeholders from the wrong
+        // shape forever. Sustained contrary evidence moves it, in bounded
+        // steps, and it stops once it agrees with what it measured.
+        function test_rowHeightEstimateRelatchesOnADifferentShape() {
+            const chat = openDenseChat(4000, 4000)
+            const internal = chat.internal
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+            establishRowHeight(internal)
+
+            const base = internal.avgRowHeight
+            const tall = base * 3
+
+            let rows = 0
+            for (let i = 0; i < 60 && internal.avgRowHeight < base * 1.5; ++i) {
+                internal.observeRowHeights(tall * 20, 20)
+                rows += 20
+            }
+            verify(internal.avgRowHeight >= base * 1.5,
+                   "a sustained different shape must re-estimate, still at "
+                   + internal.avgRowHeight + " from " + base)
+            verify(rows <= 400,
+                   "and within a few batches, took " + rows + " rows")
+
+            for (let i = 0; i < 300 && internal.avgRowHeight < tall * 0.9; ++i)
+                internal.observeRowHeights(tall * 20, 20)
+            verify(internal.avgRowHeight >= tall * 0.9,
+                   "the estimate must converge on the evidence, reached "
+                   + internal.avgRowHeight + " of " + tall)
+
+            const settled = internal.avgRowHeight
+            for (let i = 0; i < 20; ++i)
+                internal.observeRowHeights(tall * 20, 20)
+            fuzzyCompare(internal.avgRowHeight, settled, 0.001)
+        }
+
+        // A different chat is a different row shape, so the estimate must be
+        // re-established from its rows rather than argued down from the last
+        // chat's over hundreds of samples.
+        function test_rowHeightEstimateIsForgottenPerChat() {
+            const chat = openDenseChat(600, 600)
+            const internal = chat.internal
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+            establishRowHeight(internal)
+
+            const base = internal.avgRowHeight
+            verify(internal.rowHeightSampleCount >= internal.rowHeightSettleCount)
+
+            contentModuleMock.mockChatId = "chat-2"
+            internal.openWindow()
+
+            compare(internal.rowHeightSampleCount, 0,
+                    "a chat switch must drop the previous chat's evidence")
+
+            // one batch of the new chat's shape is enough to re-estimate,
+            // where the settled sample would have needed a hundred rows
+            internal.observeRowHeights(base * 3 * 8, 8)
+            verify(internal.avgRowHeight >= base * 2.5,
+                   "the new chat's first batch must establish the estimate, at "
+                   + internal.avgRowHeight + " from " + base)
+
+            contentModuleMock.mockChatId = "chat-1"
+        }
+
+        // The defect as the user saw it: skeleton rows on screen resizing as
+        // batches landed, and the view lurching with them. With the estimate
+        // held, a landing batch changes neither the space a dummy holds nor
+        // where anything on screen sits. The view stays on the newest
+        // message, so the bottom row is pinned and every dummy above it
+        // carries the drift of all the rows below — the lever the user was
+        // watching.
+        function test_dummyRowsHoldTheirPlaceAsBatchesLand() {
+            const chat = openDenseChat(4000, 0)
+            const listView = chat.listView
+            const internal = chat.internal
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+            establishRowHeight(internal)
+
+            let lowest = null
+            let highest = null
+            for (let i = 0; i < listView.count; ++i) {
+                const item = listView.itemAtRow(i)
+                if (!item || !item.visible || item.height <= 0)
+                    continue
+                verify(item.showsSkeleton, "row " + i + " must be a dummy")
+                const top = item.mapToItem(listView, 0, 0).y
+                if (top < 0 || top + item.height > listView.height)
+                    continue
+                lowest = lowest || item
+                highest = item
+            }
+            verify(!!highest && highest !== lowest,
+                   "the viewport must show a column of dummies")
+
+            const dummySpace = internal.dummyRowHeight
+            const dummyHeight = highest.height
+            const highestScene = highest.mapToItem(root, 0, 0).y
+            const lowestScene = lowest.mapToItem(root, 0, 0).y
+
+            const wobble = [0.85, 1.14, 0.88, 1.12, 0.9, 1.15, 0.87, 1.1,
+                            0.92, 1.08, 0.86, 1.13]
+            let worstShift = 0
+            for (let i = 0; i < wobble.length; ++i) {
+                internal.observeRowHeights(dummySpace * wobble[i] * 20, 20)
+                waitForRendering(listView)
+                compare(highest.height, dummyHeight,
+                        "a dummy must not resize on batch " + i)
+                worstShift = Math.max(
+                            worstShift,
+                            Math.abs(highest.mapToItem(root, 0, 0).y - highestScene))
+                worstShift = Math.max(
+                            worstShift,
+                            Math.abs(lowest.mapToItem(root, 0, 0).y - lowestScene))
+            }
+            compare(internal.dummyRowHeight, dummySpace)
+            verify(worstShift <= 1,
+                   "nothing on screen may move as batches land, moved "
+                   + worstShift.toFixed(1) + "px")
+        }
+
+        // The row whose top edge sits closest to the viewport top, and how
+        // far from it — the position the view holds content by.
+        function rowAtViewportTop(listView) {
+            let best = null
+            let bestOffset = 0
+            let bestDistance = Number.MAX_VALUE
+            for (let i = 0; i < listView.count; ++i) {
+                const item = listView.itemAtRow(i)
+                if (!item || !item.visible || item.height <= 0)
+                    continue
+                const offset = item.mapToItem(listView, 0, 0).y
+                if (Math.abs(offset) < bestDistance) {
+                    bestDistance = Math.abs(offset)
+                    bestOffset = offset
+                    best = item
+                }
+            }
+            return { key: best ? best.rowKey : "", offset: bestOffset }
+        }
+
+        // The other half of the span decision (issue 0022 removed the 300-row
+        // cap so the scrollbar could be proportionally honest, and it stays
+        // removed). A re-latch is rare, but it rescales a placeholder that
+        // stands for thousands of rows — hundreds of thousands of pixels of
+        // content height at once. That must not reach the viewport: the view
+        // holds content by the row at its top edge, so the whole delta is
+        // absorbed by the position it re-applies, and the row the user was
+        // reading stays where it was.
+        function test_aRelatchDoesNotMoveTheRowUnderTheViewportTop() {
+            const chat = openDenseChat(4000, 0)
+            const listView = chat.listView
+            const internal = chat.internal
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+            establishRowHeight(internal)
+
+            // off the newest message, so the view is held by its anchor
+            // rather than pinned to the content bottom
+            listView.contentY -= 200
+            waitForRendering(listView)
+            verify(!listView.stickingToNewest,
+                   "the view must be off the newest message")
+
+            const base = internal.avgRowHeight
+            const beforePlaceholder = internal.topPlaceholderHeight
+            const before = rowAtViewportTop(listView)
+            verify(!!before.key, "a row must sit at the viewport top")
+
+            // one overwhelming batch of a different shape: a re-latch, the
+            // only event that still moves the estimate once it has settled
+            internal.observeRowHeights(base * 4 * 512, 512)
+            waitForRendering(listView)
+
+            verify(internal.avgRowHeight > base * 2,
+                   "the batch must force a re-latch, estimate at "
+                   + internal.avgRowHeight + " from " + base)
+            verify(internal.topPlaceholderHeight - beforePlaceholder > 100000,
+                   "and rescale the placeholder by hundreds of thousands of "
+                   + "pixels, moved "
+                   + (internal.topPlaceholderHeight - beforePlaceholder).toFixed(0))
+
+            const after = rowAtViewportTop(listView)
+            compare(after.key, before.key,
+                    "the same row must still be under the viewport top")
+            verify(Math.abs(after.offset - before.offset) <= 2,
+                   "and at the same offset, moved "
+                   + (after.offset - before.offset).toFixed(1) + "px")
+        }
+
         // ---- the backend is told which rows to keep ----
 
         function test_windowIsPublishedToTheModel() {
