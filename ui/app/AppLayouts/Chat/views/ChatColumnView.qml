@@ -48,6 +48,16 @@ Item {
     property var stickersPopup
     property bool areTestNetworksEnabled
 
+    /*
+       Gates the (heavy) messages view on the centre panel having finished
+       incubating. While this column is still being built, an active messages
+       loader is incubated alongside it and the panel's own Loader cannot report
+       Ready until it drains — which keeps the section skeleton, input bar and
+       all, on screen for the whole message build instead of handing over to the
+       per-chat skeleton. Deferring it lets the shell show first, as intended.
+    */
+    property bool messagesViewEnabled: true
+
     readonly property string activeChatId: parentModule && parentModule.activeItem.id
     readonly property int chatsCount: parentModule && parentModule.model ? parentModule.model.count : 0
     readonly property int activeChatType: rootStore.activeChatType
@@ -330,6 +340,11 @@ Item {
         }
 
         function restoreInputState(preservedText) {
+            // scheduled via Qt.callLater — it can fire while this view is
+            // tearing down (chat/section switch), when the dying context has
+            // already dropped its functions
+            if (typeof d.mentionNames !== "function")
+                return
 
             if (!d.activeChatContentModule) {
                 chatInput.clear()
@@ -443,13 +458,30 @@ Item {
                 model: parentModule && parentModule.model
 
                 Loader {
+                    id: chatContentLoader
+
                     anchors.fill: parent
-                    active: model.type !== Constants.chatType.category && model.type !== Constants.chatType.unknown
+
+                    // Only chats that have been activated get a content view;
+                    // loaderActive latches on first activation (see
+                    // chat_section/model.nim setActiveItem), preserving state
+                    // for visited chats without building one view per chat
+                    property bool wasShown: false
+
+                    Binding on wasShown {
+                        when: !!model && model.active
+                        value: true
+                        restoreMode: Binding.RestoreNone
+                    }
+
+                    active: model.type !== Constants.chatType.category && model.type !== Constants.chatType.unknown &&
+                            (model.active || (model.loaderActive && chatContentLoader.wasShown))
+
                     sourceComponent: ChatContentView {
                         visible: !root.rootStore.openCreateChat && model.active
                         chatId: model.itemId
                         chatType: model.type
-                        chatMessagesLoader.active: model.loaderActive
+                        chatMessagesLoader.active: model.loaderActive && root.messagesViewEnabled
                         rootStore: root.rootStore
                         formatBalance: d.formatBalance
                         emojiPopup: root.emojiPopup

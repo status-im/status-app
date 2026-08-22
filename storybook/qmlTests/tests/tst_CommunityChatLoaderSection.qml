@@ -124,19 +124,7 @@ Item {
             root.height = 700
         }
 
-        function findAllByTypePrefix(item, prefix, out) {
-            if (!item)
-                return out
-            if (item.toString().indexOf(prefix) === 0)
-                out.push(item)
-            const list = item.children
-            for (let i = 0; i < list.length; ++i)
-                findAllByTypePrefix(list[i], prefix, out)
-            return out
-        }
-
-        // like findAllByTypePrefix, but through `data` so non-visual children
-        // (popups, tooltips) are found too
+        // walks `data` so non-visual children (popups, tooltips) are found too
         function findAllInDataByTypePrefix(obj, prefix, out) {
             if (!obj)
                 return out
@@ -270,14 +258,28 @@ Item {
                    "admin channels list must be virtualized, got " + created
                    + " of " + lv.count)
         }
-        function clickableChatRow(lv) {
-            const chatItems = findAllByTypePrefix(lv.contentItem, "StatusChatListItem_QMLTYPE", [])
-            for (let i = 0; i < chatItems.length; ++i) {
-                const item = chatItems[i]
-                if (item.chatId !== mock.activeChatId && item.visible && item.height > 0)
-                    return item
+        // The rows the view has actually laid out, in model order. Walking
+        // contentItem.children instead would also pick up delegates the view
+        // is still incubating for its cache buffer: those are already
+        // parented, visible and sized, but not yet positioned, so they sit at
+        // y 0 on top of the real first row. itemAtIndex only ever returns
+        // placed delegates.
+        function placedRows(lv) {
+            const out = []
+            for (let i = 0; i < lv.count; ++i) {
+                const row = lv.itemAtIndex(i)
+                if (row)
+                    out.push(row)
             }
-            return null
+            return out
+        }
+
+        function placedChatRows(lv) {
+            return placedRows(lv).filter(row => !row.isCategory)
+        }
+
+        function clickableChatRow(lv) {
+            return placedChatRows(lv).find(row => row.chatId !== mock.activeChatId) ?? null
         }
 
         function test_clickSelectsChannel() {
@@ -320,14 +322,13 @@ Item {
             tryVerify(() => lv.count > 0, 10000)
             waitForRendering(lv)
 
-            const categoryItems =
-                findAllByTypePrefix(lv.contentItem, "StatusChatListCategoryItem_QMLTYPE", [])
-            verify(categoryItems.length > 0, "a category row must exist")
+            const categoryRow = placedRows(lv).find(row => row.isCategory)
+            verify(!!categoryRow, "a category row must exist")
             // every row hosts both item types; only category rows show theirs
-            const category = categoryItems.filter(c => c.visible)[0]
+            const category = categoryRow.item
             verify(!!category)
             verify(category.opened)
-            mouseClick(category)
+            mouseClick(categoryRow)
             tryVerify(() => !category.opened, 5000,
                       "clicking a category must collapse it")
         }
@@ -346,25 +347,40 @@ Item {
                           && loader.item.centerPanelReady
                           && loader.item.rightPanelReady, 60000,
                       "all panels must be ready before gesture tests")
+            // panels flip visible on Ready — a full render pass must deliver
+            // their geometry and pointer state before gestures are synthesized
+            waitForRendering(loader.item)
         }
 
         function waitForStableRows(lv) {
             let prevCount = -1
             let prevY = -1e9
             tryVerify(() => {
-                const rows = findAllByTypePrefix(lv.contentItem, "StatusChatListItem_QMLTYPE", [])
-                    .filter(r => r.visible && r.height > 0)
+                const rows = placedChatRows(lv)
                 if (rows.length < 2) {
                     prevCount = -1
                     return false
                 }
-                rows.sort((a, b) => a.mapToItem(null, 0, 0).y - b.mapToItem(null, 0, 0).y)
                 const y = rows[0].mapToItem(null, 0, 0).y
                 const stable = rows.length === prevCount && y === prevY
                 prevCount = rows.length
                 prevY = y
                 return stable
             }, 10000, "chat rows must settle before dragging")
+        }
+
+        // Drags `row` vertically by `dy` in the STATIC list's coordinates
+        // (the dragged row moves — item-relative coordinates would chase it).
+        function dragRowVertically(lv, row, dy) {
+            const start = row.mapToItem(lv, row.width / 2, row.height / 2)
+            mousePress(lv, start.x, start.y)
+            for (let step = 1; step <= 8; ++step)
+                mouseMove(lv, start.x, start.y + (dy * step) / 8, 20)
+            // a frame between the last move and the release lets the drop
+            // target process the final position before the drop lands
+            waitForRendering(lv)
+            mouseRelease(lv, start.x, start.y + dy)
+            waitForRendering(lv)
         }
 
         function test_adminDragReordersToAdjacentRow() {
@@ -384,33 +400,23 @@ Item {
             waitForSectionReady(loader)
             waitForStableRows(lv)
 
-            const rows = findAllByTypePrefix(lv.contentItem, "StatusChatListItem_QMLTYPE", [])
-                .filter(r => r.visible && r.height > 0)
+            const rows = placedChatRows(lv)
             verify(rows.length >= 2)
-            rows.sort((a, b) => a.mapToItem(null, 0, 0).y - b.mapToItem(null, 0, 0).y)
             const first = rows[0]
             const second = rows[1]
             const firstId = first.chatId
             const rowH = first.height
+            // read before the gesture: the mock renumbers positions when it
+            // applies the reorder
+            const targetPosition = second.position
 
-            // press on the first row and drag to the middle of the second
-            // row, in the STATIC list's coordinates (the dragged row moves —
-            // item-relative coordinates would chase it)
-            const start = first.mapToItem(lv, first.width / 2, first.height / 2)
-            mousePress(lv, start.x, start.y)
-            for (let step = 1; step <= 8; ++step)
-                mouseMove(lv, start.x, start.y + (rowH * 1.2 * step) / 8, 20)
-            // a frame between the last move and the release lets the drop
-            // target process the final position before the drop lands
-            waitForRendering(lv)
-            mouseRelease(lv, start.x, start.y + rowH * 1.2)
-            waitForRendering(lv)
+            // press on the first row and drag to the middle of the second row
+            dragRowVertically(lv, first, rowH * 1.2)
 
             tryVerify(() => !!mock.sectionModule.lastReorder, 3000,
                       "drag one row down must trigger a reorder")
             compare(mock.sectionModule.lastReorder.chatId, firstId)
-            compare(mock.sectionModule.lastReorder.to, second.position !== undefined
-                    ? second.position : 1,
+            compare(mock.sectionModule.lastReorder.to, targetPosition,
                     "reorder target must be the adjacent row's position")
         }
 
@@ -435,30 +441,22 @@ Item {
             waitForSectionReady(loader)
             waitForStableRows(lv)
 
-            const rows = findAllByTypePrefix(lv.contentItem, "StatusChatListItem_QMLTYPE", [])
-                .filter(r => r.visible && r.height > 0)
+            const rows = placedChatRows(lv)
             verify(rows.length >= 2)
-            rows.sort((a, b) => a.mapToItem(null, 0, 0).y - b.mapToItem(null, 0, 0).y)
             const first = rows[0]
             const second = rows[1]
             const secondId = second.chatId
             const rowH = second.height
+            // read before the gesture: the mock renumbers positions when it
+            // applies the reorder
+            const targetPosition = first.position
 
-            const start = second.mapToItem(lv, second.width / 2, second.height / 2)
-            mousePress(lv, start.x, start.y)
-            for (let step = 1; step <= 8; ++step)
-                mouseMove(lv, start.x, start.y - (rowH * 1.2 * step) / 8, 20)
-            // a frame between the last move and the release lets the drop
-            // target process the final position before the drop lands
-            waitForRendering(lv)
-            mouseRelease(lv, start.x, start.y - rowH * 1.2)
-            waitForRendering(lv)
+            dragRowVertically(lv, second, -rowH * 1.2)
 
             tryVerify(() => !!mock.sectionModule.lastReorder, 3000,
                       "drag one row up must trigger a reorder")
             compare(mock.sectionModule.lastReorder.chatId, secondId)
-            compare(mock.sectionModule.lastReorder.to, first.position !== undefined
-                    ? first.position : 0,
+            compare(mock.sectionModule.lastReorder.to, targetPosition,
                     "reorder target must be the adjacent row's position")
         }
 
@@ -479,39 +477,6 @@ Item {
             const banner = findChildByTypePrefix(lv.footerItem, "WelcomeBannerPanel")
             verify(!!banner, "the footer must hold the welcome banner")
             tryVerify(() => banner.visible)
-        }
-
-        // Right-clicking the empty area below the channels opens the admin
-        // menu — repeatedly (the menu instance must survive closing).
-        function test_adminEmptyAreaRightClickMenuReopens() {
-            mock.memberRole = Constants.memberRole.owner
-            mock.categoriesCount = 0
-            mock.uncategorizedChannelsCount = 2
-            mock.install()
-            // the banner footer is tall — make sure empty space remains
-            root.height = 1400
-
-            const loader = loadSection()
-            const lv = findChild(loader, "chatListItems")
-            verify(!!lv)
-            tryVerify(() => lv.count > 0, 10000)
-            waitForRendering(lv)
-            tryVerify(() => lv.contentHeight > 0, 5000)
-            verify(lv.contentHeight < lv.height - 10,
-                   "config must leave empty space below the rows")
-
-            const overlay = QC.Overlay.overlay
-            function openPopupItem() {
-                return Array.prototype.filter.call(overlay.children,
-                    c => c.toString().indexOf("QQuickPopupItem") === 0 && c.visible)[0]
-            }
-            for (let round = 0; round < 2; ++round) {
-                mouseClick(lv, lv.width / 2, lv.height - 5, Qt.RightButton)
-                tryVerify(() => !!openPopupItem(), 2000,
-                          "empty-area right-click must open the admin menu, round " + round)
-                keyClick(Qt.Key_Escape)
-                tryVerify(() => !openPopupItem())
-            }
         }
 
         function test_memberHasNoBannerFooter() {

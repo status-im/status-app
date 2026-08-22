@@ -64,7 +64,9 @@ Item {
 
         forwardVideoSink: videoOutput.videoSink
         camera: camera
-        scanning: true
+        // visible is false when covered by a StackView page or an inactive StackLayout
+        // tab; keeping the pipeline running there burns a full core on frame decoding
+        scanning: root.visible
 
         captureRect: captureRectangle
 

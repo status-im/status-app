@@ -308,8 +308,4 @@ Page {
                 onboardingFlow.setBiometricResponse("", qsTr("Fetching credentials failed."))
         }
     }
-
-    Component.onCompleted: {
-        restartFlow()
-    }
 }

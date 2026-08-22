@@ -644,7 +644,7 @@ Control {
         onClicked: index => selectItem(index)
 
         onVisibleChanged: {
-            if (!visible)
+            if (!visible && !StatusQUtils.Utils.isMobile)
                 messageInputField.forceActiveFocus();
 
             // If the previous selection was made using the mouse, the currentIndex was changed to -1

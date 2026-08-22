@@ -4400,23 +4400,7 @@ You will remain logged in, and your recovery phrase will be entirely in your han
 <context>
     <name>ContactsColumnView</name>
     <message>
-        <source>Messages</source>
-        <translation>메시지</translation>
-    </message>
-    <message>
-        <source>Start chat</source>
-        <translation>채팅 시작</translation>
-    </message>
-    <message>
-        <source>Search</source>
-        <translation type="unfinished">검색</translation>
-    </message>
-    <message>
         <source>Search contacts and groups...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Invite contacts</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

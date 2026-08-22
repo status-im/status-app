@@ -1024,6 +1024,13 @@ Item {
         }
 
         readonly property int activeSectionType: appMain.rootStore.activeSectionType
+        // Deferred backend work (first-time section model builds) waits for
+        // the section-switch transition: notify once the navbar slide settles,
+        // or right away when the switch runs without one
+        onActiveSectionTypeChanged: Qt.callLater(function() {
+            if (!sidebar.slideAnimationRunning)
+                appMain.rootStore.notifySectionTransitionSettled()
+        })
         readonly property bool isMessagingRelatedSectionType: activeSectionType === Constants.appSection.chat ||
                                                               activeSectionType === Constants.appSection.community
         readonly property bool isWalletRelatedSectionType: activeSectionType === Constants.appSection.wallet ||
@@ -1549,7 +1556,8 @@ Item {
 
     Loader {
         id: statusEmojiPopup
-        active: appMain.mainReady
+        active: appMain.mainReady && appMain.rootStore.sectionsLoaded
+        asynchronous: true
         sourceComponent: StatusEmojiPopup {
             directParent: appMain.Window.window.contentItem
             height: 440
@@ -1560,7 +1568,8 @@ Item {
 
     Loader {
         id: statusStickersPopupLoader
-        active: appMain.mainReady
+        active: appMain.mainReady && appMain.rootStore.sectionsLoaded
+        asynchronous: true
         sourceComponent: StatusStickersPopup {
             directParent: appMain.Window.contentItem
             height: 440
@@ -2197,7 +2206,7 @@ Item {
                         id: homePageLoader
                         focus: active
                         active: appMain.featureFlagsStore.homePageEnabled
-                                && appView.currentIndex === Constants.appViewStackIndex.homePage
+                                && d.activeSectionType === Constants.appSection.homePage
 
                         rootStore: appMain.rootStore
                         rootChatStore: appMain.rootChatStore
@@ -2472,34 +2481,59 @@ Item {
 
                     // Composed from the section skeleton panels (the former
                     // ChatLayoutLoading view is superseded by them)
-                    RowLayout {
-                        spacing: 0
+                    Item {
+                        Rectangle {
+                            anchors.fill: parent
+                            color: appMain.isPortraitMode
+                                   ? Theme.palette.baseColor4
+                                   : Theme.palette.statusAppLayout.rightPanelBackgroundColor
+                        }
 
                         ChatPanels.MessagesListSkeleton {
-                            visible: !appMain.isPortraitMode
-                            Layout.fillHeight: true
-                            Layout.preferredWidth: Constants.chatSectionLeftColumnWidth
+                            anchors.fill: parent
+                            visible: appMain.isPortraitMode
+                            sectionKnown: false
                         }
 
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
+                        RowLayout {
+                            anchors.fill: parent
                             spacing: 0
+                            visible: !appMain.isPortraitMode
 
-                            ChatPanels.ChatHeaderSkeleton {
-                                Layout.fillWidth: true
+                            Rectangle {
+                                Layout.fillHeight: true
+                                Layout.preferredWidth: Constants.chatSectionLeftColumnWidth
+                                color: Theme.palette.baseColor4
+
+                                ChatPanels.MessagesListSkeleton {
+                                    anchors.fill: parent
+                                    sectionKnown: false
+                                }
                             }
 
-                            ChatPanels.MessagesChatSkeleton {
+                            ColumnLayout {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
-                            }
-                        }
+                                spacing: 0
 
-                        ChatPanels.MembersListSkeleton {
-                            visible: appMain.accountSettingsStore.showUsersList && !appMain.isPortraitMode
-                            Layout.fillHeight: true
-                            Layout.preferredWidth: 280
+                                ChatPanels.ChatHeaderSkeleton {
+                                    Layout.fillWidth: true
+                                }
+
+                                ChatPanels.MessagesChatSkeleton {
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                }
+                            }
+
+                            Rectangle {
+                                visible: appMain.accountSettingsStore.showUsersList
+                                Layout.fillHeight: true
+                                Layout.preferredWidth: 280
+                                color: Theme.palette.baseColor4
+
+                                ChatPanels.MembersListSkeleton { anchors.fill: parent }
+                            }
                         }
                     }
                 }
@@ -2554,6 +2588,13 @@ Item {
                 id: sidebar
                 height: parent.height
                 alwaysVisible: !appMain.isPortraitMode
+
+                // the counterpart of d.onActiveSectionTypeChanged for switches
+                // that DO animate the navbar away
+                onSlideAnimationRunningChanged: {
+                    if (!slideAnimationRunning)
+                        appMain.rootStore.notifySectionTransitionSettled()
+                }
 
                 browserSectionActive: d.activeSectionType === Constants.appSection.browser
 

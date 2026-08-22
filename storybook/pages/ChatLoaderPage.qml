@@ -58,6 +58,9 @@ SplitView {
 
         property double loadStartTime: 0
         property var contentModules: ({})
+        // unserved rows per chat, consumed by loadMoreMessages
+        property var backlogs: ({})
+        property int loadMoreCallCount: 0
         readonly property var mockState: ({ preparedChatId: "" })
         property string activeChatId: ""
 
@@ -123,6 +126,7 @@ SplitView {
                     color: "",
                     colorId: i % 10,
                     categoryOpened: true,
+                    hidden: false,
                     usesDefaultName: false,
                     onlineStatus: i % 2,
                     requiresPermissions: false,
@@ -134,11 +138,14 @@ SplitView {
             }
         }
 
-        function fillMessages(model, count, peerIdx) {
+        function fillMessages(model, count, peerIdx, offset) {
+            offset = offset || 0
             const now = Date.now()
-            // like message_model.nim: index 0 is the newest message and
-            // history grows towards higher indexes
-            for (let i = 0; i < count; ++i) {
+            // like message_model.nim: logical index 0 is the newest message
+            // and history grows towards higher indexes; pages appended via
+            // `offset` continue into older history
+            for (let j = 0; j < count; ++j) {
+                const i = offset + j
                 const own = i % 3 === 1
                 const ts = now - i * 60000
                 model.append({
@@ -160,9 +167,9 @@ SplitView {
                     senderEnsVerified: false,
                     senderTrustStatus: 0,
                     amISender: own,
-                    messageText: "Message " + (count - i) + " — the quick brown fox jumps over the lazy dog. "
+                    messageText: "Message " + i + " — the quick brown fox jumps over the lazy dog. "
                                  + (i % 5 === 0 ? "A somewhat longer paragraph to vary the bubble heights and make the layout work harder while measuring text. " : ""),
-                    unparsedText: "Message " + (count - i),
+                    unparsedText: "Message " + i,
                     messageImage: "",
                     messageAttachments: "",
                     contentType: Constants.messageContentType.messageType,
@@ -236,7 +243,12 @@ SplitView {
             const module = contentModuleFor(id)
             if (module && !module.messagesModel) {
                 module.messagesModel = messagesModelComp.createObject(module)
-                fillMessages(module.messagesModel, ctrlMessages.value, id.split("-")[1])
+                // paged like the real backend: first page now, the rest served
+                // through loadMoreMessages 20 rows at a time
+                const total = ctrlMessages.value
+                const firstPage = Math.min(20, total)
+                fillMessages(module.messagesModel, firstPage, id.split("-")[1])
+                d.backlogs[id] = total - firstPage
             }
             ChatStores.ChatStoresConfig.currentChatContentModule = module
         }
@@ -309,7 +321,22 @@ SplitView {
                 signal scrollToMessage(string messageId)
 
                 function getChatId() { return contentModule.chatId }
-                function loadMoreMessages() {}
+                function loadMoreMessages() {
+                    d.loadMoreCallCount++
+                    console.info("loadMoreMessages call #" + d.loadMoreCallCount,
+                                 "chat", contentModule.chatId,
+                                 "t=" + (Date.now() - d.loadStartTime) + "ms",
+                                 "backlog", d.backlogs[contentModule.chatId] || 0)
+                    const remaining = d.backlogs[contentModule.chatId] || 0
+                    if (remaining <= 0)
+                        return
+                    const page = Math.min(20, remaining)
+                    d.backlogs[contentModule.chatId] = remaining - page
+                    const total = ctrlMessages.value
+                    Qt.callLater(() => d.fillMessages(contentModule.messagesModel, page,
+                                                      contentModule.chatId.split("-")[1],
+                                                      total - remaining + 20))
+                }
                 function updateKeepUnread(flag) {}
             }
 

@@ -101,6 +101,8 @@ OnboardingStackView {
         loginScreen.setBiometricResponse(secret, error)
     }
 
+    initialItem: loginAccountsModel.ModelCount.empty ? welcomePage : loginScreenComponent
+
     Connections {
         target: root.loginAccountsModel?.ModelCount ?? null
 
