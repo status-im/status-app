@@ -51,42 +51,23 @@ ColumnLayout {
         readonly property int delegateRightSpacing: scrollBarWidth + 1
     }
 
-    RowLayout {
+    MembersPanelHeader {
+        id: header
         Layout.fillWidth: true
         Layout.margins: Theme.padding
-
-        StatusBaseText {
-            id: titleText
-            Layout.fillWidth: true
-
-            opacity: (root.width > 58) ? 1.0 : 0.0
-            visible: (opacity > 0.1)
-            font.weight: Font.Medium
-            text: root.label
-
-            wrapMode: Text.Wrap
-        }
-
-        StatusFlatButton {
-            id: searchBtn
-            icon.name: "search"
-            isRoundIcon: true
-            checkable: true
-            textColor: checked || hovered ? Theme.palette.primaryColor1 : Theme.palette.directColor1
-            tooltip.text: qsTr("Search")
-            tooltip.orientation: StatusToolTip.Orientation.Bottom
-        }
+        label: root.label
     }
 
     SearchBox {
         id: searchField
+        objectName: "membersSearchBox"
         KeyNavigation.tab: userListView
-        Keys.onEscapePressed: searchBtn.checked = false
+        Keys.onEscapePressed: header.searchChecked = false
         Layout.fillWidth: true
         Layout.leftMargin: Theme.padding
         Layout.rightMargin: Theme.padding
         placeholderText: qsTr("Search members...")
-        visible: searchBtn.checked
+        visible: header.searchChecked
         onVisibleChanged: {
             if (visible)
                 forceActiveFocus()
@@ -127,23 +108,15 @@ ColumnLayout {
         verticalScrollBar.implicitWidth: d.scrollBarWidth
         verticalScrollBar.width: d.scrollBarWidth
 
+        // The members model maintains the canonical member order (online
+        // first, then name) in Nim — no sorters here, filtering only.
         model: SortFilterProxyModel {
             sourceModel: root.usersModel
             filters: [
                 SQUtils.SearchFilter {
                     roleName: "preferredDisplayName"
                     searchPhrase: searchField.text
-                    enabled: searchField.visible && !!searchPhrase
-                }
-            ]
-            sorters: [
-                RoleSorter {
-                    roleName: "onlineStatus"
-                    sortOrder: Qt.DescendingOrder
-                },
-                StringSorter {
-                    roleName: "preferredDisplayName"
-                    caseSensitivity: Qt.CaseInsensitive
+                    enabled: searchField.visible && !!searchField.text
                 }
             ]
         }

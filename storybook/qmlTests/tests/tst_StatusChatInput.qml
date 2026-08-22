@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtTest
 
+import StatusQ.Core.Utils as SQUtils
+
 import shared.status
 
 Item {
@@ -98,6 +100,11 @@ Item {
         }
     }
 
+    Component {
+        id: contactsModelComponent
+        ListModel {}
+    }
+
     TestCase {
         name: "StatusChatInput"
         when: windowShown
@@ -144,9 +151,15 @@ Item {
             controlUnderTest.textInput.select(start, end)
         }
 
+        // Replaces the input's users model with a freshly populated one:
+        // the suggestions ConcatModel captures roles when a source is set,
+        // so rows appended to the initially empty inline model never map.
         function appendContact(displayName) {
-            controlUnderTest.usersModel.append({
+            const contacts = contactsModelComponent.createObject(wrapperUnderTest)
+            contacts.append({
                 pubKey: "0x0" + displayName,
+                preferredDisplayName: displayName,
+                usesDefaultName: false,
                 onlineStatus: 1,
                 isContact: true,
                 isVerified: true,
@@ -160,6 +173,7 @@ Item {
                 icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAlklEQVR4nOzW0QmDQBAG4SSkl7SUQlJGCrElq9F3QdjjVhh/5nv3cFhY9vUIYQiNITSG0BhCExPynn1gWf9bx498P7/nzPcxEzGExhBdJGYihtAYQlO+tUZvqrPbqeudo5iJGEJjCE15a3VtodH3q2ImYgiNITTlTdG1nUZ5a92VITQxITFiJmIIjSE0htAYQrMHAAD//+wwFVpz+yqXAAAAAElFTkSuQmCC",
                 colorId: 7
             })
+            controlUnderTest.usersModel = contacts
         }
 
         function test_sendButton_icon_data() {
@@ -367,6 +381,108 @@ Item {
             compare(signalSpy.count, 1)
         }
 
+        /*
+         Perf guard: profiling showed the mention SuggestionsFilterAdaptor
+         sorting the full community members model on every chat switch (669ms
+         on a low-end device) although suggestions only matter once the user
+         enters a mention. The members model must stay unwired until the first
+         mention entry; a loading skeleton covers the wiring window.
+        */
+        function suggestionList() {
+            const list = findChild(controlUnderTest, "suggestionBoxList")
+            verify(!!list)
+            return list
+        }
+
+        function memberSuggestionIndex(displayName) {
+            return SQUtils.ModelUtils.indexOf(suggestionList().model,
+                                              "pubKey", "0x0" + displayName)
+        }
+
+        function test_mentionSuggestions_membersNotMaterializedBeforeEntry() {
+            appendContact("JohnDoe")
+            waitForRendering(controlUnderTest)
+
+            compare(memberSuggestionIndex("JohnDoe"), -1,
+                    "members must not be materialized before the first mention entry")
+        }
+
+        function test_mentionSuggestions_skeletonShownUntilModelWired() {
+            appendContact("JohnDoe")
+            waitForRendering(controlUnderTest)
+
+            // hold the wiring so the pre-wire state is observable
+            controlUnderTest.suggestionsModelWireDelay = 3600000
+
+            mouseClick(getToolBar().mentionButton)
+
+            const suggestionsBox = findChild(controlUnderTest, "suggestionsBox")
+            verify(!!suggestionsBox)
+            tryVerify(() => suggestionsBox.visible)
+
+            const skeleton = findChild(suggestionsBox, "suggestionsLoadingSkeleton")
+            verify(!!skeleton)
+            verify(skeleton.visible)
+            verify(skeleton.height > 0)
+            compare(memberSuggestionIndex("JohnDoe"), -1,
+                    "members must not be materialized while the skeleton shows")
+        }
+
+        function test_mentionSuggestions_populateOnFirstEntry() {
+            appendContact("JohnDoe")
+            waitForRendering(controlUnderTest)
+
+            mouseClick(getToolBar().mentionButton)
+
+            // members appear once the model is wired (after the skeleton
+            // window), and the skeleton goes away
+            tryVerify(() => memberSuggestionIndex("JohnDoe") >= 0)
+            const skeleton = findChild(controlUnderTest, "suggestionsLoadingSkeleton")
+            verify(!skeleton || !skeleton.visible)
+        }
+
+        // The input instance is shared across chats: a chat switch swaps
+        // usersModel on it. A mention entered in one chat must not leave the
+        // wiring latched, or every later switch re-sorts the new members
+        // model (the 698ms regression seen in the warmstart6 trace).
+        function test_mentionSuggestions_modelSwapResetsWiring() {
+            appendContact("JohnDoe")
+            waitForRendering(controlUnderTest)
+
+            mouseClick(getToolBar().mentionButton)
+            tryVerify(() => memberSuggestionIndex("JohnDoe") >= 0)
+
+            // leave the mention context (as a chat switch does), then swap
+            // the model — the next chat's members must stay unmaterialized
+            controlUnderTest.textInput.clear()
+            waitForRendering(controlUnderTest)
+            appendContact("KateRoe")
+            waitForRendering(controlUnderTest)
+
+            compare(memberSuggestionIndex("KateRoe"), -1,
+                    "swapping usersModel must unwire mention suggestions")
+
+            // a fresh mention entry wires the new model on demand
+            mouseClick(getToolBar().mentionButton)
+            tryVerify(() => memberSuggestionIndex("KateRoe") >= 0)
+        }
+
+        // A model swap while the user is mid-mention (late member delivery,
+        // permission re-evaluation) gets no enteringSuggestion edge, so the
+        // wiring must re-arm itself or suggestions stay stuck on the skeleton.
+        function test_mentionSuggestions_modelSwapMidMentionRearms() {
+            appendContact("JohnDoe")
+            waitForRendering(controlUnderTest)
+
+            mouseClick(getToolBar().mentionButton)
+            tryVerify(() => memberSuggestionIndex("JohnDoe") >= 0)
+
+            // still in mention-entry mode; swap the model under it
+            appendContact("KateRoe")
+            tryVerify(() => memberSuggestionIndex("KateRoe") >= 0,
+                      5000, "the swapped-in model must wire without leaving mention mode")
+        }
+
         function test_editCancel_emitsSignal() {
             const cancelButton = findChild(controlUnderTest, "statusChatInputEditCloseButton")
             verify(!!cancelButton)
@@ -401,6 +517,11 @@ Item {
             compare(controlUnderTest.textInput.mentionsFilter, "Jo")
             verify(controlUnderTest.getPlainText().includes("@Jo"))
 
+            // the members model wires into the suggestions shortly after the
+            // first mention entry (loading skeleton meanwhile) — a commit
+            // only applies to a visible suggestion
+            tryVerify(() => memberSuggestionIndex("JohnDoe") >= 0)
+
             keyClick(Qt.Key_Tab) // commit the highlighted suggestion
             waitForRendering(controlUnderTest)
 
@@ -420,11 +541,12 @@ Item {
             typeText("Hello @zzz")
             waitForRendering(controlUnderTest)
 
-            // enteringSuggestion is true, but there are no matches, so the box stays hidden.
+            // once the members model wires in, "zzz" matches nothing: the box
+            // (a loading skeleton meanwhile) must hide, never sit visible-but-empty
             verify(controlUnderTest.textInput.enteringSuggestion)
             const box = findChild(controlUnderTest, "suggestionsBox")
             verify(!!box)
-            verify(!box.visible, "no suggestion box for a non-matching name")
+            tryVerify(() => !box.visible, 5000, "no suggestion box for a non-matching name")
 
             signalSpy.setup(controlUnderTest, "sendMessageRequested")
             keyClick(Qt.Key_Return) // send (NoModifier maps to send on desktop/offscreen)
@@ -433,6 +555,31 @@ Item {
             verify(!controlUnderTest.getPlainText().includes("@undefined"))
             compare(controlUnderTest.getPlainText(), "Hello @zzz")
             compare(signalSpy.count, 1)
+        }
+
+        // Enter inside the wiring window must still send: the box shows only a
+        // loading skeleton then — nothing committable — and must not swallow it.
+        function test_typedMention_enterDuringLoadingStillSends() {
+            appendContact("JohnDoe")
+            waitForRendering(controlUnderTest)
+
+            // hold the wiring so the loading window stays open
+            controlUnderTest.suggestionsModelWireDelay = 3600000
+
+            controlUnderTest.textInput.forceActiveFocus()
+            typeText("Hello @Jo")
+            waitForRendering(controlUnderTest)
+
+            const box = findChild(controlUnderTest, "suggestionsBox")
+            verify(!!box)
+            tryVerify(() => box.visible && box.loading)
+
+            signalSpy.setup(controlUnderTest, "sendMessageRequested")
+            keyClick(Qt.Key_Return)
+            waitForRendering(controlUnderTest)
+
+            compare(signalSpy.count, 1)
+            verify(!controlUnderTest.getPlainText().includes("@undefined"))
         }
 
         // ── typed emoji-shortcode flow

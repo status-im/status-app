@@ -43,6 +43,12 @@ Control {
     property var usersModel
     property bool usersModelIncludeAtEveryone: true
 
+    // Delay between the first mention entry and wiring usersModel into the
+    // suggestions adaptor. Sorting a large members model blocks the GUI
+    // thread; the delay lets the suggestion box paint its loading skeleton
+    // first.
+    property int suggestionsModelWireDelay: 100
+
     property var emojiPopup: null
     property var stickersPopup: null
     // Use this to only enable the Connections only when this Input opens the Emoji popup
@@ -113,6 +119,11 @@ Control {
 
         property bool emojiPopupOpened: false
         property bool stickersPopupOpened: false
+
+        // Latched on the first mention entry; the members model stays out of
+        // the suggestions adaptor until then so chat switches never pay for
+        // sorting it.
+        property bool suggestionsModelWired: false
 
         // ── formatting state driving the toolbar bold/italic/strike/quote/code buttons ──
         // The formatting at the caret (from the parsed AST and from the raw delimiters around it)
@@ -339,7 +350,7 @@ Control {
             d.insertEmoji(emojiSuggestions.unicode)
             return true
         }
-        if (suggestionsBox.visible) {
+        if (suggestionsBox.visible && !suggestionsBox.loading) {
             suggestionsBox.selectCurrentItem()
             return true
         }
@@ -540,9 +551,38 @@ Control {
     // ("everyone" is added by the adaptor).
     SuggestionsFilterAdaptor {
         id: mentionsAdaptor
-        sourceModel: root.usersModel
+        sourceModel: d.suggestionsModelWired ? root.usersModel : null
         filter: messageInputField.mentionsFilter
         usersModelIncludeAtEveryone: root.usersModelIncludeAtEveryone
+    }
+
+    Timer {
+        id: suggestionsWireTimer
+        interval: root.suggestionsModelWireDelay
+        onTriggered: d.suggestionsModelWired = true
+    }
+
+    // The input is shared across chats; a chat switch swaps usersModel and
+    // must drop the latch or the new members model gets sorted right away.
+    // A swap mid-mention (late model delivery, permission re-evaluation) must
+    // re-arm the wiring itself: enteringSuggestion won't change again.
+    onUsersModelChanged: {
+        suggestionsWireTimer.stop()
+        d.suggestionsModelWired = false
+        if (messageInputField.enteringSuggestion)
+            suggestionsWireTimer.restart()
+    }
+
+    Connections {
+        target: messageInputField
+        enabled: !d.suggestionsModelWired
+
+        function onEnteringSuggestionChanged() {
+            if (messageInputField.enteringSuggestion)
+                suggestionsWireTimer.start()
+            else
+                suggestionsWireTimer.stop()
+        }
     }
 
     SuggestionBoxPanel {
@@ -550,6 +590,7 @@ Control {
         objectName: "suggestionsBox"
 
         model: mentionsAdaptor.model
+        loading: !d.suggestionsModelWired
         inputField: messageInputField
 
         y: -height - root.Theme.smallPadding
@@ -557,11 +598,12 @@ Control {
         height: Math.min(400, implicitHeight)
         z: parent.z + 100
 
-        // Only visible when there are actual matches. Otherwise the box would be
-        // visible-but-empty and hijack Enter/Send (checkTextInsert) into committing a
-        // non-existent row, inserting an "@undefined" pill instead of sending the text.
+        // Visible while loading (skeleton) or with actual matches, never
+        // visible-but-empty — that would hijack Enter/Send (checkTextInsert) into
+        // committing a non-existent row, inserting an "@undefined" pill instead of
+        // sending the text. During loading selectItem() bails on the empty model.
         visible: !shouldHide && messageInputField.enteringSuggestion
-                 && mentionsAdaptor.model.ModelCount.count > 0
+                 && (loading || mentionsAdaptor.model.ModelCount.count > 0)
 
         property bool shouldHide: false
 

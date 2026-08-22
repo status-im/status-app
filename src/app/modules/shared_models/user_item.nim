@@ -1,6 +1,7 @@
-import std/strformat
+import std/[strformat, unicode]
 import app_service/common/types
 import app_service/service/contacts/dto/contacts
+import contacts_utils
 
 type
   ContactRequest* {.pure.} = enum
@@ -26,6 +27,8 @@ type
     compressedPubKey: string
     emojiHash: string
     displayName: string
+    # Derived from the name sources below — never written by callers
+    preferredDisplayName: string
     usesDefaultName: bool
     ensName: string
     isEnsVerified: bool
@@ -49,10 +52,43 @@ type
     isRemoved: bool
     trustStatus: TrustStatus
 
+# Rune-wise simple-casefold compare — the name leg of the canonical member
+# order. Deliberately code-point based, not locale-collation aware.
+proc cmpFoldedNames(a, b: string): int =
+  var i = 0
+  var j = 0
+  while i < a.len and j < b.len:
+    var ra, rb: Rune
+    fastRuneAt(a, i, ra)
+    fastRuneAt(b, j, rb)
+    let fa = toLower(ra)
+    let fb = toLower(rb)
+    if fa != fb:
+      return cmp(fa.int32, fb.int32)
+  cmp(a.len - i, b.len - j)
+
+# Canonical member order (see CONTEXT.md): online first, then case-folded
+# preferred display name, then pubKey. The pubKey leg makes the order total, so
+# incremental repositioning has exactly one correct position.
+proc cmpCanonicalOrder*(a, b: UserItem): int =
+  result = cmp(b.onlineStatus.int, a.onlineStatus.int)
+  if result == 0:
+    result = cmpFoldedNames(a.preferredDisplayName, b.preferredDisplayName)
+  if result == 0:
+    result = cmp(a.pubKey, b.pubKey)
+
+# preferredDisplayName and usesDefaultName are derived from the name sources;
+# an unverified ENS name counts as no name (matches what data() serves)
+proc recomputeDerivedNames(self: UserItem) =
+  let effectiveEnsName = if self.isEnsVerified: self.ensName else: ""
+  self.preferredDisplayName = resolvePreferredDisplayName(
+    self.localNickname, effectiveEnsName, self.displayName, self.alias)
+  self.usesDefaultName = resolveUsesDefaultName(
+    self.localNickname, effectiveEnsName, self.displayName)
+
 proc setup*(self: UserItem,
   pubKey: string,
   displayName: string,
-  usesDefaultName: bool,
   ensName: string,
   isEnsVerified: bool,
   localNickname: string,
@@ -79,7 +115,6 @@ proc setup*(self: UserItem,
   ) =
   self.pubKey = pubKey
   self.displayName = displayName
-  self.usesDefaultName = usesDefaultName
   self.ensName = ensName
   self.isEnsVerified = isEnsVerified
   self.localNickname = localNickname
@@ -102,13 +137,13 @@ proc setup*(self: UserItem,
   self.trustStatus = trustStatus
   self.compressedPubKey = compressedPubKey
   self.emojiHash = emojiHash
+  self.recomputeDerivedNames()
 
 # FIXME: remove defaults
 # TODO: #14964
 proc initUserItem*(
     pubKey: string,
     displayName: string,
-    usesDefaultName: bool,
     ensName: string,
     isEnsVerified: bool,
     localNickname: string,
@@ -136,7 +171,6 @@ proc initUserItem*(
   result.setup(
     pubKey = pubKey,
     displayName = displayName,
-    usesDefaultName = usesDefaultName,
     ensName = ensName,
     isEnsVerified = isEnsVerified,
     localNickname = localNickname,
@@ -209,36 +243,41 @@ proc displayName*(self: UserItem): string {.inline.} =
 
 proc `displayName=`*(self: UserItem, value: string) {.inline.} =
   self.displayName = value
+  self.recomputeDerivedNames()
+
+proc preferredDisplayName*(self: UserItem): string {.inline.} =
+  self.preferredDisplayName
 
 proc usesDefaultName*(self: UserItem): bool {.inline.} =
   self.usesDefaultName
-
-proc `usesDefaultName=`*(self: UserItem, value: bool) {.inline.} =
-  self.usesDefaultName = value
 
 proc ensName*(self: UserItem): string {.inline.} =
   if self.isEnsVerified: self.ensName else: ""
 
 proc `ensName=`*(self: UserItem, value: string) {.inline.} =
   self.ensName = value
+  self.recomputeDerivedNames()
 
 proc isEnsVerified*(self: UserItem): bool {.inline.} =
   self.isEnsVerified
 
 proc `isEnsVerified=`*(self: UserItem, value: bool) {.inline.} =
   self.isEnsVerified = value
+  self.recomputeDerivedNames()
 
 proc localNickname*(self: UserItem): string {.inline.} =
   self.localNickname
 
 proc `localNickname=`*(self: UserItem, value: string) {.inline.} =
   self.localNickname = value
+  self.recomputeDerivedNames()
 
 proc alias*(self: UserItem): string {.inline.} =
   self.alias
 
 proc `alias=`*(self: UserItem, value: string) {.inline.} =
   self.alias = value
+  self.recomputeDerivedNames()
 
 proc icon*(self: UserItem): string {.inline.} =
   self.icon

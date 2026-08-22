@@ -18619,10 +18619,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
 <context>
     <name>UserListPanel</name>
     <message>
-        <source>Search</source>
-        <translation type="unfinished">Hledat</translation>
-    </message>
-    <message>
         <source>Search members...</source>
         <translation type="unfinished"></translation>
     </message>

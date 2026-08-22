@@ -150,6 +150,22 @@ SwipeView {
     */
     signal backButtonClicked()
 
+    /*!
+        \qmlsignal StatusSectionLayoutPortrait::panelSwitchStarted()
+        Emitted when a swipe between panels starts moving — the user drags,
+        or the slide following a \c currentIndex change begins. Paired with
+        \l panelSwitchEnded; consumers should defer expensive panel swaps
+        (e.g. replacing a skeleton with the real panel) to the end signal,
+        or the swap frame stutters the slide.
+    */
+    signal panelSwitchStarted()
+
+    /*!
+        \qmlsignal StatusSectionLayoutPortrait::panelSwitchEnded()
+        Emitted when the swipe between panels settles on a page.
+    */
+    signal panelSwitchEnded()
+
     // Bound (not a function) so StatusSectionLayout.canGoBack stays reactive.
     readonly property bool canGoBackInternally: root.currentIndex > 0 || !!root.backButtonName
 
@@ -157,6 +173,20 @@ SwipeView {
         id: d
         // Cache wrapper items removed from the swipe view
         property list<Item> items: []
+
+        // A switch is in flight while the user drags the view or while the
+        // slide following a currentIndex change is off the target page.
+        readonly property bool panelSwitchOngoing:
+            root.contentItem.moving
+            || (!!root.currentItem
+                && Math.abs(root.contentItem.contentX - root.currentItem.x) > 0.5)
+
+        onPanelSwitchOngoingChanged: {
+            if (panelSwitchOngoing)
+                root.panelSwitchStarted()
+            else
+                root.panelSwitchEnded()
+        }
 
         function handleBackAction() {
             if (!!root.backButtonName) {

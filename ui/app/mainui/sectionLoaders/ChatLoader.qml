@@ -4,6 +4,7 @@ import QtQuick
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Layout
+import StatusQ.Core.Backpressure
 
 import AppLayouts.Chat.panels
 
@@ -80,14 +81,43 @@ Loader {
 
         anchors.fill: parent
 
-        headerContent: (root.item?.headerReady ?? false) ? root.item.headerContent : headerSkeleton
-        leftPanel: (root.item?.leftPanelReady ?? false) ? root.item.leftPanel : listSkeleton
-        centerPanel: (root.item?.centerPanelReady ?? false) ? root.item.centerPanel : chatSkeleton
-        rightPanel: (root.item?.rightPanelReady ?? false) ? root.item.rightPanel : membersSkeleton
+        headerContent: headerGate.up ? root.item.headerContent : headerSkeleton
+        leftPanel: leftPanelGate.up ? root.item.leftPanel : listSkeleton
+        centerPanel: centerPanelGate.up ? root.item.centerPanel : chatSkeleton
+        rightPanel: rightPanelGate.up ? root.item.rightPanel : membersSkeleton
         showRightPanel: root.item?.showRightPanel ?? root.accountSettingsStore.showUsersList
         subsectionHistory: root.item?.viewSubsectionHistory ?? null
 
         leftPanelWidthOverride: root.leftPanelWidthOverride
+
+        onPanelSwitchStarted: d.panelSwitchOngoing = true
+        onPanelSwitchEnded: d.panelSwitchOngoing = false
+    }
+
+    // One gate per chrome slot: skeleton→panel promotion waits out the
+    // chrome's panel-switch animation.
+    PanelSwapGate {
+        id: headerGate
+        ready: root.item?.headerReady ?? false
+        switchOngoing: d.panelSwitchOngoing
+    }
+
+    PanelSwapGate {
+        id: leftPanelGate
+        ready: root.item?.leftPanelReady ?? false
+        switchOngoing: d.panelSwitchOngoing
+    }
+
+    PanelSwapGate {
+        id: centerPanelGate
+        ready: root.item?.centerPanelReady ?? false
+        switchOngoing: d.panelSwitchOngoing
+    }
+
+    PanelSwapGate {
+        id: rightPanelGate
+        ready: root.item?.rightPanelReady ?? false
+        switchOngoing: d.panelSwitchOngoing
     }
 
     // Skeleton slot items carry the same page paddings as the real panels.
@@ -97,7 +127,7 @@ Loader {
     Loader {
         id: headerSkeleton
         objectName: "headerSkeleton"
-        active: !(root.item?.headerReady ?? false)
+        active: !headerGate.up
         visible: active
         sourceComponent: ChatHeaderSkeleton {}
     }
@@ -105,7 +135,7 @@ Loader {
     Loader {
         id: listSkeleton
         objectName: "leftPanelSkeleton"
-        active: !(root.item?.leftPanelReady ?? false)
+        active: !leftPanelGate.up
         visible: active
 
         // The real header: invite and start-chat act app-globally, so they
@@ -127,7 +157,7 @@ Loader {
     Loader {
         id: chatSkeleton
         objectName: "centerPanelSkeleton"
-        active: !(root.item?.centerPanelReady ?? false)
+        active: !centerPanelGate.up
         visible: active
 
         sourceComponent: MessagesChatSkeleton {
@@ -141,7 +171,7 @@ Loader {
     Loader {
         id: membersSkeleton
         objectName: "rightPanelSkeleton"
-        active: !(root.item?.rightPanelReady ?? false)
+        active: !rightPanelGate.up
         visible: active
 
         sourceComponent: MembersListSkeleton {}
@@ -177,6 +207,13 @@ Loader {
         id: d
 
         property ChatStores.RootStore chatRootStore: null
+        property bool showUsersPanel: root.accountSettingsStore.showUsersList
+
+        // The portrait chrome animates panel switches and brackets them with
+        // panelSwitchStarted/Ended: a panel that becomes ready mid-slide
+        // keeps its skeleton (via its PanelSwapGate) until the slide ends,
+        // or the swap frame stutters it.
+        property bool panelSwitchOngoing: false
     }
 
     Component.onCompleted: {
@@ -195,7 +232,7 @@ Loader {
             visible: false,
             isChatView: true,
             sectionLayout: sectionLayout,
-            showUsersList:                  Qt.binding(() => root.accountSettingsStore.showUsersList),
+            showUsersList:                  Qt.binding(() => d.showUsersPanel),
             rootStore:                      Qt.binding(() => d.chatRootStore),
             createChatPropertiesStore:      Qt.binding(() => root.createChatPropertiesStore),
             tokensStore:                    Qt.binding(() => root.tokensStore),
@@ -246,7 +283,10 @@ Loader {
         ignoreUnknownSignals: true
 
         function onShowUsersListRequested(show) {
-            root.accountSettingsStore.setShowUsersList(show)
+            d.showUsersPanel = show //optimistic; update settings after a short delay to avoid jank from the panel resize
+            Backpressure.setTimeout(root, 300, () => {
+                root.accountSettingsStore.setShowUsersList(show)
+            })
         }
         function onProfileButtonClicked() {
             Global.changeAppSectionBySectionType(Constants.appSection.profile)

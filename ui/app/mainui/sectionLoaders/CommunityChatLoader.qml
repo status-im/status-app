@@ -3,6 +3,7 @@ import QtQuick
 
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
+import StatusQ.Core.Backpressure
 import StatusQ.Layout
 
 import utils
@@ -102,15 +103,44 @@ Loader {
 
             visible: !root.item || !root.item.ownsFullPage
 
-            headerContent: (root.item?.headerReady ?? false) ? root.item.headerContent : headerSkeleton
-            leftPanel: (root.item?.leftPanelReady ?? false) ? root.item.leftPanel : channelsSkeleton
-            centerPanel: (root.item?.centerPanelReady ?? false) ? root.item.centerPanel : chatSkeleton
-            rightPanel: (root.item?.rightPanelReady ?? false) ? root.item.rightPanel : membersSkeleton
+            headerContent: headerGate.up ? root.item.headerContent : headerSkeleton
+            leftPanel: leftPanelGate.up ? root.item.leftPanel : channelsSkeleton
+            centerPanel: centerPanelGate.up ? root.item.centerPanel : chatSkeleton
+            rightPanel: rightPanelGate.up ? root.item.rightPanel : membersSkeleton
             showRightPanel: root.item?.showRightPanel ?? root.accountSettingsStore.showUsersList
             subsectionHistory: root.item?.viewSubsectionHistory ?? null
 
             leftPanelWidthOverride: root.leftPanelWidthOverride
+
+            onPanelSwitchStarted: d.panelSwitchOngoing = true
+            onPanelSwitchEnded: d.panelSwitchOngoing = false
         }
+    }
+
+    // One gate per chrome slot: skeleton→panel promotion waits out the
+    // chrome's panel-switch animation.
+    PanelSwapGate {
+        id: headerGate
+        ready: root.item?.headerReady ?? false
+        switchOngoing: d.panelSwitchOngoing
+    }
+
+    PanelSwapGate {
+        id: leftPanelGate
+        ready: root.item?.leftPanelReady ?? false
+        switchOngoing: d.panelSwitchOngoing
+    }
+
+    PanelSwapGate {
+        id: centerPanelGate
+        ready: root.item?.centerPanelReady ?? false
+        switchOngoing: d.panelSwitchOngoing
+    }
+
+    PanelSwapGate {
+        id: rightPanelGate
+        ready: root.item?.rightPanelReady ?? false
+        switchOngoing: d.panelSwitchOngoing
     }
 
     // Skeleton slot items carry the same page paddings as the real panels.
@@ -120,7 +150,7 @@ Loader {
     Loader {
         id: headerSkeleton
         objectName: "headerSkeleton"
-        active: root.chromeNeeded && !(root.item?.headerReady ?? false)
+        active: root.chromeNeeded && !headerGate.up
         visible: active
         sourceComponent: ChatHeaderSkeleton {}
     }
@@ -128,7 +158,7 @@ Loader {
     Loader {
         id: channelsSkeleton
         objectName: "leftPanelSkeleton"
-        active: root.chromeNeeded && !(root.item?.leftPanelReady ?? false)
+        active: root.chromeNeeded && !leftPanelGate.up
         visible: active
 
         sourceComponent: CommunityChannelsSkeleton {
@@ -146,7 +176,7 @@ Loader {
     Loader {
         id: chatSkeleton
         objectName: "centerPanelSkeleton"
-        active: root.chromeNeeded && !(root.item?.centerPanelReady ?? false)
+        active: root.chromeNeeded && !centerPanelGate.up
         visible: active
 
         sourceComponent: MessagesChatSkeleton {
@@ -160,7 +190,7 @@ Loader {
     Loader {
         id: membersSkeleton
         objectName: "rightPanelSkeleton"
-        active: root.chromeNeeded && !(root.item?.rightPanelReady ?? false)
+        active: root.chromeNeeded && !rightPanelGate.up
         visible: active
 
         sourceComponent: MembersListSkeleton {}
@@ -200,6 +230,7 @@ Loader {
         property var newCommunityStore: null
         property int pendingSettingsSection: -1
         property int pendingSettingsSubsection: -1
+        property bool showUsersPanel: root.accountSettingsStore.showUsersList
         property int pendingViewIndex: -1
 
         // The view switch may arrive while the section still incubates —
@@ -211,6 +242,12 @@ Loader {
             }
             pendingViewIndex = index
         }
+
+        // The portrait chrome animates panel switches and brackets them with
+        // panelSwitchStarted/Ended: a panel that becomes ready mid-slide
+        // keeps its skeleton (via its PanelSwapGate) until the slide ends,
+        // or the swap frame stutters it.
+        property bool panelSwitchOngoing: false
 
         function clearStores() {
             pendingSettingsSection = -1
@@ -263,7 +300,7 @@ Loader {
             isChatView:                     false,
             visible:                        false,
             sectionLayout:                  Qt.binding(() => chromeLoader.item),
-            showUsersList:                  Qt.binding(() => root.accountSettingsStore.showUsersList),
+            showUsersList:                  Qt.binding(() => d.showUsersPanel),
             emojiPopup:                     Qt.binding(() => root.emojiPopupLoader.item),
             stickersPopup:                  Qt.binding(() => root.stickersPopupLoader.item),
             sectionItemModel:               Qt.binding(() => root.sectionItemModel),
@@ -339,7 +376,10 @@ Loader {
         ignoreUnknownSignals: true
 
         function onShowUsersListRequested(show) {
-            root.accountSettingsStore.setShowUsersList(show)
+            d.showUsersPanel = show //optimistic; update settings after a short delay to avoid jank from the panel resize
+            Backpressure.setTimeout(root, 300, () => {
+                root.accountSettingsStore.setShowUsersList(show)
+            })
         }
         function onProfileButtonClicked() {
             Global.changeAppSectionBySectionType(Constants.appSection.profile)

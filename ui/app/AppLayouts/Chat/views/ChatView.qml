@@ -63,8 +63,10 @@ Item {
     readonly property bool leftPanelReady: contactColumnLoader.status === Loader.Ready
     readonly property bool centerPanelReady: centerPanelLoader.status === Loader.Ready
                                              || !centerPanelLoader.active
-    // The members panel is not deferred here: it is instantiated with the view.
-    readonly property bool rightPanelReady: true
+    // The members panel is only ready once the latch is back up: until then it
+    // shows its own skeleton, so the chrome must keep showing one too.
+    readonly property bool rightPanelReady: !rightPanelLoader.active
+                                            || rightPanelLoader.status === Loader.Ready
 
     property ChatStores.RootStore rootStore
     property ChatStores.CreateChatPropertiesStore createChatPropertiesStore
@@ -171,6 +173,7 @@ Item {
 
     QtObject {
         id: d
+        objectName: "chatViewInternal"
 
         readonly property bool shouldLoadCenterPanel: !root.isPortraitMode ||
                                                       centerPanelRequested ||
@@ -309,39 +312,66 @@ Item {
         root.navToMsgListRequested(false)
     }
 
-    readonly property Item rightPanel: UserListPanel {
-        chatType: root.chatContentModule?.chatDetails.type || Constants.chatType.unknown
-        isAdmin: root.chatContentModule?.amIChatAdmin() || false
+    readonly property Item rightPanel: Loader {
+        id: rightPanelLoader
+        width: Constants.chatSectionRightColumnWidth
+        height: root.sectionLayout?.height ?? 0
 
-        label: qsTr("Members")
-        communityMemberReevaluationStatus: root.communityMemberReevaluationStatus
+        // Loaded only while shown — hiding the members list discards it —
+        // and asynchronously behind the skeleton: the members list must
+        // never delay a chat switch.
+        active: root.showRightPanel
+        asynchronous: true
 
-        usersModel: root.usersModel
-
-        onOpenProfileRequested: Global.openProfilePopup(pubKey, null)
-        onReviewContactRequestRequested: Global.openReviewContactRequestPopup(pubKey, null)
-        onSendContactRequestRequested: Global.openContactRequestPopup(pubKey, null)
-        onEditNicknameRequested: Global.openNicknamePopupRequested(pubKey, null)
-        onBlockContactRequested: Global.blockContactRequested(pubKey)
-        onUnblockContactRequested: Global.unblockContactRequested(pubKey)
-        onMarkAsUntrustedRequested: Global.markAsUntrustedRequested(pubKey)
-        onRemoveContactRequested: Global.removeContactRequested(pubKey)
-
-        onRemoveNicknameRequested: {
-            const oldName = ModelUtils.getByKey(usersModel, "pubKey", pubKey, "localNickname")
-            root.changeContactNicknameRequest(pubKey, "", oldName, true)
+        Loader {
+            objectName: "membersPanelSkeleton"
+            anchors.fill: parent
+            active: rightPanelLoader.active
+                    && rightPanelLoader.status !== Loader.Ready
+            visible: active
+            sourceComponent: MembersListSkeleton {}
         }
 
-        onCreateOneToOneChatRequested: {
-            Global.changeAppSectionBySectionType(Constants.appSection.chat)
-            root.rootStore.chatCommunitySectionModule.createOneToOneChat("", pubKey, "")
+        sourceComponent: UserListPanel {
+            // async incubation parents the partially-built panel into the
+            // scene early — keep it invisible behind the skeleton until ready.
+            // Binding the model eagerly is fine: it arrives pre-sorted from
+            // Nim, so a chat switch pays no sorting.
+            visible: rightPanelLoader.status === Loader.Ready
+
+            chatType: root.chatContentModule?.chatDetails.type || Constants.chatType.unknown
+            isAdmin: root.chatContentModule?.amIChatAdmin() || false
+
+            label: qsTr("Members")
+            communityMemberReevaluationStatus: root.communityMemberReevaluationStatus
+
+            usersModel: root.usersModel
+
+            onOpenProfileRequested: Global.openProfilePopup(pubKey, null)
+            onReviewContactRequestRequested: Global.openReviewContactRequestPopup(pubKey, null)
+            onSendContactRequestRequested: Global.openContactRequestPopup(pubKey, null)
+            onEditNicknameRequested: Global.openNicknamePopupRequested(pubKey, null)
+            onBlockContactRequested: Global.blockContactRequested(pubKey)
+            onUnblockContactRequested: Global.unblockContactRequested(pubKey)
+            onMarkAsUntrustedRequested: Global.markAsUntrustedRequested(pubKey)
+            onRemoveContactRequested: Global.removeContactRequested(pubKey)
+
+            onRemoveNicknameRequested: {
+                const oldName = ModelUtils.getByKey(usersModel, "pubKey", pubKey, "localNickname")
+                root.changeContactNicknameRequest(pubKey, "", oldName, true)
+            }
+
+            onCreateOneToOneChatRequested: {
+                Global.changeAppSectionBySectionType(Constants.appSection.chat)
+                root.rootStore.chatCommunitySectionModule.createOneToOneChat("", pubKey, "")
+            }
+
+            onRemoveTrustStatusRequested: root.removeTrustStatusRequest(pubKey)
+            onRemoveContactFromGroupRequested: root.rootStore.removeMemberFromGroupChat(pubKey)
+
+            onMarkAsTrustedRequested: Global.openMarkAsIDVerifiedPopup(pubKey, null)
+            onRemoveTrustedMarkRequested: Global.openRemoveIDVerificationDialog(pubKey, null)
         }
-
-        onRemoveTrustStatusRequested: root.removeTrustStatusRequest(pubKey)
-        onRemoveContactFromGroupRequested: root.rootStore.removeMemberFromGroupChat(pubKey)
-
-        onMarkAsTrustedRequested: Global.openMarkAsIDVerifiedPopup(pubKey, null)
-        onRemoveTrustedMarkRequested: Global.openRemoveIDVerificationDialog(pubKey, null)
     }
 
     onChatContentModuleChanged: {

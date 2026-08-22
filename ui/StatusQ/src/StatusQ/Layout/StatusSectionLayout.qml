@@ -245,6 +245,36 @@ LayoutChooser {
         || (portraitView.visible && portraitView.canGoBackInternally)
         || (!!root.subsectionHistory && root.subsectionHistory.canGoBack)
 
+    /*!
+        \qmlsignal StatusSectionLayout::panelSwitchStarted()
+        Emitted when a switch between panels starts. In portrait that is the
+        swipe slide beginning (a drag or a \c currentIndex change): consumers
+        should defer expensive panel swaps (e.g. replacing a skeleton with
+        the real panel) until \l panelSwitchEnded, or the swap frame stutters
+        the slide. Landscape has no slide, so a \c currentIndex change emits
+        both signals back-to-back.
+    */
+    signal panelSwitchStarted()
+
+    /*!
+        \qmlsignal StatusSectionLayout::panelSwitchEnded()
+        Emitted when a switch between panels ends: the portrait swipe settled
+        on a page, or immediately after \l panelSwitchStarted in landscape.
+        The pair stays balanced across rotations: rotating to landscape
+        mid-slide ends the switch immediately, rotating into a still-running
+        slide starts one.
+    */
+    signal panelSwitchEnded()
+
+    // Landscape shows every panel at once — no slide — but consumers still
+    // get each switch bracketed by the signal pair, back-to-back.
+    onCurrentIndexChanged: {
+        if (!portraitView.visible) {
+            root.panelSwitchStarted()
+            root.panelSwitchEnded()
+        }
+    }
+
     readonly property int windowWidth: root.Window?.width ?? Screen.width
 
     criteria: [
@@ -312,6 +342,33 @@ LayoutChooser {
 
         onBackButtonClicked: root.backButtonClicked()
 
+        // Raw slide state, tracked regardless of orientation — the slide also
+        // runs invisibly in landscape, since currentIndex is an alias into
+        // this view.
+        property bool switchOngoing: false
+
+        onPanelSwitchStarted: switchOngoing = true
+        onPanelSwitchEnded: switchOngoing = false
+
         Component.onCompleted: currentIndexCache = currentIndex
+    }
+
+    QtObject {
+        id: d
+
+        // The emitted bracket pairs on the edges of this: a slide counts as
+        // a panel switch only while the portrait layout is the visible one.
+        // Rotating away mid-slide closes the bracket immediately (nothing
+        // visible left to defer for); rotating into a still-running slide
+        // opens one — start/end stay paired across orientation changes.
+        readonly property bool panelSwitchOngoing:
+            portraitView.visible && portraitView.switchOngoing
+
+        onPanelSwitchOngoingChanged: {
+            if (panelSwitchOngoing)
+                root.panelSwitchStarted()
+            else
+                root.panelSwitchEnded()
+        }
     }
 }
