@@ -108,10 +108,6 @@ Item {
             if(scrollY < 1000) messageStore.loadMoreMessages()
         })
 
-        function setKeepUnread(flag: bool) {
-            root.messageStore.setKeepUnread(flag)
-        }
-
         function markAllMessagesReadIfMostRecentMessageIsInViewport() {
             if (Qt.application.state != Qt.ApplicationActive || !isMostRecentMessageInViewport || !chatLogView.visible || keepUnread) {
                 return
@@ -193,8 +189,6 @@ Item {
         target: !!d.chatDetails ? d.chatDetails : null
 
         function onActiveChanged() {
-            d.setKeepUnread(false)
-
             if (active && d.isAtBottom) {
                 Qt.callLater(d.scrollToBottom)
             }
@@ -248,25 +242,9 @@ Item {
         }
     }
 
-    Loader {
-        id: loadingMessagesView
-
-        anchors.top: loadingMessagesIndicator.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        active: messageStore.loading
-        visible: active
-        sourceComponent: MessagesLoadingView {
-            anchors.margins: 16
-            anchors.fill: parent
-        }
-    }
-
     StatusListView {
         id: chatLogView
-        visible: !loadingMessagesView.visible
+        visible: !messageStore.loading
         objectName: "chatLogView"
         anchors.top: loadingMessagesIndicator.bottom
         anchors.bottom: parent.bottom

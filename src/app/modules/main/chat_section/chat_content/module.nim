@@ -407,6 +407,10 @@ method onMadeActive*(self: Module) =
   elif self.controller.getChatDetails().unviewedMessagesCount > 0:
     self.messagesModule.resetNewMessagesMarker()
   self.messagesModule.reevaluateViewLoadingState()
+  # keepUnread only guards auto-mark-read while the user stays in the chat
+  # after marking it unread; entering the chat always clears it. Done here
+  # rather than in QML so it holds even before the view is built.
+  self.messagesModule.resetKeepUnread()
   self.view.setActive()
 
 method onMadeInactive*(self: Module) =
