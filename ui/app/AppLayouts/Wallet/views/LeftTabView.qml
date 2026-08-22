@@ -18,6 +18,7 @@ import shared.controls
 import shared.popups
 
 import "../controls"
+import "../panels"
 import "../popups"
 import "../stores"
 
@@ -55,6 +56,9 @@ Rectangle {
         readonly property string removeAccountIdentifier: "wallet-section-remove-account"
         readonly property real bottomSafeMargin: root.SafeArea.margins.bottom
         readonly property real footerHeight: footer.height + followingAddressesFooter.height
+
+        // null until the async loader finishes; consumers must fall back gracefully
+        readonly property var accountsListView: walletAccountsListViewLoader.item
     }
 
     Loader {
@@ -231,7 +235,7 @@ Rectangle {
             color: root.color
             z: 2
 
-            layer.enabled: !walletAccountsListView.atYBeginning
+            layer.enabled: !(d.accountsListView?.atYBeginning ?? true)
             layer.effect: DropShadow {
                 verticalOffset: 10
                 radius: 20
@@ -246,9 +250,25 @@ Rectangle {
             Layout.fillHeight: true
             Layout.fillWidth: true
 
-            StatusListView {
-                id: walletAccountsListView
-                objectName: "walletAccountsListView"
+            // Skeleton mimicking the accounts list, shown while the ListView
+            // incubates and released afterwards: an alive invisible skeleton
+            // re-evaluates its tile geometry on every resize
+            Loader {
+                anchors {
+                    top: parent.top
+                    left: parent.left
+                    right: parent.right
+                    margins: Theme.padding
+                }
+                active: walletAccountsListViewLoader.status !== Loader.Ready
+                visible: active
+                sourceComponent: WalletAccountsSkeleton {}
+            }
+
+            Loader {
+                id: walletAccountsListViewLoader
+                asynchronous: true
+                visible: status === Loader.Ready
                 anchors {
                     top: parent.top
                     left: parent.left
@@ -256,144 +276,149 @@ Rectangle {
                 }
                 height: Math.max(0, parent.height - d.footerHeight)
 
-                spacing: Theme.smallPadding
-                currentIndex: -1
-                highlightRangeMode: ListView.ApplyRange
-                preferredHighlightBegin: 0
-                preferredHighlightEnd: height
-                bottomMargin: Theme.padding
-                verticalScrollBar.implicitWidth: Math.max(Theme.halfPadding, 8)
+                sourceComponent: StatusListView {
+                    id: walletAccountsListView
+                    objectName: "walletAccountsListView"
 
-                readonly property Item firstItem: count > 0 ? itemAtIndex(0) : null
-                readonly property bool footerOverlayed: d.loaded && contentHeight > availableHeight
+                    spacing: Theme.smallPadding
+                    currentIndex: -1
+                    highlightRangeMode: ListView.ApplyRange
+                    preferredHighlightBegin: 0
+                    preferredHighlightEnd: height
+                    bottomMargin: Theme.padding
+                    verticalScrollBar.implicitWidth: Math.max(Theme.halfPadding, 8)
 
-                delegate: StatusListItem {
-                    objectName: "walletAccountListItem"
-                    readonly property bool itemLoaded: !model.assetsLoading // needed for e2e tests
-                    width: ListView.view.width - Theme.padding * 2
-                    highlighted: viewState.selectedAddress.toLowerCase() === model.address.toLowerCase()
-                    onHighlightedChanged: {
-                        if (highlighted)
-                            ListView.view.currentIndex = index
-                    }
-                    anchors.horizontalCenter: !!parent ? parent.horizontalCenter : undefined
-                    title: model.name
-                    subTitle: !model.hideFromTotalBalance ? LocaleUtils.currencyAmountToLocaleString(model.currencyBalance): ""
-                    asset.emoji: !!model.emoji ? model.emoji: ""
-                    asset.color: Utils.getColorForId(Theme.palette, model.colorId)
-                    asset.name: !model.emoji ? "filled-account": ""
-                    asset.width: 40
-                    asset.height: 40
-                    asset.letterSize: 14
-                    asset.isLetterIdenticon: !!model.emoji ? true : false
-                    asset.bgColor: Theme.palette.primaryColor3
-                    statusListItemTitle.font.weight: Font.Medium
-                    color: sensor.containsMouse || highlighted ? Theme.palette.baseColor3 : "transparent"
-                    statusListItemSubTitle.loading: !!model.assetsLoading
-                    errorMode: viewState.accountBalanceNotAvailable
-                    errorIcon.tooltip.maxWidth: 300
-                    errorIcon.tooltip.text: viewState.accountBalanceNotAvailableText
-                    onClicked: function(itemId, mouse) {
-                        if (mouse.button === Qt.RightButton) {
-                            walletAccountContextMenu.active = true
-                            walletAccountContextMenu.item.account = model
-                            walletAccountContextMenu.item.popup(this, mouse.x, mouse.y)
-                            return
+                    readonly property Item firstItem: count > 0 ? itemAtIndex(0) : null
+                    readonly property bool footerOverlayed: d.loaded && contentHeight > availableHeight
+
+                    delegate: StatusListItem {
+                        objectName: "walletAccountListItem"
+                        readonly property bool itemLoaded: !model.assetsLoading // needed for e2e tests
+                        width: ListView.view.width - Theme.padding * 2
+                        highlighted: viewState.selectedAddress.toLowerCase() === model.address.toLowerCase()
+                        onHighlightedChanged: {
+                            if (highlighted)
+                                ListView.view.currentIndex = index
                         }
-                        root.accountSelected(model.address)
-                    }
-                    components: [
-                        StatusIcon {
-                            width: !!icon ? 15: 0
-                            height: !!icon ? 15: 0
-                            color: Theme.palette.directColor1
-                            icon: model.walletType === Constants.watchWalletType ? "show" : ""
-                        },
-                        StatusIcon {
-                            width: !!icon ? 15: 0
-                            height: !!icon ? 15: 0
-                            color: Theme.palette.directColor1
-                            icon: model.migratedToColdWallet ? "keycard" : ""
-                        }
-                    ]
-                }
-
-                header: StatusFlatButton {
-                    id: header
-                    verticalPadding: Theme.padding
-                    horizontalPadding: Theme.padding
-                    highlighted: viewState.showAllAccounts
-                    objectName: "allAccountsBtn"
-
-                    leftInset: Theme.padding
-                    bottomInset: Theme.padding
-                    leftPadding: Theme.xlPadding
-                    bottomPadding: Theme.bigPadding
-
-                    background: Rectangle {
-                        radius: Theme.radius
-                        color: header.highlighted || header.hovered ? Theme.palette.backgroundHover : root.color
-                        implicitWidth: parent.ListView.view.width - Theme.padding * 2
-                    }
-
-                    onClicked: root.allAccountsSelected()
-
-                    contentItem: ColumnLayout {
-                        spacing: 0
-                        StatusBaseText {
-                            id: allAccounts
-                            color: Theme.palette.baseColor1
-                            text: qsTr("All accounts")
-                            font.weight: Font.Medium
-                            font.pixelSize: Theme.primaryTextFontSize
-                            lineHeightMode: Text.FixedHeight
-                            lineHeight: 22
-                        }
-                        RowLayout {
-                            spacing: 4
-                            StatusTextWithLoadingState {
-                                id: walletAmountValue
-                                objectName: "walletLeftListAmountValue"
-                                customColor: Theme.palette.textColor
-                                text: viewState.totalCurrencyBalance
-                                      ? LocaleUtils.currencyAmountToLocaleString(viewState.totalCurrencyBalance, {noSymbol: true})
-                                      : ""
-                                font.pixelSize: Theme.fontSize(22)
-                                loading: viewState.balanceLoading
-                                lineHeightMode: Text.FixedHeight
-                                lineHeight: 36
-                                verticalAlignment: Text.AlignVCenter
+                        anchors.horizontalCenter: !!parent ? parent.horizontalCenter : undefined
+                        title: model.name
+                        subTitle: !model.hideFromTotalBalance ? LocaleUtils.currencyAmountToLocaleString(model.currencyBalance): ""
+                        asset.emoji: !!model.emoji ? model.emoji: ""
+                        asset.color: Utils.getColorForId(Theme.palette, model.colorId)
+                        asset.name: !model.emoji ? "filled-account": ""
+                        asset.width: 40
+                        asset.height: 40
+                        asset.letterSize: 14
+                        asset.isLetterIdenticon: !!model.emoji ? true : false
+                        asset.bgColor: Theme.palette.primaryColor3
+                        statusListItemTitle.font.weight: Font.Medium
+                        color: sensor.containsMouse || highlighted ? Theme.palette.baseColor3 : "transparent"
+                        statusListItemSubTitle.loading: !!model.assetsLoading
+                        errorMode: viewState.accountBalanceNotAvailable
+                        errorIcon.tooltip.maxWidth: 300
+                        errorIcon.tooltip.text: viewState.accountBalanceNotAvailableText
+                        onClicked: function(itemId, mouse) {
+                            if (mouse.button === Qt.RightButton) {
+                                walletAccountContextMenu.active = true
+                                walletAccountContextMenu.item.account = model
+                                walletAccountContextMenu.item.popup(this, mouse.x, mouse.y)
+                                return
                             }
-                            StatusTextWithLoadingState {
-                                customColor: Theme.palette.textColor
-                                text: viewState.totalCurrencyBalance ? viewState.totalCurrencyBalance.symbol : ""
-                                font.pixelSize: Theme.additionalTextSize
-                                loading: viewState.balanceLoading
+                            root.accountSelected(model.address)
+                        }
+                        components: [
+                            StatusIcon {
+                                width: !!icon ? 15: 0
+                                height: !!icon ? 15: 0
+                                color: Theme.palette.directColor1
+                                icon: model.walletType === Constants.watchWalletType ? "show" : ""
+                            },
+                            StatusIcon {
+                                width: !!icon ? 15: 0
+                                height: !!icon ? 15: 0
+                                color: Theme.palette.directColor1
+                                icon: model.migratedToColdWallet ? "keycard" : ""
+                            }
+                        ]
+                    }
+
+                    header: StatusFlatButton {
+                        id: header
+                        verticalPadding: Theme.padding
+                        horizontalPadding: Theme.padding
+                        highlighted: viewState.showAllAccounts
+                        objectName: "allAccountsBtn"
+
+                        leftInset: Theme.padding
+                        bottomInset: Theme.padding
+                        leftPadding: Theme.xlPadding
+                        bottomPadding: Theme.bigPadding
+
+                        background: Rectangle {
+                            radius: Theme.radius
+                            color: header.highlighted || header.hovered ? Theme.palette.backgroundHover : root.color
+                            implicitWidth: parent.ListView.view.width - Theme.padding * 2
+                        }
+
+                        onClicked: root.allAccountsSelected()
+
+                        contentItem: ColumnLayout {
+                            spacing: 0
+                            StatusBaseText {
+                                id: allAccounts
+                                color: Theme.palette.baseColor1
+                                text: qsTr("All accounts")
                                 font.weight: Font.Medium
+                                font.pixelSize: Theme.primaryTextFontSize
                                 lineHeightMode: Text.FixedHeight
                                 lineHeight: 22
-                                verticalAlignment: Text.AlignBottom
                             }
-                            visible: !viewState.accountBalanceNotAvailable
-                        }
-                        StatusFlatRoundButton {
-                            id: errorIcon
-                            Layout.preferredWidth: 14
-                            Layout.preferredHeight: 14
-                            icon.width: 14
-                            icon.height: 14
-                            icon.name: "tiny/warning"
-                            icon.color: Theme.palette.dangerColor1
-                            tooltip.text: viewState.accountBalanceNotAvailableText
-                            tooltip.maxWidth: 200
-                            visible: viewState.accountBalanceNotAvailable
+                            RowLayout {
+                                spacing: 4
+                                StatusTextWithLoadingState {
+                                    id: walletAmountValue
+                                    objectName: "walletLeftListAmountValue"
+                                    customColor: Theme.palette.textColor
+                                    text: viewState.totalCurrencyBalance
+                                        ? LocaleUtils.currencyAmountToLocaleString(viewState.totalCurrencyBalance, {noSymbol: true})
+                                        : ""
+                                    font.pixelSize: Theme.fontSize(22)
+                                    loading: viewState.balanceLoading
+                                    lineHeightMode: Text.FixedHeight
+                                    lineHeight: 36
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                                StatusTextWithLoadingState {
+                                    customColor: Theme.palette.textColor
+                                    text: viewState.totalCurrencyBalance ? viewState.totalCurrencyBalance.symbol : ""
+                                    font.pixelSize: Theme.additionalTextSize
+                                    loading: viewState.balanceLoading
+                                    font.weight: Font.Medium
+                                    lineHeightMode: Text.FixedHeight
+                                    lineHeight: 22
+                                    verticalAlignment: Text.AlignBottom
+                                }
+                                visible: !viewState.accountBalanceNotAvailable
+                            }
+                            StatusFlatRoundButton {
+                                id: errorIcon
+                                Layout.preferredWidth: 14
+                                Layout.preferredHeight: 14
+                                icon.width: 14
+                                icon.height: 14
+                                icon.name: "tiny/warning"
+                                icon.color: Theme.palette.dangerColor1
+                                tooltip.text: viewState.accountBalanceNotAvailableText
+                                tooltip.maxWidth: 200
+                                visible: viewState.accountBalanceNotAvailable
+                            }
                         }
                     }
-                }
 
-                model: SortFilterProxyModel {
-                    sourceModel: viewState.accountsModel
-                    sorters: RoleSorter { roleName: "position"; sortOrder: Qt.AscendingOrder }
+                    model: SortFilterProxyModel {
+                        sourceModel: viewState.accountsModel
+                        sorters: RoleSorter { roleName: "position"; sortOrder: Qt.AscendingOrder }
+                    }
                 }
             }
 
@@ -402,8 +427,14 @@ Rectangle {
 
                 anchors {
                     top: parent.top
-                    // Bottom Margin is not applied to ListView if it's fully visible
-                    topMargin: Math.min(walletAccountsListView.contentHeight, parent.height - d.footerHeight) + (walletAccountsListView.footerOverlayed ? 0 : walletAccountsListView.bottomMargin)
+                    // Bottom Margin is not applied to ListView if it's fully visible;
+                    // while the list is still loading, keep the footer at the bottom
+                    topMargin: {
+                        const listView = d.accountsListView
+                        if (!listView)
+                            return parent.height - d.footerHeight
+                        return Math.min(listView.contentHeight, parent.height - d.footerHeight) + (listView.footerOverlayed ? 0 : listView.bottomMargin)
+                    }
                     left: parent.left
                     right: parent.right
                 }
@@ -415,9 +446,9 @@ Rectangle {
                     id: footerBackground
                     color: root.color
                     implicitWidth: root.width
-                    implicitHeight: (walletAccountsListView.firstItem?.height ?? Theme.xlPadding*2) + Theme.xlPadding
+                    implicitHeight: (d.accountsListView?.firstItem?.height ?? Theme.xlPadding*2) + Theme.xlPadding
 
-                    layer.enabled: walletAccountsListView.footerOverlayed && !walletAccountsListView.atYEnd
+                    layer.enabled: (d.accountsListView?.footerOverlayed ?? false) && !(d.accountsListView?.atYEnd ?? true)
                     layer.effect: DropShadow {
                         verticalOffset: -10
                         radius: 20
@@ -447,7 +478,7 @@ Rectangle {
                     isRoundIcon: true
                     textColor: Theme.palette.directColor1
                     textFillWidth: true
-                    spacing: walletAccountsListView.firstItem?.statusListItemTitleArea.anchors.leftMargin ?? Theme.padding
+                    spacing: d.accountsListView?.firstItem?.statusListItemTitleArea.anchors.leftMargin ?? Theme.padding
                     onClicked: root.savedAddressesSelected()
                 }
             }
@@ -478,7 +509,7 @@ Rectangle {
                     isRoundIcon: true
                     textColor: Theme.palette.directColor1
                     textFillWidth: true
-                    spacing: walletAccountsListView.firstItem?.statusListItemTitleArea.anchors.leftMargin ?? Theme.padding
+                    spacing: d.accountsListView?.firstItem?.statusListItemTitleArea.anchors.leftMargin ?? Theme.padding
                     onClicked: root.followingAddressesSelected()
                 }
             }
