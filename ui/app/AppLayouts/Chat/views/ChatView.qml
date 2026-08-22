@@ -260,9 +260,11 @@ Item {
         // no visual parent. Bound it with the chrome geometry for that phase —
         // otherwise the loader falls back to the chat list's implicit height
         // (its full content height), which builds a delegate for every chat
-        // only to discard them once the proxy applies the real size.
+        // only to discard them once the proxy applies the real size. The
+        // anchors are inert until then and take over once the proxy parents it.
         width: Constants.chatSectionLeftColumnWidth
         height: root.sectionLayout?.height ?? 0
+        asynchronous: true
         sourceComponent: root.rootStore.chatCommunitySectionModule.isCommunity()?
                              communtiyColumnComponent :
                              contactsColumnComponent
@@ -270,6 +272,7 @@ Item {
 
     readonly property Item centerPanel: Loader {
         id: centerPanelLoader
+        asynchronous: true
         active: d.shouldLoadCenterPanel
         sourceComponent: (root.allChannelsAreHiddenBecauseNotPermitted || root.contentLocked) ?
                              joinCommunityCenterPanelComponent : chatColumnViewComponent
@@ -437,6 +440,10 @@ Item {
 
             onSearchButtonClicked: root.openAppSearch()
             onDisplayEditChannelPopup: {
+                // contactColumnLoader is asynchronous — drop the request if
+                // the panel is still incubating
+                if (!contactColumnLoader.item)
+                    return
                 Global.openPopup(contactColumnLoader.item.createChannelPopup, {
                     isEdit: true,
                     chatId: chatId,
