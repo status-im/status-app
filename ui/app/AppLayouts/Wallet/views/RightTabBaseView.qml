@@ -20,6 +20,8 @@ FocusScope {
             visible: !!target
 
             Layout.fillWidth: true
+            Layout.leftMargin: Theme.bigPadding
+            Layout.rightMargin: Theme.bigPadding
         }
 
         LayoutItemProxy {
@@ -29,6 +31,8 @@ FocusScope {
 
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.leftMargin: Theme.bigPadding
+            Layout.rightMargin: Theme.bigPadding
         }
     }
 }
