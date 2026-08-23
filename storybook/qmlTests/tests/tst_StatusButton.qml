@@ -208,8 +208,8 @@ Item {
             // verify the tooltip is visible in interactive or enabled when hovered
             const buttonTooltip = findChild(controlUnderTest, "buttonTooltip")
             verify(!!buttonTooltip)
+            verify(!buttonTooltip.item, "the tooltip must not be built before the first hover")
             mouseMove(controlUnderTest, controlUnderTest.width/2, controlUnderTest.height/2)
-            waitForItemPolished(buttonTooltip.contentItem)
             tryCompare(buttonTooltip, "opened", data.tooltip)
 
             // verify the click goes thru (or not) as expected

@@ -304,11 +304,13 @@ AbstractButton {
         cursorShape: root.interactive && !root.loading && !root.loadingWithText ? Qt.PointingHandCursor: undefined // always works; 'undefined' resets to default cursor
     }
 
-    StatusToolTip {
+    StatusLazyToolTip {
         id: tooltip
         objectName: "buttonTooltip"
-        visible: tooltip.text !== "" && pointerHoverHandler.hovered && !root.pressed
-        offset: -(tooltip.x + tooltip.width/2 - root.width/2)
+        tooltipObjectName: "buttonTooltipPopup"
+        target: root
+        centerArrowOnTarget: true
+        shown: pointerHoverHandler.hovered && !root.pressed
     }
 
     Component {
