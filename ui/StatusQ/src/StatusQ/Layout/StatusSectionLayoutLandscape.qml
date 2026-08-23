@@ -145,6 +145,50 @@ Control {
     property color backgroundColor: Theme.palette.statusAppLayout.rightPanelBackgroundColor
 
     /*!
+        \qmlproperty bool StatusSectionLayoutLandscape::panelsFrozen
+        While true the panel slots stop tracking their box: each panel keeps the
+        last geometry it was given. See \l StatusSectionLayout::panelsFrozen.
+    */
+    property bool panelsFrozen: false
+
+    /*!
+        \qmlproperty real StatusSectionLayoutLandscape::leftPanelSlotWidth
+        \qmlproperty real StatusSectionLayoutLandscape::leftPanelSlotHeight
+        The box the left panel slot will give its panel. Valid whether or not a
+        panel has arrived, so a section that builds its panel before the chrome
+        adopts it can pre-size it exactly and make the handoff resize-free.
+    */
+    readonly property real leftPanelSlotWidth: leftPanelProxy.width
+    readonly property real leftPanelSlotHeight: leftPanelProxy.height
+    /*!
+        \qmlproperty real StatusSectionLayoutLandscape::centerPanelSlotWidth
+        \qmlproperty real StatusSectionLayoutLandscape::centerPanelSlotHeight
+        The box the centre panel slot will give its panel. Valid whether or not a
+        panel has arrived, so a section that builds its panel before the chrome
+        adopts it can pre-size it exactly and make the handoff resize-free.
+    */
+    readonly property real centerPanelSlotWidth: centerPanelProxy.width
+    readonly property real centerPanelSlotHeight: centerPanelProxy.height
+    /*!
+        \qmlproperty real StatusSectionLayoutLandscape::rightPanelSlotWidth
+        \qmlproperty real StatusSectionLayoutLandscape::rightPanelSlotHeight
+        The box the right panel slot will give its panel. Valid whether or not a
+        panel has arrived, so a section that builds its panel before the chrome
+        adopts it can pre-size it exactly and make the handoff resize-free.
+    */
+    readonly property real rightPanelSlotWidth: rightPanelProxy.width
+    readonly property real rightPanelSlotHeight: rightPanelProxy.height
+
+    /*!
+        \qmlproperty bool StatusSectionLayoutLandscape::leftColumnAnimating
+        True while the left column is animating to a new width. The centre
+        panel's width is the complement, so this walks both panels through a
+        run of sizes; \l StatusSectionLayout holds its geometry bracket open
+        until it clears.
+    */
+    readonly property bool leftColumnAnimating: leftPanelWidthAnimation.running
+
+    /*!
         \qmlsignal
         This signal is emitted when the back button of the header component
         is pressed.
@@ -169,6 +213,7 @@ Control {
 
         Behavior on effectiveLeftPanelWidth {
             NumberAnimation {
+                id: leftPanelWidthAnimation
                 duration: ThemeUtils.AnimationDuration.Slow
                 easing.type: Easing.InOutCubic
             }
@@ -192,8 +237,10 @@ Control {
             background: Rectangle {
                 color: root.Theme.palette.baseColor4
             }
-            contentItem: LayoutItemProxy {
+            contentItem: SectionPanelSlot {
+                id: leftPanelProxy
                 target: d.effectiveLeftPanel
+                frozen: root.panelsFrozen
             }
         }
 
@@ -226,13 +273,14 @@ Control {
                     onBackButtonClicked: root.backButtonClicked()
                 }
 
-                LayoutItemProxy {
+                SectionPanelSlot {
                     id: centerPanelProxy
                     width: parent.width
                     anchors.top: statusToolBar.bottom
                     anchors.bottom: footerSlot.top
                     anchors.bottomMargin: footerSlot.visible ? root.footerSpacing : 0
                     target: root.centerPanel
+                    frozen: root.panelsFrozen
                 }
 
                 LayoutItemProxy {
@@ -254,8 +302,10 @@ Control {
             background: Rectangle {
                 color: root.Theme.palette.baseColor4
             }
-            contentItem: LayoutItemProxy {
+            contentItem: SectionPanelSlot {
+                id: rightPanelProxy
                 target: root.rightPanel
+                frozen: root.panelsFrozen
             }
         }
     }

@@ -151,10 +151,8 @@ Item {
         formatBalance: function(balance){
             return LocaleUtils.currencyAmountToLocaleString(root.currencyStore.getCurrencyAmount(balance, tokenGroup.key))
         }
-        communityTag.visible: d.isCommunityAsset
-        communityTag.tagPrimaryLabel.text: d.isCommunityAsset ? tokenGroup.communityName: ""
-        communityTag.asset.name: d.isCommunityAsset ? tokenGroup && !!tokenGroup.communityImage ? tokenGroup.communityImage : "" : ""
-        communityTag.asset.isImage: true
+        communityName: d.isCommunityAsset && tokenGroup.communityName ? tokenGroup.communityName : ""
+        communityImage: d.isCommunityAsset && tokenGroup.communityImage ? tokenGroup.communityImage : ""
     }
 
     enum GraphType {
@@ -470,54 +468,61 @@ Item {
                     rowSpacing: 10
                     flow: detailsFlow.isOverflowing && detailsFlow.width > 400 ? GridLayout.LeftToRight: GridLayout.TopToBottom
 
-                    InformationTileAssetDetails {
-                        id: websiteBlock
-
+                    // Latched, not hidden: a community asset has no website block
+                    // and a plain asset has no minted-by block, so one of the two
+                    // was always built and never shown.
+                    Loader {
                         Layout.alignment: Qt.AlignTop
                         Layout.preferredWidth: detailsFlow.isOverflowing ? -1 : detailsFlow.rightSideWidth
-                        visible: !d.isCommunityAsset && tokenGroup.websiteUrl
-                        primaryText: qsTr("Website")
-                        content: InformationTag {
-                            asset.name : "browser"
-                            tagPrimaryLabel.text: SQUtils.Utils.stripHttpsAndwwwFromUrl(tokenGroup.websiteUrl)
-                            visible: typeof tokenGroup != "undefined" && tokenGroup && tokenGroup.websiteUrl !== ""
-                            customBackground: Component {
-                                Rectangle {
-                                    color: Theme.palette.baseColor2
-                                    border.width: 1
-                                    border.color: "transparent"
-                                    radius: 36
+                        active: !d.isCommunityAsset && !!tokenGroup.websiteUrl
+                        visible: active
+                        sourceComponent: InformationTileAssetDetails {
+                            primaryText: qsTr("Website")
+                            content: InformationTag {
+                                asset.name : "browser"
+                                tagPrimaryLabel.text: SQUtils.Utils.stripHttpsAndwwwFromUrl(tokenGroup.websiteUrl)
+                                visible: typeof tokenGroup != "undefined" && tokenGroup && tokenGroup.websiteUrl !== ""
+                                customBackground: Component {
+                                    Rectangle {
+                                        color: Theme.palette.baseColor2
+                                        border.width: 1
+                                        border.color: "transparent"
+                                        radius: 36
+                                    }
                                 }
-                            }
-                            StatusMouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: Global.requestOpenLink(tokenGroup.websiteUrl)
+                                StatusMouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: Global.requestOpenLink(tokenGroup.websiteUrl)
+                                }
                             }
                         }
                     }
 
-                    InformationTileAssetDetails {
+                    Loader {
                         Layout.alignment: Qt.AlignTop
                         Layout.preferredWidth: detailsFlow.isOverflowing ? -1 : detailsFlow.rightSideWidth
-                        visible:  d.isCommunityAsset
-                        primaryText: qsTr("Minted by")
-                        content: InformationTag {
-                            tagPrimaryLabel.text: tokenGroup && tokenGroup.communityName ? tokenGroup.communityName : ""
-                            asset.name: tokenGroup && tokenGroup.communityImage ? tokenGroup.communityImage : ""
-                            asset.isImage: true
-                            customBackground: Component {
-                                Rectangle {
-                                    color: Theme.palette.baseColor2
-                                    border.width: 1
-                                    border.color: "transparent"
-                                    radius: 36
+                        active: d.isCommunityAsset
+                        visible: active
+                        sourceComponent: InformationTileAssetDetails {
+                            primaryText: qsTr("Minted by")
+                            content: InformationTag {
+                                tagPrimaryLabel.text: tokenGroup && tokenGroup.communityName ? tokenGroup.communityName : ""
+                                asset.name: tokenGroup && tokenGroup.communityImage ? tokenGroup.communityImage : ""
+                                asset.isImage: true
+                                customBackground: Component {
+                                    Rectangle {
+                                        color: Theme.palette.baseColor2
+                                        border.width: 1
+                                        border.color: "transparent"
+                                        radius: 36
+                                    }
                                 }
-                            }
-                            StatusMouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: Global.switchToCommunity(tokenGroup.communityId)
+                                StatusMouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: Global.switchToCommunity(tokenGroup.communityId)
+                                }
                             }
                         }
                     }

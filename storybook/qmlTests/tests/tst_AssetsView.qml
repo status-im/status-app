@@ -517,12 +517,21 @@ Item {
             return comboBox
         }
 
+        // The rows are TokenDelegateShells; the token row itself lives behind
+        // the shell's async Loader, so it is not there the instant the shell is.
+        function tokenRowAt(listView, index) {
+            const shell = listView.itemAtIndex(index)
+            verify(!!shell, "no row shell at index %1".arg(index))
+            tryVerify(() => shell.contentReady)
+            return shell.contentItem
+        }
+
         function verifyAssetOrder(expectedTitles) {
             const listView = getListView(controlUnderTest)
             waitForRendering(listView)
             compare(listView.count, expectedTitles.length)
             for (let i = 0; i < expectedTitles.length; ++i)
-                compare(listView.itemAtIndex(i).title, expectedTitles[i])
+                compare(tokenRowAt(listView, i).title, expectedTitles[i])
         }
 
         function verifyComboBoxDisplay(comboBox, optionText, ascending) {
@@ -771,8 +780,9 @@ Item {
                 if (listView.count !== expectedTitles.length)
                     return false
                 for (let i = 0; i < expectedTitles.length; ++i) {
-                    const item = listView.itemAtIndex(i)
-                    if (!item || item.title !== expectedTitles[i])
+                    const shell = listView.itemAtIndex(i)
+                    if (!shell || !shell.contentReady
+                            || shell.contentItem.title !== expectedTitles[i])
                         return false
                 }
                 return true
