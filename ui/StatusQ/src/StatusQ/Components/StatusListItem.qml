@@ -261,11 +261,11 @@ Rectangle {
                     icon: root.titleTextIcon
                 }
 
-                StatusToolTip {
+                StatusLazyToolTip {
                     id: statusListItemTitleTooltip
                     text: statusListItemTitle.text
                     delay: 0
-                    visible: statusListItemTitle.truncated && statusListItemTitleMouseArea.containsMouse
+                    shown: statusListItemTitle.truncated && statusListItemTitleMouseArea.containsMouse
                 }
 
                 StatusMouseArea {
