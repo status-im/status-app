@@ -287,46 +287,57 @@ Control {
 
             model: root.model ?? null
 
-            delegate: TokenDelegate {
-                objectName: `AssetView_TokenListItem_${model.symbol}` // TODO: use model.key
+            // Only the shell is built by the list's refill, which is one
+            // uninterruptible polish pass; the row itself incubates behind the
+            // shell's async Loader in metered bites.
+            delegate: TokenDelegateShell {
+                id: rowShell
+
+                objectName: `AssetView_TokenRowShell_${model.symbol}`
 
                 width: ListView.view.width
 
-                // chainIds arrives as a comma-separated string from the terminal model
-                readonly property var chainIdsList: {
-                    const ids = model.chainIds
-                    return (ids && ids.length) ? ids.split(",").map(Number) : []
+                sourceComponent: TokenDelegate {
+                    objectName: `AssetView_TokenListItem_${model.symbol}` // TODO: use model.key
+
+                    width: rowShell.width
+
+                    // chainIds arrives as a comma-separated string from the terminal model
+                    readonly property var chainIdsList: {
+                        const ids = model.chainIds
+                        return (ids && ids.length) ? ids.split(",").map(Number) : []
+                    }
+
+                    name: model.name
+                    icon: model.logoUri || Constants.tokenIcon(model.symbol, false)
+                    balance: root.formatBalance(model.balance, model.key)
+                    balanceLoading: model.balanceLoading
+                    marketBalance: root.formatFiat(model.marketBalance)
+
+                    marketDetailsAvailable: model.marketDetailsAvailable
+                    marketDetailsLoading: model.marketDetailsLoading
+                    marketCurrencyPrice: root.formatFiat(model.change1DayFiat)
+                    marketChangePct24hour: model.marketChangePct24hour
+
+                    communityId: model.communityId
+                    communityName: model.communityName ?? ""
+                    communityIcon: model.communityImage ?? ""
+
+                    errorTooltipText_1: root.chainsError(chainIdsList)
+                    errorTooltipText_2: root.marketDataError
+
+                    errorMode: !!root.balanceError
+                    errorIcon.tooltip.text: root.balanceError
+
+                    onClicked: function (itemId, mouse) {
+                        if (mouse.button === Qt.LeftButton)
+                            root.assetClicked(model.key)
+                        else if (mouse.button === Qt.RightButton)
+                            tokenContextMenu.createObject(this, { model }).popup(mouse.x, mouse.y)
+                    }
+
+                    onCommunityClicked: (communityId) => root.communityClicked(model.communityId)
                 }
-
-                name: model.name
-                icon: model.logoUri || Constants.tokenIcon(model.symbol, false)
-                balance: root.formatBalance(model.balance, model.key)
-                balanceLoading: model.balanceLoading
-                marketBalance: root.formatFiat(model.marketBalance)
-
-                marketDetailsAvailable: model.marketDetailsAvailable
-                marketDetailsLoading: model.marketDetailsLoading
-                marketCurrencyPrice: root.formatFiat(model.change1DayFiat)
-                marketChangePct24hour: model.marketChangePct24hour
-
-                communityId: model.communityId
-                communityName: model.communityName ?? ""
-                communityIcon: model.communityImage ?? ""
-
-                errorTooltipText_1: root.chainsError(chainIdsList)
-                errorTooltipText_2: root.marketDataError
-
-                errorMode: !!root.balanceError
-                errorIcon.tooltip.text: root.balanceError
-
-                onClicked: function (itemId, mouse) {
-                    if (mouse.button === Qt.LeftButton)
-                        root.assetClicked(model.key)
-                    else if (mouse.button === Qt.RightButton)
-                        tokenContextMenu.createObject(this, { model }).popup(mouse.x, mouse.y)
-                }
-
-                onCommunityClicked: (communityId) => root.communityClicked(model.communityId)
             }
         }
 

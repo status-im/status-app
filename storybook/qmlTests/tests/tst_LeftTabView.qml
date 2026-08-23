@@ -87,8 +87,9 @@ Item {
                 if (listView.count !== expectedTitles.length)
                     return false
                 for (let i = 0; i < expectedTitles.length; ++i) {
-                    const item = listView.itemAtIndex(i)
-                    if (!item || item.title !== expectedTitles[i])
+                    // the delegate root is a shell; the title is on the row it incubates
+                    const row = listView.itemAtIndex(i)?.contentItem
+                    if (!row || row.title !== expectedTitles[i])
                         return false
                 }
                 return true
