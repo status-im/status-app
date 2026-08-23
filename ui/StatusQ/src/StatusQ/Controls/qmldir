@@ -31,6 +31,7 @@ StatusInput 0.1 StatusInput.qml
 StatusItemDelegate 0.1 StatusItemDelegate.qml
 StatusItemPicker 0.1 StatusItemPicker.qml
 StatusLabeledSlider 0.1 StatusLabeledSlider.qml
+StatusLazyToolTip 0.1 StatusLazyToolTip.qml
 StatusLinkText 0.1 StatusLinkText.qml
 NativeSwipeHandler 0.1 NativeSwipeHandler.qml
 NativeSwipeHandlerImpl 0.1 NativeSwipeHandlerImpl.qml
