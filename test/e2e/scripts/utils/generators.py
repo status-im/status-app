@@ -3,7 +3,7 @@ import random
 import string
 from zpywallet import HDWallet
 from zpywallet.network import EthereumMainNet
-from eth_account.hdaccount import generate_mnemonic, Mnemonic
+from eth_account.hdaccount import Language, generate_mnemonic, Mnemonic
 
 import configs
 from constants import WalletAccountColors
@@ -81,7 +81,10 @@ def random_color():
 def random_mnemonic():
     words = ''
     while not Mnemonic().is_mnemonic_valid(mnemonic=words):
-        new_words = generate_mnemonic(num_words=random.choice([12, 18, 24]), lang='english')
+        new_words = generate_mnemonic(
+            num_words=random.choice([12, 18, 24]),
+            lang=Language.ENGLISH,
+        )
         words = new_words
     return words
 
