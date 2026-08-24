@@ -5,6 +5,7 @@ GO_VERSION="1.24.7"
 GO_INSTALL_DIR="/usr/local/go"
 QT_VERSION="6.11.0"
 QT_INSTALL_DIR="/opt/qt"
+PROTOC_VERSION="36.0"
 
 function check_version {
   source /etc/os-release
@@ -16,9 +17,21 @@ function install_build_dependencies {
   echo "Install build dependencies"
   apt update
   apt install -yq git wget build-essential \
-    cmake extra-cmake-modules pkg-config protoc-gen-go \
+    cmake extra-cmake-modules pkg-config unzip \
     mesa-common-dev unixodbc-dev libpq-dev libglu1-mesa-dev libpcsclite-dev \
     libssl-dev libpulse-mainloop-glib0 libxkbcommon-x11-dev
+}
+
+function install_protoc {
+  if [[ "$(protoc --version 2>/dev/null)" == "libprotoc ${PROTOC_VERSION}" ]]; then
+    echo "Already present: $(protoc --version)"
+    return
+  fi
+  echo "Install protoc ${PROTOC_VERSION}"
+  PROTOC_ZIP="protoc-${PROTOC_VERSION}-linux-x86_64.zip"
+  wget -q -L "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/${PROTOC_ZIP}"
+  unzip -o -q -d /usr/local "${PROTOC_ZIP}" 'bin/protoc' 'include/*'
+  rm "${PROTOC_ZIP}"
 }
 
 function install_release_dependencies {
@@ -108,6 +121,7 @@ export PATH=\$QTDIR:\$QTDIR/bin:\$(go env GOPATH)\bin:$PATH
 if [ "$0" = "$BASH_SOURCE" ]; then
     check_version
     install_build_dependencies
+    install_protoc
     install_release_dependencies
     install_flatpak_dependencies
     install_runtime_dependencies

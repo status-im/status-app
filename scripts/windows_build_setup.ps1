@@ -72,7 +72,7 @@ function Install-Dependencies {
     Scoop-Install 'status/python'        '3.13.5'
     Scoop-Install 'status/mingw-winlibs' '15.2.0-13.0.0-r5'
     Scoop-Install 'status/vcredist2022'  '14.44.35211.0'
-    Scoop-Install 'status/protobuf'      '3.20.1'
+    Scoop-Install 'status/protobuf'      '36.0'
     Scoop-Install 'status/openssl-lts'   '3.0.19'
     Scoop-Install 'status/inno-setup'    '6.7.0'
     Scoop-Install 'status/msys2'         '2025-12-13'
