@@ -21,10 +21,7 @@ import StatusQ.Core.Utils as SQUtils
 import StatusQ.Popups
 import StatusQ.Popups.Dialog
 
-
-import AppLayouts.stores.Messaging 1.0
-
-import "../stores"
+import AppLayouts.Profile.stores
 import "../controls"
 import "../popups"
 import "../panels"
@@ -32,9 +29,10 @@ import "../panels"
 SettingsContentBase {
     id: root
 
-    property MessagingSettingsStore messagingSettingsStore
     property AdvancedStore advancedStore
     property WalletStore walletStore
+
+    property bool isProduction: production
 
     property bool isFleetSelectionEnabled
     property bool isBrowserEnabled: true
@@ -248,30 +246,15 @@ SettingsContentBase {
                 }
             }
 
-            StatusBaseText {
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.leftMargin: Theme.padding
-                anchors.rightMargin: Theme.padding
+            StatusSettingsLineButton {
+                width: parent.width
                 text: qsTr("Application Logs") + " (" + root.advancedStore.logDir() + ")"
-                font.underline: mouseArea.containsMouse
-                color: Theme.palette.primaryColor1
-                topPadding: 23
-                wrapMode: Text.Wrap
-                elide: Text.ElideRight
-
-                StatusMouseArea {
-                    id: mouseArea
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    hoverEnabled: true
-                    onClicked: {
-                        if (SQUtils.Utils.isMobile) {
-                            Global.openShakeToSharePopup()
-                            return
-                        }
-                        Qt.openUrlExternally(UrlUtils.urlFromUserInput(root.advancedStore.logDir()))
+                onClicked: {
+                    if (SQUtils.Utils.isMobile) {
+                        Global.openShakeToSharePopup()
+                        return
                     }
+                    Qt.openUrlExternally(UrlUtils.urlFromUserInput(root.advancedStore.logDir()))
                 }
             }
 
@@ -427,31 +410,29 @@ SettingsContentBase {
                         showCancelButton: lightMode
                         onConfirmButtonClicked: {
                             root.advancedStore.setWakuV2LightClientEnabled(lightMode)
+                            close()
                         }
                         onCancelButtonClicked: {
                             close()
                         }
                         onClosed: {
-                            if (root.advancedStore.wakuV2LightClientEnabled){
-                                btnWakuV2Light.toggle()
+                            // revert if canceled
+                            if (root.advancedStore.wakuV2LightClientEnabled) {
+                                btnWakuV2Light.click()
                             } else {
-                                btnWakuV2Full.toggle()
+                                btnWakuV2Full.click()
                             }
+
                             destroy()
                         }
                     }
                 }
 
-                ButtonGroup {
-                    id: wakuV2Group
-                }
-
                 BloomSelectorButton {
                     id: btnWakuV2Light
                     objectName: "lightWakuModeButton"
-                    buttonGroup: wakuV2Group
-                    checkedByDefault: root.advancedStore.wakuV2LightClientEnabled
-                    btnText: qsTr("Light mode")
+                    checked: root.advancedStore.wakuV2LightClientEnabled
+                    text: qsTr("Light mode")
                     onToggled: {
                         Global.openPopup(wakuV2ModeConfirmationDialogComponent, { lightMode: true })
                     }
@@ -460,9 +441,8 @@ SettingsContentBase {
                 BloomSelectorButton {
                     id: btnWakuV2Full
                     objectName: "relayWakuModeButton"
-                    buttonGroup: wakuV2Group
-                    checkedByDefault: !root.advancedStore.wakuV2LightClientEnabled
-                    btnText: qsTr("Relay mode")
+                    checked: !root.advancedStore.wakuV2LightClientEnabled
+                    text: qsTr("Relay mode")
                     onToggled: {
                         Global.openPopup(wakuV2ModeConfirmationDialogComponent, { lightMode: false })
                     }
@@ -489,6 +469,7 @@ SettingsContentBase {
                 text: qsTr("Debug")
                 isSwitch: true
                 enabled: !root.advancedStore.isRuntimeLogLevelSet
+                hoverEnabled: true
                 checked: root.advancedStore.isDebugEnabled
 
                 onClicked: {
@@ -496,20 +477,9 @@ SettingsContentBase {
                     Global.openPopup(enableDebugComponent)
                 }
 
-                StatusMouseArea {
-                    id: overlayMouseArea
-                    anchors.fill: parent
-                    enabled: true
-                    hoverEnabled: true
-                    propagateComposedEvents: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: debugLineButton.clicked()
-                }
-
                 StatusToolTip {
                     text: qsTr("The value is overridden with runtime options")
-                    visible: overlayMouseArea.containsMouse && root.advancedStore.isRuntimeLogLevelSet
-                    delay: 1000
+                    visible: parent.hovered && root.advancedStore.isRuntimeLogLevelSet
                 }
             }
 
@@ -537,6 +507,7 @@ SettingsContentBase {
             StatusSettingsLineButton {
                 width: parent.width
                 id: rpcStatsButton
+                visible: storageStatsSection.visible
                 text: qsTr("RPC statistics")
                 onClicked: rpcStatsModal.open()
             }
@@ -544,6 +515,7 @@ SettingsContentBase {
             StatusSettingsLineButton {
                 width: parent.width
                 id: httpStatsButton
+                visible: storageStatsSection.visible
                 text: qsTr("HTTP statistics")
                 onClicked: httpStatsModal.open()
             }
@@ -558,7 +530,7 @@ SettingsContentBase {
                 anchors.right: parent.right
                 anchors.leftMargin: Theme.padding
                 anchors.rightMargin: Theme.padding
-                text: qsTr("Storage stats")
+                text: qsTr("On-device profile stats")
                 topPadding: Theme.bigPadding
                 bottomPadding: Theme.padding
                 visible: storageStatsSection.visible
@@ -572,7 +544,7 @@ SettingsContentBase {
                 onVisibleChanged: if (visible) d.restoreStorageStats()
 
                 // Non-production and CI builds; in release only behind Debug.
-                visible: !production || TestConfig.testMode || root.advancedStore.isDebugEnabled
+                visible: !root.isProduction || TestConfig.testMode || root.advancedStore.isDebugEnabled
 
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -583,9 +555,8 @@ SettingsContentBase {
                 StatusBaseText {
                     Layout.fillWidth: true
                     wrapMode: Text.Wrap
-                    color: Theme.palette.baseColor1
                     font.pixelSize: Theme.tertiaryTextFontSize
-                    text: qsTr("Describes the shape of this account's databases - how many messages, chats and wallet rows it holds, how far behind the sync state is, how large each table is - so that a developer can rebuild an equivalent account to reproduce a bug. Dates appear only as day counts, and no message, chat, contact or address is ever included. Nothing is collected until you press Collect data.")
+                    text: qsTr("Shows stats for your Status profile, such as counts of chats, messages, communities and collectibles, and app and wallet database sizes. Stats are shown and remain only on your device and include NO message, chat, contact, address or other content. Click Refresh stats to show or update them.")
                 }
 
                 RowLayout {
@@ -595,7 +566,7 @@ SettingsContentBase {
                     StatusButton {
                         objectName: "collectStorageStatsButton"
                         text: root.advancedStore.isCollectingStorageStats
-                              ? qsTr("Collecting...") : qsTr("Collect data")
+                              ? qsTr("Refreshing...") : qsTr("Refresh stats")
                         enabled: !root.advancedStore.isCollectingStorageStats
                         onClicked: {
                             d.beginStorageStatsCollection()
@@ -607,31 +578,31 @@ SettingsContentBase {
                         objectName: "copyStorageStatsButton"
                         visible: d.storageStatsJson !== ""
                         textToCopy: d.storageStatsJson
-                        onCopyClicked: ClipboardUtils.setText(textToCopy)
+                        onCopyClicked: textToCopy => ClipboardUtils.setText(textToCopy)
                     }
+                }
 
-                    StatusBaseText {
-                        objectName: "storageStatsStatusText"
-                        Layout.fillWidth: true
-                        elide: Text.ElideMiddle
-                        font.pixelSize: Theme.tertiaryTextFontSize
-                        color: d.storageStatsError !== ""
-                               ? Theme.palette.dangerColor1 : Theme.palette.baseColor1
-                        text: {
-                            if (d.storageStatsError !== "")
-                                return d.storageStatsError
-                            if (root.advancedStore.isCollectingStorageStats)
-                                return d.storageStatsTotal > 0
-                                        ? qsTr("%1 of %2").arg(d.storageStatsStep).arg(d.storageStatsTotal)
-                                        : qsTr("Starting...")
-                            if (d.storageStatsSnapshotPath !== "")
-                                return qsTr("Collected %1, saved to %2 and picked up by Application Logs")
-                                        .arg(d.formatAge(d.storageStatsAgeSeconds))
-                                        .arg(d.storageStatsSnapshotPath)
-                            if (d.storageStatsAgeSeconds >= 0)
-                                return qsTr("Collected %1").arg(d.formatAge(d.storageStatsAgeSeconds))
-                            return ""
-                        }
+                StatusBaseText {
+                    objectName: "storageStatsStatusText"
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    wrapMode: Text.Wrap
+                    maximumLineCount: 3
+                    font.pixelSize: Theme.tertiaryTextFontSize
+                    color: d.storageStatsError !== ""
+                           ? Theme.palette.dangerColor1 : Theme.palette.baseColor1
+                    text: {
+                        if (d.storageStatsError !== "")
+                            return d.storageStatsError
+                        if (root.advancedStore.isCollectingStorageStats)
+                            return d.storageStatsTotal > 0
+                                    ? qsTr("%1 of %2").arg(d.storageStatsStep).arg(d.storageStatsTotal)
+                                    : qsTr("Starting...")
+                        if (d.storageStatsSnapshotPath !== "")
+                            return qsTr("Collected %1, saved to %2 and picked up by Application Logs").arg(d.formatAge(d.storageStatsAgeSeconds)).arg(d.storageStatsSnapshotPath)
+                        if (d.storageStatsAgeSeconds >= 0)
+                            return qsTr("Collected %1").arg(d.formatAge(d.storageStatsAgeSeconds))
+                        return ""
                     }
                 }
 

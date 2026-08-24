@@ -20,7 +20,6 @@ when defined(ios):
 import seaqt/qguiapplication
 import seaqt/qsslconfiguration
 import seaqt/qsslcertificate
-import seaqt/QtCore/gen_qnamespace
 
 when defined(qmldebug):
   import seaqt/qqmldebuggingenabler

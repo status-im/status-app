@@ -190,7 +190,7 @@ void HttpStats::clearCache()
         return;
     }
 
-    for (const auto& cache : caches) {
+    for (const auto& cache : std::as_const(caches)) {
         if (cache.isNull())
             continue;
         // Clear on the cache's thread, and report from inside the same call so a

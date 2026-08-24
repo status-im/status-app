@@ -496,7 +496,6 @@ StatusSectionLayout {
         Component {
             id: advancedViewComp
             AdvancedView {
-                messagingSettingsStore: root.messagingSettingsStore
                 advancedStore: root.advancedStore
                 walletStore: root.walletStore
                 isFleetSelectionEnabled: fleetSelectionEnabled

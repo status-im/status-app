@@ -38,19 +38,21 @@ SplitView {
             SplitView.preferredHeight: 200
 
             logsView.logText: logs.logText
-        }
-    }
 
-    Switch {
-        id: ctrlProduction
-        SplitView.minimumWidth: 300
-        SplitView.preferredWidth: 300
-        text: "Production"
-        checked: true
+            ColumnLayout {
+                anchors.fill: parent
+
+                Switch {
+                    id: ctrlProduction
+                    text: "Production"
+                    checked: true
+                }
+            }
+        }
     }
 }
 
-// category: Views
+// category: Settings
 // status: good
 // https://www.figma.com/file/idUoxN7OIW2Jpp3PMJ1Rl8/%E2%9A%99%EF%B8%8F-Settings-%7C-Desktop?node-id=1159%3A114479
 // https://www.figma.com/file/idUoxN7OIW2Jpp3PMJ1Rl8/%E2%9A%99%EF%B8%8F-Settings-%7C-Desktop?node-id=1684%3A127762
