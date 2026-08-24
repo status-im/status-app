@@ -164,7 +164,6 @@ RUN GOLANG_SHA256="da18191ddb7db8a9339816f3e2b54bdded8047cdc2a5d67059478f8d1595c
 # Install Go tools and clean up Go module cache to save space
 RUN /usr/local/go/bin/go install github.com/go-bindata/go-bindata/v3/go-bindata@latest \
  && /usr/local/go/bin/go install go.uber.org/mock/mockgen@v0.4.0 \
- && /usr/local/go/bin/go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.1 \
  && cp /root/go/bin/* /usr/local/bin/ \
  && rm -rf /root/go /root/.cache/go-build
 
