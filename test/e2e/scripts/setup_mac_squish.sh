@@ -96,6 +96,16 @@ else
   echo "Squish rpath already configured."
 fi
 
+# _hashlib.so is linked to python.org libssl.1.1; Squish already ships it beside Python.
+HASHLIB_SO="${SQUISH_DIR}/python/Python.framework/Versions/3.10/lib/python3.10/lib-dynload/_hashlib.cpython-310-darwin.so"
+PYORG_SSL_LIB="/Library/Frameworks/Python.framework/Versions/3.10/lib"
+if [[ -f "$HASHLIB_SO" ]] && otool -L "$HASHLIB_SO" | grep -q "$PYORG_SSL_LIB/libssl.1.1.dylib"; then
+  echo "Repointing _hashlib.so to Squish OpenSSL 1.1 ..."
+  install_name_tool -change "$PYORG_SSL_LIB/libssl.1.1.dylib" "@loader_path/../../libssl.1.1.dylib" "$HASHLIB_SO"
+  install_name_tool -change "$PYORG_SSL_LIB/libcrypto.1.1.dylib" "@loader_path/../../libcrypto.1.1.dylib" "$HASHLIB_SO"
+  codesign --force --sign - "$HASHLIB_SO" >/dev/null
+fi
+
 if [[ -d "$VENV" ]] && venv_uses_python_org_framework; then
   echo "Venv loads python.org Python.framework; recreating from Squish Python ..."
   rm -rf "$VENV"
