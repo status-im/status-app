@@ -1039,71 +1039,71 @@
     </message>
     <message>
         <source>The collected profile could not be read: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Le profil recueilli n&apos;a pas pu être lu&#xa0;: %</translation>
     </message>
     <message>
         <source>just now</source>
-        <translation type="unfinished"></translation>
+        <translation>maintenant</translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s) ago</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Il y a %n minute</numerusform>
+            <numerusform>Il y a %n minutes</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s) ago</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Il y a %n heure</numerusform>
             <numerusform>Il y a %n heures</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s) ago</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Il y a %n jour</numerusform>
             <numerusform>Il y a %n jours</numerusform>
         </translation>
     </message>
     <message>
         <source>Messages</source>
-        <translation type="unfinished">Messages</translation>
+        <translation>Messages</translation>
     </message>
     <message>
         <source>Chats</source>
-        <translation type="unfinished"></translation>
+        <translation>Chats</translation>
     </message>
     <message>
         <source>Communities</source>
-        <translation type="unfinished">Communautés</translation>
+        <translation>Communautés</translation>
     </message>
     <message>
         <source>Oldest message</source>
-        <translation type="unfinished"></translation>
+        <translation>Plus vieux message</translation>
     </message>
     <message>
         <source>Max sync gap</source>
-        <translation type="unfinished"></translation>
+        <translation>Écart de synch max</translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n jour</numerusform>
+            <numerusform>%n jours</numerusform>
         </translation>
     </message>
     <message>
         <source>Collectibles</source>
-        <translation type="unfinished">Collectibles</translation>
+        <translation>Collectibles</translation>
     </message>
     <message>
         <source>App database</source>
-        <translation type="unfinished"></translation>
+        <translation>Base de données de l&apos;app</translation>
     </message>
     <message>
         <source>Wallet database</source>
-        <translation type="unfinished"></translation>
+        <translation>Base de données du portefeuille</translation>
     </message>
     <message>
         <source>Fleet</source>
@@ -1179,35 +1179,35 @@
     </message>
     <message>
         <source>Shows stats for your Status profile, such as counts of chats, messages, communities and collectibles, and app and wallet database sizes. Stats are shown and remain only on your device and include NO message, chat, contact, address or other content. Click Refresh stats to show or update them.</source>
-        <translation type="unfinished"></translation>
+        <translation>Affiche les statistiques de votre profil Status, comme le nombre de discussions, de messages, de communautés et de collectibles, ainsi que la taille des bases de données de l&apos;application et du portefeuille. Ces statistiques sont affichées et restent uniquement sur votre appareil et n&apos;incluent aucun message, discussion, contact, adresse ou autre contenu. Cliquez sur «&#xa0;Actualiser les statistiques&#xa0;» pour les afficher ou les mettre à jour.</translation>
     </message>
     <message>
         <source>Refreshing...</source>
-        <translation type="unfinished"></translation>
+        <translation>Rafraîchissement...</translation>
     </message>
     <message>
         <source>Refresh stats</source>
-        <translation type="unfinished"></translation>
+        <translation>Rafraîchir les stats</translation>
     </message>
     <message>
         <source>%1 of %2</source>
-        <translation type="unfinished">%1 sur %2</translation>
+        <translation>%1 sur %2</translation>
     </message>
     <message>
         <source>Starting...</source>
-        <translation type="unfinished"></translation>
+        <translation>Début...</translation>
     </message>
     <message>
         <source>Collected %1, saved to %2 and picked up by Application Logs</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 collecté, enregistré dans %2 et récupéré par les logs d&apos;application</translation>
     </message>
     <message>
         <source>Collected %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 collecté</translation>
     </message>
     <message>
         <source>Chats by message count</source>
-        <translation type="unfinished"></translation>
+        <translation>Discussions par nombre de messages</translation>
     </message>
     <message>
         <source>The app will restart if you confirm.</source>
@@ -1290,7 +1290,7 @@
     </message>
     <message>
         <source>On-device profile stats</source>
-        <translation type="unfinished"></translation>
+        <translation>Stats dur profil sur l&apos;appareil</translation>
     </message>
     <message>
         <source>Are you sure you want to disable debug mode?</source>
@@ -1833,7 +1833,7 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Send the Status Team bot a contact request to get useful Status tips, important updates, and share your feedback, ideas, or issues directly with the Status team.</source>
-        <translation type="unfinished"></translation>
+        <translation>Envoyez une demande de contact au bot de l&apos;équipe Status pour obtenir des conseils utiles, des mises à jour importantes et partager vos commentaires, idées ou problèmes directement avec l&apos;équipe Status.</translation>
     </message>
     <message>
         <source>Invite People</source>
@@ -4014,35 +4014,35 @@ file format</source>
     </message>
     <message>
         <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — no restart needed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Votre mot de passe sera modifié. Cette opération consiste uniquement à recrypter votre fichier de clé de profil et ne prend que quelques instants&#xa0;; aucun redémarrage n&apos;est nécessaire.</translation>
     </message>
     <message>
         <source>Your data will be fully re-encrypted with a new encryption key. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vos données seront entièrement rechiffrées à l&apos;aide d&apos;une nouvelle clé de chiffrement. Ce processus peut prendre un certain temps, pendant lequel vous ne pourrez pas utiliser l&apos;application. Ne quittez pas l&apos;application et n&apos;éteignez pas votre appareil. Cela entraînerait une corruption des données, la perte de votre profil Status et l&apos;impossibilité de redémarrer Status.</translation>
     </message>
     <message>
         <source>Your data must now be re-encrypted with your new password. This one-time process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status. Future password changes will be instant.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vos données doivent maintenant être rechiffrées avec votre nouveau mot de passe. Cette opération unique peut prendre un certain temps, pendant lequel vous ne pourrez pas utiliser l&apos;application. Ne quittez pas l&apos;application et n&apos;éteignez pas votre appareil. Cela entraînerait une corruption des données, la perte de votre profil Status et l&apos;impossibilité de redémarrer Status. Les changements de mot de passe subséquents seront instantanés.</translation>
     </message>
     <message>
         <source>Also re-encrypt my data with a new encryption key</source>
-        <translation type="unfinished"></translation>
+        <translation>Également crypter mes données à nouveau avec une nouvelle clé de chiffrement.</translation>
     </message>
     <message>
         <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires a restart.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nécessaire seulement si vous soupçonnez que votre appareil a été compromis. Cette procédure est beaucoup plus longue et nécessite un redémarrage.</translation>
     </message>
     <message>
         <source>Password changed</source>
-        <translation type="unfinished"></translation>
+        <translation>Mot de passe modifié</translation>
     </message>
     <message>
         <source>Re-encrypting your data...</source>
-        <translation type="unfinished"></translation>
+        <translation>Recryptage de vos données...</translation>
     </message>
     <message>
         <source>Changing your password...</source>
-        <translation type="unfinished"></translation>
+        <translation>Changement de votre mot de passe...</translation>
     </message>
     <message>
         <source>Restart Status and log in using your new password</source>
@@ -4050,7 +4050,7 @@ file format</source>
     </message>
     <message>
         <source>You can continue using Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Vous pouvez continuer à utiliser Status</translation>
     </message>
     <message>
         <source>Do not quit the app or turn off your device</source>
@@ -4058,7 +4058,7 @@ file format</source>
     </message>
     <message>
         <source>This should only take a moment</source>
-        <translation type="unfinished"></translation>
+        <translation>Ça ne devrait prendre qu&apos;un instant</translation>
     </message>
     <message>
         <source>Change password</source>
@@ -4078,7 +4078,7 @@ file format</source>
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished">Fermer</translation>
+        <translation>Fermer</translation>
     </message>
 </context>
 <context>
@@ -4560,7 +4560,7 @@ Vous resterez connecté et votre phrase de récupération sera entièrement entr
     </message>
     <message>
         <source>Your profile encryption key will also be updated. Do you wish to continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>Votre clé de chiffrement de profil sera également mise à jour. Voulez-vous continuer&#xa0;?</translation>
     </message>
     <message>
         <source>Your data will also be re-encrypted, restricting access to Status for up to 30 mins. Do you wish to continue?</source>
@@ -4587,7 +4587,7 @@ Vous resterez connecté et votre phrase de récupération sera entièrement entr
     </message>
     <message>
         <source>Profile migration complete</source>
-        <translation type="unfinished"></translation>
+        <translation>Migration du profil terminée</translation>
     </message>
     <message>
         <source>Your data was successfully re-encrypted with your new password. You can now restart Status and log in to your profile using the password you just created.</source>
@@ -4595,7 +4595,7 @@ Vous resterez connecté et votre phrase de récupération sera entièrement entr
     </message>
     <message>
         <source>Your profile no longer uses Keycard. You can now log in using the password you just created.</source>
-        <translation type="unfinished"></translation>
+        <translation>Votre profil n&apos;utilise plus de Keycard. Vous pouvez maintenant vous connecter avec le mot de passe que vous venez de créer.</translation>
     </message>
     <message>
         <source>Re-encryption failed</source>
@@ -11232,14 +11232,14 @@ chargement</translation>
     <name>MembersListSkeleton</name>
     <message>
         <source>Members</source>
-        <translation type="unfinished">Membres</translation>
+        <translation>Membres</translation>
     </message>
 </context>
 <context>
     <name>MembersPanelHeader</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechercher</translation>
     </message>
 </context>
 <context>
@@ -11501,19 +11501,19 @@ chargement</translation>
     <name>MessagesListHeader</name>
     <message>
         <source>Messages</source>
-        <translation type="unfinished">Messages</translation>
+        <translation>Messages</translation>
     </message>
     <message>
         <source>Invite contacts</source>
-        <translation type="unfinished">Inviter des contacts</translation>
+        <translation>Inviter des contacts</translation>
     </message>
     <message>
         <source>Start chat</source>
-        <translation type="unfinished">Démarrer une conversation</translation>
+        <translation>Démarrer une conversation</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechercher</translation>
     </message>
 </context>
 <context>
@@ -12573,11 +12573,11 @@ chargement</translation>
     </message>
     <message>
         <source>Error loading accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur de chargement des comptes</translation>
     </message>
     <message>
         <source>Failed to load accounts. Please restart the app and try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de charger les comptes. Veuillez redémarrer l&apos;application et réessayer.</translation>
     </message>
     <message>
         <source>Credentials not found.</source>
@@ -13601,6 +13601,10 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
 </context>
 <context>
     <name>PrimaryNavSidebar</name>
+    <message>
+        <source>Status Help Bot</source>
+        <translation>Bot d&apos;assistance Status</translation>
+    </message>
     <message>
         <source>Activity Center</source>
         <translation>Centre d’activité</translation>
@@ -16814,7 +16818,7 @@ avec un retour à la ligne</translation>
     <name>StatusTrayIcon</name>
     <message>
         <source>Open Status</source>
-        <translation>Ouvrir le menu d&apos;état</translation>
+        <translation>Ouvrir Status</translation>
     </message>
     <message>
         <source>Quit</source>
@@ -18601,6 +18605,10 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
         <translation>Copier le lien vers le profil</translation>
     </message>
     <message>
+        <source>Settings</source>
+        <translation>Paramètres</translation>
+    </message>
+    <message>
         <source>Always online</source>
         <translation>Toujours en ligne</translation>
     </message>
@@ -18948,7 +18956,7 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     <name>WalletAccountsSkeleton</name>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished">Portefeuille</translation>
+        <translation>Portefeuille</translation>
     </message>
 </context>
 <context>
