@@ -1178,19 +1178,15 @@
         <translation>Funciones para desarrolladores</translation>
     </message>
     <message>
-        <source>Storage stats</source>
+        <source>Shows stats for your Status profile, such as counts of chats, messages, communities and collectibles, and app and wallet database sizes. Stats are shown and remain only on your device and include NO message, chat, contact, address or other content. Click Refresh stats to show or update them.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Describes the shape of this account&apos;s databases - how many messages, chats and wallet rows it holds, how far behind the sync state is, how large each table is - so that a developer can rebuild an equivalent account to reproduce a bug. Dates appear only as day counts, and no message, chat, contact or address is ever included. Nothing is collected until you press Collect data.</source>
+        <source>Refreshing...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Collecting...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Collect data</source>
+        <source>Refresh stats</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1286,6 +1282,10 @@
     </message>
     <message>
         <source>HTTP statistics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>On-device profile stats</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

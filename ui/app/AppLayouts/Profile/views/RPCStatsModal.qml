@@ -16,8 +16,7 @@ import utils
 import QtModelsToolkit
 import SortFilterProxyModel
 
-import "../stores"
-
+import AppLayouts.Profile.stores
 
 StatusDialog {
     id: root

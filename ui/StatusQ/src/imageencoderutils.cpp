@@ -4,7 +4,6 @@
 #include <QUrl>
 #include <QQmlEngine>
 #include <QQuickImageProvider>
-#include <QPixmap>
 
 namespace {
 
