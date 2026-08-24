@@ -360,7 +360,9 @@ proc finishAppLoading2[T](self: Module[T]) =
 method onAccountLoginError*[T](self: Module[T], error: string) =
   # SQLITE_NOTADB: "file is not a database"
   var wrongPassword = false
-  if error.contains("file is not a database"):
+  if error.contains("file is not a database") or
+      error.contains("incorrect password provided") or
+      error.contains("envelope: invalid key-encryption key"):
     wrongPassword = true
   warn "failed to login", wrongPassword, error
   self.view.accountLoginError(error, wrongPassword)
