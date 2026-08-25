@@ -16,20 +16,33 @@ Pick your platform below and follow the steps in order.
 
 ## Linux
 
-Details: [Notion — Linux setup](https://www.notion.so/Linux-21f7abd2bb684a0fb10057848760a889).
+Squish env lives in `.venv/bin/activate` (terminal) and `.env` (PyCharm). Do **not** put `SQUISH_DIR`, `PYTHONPATH`, or `LD_LIBRARY_PATH` in `/etc/profile` or `~/.bashrc` — that hangs desktop apps that scan the Python SDK (including PyCharm).
 
-### One-time setup
+### Linux — one-time setup
+
+1. Install **Squish 9.2.2** (default lookup: `$HOME/Squish_9_2_2` or `/opt/squish-runner-9.2.2-qt-6.11`) and activate the license ([Qt Squish](https://www.qt.io/squish)).
+2. Get a **Status AppImage** or local `bin/nim_status_client` (see [Which app to use](#which-app-to-use)).
+3. On Debian/Ubuntu, if `python3 -m venv` fails: `sudo apt install python3-venv`.
+4. From `test/e2e`:
 
 ```bash
 cd test/e2e
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-cp configs/_local.default.py configs/_local.py
+./scripts/setup_linux_squish.sh
 ```
 
-Edit `configs/_local.py` — set `AUT_PATH`:
+The script creates `.venv`, installs `requirements.txt`, writes Squish into `activate` / `.env`, and copies `configs/_local.py` if it is missing. Override Squish path with `SQUISH_DIR=...` if needed.
+
+On Ubuntu 24.04+ system `python3` is **3.12**, and `numpy~=1.25` has no wheel (`Cannot import 'setuptools.build_meta'`). `python3.10` is usually not on `PATH` — use Squish’s bundled interpreter (unset `PYTHONPATH` first; recreate `.venv` if the first run already used 3.12):
+
+```bash
+unset SQUISH_DIR PYTHONPATH LD_LIBRARY_PATH
+rm -rf .venv
+PYTHON=$HOME/Squish_9_2_2/python/bin/python3.10 ./scripts/setup_linux_squish.sh
+# if Squish is under /opt:
+# PYTHON=/opt/squish-runner-9.2.2-qt-6.11/python/bin/python3.10 ./scripts/setup_linux_squish.sh
+```
+
+5. Edit `configs/_local.py`:
 
 ```python
 AUT_PATH = "/path/to/Status.AppImage"
@@ -37,50 +50,56 @@ AUT_PATH = "/path/to/Status.AppImage"
 # AUT_PATH = "/path/to/status-app/bin/nim_status_client"
 ```
 
-Set `SQUISH_DIR` (e.g. `/opt/squish-runner-9.2.2-qt-6.11`).
-
-### Run tests
+### Run tests (Terminal)
 
 ```bash
 cd test/e2e
 source .venv/bin/activate
-pytest -m critical
+pytest tests/onboarding/test_language_selector_and_password_strength.py -v --maxfail=1
+# or the PR suite:
+# pytest -m critical
 ```
+
+PyCharm: [Run tests (PyCharm)](#run-tests-pycharm).
 
 ---
 
 ## Windows
 
-Details: [Notion — Windows setup](https://www.notion.so/Windows-fbccd2b09b784b32ba4174233d83878d).
+Squish env lives in `.venv\Scripts\Activate.ps1` / `activate.bat` (terminal) and `.env` (PyCharm). Do **not** set `SQUISH_DIR` or `PYTHONPATH` as permanent user or system environment variables.
 
-### One-time setup
+### Windows — one-time setup
 
-```bash
+1. Install **Python 3.10+** and **Squish 9.2.2** (default lookup: `C:\squish-runner-9.2.2-qt-6.11`) and activate the license ([Qt Squish](https://www.qt.io/squish)).
+2. Get **Status.exe** (see [Which app to use](#which-app-to-use)).
+3. From `test/e2e` in PowerShell:
+
+```powershell
 cd test\e2e
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-
-copy configs\_local.default.py configs\_local.py
+powershell -ExecutionPolicy Bypass -File .\scripts\setup_windows_squish.ps1
 ```
 
-Edit `configs/_local.py` — set `AUT_PATH`:
+The script creates `.venv`, installs `requirements.txt`, writes Squish into the activate scripts / `.env`, and copies `configs/_local.py` if it is missing. Override Squish path with `$env:SQUISH_DIR = 'D:\Squish'` before running.
+
+4. Edit `configs/_local.py`:
 
 ```python
 AUT_PATH = "C:\\Users\\you\\AppData\\Local\\StatusApp\\bin\\Status.exe"
 # or local dev build:
-# AUT_PATH = "C:\\path\\to\\status-app\\bin\\Status.exe"
+# AUT_PATH = "C:\\path\\to\\status-app\\bin\\StatusDev.exe"
 ```
 
-Set `SQUISH_DIR` (e.g. `C:\squish-runner-9.2.2-qt-6.11`).
+### Run tests (Terminal)
 
-### Run tests
-
-```bash
+```powershell
 cd test\e2e
-.venv\Scripts\activate
-pytest -m critical
+.\.venv\Scripts\Activate.ps1
+pytest tests/onboarding/test_language_selector_and_password_strength.py -v --maxfail=1
+# or the PR suite:
+# pytest -m critical
 ```
+
+PyCharm: [Run tests (PyCharm)](#run-tests-pycharm).
 
 ---
 
@@ -139,7 +158,7 @@ The script creates `.venv` from Squish’s bundled Python (no system Intel Pytho
 ```python
 AUT_PATH = "/Users/you/Downloads/Status.app"
 # or local dev build:
-# AUT_PATH = "/Users/you/status-app/bin/nim_status_client"
+# AUT_PATH = "/Users/you/status-app/bin/StatusDev.app"
 ```
 
 ### Run tests (Terminal)
@@ -152,14 +171,44 @@ pytest tests/onboarding/test_language_selector_and_password_strength.py -v --max
 # pytest -m critical
 ```
 
-### Run tests (PyCharm)
+PyCharm: [Run tests (PyCharm)](#run-tests-pycharm).
 
-1. Complete [macOS one-time setup](#macos--one-time-setup) above.
-2. **Interpreter**: `test/e2e/.venv/bin/python` — select **existing**, do not create a new venv from Homebrew or python.org.
-3. **Working directory**: `test/e2e`
-4. Use [`.env`](.env.example) (`SQUISH_DIR` / `PYTHONPATH`) — the setup script copies `.env.example` → `.env` if needed.
-5. Set `AUT_PATH` in `configs/_local.py`.
-6. Run pytest, e.g. the onboarding file above or `-m critical`.
+---
+
+## Run tests (PyCharm)
+
+Same on Linux, Windows, and macOS. Finish the one-time setup for your OS first.
+
+1. **Interpreter**: existing `.venv` — `test/e2e/.venv/bin/python` (Linux / macOS) or `test\e2e\.venv\Scripts\python.exe` (Windows). Do not create a new venv (on Mac: not from Homebrew or python.org).
+2. **Working directory**: `test/e2e`
+3. Set `AUT_PATH` in `configs/_local.py`.
+4. **`SQUISH_DIR` alone is not enough** — Python finds `squishtest` via `PYTHONPATH`. Put the variables on the **pytest run configuration** (Run → Edit Configurations → Environment variables), not on the project interpreter, and not in `/etc/profile`, `~/.zshrc`, or Windows user/system environment.
+5. If putting `PYTHONPATH` in `.env` makes PyCharm hang on “Updating Python interpreter”, omit it from `.env` and set it only on that run configuration.
+6. Run pytest, e.g. `tests/onboarding/test_language_selector_and_password_strength.py` or `-m critical`.
+
+Use your real Squish path.
+
+**Linux** (also `LD_LIBRARY_PATH`, or `squishtest`’s `.so` will not load):
+
+```
+SQUISH_DIR=/home/you/Squish_9_2_2
+PYTHONPATH=/home/you/Squish_9_2_2/lib:/home/you/Squish_9_2_2/lib/python
+LD_LIBRARY_PATH=/home/you/Squish_9_2_2/lib:/home/you/Squish_9_2_2/python3/lib
+```
+
+**Windows** (`PYTHONPATH` uses `;`). Prepend Squish `lib` and `python3\lib` to `PATH` in the same run configuration — do not replace the whole `PATH`:
+
+```
+SQUISH_DIR=C:\squish-runner-9.2.2-qt-6.11
+PYTHONPATH=C:\squish-runner-9.2.2-qt-6.11\lib;C:\squish-runner-9.2.2-qt-6.11\lib\python
+```
+
+**macOS:**
+
+```
+SQUISH_DIR=/Applications/Squish_9_2_2
+PYTHONPATH=/Applications/Squish_9_2_2/lib:/Applications/Squish_9_2_2/lib/python
+```
 
 ---
 
@@ -167,10 +216,12 @@ pytest tests/onboarding/test_language_selector_and_password_strength.py -v --max
 
 | Source | Linux | Windows | macOS |
 |--------|-------|---------|-------|
-| **CI nightly** | `.AppImage` from [Jenkins nightly](https://ci.status.im/job/status-desktop/job/nightly/) | `Status.exe` from nightly | DMG with Squish entitlements ([below](#getting-a-mac-build-from-ci)) |
-| **Local dev build** | `bin/nim_status_client` or AppImage | `bin\Status.exe` | `Status.app` or `bin/nim_status_client` |
+| **CI nightly** | `.AppImage` from [Jenkins nightly](https://ci.status.im/job/status-desktop/job/nightly/) | `StatusApp\bin\Status.exe` from the nightly package | DMG with Squish entitlements → `Status.app` ([below](#getting-a-mac-build-from-ci)) |
+| **Local dev build** | `bin/nim_status_client` | `bin\StatusDev.exe` | `bin/StatusDev.app` |
 
-CI builds are usually more stable; local dev builds work on all platforms.
+On Windows use the packaged launcher **`StatusApp\bin\Status.exe`** (e2e requires `Status` in `AUT_PATH`). A local `make` build is **`StatusDev.exe`**. On macOS, CI is **`Status.app`**; `make run` produces **`bin/StatusDev.app`**. Set `AUT_PATH` to the `.app` bundle.
+
+CI packaged builds are usually more stable; local dev builds work on all platforms.
 
 ### Getting a Mac build from CI
 
@@ -236,17 +287,19 @@ Compose does not write the fleets JSON. Generate it from the repo root (`--proje
 python3 test/e2e/scripts/scan_waku_fleet.py --project <compose-project>
 ```
 
-That writes `assets/local-waku-fleets-config.json`.
+That writes `assets/local-waku-fleets-config.json` (override with `--output`; `--fleet-name` must match the fleet you will run, default `status-app.test`).
 
 Leave this running. In another terminal, from `test/e2e` with your venv activated:
 
 ```bash
 export E2E_LOCAL_WAKU_FLEET=1
-# export STATUS_FLEET=status-app.test   # optional; must match assets/local-waku-fleets-config.json
+# export STATUS_FLEET=status-app.test   # optional; must be a key in the JSON
 pytest -m critical
 ```
 
-Without `E2E_LOCAL_WAKU_FLEET`, the app uses built-in fleets (e.g. `status.prod`). CI sets this on Linux and Windows in [ci/Jenkinsfile.tests-e2e](../../ci/Jenkinsfile.tests-e2e).
+`E2E_LOCAL_WAKU_FLEET` makes the runner point the app at that JSON: CLI `--waku-fleets-config` and env **`STATUS_FLEET_CONFIG_FILE`** (what status-go reads). Locally you do not need to export `STATUS_FLEET_CONFIG_FILE` — startaut sets it to `<repo>/assets/local-waku-fleets-config.json`. CI sets the same variable on the agent (`ci/Jenkinsfile.tests-e2e`). If you generate the file elsewhere, copy or write it to that path (the runner does not read a custom `STATUS_FLEET_CONFIG_FILE` from your shell).
+
+Without `E2E_LOCAL_WAKU_FLEET`, the app uses built-in fleets (e.g. `status.prod`).
 
 ---
 
@@ -268,7 +321,13 @@ pytest --markers        # list all marks
 
 | Problem | What to try |
 |---------|-------------|
-| `SQUISH_DIR` error | Mac: `source .venv/bin/activate`. Linux/Windows: `export SQUISH_DIR=...`. PyCharm: use `.env`. |
+| `SQUISH_DIR` error | Activate `.venv` (terminal) or set env on the [PyCharm](#run-tests-pycharm) run configuration. Do **not** put Squish in `/etc/profile`. |
+| Linux: `python3 -m venv` / ensurepip | `sudo apt install python3-venv`, then `./scripts/setup_linux_squish.sh` |
+| Linux: `Cannot import 'setuptools.build_meta'` / numpy on 3.12 | Unset `PYTHONPATH`, `rm -rf .venv`, then `PYTHON=$HOME/Squish_9_2_2/python/bin/python3.10 ./scripts/setup_linux_squish.sh` (or `$SQUISH_DIR/python/bin/python3.10` if Squish is under `/opt`) |
+| Linux: `import squishtest` / `.so` | Re-run `./scripts/setup_linux_squish.sh` so `LD_LIBRARY_PATH` is in `activate` |
+| PyCharm: `No module named 'squishtest'` | `SQUISH_DIR` is not enough. Set `PYTHONPATH` (and Linux `LD_LIBRARY_PATH` / Windows `PATH`) on the [pytest run configuration](#run-tests-pycharm), not the interpreter. |
+| PyCharm hangs on “Updating Python interpreter” | Do not put `PYTHONPATH` on the interpreter, in `/etc/profile`, or in `.env` if the IDE loads it for the SDK. Set it only on the run configuration. |
+| Windows: Squish not found | `$env:SQUISH_DIR = 'C:\squish-runner-9.2.2-qt-6.11'; .\scripts\setup_windows_squish.ps1` |
 | Mac: Squish Python not found | `SQUISH_DIR=/Applications/Squish_9_2_2 ./scripts/setup_mac_squish.sh` |
 | Mac: `Library not loaded: .../Python.framework/Versions/3.10` / `Abort trap: 6` | Clean Mac has no python.org Intel Python — that is expected. Do not install it and do not use `python3.10-intel64` as the venv base. Re-run `./scripts/setup_mac_squish.sh`. |
 | Mac: `Failed building wheel for scrypt` | Install x86_64 OpenSSL: `arch -x86_64 /usr/local/bin/brew install openssl@3`, then re-run setup. ARM Homebrew (`/opt/homebrew`) will not work. |
