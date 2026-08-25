@@ -293,10 +293,16 @@ Loader {
             selectedText,
             openExpanded,
             deferCloseOnPressOutside,
-            closeOnPressOutsideRestoreDelay: deferCloseOnPressOutside && delegate?.isMobile ? 1000 : 350
+            closeOnPressOutsideRestoreDelay: deferCloseOnPressOutside && delegate?.isMobile ? 1000 : 350,
+            // A hover menu must not grab focus, otherwise opening it steals focus from a
+            // message whose text is selected and clears that selection just on hover.
+            focus: !closeOnHoverExit
         }
 
-        d.preventVirtualKeyboardOpening()
+        // Only steal focus (to keep the virtual keyboard closed) for explicitly-invoked
+        // menus. Doing so on hover would clear a text selection held by another message.
+        if (!closeOnHoverExit)
+            d.preventVirtualKeyboardOpening()
         // Keep the text selection visible/available while the menu is open; the popup takes focus
         // and would otherwise clear it. Restored in the menu's onAboutToHide handler.
         if (delegate)
