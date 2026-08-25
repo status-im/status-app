@@ -59,7 +59,10 @@ QtObject:
     return uriPath
 
   proc getStatusSupportBotChatKey*(self: Utils): string {.slot.} =
-    return getEnv("STATUS_SUPPORT_BOT_CHAT_KEY")
+    let envVarChatKey = getEnv("STATUS_SUPPORT_BOT_CHAT_KEY")
+    if envVarChatKey.len > 0:
+      return envVarChatKey
+    return "zQ3shX8r9eRDTEQQhks4qciDunphxdY1w1KjvZ32Pn7dGdWTL"
 
   proc collectLogFilesJson*(self: Utils): string {.slot.} =
     ## Return a JSON array of absolute file paths for all "*.log" files under constants.DATADIR (recursive).

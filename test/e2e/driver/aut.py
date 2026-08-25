@@ -95,7 +95,8 @@ class AUT:
             str(self.path),
             f'--datadir={self.app_data}',
         ]
-        child_env = None
+        child_env = os.environ.copy()
+        child_env['STATUS_GO_DISABLE_SUPPORT_BOT_CONTACT_REQUEST'] = '1'
         use_local_waku = os.environ.get('E2E_LOCAL_WAKU_FLEET', '').lower() in _LOCAL_WAKU_ENV_VALUES
         if use_local_waku:
             repo_root = configs.testpath.ROOT.parent.parent
@@ -108,7 +109,6 @@ class AUT:
                     f'--waku-fleets-config={local_config}',
                 ]
             )
-            child_env = os.environ.copy()
             child_env['STATUS_FLEET'] = local_fleet
             child_env['STATUS_FLEET_CONFIG_FILE'] = str(local_config)
         command.extend(
