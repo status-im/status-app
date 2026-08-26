@@ -10,6 +10,8 @@
 
 #include <StatusQ/typesregistration.h>
 
+#include "inputmethodtester.h"
+
 using namespace Qt::Literals::StringLiterals;
 
 extern "C" void statusq_installBoostedIncubationController(void* engine, int msPerTick,
@@ -49,6 +51,9 @@ public slots:
             engine->addImportPath(path);
 
         registerStatusQTypes();
+
+        // Test-only helper for driving the IME/input-method path from QML tests.
+        qmlRegisterType<InputMethodTester>("Storybook.Testing", 1, 0, "InputMethodTester");
 
         // Register the same context-property mocks the storybook app uses (e.g. userProfile),
         // so components that read them (via Utils) behave the same under test.
