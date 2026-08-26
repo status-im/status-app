@@ -1005,7 +1005,7 @@ Loader {
                                                             const menuWidth = contextMenu?.maxImplicitWidth || 234
                                                             const menuHeight = contextMenu?.implicitHeight || 0
                                                             const x = Math.max(0, delegate.width - menuWidth - Theme.padding)
-                                                            return delegate.mapToItem(root.item, x, -menuHeight / 2)
+                                                            return delegate.mapToItem(root.item, x, -menuHeight / 4 * 3)
                                                         },
                                                         closeOnHoverExit: true
                                                     })
