@@ -1347,6 +1347,12 @@ QtObject {
         return getCommunityChannelShareLink(communityId, channelId)
     }
 
+    function isThreadSupportedChatType(chatType) {
+        return chatType === Constants.chatType.communityChat ||
+                chatType === Constants.chatType.oneToOne ||
+                chatType === Constants.chatType.privateGroupChat
+    }
+
     function getCommunityDataFromSharedLink(link: string) {
         const communityDataString = sharedUrlsModuleInst.parseCommunitySharedUrl(link)
         try {

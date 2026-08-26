@@ -45,6 +45,8 @@ type
     PermissionsCheckOngoing
     Hidden # derived: chat hidden by its collapsed category
            # (depends on CategoryOpened, Active, Muted, HasUnreadMessages, NotificationsCount)
+    IsThread
+    ParentChatId
 
 QtObject:
   type
@@ -143,6 +145,8 @@ QtObject:
       ModelRole.MissingEncryptionKey.int:"missingEncryptionKey",
       ModelRole.PermissionsCheckOngoing.int:"permissionsCheckOngoing",
       ModelRole.Hidden.int:"hidden",
+      ModelRole.IsThread.int:"isThread",
+      ModelRole.ParentChatId.int:"parentChatId",
 
     }.toTable
 
@@ -227,6 +231,10 @@ QtObject:
       return newQVariant(item.permissionsCheckOngoing)
     of ModelRole.Hidden:
       return newQVariant(item.hidden)
+    of ModelRole.IsThread:
+      return newQVariant(item.isThread)
+    of ModelRole.ParentChatId:
+      return newQVariant(item.parentChatId)
 
   proc getItemIdxById(items: seq[ChatItem], id: string): int =
     var idx = 0
