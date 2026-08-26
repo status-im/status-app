@@ -38,6 +38,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "es"; MessagesFile: "compiler:Languages\Spanish.isl"
 Name: "ko"; MessagesFile: "compiler:Languages\Korean.isl"
 Name: "cs"; MessagesFile: "compiler:Languages\Czech.isl"
+Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
+Name: "ua"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
 [Files]
 
