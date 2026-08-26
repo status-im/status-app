@@ -163,8 +163,8 @@ QtObject:
   proc unmuteCategory*(self: View, categoryId: string) {.slot.} =
     self.delegate.unmuteCategory(categoryId)
 
-  proc markAllMessagesRead*(self: View, chatId: string) {.slot.} =
-    self.delegate.markAllMessagesRead(chatId)
+  proc markAllMessagesRead*(self: View, chatId: string, threadId: string = "") {.slot.} =
+    self.delegate.markAllMessagesRead(chatId, threadId)
 
   proc clearChatHistory*(self: View, chatId: string) {.slot.} =
     self.delegate.clearChatHistory(chatId)

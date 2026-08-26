@@ -342,7 +342,7 @@ StatusMenu {
         onTriggered: root.openThread()
         enabled: !root.disabledForChat &&
                 root.threadsFeatureEnabled &&
-                root.chatType === Constants.chatType.communityChat
+                Utils.isThreadSupportedChatType(root.chatType)
     }
 
     MsgCtxAction {
