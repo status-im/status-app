@@ -308,6 +308,7 @@ Control {
                     Layout.fillWidth: true
 
                     StatusPinMessageDetails {
+                        Layout.maximumWidth: parent.width
                         active: root.isPinned
                         visible: active
                         pinnedMsgInfoText: root.pinnedMsgInfoText

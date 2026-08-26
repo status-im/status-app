@@ -59,11 +59,13 @@ Loader {
                 text: pinnedMsgInfoText
             }
             StatusBaseText {
+                Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
                 color: Theme.palette.directColor1
                 font.pixelSize: Theme.secondaryTextFontSize
                 font.weight: Font.Medium
                 text: pinnedBy
+                elide: Text.ElideRight
             }
         }
     }
