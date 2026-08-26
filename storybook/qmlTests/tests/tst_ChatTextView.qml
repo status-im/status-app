@@ -165,6 +165,24 @@ Item {
             compare(control.selectedText, "")
         }
 
+        // Selection is mouse-only: a touch drag over a selectable view must not select anything
+        // (touch is handled one level above — tap activates links, long press opens the menu).
+        function test_touchDragDoesNotSelect() {
+            control.selectable = true
+            control.blocks = [
+                { type: "text", html: "first line" },
+                { type: "text", html: "second line" }
+            ]
+            tryVerify(() => control.implicitHeight > 0)
+
+            const touch = touchEvent(control)
+            touch.press(0, control, 0, 3).commit()
+            touch.move(0, control, control.width - 4, control.implicitHeight - 4).commit()
+            touch.release(0, control, control.width - 4, control.implicitHeight - 4).commit()
+
+            compare(control.selectedText, "", "touch must not select text")
+        }
+
         // With `selectable`, dragging from the first block into the second selects across
         // both — the combined selectedText contains text from each.
         function test_crossBlockSelection() {
@@ -510,6 +528,46 @@ Item {
             mouseRelease(control, 10, 5)
             compare(mentionSpy.count, 1)
             compare(mentionSpy.signalArguments[0][0], "0xabc")
+        }
+
+        // Touch input doesn't select; links are activated via the public activateLinkAt(),
+        // which the message view calls from its touch TapHandler.
+        function test_activateLinkAt_link() {
+            control.selectable = true
+            control.blocks = [{ type: "text", html: '<a href="https://status.im">https://status.im</a>' }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            linkSpy.clear()
+            control.activateLinkAt(Qt.point(10, 5))
+            compare(linkSpy.count, 1)
+            compare(linkSpy.signalArguments[0][0], "https://status.im")
+        }
+
+        function test_activateLinkAt_mention() {
+            control.selectable = true
+            control.blocks = [{ type: "text", html: '<a href="0xabc">@alice</a>' }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            mentionSpy.clear()
+            control.activateLinkAt(Qt.point(5, 5))
+            compare(mentionSpy.count, 1)
+            compare(mentionSpy.signalArguments[0][0], "0xabc")
+        }
+
+        // A real touch tap (not the direct activateLinkAt() API call above) must also activate
+        // a link. The read-only TextEdit backing each block grabs touch points exclusively by
+        // default, so this guards against that grab silently swallowing the tap.
+        function test_realTouchTapActivatesLink() {
+            control.selectable = true
+            control.blocks = [{ type: "text", html: '<a href="https://status.im">https://status.im</a>' }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            linkSpy.clear()
+            const touch = touchEvent(control)
+            touch.press(0, control, 10, 5).commit()
+            touch.release(0, control, 10, 5).commit()
+            compare(linkSpy.count, 1)
+            compare(linkSpy.signalArguments[0][0], "https://status.im")
         }
 
         // A drag (selection) must NOT be treated as a link click.
