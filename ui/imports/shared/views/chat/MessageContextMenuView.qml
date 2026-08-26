@@ -352,8 +352,8 @@ StatusMenu {
     MsgCtxAction {
         id: copySelectedTextItem
         objectName: "messageContextMenu_copySelection"
-        text: qsTr("Copy")
-        icon.name: "copy"
+        text: qsTr("Copy selected")
+        icon.name: "copy_selected"
         enabled: root.expanded && !!root.selectedText
         onTriggered: root.copyToClipboard(root.selectedText)
     }
