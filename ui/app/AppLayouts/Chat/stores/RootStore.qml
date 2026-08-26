@@ -601,19 +601,22 @@ QtObject {
         }
 
         property var oneToOneContactModelEntryLoader: Loader {
-            active: d.activeChatId && d.activeChatType === Constants.chatType.oneToOne
+            active: d.activeContactId && d.activeChatType === Constants.chatType.oneToOne
 
             sourceComponent: ContactModelEntry {
-                publicKey: d.activeChatId
+                publicKey: d.activeContactId
                 contactsModel: root.contactsModel
                 onPopulateContactDetailsRequested: {
-                    root.populateContactDetailsRequested(d.activeChatId)
+                    root.populateContactDetailsRequested(d.activeContactId)
                 }
             }
         }
 
         readonly property string activeChatId: chatCommunitySectionModule && chatCommunitySectionModule.activeItem ? chatCommunitySectionModule.activeItem.id : ""
         readonly property int activeChatType: chatCommunitySectionModule && chatCommunitySectionModule.activeItem ? chatCommunitySectionModule.activeItem.type : -1
+        readonly property bool activeIsThread: chatCommunitySectionModule && chatCommunitySectionModule.activeItem ? chatCommunitySectionModule.activeItem.isThread : false
+        readonly property string activeContactId: chatCommunitySectionModule && chatCommunitySectionModule.activeItem ?
+                                                     (d.activeIsThread ? chatCommunitySectionModule.activeItem.parentChatId : d.activeChatId) : ""
         readonly property bool amIMember: chatCommunitySectionModule ? chatCommunitySectionModule.amIMember : false
 
         property var oneToOneChatContact: oneToOneContactModelEntryLoader.active ? d.oneToOneContactModelEntryLoader.item.contactDetails : undefined

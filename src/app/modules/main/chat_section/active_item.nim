@@ -20,6 +20,7 @@ QtObject:
 
   proc setActiveItemData*(self: ActiveItem, item: ChatItem) =
     self.item = item
+    self.idChanged()
 
   # Used when there is no longer an active item (last channel was deleted)
   proc resetActiveItemData*(self: ActiveItem) =
@@ -82,6 +83,24 @@ QtObject:
 
   QtProperty[int] type:
     read = getType
+
+  proc getIsThread(self: ActiveItem): bool {.slot.} =
+    if(self.item.isNil):
+      return false
+    return self.item.isThread
+
+  QtProperty[bool] isThread:
+    read = getIsThread
+    notify = idChanged
+
+  proc getParentChatId(self: ActiveItem): string {.slot.} =
+    if(self.item.isNil):
+      return ""
+    return self.item.parentChatId
+
+  QtProperty[string] parentChatId:
+    read = getParentChatId
+    notify = idChanged
 
   proc getHasUnreadMessages(self: ActiveItem): bool {.slot.} =
     if(self.item.isNil):
