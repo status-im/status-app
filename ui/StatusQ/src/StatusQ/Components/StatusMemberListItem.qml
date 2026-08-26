@@ -7,6 +7,8 @@ import StatusQ.Core
 import StatusQ.Controls
 import StatusQ.Core.Utils
 
+import MobileUI
+
 /*!
    \qmltype StatusMemberListItem
    \inherits ItemDelegate
@@ -111,7 +113,7 @@ ItemDelegate {
        \qmlproperty color StatusMemberListItem::color
        Defines the background color of the delegate
     */
-    property color color: hovered || highlighted ? Theme.palette.baseColor2 : Theme.palette.baseColor4
+    property color color: hoverHandler.hovered || highlighted ? Theme.palette.baseColor2 : Theme.palette.baseColor4
 
     /*!
        \qmlproperty list<Item> StatusMemberListItem::components
@@ -177,11 +179,27 @@ ItemDelegate {
 
     // handles the hover & cursor for the item except the extra buttons
     HoverHandler {
-       cursorShape: root.enabled && root.hoverEnabled && root.hovered ? Qt.PointingHandCursor : undefined
+        id: hoverHandler
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
+        cursorShape: root.enabled && root.hoverEnabled && root.hovered ? Qt.PointingHandCursor : undefined
     }
 
-    StatusSecondaryActionHandler {
-        onTriggered: pos => root.rightClicked(pos)
+    // Right-click: mouse or similar
+    TapHandler {
+        acceptedButtons: Qt.RightButton
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
+        onTapped: (eventPoint, button) => root.rightClicked(eventPoint.position)
+    }
+
+    // Long-press: touch screens only (but needs to reemit the clicked() signal due to the active grab)
+    TapHandler {
+        gesturePolicy: TapHandler.ReleaseWithinBounds
+        acceptedDevices: PointerDevice.TouchScreen
+        onTapped: root.clicked()
+        onLongPressed: {
+            MobileUI.vibrate() // no-op on non-mobile platforms (e.g. laptop touch screens)
+            root.rightClicked(point.position)
+        }
     }
 
     contentItem: GridLayout {
