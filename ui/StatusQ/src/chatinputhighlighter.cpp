@@ -796,6 +796,11 @@ void ChatInputHighlighter::pasteFromClipboard(int selectionStart, int selectionE
     // it up front) so the first insert replaces it as one selection-aware operation — this makes a
     // single Ctrl+Z restore the replaced text with the caret back at its end, rather than two undo
     // steps that collapse the caret to the document start.
+    // Insertion begins at the selection start (or the caret). Remember whether that spot is inside a
+    // quote block so continuation lines of a multi-line paste can be kept in the quote (see below).
+    const int insertPos = (selectionStart != selectionEnd) ? selectionStart : cursorPosition;
+    const bool inQuote = isInQuoteBlock(insertPos);
+
     QTextCursor cursor(document());
     if (selectionStart != selectionEnd) {
         cursor.setPosition(selectionStart);
@@ -833,10 +838,22 @@ void ChatInputHighlighter::pasteFromClipboard(int selectionStart, int selectionE
                 if (cursor.hasSelection())
                     cursor.removeSelectedText();
                 cursor.insertBlock();
+                // Pasting into a quote block: keep this continuation line in the quote by
+                // prefixing it right away, so following tokens append after the "> ".
+                if (inQuote)
+                    cursor.insertText(QStringLiteral("> "));
             }
         }
     } else if (mime->hasText()) {
-        insertEmojiAwareText(cursor, mime->text());
+        // Pasting into a quote block: keep every continuation line in the quote by turning each
+        // line break into "\n> ". The first line has no leading break, so it merges into the
+        // already-present "> " prefix. Done inline (not as a post-pass) so the final insert ends
+        // at the end of the pasted content — this keeps the caret there on the initial paste and
+        // after undo→redo. Pre-existing "> " lines get double-prefixed ("> > "), which is fine.
+        QString text = mime->text();
+        if (inQuote)
+            text.replace(QLatin1Char('\n'), QStringLiteral("\n> "));
+        insertEmojiAwareText(cursor, text);
     }
     cursor.endEditBlock();
 }

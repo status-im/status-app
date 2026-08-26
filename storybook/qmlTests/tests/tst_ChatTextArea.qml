@@ -4,6 +4,8 @@ import QtTest
 import StatusQ
 import shared.status
 
+import Storybook.Testing
+
 Item {
     id: root
     width: 600
@@ -44,6 +46,13 @@ Item {
             required property int start
             required property int length
         }
+    }
+
+    // Drives the input-method (IME) path: dispatches a real QInputMethodEvent commit to the
+    // control, the way an on-screen keyboard delivers text (e.g. Android's virtual-keyboard
+    // context-menu "Paste").
+    InputMethodTester {
+        id: imeTester
     }
 
     SignalSpy {
@@ -663,6 +672,64 @@ Item {
             tryCompare(plain, "text", "A@aliceB")
         }
 
+        // Internal round-trip of multi-line plain text: copying multiple blocks writes paragraph
+        // separators into the private MIME (type-2 tokens), and pasting them back reconstructs the
+        // block structure exactly.
+        function test_copyPaste_multiLineRoundTrip() {
+            control.text = "a\nb\nc"
+            control.forceActiveFocus()
+            control.selectAll()
+            keyClick(Qt.Key_C, Qt.ControlModifier)
+
+            control.text = ""
+            control.cursorPosition = 0
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            tryCompare(control, "text", "a\nb\nc")
+            compare(control.cursorPosition, control.length)
+        }
+
+        // Internal round-trip preserving a mention that sits across a paragraph break: the type-0
+        // text, type-1 mention and type-2 paragraph-separator tokens all round-trip together.
+        function test_copyPaste_mentionAcrossParagraphsRoundTrip() {
+            const M = String.fromCharCode(0xFFFC)
+            control.text = "A"
+            control.insertMention(1, "@alice", "0xabc")
+            control.insert(control.length, "\nB") // -> "A<mention>\nB"
+            compare(control.text, "A" + M + "\nB")
+            tryCompare(mentionsRepeater, "count", 1)
+
+            control.forceActiveFocus()
+            control.selectAll()
+            keyClick(Qt.Key_C, Qt.ControlModifier)
+
+            control.text = ""
+            control.cursorPosition = 0
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            tryCompare(control, "text", "A" + M + "\nB")
+            tryCompare(mentionsRepeater, "count", 1)
+            compare(mentionsRepeater.itemAt(0).name, "@alice")
+            compare(mentionsRepeater.itemAt(0).pubKey, "0xabc")
+        }
+
+        // A multi-line internal paste (several insertBlock/insertText tokens) collapses into a single
+        // undo step: one Ctrl+Z removes the whole paste and restores the pre-paste text.
+        function test_pasteInternalMultiLine_singleUndoRestores() {
+            control.text = "a\nb"
+            control.forceActiveFocus()
+            control.selectAll()
+            keyClick(Qt.Key_C, Qt.ControlModifier)
+
+            control.text = "Z"
+            control.cursorPosition = control.length
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+            tryCompare(control, "text", "Za\nb")
+
+            keyClick(Qt.Key_Z, Qt.ControlModifier)
+            compare(control.text, "Z")
+        }
+
         // Pasting over a selection replaces it in a single undo step: one Ctrl+Z restores the
         // replaced text directly (the selection removal and the insertion share one edit block),
         // with the caret left at the end of the restored text (not collapsed to its start).
@@ -680,6 +747,271 @@ Item {
             // Caret restored to the end of the originally-selected text ("bc"), not collapsed to
             // the document start.
             compare(control.cursorPosition, 3)
+        }
+
+        // ── paste into a quote block ─────────────────────────────────────────────
+
+        // Pasting multi-line text into a quote keeps the whole paste inside the quote: the first
+        // line merges into the current "> " line, every following line gains a "> " prefix. The
+        // caret lands at the end of the pasted content.
+        function test_pasteMultiLineIntoQuote_prefixesContinuationLines() {
+            control.text = "> "
+            control.forceActiveFocus()
+            control.cursorPosition = 2 // quote content start, right after "> "
+            ClipboardUtils.setText("a\nb\nc")
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            tryCompare(control, "text", "> a\n> b\n> c")
+            compare(control.cursorPosition, control.length) // end of the last pasted line
+        }
+
+        // A single-line paste into a quote is unchanged (no continuation lines to prefix).
+        function test_pasteSingleLineIntoQuote_unchanged() {
+            control.text = "> "
+            control.forceActiveFocus()
+            control.cursorPosition = 2
+            ClipboardUtils.setText("x")
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            tryCompare(control, "text", "> x")
+            compare(control.cursorPosition, 3)
+        }
+
+        // Outside a quote block, a multi-line paste is inserted verbatim — no "> " prefixing.
+        function test_pasteMultiLineOutsideQuote_unchanged() {
+            control.text = ""
+            control.forceActiveFocus()
+            control.cursorPosition = 0
+            ClipboardUtils.setText("a\nb")
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            tryCompare(control, "text", "a\nb")
+            compare(control.cursorPosition, control.length)
+        }
+
+        // A multi-line paste into a quote (with its added "> " prefixes) is one undo step: a single
+        // Ctrl+Z restores the pre-paste state.
+        function test_pasteMultiLineIntoQuote_singleUndoRestores() {
+            control.text = "> "
+            control.forceActiveFocus()
+            control.cursorPosition = 2
+            ClipboardUtils.setText("a\nb\nc")
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+            tryCompare(control, "text", "> a\n> b\n> c")
+
+            keyClick(Qt.Key_Z, Qt.ControlModifier)
+            compare(control.text, "> ")
+        }
+
+        // Undo then redo of a multi-line paste into a quote restores the text and leaves the caret
+        // at the end of the pasted content — not on the second line (regression: the prefixes must
+        // be inserted inline so the last edit ends at the paste end).
+        function test_pasteMultiLineIntoQuote_redoKeepsCaretAtEnd() {
+            control.text = "> "
+            control.forceActiveFocus()
+            control.cursorPosition = 2
+            ClipboardUtils.setText("a\nb\nc")
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+            tryCompare(control, "text", "> a\n> b\n> c")
+
+            keySequence(StandardKey.Undo)
+            compare(control.text, "> ")
+
+            keySequence(StandardKey.Redo)
+            tryCompare(control, "text", "> a\n> b\n> c")
+            compare(control.cursorPosition, control.length) // end of paste, not the second line
+        }
+
+        // The internal (mention-preserving) paste path is quote-aware too: a multi-line selection
+        // copied from the input keeps every continuation line in the quote when pasted into it.
+        function test_pasteInternalMultiLineIntoQuote_prefixesContinuationLines() {
+            control.text = "a\nb\nc"
+            control.forceActiveFocus()
+            control.selectAll()
+            keyClick(Qt.Key_C, Qt.ControlModifier)
+
+            control.text = "> "
+            control.cursorPosition = 2
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            tryCompare(control, "text", "> a\n> b\n> c")
+            compare(control.cursorPosition, control.length)
+        }
+
+        // ── IME commit paste ──────────────────
+
+        // Pasting via the on-screen keyboard's context menu arrives as an IME commit string, not a
+        // key event or the in-app "Paste" action — so it bypasses pasteText()/Keys.onPressed. When
+        // the caret is in a quote block, the InputMethodEventFilter must reroute a multi-line commit
+        // through the quote-aware paste path instead of letting the TextArea insert it verbatim
+        // (which would break out of the quote). Continuation lines gain a "> " prefix.
+        function test_imeCommitMultiLineIntoQuote_prefixesContinuationLines() {
+            control.text = "> "
+            control.forceActiveFocus()
+            control.cursorPosition = 2
+            ClipboardUtils.setText("a\nb\nc")
+
+            imeTester.commit(control, "a\nb\nc")
+
+            tryCompare(control, "text", "> a\n> b\n> c")
+            compare(control.cursorPosition, control.length)
+        }
+
+        // The rerouted IME paste is one undo step (same as the Ctrl+V / in-app-menu path): a single
+        // Ctrl+Z restores the pre-paste "> ".
+        function test_imeCommitMultiLineIntoQuote_singleUndoRestores() {
+            control.text = "> "
+            control.forceActiveFocus()
+            control.cursorPosition = 2
+            ClipboardUtils.setText("a\nb\nc")
+
+            imeTester.commit(control, "a\nb\nc")
+            tryCompare(control, "text", "> a\n> b\n> c")
+
+            keyClick(Qt.Key_Z, Qt.ControlModifier)
+            compare(control.text, "> ")
+        }
+
+        // Outside a quote block the IME commit is left to the TextArea and inserted verbatim — the
+        // filter must not intercept it (no "> " prefixing, no double insertion).
+        function test_imeCommitMultiLineOutsideQuote_insertedVerbatim() {
+            control.text = ""
+            control.forceActiveFocus()
+            control.cursorPosition = 0
+            ClipboardUtils.setText("a\nb")
+
+            imeTester.commit(control, "a\nb")
+
+            tryCompare(control, "text", "a\nb")
+        }
+
+        // A single-line IME commit inside a quote is ordinary typing/paste with nothing to prefix —
+        // the filter must not intercept it, so it inserts once, verbatim.
+        function test_imeCommitSingleLineIntoQuote_insertedVerbatim() {
+            control.text = "> "
+            control.forceActiveFocus()
+            control.cursorPosition = 2
+            ClipboardUtils.setText("x")
+
+            imeTester.commit(control, "x")
+
+            tryCompare(control, "text", "> x")
+        }
+
+        // ── IME commit: quote continuation (OSK new-line) ────────────────────────
+
+        // The on-screen keyboard's new-line commits "\n" through the IME, bypassing Keys.onPressed.
+        // Inside a quote block the filter applies the same continuation as desktop Enter: start a
+        // new "> " line and consume the event so no bare "\n" is inserted. Mirrors
+        // test_quoteEnterContinues via the IME path.
+        function test_imeNewline_continuesQuoteBlock() {
+            control.text = "> A"
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            imeTester.commit(control, "\n")
+
+            compare(control.text, "> A\n> ")
+            compare(control.cursorPosition, control.length)
+        }
+
+        // A new-line committed on the second of two consecutive empty quote lines drops both,
+        // exiting the quote — the IME-path counterpart of test_quoteDoubleEnterExits.
+        function test_imeNewline_doubleEmptyExitsQuote() {
+            control.text = "> A\n> \n> "
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            imeTester.commit(control, "\n")
+
+            compare(control.text, "> A\n")
+        }
+
+        // Outside a quote block the "\n" commit is not intercepted — the TextArea inserts a real
+        // newline as usual (continueQuoteBlock returns false, event not accepted).
+        function test_imeNewline_outsideQuoteInsertsNewline() {
+            control.text = "ab"
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            imeTester.commit(control, "\n")
+
+            compare(control.text, "ab\n")
+        }
+
+        // ── IME commit: ASCII-emoji conversion (OSK space / new-line) ─────────────
+
+        // Completing an emoticon with a space committed through the IME converts it, just like the
+        // desktop Space key: convertAsciiEmoji() runs before the TextArea inserts the space.
+        function test_imeSpace_convertsAsciiEmoji() {
+            control.asciiEmojiConversion = true
+            control.text = "hi :)"
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            imeTester.commit(control, " ")
+
+            compare(control.textWithMentions(), "hi " + slightlySmiling + " ")
+        }
+
+        // A new-line committed through the IME converts the emoticon too. Outside a quote block, so
+        // the newline is inserted (no quote continuation) after the conversion.
+        function test_imeNewline_convertsAsciiEmoji() {
+            control.asciiEmojiConversion = true
+            control.text = "hi :)"
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            imeTester.commit(control, "\n")
+
+            compare(control.textWithMentions(), "hi " + slightlySmiling + "\n")
+        }
+
+        // ── IME preedit (composition) awareness ──────────────────────────────────
+
+        // While an IME composition is active, the mention filter splices in the preedit text so
+        // suggestions reflect what the user visually typed (committed "@a" + preedit "bc" → "abc").
+        function test_preedit_extendsMentionFilter() {
+            control.text = "@a"
+            control.forceActiveFocus()
+            control.cursorPosition = 2
+
+            imeTester.setPreedit(control, "bc")
+
+            tryCompare(control, "enteringSuggestion", true)
+            tryCompare(control, "mentionsFilter", "abc")
+        }
+
+        // The emoji shortcode context is preedit-aware too: a committed ":a" plus a preedit reaches
+        // the two-char trigger threshold and the filter includes the composition.
+        function test_preedit_extendsEmojiFilter() {
+            control.text = ":a"
+            control.forceActiveFocus()
+            control.cursorPosition = 2
+
+            imeTester.setPreedit(control, "bc")
+
+            tryCompare(control, "enteringEmoji", true)
+            tryCompare(control, "emojiFilter", "abc")
+        }
+
+        // An active IME composition suppresses ASCII-emoji conversion: asciiEmojiBeforeCaret() bails
+        // while preedit text is present, so a forced convert mid-composition is a no-op.
+        function test_preedit_blocksAsciiEmojiConversion() {
+            control.asciiEmojiConversion = true
+            control.text = ":)"
+            control.forceActiveFocus()
+            control.cursorPosition = 2
+
+            imeTester.setPreedit(control, "x")
+            control.convertAsciiEmoji()
+
+            compare(control.textWithMentions(), ":)")
         }
 
         // ── image paste ─────────────────────────────────────────────────────────
