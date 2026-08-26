@@ -11363,10 +11363,6 @@ chargement</translation>
 <context>
     <name>MessageContextMenuView</name>
     <message>
-        <source>Copy</source>
-        <translation>Copier</translation>
-    </message>
-    <message>
         <source>Copy message</source>
         <translation>Copier le message</translation>
     </message>
@@ -11377,6 +11373,10 @@ chargement</translation>
     <message>
         <source>Edit</source>
         <translation type="unfinished">Modifier</translation>
+    </message>
+    <message>
+        <source>Copy selected</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy link to message</source>
