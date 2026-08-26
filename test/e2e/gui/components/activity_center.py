@@ -4,15 +4,10 @@ import typing
 
 import allure
 import object as squish_object
-import squish
 
 import configs.timeouts
 import driver
-from driver.objects_access import (
-    describe_button_for_log,
-    find_notification_button_on_card,
-    item_is_visible,
-)
+from driver.objects_access import find_notification_button_on_card
 from helpers.chat_helper import skip_message_backup_popup_if_visible
 from gui.elements.button import Button
 from gui.elements.object import QObject
@@ -21,44 +16,43 @@ from gui.objects_map import names, activity_center_names
 
 LOG = logging.getLogger(__name__)
 
+_ACCEPT_BUTTON = activity_center_names.notificationCardAcceptButton['objectName']
+_DECLINE_BUTTON = activity_center_names.notificationCardDeclineButton['objectName']
+
+
 class ContactRequest:
 
     def __init__(self, obj):
         self.object = obj
-        self.contact_request: typing.Optional[str] = None
-        self.header: typing.Optional[QObject] = None
-        self.accept_button: typing.Optional[Button] = None
-        self.decline_button: typing.Optional[Button] = None
-        self.init_ui()
+        try:
+            title = getattr(obj, 'title', None)
+            self.contact_request = str(title).strip() if title not in (None, '') else None
+        except Exception:
+            self.contact_request = None
 
     def __repr__(self):
         return self.contact_request
 
-    def init_ui(self):
-        title = None
-        try:
-            title = getattr(self.object, 'title', None)
-            self.contact_request = str(title).strip() if title not in (None, '') else None
-        except Exception:
-            self.contact_request = None
-        LOG.info('ContactRequest init: title=%r -> contact_request=%r', title, self.contact_request)
-
-        self.header = QObject(activity_center_names.notificationCardHeader)
-        self.accept_button = Button(activity_center_names.notificationCardAcceptButton)
-        self.decline_button = Button(activity_center_names.notificationCardDeclineButton)
-
+    def _button(self, object_name: str) -> Button:
+        btn = find_notification_button_on_card(self.object, object_name)
+        if btn is None:
+            raise LookupError(
+                f'Button {object_name!r} not found on notification card {self.contact_request!r}'
+            )
+        return Button(real_name=driver.objectMap.realName(btn))
 
     @allure.step('Accept request')
     def accept(self):
-        time.sleep(1)
-        self.accept_button.click()
-        assert not self.accept_button.is_visible
+        button = self._button(_ACCEPT_BUTTON)
+        button.click()
+        button.wait_until_hidden()
         skip_message_backup_popup_if_visible()
 
     @allure.step('Decline request')
     def decline(self):
-        self.decline_button.click()
-        self.decline_button.wait_until_hidden()
+        button = self._button(_DECLINE_BUTTON)
+        button.click()
+        button.wait_until_hidden()
 
 
 class ActivityCenter(QObject):

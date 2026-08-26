@@ -34,7 +34,11 @@ from gui.elements.text_edit import TextEdit
 from gui.elements.text_label import TextLabel
 from gui.objects_map import messaging_names, communities_names
 from gui.screens.community import CommunityScreen, BannedCommunityScreen
-from helpers.chat_helper import message_plain_text, skip_message_backup_popup_if_visible
+from helpers.chat_helper import (
+    message_plain_text,
+    plain_text_from_message_object,
+    skip_message_backup_popup_if_visible,
+)
 from scripts.tools.image import Image
 from scripts.utils.generators import random_sticker
 
@@ -147,26 +151,56 @@ class ToolBar(QObject):
 
 
 class Message:
+    _UI_PARSE_DEPTH = 48
 
     def __init__(self, obj):
         self.object = obj
+        self._ui_parsed = False
         self.date: typing.Optional[str] = None
         self.time: typing.Optional[str] = None
         self.icon: typing.Optional[Image] = None
         self.from_user: typing.Optional[str] = None
-        self.text: typing.Optional[str] = None
-        self.delegate_button: typing.Optional[Button] = None
-        self.reply_corner: typing.Optional[QObject] = None
+        self._text: typing.Optional[str] = None
+        self._delegate_button: typing.Optional[Button] = None
+        self._reply_corner: typing.Optional[QObject] = None
         self.link_preview: typing.Optional[QObject] = None
         self.link_preview_title_object: typing.Optional[QObject] = None
-        self.image_message: typing.Optional[QObject] = None
+        self._image_message: typing.Optional[QObject] = None
         self.banner_image: typing.Optional[QObject] = None
         self.community_invitation: dict = {}
+
+    @property
+    def text(self) -> typing.Optional[str]:
+        plain = plain_text_from_message_object(self.object)
+        if plain:
+            return plain
+        self._ensure_ui_parsed()
+        return self._text
+
+    @property
+    def delegate_button(self) -> typing.Optional[Button]:
+        self._ensure_ui_parsed()
+        return self._delegate_button
+
+    @property
+    def reply_corner(self) -> typing.Optional[QObject]:
+        self._ensure_ui_parsed()
+        return self._reply_corner
+
+    @property
+    def image_message(self) -> typing.Optional[QObject]:
+        self._ensure_ui_parsed()
+        return self._image_message
+
+    def _ensure_ui_parsed(self):
+        if self._ui_parsed:
+            return
+        self._ui_parsed = True
         self.init_ui()
 
     def init_ui(self):
         try:
-            for child in walk_children(self.object):
+            for child in walk_children(self.object, self._UI_PARSE_DEPTH):
                 try:
                     object_name = getattr(child, 'objectName', '')
                     child_id = getattr(child, 'id', '')
@@ -179,8 +213,8 @@ class Message:
                         self.community_invitation['description'] = str(getattr(child, 'text', ''))
                     elif child_id == 'titleLayout':
                         self.link_preview_title_object = child
-                    elif object_name == 'StatusTextMessage_chatText':
-                        self.text = str(getattr(child, 'text', ''))
+                    elif object_name == 'StatusTextMessage_chatText' or child_id == 'chatText':
+                        self._text = str(getattr(child, 'text', ''))
                     else:
                         match child_id:
                             case 'profileImage':
@@ -189,16 +223,14 @@ class Message:
                                 self.from_user = str(getattr(child, 'text', ''))
                             case 'timestampText':
                                 self.time = str(getattr(child, 'text', ''))
-                            case 'chatText':
-                                self.text = str(getattr(child, 'text', ''))
                             case 'replyCorner':
-                                self.reply_corner = QObject(real_name=driver.objectMap.realName(child))
+                                self._reply_corner = QObject(real_name=driver.objectMap.realName(child))
                             case 'delegate':
-                                self.delegate_button = Button(real_name=driver.objectMap.realName(child))
+                                self._delegate_button = Button(real_name=driver.objectMap.realName(child))
                             case 'linksMessageView':
                                 self.link_preview = QObject(real_name=driver.objectMap.realName(child))
                             case 'imageMessage':
-                                self.image_message = child
+                                self._image_message = child
                             case 'bannerImage':
                                 self.banner_image = QObject(real_name=driver.objectMap.realName(child))
                 except (AttributeError, RuntimeError, LookupError):
@@ -208,10 +240,10 @@ class Message:
             # If walking children fails, continue with minimal initialization
             pass
 
-        if self.text is None:
+        if self._text is None:
             chat_text = _find_named_descendant(self.object, 'StatusTextMessage_chatText')
             if chat_text is not None:
-                self.text = str(getattr(chat_text, 'text', ''))
+                self._text = str(getattr(chat_text, 'text', ''))
 
     def has_community_invite(self) -> bool:
         if self.community_link:
@@ -219,7 +251,7 @@ class Message:
         if str(getattr(self.object, 'communityId', '') or ''):
             return True
         try:
-            for child in walk_children(self.object):
+            for child in walk_children(self.object, self._UI_PARSE_DEPTH):
                 if str(getattr(child, 'communityId', '') or ''):
                     return True
                 object_name = str(getattr(child, 'objectName', ''))
@@ -304,13 +336,13 @@ class Message:
 
     @allure.step('Get title of link preview')
     def get_link_preview_title(self) -> str:
-        for child in walk_children(self.link_preview_title_object):
+        self._ensure_ui_parsed()
+        for child in walk_children(self.link_preview_title_object, 16):
             if getattr(child, 'objectName', '') == 'linkPreviewTitle':
                 return str(child.text)
 
     @allure.step('Get link domain from message')
     def get_link_domain(self) -> str:
-        # Safely access linkData attribute which may not exist immediately
         link_data = getattr(self.delegate_button.object, 'linkData', None)
         if link_data is None:
             raise AttributeError('linkData is not available on message object yet')
@@ -328,13 +360,13 @@ class Message:
     def get_emoji_reactions_pathes(self):
         reactions_pathes = []
         try:
-            for child in walk_children(self.object):
+            for child in walk_children(self.object, self._UI_PARSE_DEPTH):
                 try:
                     child_id = getattr(child, 'id', '')
                     if child_id == 'reactionDelegate':
                         # Search for StatusIcon inside reactionDelegate and extract emoji ID from icon path
                         try:
-                            for item in walk_children(child):
+                            for item in walk_children(child, 16):
                                 try:
                                     icon_path = None
                                     if hasattr(item, 'icon'):
@@ -372,9 +404,7 @@ class ChatView(QObject):
         self._deleted_message = QObject(messaging_names.chatMessageViewDelegate_deletedMessage_RowLayout)
         self._recent_messages_button = QObject(messaging_names.layout_recentMessagesButton_AnchorButton)
 
-    @allure.step('Get messages')
-    def messages(self, index: int) -> typing.List[Message]:
-        _messages = []
+    def _iter_message_objects(self, index: typing.Optional[int]):
         # message_list_item has different indexes if we run multiple instances, so we pass index
         if index is not None:
             self._message_list_item.real_name['index'] = index
@@ -385,8 +415,11 @@ class ChatView(QObject):
             self._recent_messages_button.click()
         for item in driver.findAllObjects(self._message_list_item.real_name):
             if getattr(item, 'isMessage', True):
-                _messages.append(Message(item))
-        return _messages
+                yield item
+
+    @allure.step('Get messages')
+    def messages(self, index: int) -> typing.List[Message]:
+        return [Message(item) for item in self._iter_message_objects(index)]
 
     @allure.step('Open send modal from address link in message')
     def open_send_modal_from_link(self, text: str, index: int = 0):
@@ -405,9 +438,9 @@ class ChatView(QObject):
     ) -> typing.Optional[Message]:
         indexes = (index, None) if index is not None else (None,)
         for current_index in indexes:
-            for message in self.messages(current_index):
-                if message_text in message_plain_text(message):
-                    return message
+            for item in self._iter_message_objects(current_index):
+                if message_text in plain_text_from_message_object(item):
+                    return Message(item)
         return None
 
     def find_message_by_text(
