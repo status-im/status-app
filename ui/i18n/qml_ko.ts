@@ -5162,24 +5162,12 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>비트코인</translation>
     </message>
     <message>
-        <source>Status Network Token</source>
-        <translation>Status Network Token</translation>
-    </message>
-    <message>
-        <source>Dai</source>
-        <translation>Dai</translation>
-    </message>
-    <message>
         <source>United Arab Emirates dirham</source>
         <translation>아랍에미리트 디르함</translation>
     </message>
     <message>
         <source>Other Fiat</source>
         <translation>기타 법정화폐</translation>
-    </message>
-    <message>
-        <source>Afghan afghani</source>
-        <translation>아프가니스탄 아프가니</translation>
     </message>
     <message>
         <source>Argentine peso</source>
@@ -5190,36 +5178,16 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>호주 달러</translation>
     </message>
     <message>
-        <source>Barbadian dollar</source>
-        <translation>바베이도스 달러</translation>
-    </message>
-    <message>
         <source>Bangladeshi taka</source>
         <translation>방글라데시 타카</translation>
-    </message>
-    <message>
-        <source>Bulgarian lev</source>
-        <translation>불가리아 레프</translation>
     </message>
     <message>
         <source>Bahraini dinar</source>
         <translation>바레인 디나르</translation>
     </message>
     <message>
-        <source>Brunei dollar</source>
-        <translation>브루나이 달러</translation>
-    </message>
-    <message>
-        <source>Bolivian boliviano</source>
-        <translation>볼리비아노</translation>
-    </message>
-    <message>
         <source>Brazillian real</source>
         <translation>브라질 레알</translation>
-    </message>
-    <message>
-        <source>Bhutanese ngultrum</source>
-        <translation>부탄 눌트럼</translation>
     </message>
     <message>
         <source>Canadian dollar</source>
@@ -5238,14 +5206,6 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>중국 위안화</translation>
     </message>
     <message>
-        <source>Colombian peso</source>
-        <translation>콜롬비아 페소</translation>
-    </message>
-    <message>
-        <source>Costa Rican colón</source>
-        <translation>코스타리카 콜론</translation>
-    </message>
-    <message>
         <source>Czech koruna</source>
         <translation>체코 코루나</translation>
     </message>
@@ -5254,32 +5214,12 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>덴마크 크로네</translation>
     </message>
     <message>
-        <source>Dominican peso</source>
-        <translation>도미니카 페소</translation>
-    </message>
-    <message>
-        <source>Egyptian pound</source>
-        <translation>이집트 파운드</translation>
-    </message>
-    <message>
-        <source>Ethiopian birr</source>
-        <translation>에티오피아 비르</translation>
-    </message>
-    <message>
         <source>Georgian lari</source>
         <translation>조지아 라리</translation>
     </message>
     <message>
-        <source>Ghanaian cedi</source>
-        <translation>가나 세디</translation>
-    </message>
-    <message>
         <source>Hong Kong dollar</source>
         <translation>홍콩 달러</translation>
-    </message>
-    <message>
-        <source>Croatian kuna</source>
-        <translation>크로아티아 쿠나</translation>
     </message>
     <message>
         <source>Hungarian forint</source>
@@ -5298,48 +5238,16 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>인도 루피</translation>
     </message>
     <message>
-        <source>Icelandic króna</source>
-        <translation>아이슬란드 크로나</translation>
-    </message>
-    <message>
-        <source>Jamaican dollar</source>
-        <translation>자메이카 달러</translation>
-    </message>
-    <message>
         <source>Japanese yen</source>
         <translation>일본 엔</translation>
-    </message>
-    <message>
-        <source>Kenyan shilling</source>
-        <translation>케냐 실링</translation>
     </message>
     <message>
         <source>Kuwaiti dinar</source>
         <translation>쿠웨이트 디나르</translation>
     </message>
     <message>
-        <source>Kazakhstani tenge</source>
-        <translation>카자흐스탄 텡게</translation>
-    </message>
-    <message>
         <source>Sri Lankan rupee</source>
         <translation>스리랑카 루피</translation>
-    </message>
-    <message>
-        <source>Moroccan dirham</source>
-        <translation>모로코 디르함</translation>
-    </message>
-    <message>
-        <source>Moldovan leu</source>
-        <translation>몰도바 레우</translation>
-    </message>
-    <message>
-        <source>Mauritian rupee</source>
-        <translation>모리셔스 루피</translation>
-    </message>
-    <message>
-        <source>Malawian kwacha</source>
-        <translation>말라위 콰차</translation>
     </message>
     <message>
         <source>Mexican peso</source>
@@ -5350,14 +5258,6 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>말레이시아 링깃</translation>
     </message>
     <message>
-        <source>Mozambican metical</source>
-        <translation>모잠비크 메티칼</translation>
-    </message>
-    <message>
-        <source>Namibian dollar</source>
-        <translation>나미비아 달러</translation>
-    </message>
-    <message>
         <source>Nigerian naira</source>
         <translation>나이지리아 나이라</translation>
     </message>
@@ -5366,24 +5266,8 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>노르웨이 크로네</translation>
     </message>
     <message>
-        <source>Nepalese rupee</source>
-        <translation>네팔 루피</translation>
-    </message>
-    <message>
         <source>New Zealand dollar</source>
         <translation>뉴질랜드 달러</translation>
-    </message>
-    <message>
-        <source>Omani rial</source>
-        <translation>오만 리얄</translation>
-    </message>
-    <message>
-        <source>Peruvian sol</source>
-        <translation>페루 솔</translation>
-    </message>
-    <message>
-        <source>Papua New Guinean kina</source>
-        <translation>파푸아뉴기니 키나</translation>
     </message>
     <message>
         <source>Philippine peso</source>
@@ -5396,22 +5280,6 @@ Remember your password and don&apos;t share it with anyone.</source>
     <message>
         <source>Polish złoty</source>
         <translation>폴란드 즈워티</translation>
-    </message>
-    <message>
-        <source>Paraguayan guaraní</source>
-        <translation>파라과이 과라니</translation>
-    </message>
-    <message>
-        <source>Qatari riyal</source>
-        <translation>카타르 리얄</translation>
-    </message>
-    <message>
-        <source>Romanian leu</source>
-        <translation>루마니아 레우</translation>
-    </message>
-    <message>
-        <source>Serbian dinar</source>
-        <translation>세르비아 디나르</translation>
     </message>
     <message>
         <source>Saudi riyal</source>
@@ -5430,16 +5298,8 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>태국 바트</translation>
     </message>
     <message>
-        <source>Trinidad and Tobago dollar</source>
-        <translation>트리니다드 토바고 달러</translation>
-    </message>
-    <message>
         <source>New Taiwan dollar</source>
         <translation>신 타이완 달러</translation>
-    </message>
-    <message>
-        <source>Tanzanian shilling</source>
-        <translation>탄자니아 실링</translation>
     </message>
     <message>
         <source>Turkish lira</source>
@@ -5448,18 +5308,6 @@ Remember your password and don&apos;t share it with anyone.</source>
     <message>
         <source>Ukrainian hryvnia</source>
         <translation>우크라이나 그리브나</translation>
-    </message>
-    <message>
-        <source>Ugandan shilling</source>
-        <translation>우간다 실링</translation>
-    </message>
-    <message>
-        <source>Uruguayan peso</source>
-        <translation>우루과이 페소</translation>
-    </message>
-    <message>
-        <source>Venezuelan bolívar</source>
-        <translation>베네수엘라 볼리바르</translation>
     </message>
     <message>
         <source>Vietnamese đồng</source>
