@@ -20,6 +20,7 @@ Item {
     property var featureFlagsStore
     property var languageStore
     property var keychain
+    property var secureStorage
     property string lastSelectedProfileKeyUid
     property bool biometricFlowPending
 

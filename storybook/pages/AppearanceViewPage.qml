@@ -61,6 +61,7 @@ Item {
     PopupsLoader {
         id: popups
         keychain: Keychain {}
+        secureStorage: SecureStorage { service: "StatusStorybook.AutoLogin" }
         popupParent: root
         sharedRootStore: SharedStores.RootStore {}
         rootStore: AppLayoutStores.RootStore {}

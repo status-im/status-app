@@ -19,6 +19,7 @@ Loader {
 
     required property Item popupParent
     required property Keychain keychain
+    required property SecureStorage secureStorage
     required property RootStore sharedRootStore
     required property AppLayoutStores.RootStore rootStore
     required property CommunityTokensStore communityTokensStore
@@ -81,6 +82,7 @@ Loader {
         setSource(QmlCompiler.popupsUrl, {
             popupParent:            Qt.binding(() => root.popupParent),
             keychain:               Qt.binding(() => root.keychain),
+            secureStorage:          Qt.binding(() => root.secureStorage),
             sharedRootStore:        Qt.binding(() => root.sharedRootStore),
             rootStore:              Qt.binding(() => root.rootStore),
             communityTokensStore:   Qt.binding(() => root.communityTokensStore),
