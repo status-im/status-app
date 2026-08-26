@@ -62,10 +62,10 @@ StatusMenu {
 
         readonly property int iconSize: 20
         readonly property int defaultMenuWidth: 234
-        readonly property int menuPadding: root.Theme.halfPadding
+        readonly property int menuPadding: root.Theme.defaultHalfPadding
         readonly property int compactPadding: menuPadding / 2
         readonly property int rowWidth: Math.max(0, root.maxImplicitWidth - 2 * menuPadding)
-        readonly property int defaultItemSpacing: root.Theme.padding
+        readonly property int defaultItemSpacing: root.Theme.defaultPadding
         readonly property int defaultActionSize: iconSize + 2 * compactPadding
         readonly property int singleRowActionSize: iconSize + 3 * compactPadding
         readonly property bool editActionVisible: root.isMyMessage && !root.editRestricted && !root.disabledForChat
@@ -402,6 +402,6 @@ StatusMenu {
     component MsgCtxAction: StatusAction {
         icon.width: d.iconSize
         icon.height: d.iconSize
-        fontSettings.pixelSize: Theme.primaryTextFontSize
+        fontSettings.pixelSize: root.Theme.primaryTextFontSize
     }
 }
