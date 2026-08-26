@@ -11226,8 +11226,8 @@ al cargar</translation>
         <translation type="unfinished">Editar</translation>
     </message>
     <message>
-        <source>Copy</source>
-        <translation type="unfinished">Copiar</translation>
+        <source>Copy selected</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy message</source>
