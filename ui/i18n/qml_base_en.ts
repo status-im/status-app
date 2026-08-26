@@ -5178,23 +5178,11 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Status Network Token</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Dai</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>United Arab Emirates dirham</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Other Fiat</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Afghan afghani</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5206,15 +5194,7 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Barbadian dollar</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Bangladeshi taka</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Bulgarian lev</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5222,19 +5202,7 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Brunei dollar</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Bolivian boliviano</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Brazillian real</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Bhutanese ngultrum</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5254,14 +5222,6 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Colombian peso</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Costa Rican colón</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Czech koruna</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5270,31 +5230,11 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Dominican peso</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Egyptian pound</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Ethiopian birr</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Georgian lari</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Ghanaian cedi</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Hong Kong dollar</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Croatian kuna</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5314,19 +5254,7 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Icelandic króna</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Jamaican dollar</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Japanese yen</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Kenyan shilling</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5334,27 +5262,7 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Kazakhstani tenge</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Sri Lankan rupee</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Moroccan dirham</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Moldovan leu</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mauritian rupee</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Malawian kwacha</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5366,14 +5274,6 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Mozambican metical</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Namibian dollar</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Nigerian naira</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5382,23 +5282,7 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Nepalese rupee</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>New Zealand dollar</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Omani rial</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Peruvian sol</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Papua New Guinean kina</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5411,22 +5295,6 @@ Remember your password and don&apos;t share it with anyone.</source>
     </message>
     <message>
         <source>Polish złoty</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Paraguayan guaraní</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Qatari riyal</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Romanian leu</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Serbian dinar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5446,15 +5314,7 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Trinidad and Tobago dollar</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>New Taiwan dollar</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Tanzanian shilling</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5463,18 +5323,6 @@ Remember your password and don&apos;t share it with anyone.</source>
     </message>
     <message>
         <source>Ukrainian hryvnia</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Ugandan shilling</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Uruguayan peso</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Venezuelan bolívar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
