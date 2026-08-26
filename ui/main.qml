@@ -518,6 +518,7 @@ Window {
             featureFlagsStore: applicationWindow.featureFlagsStore
             languageStore: applicationWindow.languageStore
             keychain: appKeychain
+            secureStorage: appSecureStorage
             systemTrayIconAvailable: systemTray.available
             utilsStore: applicationWindow.utilsStore
 
@@ -639,6 +640,7 @@ Window {
                 item.featureFlagsStore = applicationWindow.featureFlagsStore
                 item.languageStore = applicationWindow.languageStore
                 item.keychain = appKeychain
+                item.secureStorage = appSecureStorage
                 item.lastSelectedProfileKeyUid = Qt.binding(() => localAppSettings.selectedProfileKeyUid)
                 item.biometricFlowPending = Qt.binding(() => applicationWindow.biometricFlowPending)
                 splashScreenLoader.active = false
@@ -698,6 +700,12 @@ Window {
                     moveToAppMain()
                 }
             }
+        }
+
+        SecureStorage {
+            id: appSecureStorage
+
+            service: "StatusDesktop.AutoLogin"
         }
 
         Loader {

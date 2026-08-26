@@ -53,6 +53,7 @@ QtObject {
 
     required property var popupParent
     required property Keychain keychain
+    required property SecureStorage secureStorage
 
     required property RootStore sharedRootStore
     required property AppLayoutStores.RootStore rootStore

@@ -14,6 +14,7 @@ Loader {
     required property AppStores.FeatureFlagsStore featureFlagsStore
     required property ProfileStores.LanguageStore languageStore
     required property Keychain keychain
+    required property SecureStorage secureStorage
     required property bool systemTrayIconAvailable
 
     property SharedStores.UtilsStore utilsStore
@@ -29,6 +30,7 @@ Loader {
             featureFlagsStore:      Qt.binding(() => root.featureFlagsStore),
             languageStore:          Qt.binding(() => root.languageStore),
             keychain:               Qt.binding(() => root.keychain),
+            secureStorage:          Qt.binding(() => root.secureStorage),
             utilsStore:             Qt.binding(() => root.utilsStore),
             systemTrayIconAvailable:Qt.binding(() => root.systemTrayIconAvailable),
             mainReady:              Qt.binding(() => root.mainReady),
