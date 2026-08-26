@@ -319,7 +319,7 @@ Loader {
             // menu opens up and to the left of the finger) so it isn't hidden under the finger.
             const menuWidth = d.contextMenu?.maxImplicitWidth || 0
             const menuHeight = d.contextMenu?.implicitHeight || 0
-            popupPoint = Qt.point(point.x - menuWidth / 2, point.y - menuHeight)
+            popupPoint = Qt.point(point.x - menuWidth / 2, point.y - menuHeight - root.Theme.defaultSmallPadding)
         }
         d.contextMenu.popup(popupPoint)
         d.contextMenu.aboutToHide.connect(() => {
@@ -1005,7 +1005,7 @@ Loader {
                                                             const menuWidth = contextMenu?.maxImplicitWidth || 234
                                                             const menuHeight = contextMenu?.implicitHeight || 0
                                                             const x = Math.max(0, delegate.width - menuWidth - Theme.padding)
-                                                            return delegate.mapToItem(root.item, x, -menuHeight / 4 * 3)
+                                                            return delegate.mapToItem(root.item, x, -menuHeight + 1)
                                                         },
                                                         closeOnHoverExit: true
                                                     })
