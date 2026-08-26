@@ -18,6 +18,8 @@ class KeycardSettingsView(QObject):
         self._details_title = TextLabel(keycard_names.keycardSettingsDetailsTitle)
         self._key_pair_info = QObject(keycard_names.keycardSettingsKeyPairInfo)
         self._import_seed_phrase_item = Button(keycard_names.settingsKeycardDetailsImportSeedPhrase)
+        self._import_new_keypair_item = Button(keycard_names.settingsKeycardDetailsImportNewKeypair)
+        self._move_profile_keypair_item = Button(keycard_names.settingsKeycardDetailsMoveProfileKeypair)
 
     @property
     def is_read_keycard_button_visible(self) -> bool:
@@ -63,4 +65,14 @@ class KeycardSettingsView(QObject):
     @allure.step('Import a key pair from recovery phrase')
     def import_from_recovery_phrase(self) -> KeycardManagementPopup:
         self._import_seed_phrase_item.click()
+        return KeycardManagementPopup().wait_until_appears()
+
+    @allure.step('Import a new key pair to Keycard')
+    def import_new_keypair(self) -> KeycardManagementPopup:
+        self._import_new_keypair_item.click()
+        return KeycardManagementPopup().wait_until_appears()
+
+    @allure.step('Move profile key pair to Keycard')
+    def move_profile_keypair(self) -> KeycardManagementPopup:
+        self._move_profile_keypair_item.click()
         return KeycardManagementPopup().wait_until_appears()
