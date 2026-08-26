@@ -11170,8 +11170,8 @@ to load</source>
         <translation type="unfinished">편집</translation>
     </message>
     <message>
-        <source>Copy</source>
-        <translation type="unfinished">클립보드로 복사</translation>
+        <source>Copy selected</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy message</source>

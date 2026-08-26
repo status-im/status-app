@@ -11213,7 +11213,7 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Copy</source>
+        <source>Copy selected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
