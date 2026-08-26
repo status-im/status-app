@@ -15,7 +15,32 @@ QtObject {
 
     readonly property var currenciesModel: CurrenciesModel {}
 
-    readonly property string currentCurrency: Global.appIsReady ? walletSection.currentCurrency : "USD"
+    readonly property string currentCurrency: d.isSupported(d.storedCurrency) ? d.storedCurrency
+                                                                              : d.fallbackCurrency
+
+    readonly property QtObject _d: QtObject {
+        id: d
+
+        readonly property string fallbackCurrency: "USD"
+
+        readonly property string storedCurrency: Global.appIsReady ? walletSection.currentCurrency : ""
+
+        function isSupported(shortName) {
+            return !!shortName && SQUtils.ModelUtils.indexOf(root.currenciesModel, "shortName", shortName) !== -1
+        }
+
+        // A currency the model does not carry leaves the picker with no
+        // selection and every amount formatted against a currency nothing can
+        // price. Write the fallback back, so the correction reaches the rest of
+        // the app rather than only this store's readers.
+        onStoredCurrencyChanged: {
+            if (!storedCurrency || isSupported(storedCurrency))
+                return
+            console.warn("Unsupported display currency %1, falling back to %2"
+                         .arg(storedCurrency).arg(fallbackCurrency))
+            root.updateCurrency(fallbackCurrency)
+        }
+    }
 
     function updateCurrency(shortName) {
         walletSection.updateCurrency(shortName)

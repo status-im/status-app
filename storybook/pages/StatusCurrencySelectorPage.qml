@@ -70,12 +70,12 @@ SplitView {
             isToken: false
         }
         ListElement {
-            key: "stn"
-            shortName: "SNT"
-            name: qsTr("Status Network Token")
-            symbol: ""
+            key: "btc"
+            shortName: "BTC"
+            name: qsTr("Bitcoin")
+            symbol: "฿"
             category: qsTr("Tokens")
-            imageSource: "../../assets/png/tokens/SNT.png"
+            imageSource: "../../assets/png/tokens/WBTC.png"
             selected: false
             isToken: true
         }

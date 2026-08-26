@@ -1,4 +1,4 @@
-import nimqml, tables, chronicles
+import nimqml, strutils, tables, chronicles
 
 import app/core/eventemitter
 import app/core/signals/types
@@ -40,6 +40,7 @@ QtObject:
     leaderboardPageLoading: bool
     totalLeaderboardCount: int
     currentPage: int
+    currentCurrency: string
 
   # forward declaration
   proc handleLeaderboardPageLoaded(self: Service, data: WalletSignal)
@@ -58,6 +59,7 @@ QtObject:
     result.leaderboardPageLoading = false
     result.totalLeaderboardCount = 0
     result.currentPage = -1
+    result.currentCurrency = ""
     result.marketLeaderboardTokens = @[]
 
   proc init*(self: Service) =
@@ -71,6 +73,14 @@ QtObject:
         of EventLeaderboardPagePricesUpdated:
           self.handlePricesUpdated(data)
 
+  proc updateBelongsToPage(self: Service, currency: string): bool =
+    ## An update belongs to the displayed page when it carries the currency
+    ## that page is in. That is normally the selected currency, but the backend
+    ## serves a fallback one when the market data provider cannot price the
+    ## selection, and the updates then arrive in the fallback too.
+    return currency.cmpIgnoreCase(self.currentCurrency) == 0 or
+        currency.cmpIgnoreCase(self.settingsService.getCurrency()) == 0
+
   proc handleLeaderboardPageLoaded(self: Service, data: WalletSignal) =
     try:
       let leaderboardData = Json.decode($data.message, LeaderboardPage, allowUnknownFields = true)
@@ -78,6 +88,7 @@ QtObject:
         self.leaderboardPageLoading = false
         self.totalLeaderboardCount = leaderboardData.totalCount
         self.marketLeaderboardTokens = leaderboardData.data
+        self.currentCurrency = leaderboardData.currency
         self.events.emit(SIGNAL_MARKET_LEADERBOARD_PAGE_LOADED, Args())
     except:
       error "Error parsing page loaded leaderboard data"
@@ -86,7 +97,8 @@ QtObject:
     try:
       let leaderboardData = Json.decode($data.message, LeaderboardPage, allowUnknownFields = true)
       if self.currentPage == leaderboardData.page and
-          self.settingsService.getCurrency() == leaderboardData.currency:
+          self.updateBelongsToPage(leaderboardData.currency):
+        self.currentCurrency = leaderboardData.currency
 
         var updates: seq[LeaderboardTokenUpdated] = @[]
 
@@ -106,7 +118,7 @@ QtObject:
     try:
       let leaderboardPricesUpdate = Json.decode($data.message, LeaderboardPagePrices, allowUnknownFields = true)
       if self.currentPage == leaderboardPricesUpdate.page and
-          self.settingsService.getCurrency() == leaderboardPricesUpdate.currency:
+          self.updateBelongsToPage(leaderboardPricesUpdate.currency):
 
         # Create a temporary Table for fast lookups: key => (index, MarketItem)
         var tokenMap = initTable[string, int]()
