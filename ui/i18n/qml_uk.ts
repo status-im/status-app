@@ -1843,6 +1843,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>Цей канал більше не існує</translation>
     </message>
     <message>
+        <source>Send the Status Team bot a contact request to get useful Status tips, important updates, and share your feedback, ideas, or issues directly with the Status team.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Invite People</source>
         <translation>Запросити людей</translation>
     </message>
@@ -13668,6 +13672,10 @@ to load</source>
 <context>
     <name>PrimaryNavSidebar</name>
     <message>
+        <source>Status Help Bot</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Activity Center</source>
         <translation>Центр активності</translation>
     </message>
@@ -18681,6 +18689,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Copy link to profile</source>
         <translation>Копіювати посилання на профіль</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation type="unfinished">Налаштування</translation>
     </message>
     <message>
         <source>Always online</source>
