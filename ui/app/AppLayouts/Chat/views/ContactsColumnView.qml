@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Theme
@@ -113,9 +114,27 @@ Item {
                         enabled: searchInput.visible && !!searchPhrase
                     }
                 ]
-                sorters: RoleSorter {
-                    roleName: "lastMessageTimestamp"
-                    sortOrder: Qt.DescendingOrder
+                sorters: FastExpressionSorter {
+                    expectedRoles: ["itemId", "parentChatId", "isThread", "lastMessageTimestamp", "position"]
+                    expression: {
+                        function timestampFor(item) {
+                            if (!item.isThread)
+                                return item.lastMessageTimestamp
+
+                            const parent = JSON.parse(root.chatSectionModule.getItemAsJson(item.parentChatId))
+                            return parent.lastMessageTimestamp
+                        }
+
+                        const leftTimestamp = timestampFor(modelLeft)
+                        const rightTimestamp = timestampFor(modelRight)
+                        if (leftTimestamp !== rightTimestamp)
+                            return rightTimestamp - leftTimestamp
+
+                        if (modelLeft.isThread !== modelRight.isThread)
+                            return modelLeft.isThread ? 1 : -1
+
+                        return modelLeft.position - modelRight.position
+                    }
                 }
             }
 
@@ -152,6 +171,8 @@ Item {
                     chatIcon = obj.icon
                     chatType = obj.type
                     chatMuted = obj.muted
+                    isThread = obj.isThread
+                    threadId = obj.isThread ? obj.itemId : ""
                 }
 
                 onMuteChat: (chatId, interval) => {
@@ -162,8 +183,8 @@ Item {
                     root.chatSectionModule.unmuteChat(chatId)
                 }
 
-                onMarkAllMessagesRead: (chatId) => {
-                    root.chatSectionModule.markAllMessagesRead(chatId)
+                onMarkAllMessagesRead: (chatId, threadId) => {
+                    root.chatSectionModule.markAllMessagesRead(chatId, threadId)
                 }
 
                 onClearChatHistory: (chatId) => {
