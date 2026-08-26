@@ -308,6 +308,12 @@ Loader {
         let popupPoint = point
         if (options.positionProvider) {
             popupPoint = options.positionProvider(d.contextMenu)
+        } else if (deferCloseOnPressOutside) {
+            // Android long-press: put the menu's bottom-right corner at the press point (the
+            // menu opens up and to the left of the finger) so it isn't hidden under the finger.
+            const menuWidth = d.contextMenu?.maxImplicitWidth || 0
+            const menuHeight = d.contextMenu?.implicitHeight || 0
+            popupPoint = Qt.point(point.x - menuWidth / 2, point.y - menuHeight)
         }
         d.contextMenu.popup(popupPoint)
         d.contextMenu.aboutToHide.connect(() => {
