@@ -187,6 +187,7 @@ Item {
     readonly property MarketStore marketStore: MarketStore {}
 
     required property Keychain keychain
+    required property SecureStorage secureStorage
 
     required property bool systemTrayIconAvailable
     required property bool mainReady
@@ -1288,6 +1289,7 @@ Item {
         id: popups
 
         keychain: appMain.keychain
+        secureStorage: appMain.secureStorage
         sharedRootStore: appMain.sharedRootStore
         popupParent: appMain
         rootStore: appMain.rootStore
@@ -2533,6 +2535,7 @@ Item {
                         popupHandler: popupRequestsHandler
                         emojiPopupLoader: statusEmojiPopup
                         keychain: appMain.keychain
+                        secureStorage: appMain.secureStorage
 
                         isProduction: appMain.rootStore.isProduction
                         isPortraitMode: appMain.isPortraitMode

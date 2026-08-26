@@ -51,6 +51,7 @@ StatusSectionLoader {
     required property HandlersManagerLoader popupHandler
     required property Loader emojiPopupLoader
     required property Keychain keychain
+    required property SecureStorage secureStorage
 
     // Inputs
     required property bool isProduction
@@ -119,6 +120,7 @@ StatusSectionLoader {
             networksStore:                          Qt.binding(() => root.networksStore),
             messagingRootStore:                     Qt.binding(() => root.messagingRootStore),
             keychain:                               root.keychain,
+            secureStorage:                          root.secureStorage,
             emojiPopup:                             root.emojiPopupLoader.item,
             mutualContactsModel:                    root.contactsAdaptor.mutualContacts,
             blockedContactsModel:                   root.contactsAdaptor.blockedContacts,

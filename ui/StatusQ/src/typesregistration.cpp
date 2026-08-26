@@ -13,6 +13,7 @@
 #include "StatusQ/httpstats.h"
 #include "StatusQ/imageencoderutils.h"
 #include "StatusQ/keychain.h"
+#include "StatusQ/securestorage.h"
 #include "StatusQ/localnetworkpermission.h"
 #include "StatusQ/markdownutils.h"
 #include "StatusQ/networkchecker.h"
@@ -141,6 +142,8 @@ void registerStatusQTypes() {
 
     qmlRegisterType<Keychain>("StatusQ", 0, 1, "Keychain");
     qRegisterMetaType<Keychain::Status>();
+    qmlRegisterType<SecureStorage>("StatusQ", 0, 1, "SecureStorage");
+    qRegisterMetaType<SecureStorage::Status>();
 
     // Workaround for https://bugreports.qt.io/browse/QTBUG-86428
     qmlRegisterAnonymousType<QAbstractItemModel>("StatusQ", 1);

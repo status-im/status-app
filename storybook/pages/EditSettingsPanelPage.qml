@@ -17,6 +17,7 @@ SplitView {
 
     PopupsLoader {
         keychain: Keychain {}
+        secureStorage: SecureStorage { service: "StatusStorybook.AutoLogin" }
         popupParent: root
         sharedRootStore: SharedStores.RootStore {}
         rootStore: AppLayoutsStores.RootStore {}

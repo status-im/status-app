@@ -196,6 +196,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/imageencoderutils.h
         include/StatusQ/inputmethodeventfilter.h
         include/StatusQ/keychain.h
+        include/StatusQ/securestorage.h
         include/StatusQ/markdownast.h
         include/StatusQ/markdownhtml.h
         include/StatusQ/markdownparser.h
@@ -247,6 +248,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/imageencoderutils.cpp
         src/inputmethodeventfilter.cpp
         src/keychain.cpp
+        src/securestorage.cpp
         src/osnotification.cpp
         src/urlschemeevent.cpp
         src/localnetworkpermission.cpp
@@ -319,6 +321,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         src/shareutils_other.cpp
         src/shareintake_other.cpp
         src/keychain_apple.mm
+        src/securestorage_apple.mm
         src/osnotification_apple.mm
         src/accessibility_crash_filter.mm
         src/StatusQ/Controls/NativeSwipeHandlerItem_macos.mm
@@ -340,6 +343,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
         src/shareutils_ios.mm
         src/shareintake_ios.mm
         src/keychain_apple.mm
+        src/securestorage_apple.mm
         src/accessibility_crash_filter.mm
         src/StatusQ/Controls/NativeSwipeHandlerItem_ios.mm
         src/StatusQ/Controls/NativeIndicatorItem_ios.mm
@@ -349,6 +353,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
     target_sources(StatusQ PRIVATE
         src/keychain_android.cpp
+        src/securestorage_other.cpp
         src/safutils_android.cpp
         src/lifecycleutils_android.cpp
         src/StatusQ/Controls/NativeSwipeHandlerItem_android.cpp
@@ -361,6 +366,7 @@ else ()
         src/shareutils_other.cpp
         src/shareintake_other.cpp
         src/keychain_other.cpp
+        src/securestorage_other.cpp
     )
 endif ()
 

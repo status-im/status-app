@@ -74,6 +74,7 @@ StatusSectionLayout {
     property var emojiPopup
 
     required property Keychain keychain
+    required property SecureStorage secureStorage
 
     property bool isKeycardEnabled: true
     property bool isBrowserEnabled: true
