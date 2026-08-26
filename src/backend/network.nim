@@ -6,26 +6,26 @@ import backend/network_types
 
 export response_type, network_types
 
-rpc(getFlatEthereumChains, "wallet"):
+rpc(getFlatEthereumChains, "networks"):
   discard
 
-rpc(addEthereumChain, "wallet"):
+rpc(addEthereumChain, "networks"):
   network: NetworkDto
 
-rpc(deleteEthereumChain, "wallet"):
+rpc(deleteEthereumChain, "networks"):
   chainId: int
 
-rpc(setChainActive, "wallet"):
+rpc(setChainActive, "networks"):
   chainId: int
   active: bool
 
 rpc(fetchChainIDForURL, "wallet"):
   url: string
 
-rpc(setChainEnabled, "wallet"):
+rpc(setChainEnabled, "networks"):
   chainId: int
   enabled: bool
 
-rpc(setChainUserRpcProviders, "wallet"):
+rpc(setChainUserRpcProviders, "networks"):
   chainId: int
   rpcProviders: seq[RpcProviderDto]
