@@ -243,8 +243,22 @@ StatusTextArea {
         onInputMethodEventReceived: (imeEvent) => {
             if (imeEvent.commitString === " " || imeEvent.commitString === "\n")
                 root.convertAsciiEmoji()
-            if (imeEvent.commitString === "\n" && d.continueQuoteBlock())
+            if (imeEvent.commitString === "\n" && d.continueQuoteBlock()) {
                 imeEvent.accept()
+                return
+            }
+            // A multi-character commit carrying a newline is a clipboard paste delivered through
+            // the IME — e.g. Android's virtual-keyboard context-menu "Paste", which reaches neither
+            // Keys.onPressed nor the in-app menu. Inside a quote block the TextArea would insert it
+            // verbatim and break out of the quote, so route it through the same quote-aware paste
+            // path (pasteText → pasteFromClipboard) and consume the event to suppress the raw
+            // insertion. The committed text equals the clipboard for an OSK paste, so pasteText's
+            // ClipboardUtils-based logic (char limit, mention restore, "> " prefixing) applies.
+            if (imeEvent.commitString.length > 1 && imeEvent.commitString.includes("\n")
+                    && highlighter.isInQuoteBlock(root.cursorPosition)) {
+                root.pasteText()
+                imeEvent.accept()
+            }
         }
     }
 
