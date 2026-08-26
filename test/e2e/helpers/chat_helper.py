@@ -5,14 +5,41 @@ import time
 import allure
 
 import configs
+from driver.objects_access import find_descendant_by_object_name
 from gui.components.community.enable_message_backup_popup import EnableMessageBackupPopup
 from gui.components.introduce_yourself_popup import IntroduceYourselfPopup
 from scripts.utils.parsers import remove_tags
 
+_MESSAGE_TEXT_PARSE_DEPTH = 48
+
+
+def plain_text_from_message_object(obj) -> str:
+    try:
+        chat_text = find_descendant_by_object_name(
+            obj, 'StatusTextMessage_chatText', _MESSAGE_TEXT_PARSE_DEPTH,
+        )
+        if chat_text is not None:
+            text = getattr(chat_text, 'text', None)
+            if text not in (None, ''):
+                plain = remove_tags(str(text)).strip()
+                if plain:
+                    return plain
+    except (LookupError, RuntimeError, AttributeError):
+        pass
+
+    for attr in ('unparsedText', 'messageText'):
+        raw = getattr(obj, attr, None)
+        if raw not in (None, ''):
+            plain = remove_tags(str(raw)).strip()
+            if plain:
+                if getattr(obj, 'isEdited', False) and '(edited)' not in plain:
+                    plain = f'{plain} (edited)'
+                return plain
+    return ''
+
 
 def message_plain_text(msg) -> str:
-    raw = str(getattr(msg.object, 'unparsedText', None) or msg.text or '')
-    return remove_tags(raw).strip()
+    return plain_text_from_message_object(msg.object)
 
 
 @allure.step('Get visible message texts from chat')
@@ -74,4 +101,3 @@ def skip_intro_if_visible(attempts = 4):
                 continue
             else:
                 raise Exception(f"Failed to close IntroduceYourselfPopup after {attempts} attempts: {e}")
-

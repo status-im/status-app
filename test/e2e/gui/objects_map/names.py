@@ -421,6 +421,10 @@ contactRequestToChatKeyModal = {"container": statusDesktop_mainWindow_overlay,
 sendContactRequestModal_ChatKey_Input_TextEdit = {"container": statusDesktop_mainWindow_overlay,
                                                   "objectName": "SendContactRequestModal_ChatKey_Input",
                                                   "type": "TextEdit", "visible": True}
+sendContactRequestModal_ChatKey_PasteButton = {"container": contactRequestToChatKeyModal,
+                                               "type": "StatusPasteButton", "visible": True}
+sendContactRequestModal_ChatKey_ValidationIcon = {"container": contactRequestToChatKeyModal,
+                                                  "type": "StatusIcon", "visible": True}
 sendContactRequestModal_SayWhoYouAre_Input_TextEdit = {"container": statusDesktop_mainWindow_overlay,
                                                        "objectName": "SendContactRequestModal_SayWhoYouAre_Input",
                                                        "type": "TextEdit", "visible": True}

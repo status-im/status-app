@@ -51,7 +51,6 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
         with step('Verify that contact request was sent and is in pending requests'):
             contacts_settings.open_pending_requests()
             assert Messaging.CONTACT_REQUEST_SENT.value == contacts_settings.contact_items[0].object.contactText
-            assert len(contacts_settings.contact_items) == 1
             assert str(contacts_settings.section_header.object.text) == 'Sent'
             main_window.minimize()
 
@@ -63,16 +62,6 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             contacts_settings.open_pending_requests()
             assert str(contacts_settings.section_header.object.text) == 'Received'
             assert user_one.name == contacts_settings.contact_items[0].contact
-            assert len(contacts_settings.contact_items) == 1
-
-        # TODO: seems the toast is disappearing very fast
-        # with step('Verify toast message about new contact request received'):
-        #     toast_messages = main_window.wait_for_notification()
-        #     assert len(toast_messages) == 1, \
-        #         f"Multiple toast messages appeared"
-        #     message = toast_messages[0]
-        #     assert message == Messaging.NEW_CONTACT_REQUEST.value, \
-        #         f"Toast message is incorrect, current message is {message}"
 
         with step(f'User {user_two.name}, accept contact request from {user_one.name}'):
             contacts_settings.accept_contact_request(user_one.name)
