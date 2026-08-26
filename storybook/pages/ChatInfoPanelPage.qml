@@ -142,7 +142,20 @@ SplitView {
             membersContent: Component {
                 UserListPanel {
                     headerVisible: false
-                    usersModel: UsersModel {}
+                    usersModel: SortFilterProxyModel{
+                        sourceModel: users
+                        sorters: [
+                            RoleSorter {
+                                roleName: "onlineStatus"
+                                sortOrder: Qt.DescendingOrder
+                            },
+                            StringSorter {
+                                roleName: "preferredDisplayName"
+                                caseSensitivity: Qt.CaseInsensitive
+                            }
+                        ]
+                    }
+                    getEmojiHashFn: pubKey => users.emojiHashByPubKey(pubKey)
                     searchText: info.searchText
                 }
             }
@@ -195,3 +208,6 @@ SplitView {
         }
     }
 }
+
+// category: Panels
+// status: good

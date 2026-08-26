@@ -6,6 +6,8 @@ import AppLayouts.Chat.panels
 
 import Models
 
+import SortFilterProxyModel
+
 import utils
 
 SplitView {
@@ -24,11 +26,27 @@ SplitView {
             border.color: "gray"
         }
 
+        UsersModel {
+            id: usersBaseModel
+        }
+
         UserListPanel {
             anchors.fill: parent
 
-            usersModel: UsersModel {}
-
+            usersModel: SortFilterProxyModel{
+                sourceModel: usersBaseModel
+                sorters: [
+                    RoleSorter {
+                        roleName: "onlineStatus"
+                        sortOrder: Qt.DescendingOrder
+                    },
+                    StringSorter {
+                        roleName: "preferredDisplayName"
+                        caseSensitivity: Qt.CaseInsensitive
+                    }
+                ]
+            }
+            getEmojiHashFn: pubKey => usersBaseModel.emojiHashByPubKey(pubKey)
             label: labelTextField.text
             isAdmin: isAdminCheckBox.checked
             chatType: chatTypeSelector.currentValue
@@ -67,6 +85,7 @@ SplitView {
                 }
 
                 ComboBox {
+                    Layout.fillWidth: true
                     id: chatTypeSelector
 
                     textRole: "text"
@@ -89,12 +108,13 @@ SplitView {
                 }
 
                 ComboBox {
+                    Layout.fillWidth: true
                     id: communityMemberReevaluationStatusSelector
 
                     textRole: "text"
                     valueRole: "value"
                     model: [
-                        { text: "Unknown", value: Constants.CommunityMemberReevaluationStatus.None },
+                        { text: "None", value: Constants.CommunityMemberReevaluationStatus.None },
                         { text: "InProgress", value: Constants.CommunityMemberReevaluationStatus.InProgress },
                         { text: "Done", value: Constants.CommunityMemberReevaluationStatus.Done }
                     ]

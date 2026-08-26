@@ -3,6 +3,14 @@ import QtQuick
 import utils
 
 ListModel {
+    function emojiHashByPubKey(pubKey) {
+        for (let i = 0; i < count; i++) {
+            const item = get(i)
+            if (!!item)
+                return JSON.parse(item.emojiHash)
+        }
+    }
+
     readonly property var data: [
         {
             pubKey: "0x043a7ed0e8752236a4688563652fd0296453cef00a5dcddbe252dc74f72cc1caa97a2b65e4a1a52d9c30a84c9966beaaaf6b333d659cbdd2e486b443ed1012cf04",
@@ -112,7 +120,7 @@ ListModel {
             ensName: "",
             preferredDisplayName: "Maria2",
             icon: "",
-            colorId: 5,
+            colorId: 6,
             isEnsVerified: false,
             isAwaitingAddress: false,
             memberRole: Constants.memberRole.none,
