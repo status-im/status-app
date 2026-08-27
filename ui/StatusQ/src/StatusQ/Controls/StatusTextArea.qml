@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 
+import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
 
@@ -69,7 +70,11 @@ TextArea {
     color: Theme.palette.directColor1
     selectedTextColor: color
     selectionColor: Theme.palette.primaryColor2
-    placeholderTextColor: root.enabled ? Theme.palette.baseColor1 : Theme.palette.directColor9
+
+    // The placeholder is rendered by a custom overlay (see below) instead of
+    // the active QtQuick Controls style, so it looks the same on every platform.
+    // Keep the native placeholder invisible so the two don't compete.
+    placeholderTextColor: StatusColors.transparent
 
     font {
         family: Fonts.baseFont.family
@@ -101,6 +106,29 @@ TextArea {
 
     cursorDelegate: StatusCursorDelegate {
         cursorVisible: root.cursorVisible
+    }
+
+    // Style-independent placeholder overlay. Rendering the placeholder ourselves
+    // avoids relying on the active QtQuick Controls style, whose default differs
+    // per platform. Pinpointing to single style is not possible because it
+    // blocks native context menu on iOS.
+    StatusBaseText {
+        id: placeholder
+
+        x: root.leftPadding
+        y: root.topPadding
+        width: root.width - root.leftPadding - root.rightPadding
+        // Constrain to the editable area and clip/elide so long placeholders
+        // never overflow the input's boundaries.
+        height: root.height - root.topPadding - root.bottomPadding
+        clip: true
+
+        visible: root.length === 0 && root.preeditText === ""
+        text: root.placeholderText
+        color: root.enabled ? Theme.palette.baseColor1 : Theme.palette.directColor9
+        font: root.font
+        wrapMode: root.wrapMode
+        elide: Text.ElideRight
     }
 
     // selectedText is not notified correctly when selection is cleared on Android.
