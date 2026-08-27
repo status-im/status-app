@@ -3,6 +3,7 @@ from objectmaphelper import *
 
 # Map for activity center
 
+activityCenterSlideContainer = {"container": statusDesktop_mainWindow, "objectName": "activityCenterSlideContainer", "type": "Rectangle", "visible": True}
 activityCenterPanel = {"container": statusDesktop_mainWindow, "objectName": "activityCenterPanel", "type": "ActivityCenterPanel", "visible": True}
 activityCenterCloseButton = {"container": activityCenterPanel, "objectName": "closeButton", "type": "StatusFlatRoundButton", "visible": True}
 activityCenterListView = {"container": activityCenterPanel, "objectName": "listView", "type": "StatusListView", "visible": True}
