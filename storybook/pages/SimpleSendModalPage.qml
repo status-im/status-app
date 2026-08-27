@@ -37,7 +37,8 @@ SplitView {
         readonly property WalletAssetsStoreMock walletAssetStore: WalletAssetsStoreMock {
             walletTokensStore: TokensStoreMock {
                 tokenGroupsModel: TokenGroupsModel{}
-                _displayAssetsBelowBalanceThresholdDisplayAmountFunc: () => 0
+                tokenSelectorStubData: sendAssetsModel
+                displayAssetsBelowBalance: true
             }
         }
 
@@ -46,7 +47,7 @@ SplitView {
         function getCurrencyAmount(amount, symbol) {
             return ({
                         amount: amount,
-                        symbol: symbol ? symbol.toUpperCase() : root.currentCurrency,
+                        symbol: symbol ? symbol.toUpperCase() : simpleSend.currentCurrency,
                         displayDecimals: 2,
                         stripTrailingZeroes: false
                     })
@@ -601,7 +602,7 @@ SplitView {
                 text: "displayOnlyAssets"
             }
 
-            Text {
+            Label {
                 text: "Select an accounts"
             }
             ComboBox {
@@ -623,7 +624,7 @@ SplitView {
                 id: testNetworksCheckbox
                 text: "are test networks enabled"
             }
-            Text {
+            Label {
                 text: "Select a network"
             }
             ComboBox {
@@ -634,7 +635,7 @@ SplitView {
                 currentIndex: 0
             }
 
-            Text {
+            Label {
                 text: "Select a token"
             }
             ComboBox {
@@ -679,11 +680,11 @@ SplitView {
                     ]
 
                     markerRoleName: "which_model"
-                    expectedRoles: ["key", "name", "addressPerChain", "chainId", "ownership", "type", "tokenType", "addressPerChain"]
+                    expectedRoles: ["key", "name", "addressPerChain", "chainId", "ownership", "type", "tokenType"]
                 }
                 delegate: ItemDelegate {
                     contentItem: RowLayout {
-                        Text {
+                        Label {
                             text: model.name
                         }
                         StatusIcon {
@@ -744,7 +745,7 @@ SplitView {
                 }
             }
 
-            Text {
+            Label {
                 text: "Select a recipient"
             }
             RowLayout {
@@ -760,7 +761,7 @@ SplitView {
                 }
             }
 
-            Text {
+            Label {
                 text: "Number of saved wallet accounts"
             }
             SpinBox {
@@ -775,20 +776,20 @@ SplitView {
                 }
             }
 
-            Text {
+            Label {
                 text: "account selected is: \n"
                       + simpleSend.selectedAccountAddress
             }
-            Text {
+            Label {
                 text: "network selected is: " + simpleSend.selectedChainId
             }
-            Text {
-                text: "token selected is: " + simpleSend.selectedTokenKey
+            Label {
+                text: "token selected is: " + simpleSend.selectedGroupKey
             }
-            Text {
+            Label {
                 text: "raw amount entered is: " + simpleSend.selectedRawAmount
             }
-            Text {
+            Label {
                 text: "selected recipient is: \n" + simpleSend.selectedRecipientAddress
             }
         }
