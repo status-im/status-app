@@ -858,6 +858,61 @@ void ChatInputHighlighter::pasteFromClipboard(int selectionStart, int selectionE
     cursor.endEditBlock();
 }
 
+bool ChatInputHighlighter::isSingleUrl(const QString& text) const
+{
+    const QString trimmed = text.trimmed();
+    if (trimmed.isEmpty())
+        return false;
+    // A genuine bare URL never contains brackets/parens or whitespace (the autolink rule stops at
+    // them), while an explicit "[label](url)" string does — reject those so they are not mistaken
+    // for a single URL and wrapped again.
+    for (const QChar c : trimmed) {
+        if (c.isSpace() || c == QLatin1Char('[') || c == QLatin1Char(']')
+                || c == QLatin1Char('(') || c == QLatin1Char(')')
+                || c == QLatin1Char('{') || c == QLatin1Char('}'))
+            return false;
+    }
+    const QVariantList links = parseLinks(trimmed);
+    if (links.size() != 1)
+        return false;
+    const QVariantMap link = links.first().toMap();
+    return link.value(QStringLiteral("start")).toInt() == 0
+            && link.value(QStringLiteral("length")).toInt() == trimmed.size();
+}
+
+bool ChatInputHighlighter::isPlainTextRange(int start, int end) const
+{
+    if (!document() || start >= end)
+        return false;
+
+    QTextCursor cursor(document());
+    cursor.setPosition(start);
+    cursor.setPosition(end, QTextCursor::KeepAnchor);
+    const QString sel = cursor.selectedText();
+    // U+2029 (ParagraphSeparator) marks a block/newline break; U+FFFC (ObjectReplacementCharacter)
+    // marks a mention pill or an inline emoji image. Either disqualifies the range from being a
+    // clean, single-line plain-text label.
+    return !sel.contains(QChar::ParagraphSeparator)
+            && !sel.contains(QChar::ObjectReplacementCharacter);
+}
+
+void ChatInputHighlighter::wrapSelectionInLink(int start, int end, const QString& url)
+{
+    if (!document() || start >= end)
+        return;
+
+    // Put the selection *on the cursor* and replace it with "[" + label + "](url)" in a single
+    // insert. Because it is one selection-aware operation (not brackets inserted around the text),
+    // a single Ctrl+Z restores the original text with the caret back at the end of the selection —
+    // rather than two undo steps that collapse the caret to the document start. The range is
+    // guaranteed plain text by the caller (isPlainTextRange), so the label is safe to re-insert.
+    QTextCursor cursor(document());
+    cursor.setPosition(start);
+    cursor.setPosition(end, QTextCursor::KeepAnchor);
+    const QString label = cursor.selectedText();
+    cursor.insertText(QLatin1Char('[') + label + QStringLiteral("](") + url + QLatin1Char(')'));
+}
+
 QString ChatInputHighlighter::textWithMentions() const
 {
     if (!document())
