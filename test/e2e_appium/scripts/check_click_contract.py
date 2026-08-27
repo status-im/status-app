@@ -7,9 +7,10 @@ interaction failures. Suite-defined ``-> bool`` methods are either
 best-effort (BEST_EFFORT names: ignoring the result is legal) or
 outcome-reporting (result MUST be consumed: assert/if/return/assign).
 
-Rules: R-CONSUME (branch/assert/assign/walrus/not/while on raising click());
+Rules: R-CONSUME (branch/assert/assign/augassign/walrus/not/while/short-circuit
+on raising click());
 R-ELEMENT (branching on zero-arg WebElement.click(), returns None);
-R-WRAPPER (bool-annotated def whose tail returns raising click());
+R-WRAPPER (any def whose tail returns raising click());
 R-ALWAYS-TRUE (bool-annotated def, every return literal True, body contains a
 bare raising click()); R-IGNORED (statement-level call of an indexed
 outcome-reporting bool method); R-CONFLICT (same method name indexed with
@@ -30,7 +31,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SKIP_DIRS = {".venv", "venv", "env", "__pycache__", "node_modules", ".git", "reports",
              "scripts", "cli", "locators"}  # tooling + locator factories — outside the click-contract domain
-SKIP_REL = {"pages/base_page.py", "scripts/check_click_contract.py"}
+SKIP_REL = {"scripts/check_click_contract.py"}
 CLICK = "click"
 
 BEST_EFFORT_PREFIXES = (
@@ -139,10 +140,15 @@ class Checker(ast.NodeVisitor):
     def visit_NamedExpr(self, n):
         self._check_value(n.value, "walrus"); self.generic_visit(n)
 
+    def visit_AugAssign(self, n):
+        self._check_value(n.value, "augmented assignment"); self.generic_visit(n)
+
     def visit_Expr(self, n):
         v = n.value
         if isinstance(v, ast.Await):
             v = v.value
+        if isinstance(v, ast.BoolOp):
+            self._check_value(v, "short-circuit")
         if isinstance(v, ast.Call):
             name = None
             if isinstance(v.func, ast.Attribute):
@@ -156,14 +162,18 @@ class Checker(ast.NodeVisitor):
         self.generic_visit(n)
 
     def visit_FunctionDef(self, n):
-        if is_bool_annotation(n.returns) and n.name not in (CLICK, "try_click"):
+        if n.name not in (CLICK, "try_click"):
+            # Any function whose tail returns a raising click() is a wrapper
+            # its callers will guard as if it returned False; the annotation
+            # (or its absence) does not change that.
             for st in own_nodes(n):
                 if isinstance(st, ast.Return) and st.value is not None:
                     for c in ast.walk(st.value):
                         if is_click_call(c) and has_args(c):
                             self.flag(st, "R-WRAPPER",
-                                      f"bool wrapper '{n.name}' returns raising click() — "
+                                      f"wrapper '{n.name}' returns raising click() — "
                                       "tail can raise; return try_click or catch")
+        if is_bool_annotation(n.returns) and n.name not in (CLICK, "try_click"):
             returns = [st for st in own_nodes(n) if isinstance(st, ast.Return)]
             all_true = returns and all(
                 isinstance(r.value, ast.Constant) and r.value.value is True
