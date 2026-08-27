@@ -843,6 +843,130 @@ Item {
             compare(control.cursorPosition, control.length)
         }
 
+        // ── paste URL over selection: link wrapping ──────────────────────────────
+
+        // Pasting a URL while plain text is selected wraps the selection as the link's label
+        // ("[selection](url)") instead of replacing it, with the caret left just after the ")".
+        function test_pasteUrlOverSelection_wrapsAsLink() {
+            control.text = "Hello world"
+            control.forceActiveFocus()
+            control.select(6, 11) // select "world"
+            ClipboardUtils.setText("http://link.com")
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            tryCompare(control, "text", "Hello [world](http://link.com)")
+            compare(control.cursorPosition, control.length) // right after the closing ")"
+        }
+
+        // With no selection, a pasted URL is inserted verbatim — no bracketing.
+        function test_pasteUrlNoSelection_insertsVerbatim() {
+            control.text = "Hello "
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+            ClipboardUtils.setText("http://link.com")
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            tryCompare(control, "text", "Hello http://link.com")
+        }
+
+        // Pasting non-URL text over a selection still replaces it (the wrapping is URL-only).
+        function test_pasteNonUrlOverSelection_replaces() {
+            control.text = "Hello world"
+            control.forceActiveFocus()
+            control.select(6, 11) // select "world"
+            ClipboardUtils.setText("there")
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            tryCompare(control, "text", "Hello there")
+        }
+
+        // The link wrap is one undo step: a single Ctrl+Z restores the pre-paste text.
+        function test_pasteUrlOverSelection_singleUndoRestores() {
+            control.text = "Hello world"
+            control.forceActiveFocus()
+            control.select(6, 11)
+            ClipboardUtils.setText("http://link.com")
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+            tryCompare(control, "text", "Hello [world](http://link.com)")
+
+            keyClick(Qt.Key_Z, Qt.ControlModifier)
+            compare(control.text, "Hello world")
+        }
+
+        // Undoing the link wrap restores the caret to the end of the originally-selected text
+        // (like a normal paste-over-selection undo), not collapsed to the document start.
+        function test_pasteUrlOverSelection_undoRestoresCaretAfterSelection() {
+            control.text = "Hello world"
+            control.forceActiveFocus()
+            control.select(6, 11) // select "world"
+            ClipboardUtils.setText("http://link.com")
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+            tryCompare(control, "text", "Hello [world](http://link.com)")
+
+            keyClick(Qt.Key_Z, Qt.ControlModifier)
+            compare(control.text, "Hello world")
+            compare(control.cursorPosition, 11) // end of the restored "world", not the doc start
+        }
+
+        // A selection containing a mention pill is not clean plain text, so the URL replaces the
+        // selection (falls back to a normal paste) rather than wrapping it.
+        function test_pasteUrlOverMentionSelection_fallsBack() {
+            const M = makeMentionDoc() // "A<mention>B"
+            control.forceActiveFocus()
+            control.selectAll()
+            ClipboardUtils.setText("http://link.com")
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            tryCompare(control, "text", "http://link.com")
+            tryCompare(mentionsRepeater, "count", 0)
+        }
+
+        // A selection spanning a line break cannot be a single-line label, so the URL replaces it.
+        function test_pasteUrlOverMultilineSelection_fallsBack() {
+            control.text = "a\nb"
+            control.forceActiveFocus()
+            control.selectAll()
+            ClipboardUtils.setText("http://link.com")
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            tryCompare(control, "text", "http://link.com")
+        }
+
+        // Link wrapping works inside a quote block: the selection is kept in the quote as the label.
+        function test_pasteUrlOverSelectionInQuote_wraps() {
+            control.text = "> Hello world"
+            control.forceActiveFocus()
+            control.select(8, 13) // select "world"
+            ClipboardUtils.setText("http://link.com")
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            tryCompare(control, "text", "> Hello [world](http://link.com)")
+        }
+
+        // A wrap that would exceed the character limit is rejected whole: nothing is inserted and
+        // attemptToExceedHardLimit fires (the kept selection plus wrapping syntax is counted).
+        function test_pasteUrlWrapExceedsLimit_rejected() {
+            control.characterLimit = 12
+            control.text = "Hello world" // length 11
+            control.forceActiveFocus()
+            control.select(6, 11)
+            ClipboardUtils.setText("http://link.com")
+            limitSpy.clear()
+
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            compare(control.text, "Hello world") // unchanged
+            compare(limitSpy.count, 1)
+        }
+
         // ── IME commit paste ──────────────────
 
         // Pasting via the on-screen keyboard's context menu arrives as an IME commit string, not a
@@ -901,6 +1025,20 @@ Item {
             imeTester.commit(control, "x")
 
             tryCompare(control, "text", "> x")
+        }
+
+        // An OSK "Paste" of a single URL over a selection arrives as a plain (newline-free) IME
+        // commit; the filter reroutes it through pasteText() so the selection is wrapped as the
+        // link's label rather than replaced.
+        function test_imeCommitUrlOverSelection_wrapsAsLink() {
+            control.text = "Hello world"
+            control.forceActiveFocus()
+            control.select(6, 11) // select "world"
+            ClipboardUtils.setText("http://link.com")
+
+            imeTester.commit(control, "http://link.com")
+
+            tryCompare(control, "text", "Hello [world](http://link.com)")
         }
 
         // ── IME commit: quote continuation (OSK new-line) ────────────────────────

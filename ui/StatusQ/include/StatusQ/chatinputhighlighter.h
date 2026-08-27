@@ -143,6 +143,20 @@ public:
     Q_INVOKABLE void pasteFromClipboard(int selectionStart, int selectionEnd,
                                         int cursorPosition);
 
+    // True when the whole trimmed `text` is exactly one auto-detected URL (a single full-span
+    // link, no surrounding text, no bracket/paren characters). Used to decide whether a paste
+    // over a selection should wrap it as a markdown link label.
+    Q_INVOKABLE bool isSingleUrl(const QString& text) const;
+
+    // True when `[start, end)` contains only plain text — no mention pills, no inline emoji image
+    // objects, and no paragraph/line break. Guards the "wrap only clean text" rule for link paste.
+    Q_INVOKABLE bool isPlainTextRange(int start, int end) const;
+
+    // Wraps `[start, end)` as a markdown link label: inserts "[" at start and "](url)" at end,
+    // preserving the selected text as the label, as a single undo step. The caller repositions
+    // the caret (typically to just after the closing ")").
+    Q_INVOKABLE void wrapSelectionInLink(int start, int end, const QString& url);
+
     // Returns the whole document as plain text, each mention pill rendered as its "@"+pubKey
     // wire form and paragraph separators as '\n'. Inverse of setTextWithMentions.
     Q_INVOKABLE QString textWithMentions() const;
