@@ -5,6 +5,7 @@ import QtQml.Models
 import StatusQ.Core.Theme
 
 import Storybook
+import Models
 
 import AppLayouts.Wallet.views
 import AppLayouts.Wallet.controls
@@ -21,7 +22,7 @@ SplitView {
         SendModalFooter {
             id: footer
             anchors.centerIn: parent
-            width: 595
+            implicitWidth: 595
 
             loading: loadingCheckbox.checked
             error: errorCheckbox.checked
@@ -41,7 +42,7 @@ SplitView {
         RouterErrorTag {
             errorTitle: "Error 2"
             buttonText: "Add ETH"
-            errorDetails: "Details will appear here"
+            errorDetails: ModelsData.descriptions.longLoremIpsum
             expandable: true
         }
     }
