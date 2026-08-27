@@ -147,13 +147,17 @@ Loader {
                 d.validationTimer.restart()
             }
 
-            width: parent.width
+            leftPadding: 4
+            rightPadding: 4
+            bottomPadding: 4
+            topPadding: 4
             height: visible ? implicitHeight: 0
 
             checkMarkVisible: !d.isBeingEvaluated && d.isValidAddress
             loading: d.isBeingEvaluated
             input.edit.textFormat: Text.AutoText
             error: !d.isBeingEvaluated && !!d.inputError && root.model.ModelCount.count === 0 ? d.inputError : ""
+            input.background.color: Theme.palette.secondaryMenuBackground
 
             onTextChanged: Qt.callLater(() => validateInput())
             onClearClicked: {
