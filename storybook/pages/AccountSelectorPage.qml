@@ -33,11 +33,6 @@ SplitView {
         }
 
         readonly property var currencyStore: CurrenciesStore{}
-        readonly property var nonWatchWalletAcounts: SortFilterProxyModel {
-            sourceModel: walletAccountsModel
-            filters: ValueFilter { roleName: "canSend"; value: true }
-        }
-
         readonly property var filteredFlatNetworksModel: SortFilterProxyModel {
             sourceModel: d.flatNetworks
             filters: ValueFilter { roleName: "isTest"; value: true }
@@ -178,7 +173,6 @@ SplitView {
                 }
             }
         }
-
     }
 
     Item {
@@ -209,3 +203,4 @@ SplitView {
 }
 
 // category: Components
+// status: good
