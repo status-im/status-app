@@ -6,7 +6,35 @@ import ./utils
 logScope:
   topics = "keychain-credential"
 
-const DEK_CREDENTIAL_PREFIX* = "dek:"
+export utils.DEK_CREDENTIAL_PREFIX
+
+proc dekCredentialForPasswordProfile*(keyUid: string, password: string): string =
+  ## Returns "dek:<64-hex>" ONLY when the profile is confirmed migrated to DEK encryption
+  ## AND the DEK export succeeds; "" in every other case (legacy profile, any failure).
+  ##
+  ## Unlike biometricCredentialForPasswordProfile below, this NEVER falls back to
+  ## returning the password — required for the silently readable "Stay logged in" store,
+  ## which must never hold a raw password. Provenance is guaranteed structurally: a
+  ## legacy profile returns "" here no matter what the password looks like (even one
+  ## shaped exactly like a tagged DEK).
+  try:
+    let info = status_privacy.getProfileEncryptionInfo(keyUid)
+    if info.result.isNil or info.result.kind != JObject or
+        info.result{"error"}.getStr.len > 0 or
+        not info.result.hasKey("migrated") or info.result["migrated"].kind != JBool:
+      error "unexpected profile encryption info response", keyUid
+      return ""
+    if not info.result["migrated"].getBool:
+      return "" # legacy profile: no DEK exists, nothing may be stored silently
+    let response = status_privacy.exportProfileDEK(keyUid, hashPassword(password))
+    let dek = response.result{"dek"}.getStr
+    if dek.len == 0:
+      error "export-profile-dek returned no DEK", keyUid, err = response.result{"error"}.getStr
+      return ""
+    return DEK_CREDENTIAL_PREFIX & dek
+  except Exception as e:
+    error "failed to prepare DEK credential", errName = e.name, errDesription = e.msg
+    return ""
 
 proc biometricCredentialForPasswordProfile*(keyUid: string, password: string): string =
   ## Returns the value to store in the OS keychain for biometric login for a password based profile.
