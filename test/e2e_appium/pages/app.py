@@ -282,12 +282,12 @@ class App(BasePage):
                     "Nav not visible on Settings attempt %d", attempt
                 )
                 continue
-            if not self.safe_click(self.locators.PROFILE_NAV_BUTTON, timeout=5):
+            if not self.try_click(self.locators.PROFILE_NAV_BUTTON, timeout=5):
                 self.logger.warning(
                     "Profile nav button tap failed on Settings attempt %d", attempt
                 )
                 continue
-            if not self.safe_click(self.locators.SETTINGS_ACTION, timeout=5):
+            if not self.try_click(self.locators.SETTINGS_ACTION, timeout=5):
                 self.logger.warning(
                     "Settings menu item tap failed on attempt %d", attempt
                 )
