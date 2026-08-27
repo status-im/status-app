@@ -36,26 +36,10 @@ StatusDropdown {
     signal toggleNetwork(int chainId, int index)
     signal manageNetworksClicked()
 
-
     modal: false
 
     padding: 4
     implicitWidth: 300
-
-    background: Rectangle {
-        radius: Theme.radius
-        color: Theme.palette.background
-        border.color: Theme.palette.border
-        layer.enabled: true
-        layer.effect: DropShadow {
-            verticalOffset: 3
-            radius: 8
-            samples: 15
-            fast: true
-            cached: true
-            color: "#22000000"
-        }
-    }
 
     // Keeps the single-selection invariant (exactly one selected network,
     // defaulting to the first one) while the view below is not instantiated.

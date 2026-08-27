@@ -166,10 +166,6 @@ StatusComboBox {
         relativeX: parent.width - width
         relativeY: parent.height + 4
 
-        padding: 1
-        topPadding: 8
-        bottomPadding: !!d.window.window ? d.window.window.SafeArea.margins.bottom: 0
-
         flatNetworks: root.flatNetworks
         disableChainsWithNoCommunitiesSupport: root.disableChainsWithNoCommunitiesSupport
         selectionAllowed: root.selectionAllowed
