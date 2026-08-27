@@ -10,6 +10,7 @@ before and after closing the top dialog.
 import logging
 
 import pytest
+from selenium.common.exceptions import InvalidSessionIdException
 
 from utils.screen_identity import dismiss_stacked_overlays, topmost_overlay
 
@@ -47,11 +48,13 @@ CLEAR = f'{DECLARATION}<hierarchy rotation="0" />'
 class StubDriver:
     def __init__(self, sources):
         self._sources = list(sources)
+        self.current = self._sources[0]
 
     @property
     def page_source(self):
         # Hold the last state so extra reads in one round stay consistent.
-        return self._sources.pop(0) if len(self._sources) > 1 else self._sources[0]
+        self.current = self._sources.pop(0) if len(self._sources) > 1 else self._sources[0]
+        return self.current
 
 
 class BrokenDriver:
@@ -60,10 +63,20 @@ class BrokenDriver:
         raise RuntimeError("session gone")
 
 
+class DeadDriver:
+    @property
+    def page_source(self):
+        raise InvalidSessionIdException("invalid session id")
+
+
 class StubPage:
     def __init__(self, driver):
         self.driver = driver
         self.logger = logging.getLogger("stub")
+
+    def is_element_visible(self, locator, timeout=0):
+        # Read the state the last page_source served; do not advance it.
+        return locator[1].split("'")[1] in self.driver.current
 
 
 def _page(*sources):
@@ -142,3 +155,34 @@ def test_does_nothing_when_no_overlay_is_on_top():
     overlays = [("push_notifications", POPUP, lambda: pytest.fail("should not tap"))]
 
     assert dismiss_stacked_overlays(page, overlays) == ([], None)
+
+
+def test_raises_when_the_session_is_dead():
+    with pytest.raises(InvalidSessionIdException):
+        topmost_overlay(StubPage(DeadDriver()), (POPUP, NAV_EDU))
+
+
+def test_dismisses_a_visible_dialog_when_nothing_holds_focus():
+    page = _page(NOTHING_FOCUSED, CLEAR)
+    calls = []
+    actions, error = dismiss_stacked_overlays(
+        page,
+        [
+            ("push_notifications", POPUP, lambda: calls.append("popup") or True),
+            ("nav_education", NAV_EDU, lambda: calls.append("nav_edu") or True),
+        ],
+    )
+    assert calls == ["popup"]
+    assert actions == ["push_notifications:dismissed"]
+    assert error is None
+
+
+def test_reports_a_visible_dialog_that_survives_every_round():
+    page = _page(NOTHING_FOCUSED)
+    actions, error = dismiss_stacked_overlays(
+        page,
+        [("push_notifications", POPUP, lambda: True)],
+        max_rounds=3,
+    )
+    assert actions == ["push_notifications:dismissed"] * 3
+    assert error == "Overlays were still on top after 3 rounds"

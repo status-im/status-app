@@ -19,6 +19,7 @@ concrete cause of the nav wedges seen while building this.
 import xml.etree.ElementTree as ET
 
 from locators.base_locators import BaseLocators
+from utils.exceptions import is_session_fatal
 from locators.wallet.accounts_locators import WalletAccountsLocators
 from locators.settings.settings_locators import SettingsLocators
 from locators.messaging.chat_locators import ChatLocators
@@ -52,6 +53,8 @@ def dismiss_backup_modal(page, timeout: int = 2) -> bool:
         page.click(BACKUP_MODAL_SKIP, timeout=5)
         return page.wait_for_invisibility(BACKUP_MODAL, timeout=5)
     except Exception as exc:
+        if is_session_fatal(exc):
+            raise
         page.logger.warning("Backup modal present but dismissal failed: %s", exc)
         return False
 
@@ -70,6 +73,8 @@ def dismiss_introduce_yourself(page, timeout: int = 2) -> bool:
         page.click(INTRODUCE_MODAL_SKIP, timeout=5)
         return page.wait_for_invisibility(INTRODUCE_MODAL_SKIP, timeout=5)
     except Exception as exc:
+        if is_session_fatal(exc):
+            raise
         page.logger.warning(
             "Introduce-yourself sheet present but dismissal failed: %s", exc
         )
@@ -94,8 +99,10 @@ def topmost_overlay(page, object_names: tuple[str, ...]) -> str | None:
     """
     try:
         root = ET.fromstring(page.driver.page_source.encode("utf-8"))
-    except Exception:
-        page.logger.warning("Could not read the page source to find the top overlay")
+    except Exception as exc:
+        if is_session_fatal(exc):
+            raise
+        page.logger.warning("Could not read the page source to find the top overlay: %s", exc)
         return None
 
     for node in root.iter():
@@ -108,13 +115,19 @@ def topmost_overlay(page, object_names: tuple[str, ...]) -> str | None:
     return None
 
 
+def overlay_locator(object_name: str) -> tuple:
+    return ("xpath", f"//*[contains(@resource-id,'{object_name}')]")
+
+
 def dismiss_stacked_overlays(page, overlays, max_rounds: int = 4):
     """Close overlays from the top of the stack down.
 
     ``overlays`` is a sequence of (label, object name, dismiss callable).
-    The order of that sequence is not used: each round asks the device
-    which dialog is on top and closes that one, because a lower dialog
-    cannot be tapped until the ones above it are gone.
+    Each round asks the device which listed dialog holds focus and closes
+    that one, because a lower dialog cannot be tapped until the ones above
+    it are gone. When focus names none of them, the sequence order decides:
+    the first listed dialog still visible is closed, so a dialog on screen
+    is never reported as absent.
 
     Returns (actions, error). ``error`` is None once nothing is left on
     top, otherwise a message naming the overlay that is still there.
@@ -124,6 +137,11 @@ def dismiss_stacked_overlays(page, overlays, max_rounds: int = 4):
 
     for _ in range(max_rounds):
         name = topmost_overlay(page, tuple(by_name))
+        if name is None:
+            name = next(
+                (n for n in by_name if page.is_element_visible(overlay_locator(n), timeout=2)),
+                None,
+            )
         if name is None:
             return actions, None
 

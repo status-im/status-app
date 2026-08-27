@@ -34,7 +34,7 @@ from pages.onboarding import (
 )
 from services.app_initialization_manager import AppInitializationManager
 from utils.generators import generate_seed_phrase
-from utils.screen_identity import dismiss_stacked_overlays
+from utils.screen_identity import dismiss_stacked_overlays, overlay_locator
 
 NAV_EDUCATION_ID = "NavigationEducationDialog"
 
@@ -455,7 +455,12 @@ class OnboardingFlow:
                 (
                     "nav_education",
                     NAV_EDUCATION_ID,
-                    lambda: overlay_page.try_click(nav_edu_close, timeout=5),
+                    lambda: (
+                        overlay_page.try_click(nav_edu_close, timeout=5)
+                        and overlay_page.wait_for_invisibility(
+                            overlay_locator(NAV_EDUCATION_ID), timeout=5
+                        )
+                    ),
                 ),
             ],
         )
