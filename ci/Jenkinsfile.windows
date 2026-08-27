@@ -123,16 +123,18 @@ pipeline {
         sh 'git submodule update --init --recursive'
       }
     }
-    stage('Override status-go ref') {
-      when { expression { params.STATUS_GO_REF?.trim() } }
-      steps {
-        sh "./scripts/override-status-go-ref.sh ${params.STATUS_GO_REF}"
-      }
-    }
     stage('Deps') {
       steps {
         sh 'make update'
         sh 'make deps'
+      }
+    }
+
+    stage('Override status-go ref') {
+      /* Must run after `make update`, which resets submodules. */
+      when { expression { params.STATUS_GO_REF?.trim() } }
+      steps {
+        sh "./scripts/override-status-go-ref.sh ${params.STATUS_GO_REF}"
       }
     }
 
