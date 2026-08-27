@@ -215,8 +215,16 @@ def main():
         c.visit(tree)
         bad.extend(c.bad)
         for n in ast.walk(tree):
-            if isinstance(n, ast.Attribute) and n.attr == "safe_click":
-                bad.append(f"{rel}:{n.lineno}: safe_click reference (renamed to click)")
+            hit = (
+                (isinstance(n, ast.Attribute) and n.attr == "safe_click")
+                or (isinstance(n, ast.Name) and n.id == "safe_click")
+                or (isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+                    and n.name == "safe_click")
+                or (isinstance(n, ast.alias)
+                    and "safe_click" in (n.name, n.asname))
+            )
+            if hit:
+                bad.append(f"{rel}:{getattr(n, 'lineno', 0)}: safe_click reference (renamed to click)")
 
     if bad:
         print("click-contract violations:")
