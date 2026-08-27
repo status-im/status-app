@@ -58,7 +58,7 @@ def test_join_leave_profile_showcase_community(multiple_instances):
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
             ), f'Chat with {owner.name} not in list'
             chat = messages_view.left_panel.click_chat_by_name(owner.name)
-            community_screen = chat.click_community_invite(community.name, 0)
+            community_screen = chat.click_community_invite_message()
             welcome_popup = community_screen.left_panel.open_welcome_community_popup()
             assert community.name in welcome_popup.title
             assert community.introduction == welcome_popup.intro

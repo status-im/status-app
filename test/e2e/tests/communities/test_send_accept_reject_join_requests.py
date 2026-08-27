@@ -86,7 +86,7 @@ def test_send_accept_reject_join_requests(multiple_instances):
             switch_to_aut(aut_three, main_screen)
             messages_view = main_screen.left_panel.open_messages_screen()
             chat = messages_view.left_panel.click_chat_by_name(user_two.name)
-            community_screen = chat.click_community_invite(community.name, 0)
+            community_screen = chat.click_community_invite_message()
 
         with step(f'User {user_three.name}, verify welcome community popup and request to join'):
             welcome_popup = community_screen.left_panel.open_welcome_community_popup()
@@ -101,7 +101,7 @@ def test_send_accept_reject_join_requests(multiple_instances):
             messages_view = main_screen.left_panel.open_messages_screen()
             skip_message_backup_popup_if_visible()
             chat = messages_view.left_panel.click_chat_by_name(user_two.name)
-            community_screen = chat.click_community_invite(community.name, 0)
+            community_screen = chat.click_community_invite_message()
 
         with step(f'User {user_one.name}, verify welcome community popup and request to join'):
             welcome_popup = community_screen.left_panel.open_welcome_community_popup()

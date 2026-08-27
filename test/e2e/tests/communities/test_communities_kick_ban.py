@@ -51,11 +51,11 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
         with step(f'User {user_one.name}, accept invitation from {user_two.name}'):
             switch_to_aut(aut_one, main_screen)
             messages_view = main_screen.left_panel.open_messages_screen()
-            skip_message_backup_popup_if_visible()
             assert driver.waitFor(lambda: user_two.name in messages_view.left_panel.get_chats_names,
                                   10000)
             chat = messages_view.left_panel.click_chat_by_name(user_two.name)
-            community_screen = chat.click_community_invite(community.name, 0)
+            skip_message_backup_popup_if_visible()
+            community_screen = chat.click_community_invite_message()
 
         with step(f'User {user_one.name}, verify welcome community popup'):
             welcome_popup = community_screen.left_panel.open_welcome_community_popup()
@@ -109,7 +109,7 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
             messages_view1 = main_screen.left_panel.open_messages_screen()
             chat = messages_view1.left_panel.click_chat_by_name(user_two.name)
             time.sleep(1)
-            community_screen = chat.click_community_invite(community.name, 0)
+            community_screen = chat.click_community_invite_message()
 
             welcome_popup = community_screen.left_panel.open_welcome_community_popup()
             welcome_popup.join().authenticate(user_one.password)
@@ -132,7 +132,7 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
             switch_to_aut(aut_one, main_screen)
             messages_view = main_screen.left_panel.open_messages_screen()
             chat = messages_view.left_panel.click_chat_by_name(user_two.name)
-            community_screen = chat.click_community_invite(community.name, 0)
+            community_screen = chat.click_community_invite_message()
             welcome_popup = community_screen.left_panel.open_welcome_community_popup()
             welcome_popup.join().authenticate(user_one.password)
             assert driver.waitFor(lambda: not community_screen.left_panel.is_join_community_visible,
