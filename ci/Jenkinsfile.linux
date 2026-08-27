@@ -64,7 +64,7 @@ pipeline {
     buildDiscarder(logRotator(
       numToKeepStr: '10',
       daysToKeepStr: '30',
-      artifactNumToKeepStr: '1',
+      artifactNumToKeepStr: '10',
       artifactDaysToKeepStr: '30'
     ))
     /* Allows combined build to copy */
