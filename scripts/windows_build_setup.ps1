@@ -77,7 +77,7 @@ function Install-Dependencies {
     Scoop-Install 'status/inno-setup'    '6.7.0'
     Scoop-Install 'status/msys2'         '2025-12-13'
     Scoop-Install 'status/llvm'          '22.1.8'
-    Scoop-Install 'status/temurin17-jdk' '17.0.19-10'
+    Scoop-Install 'status/openjdk25'     '25.0.2-10'
 }
 
 function Install-MSYS2-Packages {
@@ -153,7 +153,7 @@ export PATH=`"/c/BuildTools/MSBuild/Current/Bin:`$PATH`"
 export PATH=`"/c/BuildTools/VC/Tools/MSVC/14.44.35207/bin:`$PATH`"
 export PATH=`"/c/ProgramData/scoop/apps/openssl-lts/current/bin:`$PATH`"
 export PATH=`"/c/ProgramData/scoop/apps/inno-setup/current:`$PATH`"
-export PATH=`"/c/ProgramData/scoop/apps/temurin17-jdk/17.0.19-10/bin:`$PATH`"
+export PATH=`"/c/ProgramData/scoop/apps/openjdk25/25.0.2-10/bin:`$PATH`"
 "@
 }
 
