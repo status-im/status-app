@@ -1905,6 +1905,7 @@ Item {
 
             // Container for the Activity Center Area in Landscape
             Rectangle {
+                objectName: "activityCenterSlideContainer"
                 readonly property bool openPanel: !mainLayoutItem.isPortraitMode ? mainLayoutItem.openACCenterPanel : false
 
                 // Keep alive while closing animation
