@@ -11,21 +11,19 @@ class PinnedMessagesPopup(QObject):
     def __init__(self):
         super().__init__(names.pinnedMessagesPopup)
         self._close_button = Button(names.headerActionsCloseButton_StatusFlatRoundButton)
-        self._unpin_button = Button(names.unpinButton_StatusFlatRoundButton)
-        self._pinned_message_details = QObject(names.pinMessageDetails)
-
-    @allure.step('Wait until appears {0}')
-    def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        self._pinned_message_details.wait_until_appears(timeout_msec)
-        return self
+        self._context_menu = QObject(names.contextMenu_PopupItem)
+        self._unpin_menu_item = Button(names.pinnedMessagesPopup_unpin_StatusMenuItem)
+        self._pinned_message_details = QObject(names.pinMessageDetails_in_pinnedPopup)
 
     @allure.step('Unpin message')
     def unpin_message(self):
-        self._pinned_message_details.hover()
-        self._unpin_button.click()
+        self._pinned_message_details.wait_until_appears()
+        self._pinned_message_details.right_click()
+        self._context_menu.wait_until_appears()
+        self._unpin_menu_item.wait_until_appears().click()
         return self
 
     @allure.step('Close pinned messages popup')
     def close(self):
         self._close_button.click()
-        self._pinned_message_details.wait_until_hidden()
+        self.wait_until_hidden()

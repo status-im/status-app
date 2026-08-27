@@ -75,8 +75,10 @@ chatMessageViewDelegate_messageContextMenuExpandButton = {"container": messageCo
 chatMessageViewDelegate_messageContextMenuPinButton = {"container": messageContextView, "objectName": "messageContextMenu_pin", "type": "StatusMenuItem", "visible": True}
 chatMessageViewDelegate_messageContextMenuUnpinButton = {"container": messageContextView, "objectName": "messageContextMenu_pin", "type": "StatusMenuItem", "visible": True}
 chatMessageViewDelegate_messageContextMenuEditButton = {"container": messageContextView, "objectName": "messageContextMenu_edit", "type": "StatusFlatRoundButton", "visible": True}
+chatMessageViewDelegate_messageContextMenuEditMenuItem = {"container": messageContextView, "objectName": "messageContextMenu_edit", "type": "StatusMenuItem", "visible": True}
 chatMessageViewDelegate_messageContextMenuDeleteButton = {"container": messageContextView, "objectName": "messageContextMenu_delete", "type": "StatusMenuItem", "visible": True}
 chatMessageViewDelegate_messageContextMenuReplyButton = {"container": messageContextView, "objectName": "messageContextMenu_replyTo", "type": "StatusFlatRoundButton", "visible": True}
+chatMessageViewDelegate_messageContextMenuReplyMenuItem = {"container": messageContextView, "objectName": "messageContextMenu_replyTo", "type": "StatusMenuItem", "visible": True}
 mainWindow_replyPanel_StatusChatInputReplyPanel = {"container": statusDesktop_mainWindow, "objectName": "statusChatInputReplyArea", "type": "StatusChatInputReplyPanel", "visible": True}
 layout_recentMessagesButton_AnchorButton = {"checkable": False, "container": mainWindow_chatLogView_StatusListView, "id": "recentMessagesButton", "type": "AnchorButton", "unnamed": 1, "visible": True}
 
