@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Click-contract checker v2 (AST, two-pass).
+"""Click-contract checker (AST, two-pass).
 
 Contract: click() raises on failure and only ever returns True (True = input
 dispatched, not UI reacted); try_click() returns bool and never raises for
