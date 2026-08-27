@@ -895,6 +895,8 @@ StatusDialog {
     footer: SendModalFooter {
         objectName: "sendModalFooter"
 
+        bottomSheet: root.bottomSheet
+
         estimatedTime: root.estimatedTime
         estimatedFees: root.estimatedFiatFees
 
