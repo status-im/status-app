@@ -176,14 +176,34 @@ StatusTextArea {
             root.pasteImageRequested()
             return
         }
+        // With a plain-text selection active, pasting a bare URL turns the selection into the
+        // link's label ("[selection](url)") instead of replacing it. Only clean single-line text
+        // qualifies — pills, emoji or newlines fall back to a normal replace (isPlainTextRange).
+        const selLen = root.selectionEnd - root.selectionStart
+        const url = ClipboardUtils.text.trim()
+        const wrapAsLink = selLen > 0
+                && highlighter.isSingleUrl(url)
+                && highlighter.isPlainTextRange(root.selectionStart, root.selectionEnd)
+
         // The clipboard's plain text length is the character count; for an internal
         // mention paste this slightly over-counts (names vs 1-char pills), erring
-        // toward stricter blocking.
-        const selLen = root.selectionEnd - root.selectionStart
-        if (root.length - selLen + ClipboardUtils.text.length > root.characterLimit) {
+        // toward stricter blocking. When wrapping, the selection is kept as the label, so the
+        // added length is the wrapping syntax ("[", "](", ")") plus the url — not url − selection.
+        const newLength = wrapAsLink ? root.length + 4 + url.length
+                                     : root.length - selLen + ClipboardUtils.text.length
+        if (newLength > root.characterLimit) {
             root.attemptToExceedHardLimit()
             return
         }
+
+        if (wrapAsLink) {
+            const start = root.selectionStart
+            highlighter.wrapSelectionInLink(start, root.selectionEnd, url)
+            root.cursorPosition = start + selLen + url.length + 4 // just after the closing ")"
+            d.ensureCursorRectanglePosition()
+            return
+        }
+
         highlighter.pasteFromClipboard(root.selectionStart, root.selectionEnd,
                                        root.cursorPosition)
         d.ensureCursorRectanglePosition()
@@ -256,6 +276,17 @@ StatusTextArea {
             // ClipboardUtils-based logic (char limit, mention restore, "> " prefixing) applies.
             if (imeEvent.commitString.length > 1 && imeEvent.commitString.includes("\n")
                     && highlighter.isInQuoteBlock(root.cursorPosition)) {
+                root.pasteText()
+                imeEvent.accept()
+                return
+            }
+            // An OSK "Paste" of a single URL over a selection arrives as a plain (newline-free)
+            // commit, so it misses the branch above. Route it through the same pasteText() path so
+            // the selection-aware link wrapping applies, and consume the raw insertion. Gated on a
+            // live selection (rare during OSK typing) so ordinary typing is unaffected.
+            if (imeEvent.commitString.length > 1
+                    && root.selectionStart !== root.selectionEnd
+                    && highlighter.isSingleUrl(imeEvent.commitString)) {
                 root.pasteText()
                 imeEvent.accept()
             }
