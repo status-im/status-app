@@ -163,9 +163,9 @@ def test_create_edit_join_community_pin_unpin_message(multiple_instances):
                 configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
             ), f'Message {second_message_text} is not visible'
 
-        with step(f'Hover message {second_message_text} and pin it'):
+        with step(f'Open context menu for {second_message_text} and pin it'):
             message = messages_screen.chat.find_message_by_text(second_message_text, 0)
-            message.hover_message().pin_message()
+            message.open_context_menu().pin_message()
 
 
         with step(f'User {user_one.name} see the {second_message_text} as pinned'):

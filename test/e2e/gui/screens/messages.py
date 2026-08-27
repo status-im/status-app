@@ -348,9 +348,13 @@ class Message:
         self.delegate_button.click()
         return BannedCommunityScreen().wait_until_appears()
 
+    @allure.step('Open message context menu')
+    def open_context_menu(self):
+        return MessageQuickActions(self, mode='right_click')
+
     @allure.step('Hover message')
     def hover_message(self):
-        return MessageQuickActions(self)
+        return MessageQuickActions(self, mode='hover')
 
     @property
     @allure.step('Get user name in pinned message details')
@@ -745,6 +749,8 @@ class ChatMessagesView(QObject):
 
     @allure.step('Click more options button')
     def open_more_options(self):
+        self._more_button.wait_until_appears()
+        MessageContextMenuPopup().dismiss_if_visible(self._more_button)
         self._more_button.click()
 
     @allure.step('Choose edit group name option')
@@ -877,22 +883,35 @@ class ChatMessagesView(QObject):
 
 
 class MessageQuickActions(QObject):
-    def __init__(self, message: Message):
+    def __init__(self, message: Message, mode: str = 'right_click'):
         super().__init__(messaging_names.messageContextView)
         self._message = message
+        self._mode = mode
         self._expand_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuExpandButton)
         self._pin_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuPinButton)
         self._unpin_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuUnpinButton)
         self._edit_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuEditButton)
+        self._edit_menu_item = Button(messaging_names.chatMessageViewDelegate_messageContextMenuEditMenuItem)
         self._delete_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuDeleteButton)
         self._reply_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuReplyButton)
+        self._reply_menu_item = Button(messaging_names.chatMessageViewDelegate_messageContextMenuReplyMenuItem)
         self._reply_panel = QObject(messaging_names.mainWindow_replyPanel_StatusChatInputReplyPanel)
         self._edit_message_input = QObject(messaging_names.mainWindow_statusChatInput_StatusChatInput)
         self._edit_message_field = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
         self._message_input_area = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
         self._send_message_button = Button(messaging_names.mainWindow_statusChatInputSendButton)
 
+    def _edit_action(self) -> Button:
+        return self._edit_menu_item if self._mode == 'right_click' else self._edit_button
+
+    def _reply_action(self) -> Button:
+        return self._reply_menu_item if self._mode == 'right_click' else self._reply_button
+
     def _open_context_menu(self):
+        if self._mode == 'right_click':
+            self._message.open_context_menu_for_message()
+            return
+
         if self._message.delegate_button is None:
             raise LookupError('Message delegate not found; cannot open quick actions')
 
@@ -914,8 +933,10 @@ class MessageQuickActions(QObject):
                 f'last error was {last_error!r}'
             )
 
-    def expand(self):
-        self._open_context_menu()
+    def _expand_collapsed_menu(self):
+        if self._mode == 'right_click':
+            return self
+
         timeout_msec = configs.timeouts.UI_LOAD_TIMEOUT_MSEC
         try:
             self._expand_button.wait_until_appears(timeout_msec)
@@ -923,25 +944,31 @@ class MessageQuickActions(QObject):
             return self
         self._expand_button.click()
         assert driver.waitFor(
-            lambda: not self._expand_button.is_visible,
+            lambda: self.is_visible and self._pin_button.is_visible,
             timeout_msec,
         ), f'Message context menu did not expand within {timeout_msec} ms'
         return self
 
+    def expand(self):
+        self._open_context_menu()
+        return self._expand_collapsed_menu()
+
     @allure.step('Click pin button')
     def pin_message(self):
-        self.expand()
+        self._open_context_menu()
+        self._expand_collapsed_menu()
         self._pin_button.wait_until_appears().click()
 
     @allure.step('Click unpin button')
     def unpin_message(self):
-        self.expand()
+        self._open_context_menu()
+        self._expand_collapsed_menu()
         self._unpin_button.wait_until_appears().click()
 
     @allure.step('Edit message and save changes')
     def edit_message(self, text: str):
         self._open_context_menu()
-        self._edit_button.click()
+        self._edit_action().wait_until_appears().click()
         self._edit_message_input.wait_until_appears()
         self._edit_message_field.set_text_property(text)
         self._send_message_button.wait_until_enabled().click()
@@ -955,7 +982,7 @@ class MessageQuickActions(QObject):
     @allure.step('Reply to own message')
     def reply_own_message(self, text: str):
         self._open_context_menu()
-        self._reply_button.click()
+        self._reply_action().wait_until_appears().click()
         assert self._reply_panel.exists
         self._message_input_area.set_text_property(text)
         assert driver.waitFor(
@@ -964,13 +991,20 @@ class MessageQuickActions(QObject):
         ), 'Send button stayed disabled after reply text'
         self._send_message_button.click()
 
+    def _dismiss_context_menu(self):
+        MessageContextMenuPopup().dismiss_if_visible(self._message_input_area)
+
     @allure.step('Delete button is visible')
     def is_delete_button_visible(self) -> bool:
         try:
             self.expand()
         except (LookupError, TimeoutError):
+            self._dismiss_context_menu()
             return False
-        return self._delete_button.is_visible
+        try:
+            return self._delete_button.is_visible
+        finally:
+            self._dismiss_context_menu()
 
 
 class Members(QObject):
