@@ -70,7 +70,7 @@ Rectangle {
     }
 
     implicitHeight: childrenRect.height + (!!selectedRecipientAddress ? 0 : Theme.halfPadding/2)
-    color: Theme.palette.indirectColor1
+    color: Theme.palette.secondaryMenuBackground
     radius: 8
 
     onSearchPatternChanged: {
@@ -145,7 +145,7 @@ Rectangle {
             onKeyPressed: (event) => d.handleKeyPressOnSearch(event)
         }
 
-        SharedPanels.Separator {
+        Rectangle {
             Layout.preferredHeight: 1
             Layout.fillWidth: true
             color: Theme.palette.baseColor2
@@ -185,10 +185,9 @@ Rectangle {
             visible: !root.selectedRecipientAddress && !d.searchInProgress
         }
 
-        SharedPanels.Separator {
+        Rectangle {
             Layout.preferredHeight: 1
             Layout.fillWidth: true
-            Layout.topMargin: -Theme.halfPadding
             color: Theme.palette.baseColor2
             visible: recipientTypeTabBar.visible
         }
