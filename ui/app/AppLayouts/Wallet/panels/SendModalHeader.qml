@@ -9,7 +9,7 @@ import AppLayouts.Wallet.controls
 
 import utils
 
-RowLayout {
+Flow {
     id: root
 
     /**
@@ -89,8 +89,6 @@ RowLayout {
         tokenSelector.setSelection(name, icon, key)
     }
 
-    implicitHeight: sendModalTitleText.height
-
     spacing: 8
 
     // if not closed during scrolling they move with the header and it feels undesirable
@@ -101,10 +99,9 @@ RowLayout {
 
     StatusBaseText {
         id: sendModalTitleText
+        width: root.width
 
         objectName: "sendModalTitleText"
-
-        Layout.preferredWidth: contentWidth
 
         lineHeightMode: Text.FixedHeight
         lineHeight: root.isStickyHeader ? 30 : 38
@@ -114,76 +111,73 @@ RowLayout {
         text: qsTr("Send")
     }
 
-    TokenSelector {
-        id: tokenSelector
+    RowLayout {
+        width: root.width
+        TokenSelector {
+            id: tokenSelector
 
-        objectName: "tokenSelector"
+            objectName: "tokenSelector"
 
-        Layout.fillWidth: true
-        Layout.maximumWidth: implicitWidth
+            size: root.isStickyHeader ?
+                      TokenSelectorButton.Size.Small:
+                      TokenSelectorButton.Size.Normal
 
-        size: root.isStickyHeader ?
-                  TokenSelectorButton.Size.Small:
-                  TokenSelectorButton.Size.Normal
+            enabled: root.interactive
+            showSectionName: false
 
-        enabled: root.interactive
-        showSectionName: false
+            assetsModel: root.assetsModel
+            formatCurrencyBalance: root.formatCurrencyBalance
+            collectiblesModel: root.displayOnlyAssets ? null: root.collectiblesModel
 
-        assetsModel: root.assetsModel
-        formatCurrencyBalance: root.formatCurrencyBalance
-        collectiblesModel: root.displayOnlyAssets ? null: root.collectiblesModel
+            flatNetworksModel: root.networksModel
+            selectedChainId: root.selectedChainId
 
-        flatNetworksModel: root.networksModel
-        selectedChainId: root.selectedChainId
-
-        onCollectibleSelected: (key) => root.collectibleSelected(key)
-        onCollectionSelected: (key) => root.collectionSelected(key)
-        onAssetSelected: (key) => root.assetSelected(key)
-        onSearchInAssets: (keyword) => root.searchInAssets(keyword)
-        onFetchMoreAssets: root.fetchMoreAssets()
-        onChainSelected: (chainId) => { if (chainId !== -1) root.networkSelected(chainId) }
-    }
-
-    // Horizontal spacer
-    RowLayout {}
-
-    StatusBaseText {
-        Layout.alignment: Qt.AlignRight
-
-        text: qsTr("On:")
-        color: Theme.palette.baseColor1
-        font.pixelSize: Theme.additionalTextSize
-        lineHeight: 38
-        lineHeightMode: Text.FixedHeight
-        verticalAlignment: Text.AlignVCenter
-
-        visible: networkFilter.visible
-    }
-
-    NetworkFilter {
-        id: networkFilter
-
-        objectName: "networkFilter"
-
-        Layout.alignment: Qt.AlignTop
-
-        flatNetworks: root.networksModel
-
-        multiSelection: false
-        showSelectionIndicator: false
-        showTitle: false
-        interactive: root.interactive
-
-        Binding on selection {
-            value: [root.selectedChainId]
-            when: root.selectedChainId !== 0
+            onCollectibleSelected: (key) => root.collectibleSelected(key)
+            onCollectionSelected: (key) => root.collectionSelected(key)
+            onAssetSelected: (key) => root.assetSelected(key)
+            onSearchInAssets: (keyword) => root.searchInAssets(keyword)
+            onFetchMoreAssets: root.fetchMoreAssets()
+            onChainSelected: (chainId) => { if (chainId !== -1) root.networkSelected(chainId) }
         }
-        onSelectionChanged: {
-            if (root.selectedChainId !== selection[0]) {
-                root.networkSelected(selection[0])
+
+        Item { Layout.fillWidth: true }
+
+        StatusBaseText {
+            Layout.alignment: Qt.AlignRight
+            text: qsTr("On:")
+            color: Theme.palette.baseColor1
+            font.pixelSize: Theme.additionalTextSize
+            lineHeight: 38
+            lineHeightMode: Text.FixedHeight
+            verticalAlignment: Text.AlignVCenter
+
+            visible: networkFilter.visible
+        }
+
+        NetworkFilter {
+            Layout.topMargin: 6
+
+            id: networkFilter
+            objectName: "networkFilter"
+
+            flatNetworks: root.networksModel
+
+            multiSelection: false
+            showSelectionIndicator: false
+            showTitle: false
+            interactive: root.interactive
+
+            Binding on selection {
+                value: [root.selectedChainId]
+                when: root.selectedChainId !== 0
             }
-        }
+            onSelectionChanged: {
+                if (root.selectedChainId !== selection[0]) {
+                    root.networkSelected(selection[0])
+                }
+            }
 
-        onToggleNetwork: (chainId) => root.networkSelected(chainId)
+            onToggleNetwork: (chainId, index) => root.networkSelected(chainId)
+        }
     }
 }

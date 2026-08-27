@@ -78,15 +78,5 @@ StatusInput {
         }
     }
 
-    Connections {
-        target: root.input
-        function onKeyPressed(event) {
-            if (event.matches(StandardKey.Paste)) {
-                event.accepted = true
-                root.text = ClipboardUtils.text // paste plain text
-            }
-        }
-    }
-
-    Keys.onTabPressed: event.accepted = true
+    Keys.onTabPressed: event => event.accepted = true
 }
