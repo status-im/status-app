@@ -29,8 +29,8 @@ from gui.elements.object import QObject
 from gui.elements.text_label import TextLabel
 from gui.objects_map import wallet_names, settings_names, names
 from helpers.wallet_helper import (
-    _asset_items_finished_loading,
     is_activity_tab_content_loaded,
+    is_assets_tab_content_loaded,
 )
 
 LOG = logging.getLogger(__name__)
@@ -408,17 +408,11 @@ class WalletAccountView(QObject):
         self,
         timeout_msec: int | None = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
     ):
-        assets_tab_view = QObject(wallet_names.assets_tab_view)
-
-        def assets_loaded():
-            if not assets_tab_view.is_visible:
-                return False
-            items = driver.findAllObjects(self._asset_item.real_name)
-            if not items:
-                return False
-            return _asset_items_finished_loading(self._asset_item)
-
-        _wait_until(assets_loaded, timeout_msec, 'Assets tab did not finish loading')
+        _wait_until(
+            lambda: is_assets_tab_content_loaded(self._asset_item),
+            timeout_msec,
+            'Assets tab did not finish loading',
+        )
         return self
 
     @allure.step('Wait for collectibles tab content to finish loading')

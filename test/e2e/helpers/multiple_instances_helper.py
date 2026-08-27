@@ -8,6 +8,12 @@ from allure_commons._allure import step
 import configs
 
 
+def _attach_and_prepare(aut, main_window):
+    aut.attach()
+    main_window.prepare()
+    main_window.wait_until_appears(configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
+
+
 @allure.step('Switch to AUT and prepare main window')
 def switch_to_aut(aut, main_window):
     """
@@ -17,22 +23,19 @@ def switch_to_aut(aut, main_window):
         aut: The AUT to switch to
         main_window: MainWindow instance
     """
-    aut.attach()
-    main_window.prepare()
+    _attach_and_prepare(aut, main_window)
 
 
 @allure.step('Authorize user in AUT')
 def authorize_user_in_aut(aut, main_window, user_account):
-    aut.attach()
-    main_window.wait_until_appears(configs.timeouts.APP_LOAD_TIMEOUT_MSEC).prepare()
+    _attach_and_prepare(aut, main_window)
     main_window.authorize_user(user_account)
     main_window.minimize()
 
 
 @allure.step('Get chat key from user')
 def get_chat_key(aut, main_window):
-    aut.attach()
-    main_window.prepare()
+    _attach_and_prepare(aut, main_window)
     profile_popup = main_window.left_panel.open_online_identifier().open_profile_popup_from_online_identifier()
     chat_key = profile_popup.copy_chat_key
     main_window.left_panel.click()
@@ -53,8 +56,7 @@ def send_contact_request_from_settings(aut, main_window, chat_key, message):
     Returns:
         ContactsSettingsView: The contacts settings view instance
     """
-    aut.attach()
-    main_window.prepare()
+    _attach_and_prepare(aut, main_window)
     settings = main_window.left_panel.open_settings()
     messaging_settings = settings.left_panel.open_messaging_settings()
     contacts_settings = messaging_settings.open_contacts_settings()
@@ -73,8 +75,7 @@ def accept_contact_request_from_settings(aut, main_window, user_name):
         main_window: MainWindow instance
         user_name: Name of the user to accept request from
     """
-    aut.attach()
-    main_window.prepare()
+    _attach_and_prepare(aut, main_window)
     settings = main_window.left_panel.open_settings()
     messaging_settings = settings.left_panel.open_messaging_settings()
     contacts_settings = messaging_settings.open_contacts_settings()
