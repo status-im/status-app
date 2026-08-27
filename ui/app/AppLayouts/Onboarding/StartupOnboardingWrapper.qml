@@ -10,6 +10,7 @@ import AppLayouts.Onboarding.enums
 import AppLayouts.Onboarding.stores
 import AppLayouts.Onboarding.pages
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Platform
@@ -90,6 +91,19 @@ Item {
             }
             onDeleteBiometricsRequested: (account) => {
                 root.keychain.deleteCredential(account)
+            }
+            onStayLoggedInSaveRequested: (account, credential, enablePreference) => {
+                // The credential is guaranteed dek-tagged (enforced Nim-side). The
+                // preference survives logout by design: with it ON, an explicit login
+                // silently re-stores the credential; with it OFF, any stale credential
+                // is reconciled away (the final safety net for a mutation that
+                // committed after its caller timed out).
+                if (enablePreference)
+                    localAccountSettings.stayLoggedIn = true
+                if (localAccountSettings.stayLoggedIn)
+                    root.secureStorage.setCredential(account, credential)
+                else if (root.secureStorage.hasCredential(account) === SecureStorage.StatusSuccess)
+                    root.secureStorage.deleteCredential(account)
             }
 
             onKeycardStateChanged: {

@@ -12,6 +12,26 @@ import constants as main_constants
 const STATUS_DOMAIN* = ".stateofus.eth"
 const ETH_DOMAIN* = ".eth"
 
+const DEK_CREDENTIAL_PREFIX* = "dek:"
+
+proc isTaggedDekCredential*(value: string): bool =
+  ## Strict shape check for a tagged DEK credential: "dek:" followed by exactly 64
+  ## lowercase hex characters (status-go normalizes the DEK to lowercase hex).
+  ## NOTE: shape alone can never prove provenance — a password could be shaped like
+  ## this too. Authorization to store a credential silently must come from
+  ## dekCredentialForPasswordProfile (keychain_credential), which structurally cannot
+  ## return a password; this check is defense-in-depth on top of it.
+  const dekHexLen = 64
+  if not value.startsWith(DEK_CREDENTIAL_PREFIX):
+    return false
+  let hexPart = value[DEK_CREDENTIAL_PREFIX.len .. ^1]
+  if hexPart.len != dekHexLen:
+    return false
+  for c in hexPart:
+    if c notin {'0'..'9', 'a'..'f'}:
+      return false
+  return true
+
 proc arrayContains*[T](arr: seq[T], value: T): bool =
   return arr.any(x => x == value)
 

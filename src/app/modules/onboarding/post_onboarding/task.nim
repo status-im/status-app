@@ -19,6 +19,10 @@ type PostOnboardingTaskKind* = enum
   # This task is scheduled if the user provided a local backup file URL during onboarding.
   kPostOnboardingTaskLocalBackup = 5
 
+  # This task stores (or reconciles) the silently readable "Stay logged in" credential
+  # after a successful login.
+  kPostOnboardingTaskSaveStayLoggedIn = 6
+
 type PostOnboardingTask* = ref object of RootObj
   kind*: PostOnboardingTaskKind
 
