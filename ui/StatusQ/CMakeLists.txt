@@ -353,7 +353,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
     target_sources(StatusQ PRIVATE
         src/keychain_android.cpp
-        src/securestorage_other.cpp
+        src/securestorage_android.cpp
         src/safutils_android.cpp
         src/lifecycleutils_android.cpp
         src/StatusQ/Controls/NativeSwipeHandlerItem_android.cpp
