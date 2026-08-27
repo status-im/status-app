@@ -24,23 +24,22 @@ class Window(QObject):
     @allure.step("Maximize {0}")
     def maximize(self):
         assert driver.toplevel_window.maximize(self.real_name), 'Maximize failed'
-        LOG.info('Window %s was maximized', self.title)
+        LOG.info('Window was maximized')
 
     @allure.step("Minimize {0}")
     def minimize(self):
-        title = self.title
         assert driver.toplevel_window.minimize(self.real_name), 'Minimize failed'
-        LOG.info('Window %s was minimized', title)
+        LOG.info('Window was minimized')
 
     @allure.step("Set focus on {0}")
     def set_focus(self):
         assert driver.toplevel_window.set_focus(self.real_name), 'Set focus failed'
-        LOG.info('Window %s was focused', self.title)
+        LOG.info('Window was focused')
 
     @allure.step("Move {0} on top")
     def on_top_level(self):
         assert driver.toplevel_window.on_top_level(self.real_name), 'Set on top failed'
-        LOG.info('Window %s moved on top', self.title)
+        LOG.info('Window moved on top')
 
     @allure.step("Close {0}")
     def close(self):
@@ -59,5 +58,5 @@ class Window(QObject):
 
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
         super().wait_until_appears(timeout_msec)
-        LOG.info('Window %s appears', self.title)
+        LOG.info('Window appears')
         return self

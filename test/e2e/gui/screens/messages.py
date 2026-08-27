@@ -167,7 +167,13 @@ class Message:
         self.link_preview_title_object: typing.Optional[QObject] = None
         self._image_message: typing.Optional[QObject] = None
         self.banner_image: typing.Optional[QObject] = None
-        self.community_invitation: dict = {}
+        self._go_to_community_button: typing.Optional[Button] = None
+        self._community_invitation: dict = {}
+
+    @property
+    def community_invitation(self) -> dict:
+        self._ensure_ui_parsed()
+        return self._community_invitation
 
     @property
     def text(self) -> typing.Optional[str]:
@@ -207,10 +213,10 @@ class Message:
 
                     if object_name == 'StatusDateGroupLabel':
                         self.date = str(getattr(child, 'text', ''))
-                    elif child_id == 'title':
-                        self.community_invitation['name'] = str(getattr(child, 'text', ''))
-                    elif child_id == 'description':
-                        self.community_invitation['description'] = str(getattr(child, 'text', ''))
+                    elif object_name == 'communityName':
+                        self._community_invitation['name'] = str(getattr(child, 'text', ''))
+                    elif object_name == 'communityDescription':
+                        self._community_invitation['description'] = str(getattr(child, 'text', ''))
                     elif child_id == 'titleLayout':
                         self.link_preview_title_object = child
                     elif object_name == 'StatusTextMessage_chatText' or child_id == 'chatText':
@@ -233,6 +239,10 @@ class Message:
                                 self._image_message = child
                             case 'bannerImage':
                                 self.banner_image = QObject(real_name=driver.objectMap.realName(child))
+                            case 'joinBtn':
+                                self._go_to_community_button = Button(
+                                    real_name=driver.objectMap.realName(child)
+                                )
                 except (AttributeError, RuntimeError, LookupError):
                     # Skip children that can't be accessed safely
                     continue
@@ -272,6 +282,41 @@ class Message:
             raise LookupError(f'Message text bubble was not found for link {href!r}')
         text_bubble.linkActivated(href)
 
+    def _find_go_to_community_button(self) -> typing.Optional[Button]:
+        self._ensure_ui_parsed()
+        if self._go_to_community_button is not None:
+            return self._go_to_community_button
+        try:
+            for child in walk_children(self.object, self._UI_PARSE_DEPTH):
+                if str(getattr(child, 'text', '')) == 'Go to Community':
+                    return Button(real_name=driver.objectMap.realName(child))
+        except (RuntimeError, AttributeError, LookupError):
+            pass
+        return None
+
+    def _go_to_community_button_ready(self, button: Button) -> bool:
+        try:
+            obj = button.object
+            if not bool(getattr(obj, 'visible', False)):
+                return False
+            if bool(getattr(obj, 'loading', False)):
+                return False
+            return True
+        except (RuntimeError, AttributeError, LookupError):
+            return False
+
+    def _click_go_to_community_button(self) -> bool:
+        button = self._find_go_to_community_button()
+        if button is None:
+            return False
+        if not driver.waitFor(
+            lambda: self._go_to_community_button_ready(button),
+            configs.timeouts.COMMUNITY_LOAD_TIMEOUT_MSEC,
+        ):
+            return False
+        button.click()
+        return True
+
     @allure.step('Open community invitation')
     def open_community_invitation(
             self,
@@ -284,12 +329,18 @@ class Message:
                 f'expected={expected_link.strip()!r}, actual={community_link!r}'
             )
 
-        if community_link is not None:
-            self.activate_link(community_link)
+        if self._click_go_to_community_button():
+            return CommunityScreen().wait_for_content_loaded()
+
+        href = expected_link.strip() if expected_link else community_link
+        if href is not None:
+            self.activate_link(href)
         elif self.delegate_button is not None:
             self.delegate_button.click()
         else:
-            raise LookupError('Community invitation has neither a link nor a clickable delegate')
+            raise LookupError(
+                'Community invitation has neither a card button, a link, nor a clickable delegate'
+            )
 
         return CommunityScreen().wait_for_content_loaded()
 
@@ -496,11 +547,6 @@ class ChatView(QObject):
             )
         return message
 
-    @allure.step('Open community invitation')
-    def click_community_invite(self, community: str, index: int) -> 'CommunityScreen':
-        message = self.search_for_invitation(community, index)
-        return message.open_community_invitation()
-
     def _find_community_invitation_message(self, index: typing.Optional[int] = 0) -> typing.Optional[Message]:
         for _message in self.messages(index):
             if _message.has_community_invite():
@@ -514,42 +560,73 @@ class ChatView(QObject):
                 return message
         return None
 
+    def _invitation_matches_community(self, message: Message, community: str) -> bool:
+        invitation_name = message.community_invitation.get('name', '')
+        if invitation_name == community:
+            return True
+        return message.has_community_invite() and not invitation_name
+
+    def _find_named_invitation_message(
+            self,
+            community: str,
+            index: typing.Optional[int],
+    ) -> typing.Optional[Message]:
+        for _message in self.messages(index):
+            if self._invitation_matches_community(_message, community):
+                return _message
+        return None
+
+    def _find_invitation_message(
+            self,
+            community: typing.Optional[str] = None,
+            index: typing.Optional[int] = 0,
+    ) -> typing.Optional[Message]:
+        if community:
+            message = self._find_named_invitation_message(community, index)
+            if message is not None:
+                return message
+            for message_index in range(20):
+                message = self._find_named_invitation_message(community, message_index)
+                if message is not None:
+                    return message
+            return None
+
+        message = self._find_community_invitation_message(index)
+        if message is not None:
+            return message
+        return self._find_community_invitation_message_from_newest(0)
+
+    def _wait_for_invitation_message(
+            self,
+            community: typing.Optional[str] = None,
+            index: typing.Optional[int] = 0,
+            timeout_msec: int = configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000,
+    ) -> Message:
+        message = None
+
+        def invitation_found() -> bool:
+            nonlocal message
+            message = self._find_invitation_message(community, index)
+            return message is not None
+
+        if not driver.waitFor(invitation_found, timeout_msec):
+            label = community or 'Community invitation'
+            raise LookupError(f'{label} was not found within {timeout_msec} ms')
+        return message
+
     @allure.step('Open community invitation without relying on preview name')
     def click_community_invite_message(
             self,
             index: int = 0,
             expected_link: str = None,
     ) -> CommunityScreen:
-        message = None
-
-        def invitation_found() -> bool:
-            nonlocal message
-            message = self._find_community_invitation_message(index)
-            if message is None:
-                message = self._find_community_invitation_message_from_newest(0)
-            return message is not None
-
-        timeout_msec = configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000
-        if not driver.waitFor(invitation_found, timeout_msec):
-            raise LookupError(f'Community invitation was not found within {timeout_msec} ms')
+        message = self._wait_for_invitation_message(index=index)
         return message.open_community_invitation(expected_link=expected_link)
 
     @allure.step('Open banned community invitation')
     def open_banned_community(self, community, index) -> 'BannedCommunityScreen':
-        message = self.search_for_invitation(community, index)
+        message = self._wait_for_invitation_message(community=community, index=index)
         return message.open_banned_community_invitation()
-
-    def search_for_invitation(self, community, index):
-        message = None
-        started_at = time.monotonic()
-        while message is None:
-            for _message in self.messages(index):
-                if _message.community_invitation.get('name', '') == community:
-                    message = _message
-                    break
-            if time.monotonic() - started_at > 80:
-                raise LookupError(f'Community invitation was not found')
-        return message
 
     @allure.step('Wait until a sticker message appears in chat')
     def wait_until_sticker_message(
