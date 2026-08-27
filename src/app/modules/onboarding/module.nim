@@ -16,7 +16,7 @@ import app_service/service/keycardV2/service as keycard_serviceV2
 from app_service/service/settings/dto/settings import SettingsDto
 from app_service/service/accounts/dto/accounts import AccountDto
 from app_service/service/keycardV2/dto import KeycardEventDto, KeycardExportedKeysDto, KeycardState, toKeycardExportedKeysDto
-import app/modules/onboarding/post_onboarding/[keycard_replacement_task, keycard_convert_account, save_biometrics_task, local_backup_task]
+import app/modules/onboarding/post_onboarding/[keycard_replacement_task, keycard_convert_account, save_biometrics_task, save_stay_logged_in_task, local_backup_task]
 
 import models/login_account_item as login_acc_item
 
@@ -326,6 +326,10 @@ method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string)
     if saveBiometrics:
       let credential = if pin.len > 0: pin else: password
       self.postLoginTasks.add(newSaveBiometricsTask(credential, isPin = pin.len > 0))
+    # "Stay logged in" opt-in from the onboarding password screen (password profiles
+    # only; the task additionally skips keycard profiles as a safety net)
+    if data{"stayLoggedIn"}.getBool(false) and pin.len == 0 and password.len > 0:
+      self.postLoginTasks.add(newSaveStayLoggedInPasswordTask(password, enablePreference = true))
     if backupImportFileUrl != "":
       self.postLoginTasks.add(newLocalBackupTask(backupImportFileUrl))
 
@@ -340,19 +344,27 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
     self.loginFlow = LoginMethod(loginFlow)
 
     # drop any queued tasks by previous (failed) attempts so a stale credential can never be saved
-    self.postLoginTasks = self.postLoginTasks.filterIt(it.kind != kPostOnboardingTaskSaveBiometrics)
+    self.postLoginTasks = self.postLoginTasks.filterIt(
+      it.kind != kPostOnboardingTaskSaveBiometrics and
+      it.kind != kPostOnboardingTaskSaveStayLoggedIn)
 
     let data = parseJson(dataJson)
     let account = self.controller.getAccountByKeyUid(keyUid)
 
     case self.loginFlow:
       of LoginMethod.Password:
+        # Re-store (or reconcile) the "Stay logged in" credential after any successful
+        # password-method login. The task is a no-op unless the per-account preference is
+        # ON (checked QML-side) — this is what makes the preference survive logout: the
+        # next explicit login puts the credential back.
         let dek = data{"dek"}.getStr
         if dek.len > 0:
+          self.postLoginTasks.add(newSaveStayLoggedInDekTask(dek, keyUid = keyUid))
           self.controller.loginWithDEK(account, dek)
         else:
           if data{"updateBiometrics"}.getBool(false):
             self.postLoginTasks.add(newSaveBiometricsTask(data["password"].str, isPin = false, keyUid = keyUid))
+          self.postLoginTasks.add(newSaveStayLoggedInPasswordTask(data["password"].str, keyUid = keyUid))
           self.controller.login(account, data["password"].str)
       of LoginMethod.Keycard:
         self.loginKeycard(keyUid, data["pin"].str, data{"pairingPassword"}.getStr)
@@ -460,6 +472,9 @@ method requestLocalBackup*[T](self: Module[T], backupImportFileUrl: string) =
 method requestDeleteBiometrics*[T](self: Module[T], account: string) =
   self.view.deleteBiometricsRequested(account)
 
+method requestSaveStayLoggedIn*[T](self: Module[T], account: string, credential: string, enablePreference: bool) =
+  self.view.stayLoggedInSaveRequested(account, credential, enablePreference)
+
 method requestDeleteMultiaccount*[T](self: Module[T], keyUid: string): string =
   let err = self.controller.deleteMultiaccount(keyUid)
   if err.len > 0:
@@ -476,6 +491,8 @@ proc runPostLoginTasks*[T](self: Module[T]) =
       KeycardConvertAccountTask(task).run(self.accountsService, self)
     of kPostOnboardingTaskSaveBiometrics:
       SaveBiometricsTask(task).run(self.accountsService, self)
+    of kPostOnboardingTaskSaveStayLoggedIn:
+      SaveStayLoggedInTask(task).run(self.accountsService, self)
     of kPostOnboardingTaskLocalBackup:
       LocalBackupTask(task).run(self)
     else:
