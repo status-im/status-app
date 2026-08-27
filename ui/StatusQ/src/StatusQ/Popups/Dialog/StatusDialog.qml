@@ -177,6 +177,7 @@ Dialog {
     }
 
     parent: Overlay.overlay
+    popupType: Popup.Item
 
     modal: true
 
