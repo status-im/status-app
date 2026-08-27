@@ -127,6 +127,7 @@ Control {
 
         StatusCheckBox {
             id: understandCheckBox
+            objectName: "keycardManagementUnderstandCheckBox"
             Layout.fillWidth: true
             text: root.profileOnly
                   ? qsTr("I understand that moving this key pair will require using Keycard to log in and sign")
