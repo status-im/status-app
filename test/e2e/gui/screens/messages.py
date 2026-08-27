@@ -916,18 +916,27 @@ class MessageQuickActions(QObject):
 
     def expand(self):
         self._open_context_menu()
-        if self._expand_button.is_visible:
-            self._expand_button.click()
+        timeout_msec = configs.timeouts.UI_LOAD_TIMEOUT_MSEC
+        try:
+            self._expand_button.wait_until_appears(timeout_msec)
+        except TimeoutError:
+            return self
+        self._expand_button.click()
+        assert driver.waitFor(
+            lambda: not self._expand_button.is_visible,
+            timeout_msec,
+        ), f'Message context menu did not expand within {timeout_msec} ms'
+        return self
 
     @allure.step('Click pin button')
     def pin_message(self):
         self.expand()
-        self._pin_button.click()
+        self._pin_button.wait_until_appears().click()
 
     @allure.step('Click unpin button')
     def unpin_message(self):
         self.expand()
-        self._unpin_button.click()
+        self._unpin_button.wait_until_appears().click()
 
     @allure.step('Edit message and save changes')
     def edit_message(self, text: str):
