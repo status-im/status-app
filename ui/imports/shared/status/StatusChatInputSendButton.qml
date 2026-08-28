@@ -3,6 +3,7 @@ import QtQuick.Controls
 
 import StatusQ.Core
 import StatusQ.Core.Theme
+import StatusQ.Controls
 
 Control {
     id: root
@@ -17,8 +18,6 @@ Control {
         id: d
 
         readonly property int implicitHeight: 36
-        readonly property real hoverExpandFactor: 1.2
-        readonly property real pressedExpandFactor: 1.1
         readonly property int cornerRadius: 8
     }
 
@@ -86,28 +85,6 @@ Control {
         }
 
         Rectangle {
-            anchors.centerIn: baseBackgroundRectangle
-
-            property real factor: mouseArea.pressed
-                                  ? d.pressedExpandFactor
-                                  : (mouseArea.containsMouse
-                                     ? d.hoverExpandFactor : 1)
-
-            width: baseBackgroundRectangle.width * factor
-            height: width
-            radius: d.cornerRadius
-
-            color: baseBackgroundRectangle.color
-
-            Behavior on factor {
-                NumberAnimation {
-                    duration: ThemeUtils.AnimationDuration.Fast
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-
-        Rectangle {
             id: baseBackgroundRectangle
 
             width: parent.height
@@ -124,6 +101,16 @@ Control {
                 ColorAnimation {
                     duration: ThemeUtils.AnimationDuration.Fast
                 }
+            }
+
+            StatusRipple {
+                id: ripple
+
+                objectName: "statusChatInputSendButtonRipple"
+                anchors.fill: parent
+                enabled: root.enabled && mouseArea.enabled
+                color: Theme.palette.white
+                radius: parent.radius
             }
 
             StatusIcon {
@@ -143,6 +130,9 @@ Control {
 
                 cursorShape: Qt.PointingHandCursor
 
+                onPressed: mouse => ripple.press(mouse.x, mouse.y)
+                onReleased: ripple.release()
+                onCanceled: ripple.release()
                 onClicked: root.clicked()
             }
         }
