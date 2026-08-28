@@ -487,14 +487,17 @@ class ChatPage(BasePage):
             self.logger.error("Failed to click emoji button")
             return False
 
-        if not self.is_element_visible(emoji_locators.POPUP_CONTAINER, timeout=5):
+        # The picker opens at once, but its emoji grid (hundreds of nodes)
+        # reaches the accessibility tree seconds later; a 5s wait was too short.
+        POPUP_TIMEOUT = 20
+        if not self.is_element_visible(emoji_locators.POPUP_CONTAINER, timeout=POPUP_TIMEOUT):
             self.logger.error("Emoji popup did not appear")
             return False
 
         if not self.qt_safe_input(
             emoji_locators.SEARCH_INPUT,
             search_term,
-            timeout=5,
+            timeout=POPUP_TIMEOUT,
             verify=False,
         ):
             self.logger.error("Failed to type in emoji search")
