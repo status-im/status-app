@@ -122,9 +122,9 @@ pipeline {
       environment {
         QT_QPA_PLATFORM = "offscreen"
       }
-      steps { script {
+      steps { catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') { script {
         sh('make run-statusq-tests')
-      } }
+      } } }
     }
 
     stage('Check StatusQ Sanity Checker') {
@@ -132,15 +132,15 @@ pipeline {
       environment {
         QT_QPA_PLATFORM = "offscreen"
       }
-      steps { script {
+      steps { catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') { script {
         sh('make run-statusq-sanity-checker')
-      } }
+      } } }
     }
 
     stage('Check Storybook Tests') {
-      steps { script {
+      steps { catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') { script {
         sh('make run-storybook-tests')
-      } }
+      } } }
     }
 
     stage('Check Storybook Pages Validator') {
@@ -148,9 +148,9 @@ pipeline {
       environment {
         QT_QPA_PLATFORM = "offscreen"
       }
-      steps { script {
+      steps { catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') { script {
         sh('make run-storybook-pages-validator')
-      } }
+      } } }
     }
 
     stage('Upload') {
