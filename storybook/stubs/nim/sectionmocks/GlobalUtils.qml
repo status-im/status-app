@@ -18,4 +18,8 @@ QtObject {
     function getCompressedPk(publicKey) {
         return publicKey
     }
+
+    function getStatusSupportBotChatKey() {
+        return "0xdeadb07"
+    }
 }
