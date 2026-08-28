@@ -31,6 +31,11 @@ pipeline {
       defaultValue: getDefaultBuildSource()
     )
     string(
+      name: 'SOURCE_BUILD_NUMBER',
+      description: 'Build number of BUILD_SOURCE to copy from. Empty picks the latest.',
+      defaultValue: ''
+    )
+    string(
       name: 'TEST_NAME',
       description: 'Paste test name/part of test name to run specific test.',
       defaultValue: ''
@@ -179,7 +184,7 @@ pipeline {
         copyArtifacts(
           projectName: params.BUILD_SOURCE,
           filter:      'pkg/*-x86_64.tar.gz',
-          selector:    lastWithArtifacts(),
+          selector:    params.SOURCE_BUILD_NUMBER ? specific(params.SOURCE_BUILD_NUMBER) : lastWithArtifacts(),
           target:      './'
         )
         setBuildDescFromFile(utils.findFile('pkg/*tar.gz'))
