@@ -19,6 +19,35 @@ AbstractWebView {
     // WARN: needs to remain a var to avoid mixing platform-specific types
     property var profileManager: null
 
+    // Per-platform adapter to load; relative paths resolve against this file.
+    // Settable so tests can substitute a fake (QmlTests links no Qt::WebView).
+    property url adapterPath: SQUtils.Utils.isMobile
+        ? "MobileWebViewAdapter.qml"
+        : "WebViewAdapter.qml"
+
+    readonly property Item adapterItem: loader.item
+
+    // Never reloaded automatically: a page that dies on a timer would be
+    // reloaded forever. Only user navigation clears this.
+    crashed: d.crashed
+
+    readonly property QtObject d: QtObject {
+        property bool crashed: false
+    }
+
+    // Puts the Web View back on screen after a crash.
+    function _clearCrashedState() {
+        d.crashed = false
+    }
+
+    function _handleRenderProcessTerminated() {
+        // No Tab left to show a crashed page in (ADR 0006 §6).
+        if (root.retained)
+            return
+
+        d.crashed = true
+    }
+
     supportsZoom:           loader.item ? loader.item.supportsZoom           : false
     supportsDevTools:       loader.item ? loader.item.supportsDevTools       : false
     supportsFindInPage:     loader.item ? loader.item.supportsFindInPage     : false
@@ -75,32 +104,36 @@ AbstractWebView {
         }
         if (!SQUtils.Utils.isMobile)
             props.profileManager = Qt.binding(() => root.profileManager)
-        loader.setSource(loader.adapterPath, props)
+        loader.setSource(root.adapterPath, props)
     }
 
     function loadUrl(u) {
+        root._clearCrashedState()
         root.url = u
         if (u && u.toString())
             ensureLoaded()
     }
     /// Local-file load with a directory read grant; url syncs back via Connections.
     function loadFileUrl(fileUrl, readAccessUrl) {
+        root._clearCrashedState()
         ensureLoaded()
         if (loader.item && loader.item.loadFileUrl)
             loader.item.loadFileUrl(fileUrl, readAccessUrl || "")
         else
             console.warn("LazyWebViewAdapter: loadFileUrl unavailable")
     }
-    function goBack()             { if (loader.item) loader.item.goBack() }
-    function goForward()          { if (loader.item) loader.item.goForward() }
-    function goBackOrForward(o)   { if (loader.item) loader.item.goBackOrForward(o) }
+    function goBack()             { root._clearCrashedState(); if (loader.item) loader.item.goBack() }
+    function goForward()          { root._clearCrashedState(); if (loader.item) loader.item.goForward() }
+    function goBackOrForward(o)   { root._clearCrashedState(); if (loader.item) loader.item.goBackOrForward(o) }
     function reload() {
+        root._clearCrashedState()
         ensureLoaded()
         if (loader.item)
             loader.item.reload()
     }
     function stop()               { if (loader.item) loader.item.stop() }
     function forceReload() {
+        root._clearCrashedState()
         ensureLoaded()
         if (loader.item)
             loader.item.forceReload()
@@ -168,10 +201,6 @@ AbstractWebView {
                 console.error("Failed to load WebViewAdapter")
             }
         }
-
-        readonly property string adapterPath: SQUtils.Utils.isMobile
-            ? "MobileWebViewAdapter.qml"
-            : "WebViewAdapter.qml"
     }
 
     Connections {
@@ -192,6 +221,10 @@ AbstractWebView {
         function onJavaScriptDialogRequested(request)  { root.javaScriptDialogRequested(request) }
         function onFindTextFinished(result)            { root.findTextFinished(result) }
         function onDevToolsToggled(enabled)            { root.devToolsToggled(enabled) }
+        function onRenderProcessTerminated(status, exitCode) {
+            root._handleRenderProcessTerminated()
+            root.renderProcessTerminated(status, exitCode)
+        }
         function onTitleChanged()                      { root.syncFromAdapterItem() }
         function onIconChanged()                       { root.syncFromAdapterItem() }
         function onHtmlPageLoadedChanged()             { root.syncFromAdapterItem() }
