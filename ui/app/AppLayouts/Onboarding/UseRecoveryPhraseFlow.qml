@@ -17,6 +17,7 @@ OnboardingStackView {
     required property int type
 
     property bool isProfileMigratedToDEKEncryption: false
+    property bool stayLoggedInAvailable: false
 
     // functions
     required property var passwordStrengthScoreFunction // (string) => int
@@ -25,6 +26,7 @@ OnboardingStackView {
 
     signal seedphraseSubmitted(string seedphrase)
     signal setPasswordRequested(string password)
+    signal stayLoggedInRequested(bool enabled)
     signal importLocalBackupRequested(url importFilePath)
     signal finished
 
@@ -85,7 +87,9 @@ OnboardingStackView {
 
         CreatePasswordPage {
             passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
+            stayLoggedInAvailable: root.stayLoggedInAvailable
 
+            onStayLoggedInRequested: (enabled) => root.stayLoggedInRequested(enabled)
             onSetPasswordRequested: function(password) {
                 root.setPasswordRequested(password)
                 if (root.type === UseRecoveryPhraseFlow.Type.Login)

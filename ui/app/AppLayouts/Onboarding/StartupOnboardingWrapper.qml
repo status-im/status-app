@@ -123,6 +123,7 @@ Item {
         onChangeLanguageRequested: (newLanguageCode) => root.languageStore.changeLanguage(newLanguageCode, true)
 
         keychain: root.keychain
+        secureStorage: root.secureStorage
 
         privacyModeFeatureEnabled: root.featureFlagsStore.privacyModeFeatureEnabled
 

@@ -50,6 +50,7 @@ OnboardingStackView {
     required property string keycardCardMetadataWalletAccountsJson
 
     required property bool biometricsAvailable
+    property bool stayLoggedInAvailable: false
     required property bool displayKeycardPromoBanner
     required property bool networkChecksEnabled
 
@@ -72,6 +73,7 @@ OnboardingStackView {
     signal dismissBiometricsRequested
     signal loginRequested(string keyUid, int method, var data)
     signal enableBiometricsRequested(bool enable)
+    signal stayLoggedInRequested(bool enabled)
     signal syncProceedWithConnectionString(string connectionString)
     signal seedphraseSubmitted(string seedphrase)
     signal keyUidSubmitted(string keyUid)
@@ -327,7 +329,9 @@ OnboardingStackView {
 
         CreateNewProfileFlow {
             passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
+            stayLoggedInAvailable: root.stayLoggedInAvailable
 
+            onStayLoggedInRequested: (enabled) => root.stayLoggedInRequested(enabled)
             onFinished: (password) => {
                 root.setPasswordRequested(password)
                 d.flow = Onboarding.OnboardingFlow.CreateProfileWithPassword
@@ -343,6 +347,7 @@ OnboardingStackView {
             isSeedPhraseValid: root.isSeedPhraseValid
             isSeedPhraseDuplicate: root.isSeedPhraseDuplicate
             passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
+            stayLoggedInAvailable: root.stayLoggedInAvailable
             isProfileMigratedToDEKEncryption: {
                 const keyUid = root.loginScreen ? root.loginScreen.selectedProfileKeyId : ""
                 return keyUid ? root.isProfileMigratedToDEKEncryption(keyUid) : false
@@ -350,6 +355,7 @@ OnboardingStackView {
 
             onSeedphraseSubmitted: (seedphrase) => root.seedphraseSubmitted(seedphrase)
             onSetPasswordRequested: (password) => root.setPasswordRequested(password)
+            onStayLoggedInRequested: (enabled) => root.stayLoggedInRequested(enabled)
 
             onImportLocalBackupRequested: (importFilePath) => root.importLocalBackupRequested(importFilePath)
 
