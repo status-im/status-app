@@ -363,7 +363,9 @@ SettingsContentBase {
 
                         Backpressure.debounce(root, 500, () => {
                             const displayName = descriptionPanel.displayName.text
-                            if (!root.communitiesStore || displayName === root.profileStore.name) {
+
+                            if (!root.communitiesStore || descriptionPanel.isEnsName
+                                    || displayName === root.profileStore.displayName) {
                                 descriptionPanel.setDisplayNameValidityAndErrorMessage(true, "")
                                 return
                             }
