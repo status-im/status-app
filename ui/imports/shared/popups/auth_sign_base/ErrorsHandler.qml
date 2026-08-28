@@ -18,6 +18,7 @@ QtObject {
         readonly property string wrongPuk2: "PUK must be 12 digits"
         readonly property string connection1: "Failed to connect to card"
         readonly property string connection2: Constants.keycard.state.connectionError
+        readonly property string connection3: "Failed to establish PC/SC"
         readonly property string emptyKeycard: Constants.keycard.state.emptyKeycard
         readonly property string notKeycard: Constants.keycard.state.notKeycard
         readonly property string blockedPin: Constants.keycard.state.blockedPIN
@@ -35,6 +36,7 @@ QtObject {
     readonly property bool wrongPukError1: root.errorText.toLowerCase().indexOf(errKeyword.wrongPuk1.toLowerCase()) > -1
     readonly property bool wrongPukError2: root.errorText.toLowerCase().indexOf(errKeyword.wrongPuk2.toLowerCase()) > -1
     readonly property bool connectionKeycardError1: root.errorText.toLowerCase().indexOf(errKeyword.connection1.toLowerCase()) > -1
+                                                    || root.errorText.toLowerCase().indexOf(errKeyword.connection3.toLowerCase()) > -1
     readonly property bool connectionKeycardError2: root.errorText.toLowerCase().indexOf(errKeyword.connection2.toLowerCase()) > -1
     readonly property bool emptyKeycardError: root.errorText.toLowerCase().indexOf(errKeyword.emptyKeycard.toLowerCase()) > -1
     readonly property bool notKeycardError: root.errorText.toLowerCase().indexOf(errKeyword.notKeycard.toLowerCase()) > -1
