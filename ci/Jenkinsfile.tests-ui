@@ -8,19 +8,33 @@ def isPRBuild = utils.isPRBuild()
 
 pipeline {
   agent {
-    dockerfile {
+    /* Image with Ubuntu 22.04 and QT ${QT_VERSION} */
+    docker {
       label 'linuxcontainer'
-      filename 'tests.Dockerfile'
-      dir 'ci'
-      args '--cap-add SYS_ADMIN ' +
-           '--security-opt apparmor:unconfined ' +
-           '--device /dev/fuse ' +
-           '--group-add docker ' +
-           '--volume=/var/run/docker.sock:/var/run/docker.sock ' +
-           '--network=host ' +
-           '--user jenkins'
+      image "harbor.status.im/status-im/status-desktop-build:1.0.8-qt${QT_VERSION}"
+      /* allows jenkins use cat and mounts '/dev/fuse' for linuxdeployqt */
+      args '--entrypoint="" ' +
+           '--cap-add=SYS_ADMIN ' +
+           '--security-opt=apparmor:unconfined ' +
+           '--device=/dev/fuse ' +
+           '--volume=/nix:/nix ' +
+           '--volume=/etc/nix:/etc/nix '
     }
   }
+  // agent {
+  //   dockerfile {
+  //     label 'linuxcontainer'
+  //     filename 'tests.Dockerfile'
+  //     dir 'ci'
+  //     args '--cap-add SYS_ADMIN ' +
+  //          '--security-opt apparmor:unconfined ' +
+  //          '--device /dev/fuse ' +
+  //          '--group-add docker ' +
+  //          '--volume=/var/run/docker.sock:/var/run/docker.sock ' +
+  //          '--network=host ' +
+  //          '--user jenkins'
+  //   }
+  // }
 
   parameters {
     choice(
@@ -104,58 +118,38 @@ pipeline {
     }
 
     stage('Check StatusQ Tests') {
+      /* Needed for QGuiApplication to import QtQuick.Dialogs */
+      environment {
+        QT_QPA_PLATFORM = "offscreen"
+      }
       steps { script {
-        /* Needed for QGuiApplication to import QtQuick.Dialogs */
-        wrap([
-          $class: 'Xvfb',
-          autoDisplayName: true,
-          parallelBuild: true,
-          screen: '2560x1440x24',
-        ]) {
-          sh('make run-statusq-tests')
-        }
+        sh('make run-statusq-tests')
       } }
     }
 
     stage('Check StatusQ Sanity Checker') {
+      /* Needed for QGuiApplication to import QtQuick.Dialogs */
+      environment {
+        QT_QPA_PLATFORM = "offscreen"
+      }
       steps { script {
-        /* Needed for QGuiApplication to import QtQuick.Dialogs */
-        wrap([
-          $class: 'Xvfb',
-          autoDisplayName: true,
-          parallelBuild: true,
-          screen: '2560x1440x24',
-        ]) {
-          sh('make run-statusq-sanity-checker')
-        }
+        sh('make run-statusq-sanity-checker')
       } }
     }
 
     stage('Check Storybook Tests') {
       steps { script {
-        /* Needed for QGuiApplication to import QtQuick.Dialogs */
-        wrap([
-          $class: 'Xvfb',
-          autoDisplayName: true,
-          parallelBuild: true,
-          screen: '2560x1440x24',
-        ]) {
-          sh('make run-storybook-tests')
-        }
+        sh('make run-storybook-tests')
       } }
     }
 
     stage('Check Storybook Pages Validator') {
+      /* Needed for QGuiApplication to import QtQuick.Dialogs */
+      environment {
+        QT_QPA_PLATFORM = "offscreen"
+      }
       steps { script {
-        /* Needed for QGuiApplication to import QtQuick.Dialogs */
-        wrap([
-          $class: 'Xvfb',
-          autoDisplayName: true,
-          parallelBuild: true,
-          screen: '2560x1440x24',
-        ]) {
-          sh('make run-storybook-pages-validator')
-        }
+        sh('make run-storybook-pages-validator')
       } }
     }
 
