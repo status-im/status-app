@@ -21,6 +21,10 @@ Page {
 
     required property OnboardingStore onboardingStore
     required property Keychain keychain
+
+    // Prompt-free secure storage backing the "Stay logged in" opt-in. Optional:
+    // instantiation sites without it (tests, storybook) simply don't offer the opt-in.
+    property SecureStorage secureStorage: null
     required property bool privacyModeFeatureEnabled
 
     // list of language/locale codes, e.g. ["cs_CZ","ko","fr"]
@@ -84,6 +88,7 @@ Page {
         property string password
         property string keycardPin
         property bool enableBiometrics
+        property bool stayLoggedIn
         property string seedphrase
         property string keyUid // Used in LoginWithLostKeycardSeedphrase
         property url backupImportFileUrl
@@ -99,6 +104,7 @@ Page {
             d.password = ""
             d.keycardPin = ""
             d.enableBiometrics = false
+            d.stayLoggedIn = false
             d.seedphrase = ""
             d.keyUid = ""
             d.backupImportFileUrl = ""
@@ -125,6 +131,7 @@ Page {
                 keyUid: d.keyUid,
                 backupImportFileUrl: d.backupImportFileUrl,
                 enableBiometrics: d.enableBiometrics,
+                stayLoggedIn: d.stayLoggedIn,
                 thirdpartyServicesEnabled: d.thirdpartyServicesEnabled,
                 keycardPayload: d.keycardPayload
             }
@@ -156,6 +163,7 @@ Page {
         displayKeycardPromoBanner: !d.settings.keycardPromoShown
 
         biometricsAvailable: root.keychain.available
+        stayLoggedInAvailable: root.secureStorage ? root.secureStorage.available : false
         isKeycardEnabled: root.isKeycardEnabled
         lastSelectedProfileKeyUid: root.lastSelectedProfileKeyUid
         networkChecksEnabled: root.networkChecksEnabled
@@ -187,6 +195,7 @@ Page {
         onKeyUidSubmitted: (keyUid) => d.keyUid = keyUid
         onSetPasswordRequested: (password) => d.password = password
         onEnableBiometricsRequested: (enabled) => d.enableBiometrics = enabled
+        onStayLoggedInRequested: (enabled) => d.stayLoggedIn = enabled
         onLinkActivated: (link) => Qt.openUrlExternally(link)
         onImportLocalBackupRequested: (importFilePath) => d.backupImportFileUrl = importFilePath
         onOnboardingKeycardFlowCompletedWithData: (flow, dataJson) => {

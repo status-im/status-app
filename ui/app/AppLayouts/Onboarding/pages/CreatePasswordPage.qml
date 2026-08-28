@@ -17,7 +17,11 @@ OnboardingPage {
 
     property var passwordStrengthScoreFunction: (password) => { console.error("passwordStrengthScoreFunction: IMPLEMENT ME") }
 
+    // Whether the "Stay logged in" opt-in is offered (requires platform secure storage)
+    property bool stayLoggedInAvailable: false
+
     signal setPasswordRequested(string password)
+    signal stayLoggedInRequested(bool enabled)
 
     title: qsTr("Create profile password")
 
@@ -27,6 +31,7 @@ OnboardingPage {
         function submit() : void {
             if (!passView.ready)
                 return
+            root.stayLoggedInRequested(root.stayLoggedInAvailable && stayLoggedInCheckBox.checked)
             root.setPasswordRequested(passView.newPswText)
         }
     }
@@ -49,6 +54,15 @@ OnboardingPage {
                 recoverText: ""
                 passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
                 onReturnPressed: d.submit()
+            }
+            StatusCheckBox {
+                id: stayLoggedInCheckBox
+
+                objectName: "stayLoggedInCheckBox"
+                Layout.fillWidth: true
+                visible: root.stayLoggedInAvailable
+                checked: true // default ON for new users (per acceptance criteria)
+                text: qsTr("Stay logged in to skip entering your password each time you open Status")
             }
             StatusButton {
                 objectName: "btnConfirmPassword"

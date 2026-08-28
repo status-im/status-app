@@ -29,9 +29,18 @@ Item {
         property bool biometricsAvailable
         property string existingPin
         property bool profileEncryptionMigrated: false
+        property bool secureStorageAvailable: true
 
         readonly property string mnemonic: "apple banana cat country catalog catch category cattle dog elephant fish grape"
         readonly property string dummyNewPassword: "0123456789"
+    }
+
+    // Mirrors OnboardingLayout's internal persistent setting. It survives ON DISK across
+    // test functions and even across runs, and the keycard promo navigation depends on
+    // it — reset it before every test so page sequences stay deterministic.
+    Settings {
+        id: persistentOnboardingSettings
+        property bool keycardPromoShown
     }
 
     LoginAccountsModel {
@@ -65,6 +74,10 @@ Item {
                     return mockDriver.biometricsAvailable ? Keychain.StatusSuccess
                                                           : Keychain.StatusNotFound
                 }
+            }
+
+            secureStorage: SecureStorage {
+                readonly property bool available: mockDriver.secureStorageAvailable
             }
 
             onboardingStore: OnboardingStore {
@@ -177,6 +190,11 @@ Item {
         }
 
         function init() {
+            // Reset the disk-persisted onboarding state BEFORE the control is created,
+            // so its own Settings instance reads a clean value.
+            persistentOnboardingSettings.keycardPromoShown = false
+            persistentOnboardingSettings.sync()
+
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
 
             // disable animated transitions to speed-up tests
@@ -189,9 +207,14 @@ Item {
         }
 
         function cleanup() {
+            // The control itself is a temporary object: qmltest destroys it right after
+            // this cleanup — an explicit destroy() here would fight that lifecycle.
+            controlUnderTest = null
             mockDriver.keycardState = -1
             mockDriver.biometricsAvailable = false
             mockDriver.existingPin = ""
+            mockDriver.profileEncryptionMigrated = false
+            mockDriver.secureStorageAvailable = true
             dynamicSpy.cleanup()
             finishedSpy.clear()
             loginSpy.clear()
@@ -203,13 +226,40 @@ Item {
             verify(!!stack)
             tryCompare(stack, "topLevelStackBusy", false) // wait for page transitions to stop
 
-            if (stack.topLevelItem instanceof Loader) {
-                verify(stack.topLevelItem.item instanceof pageClass)
-                return stack.topLevelItem.item
-            }
+            const currentItem = () => stack.topLevelItem instanceof Loader ? stack.topLevelItem.item
+                                                                           : stack.topLevelItem
+            // The busy flag can clear a beat before the final item lands (nested stacks,
+            // queued pushes): retry instead of sampling once, and name the offender when
+            // it genuinely never arrives.
+            tryVerify(() => currentItem() instanceof pageClass, 5000,
+                      "getCurrentPage: expected " + pageClass + ", current: "
+                      + (currentItem() ? Utils.objectTypeName(currentItem()) : "null"))
+            return currentItem()
+        }
 
-            verify(stack.topLevelItem instanceof pageClass)
-            return stack.topLevelItem
+        // Clicks a navigation button until the expected page becomes current. The first
+        // click of a row can be swallowed while the previous row's control is still being
+        // torn down deferredly — retry the click instead of failing on a single lost one.
+        function clickToPage(button, stack, pageClass) {
+            verify(!!button)
+            for (let attempt = 0; attempt < 5; ++attempt) {
+                if (attempt > 0 && button.Window.window) {
+                    // A whole cluster of lost clicks means the window stopped receiving
+                    // synthesized input for a while (occlusion/focus loss on a busy
+                    // desktop) — nudge it back to the foreground before retrying.
+                    button.Window.window.requestActivate()
+                    wait(50)
+                }
+                mouseClick(button)
+                for (let i = 0; i < 20; ++i) {
+                    wait(25)
+                    const item = stack.topLevelItem instanceof Loader ? stack.topLevelItem.item
+                                                                      : stack.topLevelItem
+                    if (item instanceof pageClass)
+                        return getCurrentPage(stack, pageClass) // also settles the busy flag
+                }
+            }
+            return getCurrentPage(stack, pageClass) // emits the diagnostic failure
         }
 
         function createProfilesModel(entries) {
@@ -356,10 +406,9 @@ Item {
 
             const btnCreateProfile = findChild(controlUnderTest, "btnCreateProfile")
             verify(!!btnCreateProfile)
-            mouseClick(btnCreateProfile)
 
             // PAGE 2: Create profile
-            page = getCurrentPage(stack, CreateProfilePage)
+            page = clickToPage(btnCreateProfile, stack, CreateProfilePage)
 
             const btnCreateWithPassword = findChild(controlUnderTest, "btnCreateWithPassword")
             verify(!!btnCreateWithPassword)
@@ -376,6 +425,12 @@ Item {
             tryVerify(() => passwordDetailsPopup.opened)
             keyClick(Qt.Key_Escape) // close the popup
             tryVerify( () => passwordDetailsPopup.exit ? !passwordDetailsPopup.exit.running : true)
+
+            // "Stay logged in" opt-in: offered and CHECKED by default for new users
+            const stayLoggedInCheckBox = findChild(controlUnderTest, "stayLoggedInCheckBox")
+            verify(!!stayLoggedInCheckBox)
+            tryVerify(() => stayLoggedInCheckBox.visible)
+            compare(stayLoggedInCheckBox.checked, true)
 
             const btnConfirmPassword = findChild(controlUnderTest, "btnConfirmPassword")
             verify(!!btnConfirmPassword)
@@ -423,6 +478,90 @@ Item {
             compare(resultData.enableBiometrics, data.biometrics && data.bioEnabled)
             compare(resultData.keycardPin, "")
             compare(resultData.seedphrase, "")
+            compare(resultData.stayLoggedIn, true) // default-checked opt-in carried through
+        }
+
+        // Navigates Welcome -> Create profile -> Create password (password flow)
+        function navigateToCreatePasswordPage() {
+            const stack = controlUnderTest.stack
+            verify(!!stack)
+
+            let page = getCurrentPage(stack, WelcomePage)
+            waitForRendering(page)
+
+            clickToPage(findChild(controlUnderTest, "btnCreateProfile"),
+                        stack, CreateProfilePage)
+            return clickToPage(findChild(controlUnderTest, "btnCreateWithPassword"),
+                               stack, CreatePasswordPage)
+        }
+
+        // Fills both password fields and submits the create-password page
+        function submitCreatePassword() {
+            const passwordViewNewPassword = findChild(controlUnderTest, "passwordViewNewPassword")
+            verify(!!passwordViewNewPassword)
+            mouseClick(passwordViewNewPassword)
+            keyClickSequence(mockDriver.dummyNewPassword)
+
+            const passwordViewNewPasswordConfirm = findChild(controlUnderTest, "passwordViewNewPasswordConfirm")
+            verify(!!passwordViewNewPasswordConfirm)
+            mouseClick(passwordViewNewPasswordConfirm)
+            keyClickSequence(mockDriver.dummyNewPassword)
+
+            const btnConfirmPassword = findChild(controlUnderTest, "btnConfirmPassword")
+            verify(!!btnConfirmPassword)
+            tryVerify(() => btnConfirmPassword.enabled)
+            mouseClick(btnConfirmPassword)
+        }
+
+        function test_stayLoggedIn_optOut_data() {
+            return [{ tag: "available + unchecked -> false" }]
+        }
+
+        // An explicit opt-out must reach the finish data as false.
+        function test_stayLoggedIn_optOut() {
+            verify(!!controlUnderTest)
+            mockDriver.biometricsAvailable = false // skip the biometrics page
+
+            navigateToCreatePasswordPage()
+
+            const stayLoggedInCheckBox = findChild(controlUnderTest, "stayLoggedInCheckBox")
+            verify(!!stayLoggedInCheckBox)
+            tryVerify(() => stayLoggedInCheckBox.visible)
+            compare(stayLoggedInCheckBox.checked, true)
+            mouseClick(stayLoggedInCheckBox) // explicit opt-out
+            compare(stayLoggedInCheckBox.checked, false)
+
+            submitCreatePassword()
+
+            tryCompare(finishedSpy, "count", 1)
+            const resultData = finishedSpy.signalArguments[0][1]
+            verify(!!resultData)
+            compare(resultData.stayLoggedIn, false)
+        }
+
+        function test_stayLoggedIn_unavailable_data() {
+            return [{ tag: "storage unavailable -> hidden and false" }]
+        }
+
+        // Without platform secure storage the opt-in must not be offered, and the
+        // finish data must not opt the user in.
+        function test_stayLoggedIn_unavailable() {
+            verify(!!controlUnderTest)
+            mockDriver.biometricsAvailable = false // skip the biometrics page
+            mockDriver.secureStorageAvailable = false
+
+            navigateToCreatePasswordPage()
+
+            const stayLoggedInCheckBox = findChild(controlUnderTest, "stayLoggedInCheckBox")
+            verify(!!stayLoggedInCheckBox)
+            verify(!stayLoggedInCheckBox.visible)
+
+            submitCreatePassword()
+
+            tryCompare(finishedSpy, "count", 1)
+            const resultData = finishedSpy.signalArguments[0][1]
+            verify(!!resultData)
+            compare(resultData.stayLoggedIn, false)
         }
 
 
@@ -440,10 +579,9 @@ Item {
 
             const btnCreateProfile = findChild(controlUnderTest, "btnCreateProfile")
             verify(!!btnCreateProfile)
-            mouseClick(btnCreateProfile)
 
             // PAGE 2: Create profile
-            page = getCurrentPage(stack, CreateProfilePage)
+            page = clickToPage(btnCreateProfile, stack, CreateProfilePage)
 
             const btnCreateWithSeedPhrase = findChild(controlUnderTest, "btnCreateWithSeedPhrase")
             verify(!!btnCreateWithSeedPhrase)
@@ -513,6 +651,7 @@ Item {
             compare(resultData.enableBiometrics, data.biometrics && data.bioEnabled)
             compare(resultData.keycardPin, "")
             compare(resultData.seedphrase, mockDriver.mnemonic)
+            compare(resultData.stayLoggedIn, true) // opt-in forwarded through the recovery-phrase flow too
         }
 
         // FLOW: Log in -> Log in with recovery phrase
@@ -529,10 +668,9 @@ Item {
 
             const btnLogin = findChild(controlUnderTest, "btnLogin")
             verify(!!btnLogin)
-            mouseClick(btnLogin)
 
             // PAGE 2: Log in -> Enter recovery phrase
-            page = getCurrentPage(stack, NewAccountLoginPage)
+            page = clickToPage(btnLogin, stack, NewAccountLoginPage)
             const btnWithSeedphrase = findChild(page, "btnWithSeedphrase")
             verify(!!btnWithSeedphrase)
             mouseClick(btnWithSeedphrase)
@@ -624,10 +762,9 @@ Item {
 
             const btnLogin = findChild(controlUnderTest, "btnLogin")
             verify(!!btnLogin)
-            mouseClick(btnLogin)
 
             // PAGE 2: Log in
-            page = getCurrentPage(stack, NewAccountLoginPage)
+            page = clickToPage(btnLogin, stack, NewAccountLoginPage)
             const btnBySyncing = findChild(page, "btnBySyncing")
             verify(!!btnBySyncing)
             mouseClick(btnBySyncing)
