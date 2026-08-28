@@ -5203,6 +5203,10 @@ Send a contact request to the person you would like to chat with, you will be ab
         <translation>Цей пароль неможливо відновити</translation>
     </message>
     <message>
+        <source>Stay logged in to skip entering your password each time you open Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Confirm password</source>
         <translation>Підтвердьте пароль</translation>
     </message>
@@ -13999,18 +14003,6 @@ to load</source>
         <translation>Умови використання Status Software</translation>
     </message>
     <message>
-        <source>Sign out</source>
-        <translation>Вийти</translation>
-    </message>
-    <message>
-        <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation>Переконайтеся, що зберегли пароль рахунку та фразу відновлення. Без них ви можете втратити доступ до рахунку та коштів.</translation>
-    </message>
-    <message>
-        <source>Sign out &amp; Quit</source>
-        <translation>Вийти й закрити</translation>
-    </message>
-    <message>
         <source>Display zoom changed</source>
         <translation>Масштаб інтерфейсу змінено</translation>
     </message>
@@ -16357,6 +16349,25 @@ to load</source>
     <message>
         <source>Copied</source>
         <translation>Скопійовано</translation>
+    </message>
+</context>
+<context>
+    <name>SignOutConfirmationDialog</name>
+    <message>
+        <source>Sign out</source>
+        <translation type="unfinished">Вийти</translation>
+    </message>
+    <message>
+        <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
+        <translation type="unfinished">Переконайтеся, що зберегли пароль рахунку та фразу відновлення. Без них ви можете втратити доступ до рахунку та коштів.</translation>
+    </message>
+    <message>
+        <source>Sign out &amp; Quit</source>
+        <translation type="unfinished">Вийти й закрити</translation>
+    </message>
+    <message>
+        <source>Failed to remove the Stay logged in credential — sign out aborted, please try again</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

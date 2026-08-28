@@ -5179,6 +5179,10 @@ Veuillez envoyer une demande de contact à la personne avec qui vous souhaitez d
         <translation>Ce mot de passe ne peut pas être récupéré</translation>
     </message>
     <message>
+        <source>Stay logged in to skip entering your password each time you open Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Confirm password</source>
         <translation>Confirmer le mot de passe</translation>
     </message>
@@ -13924,18 +13928,6 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
         <translation>Conditions d’utilisation du logiciel Status</translation>
     </message>
     <message>
-        <source>Sign out</source>
-        <translation>Se déconnecter</translation>
-    </message>
-    <message>
-        <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation>Assurez-vous d’avoir enregistré le mot de passe de votre compte et la phrase de récupération. Sans ces éléments, vous risquez de bloquer l’accès à votre compte et de perdre vos fonds.</translation>
-    </message>
-    <message>
-        <source>Sign out &amp; Quit</source>
-        <translation>Se déconnecter et quitter</translation>
-    </message>
-    <message>
         <source>Display zoom changed</source>
         <translation>Le zoom de l&apos;affichage a été modifié</translation>
     </message>
@@ -16274,6 +16266,25 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <message>
         <source>Copied</source>
         <translation>Copié</translation>
+    </message>
+</context>
+<context>
+    <name>SignOutConfirmationDialog</name>
+    <message>
+        <source>Sign out</source>
+        <translation type="unfinished">Se déconnecter</translation>
+    </message>
+    <message>
+        <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
+        <translation type="unfinished">Assurez-vous d’avoir enregistré le mot de passe de votre compte et la phrase de récupération. Sans ces éléments, vous risquez de bloquer l’accès à votre compte et de perdre vos fonds.</translation>
+    </message>
+    <message>
+        <source>Sign out &amp; Quit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to remove the Stay logged in credential — sign out aborted, please try again</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

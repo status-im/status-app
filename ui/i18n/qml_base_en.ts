@@ -5173,6 +5173,10 @@ Send a contact request to the person you would like to chat with, you will be ab
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Stay logged in to skip entering your password each time you open Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Confirm password</source>
         <translation type="unfinished"></translation>
     </message>
@@ -13909,18 +13913,6 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Sign out</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sign out &amp; Quit</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Display zoom changed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -16258,6 +16250,25 @@ to load</source>
     </message>
     <message>
         <source>Copied</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>SignOutConfirmationDialog</name>
+    <message>
+        <source>Sign out</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sign out &amp; Quit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to remove the Stay logged in credential — sign out aborted, please try again</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

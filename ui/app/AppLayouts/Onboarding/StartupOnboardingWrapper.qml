@@ -118,12 +118,26 @@ Item {
             // silently re-stores the credential; with it OFF, any stale credential
             // is reconciled away (the final safety net for a mutation that
             // committed after its caller timed out).
-            if (enablePreference)
-                localAccountSettings.stayLoggedIn = true
-            if (localAccountSettings.stayLoggedIn)
+            // `localAccountSettings` is a context property, absent in QML tests.
+            const settings = typeof localAccountSettings !== "undefined" ? localAccountSettings : null
+            if (enablePreference && settings)
+                settings.stayLoggedIn = true
+            if (settings && settings.stayLoggedIn)
                 root.secureStorage.setCredential(account, credential)
             else if (root.secureStorage.hasCredential(account) === SecureStorage.StatusSuccess)
                 root.secureStorage.deleteCredential(account)
+        }
+
+        function onStayLoggedInDeleteRequested(account) {
+            // Lifecycle cleanup (e.g. keycard conversion — the profile stops being
+            // password-based): remove the silent credential, and only when the
+            // deletion verifiably succeeded turn the preference off (delete-first
+            // ordering; startup trusts credential presence).
+            const status = root.secureStorage.deleteCredential(account)
+            const settings = typeof localAccountSettings !== "undefined" ? localAccountSettings : null
+            if (settings && (status === SecureStorage.StatusSuccess
+                             || status === SecureStorage.StatusNotFound))
+                settings.stayLoggedIn = false
         }
 
         function onKeycardStateChanged() {

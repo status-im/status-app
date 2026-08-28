@@ -475,6 +475,9 @@ method requestDeleteBiometrics*[T](self: Module[T], account: string) =
 method requestSaveStayLoggedIn*[T](self: Module[T], account: string, credential: string, enablePreference: bool) =
   self.view.stayLoggedInSaveRequested(account, credential, enablePreference)
 
+method requestDeleteStayLoggedIn*[T](self: Module[T], account: string) =
+  self.view.stayLoggedInDeleteRequested(account)
+
 method requestDeleteMultiaccount*[T](self: Module[T], keyUid: string): string =
   let err = self.controller.deleteMultiaccount(keyUid)
   if err.len > 0:

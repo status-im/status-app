@@ -36,6 +36,7 @@ QtObject:
   proc saveBiometricsRequested*(self: View, account: string, credential: string) {.signal.}
   proc deleteBiometricsRequested*(self: View, account: string) {.signal.}
   proc stayLoggedInSaveRequested*(self: View, account: string, credential: string, enablePreference: bool) {.signal.}
+  proc stayLoggedInDeleteRequested*(self: View, account: string) {.signal.}
 
   ### QtProperties ###
 
