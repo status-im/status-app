@@ -107,6 +107,7 @@ Item {
                 function loginRequested(keyUid, method, data) {}
 
                 signal accountLoginError(string error, bool wrongPassword)
+                signal stayLoggedInDeleteRequested(string keyUid)
             }
         }
     }
@@ -153,6 +154,20 @@ Item {
 
             compare(wrapper.secureStorage.deleteCalls.length, 1)
             compare(wrapper.secureStorage.creds["uid_2"], "dek:" + root.dummyDekHex)
+        }
+
+        // Lifecycle cleanup (keycard conversion): the store's delete request removes
+        // the silent credential through the wrapper's real handler.
+        function test_stayLoggedInDeleteRequestRemovesCredential() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+
+            wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
+            wrapper.onboardingStore.stayLoggedInDeleteRequested("uid_1")
+
+            compare(wrapper.secureStorage.creds["uid_1"], undefined)
+            compare(wrapper.secureStorage.deleteCalls.length, 1)
+            compare(wrapper.secureStorage.deleteCalls[0], "uid_1")
         }
     }
 }

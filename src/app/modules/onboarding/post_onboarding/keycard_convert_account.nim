@@ -31,6 +31,11 @@ proc run*(self: KeycardConvertAccountTask,
   # If needed, the new password will be saved as part of SaveBiometricsTask.
   onboardingModule.requestDeleteBiometrics(self.keyUid)
 
+  # The conversion re-encrypts the profile: the silently stored DEK becomes stale, and
+  # the resulting keycard-history profile is out of scope for "Stay logged in" anyway —
+  # remove the credential and (on verified deletion, QML-side) turn the preference off.
+  onboardingModule.requestDeleteStayLoggedIn(self.keyUid)
+
   # TODO: Implement V2 endpoint in status-go which automatically calculates current password
   let account = accountsService.createAccountFromMnemonic(self.mnemonic, includeEncryption = true)
   let currentPassword = account.derivedAccounts.encryption.publicKey
