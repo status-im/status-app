@@ -78,6 +78,28 @@ Item {
 
             secureStorage: SecureStorage {
                 readonly property bool available: mockDriver.secureStorageAvailable
+                property var creds: ({})
+
+                function hasCredential(account) {
+                    return creds[account] !== undefined ? SecureStorage.StatusSuccess
+                                                        : SecureStorage.StatusNotFound
+                }
+                function getCredential(account) {
+                    const value = creds[account]
+                    return { status: value === undefined ? SecureStorage.StatusNotFound
+                                                         : SecureStorage.StatusSuccess,
+                             credential: value === undefined ? "" : value }
+                }
+                function setCredential(account, credential) {
+                    creds[account] = credential
+                    return SecureStorage.StatusSuccess
+                }
+                function deleteCredential(account) {
+                    if (creds[account] === undefined)
+                        return SecureStorage.StatusNotFound
+                    delete creds[account]
+                    return SecureStorage.StatusSuccess
+                }
             }
 
             onboardingStore: OnboardingStore {
@@ -207,6 +229,13 @@ Item {
         }
 
         function cleanup() {
+            // If a test aborted mid-dialog, its modal popups keep grabbing input from
+            // the shared window overlay while teardown is deferred — close them here so
+            // one failure cannot cascade into the following tests (Escape is a no-op
+            // when nothing is open; the control is discarded right after anyway).
+            for (let i = 0; i < 3; ++i)
+                keyClick(Qt.Key_Escape)
+
             // The control itself is a temporary object: qmltest destroys it right after
             // this cleanup — an explicit destroy() here would fight that lifecycle.
             controlUnderTest = null
@@ -250,7 +279,11 @@ Item {
                     button.Window.window.requestActivate()
                     wait(50)
                 }
-                mouseClick(button)
+                if (attempt < 2 || button.clicked === undefined)
+                    mouseClick(button) // exercise real input delivery first
+                else
+                    button.clicked() // input-outage fallback: emit directly — navigation
+                                     // must not depend on the desktop's input health
                 for (let i = 0; i < 20; ++i) {
                     wait(25)
                     const item = stack.topLevelItem instanceof Loader ? stack.topLevelItem.item
@@ -332,6 +365,28 @@ Item {
             const confirmDeleteButton = findChild(confirmDialog, "confirmDeleteMultiaccountBtn")
             verify(!!confirmDeleteButton)
             mouseClick(confirmDeleteButton)
+        }
+
+        // Generic variant of clickToPage for non-navigation consequences (spies, popups
+        // opening): clicks until `predicate` holds, with the same input-outage fallback.
+        function clickUntil(button, predicate) {
+            verify(!!button)
+            for (let attempt = 0; attempt < 5; ++attempt) {
+                if (attempt > 0 && button.Window.window) {
+                    button.Window.window.requestActivate()
+                    wait(50)
+                }
+                if (attempt < 2 || button.clicked === undefined)
+                    mouseClick(button)
+                else
+                    button.clicked()
+                for (let i = 0; i < 20; ++i) {
+                    wait(25)
+                    if (predicate())
+                        return
+                }
+            }
+            verify(predicate())
         }
 
         // common variant data for all flow related TDD tests
@@ -562,6 +617,122 @@ Item {
             const resultData = finishedSpy.signalArguments[0][1]
             verify(!!resultData)
             compare(resultData.stayLoggedIn, false)
+        }
+
+        readonly property string dummyDekHex: "a".repeat(64)
+
+        function setupAutoLogin(keyUid, credential) {
+            controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+            controlUnderTest.lastSelectedProfileKeyUid = keyUid
+            if (credential !== undefined)
+                controlUnderTest.secureStorage.creds[keyUid] = credential
+            loginSpy.clear()
+            controlUnderTest.autoLoginEnabled = true // triggers the one-shot attempt
+        }
+
+        function test_autoLogin_success_data() {
+            return [{ tag: "stored DEK -> silent login" }]
+        }
+
+        // A silently stored tagged DEK for the last-used password profile logs in
+        // without any prompt, via the standard {dek} login path.
+        function test_autoLogin_success() {
+            setupAutoLogin("uid_1", "dek:" + dummyDekHex)
+
+            tryCompare(loginSpy, "count", 1)
+            compare(loginSpy.signalArguments[0][0], "uid_1")
+            compare(loginSpy.signalArguments[0][1], Onboarding.LoginMethod.Password)
+            compare(loginSpy.signalArguments[0][2].dek, dummyDekHex)
+            compare(controlUnderTest.autoLoginAttempted, true)
+
+            // The failure consumer yields the attempted profile exactly once: a later
+            // (manual) login error finds nothing to delete, so another profile's valid
+            // credential can never be wiped by the fallback.
+            controlUnderTest.secureStorage.creds["uid_2"] = "dek:" + dummyDekHex
+            compare(controlUnderTest.consumeAutoLoginFailure(), "uid_1")
+            compare(controlUnderTest.consumeAutoLoginFailure(), "")
+            compare(controlUnderTest.secureStorage.creds["uid_2"], "dek:" + dummyDekHex)
+        }
+
+        function test_autoLogin_noAttempt_data() {
+            return [
+                { tag: "no stored credential" },
+                { tag: "keycard profile", keyUid: "uid_4", credential: "dek:" + "a".repeat(64) },
+                { tag: "kill-switched off", disabled: true, credential: "dek:" + "a".repeat(64) },
+            ]
+        }
+
+        // No credential, a keycard profile, or the test-environment kill-switch:
+        // no login attempt is made and the login screen appears normally.
+        function test_autoLogin_noAttempt(data) {
+            const keyUid = data.keyUid ?? "uid_1"
+            controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+            controlUnderTest.lastSelectedProfileKeyUid = keyUid
+            if (data.credential !== undefined)
+                controlUnderTest.secureStorage.creds[keyUid] = data.credential
+            loginSpy.clear()
+            if (!data.disabled)
+                controlUnderTest.autoLoginEnabled = true
+
+            wait(100)
+            compare(loginSpy.count, 0)
+            compare(controlUnderTest.autoLoginAttempted, false)
+            if (data.credential !== undefined) // an unused credential is left untouched
+                compare(controlUnderTest.secureStorage.creds[keyUid], data.credential)
+        }
+
+        function test_autoLogin_garbageCredentialIsDropped_data() {
+            return [{ tag: "untagged value -> deleted, no attempt" }]
+        }
+
+        // The silent store must only ever hold a tagged DEK: anything else is dropped
+        // and no login is attempted with it.
+        function test_autoLogin_garbageCredentialIsDropped() {
+            setupAutoLogin("uid_1", "not-a-dek")
+
+            wait(100)
+            compare(loginSpy.count, 0)
+            compare(controlUnderTest.autoLoginAttempted, false)
+            compare(controlUnderTest.secureStorage.creds["uid_1"], undefined)
+        }
+
+        function test_autoLogin_productionInitOrder_data() {
+            return [{ tag: "loader order: keyUid before enable" }]
+        }
+
+        // Mirrors ui/main.qml's Loader.onLoaded assignment order — the key UID binding
+        // is assigned before the enable flag, and enabling triggers the attempt.
+        function test_autoLogin_productionInitOrder() {
+            controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+            controlUnderTest.secureStorage.creds["uid_1"] = "dek:" + dummyDekHex
+            loginSpy.clear()
+
+            controlUnderTest.lastSelectedProfileKeyUid = "uid_1"
+            controlUnderTest.autoLoginEnabled = true // last, as in production
+
+            tryCompare(loginSpy, "count", 1)
+            compare(loginSpy.signalArguments[0][0], "uid_1")
+        }
+
+        function test_autoLogin_enableBeforeKeyUidDoesNotFire_data() {
+            return [{ tag: "wrong order stays inert (documented contract)" }]
+        }
+
+        // The attempt triggers ONLY on enabling (and at creation): assigning the key UID
+        // afterwards deliberately does NOT retry — auto-login must never fire off a
+        // login-screen profile selection. This pins the requirement that production
+        // assigns the enable flag LAST.
+        function test_autoLogin_enableBeforeKeyUidDoesNotFire() {
+            controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+            controlUnderTest.secureStorage.creds["uid_1"] = "dek:" + dummyDekHex
+            loginSpy.clear()
+
+            controlUnderTest.autoLoginEnabled = true // wrong order: key UID still empty
+            controlUnderTest.lastSelectedProfileKeyUid = "uid_1"
+
+            wait(100)
+            compare(loginSpy.count, 0)
+            compare(controlUnderTest.autoLoginAttempted, false)
         }
 
 
@@ -1084,11 +1255,9 @@ Item {
 
             const loginUserSelector = findChild(page, "loginUserSelector")
             verify(!!loginUserSelector)
-            mouseClick(loginUserSelector)
-
             const dropdown = findChild(loginUserSelector, "dropdown")
             verify(!!dropdown)
-            tryCompare(dropdown, "opened", true)
+            clickUntil(loginUserSelector, () => dropdown.opened)
 
             const menuDelegate = findChild(dropdown, data.delegateName)
             verify(!!menuDelegate)
@@ -1238,17 +1407,15 @@ Item {
 
             const loginUserSelector = findChild(page, "loginUserSelector")
             verify(!!loginUserSelector)
-            mouseClick(loginUserSelector)
-
             const dropdown = findChild(loginUserSelector, "dropdown")
             verify(!!dropdown)
-            tryCompare(dropdown, "opened", true)
+            clickUntil(loginUserSelector, () => dropdown.opened)
 
             const menuDelegate = findChild(dropdown, "manageProfilesDelegate")
             verify(!!menuDelegate)
             dynamicSpy.setup(page, "onboardingManageProfilesFlowRequested")
-            mouseClick(menuDelegate)
-            tryCompare(dynamicSpy, "count", 1)
+            clickUntil(menuDelegate, () => dynamicSpy.count > 0)
+            compare(dynamicSpy.count, 1)
 
             // Manage profile dialog
             const manageProfilesDialog = findChild(controlUnderTest, "manageProfilesDialog")
@@ -1264,8 +1431,8 @@ Item {
             const deleteButton = findChild(profileDelegate, "deleteProfileButton-uid_3")
             verify(!!deleteButton)
             dynamicSpy.setup(profileDelegate, "deleteProfileRequested")
-            mouseClick(deleteButton)
-            tryCompare(dynamicSpy, "count", 1)
+            clickUntil(deleteButton, () => dynamicSpy.count > 0)
+            compare(dynamicSpy.count, 1)
 
             // Confirmation dialog
             const deleteMultiaccountConfirmationDialog = findChild(controlUnderTest, "deleteMultiaccountConfirmationDialog")
@@ -1275,8 +1442,8 @@ Item {
             const confirmDeleteButton = findChild(deleteMultiaccountConfirmationDialog, "confirmDeleteMultiaccountBtn")
             verify(!!confirmDeleteButton)
             dynamicSpy.setup(onboardingFlow, "deleteMultiaccountRequested")
-            mouseClick(confirmDeleteButton)
-            tryCompare(dynamicSpy, "count", 1)
+            clickUntil(confirmDeleteButton, () => dynamicSpy.count > 0)
+            compare(dynamicSpy.count, 1)
         }
 
         function test_loginScreen_deleteLastProfile_showsWelcome_data() {

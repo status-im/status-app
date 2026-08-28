@@ -643,6 +643,11 @@ Window {
                 item.secureStorage = appSecureStorage
                 item.lastSelectedProfileKeyUid = Qt.binding(() => localAppSettings.selectedProfileKeyUid)
                 item.biometricFlowPending = Qt.binding(() => applicationWindow.biometricFlowPending)
+                // MUST be assigned LAST: enabling triggers the one-shot auto-login
+                // attempt, which needs the key UID (and storage) already in place.
+                // e2e runs must never auto-login: the OS secure store is not
+                // per-data-dir, so a leftover developer credential could hijack a run.
+                item.autoLoginEnabled = !localAppSettings.testEnvironment
                 splashScreenLoader.active = false
                 applicationWindow.contentLoaded()
                 Backpressure.debounce(applicationWindow, 750, () => {
