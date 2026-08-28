@@ -25,6 +25,27 @@ Page {
     // Prompt-free secure storage backing the "Stay logged in" opt-in. Optional:
     // instantiation sites without it (tests, storybook) simply don't offer the opt-in.
     property SecureStorage secureStorage: null
+
+    // Enables the silent auto-login attempt at startup. Kill-switched off in test
+    // environments: the OS secure store is not per-data-dir, so a leftover developer
+    // credential must never hijack an e2e run.
+    property bool autoLoginEnabled: false
+
+    // One-shot marker: a failed auto-login must fall back to the normal login screen,
+    // never retry (the wrapper also uses it to drop the stale credential on error).
+    readonly property alias autoLoginAttempted: d.autoLoginAttempted
+
+    // Consumed by the wrapper on the FIRST login error after an auto-login attempt:
+    // returns the key UID whose stored credential is stale, then clears itself — so a
+    // later manual-login error (possibly for a DIFFERENT profile) can never delete that
+    // profile's valid credential.
+    function consumeAutoLoginFailure() : string {
+        const keyUid = d.autoLoginPendingKeyUid
+        d.autoLoginPendingKeyUid = ""
+        return keyUid
+    }
+
+    onAutoLoginEnabledChanged: d.tryAutoLogin()
     required property bool privacyModeFeatureEnabled
 
     // list of language/locale codes, e.g. ["cs_CZ","ko","fr"]
@@ -95,6 +116,10 @@ Page {
 
         property var keycardPayload: null
 
+        // silent auto-login (one-shot per app run — deliberately NOT reset in resetState)
+        property bool autoLoginAttempted
+        property string autoLoginPendingKeyUid // set with the attempt, consumed on its failure
+
         // login screen state
         property string selectedProfileKeyId
 
@@ -138,6 +163,45 @@ Page {
 
             root.finished(flow, data)
         }
+
+        // Startup auto-login: the trigger is the PRESENCE of a silently readable
+        // credential for the last-used profile (the per-account preference isn't
+        // readable pre-login; logout already deleted the credential when auto-login
+        // shouldn't fire). Rides the exact same rails as a biometric DEK login — the
+        // wrapper's onLoginRequested pushes the splash screen, so the login screen
+        // never flashes.
+        function tryAutoLogin() : void {
+            if (d.autoLoginAttempted || !root.autoLoginEnabled)
+                return
+            if (!root.secureStorage || !root.secureStorage.available)
+                return
+
+            const keyUid = root.lastSelectedProfileKeyUid
+            if (keyUid === "")
+                return
+
+            const profile = SQUtils.ModelUtils.getByKey(root.onboardingStore.loginAccountsModel,
+                                                        "keyUid", keyUid)
+            if (!profile || profile.keycardCreatedAccount)
+                return // unknown profile, or keycard (out of scope for auto-login)
+
+            const result = root.secureStorage.getCredential(keyUid)
+            if (result.status !== SecureStorage.StatusSuccess)
+                return // nothing stored (or a storage hiccup) -> normal login screen
+
+            if (!result.credential.startsWith(Constants.keychain.dekPrefix)) {
+                // The silent store must only ever hold a tagged DEK — drop anything else
+                root.secureStorage.deleteCredential(keyUid)
+                return
+            }
+
+            d.autoLoginAttempted = true
+            d.autoLoginPendingKeyUid = keyUid
+            root.loginRequested(keyUid, Onboarding.LoginMethod.Password,
+                                { dek: result.credential.slice(Constants.keychain.dekPrefix.length) })
+        }
+
+        Component.onCompleted: d.tryAutoLogin()
     }
 
     background: Rectangle {
