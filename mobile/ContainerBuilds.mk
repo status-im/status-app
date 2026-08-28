@@ -12,7 +12,7 @@ QT_MAJOR=$(shell echo $(QT_VERSION) | cut -d. -f1)
 ARCH?=arm64
 
 # Use the same pre-built Docker image as CI (see ci/Jenkinsfile.android)
-DOCKER_IMAGE := harbor.status.im/status-im/status-desktop-build:1.0.0-qt$(QT_VERSION)-android
+DOCKER_IMAGE := harbor.status.im/status-im/status-desktop-build:1.0.3-qt$(QT_VERSION)-android
 
 # Map architecture to Android ABI
 ifeq ($(ARCH), arm64)
