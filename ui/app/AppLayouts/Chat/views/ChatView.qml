@@ -290,6 +290,16 @@ Item {
         return root.chatContentModule.chatDetails.isUsersListAvailable
     }
 
+    // Until the active chat/content module exists, `showRightPanel` is false
+    // only because its answer is not known yet. Let the section chrome keep
+    // the user-requested members column in that interval instead of resizing
+    // from shown → hidden → shown as this view initializes.
+    readonly property bool rightPanelDecisionReady: !root.showUsersList
+                                                  || root.contentLocked
+                                                  || root.rootStore.openCreateChat
+                                                  || root.allChannelsAreHiddenBecauseNotPermitted
+                                                  || !!root.chatContentModule
+
     onNavToMsgDetailsChanged: {
         if (root.navToMsgDetails) {
             d.requestCenterPanel()

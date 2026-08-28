@@ -21,6 +21,7 @@ QtObject:
       editCategoryChannelsModel: chats_model.Model
       editCategoryChannelsVariant: QVariant
       loadingHistoryMessagesInProgress: bool
+      chatsLoaded: bool
       tokenPermissionsModel: TokenPermissionsModel
       tokenPermissionsVariant: QVariant
       allTokenRequirementsMet: bool
@@ -54,6 +55,7 @@ QtObject:
     result.contactRequestsModel = user_model.newModel()
     result.contactRequestsModelVariant = newQVariant(result.contactRequestsModel)
     result.loadingHistoryMessagesInProgress = false
+    result.chatsLoaded = false
     result.tokenPermissionsModel = newTokenPermissionsModel()
     result.tokenPermissionsVariant = newQVariant(result.tokenPermissionsModel)
     result.amIMember = false
@@ -84,6 +86,25 @@ QtObject:
 
   QtProperty[QVariant] model:
     read = getModel
+
+  proc chatsLoadedChanged*(self: View) {.signal.}
+
+  # This is deliberately separate from the module's internal `chatsLoaded`
+  # flag. The latter lets the backend build the section; this property only
+  # rises once that build has populated the model and selected its active item,
+  # so QML never renders an intermediate empty section.
+  proc setChatsLoaded*(self: View) =
+    if self.chatsLoaded:
+      return
+    self.chatsLoaded = true
+    self.chatsLoadedChanged()
+
+  proc getChatsLoaded*(self: View): bool {.slot.} =
+    return self.chatsLoaded
+
+  QtProperty[bool] chatsLoaded:
+    read = getChatsLoaded
+    notify = chatsLoadedChanged
 
   proc editCategoryChannelsModel*(self: View): chats_model.Model =
     return self.editCategoryChannelsModel

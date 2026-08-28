@@ -115,6 +115,7 @@ Item {
             mock.messagesPerChannel = 150
             mock.canViewPrivateChannels = true
             mock.canPostInPrivateChannels = true
+            mock.chatsLoaded = true
             mock.install()
         }
 
@@ -181,6 +182,31 @@ Item {
             const rows = mock.uncategorizedChannelsCount + mock.categoriesCount
                        + mock.categoriesCount * mock.channelsPerCategory
             tryCompare(chatList, "count", rows)
+        }
+
+        // The model build is intentionally deferred until section navigation
+        // settles. Its real QML panels may finish incubating first, but must
+        // remain behind the loader-owned skeleton instead of exposing
+        // ChatColumnView's EmptyChatPanel for that interval.
+        function test_skeletonWaitsForDeferredCommunityModel() {
+            mock.chatsLoaded = false
+            harness.active = true
+            const loader = harness.item
+            verify(!!loader)
+
+            tryVerify(() => loader.status === Loader.Ready, 10000)
+            const chrome = findChild(loader, "sectionChrome")
+            const skeleton = findChild(loader, "centerPanelSkeleton")
+            verify(!!chrome)
+            verify(!!skeleton)
+            tryVerify(() => loader.item.centerPanelReady, 10000,
+                      "the QML center panel should finish while data remains deferred")
+            verify(chrome.centerPanel === skeleton,
+                   "the center skeleton must cover the deferred model build")
+
+            mock.chatsLoaded = true
+            tryVerify(() => chrome.centerPanel === loader.item.centerPanel, 10000,
+                      "the real center panel should replace the skeleton once data is ready")
         }
 
         // The channels column and the message view incubate off the critical

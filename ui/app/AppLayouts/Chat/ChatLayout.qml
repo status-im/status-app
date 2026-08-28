@@ -48,6 +48,7 @@ StackLayout {
     readonly property Item rightPanel: mainViewLoader.item?.rightPanel ?? null
     readonly property Item headerContent: mainViewLoader.item?.headerContent ?? null
     readonly property bool showRightPanel: mainViewLoader.item?.showRightPanel ?? false
+    readonly property bool rightPanelDecisionReady: mainViewLoader.item?.rightPanelDecisionReady ?? false
     readonly property var viewSubsectionHistory: mainViewLoader.item?.subsectionHistory ?? null
 
     // Per-panel readiness of those panels, so the loader can retire each
@@ -56,6 +57,12 @@ StackLayout {
     readonly property bool leftPanelReady: mainViewLoader.item?.leftPanelReady ?? false
     readonly property bool centerPanelReady: mainViewLoader.item?.centerPanelReady ?? false
     readonly property bool rightPanelReady: mainViewLoader.item?.rightPanelReady ?? false
+
+    // Panel loaders can finish before the deferred first chat/channel build.
+    // Keep the section chrome's skeletons until the backing model has an
+    // active, renderable state. The true fallback preserves standalone and
+    // legacy mock consumers which do not expose the new backend property.
+    readonly property bool sectionDataReady: root.rootStore?.chatCommunitySectionModule?.chatsLoaded ?? true
 
     // True while a full-page view (join/banned/offline community view or the
     // community settings page) replaces the paneled chat view; the loader hides

@@ -68,6 +68,8 @@ QtObject {
     property bool allChannelsAreHiddenBecauseNotPermitted: false
 
     property string activeChatId: ""
+    // Lets loader tests hold the backend model in its deferred-build state.
+    property bool chatsLoaded: true
 
     // Built models
     // Wallet models resolving permission holdings to symbols/icons; the
@@ -146,7 +148,7 @@ QtObject {
         readonly property bool isWaitingOnNewCommunityOwnerToConfirmRequestToRejoin: root.isWaitingOnNewCommunityOwnerToConfirmRequestToRejoin
         readonly property int requestToJoinState: root.requestToJoinState
         readonly property bool loadingHistoryMessagesInProgress: false
-        readonly property bool chatsLoaded: true
+        readonly property bool chatsLoaded: root.chatsLoaded
         readonly property var membersModel: root.membersModel
         readonly property var contactRequestsModel: null
         readonly property string emoji: ""
