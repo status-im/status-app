@@ -183,7 +183,8 @@ class ChatPage(BasePage):
             return False
 
         button_clicked = self.try_click(
-            self.locators.SEND_BUTTON, timeout=3, max_attempts=1
+            self.locators.SEND_BUTTON, timeout=3, max_attempts=1,
+            catch_driver_errors=True,
         )
         if not button_clicked:
             self.logger.info("Send button not clickable — falling back to newline trigger")
@@ -337,10 +338,12 @@ class ChatPage(BasePage):
                     # cost (activate_app + modal check + landmark wait) per
                     # poll iteration, and arrival is re-checked below anyway.
                     app._ensure_main_nav_visible()
-                    app._click_nav_item(app.locators.LEFT_NAV_WALLET)
+                    if not app._click_nav_item(app.locators.LEFT_NAV_WALLET):
+                        self.logger.debug("Nav-toggle: wallet leg missed")
                     time.sleep(1)
                     app._ensure_main_nav_visible()
-                    app._click_nav_item(app.locators.LEFT_NAV_MESSAGES)
+                    if not app._click_nav_item(app.locators.LEFT_NAV_MESSAGES):
+                        self.logger.debug("Nav-toggle: messages leg missed")
                 except Exception as exc:
                     self.logger.debug("Nav-toggle refresh failed: %s", exc)
                 self.dismiss_introduce_prompt(timeout=1)

@@ -156,10 +156,8 @@ class WalletSettingsPage(BasePage):
         details = AccountDetailsPage(self.driver)
         for attempt in range(3):
             time.sleep(0.4)
-            try:
-                self.click(locator, timeout=timeout, max_attempts=1)
-            except Exception as e:
-                self.logger.debug(f"select_account tap attempt {attempt + 1}: {e}")
+            if not self.try_click(locator, timeout=timeout, max_attempts=1):
+                self.logger.debug(f"select_account tap attempt {attempt + 1} missed")
             if details.is_loaded(timeout=3):
                 return True
             self.logger.debug(f"Account '{name}' tap did not open details (attempt {attempt + 1})")

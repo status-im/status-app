@@ -71,13 +71,12 @@ class ChangePasswordModal(BasePage):
                     self.logger.debug(
                         "Restart button still visible; tapping attempt %s", attempt + 1
                     )
-                    try:
-                        self.click(
-                            self.locators.PRIMARY_BUTTON, timeout=5, max_attempts=1
-                        )
-                    except Exception as err:
+                    if not self.try_click(
+                        self.locators.PRIMARY_BUTTON, timeout=5, max_attempts=1,
+                        catch_driver_errors=True,
+                    ):
                         self.logger.debug(
-                            "Restart button tap attempt %s failed: %s", attempt + 1, err
+                            "Restart button tap attempt %s missed", attempt + 1
                         )
                     attempt += 1
                 else:

@@ -406,8 +406,6 @@ class GroupChatPage(BasePage):
             self.long_press_element(element, duration=press_ms)
             time.sleep(1)
             self.driver.back()
-            # click raises (not returns False) on exhaustion, so gate on
-            # visibility first — else a missed long-press skips the retry below.
             if self.is_element_visible(
                 self.locators.REMOVE_FROM_GROUP_ITEM, timeout=5,
             ):

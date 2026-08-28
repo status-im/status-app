@@ -711,10 +711,19 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
 
 def pytest_sessionstart(session):
     """Click-contract lint at collection: a violation fails the session before
-    any device time is spent. Standalone: python3 scripts/check_click_contract.py"""
-    from scripts.check_click_contract import main as _click_contract_main
+    any device time is spent. Standalone: python3 scripts/check_click_contract.py
 
-    if _click_contract_main(str(session.config.rootpath)):
+    Loaded by explicit file path (not module import): the scripts/ package name
+    is a namespace merged with the repo-root scripts/, so import-by-name is one
+    stray __init__.py away from breaking. The lint anchors its own scan root."""
+    if hasattr(session.config, "workerinput"):
+        return  # xdist worker — the controller already ran the lint
+    import importlib.util
+    lint_path = Path(__file__).parent / "scripts" / "check_click_contract.py"
+    spec = importlib.util.spec_from_file_location("_click_contract_lint", lint_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    if mod.main():
         raise pytest.UsageError(
             "click-contract violations (see above) — branch on try_click, never on click()"
         )

@@ -104,13 +104,13 @@ class TestEmojiAndMedia:
 
         if not secondary_chat.wait_for_message_input(timeout=3):
             secondary_chat.dismiss_backup_prompt(timeout=3)
-            secondary_app.click_messages_button()
+            assert secondary_app.click_messages_button(), "Failed to navigate to Messages"
             secondary_chat.dismiss_backup_prompt(timeout=2)
 
             display_name = (
                 self.primary.user.display_name if self.primary and self.primary.user else None
             )
-            secondary_chat.open_chat_by_suffix(
+            assert secondary_chat.open_chat_by_suffix(
                 self.primary_suffix,
                 display_name=display_name,
                 timeout=self.CROSS_DEVICE_TIMEOUT,

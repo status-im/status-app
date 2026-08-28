@@ -148,9 +148,7 @@ class TestWalletSendSmoke(StepMixin):
             for _ in range(4):
                 if not base.is_element_visible(back_button, timeout=2):
                     break
-                try:
-                    base.click(back_button, timeout=3, max_attempts=1)
-                except Exception:
+                if not base.try_click(back_button, timeout=3, max_attempts=1):
                     break
                 time.sleep(0.3)
 

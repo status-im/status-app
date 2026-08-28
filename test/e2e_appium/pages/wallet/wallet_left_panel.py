@@ -225,7 +225,9 @@ class WalletLeftPanel(BasePage):
         if not modal.set_name(name):
             self.logger.error(f"Failed to set account name to '{name}'")
             return False
-        modal.save_changes()
+        if not modal.save_changes():
+            self.logger.error("Failed to save account changes")
+            return False
 
         auth_modal = KeycardAuthenticationModal(self.driver)
         if not auth_modal.is_displayed(timeout=5):
@@ -362,7 +364,9 @@ class WalletLeftPanel(BasePage):
             self.logger.error(f"Failed to set account name to '{new_name}'")
             return False
 
-        modal.save_changes()
+        if not modal.save_changes():
+            self.logger.error("Failed to save account changes")
+            return False
 
         if not modal.wait_until_hidden(timeout=10):
             self.logger.error("Edit account modal did not close after saving")
