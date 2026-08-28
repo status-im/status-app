@@ -13,6 +13,8 @@ import pytest
 
 from utils.screen_identity import dismiss_stacked_overlays, topmost_overlay
 
+pytestmark = [pytest.mark.gate, pytest.mark.component]
+
 
 POPUP = "EnablePushNotificationsPopup"
 NAV_EDU = "NavigationEducationDialog"
