@@ -42,7 +42,7 @@ Item {
 
                 validators: [
                     StatusRegularExpressionValidator {
-                        regularExpression: /^[0-9A-Za-z_\$-\s]*$/
+                        regularExpression: /^[0-9A-Za-z_$\-\s]*$/
                     }
                 ]
             }
@@ -69,6 +69,27 @@ Item {
             verify(regexTC.testControl.valid, "Expected valid input")
             TestUtils.pressKeyAndWait(regexTC, regexTC.testControl, Qt.Key_Ampersand)
             verify(!regexTC.testControl.valid, "Expected invalid input")
+
+            verify(qtOuput.qtOuput().length === 0, `No output expected. Found:\n"${qtOuput.qtOuput()}"\n`)
+        }
+
+        function test_regex_validation_unicode() {
+            // StatusRegularExpressionValidator evaluates through PCRE2 (RXValidator), so Unicode
+            // property classes work and match letters/digits of any script
+            regexTC.testControl.validators[0].regularExpression = /^[\p{L}\p{M}\p{N}\s]+$/
+            regexTC.testControl.validationMode = StatusInput.ValidationMode.Always
+
+            // (no Indic samples here: font shaping logs "OpenType support missing" and trips the no-output guard)
+            for (const text of ["Ђорђе Ћурчић", "Straße", "我的钱包", "ワレット", "Ђорђе ٣٤٥"]) {
+                regexTC.testControl.text = text
+                regexTC.testControl.validate(true)
+                verify(regexTC.testControl.valid, `"${text}" expected to be valid`)
+            }
+            for (const text of ["Ђорђе!", "我的钱包。", "🙂", "a_b"]) {
+                regexTC.testControl.text = text
+                regexTC.testControl.validate(true)
+                verify(!regexTC.testControl.valid, `"${text}" expected to be invalid`)
+            }
 
             verify(qtOuput.qtOuput().length === 0, `No output expected. Found:\n"${qtOuput.qtOuput()}"\n`)
         }

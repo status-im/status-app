@@ -418,7 +418,7 @@ QtObject {
                 errorMessage: qsTr("Key pair must be at least %n character(s)", "", keypair.nameLengthMin)
             },
             StatusRegularExpressionValidator {
-                regularExpression: /^[a-zA-Z0-9\-_ ]+$/
+                regularExpression: /^[\p{L}\p{M}\p{N}\-_ ]+$/
                 errorMessage: errorMessages.alphanumericalExpandedRegExp
             }
         ]
@@ -570,24 +570,24 @@ QtObject {
     }
 
     readonly property QtObject regularExpressions: QtObject {
-        readonly property var alphanumerical: /^$|^[a-zA-Z0-9]+$/
+        readonly property var alphanumerical: /^$|^[\p{L}\p{M}\p{N}]+$/
         // Adds space, dash, underscore and dot
-        readonly property var alphanumericalExpanded: /^$|^[a-zA-Z0-9\-_\.\u0020]+$/
-        // Adds dash and underscore
-        readonly property var alphanumericalExpanded1: /^[a-zA-Z0-9\-_]+(?: [a-zA-Z0-9\-_]+)*$/
+        readonly property var alphanumericalExpanded: /^$|^[\p{L}\p{M}\p{N}\-_. ]+$/
+        // Adds dash and underscore; words separated by a single space
+        readonly property var alphanumericalExpanded1: /^[\p{L}\p{M}\p{N}\-_]+(?: [\p{L}\p{M}\p{N}\-_]+)*$/
         // Adds dash, underscore, dot space and ampersand
-        readonly property var alphanumericalExpanded2: /^$|^[a-zA-Z0-9\-_\.\u0020\&]+$/
+        readonly property var alphanumericalExpanded2: /^$|^[\p{L}\p{M}\p{N}\-_. &]+$/
         // Adds dash, underscore, dot, space, comma and ampersand
-        readonly property var alphanumericalExpanded3: /^$|^[a-zA-Z0-9\-_\.\,\u0020\&]+$/
+        readonly property var alphanumericalExpanded3: /^$|^[\p{L}\p{M}\p{N}\-_., &]+$/
         // Adds a newline (e.g. community description)
-        readonly property var alphanumericalExpanded4: /^$|^[a-zA-Z0-9\-_\.\,\u0020\&\r?\n]+$/
-        readonly property var alphanumericalWithSpace: /^$|^[a-zA-Z0-9\s]+$/
+        readonly property var alphanumericalExpanded4: /^$|^[\p{L}\p{M}\p{N}\-_., &\r?\n]+$/
+        readonly property var alphanumericalWithSpace: /^$|^[\p{L}\p{M}\p{N}\s]+$/
+        readonly property var textWithEmoji: /^$|^[\x00-\x7F\p{L}\p{M}\p{N}\p{P}\p{S}\p{Z}\p{Cf}]+$/
         readonly property var asciiPrintable:         /^$|^[!-~]+$/
         readonly property var ascii:                  /^$|^[\x00-\x7F]+$/
         readonly property var capitalOnly: /^$|^[A-Z]+$/
         readonly property var numerical: /^$|^[0-9]+$/
         readonly property var emoji: /\ud83c\udff4(\udb40[\udc61-\udc7a])+\udb40\udc7f|(\ud83c[\udde6-\uddff]){2}|([\#\*0-9]\ufe0f?\u20e3)|(\u00a9|\u00ae|[\u203c\u2049\u20e3\u2122\u2139\u2194-\u2199\u21a9\u21aa\u231a\u231b\u2328\u23cf\u23e9-\u23fa\u24c2\u25aa\u25ab\u25b6\u25c0\u25fb-\u25fe\u2600-\u2604\u260e\u2611\u2614\u2615\u2618\u261d\u2620\u2622\u2623\u2626\u262a\u262e\u262f\u2638-\u263a\u2640\u2642\u2648-\u2653\u265f\u2660\u2663\u2665\u2666\u2668\u267b\u267e\u267f\u2692-\u2697\u2699\u269b\u269c\u26a0\u26a1\u26a7\u26aa\u26ab\u26b0\u26b1\u26bd\u26be\u26c4\u26c5\u26c8\u26ce\u26cf\u26d1\u26d3\u26d4\u26e9\u26ea\u26f0-\u26f5\u26f7-\u26fa\u26fd\u2702\u2705\u2708-\u270d\u270f\u2712\u2714\u2716\u271d\u2721\u2728\u2733\u2734\u2744\u2747\u274c\u274e\u2753-\u2755\u2757\u2763\u2764\u2795-\u2797\u27a1\u27b0\u27bf\u2934\u2935\u2b05-\u2b07\u2b1b\u2b1c\u2b50\u2b55\u3030\u303d\u3297\u3299]|\ud83c[\udc04\udccf\udd70\udd71\udd7e\udd7f\udd8e\udd91-\udd9a\udde6-\uddff\ude01\ude02\ude1a\ude2f\ude32-\ude3a\ude50\ude51\udf00-\udf21\udf24-\udf93\udf96\udf97\udf99-\udf9b\udf9e-\udff0\udff3-\udff5\udff7-\udfff]|\ud83d[\udc00-\udcfd\udcff-\udd3d\udd49-\udd4e\udd50-\udd67\udd6f\udd70\udd73-\udd7a\udd87\udd8a-\udd8d\udd90\udd95\udd96\udda4\udda5\udda8\uddb1\uddb2\uddbc\uddc2-\uddc4\uddd1-\uddd3\udddc-\uddde\udde1\udde3\udde8\uddef\uddf3\uddfa-\ude4f\ude80-\udec5\udecb-\uded2\uded5-\uded7\udedc-\udee5\udee9\udeeb\udeec\udef0\udef3-\udefc\udfe0-\udfeb\udff0]|\ud83e[\udd0c-\udd3a\udd3c-\udd45\udd47-\ude7c\ude80-\ude88\ude90-\udebd\udebf-\udec5\udece-\udedb\udee0-\udee8\udef0-\udef8])((\ud83c[\udffb-\udfff])?(\ud83e[\uddb0-\uddb3])?(\ufe0f?\u200d([\u2000-\u3300]|[\ud83c-\ud83e][\ud000-\udfff])\ufe0f?)?)*/g;
-        readonly property var asciiWithEmoji: /^[\u00a9\u00ae\u2000-\u3300\ud83c\ud000-\udfff\ud83d\ud000-\udfff\ud83e\ud000-\udfff\u0000-\u007F]+$/
         readonly property var wholeNumbers: /^(0|[1-9][0-9]*)$/
         readonly property var positiveRealNumbers: /^(0|[1-9][0-9]*)([.,][0-9]+)?$/
     }
@@ -595,11 +595,11 @@ QtObject {
     readonly property QtObject errorMessages: QtObject {
         readonly property string alphanumericalRegExp: qsTr("Only letters and numbers allowed")
         readonly property string alphanumericalExpandedRegExp: qsTr("Only letters, numbers, underscores, periods, whitespaces and hyphens allowed")
-        readonly property string alphanumericalExpanded1RegExp: qsTr("Invalid characters (A-Z and 0-9, single whitespace, hyphens and underscores only)")
+        readonly property string alphanumericalExpanded1RegExp: qsTr("Invalid characters (letters and numbers, single whitespace, hyphens and underscores only)")
         readonly property string alphanumericalExpanded3RegExp: qsTr("Only letters, numbers, underscores, periods, commas, whitespaces and hyphens allowed")
         readonly property string alphanumericalWithSpaceRegExp: qsTr("Special characters are not allowed")
         readonly property string asciiRegExp: qsTr("Only letters, numbers and ASCII characters allowed")
-        readonly property string emojRegExp: qsTr("Name is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)")
+        readonly property string emojRegExp: qsTr("Name is too cool (use letters and numbers, single whitespace, hyphens and underscores only)")
         readonly property string wholeNumbers: qsTr("Whole numbers only")
         readonly property string positiveRealNumbers: qsTr("Positive real numbers only")
     }

@@ -4296,10 +4296,6 @@ Vous resterez connecté et votre phrase de récupération sera entièrement entr
         <translation>Seules les lettres, les chiffres, les tirets bas, les points, les espaces et les tirets sont autorisés.</translation>
     </message>
     <message>
-        <source>Invalid characters (A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>Caractères non valides (seules les lettres A-Z et les chiffres 0-9, les espaces, les tirets et les tirets bas sont autorisés).</translation>
-    </message>
-    <message>
         <source>Only letters, numbers, underscores, periods, commas, whitespaces and hyphens allowed</source>
         <translation>Seules les lettres, les chiffres, les tirets bas, les points, les virgules, les espaces et les tirets sont autorisés.</translation>
     </message>
@@ -4312,8 +4308,12 @@ Vous resterez connecté et votre phrase de récupération sera entièrement entr
         <translation>Seules les lettres, les chiffres et les caractères ASCII sont autorisés.</translation>
     </message>
     <message>
-        <source>Name is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>Le nom est trop cool (utilisez uniquement les lettres majuscules A-Z et les chiffres 0-9, un seul espace, des tirets et des tirets bas).</translation>
+        <source>Invalid characters (letters and numbers, single whitespace, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Name is too cool (use letters and numbers, single whitespace, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Whole numbers only</source>
@@ -6320,8 +6320,8 @@ key pair. Keycard will be required for signing</source>
         <translation>Les noms publics ne peuvent pas commencer ou se terminer par un espace</translation>
     </message>
     <message>
-        <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
-        <translation>Caractères non valides (utilisez uniquement les lettres A à Z et les chiffres de 0 à 9, ainsi que les tirets, les traits de soulignement et les espaces)</translation>
+        <source>Invalid characters (use letters and numbers, hyphens, underscores and spaces only)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
@@ -6587,18 +6587,6 @@ key pair. Keycard will be required for signing</source>
         <translation>Nom</translation>
     </message>
     <message>
-        <source>Please name your token name (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Veuillez donner un nom à votre jeton (utilisez uniquement les lettres A-Z et les chiffres 0-9, ainsi que les tirets et les traits de soulignement)</translation>
-    </message>
-    <message>
-        <source>Your token name is too cool (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Le nom de votre jeton est trop original (utilisez uniquement les lettres A-Z et les chiffres 0-9, ainsi que les tirets et les traits de soulignement)</translation>
-    </message>
-    <message>
-        <source>Your token name contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Le nom de votre jeton contient des caractères non valides (utilisez uniquement les lettres A-Z et les chiffres 0-9, ainsi que les tirets et les traits de soulignement)</translation>
-    </message>
-    <message>
         <source>Asset name already exists</source>
         <translation>Ce nom d&apos;actif existe déjà</translation>
     </message>
@@ -6623,8 +6611,20 @@ key pair. Keycard will be required for signing</source>
         <translation>Veuillez saisir une description du jeton</translation>
     </message>
     <message>
-        <source>Only A-Z, 0-9 and standard punctuation allowed</source>
-        <translation>Seules les lettres A-Z, les chiffres 0-9 et la ponctuation standard sont autorisées</translation>
+        <source>Please name your token name (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your token name is too cool (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your token name contains invalid characters (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Only letters, numbers, standard punctuation and emojis allowed</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Symbol</source>
@@ -12215,8 +12215,8 @@ chargement</translation>
         <translation>Pseudonyme</translation>
     </message>
     <message>
-        <source>Invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Caractères non valides (utilisez uniquement les lettres A à Z, les chiffres de 0 à 9, les tirets et les traits de soulignement)</translation>
+        <source>Invalid characters (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
         <source>Nicknames must be at least %n character(s) long</source>

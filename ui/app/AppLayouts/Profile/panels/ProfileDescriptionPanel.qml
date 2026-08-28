@@ -62,11 +62,8 @@ Item {
                     errorMessage: qsTr("Bio can't be longer than %n character(s)", "", bioInput.charLimit)
                 },
                 StatusRegularExpressionValidator {
-                    regularExpression: Constants.regularExpressions.asciiWithEmoji
+                    regularExpression: Constants.regularExpressions.textWithEmoji
                     errorMessage: qsTr("Invalid characters. Standard keyboard characters and emojis only.")
-                    validate: function (value) {
-                        return (regularExpression.test(value) || (value.length === 0));
-                    }
                 }
             ]
             input.tabNavItem: displayNameInput.input.edit
