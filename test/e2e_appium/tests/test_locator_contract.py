@@ -18,6 +18,7 @@ from pages.app import App
 E2E_ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.mark.gate
 @pytest.mark.component
 def test_nav_recovery_probes_a_defined_locator(monkeypatch):
     """Drive the recovery path that runs after the introduce-yourself sheet.
@@ -133,6 +134,7 @@ def _binding_for(class_name, attr, owners, seen=None):
     return None
 
 
+@pytest.mark.gate
 @pytest.mark.component
 def test_no_references_to_undefined_locators():
     """Flag every locator attribute no locator class defines.
