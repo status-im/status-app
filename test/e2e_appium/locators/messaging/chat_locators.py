@@ -1,4 +1,4 @@
-from ..base_locators import BaseLocators
+from ..base_locators import BaseLocators, xpath_string
 
 
 class ChatLocators(BaseLocators):
@@ -75,20 +75,14 @@ class ChatLocators(BaseLocators):
         "//*[contains(@resource-id,'startChatButton')]"
     )
 
-    # First chat item in the list (for open_first_chat)
-    FIRST_CHAT_ITEM = BaseLocators.xpath(
-        "(//android.widget.Button[contains(@resource-id,'StatusDraggableListItem')])[1]"
+    CHAT_ROWS = BaseLocators.xpath(
+        "//android.widget.Button[contains(@resource-id,'StatusDraggableListItem')]"
     )
+    CHAT_HEADER_NAME = BaseLocators.resource_id_contains("statusChatInfoButtonNameText")
 
     @staticmethod
-    def dm_row_button(chat_identifier: str) -> tuple:
-        escaped = chat_identifier.replace("'", "\\'")
-        xpath = (
-            "//android.widget.Button[contains(@resource-id,'StatusDraggableListItem')]"
-            f"[(contains(@resource-id,\"{escaped}\") or contains(@content-desc,\"{escaped}\")"
-            f" or contains(@text,\"{escaped}\"))]"
-        )
-        return BaseLocators.xpath(xpath)
+    def chat_row(resource_id: str) -> tuple:
+        return BaseLocators.xpath(f"//*[@resource-id={xpath_string(resource_id)}]")
 
     @staticmethod
     def chat_list_item(display_name: str) -> tuple:
