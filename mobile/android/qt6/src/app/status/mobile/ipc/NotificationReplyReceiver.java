@@ -115,20 +115,34 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                 String result = StatusGoService.callRpc("CallPrivateRPC", argsJson);
                 boolean failed = false;
                 String errorMsg = null;
-                if (result != null) {
-                    try {
-                        JSONObject resp = new JSONObject(result);
-                        if (resp.has("error") && !resp.isNull("error")) {
-                            Object err = resp.get("error");
-                            failed = true;
-                            errorMsg = err instanceof JSONObject
-                                    ? ((JSONObject) err).optString("message", "rpc error")
-                                    : err.toString();
-                        }
-                    } catch (Exception ignored) {
-                        failed = true;
-                        errorMsg = "unparseable response";
+                try {
+                    if (result == null || result.isEmpty()) {
+                        throw new IllegalStateException("empty response");
                     }
+
+                    JSONObject response = new JSONObject(result);
+                    if (response.has("error") && !response.isNull("error")) {
+                        Object err = response.get("error");
+                        failed = true;
+                        errorMsg = err instanceof JSONObject
+                                ? ((JSONObject) err).optString("message", "rpc error")
+                                : err.toString();
+                    } else {
+                        JSONObject sendResult = response.optJSONObject("result");
+                        if (sendResult == null
+                                || !(sendResult.opt("chats") instanceof JSONArray)
+                                || !(sendResult.opt("messages") instanceof JSONArray)) {
+                            failed = true;
+                            errorMsg = "missing send result";
+                        } else if (!StatusGoService.publishNotificationReplyResult(response.toString())) {
+                            // The message has already been persisted and sent. A later cold start
+                            // will reload it from status-go, so this is not a send failure.
+                            Log.w(TAG, "sent reply but could not queue frontend update");
+                        }
+                    }
+                } catch (Exception ignored) {
+                    failed = true;
+                    errorMsg = "unparseable response";
                 }
 
                 StatusNotificationManager mgr = StatusNotificationManager.getInstance();
