@@ -25,6 +25,9 @@ QtObject:
   proc getBiometricCredentialForStorage*(self: View, keyUid: string, password: string): string {.slot.} =
     return self.delegate.getBiometricCredentialForStorage(keyUid, password)
 
+  proc getStayLoggedInCredentialForStorage*(self: View, keyUid: string, password: string): string {.slot.} =
+    return self.delegate.getStayLoggedInCredentialForStorage(keyUid, password)
+
   proc setBiometricPreferenceNotNow*(self: View) {.slot.} =
     self.delegate.setBiometricPreferenceNotNow()
 
