@@ -105,6 +105,11 @@ QtObject:
   proc getBiometricCredentialForStorage*(self: Service, keyUid: string, password: string): string =
     return keychain_credential.biometricCredentialForPasswordProfile(keyUid, password)
 
+  proc getStayLoggedInCredentialForStorage*(self: Service, keyUid: string, password: string): string =
+    ## For the silently readable "Stay logged in" store: tagged DEK or "" — this
+    ## conversion structurally cannot return a password (unlike the biometric one).
+    return keychain_credential.dekCredentialForPasswordProfile(keyUid, password)
+
   proc isMnemonicBackedUp*(self: Service): bool =
     return self.settingsService.getMnemonic().len == 0
 

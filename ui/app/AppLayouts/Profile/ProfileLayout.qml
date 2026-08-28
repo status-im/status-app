@@ -341,6 +341,7 @@ StatusSectionLayout {
             ChangePasswordView {
                 privacyStore: root.privacyStore
                 keychain: root.keychain
+                secureStorage: root.secureStorage
                 passwordStrengthScoreFunction: root.sharedRootStore.getPasswordStrengthScore
                 contentWidth: d.contentWidth
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.password)

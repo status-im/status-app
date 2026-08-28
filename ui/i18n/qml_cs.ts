@@ -3003,12 +3003,32 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Nepodařilo se povolit biometrické přihlášení a ověřování transakcí pro toto zařízení</translation>
     </message>
     <message>
+        <source>Failed to enable Stay logged in for this device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to migrate to the new encryption format: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stay logged in enabled for this device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Biometric login and transaction authentication disabled for this device</source>
         <translation>Biometrické přihlášení a ověřování transakcí zakázáno pro toto zařízení</translation>
     </message>
     <message>
         <source>Failed to disable biometric login and transaction authentication for this device</source>
         <translation>Nepodařilo se zakázat biometrické přihlášení a ověřování transakcí pro toto zařízení</translation>
+    </message>
+    <message>
+        <source>Failed to disable Stay logged in for this device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stay logged in disabled for this device</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Change your password</source>
@@ -3021,6 +3041,26 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <message>
         <source>Biometric login disabled — re-enable it in Settings</source>
         <translation>Biometrické přihlášení zakázáno - povolte jej v Nastavení</translation>
+    </message>
+    <message>
+        <source>Stay logged in disabled — re-enable it in Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to update the Stay logged in credential</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Encryption updated</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your profile was migrated to the new encryption format. Status must restart to complete the process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status</source>
+        <translation type="unfinished">Restartovat Status</translation>
     </message>
     <message>
         <source>Change</source>
@@ -17490,6 +17530,29 @@ selhalo</translation>
     <message>
         <source>invalid input</source>
         <translation>neplatný vstup</translation>
+    </message>
+</context>
+<context>
+    <name>StayLoggedInSectionView</name>
+    <message>
+        <source>Stay logged in to skip entering your password each time you open Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Secure storage is unavailable on this device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To use this feature, update your password (you can provide the same one) or migrate to the new encryption format.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Migrate to the new encryption format</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Re-encrypting your data with the new encryption format. This may take some time — do not quit the app or turn off your device.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

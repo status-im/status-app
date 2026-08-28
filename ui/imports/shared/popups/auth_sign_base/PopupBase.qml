@@ -28,6 +28,11 @@ StatusDialog {
 
     required property Keychain keychain
 
+    // Optional prompt-free secure storage ("Stay logged in"): when set, a successful
+    // auth repairs a stale silently-stored credential under the same conditions as the
+    // biometric one. Popups that don't provide it simply skip the repair.
+    property SecureStorage secureStorage: null
+
     // interface properties
     required property string keycardState
     required property string keycardUid
@@ -48,6 +53,12 @@ StatusDialog {
     property bool externalAuthorization: false // when set, the credential is not collected here, instead an "Authorize" buutton is shown, emitting authorizeRequested signal
 
     property var getCredentialForStorage: null // (keyUid: string, password: string) => string - value to store in the OS keychain, if "" signals failure
+
+    // (keyUid: string, credential: string) => string — DEK-only conversion for the
+    // silently readable "Stay logged in" store: tagged DEK for a confirmed-migrated
+    // profile, "" otherwise. Never derived from the biometric value: shape proves
+    // nothing about provenance, and the silent store must never receive a password.
+    property var getStayLoggedInCredentialForStorage: null
 
     // Set for flows that need the actual password and cannot accept the profile's DEK
     // (e.g. device syncing, where the password itself is validated against and transferred
@@ -293,6 +304,19 @@ StatusDialog {
             if (toStore === ""
                     || root.keychain.updateCredential(root.useKeyUid, toStore) !== Keychain.StatusSuccess) {
                 Global.displayToastMessage(qsTr("Failed to update stored credentials"), "", "warning", false, Constants.ephemeralNotificationType.danger, "")
+            }
+
+            // Repair a stale "Stay logged in" credential under the same trigger
+            // conditions — via the DEK-only converter, independently of the biometric
+            // value (see getStayLoggedInCredentialForStorage). An empty result (legacy
+            // profile, failure) stores nothing; the biometric-refresh toast above
+            // already covers user feedback.
+            if (root.secureStorage && !isPin
+                    && root.getStayLoggedInCredentialForStorage
+                    && root.secureStorage.hasCredential(root.useKeyUid) === SecureStorage.StatusSuccess) {
+                const silentCredential = root.getStayLoggedInCredentialForStorage(root.useKeyUid, credential)
+                if (silentCredential !== "")
+                    root.secureStorage.setCredential(root.useKeyUid, silentCredential)
             }
         }
 

@@ -62,6 +62,37 @@ Item {
         }
     }
 
+    Component {
+        id: mockedSecureStorageComponent
+
+        // Shadows the C++ members so no real OS secure storage is touched
+        SecureStorage {
+            readonly property bool available: true
+            property var creds: ({})
+            property var setCalls: []
+
+            function hasCredential(account) {
+                return creds[account] !== undefined ? SecureStorage.StatusSuccess
+                                                    : SecureStorage.StatusNotFound
+            }
+            function setCredential(account, credential) {
+                setCalls.push({ account, credential })
+                creds[account] = credential
+                return SecureStorage.StatusSuccess
+            }
+            function deleteCredential(account) {
+                delete creds[account]
+                return SecureStorage.StatusSuccess
+            }
+            function getCredential(account) {
+                const value = creds[account]
+                return { status: value === undefined ? SecureStorage.StatusNotFound
+                                                     : SecureStorage.StatusSuccess,
+                         credential: value === undefined ? "" : value }
+            }
+        }
+    }
+
     TestCase {
         name: "AuthSignPopupBase_passwordFocus"
         when: windowShown
@@ -293,6 +324,140 @@ Item {
             compare(actionRuns, 0)
             compare(mockKeychain.updatedCredentials.length, 0)
             verify(popup.opened) // stays open for manual entry
+        }
+    }
+
+    TestCase {
+        name: "AuthSignPopupBase_secureStorageRepair"
+        when: windowShown
+
+        property var popup: null
+        property var mockKeychain: null
+        property var mockSecureStorage: null
+
+        function init() {
+            mockKeychain = createTemporaryObject(mockedKeychainComponent, root)
+            verify(!!mockKeychain)
+            mockSecureStorage = createTemporaryObject(mockedSecureStorageComponent, root)
+            verify(!!mockSecureStorage)
+            // The repair only applies when a silent credential is already stored
+            mockSecureStorage.creds["key-uid-1"] = "dek:stale-stored-dek"
+        }
+
+        function cleanup() {
+            if (popup) {
+                popup.destroy()
+                popup = null
+            }
+        }
+
+        function createRepairPopup(extraProperties) {
+            const properties = Object.assign({
+                                                 keychain: mockKeychain,
+                                                 secureStorage: mockSecureStorage,
+                                                 isKeycardKeyPair: false,
+                                                 userProfileMigratedToColdWallet: false,
+                                                 // biometric-storage conversion — its result must NEVER
+                                                 // reach the silent store
+                                                 getCredentialForStorage: (keyUid, password) => "dek:biometric-" + password
+                                             }, extraProperties || {})
+            const created = createTemporaryObject(componentUnderTest, root, properties)
+            verify(!!created)
+            return created
+        }
+
+        // Runs the legacy-secret upgrade flow (the trigger the repair rides on).
+        function runLegacyUpgradeFlow(secret) {
+            popup.performPasswordAction = (password) => true
+            popup.open()
+            tryCompare(popup, "opened", true)
+            tryCompare(mockKeychain, "requestCount", 1)
+            mockKeychain.getCredentialRequestCompleted(Keychain.StatusSuccess, secret)
+        }
+
+        // The strict DEK-only conversion rejects (legacy profile): nothing may reach the
+        // silent store. This includes DEK-shaped legacy passwords — the converter ignores
+        // shape, and the popup never falls back to the biometric value.
+        function test_repairSkipsWhenStrictConversionRejects() {
+            popup = createRepairPopup({
+                                          getStayLoggedInCredentialForStorage: (keyUid, credential) => ""
+                                      })
+            runLegacyUpgradeFlow("legacy-password")
+
+            tryCompare(mockKeychain.updatedCredentials, "length", 1) // biometric refresh ran
+            compare(mockSecureStorage.setCalls.length, 0)            // silent store untouched
+            compare(mockSecureStorage.creds["key-uid-1"], "dek:stale-stored-dek")
+        }
+
+        // The strict conversion succeeds: exactly one silent-store write with that result.
+        function test_repairStoresStrictConversionResult() {
+            popup = createRepairPopup({
+                                          getStayLoggedInCredentialForStorage: (keyUid, credential) => "dek:strict-" + credential
+                                      })
+            runLegacyUpgradeFlow("legacy-password")
+
+            tryCompare(mockSecureStorage.setCalls, "length", 1)
+            compare(mockSecureStorage.setCalls[0].account, "key-uid-1")
+            compare(mockSecureStorage.setCalls[0].credential, "dek:strict-legacy-password")
+        }
+
+        // Even when both converters return dek-tagged values, the silent store receives
+        // ONLY the strict converter's result — never the biometric one.
+        function test_repairNeverReusesBiometricResult() {
+            popup = createRepairPopup({
+                                          getStayLoggedInCredentialForStorage: (keyUid, credential) => "dek:strict-independent"
+                                      })
+            runLegacyUpgradeFlow("legacy-password")
+
+            tryCompare(mockKeychain.updatedCredentials, "length", 1)
+            compare(mockKeychain.updatedCredentials[0].credential, "dek:biometric-legacy-password")
+            tryCompare(mockSecureStorage.setCalls, "length", 1)
+            compare(mockSecureStorage.setCalls[0].credential, "dek:strict-independent")
+            verify(mockSecureStorage.setCalls[0].credential !== mockKeychain.updatedCredentials[0].credential)
+        }
+
+        // The exact original regression vector: a RAW legacy password that is DEK-shaped
+        // ("dek:legacy-password"), submitted manually after a biometric mismatch. The
+        // strict converter rejects it (legacy profile); a future shortcut keying on
+        // credential.startsWith("dek:") would wrongly store it and fail this test.
+        function test_repairRejectsDekShapedLegacyPasswordAfterMismatch() {
+            popup = createRepairPopup({
+                                          getStayLoggedInCredentialForStorage: (keyUid, credential) => ""
+                                      })
+            let capturedPasswords = []
+            popup.performPasswordAction = (password) => {
+                capturedPasswords.push(password)
+                return password === "dek:legacy-password"
+            }
+            popup.open()
+            tryCompare(popup, "opened", true)
+            tryCompare(mockKeychain, "requestCount", 1)
+
+            // Biometrics produce a stale legacy secret -> action fails -> mismatch
+            mockKeychain.getCredentialRequestCompleted(Keychain.StatusSuccess, "stale-secret")
+
+            // The user types the working, DEK-shaped raw password and submits manually
+            const input = findChild(popup, "authenticationPasswordInput")
+            verify(!!input)
+            input.text = "dek:legacy-password" // editing also clears the wrong-password flag
+
+            const submitButton = findChild(popup, "keycardPopupBaseSubmitButton")
+            verify(!!submitButton)
+            tryVerify(() => submitButton.visible && submitButton.enabled)
+            submitButton.clicked() // deterministic, geometry-independent submission
+
+            // The manual submission actually carried the DEK-shaped raw password
+            compare(capturedPasswords.length, 2) // biometric attempt + manual submission
+            compare(capturedPasswords[0], "stale-secret")
+            compare(capturedPasswords[1], "dek:legacy-password")
+
+            // The mismatch repair ran: the biometric item was refreshed through its own
+            // converter, but the silent store was NOT touched — the DEK-shaped raw
+            // password was rejected by the strict converter, not waved through by shape.
+            tryCompare(mockKeychain.updatedCredentials, "length", 1)
+            compare(mockKeychain.updatedCredentials[0].credential, "dek:biometric-dek:legacy-password")
+            compare(mockSecureStorage.setCalls.length, 0)
+            compare(mockSecureStorage.creds["key-uid-1"], "dek:stale-stored-dek")
         }
     }
 

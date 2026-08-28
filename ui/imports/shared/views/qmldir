@@ -15,3 +15,4 @@ SyncingDisplayCode 1.0 SyncingDisplayCode.qml
 SyncingEnterCode 1.0 SyncingEnterCode.qml
 SyncingErrorMessage 1.0 SyncingErrorMessage.qml
 BiometricsSectionView 1.0 BiometricsSectionView.qml
+StayLoggedInSectionView 1.0 StayLoggedInSectionView.qml

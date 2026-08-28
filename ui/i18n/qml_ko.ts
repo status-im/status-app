@@ -2984,8 +2984,28 @@ Do you wish to override the security check and continue?</source>
         <translation>이 기기에서 생체 로그인과 거래 인증이 비활성화되었습니다</translation>
     </message>
     <message>
+        <source>Failed to enable Stay logged in for this device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to migrate to the new encryption format: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stay logged in enabled for this device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Failed to disable biometric login and transaction authentication for this device</source>
         <translation>이 기기에서 생체 로그인과 거래 인증을 해제하지 못했습니다</translation>
+    </message>
+    <message>
+        <source>Failed to disable Stay logged in for this device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stay logged in disabled for this device</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Change your password</source>
@@ -2994,6 +3014,26 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Biometric login disabled — re-enable it in Settings</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stay logged in disabled — re-enable it in Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to update the Stay logged in credential</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Encryption updated</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your profile was migrated to the new encryption format. Status must restart to complete the process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status</source>
+        <translation type="unfinished">Status 다시 시작</translation>
     </message>
     <message>
         <source>Change</source>
@@ -17322,6 +17362,29 @@ to load</source>
     <message>
         <source>invalid input</source>
         <translation>잘못된 입력</translation>
+    </message>
+</context>
+<context>
+    <name>StayLoggedInSectionView</name>
+    <message>
+        <source>Stay logged in to skip entering your password each time you open Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Secure storage is unavailable on this device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To use this feature, update your password (you can provide the same one) or migrate to the new encryption format.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Migrate to the new encryption format</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Re-encrypting your data with the new encryption format. This may take some time — do not quit the app or turn off your device.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

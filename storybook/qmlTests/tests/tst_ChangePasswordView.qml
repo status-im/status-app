@@ -24,7 +24,15 @@ Item {
     // What the credential transform returns; "" simulates a helper failure.
     property string transformResult: "dek:fresh-dek-hex"
 
+    // What the DEK-only "Stay logged in" transform returns; "" simulates a legacy
+    // profile or a helper failure (that converter never returns a raw password).
+    property string silentTransformResult: "dek:silent-dek-hex"
+
+    property bool profileMigratedMock: true
+    property var changePasswordCalls: []
+
     property var keychainMock: null
+    property var secureStorageMock: null
     property var view: null
 
     Component {
@@ -62,6 +70,46 @@ Item {
         }
     }
 
+    Component {
+        id: mockedSecureStorageComponent
+
+        // Shadows the C++ members so no real OS secure storage is touched
+        SecureStorage {
+            property bool available: true
+            property var creds: ({})
+            property var setCalls: []
+            property var deleteCalls: []
+            property int setStatus: SecureStorage.StatusSuccess
+            property int deleteStatus: SecureStorage.StatusSuccess
+
+            function hasCredential(account) {
+                return creds[account] !== undefined ? SecureStorage.StatusSuccess
+                                                    : SecureStorage.StatusNotFound
+            }
+            function setCredential(account, credential) {
+                setCalls.push({ account, credential })
+                if (setStatus === SecureStorage.StatusSuccess)
+                    creds[account] = credential
+                return setStatus
+            }
+            function deleteCredential(account) {
+                deleteCalls.push({ account })
+                if (deleteStatus !== SecureStorage.StatusSuccess)
+                    return deleteStatus // failure/indeterminate: item untouched
+                if (creds[account] === undefined)
+                    return SecureStorage.StatusNotFound
+                delete creds[account]
+                return SecureStorage.StatusSuccess
+            }
+            function getCredential(account) {
+                const value = creds[account]
+                return { status: value === undefined ? SecureStorage.StatusNotFound
+                                                     : SecureStorage.StatusSuccess,
+                         credential: value === undefined ? "" : value }
+            }
+        }
+    }
+
     // Mimics ui/main.qml's app-level handler: ANY deletion records a permanent opt-out.
     // Declared before the view is created, matching the app's connection order.
     Connections {
@@ -89,10 +137,12 @@ Item {
                     signal passwordChanged(success: bool, errorMsg: string)
                 }
 
-                function changePassword(password, newPassword, rekey = false) {}
+                function changePassword(password, newPassword, rekey = false) {
+                    root.changePasswordCalls.push({ password, newPassword, rekey })
+                }
 
                 function isProfileMigratedToDEKEncryption() {
-                    return true
+                    return root.profileMigratedMock
                 }
 
                 function getBiometricCredentialForStorage(keyUid, password) {
@@ -102,9 +152,19 @@ Item {
                 function setBiometricPreferenceNotNow() {
                     root.preference = "notNow"
                 }
+
+                property bool stayLoggedIn: false
+                function setStayLoggedIn(value) {
+                    stayLoggedIn = value
+                }
+                function getStayLoggedInCredentialForStorage(keyUid, password) {
+                    // DEK-only conversion: tagged DEK or "" (never a raw password)
+                    return root.silentTransformResult
+                }
             }
 
             keychain: root.keychainMock
+            secureStorage: root.secureStorageMock
         }
     }
 
@@ -115,9 +175,14 @@ Item {
         function init() {
             root.preference = "store"
             root.transformResult = "dek:fresh-dek-hex"
+            root.silentTransformResult = "dek:silent-dek-hex"
+            root.profileMigratedMock = true
+            root.changePasswordCalls = []
             root.keychainMock = createTemporaryObject(mockedKeychainComponent, root)
             verify(!!root.keychainMock)
             root.keychainMock.deleteStatus = Keychain.StatusSuccess
+            root.secureStorageMock = createTemporaryObject(mockedSecureStorageComponent, root)
+            verify(!!root.secureStorageMock)
             root.view = createTemporaryObject(viewComponent, root)
             verify(!!root.view)
         }
@@ -219,6 +284,148 @@ Item {
             Qt.callLater(() => drained = true)
             tryVerify(() => drained)
             compare(root.preference, "never")
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        // "Stay logged in" flows
+        //////////////////////////////////////////////////////////////////////////
+
+        function stayLoggedInSection() {
+            const section = findChild(root.view, "stayLoggedInSection")
+            verify(!!section)
+            return section
+        }
+
+        // Enabling: auth result -> DEK-only conversion -> stored -> preference ON.
+        function test_stayLoggedInEnableSuccess() {
+            stayLoggedInSection().toggleStayLoggedIn(false) // switch was unchecked
+
+            Global.authenticationResult(Constants.authenticationReason.enableStayLoggedIn,
+                                        "password-1", "", root.testKeyUid, "")
+
+            compare(root.secureStorageMock.setCalls.length, 1)
+            compare(root.secureStorageMock.setCalls[0].account, root.testKeyUid)
+            compare(root.secureStorageMock.setCalls[0].credential, "dek:silent-dek-hex")
+            compare(root.view.privacyStore.stayLoggedIn, true)
+        }
+
+        // DEK-only conversion failure (legacy profile / helper error): nothing is
+        // stored and the preference stays OFF.
+        function test_stayLoggedInEnableConversionFailure() {
+            root.silentTransformResult = ""
+
+            stayLoggedInSection().toggleStayLoggedIn(false)
+            Global.authenticationResult(Constants.authenticationReason.enableStayLoggedIn,
+                                        "password-1", "", root.testKeyUid, "")
+
+            compare(root.secureStorageMock.setCalls.length, 0)
+            compare(root.view.privacyStore.stayLoggedIn, false)
+        }
+
+        // Storage failure while enabling: the preference stays OFF.
+        function test_stayLoggedInEnableStoreFailure() {
+            root.secureStorageMock.setStatus = SecureStorage.StatusGenericError
+
+            stayLoggedInSection().toggleStayLoggedIn(false)
+            Global.authenticationResult(Constants.authenticationReason.enableStayLoggedIn,
+                                        "password-1", "", root.testKeyUid, "")
+
+            compare(root.secureStorageMock.setCalls.length, 1)
+            compare(root.view.privacyStore.stayLoggedIn, false)
+        }
+
+        function test_stayLoggedInDisable_data() {
+            return [
+                { tag: "verified deletion", deleteStatus: SecureStorage.StatusSuccess, expectedPref: false },
+                { tag: "nothing stored", deleteStatus: SecureStorage.StatusSuccess, noItem: true, expectedPref: false },
+                { tag: "deletion error", deleteStatus: SecureStorage.StatusGenericError, expectedPref: true },
+                { tag: "deletion indeterminate", deleteStatus: SecureStorage.StatusIndeterminate, expectedPref: true },
+            ]
+        }
+
+        // Disabling deletes the credential FIRST; the preference flips only when the
+        // deletion verifiably succeeded (Success/NotFound) — never on error or
+        // indeterminate outcomes, since startup trusts credential presence.
+        function test_stayLoggedInDisable(data) {
+            root.view.privacyStore.setStayLoggedIn(true)
+            if (!data.noItem)
+                root.secureStorageMock.creds[root.testKeyUid] = "dek:stored-dek-hex"
+            root.secureStorageMock.deleteStatus = data.deleteStatus
+
+            stayLoggedInSection().toggleStayLoggedIn(true) // switch was checked
+
+            compare(root.secureStorageMock.deleteCalls.length, 1)
+            compare(root.view.privacyStore.stayLoggedIn, data.expectedPref)
+        }
+
+        // Password change with a stored silent credential: refreshed from the DEK-only
+        // converter; the preference is untouched.
+        function test_stayLoggedInRefreshOnPasswordChange() {
+            root.view.privacyStore.setStayLoggedIn(true)
+            root.secureStorageMock.creds[root.testKeyUid] = "dek:old-dek-hex"
+
+            emitPasswordChanged(true)
+
+            compare(root.secureStorageMock.setCalls.length, 1)
+            compare(root.secureStorageMock.setCalls[0].credential, "dek:silent-dek-hex")
+            compare(root.view.privacyStore.stayLoggedIn, true)
+        }
+
+        function test_stayLoggedInRefreshFailure_data() {
+            return [
+                { tag: "delete verified -> feature disabled", deleteStatus: SecureStorage.StatusSuccess, expectedPref: false },
+                { tag: "delete failed -> preference kept", deleteStatus: SecureStorage.StatusGenericError, expectedPref: true },
+                { tag: "delete indeterminate -> preference kept", deleteStatus: SecureStorage.StatusIndeterminate, expectedPref: true },
+            ]
+        }
+
+        // Refresh failure deletes the stale credential; the preference is flipped OFF
+        // only when the deletion verifiably succeeded.
+        function test_stayLoggedInRefreshFailure(data) {
+            root.view.privacyStore.setStayLoggedIn(true)
+            root.secureStorageMock.creds[root.testKeyUid] = "dek:old-dek-hex"
+            root.silentTransformResult = "" // conversion failure
+            root.secureStorageMock.deleteStatus = data.deleteStatus
+
+            emitPasswordChanged(true)
+
+            compare(root.secureStorageMock.deleteCalls.length, 1)
+            compare(root.view.privacyStore.stayLoggedIn, data.expectedPref)
+        }
+
+        // Migration: auth result -> same-password non-rekey change -> on success a
+        // non-dismissible restart dialog (restart is the only way out).
+        function test_migrationFlowOpensNonDismissibleRestartDialog() {
+            root.profileMigratedMock = false
+            root.view.destroy()
+            root.view = createTemporaryObject(viewComponent, root)
+            verify(!!root.view)
+
+            stayLoggedInSection().migrateRequested()
+            Global.authenticationResult(Constants.authenticationReason.migrateProfileEncryption,
+                                        "password-1", "", root.testKeyUid, "")
+
+            compare(root.changePasswordCalls.length, 1)
+            compare(root.changePasswordCalls[0].password, "password-1")
+            compare(root.changePasswordCalls[0].newPassword, "password-1")
+            compare(root.changePasswordCalls[0].rekey, false)
+
+            root.view.privacyStore.privacyModule.passwordChanged(true, "")
+
+            const dialog = findChild(root.view, "migrationRestartDialog")
+            verify(!!dialog)
+            tryVerify(() => dialog.opened)
+            compare(dialog.escapeKeyCloses, false)
+            compare(dialog.closeOnOverlayClick, false)
+
+            // Any close that is not the restart action immediately reopens the dialog
+            dialog.close()
+            tryVerify(() => dialog.opened)
+
+            // Cleanup: simulate the restart action having been taken
+            dialog.restartTriggered = true
+            dialog.close()
+            tryVerify(() => !dialog.opened)
         }
     }
 }

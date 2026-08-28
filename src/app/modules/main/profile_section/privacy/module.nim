@@ -58,6 +58,9 @@ method isProfileMigratedToDEKEncryption*(self: Module): bool =
 method getBiometricCredentialForStorage*(self: Module, keyUid: string, password: string): string =
   return self.controller.getBiometricCredentialForStorage(keyUid, password)
 
+method getStayLoggedInCredentialForStorage*(self: Module, keyUid: string, password: string): string =
+  return self.controller.getStayLoggedInCredentialForStorage(keyUid, password)
+
 method setBiometricPreferenceNotNow*(self: Module) =
   singletonInstance.localAccountSettings.setStoreToKeychainValue(LS_VALUE_NOT_NOW)
 
