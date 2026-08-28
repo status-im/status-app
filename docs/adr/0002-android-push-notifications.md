@@ -133,6 +133,11 @@ When the UI comes to the foreground, all active notifications are cancelled and 
 3. On success the notification is updated with the sent message via a new `local-notifications` signal from `status-go`.
 4. On failure a "Reply failed" notification is shown.
 
+The send response is also forwarded to the UI process as an internal `notification.reply.sent`
+signal. It is queued while the UI is backgrounded, then processed through the same messenger
+response path as a normal in-app send when the UI returns. `local-notifications` continues to
+update only the Android notification thread.
+
 ---
 
 ## What was considered

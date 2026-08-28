@@ -46,11 +46,20 @@ type MessageDeliveredSignal* = ref object of Signal
   chatId*: string
   messageId*: string
 
+type NotificationReplySentSignal* = ref object of Signal
+  ## Full successful JSON-RPC response from an Android notification reply.
+  response*: JsonNode
+
 proc fromEvent*(T: type MessageDeliveredSignal, event: JsonNode): MessageDeliveredSignal =
   result = MessageDeliveredSignal()
   result.signalType = SignalType.MessageDelivered
   result.chatId = event["event"]["chatID"].getStr
   result.messageId = event["event"]["messageID"].getStr
+
+proc fromEvent*(T: type NotificationReplySentSignal, event: JsonNode): NotificationReplySentSignal =
+  result = NotificationReplySentSignal()
+  result.signalType = SignalType.NotificationReplySent
+  result.response = if event.contains("event"): event["event"] else: newJNull()
 
 proc fromEvent*(T: type MessageSignal, event: JsonNode): MessageSignal =
   var signal:MessageSignal = MessageSignal()
@@ -169,4 +178,3 @@ proc fromEvent*(T: type MessageSignal, event: JsonNode): MessageSignal =
     for contactId in e["updatedProfileShowcaseContactIDs"]:
       signal.updatedProfileShowcaseContactIDs.add(contactId.getStr())
   result = signal
-

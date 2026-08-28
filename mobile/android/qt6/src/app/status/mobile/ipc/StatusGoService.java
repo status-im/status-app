@@ -24,6 +24,8 @@ import androidx.core.app.NotificationCompat;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -69,6 +71,14 @@ public final class StatusGoService extends Service {
     private static final int NOTIFICATION_SMALL_ICON = R.drawable.ic_notification_status_logo;
 
     private final RemoteCallbackList<IStatusGoSignalListener> listeners = new RemoteCallbackList<>();
+    /** RemoteCallbackList broadcasts must never overlap. */
+    private final Object signalDispatchLock = new Object();
+    /**
+     * Successful inline replies are initiated outside the UI process. Preserve their normal
+     * send-response update until that process is visible and can consume it.
+     */
+    private final Object notificationReplyLock = new Object();
+    private final Deque<String> pendingNotificationReplySignals = new ArrayDeque<>();
     private volatile boolean foregroundStarted = false;
     private volatile boolean uiVisible = false;
 
@@ -143,6 +153,18 @@ public final class StatusGoService extends Service {
     }
 
     /**
+     * Queues the successful sendChatMessage JSON-RPC response from an Android
+     * notification reply for normal frontend processing. The frontend's regular send path
+     * consumes this response to update chat state; status-go does not emit messages.new for
+     * locally initiated sends.
+     */
+    public static boolean publishNotificationReplyResult(String rpcResponseJson) {
+        final StatusGoService service = sInstance;
+        if (service == null || rpcResponseJson == null || rpcResponseJson.isEmpty()) return false;
+        return service.publishNotificationReplyResultInternal(rpcResponseJson);
+    }
+
+    /**
      * Defense-in-depth: ensure only our own app UID can invoke Binder methods.
      *
      * Note: this service is also declared with android:exported="false" and a signature-level
@@ -171,35 +193,83 @@ public final class StatusGoService extends Service {
         maybeStartForegroundFromSignal(jsonSignal);
         notificationManager.handleSignal(jsonSignal);
 
-        final int n = listeners.beginBroadcast();
+        dispatchSignalToListeners(jsonSignal);
+    }
+
+    /**
+     * Sends a signal over the existing Binder transport. Returns how many listeners accepted
+     * delivery, which lets notification replies remain queued until a UI listener is reachable.
+     */
+    private int dispatchSignalToListeners(String jsonSignal) {
+        final int signalSizeBytes = jsonSignal != null
+                ? jsonSignal.getBytes(StandardCharsets.UTF_8).length
+                : 0;
         final boolean useSharedMemorySignal = signalSizeBytes >= SIGNAL_SHARED_MEMORY_THRESHOLD_BYTES;
         final byte[] signalBytes = useSharedMemorySignal
                 ? (jsonSignal != null ? jsonSignal.getBytes(StandardCharsets.UTF_8) : new byte[0])
                 : null;
-        try {
-            for (int i = 0; i < n; i++) {
-                try {
-                    final IStatusGoSignalListener listener = listeners.getBroadcastItem(i);
-                    if (useSharedMemorySignal) {
-                        try (RpcResponse signalResponse = sharedPayload(signalBytes, "statusgo-signal")) {
-                            listener.onSignalShm(signalResponse);
+        int delivered = 0;
+        synchronized (signalDispatchLock) {
+            final int n = listeners.beginBroadcast();
+            try {
+                for (int i = 0; i < n; i++) {
+                    try {
+                        final IStatusGoSignalListener listener = listeners.getBroadcastItem(i);
+                        if (useSharedMemorySignal) {
+                            try (RpcResponse signalResponse = sharedPayload(signalBytes, "statusgo-signal")) {
+                                listener.onSignalShm(signalResponse);
+                            }
+                        } else {
+                            listener.onSignal(jsonSignal);
                         }
-                    } else {
-                        listener.onSignal(jsonSignal);
+                        delivered++;
+                    } catch (RemoteException e) {
+                        Log.w(TAG, "failed to deliver signal to UI listener type=" + getSignalType(jsonSignal)
+                                + " sizeBytes=" + signalSizeBytes, e);
+                    } catch (RuntimeException e) {
+                        Log.w(TAG, "runtime failure delivering signal to UI listener type=" + getSignalType(jsonSignal)
+                                + " sizeBytes=" + signalSizeBytes, e);
+                    } catch (Throwable e) {
+                        Log.w(TAG, "unexpected failure delivering signal to UI listener type=" + getSignalType(jsonSignal)
+                                + " sizeBytes=" + signalSizeBytes, e);
                     }
-                } catch (RemoteException e) {
-                    Log.w(TAG, "failed to deliver signal to UI listener type=" + getSignalType(jsonSignal)
-                            + " sizeBytes=" + signalSizeBytes, e);
-                } catch (RuntimeException e) {
-                    Log.w(TAG, "runtime failure delivering signal to UI listener type=" + getSignalType(jsonSignal)
-                            + " sizeBytes=" + signalSizeBytes, e);
-                } catch (Throwable e) {
-                    Log.w(TAG, "unexpected failure delivering signal to UI listener type=" + getSignalType(jsonSignal)
-                            + " sizeBytes=" + signalSizeBytes, e);
                 }
+            } finally {
+                listeners.finishBroadcast();
             }
-        } finally {
-            listeners.finishBroadcast();
+        }
+        return delivered;
+    }
+
+    private boolean publishNotificationReplyResultInternal(String rpcResponseJson) {
+        final String signal;
+        try {
+            JSONObject envelope = new JSONObject();
+            envelope.put("type", "notification.reply.sent");
+            envelope.put("event", new JSONObject(rpcResponseJson));
+            signal = envelope.toString();
+        } catch (Throwable t) {
+            Log.w(TAG, "failed to create notification reply frontend signal", t);
+            return false;
+        }
+
+        synchronized (notificationReplyLock) {
+            if (!uiVisible || dispatchSignalToListeners(signal) == 0) {
+                pendingNotificationReplySignals.addLast(signal);
+            }
+        }
+        return true;
+    }
+
+    /** Flushes queued notification replies in FIFO order once the frontend is usable. */
+    private void flushPendingNotificationReplySignals() {
+        synchronized (notificationReplyLock) {
+            while (uiVisible && !pendingNotificationReplySignals.isEmpty()) {
+                if (dispatchSignalToListeners(pendingNotificationReplySignals.peekFirst()) == 0) {
+                    return;
+                }
+                pendingNotificationReplySignals.removeFirst();
+            }
         }
     }
 
@@ -450,6 +520,7 @@ public final class StatusGoService extends Service {
         mainHandler.removeCallbacks(repauseMessagingRunnable);
         notificationManager.setUiVisible(visible);
         scheduleBackendLifecycleUpdate(visible);
+        if (visible) flushPendingNotificationReplySignals();
     }
 
     private final IStatusGoService.Stub binder = new IStatusGoService.Stub() {
@@ -492,6 +563,7 @@ public final class StatusGoService extends Service {
             enforceCallerIsSameApp();
             if (listener == null) return;
             listeners.register(listener);
+            if (uiVisible) flushPendingNotificationReplySignals();
             // Reset uiVisible if the UI process dies unexpectedly (crash, OOM, force-stop).
             // RemoteCallbackList.unregister() calls unlinkToDeath internally, so clean
             // unregistration does not trigger this callback.
