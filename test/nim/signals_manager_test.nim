@@ -6,6 +6,7 @@ import app/core/signals/signals_manager
 import app/core/signals/signal_type_scan
 import app/core/signals/remote_signals/signal_type
 import app/core/signals/remote_signals/mediaserver
+import app/core/signals/remote_signals/messages
 import app/core/signals/remote_signals/storage_stats
 
 # Exercises the real ManageSignals dispatch path (`processSignal`) to prove that
@@ -85,6 +86,18 @@ suite "SignalsManager - unhandled signal-type skipping":
 
     check dispatched
     check receivedPort == 0
+
+  test "notification.reply.sent carries the full successful send response":
+    let emitter = createEventEmitter()
+    var response: JsonNode
+    emitter.on(SignalType.NotificationReplySent.event) do(a: Args):
+      response = NotificationReplySentSignal(a).response
+
+    let manager = newSignalsManager(emitter)
+    manager.processSignal("""{"type":"notification.reply.sent","event":{"jsonrpc":"2.0","id":1,"result":{"chats":[{"id":"chat-id"}],"messages":[{"id":"message-id"}]}}}""")
+
+    check response["result"]["chats"][0]["id"].getStr == "chat-id"
+    check response["result"]["messages"][0]["id"].getStr == "message-id"
 
   test "a handled type in a whitespaced envelope still dispatches (scan-miss fallback)":
     # The fast substring scan assumes status-go's compact `"type":"` byte token.

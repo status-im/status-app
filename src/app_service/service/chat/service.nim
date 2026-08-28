@@ -182,6 +182,18 @@ QtObject:
         for clearedHistoryDto in receivedData.clearedHistories:
           self.events.emit(SIGNAL_CHAT_HISTORY_CLEARED, ChatArgs(chatId: clearedHistoryDto.chatId))
 
+    self.events.on(SignalType.NotificationReplySent.event) do(e: Args):
+      let receivedData = NotificationReplySentSignal(e)
+      try:
+        let response = Json.decode($receivedData.response, RpcResponse[JsonNode])
+        if not response.error.isNil:
+          raise newException(CatchableError, response.error.message)
+        let (chats, messages) = self.processMessengerResponse(response)
+        if chats.len == 0 or messages.len == 0:
+          raise newException(CatchableError, "no chat or message returned")
+      except CatchableError as ex:
+        error "failed to process notification reply response", msg = ex.msg
+
   proc asyncGetActiveChats*(self: Service) =
     let arg = AsyncGetActiveChatsTaskArg(
       tptr: asyncGetActiveChatsTask,
@@ -741,4 +753,3 @@ QtObject:
 
   proc delete*(self: Service) =
     self.QObject.delete
-
