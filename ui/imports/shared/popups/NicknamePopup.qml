@@ -42,7 +42,7 @@ CommonContactDialog {
             StatusValidator {
                 validatorObj: RXValidator { regularExpression: /^[\w\d_ -\.]*$/u }
                 validate: (value) => validatorObj.test(value)
-                errorMessage: qsTr("Invalid characters (use A-Z and 0-9, hyphens and underscores only)")
+                errorMessage: qsTr("Invalid characters (use letters and numbers, hyphens and underscores only)")
             },
             StatusMinLengthValidator {
                 minLength: Constants.displayName.nameLengthMin

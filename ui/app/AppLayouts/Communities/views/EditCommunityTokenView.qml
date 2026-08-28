@@ -152,10 +152,10 @@ StatusScrollView {
             charLimit: 15
             placeholderText: qsTr("Name")
             validationMode: root.validationMode
-            minLengthValidator.errorMessage: qsTr("Please name your token name (use A-Z and 0-9, hyphens and underscores only)")
+            minLengthValidator.errorMessage: qsTr("Please name your token name (use letters and numbers, hyphens and underscores only)")
             regexValidator.errorMessage: d.hasEmoji(text) ?
-                                             qsTr("Your token name is too cool (use A-Z and 0-9, hyphens and underscores only)") :
-                                             qsTr("Your token name contains invalid characters (use A-Z and 0-9, hyphens and underscores only)")
+                                             qsTr("Your token name is too cool (use letters and numbers, hyphens and underscores only)") :
+                                             qsTr("Your token name contains invalid characters (use letters and numbers, hyphens and underscores only)")
             extraValidator.validate: function (value) {
                 // If minting failed, we can retry same deployment, so same name allowed
                 const allowRepeatedName = root.token.deployState === Constants.ContractTransactionStatus.Failed
@@ -191,8 +191,8 @@ StatusScrollView {
             maximumHeight: minimumHeight
             validationMode: root.validationMode
             minLengthValidator.errorMessage: qsTr("Please enter a token description")
-            regexValidator.regularExpression: Constants.regularExpressions.ascii
-            regexValidator.errorMessage: qsTr("Only A-Z, 0-9 and standard punctuation allowed")
+            regexValidator.regularExpression: Constants.regularExpressions.textWithEmoji
+            regexValidator.errorMessage: qsTr("Only letters, numbers, standard punctuation and emojis allowed")
             input.tabNavItem: symbolInput
             onTextChanged: root.token.description = text
         }

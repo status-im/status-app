@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls // for Popup.xxx
 
+import StatusQ // for RXValidator
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Controls.Validators
@@ -376,6 +377,7 @@ StatusDialog {
 
             StatusInput {
                 id: nameInput
+                objectName: "savedAddressNameStatusInput"
                 width: parent.width
                 anchors.horizontalCenter: parent.horizontalCenter
                 charLimit: 24
@@ -394,18 +396,20 @@ StatusDialog {
                         property bool isEmoji: false
 
                         name: "check-for-no-emojis"
+                        validatorObj: RXValidator { regularExpression: Constants.regularExpressions.alphanumericalExpanded1 }
                         validate: (value) => {
                                       const normalizedValue = value.trim()
                                       if (!normalizedValue) {
                                           return true
                                       }
 
+                                      Constants.regularExpressions.emoji.lastIndex = 0
                                       isEmoji = Constants.regularExpressions.emoji.test(normalizedValue)
                                       if (isEmoji){
                                           return false
                                       }
 
-                                      return Constants.regularExpressions.alphanumericalExpanded1.test(normalizedValue)
+                                      return validatorObj.test(normalizedValue)
                                   }
                         errorMessage: isEmoji?
                                           Constants.errorMessages.emojRegExp
