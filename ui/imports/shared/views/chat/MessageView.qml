@@ -1005,7 +1005,15 @@ Loader {
                                                             const menuWidth = contextMenu?.maxImplicitWidth || 234
                                                             const menuHeight = contextMenu?.implicitHeight || 0
                                                             const x = Math.max(0, delegate.width - menuWidth - Theme.padding)
-                                                            return delegate.mapToItem(root.item, x, -menuHeight + 1)
+                                                            const pos = delegate.mapToItem(root.item, x, -menuHeight + 1)
+
+                                                            // Prevent the hover menu from overlapping the chat header.
+                                                            if (root.chatLogView) {
+                                                                const listTop = root.chatLogView.mapToItem(root.item, 0, 0).y
+                                                                if (pos.y < listTop)
+                                                                    return Qt.point(pos.x, listTop)
+                                                            }
+                                                            return pos
                                                         },
                                                         closeOnHoverExit: true
                                                     })
