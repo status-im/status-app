@@ -4321,10 +4321,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <translation>Дозволено лише літери, цифри, підкреслення, крапки, пробіли й дефіси</translation>
     </message>
     <message>
-        <source>Invalid characters (A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>Недійсні символи (дозволено лише A-Z, 0-9, одинарні пробіли, дефіси й підкреслення)</translation>
-    </message>
-    <message>
         <source>Only letters, numbers, underscores, periods, commas, whitespaces and hyphens allowed</source>
         <translation>Дозволено лише літери, цифри, підкреслення, крапки, коми, пробіли й дефіси</translation>
     </message>
@@ -4337,8 +4333,12 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <translation>Дозволено лише літери, цифри й символи ASCII</translation>
     </message>
     <message>
-        <source>Name is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>Ім’я надто круте (використовуйте лише A-Z, 0-9, одинарні пробіли, дефіси й підкреслення)</translation>
+        <source>Invalid characters (letters and numbers, single whitespace, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Name is too cool (use letters and numbers, single whitespace, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Whole numbers only</source>
@@ -6199,8 +6199,8 @@ key pair. Keycard will be required for signing</source>
         <translation>Ім’я профілю не може починатися або закінчуватися пробілом</translation>
     </message>
     <message>
-        <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
-        <translation>Недійсні символи (використовуйте лише A-Z, 0-9, дефіси, підкреслення та пробіли)</translation>
+        <source>Invalid characters (use letters and numbers, hyphens, underscores and spaces only)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
@@ -6470,18 +6470,6 @@ key pair. Keycard will be required for signing</source>
         <translation>Назва</translation>
     </message>
     <message>
-        <source>Please name your token name (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Введіть назву токена (лише A-Z, 0-9, дефіси та підкреслення)</translation>
-    </message>
-    <message>
-        <source>Your token name is too cool (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Назва токена надто крута (лише A-Z, 0-9, дефіси та підкреслення)</translation>
-    </message>
-    <message>
-        <source>Your token name contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Назва токена містить неприпустимі символи (лише A-Z, 0-9, дефіси та підкреслення)</translation>
-    </message>
-    <message>
         <source>Asset name already exists</source>
         <translation>Назва активу вже існує</translation>
     </message>
@@ -6506,8 +6494,20 @@ key pair. Keycard will be required for signing</source>
         <translation>Введіть опис токена</translation>
     </message>
     <message>
-        <source>Only A-Z, 0-9 and standard punctuation allowed</source>
-        <translation>Дозволено лише A-Z, 0-9 і стандартні розділові знаки</translation>
+        <source>Please name your token name (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your token name is too cool (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your token name contains invalid characters (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Only letters, numbers, standard punctuation and emojis allowed</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Symbol</source>
@@ -12133,8 +12133,8 @@ to load</source>
         <translation>Псевдонім</translation>
     </message>
     <message>
-        <source>Invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Недопустимі символи (використовуйте лише A-Z, 0-9, дефіси та підкреслення)</translation>
+        <source>Invalid characters (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
         <source>Nicknames must be at least %n character(s) long</source>

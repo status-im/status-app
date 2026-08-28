@@ -4321,10 +4321,6 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Invalid characters (A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Only letters, numbers, underscores, periods, commas, whitespaces and hyphens allowed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4337,7 +4333,11 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Name is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
+        <source>Invalid characters (letters and numbers, single whitespace, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Name is too cool (use letters and numbers, single whitespace, hyphens and underscores only)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6198,7 +6198,7 @@ key pair. Keycard will be required for signing</source>
         <translation>Zobrazovaná jména nesmí začínat ani končit mezerou</translation>
     </message>
     <message>
-        <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
+        <source>Invalid characters (use letters and numbers, hyphens, underscores and spaces only)</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
@@ -6469,18 +6469,6 @@ key pair. Keycard will be required for signing</source>
         <translation>Název</translation>
     </message>
     <message>
-        <source>Please name your token name (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Pojmenujte prosím svůj token (použijte pouze A-Z a 0-9, pomlčky a podtržítka)</translation>
-    </message>
-    <message>
-        <source>Your token name is too cool (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Název vašeho tokenu je příliš cool (použijte pouze A-Z a 0-9, pomlčky a podtržítka)</translation>
-    </message>
-    <message>
-        <source>Your token name contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Název vašeho tokenu obsahuje neplatné znaky (používejte pouze A-Z a 0-9, pomlčky a podtržítka)</translation>
-    </message>
-    <message>
         <source>Asset name already exists</source>
         <translation>Název aktiva již existuje</translation>
     </message>
@@ -6505,8 +6493,20 @@ key pair. Keycard will be required for signing</source>
         <translation>Zadejte prosím popis tokenu</translation>
     </message>
     <message>
-        <source>Only A-Z, 0-9 and standard punctuation allowed</source>
-        <translation>Povoleno pouze A-Z, 0-9 a standardní interpunkce</translation>
+        <source>Please name your token name (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your token name is too cool (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your token name contains invalid characters (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Only letters, numbers, standard punctuation and emojis allowed</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Symbol</source>
@@ -12130,8 +12130,8 @@ selhalo</translation>
         <translation>Přezdívka</translation>
     </message>
     <message>
-        <source>Invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Neplatné znaky (používejte pouze A-Z a 0-9, pomlčky a podtržítka)</translation>
+        <source>Invalid characters (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
         <source>Nicknames must be at least %n character(s) long</source>
