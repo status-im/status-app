@@ -413,6 +413,10 @@ method onChatsLoaded*(
       if chatId == activeChatId:
         cModule.onMadeActive()
 
+  # The QML section chrome may have finished incubating before this deferred
+  # build. Only now is its model safe to reveal.
+  self.view.setChatsLoaded()
+
 proc checkIfModuleDidLoad(self: Module) =
   if self.moduleLoaded:
     return

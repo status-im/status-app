@@ -83,6 +83,17 @@ Loader {
     // instance behaves like a plain, always-chromed loader.
     property bool chromeNeeded: true
 
+    // `ChatView.showRightPanel` is temporarily false before it has an active
+    // chat/content module. Keep the column at the persisted user preference
+    // until that decision is meaningful; otherwise the loading chrome visibly
+    // resizes true → false → true while a community starts.
+    readonly property bool rightPanelDecisionReady: root.item?.rightPanelDecisionReady ?? false
+    readonly property bool showRightPanel: root.rightPanelDecisionReady
+                                         ? (root.item?.showRightPanel ?? false)
+                                         : root.accountSettingsStore.showUsersList
+
+    readonly property bool panelSwapGateReady: root.item?.sectionDataReady ?? true
+
     // The section chrome is owned by the loader: it shows instantly with
     // skeleton panels and swaps in the real panels produced by ChatView
     // (LayoutItemProxy retarget) as each one finishes incubating. Each slot is
@@ -107,7 +118,7 @@ Loader {
             leftPanel: leftPanelGate.up ? root.item.leftPanel : channelsSkeleton
             centerPanel: centerPanelGate.up ? root.item.centerPanel : chatSkeleton
             rightPanel: rightPanelGate.up ? root.item.rightPanel : membersSkeleton
-            showRightPanel: root.item?.showRightPanel ?? root.accountSettingsStore.showUsersList
+            showRightPanel: root.showRightPanel
             subsectionHistory: root.item?.viewSubsectionHistory ?? null
 
             leftPanelWidthOverride: root.leftPanelWidthOverride
@@ -121,25 +132,25 @@ Loader {
     // chrome's panel-switch animation.
     PanelSwapGate {
         id: headerGate
-        ready: root.item?.headerReady ?? false
+        ready: root.panelSwapGateReady && (root.item?.headerReady ?? false)
         switchOngoing: d.panelSwitchOngoing
     }
 
     PanelSwapGate {
         id: leftPanelGate
-        ready: root.item?.leftPanelReady ?? false
+        ready: root.panelSwapGateReady && (root.item?.leftPanelReady ?? false)
         switchOngoing: d.panelSwitchOngoing
     }
 
     PanelSwapGate {
         id: centerPanelGate
-        ready: root.item?.centerPanelReady ?? false
+        ready: root.panelSwapGateReady && (root.item?.centerPanelReady ?? false)
         switchOngoing: d.panelSwitchOngoing
     }
 
     PanelSwapGate {
         id: rightPanelGate
-        ready: root.item?.rightPanelReady ?? false
+        ready: root.panelSwapGateReady && (root.item?.rightPanelReady ?? false)
         switchOngoing: d.panelSwitchOngoing
     }
 

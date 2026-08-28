@@ -23,17 +23,19 @@ Item {
         id: sectionStubComp
 
         Item {
+            property bool sectionDataReady: true
             property bool headerReady: false
             property bool leftPanelReady: false
             property bool centerPanelReady: false
             property bool rightPanelReady: false
+            property bool rightPanelDecisionReady: false
 
             readonly property Item headerContent: Item {}
             readonly property Item leftPanel: Item {}
             readonly property Item centerPanel: Item {}
             readonly property Item rightPanel: Item {}
 
-            readonly property bool showRightPanel: true
+            property bool showRightPanel: false
             readonly property var viewSubsectionHistory: null
             readonly property bool ownsFullPage: false
             property bool navToMsgDetails: false
@@ -208,6 +210,55 @@ Item {
             verify(chrome.leftPanel === findChild(loader, "leftPanelSkeleton"))
             verify(chrome.centerPanel === findChild(loader, "centerPanelSkeleton"))
             verify(chrome.rightPanel === findChild(loader, "rightPanelSkeleton"))
+        }
+
+        function test_rightPanelVisibilityWaitsForDecision_data() { return loaderCases() }
+
+        // While ChatView is still obtaining the active chat, its false
+        // showRightPanel value means “unknown”. The chrome must retain the
+        // user's members-panel preference until the decision becomes final.
+        function test_rightPanelVisibilityWaitsForDecision(data) {
+            appAccountSettingsStore.showUsersList = true
+            const loader = createLoaderWithStub(data.comp)
+            const stub = loader.item
+            const chrome = findChild(loader, "sectionChrome")
+
+            verify(chrome.showRightPanel,
+                   "pending chat data must not hide the requested members column")
+
+            stub.rightPanelDecisionReady = true
+            verify(!chrome.showRightPanel,
+                   "the final chat decision must still be able to hide the members column")
+
+            appAccountSettingsStore.showUsersList = false
+        }
+
+        // QML panel incubation alone is insufficient while the backend's
+        // deferred first chat/channel build is still in progress. Both
+        // section loaders must keep every slot on its skeleton until the
+        // model is safe to render.
+        function test_sectionDataReadiness_data() { return loaderCases() }
+
+        function test_sectionDataReadiness(data) {
+            const loader = createLoaderWithStub(data.comp)
+            const stub = loader.item
+            const chrome = findChild(loader, "sectionChrome")
+            verify(!!chrome)
+
+            stub.sectionDataReady = false
+            for (const spec of slotSpecs)
+                stub[spec.flag] = true
+
+            for (const spec of slotSpecs) {
+                verify(chrome[spec.slot] === findChild(loader, spec.skeleton),
+                       spec.slot + " must stay on its skeleton until section data is ready")
+            }
+
+            stub.sectionDataReady = true
+            for (const spec of slotSpecs) {
+                verify(chrome[spec.slot] === stub[spec.slot],
+                       spec.slot + " must promote after section data is ready")
+            }
         }
     }
 }
