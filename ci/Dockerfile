@@ -3,6 +3,8 @@ ARG QT_MODULES="qtwebchannel qtwebview qtwebsockets qt5compat qtmultimedia qtweb
 ARG LINUXDEPLOYQT_VERSION="20250615-0393b84"
 ARG PCSCLITE_VERSION="2.2.3"
 ARG PCSCLITE_SHA256="6e0205a47ec0dd10c000965ee88e08e60c2f7f3ce7280ce0e624915821ea2402"
+ARG CCID_VERSION="1.7.0"
+ARG CCID_SHA256="4abe76010a72944e02e8d5d4d60ba665f941891eee2a35f77fd35cebc095e14b"
 ARG NIM_VERSION="2.2.4"
 
 # QT Installation Image --------------------------------------------------------
@@ -25,7 +27,7 @@ RUN python3 -m pip install setuptools \
 # PCSC Lite Build Image --------------------------------------------------------
 FROM ubuntu:22.04 AS pcsc-build
 
-ARG PCSCLITE_VERSION PCSCLITE_SHA256
+ARG PCSCLITE_VERSION PCSCLITE_SHA256 CCID_VERSION CCID_SHA256
 
 # To fix: https://github.com/status-im/status-app/issues/16768
 # https://blog.apdu.fr/posts/2024/05/pcsc-lite-now-uses-meson-build-tool/
@@ -42,9 +44,21 @@ RUN wget -q "https://github.com/LudovicRousseau/PCSC/archive/refs/tags/${PCSCLIT
 
 WORKDIR /pcsc
 
-RUN meson setup builddir -Dpolkit=false -Dlibsystemd=false -Dserial=false -Dipcdir=/tmp/pcscd/run
-RUN cd builddir && ninja
+RUN meson setup builddir -Dpolkit=false -Dlibsystemd=false -Dserial=false \
+    -Dipcdir=/tmp/pcscd/run -Dusbdropdir=/tmp/pcscd/drivers \
+    -Dlibdir=lib/x86_64-linux-gnu
+RUN cd builddir && ninja && ninja install
 RUN cp builddir/pcsclite.h src/PCSC
+
+RUN wget -q "https://github.com/LudovicRousseau/CCID/archive/refs/tags/${CCID_VERSION}.tar.gz" -O /tmp/ccid.tar.gz \
+ && echo "${CCID_SHA256} /tmp/ccid.tar.gz" | sha256sum -c \
+ && mkdir /ccid \
+ && tar -xzf /tmp/ccid.tar.gz -C /ccid --strip-components=1
+
+WORKDIR /ccid
+ENV PKG_CONFIG_PATH=/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig
+RUN meson setup builddir -Dserial=false -Dudev-rules=false
+RUN cd builddir && ninja && ninja install
 
 # Build Image ------------------------------------------------------------------
 FROM ubuntu:22.04
@@ -89,6 +103,7 @@ RUN apt update -yq && apt install -yq software-properties-common \
     libcups2 libcups2-dev \
     libgtk-3-0 libgtk-3-dev \
     libgdk-pixbuf-2.0-0 libgdk-pixbuf2.0-dev \
+    libusb-1.0-0 \
  && apt-get -qq clean
 
 # Install PCSC Lite
@@ -99,6 +114,7 @@ COPY --from=pcsc-build /pcsc/builddir/libpcsclite_real.so.1 /pcsc/builddir/libpc
                        /pcsc/builddir/libpcsclite.so.1      /pcsc/builddir/libpcsclite.so \
                        /pcsc/builddir/libpcscspy.so.0       /pcsc/builddir/libpcscspy.so \
                        /usr/local/lib/x86_64-linux-gnu/
+COPY --from=pcsc-build /tmp/pcscd/drivers /usr/local/lib/pcsc/drivers
 
 # Install linuxdeployqt
 # built from https://github.com/probonopd/linuxdeployqt/commit/0393b84
