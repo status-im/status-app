@@ -4282,10 +4282,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Invalid characters (A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Only letters, numbers, underscores, periods, commas, whitespaces and hyphens allowed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4298,7 +4294,11 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Name is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
+        <source>Invalid characters (letters and numbers, single whitespace, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Name is too cool (use letters and numbers, single whitespace, hyphens and underscores only)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6149,7 +6149,7 @@ key pair. Keycard will be required for signing</source>
         <translation>표시 이름은 공백으로 시작하거나 끝날 수 없습니다</translation>
     </message>
     <message>
-        <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
+        <source>Invalid characters (use letters and numbers, hyphens, underscores and spaces only)</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
@@ -6412,18 +6412,6 @@ key pair. Keycard will be required for signing</source>
         <translation>이름</translation>
     </message>
     <message>
-        <source>Please name your token name (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>토큰 이름을 입력하세요 (A-Z와 0-9, 하이픈과 밑줄만 사용)</translation>
-    </message>
-    <message>
-        <source>Your token name is too cool (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>토큰 이름이 너무 멋져요 (A-Z와 0-9, 하이픈, 밑줄만 사용하세요)</translation>
-    </message>
-    <message>
-        <source>Your token name contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>토큰 이름에 잘못된 문자가 포함되어 있습니다(A-Z, 0-9, 하이픈(-), 밑줄(_)만 사용하세요)</translation>
-    </message>
-    <message>
         <source>Asset name already exists</source>
         <translation>자산 이름이 이미 존재합니다</translation>
     </message>
@@ -6448,8 +6436,20 @@ key pair. Keycard will be required for signing</source>
         <translation>토큰 설명을 입력하세요</translation>
     </message>
     <message>
-        <source>Only A-Z, 0-9 and standard punctuation allowed</source>
-        <translation>A-Z, 0-9, 그리고 표준 문장 부호만 사용할 수 있습니다</translation>
+        <source>Please name your token name (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your token name is too cool (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your token name contains invalid characters (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Only letters, numbers, standard punctuation and emojis allowed</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Symbol</source>
@@ -12011,8 +12011,8 @@ to load</source>
         <translation>닉네임</translation>
     </message>
     <message>
-        <source>Invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>유효하지 않은 문자입니다 (A-Z, 0-9, 하이픈과 언더스코어만 사용하세요)</translation>
+        <source>Invalid characters (use letters and numbers, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
         <source>Nicknames must be at least %n character(s) long</source>
