@@ -23,6 +23,7 @@ copy_system_libs() {
   cp -r /usr/lib/x86_64-linux-gnu/gstreamer-1.0 "$dest/"
   cp -r /usr/lib/x86_64-linux-gnu/nss "$dest/"
   cp -P /usr/local/lib/x86_64-linux-gnu/libpcsclite*.so* "$dest/"
+  cp -P /usr/lib/x86_64-linux-gnu/libusb-1.0.so* "$dest/"
 }
 
 DEST="${APP_DIR:?APP_DIR must be set}/usr"
@@ -80,6 +81,9 @@ if [[ -z "${IN_NIX_SHELL:-}" ]]; then
   echo "Bundling pcscd..."
   cp -L "/usr/local/sbin/pcscd"* "${DEST}/bin/"
   chmod 755 "${DEST}/bin/pcscd"*
+
+  echo "Bundling CCID driver..."
+  cp -a /usr/local/lib/pcsc/drivers/. "${DEST}/lib/pcsc/drivers/"
 
   echo "Bundling Dash shell..."
   cp /usr/bin/dash "${DEST}/bin/"
