@@ -3426,8 +3426,15 @@ Item {
     // is consulted before the key event reaches the focus chain, which is the only
     // route that works in the Browser — a focused WebEngineView accepts every key
     // event and nothing bubbles out of it.
+    //
+    // On Windows StandardKey.Back also binds plain Backspace. That normally edits
+    // the focused text field, but when a non-editable item has focus (e.g. the open
+    // mention-suggestion list) the unconsumed Backspace reaches this shortcut and
+    // hijacks a chat/subsection switch. Bind the explicit Alt+Left there instead so
+    // Backspace never navigates; other platforms keep StandardKey.Back unchanged.
     Shortcut {
-        sequences: [StandardKey.Back]
+        sequences: Qt.platform.os === SQUtils.Utils.windows
+                   ? ["Alt+Left"] : [StandardKey.Back]
         enabled: !SQUtils.Utils.isMobile && appMain.canGoBackAnywhere
         onActivated: appMain.tryGoBack()
     }
