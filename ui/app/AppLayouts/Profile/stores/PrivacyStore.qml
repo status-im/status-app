@@ -35,6 +35,17 @@ QtObject {
         root.privacyModule.setBiometricPreferenceNotNow()
     }
 
+    // "Stay logged in" — per-account preference + DEK-only credential conversion
+    readonly property bool stayLoggedIn: localAccountSettings.stayLoggedIn
+
+    function setStayLoggedIn(value) {
+        localAccountSettings.stayLoggedIn = value
+    }
+
+    function getStayLoggedInCredentialForStorage(keyUid, password) {
+        return root.privacyModule.getStayLoggedInCredentialForStorage(keyUid, password)
+    }
+
     function getMnemonic() {
         return root.privacyModule.getMnemonic()
     }

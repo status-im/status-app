@@ -55,6 +55,9 @@ proc isProfileMigratedToDEKEncryption*(self: Controller): bool =
 proc getBiometricCredentialForStorage*(self: Controller, keyUid: string, password: string): string =
   return self.privacyService.getBiometricCredentialForStorage(keyUid, password)
 
+proc getStayLoggedInCredentialForStorage*(self: Controller, keyUid: string, password: string): string =
+  return self.privacyService.getStayLoggedInCredentialForStorage(keyUid, password)
+
 proc getMnemonic*(self: Controller): string =
   return self.privacyService.getMnemonic()
 

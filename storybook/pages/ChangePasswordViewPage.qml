@@ -59,6 +59,16 @@ SplitView {
                     logs.logEvent("privacyStore::setBiometricPreferenceNotNow")
                 }
 
+                property bool stayLoggedIn: false
+                function setStayLoggedIn(value) {
+                    stayLoggedIn = value
+                    logs.logEvent("privacyStore::setStayLoggedIn", ["value"], [value])
+                }
+                function getStayLoggedInCredentialForStorage(keyUid, password) {
+                    // DEK-only conversion: tagged DEK for migrated profiles, "" otherwise
+                    return ctrlFastPasswordChange.checked ? "dek:" + "0".repeat(64) : ""
+                }
+
                 readonly property string keyUid: keyUidInput.text
 
                 function tryStoreToKeyChain(errorDescription) {
@@ -67,7 +77,14 @@ SplitView {
             }
 
             keychain: loader.item
+            secureStorage: pageSecureStorage
         }
+    }
+
+    SecureStorage {
+        id: pageSecureStorage
+
+        service: "StatusStorybook.AutoLogin"
     }
 
     Loader {
