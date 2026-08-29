@@ -62,10 +62,12 @@ StatusDialog {
         headline.title: root.title
         headline.subtitle: root.subtitle
         actions.closeButton.onClicked: root.close()
-        leftComponent: StatusRoundIcon {
-            width: visible?  implicitWidth: 0
-            visible: !!root.asset.name
-            asset: root.asset
+        leftComponent: !!root.asset.name ? leftIconComponent : undefined
+        Component {
+            id: leftIconComponent
+            StatusRoundIcon {
+                asset: root.asset
+            }
         }
     }
 

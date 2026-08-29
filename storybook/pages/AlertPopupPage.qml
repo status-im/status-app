@@ -32,7 +32,6 @@ SplitView {
             AlertPopup {
                 id: dialog
 
-                anchors.centerIn: parent
                 title: qsTr("Remotely destruct %n token(s)", "", 12)
                 acceptBtnText: qsTr("Remotely destruct")
                 alertText: qsTr("Continuing will destroy tokens held by members and revoke any perissions they given. To undo you will have to issue them new tokens.")
@@ -40,6 +39,10 @@ SplitView {
                 onAcceptClicked: logs.logEvent("AlertPopup::onAcceptClicked")
                 onCancelClicked: logs.logEvent("AlertPopup::onCancelClicked")
 
+                Binding on asset.name {
+                    when: ctrlIcon.checked
+                    value: "settings"
+                }
             }
         }
 
@@ -50,13 +53,14 @@ SplitView {
             SplitView.preferredHeight: 150
 
             logsView.logText: logs.logText
-        }
-    }
 
-    Pane {
-        SplitView.minimumWidth: 300
-        SplitView.preferredWidth: 300
+            CheckBox {
+                id: ctrlIcon
+                text: "With icon"
+            }
+        }
     }
 }
 
 // category: Popups
+// status: good

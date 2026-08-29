@@ -49,9 +49,8 @@ StatusDialog {
     header: StatusDialogHeader {
         headline.title: d.headerTitle
         actions.closeButton.onClicked: root.close()
-        leftComponent: StatusSmartIdenticon {
-            asset.name: root.communityLogo
-            asset.isImage: !!asset.name
+        leftComponent: StatusRoundedImage {
+            image.source: root.communityLogo
         }
     }
 
@@ -63,7 +62,7 @@ StatusDialog {
 
                 onClicked: {
                     root.cancelClicked()
-                    close()
+                    root.close()
                 }
             }
 
@@ -72,7 +71,7 @@ StatusDialog {
 
                 onClicked: {
                     root.mintClicked()
-                    close()
+                    root.close()
                 }
             }
         }
