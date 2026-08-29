@@ -15,8 +15,6 @@ import shared.controls
 import shared.popups
 import utils
 
-import AppLayouts.Wallet
-
 Rectangle {
     id: root
 
@@ -182,6 +180,7 @@ Rectangle {
             width: root.width - 2 * 20
 
             acceptBtnText: qsTr("Got it")
+            acceptBtnType: StatusBaseButton.Type.Normal
             cancelBtn.text: !!infoBox.url? qsTr("Read more") : ""
             cancelBtn.icon.name: "external-link"
             cancelBtn.visible: !!infoBox.url

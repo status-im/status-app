@@ -54,7 +54,7 @@ ToolBar {
                 margins: Theme.defaultPadding
             }
 
-            spacing: Theme.halfPadding
+            spacing: Theme.defaultSmallPadding
 
             Loader {
                 id: leftComponentLoader

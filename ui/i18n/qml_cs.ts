@@ -15391,6 +15391,10 @@ selhalo</translation>
         <translation>Upravit nastavení transakce</translation>
     </message>
     <message>
+        <source>Edit</source>
+        <translation type="unfinished">Upravit</translation>
+    </message>
+    <message>
         <source>Send</source>
         <translation>Odeslat</translation>
     </message>
