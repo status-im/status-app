@@ -33,7 +33,6 @@ SplitView {
             TransferOwnershipAlertPopup {
                 id: dialog
 
-                anchors.centerIn: parent                
                 closePolicy: Popup.NoAutoClose
                 visible: true
                 modal: false
