@@ -15250,6 +15250,10 @@ to load</source>
         <translation>Змінити налаштування транзакції</translation>
     </message>
     <message>
+        <source>Edit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Send</source>
         <translation>Надіслати</translation>
     </message>

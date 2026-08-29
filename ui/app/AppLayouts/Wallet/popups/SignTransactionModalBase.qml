@@ -10,7 +10,6 @@ import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Components
-import StatusQ.Popups
 import StatusQ.Popups.Dialog
 
 import shared.controls
@@ -56,7 +55,6 @@ StatusDialog {
     property ObjectModel leftFooterContents
     property ObjectModel rightFooterContents: ObjectModel {
         RowLayout {
-            Layout.rightMargin: 4
             spacing: Theme.halfPadding
             StatusFlatButton {
                 objectName: "rejectButton"
@@ -109,7 +107,8 @@ StatusDialog {
     signal closeInternalPopup()
 
     width: 480
-    padding: 0
+    horizontalPadding: 0
+    verticalPadding: 0 // to have the gradient strech top-bottom
 
     closePolicy: Popup.NoAutoClose
 
@@ -136,6 +135,7 @@ StatusDialog {
 
     footer: StatusDialogFooter {
         dropShadowEnabled: true
+        bottomSheet: root.bottomSheet
 
         leftButtons: root.leftFooterContents
         rightButtons: root.rightFooterContents
@@ -145,33 +145,30 @@ StatusDialog {
         id: scrollView
         anchors.fill: parent
         contentWidth: availableWidth
-        contentHeight: content.implicitHeight
-        topPadding: 0
-        bottomPadding: countdownPill.height
+        padding: 0
 
         ColumnLayout {
             id: content
-            anchors.left: parent.left
-            anchors.leftMargin: 4
-            anchors.right: parent.right
-            anchors.rightMargin: 4
-            spacing: 0
+            width: scrollView.availableWidth
+            spacing: 12
 
             // header box with gradient
-            Rectangle {
+            Control {
                 Layout.fillWidth: true
-                Layout.leftMargin: -parent.anchors.leftMargin - scrollView.leftPadding
-                Layout.rightMargin: -parent.anchors.rightMargin - scrollView.rightPadding
-                Layout.preferredHeight: childrenRect.height + 80 - countdownPill.height // 40 + 40 top/bottomMargin
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: Utils.setColorAlpha(root.gradientColor, 0.05) }
-                    GradientStop { position: 1.0; color: root.backgroundColor }
-                }
+                Layout.alignment: Qt.AlignHCenter
+                verticalPadding: Theme.bigPadding // for top/bottom margin
+                horizontalPadding: Theme.defaultPadding // for scrollbars
 
-                ColumnLayout {
-                    width: 336 // by design
-                    spacing: 12
-                    anchors.centerIn: parent
+                background: Rectangle {
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: StatusColors.alphaColor(root.gradientColor, 0.25) }
+                        GradientStop { position: 1.0; color: root.backgroundColor }
+                    }
+                }
+                contentItem: ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: 336
+                    spacing: 20
 
                     RowLayout {
                         Layout.alignment: Qt.AlignHCenter
@@ -298,23 +295,23 @@ StatusDialog {
 
                     InformationTag {
                         id: infoTag
+                        Layout.maximumWidth: parent.width
                         Layout.alignment: Qt.AlignHCenter
                         asset.name: "info"
                         tagPrimaryLabel.text: root.infoTagText
                         visible: !!root.infoTagText
                     }
                 }
+            }
 
-                CountdownPill {
-                    id: countdownPill
-                    objectName: "countdownPill"
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.margins: Theme.padding
-                    timestamp: root.requestTimestamp
-                    expirationSeconds: root.expirationSeconds
-                    visible: !!root.hasExpiryDate
-                }
+            CountdownPill {
+                id: countdownPill
+                objectName: "countdownPill"
+                anchors.right: parent.right
+                anchors.top: parent.top
+                timestamp: root.requestTimestamp
+                expirationSeconds: root.expirationSeconds
+                visible: !!root.hasExpiryDate
             }
 
             StatusDialogDivider {
@@ -325,6 +322,11 @@ StatusDialog {
 
             ColumnLayout {
                 Layout.fillWidth: true
+                // for scrollbars
+                Layout.leftMargin: Theme.defaultPadding
+                Layout.rightMargin: Theme.defaultPadding
+                // for bottom margin
+                Layout.bottomMargin: Theme.defaultPadding
                 id: contentsLayout
             }
         }

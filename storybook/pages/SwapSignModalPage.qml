@@ -60,6 +60,7 @@ SplitView {
         PopupBackground {
             id: popupBg
             anchors.fill: parent
+            color: "gray"
 
             Button {
                 anchors.centerIn: parent
@@ -71,7 +72,6 @@ SplitView {
             Component {
                 id: dlgComponent
                 SwapSignModal {
-                    anchors.centerIn: parent
                     destroyOnClose: true
                     modal: false
 
@@ -122,7 +122,8 @@ SplitView {
 
                     feesLoading: ctrlLoading.checked
 
-                    expirationSeconds: !!ctrlExpiration.text && parseInt(ctrlExpiration.text) ? parseInt(ctrlExpiration.text) : 0
+                    expirationSeconds: ctrlExpiration.value
+                    hasExpiryDate: ctrlExpiration.value > 0
                     onExpirationSecondsChanged: requestTimestamp = new Date()
 
                     onAccepted: logs.logEvent("accepted")
@@ -174,7 +175,7 @@ SplitView {
                 placeholderText: "To amount"
             }
 
-            Text {
+            Label {
                 text: "Selected Account"
             }
             ComboBox {
@@ -186,7 +187,7 @@ SplitView {
                 currentIndex: 0
             }
 
-            Text {
+            Label {
                 text: "Selected Network"
             }
             ComboBox {
@@ -203,7 +204,7 @@ SplitView {
                 text: "Fees loading"
             }
 
-            Text {
+            Label {
                 text: "Login Type"
             }
             ComboBox {
@@ -220,10 +221,16 @@ SplitView {
                 restoreMode: Binding.RestoreBindingOrValue
             }
 
-            TextField {
+            Label {
+                text: "Expiration"
+            }
+            SpinBox {
                 Layout.fillWidth: true
                 id: ctrlExpiration
-                placeholderText: "Expiration in seconds"
+                value: 0
+                from: 0
+                to: 120
+                editable: true
             }
         }
     }

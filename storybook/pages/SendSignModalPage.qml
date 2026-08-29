@@ -111,6 +111,7 @@ SplitView {
         PopupBackground {
             id: popupBg
             anchors.fill: parent
+            color: "gray"
 
             Button {
                 anchors.centerIn: parent
@@ -122,8 +123,6 @@ SplitView {
             Component {
                 id: dlgComponent
                 SendSignModal {
-                    closePolicy: Popup.CloseOnEscape
-                    anchors.centerIn: parent
                     destroyOnClose: true
                     modal: false
 
@@ -203,8 +202,8 @@ SplitView {
                         return 0
                     }
 
-                    fiatFees: formatBigNumber(42.542567, "EUR")
-                    cryptoFees: formatBigNumber(0.06, "ETH")
+                    fiatFees: formatBigNumber(42.542567)
+                    cryptoFees: formatBigNumber(0.06)
                     estimatedTime: qsTr("~60s")
 
                     isCollectibleLoading: isCollectibleLoadingCheckbox.checked
@@ -218,8 +217,7 @@ SplitView {
                                        + '<img src="https://placekitten.com/40/40">'
                                      : (!!collectibleComboBox.currentCollectible ?
                                             collectibleComboBox.currentCollectible.name: "")
-                    collectibleBackgroundColor: !!collectibleComboBox.currentCollectible ?
-                                                    collectibleComboBox.currentCollectible.backgroundColor: ""
+                    collectibleBackgroundColor: collectibleComboBox.currentCollectible?.backgroundColor ?? "transparent"
                     collectibleMediaUrl: !!collectibleComboBox.currentCollectible ?
                                              collectibleComboBox.currentCollectible.mediaUrl ?? "" : ""
                     collectibleMediaType: ""
@@ -231,7 +229,8 @@ SplitView {
 
                     feesLoading: ctrlLoading.checked
 
-                    expirationSeconds: !!ctrlExpiration.text && parseInt(ctrlExpiration.text) ? parseInt(ctrlExpiration.text) : 0
+                    expirationSeconds: ctrlExpiration.value
+                    hasExpiryDate: ctrlExpiration.value > 0
                     onExpirationSecondsChanged: requestTimestamp = new Date()
 
                     fnGetOpenSeaExplorerUrl: function(networkShortName) {
@@ -288,7 +287,7 @@ SplitView {
                 }
                 enabled: isCollectibleCheckbox.checked
             }
-            Text {
+            Label {
                 text: "Selected Send Amount"
             }
             TextField {
@@ -297,7 +296,7 @@ SplitView {
                 text: "100"
                 placeholderText: "From amount"
             }
-            Text {
+            Label {
                 text: "Selected From Account"
             }
             ComboBox {
@@ -309,7 +308,7 @@ SplitView {
                 currentIndex: 0
             }
 
-            Text {
+            Label {
                 text: "Selected Recipient"
             }
             ComboBox {
@@ -321,7 +320,7 @@ SplitView {
                 currentIndex: 0
             }
 
-            Text {
+            Label {
                 text: "Selected Network"
             }
             ComboBox {
@@ -338,7 +337,7 @@ SplitView {
                 text: "Fees loading"
             }
 
-            Text {
+            Label {
                 text: "Login Type"
             }
             ComboBox {
@@ -355,10 +354,16 @@ SplitView {
                 restoreMode: Binding.RestoreBindingOrValue
             }
 
-            TextField {
+            Label {
+                text: "Expiration"
+            }
+            SpinBox {
                 Layout.fillWidth: true
                 id: ctrlExpiration
-                placeholderText: "Expiration in seconds"
+                value: 0
+                from: 0
+                to: 120
+                editable: true
             }
         }
     }

@@ -59,7 +59,7 @@ Item {
             Layout.topMargin: Theme.padding
             horizontalAlignment: Text.AlignHCenter
             text: root.title
-            font.pixelSize: Theme.fontSize25
+            font.pixelSize: Theme.fontSize(25)
             font.bold: true
             color: root.isError ? Theme.palette.dangerColor1 : Theme.palette.directColor1
             wrapMode: Text.WordWrap
