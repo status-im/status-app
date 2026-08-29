@@ -89,14 +89,17 @@ SignTransactionModalBase {
 
     leftFooterContents: ObjectModel {
         RowLayout {
-            Layout.leftMargin: 4
-            spacing: Theme.bigPadding
+            Layout.fillWidth: true
+            spacing: Theme.padding
             ColumnLayout {
+                Layout.fillWidth: true
                 spacing: 2
                 StatusBaseText {
+                    Layout.fillWidth: true
                     text: qsTr("Max fees:")
                     color: Theme.palette.baseColor1
                     font.pixelSize: Theme.additionalTextSize
+                    elide: Text.ElideRight
                 }
                 StatusTextWithLoadingState {
                     id: maxFees
@@ -104,7 +107,8 @@ SignTransactionModalBase {
                     objectName: "footerFiatFeesText"
                     text: root.hasFees ? formatBigNumber(root.fiatFees, root.fiatSymbol) : qsTr("No fees")
                     loading: root.feesLoading && root.hasFees
-                    elide: Qt.ElideMiddle
+                    font.pixelSize: Theme.additionalTextSize
+                    elide: Text.ElideRight
                     customColor: !root.hasFees || root.enoughFundsForFees ? Theme.palette.directColor1 : Theme.palette.dangerColor1
                     ColorTransition on customColor {}
                 }
@@ -113,15 +117,20 @@ SignTransactionModalBase {
                 spacing: 2
                 visible: root.hasFees
                 StatusBaseText {
+                    Layout.fillWidth: true
                     text: qsTr("Est. time:")
                     color: Theme.palette.baseColor1
                     font.pixelSize: Theme.additionalTextSize
+                    elide: Qt.ElideRight
                 }
                 StatusTextWithLoadingState {
+                    Layout.fillWidth: true
                     id: estimatedTime
                     objectName: "footerEstimatedTime"
                     text: root.estimatedTime
                     loading: root.estimatedTimeLoading
+                    font.pixelSize: Theme.additionalTextSize
+                    elide: Qt.ElideRight
                     ColorTransition on customColor {}
                 }
             }
@@ -164,7 +173,6 @@ SignTransactionModalBase {
     // Fees
     SignInfoBox {
         Layout.fillWidth: true
-        Layout.bottomMargin: Theme.bigPadding
         objectName: "feesBox"
         caption: qsTr("Fees")
         primaryText: qsTr("Max. fees on %1").arg(root.networkName)

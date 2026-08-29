@@ -86,7 +86,7 @@ SignTransactionModalBase {
     required property var fnGetOpenSeaExplorerUrl
 
     /** Transaction settings related parameters **/
-    required property int selectedFeeMode
+    required property int selectedFeeMode // Constants.FeePriorityModeType.XXX
 
     required property bool fromChainEIP1559Compliant
     required property bool fromChainNoBaseFee
@@ -149,9 +149,7 @@ SignTransactionModalBase {
         const tokenToSend = root.isCollectible ? root.collectibleName:
                               "%1 %2".arg(root.tokenAmount).arg(root.tokenSymbol)
         //: e.g. (Send) 100 DAI to batista.eth
-        return qsTr("%1 to %2").
-        arg(tokenToSend).
-        arg(SQUtils.Utils.elideAndFormatWalletAddress(root.recipientAddress))
+        return qsTr("%1 to %2").arg(tokenToSend).arg(SQUtils.Utils.elideAndFormatWalletAddress(root.recipientAddress))
     }
 
     headerActionsCloseButtonVisible: true
@@ -207,12 +205,17 @@ SignTransactionModalBase {
 
     leftFooterContents: ObjectModel {
         RowLayout {
-            Layout.leftMargin: 4
+            Layout.fillWidth: true
+            id: leftFeesContent
             spacing: Theme.padding
+            visible: root.width > ThemeUtils.portraitBreakpoint.width / 2
             ColumnLayout {
+                Layout.fillWidth: true
                 spacing: 2
                 RowLayout {
+                    Layout.fillWidth: true
                     StatusBaseText {
+                        Layout.fillWidth: true
                         objectName: "footerEstTimeLabel"
                         text: WalletUtils.getFeeTextForFeeMode(root.selectedFeeMode)
                         color: Theme.palette.baseColor1
@@ -221,47 +224,51 @@ SignTransactionModalBase {
                     StatusImage {
                         objectName: "footerEstTimeIcon"
                         Layout.alignment: Qt.AlignVCenter
-                        Layout.preferredWidth: 22
-                        Layout.preferredHeight: 22
+                        Layout.preferredWidth: 16
+                        Layout.preferredHeight: 16
                         source: WalletUtils.getIconForFeeMode(root.selectedFeeMode)
                     }
                 }
                 StatusTextWithLoadingState {
+                    Layout.fillWidth: true
                     objectName: "footerEstTimeText"
                     text: loading ? Constants.dummyText : root.estimatedTime
                     loading: root.feesLoading
+                    font.pixelSize: Theme.additionalTextSize
                 }
             }
             ColumnLayout {
+                Layout.fillWidth: true
                 spacing: 2
                 StatusBaseText {
+                    Layout.fillWidth: true
                     objectName: "footerFiatFeesLabel"
                     text: qsTr("Max fees")
                     color: Theme.palette.baseColor1
                     font.pixelSize: Theme.additionalTextSize
                 }
                 StatusTextWithLoadingState {
+                    Layout.fillWidth: true
                     objectName: "footerFiatFeesText"
                     text: loading ? Constants.dummyText : root.fiatFees
                     loading: root.feesLoading
+                    font.pixelSize: Theme.additionalTextSize
                 }
             }
-            StatusFlatButton {
-                Layout.preferredWidth: 44
-                Layout.preferredHeight: 44
-                tooltip.text: qsTr("Edit transaction settings")
-                icon.name: "settings-advance"
-                textColor: hovered? Theme.palette.directColor1 : Theme.palette.baseColor1
-                size: StatusBaseButton.Size.Small
-                onClicked: {
-                    root.internalPopupActive = true
-                }
+        }
+        StatusFlatButton {
+            tooltip.text: qsTr("Edit transaction settings")
+            icon.name: "settings-advance"
+            textColor: hovered ? Theme.palette.directColor1 : Theme.palette.baseColor1
+            size: StatusBaseButton.Size.Small
+            text: leftFeesContent.visible ? "" : qsTr("Edit")
+            onClicked: {
+                root.internalPopupActive = true
             }
         }
     }
 
     property Component internalPopup: TransactionSettings {
-
         fnGetPriceInCurrencyForFee: root.fnGetPriceInCurrencyForFee
         fnGetPriceInNativeTokenForFee: root.fnGetPriceInNativeTokenForFee
         fnGetEstimatedTime: root.fnGetEstimatedTime
@@ -520,7 +527,6 @@ SignTransactionModalBase {
     // Fees
     SignInfoBox {
         Layout.fillWidth: true
-        Layout.bottomMargin: Theme.bigPadding
         objectName: "feesBox"
         caption: qsTr("Fees")
         primaryText: qsTr("Max. fees on %1").arg(root.networkName)

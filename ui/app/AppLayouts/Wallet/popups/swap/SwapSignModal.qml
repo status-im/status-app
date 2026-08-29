@@ -49,6 +49,8 @@ SignTransactionModalBase {
     //: e.g. (swap) 100 DAI to 100 USDT
     subtitle: qsTr("%1 to %2").arg(formatBigNumber(fromTokenAmount, fromTokenSymbol)).arg(formatBigNumber(toTokenAmount, toTokenSymbol))
 
+    headerActionsCloseButtonVisible: true
+
     gradientColor: root.accountColor
     fromImageSource: Constants.tokenIcon(root.fromTokenSymbol)
     toImageSource: Constants.tokenIcon(root.toTokenSymbol)
@@ -58,6 +60,7 @@ SignTransactionModalBase {
         .arg(formatBigNumber(root.toTokenAmount, root.toTokenSymbol)).arg(root.accountName).arg(root.networkName)
     headerSubTextLayout: [
         SwapProvidersTermsAndConditionsText {
+            Layout.fillWidth: true
             serviceProviderName: root.serviceProviderName
             onLinkClicked: root.requestOpenLink(root.serviceProviderURL)
             onTermsAndConditionClicked: root.requestOpenLink(root.serviceProviderTandCUrl)
@@ -81,31 +84,43 @@ SignTransactionModalBase {
 
     leftFooterContents: ObjectModel {
         RowLayout {
-            Layout.leftMargin: 4
-            spacing: Theme.bigPadding
+            Layout.fillWidth: true
+            spacing: Theme.padding
             ColumnLayout {
+                Layout.fillWidth: true
                 spacing: 2
                 StatusBaseText {
+                    Layout.fillWidth: true
                     text: qsTr("Max fees:")
                     color: Theme.palette.baseColor1
                     font.pixelSize: Theme.additionalTextSize
+                    elide: Text.ElideRight
                 }
                 StatusTextWithLoadingState {
+                    Layout.fillWidth: true
                     objectName: "footerFiatFeesText"
                     text: loading ? Constants.dummyText : root.fiatFees
                     loading: root.feesLoading
+                    font.pixelSize: Theme.additionalTextSize
+                    elide: Text.ElideRight
                 }
             }
             ColumnLayout {
+                Layout.fillWidth: true
                 spacing: 2
                 StatusBaseText {
+                    Layout.fillWidth: true
                     text: qsTr("Max slippage:")
                     color: Theme.palette.baseColor1
                     font.pixelSize: Theme.additionalTextSize
+                    elide: Text.ElideRight
                 }
                 StatusBaseText {
+                    Layout.fillWidth: true
                     objectName: "footerMaxSlippageText"
                     text: "%1%".arg(LocaleUtils.numberToLocaleString(root.slippage))
+                    font.pixelSize: Theme.additionalTextSize
+                    elide: Text.ElideRight
                 }
             }
         }

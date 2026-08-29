@@ -15307,6 +15307,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Edit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Send</source>
         <translation type="unfinished"></translation>
     </message>

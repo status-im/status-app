@@ -15254,6 +15254,10 @@ to load</source>
         <translation>트랜잭션 설정 편집</translation>
     </message>
     <message>
+        <source>Edit</source>
+        <translation type="unfinished">편집</translation>
+    </message>
+    <message>
         <source>Send</source>
         <translation>보내기</translation>
     </message>

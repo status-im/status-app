@@ -15322,6 +15322,10 @@ al cargar</translation>
         <translation>Editar configuración de transacción</translation>
     </message>
     <message>
+        <source>Edit</source>
+        <translation type="unfinished">Editar</translation>
+    </message>
+    <message>
         <source>Send</source>
         <translation>Enviar</translation>
     </message>

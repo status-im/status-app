@@ -19,7 +19,7 @@ SplitView {
         SplitView.fillWidth: true
         SplitView.fillHeight: true
 
-        color: Theme.palette.background
+        color: "gray"
 
         Button {
             anchors.centerIn: parent
@@ -65,7 +65,8 @@ SplitView {
             requestPayload: controls.contentToSign[contentToSignComboBox.currentIndex]
             signingTransaction: signingTransaction.checked
 
-            expirationSeconds: !!ctrlExpiration.text && parseInt(ctrlExpiration.text) ? parseInt(ctrlExpiration.text) : 0
+            expirationSeconds: ctrlExpiration.value
+            hasExpiryDate: ctrlExpiration.value > 0
             onExpirationSecondsChanged: requestTimestamp = new Date()
 
             onAccepted: print ("Accepted")
@@ -171,10 +172,15 @@ Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Fusce nibh. Etiam quis
                 ToolTip.text: "Replaces dappName with an HTML payload to verify "
                               + "textFormat: Text.PlainText renders literal markup, not styled text."
             }
-            TextField {
-                Layout.fillWidth: true
+            Label {
+                text: "Expiration"
+            }
+            SpinBox {
                 id: ctrlExpiration
-                placeholderText: "Expiration in seconds"
+                value: 0
+                from: 0
+                to: 120
+                editable: true
             }
         }
     }
