@@ -40,6 +40,7 @@ ColumnLayout {
         statusListItemTitle.customColor: root.primaryTextCustomColor
         statusListItemTitle.textFormat: Text.PlainText
         subTitle: root.secondaryText
+        statusListItemSubTitle.font.family: Fonts.codeFont.family
         statusListItemSubTitle.font.pixelSize: Theme.additionalTextSize
         statusListItemSubTitle.textFormat: Text.PlainText
         asset.name: root.icon

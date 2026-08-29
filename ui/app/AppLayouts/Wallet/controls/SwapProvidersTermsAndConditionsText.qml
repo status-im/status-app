@@ -7,7 +7,7 @@ import StatusQ.Core.Theme
 
 import utils
 
-RowLayout {
+StatusCenteredFlow {
     id: root
 
     required property string serviceProviderName
@@ -17,8 +17,8 @@ RowLayout {
     spacing: 4
 
     StatusIcon {
-        Layout.preferredWidth: 16
-        Layout.preferredHeight: 16
+        width: 16
+        height: 16
         icon: "external-link"
         color: Theme.palette.directColor1
     }
@@ -27,7 +27,6 @@ RowLayout {
         text: qsTr("Powered by")
     }
     StatusLinkText {
-        Layout.topMargin: 1 // compensate for the underline
         text: "%1.".arg(root.serviceProviderName)
         font.weight: Font.Normal
         textFormat: Text.PlainText
@@ -38,7 +37,6 @@ RowLayout {
         text: qsTr("View")
     }
     StatusLinkText {
-        Layout.topMargin: 1 // compensate for the underline
         text: qsTr("Terms & Conditions")
         font.weight: Font.Normal
         onClicked: root.termsAndConditionClicked()

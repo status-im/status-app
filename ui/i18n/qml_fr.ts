@@ -15177,6 +15177,10 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
         <translation>Modifier les paramètres de la transaction</translation>
     </message>
     <message>
+        <source>Edit</source>
+        <translation type="unfinished">Modifier</translation>
+    </message>
+    <message>
         <source>Send</source>
         <translation>Envoyer</translation>
     </message>
