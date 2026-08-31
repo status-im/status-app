@@ -82,6 +82,7 @@ OnboardingPage {
                 Layout.fillHeight: true
 
                 StatusLanguageSelector {
+                    objectName: "welcomeLanguageSelector"
                     anchors.right: parent.right
                     anchors.rightMargin: root.isPortrait ? 0 : Theme.padding
                     anchors.top: parent.top
