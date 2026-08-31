@@ -38,6 +38,9 @@ QtObject:
   method rowCount(self: Model, index: QModelIndex = nil): int =
     return self.items.len
 
+  proc isEmpty*(self: Model): bool =
+    return self.items.len == 0
+
   method roleNames(self: Model): Table[int, string] =
     {
       ModelRole.TokenKey.int: "tokenKey",
