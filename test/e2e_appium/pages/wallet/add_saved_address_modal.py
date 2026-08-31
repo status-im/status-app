@@ -33,7 +33,7 @@ class AddSavedAddressModal(BasePage):
         if not self.wait_for_element_enabled(self.locators.SAVE_BUTTON, timeout=8):
             self.logger.error("Add address button did not become enabled")
             return False
-        return self.safe_click(self.locators.SAVE_BUTTON)
+        return self.try_click(self.locators.SAVE_BUTTON)
 
     def add_saved_address(self, name: str, address: str) -> bool:
         if not self.is_displayed(timeout=8):

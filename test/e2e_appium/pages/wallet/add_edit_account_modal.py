@@ -32,11 +32,11 @@ class AddEditAccountModal(BasePage):
         Opens the origin selector, picks watched address, and types the
         Ethereum address into the input field.
         """
-        if not self.safe_click(self.locators.ORIGIN_SELECTOR, timeout=5):
+        if not self.try_click(self.locators.ORIGIN_SELECTOR, timeout=5):
             self.logger.error("Failed to open origin selector")
             return False
 
-        if not self.safe_click(self.locators.ORIGIN_WATCHED_ADDRESS, timeout=5):
+        if not self.try_click(self.locators.ORIGIN_WATCHED_ADDRESS, timeout=5):
             self.logger.error("Failed to select watched address origin")
             return False
 

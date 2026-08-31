@@ -15,12 +15,12 @@ class ProfileSettingsPage(BasePage):
         )
 
     def open_identity_tab(self) -> bool:
-        return self.safe_click(self.locators.PROFILE_TAB_IDENTITY, max_attempts=1)
+        return self.try_click(self.locators.PROFILE_TAB_IDENTITY, max_attempts=1)
 
     def open_share_profile(self):
         from .share_profile_dialog import ShareProfileDialog
 
-        if not self.safe_click(self.locators.SHARE_PROFILE_BUTTON):
+        if not self.try_click(self.locators.SHARE_PROFILE_BUTTON):
             return None
         dialog = ShareProfileDialog(self.driver)
         return dialog if dialog.is_displayed(timeout=8) else None

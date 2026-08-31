@@ -3,7 +3,6 @@ import time
 
 from constants.support_bot import SUPPORT_BOT_DISPLAY_NAME
 from locators.messaging.chat_locators import ChatLocators
-from utils.exceptions import ElementInteractionError
 
 from ..base_page import BasePage
 
@@ -23,7 +22,9 @@ class ChatPage(BasePage):
         if self._is_chat_list_visible(timeout=2):
             return True
         if self.is_portrait_mode():
-            self.safe_click(self.locators.TOOLBAR_BACK_BUTTON, timeout=2)
+            # try_click: a failed back-tap must not raise out of this
+            # bool-contract helper — the visibility re-check answers either way.
+            self.try_click(self.locators.TOOLBAR_BACK_BUTTON, timeout=2)
             return self._is_chat_list_visible(timeout=timeout)
         return False
 
@@ -33,7 +34,7 @@ class ChatPage(BasePage):
 
     def open_chat(self, display_name: str) -> bool:
         locator = self.locators.chat_list_item(display_name)
-        return self.safe_click(locator, max_attempts=2)
+        return self.try_click(locator, max_attempts=2)
 
     def _chat_rows(self) -> list[tuple[str, str, str]]:
         """``(resource-id, name, label)`` for every listed chat row.
@@ -164,7 +165,7 @@ class ChatPage(BasePage):
 
     def tap_start_chat(self, timeout: int | None = 5) -> bool:
         self.dismiss_backup_prompt(timeout=2)
-        return self.safe_click(self.locators.START_CHAT_BUTTON, timeout=timeout)
+        return self.try_click(self.locators.START_CHAT_BUTTON, timeout=timeout)
 
     def send_message(self, message: str, timeout: int | None = None) -> bool:
         """Type, tap SEND_BUTTON, fall back to newline if the button
@@ -181,14 +182,9 @@ class ChatPage(BasePage):
         ):
             return False
 
-        button_clicked = False
-        try:
-            button_clicked = self.safe_click(
-                self.locators.SEND_BUTTON, timeout=3, max_attempts=1
-            )
-        except Exception as exc:
-            self.logger.debug("Send-button click suppressed: %s", exc)
-
+        button_clicked = self.try_click(
+            self.locators.SEND_BUTTON, timeout=3, max_attempts=1
+        )
         if not button_clicked:
             self.logger.info("Send button not clickable — falling back to newline trigger")
             if not self.qt_safe_input(
@@ -233,7 +229,7 @@ class ChatPage(BasePage):
         except Exception as e:
             self.logger.debug(f"dismiss_introduce_prompt direct click failed: {e}")
             try:
-                return self.safe_click(self.locators.INTRODUCE_SKIP_BUTTON, timeout=timeout)
+                return self.try_click(self.locators.INTRODUCE_SKIP_BUTTON, timeout=timeout)
             except Exception as e2:
                 self.logger.debug(f"dismiss_introduce_prompt click also failed: {e2}")
                 return False
@@ -248,7 +244,7 @@ class ChatPage(BasePage):
         except Exception as e:
             self.logger.debug(f"dismiss_backup_prompt direct click failed: {e}")
             try:
-                return self.safe_click(self.locators.BACKUP_SKIP_BUTTON, timeout=timeout)
+                return self.try_click(self.locators.BACKUP_SKIP_BUTTON, timeout=timeout)
             except Exception as e2:
                 self.logger.debug(f"dismiss_backup_prompt click also failed: {e2}")
                 return False
@@ -269,7 +265,7 @@ class ChatPage(BasePage):
         except Exception as e:
             self.logger.debug(f"dismiss_push_notification_prompt direct click failed: {e}")
             try:
-                return self.safe_click(self.locators.PUSH_NOTIF_LATER_BUTTON, timeout=timeout)
+                return self.try_click(self.locators.PUSH_NOTIF_LATER_BUTTON, timeout=timeout)
             except Exception as e2:
                 self.logger.debug(f"dismiss_push_notification_prompt click also failed: {e2}")
                 return False
@@ -291,7 +287,7 @@ class ChatPage(BasePage):
         except Exception as e:
             self.logger.debug(f"dismiss_drawer_intro_prompt direct click failed: {e}")
             try:
-                return self.safe_click(self.locators.DIALOG_HEADER_CLOSE_BUTTON, timeout=timeout)
+                return self.try_click(self.locators.DIALOG_HEADER_CLOSE_BUTTON, timeout=timeout)
             except Exception as e2:
                 self.logger.debug(f"dismiss_drawer_intro_prompt click also failed: {e2}")
                 return False
@@ -383,7 +379,7 @@ class ChatPage(BasePage):
         """Cancel reply mode by tapping the close button."""
         if not self.is_reply_mode_active(timeout=2):
             return True  # Not in reply mode
-        return self.safe_click(self.locators.REPLY_CLOSE_BUTTON, timeout=timeout)
+        return self.try_click(self.locators.REPLY_CLOSE_BUTTON, timeout=timeout)
 
     # ===== Message State Verification =====
 
@@ -482,7 +478,7 @@ class ChatPage(BasePage):
 
         emoji_locators = EmojiPickerLocators()
 
-        if not self.safe_click(self.locators.EMOJI_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.EMOJI_BUTTON, timeout=timeout):
             self.logger.error("Failed to click emoji button")
             return False
 
@@ -513,18 +509,18 @@ class ChatPage(BasePage):
                 self.logger.error(f"No emoji results for search '{search_term}'")
                 return False
 
-        if not self.safe_click(target, timeout=5):
+        if not self.try_click(target, timeout=5):
             self.logger.error(f"Failed to tap emoji for '{search_term}'")
             return False
 
-        return self.safe_click(self.locators.SEND_BUTTON, timeout=5)
+        return self.try_click(self.locators.SEND_BUTTON, timeout=5)
 
     def open_image_dialog(self, timeout: int = 10) -> bool:
         """Open the image attachment dialog via the command menu."""
-        if not self.safe_click(self.locators.COMMAND_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.COMMAND_BUTTON, timeout=timeout):
             self.logger.error("Failed to click command button")
             return False
-        return self.safe_click(self.locators.ADD_IMAGE_ACTION, timeout=5)
+        return self.try_click(self.locators.ADD_IMAGE_ACTION, timeout=5)
 
     def open_chat_options_menu(self, timeout: int = 10) -> bool:
         """Open the chat header context menu (More options)."""

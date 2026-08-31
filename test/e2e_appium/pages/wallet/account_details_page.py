@@ -195,7 +195,7 @@ class AccountDetailsPage(BasePage):
         Returns:
             bool: True if click succeeded.
         """
-        return self.safe_click(self.locators.DELETE_BUTTON, timeout=timeout)
+        return self.try_click(self.locators.DELETE_BUTTON, timeout=timeout)
 
     def open_delete_confirmation(
         self, timeout: int = 10
@@ -255,4 +255,4 @@ class AccountDetailsPage(BasePage):
         Returns:
             bool: True if click succeeded.
         """
-        return self.safe_click(self.locators.EDIT_BUTTON, timeout=timeout)
+        return self.try_click(self.locators.EDIT_BUTTON, timeout=timeout)

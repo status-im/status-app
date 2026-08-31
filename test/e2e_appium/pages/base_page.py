@@ -154,10 +154,14 @@ class BasePage:
         timeout: int | None = None,
         fallback_locators: list[tuple] | None = None,
         max_attempts: int = 3,
+        capture_evidence: bool = True,
     ) -> bool:
         """Click element with retries and gesture fallback.
 
-        Raises ElementInteractionError if all attempts exhausted.
+        Raises ElementInteractionError if all attempts exhausted. True means
+        the input was DISPATCHED, not that the UI reacted — Qt can accept a
+        tap without the target's handler firing, so anything that must land
+        on a new screen still needs an arrival check (landmark/anchor).
         """
         all_locators = [locator, *(fallback_locators or [])]
 
@@ -200,23 +204,28 @@ class BasePage:
 
             self.logger.debug(f"Exhausted all attempts for locator: {loc[1]}")
 
-        self._raise_click_failure(all_locators)
+        self._raise_click_failure(all_locators, capture_evidence=capture_evidence)
 
     def _wait_for_clickable(self, locator: tuple, timeout: int | None = None) -> WebElement:
         """Wait for element to be clickable and return it."""
         wait = self._create_wait(timeout, "element_click")
         return wait.until(EC.element_to_be_clickable(locator))
 
-    def _raise_click_failure(self, locators: list[tuple]) -> NoReturn:
+    def _raise_click_failure(
+        self, locators: list[tuple], capture_evidence: bool = True
+    ) -> NoReturn:
         """Log failure details and raise ElementInteractionError."""
         locator_desc = locators[0][1] if locators else "unknown"
         message = (
             f"Failed to click element after trying {len(locators)} locator(s). "
             f"First locator: {locators[0] if locators else 'none'}"
         )
-        self.logger.error(message)
-        self.take_screenshot(f"click_failure_{locator_desc}")
-        self.dump_page_source(f"click_failure_{locator_desc}")
+        if capture_evidence:
+            self.logger.error(message)
+            self.take_screenshot(f"click_failure_{locator_desc}")
+            self.dump_page_source(f"click_failure_{locator_desc}")
+        else:
+            self.logger.debug(message)
         raise ElementInteractionError(message, str(locators[0] if locators else ""), "click")
 
     def try_click(
@@ -226,14 +235,21 @@ class BasePage:
         timeout: int | None = None,
         fallback_locators: list[tuple] | None = None,
         max_attempts: int = 3,
+        capture_evidence: bool = False,
     ) -> bool:
-        """safe_click that returns False instead of raising on exhaustion."""
+        """safe_click that returns False instead of raising on exhaustion.
+
+        No failure artifacts by default: try_click sites are probes and
+        optional taps whose False branch handles the miss — pass
+        capture_evidence=True where a screenshot/page dump is wanted.
+        """
         try:
             return self.safe_click(
                 locator,
                 timeout=timeout,
                 fallback_locators=fallback_locators,
                 max_attempts=max_attempts,
+                capture_evidence=capture_evidence,
             )
         except ElementInteractionError:
             return False

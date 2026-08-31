@@ -36,7 +36,7 @@ class CreateChatPage(BasePage):
         except Exception as exc:
             self.logger.debug("Backup prompt dismiss check failed: %s", exc)
 
-        if not self.safe_click(self.locators.START_CHAT_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.START_CHAT_BUTTON, timeout=timeout):
             return False
 
         if wait_for_input and not self.is_element_visible(
@@ -101,7 +101,7 @@ class CreateChatPage(BasePage):
             except Exception as exc:
                 self.logger.debug("Direct click on send button failed: %s", exc)
 
-        if not self.safe_click(self.locators.CONTACT_REQUEST_SEND_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.CONTACT_REQUEST_SEND_BUTTON, timeout=timeout):
             self.logger.error("Failed to tap contact request send button")
             self.take_screenshot("contact_request_send_failure")
             self.dump_page_source("contact_request_send_failure")

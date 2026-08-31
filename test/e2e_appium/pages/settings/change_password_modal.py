@@ -29,7 +29,7 @@ class ChangePasswordModal(BasePage):
         user: Optional["TestUser"] = None,
         timeout: int = 90,
     ) -> bool:
-        if not self.safe_click(self.locators.PRIMARY_BUTTON, timeout=15):
+        if not self.try_click(self.locators.PRIMARY_BUTTON, timeout=15):
             self.logger.error("Primary restart button not clickable on change-password modal")
             return False
 
