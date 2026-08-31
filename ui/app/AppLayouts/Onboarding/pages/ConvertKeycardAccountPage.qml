@@ -47,18 +47,13 @@ OnboardingPage {
                 when: root.convertKeycardAccountState === Onboarding.ProgressState.Success
 
                 PropertyChanges {
-                    target: root
-                    root.title: root.restartRequired ? qsTr("Re-encryption complete")
-                                                     : qsTr("Profile migration complete")
+                    root.title: qsTr("Re-encryption complete")
                 }
                 PropertyChanges {
                     iconLoader.sourceComponent: successIcon
                 }
                 PropertyChanges {
-                    target: subtitle
-                    subtitle.text: root.restartRequired
-                                   ? qsTr("Your data was successfully re-encrypted with your new password. You can now restart Status and log in to your profile using the password you just created.")
-                                   : qsTr("Your profile no longer uses Keycard. You can now log in using the password you just created.")
+                    subtitle.text: qsTr("Your profile data was re-encrypted successfully.\nLog in with your new password.")
                 }
                 PropertyChanges {
                     warningText.visible: false
