@@ -77,10 +77,6 @@ class TestChatManagement:
                 if chat_page.wait_for_message_input(timeout=self.UI_TIMEOUT):
                     return chat_page
 
-        if chat_page.open_first_chat(timeout=self.UI_TIMEOUT):
-            if chat_page.wait_for_message_input(timeout=self.UI_TIMEOUT):
-                return chat_page
-
         raise AssertionError(
             "Could not navigate to a chat with message input."
         )
@@ -109,9 +105,6 @@ class TestChatManagement:
             ):
                 if secondary_chat.wait_for_message_input(timeout=self.UI_TIMEOUT):
                     return secondary_chat
-
-        if secondary_chat.open_first_chat(timeout=self.UI_TIMEOUT):
-            secondary_chat.wait_for_message_input(timeout=self.UI_TIMEOUT)
 
         return secondary_chat
 

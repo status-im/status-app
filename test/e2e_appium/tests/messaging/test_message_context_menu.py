@@ -104,13 +104,6 @@ class _MessageContextMenuBase:
                     self.logger.info("Opened chat with secondary user")
                     return chat_page
 
-        # Fallback: try opening first available chat
-        self.logger.info("Attempting to open first available chat")
-        if chat_page.open_first_chat(timeout=self.UI_TIMEOUT):
-            if chat_page.wait_for_message_input(timeout=self.UI_TIMEOUT):
-                self.logger.info("Opened first chat successfully")
-                return chat_page
-
         raise AssertionError(
             "Could not navigate to a chat with message input. "
             "App may be in unexpected state."
@@ -165,10 +158,6 @@ class _MessageContextMenuBase:
                 if secondary_chat.wait_for_message_input(timeout=self.UI_TIMEOUT):
                     self.logger.info("Secondary opened chat with primary")
                     return secondary_chat
-
-        # Fallback: open first chat
-        if secondary_chat.open_first_chat(timeout=self.UI_TIMEOUT):
-            secondary_chat.wait_for_message_input(timeout=self.UI_TIMEOUT)
 
         return secondary_chat
 
