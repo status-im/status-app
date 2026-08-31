@@ -14,7 +14,7 @@ class Window(QObject):
     def prepare(self) -> 'Window':
         self.maximize()
         self.set_focus()
-        # self.on_top_level()
+        self.on_top_level()
         return self
 
     @property

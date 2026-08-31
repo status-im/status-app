@@ -26,15 +26,34 @@ def find_process_by_port(port: int) -> typing.List[int]:
     return pid_list
 
 
-def _port_is_listening(port: int) -> bool:
+def _port_is_listening(host: str, port: int, family: int = socket.AF_INET) -> bool:
+    try:
+        with socket.socket(family, socket.SOCK_STREAM) as sock:
+            sock.settimeout(0.2)
+            return sock.connect_ex((host, port)) == 0
+    except OSError:
+        return False
+
+
+def _port_can_bind(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.settimeout(0.2)
-        return sock.connect_ex(('127.0.0.1', port)) == 0
+        exclusive = getattr(socket, 'SO_EXCLUSIVEADDRUSE', None)
+        if exclusive is not None:
+            sock.setsockopt(socket.SOL_SOCKET, exclusive, 1)
+        try:
+            sock.bind(('127.0.0.1', port))
+            return True
+        except OSError:
+            return False
 
 
 def find_free_port(start: int, step: int) -> int:
     for port in range(start, start + step * 100, step):
-        if not _port_is_listening(port):
+        if _port_is_listening('127.0.0.1', port):
+            continue
+        if _port_is_listening('::1', port, socket.AF_INET6):
+            continue
+        if _port_can_bind(port):
             return port
     raise RuntimeError(f'No free TCP port found from {start}')
 
