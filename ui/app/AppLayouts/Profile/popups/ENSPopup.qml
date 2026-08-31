@@ -13,26 +13,31 @@ import shared
 import shared.panels
 import shared.popups
 
-import AppLayouts.Profile.stores
-
 StatusDialog {
     id: root
 
-    property EnsUsernamesStore ensUsernamesStore
+    // The currently preferred ENS username (empty when none is selected yet).
+    property string preferredUsername
+
+    // Model of the selectable ENS usernames; expected role: ensUsername.
+    property var model
+
+    // Emitted when the user confirms a different username as their preferred one.
+    signal preferredUsernameSelected(string ensUsername)
 
     title: qsTr("Primary username")
     standardButtons: Dialog.ApplyRole
     implicitWidth: 400
 
     onApplied: {
-        ensUsernamesStore.setPrefferedEnsUsername(d.newUsername);
+        root.preferredUsernameSelected(d.newUsername);
         close();
     }
 
     footer: StatusDialogFooter {
         rightButtons: ObjectModel {
             StatusButton {
-                enabled: d.newUsername !== root.ensUsernamesStore.preferredUsername
+                enabled: d.newUsername !== root.preferredUsername
                 text: qsTr("Apply")
                 onClicked: {
                     root.applied()
@@ -44,7 +49,7 @@ StatusDialog {
     QtObject {
         id: d
 
-        property string newUsername: root.ensUsernamesStore.preferredUsername
+        property string newUsername: root.preferredUsername
     }
 
     ColumnLayout {
@@ -53,7 +58,7 @@ StatusDialog {
 
         StyledText {
             Layout.fillWidth: true
-            text: root.ensUsernamesStore.preferredUsername ?
+            text: root.preferredUsername ?
                   qsTr("Your messages are displayed to others with this username:")
                   :
                   qsTr("Once you select a username, you won’t be able to disable it afterwards. You will only be able choose a different username to display.")
@@ -62,8 +67,8 @@ StatusDialog {
         }
 
         StyledText {
-            visible: root.ensUsernamesStore.preferredUsername
-            text: root.ensUsernamesStore.preferredUsername
+            visible: root.preferredUsername
+            text: root.preferredUsername
             font.pixelSize: Theme.secondaryAdditionalTextSize
             font.weight: Font.Bold
         }
@@ -74,14 +79,14 @@ StatusDialog {
             Layout.fillWidth: true
             Layout.fillHeight: true
             implicitHeight: contentHeight
-            model: root.ensUsernamesStore.currentChainEnsUsernamesModel
+            model: root.model
 
             delegate: RadioDelegate {
                 id: radioDelegate
 
                 width: ListView.view.width
                 text: ensUsername
-                checked: root.ensUsernamesStore.preferredUsername === ensUsername
+                checked: root.preferredUsername === ensUsername
 
                 contentItem: StyledText {
                     color: Theme.palette.textColor
@@ -100,6 +105,5 @@ StatusDialog {
             }
         }
     }
-
 }
 
