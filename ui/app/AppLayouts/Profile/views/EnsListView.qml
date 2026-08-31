@@ -162,11 +162,11 @@ Item {
         }
 
         Item {
-            width: childrenRect.width
             height: childrenRect.height
 
             id: primaryUsernameItem
             anchors.left: parent.left
+            anchors.right: parent.right
             anchors.top: chatSettingsLabel.bottom
             anchors.topMargin: 24
 
@@ -203,6 +203,8 @@ Item {
 
             anchors.top: !visible ? separator.bottom : primaryUsernameItem.bottom
             anchors.topMargin: Theme.padding * 2
+            anchors.left: parent.left
+            anchors.right: parent.right
 
             visible: root.hasConfirmedEnsUsernames
                      && root.preferredUsername !== ""
@@ -214,10 +216,12 @@ Item {
             messageDetails: StatusMessageDetails {
                 contentType: StatusMessage.ContentType.Text
                 messageText: qsTr("Hey!")
+                unparsedText: messageText
                 amISender: false
                 sender.displayName: root.preferredUsername
                 sender.profileImage.assetSettings.isImage: true
-                sender.profileImage.assetSettings.color: Utils.colorForPubkey(root.Theme.palette, root.pubkey)
+                sender.profileImage.assetSettings.color:
+                    Utils.colorForPubkey(root.Theme.palette, root.pubkey)
                 sender.profileImage.name: root.icon
             }
         }
@@ -225,10 +229,12 @@ Item {
         StatusBaseText {
             anchors.top: messagesShownAs.bottom
             anchors.left: messagesShownAs.left
+            anchors.right: messagesShownAs.right
             anchors.topMargin: Theme.padding
             text: qsTr("You’re displaying your ENS username in chats")
             font.pixelSize: Theme.fontSize(14)
             color: Theme.palette.baseColor1
+            wrapMode: Text.Wrap
         }
     }
 
