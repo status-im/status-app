@@ -91,7 +91,7 @@ class TestOnboardingImportSeed(StepMixin):
                 "//*[contains(@resource-id,'headerActionsCloseButton')]")
             base_for_edu = BasePage(driver)
             if base_for_edu.is_element_visible(nav_edu, timeout=5):
-                base_for_edu.safe_click(nav_edu, timeout=5)
+                base_for_edu.click(nav_edu, timeout=5)
             # Re-check push notifications in case it pops up after nav-edu.
             PushNotificationsPage(driver).dismiss_if_present(timeout=5)
 
@@ -101,7 +101,7 @@ class TestOnboardingImportSeed(StepMixin):
             app = App(driver)
 
             # Use click_wallet_button(), which calls _ensure_main_nav_visible()
-            # to open the drawer in portrait. Direct safe_click on
+            # to open the drawer in portrait. Direct click on
             # LEFT_NAV_WALLET fails in portrait — the nav item is behind a
             # closed drawer.
             assert app.click_wallet_button(), "Failed to navigate to Wallet"
@@ -182,7 +182,7 @@ class TestOnboardingImportSeed(StepMixin):
 
         async with self.step(self.device, "Select Create profile from dropdown"):
             try:
-                base.safe_click(
+                base.click(
                     rel.CREATE_PROFILE_DROPDOWN_ITEM, timeout=10, max_attempts=2
                 )
             except Exception:

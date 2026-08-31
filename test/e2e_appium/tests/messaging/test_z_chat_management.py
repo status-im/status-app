@@ -58,7 +58,7 @@ class TestChatManagement:
             return chat_page
 
         chat_page.dismiss_backup_prompt(timeout=3)
-        app.click_messages_button()
+        assert app.click_messages_button(), "Failed to navigate to Messages"
         chat_page.dismiss_backup_prompt(timeout=2)
         await asyncio.sleep(0.5)
 
@@ -90,7 +90,7 @@ class TestChatManagement:
             return secondary_chat
 
         secondary_chat.dismiss_backup_prompt(timeout=3)
-        secondary_app.click_messages_button()
+        assert secondary_app.click_messages_button(), "Failed to navigate to Messages"
         secondary_chat.dismiss_backup_prompt(timeout=2)
         await asyncio.sleep(0.5)
 
@@ -160,7 +160,7 @@ class TestChatManagement:
         async with self.step("Verify chat still in primary's chat list"):
             app = App(self.driver)
             chat_page.dismiss_backup_prompt(timeout=3)
-            app.click_messages_button()
+            assert app.click_messages_button(), "Failed to navigate to Messages"
             chat_page.dismiss_backup_prompt(timeout=2)
             await asyncio.sleep(0.5)
 
@@ -207,7 +207,7 @@ class TestChatManagement:
             await asyncio.sleep(1)  # Let UI settle after close
             app = App(self.driver)
             chat_page.dismiss_backup_prompt(timeout=3)
-            app.click_messages_button()
+            assert app.click_messages_button(), "Failed to navigate to Messages"
             chat_page.dismiss_backup_prompt(timeout=2)
             await asyncio.sleep(0.5)
 
@@ -226,7 +226,7 @@ class TestChatManagement:
             secondary_app = App(self.ctx.secondary.driver)
 
             secondary_chat.dismiss_backup_prompt(timeout=3)
-            secondary_app.click_messages_button()
+            assert secondary_app.click_messages_button(), "Failed to navigate to Messages"
             secondary_chat.dismiss_backup_prompt(timeout=2)
             await asyncio.sleep(0.5)
 

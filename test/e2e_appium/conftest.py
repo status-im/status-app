@@ -341,12 +341,165 @@ def _apply_test_cooldown(item) -> None:
     time.sleep(cooldown_seconds)
 
 
+
+def _resolve_failure_drivers(item):
+    """All drivers worth capturing from, deduped: test instance (plain tests),
+    instance.device (StepMixin), and every stash session manager (multi-device
+    secondaries included)."""
+    found = []
+    seen = set()
+
+    def add(label, drv):
+        if drv is not None and id(drv) not in seen:
+            seen.add(id(drv))
+            found.append((label, drv))
+
+    inst = getattr(item, "instance", None)
+    if inst is not None:
+        add("", getattr(inst, "driver", None))
+        device = getattr(inst, "device", None)
+        if device is not None:
+            add("", getattr(device, "driver", None))
+    if hasattr(item, "stash"):
+        for session_managers, _pool, _environment in item.stash.get(
+            MULTI_DEVICE_MANAGERS_KEY, []
+        ):
+            for name, session_manager in session_managers.items():
+                add(name, getattr(session_manager, "driver", None))
+    return found
+
+
+def _capture_failure_artifacts(item, rep):
+    """Capture screenshot + page source + Appium logs for a failed phase.
+
+    Runs in whichever phase failed (setup/call/teardown) so the captured state
+    is the failure's, not whatever teardown left behind. A capture-miss is a
+    WARNING so misses are countable from logs."""
+    log = get_logger("conftest")
+    try:
+        drivers = _resolve_failure_drivers(item)
+        if not drivers:
+            log.warning(
+                "failure-evidence: no driver resolvable for %s (%s phase)",
+                getattr(item, "name", "test"), getattr(rep, "when", "?"),
+            )
+            return
+
+        try:
+            config_obj = get_config()
+            screenshots_dir = config_obj.screenshots_dir or "screenshots"
+            logs_dir = config_obj.logs_dir or "logs"
+        except Exception:
+            screenshots_dir = "screenshots"
+            logs_dir = "logs"
+
+        captured_any = False
+        for dev_label, driver in drivers:
+            test_id = getattr(item, "name", "test") + (
+                f"__{rep.when}" if getattr(rep, "when", None) else ""
+            ) + (f"__{dev_label}" if dev_label else "")
+
+            s_path = None
+            x_path = None
+            try:
+                s_path = save_screenshot(driver, str(screenshots_dir), f"FAILED_{test_id}")
+            except Exception:
+                pass
+            try:
+                x_path = save_page_source(driver, str(screenshots_dir), f"FAILED_{test_id}")
+            except Exception:
+                pass
+            if s_path:
+                log.info(f"Saved failure screenshot: {s_path}")
+                captured_any = True
+            if x_path:
+                log.info(f"Saved failure page source: {x_path}")
+                captured_any = True
+
+            try:
+                import allure
+                if s_path:
+                    allure.attach.file(
+                        str(s_path),
+                        name=f"screenshot_{test_id}",
+                        attachment_type=allure.attachment_type.PNG,
+                    )
+                if x_path:
+                    allure.attach.file(
+                        str(x_path),
+                        name=f"page_source_{test_id}",
+                        attachment_type=allure.attachment_type.XML,
+                    )
+            except Exception as attach_err:
+                log.debug(f"Allure attach failed for {test_id}: {attach_err}")
+
+            log_paths: List[Path] = []
+            try:
+                log_types = set(getattr(driver, "log_types", []) or [])
+            except Exception:
+                log_types = set()
+            desired_types = [t for t in ("server", "logcat") if t in log_types]
+            if desired_types:
+                logs_root = Path(logs_dir)
+                logs_root.mkdir(parents=True, exist_ok=True)
+                for log_type in desired_types:
+                    try:
+                        entries = driver.get_log(log_type) or []
+                    except Exception as err:
+                        log.warning(f"Failed to fetch '{log_type}' log for {test_id}: {err}")
+                        continue
+                    if not entries:
+                        continue
+                    log_file = logs_root / f"FAILED_{test_id}_{log_type}.log"
+                    try:
+                        with log_file.open("w", encoding="utf-8") as handle:
+                            for entry in entries:
+                                timestamp = entry.get("timestamp") or entry.get("time") or ""
+                                level = entry.get("level") or ""
+                                message = entry.get("message") or ""
+                                handle.write(f"{timestamp}\t{level}\t{message}\n")
+                        log.info(f"Saved failure {log_type} log: {log_file}")
+                        log_paths.append(log_file)
+                    except Exception as err:
+                        log.warning(f"Failed to persist {log_type} log for {test_id}: {err}")
+            if log_paths:
+                captured_any = True
+                global _saved_failure_logs
+                _saved_failure_logs.extend(log_paths)
+
+        state = getattr(item, "_failure_evidence_state", None)
+        if captured_any:
+            if state is not None:
+                state["saved"] = True
+            setattr(item, "_failure_artifacts_saved", True)
+        else:
+            log.warning(
+                "failure-evidence: drivers resolved but nothing captured for %s (%s phase)",
+                getattr(item, "name", "test"), getattr(rep, "when", "?"),
+            )
+    except Exception as e:
+        log.warning(f"Artifact capture failed: {e}")
+
+
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     outcome = yield
     rep = outcome.get_result()
 
     setattr(item, "rep_" + rep.when, rep)
+
+    # Failure evidence is captured in the phase that failed, before any
+    # stash gating or teardown mutation (single- and multi-device alike).
+    # Keyed per rerun execution (pytest-rerunfailures reuses the item), and a
+    # zero-capture attempt may retry in a later phase of the same execution.
+    if rep.failed:
+        execution = getattr(item, "execution_count", 0)
+        state = getattr(item, "_failure_evidence_state", None)
+        if state is None or state.get("execution") != execution:
+            state = {"execution": execution, "saved": False}
+            item._failure_evidence_state = state
+        if not state["saved"]:
+            _capture_failure_artifacts(item, rep)
 
     if rep.when == "call":
         logger = get_logger("conftest")
@@ -488,125 +641,6 @@ def pytest_runtest_makereport(item, call):
                     name,
                 )
 
-    # Get screenshot and page source artifacts
-    try:
-        if getattr(rep, "failed", False) and not getattr(
-            item, "_failure_artifacts_saved", False
-        ):
-            driver = None
-            try:
-                if hasattr(item, "instance") and hasattr(item.instance, "driver"):
-                    driver = item.instance.driver
-            except Exception:
-                driver = None
-
-            if driver:
-                # Resolve screenshots directory from environment config; fallback to 'screenshots'
-                try:
-                    config_obj = get_config()
-                    screenshots_dir = config_obj.screenshots_dir or "screenshots"
-                    logs_dir = config_obj.logs_dir or "logs"
-                except Exception:
-                    screenshots_dir = "screenshots"
-                    logs_dir = "logs"
-
-                test_id = getattr(item, "name", "test") + (
-                    f"__{rep.when}" if getattr(rep, "when", None) else ""
-                )
-
-                s_path = None
-                x_path = None
-                try:
-                    s_path = save_screenshot(
-                        driver, str(screenshots_dir), f"FAILED_{test_id}"
-                    )
-                except Exception:
-                    pass
-                try:
-                    x_path = save_page_source(
-                        driver, str(screenshots_dir), f"FAILED_{test_id}"
-                    )
-                except Exception:
-                    pass
-
-                log = get_logger("conftest")
-                if s_path:
-                    log.info(f"Saved failure screenshot: {s_path}")
-                if x_path:
-                    log.info(f"Saved failure page source: {x_path}")
-
-                # Attach artifacts to Allure report
-                try:
-                    import allure
-                    if s_path:
-                        allure.attach.file(
-                            str(s_path),
-                            name=f"screenshot_{test_id}",
-                            attachment_type=allure.attachment_type.PNG,
-                        )
-                    if x_path:
-                        allure.attach.file(
-                            str(x_path),
-                            name=f"page_source_{test_id}",
-                            attachment_type=allure.attachment_type.XML,
-                        )
-                except ImportError:
-                    pass
-
-                # Capture Appium server/logcat logs for deeper diagnostics
-                log_paths: List[Path] = []
-                try:
-                    log_types = set(getattr(driver, "log_types", []) or [])
-                except Exception:
-                    log_types = set()
-
-                desired_types = [
-                    log_type
-                    for log_type in ("server", "logcat")
-                    if log_type in log_types
-                ]
-                if desired_types:
-                    logs_root = Path(logs_dir)
-                    logs_root.mkdir(parents=True, exist_ok=True)
-                    for log_type in desired_types:
-                        try:
-                            entries = driver.get_log(log_type) or []
-                        except Exception as err:
-                            log.warning(
-                                f"Failed to fetch '{log_type}' log for {test_id}: {err}"
-                            )
-                            continue
-
-                        if not entries:
-                            continue
-
-                        log_file = logs_root / f"FAILED_{test_id}_{log_type}.log"
-                        try:
-                            with log_file.open("w", encoding="utf-8") as handle:
-                                for entry in entries:
-                                    timestamp = (
-                                        entry.get("timestamp")
-                                        or entry.get("time")
-                                        or ""
-                                    )
-                                    level = entry.get("level") or ""
-                                    message = entry.get("message") or ""
-                                    handle.write(f"{timestamp}\t{level}\t{message}\n")
-                            log.info(f"Saved failure {log_type} log: {log_file}")
-                            log_paths.append(log_file)
-                        except Exception as err:
-                            log.warning(
-                                f"Failed to persist {log_type} log for {test_id}: {err}"
-                            )
-
-                if log_paths:
-                    global _saved_failure_logs
-                    _saved_failure_logs.extend(log_paths)
-
-                setattr(item, "_failure_artifacts_saved", True)
-    except Exception as e:
-        log = get_logger("conftest")
-        log.warning(f"Artifact capture failed: {e}")
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
@@ -685,3 +719,23 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         logger.info("Failure log artifacts:")
         for path in _saved_failure_logs:
             logger.info("  %s", path)
+
+
+def pytest_sessionstart(session):
+    """Click-contract lint at collection: a violation fails the session before
+    any device time is spent. Standalone: python3 scripts/check_click_contract.py
+
+    Loaded by explicit file path (not module import): the scripts/ package name
+    is a namespace merged with the repo-root scripts/, so import-by-name is one
+    stray __init__.py away from breaking. The lint anchors its own scan root."""
+    if hasattr(session.config, "workerinput"):
+        return  # xdist worker — the controller already ran the lint
+    import importlib.util
+    lint_path = Path(__file__).parent / "scripts" / "check_click_contract.py"
+    spec = importlib.util.spec_from_file_location("_click_contract_lint", lint_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    if mod.main():
+        raise pytest.UsageError(
+            "click-contract violations (see above) — branch on try_click, never on click()"
+        )

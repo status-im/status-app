@@ -207,7 +207,7 @@ class GroupChatLocators(BaseLocators):
     #    Qt's accessibility bridge marks these rows ``clickable="false"``
     #    (onClicked is handled at the QML layer, not bridged to a11y), so
     #    we do NOT filter by ``@clickable``; the element-tap fallback in
-    #    ``safe_click`` works regardless of the a11y flag.
+    #    ``click`` works regardless of the a11y flag.
     # 2. Add/remove-members sheet (ExistingContacts.qml /
     #    PickedContacts.qml). Rows there have objectName
     #    "statusMemberListItem-{compressedPubKey}".

@@ -344,7 +344,7 @@ class DeviceContext:
                 return None
 
             try:
-                app.safe_click(invite_action, timeout=5)
+                app.click(invite_action, timeout=5)
             except Exception as exc:
                 self.logger.error("Failed to click Invite contacts: %s", exc)
                 return None

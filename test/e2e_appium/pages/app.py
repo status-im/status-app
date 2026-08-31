@@ -48,6 +48,25 @@ class App(BasePage):
             self.logger.info("Already in Messages section — skipping nav")
             return True
         from utils.screen_identity import SCREEN_ANCHORS
+        # Landmark early-return: active_section() reads 'unknown' with the
+        # drawer closed even when the chat list is on screen. Qt reports
+        # covered elements as visible, so only trust the landmark when no
+        # drawer is open, and clear the backup sheet like the nav path would.
+        if (self.is_element_visible(SCREEN_ANCHORS["messages"], timeout=1)
+                and not self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=1)):
+            from utils.screen_identity import BACKUP_MODAL, dismiss_backup_modal
+            dismiss_backup_modal(self)
+            # dismiss_backup_modal returns False both when no modal was up and
+            # when one would not close, so re-check rather than trust the bool.
+            if self.is_element_visible(BACKUP_MODAL, timeout=1):
+                self.logger.warning("Backup modal still up — falling back to nav")
+                return self._click_drawer_nav_with_verify(
+                    nav_locator=self.locators.LEFT_NAV_MESSAGES,
+                    landmark_locator=SCREEN_ANCHORS["messages"],
+                    nav_name="Messages",
+                )
+            self.logger.info("Messages landmark already visible — skipping nav")
+            return True
         return self._click_drawer_nav_with_verify(
             nav_locator=self.locators.LEFT_NAV_MESSAGES,
             landmark_locator=SCREEN_ANCHORS["messages"],

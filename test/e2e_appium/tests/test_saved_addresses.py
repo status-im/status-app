@@ -20,7 +20,7 @@ class TestSavedAddresses(StepMixin):
         async with self.step(self.device, "Navigate to Saved Addresses"):
             app = App(self.device.driver)
             # click_wallet_button() opens the drawer first in portrait mode
-            # via _ensure_main_nav_visible(); a raw safe_click on
+            # via _ensure_main_nav_visible(); a raw click on
             # LEFT_NAV_WALLET fails in portrait because the nav item is
             # behind a closed drawer.
             assert app.click_wallet_button(), "Failed to open Wallet"

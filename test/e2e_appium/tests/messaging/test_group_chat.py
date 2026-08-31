@@ -122,7 +122,7 @@ class TestGroupChat:
         chat_page = ChatPage(device_driver)
 
         chat_page.dismiss_backup_prompt(timeout=2)
-        app.click_messages_button()
+        assert app.click_messages_button(), "Failed to navigate to Messages"
         chat_page.dismiss_backup_prompt(timeout=2)
         await asyncio.sleep(0.5)
         return chat_page

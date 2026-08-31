@@ -78,7 +78,7 @@ class _MessageContextMenuBase:
         # Navigate to messages tab
         self.logger.info("Navigating to Messages tab")
         chat_page.dismiss_backup_prompt(timeout=3)
-        app.click_messages_button()
+        assert app.click_messages_button(), "Failed to navigate to Messages"
         chat_page.dismiss_backup_prompt(timeout=2)
 
         # Allow the UI to settle after navigation (BrowserStack latency)
@@ -139,7 +139,7 @@ class _MessageContextMenuBase:
         # Navigate to messages
         self.logger.info("Navigating secondary to Messages tab")
         secondary_chat.dismiss_backup_prompt(timeout=3)
-        secondary_app.click_messages_button()
+        assert secondary_app.click_messages_button(), "Failed to navigate to Messages"
         secondary_chat.dismiss_backup_prompt(timeout=2)
 
         # Allow the UI to settle after navigation (BrowserStack latency)

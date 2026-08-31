@@ -41,7 +41,10 @@ class SettingsPage(BasePage):
             self.locators.BACKUP_RECOVERY_MENU_ITEM, timeout=10
         ):
             return None
-        if not self.try_click(self.locators.BACKUP_RECOVERY_MENU_ITEM, timeout=5):
+        if not self.try_click(
+            self.locators.BACKUP_RECOVERY_MENU_ITEM, timeout=5,
+            catch_driver_errors=True,
+        ):
             return None
         modal = BackupSeedModal(self.driver)
         return modal if modal.is_displayed(timeout=10) else None
@@ -53,6 +56,7 @@ class SettingsPage(BasePage):
             self.locators.PASSWORD_MENU_ITEM,
             timeout=5,
             fallback_locators=[self.locators.PASSWORD_MENU_ITEM_TEXT],
+            catch_driver_errors=True,
         ):
             return None
 
@@ -73,7 +77,7 @@ class SettingsPage(BasePage):
         self.try_click(locators.SETTINGS_WALLET_MENU_ITEM)
         if not self.is_element_visible(locators.SAVED_ADDRESSES_ITEM, timeout=10):
             return None
-        if not self.try_click(locators.SAVED_ADDRESSES_ITEM):
+        if not self.try_click(locators.SAVED_ADDRESSES_ITEM, catch_driver_errors=True):
             return None
         page = SavedAddressesPage(self.driver)
         return page if page.is_loaded(timeout=10) else None
@@ -129,5 +133,6 @@ class SettingsPage(BasePage):
         profile_page = self.open_profile_settings()
         if not profile_page:
             return None
-        profile_page.open_identity_tab()
+        if not profile_page.open_identity_tab():
+            return None
         return profile_page.open_share_profile()

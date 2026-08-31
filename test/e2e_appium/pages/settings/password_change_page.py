@@ -47,7 +47,7 @@ class PasswordChangePage(BasePage):
 
         modal = ChangePasswordModal(self.driver)
         try:
-            self.safe_click(self.locators.CHANGE_PASSWORD_BUTTON, timeout=5)
+            self.click(self.locators.CHANGE_PASSWORD_BUTTON, timeout=5)
         except Exception as e:
             self.logger.error(f"Failed to click change password button: {e}")
             return None

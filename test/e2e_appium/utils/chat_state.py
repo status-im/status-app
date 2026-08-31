@@ -33,7 +33,8 @@ def ensure_chat_visible(
         return
 
     chat_page.dismiss_backup_prompt(timeout=2)
-    app.click_messages_button()
+    if not app.click_messages_button():
+        chat_page.logger.debug("ensure_chat_visible: Messages nav missed; re-checking")
     chat_page.dismiss_backup_prompt(timeout=2)
 
     if chat_page.wait_for_message_input(timeout=3):
