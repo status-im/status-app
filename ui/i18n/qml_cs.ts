@@ -5,23 +5,23 @@
     <name>A11YInformationTag</name>
     <message>
         <source>Accessibility services on your device may access screen content. Check your device&apos;s %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Služby přístupnosti na vašem zařízení mohou mít přístup k obsahu obrazovky. Zkontrolujte nastavení vašeho zařízení %1.</translation>
     </message>
     <message>
         <source>Settings &gt; Accessibility</source>
-        <translation type="unfinished"></translation>
+        <translation>Nastavení &gt; Usnadnění</translation>
     </message>
     <message>
         <source>Accessibility services on your computer may access screen content. Check your operating system&apos;s %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Služby usnadňující používání v počítači mohou mít přístup k obsahu obrazovky. Zkontrolujte nastavení vašeho operačního systému %1.</translation>
     </message>
     <message>
         <source>Accessibility services on your device may access screen content. Check your device&apos;s Accessibility settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Služby usnadňující používání na vašem zařízení mohou mít přístup k obsahu obrazovky. Zkontrolujte nastavení Přístupnosti ovládání ve vašem zařízení.</translation>
     </message>
     <message>
         <source>Accessibility services on your computer may access screen content. Check your operating system&apos;s Accessibility settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Služby usnadňující používání v počítači mohou mít přístup k obsahu obrazovky. Zkontrolujte nastavení Usnadnění ovládání ve vašem operačním systému.</translation>
     </message>
 </context>
 <context>
@@ -56,15 +56,15 @@
     </message>
     <message>
         <source>status-app</source>
-        <translation type="unfinished"></translation>
+        <translation>status-app</translation>
     </message>
     <message>
         <source>logos-delivery-go</source>
-        <translation type="unfinished"></translation>
+        <translation>logos-delivery-go</translation>
     </message>
     <message>
         <source>Status App&apos;s GitHub Repositories</source>
-        <translation type="unfinished"></translation>
+        <translation>Úložiště GitHub aplikace Status</translation>
     </message>
     <message>
         <source>status-go</source>
@@ -273,19 +273,19 @@
     <name>ActivityCenterAdaptor</name>
     <message>
         <source>Removed you from contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Odebrali vás z kontaktů</translation>
     </message>
     <message>
         <source>You’re added to private group chat</source>
-        <translation type="unfinished"></translation>
+        <translation>Byli jste přidáni do soukromé skupinové konverzace</translation>
     </message>
     <message>
         <source>Invitation to join community</source>
-        <translation type="unfinished"></translation>
+        <translation>Pozvánka ke vstupu do komunity</translation>
     </message>
     <message>
         <source>Community membership request</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádost o členství v komunitě</translation>
     </message>
     <message>
         <source>Accept pending</source>
@@ -297,99 +297,99 @@
     </message>
     <message>
         <source>Pending</source>
-        <translation type="unfinished"></translation>
+        <translation>Čekající</translation>
     </message>
     <message>
         <source>Request to join community</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádost o vstup do komunity</translation>
     </message>
     <message>
         <source>In progress</source>
-        <translation type="unfinished"></translation>
+        <translation>Probíhá</translation>
     </message>
     <message>
         <source>You have been kicked out of community</source>
-        <translation type="unfinished"></translation>
+        <translation>Byli jste vyhozeni z komunity</translation>
     </message>
     <message>
         <source>You have been &lt;font color=&apos;%1&apos;&gt;banned&lt;/font&gt; from community</source>
-        <translation type="unfinished"></translation>
+        <translation>Byli jste &lt;font color=&apos;%1&apos;&gt;zabanováni&lt;/font&gt; v komunitě</translation>
     </message>
     <message>
         <source>You have been &lt;font color=&apos;%1&apos;&gt;unbanned&lt;/font&gt; in community</source>
-        <translation type="unfinished"></translation>
+        <translation>Byli jste &lt;font color=&apos;%1&apos;&gt;odbanováni&lt;/font&gt; v komunitě</translation>
     </message>
     <message>
         <source>You’re received a token in community</source>
-        <translation type="unfinished"></translation>
+        <translation>Obdrželi jste token v komunitě</translation>
     </message>
     <message>
         <source>You received your first community token</source>
-        <translation type="unfinished"></translation>
+        <translation>Obdrželi jste svůj první token komunity</translation>
     </message>
     <message>
         <source>&lt;b&gt;%1 %2 (%3) minted by %4.&lt;/b&gt;&lt;br&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;%1 %2 (%3) vytvořeno uživatelem %4.&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
         <source>Community tokens are created by the community and aren’t verified. Always check their source before interacting.</source>
-        <translation type="unfinished"></translation>
+        <translation>Komunitní tokeny jsou vytvářeny komunitou a nejsou ověřeny. Před interakcí si vždy zkontrolujte jejich zdroj.</translation>
     </message>
     <message>
         <source>You received the owner token</source>
-        <translation type="unfinished"></translation>
+        <translation>Obdrželi jste token vlastníka</translation>
     </message>
     <message>
         <source>Ownership transfer</source>
-        <translation type="unfinished"></translation>
+        <translation>Převod vlastnictví</translation>
     </message>
     <message>
         <source>To continue to be a member of community, you need to share your accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Chcete-li i nadále být členem komunity, musíte sdílet své účty</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation type="unfinished">Stav</translation>
+        <translation>Stav</translation>
     </message>
     <message>
         <source>New device detected</source>
-        <translation type="unfinished">Detekováno nové zařízení</translation>
+        <translation>Detekováno nové zařízení</translation>
     </message>
     <message>
         <source>New device with %1 profile has been detected.</source>
-        <translation type="unfinished">Bylo detekováno nové zařízení s profilem %1.</translation>
+        <translation>Bylo detekováno nové zařízení s profilem %1.</translation>
     </message>
     <message>
         <source>Sync your profile</source>
-        <translation type="unfinished">Synchronizovat váš profil</translation>
+        <translation>Synchronizovat váš profil</translation>
     </message>
     <message>
         <source>Check your other device for a pairing request.</source>
-        <translation type="unfinished">Zkontrolujte své druhé zařízení pro žádost o spárování.</translation>
+        <translation>Zkontrolujte své druhé zařízení pro žádost o spárování.</translation>
     </message>
     <message>
         <source>Accepted</source>
-        <translation type="unfinished">Přijato</translation>
+        <translation>Přijato</translation>
     </message>
     <message>
         <source>Decline</source>
-        <translation type="unfinished">Zamítnout</translation>
+        <translation>Zamítnout</translation>
     </message>
     <message>
         <source>You are now the owner of the community</source>
-        <translation type="unfinished"></translation>
+        <translation>Nyní jste vlastníkem komunity</translation>
     </message>
     <message>
         <source>You no longer control the community</source>
-        <translation type="unfinished"></translation>
+        <translation>Už komunitu nekontrolujete</translation>
     </message>
     <message>
         <source>Failed</source>
-        <translation type="unfinished">Selhalo</translation>
+        <translation>Selhalo</translation>
     </message>
     <message>
         <source>Declined</source>
-        <translation type="unfinished">Odmítnuto</translation>
+        <translation>Odmítnuto</translation>
     </message>
 </context>
 <context>
@@ -412,23 +412,23 @@
     </message>
     <message>
         <source>Turn it on to get updates about new features and announcements. You can also enable this anytime in Privacy &amp; Security settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zapněte jej, abyste dostávali novinky o nových funkcích a oznámeních. Můžete jej také kdykoli zapnout v nastavení Soukromí a zabezpečení.</translation>
     </message>
     <message>
         <source>Status News RSS is off</source>
-        <translation type="unfinished"></translation>
+        <translation>Kanál Status News RSS je vypnutý</translation>
     </message>
     <message>
         <source>Status News notifications are off</source>
-        <translation type="unfinished"></translation>
+        <translation>Oznámení Status News jsou vypnutá</translation>
     </message>
     <message>
         <source>Turn them on to get updates about new features and announcements. You can also enable this anytime in Notifications and Sound settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zapněte je, abyste dostávali novinky o nových funkcích a oznámeních. Můžete je také kdykoli zapnout v nastavení Oznámení a zvuk.</translation>
     </message>
     <message>
         <source>Activity</source>
-        <translation type="unfinished">Aktivita</translation>
+        <translation>Aktivita</translation>
     </message>
 </context>
 <context>
@@ -703,15 +703,15 @@
     </message>
     <message>
         <source>Re-import the %1 key pair to add accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Znovu importujte pár klíčů %1, abyste přidali účty</translation>
     </message>
     <message>
         <source>Adding accounts to the &lt;b&gt;%1&lt;/b&gt; key pair isn&apos;t possible due to recent improvements in how key pairs are stored. Please remove this key pair from the app and import it again from your Keycard — after that you&apos;ll be able to add accounts to it. Your keys are safe: removing the key pair from the app doesn&apos;t affect the Keycard, and importing it back takes only a moment.&lt;br/&gt;&lt;br/&gt;• Go to Settings → Wallet → click the three dots on the &lt;b&gt;%1&lt;/b&gt; key pair → Remove key pair and derived accounts&lt;br/&gt;• Go to Settings → Keycard → Read Keycard → Add key pair to Status wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Přidávání účtů k páru klíčů &lt;b&gt;%1&lt;/b&gt; není možné kvůli nedávným vylepšením způsobu ukládání párů klíčů. Odstraňte tento pár klíčů z aplikace a znovu jej importujte ze své Keycard – poté budete moci přidávat účty. Vaše klíče jsou v bezpečí: odstranění páru klíčů z aplikace neovlivní Keycard a jeho opětovné importování zabere jen chvilku.&lt;br/&gt;&lt;br/&gt;• Přejděte do Nastavení → Peněženka → klikněte na tři tečky u páru klíčů &lt;b&gt;%1&lt;/b&gt; → Odstranit pár klíčů a odvozené účty&lt;br/&gt;• Přejděte do Nastavení → Keycard → Přečíst Keycard → Přidat pár klíčů do peněženky Status</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished">Zavřít</translation>
+        <translation>Zavřít</translation>
     </message>
     <message>
         <source>Save changes</source>
@@ -840,11 +840,11 @@
     <name>AddFavoriteModal</name>
     <message>
         <source>Edit bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>Upravit záložku</translation>
     </message>
     <message>
         <source>Add bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>Přidat záložku</translation>
     </message>
     <message>
         <source>URL</source>
@@ -876,11 +876,11 @@
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Smazat</translation>
+        <translation>Smazat</translation>
     </message>
     <message>
         <source>Save changes</source>
-        <translation type="unfinished">Uložit změny</translation>
+        <translation>Uložit změny</translation>
     </message>
     <message>
         <source>Add</source>
@@ -1023,15 +1023,15 @@
     <name>AdvancedStore</name>
     <message>
         <source>Logos Storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Logos úložiště</translation>
     </message>
     <message>
         <source>Torrent</source>
-        <translation type="unfinished"></translation>
+        <translation>Torrent</translation>
     </message>
     <message>
         <source>Disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Zakázáno</translation>
     </message>
 </context>
 <context>
@@ -1042,23 +1042,23 @@
     </message>
     <message>
         <source>The collected profile could not be read: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepodařilo se načíst shromážděný profil: %1</translation>
     </message>
     <message>
         <source>just now</source>
-        <translation type="unfinished"></translation>
+        <translation>před chvílí</translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s) ago</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>před %n minutou</numerusform>
+            <numerusform>před %n minutami</numerusform>
+            <numerusform>před %n minutami</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s) ago</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>před %n hodinou</numerusform>
             <numerusform>před %n hodinami</numerusform>
             <numerusform>před %n hodinami</numerusform>
@@ -1066,7 +1066,7 @@
     </message>
     <message numerus="yes">
         <source>%n day(s) ago</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>před %n dnem</numerusform>
             <numerusform>před %n dny</numerusform>
             <numerusform>před %n dny</numerusform>
@@ -1074,43 +1074,43 @@
     </message>
     <message>
         <source>Messages</source>
-        <translation type="unfinished">Zprávy</translation>
+        <translation>Zprávy</translation>
     </message>
     <message>
         <source>Chats</source>
-        <translation type="unfinished"></translation>
+        <translation>Konverzace</translation>
     </message>
     <message>
         <source>Communities</source>
-        <translation type="unfinished">Komunity</translation>
+        <translation>Komunity</translation>
     </message>
     <message>
         <source>Oldest message</source>
-        <translation type="unfinished"></translation>
+        <translation>Nejstarší zpráva</translation>
     </message>
     <message>
         <source>Max sync gap</source>
-        <translation type="unfinished"></translation>
+        <translation>Maximální mezera synchronizace</translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n den</numerusform>
+            <numerusform>%n dny</numerusform>
+            <numerusform>%n dnů</numerusform>
         </translation>
     </message>
     <message>
         <source>Collectibles</source>
-        <translation type="unfinished">Sbírky</translation>
+        <translation>Sbírky</translation>
     </message>
     <message>
         <source>App database</source>
-        <translation type="unfinished"></translation>
+        <translation>Databáze aplikace</translation>
     </message>
     <message>
         <source>Wallet database</source>
-        <translation type="unfinished"></translation>
+        <translation>Databáze peněženky</translation>
     </message>
     <message>
         <source>Fleet</source>
@@ -1138,11 +1138,11 @@
     </message>
     <message>
         <source>Logs (%1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Protokoly (%1)</translation>
     </message>
     <message>
         <source>Refresh logs size</source>
-        <translation type="unfinished"></translation>
+        <translation>Obnovit velikost protokolů</translation>
     </message>
     <message>
         <source>Experimental features</source>
@@ -1158,7 +1158,7 @@
     </message>
     <message>
         <source>Enable Copying Message Links</source>
-        <translation type="unfinished"></translation>
+        <translation>Povolit kopírování odkazů na zprávy</translation>
     </message>
     <message>
         <source>The account will be logged out. When you login again, the selected mode will be enabled</source>
@@ -1186,51 +1186,51 @@
     </message>
     <message>
         <source>Shows stats for your Status profile, such as counts of chats, messages, communities and collectibles, and app and wallet database sizes. Stats are shown and remain only on your device and include NO message, chat, contact, address or other content. Click Refresh stats to show or update them.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zobrazuje statistiky pro váš profil Status, jako je počet chatů, zpráv, komunit a sběratelských předmětů a velikost databáze aplikace a peněženky. Statistiky se zobrazují a zůstávají pouze na vašem zařízení a neobsahují žádné zprávy, chaty, kontakty, adresy ani jiný obsah. Kliknutím na Obnovit statistiky zobrazíte nebo aktualizujete statistiky.</translation>
     </message>
     <message>
         <source>Refreshing...</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktualizuje se...</translation>
     </message>
     <message>
         <source>Refresh stats</source>
-        <translation type="unfinished"></translation>
+        <translation>Obnovit statistiky</translation>
     </message>
     <message>
         <source>%1 of %2</source>
-        <translation type="unfinished">%1 z %2</translation>
+        <translation>%1 z %2</translation>
     </message>
     <message>
         <source>Starting...</source>
-        <translation type="unfinished"></translation>
+        <translation>Spouští se...</translation>
     </message>
     <message>
         <source>Collected %1, saved to %2 and picked up by Application Logs</source>
-        <translation type="unfinished"></translation>
+        <translation>Shromážděno %1, uloženo do %2 a zpracováno protokoly aplikace</translation>
     </message>
     <message>
         <source>Collected %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Shromážděno %1</translation>
     </message>
     <message>
         <source>Chats by message count</source>
-        <translation type="unfinished"></translation>
+        <translation>Konverzace podle počtu zpráv</translation>
     </message>
     <message>
         <source>The app will restart if you confirm.</source>
-        <translation type="unfinished"></translation>
+        <translation>Aplikace se restartuje, pokud potvrdíte.</translation>
     </message>
     <message>
         <source>Choose a number between 1 and 50</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyberte číslo mezi 1 a 50</translation>
     </message>
     <message>
         <source>Number between 1 and 50</source>
-        <translation type="unfinished"></translation>
+        <translation>Číslo mezi 1 a 50</translation>
     </message>
     <message>
         <source>Number needs to be between 1 and 50</source>
-        <translation type="unfinished"></translation>
+        <translation>Číslo musí být mezi 1 a 50</translation>
     </message>
     <message>
         <source>Debug</source>
@@ -1238,35 +1238,35 @@
     </message>
     <message>
         <source>Some old log files could not be cleared</source>
-        <translation type="unfinished"></translation>
+        <translation>Některé staré soubory protokolu se nepodařilo vymazat</translation>
     </message>
     <message>
         <source>No old log files to clear</source>
-        <translation type="unfinished"></translation>
+        <translation>Není co mazat ze starých souborů protokolu</translation>
     </message>
     <message numerus="yes">
         <source>%n old log file(s) cleared</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>vymazán %n starý soubor protokolu</numerusform>
+            <numerusform>vymazány %n staré soubory protokolu</numerusform>
+            <numerusform>vymazáno %n starých souborů protokolu</numerusform>
         </translation>
     </message>
     <message>
         <source>Clearing...</source>
-        <translation type="unfinished"></translation>
+        <translation>Probíhá mazání...</translation>
     </message>
     <message>
         <source>Clear old logs</source>
-        <translation type="unfinished"></translation>
+        <translation>Vymazat staré protokoly</translation>
     </message>
     <message>
         <source>Archive Protocol</source>
-        <translation type="unfinished"></translation>
+        <translation>Protokol archivace</translation>
     </message>
     <message>
         <source>Logos Messaging options</source>
-        <translation type="unfinished"></translation>
+        <translation>Možnosti zasílání zpráv Logos</translation>
     </message>
     <message>
         <source>The value is overridden with runtime options</source>
@@ -1290,19 +1290,19 @@
     </message>
     <message>
         <source>HTTP statistics</source>
-        <translation type="unfinished"></translation>
+        <translation>HTTP statistiky</translation>
     </message>
     <message>
         <source>On-device profile stats</source>
-        <translation type="unfinished"></translation>
+        <translation>Statistiky profilu zařízení</translation>
     </message>
     <message>
         <source>Are you sure you want to disable debug mode?</source>
-        <translation type="unfinished"></translation>
+        <translation>Jste si jisti, že chcete vypnout režim ladění?</translation>
     </message>
     <message>
         <source>Are you sure you want to enable debug mode?</source>
-        <translation type="unfinished"></translation>
+        <translation>Jste si jisti, že chcete zapnout režim ladění?</translation>
     </message>
     <message>
         <source>How many log files do you want to keep archived?</source>
@@ -1310,7 +1310,7 @@
     </message>
     <message>
         <source>Number of archive files per group</source>
-        <translation type="unfinished"></translation>
+        <translation>Počet archivovaných souborů na skupinu</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -1322,19 +1322,19 @@
     </message>
     <message>
         <source>Are you sure you want to clear old log files?</source>
-        <translation type="unfinished"></translation>
+        <translation>Jste si jisti, že chcete vymazat staré soubory protokolu?</translation>
     </message>
     <message>
         <source>Disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Zakázáno</translation>
     </message>
     <message>
         <source>Logos Storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Úložiště Logos</translation>
     </message>
     <message>
         <source>Torrent</source>
-        <translation type="unfinished"></translation>
+        <translation>Torrent</translation>
     </message>
     <message>
         <source>Refetch transaction history</source>
@@ -1824,27 +1824,27 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
     <message>
         <source>CoinGecko connection successful</source>
-        <translation type="unfinished"></translation>
+        <translation>Připojení ke službě CoinGecko proběhlo úspěšně</translation>
     </message>
     <message>
         <source>CoinGecko connection down. Market values are as of %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Připojení ke službě CoinGecko je nedostupné. Hodnoty trhu jsou z %1.</translation>
     </message>
     <message>
         <source>CoinGecko connection down. Market values cannot be retrieved.</source>
-        <translation type="unfinished"></translation>
+        <translation>Připojení ke službě CoinGecko je nedostupné. Hodnoty trhu nelze načíst.</translation>
     </message>
     <message>
         <source>Retrying connection to CoinGecko...</source>
-        <translation type="unfinished"></translation>
+        <translation>Opakované pokusy o připojení ke službě CoinGecko...</translation>
     </message>
     <message>
         <source>This channel no longer exists</source>
-        <translation type="unfinished"></translation>
+        <translation>Tento kanál již neexistuje</translation>
     </message>
     <message>
         <source>Send the Status Team bot a contact request to get useful Status tips, important updates, and share your feedback, ideas, or issues directly with the Status team.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pošlete botu Status Team žádost o kontakt, abyste získali užitečné tipy, důležité aktualizace a mohli sdílet svou zpětnou vazbu, nápady nebo problémy přímo s týmem Status.</translation>
     </message>
     <message>
         <source>Invite People</source>
@@ -1956,11 +1956,11 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Not Connected to Logos network</source>
-        <translation type="unfinished"></translation>
+        <translation>Není připojeno k síti Logos</translation>
     </message>
     <message>
         <source>How to fix</source>
-        <translation type="unfinished"></translation>
+        <translation>Jak to opravit</translation>
     </message>
     <message>
         <source>Retrying connection to POKT Network (grove.city).</source>
@@ -2048,7 +2048,7 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
     <message>
         <source>POKT &amp; Infura down for &lt;a href=&apos;#&apos;&gt;multiple chains&lt;/a&gt;. Token balances for those chains cannot be retrieved.</source>
-        <translation type="unfinished"></translation>
+        <translation>POKT a Infura jsou nedostupné pro &lt;a href=&apos;#&apos;&gt;více řetězců&lt;/a&gt;. Nelze načíst zůstatky tokenů pro tyto řetězce.</translation>
     </message>
 </context>
 <context>
@@ -2078,31 +2078,31 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Interface zoom</source>
-        <translation type="unfinished"></translation>
+        <translation>Měřítko rozhraní</translation>
     </message>
     <message>
         <source>Scale the app interface and text</source>
-        <translation type="unfinished"></translation>
+        <translation>Změňte měřítko rozhraní a textu aplikace</translation>
     </message>
     <message>
         <source>Join</source>
-        <translation type="unfinished">Připojit se</translation>
+        <translation>Připojit se</translation>
     </message>
     <message>
         <source>Follow display zoom</source>
-        <translation type="unfinished"></translation>
+        <translation>Použít měřítko obrazovky</translation>
     </message>
     <message>
         <source>Apply your system settings defaults values</source>
-        <translation type="unfinished"></translation>
+        <translation>Použít výchozí hodnoty nastavení systému</translation>
     </message>
     <message>
         <source>Restart to apply</source>
-        <translation type="unfinished"></translation>
+        <translation>Restartujte pro použití</translation>
     </message>
     <message>
         <source>Restart Status to apply the new interface zoom level</source>
-        <translation type="unfinished"></translation>
+        <translation>Restartujte, aby se použilo nové měřítko rozhraní</translation>
     </message>
     <message>
         <source>System</source>
@@ -2237,15 +2237,15 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     <name>AuthenticationPopup</name>
     <message>
         <source>Authenticate</source>
-        <translation type="unfinished">Ověřit</translation>
+        <translation>Ověřit</translation>
     </message>
     <message>
         <source>Update password &amp; authenticate</source>
-        <translation type="unfinished">Aktualizovat heslo a ověřit</translation>
+        <translation>Aktualizovat heslo a ověřit</translation>
     </message>
     <message>
         <source>Update PIN &amp; authenticate</source>
-        <translation type="unfinished">Aktualizovat PIN a ověřit</translation>
+        <translation>Aktualizovat PIN a ověřit</translation>
     </message>
 </context>
 <context>
@@ -2320,7 +2320,7 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
     <message>
         <source>A 12-word phrase that gives full access to your funds and is the only way to recover them. Make sure nothing can see or record your screen.</source>
-        <translation type="unfinished"></translation>
+        <translation>Dvanáctislovná fráze, která poskytuje plný přístup k vašim prostředkům a je jediným způsobem, jak je obnovit. Ujistěte se, že nic nemůže vidět nebo nahrávat vaši obrazovku. </translation>
     </message>
     <message>
         <source>Reveal recovery phrase</source>
@@ -2328,7 +2328,7 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Never share your recovery phrase. Anyone asking for it is trying to scam you. To back up your recovery phrase, write it down and store it securely.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nikdy nesdílejte svou obnovovací frázi. Kdokoli, kdo o ni žádá, se vás snaží podvést. Chcete-li zálohovat svou obnovovací frázi, zapište ji a bezpečně uschovejte.</translation>
     </message>
     <message>
         <source>Confirm recovery phrase</source>
@@ -2442,15 +2442,15 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Backups are stored in the Status folder in Files.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zálohy jsou uloženy ve složce Status v souborech.</translation>
     </message>
     <message>
         <source>Locate in Files</source>
-        <translation type="unfinished"></translation>
+        <translation>Najít v Souborech</translation>
     </message>
     <message>
         <source>Locate your backup directory in Files</source>
-        <translation type="unfinished"></translation>
+        <translation>Najděte složku se zálohami v aplikaci Soubory</translation>
     </message>
 </context>
 <context>
@@ -2491,39 +2491,39 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     <name>Biometrics</name>
     <message>
         <source>Biometric %1 failed</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 pomocí biometriky selhalo</translation>
     </message>
     <message>
         <source>signing</source>
-        <translation type="unfinished"></translation>
+        <translation>Podepisování</translation>
     </message>
     <message>
         <source>authentication</source>
-        <translation type="unfinished"></translation>
+        <translation>Ověřování</translation>
     </message>
     <message>
         <source>%1 with biometrics</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 s použitím biometrie</translation>
     </message>
     <message>
         <source>Signing</source>
-        <translation type="unfinished">Podepisování</translation>
+        <translation>Podepisování</translation>
     </message>
     <message>
         <source>Authentication</source>
-        <translation type="unfinished"></translation>
+        <translation>Ověřování</translation>
     </message>
     <message>
         <source>Use your %1 instead</source>
-        <translation type="unfinished"></translation>
+        <translation>Použijte místo toho: %1</translation>
     </message>
     <message>
         <source>PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN kód</translation>
     </message>
     <message>
         <source>password</source>
-        <translation type="unfinished"></translation>
+        <translation>heslo</translation>
     </message>
 </context>
 <context>
@@ -2579,85 +2579,85 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     <name>BrowserAddressField</name>
     <message>
         <source>Search or enter address</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyhledejte nebo zadejte adresu</translation>
     </message>
 </context>
 <context>
     <name>BrowserDownloadOpenContext</name>
     <message>
         <source>This file cannot be played here. Open it with another app.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tento soubor zde nelze přehrát. Otevřete jej v jiné aplikaci.</translation>
     </message>
 </context>
 <context>
     <name>BrowserFormatSupportContext</name>
     <message>
         <source>Audio and video</source>
-        <translation type="unfinished"></translation>
+        <translation>Zvuk a video</translation>
     </message>
     <message>
         <source>Documents and images</source>
-        <translation type="unfinished"></translation>
+        <translation>Dokumenty a obrázky</translation>
     </message>
     <message>
         <source>Images</source>
-        <translation type="unfinished"></translation>
+        <translation>Obrázky</translation>
     </message>
     <message>
         <source>Plain text</source>
-        <translation type="unfinished"></translation>
+        <translation>Prostý text</translation>
     </message>
 </context>
 <context>
     <name>BrowserLandscapeToolbar</name>
     <message>
         <source>Back</source>
-        <translation type="unfinished">Zpět</translation>
+        <translation>Zpět</translation>
     </message>
     <message>
         <source>Forward</source>
-        <translation type="unfinished"></translation>
+        <translation>Dopředu</translation>
     </message>
     <message>
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Zastavit</translation>
     </message>
     <message>
         <source>Reload</source>
-        <translation type="unfinished"></translation>
+        <translation>Obnovit</translation>
     </message>
     <message>
         <source>Home</source>
         <comment>web browser home page</comment>
-        <translation type="unfinished"></translation>
+        <translation>Domů</translation>
     </message>
     <message>
         <source>Exit Incognito mode</source>
-        <translation type="unfinished">Ukončit anonymní režim</translation>
+        <translation>Ukončit anonymní režim</translation>
     </message>
     <message>
         <source>Go Incognito</source>
-        <translation type="unfinished">Přejít do anonymního režimu</translation>
+        <translation>Přejít do anonymního režimu</translation>
     </message>
     <message>
         <source>Bookmarked</source>
-        <translation type="unfinished"></translation>
+        <translation>V záložkách</translation>
     </message>
     <message>
         <source>Add to bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Přidat do záložek</translation>
     </message>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished">Peněženka</translation>
+        <translation>Peněženka</translation>
     </message>
     <message>
         <source>Open Tabs view</source>
-        <translation type="unfinished"></translation>
+        <translation>Otevřít zobrazení karet</translation>
     </message>
     <message>
         <source>Menu</source>
-        <translation type="unfinished"></translation>
+        <translation>Nabídka</translation>
     </message>
 </context>
 <context>
@@ -2678,69 +2678,69 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Add bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>Přidat záložku</translation>
     </message>
 </context>
 <context>
     <name>BrowserLinkContextMenu</name>
     <message>
         <source>Share link</source>
-        <translation type="unfinished"></translation>
+        <translation>Sdílet odkaz</translation>
     </message>
     <message>
         <source>Copy link</source>
-        <translation type="unfinished">Kopírovat odkaz</translation>
+        <translation>Kopírovat odkaz</translation>
     </message>
     <message>
         <source>Open in new tab</source>
-        <translation type="unfinished"></translation>
+        <translation>Otevřít na nové kartě</translation>
     </message>
     <message>
         <source>Download link</source>
-        <translation type="unfinished"></translation>
+        <translation>Stáhnout odkaz</translation>
     </message>
     <message>
         <source>Download image</source>
-        <translation type="unfinished">Stáhnout obrázek</translation>
+        <translation>Stáhnout obrázek</translation>
     </message>
 </context>
 <context>
     <name>BrowserPortraitToolbar</name>
     <message>
         <source>Open Tabs view</source>
-        <translation type="unfinished"></translation>
+        <translation>Otevřít zobrazení karet</translation>
     </message>
     <message>
         <source>Bookmarked</source>
-        <translation type="unfinished"></translation>
+        <translation>V záložkách</translation>
     </message>
     <message>
         <source>Add to bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Přidat do záložek</translation>
     </message>
     <message>
         <source>Back</source>
-        <translation type="unfinished">Zpět</translation>
+        <translation>Zpět</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Hledat</translation>
+        <translation>Hledat</translation>
     </message>
     <message>
         <source>Forward</source>
-        <translation type="unfinished"></translation>
+        <translation>Dopředu</translation>
     </message>
     <message>
         <source>Exit Incognito mode</source>
-        <translation type="unfinished">Ukončit anonymní režim</translation>
+        <translation>Ukončit anonymní režim</translation>
     </message>
     <message>
         <source>Go Incognito</source>
-        <translation type="unfinished">Přejít do anonymního režimu</translation>
+        <translation>Přejít do anonymního režimu</translation>
     </message>
     <message>
         <source>Menu</source>
-        <translation type="unfinished"></translation>
+        <translation>Nabídka</translation>
     </message>
 </context>
 <context>
@@ -2762,11 +2762,11 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <name>BrowserSavedSessionContext</name>
     <message>
         <source>Start Page</source>
-        <translation type="unfinished">Úvodní stránka</translation>
+        <translation>Úvodní stránka</translation>
     </message>
     <message>
         <source>New Tab</source>
-        <translation type="unfinished">Nová karta</translation>
+        <translation>Nová karta</translation>
     </message>
 </context>
 <context>
@@ -2801,11 +2801,11 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Supported formats</source>
-        <translation type="unfinished"></translation>
+        <translation>Podporované formáty</translation>
     </message>
     <message>
         <source>Find in page</source>
-        <translation type="unfinished"></translation>
+        <translation>Najít na stránce</translation>
     </message>
     <message>
         <source>Compatibility mode</source>
@@ -2817,7 +2817,7 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Force reload</source>
-        <translation type="unfinished"></translation>
+        <translation>Vynutit obnovení</translation>
     </message>
     <message>
         <source>Clear site data</source>
@@ -2829,15 +2829,15 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Clearing browsing data...</source>
-        <translation type="unfinished"></translation>
+        <translation>Probíhá mazání dat prohlížeče...</translation>
     </message>
     <message>
         <source>Clear browsing data</source>
-        <translation type="unfinished"></translation>
+        <translation>Vymazat data prohlížeče</translation>
     </message>
     <message>
         <source>Clears the cache and cookies for the entire browser. Browsing is paused until it is done.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vymaže mezipaměť a soubory cookie pro celý prohlížeč. Prohlížení bude pozastaveno, dokud se proces nedokončí.</translation>
     </message>
     <message>
         <source>Settings</source>
@@ -2856,15 +2856,15 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Show bookmarks bar</source>
-        <translation type="unfinished"></translation>
+        <translation>Zobrazit panel záložek</translation>
     </message>
     <message>
         <source>Restore open tabs</source>
-        <translation type="unfinished"></translation>
+        <translation>Obnovit otevřené karty</translation>
     </message>
     <message>
         <source>Turn on to save your tabs only on this device and restore them next time. Turning off deletes all saved session data.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zapněte, chcete-li ukládat záložky pouze v tomto zařízení a obnovit je příště. Vypnutí smaže všechna uložená data relace.</translation>
     </message>
 </context>
 <context>
@@ -2934,11 +2934,11 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Your assets on %1</source>
-        <translation type="unfinished">Vaše aktiva na %1</translation>
+        <translation>Vaše aktiva na %1</translation>
     </message>
     <message>
         <source>Popular assets</source>
-        <translation type="unfinished">Populární aktiva</translation>
+        <translation>Populární aktiva</translation>
     </message>
     <message>
         <source>Ways to buy %1 for %2</source>
@@ -3245,15 +3245,15 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <name>ChatMessagesView</name>
     <message>
         <source>Couldn&apos;t add reaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepodařilo se přidat reakci</translation>
     </message>
     <message>
         <source>Couldn&apos;t remove reaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepodařilo se odebrat reakci</translation>
     </message>
     <message>
         <source>Please try again later</source>
-        <translation type="unfinished">Prosím zkuste znovu později</translation>
+        <translation>Prosím zkuste znovu později</translation>
     </message>
     <message>
         <source>Send Contact Request</source>
@@ -3383,7 +3383,7 @@ formát souboru</translation>
     </message>
     <message>
         <source>Displaying collectibles on %1 is not currently supported by Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zobrazování sběratelských předmětů na zařízení %1 aktuálně Status nepodporuje.</translation>
     </message>
 </context>
 <context>
@@ -3441,7 +3441,7 @@ formát souboru</translation>
     </message>
     <message>
         <source>Collectibles could not be loaded</source>
-        <translation type="unfinished"></translation>
+        <translation>Sbírky se nepodařilo načíst</translation>
     </message>
     <message>
         <source>Community minted</source>
@@ -3547,11 +3547,11 @@ formát souboru</translation>
     </message>
     <message>
         <source>Invite contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Pozvat kontakty</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Hledat</translation>
+        <translation>Hledat</translation>
     </message>
 </context>
 <context>
@@ -3698,7 +3698,7 @@ formát souboru</translation>
     <name>CommunityColumnView</name>
     <message>
         <source>Search channels...</source>
-        <translation type="unfinished"></translation>
+        <translation>Hledat kanály...</translation>
     </message>
     <message>
         <source>Create channel</source>
@@ -3781,19 +3781,19 @@ formát souboru</translation>
     <name>CommunityFetchPopup</name>
     <message>
         <source>Unable to fetch the community</source>
-        <translation type="unfinished"></translation>
+        <translation>Nelze stáhnout komunitu</translation>
     </message>
     <message>
         <source>We&apos;re fetching community...</source>
-        <translation type="unfinished"></translation>
+        <translation>Komutina se stahuje...</translation>
     </message>
     <message>
         <source>It may be offline, or Status couldn&apos;t reach it</source>
-        <translation type="unfinished"></translation>
+        <translation>Možná je offline nebo pro Status nedosažitelná</translation>
     </message>
     <message>
         <source>Retry</source>
-        <translation type="unfinished">Zkusit znovu</translation>
+        <translation>Zkusit znovu</translation>
     </message>
 </context>
 <context>
@@ -3981,7 +3981,7 @@ formát souboru</translation>
     <name>CommunityTokensStore</name>
     <message>
         <source>Transaction failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Transakce selhala</translation>
     </message>
 </context>
 <context>
@@ -4034,35 +4034,35 @@ formát souboru</translation>
     </message>
     <message>
         <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — no restart needed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vaše heslo bude změněno. Toto pouze znovu zašifruje váš soubor klíčů profilu a zabere to jen chvilku – není potřeba restartovat.</translation>
     </message>
     <message>
         <source>Your data will be fully re-encrypted with a new encryption key. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vaše data budou plně znovu zašifrována novým šifrovacím klíčem. Tento proces může trvat nějakou dobu, během které nebudete moci s aplikací interagovat. Neukončujte aplikaci ani nevypínejte zařízení. V opačném případě dojde k poškození dat, ztrátě profilu Status a nebude možné aplikaci restartovat.</translation>
     </message>
     <message>
         <source>Your data must now be re-encrypted with your new password. This one-time process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status. Future password changes will be instant.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vaše data musí být nyní znovu zašifrována novým heslem. Tento jednorázový proces může trvat nějakou dobu, během které nebudete moci s aplikací interagovat. Neukončujte aplikaci ani nevypínejte zařízení. V opačném případě dojde k poškození dat, ztrátě profilu Status a nebude možné aplikaci restartovat. Budoucí změny hesla budou probíhat okamžitě.</translation>
     </message>
     <message>
         <source>Also re-encrypt my data with a new encryption key</source>
-        <translation type="unfinished"></translation>
+        <translation>Také znovu zašifrovat moje data novým šifrovacím klíčem</translation>
     </message>
     <message>
         <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires a restart.</source>
-        <translation type="unfinished"></translation>
+        <translation>Potřebné pouze v případě, že máte podezření, že bylo vaše zařízení ohroženo. Trvá to výrazně déle a vyžaduje restart.</translation>
     </message>
     <message>
         <source>Password changed</source>
-        <translation type="unfinished"></translation>
+        <translation>Heslo změněno</translation>
     </message>
     <message>
         <source>Re-encrypting your data...</source>
-        <translation type="unfinished"></translation>
+        <translation>Provádím opětovné šifrování vašich dat...</translation>
     </message>
     <message>
         <source>Changing your password...</source>
-        <translation type="unfinished"></translation>
+        <translation>Probíjá změna hesla...</translation>
     </message>
     <message>
         <source>Restart Status and log in using your new password</source>
@@ -4070,7 +4070,7 @@ formát souboru</translation>
     </message>
     <message>
         <source>You can continue using Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Můžete pokračovat v používání Status</translation>
     </message>
     <message>
         <source>Do not quit the app or turn off your device</source>
@@ -4078,7 +4078,7 @@ formát souboru</translation>
     </message>
     <message>
         <source>This should only take a moment</source>
-        <translation type="unfinished"></translation>
+        <translation>Mělo by to trvat jen chvilku</translation>
     </message>
     <message>
         <source>Change password</source>
@@ -4098,7 +4098,7 @@ formát souboru</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished">Zavřít</translation>
+        <translation>Zavřít</translation>
     </message>
 </context>
 <context>
@@ -4158,30 +4158,30 @@ formát souboru</translation>
     <name>ConfirmKeyPairForStopUsingState</name>
     <message>
         <source>I understand Keycard will no longer be used for signing, and Status password will be required</source>
-        <translation type="unfinished"></translation>
+        <translation>Rozumím, že Keycard již nebude používána pro podepisování a bude vyžadováno Status heslo</translation>
     </message>
 </context>
 <context>
     <name>ConfirmPasswordState</name>
     <message>
         <source>Have you written down your password?</source>
-        <translation type="unfinished">Zapsali jste si své heslo?</translation>
+        <translation>Zapsali jste si své heslo?</translation>
     </message>
     <message>
         <source>You will never be able to recover your password if you lose it.</source>
-        <translation type="unfinished">Pokud heslo ztratíte, nikdy jej nebudete moci obnovit.</translation>
+        <translation>Pokud heslo ztratíte, nikdy jej nebudete moci obnovit.</translation>
     </message>
     <message>
         <source>If you lose your password you will lose access to your Status profile.</source>
-        <translation type="unfinished">Pokud ztratíte heslo, ztratíte přístup ke svému profilu Status.</translation>
+        <translation>Pokud ztratíte heslo, ztratíte přístup ke svému profilu Status.</translation>
     </message>
     <message>
         <source>If you need to, write it using pen and paper and keep in a safe place.</source>
-        <translation type="unfinished">Pokud potřebujete, napište si ho tužkou na papír a uložte na bezpečné místo.</translation>
+        <translation>Pokud potřebujete, napište si ho tužkou na papír a uložte na bezpečné místo.</translation>
     </message>
     <message>
         <source>Confirm your password (again)</source>
-        <translation type="unfinished">Potvrďte své heslo (znovu)</translation>
+        <translation>Potvrďte své heslo (znovu)</translation>
     </message>
 </context>
 <context>
@@ -4238,11 +4238,11 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     <name>ConfirmationPopup</name>
     <message>
         <source>Enable KLIPY GIFs?</source>
-        <translation type="unfinished"></translation>
+        <translation>Povolit GIFy z KLIPY?</translation>
     </message>
     <message>
         <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
-        <translation type="unfinished"></translation>
+        <translation>Po povolení mohou animované obrázky odeslané v chatu sdílet vaše metadata se službou KLIPY.</translation>
     </message>
     <message>
         <source>Enable</source>
@@ -4298,119 +4298,119 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     <name>Constants</name>
     <message>
         <source>Key pair starting with whitespace are not allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Klíčové páry nesmí začínat mezerou</translation>
     </message>
     <message numerus="yes">
         <source>Key pair must be at least %n character(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Klíčový pár musí mít alespoň %n znak</numerusform>
+            <numerusform>Klíčový pár musí mít alespoň %n znaky</numerusform>
+            <numerusform>Klíčový pár musí mít alespoň %n znaků</numerusform>
         </translation>
     </message>
     <message>
         <source>Only letters and numbers allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Povoleny jsou pouze písmena a čísla</translation>
     </message>
     <message>
         <source>Only letters, numbers, underscores, periods, whitespaces and hyphens allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Povoleny jsou pouze písmena, čísla, podtržítka, tečky, mezery a pomlčky</translation>
     </message>
     <message>
         <source>Only letters, numbers, underscores, periods, commas, whitespaces and hyphens allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Povoleny jsou pouze písmena, číslice, podtržítka, tečky, čárky, mezery a pomlčky</translation>
     </message>
     <message>
         <source>Special characters are not allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Speciální znaky nejsou povoleny</translation>
     </message>
     <message>
         <source>Only letters, numbers and ASCII characters allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Povoleny jsou pouze písmena, čísla a znaky ASCII</translation>
     </message>
     <message>
         <source>Invalid characters (letters and numbers, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Neplatné znaky (pouze písmena a čísla, jednotlivé mezery, pomlčky a podtržítka)</translation>
     </message>
     <message>
         <source>Name is too cool (use letters and numbers, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Příliš cool název (používejte pouze písmena a čísla, jednotlivé mezery, pomlčky a podtržítka)</translation>
     </message>
     <message>
         <source>Whole numbers only</source>
-        <translation type="unfinished"></translation>
+        <translation>Pouze celá čísla</translation>
     </message>
     <message>
         <source>Positive real numbers only</source>
-        <translation type="unfinished"></translation>
+        <translation>Pouze kladná reálná čísla</translation>
     </message>
     <message>
         <source>How to display the QR code on your other device</source>
-        <translation type="unfinished"></translation>
+        <translation>Jak zobrazit QR kód na vašem druhém zařízení</translation>
     </message>
     <message>
         <source>How to copy the encrypted key from your other device</source>
-        <translation type="unfinished"></translation>
+        <translation>Jak zkopírovat šifrovaný klíč z vašeho druhého zařízení</translation>
     </message>
     <message>
         <source>Limit of 20 accounts reached</source>
-        <translation type="unfinished"></translation>
+        <translation>Dosažen limit 20 účtů</translation>
     </message>
     <message>
         <source>Remove any account to add a new one.</source>
-        <translation type="unfinished"></translation>
+        <translation>Odstraňte některý účet, abyste mohli přidat nový.</translation>
     </message>
     <message>
         <source>Limit of 5 key pairs reached</source>
-        <translation type="unfinished"></translation>
+        <translation>Dosažen limit 5 klíčových párů</translation>
     </message>
     <message>
         <source>Remove key pair to add a new one.</source>
-        <translation type="unfinished"></translation>
+        <translation>Odstraňte klíčový pár, abyste mohli přidat nový.</translation>
     </message>
     <message>
         <source>Limit of 3 watched addresses reached</source>
-        <translation type="unfinished"></translation>
+        <translation>Dosažen limit 3 sledovaných adres</translation>
     </message>
     <message>
         <source>Remove a watched address to add a new one.</source>
-        <translation type="unfinished"></translation>
+        <translation>Odstraňte sledovanou adresu, abyste mohli přidat novou.</translation>
     </message>
     <message>
         <source>Limit of 20 saved addresses reached</source>
-        <translation type="unfinished"></translation>
+        <translation>Dosažen limit 20 uložených adres</translation>
     </message>
     <message>
         <source>Remove a saved address to add a new one.</source>
-        <translation type="unfinished"></translation>
+        <translation>Odstraňte uloženou adresu, abyste mohli přidat novou.</translation>
     </message>
     <message>
         <source>Username already taken :(</source>
-        <translation type="unfinished"></translation>
+        <translation>Uživatelské jméno již zabráno :(</translation>
     </message>
     <message>
         <source>Username doesn’t belong to you :(</source>
-        <translation type="unfinished"></translation>
+        <translation>Uživatelské jméno vám nepatří :(</translation>
     </message>
     <message>
         <source>Continuing will connect this username with your chat key.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokračováním se toto uživatelské jméno propojí s vaším klíčem pro chat.</translation>
     </message>
     <message>
         <source>✓ Username available!</source>
-        <translation type="unfinished"></translation>
+        <translation>✓ Uživatelské jméno je dostupné!</translation>
     </message>
     <message>
         <source>Username is already connected with your chat key and can be used inside Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>Toto uživatelské jméno je již propojeno s vaším klíčem pro chat a lze jej použít v aplikaci Status. </translation>
     </message>
     <message>
         <source>This user name is owned by you and connected with your chat key. Continue to set `Show my ENS username in chats`.</source>
-        <translation type="unfinished"></translation>
+        <translation>Toto uživatelské jméno vlastníte a je propojeno s vaším klíčem pro chat. Pokračujte a nastavte možnost `Zobrazovat mé uživatelské jméno ENS v chatech`. </translation>
     </message>
     <message>
         <source>Continuing will require a transaction to connect the username with your current chat key.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokračování bude vyžadovat transakci pro propojení uživatelského jména s vaším aktuálním klíčem pro chat.</translation>
     </message>
 </context>
 <context>
@@ -4444,7 +4444,7 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     <name>ContactsColumnView</name>
     <message>
         <source>Search contacts and groups...</source>
-        <translation type="unfinished"></translation>
+        <translation>Hledat kontakty a skupiny...</translation>
     </message>
 </context>
 <context>
@@ -4581,11 +4581,11 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     </message>
     <message>
         <source>Your profile encryption key will also be updated. Do you wish to continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>Váš klíč pro šifrování profilu bude také aktualizován. Chcete pokračovat?</translation>
     </message>
     <message>
         <source>Your data will also be re-encrypted, restricting access to Status for up to 30 mins. Do you wish to continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>Vaše data budou také znovu zašifrována, což omezí přístup ke službě Status až na 30 minut. Chcete pokračovat?</translation>
     </message>
     <message>
         <source>Continue</source>
@@ -4609,7 +4609,8 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     <message>
         <source>Your profile data was re-encrypted successfully.
 Log in with your new password.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vaše profilová data byla úspěšně znovu zašifrována.
+Přihlaste se pomocí nového hesla.</translation>
     </message>
     <message>
         <source>Re-encryption failed</source>
@@ -4685,22 +4686,22 @@ Log in with your new password.</source>
     <name>CountdownProgressIndicator</name>
     <message>
         <source>%1s</source>
-        <translation type="unfinished"></translation>
+        <translation>%1s</translation>
     </message>
 </context>
 <context>
     <name>CrashedWebPage</name>
     <message>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>Nastala chyba</translation>
     </message>
     <message>
         <source>This page stopped responding and needs to be reloaded.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tato stránka přestala reagovat a je třeba ji znovu načíst.</translation>
     </message>
     <message>
         <source>Reload</source>
-        <translation type="unfinished"></translation>
+        <translation>Obnovit</translation>
     </message>
 </context>
 <context>
@@ -4882,7 +4883,7 @@ Log in with your new password.</source>
     </message>
     <message>
         <source>Only letters, numbers, underscores, periods and hyphens allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Povoleny jsou pouze písmena, číslice, podtržítka, tečky a pomlčky</translation>
     </message>
     <message>
         <source>Channel colour</source>
@@ -5102,39 +5103,39 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     <name>CreatePasswordState</name>
     <message>
         <source>Create a password</source>
-        <translation type="unfinished">Vytvořit heslo</translation>
+        <translation>Vytvořit heslo</translation>
     </message>
     <message>
         <source>Create a password to unlock Status on this device &amp; sign transactions. &lt;span style=&apos;color:%1;&apos;&gt;You won’t be able to recover password if lost.&lt;/span&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>Vytvořte si heslo pro odemknutí Status na tomto zařízení a podepisování transakcí. &lt;span style=&apos;color:%1;&apos;&gt;Pokud heslo ztratíte, nebudete jej moci obnovit.&lt;/span&gt;</translation>
     </message>
     <message>
         <source>New password</source>
-        <translation type="unfinished"></translation>
+        <translation>Nové heslo</translation>
     </message>
     <message>
         <source>To strengthen your password consider including:</source>
-        <translation type="unfinished"></translation>
+        <translation>Pro zvýšení bezpečnosti hesla zvažte zahrnutí:</translation>
     </message>
     <message>
         <source>Lower case</source>
-        <translation type="unfinished">Malá písmena</translation>
+        <translation>Malá písmena</translation>
     </message>
     <message>
         <source>Upper case</source>
-        <translation type="unfinished">Velká písmena</translation>
+        <translation>Velká písmena</translation>
     </message>
     <message>
         <source>Numbers</source>
-        <translation type="unfinished">Čísla</translation>
+        <translation>Číslice</translation>
     </message>
     <message>
         <source>Symbols</source>
-        <translation type="unfinished">Symboly</translation>
+        <translation>Symboly</translation>
     </message>
     <message>
         <source>Confirm password</source>
-        <translation type="unfinished">Potvrdit heslo</translation>
+        <translation>Potvrdit heslo</translation>
     </message>
 </context>
 <context>
@@ -5169,11 +5170,11 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     </message>
     <message>
         <source>Use Keycard</source>
-        <translation type="unfinished">Použít Keycard</translation>
+        <translation>Použít Keycard</translation>
     </message>
     <message>
         <source>Reveal what you have on Keycard first</source>
-        <translation type="unfinished"></translation>
+        <translation>Nejprve si prohlédněte, co máte na Keycard</translation>
     </message>
 </context>
 <context>
@@ -5831,152 +5832,153 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     </message>
     <message>
         <source>Keycard is empty</source>
-        <translation type="unfinished">Keycard je prázdná</translation>
+        <translation>Keycard je prázdná</translation>
     </message>
     <message>
         <source>Keycard is blocked</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard je zablokovaná</translation>
     </message>
     <message>
         <source>Keycard stores only PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard ukládá pouze PIN</translation>
     </message>
     <message>
         <source>Keycard stores Status profile key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard ukládá pár klíčů profilu Status</translation>
     </message>
     <message>
         <source>Keycard stores key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard ukládá pár klíčů</translation>
     </message>
     <message>
         <source>Keycard</source>
-        <translation type="unfinished">Keycard</translation>
+        <translation>Keycard</translation>
     </message>
     <message>
         <source>Keycard is blocked due to five failed PUK input attempts</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard je zablokovaná kvůli pěti neúspěšným pokusům o zadání PUK kódu</translation>
     </message>
     <message>
         <source>Keycard is blocked due to three failed PIN input attempts</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard je zablokovaná kvůli třem neúspěšným pokusům o zadání PIN kódu</translation>
     </message>
     <message>
         <source>You are using this Keycard to login to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Používáte tuto Keycard pro přihlášení do Status</translation>
     </message>
     <message>
         <source>This key pair have been already added to Status wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Tento pár klíčů byl již přidán do peněženky Status</translation>
     </message>
     <message>
         <source>Key pair has not been added to Status wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Tento pár klíčů nebyl přidán do peněženky Status</translation>
     </message>
     <message>
         <source>You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.</source>
-        <translation type="unfinished"></translation>
+        <translation>Momentálně nemůžete pracovat s obsahem Keycard, protože na ní nejsou žádné volné sloty pro párování. Můžete ji však používat s dříve spárovanými instalacemi.</translation>
     </message>
     <message>
         <source>Status profile is not migrated to keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Profil Status nebyl migrován do Keycard.</translation>
     </message>
     <message>
         <source>, </source>
-        <translation type="unfinished"></translation>
+        <translation>, </translation>
     </message>
     <message>
         <source>UID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UID: %1</translation>
     </message>
     <message>
         <source>What you can do:</source>
-        <translation type="unfinished"></translation>
+        <translation>Co můžete dělat:</translation>
     </message>
     <message>
         <source>Move profile key pair to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Přesuňte pár klíčů profilu na Keycard</translation>
     </message>
     <message>
         <source>Move key pair from Status wallet to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Přesuňte pár klíčů z peněženky Status na Keycard</translation>
     </message>
     <message>
         <source>Keycard will be required for signing</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard bude vyžadována pro podepisování</translation>
     </message>
     <message>
         <source>Import a new key pair to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Importujte nový pár klíčů do Keycard</translation>
     </message>
     <message>
         <source>Unblock with recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Odblokovat pomocí obnovovací fráze</translation>
     </message>
     <message>
         <source>Unblock with PUK</source>
-        <translation type="unfinished"></translation>
+        <translation>Odblokovat pomocí PUK kódu</translation>
     </message>
     <message>
         <source>If you set your PUK earlier for this Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokud jste si dříve nastavili PUK pro tuto Keycard</translation>
     </message>
     <message>
         <source>Add key pair to Status wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Přidejte pár klíčů do peněženky Status</translation>
     </message>
     <message>
         <source>You’ll be able to sign transactions in Status wallet with Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Budete moci podepisovat transakce v peněžence Status pomocí Keycard</translation>
     </message>
     <message>
         <source>New name will be visible in Status and in other apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Nový název bude viditelný v aplikaci Status a v dalších aplikacích</translation>
     </message>
     <message>
         <source>Set or change PUK</source>
-        <translation type="unfinished"></translation>
+        <translation>Nastavit nebo změnit PUK</translation>
     </message>
     <message>
         <source>Remove everything from Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Odstranit vše z Keycard</translation>
     </message>
     <message>
         <source>Keycard will be required for signing and logging in to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard bude vyžadována pro podepisování a přihlašování do aplikace Status</translation>
     </message>
     <message>
         <source>Import a key pair from recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Importovat pár klíčů z obnovovací fráze</translation>
     </message>
     <message>
         <source>In case you lost Keycard, want to create a backup or import a
 key pair. Keycard will be required for signing</source>
-        <translation type="unfinished"></translation>
+        <translation>V případě, že jste Keycard ztratili, chcete vytvořit zálohu nebo importovat pár klíčů. 
+Keycard bude vyžadována pro podepisování</translation>
     </message>
     <message>
         <source>If you want to have a different PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokud chcete mít jiný PIN</translation>
     </message>
     <message>
         <source>Rename</source>
-        <translation type="unfinished"></translation>
+        <translation>Přejmenovat</translation>
     </message>
     <message>
         <source>If you want an additional recovery option</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokud chcete mít další možnost obnovení</translation>
     </message>
     <message>
         <source>Requires providing the recovery phrase for the key pair stored on Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyžaduje zadání obnovovací fráze pro pár klíčů uložený na Keycard</translation>
     </message>
     <message>
         <source>Factory reset Keycard</source>
-        <translation type="unfinished">Tovární nastavení Keycard</translation>
+        <translation>Tovární nastavení Keycard</translation>
     </message>
     <message>
         <source>No free pairing slots</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádné volné sloty pro párování</translation>
     </message>
 </context>
 <context>
@@ -6019,23 +6021,23 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Full metadata privacy means it&apos;s impossible to tell who you are talking to by surveilling your internet traffic</source>
-        <translation type="unfinished"></translation>
+        <translation>Úplné soukromí metadat znamená, že je nemožné zjistit, s kým komunikujete, sledováním vašeho internetového provozu</translation>
     </message>
     <message>
         <source>Status is home to crypto&apos;s leading multi-chain self-custodial wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Status je domovem přední multi-chainové peněženky, kde máte plnou kontrolu nad svými kryptoměnami.</translation>
     </message>
     <message>
         <source>Your cryptographic key pairs encrypt all of your messages which can only be unlocked by the intended recipient</source>
-        <translation type="unfinished"></translation>
+        <translation>Vaše kryptografické páry klíčů šifrují všechny vaše zprávy, které může odemknout pouze zamýšlený příjemce</translation>
     </message>
     <message>
         <source>Status&apos; Web3 browser requires all DApps to ask permission before connecting to your wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Webový prohlížeč Web3 od Status vyžaduje, aby se všechny DApps před připojením k vaší peněžence zeptaly na povolení</translation>
     </message>
     <message>
         <source>Status is open source software that lets you interact with p2p networks. Status itself doesn&apos;t provide any services</source>
-        <translation type="unfinished"></translation>
+        <translation>Status je software s otevřeným zdrojovým kódem, který vám umožňuje komunikovat s p2p sítěmi. Samotný Status neposkytuje žádné služby</translation>
     </message>
     <message>
         <source>Status is a way to access p2p networks that are permissionlessly created and run by individuals around the world</source>
@@ -6067,35 +6069,35 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Status is a public good licensed under the MPL-2.0 open source license, for anyone to share, modify and benefit from</source>
-        <translation type="unfinished"></translation>
+        <translation>Status je veřejné statek licencovaný pod MPL-2.0 s otevřeným zdrojovým kódem, který může kdokoli sdílet, upravovat a využívat</translation>
     </message>
     <message>
         <source>The only continent that doesn&apos;t (yet!) have any Status core contributors is Antarctica</source>
-        <translation type="unfinished"></translation>
+        <translation>Jediný kontinent, který (zatím!) nemá žádné hlavní přispěvatele projektu Status, je Antarktida</translation>
     </message>
     <message>
         <source>We are the 5th most active crypto project on GitHub</source>
-        <translation type="unfinished"></translation>
+        <translation>Jsme pátý nejaktivnější kryptoprojekt na GitHubu</translation>
     </message>
     <message>
         <source>Many other messengers with e2e encryption don&apos;t have metadata privacy!</source>
-        <translation type="unfinished"></translation>
+        <translation>Mnoho dalších messengerů s šifrováním end-to-end nemá ochranu metadat!</translation>
     </message>
     <message>
         <source>Help to translate Status into your native language. See https://status.app/translations for more info</source>
-        <translation type="unfinished"></translation>
+        <translation>Pomozte s překladem Status do vašeho rodného jazyka. Další informace naleznete na adrese https://status.app/translations</translation>
     </message>
     <message>
         <source>Status has a multi-chain wallet which will allow quick and easy multi-chain txns.</source>
-        <translation type="unfinished"></translation>
+        <translation>Status má multi-chain peněženku, která umožní rychlé a snadné multi-chain transakce.</translation>
     </message>
     <message>
         <source>Status&apos; Nimbus team is collaborating with the Ethereum Foundation to create the Portal Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Tým Nimbus od Status spolupracuje s nadací Ethereum na vytvoření sítě Portal Network</translation>
     </message>
     <message>
         <source>Status&apos; Portal Network client (Fluffy) will let Status users interact with Ethereum in a fully decentralised way</source>
-        <translation type="unfinished"></translation>
+        <translation>Klientská aplikace Portal Network od Status (Fluffy) umožní uživatelům Status komunikovat s Ethereem plně decentralizovaným způsobem</translation>
     </message>
     <message>
         <source>Status supports free communication without the approval or oversight of big tech</source>
@@ -6103,7 +6105,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Status uses the Logos Messaging p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
-        <translation type="unfinished"></translation>
+        <translation>Status používá protokol pro p2p komunikaci Logos Messaging — evoluci původního protokolu Whisper od nadace Ethereum</translation>
     </message>
     <message>
         <source>Status allows you to communicate freely without the threat of surveillance</source>
@@ -6355,7 +6357,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Invalid characters (use letters and numbers, hyphens, underscores and spaces only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Neplatné znaky (používejte pouze písmena a čísla, pomlčky, podtržítka a mezery)</translation>
     </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
@@ -6420,73 +6422,73 @@ key pair. Keycard will be required for signing</source>
     <name>DownloadPill</name>
     <message>
         <source>Missing file</source>
-        <translation type="unfinished"></translation>
+        <translation>Chybějící soubor</translation>
     </message>
     <message>
         <source>Cancelled</source>
-        <translation type="unfinished">Zrušeno</translation>
+        <translation>Zrušeno</translation>
     </message>
     <message>
         <source>Interrupted</source>
-        <translation type="unfinished"></translation>
+        <translation>Přerušeno</translation>
     </message>
 </context>
 <context>
     <name>DownloadRecordMenu</name>
     <message>
         <source>Share file</source>
-        <translation type="unfinished"></translation>
+        <translation>Sdílet soubor</translation>
     </message>
     <message>
         <source>Copy file path</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopírovat cestu k souboru</translation>
     </message>
     <message>
         <source>Share URL</source>
-        <translation type="unfinished"></translation>
+        <translation>Sdílet URL</translation>
     </message>
     <message>
         <source>Copy URL</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopírovat URL</translation>
     </message>
     <message>
         <source>Downloads</source>
-        <translation type="unfinished">Stažené soubory</translation>
+        <translation>Stažené soubory</translation>
     </message>
     <message>
         <source>Pause</source>
-        <translation type="unfinished">Pozastavit</translation>
+        <translation>Pozastavit</translation>
     </message>
     <message>
         <source>Resume</source>
-        <translation type="unfinished">Obnovit</translation>
+        <translation>Obnovit</translation>
     </message>
     <message>
         <source>Open in Browser</source>
-        <translation type="unfinished"></translation>
+        <translation>Otevřít v prohlížeči</translation>
     </message>
     <message>
         <source>Show in folder</source>
-        <translation type="unfinished">Zobrazit ve složce</translation>
+        <translation>Zobrazit ve složce</translation>
     </message>
     <message>
         <source>Retry</source>
-        <translation type="unfinished">Zkusit znovu</translation>
+        <translation>Zkusit znovu</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Zrušit</translation>
+        <translation>Zrušit</translation>
     </message>
     <message>
         <source>Dismiss</source>
-        <translation type="unfinished"></translation>
+        <translation>Zavřít</translation>
     </message>
 </context>
 <context>
     <name>DownloadsListView</name>
     <message>
         <source>Downloaded files will appear here.</source>
-        <translation type="unfinished">Stažené soubory se zobrazí zde.</translation>
+        <translation>Stažené soubory se zobrazí zde.</translation>
     </message>
 </context>
 <context>
@@ -6539,7 +6541,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>No members found</source>
-        <translation type="unfinished"></translation>
+        <translation>Nenalezeni žádní členové</translation>
     </message>
     <message>
         <source>Show fees (will be enabled once the form is filled)</source>
@@ -6650,19 +6652,19 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Please name your token name (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Zadejte název tokenu (používejte pouze písmena a čísla, pomlčky a podtržítka)</translation>
     </message>
     <message>
         <source>Your token name is too cool (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Váš název tokenu je příliš skvělý (používejte pouze písmena a čísla, pomlčky a podtržítka)</translation>
     </message>
     <message>
         <source>Your token name contains invalid characters (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Váš název tokenu obsahuje neplatné znaky (používejte pouze písmena a čísla, pomlčky a podtržítka)</translation>
     </message>
     <message>
         <source>Only letters, numbers, standard punctuation and emojis allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Povolená jsou pouze písmena, čísla, standardní interpunkce a emotikony</translation>
     </message>
     <message>
         <source>Symbol</source>
@@ -6976,7 +6978,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Error while contacting KLIPY API, please retry.</source>
-        <translation type="unfinished"></translation>
+        <translation>Došlo k chybě při komunikaci s rozhraním KLIPY API, zkuste to prosím znovu.</translation>
     </message>
     <message>
         <source>Retry</source>
@@ -7044,7 +7046,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>This service operates using the Archive Protocol, which will be automatically enabled using Logos Storage by default.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tato služba funguje na základě protokolu Archive Protocol, který bude ve výchozím nastavení automaticky aktivován pomocí systému Logos Storage.</translation>
     </message>
     <message>
         <source>Read more</source>
@@ -7094,31 +7096,31 @@ key pair. Keycard will be required for signing</source>
     <name>EnablePushNotificationsPopup</name>
     <message>
         <source>Enable notifications</source>
-        <translation type="unfinished"></translation>
+        <translation>Povolit oznámení</translation>
     </message>
     <message>
         <source>Receive notification alerts for incoming messages, mentions, and contact requests on your device so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;.&lt;br&gt;&lt;br&gt;Status uses APNs (Apple Push Notification service) solely to deliver notification signals; your end-to-end encrypted message content is never passed through or stored there.</source>
-        <translation type="unfinished"></translation>
+        <translation>Přijímejte upozornění na příchozí zprávy, zmínky a žádosti o kontakt na vašem zařízení, abyste mohli být v reálném čase informováni. Můžete si to kdykoli přizpůsobit v &lt;b&gt;Nastavení → Oznámení&lt;/b&gt;.&lt;br&gt;&lt;br&gt;Status používá APNs (Apple Push Notification service) pouze pro doručování signálů upozornění; obsah vašich zpráv šifrovaných end-to-end se přes něj nepřeposílá ani neukládá. </translation>
     </message>
     <message>
         <source>Receive real-time notifications for incoming messages, mentions, and contact requests on your device so you can stay up to date and reply or react without opening the app. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</source>
-        <translation type="unfinished"></translation>
+        <translation>Přijímejte upozornění v reálném čase na příchozí zprávy, zmínky a žádosti o kontakt na vašem zařízení, abyste mohli být v obraze a odpovídat nebo reagovat, aniž byste museli otevírat aplikaci. Můžete si to kdykoli přizpůsobit v &lt;b&gt;Nastavení → Oznámení&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status doručuje oznámení prostřednictvím své vlastní pozadí, bez zapojení třetích stran, centralizovaných serverů nebo zprostředkovatelů. </translation>
     </message>
     <message>
         <source>Don&apos;t ask me again</source>
-        <translation type="unfinished">Už se mě neptat</translation>
+        <translation>Už se mě neptat</translation>
     </message>
     <message>
         <source>Maybe later</source>
-        <translation type="unfinished">Možná později</translation>
+        <translation>Možná později</translation>
     </message>
     <message>
         <source>Open settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Otevřít nastavení</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">Pokračovat</translation>
+        <translation>Pokračovat</translation>
     </message>
 </context>
 <context>
@@ -7504,11 +7506,11 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     <name>EnterKeyPairNameState</name>
     <message>
         <source>Name your key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Pojmenovat pár klíčů</translation>
     </message>
     <message>
         <source>What would you like this key pair to be called?</source>
-        <translation type="unfinished"></translation>
+        <translation>Jak by se měl tento pár klíčů jmenovat?</translation>
     </message>
 </context>
 <context>
@@ -7538,19 +7540,19 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     <name>EnterPairingPassword</name>
     <message>
         <source>Enter Keycard pairing password</source>
-        <translation type="unfinished"></translation>
+        <translation>Zadejte heslo pro párování Keycard</translation>
     </message>
     <message>
         <source>This Keycard was set up with a custom pairing password. Enter it to continue.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tato Keycard byla nastavena s vlastním heslem pro párování. Pro pokračování jej zadejte.</translation>
     </message>
     <message>
         <source>Pairing password</source>
-        <translation type="unfinished"></translation>
+        <translation>Heslo pro párování</translation>
     </message>
     <message>
         <source>Pairing password incorrect</source>
-        <translation type="unfinished"></translation>
+        <translation>Nesprávné heslo pro párování</translation>
     </message>
 </context>
 <context>
@@ -7572,24 +7574,25 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     <name>EnterPin</name>
     <message>
         <source>Authorization required</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyžadováno ověření</translation>
     </message>
     <message>
         <source>This key pair is not stored on your Keycard. Authorize with your profile
 to sign using the keys stored on this device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tento pár klíčů není uložen na vaší Keycard. Ověřte se pomocí svého profilu,
+abyste mohli podepisovat pomocí klíčů uložených v tomto zařízení.</translation>
     </message>
     <message>
         <source>Authorize</source>
-        <translation type="unfinished"></translation>
+        <translation>Ověřit</translation>
     </message>
     <message>
         <source>PIN incorrect</source>
-        <translation type="unfinished">Nesprávný PIN</translation>
+        <translation>Nesprávný PIN</translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Zbývá %n pokus</numerusform>
             <numerusform>Zbývají %n pokusy</numerusform>
             <numerusform>Zbývá %n pokusů</numerusform>
@@ -7597,18 +7600,18 @@ to sign using the keys stored on this device.</source>
     </message>
     <message>
         <source>Enter the Keycard PIN</source>
-        <translation type="unfinished">Zadejte PIN Keycard</translation>
+        <translation>Zadejte PIN Keycard</translation>
     </message>
 </context>
 <context>
     <name>EnterPinState</name>
     <message>
         <source>PIN incorrect</source>
-        <translation type="unfinished">Nesprávný PIN</translation>
+        <translation>Nesprávný PIN</translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Zbývá %n pokus</numerusform>
             <numerusform>Zbývají %n pokusy</numerusform>
             <numerusform>Zbývá %n pokusů</numerusform>
@@ -7616,19 +7619,19 @@ to sign using the keys stored on this device.</source>
     </message>
     <message>
         <source>PIN doesn&apos;t match</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN se neshoduje</translation>
     </message>
     <message>
         <source>Enter new PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Zadejte nový PIN</translation>
     </message>
     <message>
         <source>Repeat new PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Zopakujte nový PIN</translation>
     </message>
     <message>
         <source>Enter Keycard PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Zadejte PIN Keycard</translation>
     </message>
 </context>
 <context>
@@ -7686,23 +7689,23 @@ to sign using the keys stored on this device.</source>
     <name>EnterPukState</name>
     <message>
         <source>Repeat your Keycard PUK</source>
-        <translation type="unfinished">Zopakujte PUK Keycard</translation>
+        <translation>Zopakujte PUK Keycard</translation>
     </message>
     <message>
         <source>Choose a Keycard PUK</source>
-        <translation type="unfinished">Zvolte PUK Keycard</translation>
+        <translation>Zvolte PUK Keycard</translation>
     </message>
     <message>
         <source>Use numbers only</source>
-        <translation type="unfinished"></translation>
+        <translation>Používejte pouze číslice</translation>
     </message>
     <message>
         <source>PUK doesn&apos;t match</source>
-        <translation type="unfinished"></translation>
+        <translation>Zadaný PUK se neshoduje</translation>
     </message>
     <message>
         <source>Enter PUK</source>
-        <translation type="unfinished">Zadejte PUK</translation>
+        <translation>Zadejte PUK</translation>
     </message>
 </context>
 <context>
@@ -7752,11 +7755,11 @@ to sign using the keys stored on this device.</source>
     <name>EnterSeedPhraseState</name>
     <message>
         <source>Enter recovery phrase</source>
-        <translation type="unfinished">Zadejte obnovovací frázi</translation>
+        <translation>Zadejte obnovovací frázi</translation>
     </message>
     <message>
         <source>Invalid recovery phrase</source>
-        <translation type="unfinished">Neplatná obnovovací fráze</translation>
+        <translation>Neplatná obnovovací fráze</translation>
     </message>
 </context>
 <context>
@@ -7824,47 +7827,47 @@ to sign using the keys stored on this device.</source>
     <name>ExemptionsView</name>
     <message>
         <source>Community</source>
-        <translation type="unfinished">Komunita</translation>
+        <translation>Komunita</translation>
     </message>
     <message>
         <source>1:1 Chat</source>
-        <translation type="unfinished">Chat 1:1</translation>
+        <translation>1:1 konverzase</translation>
     </message>
     <message>
         <source>Group Chat</source>
-        <translation type="unfinished">Skupinový chat</translation>
+        <translation>Skupinová konverzace</translation>
     </message>
     <message>
         <source>Muted</source>
-        <translation type="unfinished">Ztlumeno</translation>
+        <translation>Ztlumeno</translation>
     </message>
     <message>
         <source>Off</source>
-        <translation type="unfinished">Vypnuto</translation>
+        <translation>Vypnuto</translation>
     </message>
     <message>
         <source>Quiet</source>
-        <translation type="unfinished">Potichu</translation>
+        <translation>Potichu</translation>
     </message>
     <message>
         <source>Personal @ Mentions %1</source>
-        <translation type="unfinished">Osobní zmínky @ %1</translation>
+        <translation>Osobní @zmínky %1</translation>
     </message>
     <message>
         <source>Global @ Mentions %1</source>
-        <translation type="unfinished">Globální zmínky @ %1</translation>
+        <translation>Globální @zmínky %1</translation>
     </message>
     <message>
         <source>Alerts</source>
-        <translation type="unfinished">Upozornění</translation>
+        <translation>Upozornění</translation>
     </message>
     <message>
         <source>Other Messages %1</source>
-        <translation type="unfinished">Ostatní zprávy %1</translation>
+        <translation>Ostatní zprávy %1</translation>
     </message>
     <message>
         <source>Multiple Exemptions</source>
-        <translation type="unfinished">Více výjimek</translation>
+        <translation>Více výjimek</translation>
     </message>
 </context>
 <context>
@@ -7958,11 +7961,11 @@ to sign using the keys stored on this device.</source>
     <name>ExportKeypair</name>
     <message>
         <source>Authenticate to create a QR code</source>
-        <translation type="unfinished"></translation>
+        <translation>Ověřte se pro vytvoření QR kódu</translation>
     </message>
     <message>
         <source>Authenticate</source>
-        <translation type="unfinished">Ověřit</translation>
+        <translation>Ověřit</translation>
     </message>
     <message>
         <source>Encrypted key pairs code</source>
@@ -8049,12 +8052,12 @@ to sign using the keys stored on this device.</source>
     <message>
         <source>A factory reset will delete the key on this Keycard.
 Are you sure you want to do this?</source>
-        <translation type="unfinished">Tovární nastavení smaže klíč na této Keycard.
+        <translation>Tovární nastavení smaže pár klíčů na této Keycard.
 Opravdu to chcete udělat?</translation>
     </message>
     <message>
         <source>I understand the key pair on this Keycard will be deleted</source>
-        <translation type="unfinished">Rozumím, že pár klíčů na této Keycard bude smazán</translation>
+        <translation>Rozumím, že pár klíčů na této Keycard bude smazán</translation>
     </message>
 </context>
 <context>
@@ -8076,7 +8079,7 @@ Opravdu to chcete udělat?</translation>
     <name>FeeRow</name>
     <message>
         <source>Max.</source>
-        <translation type="unfinished"></translation>
+        <translation>Max.</translation>
     </message>
 </context>
 <context>
@@ -8294,7 +8297,7 @@ Opravdu to chcete udělat?</translation>
     </message>
     <message>
         <source>Remove from saved addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Odstranit z uložených adres</translation>
     </message>
 </context>
 <context>
@@ -8309,22 +8312,22 @@ Opravdu to chcete udělat?</translation>
     </message>
     <message>
         <source>No onchain follows yet. Find and follow Ethereum accounts on %1 to see them here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zatím nemáte žádné sledované adresy. Najděte a sledujte účty Ethereum na %1, abyste je mohli vidět zde.</translation>
     </message>
     <message>
         <source>Ethereum Follow Protocol</source>
-        <translation type="unfinished"></translation>
+        <translation>Ethereum Follow Protocol</translation>
     </message>
 </context>
 <context>
     <name>FollowingAddressesDelegate</name>
     <message>
         <source>Remove from saved addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Odebrat z uložených adres</translation>
     </message>
     <message>
         <source>Add to saved addresses</source>
-        <translation type="unfinished">Přidat do uložených adres</translation>
+        <translation>Přidat do uložených adres</translation>
     </message>
 </context>
 <context>
@@ -8342,7 +8345,7 @@ Opravdu to chcete udělat?</translation>
     <name>GetSyncCodeDesktopInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation type="unfinished"></translation>
+        <translation>Ujistěte se, že jsou obě zařízení připojena ke stejné síti</translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -8440,7 +8443,7 @@ Opravdu to chcete udělat?</translation>
     <name>GetSyncCodeMobileInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation type="unfinished"></translation>
+        <translation>Ujistěte se, že jsou obě zařízení připojena ke stejné síti</translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -8565,15 +8568,15 @@ Opravdu to chcete udělat?</translation>
     <name>HandlersManager</name>
     <message>
         <source>Info</source>
-        <translation type="unfinished">Info</translation>
+        <translation>Info</translation>
     </message>
     <message>
         <source>Swap is not available in the testnet mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>Funkce Swap není v testovacím režimu dostupná.</translation>
     </message>
     <message>
         <source>Push notifications enabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Zapnutá funkce push notifikací</translation>
     </message>
 </context>
 <context>
@@ -8758,35 +8761,35 @@ Opravdu to chcete udělat?</translation>
     <name>HttpStatsModal</name>
     <message>
         <source>network %1 in %2 req · cache %3 in %4 req</source>
-        <translation type="unfinished"></translation>
+        <translation>síť %1 z %2 požadavků · cache %3 z %4 požadavků</translation>
     </message>
     <message>
         <source>Total: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Celkem: %1</translation>
     </message>
     <message>
         <source>Disk cache: %1 of %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Cache na disku: %1 z %2</translation>
     </message>
     <message>
         <source>Not counted here: status-go, messaging, the webviews, and requests made outside the QML network access manager.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zde se nepočítají: status-go, zprávy, webové zobrazení a požadavky provedené mimo QML síťový přístupový správce.</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation type="unfinished">Obnovit</translation>
+        <translation>Obnovit</translation>
     </message>
     <message>
         <source>Reset</source>
-        <translation type="unfinished">Resetovat</translation>
+        <translation>Resetovat</translation>
     </message>
     <message>
         <source>Clear cache</source>
-        <translation type="unfinished"></translation>
+        <translation>Vymazat cache</translation>
     </message>
     <message>
         <source>Total</source>
-        <translation type="unfinished">Celkem</translation>
+        <translation>Celkem</translation>
     </message>
 </context>
 <context>
@@ -9020,11 +9023,11 @@ Opravdu to chcete udělat?</translation>
     <name>InsertEmptyKeycardState</name>
     <message>
         <source>Insert an empty Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Vložte prázdnou Keycard</translation>
     </message>
     <message>
         <source>Insert an empty Keycard you want to migrate your key pair to.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vložte prázdnou Keycard, na kterou chcete migrovat svůj pár klíčů.</translation>
     </message>
 </context>
 <context>
@@ -9238,15 +9241,15 @@ Opravdu to chcete udělat?</translation>
     <name>KeyPairCompactItem</name>
     <message>
         <source>Moving this key pair will require you to use your Keycard to login</source>
-        <translation type="unfinished">Přesunutí tohoto páru klíčů bude vyžadovat použití vaší Keycard pro přihlášení</translation>
+        <translation>Přesunutí tohoto páru klíčů bude vyžadovat použití vaší Keycard pro přihlášení</translation>
     </message>
     <message>
         <source>Keycard Locked</source>
-        <translation type="unfinished">Keycard uzamčena</translation>
+        <translation>Keycard uzamčena</translation>
     </message>
     <message numerus="yes">
         <source>Contains %n account(s) with Keycard incompatible derivation paths</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Obsahuje %n účet s nekompatibilními odvozovacími cestami Keycard</numerusform>
             <numerusform>Obsahuje %n účty s nekompatibilními odvozovacími cestami Keycard</numerusform>
             <numerusform>Obsahuje %n účtů s nekompatibilními odvozovacími cestami Keycard</numerusform>
@@ -9273,666 +9276,666 @@ Opravdu to chcete udělat?</translation>
     </message>
     <message>
         <source>Active Accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktivní účty</translation>
     </message>
 </context>
 <context>
     <name>KeycardAuth</name>
     <message>
         <source>Plug in Keycard reader...</source>
-        <translation type="unfinished">Připojte čtečku Keycard...</translation>
+        <translation>Připojte čtečku Keycard...</translation>
     </message>
     <message>
         <source>Tap or insert Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Přiložte nebo vložte Keycard...</translation>
     </message>
     <message>
         <source>Reading Keycard...</source>
-        <translation type="unfinished">Načítání Keycard...</translation>
+        <translation>Načítání Keycard...</translation>
     </message>
     <message>
         <source>Keycard is empty</source>
-        <translation type="unfinished">Keycard je prázdná</translation>
+        <translation>Keycard je prázdná</translation>
     </message>
     <message>
         <source>There is no key pair on this Keycard</source>
-        <translation type="unfinished">Na této Keycard není žádný pár klíčů</translation>
+        <translation>Na této Keycard není žádný pár klíčů</translation>
     </message>
     <message>
         <source>This is not a Keycard</source>
-        <translation type="unfinished">Toto není Keycard</translation>
+        <translation>Toto není Keycard</translation>
     </message>
     <message>
         <source>Connection error</source>
-        <translation type="unfinished"></translation>
+        <translation>Chyba připojení</translation>
     </message>
     <message>
         <source>Something went wrong, please try again</source>
-        <translation type="unfinished"></translation>
+        <translation>Nastala chyba, zkuste to znovu</translation>
     </message>
     <message>
         <source>Keycard locked</source>
-        <translation type="unfinished">Keycard uzamčena</translation>
+        <translation>Keycard uzamčena</translation>
     </message>
     <message>
         <source>PIN entered incorrectly too many times</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN byl příliškrát zadán nesprávně</translation>
     </message>
     <message>
         <source>PUK entered incorrectly too many times</source>
-        <translation type="unfinished"></translation>
+        <translation>PUK byl příliškrát zadán nesprávně</translation>
     </message>
     <message>
         <source>Keycard pairing error</source>
-        <translation type="unfinished"></translation>
+        <translation>Chyba při párování Keycard</translation>
     </message>
     <message>
         <source>Max pairing slots reached for this Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Pro tuto Keycard bylo dosaženo maximálního počtu párovacích slotů</translation>
     </message>
     <message>
         <source>This Keycard was set up with a custom pairing password</source>
-        <translation type="unfinished"></translation>
+        <translation>Tato Keycard byla nastavena s vlastním heslem pro párování</translation>
     </message>
     <message>
         <source>Wrong Keycard inserted</source>
-        <translation type="unfinished">Vložena nesprávná Keycard</translation>
+        <translation>Vložena nesprávná Keycard</translation>
     </message>
     <message>
         <source>Inserted Keycard does not match the expected key</source>
-        <translation type="unfinished"></translation>
+        <translation>Vložená Keycard neodpovídá očekávanému klíči</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation type="unfinished"></translation>
+        <translation>Úspěch</translation>
     </message>
     <message>
         <source>The card is not a Keycard, try again with Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tato karta není Keycard , zkuste to znovu s Keycard .</translation>
     </message>
     <message>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>Něco se nepodařilo</translation>
     </message>
     <message>
         <source>Try again</source>
-        <translation type="unfinished">Zkusit znovu</translation>
+        <translation>Zkusit znovu</translation>
     </message>
 </context>
 <context>
     <name>KeycardChannelDrawer</name>
     <message>
         <source>Please tap your Keycard to the back of your device</source>
-        <translation type="unfinished"></translation>
+        <translation>Přiložte svou Keycard na zadní stranu zařízení</translation>
     </message>
     <message>
         <source>Reading Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Čtení Keycard</translation>
     </message>
     <message>
         <source>Please keep your Keycard in place</source>
-        <translation type="unfinished"></translation>
+        <translation>Nechejte Keycard na místě</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation type="unfinished"></translation>
+        <translation>Úspěch</translation>
     </message>
     <message>
         <source>Keycard operation completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Operace s Keycard byla úspěšně dokončena</translation>
     </message>
     <message>
         <source>Keycard Not Supported</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard není podporována</translation>
     </message>
     <message>
         <source>Your device does not support keycard operations. Please try again with a different device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vaše zařízení nepodporuje operace s Keycard. Zkuste to s jiným zařízením.</translation>
     </message>
     <message>
         <source>Keycard Not Available</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard není k dispozici</translation>
     </message>
     <message>
         <source>Please enable NFC on your device to use the Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pro použití Keycard povolte na svém zařízení NFC.</translation>
     </message>
     <message>
         <source>Dismiss</source>
-        <translation type="unfinished"></translation>
+        <translation>Zavřít</translation>
     </message>
     <message>
         <source>Ready to scan</source>
-        <translation type="unfinished"></translation>
+        <translation>Připraveno ke skenování</translation>
     </message>
     <message>
         <source>Try to keep your Keycard in place</source>
-        <translation type="unfinished"></translation>
+        <translation>Zkuste nechat Keycard na místě</translation>
     </message>
 </context>
 <context>
     <name>KeycardDetailsPage</name>
     <message>
         <source>No free pairing slots</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádné volné sloty pro párování</translation>
     </message>
     <message>
         <source>Keycard is empty</source>
-        <translation type="unfinished">Keycard je prázdná</translation>
+        <translation>Keycard je prázdná</translation>
     </message>
     <message>
         <source>Keycard is blocked</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard je zablokovaná</translation>
     </message>
     <message>
         <source>Keycard stores only PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard ukládá pouze PIN</translation>
     </message>
     <message>
         <source>Profile already exists</source>
-        <translation type="unfinished"></translation>
+        <translation>Profil již existuje</translation>
     </message>
     <message>
         <source>Keycard stores key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard ukládá pár klíčů</translation>
     </message>
     <message>
         <source>Keycard</source>
-        <translation type="unfinished">Keycard</translation>
+        <translation>Keycard</translation>
     </message>
     <message>
         <source>, </source>
-        <translation type="unfinished"></translation>
+        <translation>,</translation>
     </message>
     <message>
         <source>UID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UID: %1</translation>
     </message>
     <message>
         <source>You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.</source>
-        <translation type="unfinished"></translation>
+        <translation>Momentálně nemůžete pracovat s obsahem Keycard, protože nemá žádné volné sloty pro párování. Můžete ji však používat s dříve spárovanými instalacemi.</translation>
     </message>
     <message>
         <source>Profile for key pair stored on Keycard already added to this device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Profil pro pár klíčů uložený na Keycard již byl přidán do tohoto zařízení.</translation>
     </message>
     <message>
         <source>Keycard stores information about your accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard ukládá informace o vašich účtech</translation>
     </message>
     <message>
         <source>What you can do:</source>
-        <translation type="unfinished"></translation>
+        <translation>Co můžete dělat:</translation>
     </message>
     <message>
         <source>Import a new key pair to Keycard and create new profile</source>
-        <translation type="unfinished"></translation>
+        <translation>Importujte nový pár klíčů do Keycard a vytvořte nový profil</translation>
     </message>
     <message>
         <source>Keycard will be required for signing and logging in to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard bude vyžadována pro podepisování a přihlašování do Status</translation>
     </message>
     <message>
         <source>Import a key pair from recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Importujte pár klíčů z obnovovací fráze</translation>
     </message>
     <message>
         <source>You’ll create a new profile or login if key pair already associated with existing Status profile. Keycard will be required for signing and logging in to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Vytvoříte nový profil nebo se přihlásíte, pokud je pár klíčů již spojen se stávajícím profilem Status. Keycard bude vyžadována pro podepisování a přihlašování do Status</translation>
     </message>
     <message>
         <source>Unblock with recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Odblokovat pomocí obnovovací fráze</translation>
     </message>
     <message>
         <source>Requires providing the recovery phrase for the key pair stored on Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyžaduje zadání obnovovací fráze pro pár klíčů uložený na Keycard</translation>
     </message>
     <message>
         <source>Unblock with PUK</source>
-        <translation type="unfinished"></translation>
+        <translation>Odblokovat pomocí PUK</translation>
     </message>
     <message>
         <source>If you set your PUK earlier for this Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokud jste si dříve nastavili PUK pro tuto Keycard</translation>
     </message>
     <message>
         <source>Login with this Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Přihlaste se pomocí této Keycard </translation>
     </message>
     <message>
         <source>Go back to login screen</source>
-        <translation type="unfinished"></translation>
+        <translation>Zpět na přihlašovací obrazovku</translation>
     </message>
     <message>
         <source>You can login with password and move your profile to Keycard, from the settings/Keycard section</source>
-        <translation type="unfinished"></translation>
+        <translation>Můžete se přihlásit pomocí hesla a přesunout svůj profil do Keycard, v sekci Nastavení/Keycard</translation>
     </message>
     <message>
         <source>Factory reset</source>
-        <translation type="unfinished"></translation>
+        <translation>Tovární nastavení</translation>
     </message>
     <message>
         <source>Remove everything from Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Odstranit vše z Keycard</translation>
     </message>
 </context>
 <context>
     <name>KeycardLostPage</name>
     <message>
         <source>Lost Keycard</source>
-        <translation type="unfinished">Ztracená Keycard</translation>
+        <translation>Ztracená Keycard</translation>
     </message>
     <message>
         <source>If you don&apos;t have any other spare Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokud nemáte žádnou jinou náhradní Keycard</translation>
     </message>
     <message>
         <source>Buy new</source>
-        <translation type="unfinished"></translation>
+        <translation>Koupit novou</translation>
     </message>
     <message>
         <source>Go to Keycard.tech and order Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Přejděte na Keycard.tech a objednejte si Keycard</translation>
     </message>
     <message>
         <source>If you have a spare Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokud máte náhradní Keycard</translation>
     </message>
     <message>
         <source>Read your spare Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Načíst náhradní Keycard</translation>
     </message>
     <message>
         <source>You may need to factory reset it first and then import key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Nejprve ji možná budete muset obnovit do továrního nastavení a poté importovat pár klíčů</translation>
     </message>
     <message>
         <source>Start using profile without Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Začněte používat profil bez Keycard</translation>
     </message>
     <message>
         <source>Enter recovery phrase for your profile and login to status.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zadejte obnovovací frázi pro svůj profil a přihlaste se do Statusu.</translation>
     </message>
 </context>
 <context>
     <name>KeycardManagementPopup</name>
     <message>
         <source>Read Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Načíst Keycard</translation>
     </message>
     <message>
         <source>Keycard Flow</source>
-        <translation type="unfinished"></translation>
+        <translation>Postup s Keycard</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Zrušit</translation>
+        <translation>Zrušit</translation>
     </message>
     <message>
         <source>Done</source>
-        <translation type="unfinished">Hotovo</translation>
+        <translation>Hotovo</translation>
     </message>
     <message>
         <source>Factory reset</source>
-        <translation type="unfinished"></translation>
+        <translation>Tovární nastavení</translation>
     </message>
     <message>
         <source>Start using profile without Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Začít používat profil bez Keycard</translation>
     </message>
     <message>
         <source>Log in with this Keycard</source>
-        <translation type="unfinished">Přihlásit se pomocí této Keycard</translation>
+        <translation>Přihlásit se pomocí této Keycard</translation>
     </message>
     <message>
         <source>Import a key pair from recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Importovat pár klíčů z obnovovací fráze</translation>
     </message>
     <message>
         <source>No PIN? Skip</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádný PIN? Přeskočit</translation>
     </message>
     <message>
         <source>Factory reset this Keycard</source>
-        <translation type="unfinished">Tovární nastavení této Keycard</translation>
+        <translation>Tovární nastavení této Keycard</translation>
     </message>
     <message>
         <source>Resetting Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Probíhá resetování Keycard...</translation>
     </message>
     <message>
         <source>Logging in with Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Probíhá přihlašování pomocí Keycard...</translation>
     </message>
     <message>
         <source>Reading...</source>
-        <translation type="unfinished"></translation>
+        <translation>Načítání...</translation>
     </message>
     <message>
         <source>Keycard has been reset</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard byla resetována</translation>
     </message>
     <message>
         <source>Ready to recover your profile</source>
-        <translation type="unfinished"></translation>
+        <translation>Připraveno k obnovení vašeho profilu</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation type="unfinished"></translation>
+        <translation>Úspěch</translation>
     </message>
     <message>
         <source>Keycard is now empty.</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard je nyní prázdná.</translation>
     </message>
     <message>
         <source>Continue to log in and convert your profile to use a Status password.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokračujte přihlášením a převeďte svůj profil, aby používal heslo Status.</translation>
     </message>
     <message>
         <source>Continue to finish logging in.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokračujte, abyste dokončili přihlašování.</translation>
     </message>
     <message>
         <source>Continue to finish setting up your profile.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokračujte, abyste dokončili nastavení svého profilu.</translation>
     </message>
     <message>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>Něco se pokazilo</translation>
     </message>
     <message>
         <source>Try again</source>
-        <translation type="unfinished">Zkusit znovu</translation>
+        <translation>Zkusit znovu</translation>
     </message>
     <message>
         <source>Import key pair from recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Importovat pár klíčů z obnovovací fráze</translation>
     </message>
     <message>
         <source>Try setting the PIN again</source>
-        <translation type="unfinished"></translation>
+        <translation>Zkuste nastavit PIN znovu</translation>
     </message>
     <message>
         <source>Next</source>
-        <translation type="unfinished">Další</translation>
+        <translation>Další</translation>
     </message>
     <message>
         <source>Importing key pair to Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Probíhá import páru klíčů do Keycard...</translation>
     </message>
     <message>
         <source>Add another account</source>
-        <translation type="unfinished">Přidat další účet</translation>
+        <translation>Přidat další účet</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">Pokračovat</translation>
+        <translation>Pokračovat</translation>
     </message>
     <message>
         <source>Key pair has been imported to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Pár klíčů byl importován do Keycard</translation>
     </message>
     <message>
         <source>Keycard is now required to sign with this key pair.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pro podepisování s tímto párem klíčů je nyní nutné používat Keycard.</translation>
     </message>
     <message>
         <source>Import a new key pair to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Importovat nový pár klíčů do Keycard</translation>
     </message>
     <message>
         <source>Move key pair to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Přesunout pár klíčů do Keycard</translation>
     </message>
     <message>
         <source>Moving key pair to Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Přesouvám pár klíčů do Keycard...</translation>
     </message>
     <message>
         <source>Key pair has been moved to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Pár klíčů byl přesunut do Keycard</translation>
     </message>
     <message>
         <source>Move profile key pair to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Přesunout profilový pár klíčů do Keycard</translation>
     </message>
     <message>
         <source>Moving profile key pair to Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Přesouvám profilový pár klíčů do Keycard...</translation>
     </message>
     <message>
         <source>Profile key pair has been moved to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Profilový pár klíčů byl přesunut do Keycard</translation>
     </message>
     <message>
         <source>Quit and restart Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Ukončit a restartovat Status</translation>
     </message>
     <message>
         <source>Re-encrypting data may take some time</source>
-        <translation type="unfinished"></translation>
+        <translation>Opakované šifrování dat může trvat nějakou dobu</translation>
     </message>
     <message>
         <source>Do not quit the application or turn off your device. Doing so will lead to data
 corruption, loss of your Status profile and the inability to restart Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>Neukončujte aplikaci ani nevypínejte zařízení. V opačném případě dojde k poškození dat, ztrátě profilu Status a nebude možné aplikaci restartovat.</translation>
     </message>
     <message>
         <source>Keycard is now required to log in and sign.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pro přihlášení a podepisování je nyní nutné používat Keycard.</translation>
     </message>
     <message>
         <source>Add key pair to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Přidejte pár klíčů do Status</translation>
     </message>
     <message>
         <source>Adding key pair to Status...</source>
-        <translation type="unfinished"></translation>
+        <translation>Přidávám pár klíčů do Status...</translation>
     </message>
     <message>
         <source>Key pair has been added to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Pár klíčů byl přidán do Status</translation>
     </message>
     <message>
         <source>Now you can sign with this key pair using Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nyní můžete podepisovat s tímto párem klíčů pomocí Keycard.</translation>
     </message>
     <message>
         <source>Stop using Keycard for key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Přestat používat Keycard pro tento pár klíčů</translation>
     </message>
     <message>
         <source>Create password</source>
-        <translation type="unfinished"></translation>
+        <translation>Vytvořit heslo</translation>
     </message>
     <message>
         <source>Finalize Status Password Creation</source>
-        <translation type="unfinished">Dokončit vytváření hesla Status</translation>
+        <translation>Dokončit vytváření hesla Status</translation>
     </message>
     <message>
         <source>Moving key pair to Status...</source>
-        <translation type="unfinished"></translation>
+        <translation>Přesouvám pár klíčů do Status...</translation>
     </message>
     <message>
         <source>Key pair has been moved to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Párový klíč byl přesunut do Statusu</translation>
     </message>
     <message>
         <source>Keycard read completed</source>
-        <translation type="unfinished"></translation>
+        <translation>Čtení Keycard bylo dokončeno</translation>
     </message>
     <message>
         <source>Status password is now required to sign.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pro podepisování je nyní vyžadováno Status heslo.</translation>
     </message>
     <message>
         <source>Stop using Keycard for profile key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Přestat používat Keycard pro párový klíč profilu</translation>
     </message>
     <message>
         <source>Moving profile key pair to Status...</source>
-        <translation type="unfinished"></translation>
+        <translation>Přesouvám párový klíč profilu do Statusu…</translation>
     </message>
     <message>
         <source>Profile key pair has been moved to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Párový klíč profilu byl přesunut do Statusu</translation>
     </message>
     <message>
         <source>Status password is now required to log in and sign.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pro přihlášení a podepisování je nyní vyžadováno heslo pro Status.</translation>
     </message>
     <message>
         <source>Change Keycard PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Změnit PIN Keycard</translation>
     </message>
     <message>
         <source>Changing Keycard PIN...</source>
-        <translation type="unfinished"></translation>
+        <translation>Změna PINu Keycard...</translation>
     </message>
     <message>
         <source>Keycard PIN has been changed</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN Keycard byl změněn</translation>
     </message>
     <message>
         <source>New PIN is required to interact with Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pro interakci s Keycard je vyžadován nový PIN.</translation>
     </message>
     <message>
         <source>Set or change PUK</source>
-        <translation type="unfinished"></translation>
+        <translation>Nastavit nebo změnit PUK</translation>
     </message>
     <message>
         <source>Setting your Keycard PUK...</source>
-        <translation type="unfinished">Nastavování PUKu vaší Keycard...</translation>
+        <translation>Nastavování PUKu vaší Keycard...</translation>
     </message>
     <message>
         <source>Keycard’s PUK successfully set</source>
-        <translation type="unfinished">PUK Keycard úspěšně nastaven</translation>
+        <translation>PUK Keycard úspěšně nastaven</translation>
     </message>
     <message>
         <source>Rename Keycard</source>
-        <translation type="unfinished">Přejmenovat Keycard</translation>
+        <translation>Přejmenovat Keycard</translation>
     </message>
     <message>
         <source>Rename</source>
-        <translation type="unfinished"></translation>
+        <translation>Přejmenovat</translation>
     </message>
     <message>
         <source>Renaming Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Přejmenovávám Keycard...</translation>
     </message>
     <message>
         <source>Keycard has been renamed</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard byla přejmenována</translation>
     </message>
     <message>
         <source>New name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Nový název: %1</translation>
     </message>
     <message>
         <source>Unblock with PUK</source>
-        <translation type="unfinished"></translation>
+        <translation>Odblokovat pomocí PUK</translation>
     </message>
     <message>
         <source>Unblocking Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Odblokovávám Keycard...</translation>
     </message>
     <message>
         <source>Keycard has been unblocked</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard byla odblokována</translation>
     </message>
     <message>
         <source>You can now use your Keycard again</source>
-        <translation type="unfinished"></translation>
+        <translation>Nyní můžete znovu používat svou Keycard</translation>
     </message>
     <message>
         <source>Unblock with recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Odblokovat pomocí obnovovací fráze</translation>
     </message>
     <message>
         <source>It is now ready to use.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nyní je připravena k použití.</translation>
     </message>
 </context>
 <context>
     <name>KeycardProgressState</name>
     <message>
         <source>Reading...</source>
-        <translation type="unfinished"></translation>
+        <translation>Čtení...</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation type="unfinished"></translation>
+        <translation>Úspěch</translation>
     </message>
     <message>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>Nastala chyba</translation>
     </message>
     <message>
         <source>Try again</source>
-        <translation type="unfinished">Zkusit znovu</translation>
+        <translation>Zkusit znovu</translation>
     </message>
     <message>
         <source>Plug in Keycard reader...</source>
-        <translation type="unfinished">Připojte čtečku Keycard...</translation>
+        <translation>Připojte čtečku Keycard...</translation>
     </message>
     <message>
         <source>Tap or insert Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Přiložte nebo vložte Keycard...</translation>
     </message>
     <message>
         <source>Reading Keycard...</source>
-        <translation type="unfinished">Načítání Keycard...</translation>
+        <translation>Načítání Keycard...</translation>
     </message>
     <message>
         <source>This is not a Keycard</source>
-        <translation type="unfinished">Toto není Keycard</translation>
+        <translation>Toto není Keycard</translation>
     </message>
     <message>
         <source>Connection error</source>
-        <translation type="unfinished"></translation>
+        <translation>Chyba připojení</translation>
     </message>
     <message>
         <source>Something went wrong, please try again</source>
-        <translation type="unfinished"></translation>
+        <translation>Nastala chyba, zkuste to znovu</translation>
     </message>
     <message>
         <source>Wrong Keycard inserted</source>
-        <translation type="unfinished">Vložena nesprávná Keycard</translation>
+        <translation>Vložena nesprávná Keycard</translation>
     </message>
     <message>
         <source>Inserted Keycard does not match the expected key</source>
-        <translation type="unfinished"></translation>
+        <translation>Vložená Keycard neodpovídá očekávanému klíči</translation>
     </message>
     <message>
         <source>It&apos;s a different Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Toto je jiná Keycard</translation>
     </message>
     <message>
         <source>Keycard is not empty</source>
-        <translation type="unfinished">Keycard není prázdná</translation>
+        <translation>Keycard není prázdná</translation>
     </message>
     <message>
         <source>Try again with an empty keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Zkuste to znovu s prázdnou Keycard</translation>
     </message>
     <message>
         <source>The card is not a Keycard, try again with Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Karta není Keycard, zkuste to znovu s Keycard</translation>
     </message>
     <message>
         <source>Please try again with Keycard you read before</source>
-        <translation type="unfinished"></translation>
+        <translation>Zkuste to znovu s Keycard, kterou jste načetli dříve</translation>
     </message>
     <message>
         <source>PIN incorrect</source>
-        <translation type="unfinished">Nesprávný PIN</translation>
+        <translation>Nesprávný PIN</translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Zbývá %n pokus</numerusform>
             <numerusform>Zbývají %n pokusy</numerusform>
             <numerusform>Zbývá %n pokusů</numerusform>
@@ -9940,157 +9943,157 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Keycard is blocked</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard je zablokovaná</translation>
     </message>
     <message>
         <source>Keycard is blocked due to three failed PIN input attempts</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard je zablokovaná kvůli třem neúspěšným pokusům o zadání PIN kódu</translation>
     </message>
     <message>
         <source>PUK incorrect</source>
-        <translation type="unfinished">Nesprávný PUK</translation>
+        <translation>Nesprávný PUK</translation>
     </message>
     <message>
         <source>Keycard is blocked due to five failed PUK input attempts</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard je zablokovaná kvůli pěti neúspěšným pokusům o zadání PUK kódu</translation>
     </message>
 </context>
 <context>
     <name>KeycardSimulatorController</name>
     <message>
         <source>Keycard Simulator Controller</source>
-        <translation type="unfinished"></translation>
+        <translation>Řídicí jednotka simulátoru Keycard</translation>
     </message>
     <message>
         <source>Keycard &quot;%1&quot; not created: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard &quot;%1&quot; nebyla vytvořena: %2</translation>
     </message>
     <message>
         <source>Keycard &quot;%1&quot; created</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard &quot;%1&quot; byla vytvořena</translation>
     </message>
     <message>
         <source>Applet version</source>
-        <translation type="unfinished"></translation>
+        <translation>Verze appletu</translation>
     </message>
     <message>
         <source>Use applet tag 4.0 (SecureChannel V2)</source>
-        <translation type="unfinished"></translation>
+        <translation>Použít tag aplikačního programu 4.0 (SecureChannel V2)</translation>
     </message>
     <message>
         <source>Tag 4.0 needs keycard-qt SecureChannel V2 support — not driveable by the app yet and refers to status-keycard after #72e9574 commit.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tag 4.0 vyžaduje podporu SecureChannel V2 pro keycard-qt — aplikace jej zatím nepodporuje a odkazuje na stavovou klíčovou kartu po commitu #72e9574.</translation>
     </message>
     <message>
         <source>Default: tag 3.2 (classic password pairing), matches the current keycard-qt and refers to status-keycard #72e9574 commit.</source>
-        <translation type="unfinished"></translation>
+        <translation>Výchozí: tag 3.2 (klasické párování heslem), odpovídá aktuálnímu keycard-qt a odkazuje na stavovou klíčovou kartu commitu #72e9574.</translation>
     </message>
     <message>
         <source>1. Simulator</source>
-        <translation type="unfinished"></translation>
+        <translation>1. Simulátor</translation>
     </message>
     <message>
         <source>Restart Keycard Simulator</source>
-        <translation type="unfinished"></translation>
+        <translation>Restartovat simulátor Keycard</translation>
     </message>
     <message>
         <source>Start Keycard Simulator</source>
-        <translation type="unfinished"></translation>
+        <translation>Spustit simulátor Keycard</translation>
     </message>
     <message>
         <source>2. Create keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>2. Vytvořit Keycard</translation>
     </message>
     <message>
         <source>Card id:</source>
-        <translation type="unfinished"></translation>
+        <translation>ID karty:</translation>
     </message>
     <message>
         <source>Create Empty Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Vytvořit prázdnou Keycard</translation>
     </message>
     <message>
         <source>— or create one with a seed —</source>
-        <translation type="unfinished"></translation>
+        <translation>— nebo vytvořit s počátečním klíčem —</translation>
     </message>
     <message>
         <source>Seed phrase (mandatory)</source>
-        <translation type="unfinished"></translation>
+        <translation>Počáteční fráze (povinné)</translation>
     </message>
     <message>
         <source>PIN:</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN:</translation>
     </message>
     <message>
         <source>PUK:</source>
-        <translation type="unfinished"></translation>
+        <translation>PUK:</translation>
     </message>
     <message>
         <source>Keycard name (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Název Keycard (volitelný)</translation>
     </message>
     <message>
         <source>Paths, comma-separated (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Cesty, oddělené čárkami (volitelné)</translation>
     </message>
     <message>
         <source>Pairing password (optional, default if empty)</source>
-        <translation type="unfinished"></translation>
+        <translation>Párovací heslo (volitelné, výchozí, pokud je prázdné)</translation>
     </message>
     <message>
         <source>Create Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Vytvořit Keycard</translation>
     </message>
     <message>
         <source>Creating Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Vytvářím Keycard...</translation>
     </message>
     <message>
         <source>Clear local pairings</source>
-        <translation type="unfinished"></translation>
+        <translation>Vymazat lokální párování</translation>
     </message>
     <message>
         <source>3. Select keycard (does not insert it)</source>
-        <translation type="unfinished"></translation>
+        <translation>3. Vybrat Keycard (nevkládejte ji)</translation>
     </message>
     <message>
         <source>&lt;no keycard selected&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;nebyla vybrána žádná klíčová karta&gt;</translation>
     </message>
     <message>
         <source>4. Reader &amp; card</source>
-        <translation type="unfinished"></translation>
+        <translation>4. Čtečka a karta</translation>
     </message>
     <message>
         <source>Insert keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Vložit Keycard</translation>
     </message>
     <message>
         <source>Inserts the selected keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Vloží vybranou Keycard</translation>
     </message>
     <message>
         <source>Remove keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Odebrat Keycard</translation>
     </message>
     <message>
         <source>Removes the selected keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Odebere vybranou Keycard</translation>
     </message>
     <message>
         <source>Plug reader</source>
-        <translation type="unfinished"></translation>
+        <translation>Připojit čtečku</translation>
     </message>
     <message>
         <source>Unplug reader</source>
-        <translation type="unfinished"></translation>
+        <translation>Odpojit čtečku</translation>
     </message>
 </context>
 <context>
     <name>KeycardViewNew</name>
     <message>
         <source>Read Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Načíst Keycard</translation>
     </message>
 </context>
 <context>
@@ -10237,7 +10240,7 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Onchain friends</source>
-        <translation type="unfinished"></translation>
+        <translation>Přátelé v blockchainu</translation>
     </message>
 </context>
 <context>
@@ -10251,7 +10254,7 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     <name>LinkPreviewGifDelegate</name>
     <message>
         <source>Animated GIF</source>
-        <translation type="unfinished"></translation>
+        <translation>Animovaný GIF</translation>
     </message>
 </context>
 <context>
@@ -10311,7 +10314,7 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Always Enable</source>
-        <translation type="unfinished"></translation>
+        <translation>Vždy povolit</translation>
     </message>
     <message>
         <source>Don&apos;t ask me again</source>
@@ -10467,75 +10470,75 @@ selhalo</translation>
     <name>LoginKeycardBox</name>
     <message>
         <source>Plug in Keycard reader...</source>
-        <translation type="unfinished">Připojte čtečku Keycard...</translation>
+        <translation>Připojte čtečku Keycard...</translation>
     </message>
     <message>
         <source>Tap or insert your Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Přiložte nebo vložte svou Keycard...</translation>
     </message>
     <message>
         <source>Reading Keycard...</source>
-        <translation type="unfinished">Načítání Keycard...</translation>
+        <translation>Načítání Keycard...</translation>
     </message>
     <message>
         <source>Wrong Keycard for this profile</source>
-        <translation type="unfinished"></translation>
+        <translation>Tato Keycard není pro tento profil</translation>
     </message>
     <message>
         <source>Keycard blocked</source>
-        <translation type="unfinished">Keycard zablokována</translation>
+        <translation>Keycard zablokována</translation>
     </message>
     <message>
         <source>Unblock</source>
-        <translation type="unfinished">Odblokovat</translation>
+        <translation>Odblokovat</translation>
     </message>
     <message>
         <source>Pairing password</source>
-        <translation type="unfinished"></translation>
+        <translation>Heslo pro párování</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">Pokračovat</translation>
+        <translation>Pokračovat</translation>
     </message>
     <message>
         <source>This isn&apos;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Toto není Keycard.&lt;br&gt;Vyjměte kartu a vložte Keycard.</translation>
     </message>
     <message>
         <source>Issue detecting Keycard.&lt;br&gt;Re-scan Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Problém při detekci Keycard.&lt;br&gt;Znovu načtěte Keycard.</translation>
     </message>
     <message>
         <source>This Keycard was set up with a custom pairing password. Enter it to continue.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tato Keycard byla nastavena s vlastním heslem pro párování. Pro pokračování jej zadejte.</translation>
     </message>
     <message>
         <source>No free pairing slots on this Keycard.&lt;br&gt;You can use it with previously paired installations.</source>
-        <translation type="unfinished"></translation>
+        <translation>Na této Keycard nejsou žádná volná místa pro párování.&lt;br&gt;Můžete ji použít s dříve spárovanými instalacemi.</translation>
     </message>
     <message>
         <source>The scanned Keycard is empty.&lt;br&gt;Scan the correct Keycard for this profile.</source>
-        <translation type="unfinished"></translation>
+        <translation>Naskenovaná Keycard je prázdná.&lt;br&gt;Naskenujte správnou Keycard pro tento profil.</translation>
     </message>
     <message numerus="yes">
         <source>PIN incorrect. %n attempt(s) remaining.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>PIN je nesprávný. Zbývá %n pokus.</numerusform>
+            <numerusform>PIN je nesprávný. Zbývají %n pokusy.</numerusform>
+            <numerusform>PIN je nesprávný. Zbývá %n pokusů.</numerusform>
         </translation>
     </message>
     <message>
         <source>Login failed. %1</source>
-        <translation type="unfinished">Přihlášení selhalo. %1</translation>
+        <translation>Přihlášení selhalo. %1</translation>
     </message>
     <message>
         <source>Show details.</source>
-        <translation type="unfinished">Zobrazit podrobnosti.</translation>
+        <translation>Zobrazit podrobnosti.</translation>
     </message>
     <message>
         <source>Enter Keycard PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Zadat PIN Keycard</translation>
     </message>
 </context>
 <context>
@@ -10620,7 +10623,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Lost Keycard?</source>
-        <translation type="unfinished"></translation>
+        <translation>Ztracená Keycard?</translation>
     </message>
     <message>
         <source>Login failed</source>
@@ -10695,63 +10698,63 @@ selhalo</translation>
     <name>LogosNetworkView</name>
     <message>
         <source>Messages are sent via the Logos Messaging Network, a peer-to-peer network powered collectively by users running Status Desktop, making Status decentralized, resilient, and censorship-resistant. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Zprávy jsou odesílány prostřednictvím sítě Logos Messaging Network, což je síť typu peer-to-peer, kterou kolektivně provozují uživatelé používající Status Desktop, díky čemuž je Status decentralizovaný, odolný a odolný proti cenzuře. %1</translation>
     </message>
     <message>
         <source>Learn more</source>
-        <translation type="unfinished">Dozvědět se více</translation>
+        <translation>Dozvědět se více</translation>
     </message>
     <message>
         <source>Connected Logos network peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Připojené uzly sítě Logos</translation>
     </message>
     <message>
         <source>Peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Uzly</translation>
     </message>
     <message>
         <source>Peer</source>
-        <translation type="unfinished"></translation>
+        <translation>Uzel</translation>
     </message>
     <message>
         <source>Checking peer connection...</source>
-        <translation type="unfinished"></translation>
+        <translation>Probíhá kontrola připojení k uzlu...</translation>
     </message>
     <message>
         <source>Connected</source>
-        <translation type="unfinished"></translation>
+        <translation>Připojeno</translation>
     </message>
     <message>
         <source>Refresh Logos network peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Obnovit uzly sítě Logos</translation>
     </message>
     <message>
         <source>Unable to refresh Logos network peers: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Nelze obnovit uzly sítě Logos: %1</translation>
     </message>
     <message>
         <source>If Status has no connected Logos peers, check:</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokud Status nemá žádné připojené uzly sítě Logos, zkontrolujte:</translation>
     </message>
     <message>
         <source>Some networks may block access to the Logos network. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Některé sítě mohou blokovat přístup k síti Logos. %1</translation>
     </message>
     <message>
         <source>Try using a VPN</source>
-        <translation type="unfinished"></translation>
+        <translation>Zkuste použít VPN</translation>
     </message>
     <message>
         <source>Current internet connection may be unstable. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktuální internetové připojení může být nestabilní. %1</translation>
     </message>
     <message>
         <source>Try another network or disconnect your VPN</source>
-        <translation type="unfinished"></translation>
+        <translation>Zkuste jinou síť nebo odpojte VPN</translation>
     </message>
     <message>
         <source>How to fix Logos network connection</source>
-        <translation type="unfinished"></translation>
+        <translation>Jak opravit připojení k síti Logos</translation>
     </message>
 </context>
 <context>
@@ -10809,11 +10812,11 @@ selhalo</translation>
     </message>
     <message>
         <source>Import key pairs from this device to your other synced devices</source>
-        <translation type="unfinished"></translation>
+        <translation>Importovat páry klíčů z tohoto zařízení do ostatních synchronizovaných zařízení</translation>
     </message>
     <message>
         <source>Show encrypted QR of key pairs on device</source>
-        <translation type="unfinished"></translation>
+        <translation>Zobrazit šifrovaný QR kód párů klíčů na zařízení</translation>
     </message>
     <message numerus="yes">
         <source>%n key pair(s) require import to use on this device</source>
@@ -10829,15 +10832,15 @@ selhalo</translation>
     </message>
     <message>
         <source>Automatically apply key pair migrations from paired devices</source>
-        <translation type="unfinished"></translation>
+        <translation>Automaticky aplikovat migrace párů klíčů ze spárovaných zařízení</translation>
     </message>
     <message>
         <source>When off, moving a key pair to or from a Keycard on a paired device won&apos;t change how this device logs in or signs. Turning it back on doesn&apos;t apply past changes.</source>
-        <translation type="unfinished"></translation>
+        <translation>Když je tato funkce vypnutá, přesunutí páru klíčů na nebo z Keycard na spárovaném zařízení nezmění způsob, jakým se toto zařízení přihlašuje nebo podepisuje. Znovu zapnutí funkce neaplikuje předchozí změny.</translation>
     </message>
     <message>
         <source>Get Keycard</source>
-        <translation type="unfinished">Získat Keycard</translation>
+        <translation>Získat Keycard</translation>
     </message>
 </context>
 <context>
@@ -10913,35 +10916,35 @@ selhalo</translation>
     <name>ManageKeyPairAccountsState</name>
     <message>
         <source>Name your accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Pojmenujte své účty</translation>
     </message>
     <message>
         <source>Colour</source>
-        <translation type="unfinished">Barva</translation>
+        <translation>Barva</translation>
     </message>
     <message>
         <source>Remove account</source>
-        <translation type="unfinished">Odstranit účet</translation>
+        <translation>Odstranit účet</translation>
     </message>
     <message>
         <source>Do you want to delete the &quot;%1&quot; account?</source>
-        <translation type="unfinished"></translation>
+        <translation>Chcete smazat účet &quot;%1&quot;?</translation>
     </message>
     <message>
         <source>Do you want to delete this account?</source>
-        <translation type="unfinished"></translation>
+        <translation>Chcete smazat tento účet?</translation>
     </message>
     <message>
         <source>Yes, delete this account</source>
-        <translation type="unfinished">Ano, smazat tento účet</translation>
+        <translation>Ano, smazat tento účet</translation>
     </message>
     <message>
         <source>What would you like this account to be called?</source>
-        <translation type="unfinished">Jak byste chtěli tento účet nazvat?</translation>
+        <translation>Jak byste chtěli tento účet nazvat?</translation>
     </message>
     <message>
         <source>Preview</source>
-        <translation type="unfinished">Náhled</translation>
+        <translation>Náhled</translation>
     </message>
 </context>
 <context>
@@ -11161,10 +11164,10 @@ selhalo</translation>
     <name>MarketFooter</name>
     <message numerus="yes">
         <source>Showing %L1 to %L2 of %n result(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Zobrazuje se %L1 až %L2 z %n výsledku</numerusform>
+            <numerusform>Zobrazuje se %L1 až %L2 z %n výsledků</numerusform>
+            <numerusform>Zobrazuje se %L1 až %L2 z %n výsledků</numerusform>
         </translation>
     </message>
 </context>
@@ -11280,14 +11283,14 @@ selhalo</translation>
     <name>MembersListSkeleton</name>
     <message>
         <source>Members</source>
-        <translation type="unfinished">Členové</translation>
+        <translation>Členové</translation>
     </message>
 </context>
 <context>
     <name>MembersPanelHeader</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Hledat</translation>
+        <translation>Hledat</translation>
     </message>
 </context>
 <context>
@@ -11413,15 +11416,15 @@ selhalo</translation>
     <name>MessageContextMenuView</name>
     <message>
         <source>Reply</source>
-        <translation type="unfinished">Odpovědět</translation>
+        <translation>Odpovědět</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished">Upravit</translation>
+        <translation>Upravit</translation>
     </message>
     <message>
         <source>Copy selected</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopírovat vybrané</translation>
     </message>
     <message>
         <source>Copy message</source>
@@ -11429,7 +11432,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Copy link to message</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopírovat odkaz na zprávu</translation>
     </message>
     <message>
         <source>Unpin</source>
@@ -11441,7 +11444,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Smazat</translation>
+        <translation>Smazat</translation>
     </message>
     <message>
         <source>Mark as unread</source>
@@ -11452,7 +11455,7 @@ selhalo</translation>
     <name>MessageReactionsRow</name>
     <message>
         <source>Add reaction</source>
-        <translation type="unfinished">Přidat reakci</translation>
+        <translation>Přidat reakci</translation>
     </message>
 </context>
 <context>
@@ -11511,7 +11514,7 @@ selhalo</translation>
     </message>
     <message>
         <source>GIF</source>
-        <translation type="unfinished"></translation>
+        <translation>GIF</translation>
     </message>
     <message>
         <source>Unknown message. Trying to recover it</source>
@@ -11522,19 +11525,19 @@ selhalo</translation>
     <name>MessagesListHeader</name>
     <message>
         <source>Messages</source>
-        <translation type="unfinished">Zprávy</translation>
+        <translation>Zprávy</translation>
     </message>
     <message>
         <source>Invite contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Pozvat kontakty</translation>
     </message>
     <message>
         <source>Start chat</source>
-        <translation type="unfinished">Zahájit chat</translation>
+        <translation>Zahájit konverzaci</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Hledat</translation>
+        <translation>Hledat</translation>
     </message>
 </context>
 <context>
@@ -11573,27 +11576,27 @@ selhalo</translation>
     </message>
     <message>
         <source>Mobile data and Wi-Fi</source>
-        <translation type="unfinished"></translation>
+        <translation>Mobilní data a Wi-Fi</translation>
     </message>
     <message>
         <source>Wi-Fi only</source>
-        <translation type="unfinished"></translation>
+        <translation>Pouze Wi-Fi</translation>
     </message>
     <message>
         <source>Sync messages on mobile data?</source>
-        <translation type="unfinished"></translation>
+        <translation>Synchronizovat zprávy pomocí mobilních dat?</translation>
     </message>
     <message>
         <source>If you choose to sync over Wi-Fi only, messages sent to you while you are offline will be delivered once you connect to Wi-Fi.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokud se rozhodnete synchronizovat pouze přes Wi-Fi, zprávy odeslané vám, když jste offline, budou doručeny až po připojení k Wi-Fi.</translation>
     </message>
     <message>
         <source>The Status App uses a lot of data when fetching missed messages. If you have a limited data plan, consider syncing over Wi-Fi only.</source>
-        <translation type="unfinished"></translation>
+        <translation>Aplikace Status používá při načítání doručených zpráv velké množství dat. Pokud máte omezený datový tarif, zvažte synchronizaci pouze přes Wi-Fi.</translation>
     </message>
     <message>
         <source>Message syncing</source>
-        <translation type="unfinished"></translation>
+        <translation>Synchronizace zpráv</translation>
     </message>
 </context>
 <context>
@@ -11813,74 +11816,74 @@ selhalo</translation>
     <name>MobileAddressBar</name>
     <message>
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Zastavit</translation>
     </message>
     <message>
         <source>Reload</source>
-        <translation type="unfinished"></translation>
+        <translation>Obnovit</translation>
     </message>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished">Peněženka</translation>
+        <translation>Peněženka</translation>
     </message>
 </context>
 <context>
     <name>MobileSettingsMenu</name>
     <message>
         <source>Browser</source>
-        <translation type="unfinished">Webový prohlížeč</translation>
+        <translation>Webový prohlížeč</translation>
     </message>
     <message>
         <source>Incognito</source>
-        <translation type="unfinished"></translation>
+        <translation>Soukromý režim</translation>
     </message>
     <message>
         <source>Find in page</source>
-        <translation type="unfinished"></translation>
+        <translation>Najít na stránce</translation>
     </message>
     <message>
         <source>Zoom</source>
-        <translation type="unfinished">Lupa</translation>
+        <translation>Lupa</translation>
     </message>
     <message>
         <source>Zoom Out</source>
-        <translation type="unfinished">Oddálit</translation>
+        <translation>Oddálit</translation>
     </message>
     <message>
         <source>Zoom In</source>
-        <translation type="unfinished">Přiblížit</translation>
+        <translation>Přiblížit</translation>
     </message>
     <message>
         <source>Zoom Fit</source>
-        <translation type="unfinished">Přizpůsobit velikost</translation>
+        <translation>Přizpůsobit velikost</translation>
     </message>
     <message>
         <source>Compatibility mode</source>
-        <translation type="unfinished">Režim kompatibility</translation>
+        <translation>Režim kompatibility</translation>
     </message>
     <message>
         <source>Supported formats</source>
-        <translation type="unfinished"></translation>
+        <translation>Podporované formáty</translation>
     </message>
     <message>
         <source>Force reload</source>
-        <translation type="unfinished"></translation>
+        <translation>Vynutit obnovení</translation>
     </message>
     <message>
         <source>Clear site data</source>
-        <translation type="unfinished">Vyčistit data stránky</translation>
+        <translation>Vyčistit data stránky</translation>
     </message>
     <message>
         <source>Clearing browsing data...</source>
-        <translation type="unfinished"></translation>
+        <translation>Probíhá mazání dat prohlížeče...</translation>
     </message>
     <message>
         <source>Clear browsing data</source>
-        <translation type="unfinished"></translation>
+        <translation>Vymazat data prohlížeče</translation>
     </message>
     <message>
         <source>Settings</source>
-        <translation type="unfinished">Nastavení</translation>
+        <translation>Nastavení</translation>
     </message>
 </context>
 <context>
@@ -12012,7 +12015,7 @@ selhalo</translation>
     </message>
     <message>
         <source>This Display Name is already in use in one of your joined communities</source>
-        <translation type="unfinished">Toto zobrazované jméno se již používá v jedné z vašich připojených komunit</translation>
+        <translation>Toto zobrazované jméno se již používá v jedné z vašich připojených komunit</translation>
     </message>
 </context>
 <context>
@@ -12034,14 +12037,14 @@ selhalo</translation>
     <name>NavigationEducationDialog</name>
     <message>
         <source>To open app menu</source>
-        <translation type="unfinished"></translation>
+        <translation>Pro otevření nabídky aplikace</translation>
     </message>
 </context>
 <context>
     <name>NetworkChipFilter</name>
     <message>
         <source>All</source>
-        <translation type="unfinished">Všechny</translation>
+        <translation>Všechny</translation>
     </message>
 </context>
 <context>
@@ -12060,15 +12063,15 @@ selhalo</translation>
     </message>
     <message>
         <source>Token balances are fetched from Pocket Network (POKT) and Infura which are both currently unavailable</source>
-        <translation type="unfinished"></translation>
+        <translation>Zůstatky tokenů se načítají ze služeb Pocket Network (POKT) a Infura, které jsou v současné době nedostupné.</translation>
     </message>
     <message>
         <source>Market values are fetched from CoinGecko which is currently unavailable</source>
-        <translation type="unfinished"></translation>
+        <translation>Tržní hodnoty se načítají ze služby CoinGecko, která je v současné době nedostupná.</translation>
     </message>
     <message>
         <source>Market values and token balances use CoinGecko and POKT/Infura which are all currently unavailable.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tržní hodnoty a zůstatky tokenů používají služby CoinGecko a POKT/Infura, které jsou všechny v současné době nedostupné.</translation>
     </message>
     <message>
         <source>Requires POKT/Infura for %1, which is currently unavailable</source>
@@ -12126,107 +12129,107 @@ selhalo</translation>
     <name>NewAccountLoginPage</name>
     <message>
         <source>Log in</source>
-        <translation type="unfinished">Přihlásit se</translation>
+        <translation>Přihlásit se</translation>
     </message>
     <message>
         <source>How would you like to log in to Status?</source>
-        <translation type="unfinished"></translation>
+        <translation>Jak se chcete přihlásit do Status?</translation>
     </message>
     <message>
         <source>Log in with recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Přihlásit se pomocí obnovovací fráze</translation>
     </message>
     <message>
         <source>If you have your Status recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokud máte k dispozici obnovovací frázi Status</translation>
     </message>
     <message>
         <source>Enter recovery phrase</source>
-        <translation type="unfinished">Zadejte obnovovací frázi</translation>
+        <translation>Zadat obnovovací frázi</translation>
     </message>
     <message>
         <source>Log in by syncing</source>
-        <translation type="unfinished"></translation>
+        <translation>Přihlásit se synchronizací</translation>
     </message>
     <message>
         <source>If you have Status on another device</source>
-        <translation type="unfinished">Pokud máte Status na jiném zařízení</translation>
+        <translation>Pokud máte Status na jiném zařízení</translation>
     </message>
     <message>
         <source>Reveal what you have on Keycard first</source>
-        <translation type="unfinished"></translation>
+        <translation>Nejprve si prohlédněte, co máte na Keycard</translation>
     </message>
     <message>
         <source>To pair your devices and sync your profile, make sure:&lt;br&gt;&lt;ul&gt;&lt;li&gt;Both devices are on the same non-mobile network&lt;/li&gt;&lt;li&gt;You&apos;re logged in on the other device&lt;/li&gt;&lt;li&gt;No firewall or VPN is blocking local network access&lt;/li&gt;&lt;/ul&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>Chcete-li spárovat zařízení a synchronizovat profil, ujistěte se, že:&lt;br&gt;&lt;ul&gt;&lt;li&gt;Obě zařízení jsou ve stejné síti, která není mobilní&lt;/li&gt;&lt;li&gt;Jste přihlášeni na druhém zařízení&lt;/li&gt;&lt;li&gt;Žádný firewall nebo VPN neblokuje přístup do lokální sítě&lt;/li&gt;&lt;/ul&gt;</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Zrušit</translation>
+        <translation>Zrušit</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">Pokračovat</translation>
+        <translation>Pokračovat</translation>
     </message>
     <message>
         <source>Status does not have access to local network</source>
-        <translation type="unfinished"></translation>
+        <translation>Status nemá přístup k lokální síti</translation>
     </message>
     <message>
         <source>Status must be connected to the local network on this device for you to be able to log in via syncing. To rectify this...</source>
-        <translation type="unfinished"></translation>
+        <translation>Status musí být na tomto zařízení připojen k lokální síti, abyste se mohli přihlásit pomocí synchronizace. Chcete-li to napravit...</translation>
     </message>
     <message>
         <source>1. Open System Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>1. Otevřete systémová nastavení</translation>
     </message>
     <message>
         <source>2. Click Privacy &amp; Security</source>
-        <translation type="unfinished"></translation>
+        <translation>2. Klikněte na Soukromí a zabezpečení</translation>
     </message>
     <message>
         <source>3. Click Local Network</source>
-        <translation type="unfinished"></translation>
+        <translation>3. Klikněte na Lokální síť</translation>
     </message>
     <message>
         <source>4. Find Status</source>
-        <translation type="unfinished"></translation>
+        <translation>4. Najděte Status</translation>
     </message>
     <message>
         <source>5. Toggle the switch to grant access</source>
-        <translation type="unfinished"></translation>
+        <translation>5. Přepněte přepínač a udělte přístup</translation>
     </message>
     <message>
         <source>6. Click %1 below</source>
-        <translation type="unfinished"></translation>
+        <translation>6. Klikněte níže: %1</translation>
     </message>
     <message>
         <source>Verify local network access</source>
-        <translation type="unfinished"></translation>
+        <translation>Ověřte přístup k lokální síti</translation>
     </message>
     <message>
         <source>Verifying</source>
-        <translation type="unfinished"></translation>
+        <translation>Ověřování</translation>
     </message>
     <message>
         <source>Checking access...</source>
-        <translation type="unfinished"></translation>
+        <translation>Kontrola přístupu...</translation>
     </message>
     <message>
         <source>Use Keycard</source>
-        <translation type="unfinished">Použít Keycard</translation>
+        <translation>Použít Keycard</translation>
     </message>
     <message>
         <source>Enable local network access to sync devices</source>
-        <translation type="unfinished"></translation>
+        <translation>Povolte přístup k lokální síti, abyste mohli synchronizovat zařízení</translation>
     </message>
     <message>
         <source>Turn on Local network access in your device settings under Settings &gt;&gt; Status &gt;&gt; Local Network.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zapněte přístup k lokální síti v nastavení zařízení v části Nastavení &gt;&gt; Status &gt;&gt; Lokální síť.</translation>
     </message>
     <message>
         <source>Open Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Otevřít nastavení</translation>
     </message>
 </context>
 <context>
@@ -12234,14 +12237,14 @@ selhalo</translation>
     <message>
         <source>UNREAD</source>
         <comment>unread message(s)</comment>
-        <translation type="unfinished"></translation>
+        <translation>NEPŘEČTENO</translation>
     </message>
     <message numerus="yes">
         <source>%n unread message(s) since %1</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n nová zpráva od %1</numerusform>
+            <numerusform>%n nové zprávy od %1</numerusform>
+            <numerusform>%n nových zpráv od %1</numerusform>
         </translation>
     </message>
 </context>
@@ -12268,7 +12271,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Invalid characters (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Neplatné znaky (používejte pouze písmena a čísla, pomlčky a podtržítka)</translation>
     </message>
     <message numerus="yes">
         <source>Nicknames must be at least %n character(s) long</source>
@@ -12356,53 +12359,53 @@ selhalo</translation>
     <name>NotificationAdaptorContactRequest</name>
     <message>
         <source>New contact request</source>
-        <translation type="unfinished"></translation>
+        <translation>Nová žádost o kontakt</translation>
     </message>
     <message>
         <source>You’ve sent request to contact</source>
-        <translation type="unfinished"></translation>
+        <translation>Odeslali jste žádost o kontakt</translation>
     </message>
     <message>
         <source>Accepted your contact request</source>
-        <translation type="unfinished"></translation>
+        <translation>Vaše žádost o kontakt přijata</translation>
     </message>
     <message>
         <source>Declined your contact request</source>
-        <translation type="unfinished"></translation>
+        <translation>Vaše žádost o kontakt odmítnuta</translation>
     </message>
     <message>
         <source>Contact request accepted</source>
-        <translation type="unfinished">Žádost o kontakt přijata</translation>
+        <translation>Žádost o kontakt přijata</translation>
     </message>
     <message>
         <source>Contact request declined</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádost o kontakt zamítnuta</translation>
     </message>
 </context>
 <context>
     <name>NotificationAdaptorMessenger</name>
     <message>
         <source>GIF</source>
-        <translation type="unfinished"></translation>
+        <translation>GIF</translation>
     </message>
 </context>
 <context>
     <name>NotificationCard</name>
     <message>
         <source>Decline</source>
-        <translation type="unfinished">Zamítnout</translation>
+        <translation>Zamítnout</translation>
     </message>
     <message>
         <source>Accept</source>
-        <translation type="unfinished">Přijmout</translation>
+        <translation>Přijmout</translation>
     </message>
     <message>
         <source>Mark as read</source>
-        <translation type="unfinished">Označit jako přečtené</translation>
+        <translation>Označit jako přečtené</translation>
     </message>
     <message>
         <source>Mark as unread</source>
-        <translation type="unfinished">Označit jako nepřečtěné</translation>
+        <translation>Označit jako nepřečtěné</translation>
     </message>
 </context>
 <context>
@@ -12424,23 +12427,23 @@ selhalo</translation>
     <name>NotificationsView</name>
     <message>
         <source>Enable notifications</source>
-        <translation type="unfinished"></translation>
+        <translation>Povolit oznámení</translation>
     </message>
     <message>
         <source>Receive notifications for incoming messages, mentions, and contact requests on your computer so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications directly through your operating system, with no third parties, centralized servers, or intermediaries involved.</source>
-        <translation type="unfinished"></translation>
+        <translation>Přijímejte oznámení o příchozích zprávách, zmínkách a požadavcích na kontakt na vašem počítači, abyste mohli být v reálném čase informováni. Kdykoli můžete provést úpravy v části &lt;b&gt;Nastavení → Oznámení&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status doručuje oznámení přímo prostřednictvím vašeho operačního systému, bez zapojení třetích stran, centralizovaných serverů nebo zprostředkovatelů. </translation>
     </message>
     <message>
         <source>&lt;font color=&apos;%1&apos;&gt;Enable notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling notifications in the app below, enable them in &lt;font color=&apos;%1&apos;&gt;your device settings&lt;/font&gt; first.</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;font color=&apos;%1&apos;&gt;Povolte oznámení v nastavení zařízení&lt;/font&gt;&lt;br&gt;&lt;br&gt;Než povolíte oznámení v aplikaci níže, povolte je nejprve v &lt;font color=&apos;%1&apos;&gt;nastavení zařízení&lt;/font&gt;. </translation>
     </message>
     <message>
         <source>Status uses APNs (Apple Push Notification service) solely to deliver notification signals on your device; your end-to-end encrypted message content is never passed through or stored there.</source>
-        <translation type="unfinished"></translation>
+        <translation>Status používá APNs (Apple Push Notification service) výhradně k doručování signálů oznámení do vašeho zařízení; obsah vašich zpráv šifrovaných end-to-end se přes něj nepřeposílá ani neukládá.</translation>
     </message>
     <message>
         <source>Status delivers notifications on your device via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</source>
-        <translation type="unfinished"></translation>
+        <translation>Status doručuje oznámení do vašeho zařízení prostřednictvím své interní služby běžící na pozadí, bez zapojení třetích stran, centralizovaných serverů nebo zprostředkovatelů.</translation>
     </message>
     <message>
         <source>Messages</source>
@@ -12528,7 +12531,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Status delivers notifications directly through your operating system, with no centralized servers or intermediaries. Ensure they are enabled for Status in your system settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Status doručuje oznámení přímo prostřednictvím vašeho operačního systému, bez centralizovaných serverů nebo zprostředkovatelů. Ujistěte se, že jsou pro Status povolena v nastavení systému.</translation>
     </message>
     <message>
         <source>Exemptions</source>
@@ -12544,15 +12547,15 @@ selhalo</translation>
     </message>
     <message>
         <source>Including:</source>
-        <translation type="unfinished"></translation>
+        <translation>Zahrnuje:</translation>
     </message>
     <message>
         <source>Mentions and replies in communities</source>
-        <translation type="unfinished"></translation>
+        <translation>Zmínky a odpovědi v komunitách</translation>
     </message>
     <message>
         <source>Contact requests and group messages</source>
-        <translation type="unfinished"></translation>
+        <translation>Požadavky na kontakt a skupinové zprávy</translation>
     </message>
 </context>
 <context>
@@ -12598,11 +12601,11 @@ selhalo</translation>
     </message>
     <message>
         <source>Error loading accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepodařilo se načíst účty</translation>
     </message>
     <message>
         <source>Failed to load accounts. Please restart the app and try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepodařilo se načíst účty. Restartujte aplikaci a zkuste to znovu.</translation>
     </message>
     <message>
         <source>Credentials not found.</source>
@@ -13388,254 +13391,254 @@ selhalo</translation>
     <name>PopupBase</name>
     <message>
         <source>Authenticate</source>
-        <translation type="unfinished">Ověřit</translation>
+        <translation>Ověřit</translation>
     </message>
     <message>
         <source>Use biometrics</source>
-        <translation type="unfinished">Použít biometrii</translation>
+        <translation>Použít biometrii</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Zrušit</translation>
+        <translation>Zrušit</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">Pokračovat</translation>
+        <translation>Pokračovat</translation>
     </message>
     <message>
         <source>Failed to update stored credentials</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepodařilo se aktualizovat uložené přihlašovací údaje</translation>
     </message>
     <message>
         <source>Credentials successfully obtained from biometrics</source>
-        <translation type="unfinished"></translation>
+        <translation>Úspěšně získány přihlašovací údaje z biometrických dat</translation>
     </message>
     <message>
         <source>Biometrics not supported</source>
-        <translation type="unfinished"></translation>
+        <translation>Biometrie není podporována</translation>
     </message>
     <message>
         <source>Generic error occurred</source>
-        <translation type="unfinished"></translation>
+        <translation>Nastala obecná chyba</translation>
     </message>
     <message>
         <source>Biometrics is unavailable</source>
-        <translation type="unfinished"></translation>
+        <translation>Biometrie není dostupná</translation>
     </message>
     <message>
         <source>Biometrics cancelled</source>
-        <translation type="unfinished"></translation>
+        <translation>Biometrie byla zrušena</translation>
     </message>
     <message>
         <source>Biometrics not found</source>
-        <translation type="unfinished"></translation>
+        <translation>Biometrie nebyla nalezena</translation>
     </message>
     <message>
         <source>Biometrics fallback error</source>
-        <translation type="unfinished"></translation>
+        <translation>Chyba při záložním řešení biometrie</translation>
     </message>
     <message>
         <source>Unknown biometrics error</source>
-        <translation type="unfinished"></translation>
+        <translation>Neznámá chyba biometrie</translation>
     </message>
 </context>
 <context>
     <name>Popups</name>
     <message>
         <source>Share addresses with %1&apos;s owner</source>
-        <translation type="unfinished"></translation>
+        <translation>Sdílejte adresy s vlastníkem %1</translation>
     </message>
     <message>
         <source>Share addresses to rejoin %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Sdílejte adresy, abyste se mohli znovu připojit k %1</translation>
     </message>
     <message>
         <source>Image saved to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Obrázek uložen do %1</translation>
     </message>
     <message>
         <source>Image saved to system gallery</source>
-        <translation type="unfinished"></translation>
+        <translation>Obrázek uložen do systémové galerie</translation>
     </message>
     <message>
         <source>Failed to save image</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepodařilo se uložit obrázek</translation>
     </message>
     <message>
         <source>%1 removed from contacts and marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 byl odebrán z kontaktů a označen jako nedůvěryhodný</translation>
     </message>
     <message>
         <source>%1 marked as trusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 označen jako důvěryhodný</translation>
     </message>
     <message>
         <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>Odebrána značka důvěryhodnosti %1, odebrán z kontaktů a označen jako nedůvěryhodný</translation>
     </message>
     <message>
         <source>%1 trust mark removed and marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>Odebrána značka důvěryhodnosti a %1 označen jako nedůvěryhodný</translation>
     </message>
     <message>
         <source>%1 trust mark removed and removed from contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Odebrána značka důvěryhodnosti a %1 odebrán z kontaktů</translation>
     </message>
     <message>
         <source>Contact request accepted</source>
-        <translation type="unfinished">Žádost o kontakt přijata</translation>
+        <translation>Žádost o kontakt přijata</translation>
     </message>
     <message>
         <source>Contact request ignored</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádost o kontakt ignorována</translation>
     </message>
     <message>
         <source>Recovery phrase permanently removed from Status application storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Obnovovací fráze byla trvale odstraněna z úložiště aplikace Status</translation>
     </message>
     <message>
         <source>You backed up your recovery phrase. Access it in Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Zálohovali jste obnovovací frázi. Získejte k ní přístup v Nastavení</translation>
     </message>
     <message>
         <source>Profile Picture</source>
-        <translation type="unfinished"></translation>
+        <translation>Profilový obrázek</translation>
     </message>
     <message>
         <source>Make this my Profile Pic</source>
-        <translation type="unfinished"></translation>
+        <translation>Nastavit jako můj profilový obrázek</translation>
     </message>
     <message>
         <source>%1 marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 označen jako nedůvěryhodný</translation>
     </message>
     <message>
         <source>%1 unblocked</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 odblokován</translation>
     </message>
     <message>
         <source>%1 blocked</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 zablokován</translation>
     </message>
     <message>
         <source>Please choose a directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyberte prosím adresář</translation>
     </message>
     <message>
         <source>Are you sure want to leave &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>Opravdu chcete opustit &apos;%1&apos;?</translation>
     </message>
     <message>
         <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
-        <translation type="unfinished"></translation>
+        <translation>Budete muset požádat o opětovné přidání, pokud se v budoucnu budete chtít znovu stát členem. Pokud jste se ke komunitě připojili pomocí veřejného klíče, ujistěte se, že máte jeho kopii, než odejdete. </translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Zrušit</translation>
+        <translation>Zrušit</translation>
     </message>
     <message>
         <source>Leave %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Opustit %1</translation>
     </message>
     <message>
         <source>Align with paired device</source>
-        <translation type="unfinished"></translation>
+        <translation>Synchronizovat se spárovaným zařízením</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">Pokračovat</translation>
+        <translation>Pokračovat</translation>
     </message>
     <message>
         <source>Your profile has been migrated to Keycard on paired device</source>
-        <translation type="unfinished"></translation>
+        <translation>Váš profil byl přesunut na Keycard na spárovaném zařízení</translation>
     </message>
     <message>
         <source>Your profile has been migrated from Keycard to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Váš profil byl přesunut z Keycard do Status</translation>
     </message>
     <message>
         <source>In order to align on the login/signing method on this device, you need to complete the migration flow, clicking the &quot;Continue&quot; button below, or cancel this popup if you want to keep the current login/signing method.</source>
-        <translation type="unfinished"></translation>
+        <translation>Chcete-li sladit metodu přihlašování/podepisování na tomto zařízení, musíte dokončit proces migrace kliknutím na tlačítko „Pokračovat“ níže, nebo zrušit toto okno, pokud chcete zachovat aktuální metodu přihlašování/podepisování. </translation>
     </message>
     <message>
         <source>If you don&apos;t want to see this message again, go to Settings/Wallet and toggle off &quot;Automatically apply key pair migrations from paired device&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokud si nepřejete, aby se tato zpráva zobrazovala znovu, přejděte do Nastavení/Peněženka a vypněte možnost „Automaticky aplikovat migrace páru klíčů ze spárovaného zařízení“. </translation>
     </message>
     <message>
         <source>Sign transaction - update %1 smart contract</source>
-        <translation type="unfinished"></translation>
+        <translation>Podepsat transakci – aktualizovat chytrý kontrakt %1</translation>
     </message>
     <message>
         <source>%1 (%2) successfully hidden. You can toggle asset visibility via %3.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 (%2) byl úspěšně skryt. Viditelnost aktiva můžete přepnout v %3.</translation>
     </message>
     <message>
         <source>Settings</source>
         <comment>Go to Settings</comment>
-        <translation type="unfinished">Nastavení</translation>
+        <translation>Nastavení</translation>
     </message>
     <message>
         <source>Hide collectible</source>
-        <translation type="unfinished">Skrýt sběratelský předmět</translation>
+        <translation>Skrýt sběratelský předmět</translation>
     </message>
     <message>
         <source>Hide %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Skrýt %1</translation>
     </message>
     <message>
         <source>Are you sure you want to hide %1? You will no longer see or be able to interact with this collectible anywhere inside Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jste si jisti, že chcete skrýt %1? Už jej neuvidíte a nebudete s ním moci interagovat v aplikaci Status.</translation>
     </message>
     <message>
         <source>%1 successfully hidden. You can toggle collectible visibility via %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 byl úspěšně skryt. Viditelnost sběratelského předmětu můžete přepnout v %2.</translation>
     </message>
     <message>
         <source>Status Software Privacy Policy</source>
-        <translation type="unfinished">Zásady ochrany osobních údajů softwaru Status</translation>
+        <translation>Zásady ochrany osobních údajů softwaru Status</translation>
     </message>
     <message>
         <source>Status Software Terms of Use</source>
-        <translation type="unfinished">Podmínky použití softwaru Status</translation>
+        <translation>Podmínky použití softwaru Status</translation>
     </message>
     <message>
         <source>Sign out</source>
-        <translation type="unfinished"></translation>
+        <translation>Odhlásit se</translation>
     </message>
     <message>
         <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ujistěte se, že máte uložené heslo k účtu a obnovovací frázi. Bez nich můžete zablokovat přístup ke svému účtu a přijít o finanční prostředky.</translation>
     </message>
     <message>
         <source>Sign out &amp; Quit</source>
-        <translation type="unfinished">Odhlásit se a ukončit</translation>
+        <translation>Odhlásit se a ukončit</translation>
     </message>
     <message>
         <source>Display zoom changed</source>
-        <translation type="unfinished"></translation>
+        <translation>Změněno zvětšení displeje</translation>
     </message>
     <message>
         <source>Restart</source>
-        <translation type="unfinished">Restartovat</translation>
+        <translation>Restartovat</translation>
     </message>
     <message>
         <source>Not Now</source>
-        <translation type="unfinished"></translation>
+        <translation>Nyní ne</translation>
     </message>
     <message>
         <source>Restart Status to apply your new display zoom</source>
-        <translation type="unfinished"></translation>
+        <translation>Restartujte aplikaci Status, aby se použilo nové zvětšení displeje</translation>
     </message>
 </context>
 <context>
     <name>PrimaryNavSidebar</name>
     <message>
         <source>Status Help Bot</source>
-        <translation type="unfinished"></translation>
+        <translation>Status Help Bot</translation>
     </message>
     <message>
         <source>Activity Center</source>
-        <translation type="unfinished">Centrum aktivit</translation>
+        <translation>Centrum aktivit</translation>
     </message>
 </context>
 <context>
@@ -13844,7 +13847,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Copied to clipboard</source>
-        <translation type="unfinished"></translation>
+        <translation>Zkopírováno do schránky</translation>
     </message>
     <message>
         <source>Remove trusted mark</source>
@@ -13918,7 +13921,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Logos Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Síť Logos</translation>
     </message>
 </context>
 <context>
@@ -14285,7 +14288,7 @@ selhalo</translation>
     </message>
     <message>
         <source>%1 / %2</source>
-        <translation></translation>
+        <translation>%1 / %2</translation>
     </message>
     <message>
         <source>Link limit of %1 reached</source>
@@ -14397,50 +14400,50 @@ selhalo</translation>
     </message>
     <message>
         <source>Align the QR code within the frame to scan</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>To scan QR codes, add contacts, send funds to wallets, and sync apps.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pro skenování QR kódů, přidávání kontaktů, odesílání finančních prostředků do peněženek a synchronizaci aplikací.</translation>
     </message>
     <message>
         <source>Open settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Otevřít nastavení</translation>
     </message>
     <message>
         <source>Scanned successfully</source>
-        <translation type="unfinished">Úspěšně naskenováno</translation>
+        <translation>Úspěšně naskenováno</translation>
     </message>
 </context>
 <context>
     <name>QRCodeScannerDialog</name>
     <message>
         <source>QR Scanner</source>
-        <translation type="unfinished"></translation>
+        <translation>QR skener</translation>
     </message>
     <message>
         <source>Contact request</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádost o kontakt</translation>
     </message>
     <message>
         <source>Join communities</source>
-        <translation type="unfinished"></translation>
+        <translation>Připojte se ke komunitám</translation>
     </message>
     <message>
         <source>Send tokens</source>
-        <translation type="unfinished"></translation>
+        <translation>Poslat tokeny</translation>
     </message>
     <message>
         <source>Open WEB links</source>
-        <translation type="unfinished"></translation>
+        <translation>Otevřít webové odkazy</translation>
     </message>
     <message>
         <source>We cannot read that QR code.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nemůžeme načíst tento QR kód.</translation>
     </message>
     <message>
         <source>WalletConnect to connect to dApps</source>
-        <translation type="unfinished"></translation>
+        <translation>WalletConnect pro připojení k dApps</translation>
     </message>
 </context>
 <context>
@@ -14466,11 +14469,11 @@ selhalo</translation>
     <name>ReceiveModal</name>
     <message>
         <source>Copy address</source>
-        <translation type="unfinished">Kopírovat adresu</translation>
+        <translation>Kopírovat adresu</translation>
     </message>
     <message>
         <source>QR code for wallet address</source>
-        <translation type="unfinished"></translation>
+        <translation>QR kód pro adresu peněženky</translation>
     </message>
 </context>
 <context>
@@ -14701,7 +14704,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Are you sure you want to remove %1 from your saved addresses?</source>
-        <translation type="unfinished"></translation>
+        <translation>Opravdu chcete odstranit %1 ze seznamu uložených adres?</translation>
     </message>
 </context>
 <context>
@@ -14832,11 +14835,11 @@ selhalo</translation>
     </message>
     <message>
         <source>History</source>
-        <translation type="unfinished"></translation>
+        <translation>Historie</translation>
     </message>
     <message>
         <source>Checking collectibles ownership…</source>
-        <translation type="unfinished"></translation>
+        <translation>Probíhá kontrola vlastnictví sběratelských předmětů…</translation>
     </message>
 </context>
 <context>
@@ -14855,7 +14858,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Type something</source>
-        <translation type="unfinished"></translation>
+        <translation>Napište něco</translation>
     </message>
 </context>
 <context>
@@ -14915,7 +14918,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Add to saved addresses</source>
-        <translation type="unfinished">Přidat do uložených adres</translation>
+        <translation>Přidat do uložených adres</translation>
     </message>
 </context>
 <context>
@@ -15024,7 +15027,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation type="unfinished">Vložit</translation>
+        <translation>Vložit</translation>
     </message>
     <message>
         <source>Loading more tokens...</source>
@@ -15065,11 +15068,11 @@ selhalo</translation>
     <name>SeedPhraseDisplayState</name>
     <message>
         <source>Write down your recovery phrase</source>
-        <translation type="unfinished">Zapište si svou obnovovací frázi</translation>
+        <translation>Zapište si svou obnovovací frázi</translation>
     </message>
     <message>
         <source>The next screen contains your recovery phrase.&lt;br/&gt;&lt;b&gt;Anyone&lt;/b&gt; who sees it can use it to access to your funds.</source>
-        <translation type="unfinished">Další obrazovka obsahuje vaši obnovovací frázi.&lt;br/&gt;&lt;b&gt;Kdokoli&lt;/b&gt;, kdo ji uvidí, ji může použít k přístupu k vašim prostředkům.</translation>
+        <translation>Další obrazovka obsahuje vaši obnovovací frázi.&lt;br/&gt;&lt;b&gt;Kdokoli&lt;/b&gt;, kdo ji uvidí, ji může použít k přístupu k vašim prostředkům.</translation>
     </message>
 </context>
 <context>
@@ -15121,23 +15124,23 @@ selhalo</translation>
     <name>SelectKeyPairState</name>
     <message>
         <source>Select key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyberte pár klíčů</translation>
     </message>
     <message>
         <source>I understand that moving this key pair will require using Keycard to sign</source>
-        <translation type="unfinished"></translation>
+        <translation>Rozumím, že přesunutí tohoto páru klíčů bude vyžadovat použití Keycard pro podepisování</translation>
     </message>
     <message>
         <source>Profile key pair</source>
-        <translation type="unfinished">Pár klíčů profilu</translation>
+        <translation>Pár klíčů profilu</translation>
     </message>
     <message>
         <source>Key pair</source>
-        <translation type="unfinished">Pár klíčů</translation>
+        <translation>Pár klíčů</translation>
     </message>
     <message>
         <source>I understand that moving this key pair will require using Keycard to log in and sign</source>
-        <translation type="unfinished"></translation>
+        <translation>Rozumím, že přesunutí tohoto páru klíčů bude vyžadovat použití Keycard pro přihlášení a podepisování</translation>
     </message>
 </context>
 <context>
@@ -15202,7 +15205,7 @@ selhalo</translation>
     </message>
     <message>
         <source>key pair requires import to use on this device</source>
-        <translation type="unfinished"></translation>
+        <translation>pro použití na tomto zařízení je nutné importovat klíčový pár</translation>
     </message>
 </context>
 <context>
@@ -15266,19 +15269,19 @@ selhalo</translation>
     </message>
     <message>
         <source>Cannot send a contact request to oneself</source>
-        <translation type="unfinished"></translation>
+        <translation>Nelze odeslat žádost o kontakt vlastní osobě.</translation>
     </message>
     <message>
         <source>This user is blocked. Unblock to send a contact request.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tento uživatel je zablokován. Pro odeslání žádosti o kontakt jej odblokujte.</translation>
     </message>
     <message>
         <source>You already sent a contact request.</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádost o kontakt již byla odeslána.</translation>
     </message>
     <message>
         <source>You are already contacts.</source>
-        <translation type="unfinished"></translation>
+        <translation>Už jste si navzájem v kontaktech.</translation>
     </message>
     <message>
         <source>Say who you are / why you want to become a contact...</source>
@@ -15327,11 +15330,11 @@ selhalo</translation>
     </message>
     <message>
         <source>Your assets on %1</source>
-        <translation type="unfinished">Vaše aktiva na %1</translation>
+        <translation>Vaše aktiva na %1</translation>
     </message>
     <message>
         <source>Popular assets</source>
-        <translation type="unfinished">Populární aktiva</translation>
+        <translation>Populární aktiva</translation>
     </message>
 </context>
 <context>
@@ -15381,7 +15384,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished">Upravit</translation>
+        <translation>Upravit</translation>
     </message>
     <message>
         <source>Send</source>
@@ -15490,7 +15493,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Keycard</source>
-        <translation type="unfinished">Keycard</translation>
+        <translation>Keycard</translation>
     </message>
     <message>
         <source>ENS usernames</source>
@@ -15510,7 +15513,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Logos network</source>
-        <translation type="unfinished"></translation>
+        <translation>Síť Logos</translation>
     </message>
     <message>
         <source>Messaging</source>
@@ -15542,7 +15545,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Notifications</source>
-        <translation type="unfinished"></translation>
+        <translation>Oznámení</translation>
     </message>
     <message>
         <source>Language &amp; Currency</source>
@@ -15623,7 +15626,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Privacy first! Join me on Status for truly private and secure chats. Use my profile link to download Status and connect: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Soukromí na prvním místě! Připojte se ke mně na Statusu a užívejte si skutečně soukromé a bezpečné chaty. Použijte můj odkaz v profilu a stáhněte si Status, abyste se mohli připojit: %1</translation>
     </message>
     <message>
         <source>Copy invitation &amp; link</source>
@@ -15635,15 +15638,15 @@ selhalo</translation>
     </message>
     <message>
         <source>Connect with %1 on Status: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Spojte se s %1 na Statusu: %2</translation>
     </message>
     <message>
         <source>%1&apos;s profile</source>
-        <translation type="unfinished">Profil uživatele %1</translation>
+        <translation>Profil uživatele %1</translation>
     </message>
     <message>
         <source>Share profile to invite contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Sdílejte profil a pozvěte kontakty</translation>
     </message>
 </context>
 <context>
@@ -15794,18 +15797,18 @@ selhalo</translation>
     </message>
     <message>
         <source>Sign</source>
-        <translation type="unfinished">Podepsat</translation>
+        <translation>Podepsat</translation>
     </message>
     <message>
         <source>Signed</source>
-        <translation type="unfinished"></translation>
+        <translation>Podepsáno</translation>
     </message>
     <message numerus="yes">
         <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, sign with the associated key pairs...</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Chcete-li sdílet %n adresu s uživatelem &lt;b&gt;%1&lt;/b&gt;, podepište ji pomocí odpovídajících párů klíčů...</numerusform>
+            <numerusform>Chcete-li sdílet %n adresy s uživatelem &lt;b&gt;%1&lt;/b&gt;, podepište je pomocí odpovídajících párů klíčů...</numerusform>
+            <numerusform>Chcete-li sdílet %n adres s uživatelem &lt;b&gt;%1&lt;/b&gt;, podepište je pomocí odpovídajících párů klíčů...</numerusform>
         </translation>
     </message>
     <message>
@@ -15868,27 +15871,27 @@ selhalo</translation>
     <name>SignPopup</name>
     <message>
         <source>Sign community request with %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Podepište žádost komunity pomocí %1</translation>
     </message>
     <message>
         <source>Sign Transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Podepsat transakci</translation>
     </message>
     <message>
         <source>Sign</source>
-        <translation type="unfinished">Podepsat</translation>
+        <translation>Podepsat</translation>
     </message>
     <message>
         <source>Update password &amp; sign</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktualizovat heslo a podepsat</translation>
     </message>
     <message>
         <source>Update PIN &amp; sign</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktualizovat PIN a podepsat</translation>
     </message>
     <message>
         <source>Failed to sign with the authorized credentials</source>
-        <translation type="unfinished"></translation>
+        <translation>Podepisování pomocí autorizovaných údajů selhalo</translation>
     </message>
 </context>
 <context>
@@ -15966,7 +15969,7 @@ selhalo</translation>
     <name>SlippageSelector</name>
     <message>
         <source>Custom %</source>
-        <translation type="unfinished"></translation>
+        <translation>Vlastní %</translation>
     </message>
     <message>
         <source>Slippage should be more than 0</source>
@@ -16163,47 +16166,47 @@ selhalo</translation>
     <name>StatusChatInput</name>
     <message>
         <source>Type something</source>
-        <translation type="unfinished"></translation>
+        <translation>Napište něco</translation>
     </message>
     <message>
         <source>Sticker</source>
-        <translation type="unfinished"></translation>
+        <translation>Samolepka</translation>
     </message>
     <message>
         <source>Multiple payment requests</source>
-        <translation type="unfinished"></translation>
+        <translation>Více žádostí o platbu</translation>
     </message>
     <message>
         <source>Payment request %1 %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádost o platbu %1 %2</translation>
     </message>
     <message numerus="yes">
         <source>%n Image(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n obrázek</numerusform>
+            <numerusform>%n obrázky</numerusform>
+            <numerusform>%n obrázků</numerusform>
         </translation>
     </message>
     <message>
         <source>Please choose an image</source>
-        <translation type="unfinished">Prosím vyberte obrázek</translation>
+        <translation>Prosím vyberte obrázek</translation>
     </message>
     <message>
         <source>Image files (%1)</source>
-        <translation type="unfinished">Soubory s obrázky (%1)</translation>
+        <translation>Soubory s obrázky (%1)</translation>
     </message>
     <message>
         <source>Please reduce the message length</source>
-        <translation type="unfinished">Prosím zkraťte délku zprávy</translation>
+        <translation>Prosím zkraťte délku zprávy</translation>
     </message>
     <message>
         <source>Maximum message character count is %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Maximální počet znaků ve zprávě je %1</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished">Upravit</translation>
+        <translation>Upravit</translation>
     </message>
 </context>
 <context>
@@ -16277,7 +16280,7 @@ selhalo</translation>
     <name>StatusCurrencySelector</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Hledat</translation>
+        <translation>Hledat</translation>
     </message>
 </context>
 <context>
@@ -16434,7 +16437,7 @@ selhalo</translation>
     <name>StatusGifPopup</name>
     <message>
         <source>Search KLIPY</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyhledat KLIPY</translation>
     </message>
     <message>
         <source>TRENDING</source>
@@ -16450,26 +16453,26 @@ selhalo</translation>
     </message>
     <message>
         <source>Enable third-party services for gifs feature to work.</source>
-        <translation type="unfinished"></translation>
+        <translation>Povolte služby třetích stran, aby funkce GIF fungovala.</translation>
     </message>
     <message>
         <source>Enable third-party services</source>
-        <translation type="unfinished">Povolit služby třetích stran</translation>
+        <translation>Povolit služby třetích stran</translation>
     </message>
 </context>
 <context>
     <name>StatusImageModal</name>
     <message>
         <source>Failed to load %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepodařilo se načíst %1</translation>
     </message>
     <message>
         <source>empty image</source>
-        <translation type="unfinished"></translation>
+        <translation>prázdný obrázek</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished">Zavřít</translation>
+        <translation>Zavřít</translation>
     </message>
 </context>
 <context>
@@ -16624,7 +16627,7 @@ selhalo</translation>
     <name>StatusPasteButton</name>
     <message>
         <source>Paste</source>
-        <translation type="unfinished">Vložit</translation>
+        <translation>Vložit</translation>
     </message>
 </context>
 <context>
@@ -16697,7 +16700,7 @@ selhalo</translation>
     <name>StatusStickerButton</name>
     <message>
         <source>Buy for %L1 SNT</source>
-        <translation type="unfinished"></translation>
+        <translation>Koupit SNT za %L1</translation>
     </message>
     <message>
         <source>Uninstall</source>
@@ -16725,7 +16728,7 @@ selhalo</translation>
     </message>
     <message>
         <source>%L1 SNT</source>
-        <translation type="unfinished"></translation>
+        <translation>%L1 SNT</translation>
     </message>
 </context>
 <context>
@@ -16752,11 +16755,11 @@ selhalo</translation>
     </message>
     <message>
         <source>Enable third-party services</source>
-        <translation type="unfinished">Povolit služby třetích stran</translation>
+        <translation>Povolit služby třetích stran</translation>
     </message>
     <message>
         <source>Enable third-party services for stickers feature to work.</source>
-        <translation type="unfinished"></translation>
+        <translation>Povolte služby třetích stran, aby funkce samolepek fungovala.</translation>
     </message>
 </context>
 <context>
@@ -16817,19 +16820,19 @@ selhalo</translation>
     <name>StatusTextEditMenu</name>
     <message>
         <source>Cut</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyjmout</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation type="unfinished">Kopírovat</translation>
+        <translation>Kopírovat</translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation type="unfinished">Vložit</translation>
+        <translation>Vložit</translation>
     </message>
     <message>
         <source>Select All</source>
-        <translation type="unfinished"></translation>
+        <translation>Vybrat vše</translation>
     </message>
 </context>
 <context>
@@ -16922,34 +16925,34 @@ selhalo</translation>
     <name>StringUtils</name>
     <message>
         <source>(edited)</source>
-        <translation type="unfinished">(upraveno)</translation>
+        <translation>(upraveno)</translation>
     </message>
 </context>
 <context>
     <name>SupportedFormatsModal</name>
     <message>
         <source>Supported formats</source>
-        <translation type="unfinished"></translation>
+        <translation>Podporované formáty</translation>
     </message>
     <message>
         <source>Files in these formats open in a browser tab. Everything else opens in another app.</source>
-        <translation type="unfinished"></translation>
+        <translation>Soubory v těchto formátech se otevírají na kartě prohlížeče. Vše ostatní se otevírá v jiné aplikaci.</translation>
     </message>
     <message>
         <source>Opens here</source>
-        <translation type="unfinished"></translation>
+        <translation>Otevře se zde</translation>
     </message>
     <message>
         <source>Opens in another app</source>
-        <translation type="unfinished"></translation>
+        <translation>Otevře se v jiné aplikaci</translation>
     </message>
     <message>
         <source>Checked against this platform&apos;s media engine.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zkontrolováno pomocí mediálního enginu této platformy.</translation>
     </message>
     <message>
         <source>Reported by this platform&apos;s browser engine.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nahlášeno prohlížečovým enginem této platformy.</translation>
     </message>
 </context>
 <context>
@@ -17027,26 +17030,26 @@ selhalo</translation>
     <name>SwapFromAccountPopup</name>
     <message>
         <source>From account</source>
-        <translation type="unfinished"></translation>
+        <translation>Z účtu</translation>
     </message>
 </context>
 <context>
     <name>SwapInputPanel</name>
     <message>
         <source>Your assets on %1</source>
-        <translation type="unfinished">Vaše aktiva na %1</translation>
+        <translation>Vaše aktiva na %1</translation>
     </message>
     <message>
         <source>Your assets</source>
-        <translation type="unfinished">Vaše aktiva</translation>
+        <translation>Vaše aktiva</translation>
     </message>
     <message>
         <source>Popular assets</source>
-        <translation type="unfinished">Populární aktiva</translation>
+        <translation>Populární aktiva</translation>
     </message>
     <message>
         <source>≈ %1</source>
-        <translation type="unfinished"></translation>
+        <translation>≈ %1</translation>
     </message>
 </context>
 <context>
@@ -17057,7 +17060,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Swap + Bridge</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Výměna + most</translation>
     </message>
     <message>
         <source>Add assets</source>
@@ -17070,11 +17073,11 @@ selhalo</translation>
     <message>
         <source>%1s</source>
         <comment>short for seconds</comment>
-        <translation type="unfinished"></translation>
+        <translation>%1 s</translation>
     </message>
     <message>
         <source>Best return</source>
-        <translation type="unfinished"></translation>
+        <translation>Nejlepší výnos</translation>
     </message>
     <message>
         <source>Bridge</source>
@@ -17098,11 +17101,11 @@ selhalo</translation>
     </message>
     <message>
         <source>Fetching quote...</source>
-        <translation type="unfinished"></translation>
+        <translation>Získávám nabídku...</translation>
     </message>
     <message>
         <source>Confirm swap + bridge</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Potvrdit výměnu + most</translation>
     </message>
     <message>
         <source>Approving %1 spending cap to Swap</source>
@@ -17126,19 +17129,19 @@ selhalo</translation>
     </message>
     <message>
         <source>Swaps on %1 are coming soon.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Výměny na %1 budou brzy dostupné.</translation>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished"></translation>
+        <translation>Nejrychlejší</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
+        <translation>Nejnižší poplatek</translation>
     </message>
     <message>
         <source>Choose route</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyberte trasu</translation>
     </message>
 </context>
 <context>
@@ -17165,7 +17168,7 @@ selhalo</translation>
     </message>
     <message>
         <source>No routes found with enough liquidity</source>
-        <translation type="unfinished"></translation>
+        <translation>Nenalezeny žádné trasy s dostatečnou likviditou</translation>
     </message>
     <message>
         <source>Something went wrong. Change amount, token or try again later.</source>
@@ -17191,31 +17194,31 @@ selhalo</translation>
     <name>SwapRoutePopup</name>
     <message>
         <source>Swap route</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Trasa pro směnu</translation>
     </message>
     <message>
         <source>Best return</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nejlepší výnos</translation>
     </message>
     <message>
         <source>Best received amount</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nejvyšší obdržená částka</translation>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nejrychlejší</translation>
     </message>
     <message>
         <source>Shortest execution time</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nejkratší doba provedení</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nejnižší poplatek</translation>
     </message>
     <message>
         <source>Lowest network cost</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nejnižší náklady na síť</translation>
     </message>
 </context>
 <context>
@@ -17282,7 +17285,7 @@ selhalo</translation>
     <name>SwapToAccountPopup</name>
     <message>
         <source>Send to</source>
-        <translation type="unfinished"></translation>
+        <translation>Poslat na</translation>
     </message>
 </context>
 <context>
@@ -17452,7 +17455,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Ensure both devices are on the same local network</source>
-        <translation type="unfinished"></translation>
+        <translation>Ujistěte se, že jsou obě zařízení ve stejné lokální síti</translation>
     </message>
     <message>
         <source>Continue</source>
@@ -17568,39 +17571,39 @@ Tuto akci nelze vzít zpět.</translation>
     <name>TabsBookmarksOverviewModal</name>
     <message>
         <source>Open tabs</source>
-        <translation type="unfinished"></translation>
+        <translation>Otevřené karty</translation>
     </message>
     <message>
         <source>Bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Záložky</translation>
     </message>
     <message>
         <source>Downloads</source>
-        <translation type="unfinished">Stažené soubory</translation>
+        <translation>Stažené soubory</translation>
     </message>
     <message>
         <source>Search in open tabs</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyhledávání v otevřených kartách</translation>
     </message>
     <message>
         <source>Search in bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyhledávání v záložkách</translation>
     </message>
     <message>
         <source>Edit bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>Upravit záložku</translation>
     </message>
     <message>
         <source>Delete bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>Smazat záložku</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Hledat</translation>
+        <translation>Hledat</translation>
     </message>
     <message>
         <source>Add</source>
-        <translation type="unfinished">Přidat</translation>
+        <translation>Přidat</translation>
     </message>
 </context>
 <context>
@@ -17653,27 +17656,27 @@ Tuto akci nelze vzít zpět.</translation>
     <name>TestnetModePopup</name>
     <message>
         <source>Turn off testnet mode</source>
-        <translation type="unfinished">Vypnout režim testnet</translation>
+        <translation>Vypnout režim testnet</translation>
     </message>
     <message>
         <source>Turn on testnet mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Zapnout režim testnet</translation>
     </message>
     <message>
         <source>Are you sure you want to turn off %1? All future transactions will be performed on live networks with real funds</source>
-        <translation type="unfinished"></translation>
+        <translation>Jste si jisti, že chcete vypnout %1? Všechny budoucí transakce budou prováděny v živých sítích s reálnými prostředky. </translation>
     </message>
     <message>
         <source>Are you sure you want to turn on %1? In this mode, all blockchain data displayed will come from testnets and all blockchain interactions will be with testnets. Testnet mode switches the entire app to using testnets only. Please switch this mode on only if you know exactly why you need to use it.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jste si jisti, že chcete zapnout %1? V tomto režimu budou všechna zobrazená data blockchainu pocházet z testovacích sítí a všechny interakce s blockchainem budou probíhat v testovacích sítích. Režim testovací sítě přepne celou aplikaci do používání pouze testovacích sítí. Zapněte tento režim pouze v případě, že přesně víte, proč ho potřebujete. </translation>
     </message>
     <message>
         <source>Testnet mode turned on</source>
-        <translation type="unfinished"></translation>
+        <translation>Režim testovací sítě zapnut</translation>
     </message>
     <message>
         <source>Testnet mode turned off</source>
-        <translation type="unfinished"></translation>
+        <translation>Režim testovací sítě vypnut</translation>
     </message>
 </context>
 <context>
@@ -17828,23 +17831,23 @@ Tuto akci nelze vzít zpět.</translation>
     </message>
     <message>
         <source>Contact removed</source>
-        <translation type="unfinished"></translation>
+        <translation>Kontakt odebrán</translation>
     </message>
     <message>
         <source>%1 removed you as a contact</source>
-        <translation type="unfinished">%1 si vás odebral z kontaktů</translation>
+        <translation>%1 si vás odebral z kontaktů</translation>
     </message>
     <message>
         <source>You removed %1 as a contact</source>
-        <translation type="unfinished">Odebrali jste %1 z kontaktů</translation>
+        <translation>Odebrali jste %1 z kontaktů</translation>
     </message>
     <message>
         <source>Backup failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Zálohování selhalo</translation>
     </message>
     <message>
         <source>Check Settings &gt; Backups to see the details and try again</source>
-        <translation type="unfinished"></translation>
+        <translation>Zkontrolujte Nastavení &gt; Zálohy, abyste viděli podrobnosti a zkuste to znovu</translation>
     </message>
     <message>
         <source>Your data backup restored successfully</source>
@@ -17852,7 +17855,7 @@ Tuto akci nelze vzít zpět.</translation>
     </message>
     <message>
         <source>Import failed. Make sure the backup file matches your profile key.</source>
-        <translation type="unfinished"></translation>
+        <translation>Import selhal. Ujistěte se, že soubor zálohy odpovídá vašemu klíči profilu.</translation>
     </message>
 </context>
 <context>
@@ -18127,79 +18130,79 @@ Tuto akci nelze vzít zpět.</translation>
     </message>
     <message>
         <source>%1 (community asset) from %2 on %3</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 (komunitní aktivum) od %2 dne %3</translation>
     </message>
     <message>
         <source>%1 from %2 to %3 on %4 and %5</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 od %2 do %3 dne %4 a %5</translation>
     </message>
     <message>
         <source>%1 to %2 on %3 and %4</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 do %2 dne %3 a %4</translation>
     </message>
     <message>
         <source>%1 from %2 to %3 on %4</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 od %2 do %3 dne %4</translation>
     </message>
     <message>
         <source>%1 to %2 on %3</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 do %2 dne %3</translation>
     </message>
     <message>
         <source>%1 from %2 on %3 and %4</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 od %2 dne %3 a %4</translation>
     </message>
     <message>
         <source>%1 from %2 on %3</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 od %2 dne %3</translation>
     </message>
     <message>
         <source>%1 at %2 on %3 in %4</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 na %2 dne %3 v %4</translation>
     </message>
     <message>
         <source>%1 at %2 on %3</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 na %2 dne %3</translation>
     </message>
     <message>
         <source>%1 to %2 in %3 on %4</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 do %2 v %3 dne %4</translation>
     </message>
     <message>
         <source>%1 from %2 to %3 in %4</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 od %2 do %3 v %4</translation>
     </message>
     <message>
         <source>%1 from %2 to %3</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 od %2 do %3</translation>
     </message>
     <message>
         <source>Via %1 on %2</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Přes %1 dne %2</translation>
     </message>
     <message>
         <source>%1 via %2 in %3</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 přes %2 v %3</translation>
     </message>
     <message>
         <source>%1 via %2</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 přes %2</translation>
     </message>
     <message>
         <source>%1 in %2 for %3 on %4</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 v %2 pro %3 dne %4</translation>
     </message>
     <message>
         <source>%1 for %2 on %3</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 pro %2 dne %3</translation>
     </message>
     <message>
         <source>Between %1 and %2 on %3</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Mezi %1 a %2 dne %3</translation>
     </message>
     <message>
         <source>With %1 on %2</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">S %1 dne %2</translation>
     </message>
     <message>
         <source>Send failed</source>
@@ -18331,11 +18334,11 @@ Tuto akci nelze vzít zpět.</translation>
     </message>
     <message>
         <source>Unknown token</source>
-        <translation type="unfinished"></translation>
+        <translation>Neznámý token</translation>
     </message>
     <message>
         <source>Unknown token (%1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Neznámý token (%1)</translation>
     </message>
 </context>
 <context>
@@ -18354,128 +18357,132 @@ Tuto akci nelze vzít zpět.</translation>
     </message>
     <message>
         <source>Set your own fees &amp; nonce</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nastavte si vlastní poplatky a nonce</translation>
     </message>
     <message>
         <source>Set your own base fee, priority fee, gas amount and nonce</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nastavte si vlastní základní poplatek, prioritní poplatek, množství gasu a nonce</translation>
     </message>
     <message>
         <source>Regular cost option using suggested gas price</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Standardní možnost nákladů s použitím doporučené ceny gasu</translation>
     </message>
     <message>
         <source>Increased gas price, incentivising miners to confirm more quickly</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Zvýšená cena gasu, která motivuje těžaře k rychlejšímu potvrzení</translation>
     </message>
     <message>
         <source>Highest base and priority fee, ensuring the fastest possible confirmation</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nejvyšší základní a prioritní poplatek, zajišťující nejrychlejší možné potvrzení</translation>
     </message>
     <message>
         <source>Low cost option using current network base fee and a low priority fee</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nízkonákladová možnost s použitím aktuálního základního poplatku sítě a nízkého prioritního poplatku</translation>
     </message>
     <message>
         <source>Gas price</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Cena gasu</translation>
     </message>
     <message>
         <source>Max base fee</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Maximální základní poplatek</translation>
     </message>
     <message>
         <source>Lower than necessary (current %1)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nižší, než je nutné (aktuálně %1)</translation>
     </message>
     <message>
         <source>Higher than necessary (current %1)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Vyšší, než je nutné (aktuálně %1)</translation>
     </message>
     <message>
         <source>Current: %1</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Aktuální: %1</translation>
     </message>
     <message>
         <source>The gas price you set is the exact amount you’ll pay per unit of gas used. If you set a gas price higher than what’s required for inclusion, the difference will not be refunded. Choose your gas price carefully to avoid overpaying.
 </source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Cena gasu, kterou nastavíte, je přesná částka, kterou zaplatíte za jednotku použitého gasu. Pokud nastavíte cenu gasu vyšší, než je vyžadováno pro zahrnutí, rozdíl vám nebude vrácen. Pečlivě si vyberte cenu gasu, abyste se vyhnuli přeplacení.</translation>
     </message>
     <message>
         <source>When your transaction gets included in the block, any difference between your max base fee and the actual base fee will be refunded.
 </source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Když bude vaše transakce zahrnuta do bloku, jakýkoli rozdíl mezi vaším maximálním základním poplatkem a skutečným základním poplatkem vám bude vrácen.</translation>
     </message>
     <message>
         <source>Note: the %1 amount shown for this value is calculated:
 Gas price (in GWEI) * gas amount</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Poznámka: částka %1 zobrazená pro tuto hodnotu se vypočítá: Cena gasu (v GWEI) * množství gasu</translation>
     </message>
     <message>
         <source>Note: the %1 amount shown for this value is calculated:
 Max base fee (in GWEI) * Max gas amount</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Poznámka: částka %1 zobrazená pro tuto hodnotu se vypočítá: Maximální základní poplatek (v GWEI) * maximální množství gasu</translation>
     </message>
     <message>
         <source>Priority fee</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Prioritní poplatek</translation>
     </message>
     <message>
         <source>Higher than max base fee: %1</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Vyšší než maximální základní poplatek: %1</translation>
     </message>
     <message>
         <source>Higher than necessary (current %1 - %2)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Vyšší, než je nutné (aktuálně %1 - %2)</translation>
     </message>
     <message>
         <source>Current: %1 - %2</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Aktuální: %1 - %2</translation>
     </message>
     <message>
         <source>AKA miner tip. A voluntary fee you can add to incentivise miners or validators to prioritise your transaction.
 
 The higher the tip, the faster your transaction is likely to be processed, especially curing periods of higher network congestion.
 </source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Také známý jako odměna pro těžaře. Jedná se o dobrovolný poplatek, který můžete přidat, abyste motivovali těžaře nebo validátory, aby vaší transakci dali přednost.
+
+Čím vyšší je odměna, tím pravděpodobnější je, že bude vaše transakce zpracována rychleji, zejména v obdobích vyššího zatížení sítě.</translation>
     </message>
     <message>
         <source>Note: the %1 amount shown for this value is calculated: Priority fee (in GWEI) * Max gas amount</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Poznámka: zobrazená hodnota %1 pro tuto položku se vypočítá: Prioritní poplatek (v GWEI) * Maximální množství gasu</translation>
     </message>
     <message>
         <source>Max gas amount</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Maximální množství gasu</translation>
     </message>
     <message>
         <source>Too low (should be between %1 and %2)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Příliš nízká hodnota (měla by být mezi %1 a %2)</translation>
     </message>
     <message>
         <source>Too high (should be between %1 and %2)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Příliš vysoká hodnota (měla by být mezi %1 a %2)</translation>
     </message>
     <message>
         <source>UNITS</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">JEDNOTKY</translation>
     </message>
     <message>
         <source>Gas amount</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Množství gasu</translation>
     </message>
     <message>
         <source>AKA gas limit. Refers to the maximum number of computational steps (or units of gas) that a transaction can consume. It represents the complexity or amount of work required to execute a transaction or smart contract.
 
 The gas limit is a cap on how much work the transaction can do on the blockchain. If the gas limit is set too low, the transaction may fail due to insufficient gas.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Také známé jako limit gasu. Označuje maximální počet výpočetních kroků (nebo jednotek gasu), které může transakce spotřebovat. Představuje složitost nebo množství práce potřebné k provedení transakce nebo chytré smlouvy. 
+
+Limit gasu je strop pro množství práce, kterou může transakce na blockchainu vykonat. Pokud je limit gasu nastaven příliš nízko, transakce může selhat kvůli nedostatečnému množství gasu.</translation>
     </message>
     <message>
         <source>Nonce</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nonce</translation>
     </message>
     <message>
         <source>Higher than suggested nonce of %1</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Vyšší než doporučený nonce %1</translation>
     </message>
     <message>
         <source>Last transaction: %1</source>
@@ -18485,7 +18492,9 @@ The gas limit is a cap on how much work the transaction can do on the blockchain
         <source>Transaction counter ensuring transactions from your account are processed in the correct order and can’t be replayed. Each new transaction increments the nonce by 1, ensuring uniqueness and preventing double-spending.
 
 If a transaction with a lower nonce is pending, higher nonce transactions will remain in the queue until the earlier one is confirmed.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Čítač transakcí, který zajišťuje, že transakce z vašeho účtu budou zpracovány ve správném pořadí a nebudou opakovaně odeslány. Každá nová transakce zvýší nonce o 1, čímž zajistí jedinečnost a zabrání dvojímu utrácení. 
+
+Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zůstanou ve frontě, dokud se dřívější nepotvrdí.</translation>
     </message>
     <message>
         <source>Confirm</source>
@@ -18504,11 +18513,11 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>&lt;b&gt;It looks like you haven’t minted the %1 Owner token yet.&lt;/b&gt; Once you have minted this token, you can transfer ownership of %1 by sending the Owner token to the account of the person you want to be the new Community owner.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&lt;b&gt;Zdá se, že jste ještě nevytvořili token %1 Owner.&lt;/b&gt; Jakmile tento token vytvoříte, můžete převést vlastnictví %1 odesláním tokenu Owner na účet osoby, kterou chcete určit jako nového vlastníka komunity.</translation>
     </message>
     <message>
         <source>&lt;b&gt;It looks like you haven’t minted the %1 Owner token yet.&lt;/b&gt; Once you have minted this token, you can make one of your other synced desktop devices the control node for the %1 Community.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&lt;b&gt;Zdá se, že jste ještě nevytvořili token %1 Owner.&lt;/b&gt; Jakmile tento token vytvoříte, můžete jedno ze svých dalších synchronizovaných stolních zařízení nastavit jako řídicí uzel pro komunitu %1.</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -18567,7 +18576,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Unblocking %1 will allow new messages you receive from %1 to reach you.</source>
         <translatorcomment>Odblokováním %1 umožníte, aby vám dorazily nové zprávy od %1.</translatorcomment>
-        <translation></translation>
+        <translation>Odblokování uživatele %1 umožní, aby se k vám dostávala nová zprávy od uživatele %1.</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -18624,7 +18633,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>UserListPanel</name>
     <message>
         <source>Search members...</source>
-        <translation type="unfinished"></translation>
+        <translation>Hledat členy...</translation>
     </message>
     <message>
         <source>Member re-evaluation in progress...</source>
@@ -18647,7 +18656,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>UserStatusContextMenu</name>
     <message>
         <source>Copy Chat Key</source>
-        <translation type="unfinished">Kopírovat klíč chatu</translation>
+        <translation>Kopírovat klíč chatu</translation>
     </message>
     <message>
         <source>Copy link to profile</source>
@@ -18655,7 +18664,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Settings</source>
-        <translation type="unfinished">Nastavení</translation>
+        <translation>Nastavení</translation>
     </message>
     <message>
         <source>Always online</source>
@@ -18671,7 +18680,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Invite contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Pozvat kontakty</translation>
     </message>
 </context>
 <context>
@@ -18798,7 +18807,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>QR Scanner</source>
-        <translation type="unfinished"></translation>
+        <translation>QR skener</translation>
     </message>
     <message>
         <source>Add new user</source>
@@ -18838,27 +18847,27 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Failed to start the transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepodařilo se spustit transakci</translation>
     </message>
     <message>
         <source>No account selected to send the transaction from</source>
-        <translation type="unfinished"></translation>
+        <translation>Nebyl vybrán žádný účet, ze kterého se má transakce odeslat</translation>
     </message>
     <message>
         <source>Failed to prepare the transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepodařilo se připravit transakci</translation>
     </message>
     <message>
         <source>Failed to send the transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepodařilo se odeslat transakci</translation>
     </message>
     <message>
         <source>Transaction signing was not completed</source>
-        <translation type="unfinished"></translation>
+        <translation>Podepisování transakce nebylo dokončeno</translation>
     </message>
     <message>
         <source>Failed to prepare the transaction for signing</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepodařilo se připravit transakci pro podepsání</translation>
     </message>
     <message>
         <source>acc</source>
@@ -18879,7 +18888,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Robinhood Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Robinhood Explorer</translation>
     </message>
     <message>
         <source>BscScan</source>
@@ -18915,39 +18924,39 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Messages are loading...</source>
-        <translation type="unfinished"></translation>
+        <translation>Zprávy se načítají...</translation>
     </message>
     <message>
         <source>Unichain Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Unichain Explorer</translation>
     </message>
     <message>
         <source>Katana Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Katana Explorer</translation>
     </message>
     <message>
         <source>Ink Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Ink Explorer</translation>
     </message>
     <message>
         <source>Abstract Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Abstract Explorer</translation>
     </message>
     <message>
         <source>ZkSync Era Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>ZkSync Era Explorer</translation>
     </message>
     <message>
         <source>Soneium Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Soneium Explorer</translation>
     </message>
     <message>
         <source>ScrollScan</source>
-        <translation type="unfinished"></translation>
+        <translation>ScrollScan</translation>
     </message>
     <message>
         <source>BlastScan</source>
-        <translation type="unfinished"></translation>
+        <translation>BlastScan</translation>
     </message>
 </context>
 <context>
@@ -19010,7 +19019,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>WalletAccountsSkeleton</name>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished">Peněženka</translation>
+        <translation>Peněženka</translation>
     </message>
 </context>
 <context>
@@ -19051,11 +19060,11 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Find a friend</source>
-        <translation type="unfinished"></translation>
+        <translation>Najít přítele</translation>
     </message>
     <message>
         <source>Onchain friends</source>
-        <translation type="unfinished"></translation>
+        <translation>Přátelé v blockchainu</translation>
     </message>
 </context>
 <context>
@@ -19066,11 +19075,11 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Soulbound tokens cannot be sent to another wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Soulbound tokeny nelze odeslat do jiné peněženky</translation>
     </message>
     <message>
         <source>Go to &quot;Manage community -&gt; Tokens&quot; page to send it</source>
-        <translation type="unfinished"></translation>
+        <translation>Přejděte na stránku „Spravovat komunitu -&gt; Tokeny“ a odešlete jej</translation>
     </message>
     <message>
         <source>Receive</source>
@@ -19139,7 +19148,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>WalletNetworkDelegate</name>
     <message>
         <source>%1 chain integrated. You can now view and swap &lt;br&gt;%1 assets, as well as interact with %1 dApps.</source>
-        <translation type="unfinished">Řetězec %1 integrován. Nyní můžete prohlížet a směňovat &lt;br&gt;aktiva %1, stejně jako interagovat s dApps na %1.</translation>
+        <translation>Řetězec %1 integrován. Nyní můžete prohlížet a směňovat &lt;br&gt;aktiva %1, stejně jako interagovat s dApps na %1.</translation>
     </message>
     <message>
         <source>Required for some Status features</source>
@@ -19150,39 +19159,39 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>WalletPrivacyWall</name>
     <message>
         <source>Enable third-party services for wallet features to work.</source>
-        <translation type="unfinished"></translation>
+        <translation>Povolte služby třetích stran, aby funkce peněženky fungovaly.</translation>
     </message>
     <message>
         <source>Portfolio view for your tokens</source>
-        <translation type="unfinished"></translation>
+        <translation>Zobrazení portfolia vašich tokenů</translation>
     </message>
     <message>
         <source>Use multi-chain, multi-account, and fully self-custodial wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Používejte multiřetězcovou, multiúčtovou a plně samoobslužnou peněženku</translation>
     </message>
     <message>
         <source>Fast &amp; easy token swaps</source>
-        <translation type="unfinished"></translation>
+        <translation>Rychlé a snadné výměny tokenů</translation>
     </message>
     <message>
         <source>Access wide token coverage and the best prices across top DEXes</source>
-        <translation type="unfinished"></translation>
+        <translation>Získejte přístup k široké nabídce tokenů a nejlepším cenám na předních decentralizovaných burzách (DEX).</translation>
     </message>
     <message>
         <source>Organize collectibles your way</source>
-        <translation type="unfinished"></translation>
+        <translation>Organizujte své sběratelské předměty podle vlastních preferencí</translation>
     </message>
     <message>
         <source>Search, filter, and sort your collectibles exactly how you want</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyhledávejte, filtrujte a řaďte své sběratelské předměty přesně tak, jak chcete</translation>
     </message>
     <message>
         <source>Multiple ways to buy tokens</source>
-        <translation type="unfinished"></translation>
+        <translation>Různé způsoby nákupu tokenů</translation>
     </message>
     <message>
         <source>Pay with cards, bank transfers, Apple/Google Pay, SEPA, and 9+ options</source>
-        <translation type="unfinished"></translation>
+        <translation>Plaťte kartou, bankovním převodem, prostřednictvím Apple/Google Pay, SEPA a dalšími než 9 možnostmi.</translation>
     </message>
 </context>
 <context>
@@ -19212,7 +19221,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>&lt; 1 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 1 min</translation>
     </message>
     <message>
         <source>&lt; 3 minutes</source>
@@ -19220,7 +19229,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>&lt; 3 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 3 min</translation>
     </message>
     <message>
         <source>&lt; 5 minutes</source>
@@ -19228,7 +19237,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>&lt; 5 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 5 min</translation>
     </message>
     <message>
         <source>&gt; 5 minutes</source>
@@ -19236,7 +19245,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>&gt; 5 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&gt; 5 min</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -19252,27 +19261,27 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>an internal error occurred</source>
-        <translation type="unfinished"></translation>
+        <translation>došlo k interní chybě</translation>
     </message>
     <message>
         <source>unknown error occurred, try again later</source>
-        <translation type="unfinished"></translation>
+        <translation>došlo k neznámé chybě, zkuste to později</translation>
     </message>
     <message>
         <source>processor internal error</source>
-        <translation type="unfinished"></translation>
+        <translation>interní chyba procesoru</translation>
     </message>
     <message>
         <source>processor network error</source>
-        <translation type="unfinished"></translation>
+        <translation>chyba síťového připojení procesoru</translation>
     </message>
     <message>
         <source>router network error</source>
-        <translation type="unfinished"></translation>
+        <translation>chyba síťového připojení routeru</translation>
     </message>
     <message>
         <source>not enough token balance</source>
-        <translation type="unfinished"></translation>
+        <translation>nedostatečný zůstatek tokenů</translation>
     </message>
     <message>
         <source>Not enough ETH to pay gas fees</source>
@@ -19280,231 +19289,231 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>amount in too low</source>
-        <translation type="unfinished"></translation>
+        <translation>příliš nízká částka</translation>
     </message>
     <message>
         <source>no positive balance</source>
-        <translation type="unfinished"></translation>
+        <translation>žádný kladný zůstatek</translation>
     </message>
     <message>
         <source>unknown processor error</source>
-        <translation type="unfinished"></translation>
+        <translation>neznámá chyba procesoru</translation>
     </message>
     <message>
         <source>failed to parse base fee</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">nepodařilo se analyzovat základní poplatek</translation>
     </message>
     <message>
         <source>failed to parse percentage fee</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">nepodařilo se analyzovat procentuální poplatek</translation>
     </message>
     <message>
         <source>contract not found</source>
-        <translation type="unfinished"></translation>
+        <translation>kontrakt nenalezen</translation>
     </message>
     <message>
         <source>network not found</source>
-        <translation type="unfinished"></translation>
+        <translation>síť nebyla nalezena</translation>
     </message>
     <message>
         <source>token not found</source>
-        <translation type="unfinished"></translation>
+        <translation>token nebyl nalezen</translation>
     </message>
     <message>
         <source>no estimation found</source>
-        <translation type="unfinished"></translation>
+        <translation>nenalezen žádný odhad</translation>
     </message>
     <message>
         <source>not available for contract type</source>
-        <translation type="unfinished"></translation>
+        <translation>není k dispozici pro daný typ kontraktu</translation>
     </message>
     <message>
         <source>no bonder fee found</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">nebyl nalezen poplatek za zajištění</translation>
     </message>
     <message>
         <source>contract type not supported</source>
-        <translation type="unfinished"></translation>
+        <translation>typ kontraktu není podporován</translation>
     </message>
     <message>
         <source>from chain not supported</source>
-        <translation type="unfinished"></translation>
+        <translation>zdrojový řetězec není podporován</translation>
     </message>
     <message>
         <source>to chain not supported</source>
-        <translation type="unfinished"></translation>
+        <translation>cílový řetězec není podporován</translation>
     </message>
     <message>
         <source>tx for chain not supported</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">transakce pro daný blockchain není podporována</translation>
     </message>
     <message>
         <source>ens resolver not found</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">nenalezen resolver ENS</translation>
     </message>
     <message>
         <source>ens registrar not found</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">nenalezen registrátor ENS</translation>
     </message>
     <message>
         <source>to and from tokens must be set</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">musí být nastaveny tokeny &apos;od&apos; a &apos;do&apos;</translation>
     </message>
     <message>
         <source>cannot resolve tokens</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">nelze vyřešit tokeny</translation>
     </message>
     <message>
         <source>price route not found</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">nenalezena cesta pro výpočet ceny</translation>
     </message>
     <message>
         <source>converting amount issue</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">problém při převodu částky</translation>
     </message>
     <message>
         <source>no chain set</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">nebyl nastaven žádný blockchain</translation>
     </message>
     <message>
         <source>no token set</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">nebyl nastaven žádný token</translation>
     </message>
     <message>
         <source>to token should not be set</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">token &apos;do&apos; by neměl být nastaven</translation>
     </message>
     <message>
         <source>from and to chains must be different</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">blockchainy &apos;od&apos; a &apos;do&apos; musí být odlišné</translation>
     </message>
     <message>
         <source>from and to chains must be same</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">blockchainy &apos;od&apos; a &apos;do&apos; musí být stejné</translation>
     </message>
     <message>
         <source>from and to tokens must be different</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">tokeny &apos;od&apos; a &apos;do&apos; musí být odlišné</translation>
     </message>
     <message>
         <source>context cancelled</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">kontext byl zrušen</translation>
     </message>
     <message>
         <source>context deadline exceeded</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">překročena doba platnosti kontextu</translation>
     </message>
     <message>
         <source>fetching price timeout</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">vypršel časový limit pro načítání ceny</translation>
     </message>
     <message>
         <source>not enough liquidity</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">nedostatečná likvidita</translation>
     </message>
     <message>
         <source>price impact too high</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">příliš vysoký dopad na cenu</translation>
     </message>
     <message>
         <source>username and public key are required for registering ens name</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">pro registraci názvu ENS jsou vyžadovány uživatelské jméno a veřejný klíč</translation>
     </message>
     <message>
         <source>only STT is supported for registering ens name on testnet</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">pro registraci názvu ENS v testovací síti je podporován pouze STT</translation>
     </message>
     <message>
         <source>only SNT is supported for registering ens name on mainnet</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Pro registraci názvu ENS na hlavní síti je podporován pouze SNT</translation>
     </message>
     <message>
         <source>username is required for releasing ens name</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Pro uvolnění názvu ENS je vyžadováno uživatelské jméno</translation>
     </message>
     <message>
         <source>username and public key are required for setting public key</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Pro nastavení veřejného klíče je vyžadováno uživatelské jméno a veřejný klíč</translation>
     </message>
     <message>
         <source>stickers pack id is required for buying stickers</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Pro zakoupení samolepek je vyžadováno ID balíčku samolepek</translation>
     </message>
     <message>
         <source>to token is required for Swap</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Pro funkci Swap je vyžadován token &apos;to&apos;</translation>
     </message>
     <message>
         <source>from and to token must be different</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Tokeny &apos;from&apos; a &apos;to&apos; musí být odlišné</translation>
     </message>
     <message>
         <source>only one of amount to send or receiving amount can be set</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Lze nastavit pouze jednu hodnotu: buď odesílanou částku, nebo přijímanou částku</translation>
     </message>
     <message>
         <source>amount to send must be positive</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Odesílaná částka musí být kladná</translation>
     </message>
     <message>
         <source>receiving amount must be positive</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Přijímaná částka musí být kladná</translation>
     </message>
     <message>
         <source>locked amount is not supported for the selected network</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Uzamčená částka není podporována pro vybranou síť</translation>
     </message>
     <message>
         <source>locked amount must not be negative</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Uzamčená částka nesmí být záporná</translation>
     </message>
     <message>
         <source>locked amount exceeds the total amount to send</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Uzamčená částka přesahuje celkovou odesílanou částku</translation>
     </message>
     <message>
         <source>locked amount is less than the total amount to send, but all networks are locked</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Uzamčená částka je menší než celková odesílaná částka, ale všechny sítě jsou uzamčeny</translation>
     </message>
     <message>
         <source>native token not found</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nativní token nebyl nalezen</translation>
     </message>
     <message>
         <source>disabled chain found among locked networks</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Mezi uzamčenými sítěmi byla nalezena deaktivovaná síť</translation>
     </message>
     <message>
         <source>a valid username, ending in &apos;.eth&apos;, is required for setting public key</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Pro nastavení veřejného klíče je vyžadováno platné uživatelské jméno, které končí na &apos;.eth&apos;</translation>
     </message>
     <message>
         <source>all supported chains are excluded, routing impossible</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Všechny podporované sítě jsou vyloučeny, směrování je nemožné</translation>
     </message>
     <message>
         <source>no best route found</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nebyl nalezen nejlepší směr</translation>
     </message>
     <message>
         <source>cannot check balance</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nelze zkontrolovat zůstatek</translation>
     </message>
     <message>
         <source>cannot check locked amounts</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nelze zkontrolovat uzamčené částky</translation>
     </message>
     <message>
         <source>not enough balance for %1 on %2 chain</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">nedostatečný zůstatek pro %1 v síti %2</translation>
     </message>
     <message>
         <source>bonder fee greater than estimated received, a higher amount is needed to cover fees</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">poplatek pro bondera je vyšší, než se očekávalo, je potřeba vyšší částka na pokrytí poplatků</translation>
     </message>
     <message>
         <source>no positive balance for your account across chains</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">nemáte žádný kladný zůstatek na vašem účtu v žádné ze sítí</translation>
     </message>
     <message>
         <source>Fast</source>
@@ -19544,7 +19553,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>New custom sort order created</source>
         <translatorcomment>Nové vlastní pořadí vytvořeno</translatorcomment>
-        <translation></translation>
+        <translation>Bylo vytvořeno nové vlastní řazení</translation>
     </message>
     <message>
         <source>Your new custom token order has been applied to your %1</source>
@@ -19709,23 +19718,23 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>main</name>
     <message>
         <source>Status Desktop</source>
-        <translation type="unfinished"></translation>
+        <translation>Status Desktop</translation>
     </message>
     <message>
         <source>Share logs or report a bug?</source>
-        <translation type="unfinished"></translation>
+        <translation>Sdílet záznamy nebo nahlásit chybu?</translation>
     </message>
     <message>
         <source>Export log files</source>
-        <translation type="unfinished"></translation>
+        <translation>Exportovat soubory protokolu</translation>
     </message>
     <message>
         <source>No log files found</source>
-        <translation type="unfinished"></translation>
+        <translation>Nenalezeny žádné soubory protokolu</translation>
     </message>
     <message>
         <source>Report a bug on GitHub</source>
-        <translation type="unfinished"></translation>
+        <translation>Nahlásit chybu na Github</translation>
     </message>
 </context>
 <context>
@@ -19736,7 +19745,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>You need to enter an account name</source>
-        <translation type="unfinished"></translation>
+        <translation>Musíte zadat název účtu</translation>
     </message>
     <message>
         <source>This is not a valid account name</source>
