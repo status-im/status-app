@@ -164,16 +164,15 @@ RUN GOLANG_SHA256="da18191ddb7db8a9339816f3e2b54bdded8047cdc2a5d67059478f8d1595c
 # Install Go tools and clean up Go module cache to save space
 RUN /usr/local/go/bin/go install github.com/go-bindata/go-bindata/v3/go-bindata@latest \
  && /usr/local/go/bin/go install go.uber.org/mock/mockgen@v0.4.0 \
- && /usr/local/go/bin/go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.1 \
  && cp /root/go/bin/* /usr/local/bin/ \
  && rm -rf /root/go /root/.cache/go-build
 
 # =============================================================================
 # Install Protoc (from GitHub releases, includes well-known types)
 # =============================================================================
-RUN PROTOC_SHA256="75d8a9d7a2c42566e46411750d589c51276242d8b6247a5724bac0f9283e05a8" \
- && PROTOC_TARBALL="protoc-3.20.0-linux-x86_64.zip" \
- && wget -q -L "https://github.com/protocolbuffers/protobuf/releases/download/v3.20.0/${PROTOC_TARBALL}" \
+RUN PROTOC_SHA256="bc8211ce760bd43ee21ddc145d6d9dbaeeabae205267a79d9054a240e367d4b4" \
+ && PROTOC_TARBALL="protoc-36.0-linux-x86_64.zip" \
+ && wget -q -L "https://github.com/protocolbuffers/protobuf/releases/download/v36.0/${PROTOC_TARBALL}" \
  && echo "${PROTOC_SHA256} ${PROTOC_TARBALL}" | sha256sum -c \
  && unzip -d /usr/local "${PROTOC_TARBALL}" \
  && rm "${PROTOC_TARBALL}"

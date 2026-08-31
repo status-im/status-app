@@ -85,7 +85,7 @@ Install [scoop](https://scoop.sh/) if you don't have it already. Then run:
 
 ```
 scoop bucket add extras
-scoop install --global protobuf@3.20.1
+scoop install --global protobuf@36.0
 ```
 
 > ⚠️ Note: There is a script `scripts/windows_build_setup.ps1`, which is used to install dependencies on CI machines. Feel free to use it as inspiration for the needed versions.
@@ -98,8 +98,10 @@ Install required packages:
 
 ```bash
 sudo apt update
-sudo apt install libpcsclite-dev build-essential mesa-common-dev libglu1-mesa-dev libssl-dev cmake jq libxcb-xinerama0 protobuf-compiler
+sudo apt install libpcsclite-dev build-essential mesa-common-dev libglu1-mesa-dev libssl-dev cmake jq libxcb-xinerama0
 ```
+
+> ⚠️ Note: `status-go` needs protoc 36 or newer, which is newer than `protobuf-compiler` in apt. `scripts/ubuntu_build_setup.sh` installs it from the upstream release.
 
 Install **Go 1.26**:
 
@@ -290,16 +292,6 @@ git clone https://github.com/status-im/status-app.git
 cd status-desktop
 ```
 
-Install some `status-go` dependencies:
-
-```bash
-make status-go-deps
-```
-
-Make sure you have `~/go/bin` in your `PATH`:
-```bash
-echo "export PATH=\"$HOME/go/bin:\$PATH\"" >> ~/.zshrc
-```
 
 Update all submodules and build the dependencies:
 
