@@ -128,7 +128,6 @@ public final class StatusNotificationManager {
         final String communityIcon = eventWrap.optString("communityIcon", "");
         final String chatIcon = eventWrap.optString("chatIcon", "");
         final boolean isFromMe = eventWrap.optBoolean("isFromMe", false);
-
         String senderIcon = "";
         String senderName = "";
         final JSONObject author = eventWrap.optJSONObject("notificationAuthor");
@@ -236,7 +235,7 @@ public final class StatusNotificationManager {
                         ? activeVisual.largeIcon : largeIconFromEvent;
                 NotificationBuilder.postMessageNotification(
                         context, notificationTitle, conversationId, notifIdInt,
-                        deepLink, largeIcon, messages, isOneToOne);
+                        deepLink, largeIcon, messages, isOneToOne, isFromMe);
             } else {
                 String idBase = (notificationId != null ? notificationId
                         : (conversationId != null ? conversationId : title + message))

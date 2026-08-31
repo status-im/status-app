@@ -110,9 +110,9 @@ No in-process conversation buffer is maintained. Instead, conversation state is 
 When the user sends a message, `status-go` emits a `local-notifications` signal with `isFromMe: true`. The Android layer uses this to:
 
 - **Skip** posting a notification if no incoming-message notification for this conversation is currently active (the user is the first sender; nothing to refresh).
-- **Refresh** an existing conversation notification by appending the sent message to the MessagingStyle thread, so the notification reflects the full conversation.
+- **Refresh** an existing conversation notification by appending the sent message to the MessagingStyle thread, so the notification reflects the full conversation. The repost uses `setOnlyAlertOnce(true)`, which preserves the notification without alerting or vibrating again.
 
-This prevents the user from seeing a notification for their own messages while still keeping an active notification up to date.
+This prevents the user from seeing a notification for their own messages while still keeping an active notification up to date. In particular, an inline reply appends to the active notification without triggering the notification channel's vibration again.
 
 ---
 
@@ -130,7 +130,7 @@ When the UI comes to the foreground, all active notifications are cancelled and 
 
 1. Extracts the reply text from `RemoteInput`.
 2. Calls `StatusGoService.callRpc("wakuext_sendChatMessage", ...)` directly (same process — no Binder round-trip needed).
-3. On success the notification is updated with the sent message via a new `local-notifications` signal from `status-go`.
+3. On success the notification is updated with the sent message via a new `local-notifications` signal from `status-go`; the update is configured to alert only once, so it does not vibrate again.
 4. On failure a "Reply failed" notification is shown.
 
 The send response is also forwarded to the UI process as an internal `notification.reply.sent`
