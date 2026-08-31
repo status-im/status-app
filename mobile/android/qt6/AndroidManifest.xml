@@ -45,7 +45,8 @@
         android:theme="@style/Theme.AppSplash"
         android:allowBackup="true"
         android:hasFragileUserData="true"
-        android:fullBackupOnly="false">
+        android:fullBackupOnly="false"
+        android:enableOnBackInvokedCallback="false">
         <activity
             android:name="app.status.mobile.StatusQtActivity"
             android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|mcc|mnc|density"
