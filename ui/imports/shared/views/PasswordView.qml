@@ -388,6 +388,7 @@ ColumnLayout {
     }
 
     StatusPasswordStrengthIndicator {
+        objectName: "passwordStrengthIndicator"
         Layout.fillWidth: true
         value: newPswInput.text.length
         strength: d.convertStrength(root.passwordStrengthScoreFunction(newPswInput.text))
@@ -408,21 +409,25 @@ ColumnLayout {
 
 
             PasswordComponentIndicator {
+                objectName: "passwordComponentIndicator_lowerCase"
                 caption: qsTr("Lower case")
                 checked: d.lowerCaseValidator(newPswInput.text)
             }
 
             PasswordComponentIndicator {
+                objectName: "passwordComponentIndicator_upperCase"
                 caption: qsTr("Upper case")
                 checked: d.upperCaseValidator(newPswInput.text)
             }
 
             PasswordComponentIndicator {
+                objectName: "passwordComponentIndicator_numbers"
                 caption: qsTr("Numbers")
                 checked: d.numbersValidator(newPswInput.text)
             }
 
             PasswordComponentIndicator {
+                objectName: "passwordComponentIndicator_symbols"
                 caption: qsTr("Symbols")
                 checked: d.symbolsValidator(newPswInput.text)
             }
@@ -443,6 +448,7 @@ ColumnLayout {
     // Here there are defined the components used inside layout item proxy components:
     StatusBaseText {
         id: minCharsText
+        objectName: "passwordViewMinCharsText"
         text: {
             if (d.isTooLong)
                 return d.passTooLongErrMessage

@@ -63,16 +63,6 @@ StatusDialog {
     QtObject {
         id: d
 
-        readonly property var chatContentModule: QtObject {
-            readonly property var chatDetails: QtObject {
-                readonly property string id: root.chatId
-                readonly property int type: Constants.chatType.oneToOne
-                readonly property bool canPostReactions: false
-                readonly property bool canPost: true
-                readonly property bool canView: true
-            }
-        }
-
         function jumpToMessage(messageId) {
             root.close()
             root.jumpToMessageRequested(messageId)
@@ -116,7 +106,6 @@ StatusDialog {
 
                     rootStore: root.store
                     messageStore: root.messageStore
-                    chatContentModule: d.chatContentModule
 
                     joined: root.joined
                     messageId: model.id

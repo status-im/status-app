@@ -688,6 +688,9 @@ Item {
 
                 // verify validation & pass error
                 tryCompare(passwordInput, "hasError", data.password !== mockDriver.dummyNewPassword)
+                if (data.password !== mockDriver.dummyNewPassword && !data.biometrics) {
+                    verify(passwordBox.validationError.indexOf(qsTr("Password incorrect")) !== -1)
+                }
             } else if (!!data.pin) { // keycard profile
                 const pinInput = findChild(page, "pinInput")
                 verify(!!pinInput)
@@ -1046,6 +1049,55 @@ Item {
             dynamicSpy.setup(onboardingFlow, "deleteMultiaccountRequested")
             mouseClick(confirmDeleteButton)
             tryCompare(dynamicSpy, "count", 1)
+        }
+
+        function test_welcomePage_languageSelectorEmitsChangeLanguageRequested() {
+            const page = getCurrentPage(controlUnderTest.stack, WelcomePage)
+            waitForRendering(page)
+
+            const selector = findChild(page, "welcomeLanguageSelector")
+            verify(!!selector)
+            compare(selector.text, "EN")
+
+            mouseClick(selector)
+            const dd = findChild(selector, "statusLanguageSelectorDropdown")
+            verify(!!dd)
+            tryCompare(dd, "opened", true)
+            waitForRendering(selector)
+
+            const listView = findChild(dd.contentItem, "statusLanguageSelectorListView")
+            verify(!!listView)
+            waitForRendering(listView)
+            const delegateDe = findChild(listView, "itemDelegate_de")
+            verify(!!delegateDe)
+
+            dynamicSpy.setup(controlUnderTest, "changeLanguageRequested")
+            mouseClick(delegateDe)
+            tryCompare(dynamicSpy, "count", 1)
+            compare(dynamicSpy.signalArguments[0][0], "de")
+        }
+
+        function test_createProfile_invalidSeedPhraseDisablesContinue() {
+            const stack = controlUnderTest.stack
+            let page = getCurrentPage(stack, WelcomePage)
+            waitForRendering(page)
+
+            mouseClick(findChild(controlUnderTest, "btnCreateProfile"))
+            page = getCurrentPage(stack, CreateProfilePage)
+            mouseClick(findChild(controlUnderTest, "btnCreateWithSeedPhrase"))
+            page = getCurrentPage(stack, SeedphrasePage)
+
+            const btnContinue = findChild(page, "btnContinue")
+            verify(!!btnContinue)
+            compare(btnContinue.enabled, false)
+
+            const firstInput = findChild(page, "enterSeedPhraseInputField1")
+            verify(!!firstInput)
+            tryCompare(firstInput, "activeFocus", true)
+            ClipboardUtils.setText("pelican chief sudden oval media rare swamp elephant lawsuit wheal knife initial")
+            keySequence(StandardKey.Paste)
+
+            tryCompare(btnContinue, "enabled", false)
         }
     }
 }
