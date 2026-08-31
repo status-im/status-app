@@ -126,7 +126,7 @@ class ChatPage(BasePage):
             self.dump_page_source(f"open_chat_by_suffix_failure_{chat_identifier}")
             return False
         try:
-            self.safe_click(locator, timeout=5, max_attempts=3)
+            self.click(locator, timeout=5, max_attempts=3)
         except ElementInteractionError as exc:
             self.logger.warning(
                 "Chat row for %s did not take the tap: %s", chat_identifier, exc,
