@@ -20,6 +20,8 @@ import AppLayouts.Chat.stores
 StatusDialog {
     id: root
 
+    objectName: "PinnedMessagesPopup"
+
     property SharedStores.UtilsStore utilsStore
     property RootStore store
     property MessageStore messageStore
@@ -61,6 +63,16 @@ StatusDialog {
     QtObject {
         id: d
 
+        readonly property var chatContentModule: QtObject {
+            readonly property var chatDetails: QtObject {
+                readonly property string id: root.chatId
+                readonly property int type: Constants.chatType.oneToOne
+                readonly property bool canPostReactions: false
+                readonly property bool canPost: true
+                readonly property bool canView: true
+            }
+        }
+
         function jumpToMessage(messageId) {
             root.close()
             root.jumpToMessageRequested(messageId)
@@ -71,6 +83,7 @@ StatusDialog {
         id: column
 
         StatusBaseText {
+            objectName: "pinnedMessagesPopup_emptyState"
             visible: pinnedMessageListView.count === 0
             text: qsTr("Pinned messages will appear here.")
             Layout.alignment: Qt.AlignCenter
@@ -84,9 +97,11 @@ StatusDialog {
 
         StatusListView {
             id: pinnedMessageListView
+            objectName: "pinnedMessagesPopup_listView"
             model: root.pinnedMessagesModel
             Layout.fillWidth: true
             Layout.fillHeight: count
+            implicitHeight: contentHeight
 
             delegate: Item {
                 id: messageDelegate
@@ -101,6 +116,7 @@ StatusDialog {
 
                     rootStore: root.store
                     messageStore: root.messageStore
+                    chatContentModule: d.chatContentModule
 
                     joined: root.joined
                     messageId: model.id
@@ -163,6 +179,7 @@ StatusDialog {
 
                 StatusMouseArea {
                     id: mouseArea
+                    objectName: "pinnedMessagesPopup_delegateMouseArea"
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -189,6 +206,7 @@ StatusDialog {
 
                 StatusFlatRoundButton {
                     id: unpinButton
+                    objectName: "pinnedMessagesPopup_unpinButton"
                     anchors.top: parent.top
                     anchors.topMargin: Theme.bigPadding
                     anchors.right: parent.right
@@ -207,6 +225,7 @@ StatusDialog {
 
                 StatusRadioButton {
                     id: radio
+                    objectName: "pinnedMessagesPopup_radio"
                     visible: root.messageToPin
                     anchors.right: parent.right
                     anchors.rightMargin: Theme.bigPadding
@@ -223,11 +242,14 @@ StatusDialog {
                     StatusMenu {
                         id: messageContextMenu
 
+                        objectName: "pinnedMessagesPopup_messageContextMenu"
                         property string messageId
 
                         StatusAction {
+                            objectName: "pinnedMessagesPopup_unpin"
                             text: qsTr("Unpin")
                             icon.name: "unpin"
+                            enabled: root.isPinActionAvailable
                             onTriggered: {
                                 root.messageStore.unpinMessage(messageContextMenu.messageId)
                                 close()
@@ -235,6 +257,7 @@ StatusDialog {
                         }
 
                         StatusAction {
+                            objectName: "pinnedMessagesPopup_jumpTo"
                             text: qsTr("Jump to")
                             icon.name: "arrow-up"
                             onTriggered: {
@@ -277,6 +300,7 @@ StatusDialog {
         visible: !!root.messageToPin
         rightButtons: ObjectModel {
             StatusButton {
+                objectName: "pinnedMessagesPopup_confirmPinButton"
                 visible: footer.visible
                 enabled: !!root.messageToUnpin && pinButtonGroup.checkedButton
                 text: qsTr("Unpin selected message and pin new message")

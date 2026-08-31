@@ -143,6 +143,25 @@ Item {
                       "mouse hover must open the quick-actions context menu")
         }
 
+        function test_hoverDoesNotOpenQuickActionsWhenInPinnedPopup() {
+            const view = createTemporaryObject(messageViewComp, root, {
+                messageId: "msg-pinned-popup",
+                senderId: "0xsender",
+                senderDisplayName: "Sender",
+                messageText: "pinned popup message",
+                unparsedText: "pinned popup message",
+                isInPinnedPopup: true,
+                joined: true
+            })
+            verify(!!view)
+            tryVerify(() => messageViewReady(view), 5000, "MessageView must be ready")
+
+            hoverMessageDelegate(view)
+            wait(500)
+            verify(!hasQuickActionsMenu(view),
+                   "hover must not open the chat quick-actions menu inside a pinned popup")
+        }
+
         function test_hoverMenuClosesWhenPointerEntersMessageGap() {
             const pair = createTemporaryObject(messagePairComp, root)
             verify(!!pair)
