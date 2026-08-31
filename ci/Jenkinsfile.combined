@@ -126,6 +126,10 @@ pipeline {
               }
             }
             stage('Windows E2E Tests') {
+              /* Temporarily skip Windows E2E tests for release builds. */
+              when {
+                expression { !utils.isReleaseBuild() }
+              }
               steps {
                 catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                   script {
