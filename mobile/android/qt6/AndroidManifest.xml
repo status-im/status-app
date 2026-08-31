@@ -47,7 +47,8 @@
         android:fullBackupContent="@xml/backup_rules"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:hasFragileUserData="true"
-        android:fullBackupOnly="false">
+        android:fullBackupOnly="false"
+        android:enableOnBackInvokedCallback="false">
         <activity
             android:name="app.status.mobile.StatusQtActivity"
             android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|mcc|mnc|density"
