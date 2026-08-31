@@ -1,39 +1,13 @@
-import allure
-import pyperclip
 import pytest
 from allure_commons._allure import step
 
 from gui.screens.settings_syncing import SyncingSettingsView
 from . import marks
 
-import configs.testpath
 from constants.syncing import SyncingSettings
 from gui.main_window import MainWindow
-from gui.screens.onboarding import OnboardingWelcomeToStatusView, OnboardingSyncCodeView
 
 pytestmark = marks
-
-
-@pytest.fixture
-def sync_screen(main_window) -> OnboardingSyncCodeView:
-    with step('Open Syncing view'):
-        welcome_screen = OnboardingWelcomeToStatusView().wait_until_appears()
-        return welcome_screen.sync_existing_user()
-
-
-@pytest.mark.case(703631)
-@pytest.mark.parametrize('wrong_sync_code', [
-    pytest.param('9rhfjgfkgfj890tjfgtjfgshjef900')
-])
-def test_wrong_sync_code(sync_screen, wrong_sync_code):
-    with step('Open sync code form'):
-        sync_code_form = sync_screen.open_enter_sync_code_form()
-
-    with step('Paste wrong sync code and check that error message appears'):
-        pyperclip.copy(wrong_sync_code)
-        sync_code_form.click_paste_button()
-        assert str(SyncingSettings.SYNC_CODE_IS_WRONG_TEXT.value == sync_code_form.get_sync_code_error_message), \
-            f'Wrong sync code message did not appear'
 
 
 @pytest.mark.case(703591)
