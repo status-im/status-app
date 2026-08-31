@@ -1,4 +1,4 @@
-import nimqml, sets
+import nimqml, sets, std/strutils
 import app/global/html_utils
 import ./io_interface
 import ./preserved_properties
@@ -45,11 +45,14 @@ QtObject:
       self: View,
       msg: string,
       replyTo: string,
-      contentType: int) {.slot.} =
+      contentType: int): bool {.slot.} =
     # FIXME: Update this when `setText` is async.
+    if msg.strip().len == 0 and self.paymentRequestModel.isEmpty():
+      return false
     self.setSendingInProgress(true)
     self.delegate.setText(msg, false)
     self.delegate.sendChatMessage(msg, replyTo, contentType, self.linkPreviewModel.getUnfuledLinkPreviews(), self.payment_request_model.getPaymentRequests())
+    return true
 
   proc sendImages*(self: View, imagePathsJson: string, msg: string, replyTo: string) {.slot.} =
     # FIXME: Update this when `setText` is async.

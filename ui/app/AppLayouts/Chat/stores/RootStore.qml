@@ -297,14 +297,10 @@ QtObject {
             chatContentModule.inputAreaModule.sendImages(JSON.stringify(convertedImagePaths), textMsg.trim(), replyMessageId)
             result = true
         } else {
-            if (textMsg.trim() !== "") {
-                chatContentModule.inputAreaModule.sendMessage(
-                            textMsg,
-                            replyMessageId,
-                            Utils.isOnlyEmoji(textMsg) ? Constants.messageContentType.emojiType : Constants.messageContentType.messageType)
-
-                result = true
-            }
+            result = chatContentModule.inputAreaModule.sendMessage(
+                        textMsg,
+                        replyMessageId,
+                        Utils.isOnlyEmoji(textMsg) ? Constants.messageContentType.emojiType : Constants.messageContentType.messageType)
         }
 
         return result
