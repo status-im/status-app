@@ -4607,16 +4607,9 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <translation>Повторне шифрування завершено</translation>
     </message>
     <message>
-        <source>Profile migration complete</source>
-        <translation>Міграцію профілю завершено</translation>
-    </message>
-    <message>
-        <source>Your data was successfully re-encrypted with your new password. You can now restart Status and log in to your profile using the password you just created.</source>
-        <translation>Ваші дані успішно повторно зашифровано новим паролем. Тепер перезапустіть Status і ввійдіть у профіль за допомогою щойно створеного пароля.</translation>
-    </message>
-    <message>
-        <source>Your profile no longer uses Keycard. You can now log in using the password you just created.</source>
-        <translation>Ваш профіль більше не використовує Keycard. Тепер ви можете ввійти за допомогою щойно створеного пароля.</translation>
+        <source>Your profile data was re-encrypted successfully.
+Log in with your new password.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Re-encryption failed</source>

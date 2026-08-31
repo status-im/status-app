@@ -4583,15 +4583,8 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Profile migration complete</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your data was successfully re-encrypted with your new password. You can now restart Status and log in to your profile using the password you just created.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your profile no longer uses Keycard. You can now log in using the password you just created.</source>
+        <source>Your profile data was re-encrypted successfully.
+Log in with your new password.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
