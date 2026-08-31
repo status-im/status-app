@@ -578,13 +578,14 @@ mainWallet_Saved_Addresses_More_Confirm_Notification = {"container": statusDeskt
                                                         "type": "StatusBaseText"}
 
 # Picture Edit Popup
-imageCropperOverlay = {"container": statusDesktop_mainWindow_overlay, "objectName": "imageCropperOverlay",
-                       "type": "Item", "visible": True}
-o_StatusSlider = {"container": imageCropperOverlay, "type": "StatusSlider", "unnamed": 1, "visible": True}
-cropSpaceItem_Item = {"container": imageCropperOverlay, "id": "cropSpaceItem", "type": "Item",
+o_StatusSlider = {"container": statusDesktop_mainWindow_overlay, "type": "StatusSlider", "unnamed": 1, "visible": True}
+cropSpaceItem_Item = {"container": statusDesktop_mainWindow_overlay, "id": "cropSpaceItem", "type": "Item",
                       "unnamed": 1, "visible": True}
-make_picture_StatusButton = {"container": imageCropperOverlay, "objectName": "imageCropperAcceptButton",
-                             "type": "StatusButton", "visible": True}
+make_picture_StatusButton = {"container": statusDesktop_mainWindow, "objectName": "imageCropperAcceptButton",
+                             "type": "StatusButton"}
+make_picture_Header = {"container": statusDesktop_mainWindow_overlay, "id": "imageWithTitle",
+                       "type": "StatusImageWithTitle", "unnamed": 1, "visible": True}
+o_DropShadow = {"container": statusDesktop_mainWindow_overlay, "type": "DropShadow", "unnamed": 1, "visible": True}
 
 # Emoji Popup
 emojiPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "StatusEmojiPopup", "type": "PopupItem",
