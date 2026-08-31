@@ -9,7 +9,7 @@ startupNewsPage = {"container": startupOnboardingLayout, "id": "newsPage", "type
 startupCreateProfileButton = {"container": startupOnboardingLayout, "objectName": "btnCreateProfile", "type": "StatusButton", "visible": True}
 startupLoginButton = {"container": startupOnboardingLayout, "objectName": "btnLogin", "type": "StatusButton", "visible": True}
 startupApprovalLinks = {"container": startupOnboardingLayout, "objectName": "approvalLinks", "type": "StatusBaseText", "visible": True}
-startupLanguageSelector = {"container": statusDesktop_mainWindow, "type": "StatusLanguageSelector", "unnamed": 1, "visible": True}
+startupLanguageSelector = {"container": statusDesktop_mainWindow, "objectName": "welcomeLanguageSelector", "type": "StatusLanguageSelector", "visible": True}
 
 # Sign in view
 enterRecoveryPhraseButton = {"container": startupOnboardingLayout, "objectName": "btnWithSeedphrase", "type": "StatusButton", "visible": True}
@@ -147,8 +147,8 @@ createPasswordView = {"container": mainWindow_CreatePasswordPage, "id": "passVie
 choosePasswordField = {"container": createPasswordView, "objectName": "passwordViewNewPassword", "type": "StatusPasswordInput", "visible": True}
 repeatPasswordField = {"container": createPasswordView, "objectName": "passwordViewNewPasswordConfirm", "type": "StatusPasswordInput", "visible": True}
 confirmPasswordButton = {"container": mainWindow_CreatePasswordPage, "objectName": "btnConfirmPassword", "type": "StatusButton", "visible": True}
-passwordStrengthIndicator = {"container": createPasswordView, "type": "StatusPasswordStrengthIndicator", "unnamed": 1, "visible": True}
-passwordComponentIndicator = {"container": createPasswordView, "type": "PasswordComponentIndicator", "unnamed": 1, "visible": True}
+passwordStrengthIndicator = {"container": createPasswordView, "objectName": "passwordStrengthIndicator", "type": "StatusPasswordStrengthIndicator", "visible": True}
+passwordComponentIndicator = {"container": createPasswordView, "type": "PasswordComponentIndicator", "visible": True}
 
 mainWindow_CreatePasswordView = {"container": statusDesktop_mainWindow, "type": "CreatePasswordView", "unnamed": 1, "visible": True}
 mainWindow_passwordViewNewPassword = {"container": mainWindow_CreatePasswordView, "objectName": "passwordViewNewPassword", "type": "StatusPasswordInput", "visible": True}
