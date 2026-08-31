@@ -4,7 +4,6 @@ from collections import namedtuple
 import allure
 
 import driver.mouse
-from gui.components.status_modals import StatusModal
 from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.slider import Slider
@@ -13,15 +12,14 @@ from gui.objects_map import names
 shift_image = namedtuple('Shift', ['left', 'right', 'top', 'bottom'])
 
 
-class PictureEditPopup(StatusModal):
+class PictureEditPopup(QObject):
 
     def __init__(self):
-        super().__init__()
-        self.make_picture_header = QObject(names.make_picture_Header)
+        super().__init__(names.imageCropperOverlay)
+        self.wait_until_appears()
         self._zoom_slider = Slider(names.o_StatusSlider)
         self._view = QObject(names.cropSpaceItem_Item)
         self.make_picture_button = Button(names.make_picture_StatusButton)
-        self._slider_handler = QObject(names.o_DropShadow)
 
     @allure.step('Set zoom shift for picture and make picture')
     def set_zoom_shift_for_picture(
@@ -32,7 +30,7 @@ class PictureEditPopup(StatusModal):
         if zoom is not None:
             self._zoom_slider.value = zoom
             # The slider changed value, but image updates only after click on slider
-            self._slider_handler.click()
+            self._zoom_slider.click()
             time.sleep(1)
         if shift is not None:
             if shift.left:
@@ -53,7 +51,7 @@ class PictureEditPopup(StatusModal):
 
     @allure.step('Make picture')
     def make_picture(self):
-        self.make_picture_button.click()
+        self.make_picture_button.wait_until_enabled().click()
         return self
 
 
