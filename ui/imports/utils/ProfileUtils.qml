@@ -10,7 +10,7 @@ QtObject {
 
     function displayName(nickName: string, ensName: string, displayName: string, aliasName: string) : string
     {
-        return nickName || ensName || displayName || aliasName
+        return nickName || ensName || displayName || aliasName || ""
     }
 
     // social links utils
