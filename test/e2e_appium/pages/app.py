@@ -159,7 +159,7 @@ class App(BasePage):
             self.logger.warning(
                 "_ensure_main_nav_visible: dismissed introduce-yourself sheet"
             )
-            if self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=2):
+            if self.is_element_visible(self.locators.PROFILE_NAV_BUTTON, timeout=2):
                 return True
 
         if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=1):
