@@ -380,6 +380,7 @@ method onNodeLogin*[T](self: Module[T], err: string, account: AccountDto, settin
   if err.len != 0:
     self.onAccountLoginError(err)
     return
+  info "account logged in", keyUid = account.keyUid
   self.controller.setLoggedInAccount(account)
   discard self.delegate.userLoggedIn()
 
