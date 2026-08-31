@@ -11,5 +11,6 @@ TokenListPopup 1.0 TokenListPopup.qml
 WalletKeypairAccountMenu 1.0 WalletKeypairAccountMenu.qml
 WalletAddressMenu 1.0 WalletAddressMenu.qml
 ConfirmChangePasswordModal 1.0 ConfirmChangePasswordModal.qml
+ENSPopup 1.0 ENSPopup.qml
 SearchEngineModal 1.0 SearchEngineModal.qml
 ExemptionNotificationsModal 1.0 ExemptionNotificationsModal.qml
