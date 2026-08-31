@@ -242,8 +242,11 @@ Item {
         id: ensPopupComponent
 
         ENSPopup {
-            ensUsernamesStore: root.ensUsernamesStore
+            preferredUsername: root.ensUsernamesStore.preferredUsername
+            model: root.ensUsernamesStore.currentChainEnsUsernamesModel
             destroyOnClose: true
+
+            onPreferredUsernameSelected: (ensUsername) => root.ensUsernamesStore.setPrefferedEnsUsername(ensUsername)
         }
     }
 }
