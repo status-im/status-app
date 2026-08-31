@@ -58,14 +58,11 @@ class ContactsSettingsPage(BasePage):
         return self.is_element_visible(self.locators.PENDING_REQUEST_ROW, timeout=timeout)
 
     def accept_contact_request(self, display_name: str) -> bool:
-        """Accept a pending contact request.
+        """Accept the pending request that is not the support bot's.
 
-        Primary is ``FIRST_PENDING_ACCEPT_BUTTON`` — the receiver's UI tags
-        the incoming request with an auto-generated identity name (e.g.
-        "Negligible Authorized Chafer"), not ``display_name``, so the
-        filtered xpath never matches in the one-pending-request flow. The
-        filtered xpath remains as a fallback for future multi-request
-        scenarios where the receiver knows the contact.
+        The list names a request with the sender's generated identity name
+        (e.g. "Negligible Authorized Chafer"), not ``display_name``, so the
+        filtered xpath is only a fallback for a receiver that knows the sender.
         """
         try:
             return self.try_click(
@@ -79,14 +76,11 @@ class ContactsSettingsPage(BasePage):
             return False
 
     def open_chat_with(self, display_name: str) -> bool:
-        """Open chat with a specific contact.
+        """Open the chat of the contact that is not the support bot.
 
-        Primary is ``FIRST_CONTACT_CHAT_BUTTON`` — Status's ContactPanel
-        content-desc carries the auto-generated identity name (e.g.
+        The contact panel carries the generated identity name (e.g.
         "Unselfish Free Crocodile"), not the chat-key suffix, so the
-        filtered xpath misses. Mirrors ``accept_contact_request``. The
-        filtered locator stays as fallback for future scenarios where
-        the contact panel does carry the suffix or display_name.
+        filtered xpath is only a fallback. Mirrors ``accept_contact_request``.
         """
         return self.try_click(
             self.locators.FIRST_CONTACT_CHAT_BUTTON,

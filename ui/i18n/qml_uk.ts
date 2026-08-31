@@ -11278,24 +11278,20 @@ to load</source>
 <context>
     <name>MessageContextMenuView</name>
     <message>
-        <source>Reply to</source>
-        <translation>Відповісти</translation>
-    </message>
-    <message>
-        <source>Edit message</source>
-        <translation>Редагувати</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Копіювати</translation>
-    </message>
-    <message>
         <source>Copy message</source>
         <translation>Копіювати</translation>
     </message>
     <message>
-        <source>Copy Message Id</source>
-        <translation>Копіювати ID</translation>
+        <source>Reply</source>
+        <translation type="unfinished">Відповісти</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy selected</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy link to message</source>
@@ -11310,12 +11306,12 @@ to load</source>
         <translation>Закріпити</translation>
     </message>
     <message>
-        <source>Mark as unread</source>
-        <translation>Непрочитане</translation>
+        <source>Delete</source>
+        <translation type="unfinished">Видалити</translation>
     </message>
     <message>
-        <source>Delete message</source>
-        <translation>Видалити</translation>
+        <source>Mark as unread</source>
+        <translation>Непрочитане</translation>
     </message>
 </context>
 <context>
@@ -11382,30 +11378,6 @@ to load</source>
     <message>
         <source>GIF</source>
         <translation>GIF</translation>
-    </message>
-    <message>
-        <source>Reply</source>
-        <translation>Відповісти</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>Редагувати</translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation>Відкріпити</translation>
-    </message>
-    <message>
-        <source>Pin</source>
-        <translation>Закріпити</translation>
-    </message>
-    <message>
-        <source>Mark as unread</source>
-        <translation>Непрочитане</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>Видалити</translation>
     </message>
     <message>
         <source>Unknown message. Trying to recover it</source>

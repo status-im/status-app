@@ -12,7 +12,7 @@ pipeline {
     /* Image with Ubuntu 22.04 and QT ${QT_VERSION} */
     docker {
       label 'linuxcontainer'
-      image "harbor.status.im/status-im/status-desktop-build:1.0.8-qt${QT_VERSION}"
+      image "harbor.status.im/status-im/status-desktop-build:1.0.13-qt${QT_VERSION}"
       /* allows jenkins use cat and mounts '/dev/fuse' for linuxdeployqt */
       args '--entrypoint="" ' +
            '--cap-add=SYS_ADMIN ' +
@@ -168,6 +168,7 @@ pipeline {
           parameters: jenkins.mapToParams([
             GIT_REF: env.CHANGE_BRANCH ?: env.BRANCH_NAME,
             BUILD_SOURCE: env.JOB_NAME,
+            SOURCE_BUILD_NUMBER: env.BUILD_NUMBER,
           ]),
         )
       } }

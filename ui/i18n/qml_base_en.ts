@@ -11205,23 +11205,19 @@ to load</source>
 <context>
     <name>MessageContextMenuView</name>
     <message>
-        <source>Reply to</source>
+        <source>Reply</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Edit message</source>
+        <source>Edit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Copy</source>
+        <source>Copy selected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy message</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Copy Message Id</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -11237,11 +11233,11 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Mark as unread</source>
+        <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Delete message</source>
+        <source>Mark as unread</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -11308,30 +11304,6 @@ to load</source>
     </message>
     <message>
         <source>GIF</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reply</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Pin</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mark as unread</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

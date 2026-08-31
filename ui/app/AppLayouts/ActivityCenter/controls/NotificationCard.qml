@@ -277,7 +277,7 @@ Control {
         }
 
         StatusSecondaryActionHandler {
-            onTriggered: {
+            onTriggered: (pos, source) => {
                 // NOTE: Context menu it's now disabled until we have more options than `Read / Unread`
                 //d.contextMenuOpen = !d.contextMenuOpen
 

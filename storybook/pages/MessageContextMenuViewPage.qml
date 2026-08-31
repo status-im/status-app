@@ -4,18 +4,18 @@ import QtQuick.Layouts
 
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as StatusQUtils
+import StatusQ.Controls
 
 import Storybook
 
 import utils
 import shared.views.chat
 
-import SortFilterProxyModel
-
 SplitView {
     id: root
 
     Logs { id: logs }
+    property MessageContextMenuView contextMenu
 
     SplitView {
         orientation: Qt.Vertical
@@ -26,39 +26,87 @@ SplitView {
             SplitView.fillHeight: true
             color: Theme.palette.background
 
-            MessageContextMenuView {
-                id: messageContextMenuView
+            ColumnLayout {
                 anchors.centerIn: parent
-                visible: false
-                closePolicy: Popup.NoAutoClose
+                spacing: 12
 
-                messageId: "Oxdeadbeef"
-                messageSenderId: "foobar"
-                emojiModel: SortFilterProxyModel {
-                    sourceModel: StatusQUtils.Emoji.emojiModel
+                Rectangle {
+                    id: messageCard
+
+                    Layout.preferredWidth: 520
+                    Layout.preferredHeight: 160
+                    color: Theme.palette.baseColor2
+                    radius: 8
+
+                    ColumnLayout {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.margins: 24
+                        spacing: 12
+
+                        Label {
+                            Layout.fillWidth: true
+                            text: "This is a sample chat message"
+                            color: Theme.palette.directColor1
+                            font.pixelSize: 18
+                            wrapMode: Text.WordWrap
+                        }
+
+                        StatusButton {
+                            id: openMenuButton
+                            text: "Open message context menu"
+                            onClicked: root.openMessageContextMenu(Qt.point(openMenuButton.x,
+                                                                            openMenuButton.y + openMenuButton.height + 8))
+                        }
+                    }
                 }
-                messageContentType: Constants.messageContentType.messageType
-                chatType: Constants.chatType.oneToOne
-                isDebugEnabled: isDebugEnabledCheckBox.checked
-                hideDisabledItems: ctrlHideDisabled.checked
-                amIChatAdmin: ctrlChatAdmin.checked
-                canPin: true
-                pinnedMessage: ctrlPinned.checked
-                selectedText: ctrlSelectedText.checked ? "Dolor ipsum sit amet" : ""
-
-                onPinMessage: logs.logEvent(`onPinMessage: ${messageContextMenuView.messageId}`)
-                onUnpinMessage: logs.logEvent(`onUnpinMessage: ${messageContextMenuView.messageId}`)
-                onPinnedMessagesLimitReached: logs.logEvent(`onPinnedMessagesLimitReached: ${messageContextMenuView.messageId}`)
-                onMarkMessageAsUnread: logs.logEvent(`onMarkMessageAsUnread: ${messageContextMenuView.messageId}`)
-                onToggleReaction: (hexcode) => logs.logEvent("onToggleReaction", ["hexcode"], [hexcode])
-                onDeleteMessage: logs.logEvent(`onDeleteMessage: ${messageContextMenuView.messageId}`)
-                onEditClicked: logs.logEvent(`onEditClicked: ${messageContextMenuView.messageId}`)
-                onShowReplyArea: (senderId) => logs.logEvent("onShowReplyArea", ["senderId"], [senderId])
-                onCopyToClipboard: (text) => logs.logEvent("onCopyToClipboard", ["text"], [text])
-                onOpenEmojiPopup: logs.logEvent("onOpenEmojiPopup")
-
-                Component.onCompleted: popup()
             }
+        }
+    }
+
+    function openMessageContextMenu(point) {
+        contextMenu?.close()
+
+        contextMenu = messageContextMenuComponent.createObject(messageCard, {
+            myPublicKey: ctrlMyMessage.checked ? "foobar" : "",
+            amIChatAdmin: false,
+            chatType: Constants.chatType.oneToOne,
+            messageId: "Oxdeadbeef",
+            unparsedText: "This is a sample chat message",
+            messageSenderId: "foobar",
+            messageContentType: Constants.messageContentType.messageType,
+            pinnedMessage: ctrlPinned.checked,
+            canPin: true,
+            selectedText: "",
+            hideDisabledItems: true,
+            openExpanded: ctrlExpanded.checked
+        })
+        contextMenu.popup(point)
+    }
+
+    Component {
+        id: messageContextMenuComponent
+
+        MessageContextMenuView {
+            id: messageContextMenuView
+
+            emojiModel: StatusQUtils.Emoji.emojiModel
+
+            messageLinkSharingEnabled: ctrlMessageLinkSharingEnabled.checked
+
+            onPinMessage: logs.logEvent(`onPinMessage: ${messageContextMenuView.messageId}`)
+            onUnpinMessage: logs.logEvent(`onUnpinMessage: ${messageContextMenuView.messageId}`)
+            onPinnedMessagesLimitReached: logs.logEvent(`onPinnedMessagesLimitReached: ${messageContextMenuView.messageId}`)
+            onMarkMessageAsUnread: logs.logEvent(`onMarkMessageAsUnread: ${messageContextMenuView.messageId}`)
+            onToggleReaction: (hexcode) => logs.logEvent("onToggleReaction", ["hexcode"], [hexcode])
+            onDeleteMessage: logs.logEvent(`onDeleteMessage: ${messageContextMenuView.messageId}`)
+            onEditClicked: logs.logEvent(`onEditClicked: ${messageContextMenuView.messageId}`)
+            onShowReplyArea: (senderId) => logs.logEvent("onShowReplyArea", ["senderId"], [senderId])
+            onCopyToClipboard: (text) => logs.logEvent("onCopyToClipboard", ["text"], [text])
+            onCopyMessageLink: logs.logEvent(`onCopyMessageLink: ${messageContextMenuView.messageId}`)
+            onOpenEmojiPopup: logs.logEvent("onOpenEmojiPopup")
+            onClosed: destroy()
         }
     }
 
@@ -73,32 +121,59 @@ SplitView {
         controls: ColumnLayout {
             spacing: 16
 
-            CheckBox {
-                id: isDebugEnabledCheckBox
-                text: "Enable Debug"
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 8
+
+                Label {
+                    Layout.fillWidth: true
+                    text: "Menu state"
+                    color: Theme.palette.baseColor1
+                    font.pixelSize: Theme.secondaryTextFontSize
+                }
+
+                ButtonGroup {
+                    id: menuStateGroup
+                }
+
+                RadioButton {
+                    id: ctrlExpanded
+                    text: "Expanded"
+                    ButtonGroup.group: menuStateGroup
+                }
+
+                RadioButton {
+                    text: "Collapsed"
+                    checked: true
+                    ButtonGroup.group: menuStateGroup
+                }
             }
 
-            CheckBox {
-                id: ctrlHideDisabled
-                text: "Hide disabled items"
-                checked: true
-            }
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 8
 
-            CheckBox {
-                id: ctrlChatAdmin
-                text: "Chat Admin"
-                checked: false
-            }
+                Label {
+                    Layout.fillWidth: true
+                    text: "Message state"
+                    color: Theme.palette.baseColor1
+                    font.pixelSize: Theme.secondaryTextFontSize
+                }
 
-            CheckBox {
-                id: ctrlPinned
-                text: "Pinned message?"
-            }
+                CheckBox {
+                    id: ctrlMyMessage
+                    text: "My message"
+                }
 
-            CheckBox {
-                id: ctrlSelectedText
-                text: "Selected text?"
-                checked: true
+                CheckBox {
+                    id: ctrlPinned
+                    text: "Pinned message"
+                }
+
+                CheckBox {
+                    id: ctrlMessageLinkSharingEnabled
+                    text: "Message link sharing enabled"
+                }
             }
         }
     }

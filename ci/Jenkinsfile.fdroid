@@ -1,5 +1,5 @@
 #!/usr/bin/env groovy
-library 'status-jenkins-lib@v1.9.48'
+library 'status-jenkins-lib@v1.9.49'
 
 /* Options section can't access functions in objects. */
 def isPRBuild = utils.isPRBuild()
@@ -72,8 +72,8 @@ pipeline {
       steps {
         sh './fdroid/cleanup-fdroiddata.sh'
         sh "git clone --branch '${params.FDROIDDATA_BRANCH}' '${params.FDROIDDATA_REPO}' ${env.FDROIDDATA_PATH}"
-        /* Update metadata commit to current GIT_COMMIT so we always build the checked-out revision. */
-        sh "sed -i 's/commit: .*/commit: '${env.GIT_COMMIT}'/' ${env.FDROIDDATA_PATH}/metadata/app.status.mobile.yml"
+        /* Update metadata commit to current HEAD so we always build the checked-out revision */
+        sh "sed -i 's/commit: .*/commit: '`git rev-parse HEAD`'/' ${env.FDROIDDATA_PATH}/metadata/app.status.mobile.yml"
       }
     }
 
@@ -91,6 +91,12 @@ pipeline {
           env.STATUS_FDROID_APK = utils.findFile("pkg/*.apk")
         }
       }
+    }
+
+    stage('Sign') {
+      steps { script {
+        status.signFdroidApk(env.STATUS_FDROID_APK)
+      } }
     }
 
     stage('Upload') {

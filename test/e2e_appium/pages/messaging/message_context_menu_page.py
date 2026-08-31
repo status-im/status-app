@@ -211,16 +211,6 @@ class MessageContextMenuPage(BasePage):
         """
         return self._tap_menu_action(self.locators.MARK_AS_UNREAD, "Mark as unread", timeout)
 
-    def tap_copy_message_id(self, timeout: int = 5) -> bool:
-        """Tap 'Copy Message Id' to copy message ID (debug feature).
-
-        Note: Only visible when debug mode is enabled.
-
-        Returns:
-            bool: True if copy ID action was triggered.
-        """
-        return self._tap_menu_action(self.locators.COPY_MESSAGE_ID, "Copy Message Id", timeout)
-
     # ===== Reactions =====
 
     def tap_quick_reaction(self, emoji: str, timeout: int = 5) -> bool:

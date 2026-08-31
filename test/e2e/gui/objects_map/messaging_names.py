@@ -71,13 +71,14 @@ groupUserListPanel_StatusMemberListItem = {"container": mainWindow_userListPanel
 StatusTextMessage_chatTextMessage = {"container": chatLogView_chatMessageViewDelegate_MessageView, "objectName": "StatusTextMessage_chatText", "type": "ChatTextView", "visible": True}
 
 chatMessageViewDelegate_deletedMessage_RowLayout = {"container": chatLogView_chatMessageViewDelegate_MessageView, "id": "deletedMessage", "type": "RowLayout", "unnamed": 1, "visible": True}
-chatMessageViewDelegate_StatusMessageQuickActions = {"container": chatLogView_chatMessageViewDelegate_MessageView, "type": "StatusMessageQuickActions", "unnamed": 1, "visible": True}
-chatMessageViewDelegate_pin_icon_StatusIcon = {"container": chatLogView_chatMessageViewDelegate_MessageView, "objectName": "pin-icon", "type": "StatusIcon", "visible": True}
-chatMessageViewDelegate_unpin_icon_StatusIcon = {"container": chatLogView_chatMessageViewDelegate_MessageView, "objectName": "unpin-icon", "type": "StatusIcon", "visible": True}
-chatMessageViewDelegate_editMessageButton_StatusFlatRoundButton = {"container": chatLogView_chatMessageViewDelegate_MessageView, "objectName": "editMessageButton", "type": "StatusFlatRoundButton", "visible": True}
-chatMessageViewDelegate_markAsUnreadButton_StatusFlatRoundButton = {"container": chatLogView_chatMessageViewDelegate_MessageView, "objectName": "markAsUnreadButton", "type": "StatusFlatRoundButton", "visible": True}
-chatMessageViewDelegate_chatDeleteMessageButton_StatusFlatRoundButton = {"container": chatLogView_chatMessageViewDelegate_MessageView, "objectName": "chatDeleteMessageButton", "type": "StatusFlatRoundButton", "visible": True}
-chatMessageViewDelegate_reply_icon_StatusIcon = {"container": chatLogView_chatMessageViewDelegate_MessageView, "objectName": "reply-icon", "type": "StatusIcon", "visible": True}
+chatMessageViewDelegate_messageContextMenuExpandButton = {"container": messageContextView, "objectName": "messageContextMenu_expand", "type": "StatusFlatRoundButton", "visible": True}
+chatMessageViewDelegate_messageContextMenuPinButton = {"container": messageContextView, "objectName": "messageContextMenu_pin", "type": "StatusMenuItem", "visible": True}
+chatMessageViewDelegate_messageContextMenuUnpinButton = {"container": messageContextView, "objectName": "messageContextMenu_pin", "type": "StatusMenuItem", "visible": True}
+chatMessageViewDelegate_messageContextMenuEditButton = {"container": messageContextView, "objectName": "messageContextMenu_edit", "type": "StatusFlatRoundButton", "visible": True}
+chatMessageViewDelegate_messageContextMenuEditMenuItem = {"container": messageContextView, "objectName": "messageContextMenu_edit", "type": "StatusMenuItem", "visible": True}
+chatMessageViewDelegate_messageContextMenuDeleteButton = {"container": messageContextView, "objectName": "messageContextMenu_delete", "type": "StatusMenuItem", "visible": True}
+chatMessageViewDelegate_messageContextMenuReplyButton = {"container": messageContextView, "objectName": "messageContextMenu_replyTo", "type": "StatusFlatRoundButton", "visible": True}
+chatMessageViewDelegate_messageContextMenuReplyMenuItem = {"container": messageContextView, "objectName": "messageContextMenu_replyTo", "type": "StatusMenuItem", "visible": True}
 mainWindow_replyPanel_StatusChatInputReplyPanel = {"container": statusDesktop_mainWindow, "objectName": "statusChatInputReplyArea", "type": "StatusChatInputReplyPanel", "visible": True}
 layout_recentMessagesButton_AnchorButton = {"checkable": False, "container": mainWindow_chatLogView_StatusListView, "id": "recentMessagesButton", "type": "AnchorButton", "unnamed": 1, "visible": True}
 

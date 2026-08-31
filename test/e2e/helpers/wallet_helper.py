@@ -5,7 +5,7 @@ import driver
 from configs import WALLET_SEED
 from gui.objects_map import wallet_names
 from constants import ReturningUser
-from constants.wallet import WALLET_ACCOUNT_EXPECTED_ASSET_TITLES, WalletNetworkSettings
+from constants.wallet import WalletNetworkSettings
 from gui.components.authenticate_popup import AuthenticatePopup
 from helpers.onboarding_helper import open_create_profile_view, import_seed_and_log_in
 from helpers.settings_helper import enable_testnet_mode
@@ -33,18 +33,7 @@ def is_assets_tab_content_loaded(asset_item) -> bool:
     except (RuntimeError, AttributeError):
         return False
 
-    items = driver.findAllObjects(asset_item.real_name)
-    if not items:
-        return False
-
-    try:
-        titles = {str(getattr(item, 'title', '')) for item in items}
-        if WALLET_ACCOUNT_EXPECTED_ASSET_TITLES.issubset(titles):
-            return True
-        return not any(getattr(item, 'balanceLoading', False) for item in items)
-    except (RuntimeError, AttributeError):
-        # Squish may briefly return destroyed/null asset delegates while the list rebuilds.
-        return False
+    return bool(driver.findAllObjects(asset_item.real_name))
 
 
 def is_activity_tab_content_loaded() -> bool:

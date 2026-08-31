@@ -195,7 +195,7 @@ $(BOTTLES):
 bottles: $(BOTTLES)
 endif
 
-deps: | check-qt-dir deps-common status-go-deps bottles
+deps: | check-qt-dir deps-common bottles
 
 update: | check-qt-dir update-common
 # Build the pkg-config wrapper (and generate this kit's Qt .pc if missing)
@@ -505,7 +505,7 @@ $(NIMSDS_LIBFILE): | platform-cleanup
 	echo -e $(BUILD_MSG) "nim-sds"
 	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go build-libsds SHELL=/bin/sh $(HANDLE_OUTPUT)
 
-$(STATUSGO): | deps status-go-deps $(NIMSDS_LIBFILE) platform-cleanup
+$(STATUSGO): | deps $(NIMSDS_LIBFILE) platform-cleanup
 	echo -e $(BUILD_MSG) "status-go"
 	# FIXME: Nix shell usage breaks builds due to Glibc mismatch.
 	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go statusgo-shared-library SHELL=/bin/sh \
@@ -514,10 +514,6 @@ $(STATUSGO): | deps status-go-deps $(NIMSDS_LIBFILE) platform-cleanup
 		 $(HANDLE_OUTPUT)
 
 status-go: $(STATUSGO)
-
-status-go-deps: export GOPROXY ?= https://proxy.golang.org|direct
-status-go-deps:
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.1
 
 status-go-clean:
 	echo -e "\033[92mCleaning:\033[39m status-go"

@@ -65,10 +65,11 @@ pipeline {
                   linux_e2e = build(
                     job: 'status-app/systems/linux/x86_64/tests-e2e',
                     parameters: jenkins.mapToParams([
-                      BUILD_SOURCE:       linux_x86_64.fullProjectName,
-                      TESTRAIL_RUN_NAME:  utils.pkgFilename(),
-                      TEST_SCOPE_FLAG:    utils.isReleaseBuild() ? '-m=critical' : '',
-                      GIT_REF:            env.BRANCH_NAME,
+                      BUILD_SOURCE:        linux_x86_64.fullProjectName,
+                      SOURCE_BUILD_NUMBER: linux_x86_64.number.toString(),
+                      TESTRAIL_RUN_NAME:   utils.pkgFilename(),
+                      TEST_SCOPE_FLAG:     utils.isReleaseBuild() ? '-m=critical' : '',
+                      GIT_REF:             env.BRANCH_NAME,
                     ]),
                   )
                 }
@@ -101,10 +102,11 @@ pipeline {
                   build(
                     job: 'status-app/systems/linux/x86_64/tests-e2e',
                     parameters: jenkins.mapToParams([
-                      BUILD_SOURCE:      linux_keycard.fullProjectName,
-                      TESTRAIL_RUN_NAME: utils.pkgFilename(),
-                      KEYCARD_TESTS:     true,
-                      GIT_REF:           env.BRANCH_NAME,
+                      BUILD_SOURCE:        linux_keycard.fullProjectName,
+                      SOURCE_BUILD_NUMBER: linux_keycard.number.toString(),
+                      TESTRAIL_RUN_NAME:   utils.pkgFilename(),
+                      KEYCARD_TESTS:       true,
+                      GIT_REF:             env.BRANCH_NAME,
                     ]),
                   )
                 }
@@ -130,10 +132,11 @@ pipeline {
                     windows_e2e = build(
                       job: 'status-app/systems/windows/x86_64/tests-e2e',
                       parameters: jenkins.mapToParams([
-                        BUILD_SOURCE:       windows_x86_64.fullProjectName,
-                        TESTRAIL_RUN_NAME:  utils.pkgFilename(),
-                        TEST_SCOPE_FLAG:    utils.isReleaseBuild() ? '-m=critical' : '',
-                        GIT_REF:            env.BRANCH_NAME,
+                        BUILD_SOURCE:        windows_x86_64.fullProjectName,
+                        SOURCE_BUILD_NUMBER: windows_x86_64.number.toString(),
+                        TESTRAIL_RUN_NAME:   utils.pkgFilename(),
+                        TEST_SCOPE_FLAG:     utils.isReleaseBuild() ? '-m=critical' : '',
+                        GIT_REF:             env.BRANCH_NAME,
                       ]),
                     )
                   }
@@ -152,10 +155,11 @@ pipeline {
                     benchmark_windows_e2e = build(
                       job: 'status-app/e2e/nightly-benchmark-windows-master',
                       parameters: jenkins.mapToParams([
-                        BUILD_SOURCE:      windows_x86_64.fullProjectName,
-                        TESTRAIL_RUN_NAME: utils.pkgFilename(),
-                        TEST_SCOPE_FLAG:   utils.isReleaseBuild() ? '-m=critical' : '',
-                        GIT_REF:           env.BRANCH_NAME
+                        BUILD_SOURCE:        windows_x86_64.fullProjectName,
+                        SOURCE_BUILD_NUMBER: windows_x86_64.number.toString(),
+                        TESTRAIL_RUN_NAME:   utils.pkgFilename(),
+                        TEST_SCOPE_FLAG:     utils.isReleaseBuild() ? '-m=critical' : '',
+                        GIT_REF:             env.BRANCH_NAME
                       ]),
                     )
                   }
@@ -189,10 +193,11 @@ pipeline {
                   build(
                     job: 'status-app/systems/windows/x86_64/tests-e2e',
                     parameters: jenkins.mapToParams([
-                      BUILD_SOURCE:      windows_keycard.fullProjectName,
-                      TESTRAIL_RUN_NAME: utils.pkgFilename(),
-                      KEYCARD_TESTS:     true,
-                      GIT_REF:           env.BRANCH_NAME,
+                      BUILD_SOURCE:        windows_keycard.fullProjectName,
+                      SOURCE_BUILD_NUMBER: windows_keycard.number.toString(),
+                      TESTRAIL_RUN_NAME:   utils.pkgFilename(),
+                      KEYCARD_TESTS:       true,
+                      GIT_REF:             env.BRANCH_NAME,
                     ]),
                   )
                 }

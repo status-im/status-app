@@ -87,7 +87,6 @@
         <file>StatusQ/Components/private/statusMessage/StatusImageMessage.qml</file>
         <file>StatusQ/Components/private/statusMessage/StatusMessageEmojiReactions.qml</file>
         <file>StatusQ/Components/private/statusMessage/StatusMessageImageAlbum.qml</file>
-        <file>StatusQ/Components/private/statusMessage/StatusMessageQuickActions.qml</file>
         <file>StatusQ/Components/private/statusMessage/StatusMessageReply.qml</file>
         <file>StatusQ/Components/private/statusMessage/StatusPinMessageDetails.qml</file>
         <file>StatusQ/Components/private/statusMessage/StatusSticker.qml</file>

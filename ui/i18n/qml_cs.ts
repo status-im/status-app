@@ -11275,24 +11275,20 @@ selhalo</translation>
 <context>
     <name>MessageContextMenuView</name>
     <message>
-        <source>Reply to</source>
-        <translation>Odpovědět na</translation>
+        <source>Reply</source>
+        <translation type="unfinished">Odpovědět</translation>
     </message>
     <message>
-        <source>Edit message</source>
-        <translation>Upravit zprávu</translation>
+        <source>Edit</source>
+        <translation type="unfinished">Upravit</translation>
     </message>
     <message>
-        <source>Copy</source>
-        <translation type="unfinished">Kopírovat</translation>
+        <source>Copy selected</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy message</source>
         <translation>Kopírovar zprávu</translation>
-    </message>
-    <message>
-        <source>Copy Message Id</source>
-        <translation>Kopírovat ID zprávy</translation>
     </message>
     <message>
         <source>Copy link to message</source>
@@ -11307,12 +11303,12 @@ selhalo</translation>
         <translation>Připnout</translation>
     </message>
     <message>
-        <source>Mark as unread</source>
-        <translation>Označit jako nepřečtěné</translation>
+        <source>Delete</source>
+        <translation type="unfinished">Smazat</translation>
     </message>
     <message>
-        <source>Delete message</source>
-        <translation>Smazat zprávu</translation>
+        <source>Mark as unread</source>
+        <translation>Označit jako nepřečtěné</translation>
     </message>
 </context>
 <context>
@@ -11379,30 +11375,6 @@ selhalo</translation>
     <message>
         <source>GIF</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reply</source>
-        <translation>Odpovědět</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>Upravit</translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation>Odepnout</translation>
-    </message>
-    <message>
-        <source>Pin</source>
-        <translation>Připnout</translation>
-    </message>
-    <message>
-        <source>Mark as unread</source>
-        <translation>Označit jako nepřečtěné</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>Smazat</translation>
     </message>
     <message>
         <source>Unknown message. Trying to recover it</source>
