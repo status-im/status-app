@@ -13,7 +13,7 @@ import shared.views.chat
 import shared.controls.chat
 import utils
 
-import "../popups"
+import AppLayouts.Profile.popups
 
 Item {
     id: root
