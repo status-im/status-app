@@ -389,6 +389,7 @@ Item {
             StatusBaseText {
                 anchors.fill: parent
                 text: qsTr("The account this username was bought with is no longer among active accounts.\nPlease add it and try again.")
+                wrapMode: Text.Wrap
             }
 
             standardButtons: Dialog.Ok
