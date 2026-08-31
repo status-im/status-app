@@ -106,7 +106,7 @@ public final class NotificationBuilder {
     public static void postMessageNotification(Context context, String title,
             String conversationId, int notificationId, String deepLink,
             Bitmap largeIcon, List<MessageEntry> messages,
-            boolean isOneToOne) {
+            boolean isOneToOne, boolean onlyAlertOnce) {
 
         Intent intent = buildTapIntent(context, deepLink);
         if (intent == null) return;
@@ -120,6 +120,7 @@ public final class NotificationBuilder {
                 .setContentTitle(title)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(false)
+                .setOnlyAlertOnce(onlyAlertOnce)
                 .setContentIntent(pendingIntent);
         if (largeIcon != null) builder.setLargeIcon(largeIcon);
 
