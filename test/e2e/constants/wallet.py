@@ -74,8 +74,9 @@ class WalletAddress(Enum):
 
 class WalletTokenSymbols(Enum):
     USDS = 'USDS'
-    USDC = 'USDC'
-    SNT = 'STT'
+    USDC = 'USDC (EVM)'
+    SNT = 'SNT'
+    STT = 'STT'
     ETH = 'ETH'
     DAI = 'DAI'
 
@@ -92,13 +93,14 @@ class WalletTokenSymbols(Enum):
 
     @classmethod
     def random_asset_details_symbol(cls) -> str:
-        return random.choice([member.value for member in cls])
+        return random.choice([member.value for member in cls if member is not cls.STT])
 
 
 _WALLET_TOKEN_TITLES = {
     WalletTokenSymbols.USDS: 'USDS',
     WalletTokenSymbols.USDC: 'USDC (EVM)',
     WalletTokenSymbols.SNT: 'Status',
+    WalletTokenSymbols.STT: 'Status',
     WalletTokenSymbols.ETH: 'Ethereum',
     WalletTokenSymbols.DAI: 'DAI',
 }

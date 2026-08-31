@@ -57,6 +57,6 @@ class AssetsView(QObject):
 
     @allure.step('Open asset')
     def open_asset_details(self, asset_name):
-        self.asset.real_name['objectName'] = 'AssetView_TokenListItem_'+ asset_name
+        self.asset.real_name['objectName'] = 'AssetView_TokenListItem_' + asset_name
         self.asset.click()
         return AssetDetailsView().wait_until_appears().wait_until_header_loaded()
