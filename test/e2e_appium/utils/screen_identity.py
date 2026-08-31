@@ -43,11 +43,11 @@ def dismiss_backup_modal(page, timeout: int = 2) -> bool:
 
     Never raises: callers use this as a guard inside nav retry loops, so a
     failed dismissal must fall through to the caller's own retry, not abort
-    it (safe_click raises on exhaustion)."""
+    it (click raises on exhaustion)."""
     if not page.is_element_visible(BACKUP_MODAL, timeout=timeout):
         return False
     try:
-        page.safe_click(BACKUP_MODAL_SKIP, timeout=5)
+        page.click(BACKUP_MODAL_SKIP, timeout=5)
         return page.wait_for_invisibility(BACKUP_MODAL, timeout=5)
     except Exception as exc:
         page.logger.warning("Backup modal present but dismissal failed: %s", exc)
@@ -65,7 +65,7 @@ def dismiss_introduce_yourself(page, timeout: int = 2) -> bool:
     if not page.is_element_visible(INTRODUCE_MODAL_SKIP, timeout=timeout):
         return False
     try:
-        page.safe_click(INTRODUCE_MODAL_SKIP, timeout=5)
+        page.click(INTRODUCE_MODAL_SKIP, timeout=5)
         return page.wait_for_invisibility(INTRODUCE_MODAL_SKIP, timeout=5)
     except Exception as exc:
         page.logger.warning(

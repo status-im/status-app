@@ -11,6 +11,7 @@ from selenium.common.exceptions import (
     NoSuchElementException,
     StaleElementReferenceException,
     TimeoutException,
+    WebDriverException,
 )
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
@@ -18,6 +19,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from config import get_config, log_element_action
+from urllib3.exceptions import HTTPError as _TransportError
+
+from utils.exceptions import is_session_fatal
 from utils.app_lifecycle_manager import AppLifecycleManager
 from utils.element_state_checker import ElementStateChecker
 from utils.exceptions import ElementInteractionError
@@ -147,7 +151,7 @@ class BasePage:
                 continue
         return False
 
-    def safe_click(
+    def click(
         self,
         locator: tuple,
         *,
@@ -236,15 +240,21 @@ class BasePage:
         fallback_locators: list[tuple] | None = None,
         max_attempts: int = 3,
         capture_evidence: bool = False,
+        catch_driver_errors: bool = False,
     ) -> bool:
-        """safe_click that returns False instead of raising on exhaustion.
+        """click() that returns False instead of raising on exhaustion.
 
-        No failure artifacts by default: try_click sites are probes and
-        optional taps whose False branch handles the miss — pass
-        capture_evidence=True where a screenshot/page dump is wanted.
+        Contract: returns True when the tap was dispatched, False when the
+        element could not be clicked. Never raises for interaction failures.
+        Driver-level errors propagate unless catch_driver_errors=True, and
+        session-fatal errors (SESSION_FATAL) ALWAYS propagate — a dead
+        session must never read as "element not clickable". No failure
+        artifacts by default: try_click sites are probes and optional taps
+        whose False branch handles the miss — pass capture_evidence=True
+        where a screenshot/page dump is wanted.
         """
         try:
-            return self.safe_click(
+            return self.click(
                 locator,
                 timeout=timeout,
                 fallback_locators=fallback_locators,
@@ -252,6 +262,15 @@ class BasePage:
                 capture_evidence=capture_evidence,
             )
         except ElementInteractionError:
+            self.logger.debug("try_click miss: %s", locator[1] if len(locator) > 1 else locator)
+            return False
+        except (WebDriverException, _TransportError) as e:
+            if is_session_fatal(e) or not catch_driver_errors:
+                raise
+            self.logger.warning(
+                "try_click swallowed non-interaction error: %s: %s",
+                type(e).__name__, e,
+            )
             return False
 
     def find_element_safe(self, locator: tuple, timeout: int | None = None) -> WebElement | None:

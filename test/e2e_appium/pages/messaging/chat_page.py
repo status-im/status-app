@@ -126,7 +126,7 @@ class ChatPage(BasePage):
             self.dump_page_source(f"open_chat_by_suffix_failure_{chat_identifier}")
             return False
         try:
-            self.safe_click(locator, timeout=5, max_attempts=3)
+            self.click(locator, timeout=5, max_attempts=3)
         except ElementInteractionError as exc:
             self.logger.warning(
                 "Chat row for %s did not take the tap: %s", chat_identifier, exc,
@@ -183,7 +183,8 @@ class ChatPage(BasePage):
             return False
 
         button_clicked = self.try_click(
-            self.locators.SEND_BUTTON, timeout=3, max_attempts=1
+            self.locators.SEND_BUTTON, timeout=3, max_attempts=1,
+            catch_driver_errors=True,
         )
         if not button_clicked:
             self.logger.info("Send button not clickable — falling back to newline trigger")
@@ -337,10 +338,12 @@ class ChatPage(BasePage):
                     # cost (activate_app + modal check + landmark wait) per
                     # poll iteration, and arrival is re-checked below anyway.
                     app._ensure_main_nav_visible()
-                    app._click_nav_item(app.locators.LEFT_NAV_WALLET)
+                    if not app._click_nav_item(app.locators.LEFT_NAV_WALLET):
+                        self.logger.debug("Nav-toggle: wallet leg missed")
                     time.sleep(1)
                     app._ensure_main_nav_visible()
-                    app._click_nav_item(app.locators.LEFT_NAV_MESSAGES)
+                    if not app._click_nav_item(app.locators.LEFT_NAV_MESSAGES):
+                        self.logger.debug("Nav-toggle: messages leg missed")
                 except Exception as exc:
                     self.logger.debug("Nav-toggle refresh failed: %s", exc)
                 self.dismiss_introduce_prompt(timeout=1)
@@ -525,7 +528,7 @@ class ChatPage(BasePage):
     def open_chat_options_menu(self, timeout: int = 10) -> bool:
         """Open the chat header context menu (More options)."""
         try:
-            self.safe_click(self.locators.CHAT_MORE_OPTIONS_BUTTON, timeout=timeout)
+            self.click(self.locators.CHAT_MORE_OPTIONS_BUTTON, timeout=timeout)
             menu_visible = self.is_element_visible(
                 self.locators.CHAT_MORE_OPTIONS_MENU, timeout=5,
             )
@@ -552,8 +555,8 @@ class ChatPage(BasePage):
             return False
 
         try:
-            self.safe_click(self.locators.CLEAR_HISTORY_MENU_ITEM, timeout=timeout)
-            self.safe_click(self.locators.CLEAR_HISTORY_CONFIRM_BUTTON, timeout=timeout)
+            self.click(self.locators.CLEAR_HISTORY_MENU_ITEM, timeout=timeout)
+            self.click(self.locators.CLEAR_HISTORY_CONFIRM_BUTTON, timeout=timeout)
             return True
         except Exception as exc:
             self.logger.error("Failed to clear chat history: %s", exc)
@@ -566,8 +569,8 @@ class ChatPage(BasePage):
             return False
 
         try:
-            self.safe_click(self.locators.CLOSE_CHAT_MENU_ITEM, timeout=timeout)
-            self.safe_click(self.locators.CLOSE_CHAT_CONFIRM_BUTTON, timeout=timeout)
+            self.click(self.locators.CLOSE_CHAT_MENU_ITEM, timeout=timeout)
+            self.click(self.locators.CLOSE_CHAT_CONFIRM_BUTTON, timeout=timeout)
             return True
         except Exception as exc:
             self.logger.error("Failed to close chat: %s", exc)
