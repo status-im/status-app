@@ -375,13 +375,16 @@ QtObject:
 
   proc constructContactDetails(self: Service, contactDto: ContactsDto, isCurrentUser: bool = false): ContactDetails =
     result = ContactDetails()
-    let (name, optionalName, icon, _) = self.getContactNameAndImageInternal(contactDto)
+    var dto = contactDto
+    if dto.alias.len == 0 and dto.id.len > 0:
+      dto.alias = self.generateAlias(dto.id)
+    let (name, optionalName, icon, _) = self.getContactNameAndImageInternal(dto)
     result.defaultDisplayName = name
     result.optionalName = optionalName
     result.icon = icon
-    result.colorId = contactDto.colorId
+    result.colorId = dto.colorId
     result.isCurrentUser = isCurrentUser
-    result.dto = contactDto
+    result.dto = dto
 
   proc getContactDetails*(self: Service, id: string): ContactDetails =
     var pubkey = id
