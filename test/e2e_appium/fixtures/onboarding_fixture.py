@@ -423,7 +423,6 @@ class OnboardingFlow:
         step_start = datetime.now()
 
         actions: list[str] = []
-        success = True
 
         # 1. Push notifications — primary expected overlay.
         if self.push_notifications_page.is_screen_displayed(timeout=30):
@@ -435,7 +434,14 @@ class OnboardingFlow:
             else:
                 self.logger.error("Failed to dismiss push notifications dialog")
                 actions.append("push_notifications:dismiss_failed")
-                success = False
+                self.step_results["push_notifications"] = {
+                    "success": False,
+                    "action": ",".join(actions),
+                    "timestamp": datetime.now(),
+                }
+                raise OnboardingFlowError(
+                    "Push notifications dialog visible but could not be dismissed"
+                )
         else:
             self.logger.warning(
                 "Push notifications dialog did not appear within 30s — unexpected"
@@ -479,7 +485,7 @@ class OnboardingFlow:
                 actions.append("push_notifications_2:dismissed")
 
         self.step_results["push_notifications"] = {
-            "success": success,
+            "success": True,
             "action": ",".join(actions),
             "timestamp": datetime.now(),
         }

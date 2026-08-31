@@ -104,18 +104,26 @@ class TestEmojiAndMedia:
 
         if not secondary_chat.wait_for_message_input(timeout=3):
             secondary_chat.dismiss_backup_prompt(timeout=3)
-            secondary_app.click_messages_button()
+            assert secondary_app.click_messages_button(), "Failed to navigate to Messages"
             secondary_chat.dismiss_backup_prompt(timeout=2)
 
             display_name = (
                 self.primary.user.display_name if self.primary and self.primary.user else None
             )
-            secondary_chat.open_chat_by_suffix(
+            if not secondary_chat.open_chat_by_suffix(
                 self.primary_suffix,
                 display_name=display_name,
                 timeout=self.CROSS_DEVICE_TIMEOUT,
+            ):
+                # Dispatch can report a miss although the chat opened (W3C
+                # timeout race); on phone layouts an open chat replaces the
+                # list, so a retry would false-fail. Arrival is asserted on
+                # the composer; chat identity is not separately verifiable
+                # here (bubble titles are not in the a11y tree).
+                self.logger.warning("open_chat_by_suffix reported a miss; trusting arrival check")
+            assert secondary_chat.wait_for_message_input(timeout=10), (
+                "Chat did not open on secondary device"
             )
-            secondary_chat.wait_for_message_input(timeout=10)
 
         secondary_count_before = secondary_chat.message_count()
 

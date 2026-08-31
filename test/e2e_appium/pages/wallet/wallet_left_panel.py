@@ -205,7 +205,7 @@ class WalletLeftPanel(BasePage):
 
     def open_add_account_popup(self) -> AddEditAccountModal | None:
         try:
-            self.safe_click(self.locators.ADD_ACCOUNT_BUTTON, timeout=5)
+            self.click(self.locators.ADD_ACCOUNT_BUTTON, timeout=5)
         except Exception as e:
             self.logger.error("Add account button not clickable: %s", e)
             self.take_screenshot("add_account_button_not_clickable")
@@ -225,7 +225,9 @@ class WalletLeftPanel(BasePage):
         if not modal.set_name(name):
             self.logger.error(f"Failed to set account name to '{name}'")
             return False
-        modal.save_changes()
+        if not modal.save_changes():
+            self.logger.error("Failed to save account changes")
+            return False
 
         auth_modal = KeycardAuthenticationModal(self.driver)
         if not auth_modal.is_displayed(timeout=5):
@@ -351,7 +353,7 @@ class WalletLeftPanel(BasePage):
             self.logger.error("Failed to open account context menu via long-press")
             return False
 
-        self.safe_click(self.locators.ACCOUNT_MENU_EDIT, timeout=5)
+        self.click(self.locators.ACCOUNT_MENU_EDIT, timeout=5)
 
         modal = AddEditAccountModal(self.driver)
         if not modal.is_displayed(timeout=10):
@@ -362,7 +364,9 @@ class WalletLeftPanel(BasePage):
             self.logger.error(f"Failed to set account name to '{new_name}'")
             return False
 
-        modal.save_changes()
+        if not modal.save_changes():
+            self.logger.error("Failed to save account changes")
+            return False
 
         if not modal.wait_until_hidden(timeout=10):
             self.logger.error("Edit account modal did not close after saving")
@@ -381,7 +385,7 @@ class WalletLeftPanel(BasePage):
         Returns:
             bool: True if deletion completed successfully.
         """
-        self.safe_click(self.locators.ACCOUNT_MENU_DELETE, timeout=5)
+        self.click(self.locators.ACCOUNT_MENU_DELETE, timeout=5)
 
         confirmation = RemoveAccountConfirmationModal(self.driver)
         if confirmation.is_displayed(timeout=5):
