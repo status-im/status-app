@@ -2867,7 +2867,7 @@ Item {
 
     Shortcut {
         context: Qt.ApplicationShortcut
-        sequences: ["Ctrl+,", StandardKey.Preferences]
+        sequence: "Ctrl+,"
         onActivated: globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.profile,
                                                                   Utils.getSettingsSubsectionForSection(d.activeSectionType))
     }
