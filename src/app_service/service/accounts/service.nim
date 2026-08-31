@@ -461,7 +461,7 @@ QtObject:
       self.events.emit(SIGNAL_LOGIN_ERROR, LoginErrorArgs(error: response.result{"error"}.getStr))
       return
 
-    debug "account logged in"
+    debug "login request accepted, waiting for node.login signal"
     self.setLocalAccountSettingsFile()
 
   proc login*(self: Service, account: AccountDto, hashedPassword: string, chatPrivateKey: string = "", mnemonic: string = "",
