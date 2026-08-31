@@ -4590,16 +4590,9 @@ Vous resterez connecté et votre phrase de récupération sera entièrement entr
         <translation>Réencryption terminée</translation>
     </message>
     <message>
-        <source>Profile migration complete</source>
-        <translation>Migration du profil terminée</translation>
-    </message>
-    <message>
-        <source>Your data was successfully re-encrypted with your new password. You can now restart Status and log in to your profile using the password you just created.</source>
-        <translation>Vos données ont été re-chiffrées avec succès à l’aide de votre nouveau mot de passe. Vous pouvez maintenant redémarrer Status et vous connecter à votre profil en utilisant le mot de passe que vous venez de créer.</translation>
-    </message>
-    <message>
-        <source>Your profile no longer uses Keycard. You can now log in using the password you just created.</source>
-        <translation>Votre profil n&apos;utilise plus de Keycard. Vous pouvez maintenant vous connecter avec le mot de passe que vous venez de créer.</translation>
+        <source>Your profile data was re-encrypted successfully.
+Log in with your new password.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Re-encryption failed</source>
