@@ -31,6 +31,6 @@ class SendContactRequestModal(BasePage):
         ):
             self.logger.error("Send button not enabled after waiting")
             return False
-        return self.safe_click(self.locators.SEND_BUTTON)
+        return self.try_click(self.locators.SEND_BUTTON)
 
 

@@ -284,7 +284,7 @@ class DeviceContext:
                 )
                 return None
 
-            if not app.safe_click(profile_locators.SHARE_PROFILE_BUTTON, timeout=5):
+            if not app.try_click(profile_locators.SHARE_PROFILE_BUTTON, timeout=5):
                 self.logger.error("Failed to click shareProfileButton")
                 return None
 

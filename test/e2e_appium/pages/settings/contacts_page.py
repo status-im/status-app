@@ -17,13 +17,13 @@ class ContactsSettingsPage(BasePage):
     def open_send_contact_request_modal(self):
         from .send_contact_request_modal import SendContactRequestModal
 
-        if not self.safe_click(self.locators.SEND_CONTACT_REQUEST_BUTTON):
+        if not self.try_click(self.locators.SEND_CONTACT_REQUEST_BUTTON):
             return None
         modal = SendContactRequestModal(self.driver)
         return modal if modal.is_displayed(timeout=10) else None
 
     def open_contacts_tab(self, timeout: Optional[int] = None) -> bool:
-        return self.safe_click(self.locators.CONTACTS_TAB, timeout=timeout)
+        return self.try_click(self.locators.CONTACTS_TAB, timeout=timeout)
 
     def wait_for_pending_requests_focusable(self, timeout: Optional[int] = 15) -> bool:
         def _is_focusable() -> bool:
@@ -40,13 +40,13 @@ class ContactsSettingsPage(BasePage):
         return self.wait_for_condition(_is_focusable, timeout=timeout)
 
     def open_pending_requests_tab(self, timeout: Optional[int] = None) -> bool:
-        return self.safe_click(self.locators.PENDING_TAB, timeout=timeout)
+        return self.try_click(self.locators.PENDING_TAB, timeout=timeout)
 
     def open_dismissed_tab(self, timeout: Optional[int] = None) -> bool:
-        return self.safe_click(self.locators.DISMISSED_TAB, timeout=timeout)
+        return self.try_click(self.locators.DISMISSED_TAB, timeout=timeout)
 
     def open_blocked_tab(self, timeout: Optional[int] = None) -> bool:
-        return self.safe_click(self.locators.BLOCKED_TAB, timeout=timeout)
+        return self.try_click(self.locators.BLOCKED_TAB, timeout=timeout)
 
     def pending_request_row_exists(
         self, display_name: Optional[str] = None, timeout: Optional[int] = 10
@@ -65,7 +65,7 @@ class ContactsSettingsPage(BasePage):
         filtered xpath is only a fallback for a receiver that knows the sender.
         """
         try:
-            return self.safe_click(
+            return self.try_click(
                 self.locators.FIRST_PENDING_ACCEPT_BUTTON,
                 fallback_locators=[self.locators.accept_button(display_name)],
                 timeout=6,
@@ -82,7 +82,7 @@ class ContactsSettingsPage(BasePage):
         "Unselfish Free Crocodile"), not the chat-key suffix, so the
         filtered xpath is only a fallback. Mirrors ``accept_contact_request``.
         """
-        return self.safe_click(
+        return self.try_click(
             self.locators.FIRST_CONTACT_CHAT_BUTTON,
             fallback_locators=[self.locators.chat_button(display_name)],
             timeout=10,
