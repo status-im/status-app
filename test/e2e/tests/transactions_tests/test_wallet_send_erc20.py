@@ -24,7 +24,7 @@ from helpers.wallet_helper import (
     pytest.param(
         WalletAddress.RECEIVER_ADDRESS.value,
         '1',
-        WalletTokenSymbols.SNT.value,
+        WalletTokenSymbols.STT.value,
         WalletNetworkNaming.LAYER1_ETHEREUM_TESTNET.value,
         id='sepolia_stt',
     ),
