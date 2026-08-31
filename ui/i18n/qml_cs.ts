@@ -4611,15 +4611,8 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
         <translation>Přešifrování dokončeno</translation>
     </message>
     <message>
-        <source>Profile migration complete</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your data was successfully re-encrypted with your new password. You can now restart Status and log in to your profile using the password you just created.</source>
-        <translation>Vaše data byla úspěšně přešifrována vaším novým heslem. Nyní můžete restartovat Status a přihlásit se ke svému profilu pomocí hesla, které jste právě vytvořili.</translation>
-    </message>
-    <message>
-        <source>Your profile no longer uses Keycard. You can now log in using the password you just created.</source>
+        <source>Your profile data was re-encrypted successfully.
+Log in with your new password.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
