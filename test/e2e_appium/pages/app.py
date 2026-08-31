@@ -86,7 +86,7 @@ class App(BasePage):
         # wide tablets in portrait still render the side-nav which never
         # disappears, so the drawer-close wait below would never succeed.
         if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=1):
-            return self.safe_click(locator, timeout=timeout, max_attempts=2)
+            return self.try_click(locator, timeout=timeout, max_attempts=2)
 
         for attempt in range(1, 4):
             el = self.find_element_safe(locator, timeout=timeout)
@@ -173,7 +173,9 @@ class App(BasePage):
                 self.locators.TOOLBAR_BACK_BUTTON, timeout=1
             ):
                 break
-            self.safe_click(self.locators.TOOLBAR_BACK_BUTTON, timeout=2)
+            # try_click: a failed back-tap must not raise out of this
+            # bool-contract helper — the loop re-checks visibility either way.
+            self.try_click(self.locators.TOOLBAR_BACK_BUTTON, timeout=2)
 
         if self.is_element_visible(self.locators.PROFILE_NAV_BUTTON, timeout=1):
             return True
@@ -481,7 +483,7 @@ class App(BasePage):
     def open_profile_menu(self) -> bool:
         self.logger.info("Opening profile menu from main navigation")
         self._ensure_main_nav_visible()
-        return self.safe_click(self.locators.PROFILE_NAV_BUTTON, timeout=5)
+        return self.try_click(self.locators.PROFILE_NAV_BUTTON, timeout=5)
 
     def copy_profile_link_from_menu(self, timeout: int = 5) -> str | None:
         if not self.open_profile_menu():
@@ -493,7 +495,7 @@ class App(BasePage):
         except Exception as exc:
             self.logger.debug("Unable to reset clipboard before copy: %s", exc)
 
-        if not self.safe_click(self.locators.COPY_PROFILE_LINK_ACTION, timeout=timeout):
+        if not self.try_click(self.locators.COPY_PROFILE_LINK_ACTION, timeout=timeout):
             self.logger.error("Failed to trigger copy-link action from profile menu")
             return None
 

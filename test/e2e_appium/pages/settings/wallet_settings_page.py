@@ -31,7 +31,7 @@ class WalletSettingsPage(BasePage):
         Returns:
             AddEditAccountModal if opened successfully, None otherwise.
         """
-        if not self.safe_click(self.locators.ADD_ACCOUNT_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.ADD_ACCOUNT_BUTTON, timeout=timeout):
             self.logger.error("Failed to click Add Account button")
             return None
 

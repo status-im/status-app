@@ -13,12 +13,12 @@ class CreateProfilePage(BasePage):
 
     def click_lets_go(self) -> bool:
         self.logger.info("Clicking 'Let's go!' button")
-        return self.safe_click(self.locators.LETS_GO_BUTTON_BY_ID)
+        return self.try_click(self.locators.LETS_GO_BUTTON_BY_ID)
 
     def click_use_recovery_phrase(self) -> bool:
         self.logger.info("Clicking 'Use a recovery phrase' button")
-        return self.safe_click(self.locators.USE_RECOVERY_PHRASE_BUTTON)
+        return self.try_click(self.locators.USE_RECOVERY_PHRASE_BUTTON)
 
     def click_use_keycard(self) -> bool:
         self.logger.info("Clicking 'Use an empty Keycard' button")
-        return self.safe_click(self.locators.USE_KEYCARD_BUTTON)
+        return self.try_click(self.locators.USE_KEYCARD_BUTTON)

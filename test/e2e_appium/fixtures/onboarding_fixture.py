@@ -224,7 +224,9 @@ class OnboardingFlow:
                 "Welcome screen should be displayed"
             )
 
-        self.welcome_page.click_create_profile()
+        assert self.welcome_page.click_create_profile(), (
+            "Failed to tap Create profile on the welcome screen"
+        )
 
         self.step_results["welcome_screen"] = {
             "success": True,
@@ -243,7 +245,9 @@ class OnboardingFlow:
                 "Create profile screen should be displayed before seed phrase import"
             )
 
-        self.create_profile_page.click_use_recovery_phrase()
+        assert self.create_profile_page.click_use_recovery_phrase(), (
+            "Failed to tap Use recovery phrase"
+        )
 
         seed_phrase = self.config.seed_phrase or generate_seed_phrase()
         self.config.seed_phrase = seed_phrase
@@ -275,7 +279,9 @@ class OnboardingFlow:
                 "Create profile screen should be displayed"
             )
 
-        self.create_profile_page.click_lets_go()
+        assert self.create_profile_page.click_lets_go(), (
+            "Failed to tap Let's go on the create-profile screen"
+        )
 
         self.step_results["create_profile_screen"] = {
             "success": True,
@@ -447,11 +453,22 @@ class OnboardingFlow:
         base_for_edu = _BasePage(self.driver)
         if base_for_edu.is_element_visible(nav_edu_locator, timeout=10):
             self.logger.info("NavigationEducationDialog detected, closing")
-            if base_for_edu.safe_click(nav_edu_locator, timeout=5):
+            if base_for_edu.try_click(nav_edu_locator, timeout=5):
                 actions.append("nav_education:dismissed")
             else:
+                # A dialog we saw but could not close is still covering the
+                # UI. Raise rather than record a failed step: the caller reads
+                # only the top-level result, which is always True.
                 self.logger.warning("NavigationEducationDialog close-tap failed")
                 actions.append("nav_education:dismiss_failed")
+                self.step_results["navigation_education"] = {
+                    "success": False,
+                    "action": ",".join(actions),
+                    "timestamp": datetime.now(),
+                }
+                raise OnboardingFlowError(
+                    "NavigationEducationDialog visible but could not be dismissed"
+                )
         else:
             actions.append("nav_education:not_displayed")
 
