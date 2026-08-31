@@ -7,7 +7,14 @@ def isPRBuild = utils.isPRBuild()
 def isNightlyBuild = utils.isNightlyBuild()
 
 pipeline {
-  agent { label 'linux && x86_64 && nix-2.24' }
+  agent {
+    docker {
+      label 'linuxcontainer'
+      image 'harbor.status.im/infra/ci-build-containers:linux-base-1.0.0'
+      args '--volume=/nix:/nix ' +
+           '--volume=/etc/nix:/etc/nix '
+    }
+  }
 
   parameters {
     booleanParam(
@@ -35,6 +42,11 @@ pipeline {
       description: 'Build with the simulated (jcardsim) keycard backend (used by keycard e2e tests).',
       defaultValue: false
     )
+    string(
+      name: 'STATUS_GO_REF',
+      description: 'Override vendor/status-go submodule to this SHA/ref.',
+      defaultValue: ''
+    )
   }
 
   options {
@@ -56,6 +68,7 @@ pipeline {
     disableRestartFromStage()
   }
 
+  // TODO: pass to nix.develop via keepEnv instead of pure: false
   environment {
     PLATFORM = "linux-nix/${getArch()}"
     /* Improve make performance */
@@ -78,7 +91,9 @@ pipeline {
     /* FIXME: figure out why NIMFLAGS are not respected */
     XDG_CACHE_HOME = "${env.WORKSPACE_TMP}/.cache"
     /* Ensure nimcache is not shared between builds. */
-    NIMFLAGS = "${params.NIMFLAGS} --colors:off --nimcache:${env.WORKSPACE_TMP}/nimcache"
+    NIMFLAGS = "${params.NIMFLAGS} --colors:off"
+    /* Nix Qt is built to output to journald: QT_FEATURE_journald */
+    QT_FORCE_STDERR_LOGGING = 1
   }
 
   stages {
@@ -92,45 +107,81 @@ pipeline {
         sh 'git submodule update --init --recursive'
       }
     }
+    stage('Override status-go ref') {
+      when { expression { params.STATUS_GO_REF?.trim() } }
+      steps { script {
+        nix.develop("./scripts/override-status-go-ref.sh ${params.STATUS_GO_REF}", pure: false)
+      } }
+    }
     stage('Deps') {
       steps { script {
-        nix.shell('make update', pure: true)
-        nix.shell('make deps', pure: true)
+        nix.develop('make update', pure: false)
+        nix.develop('make deps', pure: false)
       } }
     }
 
     stage('status-go') {
       steps { script {
-        nix.shell('make status-go', pure: true)
+        nix.develop('make status-go', pure: false)
       } }
     }
 
-    stage('Package') {
-      steps { script {
-        linux.bundle('tgz-linux', 0, true)
-      } }
-    }
-
-    stage('Parallel Upload') {
-      parallel {
-        stage('Upload') {
-          steps { script {
-            env.PKG_URL = s5cmd.upload(env.STATUS_CLIENT_TARBALL)
-            jenkins.setBuildDesc(AppImage: env.PKG_URL)
-          } }
-        }
-        stage('Archive') {
-          steps { script {
-            archiveArtifacts("${env.STATUS_CLIENT_TARBALL}*")
-          } }
-        }
+    stage('Build') {
+      environment {
+        NIMFLAGS = "${params.NIMFLAGS} --colors:off --nimcache:${env.WORKSPACE_TMP}/nimcache"
       }
+      steps { script {
+        nix.develop('make nim_status_client', pure: false)
+      } }
+    }
+
+    stage('Tests Nim') {
+      steps { script {
+        nix.develop('make tests-nim-linux', pure: false)
+      } }
+    }
+
+    stage('Check StatusQ Tests') {
+      environment {
+        QT_QPA_PLATFORM = "offscreen"
+      }
+      steps { script {
+          nix.develop('make run-statusq-tests', pure: false)
+      } }
+    }
+
+    stage('Check StatusQ Sanity Checker') {
+      environment {
+        QT_QPA_PLATFORM = "offscreen"
+      }
+      steps { script {
+        nix.develop('make run-statusq-sanity-checker', pure: false)
+      } }
+    }
+
+    stage('Check Storybook Tests') {
+      steps { script {
+          nix.develop('make run-storybook-tests', pure: false)
+      } }
+    }
+
+    stage('Check Storybook Pages Validator') {
+      environment {
+        QT_QPA_PLATFORM = "offscreen"
+      }
+      steps { script {
+          nix.develop('make run-storybook-pages-validator', pure: false)
+      } }
     }
   }
 
   post {
-    success { script { github.notifyPR(true) } }
-    failure { script { github.notifyPR(false) } }
+    // failure { script {
+    //   discord.send(
+    //     header: 'CI Desktop build Failure!',
+    //     cred: 'discord-status-desktop-webhook',
+    //   )
+    // } }
     cleanup {
       cleanWs(disableDeferredWipeout: true)
       dir(env.WORKSPACE_TMP) { deleteDir() }
