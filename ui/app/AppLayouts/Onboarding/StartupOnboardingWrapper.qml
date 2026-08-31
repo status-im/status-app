@@ -93,7 +93,10 @@ Item {
 
             onKeycardStateChanged: {
                 if (onboardingStore.loginRequestSent && keycardState === Onboarding.KeycardState.NotEmpty) {
-                    onboardingLayout.stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate)
+                    // Show the splash screen if it's not already on top (on mobile it's pushed as soon as the login is requested)
+                    const currentItem = onboardingLayout.stack.currentItem
+                    if (!currentItem || currentItem.objectName !== "splashScreenV2")
+                        onboardingLayout.stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate)
                 } else if(keycardState === Onboarding.KeycardState.Cancelled) {
                     onboardingLayout.unwindToLoginScreen()
                 }
@@ -137,7 +140,10 @@ Item {
                 return
             }
 
-            onboardingLayout.stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate)
+            // Keycard login on desktop blocks until a card is inserted. The splash screen is pushed from onKeycardStateChanged
+            // once the card is read. On mobile the OS NFC prompts for the card, so the splash is pushed right away.
+            if (method !== Onboarding.LoginMethod.Keycard || SQUtils.Utils.isMobile)
+                onboardingLayout.stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate)
 
             onboardingStore.loginRequestSent = true
             onboardingStore.loginRequested(keyUid, method, data)
