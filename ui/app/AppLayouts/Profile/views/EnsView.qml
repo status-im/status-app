@@ -277,7 +277,7 @@ Item {
             username: selectedUsername
             assetsModel: ensView.walletAssetsStore.groupedAccountAssetsModel
 
-            onBackBtnClicked: back();
+            onBackBtnClicked: back()
 
             onRegisterUsername: {
                 const chainId = root.ensUsernamesStore.getChainForBuyingEnsName()
@@ -331,9 +331,15 @@ Item {
     Component {
         id: list
         EnsListView {
-            ensUsernamesStore: ensView.ensUsernamesStore
-
             profileContentWidth: ensView.profileContentWidth
+
+            model: ensView.ensUsernamesStore.currentChainEnsUsernamesModel
+            preferredUsername: ensView.ensUsernamesStore.preferredUsername
+            pubkey: ensView.ensUsernamesStore.pubkey
+            icon: ensView.ensUsernamesStore.icon
+            hasConfirmedEnsUsernames: ensView.ensUsernamesStore.ensUsernamesModel.count > 0
+                                      || ensView.ensUsernamesStore.numOfPendingEnsUsernames() > 0
+
             onAddBtnClicked: next("search")
             onSelectEns: (username, chainId) => {
                 ensView.ensUsernamesStore.ensDetails(chainId, username)
@@ -341,6 +347,7 @@ Item {
                 selectedChainId = chainId
                 next("details")
             }
+            onPreferredUsernameSelected: (ensUsername) => ensView.ensUsernamesStore.setPrefferedEnsUsername(ensUsername)
         }
     }
 
