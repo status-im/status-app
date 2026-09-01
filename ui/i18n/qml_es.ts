@@ -4668,6 +4668,21 @@ Log in with your new password.</source>
     </message>
 </context>
 <context>
+    <name>CrashedWebPage</name>
+    <message>
+        <source>Something went wrong</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This page crashed and needs to be reloaded.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>CreateCategoryPopup</name>
     <message>
         <source>Edit category</source>
