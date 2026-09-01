@@ -55,13 +55,11 @@ proc asyncFetchChatMessagesTask(argEncoded: string) {.gcsafe, nimcall.} =
     responseJson["messages"] = messagesArr
     responseJson["messagesCursor"] = messagesCursor
 
-    # handle reactions (only for base chats, not threads)
-    if arg.threadId == "":
-      var reactionsArr: JsonNode
-      let rResponse = status_go.fetchReactions(arg.chatId, arg.msgCursor, arg.limit)
-      if not rResponse.error.isNil:
-        raise newException(CatchableError, rResponse.error.message)
-      responseJson["reactions"] = rResponse.result
+    # handle reactions
+    let rResponse = status_go.fetchReactions(arg.chatId, arg.threadId, arg.msgCursor, arg.limit)
+    if not rResponse.error.isNil:
+      raise newException(CatchableError, rResponse.error.message)
+    responseJson["reactions"] = rResponse.result
 
     arg.finish(responseJson)
 
