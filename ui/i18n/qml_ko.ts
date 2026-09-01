@@ -7281,58 +7281,61 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
+    <name>EnsTermsAndConditionsPopup</name>
+    <message>
+        <source>Terms of name registration</source>
+        <translation type="unfinished">이름 등록 약관</translation>
+    </message>
+    <message>
+        <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
+        <translation type="unfinished">자산은 1년 동안 예치됩니다. 여러분의 SNT는 잠기게 되며, 별도로 지출되지 않습니다.</translation>
+    </message>
+    <message>
+        <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
+        <translation type="unfinished">1년 후, 등록한 이름의 계약을 해지하고 예치금을 돌려받을 수 있습니다. 이름을 유지하고 싶을 경우에는 별도의 조치를 할 필요가 없습니다.</translation>
+    </message>
+    <message>
+        <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
+        <translation type="unfinished">스테이터스가 컨트랙트를 업그레이드 하는 등으로 이용 약관을 변경하는 경우, 사용자는 남은 기간에 상관 없이 사용자 이름을 해지할 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
+        <translation type="unfinished">컨트랙트 관리자는 사용자의 예치금에 접근할 수 없습니다. 이는 등록된 주소로만 반환됩니다.</translation>
+    </message>
+    <message>
+        <source>Your address(es) will be publicly associated with your ENS name.</source>
+        <translation type="unfinished">사용자의 주소는 ENS 이름과 공개적으로 연동됩니다.</translation>
+    </message>
+    <message>
+        <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
+        <translation type="unfinished">사용자 이름은 stateofus.eth 의 서브 도메인 노드로 생성되며, ENS 스마트 컨트랙트 이용 약관을 따릅니다.</translation>
+    </message>
+    <message>
+        <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
+        <translation type="unfinished">사용자를 대신하여 SNT를 양도하는 계약을 승인합니다. 이는 트랜잭션에 전송 권한을 부여할 때부터 유효합니다.</translation>
+    </message>
+    <message>
+        <source>These terms are guaranteed by the smart contract logic at addresses:</source>
+        <translation type="unfinished">이러한 조항은 다음 주소의 스마트 컨트랙트 로직으로 보장됩니다:</translation>
+    </message>
+    <message>
+        <source>%1 (Status UsernameRegistrar).</source>
+        <translation type="unfinished">%1 (Status UsernameRegistrar).</translation>
+    </message>
+    <message>
+        <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
+        <translation type="unfinished">&lt;a href=&apos;%1/%2&apos;&gt;Etherscan에서 조회&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <source>%1 (ENS Registry).</source>
+        <translation type="unfinished">%1 (ENS Registry).</translation>
+    </message>
+</context>
+<context>
     <name>EnsTermsAndConditionsView</name>
     <message>
         <source>ENS usernames</source>
         <translation>ENS 이름</translation>
-    </message>
-    <message>
-        <source>Terms of name registration</source>
-        <translation>이름 등록 약관</translation>
-    </message>
-    <message>
-        <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
-        <translation>자산은 1년 동안 예치됩니다. 여러분의 SNT는 잠기게 되며, 별도로 지출되지 않습니다.</translation>
-    </message>
-    <message>
-        <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
-        <translation>1년 후, 등록한 이름의 계약을 해지하고 예치금을 돌려받을 수 있습니다. 이름을 유지하고 싶을 경우에는 별도의 조치를 할 필요가 없습니다.</translation>
-    </message>
-    <message>
-        <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
-        <translation>스테이터스가 컨트랙트를 업그레이드 하는 등으로 이용 약관을 변경하는 경우, 사용자는 남은 기간에 상관 없이 사용자 이름을 해지할 수 있습니다.</translation>
-    </message>
-    <message>
-        <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
-        <translation>컨트랙트 관리자는 사용자의 예치금에 접근할 수 없습니다. 이는 등록된 주소로만 반환됩니다.</translation>
-    </message>
-    <message>
-        <source>Your address(es) will be publicly associated with your ENS name.</source>
-        <translation>사용자의 주소는 ENS 이름과 공개적으로 연동됩니다.</translation>
-    </message>
-    <message>
-        <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
-        <translation>사용자 이름은 stateofus.eth 의 서브 도메인 노드로 생성되며, ENS 스마트 컨트랙트 이용 약관을 따릅니다.</translation>
-    </message>
-    <message>
-        <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
-        <translation>사용자를 대신하여 SNT를 양도하는 계약을 승인합니다. 이는 트랜잭션에 전송 권한을 부여할 때부터 유효합니다.</translation>
-    </message>
-    <message>
-        <source>These terms are guaranteed by the smart contract logic at addresses:</source>
-        <translation>이러한 조항은 다음 주소의 스마트 컨트랙트 로직으로 보장됩니다:</translation>
-    </message>
-    <message>
-        <source>%1 (Status UsernameRegistrar).</source>
-        <translation>%1 (Status UsernameRegistrar).</translation>
-    </message>
-    <message>
-        <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
-        <translation>&lt;a href=&apos;%1/%2&apos;&gt;Etherscan에서 조회&lt;/a&gt;</translation>
-    </message>
-    <message>
-        <source>%1 (ENS Registry).</source>
-        <translation>%1 (ENS Registry).</translation>
     </message>
     <message>
         <source>Wallet address</source>
