@@ -48,15 +48,20 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
         }
     }
 
+    /** Falls back to the chat ID for PendingIntents created before thread-aware keys existed. */
+    private static String conversationKeyOf(Intent intent) {
+        String key = intent.getStringExtra("conversationKey");
+        return (key != null && !key.isEmpty()) ? key : intent.getStringExtra("conversationId");
+    }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent == null) return;
 
         String action = intent.getAction();
         if (NotificationBuilder.ACTION_DISMISS.equals(action)) {
-            String conversationId = intent.getStringExtra("conversationId");
             StatusNotificationManager mgr = StatusNotificationManager.getInstance();
-            if (mgr != null) mgr.clearConversation(conversationId);
+            if (mgr != null) mgr.clearConversation(conversationKeyOf(intent));
             return;
         }
 
@@ -77,6 +82,8 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
         String conversationId = intent.getStringExtra("conversationId");
         if (conversationId == null || conversationId.isEmpty()) return;
 
+        final String threadId = intent.getStringExtra("threadId");
+        final String conversationKey = conversationKeyOf(intent);
         final String replyTextStr = replyText.toString().trim();
         final int androidNotificationId = intent.getIntExtra("androidNotificationId", 0);
 
@@ -89,6 +96,7 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                 // Build sendChatMessage params (same format as Nim backend)
                 JSONObject msg = new JSONObject();
                 msg.put("chatId", conversationId);
+                msg.put("threadId", threadId == null ? "" : threadId);
                 msg.put("text", replyTextStr);
                 msg.put("contentType", 1); // 1 = TEXT_PLAIN (protobuf ChatMessage_ContentType)
                 msg.put("responseTo", "");
@@ -149,7 +157,7 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
 
                 if (failed) {
                     Log.w(TAG, "sendChatMessage failed: " + errorMsg);
-                    if (mgr != null) mgr.clearConversation(conversationId);
+                    if (mgr != null) mgr.clearConversation(conversationKey);
                     StatusNotificationManager.showReplyFailed(appContext);
                     if (androidNotificationId != 0) {
                         NotificationManagerCompat.from(appContext).cancel(androidNotificationId);
@@ -158,7 +166,7 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
             } catch (Exception e) {
                 Log.w(TAG, "failed to send reply", e);
                 StatusNotificationManager mgr = StatusNotificationManager.getInstance();
-                if (mgr != null) mgr.clearConversation(conversationId);
+                if (mgr != null) mgr.clearConversation(conversationKey);
                 StatusNotificationManager.showReplyFailed(appContext);
                 if (androidNotificationId != 0) {
                     NotificationManagerCompat.from(appContext).cancel(androidNotificationId);
