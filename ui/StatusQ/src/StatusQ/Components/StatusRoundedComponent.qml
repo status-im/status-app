@@ -63,7 +63,9 @@ Rectangle {
     implicitHeight: 40
     color: "transparent"
     radius: width / 2
-    layer.enabled: true
+    // The mask is a ShaderEffectSource + OpacityMask + mask Rectangle per instance.
+    // Invisible instances (e.g. an unused badge) must not pay for it.
+    layer.enabled: root.visible
     layer.effect: OpacityMask {
         maskSource: Rectangle {
             x: root.x; y: root.y
