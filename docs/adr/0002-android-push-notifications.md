@@ -103,6 +103,8 @@ Message notifications use `NotificationCompat.MessagingStyle` rather than plain 
 
 No in-process conversation buffer is maintained. Instead, conversation state is stored directly in the OS notification itself: when a new message arrives for an active conversation, `StatusNotificationManager` extracts the existing `MessagingStyle` from the active `StatusBarNotification` via `NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification()`, appends the new message with its sender `Person` (including icon), and re-posts the updated notification. This preserves all historical `Person` icons without any in-process caching and automatically ties the conversation thread lifetime to the notification's lifetime — swiping the notification away discards the thread state.
 
+Conversation identity is the `NotificationBuilder.conversationKey()` value — the chat ID, or `chatId#threadId` when the message belongs to a message thread — not the bare `conversationId` reported by `status-go` (which is always the parent chat). It derives the notification ID, the group key and the shortcut ID, so a thread gets its own notification stack. This is required for correctness, not just presentation: the notification ID doubles as the inline-reply `PendingIntent` request code, and `PendingIntent` matching ignores extras, so a shared ID would let whichever notification was posted last decide where a reply is sent.
+
 ---
 
 ### 6. Outgoing message handling (`isFromMe`)
@@ -132,6 +134,12 @@ When the UI comes to the foreground, all active notifications are cancelled and 
 2. Calls `StatusGoService.callRpc("wakuext_sendChatMessage", ...)` directly (same process — no Binder round-trip needed).
 3. On success the notification is updated with the sent message via a new `local-notifications` signal from `status-go`.
 4. On failure a "Reply failed" notification is shown.
+
+The reply intent carries the chat ID, the thread ID and the conversation key. The thread ID is
+read from `body.message.threadId` on the originating signal and passed straight back as the
+`threadId` field of the send RPC, so a reply to a thread notification lands in that thread
+rather than the parent chat. It is empty for non-threaded messages, which `status-go` treats as
+absent.
 
 The send response is also forwarded to the UI process as an internal `notification.reply.sent`
 signal. It is queued while the UI is backgrounded, then processed through the same messenger
