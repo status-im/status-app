@@ -4676,7 +4676,7 @@ Log in with your new password.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>This page crashed and needs to be reloaded.</source>
+        <source>This page stopped responding and needs to be reloaded.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
