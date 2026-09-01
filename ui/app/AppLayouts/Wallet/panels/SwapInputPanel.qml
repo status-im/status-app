@@ -462,10 +462,11 @@ Control {
             multiplierIndex: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.decimals ? d.selectedHolding.item.decimals : 18
             cryptoPrice: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.cryptoPrice ? d.selectedHolding.item.cryptoPrice : 0
             formatFiat: amount => qsTr("≈ %1").arg(root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency))
-            formatBalance: amount => qsTr("≈ %1").arg(root.currencyStore.formatCurrencyAmount(amount, d.inputSymbol))
+            formatBalance: amount => qsTr("≈ %1").arg(root.currencyStore.formatCurrencyAmount(amount, d.inputSymbol, { noSymbol: true, roundingMode: LocaleUtils.RoundingMode.Down }))
 
             mainInputLoading: root.mainInputLoading
             bottomTextLoading: root.bottomTextLoading
+            selectedSymbol: amountToSendInput.fiatMode ? d.inputSymbol : ""
 
             amountInputRightPadding: holdingSelector.width + Theme.padding
 
