@@ -550,6 +550,17 @@ void SystemUtilsInternal::setMainWindowReady()
 #endif
 }
 
+void SystemUtilsInternal::moveAppTaskToBack()
+{
+#ifdef Q_OS_ANDROID
+    QJniObject::callStaticMethod<void>(
+        "app/status/mobile/StatusQtActivity",
+        "moveAppTaskToBack",
+        "()V"
+    );
+#endif
+}
+
 int SystemUtilsInternal::androidKeyboardHeight() const
 {
     return m_androidKeyboardHeight;

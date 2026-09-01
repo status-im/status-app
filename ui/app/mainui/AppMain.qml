@@ -81,6 +81,7 @@ Item {
                                    appMain.privacyStore?.thirdpartyServicesEnabled ?? true : true
         onOpenUrl: (link) => Global.requestOpenLink(link)
         onOpenUrlInNewBrowserTab: (link) => d.openUrlInNewBrowserTab(link)
+        onLaunchShareFlow: (text, imagePaths) => d.launchShareFlow(text, imagePaths)
         onOpenActivityCenter: () => {
             d.closeActivityCenterOnNextBack = false
             mainLayoutItem.openACCenterPanel = true
@@ -1151,6 +1152,52 @@ Item {
                 if (browser && browser.openUrlInNewTab)
                     browser.openUrlInNewTab(link)
             })
+        }
+
+        // External intake, share route: content shared to Status from another
+        // app launches the share flow (destination picker -> preview -> send).
+        // Last-wins: a share arriving while the flow is open restarts it with
+        // the new payload; the replaced share's cached image copies are
+        // released so they don't accumulate.
+        function launchShareFlow(text: string, imagePaths) {
+            d.releaseShareFlowImages()
+            shareFlowLoader.sharedText = text
+            shareFlowLoader.sharedImagePaths = imagePaths
+            if (!shareFlowLoader.active)
+                shareFlowLoader.active = true
+            else
+                shareFlowLoader.item.restart()
+            shareFlowLoader.item.open()
+        }
+
+        // Cancel from picker or preview: nothing is sent, the cached copies of
+        // the shared images are released; on Android the whole task is
+        // backgrounded so the user lands back in the source app.
+        function cancelShareFlow() {
+            d.releaseShareFlowImages()
+            shareFlowLoader.item.close()
+            if (SQUtils.Utils.isAndroid)
+                SystemUtils.moveAppTaskToBack()
+        }
+
+        // Send the shared content to the picked destination and land in that
+        // chat. The cached image copies are NOT released here — the image-send
+        // task consumes the files asynchronously and releases them once done.
+        function completeShareFlow(sectionId: string, chatId: string, text: string) {
+            const imagePaths = shareFlowLoader.sharedImagePaths
+            shareFlowLoader.sharedImagePaths = []
+            shareFlowLoader.item.close()
+            appMain.rootChatStore.sendMessageToChat(sectionId, chatId, text, imagePaths)
+            rootStore.setActiveSectionChat(sectionId, chatId)
+        }
+
+        // Cache lifecycle: drop the flow's cached shared-image copies (cancel
+        // and last-wins-replacement paths).
+        function releaseShareFlowImages() {
+            if (shareFlowLoader.sharedImagePaths.length === 0)
+                return
+            rootStore.releaseShareIntakeFiles(shareFlowLoader.sharedImagePaths)
+            shareFlowLoader.sharedImagePaths = []
         }
 
         function tryOpenNavigationEducationPopup() {
@@ -2890,6 +2937,77 @@ Item {
         sequence: "Ctrl+,"
         onActivated: globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.profile,
                                                                   Utils.getSettingsSubsectionForSection(d.activeSectionType))
+    }
+
+    Loader {
+        id: shareFlowLoader
+        active: false
+
+        // The shared payload (external intake, share route): text editable in
+        // the preview step; image paths are app-private cached copies whose
+        // lifecycle ends with the flow (released on cancel/replace, or by the
+        // image-send task after send).
+        property string sharedText
+        property var sharedImagePaths: []
+
+        sourceComponent: Popup {
+            id: shareFlowPopup
+
+            parent: appMain
+            x: (appMain.width - width) / 2
+            y: (appMain.height - height) / 2
+            width: appMain.isPortraitMode ? appMain.width : 480
+            height: appMain.isPortraitMode ? appMain.height
+                                           : Math.min(640, appMain.height - 2 * Theme.bigPadding)
+            modal: true
+            closePolicy: Popup.NoAutoClose
+            padding: Theme.padding
+
+            onClosed: shareFlowLoader.active = false
+
+            function restart() {
+                shareFlowSteps.currentIndex = 0
+                sharePreviewPanel.text = shareFlowLoader.sharedText
+            }
+
+            RecentPostableDestinationsAdaptor {
+                id: shareDestinationsAdaptor
+                sourceModel: rootStore.chatSearchModel
+            }
+
+            StackLayout {
+                id: shareFlowSteps
+                anchors.fill: parent
+                currentIndex: 0
+
+                ShareDestinationPickerPanel {
+                    model: shareDestinationsAdaptor.model
+
+                    onDestinationPicked: (sectionId, chatId, name) => {
+                        sharePreviewPanel.destinationSectionId = sectionId
+                        sharePreviewPanel.destinationChatId = chatId
+                        sharePreviewPanel.destinationName = name
+                        shareFlowSteps.currentIndex = 1
+                    }
+                    onCancelRequested: d.cancelShareFlow()
+                }
+
+                SharePreviewPanel {
+                    id: sharePreviewPanel
+
+                    property string destinationSectionId
+                    property string destinationChatId
+
+                    text: shareFlowLoader.sharedText
+                    imagePaths: shareFlowLoader.sharedImagePaths
+
+                    onSendRequested: (text) => d.completeShareFlow(destinationSectionId,
+                                                                   destinationChatId, text)
+                    onBackRequested: shareFlowSteps.currentIndex = 0
+                    onCancelRequested: d.cancelShareFlow()
+                }
+            }
+        }
     }
 
     Loader {

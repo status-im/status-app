@@ -48,10 +48,12 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:hasFragileUserData="true"
         android:fullBackupOnly="false">
+        <!-- singleTask: share/view intents land in the caller's task, where singleTop
+             would spawn a second activity Qt cannot re-init against (dead screen). -->
         <activity
             android:name="app.status.mobile.StatusQtActivity"
             android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|mcc|mnc|density"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:resizeableActivity="true"
             android:windowSoftInputMode="adjustNothing"
             android:exported="true">
@@ -126,6 +128,26 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
+            </intent-filter>
+            <!--
+              Share target: text, links and images shared from other apps
+              (share sheet). Only text/plain and image/* are declared - exactly
+              what chat can send today; video/audio/arbitrary files are not.
+              Extraction is decision-free (StatusQtActivity.handleShareIntake):
+              image streams are copied to app-private cache at receipt (OS read
+              grants expire); the share flow launches at the Nim
+              external-intake seam.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
 
