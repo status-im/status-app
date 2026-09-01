@@ -347,8 +347,8 @@ QtObject {
         stickersModule: stickersModuleInst
     }
 
-    function sendSticker(channelId, hash, replyTo, pack, url) {
-        stickersModuleInst.send(channelId, hash, replyTo, pack, url)
+    function sendSticker(channelId, hash, replyTo, pack, url, threadId = "") {
+        stickersModuleInst.send(channelId, hash, replyTo, pack, url, threadId || "")
     }
 
     function isCurrentUser(pubkey) {
