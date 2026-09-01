@@ -551,7 +551,7 @@ RightTabBaseView {
 
                         onHideRequested: (key) => {
                                              const token = SQUtils.ModelUtils.getByKey(RootStore.walletAssetsStore.groupedAccountAssetsModel, "key", key)
-                                             Global.openConfirmHideAssetPopup(token.symbol, token.name, token.logoUri || Constants.tokenIcon(token.symbol, false), !!token.communityId)
+                                             Global.openConfirmHideAssetPopup(key, token.symbol, token.name, token.logoUri || Constants.tokenIcon(token.symbol, false), !!token.communityId)
                                          }
                         onHideCommunityAssetsRequested:
                             (communityKey) => {
@@ -662,7 +662,7 @@ RightTabBaseView {
 
                             root.sendTokenRequested(fromAddress, collectionUid, tokenType)
                         }
-                        onReceiveRequested: (symbol) => root.launchShareAddressModal()
+                        onReceiveRequested: (key) => root.launchShareAddressModal()
                         onSwitchToCommunityRequested: (communityId) => Global.switchToCommunity(communityId)
                         onManageTokensRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.wallet,
                                                                                       Constants.walletSettingsSubsection.manageCollectibles)
