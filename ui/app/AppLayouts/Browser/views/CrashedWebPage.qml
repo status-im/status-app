@@ -21,11 +21,13 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 4
+            spacing: 6
 
             StatusIcon {
                 Layout.alignment: Qt.AlignVCenter
-                icon: "exclamation_outline"
+                Layout.preferredWidth: 20
+                Layout.preferredHeight: 20
+                icon: "exclamation-octagon"
                 color: Theme.palette.directColor1
             }
 
@@ -47,7 +49,7 @@ Rectangle {
             lineHeightMode: Text.FixedHeight
             color: Theme.palette.directColor1
             wrapMode: Text.WordWrap
-            text: qsTr("This page crashed and needs to be reloaded.")
+            text: qsTr("This page stopped responding and needs to be reloaded.")
         }
 
         StatusButton {
