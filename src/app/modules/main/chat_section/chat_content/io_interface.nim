@@ -32,9 +32,6 @@ method openThreadAsChat*(self: AccessInterface, threadId: string, threadName: st
     setActive: bool = true, hasUnreadMessages: bool = false, notificationsCount: int = 0) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onChatThreadsLoaded*(self: AccessInterface, threads: seq[ThreadDto]) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method newPinnedMessagesLoaded*(self: AccessInterface, pinnedMessages: seq[PinnedMessageDto], reactions: seq[ReactionDto]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
