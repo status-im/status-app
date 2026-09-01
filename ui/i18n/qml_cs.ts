@@ -16956,12 +16956,12 @@ selhalo</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>by %1</source>
+        <source>by %1 via %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>via %1</source>
-        <translation type="unfinished">přes %1</translation>
+        <source>by %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Approving %1</source>
@@ -19075,16 +19075,32 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation>&lt; 1 minuta</translation>
     </message>
     <message>
+        <source>&lt; 1 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&lt; 3 minutes</source>
         <translation>&lt; 3 minuty</translation>
+    </message>
+    <message>
+        <source>&lt; 3 min</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>&lt; 5 minutes</source>
         <translation>&lt; 5 minut</translation>
     </message>
     <message>
+        <source>&lt; 5 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&gt; 5 minutes</source>
         <translation>&gt; 5 minut</translation>
+    </message>
+    <message>
+        <source>&gt; 5 min</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Unknown</source>
