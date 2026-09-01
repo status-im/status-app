@@ -11,4 +11,10 @@ Q_DECL_EXPORT void statusq_stopBackgroundService();
 // copies (logout hygiene). No-op if not Android.
 Q_DECL_EXPORT void statusq_clearShareShortcuts();
 
+// Delete every donated send-message interaction, and with them the iOS
+// share-sheet suggestion chips they power (logout hygiene — the iOS
+// counterpart of statusq_clearShareShortcuts). No-op if not iOS.
+// Implemented in externc.cpp via MobileUI::deleteAllDonatedInteractions().
+Q_DECL_EXPORT void statusq_deleteDonatedInteractions();
+
 }

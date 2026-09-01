@@ -6,6 +6,8 @@ import QtQuick.Window
 import QtQml.Models
 import QtQml
 
+import MobileUI
+
 import StatusQ
 import StatusQ.Core
 import StatusQ.Controls
@@ -1687,7 +1689,14 @@ QtObject {
                 headerSettings.title: qsTr("Sign out")
                 confirmationText: qsTr("Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.")
                 confirmButtonLabel: qsTr("Sign out & Quit")
-                onConfirmButtonClicked: mainModule.signOutAndQuit()
+
+                onConfirmButtonClicked: {
+                    // Ahead of signOutAndQuit, which ends in _exit(0) with no
+                    // event-loop turn for this async XPC round trip to use.
+                    // Idempotent, and a no-op off iOS.
+                    MobileUI.deleteAllDonatedInteractions()
+                    mainModule.signOutAndQuit()
+                }
             }
         },
 

@@ -24,8 +24,9 @@ echo "qmllint: $QMLLINT"
 echo "Qt modules: $QT_QML_PATH"
 echo ""
 
-# Collect all QML files
-mapfile -d '' QML_FILES < <(find "$ROOT_DIR/ui" -name "*.qml" -print0)
+# Collect all QML files (skipping build trees — they hold fetched third-party
+# sources and copies, and make lint results depend on prior builds)
+mapfile -d '' QML_FILES < <(find "$ROOT_DIR/ui" -path "*/build" -prune -o -name "*.qml" -print0)
 echo "Checking ${#QML_FILES[@]} files..."
 
 # Run qmllint with JSON output for precise filtering

@@ -308,6 +308,10 @@ proc init*(self: Controller) =
     let args = ExternalShareIntakeArgs(e)
     self.delegate.launchShareFlow(args.text, args.imagePaths, args.destinationChatId)
 
+  self.events.on(SIGNAL_SENDING_SUCCESS) do(e: Args):
+    let args = MessageSendingSuccess(e)
+    self.delegate.onMessageSent(args.chat.id)
+
   self.events.on(SIGNAL_OS_NOTIFICATION_CLICKED) do(e: Args):
     var args = ClickedNotificationArgs(e)
     self.delegate.osNotificationClicked(args.details)

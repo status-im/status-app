@@ -1,5 +1,7 @@
 // Share extension: text, links & images (fork issues #14/#15, iOS
-// share-integration slices 2 and 3, on the hand-off plumbing from #13).
+// share-integration slices 2 and 3, on the hand-off plumbing from #13);
+// suggestion-chip taps carry their donated conversation id through the same
+// hand-off (#16, slice 4).
 //
 // Thin hand-off, the extension stays a dumb platform layer (fork issue #12):
 //   1. extract the shared text/URL/images from the extension context
@@ -7,7 +9,8 @@
 //      Group `share-intake` cache immediately at receipt — the provider's
 //      file representation is only valid during the load handler, the same
 //      expiring-access rule as Android's content-URI read grants;
-//   2. write a {"type":"share","text":...,"imagePaths":[...]} payload into
+//   2. write a {"type":"share","text":...,"imagePaths":[...],
+//      "destinationChatId":...} payload into
 //      the App Group container (the pending intake slot — see
 //      src/app/core/intake/pending_intake_slot.nim for the host side and
 //      CONTEXT.md for the vocabulary);
@@ -28,6 +31,7 @@
 //     directory, mirroring the host-side guard (share_intake_cache.nim).
 
 #import <UIKit/UIKit.h>
+#import <Intents/Intents.h>
 #import <objc/message.h>
 
 // Must match ui/StatusQ/src/shareintake_ios.mm and the entitlements files
@@ -90,6 +94,13 @@ static NSString *const kTypePlainText = @"public.plain-text";
         return;
     _handled = YES;
 
+    // Suggestion-chip path (#16): when the user tapped one of the donated
+    // conversation chips instead of the app row, iOS hands the donated
+    // INSendMessageIntent back here — its conversationIdentifier is the chat
+    // id the host donated, so the destination is already decided and the host
+    // skips the picker. nil/empty for a plain app-row share.
+    NSString *destinationChatId = [self donatedConversationId];
+
     [self extractSharedContentWithCompletion:^(NSString *text, NSArray<NSString *> *imagePaths) {
         BOOL hasText = [text stringByTrimmingCharactersInSet:
                 [NSCharacterSet whitespaceAndNewlineCharacterSet]].length > 0;
@@ -102,7 +113,9 @@ static NSString *const kTypePlainText = @"public.plain-text";
             [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
             return;
         }
-        if (![self writePendingIntakeWithText:text imagePaths:imagePaths]) {
+        if (![self writePendingIntakeWithText:text
+                                   imagePaths:imagePaths
+                            destinationChatId:destinationChatId]) {
             // The hand-off failed after the copies were made: don't leak them
             // into the shared container.
             [ShareViewController deleteCachedCopies:imagePaths];
@@ -283,12 +296,25 @@ static NSString *const kTypePlainText = @"public.plain-text";
     return dest.path;
 }
 
+// The conversation id of the donated send-message intent the user tapped in
+// the share sheet; nil when the share came through the plain app row (or the
+// OS handed over something unexpected).
+- (NSString *)donatedConversationId
+{
+    INIntent *intent = self.extensionContext.intent;
+    if (![intent isKindOfClass:[INSendMessageIntent class]])
+        return nil;
+    return ((INSendMessageIntent *)intent).conversationIdentifier;
+}
+
 // Last-wins by design: an atomic overwrite of the single slot file. The
 // replaced payload's cached image copies are deleted with it — they were
 // never delivered and nothing references them anymore. Returns NO when the
 // hand-off could not be written (the caller then releases this share's own
 // copies).
-- (BOOL)writePendingIntakeWithText:(NSString *)text imagePaths:(NSArray<NSString *> *)imagePaths
+- (BOOL)writePendingIntakeWithText:(NSString *)text
+                        imagePaths:(NSArray<NSString *> *)imagePaths
+                 destinationChatId:(NSString *)destinationChatId
 {
     NSFileManager *fm = [NSFileManager defaultManager];
     NSURL *container = [fm containerURLForSecurityApplicationGroupIdentifier:kAppGroupId];
@@ -308,8 +334,9 @@ static NSString *const kTypePlainText = @"public.plain-text";
     }
 
     // Payload contract with the host (urls_manager.consumePendingIntake):
-    // {"type": "share", "text": ..., "imagePaths": [...]} — imagePaths
-    // optional; unknown extra keys are ignored there.
+    // {"type": "share", "text": ..., "imagePaths": [...],
+    // "destinationChatId": ...} — imagePaths and destinationChatId optional;
+    // unknown extra keys are ignored there.
     NSMutableDictionary *payload = [@{
         @"type" : @"share",
         @"text" : text,
@@ -317,6 +344,8 @@ static NSString *const kTypePlainText = @"public.plain-text";
     } mutableCopy];
     if (imagePaths.count > 0)
         payload[@"imagePaths"] = imagePaths;
+    if (destinationChatId.length > 0)
+        payload[@"destinationChatId"] = destinationChatId;
     NSData *json = [NSJSONSerialization dataWithJSONObject:payload options:0 error:&error];
     if (json == nil) {
         NSLog(@"StatusShareExtension: cannot serialize payload: %@", error);

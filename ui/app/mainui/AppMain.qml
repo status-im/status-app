@@ -2966,6 +2966,34 @@ Item {
         }
     }
 
+    // iOS share-sheet contact suggestions: after each successful send (in-app
+    // and share-flow) the destination is donated as a send-message intent, so
+    // iOS surfaces it as a one-tap suggestion chip in the share sheet.
+    // Event-driven only: donations repopulate organically as the user sends;
+    // logout deletes all of them unconditionally on the Nim side (main module
+    // signOutAndQuit), mirroring the Android shortcut clearing.
+    Loader {
+        id: intentDonorLoader
+
+        active: SQUtils.Utils.isIOS
+
+        sourceComponent: SendMessageIntentDonor {
+            model: shareDestinationsAdaptor.model
+            iconDirectory: SystemUtils.shareShortcutsIconDirectory()
+            onDonationRequested: (conversationId, name, iconPath) =>
+                MobileUI.donateSendMessageInteraction(conversationId, name, iconPath)
+        }
+    }
+
+    Connections {
+        target: appMain.rootStore
+        enabled: intentDonorLoader.active
+
+        function onMessageSentToChat(chatId) {
+            intentDonorLoader.item.donateForChat(chatId)
+        }
+    }
+
     Loader {
         id: shareFlowLoader
         active: false
