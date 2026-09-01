@@ -1172,7 +1172,7 @@ Loader {
                         gifUnfurlingEnabled: root.gifUnfurlingEnabled
                         onSetGifUnfurlingEnabled: localAccountSensitiveSettings.gifUnfurlingEnabled = true
                         canAskToUnfurlGifs: !root.neverAskAboutUnfurlingAgain
-                        onSetNeverAskAboutUnfurlingAgain: root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
+                        onSetNeverAskAboutUnfurlingAgain: neverAskAgain => root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
                         onPaymentRequestClicked: (index) => {
                             const request = StatusQUtils.ModelUtils.get(paymentRequestModel, index)
                             root.tokenPaymentRequested(request.receiver, request.tokenKey, request.amount)
