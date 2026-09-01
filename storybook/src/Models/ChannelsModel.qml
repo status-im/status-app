@@ -4,26 +4,29 @@ ListModel {
     ListElement {
         itemId: "_welcome"
         isCategory: false
+        type: 0
         categoryId: ""
         name: "welcome"
         emoji: ""
-        color: ""
+        color: "blue"
         icon: ""
         colorId: 1
     }
     ListElement {
         itemId: "_announcements"
         isCategory: false
+        type: 0
         categoryId: ""
         name: "announcements"
         emoji: ""
-        color: ""
+        color: "pink"
         icon: ""
         colorId: 1
     }
     ListElement {
         itemId: ""
         isCategory: true
+        type: -1
         categoryId: "_discussion"
         name: "discussion"
         emoji: ""
@@ -34,6 +37,7 @@ ListModel {
     ListElement {
         itemId: "_general"
         isCategory: false
+        type: 0
         categoryId: "_discussion"
         name: "general"
         emoji: "👋"
@@ -44,6 +48,7 @@ ListModel {
     ListElement {
         itemId: "_help"
         isCategory: false
+        type: 0
         categoryId: "_discussion"
         name: "help"
         emoji: "⚽"
@@ -54,6 +59,7 @@ ListModel {
     ListElement {
         itemId: ""
         isCategory: true
+        type: -1
         categoryId: "_support"
         name: "support"
         emoji: ""
@@ -64,6 +70,7 @@ ListModel {
     ListElement {
         itemId: "_faq"
         isCategory: false
+        type: 0
         categoryId: "_support"
         name: "faq"
         emoji: ""
@@ -74,6 +81,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam"
         isCategory: false
+        type: 0
         categoryId: "_support"
         name: "report-scam"
         emoji: ""
@@ -84,6 +92,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam2"
         isCategory: false
+        type: 0
         categoryId: "_support"
         name: "report-scam2"
         emoji: ""
@@ -94,6 +103,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam3"
         isCategory: false
+        type: 0
         categoryId: "_support"
         name: "report-scam3"
         emoji: ""
@@ -104,6 +114,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam4"
         isCategory: false
+        type: 0
         categoryId: "_support"
         name: "report-scam4"
         emoji: ""
@@ -114,6 +125,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam5"
         isCategory: false
+        type: 0
         categoryId: "_support"
         name: "report-scam5"
         emoji: ""
@@ -124,6 +136,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam6"
         isCategory: false
+        type: 0
         categoryId: "_support"
         name: "report-scam6"
         emoji: ""
@@ -134,6 +147,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam7"
         isCategory: false
+        type: 0
         categoryId: "_support"
         name: "report-scam7"
         emoji: ""
@@ -144,6 +158,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam8"
         isCategory: false
+        type: 0
         categoryId: "_support"
         name: "report-scam8"
         emoji: ""
@@ -154,6 +169,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam9"
         isCategory: false
+        type: 0
         categoryId: "_support"
         name: "report-scam9"
         emoji: ""
@@ -164,6 +180,7 @@ ListModel {
     ListElement {
         itemId: ""
         isCategory: true
+        type: -1
         categoryId: "_faq"
         name: "faq"
         emoji: ""
