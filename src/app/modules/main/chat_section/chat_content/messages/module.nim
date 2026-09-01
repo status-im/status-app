@@ -471,13 +471,11 @@ method onThreadCreated*(self: Module, parentMessageId: string, threads: seq[Thre
     notificationsCount = selectedThread.unviewedMentionsCount)
 
 method onChatThreadsLoaded*(self: Module, threads: seq[ThreadDto]) =
+  # Adding the thread rows is the chat section's job; this only back-fills the flag for
+  # messages that were already rendered when the fetch landed.
   for thread in threads:
     if thread.parentMessageId.len > 0:
       self.view.model().setHasThread(thread.parentMessageId, true)
-      # Add the thread to the chat list so it appears as a sub-chat
-      self.delegate.openThreadAsChat(thread.threadId, thread.name, thread.parentMessageId,
-        setActive = false, hasUnreadMessages = thread.unviewedMessagesCount > 0,
-        notificationsCount = thread.unviewedMentionsCount)
 
 method getChatType*(self: Module): int =
   let chatDto = self.controller.getChatDetails()
