@@ -7340,58 +7340,61 @@ Keycard bude vyžadována pro podepisování</translation>
     </message>
 </context>
 <context>
+    <name>EnsTermsAndConditionsPopup</name>
+    <message>
+        <source>Terms of name registration</source>
+        <translation type="unfinished">Podmínky registrace jména</translation>
+    </message>
+    <message>
+        <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
+        <translation type="unfinished">Prostředky jsou uloženy na 1 rok. Vaše SNT budou uzamčeny, ale nebudou utraceny.</translation>
+    </message>
+    <message>
+        <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
+        <translation type="unfinished">Po 1 roce můžete jméno uvolnit a získat svůj vklad zpět, nebo neprovádět žádnou akci a jméno si ponechat.</translation>
+    </message>
+    <message>
+        <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
+        <translation type="unfinished">Pokud se změní podmínky smlouvy — např. Status provede upgrade smlouvy — uživatel má právo uvolnit uživatelské jméno bez ohledu na dobu držení.</translation>
+    </message>
+    <message>
+        <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
+        <translation type="unfinished">Správce smlouvy nemá přístup k vašim uloženým prostředkům. Mohou být přesunuty pouze zpět na adresu, která je odeslala.</translation>
+    </message>
+    <message>
+        <source>Your address(es) will be publicly associated with your ENS name.</source>
+        <translation type="unfinished">Vaše adresa(y) budou veřejně spojeny s vaším ENS jménem.</translation>
+    </message>
+    <message>
+        <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
+        <translation type="unfinished">Uživatelská jména jsou vytvářena jako uzly subdomén stateofus.eth a podléhají podmínkám chytré smlouvy ENS.</translation>
+    </message>
+    <message>
+        <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
+        <translation type="unfinished">Autorizujete smlouvu k převodu SNT vaším jménem. K tomu může dojít pouze tehdy, když schválíte transakci k autorizaci převodu.</translation>
+    </message>
+    <message>
+        <source>These terms are guaranteed by the smart contract logic at addresses:</source>
+        <translation type="unfinished">Tyto podmínky jsou zaručeny logikou chytré smlouvy na adresách:</translation>
+    </message>
+    <message>
+        <source>%1 (Status UsernameRegistrar).</source>
+        <translation type="unfinished">%1 (Status UsernameRegistrar).</translation>
+    </message>
+    <message>
+        <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
+        <translation type="unfinished">&lt;a href=&apos;%1/%2&apos;&gt;Vyhledat na Etherscanu&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <source>%1 (ENS Registry).</source>
+        <translation type="unfinished">%1 (ENS Registry).</translation>
+    </message>
+</context>
+<context>
     <name>EnsTermsAndConditionsView</name>
     <message>
         <source>ENS usernames</source>
         <translation>ENS uživatelská jména</translation>
-    </message>
-    <message>
-        <source>Terms of name registration</source>
-        <translation>Podmínky registrace jména</translation>
-    </message>
-    <message>
-        <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
-        <translation>Prostředky jsou uloženy na 1 rok. Vaše SNT budou uzamčeny, ale nebudou utraceny.</translation>
-    </message>
-    <message>
-        <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
-        <translation>Po 1 roce můžete jméno uvolnit a získat svůj vklad zpět, nebo neprovádět žádnou akci a jméno si ponechat.</translation>
-    </message>
-    <message>
-        <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
-        <translation>Pokud se změní podmínky smlouvy — např. Status provede upgrade smlouvy — uživatel má právo uvolnit uživatelské jméno bez ohledu na dobu držení.</translation>
-    </message>
-    <message>
-        <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
-        <translation>Správce smlouvy nemá přístup k vašim uloženým prostředkům. Mohou být přesunuty pouze zpět na adresu, která je odeslala.</translation>
-    </message>
-    <message>
-        <source>Your address(es) will be publicly associated with your ENS name.</source>
-        <translation>Vaše adresa(y) budou veřejně spojeny s vaším ENS jménem.</translation>
-    </message>
-    <message>
-        <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
-        <translation>Uživatelská jména jsou vytvářena jako uzly subdomén stateofus.eth a podléhají podmínkám chytré smlouvy ENS.</translation>
-    </message>
-    <message>
-        <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
-        <translation>Autorizujete smlouvu k převodu SNT vaším jménem. K tomu může dojít pouze tehdy, když schválíte transakci k autorizaci převodu.</translation>
-    </message>
-    <message>
-        <source>These terms are guaranteed by the smart contract logic at addresses:</source>
-        <translation>Tyto podmínky jsou zaručeny logikou chytré smlouvy na adresách:</translation>
-    </message>
-    <message>
-        <source>%1 (Status UsernameRegistrar).</source>
-        <translation>%1 (Status UsernameRegistrar).</translation>
-    </message>
-    <message>
-        <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
-        <translation>&lt;a href=&apos;%1/%2&apos;&gt;Vyhledat na Etherscanu&lt;/a&gt;</translation>
-    </message>
-    <message>
-        <source>%1 (ENS Registry).</source>
-        <translation>%1 (ENS Registry).</translation>
     </message>
     <message>
         <source>Wallet address</source>
