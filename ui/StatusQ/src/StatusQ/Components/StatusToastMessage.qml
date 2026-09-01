@@ -232,7 +232,6 @@ Control {
 
     background: Rectangle {
         id: background
-        anchors.fill: parent
         color: Theme.palette.statusToastMessage.backgroundColor
         radius: 8
         border.color: Theme.palette.baseColor2
