@@ -72,6 +72,9 @@ Dialog {
     // Whether to show the divider between the content and footer.
     property bool showFooterDivider: true
 
+    // allows outside access of properties defined in contentComponent
+    readonly property alias hostedItem: contentHost.hostedItem
+
     function openInternalPopup() {
         internalPopupLayer.open()
     }
@@ -489,8 +492,10 @@ Dialog {
             MouseArea {
                 anchors.fill: parent
                 anchors.bottomMargin: internalPopupLayer.popupObject ? internalPopupLayer.popupObject.height : 0
-                onClicked: if (internalPopupLayer.closeOnOverlayClick)
-                    root.closeInternalPopup()
+                onClicked: {
+                    if (internalPopupLayer.closeOnOverlayClick)
+                        root.closeInternalPopup()
+                }
             }
         }
     }
