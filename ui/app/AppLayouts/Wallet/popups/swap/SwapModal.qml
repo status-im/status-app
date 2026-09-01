@@ -166,6 +166,16 @@ StatusDialog {
                 d.ensureBridgePicker()
         }
 
+        readonly property string modalTitle: {
+            const fromKey = root.swapInputParamsForm.fromGroupKey
+            const toKey = root.swapInputParamsForm.toGroupKey
+            if (!fromKey || !toKey)
+                return qsTr("Swap + Bridge")
+            if (!d.isBridge)
+                return qsTr("Swap")
+            return fromKey === toKey ? qsTr("Bridge") : qsTr("Swap + Bridge")
+        }
+
         readonly property string routeOrderName: {
             switch (root.swapInputParamsForm.selectedRouteOrder) {
             case Constants.swap.routeOrderFastest: return qsTr("Fastest")
@@ -352,7 +362,7 @@ StatusDialog {
                 HeaderTitleText {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                    text: qsTr("Swap + Bridge")
+                    text: d.modalTitle
                 }
 
                 StatusFlatRoundButton {

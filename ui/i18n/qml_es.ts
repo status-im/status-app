@@ -16879,6 +16879,10 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Bridge</source>
+        <translation type="unfinished">Bridge</translation>
+    </message>
+    <message>
         <source>%1s</source>
         <comment>short for seconds</comment>
         <translation type="unfinished"></translation>
