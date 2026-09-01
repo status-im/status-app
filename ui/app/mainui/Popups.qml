@@ -538,8 +538,8 @@ QtObject {
                   })
     }
 
-    function openConfirmHideAssetPopup(assetSymbol, assetName, assetImage, isCommunityToken) {
-        openPopup(confirmHideAssetPopup, { symbol: assetSymbol, name: assetName, icon: assetImage, isCommunityToken })
+    function openConfirmHideAssetPopup(assetKey, assetSymbol, assetName, assetImage, isCommunityToken) {
+        openPopup(confirmHideAssetPopup, { key: assetKey, symbol: assetSymbol, name: assetName, icon: assetImage, isCommunityToken })
     }
 
     function openConfirmHideCollectiblePopup(collectibleSymbol, collectibleName, collectibleImage, isCommunityToken) {
@@ -1518,8 +1518,19 @@ QtObject {
                 destroyOnClose: true
                 communitiesStore: root.communitiesStore
 
-                onHideClicked: (tokenSymbol, tokenName, tokenImage, isAsset) => isAsset ? root.openConfirmHideAssetPopup(tokenSymbol, tokenName, tokenImage, true)
-                                                                                        : root.openConfirmHideCollectiblePopup(tokenSymbol, tokenName, tokenImage, true)
+                // The toast payload carries only a symbol, but the hide popups are keyed
+                // by token group key, so resolve it here.
+                onHideClicked: (tokenSymbol, tokenName, tokenImage, isAsset) => {
+                    if (!isAsset) {
+                        root.openConfirmHideCollectiblePopup(tokenSymbol, tokenName, tokenImage, true)
+                        return
+                    }
+                    const token = SQUtils.ModelUtils.getByKey(
+                                    root.walletAssetsStore.groupedAccountAssetsModel, "symbol", tokenSymbol)
+                    if (!token)
+                        return
+                    root.openConfirmHideAssetPopup(token.key, tokenSymbol, tokenName, tokenImage, true)
+                }
             }
         },
         Component {
@@ -1527,13 +1538,14 @@ QtObject {
             ConfirmHideAssetPopup {
                 destroyOnClose: true
 
+                required property string key
                 required property bool isCommunityToken
 
                 onConfirmButtonClicked: {
                     if (isCommunityToken)
-                        root.walletAssetsStore.assetsController.showHideCommunityToken(symbol, false)
+                        root.walletAssetsStore.assetsController.showHideCommunityToken(key, false)
                     else
-                        root.walletAssetsStore.assetsController.showHideRegularToken(symbol, false)
+                        root.walletAssetsStore.assetsController.showHideRegularToken(key, false)
                     close()
                     Global.displayToastMessage(qsTr("%1 (%2) successfully hidden. You can toggle asset visibility via %3.").arg(name).arg(symbol)
                                                .arg(`<a style="text-decoration:none" href="#${Constants.appSection.profile}/${Constants.settingsSubsection.wallet}/${Constants.walletSettingsSubsection.manageHidden}">` + qsTr("Settings", "Go to Settings") + "</a>"),
