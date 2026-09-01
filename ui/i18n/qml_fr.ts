@@ -16887,12 +16887,12 @@ avec un retour à la ligne</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>by %1</source>
-        <translation>par %1</translation>
+        <source>by %1 via %2</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>via %1</source>
-        <translation>via %1</translation>
+        <source>by %1</source>
+        <translation>par %1</translation>
     </message>
     <message>
         <source>Approving %1</source>
@@ -18997,16 +18997,32 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
         <translation>&lt; 1 minute</translation>
     </message>
     <message>
+        <source>&lt; 1 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&lt; 3 minutes</source>
         <translation>&lt; 3 minutes</translation>
+    </message>
+    <message>
+        <source>&lt; 3 min</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>&lt; 5 minutes</source>
         <translation>&lt; 5 minutes</translation>
     </message>
     <message>
+        <source>&lt; 5 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&gt; 5 minutes</source>
         <translation>&gt; 5 minutes</translation>
+    </message>
+    <message>
+        <source>&gt; 5 min</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Unknown</source>

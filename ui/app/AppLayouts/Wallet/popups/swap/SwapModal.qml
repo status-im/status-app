@@ -700,8 +700,7 @@ StatusDialog {
                 }
             }
 
-            // wraps rather than pushing the trailing metrics off a narrow window
-            Flow {
+            RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.padding
                 visible: swapFooter.hasProposal
@@ -719,6 +718,7 @@ StatusDialog {
                     }
                     StatusBaseText {
                         objectName: "routeOrderButton"
+                        anchors.verticalCenter: parent.verticalCenter
                         text: d.routeOrderName
                         font.weight: Font.Medium
                         font.underline: routeOrderMouseArea.containsMouse
@@ -737,17 +737,25 @@ StatusDialog {
                             onClicked: swapRoutePopupComponent.createObject(root).open()
                         }
                     }
-                    StatusBaseText {
-                        text: qsTr("by %1").arg(d.serviceProviderName)
-                        color: Theme.palette.directColor4
-                    }
-                    StatusBaseText {
-                        objectName: "strategyTool"
-                        text: qsTr("via %1").arg(root.swapAdaptor.swapOutputData.txProviderTool)
-                        color: Theme.palette.directColor4
-                        visible: !!root.swapAdaptor.swapOutputData.txProviderTool
+                    StatusFlatRoundButton {
+                        objectName: "routeProviderInfoIcon"
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 20
+                        height: 20
+                        radius: width/2
+                        type: StatusFlatRoundButton.Type.Tertiary
+                        icon.name: "info"
+                        icon.width: 16
+                        icon.height: 16
+                        icon.color: Theme.palette.directColor4
+                        tooltip.text: !!root.swapAdaptor.swapOutputData.txProviderTool
+                                      ? qsTr("by %1 via %2").arg(d.serviceProviderName)
+                                                            .arg(root.swapAdaptor.swapOutputData.txProviderTool)
+                                      : qsTr("by %1").arg(d.serviceProviderName)
                     }
                 }
+
+                Item { Layout.fillWidth: true }
 
                 MetricRow {
                     StatusIcon {
@@ -773,7 +781,7 @@ StatusDialog {
                     }
                     StatusBaseText {
                         objectName: "strategyTime"
-                        text: WalletUtils.getLabelForEstimatedTxTime(root.swapAdaptor.swapOutputData.estimatedTime)
+                        text: WalletUtils.getLabelForEstimatedTxTime(root.swapAdaptor.swapOutputData.estimatedTime, true)
                         color: Theme.palette.directColor4
                     }
                 }

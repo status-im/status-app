@@ -16860,11 +16860,11 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>by %1</source>
+        <source>by %1 via %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>via %1</source>
+        <source>by %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -18970,7 +18970,15 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>&lt; 1 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&lt; 3 minutes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 3 min</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -18978,7 +18986,15 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>&lt; 5 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&gt; 5 minutes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&gt; 5 min</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
