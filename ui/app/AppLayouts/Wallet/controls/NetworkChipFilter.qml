@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import StatusQ
-import StatusQ.Components
 import StatusQ.Core
 import StatusQ.Core.Theme
 
@@ -68,10 +67,11 @@ Flow {
 
             objectName: "chainChip_" + model.chainId
             checked: root.selectedChainId === model.chainId
-            contentItem: StatusRoundedImage {
+            contentItem: NetworkIcon {
                 implicitWidth: 24
                 implicitHeight: 24
-                image.source: model.iconUrl ? Assets.svg(model.iconUrl) : ""
+                radius: 6
+                source: model.iconUrl ? Assets.svg(model.iconUrl) : ""
             }
             onClicked: root.chainSelected(model.chainId)
         }
