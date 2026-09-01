@@ -288,8 +288,8 @@ Loader {
         function onOpenFirstTokenReceivedPopup(communityId, communityName, communityLogo, tokenSymbol, tokenName, tokenAmount, tokenType, tokenImage) {
             root.invoke(() => root.item.openFirstTokenReceivedPopup(communityId, communityName, communityLogo, tokenSymbol, tokenName, tokenAmount, tokenType, tokenImage))
         }
-        function onOpenConfirmHideAssetPopup(assetSymbol, assetName, assetImage, isCommunityToken) {
-            root.invoke(() => root.item.openConfirmHideAssetPopup(assetSymbol, assetName, assetImage, isCommunityToken))
+        function onOpenConfirmHideAssetPopup(assetKey, assetSymbol, assetName, assetImage, isCommunityToken) {
+            root.invoke(() => root.item.openConfirmHideAssetPopup(assetKey, assetSymbol, assetName, assetImage, isCommunityToken))
         }
         function onOpenConfirmHideCollectiblePopup(collectibleSymbol, collectibleName, collectibleImage, isCommunityToken) {
             root.invoke(() => root.item.openConfirmHideCollectiblePopup(collectibleSymbol, collectibleName, collectibleImage, isCommunityToken))

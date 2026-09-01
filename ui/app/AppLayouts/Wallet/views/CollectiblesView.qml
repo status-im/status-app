@@ -51,7 +51,7 @@ ColumnLayout {
 
     signal collectibleClicked(int chainId, string contractAddress, string tokenId, string uid, int tokenType, string communityId)
     signal sendRequested(string collectionUid, int tokenType, string fromAddress)
-    signal receiveRequested(string symbol)
+    signal receiveRequested(string key)
     signal switchToCommunityRequested(string communityId)
     signal manageTokensRequested()
 
@@ -196,9 +196,9 @@ ColumnLayout {
             FastExpressionFilter {
                 expression: {
                     root.controller.revision
-                    return (customFilter.isCommunity ? !!model.communityId : !model.communityId) && root.controller.filterAcceptsKey(model.symbol) // TODO: use token/group key
+                    return (customFilter.isCommunity ? !!model.communityId : !model.communityId) && root.controller.filterAcceptsKey(model.key)
                 }
-                expectedRoles: ["symbol", "communityId"]
+                expectedRoles: ["key", "communityId"]
             },
             FastExpressionFilter {
                 enabled: customFilter.isCommunity && cmbFilter.hasEnabledFilters
@@ -217,10 +217,10 @@ ColumnLayout {
             FastExpressionSorter {
                 expression: {
                     root.controller.revision
-                    return root.controller.compareTokens(modelLeft.symbol, modelRight.symbol)
+                    return root.controller.compareTokens(modelLeft.key, modelRight.key)
                 }
                 enabled: d.isCustomView
-                expectedRoles: ["symbol"]
+                expectedRoles: ["key"]
             },
             RoleSorter {
                 roleName: cmbTokenOrder.currentSortRoleName
@@ -495,10 +495,10 @@ ColumnLayout {
             communityImage: model.communityImage ?? ""
             balance: model.balance ?? 1
 
-            onClicked: root.collectibleClicked(model.chainId, model.contractAddress, model.tokenId, model.symbol, model.tokenType, model.communityId ?? "")
+            onClicked: root.collectibleClicked(model.chainId, model.contractAddress, model.tokenId, model.key, model.tokenType, model.communityId ?? "")
             onContextMenuRequested: function(x, y) {
                 const userOwnedAddress = d.getFirstUserOwnedAddress(model.ownership)
-                tokenContextMenu.createObject(this, {collectionUid: model.collectionUid, key: model.key, symbol: model.symbol, chainId: model.chainId, tokenName: model.name, tokenImage: model.imageUrl,
+                tokenContextMenu.createObject(this, {collectionUid: model.collectionUid, key: model.key, chainId: model.chainId, tokenName: model.name, tokenImage: model.imageUrl,
                                                   communityId: model.communityId, communityName: model.communityName,
                                                   communityImage: model.communityImage, tokenType: model.tokenType,
                                                   soulbound: model.soulbound,
@@ -517,7 +517,6 @@ ColumnLayout {
 
             property string collectionUid
             property string key
-            property string symbol
             property int chainId
             property string tokenName
             property string tokenImage
@@ -549,7 +548,7 @@ ColumnLayout {
             StatusAction {
                 icon.name: "receive"
                 text: qsTr("Receive")
-                onTriggered: root.receiveRequested(symbol)
+                onTriggered: root.receiveRequested(key)
             }
             StatusMenuSeparator {}
             StatusAction {
@@ -558,11 +557,11 @@ ColumnLayout {
                 onTriggered: root.manageTokensRequested()
             }
             StatusAction {
-                enabled: symbol !== Utils.getNativeTokenSymbol(chainId)
+                enabled: tokenMenu.key !== Utils.getNativeTokenKey(chainId)
                 type: StatusAction.Type.Danger
                 icon.name: "hide"
                 text: qsTr("Hide collectible")
-                onTriggered: Global.openConfirmHideCollectiblePopup(symbol, tokenName, tokenImage, !!communityId)
+                onTriggered: Global.openConfirmHideCollectiblePopup(key, tokenName, tokenImage, !!communityId)
             }
             StatusAction {
                 enabled: !!communityId

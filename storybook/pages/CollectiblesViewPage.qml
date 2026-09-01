@@ -128,7 +128,7 @@ SplitView {
         customOrderAvailable: controller.hasSettings
         onCollectibleClicked: logs.logEvent("onCollectibleClicked", ["chainId", "contractAddress", "tokenId", "uid", "tokenType", "communityId"], arguments)
         onSendRequested: logs.logEvent("onSendRequested", ["symbol", "tokenType", "fromAddress"], arguments)
-        onReceiveRequested: logs.logEvent("onReceiveRequested", ["symbol"], arguments)
+        onReceiveRequested: logs.logEvent("onReceiveRequested", ["key"], arguments)
         onSwitchToCommunityRequested: logs.logEvent("onSwitchToCommunityRequested", ["communityId"], arguments)
         onManageTokensRequested: logs.logEvent("onManageTokensRequested")
         isError: ctrlErrorCheckbox.checked

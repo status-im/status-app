@@ -39,7 +39,6 @@ Item {
             append([
                 {
                     uid: "comm_alpha",
-                    symbol: "comm_alpha",
                     chainId: 1,
                     name: "Comm Alpha",
                     collectionUid: "",
@@ -59,7 +58,6 @@ Item {
                 },
                 {
                     uid: "comm_beta",
-                    symbol: "comm_beta",
                     chainId: 1,
                     name: "Comm Beta",
                     collectionUid: "",
@@ -79,7 +77,6 @@ Item {
                 },
                 {
                     uid: "reg_charlie",
-                    symbol: "reg_charlie",
                     chainId: 1,
                     name: "Reg Charlie",
                     collectionUid: "charlie_col",
@@ -99,7 +96,6 @@ Item {
                 },
                 {
                     uid: "reg_delta",
-                    symbol: "reg_delta",
                     chainId: 1,
                     name: "Reg Delta",
                     collectionUid: "delta_col",
@@ -517,8 +513,11 @@ Item {
             verify(!managePanel.dirty)
             verify(customOrderController.hasSettings)
 
-            flowState.screen = "wallet"
-            waitForRendering(harness)
+            // Assert the saved order while it still DIFFERS from the default one.
+            // The final assertion below restores the default order, so on its own it
+            // passes even when the view never consults the controller at all.
+            verifyCustomOrderApplied(applyCustomOrderToWallet(), "regularCollectiblesView",
+                                    ["Reg Delta", "Reg Charlie"])
 
             clickSortMenuItem(getSortComboBox(getView("wallet")), "Edit custom order →")
             tryVerify(() => flowState.screen === "manageTokens")

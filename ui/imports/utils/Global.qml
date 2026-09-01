@@ -58,7 +58,7 @@ QtObject {
                                        string tokenAmount,
                                        int tokenType,
                                        string tokenImage)
-    signal openConfirmHideAssetPopup(string assetSymbol, string assetName, string assetImage, bool isCommunityToken)
+    signal openConfirmHideAssetPopup(string assetKey, string assetSymbol, string assetName, string assetImage, bool isCommunityToken)
     signal openConfirmHideCollectiblePopup(string collectibleSymbol, string collectibleName, string collectibleImage, bool isCommunityToken)
 
     signal requestOpenLink(string link)
