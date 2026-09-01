@@ -1,8 +1,6 @@
 import QtQuick
 import QtTest
 
-import StatusQ.Controls
-
 import shared.controls
 
 Item {
@@ -14,50 +12,92 @@ Item {
         id: componentUnderTest
         SlippageSelector {
             anchors.centerIn: parent
+            width: 440
         }
     }
 
     property SlippageSelector controlUnderTest: null
 
+    SignalSpy {
+        id: editedSpy
+        target: controlUnderTest
+        signalName: "edited"
+    }
+
+    SignalSpy {
+        id: committedSpy
+        target: controlUnderTest
+        signalName: "committed"
+    }
+
     TestCase {
         name: "SlippageSelector"
         when: windowShown
 
+        readonly property var presets: [0.1, 0.5, 1]
+
         function init() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
+        }
+
+        function cleanup() {
+            editedSpy.clear()
+            committedSpy.clear()
         }
 
         function test_basicSetup() {
             verify(!!controlUnderTest)
             verify(controlUnderTest.width > 0)
             verify(controlUnderTest.height > 0)
+            compare(controlUnderTest.value, controlUnderTest.defaultValue)
+
+            // an applied preset leaves the custom field empty behind its hint
+            // (the initial sync is deferred a tick past component completion)
+            const customInput = findChild(controlUnderTest, "slippageCustomInput")
+            verify(!!customInput)
+            tryCompare(customInput, "length", 0)
             verify(controlUnderTest.valid)
         }
 
-        function test_selectPresetValues() {
+        function test_presetClickEditsAndCommits() {
             verify(!!controlUnderTest)
-            const buttonsRepeater = findChild(controlUnderTest, "buttonsRepeater")
-            verify(!!buttonsRepeater)
-            waitForRendering(buttonsRepeater)
-            for (let i = 0; i < buttonsRepeater.count; i++) {
-                const button = buttonsRepeater.itemAt(i)
-                verify(!!button)
-                mouseClick(button)
-                tryCompare(button, "checked", true)
-                tryCompare(button, "type", StatusBaseButton.Type.Primary)
-                tryCompare(controlUnderTest, "value", button.value)
-                verify(controlUnderTest.valid)
+
+            for (const preset of presets) {
+                editedSpy.clear()
+                committedSpy.clear()
+
+                const presetButton = findChild(controlUnderTest, "slippagePreset_" + preset)
+                verify(!!presetButton)
+                waitForRendering(presetButton)
+                mouseClick(presetButton)
+
+                compare(editedSpy.count, 1)
+                compare(editedSpy.signalArguments[0][0], preset)
+                compare(committedSpy.count, 1)
             }
         }
 
-        function test_setAndTypeCustomValue() {
+        function test_presetHighlightFollowsHostValue() {
             verify(!!controlUnderTest)
-            const customButton = findChild(controlUnderTest, "customButton")
-            verify(!!customButton)
-            mouseClick(customButton)
-            const customInput = findChild(controlUnderTest, "customInput")
+
+            for (const preset of presets) {
+                controlUnderTest.value = preset
+                for (const other of presets) {
+                    const button = findChild(controlUnderTest, "slippagePreset_" + other)
+                    verify(!!button)
+                    compare(button.selected, other === preset)
+                }
+            }
+        }
+
+        function test_typingCustomValueEditsLive() {
+            verify(!!controlUnderTest)
+
+            const customInput = findChild(controlUnderTest, "slippageCustomInput")
             verify(!!customInput)
-            tryCompare(customInput, "cursorVisible", true)
+            tryCompare(customInput, "length", 0) // wait out the deferred initial sync
+            customInput.forceActiveFocus()
+            tryCompare(customInput, "activeFocus", true)
 
             // input "1.42"
             keyClick(Qt.Key_1)
@@ -65,145 +105,76 @@ Item {
             keyClick(Qt.Key_4)
             keyClick(Qt.Key_2)
 
-            tryCompare(controlUnderTest, "value", 1.42)
+            tryVerify(() => editedSpy.count > 0, 1000, "no edited signal for a valid custom value")
+            compare(editedSpy.signalArguments[editedSpy.count - 1][0], 1.42)
             verify(controlUnderTest.valid)
-
-            // delete contents (4x)
-            keyClick(Qt.Key_Backspace)
-            keyClick(Qt.Key_Backspace)
-            keyClick(Qt.Key_Backspace)
-            keyClick(Qt.Key_Backspace)
-
-            tryCompare(customInput, "text", "")
-            tryCompare(customInput, "valid", false)
-            tryCompare(controlUnderTest, "valid", false)
-
-            // click again the first button
-            const buttonsRepeater = findChild(controlUnderTest, "buttonsRepeater")
-            verify(!!buttonsRepeater)
-            waitForRendering(buttonsRepeater)
-            const firstButton = buttonsRepeater.itemAt(0)
-            verify(!!firstButton)
-            mouseClick(firstButton)
-            tryCompare(controlUnderTest, "value", firstButton.value)
-            verify(controlUnderTest.valid)
-            tryCompare(customButton, "visible", true)
-            tryCompare(customInput, "visible", false)
+            // typing alone does not commit
+            compare(committedSpy.count, 0)
         }
 
-        function test_setCustomValue_data() {
-            return [
-                {tag: "valid", value: 1.42, valid: true},
-                {tag: "invalid", value: 111.42, valid: false},
-            ]
-        }
-
-        function test_setCustomValue(data) {
-            const theValue = data.value
-
+        function test_returnCommitsValidCustomValue() {
             verify(!!controlUnderTest)
-            verify(controlUnderTest.valid)
-            controlUnderTest.value = theValue
 
-            const customInput = findChild(controlUnderTest, "customInput")
+            const customInput = findChild(controlUnderTest, "slippageCustomInput")
             verify(!!customInput)
-            tryCompare(customInput, "cursorVisible", true)
-            tryCompare(customInput, "value", theValue)
-            tryCompare(customInput, "text", customInput.asString)
+            tryCompare(customInput, "length", 0) // wait out the deferred initial sync
+            customInput.forceActiveFocus()
+            tryCompare(customInput, "activeFocus", true)
 
-            verify(controlUnderTest.value, theValue)
-            compare(controlUnderTest.valid, data.valid)
+            keyClick(Qt.Key_2)
+            keyClick(Qt.Key_Return)
+
+            tryVerify(() => committedSpy.count === 1, 1000, "return did not commit")
+            compare(editedSpy.signalArguments[editedSpy.count - 1][0], 2)
         }
 
-        function test_setCustomValueAndReset_data() {
-            return [
-                {tag: "valid", value: 1.42, valid: true, isDefault: false},
-                {tag: "default", value: 0.5, valid: true, isDefault: true},
-                {tag: "invalid", value: 111.42, valid: false, isDefault: false},
-                {tag: "hundred", value: 100, valid: false, isDefault: false},
-            ]
-        }
-
-        function test_setCustomValueAndReset(data) {
+        function test_invalidCustomValueDoesNotEdit() {
             verify(!!controlUnderTest)
 
-            let defaultValue = NaN
-            let defaultButton = null
-            const isDefault = data.isDefault
-
-            // get the default (checked/selected) button and value
-            const buttonsRepeater = findChild(controlUnderTest, "buttonsRepeater")
-            verify(!!buttonsRepeater)
-            for (let i = 0; i < buttonsRepeater.count; i++) {
-                const button = buttonsRepeater.itemAt(i)
-                if (button && button.checked) {
-                    defaultButton = button
-                    defaultValue = button.value
-                    break
-                }
-            }
-
-            verify(!!defaultButton)
-            verify(defaultValue !== NaN)
-
-            // verify that by default, the custom button is visible, and custom input not
-            const customButton = findChild(controlUnderTest, "customButton")
-            verify(!!customButton)
-            tryCompare(customButton, "visible", true)
-            const customInput = findChild(controlUnderTest, "customInput")
+            const customInput = findChild(controlUnderTest, "slippageCustomInput")
             verify(!!customInput)
-            tryCompare(customInput, "visible", false)
-            tryCompare(controlUnderTest, "valid", true)
+            tryCompare(customInput, "length", 0) // wait out the deferred initial sync
+            customInput.forceActiveFocus()
+            tryCompare(customInput, "activeFocus", true)
 
-            // assign a new (custom) value
-            const theValue = data.value
-            controlUnderTest.value = theValue
-            tryCompare(controlUnderTest, "valid", data.valid)
+            keyClick(Qt.Key_0)
+            wait(50) // give the deferred applyIfValid a chance to (wrongly) fire
 
-            // verify the custom input has the new value (and text), and Custom button is not visible
-            tryCompare(customInput, "visible", !isDefault)
-            tryCompare(customInput, "activeFocus", !isDefault)
-            tryCompare(customButton, "visible", isDefault)
-            if (!isDefault) {
-                tryCompare(customInput, "value", theValue)
-                tryCompare(customInput, "text", customInput.asString)
-            }
+            verify(!customInput.valid)
+            verify(!controlUnderTest.valid)
+            compare(editedSpy.count, 0)
 
-            // call reset()
-            controlUnderTest.reset()
-
-            // verify that after reset, the Custom button is back
-            tryCompare(customInput, "visible", false)
-            tryCompare(customInput, "activeFocus", false)
-            tryCompare(customButton, "visible", true)
-
-            // verify that the button with default value is selected again
-            tryCompare(defaultButton, "checked", true)
-            tryCompare(controlUnderTest, "value", defaultValue)
-            tryCompare(controlUnderTest, "valid", true)
+            keyClick(Qt.Key_Return)
+            compare(committedSpy.count, 0)
         }
 
-        function test_resetDefaults() {
+        function test_customValuePrefilled() {
+            const custom = createTemporaryObject(componentUnderTest, root, {value: 2.4})
+            verify(!!custom)
+
+            const customInput = findChild(custom, "slippageCustomInput")
+            verify(!!customInput)
+            tryCompare(customInput, "value", 2.4)
+            verify(customInput.length > 0)
+        }
+
+        function test_presetClickClearsCustomField() {
             verify(!!controlUnderTest)
-            const initialValue = controlUnderTest.value
-            const buttonsRepeater = findChild(controlUnderTest, "buttonsRepeater")
-            verify(!!buttonsRepeater)
-            waitForRendering(buttonsRepeater)
-            const firstButton = buttonsRepeater.itemAt(0)
-            waitForRendering(firstButton)
-            tryCompare(firstButton, "visible", true)
-            mouseClick(firstButton)
-            tryCompare(controlUnderTest, "value", firstButton.value)
 
-            controlUnderTest.reset()
-            tryCompare(controlUnderTest, "value", initialValue)
+            const customInput = findChild(controlUnderTest, "slippageCustomInput")
+            verify(!!customInput)
+            tryCompare(customInput, "length", 0) // wait out the deferred initial sync
+            customInput.forceActiveFocus()
+            keyClick(Qt.Key_2)
+            tryVerify(() => customInput.length > 0)
+
+            const presetButton = findChild(controlUnderTest, "slippagePreset_0.5")
+            verify(!!presetButton)
+            waitForRendering(presetButton)
+            mouseClick(presetButton)
+
+            tryCompare(customInput, "length", 0)
             verify(controlUnderTest.valid)
-
-            const customButton = findChild(controlUnderTest, "customButton")
-            tryCompare(customButton, "visible", true)
-
-            const customInput = findChild(controlUnderTest, "customInput")
-            tryCompare(customInput, "visible", false)
         }
     }
 }

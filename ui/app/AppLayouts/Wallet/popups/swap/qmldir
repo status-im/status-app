@@ -2,6 +2,7 @@ SwapModal 1.0 SwapModal.qml
 SwapInputParamsForm 1.0 SwapInputParamsForm.qml
 SwapModalAdaptor 1.0 SwapModalAdaptor.qml
 SwapRoutePopup 1.0 SwapRoutePopup.qml
+SwapSlippagePopup 1.0 SwapSlippagePopup.qml
 SwapOutputData 1.0 SwapOutputData.qml
 SwapApproveCapModal 1.0 SwapApproveCapModal.qml
 SwapSignModal 1.0 SwapSignModal.qml

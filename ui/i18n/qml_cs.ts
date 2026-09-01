@@ -6802,25 +6802,6 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
-    <name>EditSlippagePanel</name>
-    <message>
-        <source>Slippage tolerance</source>
-        <translation>Tolerance skluzu</translation>
-    </message>
-    <message>
-        <source>Use default</source>
-        <translation>Použít výchozí</translation>
-    </message>
-    <message>
-        <source>Maximum deviation in price due to market volatility and liquidity allowed before the swap is cancelled. (%L1% default).</source>
-        <translation>Maximální povolená odchylka ceny v důsledku volatility trhu a likvidity před zrušením směny. (%L1% výchozí).</translation>
-    </message>
-    <message>
-        <source>Receive at least</source>
-        <translation>Obdržet alespoň</translation>
-    </message>
-</context>
-<context>
     <name>EmptyChatPanel</name>
     <message>
         <source>Share your profile</source>
@@ -15840,12 +15821,8 @@ selhalo</translation>
 <context>
     <name>SlippageSelector</name>
     <message>
-        <source>Custom</source>
-        <translation>Vlastní</translation>
-    </message>
-    <message>
-        <source>Enter a slippage value</source>
-        <translation>Zadejte hodnotu skluzu</translation>
+        <source>Custom %</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Slippage should be more than 0</source>
@@ -17144,6 +17121,17 @@ selhalo</translation>
     <message>
         <source>Max. fees on %1</source>
         <translation>Max. poplatky na %1</translation>
+    </message>
+</context>
+<context>
+    <name>SwapSlippagePopup</name>
+    <message>
+        <source>Set max price slippage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The swap will revert if the price shifts beyond this percentage.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
