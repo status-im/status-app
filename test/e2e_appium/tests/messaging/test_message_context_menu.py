@@ -175,7 +175,9 @@ class TestMessageContextMenuLocal(_MessageContextMenuBase):
     async def test_context_menu_own_message_actions(self) -> None:
         """Verify context menu shows correct actions for own message.
 
-        Own messages should show: Reply, Edit, Copy, Pin, Mark as unread, Delete
+        The menu opens collapsed: quick reactions plus Reply, Edit, Copy and
+        the expand button. The full action set (including Pin and Delete)
+        exists only after expanding.
         """
         test_message = _unique_message("ctx_menu_test")
         context_menu = MessageContextMenuPage(self.driver)
@@ -189,10 +191,25 @@ class TestMessageContextMenuLocal(_MessageContextMenuBase):
             )
             assert context_menu.is_displayed(), "Context menu not visible"
 
-        async with self.step("Verify own message actions are visible"):
+        async with self.step("Verify collapsed quick actions"):
+            assert not context_menu.is_expanded(), (
+                "Menu should open collapsed on long-press"
+            )
             assert context_menu.is_reply_visible(), "Reply action not visible"
             assert context_menu.is_edit_visible(), "Edit action not visible (own message)"
             assert context_menu.is_copy_visible(), "Copy action not visible"
+
+        async with self.step("Expand the menu"):
+            assert context_menu.tap_expand(), "Failed to expand context menu"
+
+        async with self.step("Verify full own-message action set"):
+            # The compact buttons hide on expansion, so these can only match
+            # the expanded menu's items. Pin appears only here on own messages
+            # (edit takes the compact slot).
+            assert context_menu.is_reply_visible(), "Reply not in expanded menu"
+            assert context_menu.is_edit_visible(), "Edit not in expanded menu"
+            assert context_menu.is_copy_visible(), "Copy not in expanded menu"
+            assert context_menu.is_mark_unread_visible(), "Mark as unread not in expanded menu"
             assert context_menu.is_pin_visible(), "Pin action not visible"
             assert context_menu.is_delete_visible(), "Delete action not visible (own message)"
 
@@ -441,7 +458,18 @@ class TestMessageContextMenuCrossDevice(_MessageContextMenuBase):
             )
             assert context_menu.is_displayed(), "Context menu not visible"
 
+        async with self.step("Expand the menu"):
+            # Expand before asserting: delete is never in the collapsed row,
+            # so without this the assertion passes for any message.
+            assert context_menu.tap_expand(), "Failed to expand context menu"
+
         async with self.step("Verify Delete action is NOT visible"):
+            # The positive sibling keeps the negative honest: if the menu were
+            # dismissed or still collapsed, the pin assert fails instead of the
+            # delete assert passing vacuously.
+            assert context_menu.is_pin_visible(), (
+                "Expanded menu should show Pin for another user's message"
+            )
             assert not context_menu.is_delete_visible(), (
                 "Delete action should NOT be visible for another user's message"
             )
