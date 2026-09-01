@@ -110,8 +110,11 @@ proc label*(username:string): string =
   result = "0x" & node.toHex()
 
 proc getExpirationTime*(chainId: int, username: string): int =
-  let res = status_ens.expireAt(chainId, username)
-  return fromHex[int](res.result.getStr)
+  try:
+    let res = status_ens.expireAt(chainId, username)
+    return fromHex[int](res.result.getStr)
+  except:
+    return 0
 
 proc hex2Token*(input: string, decimals: int): string =
   var value = fromHex(Stuint[256], input)
