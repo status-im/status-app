@@ -6920,25 +6920,6 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
-    <name>EditSlippagePanel</name>
-    <message>
-        <source>Slippage tolerance</source>
-        <translation>Tolérance de slippage</translation>
-    </message>
-    <message>
-        <source>Use default</source>
-        <translation>Utiliser la valeur par défaut</translation>
-    </message>
-    <message>
-        <source>Maximum deviation in price due to market volatility and liquidity allowed before the swap is cancelled. (%L1% default).</source>
-        <translation>Déviation maximale du prix autorisée en raison de la volatilité et de la liquidité du marché avant l&apos;annulation de l&apos;échange. (%L1% par défaut).</translation>
-    </message>
-    <message>
-        <source>Receive at least</source>
-        <translation>Recevoir au moins</translation>
-    </message>
-</context>
-<context>
     <name>EmptyChatPanel</name>
     <message>
         <source>Share your profile</source>
@@ -17207,6 +17188,33 @@ avec un retour à la ligne</translation>
     <message>
         <source>Max. fees on %1</source>
         <translation>Frais max. sur %1</translation>
+    </message>
+</context>
+<context>
+    <name>SwapSlippagePopup</name>
+    <message>
+        <source>Set max price slippage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The swap will revert if the price shifts beyond this percentage.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom %</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Slippage should be more than 0</source>
+        <translation type="unfinished">Le glissement doit être supérieur à 0</translation>
+    </message>
+    <message>
+        <source>Invalid value</source>
+        <translation type="unfinished">Valeur non valide</translation>
+    </message>
+    <message>
+        <source>Slippage may be higher than necessary</source>
+        <translation type="unfinished">Le glissement peut être plus élevé que nécessaire</translation>
     </message>
 </context>
 <context>

@@ -496,45 +496,51 @@ Item {
 
             const slippageButton = findChild(controlUnderTest, "slippageButton")
             verify(!!slippageButton)
-            verify(slippageButton.checkable)
-
-            const editSlippagePanel = findChild(controlUnderTest, "editSlippagePanel")
-            verify(!!editSlippagePanel)
-            verify(!editSlippagePanel.visible)
-            verify(!slippageButton.checked)
 
             root.swapAdaptor.validSwapProposalReceived = true
             verify(slippageButton.visible)
             compare(slippageButton.text, "%1%".arg(LocaleUtils.numberToLocaleString(root.swapFormData.selectedSlippage)))
             compare(slippageButton.text, "%1%".arg(0.5))
 
-            waitForRendering(slippageButton)
-            mouseClick(slippageButton)
-            tryVerify(() => slippageButton.checked, 2000, "slippage button did not toggle")
-            verify(editSlippagePanel.visible)
+            const presets = [0.1, 0.5, 1]
+            for (const preset of presets) {
+                waitForRendering(slippageButton)
+                mouseClick(slippageButton)
 
-            const slippageSelector = findChild(editSlippagePanel, "slippageSelector")
-            verify(!!slippageSelector)
+                // the dialog reparents to the overlay, so search from there
+                let presetButton = null
+                tryVerify(() => {
+                    presetButton = findChild(popupSearchRoot(), "slippagePreset_" + preset)
+                    return !!presetButton
+                }, 2000, "SwapSlippagePopup did not open")
 
-            verify(slippageSelector.valid)
-            compare(slippageSelector.value, 0.5)
+                // mouseClick on a nested delegate doesn't register here, same as
+                // the route order options
+                presetButton.clicked()
 
-            const buttonsRepeater = findChild(slippageSelector, "buttonsRepeater")
-            verify(!!buttonsRepeater)
-            waitForRendering(buttonsRepeater)
+                compare(root.swapFormData.selectedSlippage, preset)
+                tryCompare(slippageButton, "text", "%1%".arg(LocaleUtils.numberToLocaleString(preset)))
 
-            for(let i =0; i< buttonsRepeater.count; i++) {
-                let buttonUnderTest = buttonsRepeater.itemAt(i)
-                verify(!!buttonUnderTest)
-
-                // the mouseClick(buttonUnderTest) doesnt seem to work
-                buttonUnderTest.clicked()
-
-                verify(slippageSelector.valid)
-                compare(slippageSelector.value, buttonUnderTest.value)
-
-                tryCompare(slippageButton, "text", "%1%".arg(LocaleUtils.numberToLocaleString(buttonUnderTest.value)))
+                // a preset click applies and closes the popup
+                tryVerify(() => !findChild(popupSearchRoot(), "slippageCustomInput"),
+                          2000, "SwapSlippagePopup did not close")
             }
+
+            // a valid custom value applies live
+            mouseClick(slippageButton)
+            let customInput = null
+            tryVerify(() => {
+                customInput = findChild(popupSearchRoot(), "slippageCustomInput")
+                return !!customInput
+            }, 2000, "SwapSlippagePopup did not open")
+
+            // opened with a preset applied, the field is empty behind its hint
+            compare(customInput.length, 0)
+
+            customInput.forceActiveFocus()
+            keyClick(Qt.Key_2)
+            tryCompare(root.swapFormData, "selectedSlippage", 2)
+            tryCompare(slippageButton, "text", "%1%".arg(LocaleUtils.numberToLocaleString(2)))
 
             const signButton = findChild(controlUnderTest, "signButton")
             verify(!!signButton)

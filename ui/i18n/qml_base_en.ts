@@ -6911,25 +6911,6 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
-    <name>EditSlippagePanel</name>
-    <message>
-        <source>Slippage tolerance</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Use default</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Maximum deviation in price due to market volatility and liquidity allowed before the swap is cancelled. (%L1% default).</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Receive at least</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>EmptyChatPanel</name>
     <message>
         <source>Share your profile</source>
@@ -17191,6 +17172,33 @@ to load</source>
     </message>
     <message>
         <source>Max. fees on %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>SwapSlippagePopup</name>
+    <message>
+        <source>Set max price slippage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The swap will revert if the price shifts beyond this percentage.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom %</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Slippage should be more than 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid value</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Slippage may be higher than necessary</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
