@@ -7318,11 +7318,7 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
-    <name>EnsTermsAndConditionsView</name>
-    <message>
-        <source>ENS usernames</source>
-        <translation type="unfinished"></translation>
-    </message>
+    <name>EnsTermsAndConditionsPopup</name>
     <message>
         <source>Terms of name registration</source>
         <translation type="unfinished"></translation>
@@ -7369,6 +7365,13 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>%1 (ENS Registry).</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>EnsTermsAndConditionsView</name>
+    <message>
+        <source>ENS usernames</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

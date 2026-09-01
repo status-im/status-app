@@ -7329,58 +7329,61 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
+    <name>EnsTermsAndConditionsPopup</name>
+    <message>
+        <source>Terms of name registration</source>
+        <translation type="unfinished">Términos de registro de nombre</translation>
+    </message>
+    <message>
+        <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
+        <translation type="unfinished">Los fondos se depositan por 1 año. Tu SNT se bloqueará, pero no se gastará.</translation>
+    </message>
+    <message>
+        <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
+        <translation type="unfinished">Después de 1 año, puedes liberar el nombre y recuperar tu depósito, o no tomar ninguna acción para mantener el nombre.</translation>
+    </message>
+    <message>
+        <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
+        <translation type="unfinished">Si los términos del contrato cambian —por ejemplo, Status actualiza el contrato— el usuario tiene derecho a liberar el nombre de usuario independientemente del tiempo retenido.</translation>
+    </message>
+    <message>
+        <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
+        <translation type="unfinished">El controlador del contrato no puede acceder a tus fondos depositados. Sólo pueden ser devueltos a la dirección que los envió.</translation>
+    </message>
+    <message>
+        <source>Your address(es) will be publicly associated with your ENS name.</source>
+        <translation type="unfinished">Tu(s) dirección(es) se asociará(n) públicamente con tu nombre ENS.</translation>
+    </message>
+    <message>
+        <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
+        <translation type="unfinished">Los nombres de usuario se crean como nodos de subdominio de stateofus.eth y están sujetos a los términos del contrato inteligente de ENS.</translation>
+    </message>
+    <message>
+        <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
+        <translation type="unfinished">Autorizas el contrato para transferir SNT en tu nombre. Esto solo puede ocurrir cuando apruebas una transacción para autorizar la transferencia.</translation>
+    </message>
+    <message>
+        <source>These terms are guaranteed by the smart contract logic at addresses:</source>
+        <translation type="unfinished">Estos términos están garantizados por la lógica del contrato inteligente en las direcciones:</translation>
+    </message>
+    <message>
+        <source>%1 (Status UsernameRegistrar).</source>
+        <translation type="unfinished">%1 (Status UsernameRegistrar).</translation>
+    </message>
+    <message>
+        <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
+        <translation type="unfinished">&lt;a href=&apos;%1/%2&apos;&gt;Buscar en Etherscan&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <source>%1 (ENS Registry).</source>
+        <translation type="unfinished">%1 (ENS Registry).</translation>
+    </message>
+</context>
+<context>
     <name>EnsTermsAndConditionsView</name>
     <message>
         <source>ENS usernames</source>
         <translation>Nombres de usuario ENS</translation>
-    </message>
-    <message>
-        <source>Terms of name registration</source>
-        <translation>Términos de registro de nombre</translation>
-    </message>
-    <message>
-        <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
-        <translation>Los fondos se depositan por 1 año. Tu SNT se bloqueará, pero no se gastará.</translation>
-    </message>
-    <message>
-        <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
-        <translation>Después de 1 año, puedes liberar el nombre y recuperar tu depósito, o no tomar ninguna acción para mantener el nombre.</translation>
-    </message>
-    <message>
-        <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
-        <translation>Si los términos del contrato cambian —por ejemplo, Status actualiza el contrato— el usuario tiene derecho a liberar el nombre de usuario independientemente del tiempo retenido.</translation>
-    </message>
-    <message>
-        <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
-        <translation>El controlador del contrato no puede acceder a tus fondos depositados. Sólo pueden ser devueltos a la dirección que los envió.</translation>
-    </message>
-    <message>
-        <source>Your address(es) will be publicly associated with your ENS name.</source>
-        <translation>Tu(s) dirección(es) se asociará(n) públicamente con tu nombre ENS.</translation>
-    </message>
-    <message>
-        <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
-        <translation>Los nombres de usuario se crean como nodos de subdominio de stateofus.eth y están sujetos a los términos del contrato inteligente de ENS.</translation>
-    </message>
-    <message>
-        <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
-        <translation>Autorizas el contrato para transferir SNT en tu nombre. Esto solo puede ocurrir cuando apruebas una transacción para autorizar la transferencia.</translation>
-    </message>
-    <message>
-        <source>These terms are guaranteed by the smart contract logic at addresses:</source>
-        <translation>Estos términos están garantizados por la lógica del contrato inteligente en las direcciones:</translation>
-    </message>
-    <message>
-        <source>%1 (Status UsernameRegistrar).</source>
-        <translation>%1 (Status UsernameRegistrar).</translation>
-    </message>
-    <message>
-        <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
-        <translation>&lt;a href=&apos;%1/%2&apos;&gt;Buscar en Etherscan&lt;/a&gt;</translation>
-    </message>
-    <message>
-        <source>%1 (ENS Registry).</source>
-        <translation>%1 (ENS Registry).</translation>
     </message>
     <message>
         <source>Wallet address</source>

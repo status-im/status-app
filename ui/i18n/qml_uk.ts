@@ -7358,58 +7358,61 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
+    <name>EnsTermsAndConditionsPopup</name>
+    <message>
+        <source>Terms of name registration</source>
+        <translation type="unfinished">Умови реєстрації імені</translation>
+    </message>
+    <message>
+        <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
+        <translation type="unfinished">Кошти вносяться на депозит на 1 рік. Ваші SNT буде заблоковано, але не витрачено.</translation>
+    </message>
+    <message>
+        <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
+        <translation type="unfinished">Через 1 рік ви можете звільнити ім’я та повернути депозит або нічого не робити й зберегти ім’я.</translation>
+    </message>
+    <message>
+        <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
+        <translation type="unfinished">Якщо умови контракту зміняться, наприклад Status оновить контракт, користувач має право звільнити ім’я незалежно від терміну володіння.</translation>
+    </message>
+    <message>
+        <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
+        <translation type="unfinished">Контролер контракту не має доступу до внесених вами коштів. Їх можна повернути лише на адресу, з якої їх надіслано.</translation>
+    </message>
+    <message>
+        <source>Your address(es) will be publicly associated with your ENS name.</source>
+        <translation type="unfinished">Ваші адреси буде публічно пов’язано з вашим іменем ENS.</translation>
+    </message>
+    <message>
+        <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
+        <translation type="unfinished">Імена користувачів створюються як вузли субдомену stateofus.eth і підпорядковуються умовам смартконтракту ENS.</translation>
+    </message>
+    <message>
+        <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
+        <translation type="unfinished">Ви дозволяєте контракту переказувати SNT від вашого імені. Це можливо лише після схвалення транзакції, яка дозволяє переказ.</translation>
+    </message>
+    <message>
+        <source>These terms are guaranteed by the smart contract logic at addresses:</source>
+        <translation type="unfinished">Ці умови гарантовано логікою смартконтрактів за адресами:</translation>
+    </message>
+    <message>
+        <source>%1 (Status UsernameRegistrar).</source>
+        <translation type="unfinished">%1 (Status UsernameRegistrar).</translation>
+    </message>
+    <message>
+        <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
+        <translation type="unfinished">&lt;a href=&apos;%1/%2&apos;&gt;Переглянути на Etherscan&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <source>%1 (ENS Registry).</source>
+        <translation type="unfinished">%1 (реєстр ENS).</translation>
+    </message>
+</context>
+<context>
     <name>EnsTermsAndConditionsView</name>
     <message>
         <source>ENS usernames</source>
         <translation>ENS-імена</translation>
-    </message>
-    <message>
-        <source>Terms of name registration</source>
-        <translation>Умови реєстрації імені</translation>
-    </message>
-    <message>
-        <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
-        <translation>Кошти вносяться на депозит на 1 рік. Ваші SNT буде заблоковано, але не витрачено.</translation>
-    </message>
-    <message>
-        <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
-        <translation>Через 1 рік ви можете звільнити ім’я та повернути депозит або нічого не робити й зберегти ім’я.</translation>
-    </message>
-    <message>
-        <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
-        <translation>Якщо умови контракту зміняться, наприклад Status оновить контракт, користувач має право звільнити ім’я незалежно від терміну володіння.</translation>
-    </message>
-    <message>
-        <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
-        <translation>Контролер контракту не має доступу до внесених вами коштів. Їх можна повернути лише на адресу, з якої їх надіслано.</translation>
-    </message>
-    <message>
-        <source>Your address(es) will be publicly associated with your ENS name.</source>
-        <translation>Ваші адреси буде публічно пов’язано з вашим іменем ENS.</translation>
-    </message>
-    <message>
-        <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
-        <translation>Імена користувачів створюються як вузли субдомену stateofus.eth і підпорядковуються умовам смартконтракту ENS.</translation>
-    </message>
-    <message>
-        <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
-        <translation>Ви дозволяєте контракту переказувати SNT від вашого імені. Це можливо лише після схвалення транзакції, яка дозволяє переказ.</translation>
-    </message>
-    <message>
-        <source>These terms are guaranteed by the smart contract logic at addresses:</source>
-        <translation>Ці умови гарантовано логікою смартконтрактів за адресами:</translation>
-    </message>
-    <message>
-        <source>%1 (Status UsernameRegistrar).</source>
-        <translation>%1 (Status UsernameRegistrar).</translation>
-    </message>
-    <message>
-        <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
-        <translation>&lt;a href=&apos;%1/%2&apos;&gt;Переглянути на Etherscan&lt;/a&gt;</translation>
-    </message>
-    <message>
-        <source>%1 (ENS Registry).</source>
-        <translation>%1 (реєстр ENS).</translation>
     </message>
     <message>
         <source>Wallet address</source>
