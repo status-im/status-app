@@ -342,10 +342,13 @@ Item {
 
             onAddBtnClicked: next("search")
             onSelectEns: (username, chainId) => {
-                ensView.ensUsernamesStore.ensDetails(chainId, username)
+
+
                 selectedUsername = username
                 selectedChainId = chainId
                 next("details")
+
+                ensView.ensUsernamesStore.ensDetails(chainId, username)
             }
             onPreferredUsernameSelected: (ensUsername) => ensView.ensUsernamesStore.setPrefferedEnsUsername(ensUsername)
         }
@@ -354,10 +357,9 @@ Item {
     Component {
         id: details
         EnsDetailsView {
-            ensUsernamesStore: ensView.ensUsernamesStore
-            username: selectedUsername
-            chainId: selectedChainId
+            id: ensDetailsView
 
+            username: selectedUsername
             onBackBtnClicked: back()
 
             onReleaseUsernameRequested: (senderAddress) => {
@@ -366,16 +368,35 @@ Item {
                     Global.openPopup(noAccountPopupComponent)
                     return
                 }
-                ensView.releaseUsernameRequested(ensView.selectedUsername, senderAddress, ensView.selectedChainId)
+                ensView.releaseUsernameRequested(ensView.selectedUsername, senderAddress,
+                                                 ensView.selectedChainId)
+            }
+
+            onRemoveEnsUsernameRequested: (chainId, username) => {
+                ensView.ensUsernamesStore.removeEnsUsernameRequested(chainId, username)
+                back()
             }
 
             Connections {
                 target: ensView.ensUsernamesStore.ensUsernamesModule
+
                 function onTransactionWasSent(trxType: string, chainId: int, txHash: string, username: string, error: string) {
                     if (!!error || trxType !== d.releaseENS) {
                         return
                     }
                     done(ensView.selectedUsername)
+                }
+
+                function onDetailsObtained(chainId: int, ensName: string, address: string, pubkey: string, isStatus: bool, expirationTime: int) {
+                    if(username !== (isStatus ? ensName + ".stateofus.eth" : ensName))
+                        return
+
+                    ensDetailsView.setDetails(chainId, ensName, address, pubkey, isStatus, expirationTime,
+                                             ensView.ensUsernamesStore.preferredUsername === username)
+                }
+
+                function onLoading(isLoading: bool) {
+                    ensDetailsView.isLoading = isLoading
                 }
             }
         }
