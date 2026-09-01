@@ -37,6 +37,9 @@ Item {
     // True while at least one data-clearing operation is in flight (see CONTEXT: Clearing).
     property bool clearing: false
 
+    // Desktop only: mobile Backends host no separate render process.
+    property bool crashed: false
+
     // === Capability Flags ===
     required property bool supportsZoom
     required property bool supportsDevTools
@@ -123,6 +126,8 @@ Item {
     signal certificateError(var error)
     signal javaScriptDialogRequested(var request)
     signal findTextFinished(var result)
+    /// status/exitCode are the Backend's own values, not normalised.
+    signal renderProcessTerminated(int status, int exitCode)
 
     function loadUrl(url) { console.warn("AbstractWebView: loadUrl not implemented") }
 
