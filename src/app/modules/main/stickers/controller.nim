@@ -120,8 +120,9 @@ proc sendSticker*(
     channelId: string,
     replyTo: string,
     sticker: StickerDto,
-    preferredUsername: string) =
-  self.stickerService.asyncSendSticker(channelId, replyTo, sticker, preferredUsername)
+    preferredUsername: string,
+    threadId: string = "") =
+  self.stickerService.asyncSendSticker(channelId, replyTo, sticker, preferredUsername, threadId)
 
 proc getStickerMarketAddress*(self: Controller): string =
   return self.stickerService.getStickerMarketAddress()

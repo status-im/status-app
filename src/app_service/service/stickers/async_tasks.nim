@@ -74,6 +74,7 @@ type
   AsyncSendStickerTaskArg = ref object of QObjectTaskArg
     chatId: string
     replyTo: string
+    threadId: string
     stickerHash: string
     stickerPackId: string
     preferredUsername: string
@@ -86,7 +87,7 @@ const asyncSendStickerTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} 
       "You can see a nice sticker here!",
       arg.replyTo,
       ContentType.Sticker.int,
-      "",
+      arg.threadId,
       arg.preferredUsername,
       standardLinkPreviews = JsonNode(),
       statusLinkPreviews = JsonNode(),
