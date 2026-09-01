@@ -685,7 +685,8 @@ StatusSectionLayout {
             visible: !overlayLoader.active
         }
 
-        // Overlay for EmptyWebPage (no URL). Downloads List lives in Open tabs only.
+        // Overlay for EmptyWebPage (no URL) and CrashedWebPage (dead render
+        // process). Downloads List lives in Open tabs only.
         Loader {
             Layout.fillHeight: true
             Layout.fillWidth: true
@@ -694,7 +695,9 @@ StatusSectionLayout {
             readonly property int contentMode: webViewContext.currentContentMode
             visible: active
             active: contentMode === BrowserWebViewContext.ContentMode.EmptyContent
-            sourceComponent: emptyPageComponent
+                    || contentMode === BrowserWebViewContext.ContentMode.CrashedContent
+            sourceComponent: contentMode === BrowserWebViewContext.ContentMode.CrashedContent
+                             ? crashedPageComponent : emptyPageComponent
         }
     }
 
@@ -729,6 +732,13 @@ StatusSectionLayout {
             onNextTabRequested: tabs.activateNextTab()
             onPreviousTabRequested: tabs.activatePreviousTab()
             onRemoveViewRequested: webViewContext.removeView(tabs.currentIndex || 0)
+        }
+    }
+
+    Component {
+        id: crashedPageComponent
+        CrashedWebPage {
+            onReloadRequested: _internal.currentWebView?.reload()
         }
     }
 

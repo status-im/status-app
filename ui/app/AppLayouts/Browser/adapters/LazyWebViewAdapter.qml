@@ -19,6 +19,31 @@ AbstractWebView {
     // WARN: needs to remain a var to avoid mixing platform-specific types
     property var profileManager: null
 
+    // Relative paths resolve against this file. Settable so tests can
+    // substitute a fake: QmlTests links no Qt::WebView.
+    property url adapterPath: SQUtils.Utils.isMobile
+        ? "MobileWebViewAdapter.qml"
+        : "WebViewAdapter.qml"
+
+    readonly property Item adapterItem: loader.item
+
+    // Nothing reloads on its own: a page that dies on a timer would be reloaded
+    // forever. Cleared when the next navigation starts, whatever asked for it.
+    crashed: d.crashed
+    onLoadingChanged: if (loading) d.crashed = false
+
+    readonly property QtObject d: QtObject {
+        property bool crashed: false
+    }
+
+    function _handleRenderProcessTerminated() {
+        // No Tab left to show a crashed page in (ADR 0006 §6).
+        if (root.retained)
+            return
+
+        d.crashed = true
+    }
+
     supportsZoom:           loader.item ? loader.item.supportsZoom           : false
     supportsDevTools:       loader.item ? loader.item.supportsDevTools       : false
     supportsFindInPage:     loader.item ? loader.item.supportsFindInPage     : false
@@ -75,7 +100,7 @@ AbstractWebView {
         }
         if (!SQUtils.Utils.isMobile)
             props.profileManager = Qt.binding(() => root.profileManager)
-        loader.setSource(loader.adapterPath, props)
+        loader.setSource(root.adapterPath, props)
     }
 
     function loadUrl(u) {
@@ -168,10 +193,6 @@ AbstractWebView {
                 console.error("Failed to load WebViewAdapter")
             }
         }
-
-        readonly property string adapterPath: SQUtils.Utils.isMobile
-            ? "MobileWebViewAdapter.qml"
-            : "WebViewAdapter.qml"
     }
 
     Connections {
@@ -192,6 +213,10 @@ AbstractWebView {
         function onJavaScriptDialogRequested(request)  { root.javaScriptDialogRequested(request) }
         function onFindTextFinished(result)            { root.findTextFinished(result) }
         function onDevToolsToggled(enabled)            { root.devToolsToggled(enabled) }
+        function onRenderProcessTerminated(status, exitCode) {
+            root._handleRenderProcessTerminated()
+            root.renderProcessTerminated(status, exitCode)
+        }
         function onTitleChanged()                      { root.syncFromAdapterItem() }
         function onIconChanged()                       { root.syncFromAdapterItem() }
         function onHtmlPageLoadedChanged()             { root.syncFromAdapterItem() }
