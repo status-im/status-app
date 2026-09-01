@@ -17,6 +17,9 @@ Control {
     // Natural height requested by the loaded content before the dialog applies its max-height cap.
     readonly property real naturalHeight: d.loadedContentNaturalHeight
 
+    // allows outside access of properties defined in contentComponent/contentLoader
+    readonly property alias hostedItem: contentLoader.item
+
     objectName: "statusAdaptiveDialogContentHost"
     padding: 0
 
