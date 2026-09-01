@@ -234,6 +234,10 @@ Item {
 
             StatusDescriptionListItem {
                 id: walletAddressLbl
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+
                 title: qsTr("Wallet address")
                 subTitle: root.ensUsernamesStore.getWalletDefaultAddress()
                 tooltip.text: qsTr("Copied to clipboard!")
@@ -248,6 +252,10 @@ Item {
 
             StatusDescriptionListItem {
                 id: keyLbl
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+
                 title: qsTr("Key")
                 subTitle: {
                     let pubKey = root.ensUsernamesStore.pubkey;
@@ -263,32 +271,43 @@ Item {
                 anchors.topMargin: 24
             }
 
-            StatusCheckBox {
-                id: termsAndConditionsCheckbox
-                objectName: "ensAgreeTerms"
+            RowLayout {
+
                 anchors.top: keyLbl.bottom
                 anchors.topMargin: Theme.padding
                 anchors.left: parent.left
-                anchors.leftMargin: 24
-            }
-
-            StatusBaseText {
-                text: qsTr("Agree to <a href=\"#\">Terms of name registration.</a> I understand that my wallet address will be publicly connected to my username.")
-                anchors.left: termsAndConditionsCheckbox.right
-                anchors.leftMargin: Theme.halfPadding
                 anchors.right: parent.right
-                wrapMode: Text.WordWrap
-                anchors.verticalCenter: termsAndConditionsCheckbox.verticalCenter
-                onLinkActivated: popup.open()
-                color: Theme.palette.directColor1
-                TapHandler {
-                    enabled: !parent.hoveredLink
-                    onSingleTapped: termsAndConditionsCheckbox.toggle()
+                anchors.leftMargin: 24
+                anchors.rightMargin: 24
+
+                spacing: Theme.halfPadding
+
+                StatusCheckBox {
+                    id: termsAndConditionsCheckbox
+                    objectName: "ensAgreeTerms"
+
+                    Layout.alignment: Qt.AlignVCenter
                 }
-                StatusMouseArea {
-                    anchors.fill: parent
-                    acceptedButtons: Qt.NoButton // we don't want to eat clicks on the Text
-                    cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+
+                StatusBaseText {
+                    text: qsTr("Agree to <a href=\"#\">Terms of name registration.</a> I understand that my wallet address will be publicly connected to my username.")
+
+                    Layout.alignment: Qt.AlignVCenter
+                    Layout.fillWidth: true
+
+                    wrapMode: Text.WordWrap
+                    onLinkActivated: popup.open()
+                    color: Theme.palette.directColor1
+
+                    TapHandler {
+                        enabled: !parent.hoveredLink
+                        onSingleTapped: termsAndConditionsCheckbox.toggle()
+                    }
+                    StatusMouseArea {
+                        anchors.fill: parent
+                        acceptedButtons: Qt.NoButton // we don't want to eat clicks on the Text
+                        cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+                    }
                 }
             }
         }
