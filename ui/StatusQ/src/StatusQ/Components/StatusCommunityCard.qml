@@ -391,6 +391,9 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredHeight: 24
                 visible: active
+
+                // The tag row is the heaviest part of the card
+                asynchronous: true
                 active: root.categories.count > 0 || !!root.bottomRowComponent
                 sourceComponent: {
                     if (!!root.bottomRowComponent)
@@ -435,83 +438,86 @@ Rectangle {
         }
     } // End of content card
 
-    // Loading card
-    Rectangle {
-        visible: !root.loaded
+    // Loading card — behind a Loader so an already-loaded card never builds the skeleton
+    Loader {
+        active: !root.loaded
         anchors.top: parent.top
         anchors.topMargin: (root.cardSize === StatusCommunityCard.Size.Big) ? 40 : 23
         width: parent.width
         height: d.cardHeigth
-        color: d.cardColor
-        radius: d.cardRadius
-        clip: true
-        Rectangle {
-            anchors.top: parent.top
-            anchors.topMargin: 8
-            anchors.right: parent.right
-            anchors.rightMargin: anchors.topMargin
-            width: 48
-            height: 24
-            color: d.loadingColor2
-            radius: 200
-        }
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.topMargin: 32
-            anchors.margins: d.margins
+
+        sourceComponent: Rectangle {
+            color: d.cardColor
+            radius: d.cardRadius
             clip: true
-            spacing: 9
             Rectangle {
-                width: 84
-                height: 16
-                color: d.loadingColor1
-                radius: 5
+                anchors.top: parent.top
+                anchors.topMargin: 8
+                anchors.right: parent.right
+                anchors.rightMargin: anchors.topMargin
+                width: 48
+                height: 24
+                color: d.loadingColor2
+                radius: 200
             }
-            Rectangle {
-                width: 311
-                height: 16
-                color: d.loadingColor1
-                radius: 5
-            }
-            Rectangle {
-                width: 271
-                height: 16
-                color: d.loadingColor1
-                radius: 5
-            }
-            Row {
-                Layout.topMargin: 22 - 9
-                spacing: 16
-                Repeater {
-                    model: 2
-                    delegate: Row {
-                        spacing: 4
-                        Rectangle {
-                            width: 14
-                            height: 14
-                            color: d.loadingColor1
-                            radius: width / 2
-                        }
-                        Rectangle {
-                            width: 50
-                            height: 12
-                            color: d.loadingColor2
-                            radius: 5
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.topMargin: 32
+                anchors.margins: d.margins
+                clip: true
+                spacing: 9
+                Rectangle {
+                    width: 84
+                    height: 16
+                    color: d.loadingColor1
+                    radius: 5
+                }
+                Rectangle {
+                    width: 311
+                    height: 16
+                    color: d.loadingColor1
+                    radius: 5
+                }
+                Rectangle {
+                    width: 271
+                    height: 16
+                    color: d.loadingColor1
+                    radius: 5
+                }
+                Row {
+                    Layout.topMargin: 22 - 9
+                    spacing: 16
+                    Repeater {
+                        model: 2
+                        delegate: Row {
+                            spacing: 4
+                            Rectangle {
+                                width: 14
+                                height: 14
+                                color: d.loadingColor1
+                                radius: width / 2
+                            }
+                            Rectangle {
+                                width: 50
+                                height: 12
+                                color: d.loadingColor2
+                                radius: 5
+                            }
                         }
                     }
                 }
-            }
-            Row {
-                Layout.topMargin: 21 - 9
-                spacing: 8
-                Repeater {
-                    model: 3
-                    delegate:
-                    Rectangle {
-                        width: 76
-                        height: 24
-                        color: d.loadingColor2
-                        radius: 20
+                Row {
+                    Layout.topMargin: 21 - 9
+                    spacing: 8
+                    Repeater {
+                        model: 3
+                        delegate:
+                        Rectangle {
+                            width: 76
+                            height: 24
+                            color: d.loadingColor2
+                            radius: 20
+                        }
                     }
                 }
             }
