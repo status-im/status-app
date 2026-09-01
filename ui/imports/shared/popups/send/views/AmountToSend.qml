@@ -358,34 +358,10 @@ Control {
 
         RowLayout {
             Layout.fillWidth: true
-            StatusTextWithLoadingState {
-                id: bottomItem
-
-                objectName: "bottomItemText"
-
-                Layout.preferredWidth: contentWidth
-
-                text: {
-                    if (!d.fiatMode && root.cryptoPrice === 0) {
-                        return ""
-                    }
-                    const divisor = SQUtils.AmountsArithmetic.fromExponent(
-                                      d.fiatMode ? root.multiplierIndex
-                                                 : root.fiatDecimalPlaces)
-                    const divided = SQUtils.AmountsArithmetic.div(
-                                      SQUtils.AmountsArithmetic.fromString(
-                                          d.secondaryValue), divisor)
-                    const asNumber = SQUtils.AmountsArithmetic.toNumber(divided)
-
-                    return d.fiatMode ? root.formatBalance(asNumber)
-                                      : root.formatFiat(asNumber)
-                }
-
-                elide: Text.ElideMiddle
-                font.pixelSize: Theme.additionalTextSize
-                customColor: Theme.palette.directColor5
-                loading: root.bottomTextLoading
-
+            Item {
+                Layout.fillWidth: true
+                implicitWidth: bottomItem.contentWidth + (swapIcon.visible ? swapIcon.width + Theme.halfPadding : 0)
+                implicitHeight: Math.max(bottomItem.contentHeight, swapIcon.height)
                 StatusMouseArea {
                     objectName: "amountToSend_mouseArea"
 
@@ -402,35 +378,65 @@ Control {
                             return
 
                         const decimalPlaces = d.fiatMode ? root.fiatDecimalPlaces
-                                                         : root.multiplierIndex
+                                                        : root.multiplierIndex
                         const divisor = SQUtils.AmountsArithmetic.fromExponent(
-                                          decimalPlaces)
+                                        decimalPlaces)
 
                         const stringNumber = SQUtils.AmountsArithmetic.div(
-                                               SQUtils.AmountsArithmetic.fromString(secondaryValue),
-                                               divisor).toFixed(decimalPlaces)
+                                            SQUtils.AmountsArithmetic.fromString(secondaryValue),
+                                            divisor).toFixed(decimalPlaces)
 
                         const trimmed = d.fiatMode
-                                      ? stringNumber
-                                      : d.removeDecimalTrailingZeros(stringNumber)
+                                    ? stringNumber
+                                    : d.removeDecimalTrailingZeros(stringNumber)
 
                         textField.text = d.localize(trimmed)
                         textField.cursorPosition = 0
                     }
                 }
+                StatusTextWithLoadingState {
+                    id: bottomItem
 
-                HoverHandler { id: hoverHandler }
-            }
-            StatusIcon {
-                Layout.preferredWidth: 16
-                Layout.preferredHeight: 16
-                Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
+                    objectName: "bottomItemText"
 
-                icon: "swap"
-                rotation: 90
-                color: Theme.palette.directColor5
-                // no hover on touch, so a hover-gated affordance would never show there
-                visible: d.fiatToggleEnabled && (hoverHandler.hovered || SQUtils.Utils.isMobile)
+                    text: {
+                        if (!d.fiatMode && root.cryptoPrice === 0) {
+                            return ""
+                        }
+                        const divisor = SQUtils.AmountsArithmetic.fromExponent(
+                                        d.fiatMode ? root.multiplierIndex
+                                                    : root.fiatDecimalPlaces)
+                        const divided = SQUtils.AmountsArithmetic.div(
+                                        SQUtils.AmountsArithmetic.fromString(
+                                            d.secondaryValue), divisor)
+                        const asNumber = SQUtils.AmountsArithmetic.toNumber(divided)
+
+                        return d.fiatMode ? root.formatBalance(asNumber)
+                                        : root.formatFiat(asNumber)
+                    }
+
+                    width: parent.width - swapIcon.width - Theme.halfPadding
+                    elide: Text.ElideMiddle
+                    font.pixelSize: Theme.additionalTextSize
+                    customColor: Theme.palette.directColor5
+                    loading: root.bottomTextLoading
+
+                    HoverHandler { id: hoverHandler }
+                }
+                StatusIcon {
+                    id: swapIcon
+                    width: 16
+                    height: 16
+
+                    anchors.verticalCenter: bottomItem.verticalCenter
+                    anchors.left: bottomItem.right
+                    anchors.leftMargin: Theme.halfPadding
+
+                    icon: "swap"
+                    rotation: 90
+                    color: Theme.palette.directColor5
+                    visible: d.fiatToggleEnabled && (hoverHandler.hovered || SQUtils.Utils.isMobile)
+                }
             }
             Item { Layout.fillWidth: true }
             Loader {
