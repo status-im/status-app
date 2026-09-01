@@ -507,7 +507,7 @@ StatusDialog {
                     and from tokens inputed is supported by backend under
                     https://github.com/status-im/status-app/issues/15095 */
                     interactive: false
-                    fiatInputInteractive: true // read-only for typing, still togglable display
+                    fiatInputInteractive: false // read-only
                 }
 
                 SwapExchangeButton {

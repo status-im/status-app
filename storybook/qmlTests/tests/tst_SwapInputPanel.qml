@@ -151,6 +151,9 @@ Item {
 
             const mouseArea = findChild(amountToSendInput, "amountToSend_mouseArea")
             verify(!!mouseArea)
+            // the fiat line's wrapper sizes itself off the rendered text, so the
+            // click must wait for the layout to settle or it lands off-target
+            waitForRendering(controlUnderTest)
             mouseClick(mouseArea)
             compare(amountToSendInput.fiatMode, true)
 
