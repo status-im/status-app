@@ -937,8 +937,17 @@ QtObject:
 
       self.checkPaymentRequestsInMessages(messages)
 
+      var reactionsArr: JsonNode
+      var reactions: seq[ReactionDto]
+      if responseObj.getProp("reactions", reactionsArr):
+        reactions = map(
+          reactionsArr.getElems(),
+          proc(x: JsonNode): ReactionDto =
+            result = x.toReactionDto()
+        )
+
       self.events.emit(SIGNAL_MESSAGES_LOADED,
-        MessagesLoadedArgs(chatId: chatId, threadId: threadId, messages: messages, reactions: @[]))
+        MessagesLoadedArgs(chatId: chatId, threadId: threadId, messages: messages, reactions: reactions))
     except Exception as e:
       error "error loading thread messages", msg = e.msg
       if chatId.len > 0 and threadId.len > 0:
