@@ -17100,6 +17100,10 @@ selhalo</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Bridge</source>
+        <translation type="unfinished">Most</translation>
+    </message>
+    <message>
         <source>by %1 via %2</source>
         <translation type="unfinished"></translation>
     </message>
