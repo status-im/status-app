@@ -665,12 +665,14 @@ StatusDialog {
 
                 StatusTextWithLoadingState {
                     objectName: "swapQuoteText"
-                    Layout.preferredWidth: loading ? 120 : implicitWidth
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: loading ? 120 : implicitWidth
                     Layout.minimumWidth: 0
                     elide: Text.ElideRight
                     text: swapFooter.quoteText
                     customColor: Theme.palette.directColor1
                     font.weight: Font.Medium
+                    font.pixelSize: Theme.additionalTextSize
                     loading: swapFooter.loading
                 }
 
@@ -692,8 +694,9 @@ StatusDialog {
                     id: slippageButton
                     objectName: "slippageButton"
                     checkable: true
-                    icon.name: "settings"
+                    icon.name: "filter"
                     size: StatusBaseButton.Size.Small
+                    rightPadding: 0
                     text: "%1%".arg(LocaleUtils.numberToLocaleString(root.swapInputParamsForm.selectedSlippage))
                     textColor: checked || hovered ? Theme.palette.directColor1 : Theme.palette.directColor4
                     hoverColor: StatusColors.transparent
