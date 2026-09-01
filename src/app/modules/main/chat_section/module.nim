@@ -330,6 +330,7 @@ proc buildChatSectionUI(
 
   self.view.chatsModel.setData(items)
   self.setActiveItem(selectedItemId)
+  self.controller.loadChatThreadsForChats(chats.mapIt(it.id))
 
 proc createItemFromPublicKey(self: Module, publicKey: string): UserItem =
   let contactDetails = self.controller.getContactDetails(publicKey)
@@ -538,6 +539,19 @@ method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, t
   self.view.chatsModel().appendItemAfterParent(threadItem, parentIndex)
   if setActive:
     self.setActiveItem(threadId)
+
+method onChatThreadsLoaded*(self: Module, chatId: string, threads: seq[ThreadDto]) =
+  # The signal is global; other sections' chats are none of our business, and letting them
+  # through would just make openThreadAsChat log an unknown-parent error.
+  if not self.doesTopLevelChatExist(chatId):
+    return
+
+  for thread in threads:
+    if thread.parentMessageId.len == 0:
+      continue
+    self.openThreadAsChat(chatId, thread.threadId, thread.name, thread.parentMessageId,
+      setActive = false, hasUnreadMessages = thread.unviewedMessagesCount > 0,
+      notificationsCount = thread.unviewedMentionsCount)
 
 proc updateActiveChatMembership*(self: Module) =
   let activeChatId = self.controller.getActiveChatId()
