@@ -36,6 +36,7 @@ SplitView {
         transactionStore: TransactionStoreMock {}
         dappsEnabled: true
         thirdpartyServicesEnabled: ctrl3rdPartyServices.checked
+        isDebugEnabled: ctrlDebugEnabled.checked
         connectorController: QtObject {
             function getDAppsByClientId(clientId) {
                 const rawModel = [
@@ -309,6 +310,12 @@ SplitView {
         Switch {
             id: ctrl3rdPartyServices
             text: "3rd party services enabled"
+            checked: true
+        }
+
+        Switch {
+            id: ctrlDebugEnabled
+            text: "Debug enabled (adds Kill render process to the menu)"
             checked: true
         }
 

@@ -14,6 +14,9 @@ StatusMenu {
     required property real zoomFactor
     required property var browserSettings
 
+    // Gates the debug-only actions at the bottom of the menu.
+    property bool isDebugEnabled: false
+
     visualizeShortcuts: true
 
     signal addNewTab()
@@ -29,6 +32,7 @@ StatusMenu {
     signal forceReload()
     signal clearSiteData()
     signal clearBrowsingData()
+    signal killRenderProcess()
 
     property bool clearingBrowsingData: false
     property bool clearSiteDataSupported: true
@@ -130,6 +134,16 @@ StatusMenu {
         checkable: true
         checked: root.browserSettings.compatibilityMode
         onToggled: toggleCompatibilityMode(checked)
+    }
+
+    StatusAction {
+        objectName: "killRenderProcessAction"
+        // Navigates the tab to chrome://crash, which QtWebEngine honours with a
+        // deliberate null deref in that tab's render process. Debug builds only.
+        text: qsTr("Kill render process")
+        icon.name: "warning"
+        enabled: root.isDebugEnabled
+        onTriggered: root.killRenderProcess()
     }
 
     StatusAction {

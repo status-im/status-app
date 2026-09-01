@@ -810,6 +810,8 @@ StatusSectionLayout {
         incognitoMode: _internal.currentTabIncognito
         zoomFactor: _internal.currentWebView?.zoomFactor ?? 1
         browserSettings: localAccountSensitiveSettings
+        isDebugEnabled: root.isDebugEnabled
+        onKillRenderProcess: _internal.currentWebView?.loadUrl("chrome://crash")
         clearingBrowsingData: _internal.currentWebView?.clearing ?? false
         clearSiteDataSupported: _internal.currentWebView?.clearSiteDataSupported ?? true
         onForceReload: webViewContext.forceReloadCurrent()
