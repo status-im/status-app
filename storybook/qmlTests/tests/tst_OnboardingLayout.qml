@@ -683,6 +683,8 @@ Item {
                 const resultData = loginSpy.signalArguments[0][2]
                 verify(!!resultData)
                 compare(resultData.password, data.password)
+                // a keychain item exists while biometrics is on -> ask the backend to refresh it post-login
+                compare(!!resultData.updateBiometrics, !!data.biometrics)
 
                 // verify validation & pass error
                 tryCompare(passwordInput, "hasError", data.password !== mockDriver.dummyNewPassword)
@@ -742,6 +744,47 @@ Item {
                 verify(!!resultData)
                 compare(resultData.pin, data.pin)
             }
+        }
+
+        function test_loginScreen_biometricsWithDek_data() {
+            return [{ tag: "dek-tagged biometric secret" }] // dummy to skip global data, and run just once
+        }
+
+        // Biometric login for a DEK-migrated profile: the keychain returns a dek-tagged
+        // secret which must be submitted as { dek } (raw, un-hashed path) — never as a
+        // password, and never shown in the password box.
+        function test_loginScreen_biometricsWithDek() {
+            verify(!!controlUnderTest)
+            controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+            controlUnderTest.restartFlow()
+
+            mockDriver.biometricsAvailable = true
+
+            const page = getCurrentPage(controlUnderTest.stack, LoginScreen)
+            const userSelector = findChild(page, "loginUserSelector")
+            verify(!!userSelector)
+            userSelector.setSelection("uid_1")
+            tryCompare(userSelector, "selectedProfileKeyId", "uid_1")
+
+            const passwordInput = findChild(page, "loginPasswordInput")
+            verify(!!passwordInput)
+            const passwordBox = findChild(page, "passwordBox")
+            verify(!!passwordBox)
+
+            const dekHex = "8a9f7d2b6c1e4f3a5d8b9c0e2f4a6b8d0c2e4f6a8b0d2c4e6f8a0b2d4c6e8f0a"
+            controlUnderTest.keychain.getCredentialRequestCompleted(
+                        Keychain.StatusSuccess, "dek:" + dekHex)
+
+            // the DEK is not a password: it never appears in the password box
+            compare(passwordInput.text, "")
+
+            tryCompare(loginSpy, "count", 1)
+            compare(loginSpy.signalArguments[0][0], "uid_1")
+            compare(loginSpy.signalArguments[0][1], Onboarding.LoginMethod.Password)
+            const resultData = loginSpy.signalArguments[0][2]
+            verify(!!resultData)
+            compare(resultData.dek, dekHex)
+            compare(resultData.password, undefined)
         }
 
         function test_loginScreen_profileSelectionIsSavedAndRestoredAfterWrongPassword_data() {

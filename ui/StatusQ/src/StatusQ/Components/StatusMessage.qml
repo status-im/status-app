@@ -41,7 +41,6 @@ Control {
         FailedResending
     }
 
-    property list<Item> quickActions
     property alias linksComponent: linksLoader.sourceComponent
     property alias invitationComponent: invitationBubbleLoader.sourceComponent
 
@@ -124,7 +123,15 @@ Control {
         })
     }
 
+    HoverHandler {
+        acceptedDevices: PointerDevice.TouchScreen
+        onHoveredChanged: if (hovered) d.touchHoverSuppressed = true
+    }
+
     hoverEnabled: (!root.isActiveMessage && !root.disableHover)
+    onHoveredChanged: if (!hovered) d.touchHoverSuppressed = false
+    readonly property alias effectiveHovered: d.effectiveHovered
+
     background: Rectangle {
         color: {
             if (root.overrideBackground)
@@ -375,13 +382,10 @@ Control {
                         Layout.fillWidth: true
                         Layout.bottomMargin: root.editMode ? Theme.halfPadding : 0
                         sourceComponent: StatusMessageEmojiReactions {
-                            id: emojiReactionsPanel
                             enabled: !root.disableEmojis
                             reactionsModel: root.reactionsModel
                             limitReached: !!root.reactionsModel && root.reactionsModel.ModelCount.count >= root.maxEmojiReactionsPerMessage
                             messageHighlighted: root.hovered || root.isActiveMessage
-
-                            onHoverChanged: (hovered) => root.hoverChanged(messageId, hovered)
 
                             onAddEmojiClicked: (sender, mouse) => root.addReactionClicked(sender, mouse)
                             onToggleReaction: (hexcode) => root.toggleReactionClicked(hexcode)
@@ -391,17 +395,6 @@ Control {
             }
         }
 
-        Loader {
-            active: root.quickActions.length > 0
-                    && !root.isMobile // hover menu disabled on mobile; we use the MessageContextMenuView
-            visible: active && root.hovered
-            anchors.right: parent.right
-            anchors.rightMargin: Theme.padding
-            anchors.verticalCenter: parent.top
-            sourceComponent: StatusMessageQuickActions {
-                items: root.quickActions
-            }
-        }
     }
 
     ListModel {
@@ -414,9 +407,26 @@ Control {
     QtObject {
         id: d
         property string selectedText
+
+        // Hover must be reported for real pointing devices only. A touch tap makes Qt synthesize a
+        // mouse move (a "core pointer" event, indistinguishable from a real mouse by
+        // `acceptedDevices` on a HoverHandler), which would otherwise set `hovered` and trigger
+        // hover-driven UI such as the quick-actions context menu. On touch that menu is the
+        // long-press gesture instead, so a touch-originated hover is latched as suppressed until
+        // the hover genuinely ends. A latch rather than a timer is required because the synthesized
+        // hover stays active for as long as the pointer "rests" on the message after the tap.
+        //
+        // A HoverHandler (passive, never takes a grab) is used deliberately here: the read-only
+        // TextEdits rendering the message text take the exclusive grab on any touch point, which
+        // would keep a PointHandler at this level from ever becoming active.
+        property bool touchHoverSuppressed: false
+        readonly property bool effectiveHovered: root.hovered && !d.touchHoverSuppressed
+        onEffectiveHoveredChanged: root.hoverChanged(root.messageId, d.effectiveHovered)
     }
 
     component StatusTextMessageCommon: StatusTextMessage {
+        id: statusTextMessage
+
         objectName: "StatusMessage_textMessage"
         messageDetails: root.messageDetails
         isEdited: root.isEdited

@@ -1,8 +1,8 @@
 
 import time
 
+from constants.support_bot import SUPPORT_BOT_DISPLAY_NAME
 from locators.messaging.chat_locators import ChatLocators
-from utils.exceptions import ElementInteractionError
 
 from ..base_page import BasePage
 
@@ -22,7 +22,9 @@ class ChatPage(BasePage):
         if self._is_chat_list_visible(timeout=2):
             return True
         if self.is_portrait_mode():
-            self.safe_click(self.locators.TOOLBAR_BACK_BUTTON, timeout=2)
+            # try_click: a failed back-tap must not raise out of this
+            # bool-contract helper — the visibility re-check answers either way.
+            self.try_click(self.locators.TOOLBAR_BACK_BUTTON, timeout=2)
             return self._is_chat_list_visible(timeout=timeout)
         return False
 
@@ -32,76 +34,80 @@ class ChatPage(BasePage):
 
     def open_chat(self, display_name: str) -> bool:
         locator = self.locators.chat_list_item(display_name)
-        return self.safe_click(locator, max_attempts=2)
+        return self.try_click(locator, max_attempts=2)
 
-    def has_any_chat(self, timeout: int = 5) -> bool:
-        """Check if there are any chats in the chat list.
+    def _chat_rows(self) -> list[tuple[str, str, str]]:
+        """``(resource-id, name, label)`` for every listed chat row.
 
-        Returns:
-            bool: True if at least one chat exists.
+        Android exposes a row's chat name only as the resource-id segment
+        before ``.StatusDraggableListItem_``; ``text`` and ``content-desc``
+        are empty there and are kept as ``label`` for platforms that fill them.
         """
-        self._ensure_chat_list_visible()
-        return self.is_element_visible(self.locators.FIRST_CHAT_ITEM, timeout=timeout)
-
-    def get_first_chat_name(self, timeout: int = 5) -> str | None:
-        """Read the display text or content-desc of the first chat in the list.
-
-        Useful for capturing the actual name of a chat before opening it via
-        ``open_first_chat()`` so that later assertions (e.g. gone-from-list
-        checks) can use a meaningful identifier rather than a potentially
-        stale or unsynchronised name.
-
-        Returns:
-            The chat name string, or ``None`` if no chat is visible or the
-            name cannot be read.
-        """
-        self._ensure_chat_list_visible()
-        element = self.find_element_safe(self.locators.FIRST_CHAT_ITEM, timeout=timeout)
-        if not element:
-            return None
-        for attr in ("content-desc", "text"):
+        rows: list[tuple[str, str, str]] = []
+        try:
+            elements = self.driver.find_elements(*self.locators.CHAT_ROWS)
+        except Exception as exc:
+            self.logger.debug("Chat row listing failed: %s", exc)
+            return rows
+        for element in elements:
             try:
-                raw = element.get_attribute(attr)
-                if not raw or raw == "null":
-                    continue
-                value = raw.strip()
-                if " [tid:" in value:
-                    value = value.split(" [tid:")[0].strip()
-                if value:
-                    return value
+                resource_id = element.get_attribute("resource-id") or ""
+                label = " ".join(
+                    value
+                    for value in (
+                        element.get_attribute("content-desc"),
+                        element.get_attribute("text"),
+                    )
+                    if value and value != "null"
+                )
             except Exception:
                 continue
+            if ".StatusDraggableListItem_" not in resource_id:
+                continue
+            name = resource_id.split(".StatusDraggableListItem_", 1)[0].rsplit(".", 1)[-1]
+            rows.append((resource_id, name, label))
+        return rows
+
+    def _find_chat_row(
+        self, chat_identifier: str, display_name: str | None = None
+    ) -> tuple | None:
+        """Locator pinned to the peer's chat row, or None.
+
+        A row named with ``chat_identifier`` or ``display_name`` wins. Rows
+        are normally named with the peer's generated three-word name, which
+        the caller cannot know, so otherwise the peer is the one row that is
+        not the support bot's. Two or more such rows is no answer: the
+        caller fails instead of opening whichever comes first.
+        """
+        wanted = [value for value in (chat_identifier, display_name) if value]
+        peers = []
+        for resource_id, name, label in self._chat_rows():
+            if any(value in name or value in label for value in wanted):
+                return self.locators.chat_row(resource_id)
+            if SUPPORT_BOT_DISPLAY_NAME in name or SUPPORT_BOT_DISPLAY_NAME in label:
+                continue
+            peers.append(resource_id)
+        if len(peers) == 1:
+            return self.locators.chat_row(peers[0])
+        if peers:
+            self.logger.debug(
+                "%d chat rows besides the support bot's and none named %s",
+                len(peers), wanted,
+            )
         return None
 
-    def open_first_chat(self, timeout: int = 10) -> bool:
-        """Open the first chat in the chat list.
+    def wait_for_peer_rows(self, minimum: int, timeout: int = 60) -> bool:
+        """Wait until at least ``minimum`` rows other than the support bot's are listed."""
 
-        Useful for tests that need any available chat without knowing specific names.
+        def _enough() -> bool:
+            return sum(
+                1
+                for _, name, label in self._chat_rows()
+                if SUPPORT_BOT_DISPLAY_NAME not in name
+                and SUPPORT_BOT_DISPLAY_NAME not in label
+            ) >= minimum
 
-        Returns:
-            bool: True if a chat was opened successfully.
-        """
-        self._ensure_chat_list_visible()
-        if not self.is_element_visible(self.locators.FIRST_CHAT_ITEM, timeout=timeout):
-            self.logger.warning("No chats available in the list")
-            return False
-        return self.safe_click(self.locators.FIRST_CHAT_ITEM, timeout=timeout)
-
-    def _resolve_chat_locators(self, chat_identifier: str, display_name: str | None = None):
-        """Locators for a chat row, in priority order.
-
-        Status tags fresh-contact chat rows with an auto-generated 3-word
-        identity name (e.g. "Whopping Insecure Frilledlizard") in
-        ``resource-id`` on both sides, so identifier-specific locators
-        miss. ``FIRST_CHAT_ITEM`` is the load-bearing fallback in the
-        one-chat fixture scenario. Strict-uniqueness assertions are not
-        supported by these locators today.
-        """
-        locators = [self.locators.dm_row_button(chat_identifier)]
-        if display_name:
-            locators.append(self.locators.chat_list_item(display_name))
-        locators.append(self.locators.FIRST_CHAT_ITEM)
-        return locators
+        return self.wait_for_condition(_enough, timeout=timeout, poll_interval=1.0)
 
     def open_chat_by_suffix(
         self,
@@ -111,23 +117,27 @@ class ChatPage(BasePage):
         timeout: int | None = 15,
     ) -> bool:
         self._ensure_chat_list_visible()
-        primary, *fallbacks = self._resolve_chat_locators(chat_identifier, display_name)
+        deadline = time.time() + (timeout or 15)
+        locator = self._find_chat_row(chat_identifier, display_name)
+        while locator is None and time.time() < deadline:
+            time.sleep(1.0)
+            locator = self._find_chat_row(chat_identifier, display_name)
+        if locator is None:
+            self.dump_page_source(f"open_chat_by_suffix_failure_{chat_identifier}")
+            return False
         try:
-            return self.safe_click(
-                primary, fallback_locators=fallbacks, timeout=timeout, max_attempts=3,
-            )
+            self.click(locator, timeout=5, max_attempts=3)
         except ElementInteractionError as exc:
-            self.logger.debug(
-                "Direct click chain failed (%s); attempting scroll in chat list", exc,
+            self.logger.warning(
+                "Chat row for %s did not take the tap: %s", chat_identifier, exc,
             )
-        for locator in (primary, *fallbacks):
-            if self.scroll_to_element(locator, max_swipes=3, timeout=3):
-                return self.safe_click(locator, timeout=timeout, max_attempts=3)
-        # Diagnostic: dump page source so we can tell whether the chat list
-        # is genuinely empty (status-go fresh-contact race) vs populated but
-        # using AT names our locators don't match.
-        self.dump_page_source(f"open_chat_by_suffix_failure_{chat_identifier}")
-        return False
+            return False
+        header = self._read_element_text(self.locators.CHAT_HEADER_NAME, timeout=10)
+        self.logger.info("Opened chat '%s' for peer %s", header, chat_identifier)
+        if header and SUPPORT_BOT_DISPLAY_NAME in header:
+            self.dump_page_source(f"open_chat_by_suffix_wrong_chat_{chat_identifier}")
+            return False
+        return True
 
     def chat_exists_in_list(
         self,
@@ -144,9 +154,8 @@ class ChatPage(BasePage):
             self.logger.debug(f"Failed to show chat list: {exc}")
             return False
 
-        locators = self._resolve_chat_locators(chat_identifier, display_name)
         return self.wait_for_condition(
-            lambda: any(self.find_element_safe(loc, timeout=1) for loc in locators),
+            lambda: self._find_chat_row(chat_identifier, display_name) is not None,
             timeout=timeout,
             poll_interval=0.5,
         )
@@ -156,7 +165,7 @@ class ChatPage(BasePage):
 
     def tap_start_chat(self, timeout: int | None = 5) -> bool:
         self.dismiss_backup_prompt(timeout=2)
-        return self.safe_click(self.locators.START_CHAT_BUTTON, timeout=timeout)
+        return self.try_click(self.locators.START_CHAT_BUTTON, timeout=timeout)
 
     def send_message(self, message: str, timeout: int | None = None) -> bool:
         """Type, tap SEND_BUTTON, fall back to newline if the button
@@ -173,14 +182,10 @@ class ChatPage(BasePage):
         ):
             return False
 
-        button_clicked = False
-        try:
-            button_clicked = self.safe_click(
-                self.locators.SEND_BUTTON, timeout=3, max_attempts=1
-            )
-        except Exception as exc:
-            self.logger.debug("Send-button click suppressed: %s", exc)
-
+        button_clicked = self.try_click(
+            self.locators.SEND_BUTTON, timeout=3, max_attempts=1,
+            catch_driver_errors=True,
+        )
         if not button_clicked:
             self.logger.info("Send button not clickable — falling back to newline trigger")
             if not self.qt_safe_input(
@@ -225,7 +230,7 @@ class ChatPage(BasePage):
         except Exception as e:
             self.logger.debug(f"dismiss_introduce_prompt direct click failed: {e}")
             try:
-                return self.safe_click(self.locators.INTRODUCE_SKIP_BUTTON, timeout=timeout)
+                return self.try_click(self.locators.INTRODUCE_SKIP_BUTTON, timeout=timeout)
             except Exception as e2:
                 self.logger.debug(f"dismiss_introduce_prompt click also failed: {e2}")
                 return False
@@ -240,7 +245,7 @@ class ChatPage(BasePage):
         except Exception as e:
             self.logger.debug(f"dismiss_backup_prompt direct click failed: {e}")
             try:
-                return self.safe_click(self.locators.BACKUP_SKIP_BUTTON, timeout=timeout)
+                return self.try_click(self.locators.BACKUP_SKIP_BUTTON, timeout=timeout)
             except Exception as e2:
                 self.logger.debug(f"dismiss_backup_prompt click also failed: {e2}")
                 return False
@@ -261,7 +266,7 @@ class ChatPage(BasePage):
         except Exception as e:
             self.logger.debug(f"dismiss_push_notification_prompt direct click failed: {e}")
             try:
-                return self.safe_click(self.locators.PUSH_NOTIF_LATER_BUTTON, timeout=timeout)
+                return self.try_click(self.locators.PUSH_NOTIF_LATER_BUTTON, timeout=timeout)
             except Exception as e2:
                 self.logger.debug(f"dismiss_push_notification_prompt click also failed: {e2}")
                 return False
@@ -283,7 +288,7 @@ class ChatPage(BasePage):
         except Exception as e:
             self.logger.debug(f"dismiss_drawer_intro_prompt direct click failed: {e}")
             try:
-                return self.safe_click(self.locators.DIALOG_HEADER_CLOSE_BUTTON, timeout=timeout)
+                return self.try_click(self.locators.DIALOG_HEADER_CLOSE_BUTTON, timeout=timeout)
             except Exception as e2:
                 self.logger.debug(f"dismiss_drawer_intro_prompt click also failed: {e2}")
                 return False
@@ -309,19 +314,14 @@ class ChatPage(BasePage):
         self.dismiss_introduce_prompt(timeout=2)
         self.dismiss_backup_prompt(timeout=2)
         self._ensure_chat_list_visible()
-        locators = self._resolve_chat_locators(chat_identifier, display_name)
 
         deadline = time.time() + timeout
         last_refresh = time.time()
         app = App(self.driver)
 
         while time.time() < deadline:
-            # Check for the chat row
-            try:
-                if any(self.find_element_safe(loc, timeout=1) for loc in locators):
-                    return True
-            except Exception:
-                pass
+            if self._find_chat_row(chat_identifier, display_name) is not None:
+                return True
 
             # Periodically force a full nav refresh: switch to another
             # section and back so the chat list is re-built by the UI.
@@ -338,10 +338,12 @@ class ChatPage(BasePage):
                     # cost (activate_app + modal check + landmark wait) per
                     # poll iteration, and arrival is re-checked below anyway.
                     app._ensure_main_nav_visible()
-                    app._click_nav_item(app.locators.LEFT_NAV_WALLET)
+                    if not app._click_nav_item(app.locators.LEFT_NAV_WALLET):
+                        self.logger.debug("Nav-toggle: wallet leg missed")
                     time.sleep(1)
                     app._ensure_main_nav_visible()
-                    app._click_nav_item(app.locators.LEFT_NAV_MESSAGES)
+                    if not app._click_nav_item(app.locators.LEFT_NAV_MESSAGES):
+                        self.logger.debug("Nav-toggle: messages leg missed")
                 except Exception as exc:
                     self.logger.debug("Nav-toggle refresh failed: %s", exc)
                 self.dismiss_introduce_prompt(timeout=1)
@@ -360,12 +362,8 @@ class ChatPage(BasePage):
         display_name: str | None = None,
         timeout: int | None = 4,
     ) -> bool:
-        locators = self._resolve_chat_locators(chat_identifier, display_name)
-        element = None
-        for locator in locators:
-            element = self.find_element_safe(locator, timeout=timeout)
-            if element:
-                break
+        locator = self._find_chat_row(chat_identifier, display_name)
+        element = self.find_element_safe(locator, timeout=timeout) if locator else None
         if not element:
             return False
         try:
@@ -384,7 +382,7 @@ class ChatPage(BasePage):
         """Cancel reply mode by tapping the close button."""
         if not self.is_reply_mode_active(timeout=2):
             return True  # Not in reply mode
-        return self.safe_click(self.locators.REPLY_CLOSE_BUTTON, timeout=timeout)
+        return self.try_click(self.locators.REPLY_CLOSE_BUTTON, timeout=timeout)
 
     # ===== Message State Verification =====
 
@@ -483,18 +481,21 @@ class ChatPage(BasePage):
 
         emoji_locators = EmojiPickerLocators()
 
-        if not self.safe_click(self.locators.EMOJI_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.EMOJI_BUTTON, timeout=timeout):
             self.logger.error("Failed to click emoji button")
             return False
 
-        if not self.is_element_visible(emoji_locators.POPUP_CONTAINER, timeout=5):
+        # The picker opens at once, but its emoji grid (hundreds of nodes)
+        # reaches the accessibility tree seconds later; a 5s wait was too short.
+        POPUP_TIMEOUT = 20
+        if not self.is_element_visible(emoji_locators.POPUP_CONTAINER, timeout=POPUP_TIMEOUT):
             self.logger.error("Emoji popup did not appear")
             return False
 
         if not self.qt_safe_input(
             emoji_locators.SEARCH_INPUT,
             search_term,
-            timeout=5,
+            timeout=POPUP_TIMEOUT,
             verify=False,
         ):
             self.logger.error("Failed to type in emoji search")
@@ -511,23 +512,23 @@ class ChatPage(BasePage):
                 self.logger.error(f"No emoji results for search '{search_term}'")
                 return False
 
-        if not self.safe_click(target, timeout=5):
+        if not self.try_click(target, timeout=5):
             self.logger.error(f"Failed to tap emoji for '{search_term}'")
             return False
 
-        return self.safe_click(self.locators.SEND_BUTTON, timeout=5)
+        return self.try_click(self.locators.SEND_BUTTON, timeout=5)
 
     def open_image_dialog(self, timeout: int = 10) -> bool:
         """Open the image attachment dialog via the command menu."""
-        if not self.safe_click(self.locators.COMMAND_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.COMMAND_BUTTON, timeout=timeout):
             self.logger.error("Failed to click command button")
             return False
-        return self.safe_click(self.locators.ADD_IMAGE_ACTION, timeout=5)
+        return self.try_click(self.locators.ADD_IMAGE_ACTION, timeout=5)
 
     def open_chat_options_menu(self, timeout: int = 10) -> bool:
         """Open the chat header context menu (More options)."""
         try:
-            self.safe_click(self.locators.CHAT_MORE_OPTIONS_BUTTON, timeout=timeout)
+            self.click(self.locators.CHAT_MORE_OPTIONS_BUTTON, timeout=timeout)
             menu_visible = self.is_element_visible(
                 self.locators.CHAT_MORE_OPTIONS_MENU, timeout=5,
             )
@@ -554,8 +555,8 @@ class ChatPage(BasePage):
             return False
 
         try:
-            self.safe_click(self.locators.CLEAR_HISTORY_MENU_ITEM, timeout=timeout)
-            self.safe_click(self.locators.CLEAR_HISTORY_CONFIRM_BUTTON, timeout=timeout)
+            self.click(self.locators.CLEAR_HISTORY_MENU_ITEM, timeout=timeout)
+            self.click(self.locators.CLEAR_HISTORY_CONFIRM_BUTTON, timeout=timeout)
             return True
         except Exception as exc:
             self.logger.error("Failed to clear chat history: %s", exc)
@@ -568,8 +569,8 @@ class ChatPage(BasePage):
             return False
 
         try:
-            self.safe_click(self.locators.CLOSE_CHAT_MENU_ITEM, timeout=timeout)
-            self.safe_click(self.locators.CLOSE_CHAT_CONFIRM_BUTTON, timeout=timeout)
+            self.click(self.locators.CLOSE_CHAT_MENU_ITEM, timeout=timeout)
+            self.click(self.locators.CLOSE_CHAT_CONFIRM_BUTTON, timeout=timeout)
             return True
         except Exception as exc:
             self.logger.error("Failed to close chat: %s", exc)

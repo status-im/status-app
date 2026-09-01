@@ -10,13 +10,13 @@ from constants.user import message_sync_user, message_sync_contact
 from gui.components.splash_screen import SplashScreen
 from gui.main_window import MainWindow
 from gui.screens.onboarding import (
-    OnboardingBiometricsView,
     OnboardingProfileSyncedView,
     OnboardingWelcomeToStatusView,
     SyncResultView,
 )
 from helpers.chat_helper import get_visible_message_texts, skip_message_backup_popup_if_visible
 from helpers.multiple_instances_helper import switch_to_aut
+from helpers.onboarding_helper import skip_biometrics_popup_if_visible
 from scripts.utils.generators import random_text_message
 
 from . import marks
@@ -75,9 +75,8 @@ def test_local_pairing_with_message_sync(multiple_instances, user_data, user_acc
                 profile_syncing_view = OnboardingProfileSyncedView().wait_until_appears()
                 assert profile_syncing_view.log_in_button.wait_until_appears(timeout_msec=15000)
                 profile_syncing_view.log_in_button.click()
-                if configs.system.get_platform() == 'Darwin':
-                    OnboardingBiometricsView().maybe_later()
                 SplashScreen().wait_until_hidden(APP_LOAD_TIMEOUT_MSEC)
+                skip_biometrics_popup_if_visible()
                 skip_message_backup_popup_if_visible()
 
             with step(f'Confirm pairing on primary instance {aut_primary.aut_id}'):

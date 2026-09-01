@@ -434,12 +434,13 @@ QtObject:
     self.events.emit(SIGNAL_DERIVED_ADDRESSES_FROM_NOT_IMPORTED_MNEMONIC_FETCHED, data)
 
   proc doLogin(self: Service, account: AccountDto, passwordHash: string, chatPrivateKey: string = "", mnemonic: string = "",
-    walletXPub: string = "") =
+    walletXPub: string = "", dek: string = "") =
 
     var request = LoginAccountRequest(
       keyUid: account.keyUid,
       kdfIterations: account.kdfIterations,
       passwordHash: passwordHash,
+      dek: dek,
       keycardWhisperPrivateKey: chatPrivateKey,
       walletXPub: walletXPub,
       mnemonic: mnemonic,
@@ -465,9 +466,9 @@ QtObject:
     self.setLocalAccountSettingsFile()
 
   proc login*(self: Service, account: AccountDto, hashedPassword: string, chatPrivateKey: string = "", mnemonic: string = "",
-    walletXPub: string = "") =
+    walletXPub: string = "", dek: string = "") =
     try:
-      self.doLogin(account, hashedPassword, chatPrivateKey, mnemonic, walletXPub)
+      self.doLogin(account, hashedPassword, chatPrivateKey, mnemonic, walletXPub, dek)
 
     except Exception as e:
       error "login failed", errName = e.name, errDesription = e.msg

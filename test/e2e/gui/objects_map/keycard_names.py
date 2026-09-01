@@ -39,6 +39,12 @@ keycardSettingsKeyPairInfo = {"container": mainWindow_KeycardView, "objectName":
 settingsKeycardDetailsImportSeedPhrase = {"container": mainWindow_KeycardView,
                                           "objectName": "keycardDetailsImportSeedPhrase",
                                           "type": "StatusListItem", "visible": True}
+settingsKeycardDetailsImportNewKeypair = {"container": mainWindow_KeycardView,
+                                          "objectName": "keycardDetailsImportNewKeypair",
+                                          "type": "StatusListItem", "visible": True}
+settingsKeycardDetailsMoveProfileKeypair = {"container": mainWindow_KeycardView,
+                                            "objectName": "keycardDetailsMoveProfileKeypair",
+                                            "type": "StatusListItem", "visible": True}
 
 # Keycard management popup
 
@@ -58,8 +64,11 @@ keycardManagementSeedPhrase12Button = {"container": keycardManagementSeedPhraseS
 keycardManagementSeedPhrase18Button = {"container": keycardManagementSeedPhraseSwitchBar, "objectName": "18SeedButton", "type": "StatusSwitchTabButton"}
 keycardManagementSeedPhrase24Button = {"container": keycardManagementSeedPhraseSwitchBar, "objectName": "24SeedButton", "type": "StatusSwitchTabButton"}
 keycardManagementSeedPhraseInputField = {"container": statusDesktop_mainWindow_overlay, "objectName": "enterSeedPhraseInputField", "type": "TextField", "visible": True}
-keycardManagementSeedPhraseScrollView = {"container": keycardManagementPopup, "id": "scrollView", "type": "StatusScrollView","visible": True}
+keycardManagementSeedPhraseScrollView = {"container": keycardManagementPopup, "id": "scrollView", "type": "StatusScrollView", "unnamed": 1, "visible": True}
 keycardManagementUnknownPinButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "keycardManagementUnknownPinButton", "type": "StatusButton", "visible": True}
 keycardManagementDoneButton = {"container": keycardManagementPopup, "objectName": "keycardManagementDoneButton", "type": "StatusFlatButton", "visible": True}
+keycardManagementUnderstandCheckBox = {"container": keycardManagementPopup,
+                                       "objectName": "keycardManagementUnderstandCheckBox",
+                                       "type": "StatusCheckBox", "visible": True}
 keycardKeyPairNameInput = {"container": statusDesktop_mainWindow_overlay, "objectName": "keycardKeyPairNameInput", "type": "StatusInput", "visible": True}
 keycardManageAccountNameInput = {"container": statusDesktop_mainWindow_overlay, "objectName": "keycardManageAccountNameInput", "type": "StatusInput","visible": True}

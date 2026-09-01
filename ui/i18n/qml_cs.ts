@@ -2999,6 +2999,10 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Zrušit</translation>
     </message>
     <message>
+        <source>Biometric login disabled — re-enable it in Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Change</source>
         <translation>Změnit</translation>
     </message>
@@ -5203,24 +5207,12 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Status Network Token</source>
-        <translation>Status Network Token</translation>
-    </message>
-    <message>
-        <source>Dai</source>
-        <translation>Dai</translation>
-    </message>
-    <message>
         <source>United Arab Emirates dirham</source>
         <translation>Dirham Spojených arabských emirátů</translation>
     </message>
     <message>
         <source>Other Fiat</source>
         <translation>Ostatní fiat</translation>
-    </message>
-    <message>
-        <source>Afghan afghani</source>
-        <translation>Afghánský afghání</translation>
     </message>
     <message>
         <source>Argentine peso</source>
@@ -5231,36 +5223,16 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
         <translation>Australský dolar</translation>
     </message>
     <message>
-        <source>Barbadian dollar</source>
-        <translation>Barbadoský dolar</translation>
-    </message>
-    <message>
         <source>Bangladeshi taka</source>
         <translation>Bangladéšská taka</translation>
-    </message>
-    <message>
-        <source>Bulgarian lev</source>
-        <translation>Bulharský lev</translation>
     </message>
     <message>
         <source>Bahraini dinar</source>
         <translation>Bahrajnský dinár</translation>
     </message>
     <message>
-        <source>Brunei dollar</source>
-        <translation>Brunejský dolar</translation>
-    </message>
-    <message>
-        <source>Bolivian boliviano</source>
-        <translation>Bolivijské boliviano</translation>
-    </message>
-    <message>
         <source>Brazillian real</source>
         <translation>Brazilský real</translation>
-    </message>
-    <message>
-        <source>Bhutanese ngultrum</source>
-        <translation>Bhútánský ngultrum</translation>
     </message>
     <message>
         <source>Canadian dollar</source>
@@ -5279,14 +5251,6 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
         <translation>Čínský jüan</translation>
     </message>
     <message>
-        <source>Colombian peso</source>
-        <translation>Kolumbijské peso</translation>
-    </message>
-    <message>
-        <source>Costa Rican colón</source>
-        <translation>Kostarický colón</translation>
-    </message>
-    <message>
         <source>Czech koruna</source>
         <translation>Česká koruna</translation>
     </message>
@@ -5295,32 +5259,12 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
         <translation>Dánská koruna</translation>
     </message>
     <message>
-        <source>Dominican peso</source>
-        <translation>Dominikánské peso</translation>
-    </message>
-    <message>
-        <source>Egyptian pound</source>
-        <translation>Egyptská libra</translation>
-    </message>
-    <message>
-        <source>Ethiopian birr</source>
-        <translation>Etiopský birr</translation>
-    </message>
-    <message>
         <source>Georgian lari</source>
         <translation>Gruzínské lari</translation>
     </message>
     <message>
-        <source>Ghanaian cedi</source>
-        <translation>Ghanský cedi</translation>
-    </message>
-    <message>
         <source>Hong Kong dollar</source>
         <translation>Hongkongský dolar</translation>
-    </message>
-    <message>
-        <source>Croatian kuna</source>
-        <translation>Chorvatská kuna</translation>
     </message>
     <message>
         <source>Hungarian forint</source>
@@ -5339,48 +5283,16 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
         <translation>Indická rupie</translation>
     </message>
     <message>
-        <source>Icelandic króna</source>
-        <translation>Islandská koruna</translation>
-    </message>
-    <message>
-        <source>Jamaican dollar</source>
-        <translation>Jamajský dolar</translation>
-    </message>
-    <message>
         <source>Japanese yen</source>
         <translation>Japonský jen</translation>
-    </message>
-    <message>
-        <source>Kenyan shilling</source>
-        <translation>Keňský šilink</translation>
     </message>
     <message>
         <source>Kuwaiti dinar</source>
         <translation>Kuvajtský dinár</translation>
     </message>
     <message>
-        <source>Kazakhstani tenge</source>
-        <translation>Kazašské tenge</translation>
-    </message>
-    <message>
         <source>Sri Lankan rupee</source>
         <translation>Srílanská rupie</translation>
-    </message>
-    <message>
-        <source>Moroccan dirham</source>
-        <translation>Marocký dirham</translation>
-    </message>
-    <message>
-        <source>Moldovan leu</source>
-        <translation>Moldavské leu</translation>
-    </message>
-    <message>
-        <source>Mauritian rupee</source>
-        <translation>Mauricijská rupie</translation>
-    </message>
-    <message>
-        <source>Malawian kwacha</source>
-        <translation>Malawijská kwacha</translation>
     </message>
     <message>
         <source>Mexican peso</source>
@@ -5391,14 +5303,6 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
         <translation>Malajský ringgit</translation>
     </message>
     <message>
-        <source>Mozambican metical</source>
-        <translation>Mosambický metical</translation>
-    </message>
-    <message>
-        <source>Namibian dollar</source>
-        <translation>Namibijský dolar</translation>
-    </message>
-    <message>
         <source>Nigerian naira</source>
         <translation>Nigerijská naira</translation>
     </message>
@@ -5407,24 +5311,8 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
         <translation>Norská koruna</translation>
     </message>
     <message>
-        <source>Nepalese rupee</source>
-        <translation>Nepálská rupie</translation>
-    </message>
-    <message>
         <source>New Zealand dollar</source>
         <translation>Novozélandský dolar</translation>
-    </message>
-    <message>
-        <source>Omani rial</source>
-        <translation>Ománský rijál</translation>
-    </message>
-    <message>
-        <source>Peruvian sol</source>
-        <translation>Peruánský sol</translation>
-    </message>
-    <message>
-        <source>Papua New Guinean kina</source>
-        <translation>Papuánská kina</translation>
     </message>
     <message>
         <source>Philippine peso</source>
@@ -5437,22 +5325,6 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     <message>
         <source>Polish złoty</source>
         <translation>Polský zlotý</translation>
-    </message>
-    <message>
-        <source>Paraguayan guaraní</source>
-        <translation>Paraguayské guaraní</translation>
-    </message>
-    <message>
-        <source>Qatari riyal</source>
-        <translation>Katarský rijál</translation>
-    </message>
-    <message>
-        <source>Romanian leu</source>
-        <translation>Rumunské leu</translation>
-    </message>
-    <message>
-        <source>Serbian dinar</source>
-        <translation>Srbský dinár</translation>
     </message>
     <message>
         <source>Saudi riyal</source>
@@ -5471,16 +5343,8 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
         <translation>Thajský baht</translation>
     </message>
     <message>
-        <source>Trinidad and Tobago dollar</source>
-        <translation>Dolar Trinidadu a Tobaga</translation>
-    </message>
-    <message>
         <source>New Taiwan dollar</source>
         <translation>Nový tchajwanský dolar</translation>
-    </message>
-    <message>
-        <source>Tanzanian shilling</source>
-        <translation>Tanzanský šilink</translation>
     </message>
     <message>
         <source>Turkish lira</source>
@@ -5489,18 +5353,6 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     <message>
         <source>Ukrainian hryvnia</source>
         <translation>Ukrajinská hřivna</translation>
-    </message>
-    <message>
-        <source>Ugandan shilling</source>
-        <translation>Ugandský šilink</translation>
-    </message>
-    <message>
-        <source>Uruguayan peso</source>
-        <translation>Uruguayské peso</translation>
-    </message>
-    <message>
-        <source>Venezuelan bolívar</source>
-        <translation>Venezuelský bolívar</translation>
     </message>
     <message>
         <source>Vietnamese đồng</source>
@@ -11423,24 +11275,20 @@ selhalo</translation>
 <context>
     <name>MessageContextMenuView</name>
     <message>
-        <source>Reply to</source>
-        <translation>Odpovědět na</translation>
+        <source>Reply</source>
+        <translation type="unfinished">Odpovědět</translation>
     </message>
     <message>
-        <source>Edit message</source>
-        <translation>Upravit zprávu</translation>
+        <source>Edit</source>
+        <translation type="unfinished">Upravit</translation>
     </message>
     <message>
-        <source>Copy</source>
-        <translation type="unfinished">Kopírovat</translation>
+        <source>Copy selected</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy message</source>
         <translation>Kopírovar zprávu</translation>
-    </message>
-    <message>
-        <source>Copy Message Id</source>
-        <translation>Kopírovat ID zprávy</translation>
     </message>
     <message>
         <source>Copy link to message</source>
@@ -11455,12 +11303,12 @@ selhalo</translation>
         <translation>Připnout</translation>
     </message>
     <message>
-        <source>Mark as unread</source>
-        <translation>Označit jako nepřečtěné</translation>
+        <source>Delete</source>
+        <translation type="unfinished">Smazat</translation>
     </message>
     <message>
-        <source>Delete message</source>
-        <translation>Smazat zprávu</translation>
+        <source>Mark as unread</source>
+        <translation>Označit jako nepřečtěné</translation>
     </message>
 </context>
 <context>
@@ -11527,30 +11375,6 @@ selhalo</translation>
     <message>
         <source>GIF</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reply</source>
-        <translation>Odpovědět</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>Upravit</translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation>Odepnout</translation>
-    </message>
-    <message>
-        <source>Pin</source>
-        <translation>Připnout</translation>
-    </message>
-    <message>
-        <source>Mark as unread</source>
-        <translation>Označit jako nepřečtěné</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>Smazat</translation>
     </message>
     <message>
         <source>Unknown message. Trying to recover it</source>
@@ -13440,6 +13264,10 @@ selhalo</translation>
     <message>
         <source>Continue</source>
         <translation type="unfinished">Pokračovat</translation>
+    </message>
+    <message>
+        <source>Please enter your password — biometrics cannot be used for this action</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Failed to update stored credentials</source>

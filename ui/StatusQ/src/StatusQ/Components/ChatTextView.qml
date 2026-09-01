@@ -73,6 +73,15 @@ Control {
             ClipboardUtils.setText(root.selectedText)
     }
 
+    // Activates the link (mention or url) at `pos`, given in this item's coordinates; a no-op
+    // when there is no link there. Text selection is a mouse-only interaction (see the overlay
+    // below), so touch input is routed here from one level above.
+    function activateLinkAt(pos) {
+        const p = root.contentItem.mapFromItem(root, pos.x, pos.y)
+        d.collectEditors()
+        d.activateLinkAt(p.x, p.y)
+    }
+
     onSelectableChanged: d.clearSelection()
     onBlocksChanged: d.clearSelection()
     onEditedChanged: d.clearSelection()
@@ -152,6 +161,23 @@ Control {
                 text: effectiveStyle + d.wrapContent(content)
 
                 onHoveredLinkChanged: d.hoveredLink = hoveredLink
+
+                // A plain TextEdit grabs touch points exclusively (even with selectByMouse:
+                // false), so a TapHandler placed anywhere above it in the hierarchy (e.g. in
+                // StatusTextMessage, one level up) never sees touch taps. Handling the touch tap
+                // here, as a direct child of the TextEdit, is the only place the grab can be
+                // taken over from.
+                TapHandler {
+                    acceptedDevices: PointerDevice.TouchScreen
+                    gesturePolicy: TapHandler.ReleaseWithinBounds
+                    grabPermissions: PointerHandler.CanTakeOverFromItems
+                                   | PointerHandler.CanTakeOverFromHandlersOfDifferentType
+                    onSingleTapped: eventPoint => {
+                                        const link = textEdit.linkAt(eventPoint.position.x, eventPoint.position.y)
+                                        if (link)
+                                            d.activateLink(link)
+                                    }
+                }
             }
         }
 
@@ -370,19 +396,31 @@ Control {
                 root.mentionClicked(href)
         }
 
-        // Selectable mode: the overlay swallows clicks, so resolve the link ourselves by finding
-        // the editor under (x, y) (in contentItem coords) and asking it for the link there.
-        function activateLinkAt(x, y) {
+        // Selectable mode: the overlay swallows hover, so resolve the link under (x, y) (in
+        // contentItem coords) ourselves and publish it as the hovered link.
+        function updateHoveredLinkAt(x, y) {
+            if (editors.length === 0)
+                collectEditors()
+            hoveredLink = linkAt(x, y)
+        }
+
+        // Returns the link href at (x, y) (in contentItem coords), or "" when there is none.
+        function linkAt(x, y) {
             for (let i = 0; i < editors.length; ++i) {
                 const editor = editors[i]
                 const point = editor.mapFromItem(root.contentItem, x, y)
-                if (editor.contains(point)) {
-                    const link = editor.linkAt(point.x, point.y)
-                    if (link)
-                        activateLink(link)
-                    return
-                }
+                if (editor.contains(point))
+                    return editor.linkAt(point.x, point.y) || ""
             }
+            return ""
+        }
+
+        // Selectable mode: the overlay swallows clicks, so resolve the link ourselves by finding
+        // the editor under (x, y) (in contentItem coords) and asking it for the link there.
+        function activateLinkAt(x, y) {
+            const link = linkAt(x, y)
+            if (link)
+                activateLink(link)
         }
 
         function applySelection(a, b) {
@@ -538,16 +576,25 @@ Control {
     // Cross-block selection: one overlay (over the whole content) drives the per-editor
     // selection from a single press+drag. It is a child of the Control (not the Column), so
     // it can fill the content area.
-    MouseArea {
+    //
+    // Selection is a mouse-only interaction: the handlers below accept pointing devices only,
+    // so touch events pass through untouched and are handled one level above (tap to activate
+    // a link, long press to open the message context menu).
+    Item {
+        id: selectionOverlay
+
         anchors.fill: root.contentItem
         z: 100
         enabled: root.selectable
         visible: root.selectable
-        cursorShape: !!root.hoveredLink ? Qt.PointingHandCursor : Qt.IBeamCursor
-        preventStealing: true
+
+        readonly property int pointingDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                                             | PointerDevice.Stylus
 
         property real pressX: 0
         property real pressY: 0
+        property real lastX: 0
+        property real lastY: 0
         property bool moved: false
 
         // Multi-click tracking. Clicks in place cycle: 1 click, 2 word, 3 line, 4 deselect,
@@ -556,18 +603,19 @@ Control {
         property real lastPressTime: 0
         readonly property int clickSlop: 4
 
-        onPressed: (mouse) => {
+        function handlePress(x, y) {
             root.forceActiveFocus() // Grab focus (deselects other views)
 
             const now = Date.now()
-            const near = Math.abs(mouse.x - pressX) <= clickSlop
-                      && Math.abs(mouse.y - pressY) <= clickSlop
+            const near = Math.abs(x - pressX) <= clickSlop && Math.abs(y - pressY) <= clickSlop
             clickCount = (now - lastPressTime <= Qt.styleHints.mouseDoubleClickInterval && near)
                        ? clickCount + 1 : 1
             lastPressTime = now
 
-            pressX = mouse.x
-            pressY = mouse.y
+            pressX = x
+            pressY = y
+            lastX = x
+            lastY = y
             moved = false
             d.collectEditors()
 
@@ -575,30 +623,120 @@ Control {
             const mode = (clickCount - 1) % 4
             if (mode === 1) {
                 d.anchor = null           // discrete word selection, no drag-extend
-                d.selectWordAt(mouse.x, mouse.y)
+                d.selectWordAt(x, y)
                 moved = true              // suppress link activation on release
             } else if (mode === 2) {
                 d.anchor = null
-                d.selectLineAt(mouse.x, mouse.y)
+                d.selectLineAt(x, y)
                 moved = true
             } else if (mode === 3) {
                 d.clearSelection()
                 moved = true
             } else {
-                d.anchor = d.hitTest(mouse.x, mouse.y)
+                d.anchor = d.hitTest(x, y)
                 d.applySelection(d.anchor, d.anchor)
             }
         }
-        onPositionChanged: (mouse) => {
-            if (Math.abs(mouse.x - pressX) > 3 || Math.abs(mouse.y - pressY) > 3)
+
+        function handleMove(x, y) {
+            lastX = x
+            lastY = y
+            if (Math.abs(x - pressX) > 3 || Math.abs(y - pressY) > 3)
                 moved = true
             if (d.anchor)
-                d.applySelection(d.anchor, d.hitTest(mouse.x, mouse.y))
+                d.applySelection(d.anchor, d.hitTest(x, y))
         }
-        // A click (no drag) on a link activates it; a drag selects text instead.
-        onReleased: (mouse) => {
-            if (!moved)
-                d.activateLinkAt(mouse.x, mouse.y)
+
+        // The overlay covers the editors, so they never see hover events in selectable mode;
+        // resolve the link under the pointer here instead (drives the link hover highlight
+        // and the cursor shape).
+        HoverHandler {
+            acceptedDevices: selectionOverlay.pointingDevices
+            cursorShape: !!root.hoveredLink ? Qt.PointingHandCursor : Qt.IBeamCursor
+
+            onPointChanged: if (hovered) d.updateHoveredLinkAt(point.position.x, point.position.y)
+            onHoveredChanged: if (!hovered) d.hoveredLink = ""
+        }
+
+        TapHandler {
+            acceptedButtons: Qt.LeftButton
+            acceptedDevices: selectionOverlay.pointingDevices
+            // Keep the exclusive grab for the whole press, so a drag keeps extending the
+            // selection even when it leaves the message bounds (mimics `preventStealing`).
+            gesturePolicy: TapHandler.ReleaseWithinBounds
+            grabPermissions: PointerHandler.CanTakeOverFromItems
+                           | PointerHandler.CanTakeOverFromHandlersOfDifferentType
+                           | PointerHandler.ApprovesTakeOverByHandlersOfSameType
+
+            onPressedChanged: {
+                if (pressed) {
+                    selectionOverlay.suspendFlicking()
+                    selectionOverlay.handlePress(point.position.x, point.position.y)
+                } else {
+                    selectionOverlay.resumeFlicking()
+                }
+            }
+            onPointChanged: if (pressed)
+                                selectionOverlay.handleMove(point.position.x, point.position.y)
+            // A click (no drag) on a link activates it; a drag selects text instead.
+            onTapped: if (!selectionOverlay.moved)
+                          d.activateLinkAt(selectionOverlay.lastX, selectionOverlay.lastY)
+        }
+
+        // Ancestor `Flickable` (a `StatusListView` in the chat) whose interactivity is
+        // suspended while a selection drag is in progress. Pointer handler grab permissions
+        // alone aren't enough: a `Flickable` starts dragging at its own drag threshold and
+        // applies a one-shot content jump before any handler here can take the grab, which
+        // makes precise text selection (especially across lines) impossible.
+        property Flickable ancestorFlickable: null
+        property bool flickableWasInteractive: false
+
+        function findAncestorFlickable() {
+            let item = root.parent
+            while (item) {
+                if (item instanceof Flickable)
+                    return item
+                item = item.parent
+            }
+            return null
+        }
+
+        function suspendFlicking() {
+            ancestorFlickable = findAncestorFlickable()
+            if (!ancestorFlickable)
+                return
+            flickableWasInteractive = ancestorFlickable.interactive
+            ancestorFlickable.interactive = false
+        }
+
+        function resumeFlicking() {
+            if (!ancestorFlickable)
+                return
+            ancestorFlickable.interactive = flickableWasInteractive
+            ancestorFlickable = null
+        }
+
+        // A `TapHandler` alone (even with an exclusive grabbing `gesturePolicy`) is treated as
+        // a passive grab by ancestor `Flickable`s once the pointer moves past their drag
+        // threshold, so a `StatusListView`/`ListView` ancestor steals the gesture and scrolls
+        // instead of extending the text selection. Only a `DragHandler` takes the kind of
+        // exclusive (active) grab a `Flickable` respects, so one is added here to hold the
+        // grab for the drag part of the gesture; it moves nothing (`target: null`).
+        //
+        // Because it takes the grab away from the `TapHandler`, the `TapHandler` stops getting
+        // point updates once dragging starts, so the selection has to be extended from here
+        // for the rest of the gesture (the `TapHandler` still handles the press and the
+        // no-drag tap that activates links).
+        DragHandler {
+            target: null
+            acceptedButtons: Qt.LeftButton
+            acceptedDevices: selectionOverlay.pointingDevices
+            grabPermissions: PointerHandler.CanTakeOverFromItems
+                             | PointerHandler.CanTakeOverFromHandlersOfDifferentType
+
+            onCentroidChanged: if (active)
+                                   selectionOverlay.handleMove(centroid.position.x,
+                                                               centroid.position.y)
         }
     }
 

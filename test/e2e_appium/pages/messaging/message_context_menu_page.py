@@ -150,7 +150,7 @@ class MessageContextMenuPage(BasePage):
             self.logger.error(f"Context menu not visible when trying to tap {action_name}")
             return False
 
-        if not self.safe_click(locator, timeout=timeout):
+        if not self.try_click(locator, timeout=timeout):
             self.logger.error(f"Failed to tap {action_name}")
             return False
 
@@ -211,16 +211,6 @@ class MessageContextMenuPage(BasePage):
         """
         return self._tap_menu_action(self.locators.MARK_AS_UNREAD, "Mark as unread", timeout)
 
-    def tap_copy_message_id(self, timeout: int = 5) -> bool:
-        """Tap 'Copy Message Id' to copy message ID (debug feature).
-
-        Note: Only visible when debug mode is enabled.
-
-        Returns:
-            bool: True if copy ID action was triggered.
-        """
-        return self._tap_menu_action(self.locators.COPY_MESSAGE_ID, "Copy Message Id", timeout)
-
     # ===== Reactions =====
 
     def tap_quick_reaction(self, emoji: str, timeout: int = 5) -> bool:
@@ -234,7 +224,7 @@ class MessageContextMenuPage(BasePage):
             bool: True if reaction was added.
         """
         locator = self.locators.quick_reaction_by_emoji(emoji)
-        if not self.safe_click(locator, timeout=timeout):
+        if not self.try_click(locator, timeout=timeout):
             self.logger.error(f"Failed to tap quick reaction '{emoji}'")
             return False
 
@@ -297,7 +287,7 @@ class MessageContextMenuPage(BasePage):
         Returns:
             bool: True if emoji picker opened.
         """
-        if not self.safe_click(self.locators.ADD_REACTION_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.ADD_REACTION_BUTTON, timeout=timeout):
             self.logger.error("Failed to tap Add reaction button")
             return False
 
@@ -319,7 +309,7 @@ class MessageContextMenuPage(BasePage):
             bool: True if emoji was selected.
         """
         locator = self.emoji_locators.emoji_by_character(emoji)
-        if not self.safe_click(locator, timeout=timeout):
+        if not self.try_click(locator, timeout=timeout):
             self.logger.error(f"Failed to select emoji '{emoji}' from picker")
             return False
 
@@ -407,7 +397,7 @@ class MessageContextMenuPage(BasePage):
             self.logger.warning("Delete confirmation dialog not visible")
             return False
 
-        if not self.safe_click(self.locators.DELETE_CONFIRMATION_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.DELETE_CONFIRMATION_BUTTON, timeout=timeout):
             self.logger.error("Failed to click delete confirmation button")
             return False
 

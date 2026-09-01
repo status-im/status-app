@@ -67,7 +67,7 @@ make -f mobile/ContainerBuilds.mk run
 ```
 
 ### What Happens Behind the Scenes
-- The build process uses the same pre-built Docker image as the CI pipeline (`harbor.status.im/status-im/status-desktop-build:1.0.0-qt6.11.0-android`)
+- The build process uses the same pre-built Docker image as the CI pipeline (`harbor.status.im/status-im/status-desktop-build:1.0.3-qt6.11.0-android`)
 - All required tools and dependencies (Qt 6.11.0, Android SDK/NDK, Go, Nim) are provided by the container
 - The container runs on linux/amd64 platform for consistency, even on ARM macOS machines
 - The built APK/AAB is available in the `mobile/bin/android/qt6/` directory

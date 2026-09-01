@@ -11,6 +11,7 @@ from selenium.common.exceptions import (
     NoSuchElementException,
     StaleElementReferenceException,
     TimeoutException,
+    WebDriverException,
 )
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
@@ -18,6 +19,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from config import get_config, log_element_action
+from urllib3.exceptions import HTTPError as _TransportError
+
+from utils.exceptions import is_session_fatal
 from utils.app_lifecycle_manager import AppLifecycleManager
 from utils.element_state_checker import ElementStateChecker
 from utils.exceptions import ElementInteractionError
@@ -147,17 +151,21 @@ class BasePage:
                 continue
         return False
 
-    def safe_click(
+    def click(
         self,
         locator: tuple,
         *,
         timeout: int | None = None,
         fallback_locators: list[tuple] | None = None,
         max_attempts: int = 3,
+        capture_evidence: bool = True,
     ) -> bool:
         """Click element with retries and gesture fallback.
 
-        Raises ElementInteractionError if all attempts exhausted.
+        Raises ElementInteractionError if all attempts exhausted. True means
+        the input was DISPATCHED, not that the UI reacted — Qt can accept a
+        tap without the target's handler firing, so anything that must land
+        on a new screen still needs an arrival check (landmark/anchor).
         """
         all_locators = [locator, *(fallback_locators or [])]
 
@@ -200,23 +208,28 @@ class BasePage:
 
             self.logger.debug(f"Exhausted all attempts for locator: {loc[1]}")
 
-        self._raise_click_failure(all_locators)
+        self._raise_click_failure(all_locators, capture_evidence=capture_evidence)
 
     def _wait_for_clickable(self, locator: tuple, timeout: int | None = None) -> WebElement:
         """Wait for element to be clickable and return it."""
         wait = self._create_wait(timeout, "element_click")
         return wait.until(EC.element_to_be_clickable(locator))
 
-    def _raise_click_failure(self, locators: list[tuple]) -> NoReturn:
+    def _raise_click_failure(
+        self, locators: list[tuple], capture_evidence: bool = True
+    ) -> NoReturn:
         """Log failure details and raise ElementInteractionError."""
         locator_desc = locators[0][1] if locators else "unknown"
         message = (
             f"Failed to click element after trying {len(locators)} locator(s). "
             f"First locator: {locators[0] if locators else 'none'}"
         )
-        self.logger.error(message)
-        self.take_screenshot(f"click_failure_{locator_desc}")
-        self.dump_page_source(f"click_failure_{locator_desc}")
+        if capture_evidence:
+            self.logger.error(message)
+            self.take_screenshot(f"click_failure_{locator_desc}")
+            self.dump_page_source(f"click_failure_{locator_desc}")
+        else:
+            self.logger.debug(message)
         raise ElementInteractionError(message, str(locators[0] if locators else ""), "click")
 
     def try_click(
@@ -226,16 +239,38 @@ class BasePage:
         timeout: int | None = None,
         fallback_locators: list[tuple] | None = None,
         max_attempts: int = 3,
+        capture_evidence: bool = False,
+        catch_driver_errors: bool = False,
     ) -> bool:
-        """safe_click that returns False instead of raising on exhaustion."""
+        """click() that returns False instead of raising on exhaustion.
+
+        Contract: returns True when the tap was dispatched, False when the
+        element could not be clicked. Never raises for interaction failures.
+        Driver-level errors propagate unless catch_driver_errors=True, and
+        session-fatal errors (SESSION_FATAL) ALWAYS propagate — a dead
+        session must never read as "element not clickable". No failure
+        artifacts by default: try_click sites are probes and optional taps
+        whose False branch handles the miss — pass capture_evidence=True
+        where a screenshot/page dump is wanted.
+        """
         try:
-            return self.safe_click(
+            return self.click(
                 locator,
                 timeout=timeout,
                 fallback_locators=fallback_locators,
                 max_attempts=max_attempts,
+                capture_evidence=capture_evidence,
             )
         except ElementInteractionError:
+            self.logger.debug("try_click miss: %s", locator[1] if len(locator) > 1 else locator)
+            return False
+        except (WebDriverException, _TransportError) as e:
+            if is_session_fatal(e) or not catch_driver_errors:
+                raise
+            self.logger.warning(
+                "try_click swallowed non-interaction error: %s: %s",
+                type(e).__name__, e,
+            )
             return False
 
     def find_element_safe(self, locator: tuple, timeout: int | None = None) -> WebElement | None:

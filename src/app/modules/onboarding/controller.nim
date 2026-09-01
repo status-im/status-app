@@ -217,6 +217,9 @@ proc login*(
     walletXPub,
   )
 
+proc loginWithDEK*(self: Controller, account: AccountDto, dek: string) =
+  self.accountsService.login(account, hashedPassword = "", dek = dek)
+
 proc getKeypairByKeyUidFromDb*(self: Controller, keyUid: string): wallet_account_service.KeypairDto =
   return self.walletAccountService.getKeypairByKeyUidFromDb(keyUid)
 

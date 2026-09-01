@@ -68,6 +68,36 @@ Keychain::Status convertError(NSError *error)
     }
 }
 
+// Base attributes addressing a credential item. On macOS, hardened (biometric-bound) items
+// live in the data-protection keychain, while items saved before the hardening (or by
+// builds lacking the required entitlements) live in the legacy file-based keychain —
+// `dataProtection` selects which one a query addresses. On iOS there is only the
+// data-protection keychain, so the flag is irrelevant.
+static NSMutableDictionary *baseQuery(const QString &service, const QString &account, bool dataProtection)
+{
+    NSMutableDictionary *query = [NSMutableDictionary dictionary];
+    query[(__bridge id) kSecClass] = (__bridge id) kSecClassGenericPassword;
+    query[(__bridge id) kSecAttrService] = service.toNSString();
+    query[(__bridge id) kSecAttrAccount] = account.toNSString();
+#if TARGET_OS_OSX
+    if (dataProtection)
+        query[(__bridge id) kSecUseDataProtectionKeychain] = @YES;
+#else
+    Q_UNUSED(dataProtection)
+#endif
+    return query;
+}
+
+// The data-protection keychain requires keychain entitlements (proper code signing);
+// unsigned dev builds fail with errSecMissingEntitlement — the only condition under which
+// operations may fall back to (or degrade to) the legacy file-based keychain, besides a
+// plain errSecItemNotFound. Anything else (e.g. errSecNotAvailable, a general availability
+// failure) leaves the hardened store's state unknown and must be propagated as an error.
+static bool dataProtectionUnavailable(OSStatus status)
+{
+    return status == errSecMissingEntitlement;
+}
+
 Keychain::Keychain(QObject *parent)
     : QObject(parent)
 {
@@ -187,14 +217,15 @@ Keychain::Status Keychain::saveCredential(const QString &account, const QString 
     CFErrorRef error = NULL;
 
     // On iOS there is no Apple Watch companion unlock; keep flags minimal.
-    // We still create an access control object even if it's not added to the query (left commented below),
-    // to keep parity with macOS and make it easy to enable later.
     #if TARGET_OS_OSX
         auto flags = kSecAccessControlBiometryCurrentSet | kSecAccessControlOr | kSecAccessControlWatch;
     #else
         auto flags = kSecAccessControlBiometryCurrentSet;
     #endif
 
+    // The keychain itself enforces biometrics for reading the item, and BiometryCurrentSet
+    // invalidates it when the biometric enrollment changes. ThisDeviceOnly accessibility
+    // (embedded in the access control) keeps the item out of any sync/backup.
     auto accessControl = SecAccessControlCreateWithFlags(NULL,
                                                          kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
                                                          flags,
@@ -208,21 +239,49 @@ Keychain::Status Keychain::saveCredential(const QString &account, const QString 
         return StatusGenericError;
     }
 
-    NSDictionary *query = @{
-        (__bridge id) kSecClass: (__bridge id) kSecClassGenericPassword,
-        (__bridge id) kSecAttrService: m_service.toNSString(),
-        (__bridge id) kSecAttrAccount: account.toNSString(),
-        (__bridge id) kSecValueData: [password.toNSString() dataUsingEncoding:NSUTF8StringEncoding],
-        // (__bridge id)kSecAttrAccessControl: (__bridge id)accessControl, // enable if you want Keychain to enforce biometrics
+    NSData *value = [password.toNSString() dataUsingEncoding:NSUTF8StringEncoding];
 
-    };
+    // Remove any previous item from both keychains: every overwrite thereby doubles as the
+    // migration of a legacy (pre-hardening) item to the hardened, biometric-bound form.
+    // Each store must be confirmed deleted/absent — a stale copy left behind would shadow
+    // or survive the new item.
+    const auto dpDelete = SecItemDelete((__bridge CFDictionaryRef) baseQuery(m_service, account, true));
+    if (dpDelete != errSecSuccess && dpDelete != errSecItemNotFound && !dataProtectionUnavailable(dpDelete)) {
+        qWarning() << "Keychain: failed to clear previous hardened item OSStatus=" << (long) dpDelete;
+        CFRelease(accessControl);
+        return convertStatus(dpDelete);
+    }
+    const auto legacyDelete = SecItemDelete((__bridge CFDictionaryRef) baseQuery(m_service, account, false));
+    if (legacyDelete != errSecSuccess && legacyDelete != errSecItemNotFound) {
+        qWarning() << "Keychain: failed to clear previous legacy item OSStatus=" << (long) legacyDelete;
+        CFRelease(accessControl);
+        return convertStatus(legacyDelete);
+    }
 
-    SecItemDelete((__bridge CFDictionaryRef) query);                  // Ensure old item is removed
-    auto status = SecItemAdd((__bridge CFDictionaryRef) query, NULL); // Add item
+    NSMutableDictionary *query = baseQuery(m_service, account, true);
+    query[(__bridge id) kSecValueData] = value;
+    query[(__bridge id) kSecAttrAccessControl] = (__bridge id) accessControl;
+
+    auto status = SecItemAdd((__bridge CFDictionaryRef) query, NULL);
+
+    if (status != errSecSuccess && dataProtectionUnavailable(status)) {
+        // The biometric-bound item requires the data-protection keychain, which in turn
+        // requires proper code signing (keychain entitlements) — unsigned dev builds fail
+        // here. Degrade to a legacy item (pre-hardening protection level, still gated by
+        // the app-level LAContext authentication) rather than losing biometrics entirely.
+        // Any other failure is reported as-is.
+        qWarning() << "Keychain: data-protection keychain unavailable OSStatus=" << (long) status
+                   << ", storing legacy item instead";
+        NSMutableDictionary *legacyQuery = baseQuery(m_service, account, false);
+        legacyQuery[(__bridge id) kSecValueData] = value;
+        status = SecItemAdd((__bridge CFDictionaryRef) legacyQuery, NULL);
+    }
 
     CFRelease(accessControl);
     if (status == errSecSuccess) {
         emit credentialSaved(account);
+    } else {
+        qWarning() << "Keychain: saveCredential failed OSStatus=" << (long) status;
     }
 
     return convertStatus(status);
@@ -230,17 +289,28 @@ Keychain::Status Keychain::saveCredential(const QString &account, const QString 
 
 Keychain::Status Keychain::deleteCredential(const QString &account)
 {
-    NSDictionary *query = @{
-        (__bridge id) kSecClass: (__bridge id) kSecClassGenericPassword,
-        (__bridge id) kSecAttrService: m_service.toNSString(),
-        (__bridge id) kSecAttrAccount: account.toNSString(),
-    };
-    const auto status = SecItemDelete((__bridge CFDictionaryRef) query);
-    if (status == errSecSuccess) {
-        emit credentialDeleted(account);
+    // The item may live in either keychain (hardened or legacy/pre-hardening); remove both.
+    const auto dpStatus = SecItemDelete((__bridge CFDictionaryRef) baseQuery(m_service, account, true));
+    const auto legacyStatus = SecItemDelete((__bridge CFDictionaryRef) baseQuery(m_service, account, false));
+
+    // Success is only reported when BOTH stores are confirmed deleted or absent — otherwise
+    // a copy could remain accessible after credentialDeleted was emitted.
+    const bool dpResolved = dpStatus == errSecSuccess || dpStatus == errSecItemNotFound
+                            || dataProtectionUnavailable(dpStatus);
+    const bool legacyResolved = legacyStatus == errSecSuccess || legacyStatus == errSecItemNotFound;
+
+    if (!dpResolved || !legacyResolved) {
+        const auto failure = !dpResolved ? dpStatus : legacyStatus;
+        qWarning() << "Keychain: deleteCredential failed OSStatus=" << (long) failure;
+        return convertStatus(failure);
     }
 
-    return convertStatus(status);
+    if (dpStatus != errSecSuccess && legacyStatus != errSecSuccess) {
+        return StatusNotFound; // nothing existed in either store
+    }
+
+    emit credentialDeleted(account);
+    return StatusSuccess;
 }
 
 Keychain::Status Keychain::getCredential(const QString &reason, const QString &account, QString *out)
@@ -258,26 +328,34 @@ Keychain::Status Keychain::getCredential(const QString &reason, const QString &a
         return authStatus;
     }
 
-    NSDictionary *query = @{
-        (__bridge id) kSecClass: (__bridge id) kSecClassGenericPassword,
-        (__bridge id) kSecAttrService: m_service.toNSString(),
-        (__bridge id) kSecAttrAccount: account.toNSString(),
-        (__bridge id) kSecReturnData: @YES,
-        (__bridge id) kSecMatchLimit: (__bridge id) kSecMatchLimitOne,
-        (__bridge id) kSecUseAuthenticationContext: m_activeAuthContext,
+    // The freshly evaluated LAContext satisfies the item's access control without a second
+    // prompt (iOS 11+/macOS 10.13+ support kSecUseAuthenticationContext).
+    const auto copyItem = [this, &account](bool dataProtection, CFDataRef *data) {
+        NSMutableDictionary *query = baseQuery(m_service, account, dataProtection);
+        query[(__bridge id) kSecReturnData] = @YES;
+        query[(__bridge id) kSecMatchLimit] = (__bridge id) kSecMatchLimitOne;
+        query[(__bridge id) kSecUseAuthenticationContext] = m_activeAuthContext;
+        return SecItemCopyMatching((__bridge CFDictionaryRef) query, (CFTypeRef *) data);
     };
-
-    // Use the LAContext with Keychain when available. iOS 11+/macOS 10.13+ support kSecUseAuthenticationContext.
-    #if (defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000) || \
-        (defined(__MAC_OS_X_VERSION_MAX_ALLOWED) && __MAC_OS_X_VERSION_MAX_ALLOWED >= 101300)
-        NSMutableDictionary *mutableQuery = [query mutableCopy];
-        mutableQuery[(__bridge id)kSecUseAuthenticationContext] = m_activeAuthContext;
-        query = mutableQuery;
-    #endif
 
     CFDataRef data = NULL;
 
-    const auto status = SecItemCopyMatching((__bridge CFDictionaryRef) query, (CFTypeRef *) &data);
+    // Hardened item first.
+    auto status = copyItem(true, &data);
+
+    // A biometric re-enrollment invalidates the BiometryCurrentSet-bound item: report it as
+    // missing so callers fall back to password entry (the next successful save re-binds the
+    // item to the new enrollment). Deliberately no legacy fallback here — a leftover legacy
+    // copy must never resurrect a credential the invalidation just revoked.
+    if (status == errSecAuthFailed) {
+        qWarning() << "Keychain: hardened item invalidated (errSecAuthFailed), reporting not found";
+        return StatusNotFound;
+    }
+
+    // Items saved before the hardening (or by builds without keychain entitlements) remain
+    // readable from the legacy keychain; any other failure is propagated as-is.
+    if (status == errSecItemNotFound || dataProtectionUnavailable(status))
+        status = copyItem(false, &data);
 
     if (status != errSecSuccess) {
         qWarning() << "Keychain: SecItemCopyMatching failed OSStatus=" << (long) status
@@ -319,16 +397,30 @@ void Keychain::reevaluateAvailability()
 
 Keychain::Status Keychain::hasCredential(const QString &account) const
 {
-    NSDictionary *query = @{
-        (__bridge id) kSecClass: (__bridge id) kSecClassGenericPassword,
-        (__bridge id) kSecAttrService: m_service.toNSString(),
-        (__bridge id) kSecAttrAccount: account.toNSString(),
-        (__bridge id) kSecReturnData: @NO,
-        (__bridge id) kSecReturnAttributes: @YES,
-        (__bridge id) kSecMatchLimit: (__bridge id) kSecMatchLimitOne,
+    // Existence check must never prompt: request attributes only and forbid interaction
+    // (a non-interactive LAContext makes protected queries fail with
+    // errSecInteractionNotAllowed instead of showing a biometric prompt).
+    LAContext *silentContext = [[[LAContext alloc] init] autorelease];
+    silentContext.interactionNotAllowed = YES;
+
+    const auto check = [this, &account, silentContext](bool dataProtection) {
+        NSMutableDictionary *query = baseQuery(m_service, account, dataProtection);
+        query[(__bridge id) kSecReturnData] = @NO;
+        query[(__bridge id) kSecReturnAttributes] = @YES;
+        query[(__bridge id) kSecMatchLimit] = (__bridge id) kSecMatchLimitOne;
+        query[(__bridge id) kSecUseAuthenticationContext] = silentContext;
+        return SecItemCopyMatching((__bridge CFDictionaryRef) query, nil);
     };
 
-    const auto status = SecItemCopyMatching((__bridge CFDictionaryRef) query, nil);
+    auto status = check(true);
+    if (status == errSecItemNotFound || dataProtectionUnavailable(status))
+        status = check(false); // legacy (pre-hardening) item; other errors are propagated
+
+    // The item exists: reading it would merely require authentication, or is currently
+    // blocked by an enrollment invalidation (handled at read time as not-found).
+    if (status == errSecInteractionNotAllowed || status == errSecAuthFailed)
+        return StatusSuccess;
+
     return convertStatus(status);
 }
 

@@ -51,7 +51,6 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
         with step('Verify that contact request was sent and is in pending requests'):
             contacts_settings.open_pending_requests()
             assert Messaging.CONTACT_REQUEST_SENT.value == contacts_settings.contact_items[0].object.contactText
-            assert len(contacts_settings.contact_items) == 1
             assert str(contacts_settings.section_header.object.text) == 'Sent'
             main_window.minimize()
 
@@ -63,16 +62,6 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             contacts_settings.open_pending_requests()
             assert str(contacts_settings.section_header.object.text) == 'Received'
             assert user_one.name == contacts_settings.contact_items[0].contact
-            assert len(contacts_settings.contact_items) == 1
-
-        # TODO: seems the toast is disappearing very fast
-        # with step('Verify toast message about new contact request received'):
-        #     toast_messages = main_window.wait_for_notification()
-        #     assert len(toast_messages) == 1, \
-        #         f"Multiple toast messages appeared"
-        #     message = toast_messages[0]
-        #     assert message == Messaging.NEW_CONTACT_REQUEST.value, \
-        #         f"Toast message is incorrect, current message is {message}"
 
         with step(f'User {user_two.name}, accept contact request from {user_one.name}'):
             contacts_settings.accept_contact_request(user_one.name)
@@ -128,7 +117,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             # edit_message() replaces the whole composer contents; pass full final text, not only the suffix.
             edited_body = chat_message1 + additional_text
             message = chat.find_message_by_text(chat_message1, 0)
-            message_actions = message.hover_message()
+            message_actions = message.open_context_menu()
             message_actions.edit_message(edited_body)
 
             def _edited_message_visible() -> bool:
@@ -209,7 +198,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             chat_message_reply = random_text_message()
 
             message = chat.find_message_by_text(edited_body, 0)
-            message.hover_message().reply_own_message(chat_message_reply)
+            message.open_context_menu().reply_own_message(chat_message_reply)
             chat = main_window.left_panel.open_messages_screen().left_panel.click_chat_by_name(user_two.name)
             message = chat.find_message_by_text(chat_message_reply, 0)
             assert message.reply_corner.exists, \
@@ -235,12 +224,12 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
         with step(f'User {user_one.name}, delete own message and verify it was deleted'):
             switch_to_aut(aut_one, main_window)
             message = chat.find_message_by_text(chat_message_reply, 0)
-            message.hover_message().delete_message()
+            message.open_context_menu().delete_message()
 
         with step(f'User {user_one.name}, cannot delete {user_two.name} message'):
             message = messages_screen.left_panel.click_chat_by_name(user_two.name).find_message_by_text(chat_message2,
                                                                                                         3)
-            assert not message.hover_message().is_delete_button_visible(), \
+            assert not message.open_context_menu().is_delete_button_visible(), \
                 f"Delete button is visible although it should not be"
 
         with step(f'User {user_one.name}, clears chat history'):

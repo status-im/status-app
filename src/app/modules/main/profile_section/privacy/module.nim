@@ -55,6 +55,12 @@ method changePassword*(self: Module, password: string, newPassword: string, reke
 method isProfileMigratedToDEKEncryption*(self: Module): bool =
   return self.controller.isProfileMigratedToDEKEncryption()
 
+method getBiometricCredentialForStorage*(self: Module, keyUid: string, password: string): string =
+  return self.controller.getBiometricCredentialForStorage(keyUid, password)
+
+method setBiometricPreferenceNotNow*(self: Module) =
+  singletonInstance.localAccountSettings.setStoreToKeychainValue(LS_VALUE_NOT_NOW)
+
 method isMnemonicBackedUp*(self: Module): bool =
   return self.controller.isMnemonicBackedUp()
 
@@ -62,9 +68,6 @@ method mnemonicBackedUp*(self: Module) =
   self.view.emitMnemonicBackedUpSignal()
 
 method onPasswordChanged*(self: Module, success: bool, errorMsg: string) =
-  if singletonInstance.localAccountSettings.getStoreToKeychainValue() != LS_VALUE_NEVER:
-    singletonInstance.localAccountSettings.setStoreToKeychainValue(LS_VALUE_NOT_NOW)
-
   self.view.emitPasswordChangedSignal(success, errorMsg)
 
 method getMnemonic*(self: Module): string =

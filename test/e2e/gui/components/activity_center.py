@@ -4,15 +4,9 @@ import typing
 
 import allure
 import object as squish_object
-import squish
 
 import configs.timeouts
 import driver
-from driver.objects_access import (
-    describe_button_for_log,
-    find_notification_button_on_card,
-    item_is_visible,
-)
 from helpers.chat_helper import skip_message_backup_popup_if_visible
 from gui.elements.button import Button
 from gui.elements.object import QObject
@@ -21,38 +15,26 @@ from gui.objects_map import names, activity_center_names
 
 LOG = logging.getLogger(__name__)
 
+
 class ContactRequest:
 
     def __init__(self, obj):
         self.object = obj
-        self.contact_request: typing.Optional[str] = None
-        self.header: typing.Optional[QObject] = None
-        self.accept_button: typing.Optional[Button] = None
-        self.decline_button: typing.Optional[Button] = None
-        self.init_ui()
+        try:
+            title = getattr(obj, 'title', None)
+            self.contact_request = str(title).strip() if title not in (None, '') else None
+        except Exception:
+            self.contact_request = None
+        self.accept_button = Button(activity_center_names.notificationCardAcceptButton)
+        self.decline_button = Button(activity_center_names.notificationCardDeclineButton)
 
     def __repr__(self):
         return self.contact_request
 
-    def init_ui(self):
-        title = None
-        try:
-            title = getattr(self.object, 'title', None)
-            self.contact_request = str(title).strip() if title not in (None, '') else None
-        except Exception:
-            self.contact_request = None
-        LOG.info('ContactRequest init: title=%r -> contact_request=%r', title, self.contact_request)
-
-        self.header = QObject(activity_center_names.notificationCardHeader)
-        self.accept_button = Button(activity_center_names.notificationCardAcceptButton)
-        self.decline_button = Button(activity_center_names.notificationCardDeclineButton)
-
-
     @allure.step('Accept request')
     def accept(self):
-        time.sleep(1)
         self.accept_button.click()
-        assert not self.accept_button.is_visible
+        self.accept_button.wait_until_hidden()
         skip_message_backup_popup_if_visible()
 
     @allure.step('Decline request')
@@ -117,9 +99,15 @@ class ActivityCenter(QObject):
         self._close_button.click()
         return self
 
+    @allure.step('Wait until activity center is fully open')
     def _scroll_notification_into_view(self, card_ref) -> None:
         """ListView may clip the row; clicks outside the viewport often do nothing."""
         try:
+            slide = driver.waitForObject(
+                activity_center_names.activityCenterSlideContainer,
+                configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+            )
+            driver.waitFor(lambda: slide._fullyOpen, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
             list_obj = driver.waitForObject(
                 activity_center_names.activityCenterListView,
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC,

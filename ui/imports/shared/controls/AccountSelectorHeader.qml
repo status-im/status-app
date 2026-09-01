@@ -14,7 +14,7 @@ AccountSelector {
     control.rightInset: -6 //broken indicator positioning
     control.spacing: 4
 
-    indicator.color: Theme.palette.indirectColor1
+    indicator.color: textContent.color
 
     control.background: Rectangle {
         objectName: "headerBackground"

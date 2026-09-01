@@ -2999,6 +2999,10 @@ Do you wish to override the security check and continue?</source>
         <translation>Скасувати</translation>
     </message>
     <message>
+        <source>Biometric login disabled — re-enable it in Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Change</source>
         <translation>Змінити</translation>
     </message>
@@ -5203,24 +5207,12 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Status Network Token</source>
-        <translation>Токен мережі Status</translation>
-    </message>
-    <message>
-        <source>Dai</source>
-        <translation>Dai</translation>
-    </message>
-    <message>
         <source>United Arab Emirates dirham</source>
         <translation>Дирхам Об’єднаних Арабських Еміратів</translation>
     </message>
     <message>
         <source>Other Fiat</source>
         <translation>Інший фіат</translation>
-    </message>
-    <message>
-        <source>Afghan afghani</source>
-        <translation>Афганський афгані</translation>
     </message>
     <message>
         <source>Argentine peso</source>
@@ -5231,36 +5223,16 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>Австралійський долар</translation>
     </message>
     <message>
-        <source>Barbadian dollar</source>
-        <translation>Барбадоський долар</translation>
-    </message>
-    <message>
         <source>Bangladeshi taka</source>
         <translation>Бангладеська така</translation>
-    </message>
-    <message>
-        <source>Bulgarian lev</source>
-        <translation>Болгарський лев</translation>
     </message>
     <message>
         <source>Bahraini dinar</source>
         <translation>Бахрейнський динар</translation>
     </message>
     <message>
-        <source>Brunei dollar</source>
-        <translation>Брунейський долар</translation>
-    </message>
-    <message>
-        <source>Bolivian boliviano</source>
-        <translation>Болівійський болівіано</translation>
-    </message>
-    <message>
         <source>Brazillian real</source>
         <translation>Бразильський реал</translation>
-    </message>
-    <message>
-        <source>Bhutanese ngultrum</source>
-        <translation>Бутанський нгултрум</translation>
     </message>
     <message>
         <source>Canadian dollar</source>
@@ -5279,14 +5251,6 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>Китайський юань</translation>
     </message>
     <message>
-        <source>Colombian peso</source>
-        <translation>Колумбійське песо</translation>
-    </message>
-    <message>
-        <source>Costa Rican colón</source>
-        <translation>Костариканський колон</translation>
-    </message>
-    <message>
         <source>Czech koruna</source>
         <translation>Чеська крона</translation>
     </message>
@@ -5295,32 +5259,12 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>Данська крона</translation>
     </message>
     <message>
-        <source>Dominican peso</source>
-        <translation>Домініканське песо</translation>
-    </message>
-    <message>
-        <source>Egyptian pound</source>
-        <translation>Єгипетський фунт</translation>
-    </message>
-    <message>
-        <source>Ethiopian birr</source>
-        <translation>Ефіопський бир</translation>
-    </message>
-    <message>
         <source>Georgian lari</source>
         <translation>Грузинський ларі</translation>
     </message>
     <message>
-        <source>Ghanaian cedi</source>
-        <translation>Ганський седі</translation>
-    </message>
-    <message>
         <source>Hong Kong dollar</source>
         <translation>Гонконзький долар</translation>
-    </message>
-    <message>
-        <source>Croatian kuna</source>
-        <translation>Хорватська куна</translation>
     </message>
     <message>
         <source>Hungarian forint</source>
@@ -5339,48 +5283,16 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>Індійська рупія</translation>
     </message>
     <message>
-        <source>Icelandic króna</source>
-        <translation>Ісландська крона</translation>
-    </message>
-    <message>
-        <source>Jamaican dollar</source>
-        <translation>Ямайський долар</translation>
-    </message>
-    <message>
         <source>Japanese yen</source>
         <translation>Японська єна</translation>
-    </message>
-    <message>
-        <source>Kenyan shilling</source>
-        <translation>Кенійський шилінг</translation>
     </message>
     <message>
         <source>Kuwaiti dinar</source>
         <translation>Кувейтський динар</translation>
     </message>
     <message>
-        <source>Kazakhstani tenge</source>
-        <translation>Казахстанський тенге</translation>
-    </message>
-    <message>
         <source>Sri Lankan rupee</source>
         <translation>Шрі-ланкійська рупія</translation>
-    </message>
-    <message>
-        <source>Moroccan dirham</source>
-        <translation>Марокканський дирхам</translation>
-    </message>
-    <message>
-        <source>Moldovan leu</source>
-        <translation>Молдовський лей</translation>
-    </message>
-    <message>
-        <source>Mauritian rupee</source>
-        <translation>Маврикійська рупія</translation>
-    </message>
-    <message>
-        <source>Malawian kwacha</source>
-        <translation>Малавійська квача</translation>
     </message>
     <message>
         <source>Mexican peso</source>
@@ -5391,14 +5303,6 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>Малайзійський рингіт</translation>
     </message>
     <message>
-        <source>Mozambican metical</source>
-        <translation>Мозамбіцький метикал</translation>
-    </message>
-    <message>
-        <source>Namibian dollar</source>
-        <translation>Намібійський долар</translation>
-    </message>
-    <message>
         <source>Nigerian naira</source>
         <translation>Нігерійська найра</translation>
     </message>
@@ -5407,24 +5311,8 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>Норвезька крона</translation>
     </message>
     <message>
-        <source>Nepalese rupee</source>
-        <translation>Непальська рупія</translation>
-    </message>
-    <message>
         <source>New Zealand dollar</source>
         <translation>Новозеландський долар</translation>
-    </message>
-    <message>
-        <source>Omani rial</source>
-        <translation>Оманський ріал</translation>
-    </message>
-    <message>
-        <source>Peruvian sol</source>
-        <translation>Перуанський соль</translation>
-    </message>
-    <message>
-        <source>Papua New Guinean kina</source>
-        <translation>Кіна Папуа-Нової Гвінеї</translation>
     </message>
     <message>
         <source>Philippine peso</source>
@@ -5437,22 +5325,6 @@ Remember your password and don&apos;t share it with anyone.</source>
     <message>
         <source>Polish złoty</source>
         <translation>Польський злотий</translation>
-    </message>
-    <message>
-        <source>Paraguayan guaraní</source>
-        <translation>Парагвайський гуарані</translation>
-    </message>
-    <message>
-        <source>Qatari riyal</source>
-        <translation>Катарський ріал</translation>
-    </message>
-    <message>
-        <source>Romanian leu</source>
-        <translation>Румунський лей</translation>
-    </message>
-    <message>
-        <source>Serbian dinar</source>
-        <translation>Сербський динар</translation>
     </message>
     <message>
         <source>Saudi riyal</source>
@@ -5471,16 +5343,8 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation>Тайський бат</translation>
     </message>
     <message>
-        <source>Trinidad and Tobago dollar</source>
-        <translation>Долар Тринідаду і Тобаго</translation>
-    </message>
-    <message>
         <source>New Taiwan dollar</source>
         <translation>Новий тайванський долар</translation>
-    </message>
-    <message>
-        <source>Tanzanian shilling</source>
-        <translation>Танзанійський шилінг</translation>
     </message>
     <message>
         <source>Turkish lira</source>
@@ -5489,18 +5353,6 @@ Remember your password and don&apos;t share it with anyone.</source>
     <message>
         <source>Ukrainian hryvnia</source>
         <translation>Українська гривня</translation>
-    </message>
-    <message>
-        <source>Ugandan shilling</source>
-        <translation>Угандійський шилінг</translation>
-    </message>
-    <message>
-        <source>Uruguayan peso</source>
-        <translation>Уругвайське песо</translation>
-    </message>
-    <message>
-        <source>Venezuelan bolívar</source>
-        <translation>Венесуельський болівар</translation>
     </message>
     <message>
         <source>Vietnamese đồng</source>
@@ -11426,24 +11278,20 @@ to load</source>
 <context>
     <name>MessageContextMenuView</name>
     <message>
-        <source>Reply to</source>
-        <translation>Відповісти</translation>
-    </message>
-    <message>
-        <source>Edit message</source>
-        <translation>Редагувати</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Копіювати</translation>
-    </message>
-    <message>
         <source>Copy message</source>
         <translation>Копіювати</translation>
     </message>
     <message>
-        <source>Copy Message Id</source>
-        <translation>Копіювати ID</translation>
+        <source>Reply</source>
+        <translation type="unfinished">Відповісти</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy selected</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy link to message</source>
@@ -11458,12 +11306,12 @@ to load</source>
         <translation>Закріпити</translation>
     </message>
     <message>
-        <source>Mark as unread</source>
-        <translation>Непрочитане</translation>
+        <source>Delete</source>
+        <translation type="unfinished">Видалити</translation>
     </message>
     <message>
-        <source>Delete message</source>
-        <translation>Видалити</translation>
+        <source>Mark as unread</source>
+        <translation>Непрочитане</translation>
     </message>
 </context>
 <context>
@@ -11530,30 +11378,6 @@ to load</source>
     <message>
         <source>GIF</source>
         <translation>GIF</translation>
-    </message>
-    <message>
-        <source>Reply</source>
-        <translation>Відповісти</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>Редагувати</translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation>Відкріпити</translation>
-    </message>
-    <message>
-        <source>Pin</source>
-        <translation>Закріпити</translation>
-    </message>
-    <message>
-        <source>Mark as unread</source>
-        <translation>Непрочитане</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>Видалити</translation>
     </message>
     <message>
         <source>Unknown message. Trying to recover it</source>
@@ -13443,6 +13267,10 @@ to load</source>
     <message>
         <source>Continue</source>
         <translation>Продовжити</translation>
+    </message>
+    <message>
+        <source>Please enter your password — biometrics cannot be used for this action</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Failed to update stored credentials</source>

@@ -581,9 +581,10 @@ StatusDialog {
 
             objectName: "accountSelector"
 
-            y: -height - Theme.bigPadding
             anchors.left: parent.left
             anchors.leftMargin: -Theme.xlPadding
+            anchors.bottom: parent.top
+            anchors.bottomMargin: root.topPadding + 4
 
             model: root.accountsModel
 
@@ -894,7 +895,7 @@ StatusDialog {
     footer: SendModalFooter {
         objectName: "sendModalFooter"
 
-        width: root.width
+        bottomSheet: root.bottomSheet
 
         estimatedTime: root.estimatedTime
         estimatedFees: root.estimatedFiatFees

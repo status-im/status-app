@@ -657,7 +657,7 @@ StatusSectionLayout {
                 peerCount: root.logosNetworkStore.peerCount
                 peerCountLoading: root.logosNetworkStore.peerCountLoading
                 peerCountError: root.logosNetworkStore.peerCountError
-                pollingActive: profileContainer.currentIndex === Constants.settingsSubsection.logosNetworkSettings
+                pollingActive: StackView.visible
                 onRefreshPeerCountRequested: root.logosNetworkStore.refreshPeerCount()
             }
         }

@@ -29,7 +29,8 @@ class WalletLeftPanel(BasePage):
             return False
         toolbar_back = BaseLocators.tid("toolBarBackButton")
         if self.is_element_visible(toolbar_back, timeout=2):
-            self.safe_click(toolbar_back, timeout=3)
+            # try_click: bool-contract helper — the panel re-check below answers.
+            self.try_click(toolbar_back, timeout=3)
         return self.is_element_visible(self.locators.ADD_ACCOUNT_BUTTON, timeout=3)
 
     def is_loaded(self, timeout: int = 15) -> bool:
@@ -69,7 +70,7 @@ class WalletLeftPanel(BasePage):
         except Exception as exc:
             self.logger.debug("Unable to reset clipboard before copy: %s", exc)
 
-        if not self.safe_click(self.locators.ACCOUNT_MENU_COPY_ADDRESS, timeout=timeout):
+        if not self.try_click(self.locators.ACCOUNT_MENU_COPY_ADDRESS, timeout=timeout):
             self.logger.error("Failed to click Copy Address in context menu")
             return None
 
@@ -145,7 +146,7 @@ class WalletLeftPanel(BasePage):
                     self.locators.FOOTER_RECEIVE, max_swipes=3, timeout=2,
                 )
 
-        if not self.safe_click(
+        if not self.try_click(
             self.locators.FOOTER_RECEIVE,
             fallback_locators=[fallback],
             timeout=timeout,
@@ -204,7 +205,7 @@ class WalletLeftPanel(BasePage):
 
     def open_add_account_popup(self) -> AddEditAccountModal | None:
         try:
-            self.safe_click(self.locators.ADD_ACCOUNT_BUTTON, timeout=5)
+            self.click(self.locators.ADD_ACCOUNT_BUTTON, timeout=5)
         except Exception as e:
             self.logger.error("Add account button not clickable: %s", e)
             self.take_screenshot("add_account_button_not_clickable")
@@ -224,7 +225,9 @@ class WalletLeftPanel(BasePage):
         if not modal.set_name(name):
             self.logger.error(f"Failed to set account name to '{name}'")
             return False
-        modal.save_changes()
+        if not modal.save_changes():
+            self.logger.error("Failed to save account changes")
+            return False
 
         auth_modal = KeycardAuthenticationModal(self.driver)
         if not auth_modal.is_displayed(timeout=5):
@@ -350,7 +353,7 @@ class WalletLeftPanel(BasePage):
             self.logger.error("Failed to open account context menu via long-press")
             return False
 
-        self.safe_click(self.locators.ACCOUNT_MENU_EDIT, timeout=5)
+        self.click(self.locators.ACCOUNT_MENU_EDIT, timeout=5)
 
         modal = AddEditAccountModal(self.driver)
         if not modal.is_displayed(timeout=10):
@@ -361,7 +364,9 @@ class WalletLeftPanel(BasePage):
             self.logger.error(f"Failed to set account name to '{new_name}'")
             return False
 
-        modal.save_changes()
+        if not modal.save_changes():
+            self.logger.error("Failed to save account changes")
+            return False
 
         if not modal.wait_until_hidden(timeout=10):
             self.logger.error("Edit account modal did not close after saving")
@@ -380,7 +385,7 @@ class WalletLeftPanel(BasePage):
         Returns:
             bool: True if deletion completed successfully.
         """
-        self.safe_click(self.locators.ACCOUNT_MENU_DELETE, timeout=5)
+        self.click(self.locators.ACCOUNT_MENU_DELETE, timeout=5)
 
         confirmation = RemoveAccountConfirmationModal(self.driver)
         if confirmation.is_displayed(timeout=5):

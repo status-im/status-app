@@ -25,15 +25,15 @@ def wait_for_wallet_balances_loaded(
     ), f'Wallet total balance is still loading, got: {balance.text!r}'
 
 
-def _asset_items_finished_loading(asset_item) -> bool:
-    items = driver.findAllObjects(asset_item.real_name)
-    if not items:
-        return False
+def is_assets_tab_content_loaded(asset_item) -> bool:
+    views = driver.findAllObjects(wallet_names.assets_view)
     try:
-        return not any(getattr(item, 'balanceLoading', False) for item in items)
+        if not (views and getattr(views[0], 'visible', False)):
+            return False
     except (RuntimeError, AttributeError):
-        # Squish may briefly return destroyed/null asset delegates while the list rebuilds.
         return False
+
+    return bool(driver.findAllObjects(asset_item.real_name))
 
 
 def is_activity_tab_content_loaded() -> bool:

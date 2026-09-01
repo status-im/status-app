@@ -23,20 +23,6 @@ function run {
     }
 }
 
-# Install Protobuf tool necessary to generate status-go files.
-function Install-Protobuf-Go {
-    $ProtocGenVersion = "v1.34.1"
-    $ProtocGenZIP = "protoc-gen-go.$ProtocGenVersion.windows.amd64.zip"
-    $ProtocGenURL = "https://github.com/protocolbuffers/protobuf-go/releases/download/$ProtocGenVersion/$ProtocGenZIP"
-    $ProtocGenSHA256 = "403a619c4698fe5c4162c7f855803de3e8d8e0c187d7d51cbeb8d599f7a5a073"
-    (New-Object System.Net.WebClient).DownloadFile($ProtocGenURL, "$env:USERPROFILE\$ProtocGenZIP")
-    $ProtocGenRealSHA256 = (Get-Filehash -algorithm SHA256 "$env:USERPROFILE\$ProtocGenZIP").Hash
-    if ($ProtocGenRealSHA256 -ne $ProtocGenSHA256) {
-        throw "SHA256 hash does not match for $ProtocGenZIP !"
-    }
-    New-Item "$env:USERPROFILE\go\bin" -ItemType Directory -ea 0
-    run 7z x "-o$env:USERPROFILE\go\bin" -y "$env:USERPROFILE\$ProtocGenZIP"
-}
 
 function Scoop-Install([string]$package, [string]$version) {
     $appName = ($package -split '/')[-1]
@@ -72,12 +58,12 @@ function Install-Dependencies {
     Scoop-Install 'status/python'        '3.13.5'
     Scoop-Install 'status/mingw-winlibs' '15.2.0-13.0.0-r5'
     Scoop-Install 'status/vcredist2022'  '14.44.35211.0'
-    Scoop-Install 'status/protobuf'      '3.20.1'
+    Scoop-Install 'status/protobuf'      '36.0'
     Scoop-Install 'status/openssl-lts'   '3.0.19'
     Scoop-Install 'status/inno-setup'    '6.7.0'
     Scoop-Install 'status/msys2'         '2025-12-13'
     Scoop-Install 'status/llvm'          '22.1.8'
-    Scoop-Install 'status/temurin17-jdk' '17.0.19-10'
+    Scoop-Install 'status/openjdk25'     '25.0.2-10'
 }
 
 function Install-MSYS2-Packages {
@@ -153,7 +139,7 @@ export PATH=`"/c/BuildTools/MSBuild/Current/Bin:`$PATH`"
 export PATH=`"/c/BuildTools/VC/Tools/MSVC/14.44.35207/bin:`$PATH`"
 export PATH=`"/c/ProgramData/scoop/apps/openssl-lts/current/bin:`$PATH`"
 export PATH=`"/c/ProgramData/scoop/apps/inno-setup/current:`$PATH`"
-export PATH=`"/c/ProgramData/scoop/apps/temurin17-jdk/17.0.19-10/bin:`$PATH`"
+export PATH=`"/c/ProgramData/scoop/apps/openjdk25/25.0.2-10/bin:`$PATH`"
 "@
 }
 
@@ -169,7 +155,6 @@ If ($MyInvocation.InvocationName -ne ".") {
     Install-Scoop
     Install-Dependencies
     Install-MSYS2-Packages
-    Install-Protobuf-Go
     Install-Qt-SDK
     Install-VC-BuildTools
     Show-Success-Message

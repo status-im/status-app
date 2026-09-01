@@ -396,12 +396,11 @@ submit_shared_addresses_to_join_StatusButton = {"container": statusDesktop_mainW
 # Pinned messages
 pinnedMessagesPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "PinnedMessagesPopup",
                        "type": "PopupItem", "visible": True}
-unpinButton_StatusFlatRoundButton = {"container": statusDesktop_mainWindow_overlay, "id": "unpinButton",
-                                     "type": "StatusFlatRoundButton", "unnamed": 1, "visible": True}
 headerActionsCloseButton_StatusFlatRoundButton = {"container": statusDesktop_mainWindow_overlay,
                                                   "objectName": "headerActionsCloseButton",
                                                   "type": "StatusFlatRoundButton", "visible": True}
-pinMessageDetails = {"container": statusDesktop_mainWindow_overlay, "objectName": "statusPinMessageDetails", "type": "StatusPinMessageDetails", "visible": True}
+pinMessageDetails_in_pinnedPopup = {"container": pinnedMessagesPopup, "objectName": "statusPinMessageDetails",
+                                    "type": "StatusPinMessageDetails", "visible": True}
 
 # Introduce Yourself popup
 introduceYourselfPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "IntroduceYourselfPopup",
@@ -421,6 +420,10 @@ contactRequestToChatKeyModal = {"container": statusDesktop_mainWindow_overlay,
 sendContactRequestModal_ChatKey_Input_TextEdit = {"container": statusDesktop_mainWindow_overlay,
                                                   "objectName": "SendContactRequestModal_ChatKey_Input",
                                                   "type": "TextEdit", "visible": True}
+sendContactRequestModal_ChatKey_PasteButton = {"container": contactRequestToChatKeyModal,
+                                               "type": "StatusPasteButton", "visible": True}
+sendContactRequestModal_ChatKey_ValidationIcon = {"container": contactRequestToChatKeyModal,
+                                                  "type": "StatusIcon", "visible": True}
 sendContactRequestModal_SayWhoYouAre_Input_TextEdit = {"container": statusDesktop_mainWindow_overlay,
                                                        "objectName": "SendContactRequestModal_SayWhoYouAre_Input",
                                                        "type": "TextEdit", "visible": True}
@@ -487,7 +490,7 @@ o_StatusCommunityTag = {"container": statusDesktop_mainWindow_overlay, "objectNa
 confirm_Community_Tags_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
                                        "objectName": "confirmCommunityTagsButton", "type": "StatusButton",
                                        "visible": True}
-tags_edit_TextEdit = {"container": statusDesktop_mainWindow_overlay, "id": "edit", "type": "TextEdit", "unnamed": 1,
+tags_edit_TextEdit = {"container": statusStackModal, "id": "edit", "type": "TextEdit", "unnamed": 1,
                       "visible": True}
 selected_tags_text = {"container": statusDesktop_mainWindow_overlay, "type": "StatusBaseText", "unnamed": 1,
                       "visible": True}
@@ -549,6 +552,8 @@ mainWallet_Saved_Addreses_Popup_Address_Add_Button = {"container": statusDesktop
 # Context Menu
 contextMenu_PopupItem = {"container": statusDesktop_mainWindow_overlay, "objectName": "StatusMenu", "type": "PopupItem",
                          "visible": True}
+pinnedMessagesPopup_unpin_StatusMenuItem = {"container": contextMenu_PopupItem, "text": "Unpin",
+                                            "type": "StatusMenuItem", "visible": True}
 contextMenuItem = {"container": statusDesktop_mainWindow_overlay, "type": "StatusBaseText", "unnamed": 1,
                    "visible": True}
 contextMenuItem_AddWatchOnly = {"container": statusDesktop_mainWindow_overlay, "enabled": True,

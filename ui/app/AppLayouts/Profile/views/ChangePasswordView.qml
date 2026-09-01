@@ -42,6 +42,9 @@ SettingsContentBase {
 
         property bool enablingBiometrics: false
 
+        // Set when a credential-update failure forces a deletion
+        property bool pendingFailureDelete: false
+
         readonly property bool biometricsEnabled: {
             reevaluateTrigger // Reference for binding
             return keychain.hasCredential(privacyStore.keyUid) === Keychain.StatusSuccess
@@ -75,8 +78,10 @@ SettingsContentBase {
                 return
             d.enablingBiometrics = false
 
-            const credential = pin !== "" ? pin : password
-            // If credential not retrieved (cancelled or failed)
+            const credential = pin !== "" ?
+                                 pin
+                               : root.privacyStore.getBiometricCredentialForStorage(keyUid, password)
+            // If credential not retrieved (cancelled, failed, or could not be prepared)
             if (keyUid === "" || credential === "") {
                 d.showErrorToast()
                 return
@@ -97,6 +102,15 @@ SettingsContentBase {
 
         function onCredentialSaved(account: string) {
             d.showSuccessToast()
+            d.reevaluateHasCredential()
+        }
+
+        function onCredentialDeleted(account: string) {
+            if (!d.pendingFailureDelete || account !== root.privacyStore.keyUid)
+                return
+            d.pendingFailureDelete = false
+            // The global deletion handler records a permanent "never" opt-out
+            Qt.callLater(() => root.privacyStore.setBiometricPreferenceNotNow())
             d.reevaluateHasCredential()
         }
 
@@ -213,8 +227,29 @@ SettingsContentBase {
                 function onPasswordChanged(success: bool, errorMsg: string) {
                     if (success) {
                         confirmPasswordChangePopup.passwordSuccessfulyChanged()
-                        keychain.updateCredential(privacyStore.keyUid,
-                                                  choosePasswordForm.newPswText)
+                        if (root.keychain.hasCredential(root.privacyStore.keyUid) === Keychain.StatusSuccess) {
+                            const cred = root.privacyStore.getBiometricCredentialForStorage(root.privacyStore.keyUid, choosePasswordForm.newPswText)
+                            const ok = cred !== ""
+                                     && root.keychain.updateCredential(root.privacyStore.keyUid, cred) === Keychain.StatusSuccess
+                            if (!ok) {
+                                // Never leave a stale credential behind: disable biometrics
+                                d.pendingFailureDelete = true
+                                const deleteStatus = root.keychain.deleteCredential(root.privacyStore.keyUid)
+                                if (deleteStatus !== Keychain.StatusSuccess) {
+                                    // No credentialDeleted signal will arrive - clear the pending flag
+                                    d.pendingFailureDelete = false
+                                    root.privacyStore.setBiometricPreferenceNotNow()
+                                }
+                                Global.displayToastMessage(
+                                            qsTr("Biometric login disabled — re-enable it in Settings"),
+                                            "",
+                                            "warning",
+                                            false,
+                                            Constants.ephemeralNotificationType.danger,
+                                            "")
+                                d.reevaluateHasCredential()
+                            }
+                        }
                         // Reset, cause no restart in this case.
                         choosePasswordForm.reset()
                         return

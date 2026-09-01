@@ -45,8 +45,15 @@ def test_mint_owner_and_tokenmaster_tokens(main_window, user_account, network_na
         edit_owner_token_view.select_network(network_name)
 
     with step('Verify fees title and gas fees exist'):
-        assert driver.waitFor(lambda: edit_owner_token_view.get_fee_title == 'Mint ' + community.name + MintOwnerTokensElements.SIGN_TRANSACTION_MINT_TITLE.value + network_name,
-                              configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
+        expected_fee_title = (
+            'Mint ' + community.name
+            + MintOwnerTokensElements.SIGN_TRANSACTION_MINT_TITLE.value
+            + network_name
+        )
+        actual_fee_title = edit_owner_token_view.get_fee_title
+        assert actual_fee_title == expected_fee_title, (
+            f'{actual_fee_title!r} != {expected_fee_title!r}'
+        )
         assert driver.waitFor(lambda: edit_owner_token_view.get_fee_total_value != '',
                               configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
 

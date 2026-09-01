@@ -1,12 +1,13 @@
-import time
 import typing
 
 import allure
 
 import configs
+import driver
 from gui.components.confirm_recovery_phrase import ConfirmRecoveryPhrase
 from gui.elements.button import Button
-from gui.elements.object import QObject
+from gui.elements.check_box import CheckBox
+from gui.elements.object import QObject, set_text_property_on_object
 from gui.elements.scroll import Scroll
 from gui.elements.text_edit import TextEdit
 from gui.elements.text_label import TextLabel
@@ -30,6 +31,7 @@ class KeycardManagementPopup(QObject):
         self._seed_phrase_scroll = Scroll(keycard_names.keycardManagementSeedPhraseScrollView)
         self.unknown_pin_button = Button(keycard_names.keycardManagementUnknownPinButton)
         self.done_button = Button(keycard_names.keycardManagementDoneButton)
+        self.understand_checkbox = CheckBox(keycard_names.keycardManagementUnderstandCheckBox)
         self.key_pair_name_input = QObject(keycard_names.keycardKeyPairNameInput)
         self.account_name_input = QObject(keycard_names.keycardManageAccountNameInput)
 
@@ -51,6 +53,14 @@ class KeycardManagementPopup(QObject):
         self.unknown_pin_button.wait_until_appears(timeout_msec)
         self.unknown_pin_button.click()
         self.wait_until_hidden(timeout_msec)
+        return self
+
+    @allure.step('Confirm selected key pair and continue')
+    def confirm_selected_key_pair(self):
+        self.understand_checkbox.wait_until_appears()
+        self.understand_checkbox.set(True)
+        self.next_button.wait_until_enabled()
+        self.next_button.click()
         return self
 
     @allure.step('Enter new PIN {pin}')
@@ -107,11 +117,24 @@ class KeycardManagementPopup(QObject):
             raise RuntimeError('Wrong amount of seed words', len(seed_phrase_words))
 
         for index, word in enumerate(seed_phrase_words, start=1):
+            self.seed_phrase_input.real_name = dict(
+                keycard_names.keycardManagementSeedPhraseInputField)
             self.seed_phrase_input.real_name['objectName'] = f'enterSeedPhraseInputField{index}'
-            self._seed_phrase_scroll.vertical_scroll_down(self.seed_phrase_input)
-            self.seed_phrase_input.text = word
-            time.sleep(0.2)
+            try:
+                self._seed_phrase_scroll.vertical_scroll_down(self.seed_phrase_input)
+            except LookupError:
+                pass
+            field = driver.waitForObjectExists(
+                self.seed_phrase_input.real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
+            set_text_property_on_object(field, word)
+            field.focus = False
 
+        assert driver.waitFor(
+            lambda: getattr(
+                driver.waitForObjectExists(self.next_button.real_name, 200),
+                'enabled', False),
+            configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        ), 'Next did not enable after entering the recovery phrase'
         self.next_button.click()
         return self
 

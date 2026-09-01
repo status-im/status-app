@@ -271,11 +271,12 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 assert not messages_screen.group_chat.is_message_area_enabled
 
             with step('Verify members in a group members list'):
-                assert user_one.name in messages_screen.right_panel.members
-                assert user_two.name in messages_screen.right_panel.members
+                assert driver.waitFor(lambda: user_one.name in messages_screen.right_panel.members,
+                                      configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
                 assert driver.waitFor(lambda: user_three.name not in messages_screen.right_panel.members,
                                       configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-                assert len(messages_screen.right_panel.members) == 2
+                assert driver.waitFor(lambda: len(messages_screen.right_panel.members) == 2,
+                                      configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
 
             with step('Leave group'):
                 messages_screen.group_chat.leave_group().confirm_leaving()

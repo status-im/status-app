@@ -2985,6 +2985,10 @@ Do you wish to override the security check and continue?</source>
         <translation>Annuler</translation>
     </message>
     <message>
+        <source>Biometric login disabled — re-enable it in Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Change</source>
         <translation>Changer</translation>
     </message>
@@ -5179,24 +5183,12 @@ N’oubliez pas votre mot de passe et ne le partagez avec personne.</translation
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Status Network Token</source>
-        <translation>Jeton Status Network</translation>
-    </message>
-    <message>
-        <source>Dai</source>
-        <translation>Dai</translation>
-    </message>
-    <message>
         <source>United Arab Emirates dirham</source>
         <translation>Dirham des Émirats arabes unis</translation>
     </message>
     <message>
         <source>Other Fiat</source>
         <translation>Autres devises fiduciaires</translation>
-    </message>
-    <message>
-        <source>Afghan afghani</source>
-        <translation>Afghani afghan</translation>
     </message>
     <message>
         <source>Argentine peso</source>
@@ -5207,36 +5199,16 @@ N’oubliez pas votre mot de passe et ne le partagez avec personne.</translation
         <translation>Dollar australien</translation>
     </message>
     <message>
-        <source>Barbadian dollar</source>
-        <translation>Dollar barbadien</translation>
-    </message>
-    <message>
         <source>Bangladeshi taka</source>
         <translation>Taka bangladais</translation>
-    </message>
-    <message>
-        <source>Bulgarian lev</source>
-        <translation>Lev bulgare</translation>
     </message>
     <message>
         <source>Bahraini dinar</source>
         <translation>Dinar bahreïni</translation>
     </message>
     <message>
-        <source>Brunei dollar</source>
-        <translation>Dollar du Brunei</translation>
-    </message>
-    <message>
-        <source>Bolivian boliviano</source>
-        <translation>boliviano bolivien</translation>
-    </message>
-    <message>
         <source>Brazillian real</source>
         <translation>real brésilien</translation>
-    </message>
-    <message>
-        <source>Bhutanese ngultrum</source>
-        <translation>ngultroum bhoutanais</translation>
     </message>
     <message>
         <source>Canadian dollar</source>
@@ -5255,14 +5227,6 @@ N’oubliez pas votre mot de passe et ne le partagez avec personne.</translation
         <translation>yuan chinois</translation>
     </message>
     <message>
-        <source>Colombian peso</source>
-        <translation>peso colombien</translation>
-    </message>
-    <message>
-        <source>Costa Rican colón</source>
-        <translation>colón costaricien</translation>
-    </message>
-    <message>
         <source>Czech koruna</source>
         <translation>couronne tchèque</translation>
     </message>
@@ -5271,32 +5235,12 @@ N’oubliez pas votre mot de passe et ne le partagez avec personne.</translation
         <translation>couronne danoise</translation>
     </message>
     <message>
-        <source>Dominican peso</source>
-        <translation>peso dominicain</translation>
-    </message>
-    <message>
-        <source>Egyptian pound</source>
-        <translation>livre égyptienne</translation>
-    </message>
-    <message>
-        <source>Ethiopian birr</source>
-        <translation>birr éthiopien</translation>
-    </message>
-    <message>
         <source>Georgian lari</source>
         <translation>lari géorgien</translation>
     </message>
     <message>
-        <source>Ghanaian cedi</source>
-        <translation>cedi ghanéen</translation>
-    </message>
-    <message>
         <source>Hong Kong dollar</source>
         <translation>dollar hongkongais</translation>
-    </message>
-    <message>
-        <source>Croatian kuna</source>
-        <translation>kuna croate</translation>
     </message>
     <message>
         <source>Hungarian forint</source>
@@ -5315,48 +5259,16 @@ N’oubliez pas votre mot de passe et ne le partagez avec personne.</translation
         <translation>Roupie indienne</translation>
     </message>
     <message>
-        <source>Icelandic króna</source>
-        <translation>Couronne islandaise</translation>
-    </message>
-    <message>
-        <source>Jamaican dollar</source>
-        <translation>Dollar jamaïcain</translation>
-    </message>
-    <message>
         <source>Japanese yen</source>
         <translation>Yen japonais</translation>
-    </message>
-    <message>
-        <source>Kenyan shilling</source>
-        <translation>Shilling kenyan</translation>
     </message>
     <message>
         <source>Kuwaiti dinar</source>
         <translation>Dinar koweïtien</translation>
     </message>
     <message>
-        <source>Kazakhstani tenge</source>
-        <translation>Tenge kazakh</translation>
-    </message>
-    <message>
         <source>Sri Lankan rupee</source>
         <translation>Roupie sri lankaise</translation>
-    </message>
-    <message>
-        <source>Moroccan dirham</source>
-        <translation>Dirham marocain</translation>
-    </message>
-    <message>
-        <source>Moldovan leu</source>
-        <translation>Leu moldave</translation>
-    </message>
-    <message>
-        <source>Mauritian rupee</source>
-        <translation>Roupie mauricienne</translation>
-    </message>
-    <message>
-        <source>Malawian kwacha</source>
-        <translation>Kwacha malawien</translation>
     </message>
     <message>
         <source>Mexican peso</source>
@@ -5367,14 +5279,6 @@ N’oubliez pas votre mot de passe et ne le partagez avec personne.</translation
         <translation>Ringgit malaisien</translation>
     </message>
     <message>
-        <source>Mozambican metical</source>
-        <translation>Métical mozambicain</translation>
-    </message>
-    <message>
-        <source>Namibian dollar</source>
-        <translation>Dollar namibien</translation>
-    </message>
-    <message>
         <source>Nigerian naira</source>
         <translation>Naira nigérian</translation>
     </message>
@@ -5383,24 +5287,8 @@ N’oubliez pas votre mot de passe et ne le partagez avec personne.</translation
         <translation>Couronne norvégienne</translation>
     </message>
     <message>
-        <source>Nepalese rupee</source>
-        <translation>Roupie népalaise</translation>
-    </message>
-    <message>
         <source>New Zealand dollar</source>
         <translation>dollar néo-zélandais</translation>
-    </message>
-    <message>
-        <source>Omani rial</source>
-        <translation>rial omanais</translation>
-    </message>
-    <message>
-        <source>Peruvian sol</source>
-        <translation>sol péruvien</translation>
-    </message>
-    <message>
-        <source>Papua New Guinean kina</source>
-        <translation>kina papouasien</translation>
     </message>
     <message>
         <source>Philippine peso</source>
@@ -5413,22 +5301,6 @@ N’oubliez pas votre mot de passe et ne le partagez avec personne.</translation
     <message>
         <source>Polish złoty</source>
         <translation>złoty polonais</translation>
-    </message>
-    <message>
-        <source>Paraguayan guaraní</source>
-        <translation>guarani paraguayen</translation>
-    </message>
-    <message>
-        <source>Qatari riyal</source>
-        <translation>rial qatarien</translation>
-    </message>
-    <message>
-        <source>Romanian leu</source>
-        <translation>leu roumain</translation>
-    </message>
-    <message>
-        <source>Serbian dinar</source>
-        <translation>dinar serbe</translation>
     </message>
     <message>
         <source>Saudi riyal</source>
@@ -5447,16 +5319,8 @@ N’oubliez pas votre mot de passe et ne le partagez avec personne.</translation
         <translation>baht thaïlandais</translation>
     </message>
     <message>
-        <source>Trinidad and Tobago dollar</source>
-        <translation>dollar de Trinité-et-Tobago</translation>
-    </message>
-    <message>
         <source>New Taiwan dollar</source>
         <translation>nouveau dollar taïwanais</translation>
-    </message>
-    <message>
-        <source>Tanzanian shilling</source>
-        <translation>shilling tanzanien</translation>
     </message>
     <message>
         <source>Turkish lira</source>
@@ -5465,18 +5329,6 @@ N’oubliez pas votre mot de passe et ne le partagez avec personne.</translation
     <message>
         <source>Ukrainian hryvnia</source>
         <translation>hryvnia ukrainienne</translation>
-    </message>
-    <message>
-        <source>Ugandan shilling</source>
-        <translation>shilling ougandais</translation>
-    </message>
-    <message>
-        <source>Uruguayan peso</source>
-        <translation>peso uruguayen</translation>
-    </message>
-    <message>
-        <source>Venezuelan bolívar</source>
-        <translation>bolívar vénézuélien</translation>
     </message>
     <message>
         <source>Vietnamese đồng</source>
@@ -11363,24 +11215,20 @@ chargement</translation>
 <context>
     <name>MessageContextMenuView</name>
     <message>
-        <source>Reply to</source>
-        <translation>Répondre à</translation>
-    </message>
-    <message>
-        <source>Edit message</source>
-        <translation>Modifier le message</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Copier</translation>
-    </message>
-    <message>
         <source>Copy message</source>
         <translation>Copier le message</translation>
     </message>
     <message>
-        <source>Copy Message Id</source>
-        <translation>Copier l’ID du message</translation>
+        <source>Reply</source>
+        <translation type="unfinished">Répondre</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation type="unfinished">Modifier</translation>
+    </message>
+    <message>
+        <source>Copy selected</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy link to message</source>
@@ -11395,12 +11243,12 @@ chargement</translation>
         <translation>Épingler</translation>
     </message>
     <message>
-        <source>Mark as unread</source>
-        <translation>Marquer comme non lu</translation>
+        <source>Delete</source>
+        <translation type="unfinished">Supprimer</translation>
     </message>
     <message>
-        <source>Delete message</source>
-        <translation>Supprimer le message</translation>
+        <source>Mark as unread</source>
+        <translation>Marquer comme non lu</translation>
     </message>
 </context>
 <context>
@@ -11467,30 +11315,6 @@ chargement</translation>
     <message>
         <source>GIF</source>
         <translation>GIF</translation>
-    </message>
-    <message>
-        <source>Reply</source>
-        <translation>Répondre</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>Modifier</translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation>Dépingler</translation>
-    </message>
-    <message>
-        <source>Pin</source>
-        <translation>Épingler</translation>
-    </message>
-    <message>
-        <source>Mark as unread</source>
-        <translation>Marquer comme non lu</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>Supprimer</translation>
     </message>
     <message>
         <source>Unknown message. Trying to recover it</source>
@@ -13373,6 +13197,10 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <message>
         <source>Continue</source>
         <translation>Continuer</translation>
+    </message>
+    <message>
+        <source>Please enter your password — biometrics cannot be used for this action</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Failed to update stored credentials</source>
