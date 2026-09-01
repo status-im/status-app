@@ -150,10 +150,11 @@ QtObject:
     if not self.installedStickerPacksLoaded:
       self.delegate.getInstalledStickerPacks()
 
-  proc send*(self: View, channelId: string, hash: string, replyTo: string, pack: string, url: string) {.slot.} =
+  proc send*(self: View, channelId: string, hash: string, replyTo: string, pack: string, url: string,
+      threadId: string) {.slot.} =
     let sticker = initItem(hash, pack, url)
     self.addRecentStickerToList(sticker)
-    self.delegate.sendSticker(channelId, replyTo, sticker)
+    self.delegate.sendSticker(channelId, replyTo, sticker, threadId)
 
   proc getStickersMarketAddress(self: View): string {.slot.} =
     return self.stickersMarketAddress

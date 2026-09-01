@@ -656,7 +656,8 @@ Item {
                                                    hashId,
                                                    chatInput.isReply ? chatInput.replyMessageId : "",
                                                    packId,
-                                                   url)
+                                                   url,
+                                                   d.activeMessagesStore.threadId)
                     }
 
                     onIsReplyChanged: {
