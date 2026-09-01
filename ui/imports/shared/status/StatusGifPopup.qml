@@ -51,14 +51,14 @@ StatusDropdown {
     property var gifColumnB: null
     property var gifColumnC: null
 
-    property var isFavorite: function () {}
-    property var addToRecentsGif: function () {}
-    property var searchGifsRequest: function () {}
+    property var isFavorite: function (id) {}
+    property var addToRecentsGif: function (id) {}
+    property var searchGifsRequest: function (query) {}
     property var getTrendingsGifs: function () {}
     property var getFavoritesGifs: function () {}
     property var getRecentsGifs: function () {}
-    property var toggleFavoriteGif: function () {}
-    property var setGifUnfurlingEnabled: function () {}
+    property var toggleFavoriteGif: function (id, reload) {}
+    property var setGifUnfurlingEnabled: function (value) {}
 
     signal gifSelected(string url)
     signal enableThirdpartyServicesRequested
@@ -67,20 +67,6 @@ StatusDropdown {
     implicitWidth: 360
 
     fillHeightOnBottomSheet: true
-
-    background: Rectangle {
-        radius: Theme.radius
-        color: Theme.palette.background
-        border.color: Theme.palette.border
-        layer.enabled: true
-        layer.effect: DropShadow {
-            verticalOffset: 3
-            radius: 8
-            samples: 15
-            cached: true
-            color: "#22000000"
-        }
-    }
 
     onAboutToShow: {
         searchBox.clear()
@@ -103,24 +89,23 @@ StatusDropdown {
         id: d
 
         readonly property int minimumContentHeight: 440
-        readonly property int headerMargin: root.Theme.halfPadding
+        readonly property int headerMargin: root.Theme.defaultHalfPadding
     }
 
     contentItem: Item {
-        implicitHeight: Math.max(d.minimumContentHeight, contentColumn.implicitHeight)
+        implicitHeight: Math.max(d.minimumContentHeight, childrenRect.height)
 
         ColumnLayout {
             id: contentColumn
 
             anchors.fill: parent
-            spacing: 0
+            visible: root.gifUnfurlingEnabled
 
             SearchBox {
                 id: searchBox
 
                 visible: root.thirdpartyServicesEnabled
                 placeholderText: qsTr("Search KLIPY")
-                enabled: root.gifUnfurlingEnabled
 
                 Layout.fillWidth: true
                 Layout.topMargin: d.headerMargin
@@ -164,7 +149,7 @@ StatusDropdown {
                 id: gifsLoader
 
                 active: root.thirdpartyServicesEnabled && root.opened && root.gifUnfurlingEnabled
-                visible: root.thirdpartyServicesEnabled && root.gifUnfurlingEnabled
+                visible: active
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
@@ -188,7 +173,6 @@ StatusDropdown {
                     onClicked: {
                         toggleCategory(GifPopupDefinitions.Category.Trending)
                     }
-                    enabled: root.gifUnfurlingEnabled
                 }
 
                 StatusTabBarIconButton {
@@ -197,7 +181,6 @@ StatusDropdown {
                     onClicked: {
                         toggleCategory(GifPopupDefinitions.Category.Recent)
                     }
-                    enabled: root.gifUnfurlingEnabled
                 }
 
                 StatusTabBarIconButton {
@@ -206,7 +189,6 @@ StatusDropdown {
                     onClicked: {
                         toggleCategory(GifPopupDefinitions.Category.Favorite)
                     }
-                    enabled: root.gifUnfurlingEnabled
                 }
             }
 
@@ -240,14 +222,6 @@ StatusDropdown {
             }
         }
 
-        Rectangle {
-            color: 'black'
-            opacity: 0.4
-            radius: Theme.radius
-            anchors.fill: parent
-            visible: confirmationPopupLoader.active
-        }
-
         Loader {
             id: confirmationPopupLoader
 
@@ -270,57 +244,52 @@ StatusDropdown {
 
         StatusScrollView {
             id: scrollView
+            anchors.fill: parent
             contentWidth: availableWidth
 
             Row {
                 id: gifs
                 width: scrollView.availableWidth
-                spacing: Theme.halfPadding
+                spacing: Theme.defaultHalfPadding
 
                 property string lastHoveredId
 
                 StatusGifColumn {
                     gifList.model: root.gifColumnA
-                    gifWidth: (root.width / 3) - Theme.padding
+                    gifWidth: (parent.width - 2 * parent.spacing) / 3
                     lastHoveredId: gifs.lastHoveredId
 
                     toggleFavorite: root.toggleFavorite
                     isFavorite: root.isFavorite
                     addToRecentsGif: root.addToRecentsGif
 
-                    onGifHovered: {
-                        gifs.lastHoveredId = id
-                    }
+                    onGifHovered: id => gifs.lastHoveredId = id
                     onGifSelected: url => root.gifSelected(url)
                 }
 
                 StatusGifColumn {
                     gifList.model: root.gifColumnB
-                    gifWidth: (root.width / 3) - Theme.padding
+                    gifWidth: (parent.width - 2 * parent.spacing) / 3
                     lastHoveredId: gifs.lastHoveredId
 
                     toggleFavorite: root.toggleFavorite
                     isFavorite: root.isFavorite
                     addToRecentsGif: root.addToRecentsGif
 
-                    onGifHovered: {
-                        gifs.lastHoveredId = id
-                    }
+                    onGifHovered: id => gifs.lastHoveredId = id
                     onGifSelected: url => root.gifSelected(url)
                 }
 
                 StatusGifColumn {
                     gifList.model: root.gifColumnC
-                    gifWidth: (root.width / 3) - Theme.padding
+                    gifWidth: (parent.width - 2 * parent.spacing) / 3
                     lastHoveredId: gifs.lastHoveredId
 
                     toggleFavorite: root.toggleFavorite
                     isFavorite: root.isFavorite
                     addToRecentsGif: root.addToRecentsGif
 
-                    onGifHovered: {
-                        gifs.lastHoveredId = id
-                    }
+                    onGifHovered: id => gifs.lastHoveredId = id
                     onGifSelected: url => root.gifSelected(url)
                 }
             }
@@ -336,7 +305,7 @@ StatusDropdown {
             loading: root.loading
             onDoRetry: searchBox.text === ""
                         ? root.getTrendingsGifs()
-                        : searchGif(searchBox.text)
+                        : root.searchGif(searchBox.text)
         }
     }
 }
