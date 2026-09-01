@@ -275,7 +275,6 @@ Item {
                         onTriggered: {
                             Global.openPopup(createCategoryPopup, {
                                                  isEdit: true,
-                                                 channels: [],
                                                  categoryId: categoryItem.itemId,
                                                  categoryName: categoryItem.name
                                              })
@@ -571,9 +570,6 @@ Item {
         id: createCategoryPopup
         CreateCategoryPopup {
             store: root.store
-            onClosed: {
-                destroy()
-            }
         }
     }
 
