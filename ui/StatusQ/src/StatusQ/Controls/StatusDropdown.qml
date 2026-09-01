@@ -124,7 +124,7 @@ QC.Popup {
             parent: root.QC.Overlay.overlay || parent
             modal: true
             dim: true
-            closePolicy: QC.Popup.CloseOnPressOutside
+            closePolicy: QC.Popup.CloseOnEscape | QC.Popup.CloseOnPressOutside
 
             x: 0
             y: d.windowHeight - height

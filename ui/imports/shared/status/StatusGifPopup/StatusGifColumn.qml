@@ -12,15 +12,15 @@ import shared.stores
 
 Column {
     id: root
-    spacing: 8
+    spacing: Theme.defaultHalfPadding
 
     property alias gifList: repeater
     property int gifWidth: 0
     property string lastHoveredId
 
-    property var toggleFavorite: function () {}
-    property var isFavorite: function () {}
-    property var addToRecentsGif: function () {}
+    property var toggleFavorite: function (item) {}
+    property var isFavorite: function (id) {}
+    property var addToRecentsGif: function (id) {}
 
     signal gifHovered(string id)
     signal gifSelected(string url)
@@ -58,19 +58,16 @@ Column {
                 id: starButton
                 property bool favorite: root.isFavorite(model.id)
 
-                type: StatusFlatRoundButton.Type.Secondary
-                textColor: hovered || favorite ? Theme.palette.miscColor7 : Theme.palette.secondaryText
+                type: StatusBaseButton.Type.Normal
+                size: StatusBaseButton.Size.Tiny
+                textColor: hovered || favorite ? Theme.palette.miscColor7 : StatusColors.grey4
                 icon.name: favorite ? "star-icon" : "star-icon-outline"
-                icon.width:  (14/104) * thumb.width
-                icon.height: (13/104) * thumb.width
-                topPadding: (6/104) * thumb.width
-                rightPadding: (6/104) * thumb.width
-                bottomPadding: (6/104) * thumb.width
-                leftPadding: (6/104) * thumb.width
-                normalColor: "transparent"
-                visible: !loader.visible && model.id === root.lastHoveredId
+                normalColor: StatusColors.alphaColor(StatusColors.black, 0.4)
+                hoverColor: Theme.palette.hoverColor(normalColor)
+                visible: !loader.visible
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
+                anchors.margins: 2
                 z: 1
                 onClicked: {
                     root.toggleFavorite(model)
@@ -81,13 +78,8 @@ Column {
                         root.gifHovered(model.id)
                     }
                 }
-                StatusToolTip {
-                    id: statusToolTip
-                    text: starButton.favorite ?
-                        qsTr("Remove from favorites") :
-                        qsTr("Add to favorites")
-                    visible: starButton.hovered
-                }
+                tooltip.text: favorite ? qsTr("Remove from favorites")
+                                       : qsTr("Add to favorites")
             }
 
             AnimatedImage {

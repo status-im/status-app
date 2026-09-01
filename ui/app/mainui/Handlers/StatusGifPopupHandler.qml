@@ -16,6 +16,7 @@ QtObject {
     signal enableThirdpartyServicesRequested
 
     property QtObject _d: QtObject {
+        id: _d
         property var cbOnGifSelected: function () {} // It stores callback for gifSelected
         property var cbOnClose: function () {} // It stores callback for popup closed
         property var popupParent: null // Gifs button object type
