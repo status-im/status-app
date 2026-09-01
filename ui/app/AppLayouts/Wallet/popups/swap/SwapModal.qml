@@ -707,7 +707,7 @@ StatusDialog {
                     size: StatusBaseButton.Size.Small
                     rightPadding: 0
                     text: "%1%".arg(LocaleUtils.numberToLocaleString(root.swapInputParamsForm.selectedSlippage))
-                    textColor: checked || hovered ? Theme.palette.directColor1 : Theme.palette.directColor4
+                    textColor: Theme.palette.directColor1
                     hoverColor: StatusColors.transparent
                 }
             }
@@ -733,7 +733,6 @@ StatusDialog {
                         anchors.verticalCenter: parent.verticalCenter
                         text: d.routeOrderName
                         font.weight: Font.Medium
-                        font.underline: routeOrderMouseArea.containsMouse
                         color: Theme.palette.directColor1
 
                         StatusToolTip {
@@ -846,6 +845,7 @@ StatusDialog {
                 visible: !!root.swapInputParamsForm.fromTokenAmount
 
                 StatusButton {
+                    id: signButton
                     objectName: "signButton"
                     Layout.fillWidth: true
                     readonly property string fromTokenSymbol: !!root.swapAdaptor.fromToken ? root.swapAdaptor.fromToken.symbol ?? "" : ""
@@ -896,9 +896,9 @@ StatusDialog {
 
                 StatusButton {
                     objectName: "refreshQuoteButton"
-                    Layout.preferredWidth: implicitWidth
-                    Layout.preferredHeight: implicitHeight
-                    icon.name: "rotate"
+                    Layout.preferredWidth: signButton.height
+                    Layout.preferredHeight: signButton.height
+                    icon.name: "refresh"
                     type: StatusBaseButton.Type.Normal
                     enabled: swapFooter.hasProposal && !swapFooter.loading
                     onClicked: swapFooter.refresh()
