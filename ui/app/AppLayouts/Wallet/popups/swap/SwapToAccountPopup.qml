@@ -14,9 +14,6 @@ StatusDialog {
     required property var accountsModel
     required property var recentRecipientsModel
 
-    /** The from account, excluded from the "My Accounts" list **/
-    property string selectedSenderAddress
-
     /** Resolve an ENS name typed into the recipient input **/
     property var fnResolveENS: function(ensName, uuid) {}
 
@@ -40,7 +37,6 @@ StatusDialog {
         accountsModel: root.accountsModel
         recentRecipientsModel: root.recentRecipientsModel
 
-        selectedSenderAddress: root.selectedSenderAddress
         selectedRecipientType: recipientsPanel.selectedRecipientType
         searchPattern: recipientsPanel.searchPattern
     }
