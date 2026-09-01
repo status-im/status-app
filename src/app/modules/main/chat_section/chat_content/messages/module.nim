@@ -474,6 +474,8 @@ method onThreadCreationFailed*(self: Module) =
   self.view.emitThreadCreationFailedSignal()
 
 method onChatThreadsLoaded*(self: Module, threads: seq[ThreadDto]) =
+  # Adding the thread rows is the chat section's job; this only back-fills the flag for
+  # messages that were already rendered when the fetch landed.
   for thread in threads:
     if thread.parentMessageId.len > 0:
       self.view.model().setHasThread(thread.parentMessageId, true)
