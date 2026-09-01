@@ -6893,25 +6893,6 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
-    <name>EditSlippagePanel</name>
-    <message>
-        <source>Slippage tolerance</source>
-        <translation>슬리피지 허용 범위</translation>
-    </message>
-    <message>
-        <source>Use default</source>
-        <translation>기본값 사용</translation>
-    </message>
-    <message>
-        <source>Maximum deviation in price due to market volatility and liquidity allowed before the swap is cancelled. (%L1% default).</source>
-        <translation>시장 변동성과 유동성으로 인한 허용 가능한 가격 최대 편차입니다. 이 한도를 넘으면 스왑이 취소됩니다. (%L1% 기본값).</translation>
-    </message>
-    <message>
-        <source>Receive at least</source>
-        <translation>최소 수신</translation>
-    </message>
-</context>
-<context>
     <name>EmptyChatPanel</name>
     <message>
         <source>Share your profile</source>
@@ -15839,12 +15820,8 @@ to load</source>
 <context>
     <name>SlippageSelector</name>
     <message>
-        <source>Custom</source>
-        <translation>커스텀</translation>
-    </message>
-    <message>
-        <source>Enter a slippage value</source>
-        <translation>슬리피지 값을 입력하세요</translation>
+        <source>Custom %</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Slippage should be more than 0</source>
@@ -17129,6 +17106,17 @@ to load</source>
     <message>
         <source>Max. fees on %1</source>
         <translation>최대 수수료 한도: %1</translation>
+    </message>
+</context>
+<context>
+    <name>SwapSlippagePopup</name>
+    <message>
+        <source>Set max price slippage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The swap will revert if the price shifts beyond this percentage.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

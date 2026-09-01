@@ -535,20 +535,6 @@ StatusDialog {
                 }
             }
 
-            EditSlippagePanel {
-                id: editSlippagePanel
-                objectName: "editSlippagePanel"
-                Layout.fillWidth: true
-                Layout.topMargin: Theme.padding
-                visible: slippageButton.checked
-                selectedToToken: root.swapAdaptor.toToken
-                toTokenAmount: root.swapAdaptor.swapOutputData.toTokenAmount
-                loading: root.swapAdaptor.swapProposalLoading
-                onSlippageValueChanged: {
-                    root.swapInputParamsForm.selectedSlippage = slippageValue
-                }
-            }
-
             ErrorTag {
                 objectName: "errorTag"
                 visible: d.isError
@@ -648,8 +634,6 @@ StatusDialog {
                 Layout.minimumWidth: 0
                 spacing: Theme.halfPadding
                 visible: swapFooter.hasProposal || swapFooter.loading
-                // the toggle lives in this row; don't strand its panel open when the row hides
-                onVisibleChanged: if (!visible) slippageButton.checked = false
 
                 Item {
                     Layout.preferredWidth: 28
@@ -702,13 +686,13 @@ StatusDialog {
                 StatusFlatButton {
                     id: slippageButton
                     objectName: "slippageButton"
-                    checkable: true
                     icon.name: "filter"
                     size: StatusBaseButton.Size.Small
                     rightPadding: 0
                     text: "%1%".arg(LocaleUtils.numberToLocaleString(root.swapInputParamsForm.selectedSlippage))
                     textColor: Theme.palette.directColor1
                     hoverColor: StatusColors.transparent
+                    onClicked: swapSlippagePopupComponent.createObject(root).open()
                 }
             }
 
@@ -881,7 +865,6 @@ StatusDialog {
                     }
                     disabledColor: Theme.palette.directColor8
                     interactive: root.swapAdaptor.validSwapProposalReceived &&
-                                 editSlippagePanel.valid &&
                                  !d.isError &&
                                  !root.swapAdaptor.approvalPending
                     onClicked: {
@@ -913,6 +896,15 @@ StatusDialog {
             destroyOnClose: true
             routeOrder: root.swapInputParamsForm.selectedRouteOrder
             onRouteOrderSelected: order => root.swapInputParamsForm.selectedRouteOrder = order
+        }
+    }
+
+    Component {
+        id: swapSlippagePopupComponent
+        SwapSlippagePopup {
+            destroyOnClose: true
+            slippageValue: root.swapInputParamsForm.selectedSlippage
+            onSlippageSelected: value => root.swapInputParamsForm.selectedSlippage = value
         }
     }
 

@@ -22,6 +22,13 @@ SplitView {
         SlippageSelector {
             id: slippageSelector
             anchors.centerIn: parent
+            width: 440
+
+            onEdited: newValue => {
+                logs.logEvent("edited", ["newValue"], arguments)
+                value = newValue
+            }
+            onCommitted: logs.logEvent("committed")
         }
     }
 
@@ -45,26 +52,15 @@ SplitView {
                 text: "Valid: %1".arg(slippageSelector.valid ? "true" : "false")
             }
 
-            Label {
-                Layout.fillWidth: true
-                font.weight: Font.Medium
-                text: "Edited: %1".arg(slippageSelector.isEdited ? "true" : "false")
-            }
-
             ColumnLayout {
                 Repeater {
-                    model: [0, 0.1, 0.5, 0.24, 0.8, 120.84]
+                    model: [0.1, 0.5, 0.24, 0.8, 2]
 
                     Button {
                         text: "set " + modelData
                         onClicked: slippageSelector.value = modelData
                     }
                 }
-            }
-
-            Button {
-                text: "Reset defaults"
-                onClicked: slippageSelector.reset()
             }
 
             Item { Layout.fillHeight: true }
