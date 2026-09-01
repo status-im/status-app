@@ -17022,6 +17022,10 @@ avec un retour à la ligne</translation>
         <translation>Meilleur rendement</translation>
     </message>
     <message>
+        <source>Bridge</source>
+        <translation type="unfinished">Bridge</translation>
+    </message>
+    <message>
         <source>%1s</source>
         <comment>short for seconds</comment>
         <translation type="unfinished">%1&#xa0;s</translation>
