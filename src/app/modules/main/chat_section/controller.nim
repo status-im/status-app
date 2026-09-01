@@ -96,6 +96,9 @@ proc asyncCheckPermissionsToJoin*(self: Controller) =
 proc asyncCheckChannelPermissions*(self: Controller, communityId: string, chatId: string) =
   self.chatService.asyncCheckChannelPermissions(communityId, chatId)
 
+proc loadChatThreadsForChats*(self: Controller, chatIds: seq[string]) =
+  self.messageService.loadChatThreadsForChatsIfNeeded(chatIds)
+
 proc init*(self: Controller) =
   self.events.on(SIGNAL_SENDING_SUCCESS) do(e:Args):
     let args = MessageSendingSuccess(e)
@@ -135,6 +138,10 @@ proc init*(self: Controller) =
         (not self.isCommunitySection and chat.communityId != "")):
       return
     self.delegate.onMarkMessageAsUnread(chat)
+
+  self.events.on(message_service.SIGNAL_CHAT_THREADS_LOADED) do(e: Args):
+    let args = message_service.ChatThreadsLoadedArgs(e)
+    self.delegate.onChatThreadsLoaded(args.chatId, args.threads)
 
   self.events.on(chat_service.SIGNAL_CHAT_LEFT) do(e: Args):
     let args = chat_service.ChatArgs(e)
