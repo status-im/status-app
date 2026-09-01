@@ -11,6 +11,7 @@ import constants as main_constants
 import statusq_bridge
 import app/core/signal_handler
 import app/core/custom_urls/url_scheme_event
+import app/core/intake/pending_intake_slot
 import app/global/single_instance
 
 when defined(ios):
@@ -303,8 +304,14 @@ proc mainProc() =
   let singleInstance = newSingleInstance(($keccak256.digest(DATADIR))[0..31], openUri)
   let urlSchemeEvent = newUrlSchemeEvent()
   urlSchemeEvent.setInstance()
-  # init url manager before app controller
-  statusFoundation.initUrlSchemeManager(urlSchemeEvent, singleInstance, openUri)
+  # App Group hand-off slot written by the iOS share extension; the dir is
+  # empty (slot inactive) on platforms without an App Group container.
+  let pendingIntakeSlot = newPendingIntakeSlot($statusq_shareintake_pending_dir())
+  # init url manager before app controller; the manager also sweeps stale
+  # extension-made image copies from the App Group share-intake cache (keeping
+  # the copies the still-pending slot payload references).
+  statusFoundation.initUrlSchemeManager(urlSchemeEvent, singleInstance, openUri,
+    pendingIntakeSlot, $statusq_shareintake_cache_dir())
 
   when defined(ios):
     # iOS runs status-go in-process, so the app lifecycle must drive the

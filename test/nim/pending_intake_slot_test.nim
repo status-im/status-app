@@ -47,8 +47,44 @@ suite "pending_intake_slot":
     let slot = newPendingIntakeSlot(slotDir)
     check slot.take() == ""
 
+  test "peek reads the payload without clearing it":
+    # The fresh-launch cache sweep must know which cached image copies the
+    # still-pending payload references, without consuming the payload.
+    let slot = newPendingIntakeSlot(slotDir)
+    slot.write("payload")
+    check slot.peek() == "payload"
+    check slot.take() == "payload"
+
+  test "peek on an empty or inactive slot returns empty string":
+    let slot = newPendingIntakeSlot(slotDir)
+    check slot.peek() == ""
+    check newPendingIntakeSlot("").peek() == ""
+
   test "payload survives across slot instances (writer and reader are different processes)":
     let writer = newPendingIntakeSlot(slotDir)
     writer.write("from-extension")
     let reader = newPendingIntakeSlot(slotDir)
     check reader.take() == "from-extension"
+
+  test "wake recognition accepts any variant scheme with the share-intake authority":
+    # Each iOS app variant wakes itself through its own bundle-id-derived
+    # scheme (issue #48: the shared status-app scheme let a co-installed
+    # Status PR hijack the wake), so recognition keys on the share-intake
+    # authority, not the scheme.
+    check isShareIntakeWakeUrl(ShareIntakeWakeUrl)
+    check isShareIntakeWakeUrl("app.status.mobile://share-intake")
+    check isShareIntakeWakeUrl("app.status.mobile.pr://share-intake")
+    # onUrlActivated strips surrounding whitespace before routing
+    check isShareIntakeWakeUrl("  status-app://share-intake\n")
+    # trailing path/query/fragment keep the wake meaning
+    check isShareIntakeWakeUrl("status-app://share-intake/")
+    check isShareIntakeWakeUrl("app.status.mobile://share-intake?src=ext")
+
+  test "wake recognition rejects non-wake urls":
+    check not isShareIntakeWakeUrl("")
+    check not isShareIntakeWakeUrl("share-intake")
+    check not isShareIntakeWakeUrl("://share-intake")
+    check not isShareIntakeWakeUrl("status-app://c/community")
+    check not isShareIntakeWakeUrl("https://status.app/share-intake")
+    check not isShareIntakeWakeUrl("https://share-intake.example.com")
+    check not isShareIntakeWakeUrl("status-app://share-intakefoo")

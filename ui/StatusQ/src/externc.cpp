@@ -336,6 +336,14 @@ Q_DECL_EXPORT const char* statusq_shareintake_pending_dir() {
     return dir.constData();
 }
 
+// App Group `share-intake` cache dir holding the extension-made copies of
+// shared images; "" on platforms without an App Group container. The returned
+// pointer stays valid for the process lifetime.
+Q_DECL_EXPORT const char* statusq_shareintake_cache_dir() {
+    static const QByteArray dir = Status::ShareIntake::shareIntakeCacheDir().toUtf8();
+    return dir.constData();
+}
+
 #ifdef MONITORING
 Q_DECL_EXPORT void statusq_registerMonitoringType() {
     qmlRegisterSingletonType<Monitor>("Monitoring", 1, 0, "Monitor", &Monitor::qmlInstance);

@@ -9,7 +9,14 @@
     <!-- Push Notifications Entitlement -->
     <key>aps-environment</key>
     <string>development</string>
-    
+
+    <!-- App Group shared with the share extension (pending intake slot).
+         Must match mobile/ios/shareExtension/ShareExtension.entitlements. -->
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.app.status.mobile</string>
+    </array>
+
     <!-- NFC Capability (for Keycard support) -->
     <!-- NOTE: Requires PAID Apple Developer account -->
     <key>com.apple.developer.nfc.readersession.formats</key>

@@ -15,6 +15,10 @@ using namespace Status;
 #include <QJsonArray>
 #include <QJsonDocument>
 
+#if defined(Q_OS_IOS)
+    #include <CoreFoundation/CFBundle.h>
+#endif
+
 void UrlSchemeEvent::registerUrlHandler()
 {
 #if defined(Q_OS_IOS)
@@ -23,6 +27,17 @@ void UrlSchemeEvent::registerUrlHandler()
     // Register a handler for "https" scheme to intercept these URLs.
     QDesktopServices::setUrlHandler("https", this, "handleUrl");
     QDesktopServices::setUrlHandler("status-app", this, "handleUrl");
+    // Variant-unique wake scheme: each app variant registers its bundle id as
+    // a URL scheme (mobile/ios/Info.plist.template) so a co-installed variant
+    // can't hijack the share extension's wake — iOS keeps one global handler
+    // per scheme. The extension derives the same scheme from its bundle id
+    // (mobile/ios/shareExtension/ShareViewController.m). QUrl lowercases
+    // schemes on parse, so register the lowercased form.
+    if (CFBundleRef bundle = CFBundleGetMainBundle()) {
+        const QString bundleId = QString::fromCFString(CFBundleGetIdentifier(bundle));
+        if (!bundleId.isEmpty())
+            QDesktopServices::setUrlHandler(bundleId.toLower(), this, "handleUrl");
+    }
 #endif
 }
 
