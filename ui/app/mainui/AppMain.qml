@@ -2896,7 +2896,7 @@ Item {
         anchors.rightMargin: 8
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 60
-        width: 374
+        width: Math.min(parent.width - anchors.rightMargin*2, 374)
         height: Math.min(parent.height - 120, toastArea.contentHeight)
         spacing: 8
         verticalLayoutDirection: ListView.BottomToTop
