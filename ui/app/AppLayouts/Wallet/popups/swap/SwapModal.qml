@@ -322,7 +322,6 @@ StatusDialog {
             savedAddressesModel: root.savedAddressesModel
             accountsModel: root.swapAdaptor.accountsModel
             recentRecipientsModel: root.recentRecipientsModel
-            selectedSenderAddress: root.swapInputParamsForm.selectedAccountAddress
             fnResolveENS: root.fnResolveENS
             onRecipientSelected: function(address) {
                 root.swapInputParamsForm.toAccountAddress = address
