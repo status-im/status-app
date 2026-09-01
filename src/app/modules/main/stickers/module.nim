@@ -76,13 +76,14 @@ method uninstallStickerPack*(self: Module, packId: string) =
 method removeRecentStickers*(self: Module, packId: string) =
   self.controller.removeRecentStickers(packId)
 
-method sendSticker*(self: Module, channelId: string, replyTo: string, sticker: Item) =
+method sendSticker*(self: Module, channelId: string, replyTo: string, sticker: Item, threadId: string) =
   let stickerDto = StickerDto(hash: sticker.getHash, packId: sticker.getPackId)
   self.controller.sendSticker(
     channelId,
     replyTo,
     stickerDto,
-    singletonInstance.userProfile.getPreferredName())
+    singletonInstance.userProfile.getPreferredName(),
+    threadId)
 
 method addRecentStickerToList*(self: Module, sticker: StickerDto) =
   self.view.addRecentStickerToList(initItem(sticker.hash, sticker.packId, sticker.url))

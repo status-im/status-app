@@ -68,7 +68,7 @@ method uninstallStickerPack*(self: AccessInterface, packId: string) {.base.} =
 method removeRecentStickers*(self: AccessInterface, packId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method sendSticker*(self: AccessInterface, channelId: string, replyTo: string, sticker: Item) {.base.} =
+method sendSticker*(self: AccessInterface, channelId: string, replyTo: string, sticker: Item, threadId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method populateInstalledStickerPacks*(self: AccessInterface, stickers: Table[string, StickerPackDto]) {.base.} =
