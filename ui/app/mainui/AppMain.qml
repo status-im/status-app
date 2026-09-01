@@ -1184,14 +1184,34 @@ Item {
         }
 
         // Send the shared content to the picked destination and land in that
-        // chat. The cached image copies are NOT released here — the image-send
-        // task consumes the files asynchronously and releases them once done.
-        function completeShareFlow(sectionId: string, chatId: string, text: string) {
-            const imagePaths = shareFlowLoader.sharedImagePaths
+        // chat. imagePaths is the attachment list as it left the preview's
+        // chat input — the user can detach shared images there (and attach
+        // new ones); detached cached copies are released right away since no
+        // send will ever consume them. The sent files' cached copies are NOT
+        // released here — the image-send task consumes them asynchronously
+        // and releases them once done.
+        // Activation must come BEFORE the send: it synchronously builds and
+        // loads the destination chat content module (community sections build
+        // their chats lazily on first activation), so the send finds the input
+        // area module and the destination's message model is already
+        // subscribed for the local echo — the sent message shows up in the
+        // chat view the moment the send is accepted, like an in-chat send.
+        function completeShareFlow(sectionId: string, chatId: string, text: string, imagePaths) {
+            const cachedPaths = shareFlowLoader.sharedImagePaths
+            const removedCached = cachedPaths.filter(path => !imagePaths.includes(path))
+            const keptCached = cachedPaths.filter(path => imagePaths.includes(path))
             shareFlowLoader.sharedImagePaths = []
+            if (removedCached.length > 0)
+                rootStore.releaseShareIntakeFiles(removedCached)
             shareFlowLoader.item.close()
-            appMain.rootChatStore.sendMessageToChat(sectionId, chatId, text, imagePaths)
             rootStore.setActiveSectionChat(sectionId, chatId)
+            if (!appMain.rootChatStore.sendMessageToChat(sectionId, chatId, text, imagePaths)) {
+                // Nothing was sent, so the image-send task will never release
+                // the cached copies — release them here instead. Guarded to
+                // the intake's own copies; user-attached files are not ours.
+                if (keptCached.length > 0)
+                    rootStore.releaseShareIntakeFiles(keptCached)
+            }
         }
 
         // Cache lifecycle: drop the flow's cached shared-image copies (cancel
@@ -3008,18 +3028,25 @@ Item {
         property var sharedImagePaths: []
         property string preselectedDestinationChatId
 
-        sourceComponent: Popup {
+        sourceComponent: StatusDialog {
             id: shareFlowPopup
 
-            parent: appMain
-            x: (appMain.width - width) / 2
-            y: (appMain.height - height) / 2
-            width: appMain.isPortraitMode ? appMain.width : 480
-            height: appMain.isPortraitMode ? appMain.height
-                                           : Math.min(640, appMain.height - 2 * Theme.bigPadding)
-            modal: true
+            // Portrait/mobile: the dialog's own bottom-sheet handling makes
+            // it fullscreen; otherwise ~480x640 centered (the content's
+            // implicit height, capped by the dialog to 80% of the window).
+            width: 480
+            fullScreenSheet: true
             closePolicy: Popup.NoAutoClose
-            padding: Theme.padding
+            standardButtons: Dialog.NoButton
+
+            // The steps carry their own header row (back/identity/close), so
+            // the fullscreen sheet is header-less — keep that row out of the
+            // notch/status-bar area (StatusDialog only safe-area-pads the
+            // bottom).
+            Binding on topPadding {
+                when: shareFlowPopup.bottomSheet
+                value: shareFlowPopup.padding + shareFlowPopup.parent.SafeArea.margins.top
+            }
 
             Component.onCompleted: applyPreselectedDestination()
 
@@ -3027,7 +3054,9 @@ Item {
 
             function restart() {
                 shareFlowSteps.currentIndex = 0
-                sharePreviewPanel.text = shareFlowLoader.sharedText
+                // Re-push the shared payload into the preview's chat input
+                // even when it is identical to the replaced share's
+                sharePreviewPanel.reset()
                 applyPreselectedDestination()
             }
 
@@ -3035,7 +3064,13 @@ Item {
             // on the preview with it pre-selected. Falls back to the picker
             // when the chat is no longer among the postable destinations.
             function applyPreselectedDestination() {
-                const chatId = shareFlowLoader.preselectedDestinationChatId
+                showPreviewFor(shareFlowLoader.preselectedDestinationChatId)
+            }
+
+            // Land the flow on the preview step, passing the destination
+            // row's identity (avatar/name/section) into the panel so its
+            // header can render chat-header-style.
+            function showPreviewFor(chatId) {
                 if (chatId === "")
                     return
                 const destination = SQUtils.ModelUtils.getByKey(
@@ -3045,23 +3080,27 @@ Item {
                 sharePreviewPanel.destinationSectionId = destination.sectionId
                 sharePreviewPanel.destinationChatId = destination.chatId
                 sharePreviewPanel.destinationName = destination.name
+                sharePreviewPanel.destinationColor = destination.color
+                sharePreviewPanel.destinationColorId = destination.colorId
+                sharePreviewPanel.destinationIcon = destination.icon
+                sharePreviewPanel.destinationEmoji = destination.emoji
+                sharePreviewPanel.destinationChatType = destination.chatType
+                sharePreviewPanel.destinationSectionName = destination.sectionName
                 shareFlowSteps.currentIndex = 1
             }
 
-            StackLayout {
+            contentItem: StackLayout {
                 id: shareFlowSteps
-                anchors.fill: parent
+
+                implicitHeight: 640 - shareFlowPopup.topPadding
+                                - shareFlowPopup.bottomPadding
                 currentIndex: 0
 
                 ShareDestinationPickerPanel {
                     model: shareDestinationsAdaptor.model
 
-                    onDestinationPicked: (sectionId, chatId, name) => {
-                        sharePreviewPanel.destinationSectionId = sectionId
-                        sharePreviewPanel.destinationChatId = chatId
-                        sharePreviewPanel.destinationName = name
-                        shareFlowSteps.currentIndex = 1
-                    }
+                    onDestinationPicked: (sectionId, chatId, name) =>
+                        shareFlowPopup.showPreviewFor(chatId)
                     onCancelRequested: d.cancelShareFlow()
                 }
 
@@ -3073,9 +3112,12 @@ Item {
 
                     text: shareFlowLoader.sharedText
                     imagePaths: shareFlowLoader.sharedImagePaths
+                    emojiPopup: statusEmojiPopup.item
+                    stickersPopup: statusStickersPopupLoader.item
 
-                    onSendRequested: (text) => d.completeShareFlow(destinationSectionId,
-                                                                   destinationChatId, text)
+                    onSendRequested: (text, imagePaths) =>
+                        d.completeShareFlow(destinationSectionId,
+                                            destinationChatId, text, imagePaths)
                     onBackRequested: shareFlowSteps.currentIndex = 0
                     onCancelRequested: d.cancelShareFlow()
                 }
