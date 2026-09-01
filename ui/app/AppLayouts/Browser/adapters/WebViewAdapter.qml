@@ -169,6 +169,14 @@ AbstractWebView {
         property bool htmlPageLoaded: false
         backgroundColor: Theme.palette.background
 
+        // After a renderer crash the WebEngine accessibility tree still points
+        // at the deleted RenderWidgetHostViewQt, and the first AX query over it
+        // segfaults. Hide the view until a load started after the crash has
+        // finished; the crashed navigation's own LoadFailed does not count.
+        property bool rendererGone: false
+        property bool navigatedSinceCrash: false
+        Accessible.ignored: rendererGone
+
         settings.autoLoadImages: root.localAccountSensitiveSettings.autoLoadImages
         settings.javascriptEnabled: root.localAccountSensitiveSettings.javaScriptEnabled
         settings.errorPageEnabled: root.localAccountSensitiveSettings.errorPageEnabled
@@ -221,6 +229,8 @@ AbstractWebView {
                 break
             }
             console.warn("Render process exited with code " + exitCode + " " + status)
+            webView.rendererGone = true
+            webView.navigatedSinceCrash = false
             root.renderProcessTerminated(terminationStatus, exitCode)
         }
         onSelectClientCertificate: function(selection) {
@@ -233,6 +243,10 @@ AbstractWebView {
             if (loadRequest.status === WebEngineView.LoadSucceededStatus) {
                 webView.htmlPageLoaded = true
             }
+            if (loadRequest.status === WebEngineView.LoadStartedStatus)
+                webView.navigatedSinceCrash = true
+            else if (webView.navigatedSinceCrash)
+                webView.rendererGone = false
         }
         onLoadProgressChanged: function(progress) {
             if (progress >= 10)
