@@ -45,7 +45,6 @@ Pane {
                 font.weight: Font.DemiBold
                 font.pixelSize: Theme.asideTextFontSize
                 text: qsTr("DID YOU KNOW?")
-
             }
             StatusBaseText {
                 id: didYouKnowText
@@ -72,8 +71,15 @@ Pane {
                     interval: 7000
                     repeat: true
                     running: didYouKnowText.visible
+                    triggeredOnStart: true
                     onTriggered: didYouKnowText.text = didYouKnowMessages.iterator.next()
                 }
+            }
+        }
+        Connections {
+            target: Qt
+            function onUiLanguageChanged() {
+                didYouKnowTimer.restart()
             }
         }
     }
