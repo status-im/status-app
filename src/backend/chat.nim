@@ -117,6 +117,10 @@ proc fetchChatThreads*(chatId: string): RpcResponse[JsonNode] =
   let payload = %* [chatId]
   result = callPrivateRPC("chatThreads".prefix, payload)
 
+proc fetchChatThreadsForChats*(chatIds: seq[string]): RpcResponse[JsonNode] =
+  let payload = %* [chatIds]
+  result = callPrivateRPC("chatThreadsByChatIDs".prefix, payload)
+
 proc muteChat*(chatId: string, interval: int): RpcResponse[JsonNode] =
   result = callPrivateRPC("muteChatV2".prefix, %* [
     {

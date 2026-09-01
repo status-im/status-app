@@ -264,13 +264,6 @@ method openThreadAsChat*(self: Module, threadId: string, threadName: string, par
   self.delegate.openThreadAsChat(self.controller.getMyChatId(), threadId, threadName, parentMessageId,
     setActive = setActive, hasUnreadMessages = hasUnreadMessages, notificationsCount = notificationsCount)
 
-method onChatThreadsLoaded*(self: Module, threads: seq[ThreadDto]) =
-  for thread in threads:
-    if thread.parentMessageId.len > 0:
-      # Add the thread to the chat list so it appears as a sub-chat
-      self.delegate.openThreadAsChat(self.controller.getMyChatId(), thread.threadId, thread.name, thread.parentMessageId,
-        setActive = false, hasUnreadMessages = thread.unviewedMessagesCount > 0, notificationsCount = thread.unviewedMentionsCount)
-
 method muteChat*(self: Module, interval: int) =
   self.controller.muteChat(interval)
 
