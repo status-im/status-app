@@ -62,12 +62,13 @@ Item {
         id: sview
         anchors.top: sectionTitle.bottom
         anchors.topMargin: Theme.padding
-        anchors.bottom: startBtn.top
+        anchors.bottom: bottomLayout.top
         anchors.bottomMargin: Theme.padding
         anchors.left: parent.left
         anchors.right: parent.right
 
         contentWidth: availableWidth
+        contentHeight: contentItem.childrenRect.y + contentItem.childrenRect.height
 
         Item {
             id: contentItem
@@ -147,7 +148,6 @@ Item {
             }
 
             RowLayout {
-
                 anchors.top: keyLbl.bottom
                 anchors.topMargin: Theme.padding
                 anchors.left: parent.left
@@ -188,64 +188,74 @@ Item {
         }
     }
 
-    StatusButton {
+    ColumnLayout {
+        id: bottomLayout
+        spacing: Theme.padding
+
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Theme.padding
         anchors.left: parent.left
         anchors.leftMargin: Theme.padding
-        text: qsTr("Back")
-        onClicked: backBtnClicked()
-    }
-
-    Item {
-        anchors.top: startBtn.top
-        anchors.right: startBtn.left
-        anchors.rightMargin: Theme.padding
-        width: childrenRect.width
-
-        Image {
-            id: image1
-            height: 50
-            width: height
-            source: Assets.png("tokens/SNT")
-            sourceSize: Qt.size(width, height)
-            cache: false
-        }
-
-        StatusBaseText {
-            id: ensPriceLbl
-            text: qsTr("10 SNT")
-            anchors.left: image1.right
-            anchors.leftMargin: 5
-            anchors.top: image1.top
-            color: Theme.palette.directColor1
-            font.pixelSize: Theme.secondaryTextFontSize
-        }
-
-        StatusBaseText {
-            text: qsTr("Deposit")
-            anchors.left: image1.right
-            anchors.leftMargin: 5
-            anchors.topMargin: 5
-            anchors.top: ensPriceLbl.bottom
-            color: Theme.palette.baseColor1
-            font.pixelSize: Theme.secondaryTextFontSize
-        }
-    }
-
-    StatusButton {
-        id: startBtn
-        objectName: "ensStartTransaction"
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: Theme.padding
         anchors.right: parent.right
         anchors.rightMargin: Theme.padding
-        text: d.sntBalance < 10 ?
-          qsTr("Not enough SNT") :
-          qsTr("Register")
-        enabled: d.sntBalance >= 10 && termsAndConditionsCheckbox.checked
-        onClicked: root.registerUsername()
+
+        RowLayout {
+            Layout.alignment: Qt.AlignHCenter
+            spacing: Theme.padding
+
+            Image {
+                id: image1
+
+                Layout.preferredWidth: 50
+                Layout.preferredHeight: 50
+                Layout.alignment: Qt.AlignVCenter
+
+                source: Assets.png("tokens/SNT")
+                sourceSize: Qt.size(width, height)
+                cache: false
+            }
+
+            ColumnLayout {
+                spacing: 5
+
+                Layout.fillHeight: false
+                Layout.alignment: Qt.AlignVCenter
+
+                StatusBaseText {
+                    text: qsTr("10 SNT")
+                    color: Theme.palette.directColor1
+                    font.pixelSize: Theme.secondaryTextFontSize
+                }
+
+                StatusBaseText {
+                    text: qsTr("Deposit")
+                    color: Theme.palette.baseColor1
+                    font.pixelSize: Theme.secondaryTextFontSize
+                }
+            }
+
+            StatusButton {
+                objectName: "ensStartTransaction"
+
+                Layout.alignment: Qt.AlignVCenter
+
+                text: d.sntBalance < 10 ?
+                  qsTr("Not enough SNT") :
+                  qsTr("Register")
+                enabled: d.sntBalance >= 10 && termsAndConditionsCheckbox.checked
+                onClicked: root.registerUsername()
+            }
+        }
+
+        StatusButton {
+            Layout.alignment: Qt.AlignHCenter
+
+            text: qsTr("Back")
+            onClicked: backBtnClicked()
+        }
     }
+
+
 
     ModelEntry {
         id: statusTokenEntry
