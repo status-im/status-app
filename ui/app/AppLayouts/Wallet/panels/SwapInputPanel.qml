@@ -174,6 +174,7 @@ Control {
     }
 
     padding: Theme.padding
+    verticalPadding: swapExchangeButtonWidth/2 + Theme.halfPadding
 
     // by design
     implicitWidth: 492
@@ -392,11 +393,11 @@ Control {
     }
 
     contentItem: ColumnLayout {
-        spacing: Theme.halfPadding
+        spacing: 0
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: Theme.halfPadding
+            spacing: 0
 
             AccountSelectorPill {
                 objectName: "accountSelectorPill"
@@ -438,135 +439,127 @@ Control {
             }
         }
 
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            spacing: 20
+        AmountToSend {
+            readonly property bool balanceExceeded:
+                SQUtils.AmountsArithmetic.fromNumber(d.maxSafeCryptoValue, multiplierIndex).cmp(amount) === -1
 
-            AmountToSend {
-                readonly property bool balanceExceeded:
-                    SQUtils.AmountsArithmetic.fromNumber(d.maxSafeCryptoValue, multiplierIndex).cmp(amount) === -1
+            // from `amount` rather than the text: that is fiat in fiat mode
+            readonly property double asNumber: {
+                if (!valid)
+                    return 0
 
-                // from `amount` rather than the text: that is fiat in fiat mode
-                readonly property double asNumber: {
-                    if (!valid)
-                        return 0
-
-                    return SQUtils.AmountsArithmetic.toNumber(amount, multiplierIndex)
-                }
-
-                Layout.fillWidth: true
-                Layout.minimumWidth: 120 // so a long value has room to shrink into
-                // bottom-aligned with the selector column so the fiat equivalent and
-                // the balance line sit on one line
-                Layout.alignment: Qt.AlignBottom
-                id: amountToSendInput
-                objectName: "amountToSendInput"
-                interactive: root.interactive
-                markAsInvalid: (root.swapSide === SwapInputPanel.SwapSide.Pay && (balanceExceeded || d.maxInputBalance === 0)) || (!!text && !valid)
-                fiatInputInteractive: root.fiatInputInteractive
-                multiplierIndex: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.decimals ? d.selectedHolding.item.decimals : 18
-                cryptoPrice: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.cryptoPrice ? d.selectedHolding.item.cryptoPrice : 0
-                formatFiat: amount => qsTr("≈ %1").arg(root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency))
-                formatBalance: amount => qsTr("≈ %1").arg(root.currencyStore.formatCurrencyAmount(amount, d.inputSymbol))
-
-                mainInputLoading: root.mainInputLoading
-                bottomTextLoading: root.bottomTextLoading
+                return SQUtils.AmountsArithmetic.toNumber(amount, multiplierIndex)
             }
 
-            ColumnLayout {
-                Layout.alignment: Qt.AlignRight | Qt.AlignBottom
+            id: amountToSendInput
+            objectName: "amountToSendInput"
+
+            Layout.fillWidth: true
+
+            interactive: root.interactive
+            markAsInvalid: (root.swapSide === SwapInputPanel.SwapSide.Pay && (balanceExceeded || d.maxInputBalance === 0)) || (!!text && !valid)
+            fiatInputInteractive: root.fiatInputInteractive
+            multiplierIndex: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.decimals ? d.selectedHolding.item.decimals : 18
+            cryptoPrice: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.cryptoPrice ? d.selectedHolding.item.cryptoPrice : 0
+            formatFiat: amount => qsTr("≈ %1").arg(root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency))
+            formatBalance: amount => qsTr("≈ %1").arg(root.currencyStore.formatCurrencyAmount(amount, d.inputSymbol))
+
+            mainInputLoading: root.mainInputLoading
+            bottomTextLoading: root.bottomTextLoading
+
+            amountInputRightPadding: holdingSelector.width + Theme.padding
+
+            bottomRightComponent: RowLayout {
+                objectName: "balanceLine"
                 spacing: Theme.halfPadding
+                visible: d.isSelectedHoldingValidAsset
 
-                AssetSelector {
-                    id: holdingSelector
-
-                    objectName: "holdingSelector"
-
-                    Layout.alignment: Qt.AlignRight
-                    showDropdownIndicator: false
-
-                    model: root.tokenSelectorModel
-                    hasMoreItems: !!root.tokenSelectorModel && root.tokenSelectorModel.hasMoreItems
-                    isLoadingMore: root.tokenSelectorLoading || (!!root.tokenSelectorModel && root.tokenSelectorModel.isLoadingMore)
-                    nonInteractiveKey: root.nonInteractiveGroupKey
-                    nonInteractiveChainId: root.selectedNetworkChainId
-                    formatCurrencyBalance: (amount) => root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency)
-
-                    selectedNetworkIcon: !!networkEntry.item && !!networkEntry.item.iconUrl
-                                         ? Assets.svg(networkEntry.item.iconUrl) : ""
-                    defaultNetworkIcon: !!catalogNetworkEntry.item ? (catalogNetworkEntry.item.iconUrl ?? "") : ""
-
-                    flatNetworksModel: root.flatNetworksModel
-                    selectedChainId: root.listChainFilter
-                    highlightedChainId: root.selectedNetworkChainId
-                    onChainSelected: chainId => root.listChainFilter = chainId
-
-                    onSearch: function(keyword) {
-                        if (root.tokenSelectorModel)
-                            root.tokenSelectorModel.search(keyword)
-                    }
-
-                    onLoadMoreRequested: {
-                        if (root.tokenSelectorModel)
-                            root.tokenSelectorModel.fetchMore()
-                    }
-
-                    onSelected: function(key, chainId) {
-                        if (key === "")
-                            return
-                        d.selectedHoldingId = key
-                        if (chainId !== -1)
-                            root.networkSelected(chainId)
-                        else if (root.listChainFilter !== -1)
-                            root.networkSelected(root.listChainFilter)
-                        else
-                            d.adoptChainForToken(key)
-                    }
+                StatusIcon {
+                    Layout.alignment: Qt.AlignVCenter
+                    width: 16
+                    height: 16
+                    icon: "wallet"
+                    color: Theme.palette.directColor5
                 }
 
-                RowLayout {
-                    objectName: "balanceLine"
-                    Layout.alignment: Qt.AlignRight
-                    spacing: Theme.halfPadding
-                    visible: d.isSelectedHoldingValidAsset
+                StatusBaseText {
+                    objectName: "balanceCryptoText"
+                    Layout.minimumWidth: 0
+                    elide: Text.ElideRight
+                    text: root.currencyStore.formatCurrencyAmount(
+                              d.maxCryptoBalance, d.balanceSymbol,
+                              { noSymbol: true, roundingMode: LocaleUtils.RoundingMode.Down })
+                    color: Theme.palette.directColor5
+                    font.pixelSize: Theme.additionalTextSize
+                    font.weight: Font.Medium
+                }
 
-                    StatusIcon {
-                        Layout.alignment: Qt.AlignVCenter
-                        width: 16
-                        height: 16
-                        icon: "wallet"
-                        color: Theme.palette.directColor5
-                    }
+                StatusBaseText {
+                    text: "|"
+                    color: Theme.palette.directColor7
+                    font.pixelSize: Theme.additionalTextSize
+                }
 
-                    StatusBaseText {
-                        objectName: "balanceCryptoText"
-                        Layout.minimumWidth: 0
-                        elide: Text.ElideRight
-                        text: root.currencyStore.formatCurrencyAmount(
-                                  d.maxCryptoBalance, d.balanceSymbol,
-                                  { noSymbol: true, roundingMode: LocaleUtils.RoundingMode.Down })
-                        color: Theme.palette.directColor5
-                        font.pixelSize: Theme.additionalTextSize
-                        font.weight: Font.Medium
-                    }
+                StatusBaseText {
+                    objectName: "balanceFiatText"
+                    Layout.minimumWidth: 0
+                    elide: Text.ElideRight
+                    text: root.currencyStore.formatCurrencyAmount(
+                              d.maxFiatBalance, root.currencyStore.currentCurrency)
+                    color: Theme.palette.directColor5
+                    font.pixelSize: Theme.additionalTextSize
+                    font.weight: Font.Medium
+                }
+            }
 
-                    StatusBaseText {
-                        text: "|"
-                        color: Theme.palette.directColor7
-                        font.pixelSize: Theme.additionalTextSize
-                    }
+            AssetSelector {
+                id: holdingSelector
 
-                    StatusBaseText {
-                        objectName: "balanceFiatText"
-                        Layout.minimumWidth: 0
-                        elide: Text.ElideRight
-                        text: root.currencyStore.formatCurrencyAmount(
-                                  d.maxFiatBalance, root.currencyStore.currentCurrency)
-                        color: Theme.palette.directColor5
-                        font.pixelSize: Theme.additionalTextSize
-                        font.weight: Font.Medium
-                    }
+                objectName: "holdingSelector"
+
+                anchors.top: parent.top
+                anchors.right: parent.right
+                // centred on the 44px input row; the button itself is a bit taller
+                anchors.topMargin: Math.min(0, (44 - height) / 2)
+
+                showDropdownIndicator: false
+
+                model: root.tokenSelectorModel
+                hasMoreItems: !!root.tokenSelectorModel && root.tokenSelectorModel.hasMoreItems
+                isLoadingMore: root.tokenSelectorLoading || (!!root.tokenSelectorModel && root.tokenSelectorModel.isLoadingMore)
+                nonInteractiveKey: root.nonInteractiveGroupKey
+                nonInteractiveChainId: root.selectedNetworkChainId
+                formatCurrencyBalance: (amount) => root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency)
+
+                selectedNetworkIcon: !!networkEntry.item && !!networkEntry.item.iconUrl
+                                     ? Assets.svg(networkEntry.item.iconUrl) : ""
+                defaultNetworkIcon: !!catalogNetworkEntry.item ? (catalogNetworkEntry.item.iconUrl ?? "") : ""
+
+                flatNetworksModel: root.flatNetworksModel
+                selectedChainId: root.listChainFilter
+                highlightedChainId: root.selectedNetworkChainId
+                onChainSelected: chainId => root.listChainFilter = chainId
+
+                onSearch: function(keyword) {
+                    if (root.tokenSelectorModel)
+                        root.tokenSelectorModel.search(keyword)
+                }
+
+                onLoadMoreRequested: {
+                    if (root.tokenSelectorModel)
+                        root.tokenSelectorModel.fetchMore()
+                }
+
+                onSelected: function(key, chainId) {
+                    if (key === "")
+                        return
+                    d.selectedHoldingId = key
+                    if (chainId !== -1)
+                        root.networkSelected(chainId)
+                    else if (root.listChainFilter !== -1)
+                        root.networkSelected(root.listChainFilter)
+                    else
+                        d.adoptChainForToken(key)
                 }
             }
         }
