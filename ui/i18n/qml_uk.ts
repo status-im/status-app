@@ -16962,6 +16962,10 @@ to load</source>
         <translation>Найкращий дохід</translation>
     </message>
     <message>
+        <source>Bridge</source>
+        <translation type="unfinished">Бридж</translation>
+    </message>
+    <message>
         <source>%1s</source>
         <comment>short for seconds</comment>
         <translation type="unfinished">%1 с</translation>
