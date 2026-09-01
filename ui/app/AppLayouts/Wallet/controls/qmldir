@@ -8,7 +8,6 @@ BuyCryptoProvidersLoadingDelegate 1.0 BuyCryptoProvidersLoadingDelegate.qml
 CollectibleBalanceTag 1.0 CollectibleBalanceTag.qml
 CollectibleLinksTags 1.0 CollectibleLinksTags.qml
 DappsComboBox 1.0 DappsComboBox.qml
-EditSlippagePanel 1.0 EditSlippagePanel.qml
 FilterComboBox 1.0 FilterComboBox.qml
 FollowingAddressesDelegate 1.0 FollowingAddressesDelegate.qml
 FollowingAddressMenu 1.0 FollowingAddressMenu.qml
