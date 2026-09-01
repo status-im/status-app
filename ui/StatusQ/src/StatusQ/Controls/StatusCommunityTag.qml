@@ -54,10 +54,13 @@ Rectangle {
             text: root.name
         }
 
-        StatusIcon {
-            visible: root.removable
-            color: root.enabled ? Theme.palette.primaryColor1 : Theme.palette.baseColor1
-            icon: "close"
+        Loader {
+            active: root.removable
+
+            sourceComponent: StatusIcon {
+                color: root.enabled ? Theme.palette.primaryColor1 : Theme.palette.baseColor1
+                icon: "close"
+            }
         }
     }
 }

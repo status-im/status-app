@@ -154,23 +154,35 @@ StatusSectionLayout {
                 tags: root.communitiesStore.communityTags
             }
 
-            CommunitiesGridView {
-                id: communitiesGrid
-
+            Loader {
+                id: communitiesGridLoader
+                asynchronous: true
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Loader {
+                    id: loadingIndicator
+                    anchors.centerIn: parent
+                    active: communitiesGridLoader.status !== Loader.Ready
+                    sourceComponent: StatusLoadingIndicator {
+                        width: 40
+                        height: 40
+                    }
+                }
+                sourceComponent: CommunitiesGridView {
+                    id: communitiesGrid
+                    visible: communitiesGridLoader.status === Loader.Ready
+                    padding: 0
+                    bottomPadding: d.layoutBottomMargin
+                    compactMode: d.compactMode
 
-                padding: 0
-                bottomPadding: d.layoutBottomMargin
-                compactMode: d.compactMode
+                    model: filteredCommunitiesModel
+                    searchLayout: d.searchMode
 
-                model: filteredCommunitiesModel
-                searchLayout: d.searchMode
+                    assetsModel: root.assetsModel
+                    collectiblesModel: root.collectiblesModel
 
-                assetsModel: root.assetsModel
-                collectiblesModel: root.collectiblesModel
-
-                onCardClicked: (communityId) => root.communitiesStore.navigateToCommunity(communityId)
+                    onCardClicked: (communityId) => root.communitiesStore.navigateToCommunity(communityId)
+                }
             }
         }
     }

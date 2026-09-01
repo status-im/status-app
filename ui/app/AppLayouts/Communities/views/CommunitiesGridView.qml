@@ -40,8 +40,15 @@ StatusScrollView {
         // Values from the design
         readonly property int scrollViewTopMargin: 20
         readonly property int subtitlePixelSize: root.Theme.fontSize(17)
-        readonly property int promotionalCardPosition: Math.max(gridLayout.delegateCountPerRow - 1, 1)
-        property int delegateWidth: root.compactMode ? 300 : 335
+        readonly property int targetDelegateWidth: root.compactMode ? 300 : 335
+        property int delegateWidth: targetDelegateWidth
+
+        readonly property int delegateCountPerRow:
+            root.availableWidth > 0
+            ? Math.max(1, Math.trunc(root.availableWidth / (targetDelegateWidth + root.Theme.padding)))
+            : 0
+
+        readonly property int promotionalCardPosition: Math.max(delegateCountPerRow - 1, 1)
 
         Behavior on delegateWidth {
             PropertyAnimation { duration: ThemeUtils.AnimationDuration.Fast }
@@ -58,6 +65,7 @@ StatusScrollView {
         sourceModel: root.model
 
         filters: ValueFilter {
+            enabled: !root.searchLayout
             roleName: "featured"
             value: true
         }
@@ -171,7 +179,7 @@ StatusScrollView {
         }
 
         Flow {
-            readonly property int delegateCountPerRow: Math.trunc(parent.width / (d.delegateWidth + spacing))
+            readonly property int delegateCountPerRow: d.delegateCountPerRow
             Layout.preferredWidth: (delegateCountPerRow * d.delegateWidth) + (spacing * (delegateCountPerRow - 1))
             Layout.alignment: Qt.AlignHCenter
 
@@ -184,7 +192,7 @@ StatusScrollView {
 
             Repeater {
                 id: featuredRepeater
-                model: root.searchLayout ? root.model : featuredModel
+                model: featuredModel
                 delegate: communityCardDelegate
             }
             move: FastXYTransition {}
@@ -204,7 +212,7 @@ StatusScrollView {
         Flow {
             id: gridLayout
 
-            readonly property int delegateCountPerRow: Math.trunc(parent.width / (d.delegateWidth + spacing))
+            readonly property int delegateCountPerRow: d.delegateCountPerRow
             Layout.preferredWidth: (delegateCountPerRow * d.delegateWidth) + (spacing * (delegateCountPerRow - 1))
             Layout.alignment: Qt.AlignHCenter
 
