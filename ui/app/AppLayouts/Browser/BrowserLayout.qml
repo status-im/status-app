@@ -299,7 +299,11 @@ StatusSectionLayout {
                 webViewContext.setCurrentWebUrl(root.browserRootStore.get0xFormedUrl(localAccountSensitiveSettings.useBrowserEthereumExplorer, url))
                 return
             }
-            if (localAccountSensitiveSettings.selectedBrowserSearchEngineId !== SearchEnginesConfig.browserSearchEngineNone && !Utils.isURL(url) && !Utils.isURLWithOptionalProtocol(url)) {
+            // An explicit scheme is an address, never a query: chrome://crash,
+            // view-source://…, about:blank. isURL() only knows http(s). file://
+            // is left out: browsing tabs never reach it (ADR 0006 §8).
+            const hasScheme = /^(?!file:)[a-z][a-z0-9+.-]*:\/\//i.test(url) || /^about:\S+$/i.test(url)
+            if (localAccountSensitiveSettings.selectedBrowserSearchEngineId !== SearchEnginesConfig.browserSearchEngineNone && !hasScheme && !Utils.isURL(url) && !Utils.isURLWithOptionalProtocol(url)) {
                 webViewContext.setCurrentWebUrl(root.browserRootStore.getFormedUrl(localAccountSensitiveSettings.selectedBrowserSearchEngineId, url))
                 return
             } else if (Utils.isURLWithOptionalProtocol(url)) {
