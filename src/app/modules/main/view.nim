@@ -439,9 +439,11 @@ QtObject:
   proc emitOpenUrlInNewBrowserTabSignal*(self: View, url: string) =
     self.openUrlInNewBrowserTab(url)
 
-  proc launchShareFlow*(self: View, text: string, imagePathsJson: string) {.signal.}
-  proc emitLaunchShareFlowSignal*(self: View, text: string, imagePathsJson: string) =
-    self.launchShareFlow(text, imagePathsJson)
+  proc launchShareFlow*(self: View, text: string, imagePathsJson: string,
+    destinationChatId: string) {.signal.}
+  proc emitLaunchShareFlowSignal*(self: View, text: string, imagePathsJson: string,
+      destinationChatId: string) =
+    self.launchShareFlow(text, imagePathsJson, destinationChatId)
 
   proc releaseShareIntakeFiles*(self: View, imagePathsJson: string) {.slot.} =
     ## Share-flow cancel path: releases the cached copies of shared images

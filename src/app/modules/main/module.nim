@@ -12,6 +12,7 @@ import app/global/app_signals
 import app/global/[global_singleton, feature_flags]
 import app/global/app_lifecycle
 import app/android/lifecycle
+import app/android/share_shortcuts
 import app/global/utils as utils
 import app_service/service/activity_center/dto/notification as activity_center_notification_dto
 import constants
@@ -153,6 +154,7 @@ type
     urlToOpenInNewBrowserTab: string
     shareTextToDeliver: string
     shareImagePathsToDeliver: seq[string]
+    shareDestinationChatIdToDeliver: string
     shareToDeliverPending: bool
 
 {.push warning[Deprecated]: off.}
@@ -161,7 +163,8 @@ type
 proc switchToContactOrDisplayUserProfile[T](self: Module[T], publicKey: string)
 method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string)
 method openUrlInNewBrowserTab*[T](self: Module[T], url: string)
-method launchShareFlow*[T](self: Module[T], text: string, imagePaths: seq[string])
+method launchShareFlow*[T](self: Module[T], text: string, imagePaths: seq[string],
+  destinationChatId: string)
 proc checkIfWeHaveNotifications[T](self: Module[T])
 proc updateIconBadgeNumber[T](self: Module[T])
 proc createMemberItem[T](self: Module[T], memberId: string, requestId: string, state: MembershipRequestState, role: MemberRole, airdropAddress: string = ""): MemberItem
@@ -1059,10 +1062,12 @@ method onChatsLoaded*[T](
   if self.shareToDeliverPending:
     let text = self.shareTextToDeliver
     let imagePaths = self.shareImagePathsToDeliver
+    let destinationChatId = self.shareDestinationChatIdToDeliver
     self.shareToDeliverPending = false
     self.shareTextToDeliver = ""
     self.shareImagePathsToDeliver = @[]
-    self.launchShareFlow(text, imagePaths)
+    self.shareDestinationChatIdToDeliver = ""
+    self.launchShareFlow(text, imagePaths, destinationChatId)
 
 method onMediaServerStarted*[T](self: Module[T], port: int) =
   self.view.model().updateMediaServerPort(port)
@@ -2100,6 +2105,10 @@ method getKeycardManagementModule*[T](self: Module[T]): QVariant =
 method signOutAndQuit*[T](self: Module[T]) =
   info "signOutAndQuit: logging out and quitting"
   markShuttingDown()
+  # Direct-share shortcuts carry chat names and avatars on OS surfaces outside
+  # the app; clear them unconditionally before quitting so a logged-out
+  # profile's data cannot linger there (no-op off Android).
+  clearShareShortcuts()
   when defined(ios) or defined(android):
     # Since on mobile devices, application.exit() ends in _exit(0), a graceful status_go.logout() is unnecessary
     # cause it does a few other things (stops the node, closes the DBs, then re-initializes the node and restarts
@@ -2217,20 +2226,24 @@ method openUrlInNewBrowserTab*[T](self: Module[T], url: string) =
     return
   self.view.emitOpenUrlInNewBrowserTabSignal(url)
 
-method launchShareFlow*[T](self: Module[T], text: string, imagePaths: seq[string]) =
+method launchShareFlow*[T](self: Module[T], text: string, imagePaths: seq[string],
+    destinationChatId: string) =
   ## Share route of the external intake seam: content shared to Status from
   ## another app launches the share flow (destination picker -> preview ->
-  ## send). Buffered until the main view is loaded, mirroring the deep-link
-  ## and browser-tab routes above; the buffer is last-wins, and a replaced
-  ## share's cached image copies are released so they don't accumulate.
+  ## send); a non-empty destinationChatId (direct-share shortcut tap) skips
+  ## the picker step. Buffered until the main view is loaded, mirroring the
+  ## deep-link and browser-tab routes above; the buffer is last-wins, and a
+  ## replaced share's cached image copies are released so they don't
+  ## accumulate.
   if not self.chatsLoaded:
     if self.shareToDeliverPending:
       releaseCachedShareFiles(self.shareImagePathsToDeliver)
     self.shareToDeliverPending = true
     self.shareTextToDeliver = text
     self.shareImagePathsToDeliver = imagePaths
+    self.shareDestinationChatIdToDeliver = destinationChatId
     return
-  self.view.emitLaunchShareFlowSignal(text, $(%imagePaths))
+  self.view.emitLaunchShareFlowSignal(text, $(%imagePaths), destinationChatId)
 
 method releaseShareIntakeFiles*[T](self: Module[T], imagePathsJson: string) =
   ## Cache lifecycle, cancel path: the share flow was dismissed without

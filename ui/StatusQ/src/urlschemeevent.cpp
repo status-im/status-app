@@ -98,7 +98,8 @@ void UrlSchemeEvent::emitDeepLinkToQt(const QString& url)
     emit urlActivated(url);
 }
 
-void UrlSchemeEvent::emitShareToQt(const QString& text, const QStringList& imagePaths)
+void UrlSchemeEvent::emitShareToQt(const QString& text, const QStringList& imagePaths,
+                                   const QString& destinationChatId)
 {
     if (text.isEmpty() && imagePaths.isEmpty()) return;
 
@@ -106,7 +107,9 @@ void UrlSchemeEvent::emitShareToQt(const QString& text, const QStringList& image
     for (const auto& path : imagePaths)
         paths.append(path);
 
-    emit shareActivated(text, QString::fromUtf8(QJsonDocument(paths).toJson(QJsonDocument::Compact)));
+    emit shareActivated(text,
+                        QString::fromUtf8(QJsonDocument(paths).toJson(QJsonDocument::Compact)),
+                        destinationChatId);
 }
 
 static UrlSchemeEvent* g_urlSchemeEventInstance = nullptr;
@@ -132,8 +135,11 @@ Java_app_status_mobile_StatusQtActivity_passDeepLinkToQt(JNIEnv* /*env*/, jclass
 // separate from the URL channel — a shared link must launch the share flow,
 // not URL routing. Image paths are app-private cached copies made by the Java
 // layer at receipt (OS read grants expire), never OS-managed content URIs.
+// destinationChatId is the tapped direct-share shortcut's id (empty for a
+// plain share-sheet share).
 extern "C" JNIEXPORT void JNICALL
-Java_app_status_mobile_StatusQtActivity_passShareToQt(JNIEnv* env, jclass /*clazz*/, jstring text, jobjectArray imagePaths)
+Java_app_status_mobile_StatusQtActivity_passShareToQt(JNIEnv* env, jclass /*clazz*/, jstring text,
+                                                      jobjectArray imagePaths, jstring destinationChatId)
 {
     const QString shareText = QJniObject(text).toString();
 
@@ -148,7 +154,7 @@ Java_app_status_mobile_StatusQtActivity_passShareToQt(JNIEnv* env, jclass /*claz
     }
 
     if (g_urlSchemeEventInstance) {
-        g_urlSchemeEventInstance->emitShareToQt(shareText, paths);
+        g_urlSchemeEventInstance->emitShareToQt(shareText, paths, QJniObject(destinationChatId).toString());
     }
 }
 #endif

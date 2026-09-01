@@ -309,7 +309,10 @@ Q_DECL_EXPORT void statusq_urlscheme_emit_appbackgrounded(void* obj) {
 
 // imagePathsJson: JSON array of absolute paths of app-private cached copies
 // of the shared images (may be null or "[]" for text-only shares).
-Q_DECL_EXPORT void statusq_urlscheme_emit_share(void* obj, const char* text, const char* imagePathsJson) {
+// destinationChatId: the tapped direct-share shortcut's id — the destination
+// chat — or null/"" for a plain share-sheet share.
+Q_DECL_EXPORT void statusq_urlscheme_emit_share(void* obj, const char* text, const char* imagePathsJson,
+                                                const char* destinationChatId) {
     QStringList paths;
     if (imagePathsJson) {
         const auto doc = QJsonDocument::fromJson(QByteArray(imagePathsJson));
@@ -317,7 +320,8 @@ Q_DECL_EXPORT void statusq_urlscheme_emit_share(void* obj, const char* text, con
         for (const auto& value : array)
             paths << value.toString();
     }
-    static_cast<Status::UrlSchemeEvent*>(obj)->emitShareToQt(QString::fromUtf8(text), paths);
+    static_cast<Status::UrlSchemeEvent*>(obj)->emitShareToQt(QString::fromUtf8(text), paths,
+                                                             QString::fromUtf8(destinationChatId));
 }
 
 Q_DECL_EXPORT void statusq_urlscheme_delete(void* obj) {
