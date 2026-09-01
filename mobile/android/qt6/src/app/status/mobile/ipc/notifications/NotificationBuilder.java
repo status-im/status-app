@@ -53,6 +53,18 @@ public final class NotificationBuilder {
     /** ID for "reply failed" notifications. */
     private static final int REPLY_FAILED_NOTIFICATION_ID = 4243;
 
+    /**
+     * Notification identity for a conversation. Thread messages get their own stack: the
+     * notification ID doubles as the inline-reply PendingIntent request code, and PendingIntent
+     * matching ignores extras, so sharing an ID with the parent chat would let whichever
+     * notification was posted last dictate where a reply is sent.
+     */
+    public static String conversationKey(String chatId, String threadId) {
+        if (chatId == null || chatId.isEmpty()) return "";
+        if (threadId == null || threadId.isEmpty()) return chatId;
+        return chatId + "#" + threadId;
+    }
+
     /** Message item used to build MessagingStyle entries. */
     public static final class MessageEntry {
         public final String text;
@@ -97,16 +109,19 @@ public final class NotificationBuilder {
      *
      * @param context         service context
      * @param title           conversation title
-     * @param conversationId  chat ID for grouping/buffering
+     * @param conversationId  chat ID, used as the target of an inline reply
+     * @param threadId        thread ID when the message belongs to a thread, otherwise empty
      * @param notificationId  Android notification ID (stable per conversation)
      * @param deepLink        deep link URI for tap action
      * @param largeIcon       large icon bitmap (may be null)
      * @param messages        buffered messages for MessagingStyle
      */
     public static void postMessageNotification(Context context, String title,
-            String conversationId, int notificationId, String deepLink,
+            String conversationId, String threadId, int notificationId, String deepLink,
             Bitmap largeIcon, List<MessageEntry> messages,
             boolean isOneToOne) {
+
+        final String conversationKey = conversationKey(conversationId, threadId);
 
         Intent intent = buildTapIntent(context, deepLink);
         if (intent == null) return;
@@ -126,7 +141,7 @@ public final class NotificationBuilder {
         buildMessagingStyle(context, builder, title, messages, isOneToOne);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            String shortcutId = "conv_" + conversationId;
+            String shortcutId = "conv_" + conversationKey;
             // For 1-1 chats: pin the first (contact's) message sender as the shortcut Person so
             // the contact avatar is stable and does not change when the user replies.
             // For group/community: no Person — the largeIcon (group/community icon) is used instead.
@@ -136,12 +151,12 @@ public final class NotificationBuilder {
         }
 
         // Delete intent: clear per-conversation state when user swipes away
-        addDismissIntent(context, builder, conversationId, notificationId);
+        addDismissIntent(context, builder, conversationId, conversationKey, notificationId);
 
         // Reply action
-        addReplyAction(context, builder, conversationId, notificationId);
+        addReplyAction(context, builder, conversationId, threadId, conversationKey, notificationId);
 
-        builder.setGroup("conv_" + conversationId);
+        builder.setGroup("conv_" + conversationKey);
 
         NotificationManagerCompat.from(context).notify(notificationId, builder.build());
     }
@@ -175,7 +190,7 @@ public final class NotificationBuilder {
 
         addContactRequestActions(context, builder, conversationId, contactRequestId, notificationId);
         if (conversationId != null && !conversationId.isEmpty()) {
-            addDismissIntent(context, builder, conversationId, notificationId);
+            addDismissIntent(context, builder, conversationId, conversationId, notificationId);
         }
         if (conversationId != null && !conversationId.isEmpty()) {
             builder.setGroup("conv_" + conversationId);
@@ -335,18 +350,19 @@ public final class NotificationBuilder {
     }
 
     private static void addDismissIntent(Context context, NotificationCompat.Builder builder,
-            String conversationId, int notificationId) {
+            String conversationId, String conversationKey, int notificationId) {
         Intent dismissIntent = new Intent(context, NotificationReplyReceiver.class);
         dismissIntent.setAction(ACTION_DISMISS);
         dismissIntent.setPackage(context.getPackageName());
         dismissIntent.putExtra("conversationId", conversationId);
+        dismissIntent.putExtra("conversationKey", conversationKey);
         builder.setDeleteIntent(PendingIntent.getBroadcast(
                 context, notificationId, dismissIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
     }
 
     private static void addReplyAction(Context context, NotificationCompat.Builder builder,
-            String conversationId, int notificationId) {
+            String conversationId, String threadId, String conversationKey, int notificationId) {
         RemoteInput remoteInput = new RemoteInput.Builder(REPLY_REMOTE_INPUT_KEY)
                 .setLabel(context.getString(R.string.notification_reply))
                 .build();
@@ -354,6 +370,8 @@ public final class NotificationBuilder {
         replyIntent.setAction(ACTION_REPLY);
         replyIntent.setPackage(context.getPackageName());
         replyIntent.putExtra("conversationId", conversationId);
+        replyIntent.putExtra("threadId", threadId);
+        replyIntent.putExtra("conversationKey", conversationKey);
         replyIntent.putExtra("androidNotificationId", notificationId);
         int replyFlags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
