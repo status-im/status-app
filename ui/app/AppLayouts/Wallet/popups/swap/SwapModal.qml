@@ -152,7 +152,9 @@ StatusDialog {
         }
 
         readonly property var selectedAccount: selectedAccountEntry.item
-        readonly property var toAccount: toAccountEntry.item
+        readonly property var toAccount: toAccountEntry.available ? toAccountEntry.item
+                                       : toSavedAddressEntry.available ? toSavedAddressEntry.item
+                                       : null
 
         readonly property string nativeTokenSymbol: Utils.getNativeTokenSymbol(root.swapInputParamsForm.selectedNetworkChainId)
 
@@ -253,6 +255,13 @@ StatusDialog {
         sourceModel: d.accountsSelectorAdaptor.processedWalletAccounts
         key: "address"
         value: root.swapInputParamsForm.toAccountAddress || root.swapInputParamsForm.selectedAccountAddress
+    }
+
+    ModelEntry {
+        id: toSavedAddressEntry
+        sourceModel: root.savedAddressesModel
+        key: "address"
+        value: root.swapInputParamsForm.toAccountAddress
     }
 
     ModelEntry {
@@ -489,9 +498,10 @@ StatusDialog {
                     selectedAccountAddress: root.swapInputParamsForm.toAccountAddress || root.swapInputParamsForm.selectedAccountAddress
                     nonInteractiveGroupKey: d.isSameChainSwap ? payPanel.selectedHoldingId : ""
 
-                    accountName: !!d.toAccount ? d.toAccount.name : ""
-                    accountEmoji: !!d.toAccount ? d.toAccount.emoji : ""
-                    accountColorId: !!d.toAccount ? d.toAccount.colorId : ""
+                    // saved addresses carry no emoji role, hence the extra fallbacks
+                    accountName: !!d.toAccount ? d.toAccount.name ?? "" : ""
+                    accountEmoji: !!d.toAccount ? d.toAccount.emoji ?? "" : ""
+                    accountColorId: !!d.toAccount ? d.toAccount.colorId ?? "" : ""
                     onAccountPillClicked: toAccountPopupComponent.createObject(root).open()
 
                     swapSide: SwapInputPanel.SwapSide.Receive
