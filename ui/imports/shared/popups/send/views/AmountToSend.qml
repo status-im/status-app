@@ -277,16 +277,40 @@ Control {
                             + "0".repeat(root.fiatDecimalPlaces)
                 }
 
-                // A TextInput cannot elide, so a long amount is cut off mid-digit instead.
-                // Safe from feeding back into itself because Layout.maximumWidth below caps
-                // this item's contribution to the parent's width.
+                // A TextInput cannot elide, and this amount must never be cut off
+                // mid-digit, so the font keeps shrinking as far as the value needs.
+                property int overflowCorrection: 0
+                onTextChanged: overflowCorrection = 0
+                Layout.onMaximumWidthChanged: overflowCorrection = 0
+
+                function snapScrollBackIfFits() {
+                    if (contentWidth <= width)
+                        ensureVisible(0)
+                }
+                onWidthChanged: Qt.callLater(snapScrollBackIfFits)
+
+                onContentWidthChanged: {
+                    if (Layout.maximumWidth > 0 && contentWidth > Layout.maximumWidth
+                            && font.pixelSize > 1)
+                        overflowCorrection++
+                    else
+                        Qt.callLater(snapScrollBackIfFits)
+                }
+
                 font.pixelSize: {
                     const maxWidth = textField.Layout.maximumWidth
-                    if (maxWidth <= 0 || amountMetrics.width <= maxWidth)
+                    if (maxWidth <= 0 || amountMetrics.width <= 0)
                         return d.amountFontSize
-                    // -1: hinting rounds glyph advances, so the scaled estimate lands a px over
-                    return Math.max(Theme.fontSize(13),
-                                    Math.floor(d.amountFontSize * (maxWidth - 1) / amountMetrics.width))
+                    const needed = amountMetrics.width + textField.length + 1 // 1px extra
+                    if (needed <= maxWidth && overflowCorrection === 0)
+                        return d.amountFontSize
+                    // the same ~1px per character extra addition
+                    const budget = maxWidth - 1 - textField.length
+                    if (budget <= 0)
+                        return 1
+                    const scaled = Math.min(d.amountFontSize,
+                                            Math.floor(d.amountFontSize * budget / amountMetrics.width))
+                    return Math.max(1, scaled - overflowCorrection)
                 }
 
                 validator: AmountValidator {
