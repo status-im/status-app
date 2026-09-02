@@ -17,6 +17,7 @@ LINK_PCRE=0 # nimbus-build-system links `pcre` by default which is not needed
 
 .PHONY: \
 	all \
+	fix-migrations \
 	nix-shell \
 	bottles \
 	check-qt-dir \
@@ -1045,6 +1046,29 @@ clean-git:
 
 force-rebuild-status-go:
 	bash ./scripts/force-rebuild-status-go.sh $(STATUSGO)
+
+# Repair db migration marker: make fix-migrations <dbpath|datadir> <password>
+# Without arguments it lists the migrations this checkout knows.
+ifeq (fix-migrations,$(firstword $(MAKECMDGOALS)))
+FIX_MIGRATIONS_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+$(eval $(FIX_MIGRATIONS_ARGS):;@:)
+endif
+
+WALLET_MIGRATIONS_DIR := vendor/status-go/internal/db/walletdb/migrations/sql
+FIX_MIGRATIONS_DIR := scripts/fix-migrations
+FIX_MIGRATIONS_BIN := $(FIX_MIGRATIONS_DIR)/target/release/fix-migrations
+
+$(FIX_MIGRATIONS_BIN): $(FIX_MIGRATIONS_DIR)/src/main.rs $(FIX_MIGRATIONS_DIR)/Cargo.toml
+	@command -v cargo >/dev/null 2>&1 || { echo "cargo not found: install Rust (https://rustup.rs) to build $(FIX_MIGRATIONS_DIR)"; exit 1; }
+	cargo build --release --manifest-path $(FIX_MIGRATIONS_DIR)/Cargo.toml
+
+fix-migrations: $(FIX_MIGRATIONS_BIN)
+ifeq ($(words $(FIX_MIGRATIONS_ARGS)),0)
+	$(FIX_MIGRATIONS_BIN) list $(WALLET_MIGRATIONS_DIR)
+else
+	@test $(words $(FIX_MIGRATIONS_ARGS)) -eq 2 || { echo "usage: make fix-migrations [<dbpath|datadir> <password>]"; exit 1; }
+	$(FIX_MIGRATIONS_BIN) fix $(WALLET_MIGRATIONS_DIR) $(FIX_MIGRATIONS_ARGS)
+endif
 
 run: $(RUN_TARGET)
 

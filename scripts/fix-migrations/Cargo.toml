@@ -1,0 +1,15 @@
+[package]
+name = "fix-migrations"
+version = "0.1.0"
+edition = "2021"
+description = "Repair the migration version marker of a status-go sqlcipher database"
+publish = false
+
+[dependencies]
+rusqlite = { version = "0.40", features = ["bundled-sqlcipher-vendored-openssl"] }
+serde_json = "1"
+hex = "0.4"
+sha3 = "0.10"
+scrypt = { version = "0.11", default-features = false }
+aes = "0.8"
+ctr = "0.9"
