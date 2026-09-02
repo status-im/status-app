@@ -1,42 +1,35 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 
 import utils
 
 import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
-import StatusQ.Core.Utils
 import StatusQ.Controls
 import StatusQ.Components
 
-import AppLayouts.Profile.stores
 import AppLayouts.Profile.popups
-
-import QtModelsToolkit
 
 Item {
     id: root
 
-    property EnsUsernamesStore ensUsernamesStore
     property string username: ""
 
-    required property var assetsModel
+    // Contract info shown in the terms-of-registration dialog.
+    property string registrarAddress
+    property string ensRegistryAddress
+    property string etherscanAddressLink
+
+    // Registrant details.
+    property string walletAddress
+    property string pubkey
+
+    // Available SNT balance; registration requires >= 10 SNT.
+    property real sntBalance
 
     signal backBtnClicked()
     signal registerUsername()
-
-    QtObject {
-        id: d
-
-        readonly property var sntToken: statusTokenEntry.item
-        readonly property SumAggregator aggregator: SumAggregator {
-            model: !!d.sntToken && !!d.sntToken.balances ? d.sntToken.balances: null
-            roleName: "balance"
-        }
-        readonly property real sntBalance: !!sntToken && !!sntToken.decimals ? aggregator.value/(10 ** sntToken.decimals): 0
-    }
 
     StatusBaseText {
         id: sectionTitle
@@ -53,9 +46,9 @@ Item {
     EnsTermsAndConditionsPopup {
         id: popup
 
-        registrarAddress: root.ensUsernamesStore.ensRegisteredAddress
-        ensRegistryAddress: root.ensUsernamesStore.getEnsRegistry()
-        etherscanAddressLink: root.ensUsernamesStore.getEtherscanAddressLink()
+        registrarAddress: root.registrarAddress
+        ensRegistryAddress: root.ensRegistryAddress
+        etherscanAddressLink: root.etherscanAddressLink
     }
 
     StatusScrollView {
@@ -115,7 +108,7 @@ Item {
                 anchors.right: parent.right
 
                 title: qsTr("Wallet address")
-                subTitle: root.ensUsernamesStore.getWalletDefaultAddress()
+                subTitle: root.walletAddress
                 tooltip.text: qsTr("Copied to clipboard!")
                 asset.name: "copy"
                 iconButton.onClicked: {
@@ -134,7 +127,7 @@ Item {
 
                 title: qsTr("Key")
                 subTitle: {
-                    let pubKey = root.ensUsernamesStore.pubkey;
+                    let pubKey = root.pubkey;
                     return pubKey.substring(0, 20) + "..." + pubKey.substring(pubKey.length - 20);
                 }
                 tooltip.text: qsTr("Copied to clipboard!")
@@ -239,10 +232,10 @@ Item {
 
                 Layout.alignment: Qt.AlignVCenter
 
-                text: d.sntBalance < 10 ?
+                text: root.sntBalance < 10 ?
                   qsTr("Not enough SNT") :
                   qsTr("Register")
-                enabled: d.sntBalance >= 10 && termsAndConditionsCheckbox.checked
+                enabled: root.sntBalance >= 10 && termsAndConditionsCheckbox.checked
                 onClicked: root.registerUsername()
             }
         }
@@ -253,14 +246,5 @@ Item {
             text: qsTr("Back")
             onClicked: backBtnClicked()
         }
-    }
-
-
-
-    ModelEntry {
-        id: statusTokenEntry
-        sourceModel: root.assetsModel
-        key: "key"
-        value: root.ensUsernamesStore.getStatusTokenGroupKey()
     }
 }
