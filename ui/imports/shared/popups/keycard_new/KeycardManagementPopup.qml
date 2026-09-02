@@ -1180,7 +1180,7 @@ StatusDialog {
                          && contentLoader.status === Loader.Ready
                          && contentLoader.sourceComponent === enterPinComponent
                 enabled: !d.processing
-                text: qsTr("I don't have or don't know PIN")
+                text: qsTr("No PIN? Skip")
                 onClicked: d.startKeycardReading("")
             }
 
