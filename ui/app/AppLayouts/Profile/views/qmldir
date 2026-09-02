@@ -8,6 +8,7 @@ CommunitiesView 1.0 CommunitiesView.qml
 ContactsView 1.0 ContactsView.qml
 EnsDetailsView 1.0 EnsDetailsView.qml
 EnsListView 1.0 EnsListView.qml
+EnsTermsAndConditionsView 1.0 EnsTermsAndConditionsView.qml
 LanguageView 1.0 LanguageView.qml
 LogosNetworkView 1.0 LogosNetworkView.qml
 NotificationsView 1.0 NotificationsView.qml
