@@ -9596,10 +9596,6 @@ Are you sure you want to do this?</source>
         <translation>Готово</translation>
     </message>
     <message>
-        <source>I don&apos;t have or don&apos;t know PIN</source>
-        <translation>У мене немає PIN або я його не знаю</translation>
-    </message>
-    <message>
         <source>Factory reset</source>
         <translation>Заводське скидання</translation>
     </message>
@@ -9614,6 +9610,10 @@ Are you sure you want to do this?</source>
     <message>
         <source>Import a key pair from recovery phrase</source>
         <translation>Імпортувати пару ключів із фрази відновлення</translation>
+    </message>
+    <message>
+        <source>No PIN? Skip</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Factory reset this Keycard</source>
