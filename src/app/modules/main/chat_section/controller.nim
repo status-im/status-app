@@ -139,9 +139,9 @@ proc init*(self: Controller) =
       return
     self.delegate.onMarkMessageAsUnread(chat)
 
-  self.events.on(message_service.SIGNAL_CHAT_THREADS_LOADED) do(e: Args):
-    let args = message_service.ChatThreadsLoadedArgs(e)
-    self.delegate.onChatThreadsLoaded(args.chatId, args.threads)
+  self.events.on(message_service.SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED) do(e: Args):
+    let args = message_service.ChatThreadsForChatsLoadedArgs(e)
+    self.delegate.onChatThreadsForChatsLoaded(args.threads)
 
   self.events.on(chat_service.SIGNAL_CHAT_LEFT) do(e: Args):
     let args = chat_service.ChatArgs(e)
