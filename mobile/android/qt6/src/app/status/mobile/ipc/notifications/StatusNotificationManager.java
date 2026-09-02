@@ -129,11 +129,11 @@ public final class StatusNotificationManager {
         final String chatIcon = eventWrap.optString("chatIcon", "");
         final boolean isFromMe = eventWrap.optBoolean("isFromMe", false);
 
-        // status-go always reports the parent chat as conversationId; the thread, if any, is only
-        // discoverable from the embedded message.
+        // Older status-go payloads expose the thread only through the embedded message.
         final JSONObject body = eventWrap.optJSONObject("body");
         final JSONObject bodyMessage = body != null ? body.optJSONObject("message") : null;
-        final String threadId = bodyMessage != null ? bodyMessage.optString("threadId", "") : "";
+        final String fallbackThreadId = bodyMessage != null ? bodyMessage.optString("threadId", "") : "";
+        final String threadId = eventWrap.optString("threadId", fallbackThreadId);
 
         String senderIcon = "";
         String senderName = "";
