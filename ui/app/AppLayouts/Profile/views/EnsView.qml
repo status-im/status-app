@@ -9,6 +9,8 @@ import StatusQ.Core.Utils
 import StatusQ.Popups.Dialog
 import StatusQ.Core.Theme
 
+import QtModelsToolkit
+
 import utils
 import shared
 import shared.stores as SharedStores
@@ -273,14 +275,26 @@ Item {
     Component {
         id: termsAndConditions
         EnsTermsAndConditionsView {
-            ensUsernamesStore: ensView.ensUsernamesStore
             username: selectedUsername
-            assetsModel: ensView.walletAssetsStore.groupedAccountAssetsModel
+
+            registrarAddress: ensView.ensUsernamesStore.ensRegisteredAddress
+            ensRegistryAddress: ensView.ensUsernamesStore.getEnsRegistry()
+            etherscanAddressLink: ensView.ensUsernamesStore.getEtherscanAddressLink()
+
+            walletAddress: ensView.ensUsernamesStore.getWalletDefaultAddress()
+            pubkey: ensView.ensUsernamesStore.pubkey
+
+            sntBalance: {
+                const token = statusTokenEntry.item
+                if (!token || !token.decimals)
+                    return 0
+                return sntAggregator.value / (10 ** token.decimals)
+            }
 
             onBackBtnClicked: back()
 
             onRegisterUsername: {
-                const chainId = root.ensUsernamesStore.getChainForBuyingEnsName()
+                const chainId = ensView.ensUsernamesStore.getChainForBuyingEnsName()
 
                 ensView.registerUsernameRequested(ensView.selectedUsername, chainId)
             }
@@ -293,6 +307,22 @@ Item {
                     }
                     done(ensView.selectedUsername)
                 }
+            }
+
+            ModelEntry {
+                id: statusTokenEntry
+                sourceModel: ensView.walletAssetsStore.groupedAccountAssetsModel
+                key: "key"
+                value: ensView.ensUsernamesStore.getStatusTokenGroupKey()
+            }
+
+            SumAggregator {
+                id: sntAggregator
+                model: {
+                    const token = statusTokenEntry.item
+                    return !!token && !!token.balances ? token.balances : null
+                }
+                roleName: "balance"
             }
         }
     }
