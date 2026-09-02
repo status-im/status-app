@@ -11,17 +11,11 @@ StatusCenteredFlow {
     id: root
 
     required property string serviceProviderName
+    required property string txProviderTool
     signal linkClicked()
-    signal termsAndConditionClicked()
 
     spacing: 4
 
-    StatusIcon {
-        width: 16
-        height: 16
-        icon: "external-link"
-        color: Theme.palette.directColor1
-    }
     StatusBaseText {
         font.pixelSize: Theme.additionalTextSize
         text: qsTr("Powered by")
@@ -34,11 +28,6 @@ StatusCenteredFlow {
     }
     StatusBaseText {
         font.pixelSize: Theme.additionalTextSize
-        text: qsTr("View")
-    }
-    StatusLinkText {
-        text: qsTr("Terms & Conditions")
-        font.weight: Font.Normal
-        onClicked: root.termsAndConditionClicked()
+        text: qsTr("via %1").arg(root.txProviderTool)
     }
 }

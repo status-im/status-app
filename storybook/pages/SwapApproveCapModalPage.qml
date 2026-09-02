@@ -77,6 +77,8 @@ SplitView {
                     modal: false
                     closePolicy: Popup.NoAutoClose
 
+                    txProviderTool: "sushiswap"
+
                     formatBigNumber: (number, symbol, noSymbolOption) => parseFloat(number).toLocaleString(Qt.locale(), 'f', 2)
                                      + (noSymbolOption ? "" : " " + (symbol || Qt.locale().currencySymbol(Locale.CurrencyIsoCode)))
 

@@ -45,7 +45,7 @@ Item {
 
             serviceProviderName: Constants.swap.paraswapName
             serviceProviderURL: Constants.swap.paraswapUrl
-            serviceProviderTandCUrl: Constants.swap.paraswapTermsAndConditionUrl
+            txProviderTool: "sushiswap"
 
             fiatFees: "1.54 EUR"
             cryptoFees: "0.001 ETH"
