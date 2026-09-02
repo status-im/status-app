@@ -7,7 +7,11 @@ from gui.objects_map import wallet_names
 from constants import ReturningUser
 from constants.wallet import WalletNetworkSettings
 from gui.components.authenticate_popup import AuthenticatePopup
-from helpers.onboarding_helper import open_create_profile_view, import_seed_and_log_in
+from helpers.onboarding_helper import (
+    import_seed_and_log_in,
+    open_create_profile_view,
+    skip_post_login_popups_if_visible,
+)
 from helpers.settings_helper import enable_testnet_mode
 
 
@@ -33,7 +37,8 @@ def is_assets_tab_content_loaded(asset_item) -> bool:
     except (RuntimeError, AttributeError):
         return False
 
-    return bool(driver.findAllObjects(asset_item.real_name))
+    items = driver.findAllObjects(asset_item.real_name)
+    return bool(items) and all(not getattr(item, 'balanceLoading', False) for item in items)
 
 
 def is_activity_tab_content_loaded() -> bool:
@@ -49,7 +54,7 @@ def wait_for_account_assets_loaded(
         wallet_account_view,
         timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
 ):
-        wallet_account_view.open_assets_tab(wait_until_loaded=True, loading_timeout_msec=timeout_msec)
+    wallet_account_view.open_assets_tab(wait_until_loaded=True, loading_timeout_msec=timeout_msec)
 
 
 def authenticate_with_password(user_account):
@@ -66,9 +71,8 @@ def assert_authenticate_popup_not_appears(timeout_msec: int = 2000):
 @step('Open wallet account after balances are loaded')
 def open_wallet_account(main_window, account_name=None):
     account_name = account_name or WalletNetworkSettings.STATUS_ACCOUNT_DEFAULT_NAME.value
-    timeout_msec = configs.timeouts.WALLET_TRANSACTION_SYNC_TIMEOUT_MSEC
     wallet = main_window.left_panel.open_wallet()
-    wait_for_wallet_balances_loaded(wallet.left_panel, timeout_msec=timeout_msec)
+    wait_for_wallet_balances_loaded(wallet.left_panel)
     return wallet.left_panel.select_account(account_name)
 
 
@@ -80,10 +84,13 @@ def wallet_send_returning_user():
 
 def wallet_send_import_user(main_window, user_account):
     with step('Import seed and log in'):
-        with step('Open Create your profile view'):
-            create_your_profile_view = open_create_profile_view()
-        with step('Import seed and log in'):
-            import_seed_and_log_in(create_your_profile_view, user_account.seed_phrase, user_account)
+        import_seed_and_log_in(
+            open_create_profile_view(),
+            user_account.seed_phrase,
+            user_account,
+        )
+        skip_post_login_popups_if_visible()
 
-    with step('Set testnet mode'):
+    with step('Enable testnet mode'):
         enable_testnet_mode(main_window)
+        skip_post_login_popups_if_visible()

@@ -1020,7 +1020,9 @@ sendModalRecipientField = {"container": statusDesktop_mainWindow_overlay, "type"
 sendModalSendTransactionFees = {"container": statusDesktop_mainWindow_overlay, "objectName": "signTransactionFees",
                                 "type": "SimpleTransactionsFees", "visible": True}
 sendModalReviewSendButton = {"container": statusDesktop_mainWindow_overlay,
-                             "objectName": "transactionModalFooterButton", "type": "StatusButton", "visible": True}
+                             "objectName": "transactionModalFooterButton", "type": "StatusButton"}
+sendModalMaxButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "maxSendButton",
+                      "type": "StatusButton"}
 
 # Network selector
 sendModalNetworkSelectorItem = {"container": statusDesktop_mainWindow_overlay,

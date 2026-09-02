@@ -13,7 +13,6 @@ from helpers.wallet_helper import (
 )
 from scripts.utils.generators import random_ens_string
 from constants.wallet import WalletHistoryTitles, WalletNetworkNaming
-from gui.components.wallet.send_popup import SendPopup
 from gui.screens.settings_ens_usernames import ENSRegisteredView
 
 
@@ -38,8 +37,8 @@ def test_ens_name_purchase(main_window, user_account, ens_name):
         register_ens = ens_settings.click_next_button().register_ens_name()
 
     with step('Confirm sending amount for purchasing ens username in send popup'):
-        register_ens.send_button.click()
-        send_popup = SendPopup().wait_until_appears()
+        send_popup = register_ens
+        send_popup.wait_for_review_send_ready()
 
     with step('Sign and send transaction to blockchain'):
         sent_at = time.time()
