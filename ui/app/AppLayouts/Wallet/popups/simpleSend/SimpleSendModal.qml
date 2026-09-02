@@ -780,6 +780,7 @@ StatusDialog {
 
                     bottomRightComponent: MaxSendButton {
                         id: maxButton
+                        objectName: "maxSendButton"
 
                         formattedValue: {
                             let maxSafeValue = amountToSend.fiatMode ? d.maxSafeCryptoValue * amountToSend.cryptoPrice : d.maxSafeCryptoValue

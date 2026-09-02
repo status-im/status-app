@@ -112,6 +112,49 @@ class SendPopup(QObject):
         self.send_modal_review_send_button.click()
         return SignSendModalPopup().wait_until_appears()
 
+    def _parse_amount(self, raw: str) -> float:
+        if not raw:
+            return 0.0
+
+        for prefix in ('Max.', 'Max:'):
+            if prefix in raw:
+                raw = raw.split(prefix, 1)[-1]
+
+        number = raw.strip().split()[0].replace(',', '').replace('\xa0', '')
+        try:
+            return float(number)
+        except (ValueError, IndexError):
+            return 0.0
+
+    def _max_send_balance(self) -> float:
+        try:
+            button = driver.waitForObjectExists(names.sendModalMaxButton, 200)
+        except (LookupError, RuntimeError):
+            return 0.0
+
+        formatted_value = getattr(button, 'formattedValue', None)
+        if formatted_value not in (None, ''):
+            return self._parse_amount(str(formatted_value))
+
+        return self._parse_amount(str(getattr(button, 'text', '')))
+
+    @allure.step('Wait until send modal token balance is ready')
+    def wait_until_send_balance_ready(
+            self,
+            timeout_msec: int = configs.timeouts.ROUTES_TIMEOUT_MSEC,
+    ):
+        assert driver.waitFor(lambda: self._max_send_balance() > 0, timeout_msec), (
+            f'Send modal still shows zero max balance, got: {self._max_send_balance()!r}'
+        )
+        return self
+
+    def _review_send_enabled(self) -> bool:
+        try:
+            button = driver.waitForObjectExists(names.sendModalReviewSendButton, 200)
+        except (LookupError, RuntimeError):
+            return False
+        return button.enabled
+
     @allure.step('Wait until route estimation completes and Review Send is enabled')
     def wait_for_review_send_ready(
             self,
@@ -132,7 +175,7 @@ class SendPopup(QObject):
                     return False
             except Exception:
                 pass
-            return self.send_modal_review_send_button.object.enabled
+            return self._review_send_enabled()
 
         assert driver.waitFor(review_send_ready, timeout_msec), (
             'Review Send is not enabled (insufficient funds, fees loading, or router error)'
@@ -145,6 +188,7 @@ class SendPopup(QObject):
 
         if asset:
             token_selector.select_asset_from_list(asset_name=asset)
+            self.wait_until_send_balance_ready()
             self.send_modal_amount_field.text = amount
             self.ens_address_text_input.click()
             pyperclip.copy(address)
