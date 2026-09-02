@@ -9,6 +9,7 @@ type
     raribleMainnetApiKey*: string
     raribleTestnetApiKey*: string
     alchemyApiKey*: string
+    lifiApiKey*: string
     statusProxyStageName*: string
     marketDataProxyUrl*: string
     marketDataProxyUser*: string
@@ -32,6 +33,7 @@ proc toJson*(self: WalletSecretsConfig): JsonNode =
     "raribleMainnetApiKey": self.raribleMainnetApiKey,
     "raribleTestnetApiKey": self.raribleTestnetApiKey,
     "alchemyApiKey": self.alchemyApiKey,
+    "lifiApiKey": self.lifiApiKey,
     "statusProxyStageName": self.statusProxyStageName,
     "marketDataProxyUrl": self.marketDataProxyUrl,
     "marketDataProxyUser": self.marketDataProxyUser,

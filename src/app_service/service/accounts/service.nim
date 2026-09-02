@@ -169,6 +169,7 @@ QtObject:
       raribleMainnetApiKey: RARIBLE_MAINNET_API_KEY_RESOLVED,
       raribleTestnetApiKey: RARIBLE_TESTNET_API_KEY_RESOLVED,
       alchemyApiKey: ALCHEMY_API_KEY_RESOLVED,
+      lifiApiKey: LIFI_API_KEY_RESOLVED,
       statusProxyStageName: STATUS_PROXY_STAGE_NAME_RESOLVED,
       marketDataProxyUrl: MARKET_DATA_PROXY_URL_RESOLVED,
       marketDataProxyUser: MARKET_DATA_PROXY_USER_RESOLVED,
