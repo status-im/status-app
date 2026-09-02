@@ -44,7 +44,7 @@ SignTransactionModalBase {
 
     property string serviceProviderName: Constants.swap.paraswapName
     property string serviceProviderHostname: Constants.swap.paraswapHostname
-    property string serviceProviderTandCUrl: Constants.swap.paraswapTermsAndConditionUrl
+    property string txProviderTool
     property string serviceProviderURL: Constants.swap.paraswapUrl // TODO https://github.com/status-im/status-app/issues/15329
     property string serviceProviderContractAddress: Constants.swap.paraswapV6_2ContractAddress
     property string serviceProviderIcon: Assets.png("swap/%1".arg(Constants.swap.paraswapIcon)) // FIXME svg
@@ -73,9 +73,10 @@ SignTransactionModalBase {
                 text: qsTr("The smart contract specified will be able to spend up to %1 of your current or future balance.").arg(formatBigNumber(root.fromTokenAmount, root.fromTokenSymbol))
             }
             SwapProvidersTermsAndConditionsText {
+                Layout.fillWidth: true
                 serviceProviderName: root.serviceProviderName
+                txProviderTool: root.txProviderTool
                 onLinkClicked: root.requestOpenLink(root.serviceProviderURL)
-                onTermsAndConditionClicked: root.requestOpenLink(root.serviceProviderTandCUrl)
             }
         }
     ]

@@ -111,7 +111,7 @@ SplitView {
                                          ? '<font color="#27ae60" size="6"><b>Paraswap</b></font>'
                                          : Constants.swap.paraswapName
                     serviceProviderURL: Constants.swap.paraswapUrl
-                    serviceProviderTandCUrl: Constants.swap.paraswapTermsAndConditionUrl
+                    txProviderTool: "sushiswap"
 
                     fiatFees: formatBigNumber(42.542567, "EUR")
                     cryptoFees: formatBigNumber(0.06, "ETH")

@@ -17099,12 +17099,8 @@ al cargar</translation>
         <translation>Desarrollado por</translation>
     </message>
     <message>
-        <source>View</source>
-        <translation>Ver</translation>
-    </message>
-    <message>
-        <source>Terms &amp; Conditions</source>
-        <translation>Términos y condiciones</translation>
+        <source>via %1</source>
+        <translation type="unfinished">vía %1</translation>
     </message>
 </context>
 <context>
