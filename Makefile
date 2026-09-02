@@ -17,6 +17,7 @@ LINK_PCRE=0 # nimbus-build-system links `pcre` by default which is not needed
 
 .PHONY: \
 	all \
+	fix-wallet-migrations \
 	nix-shell \
 	bottles \
 	check-qt-dir \
@@ -1045,6 +1046,17 @@ clean-git:
 
 force-rebuild-status-go:
 	bash ./scripts/force-rebuild-status-go.sh $(STATUSGO)
+
+# Repair wallet db migration marker: make fix-wallet-migrations <dbpath|datadir> <password>
+# Without arguments it lists the wallet migrations the vendored status-go knows.
+ifeq (fix-wallet-migrations,$(firstword $(MAKECMDGOALS)))
+FIX_WALLET_MIGRATIONS_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+$(eval $(FIX_WALLET_MIGRATIONS_ARGS):;@:)
+endif
+
+fix-wallet-migrations:
+	cd vendor/status-go && go generate ./internal/db/walletdb/migrations/sql && go run ./cmd/fix-wallet-migrations \
+		$(if $(FIX_WALLET_MIGRATIONS_ARGS),$(abspath $(word 1,$(FIX_WALLET_MIGRATIONS_ARGS))) $(word 2,$(FIX_WALLET_MIGRATIONS_ARGS)))
 
 run: $(RUN_TARGET)
 
