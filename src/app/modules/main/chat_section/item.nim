@@ -18,6 +18,7 @@ type
     emoji: string
     description: string
     lastMessageTimestamp: int
+    sortTimestamp: int
     hasUnreadMessages: bool
     lastMessageText: string
     notificationsCount: int
@@ -92,6 +93,7 @@ proc initChatItem*(
     permissionsCheckOngoing: bool = false,
     isThread: bool = false,
     parentChatId: string = "",
+    sortTimestamp: int = -1,
     ): ChatItem =
   result = ChatItem()
   result.id = id
@@ -105,6 +107,7 @@ proc initChatItem*(
   result.description = description
   result.`type` = `type`
   result.lastMessageTimestamp = lastMessageTimestamp
+  result.sortTimestamp = if sortTimestamp == -1: lastMessageTimestamp else: sortTimestamp
   result.lastMessageText = lastMessageText
   result.hasUnreadMessages = hasUnreadMessages
   result.notificationsCount = notificationsCount
@@ -270,6 +273,12 @@ proc lastMessageTimestamp*(self: ChatItem): int =
 
 proc `lastMessageTimestamp=`*(self: var ChatItem, value: int) =
   self.lastMessageTimestamp = value
+
+proc sortTimestamp*(self: ChatItem): int =
+  self.sortTimestamp
+
+proc `sortTimestamp=`*(self: var ChatItem, value: int) =
+  self.sortTimestamp = value
 
 proc lastMessageText*(self: ChatItem): string =
   self.lastMessageText

@@ -3154,6 +3154,10 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Ladicí akce</translation>
     </message>
     <message>
+        <source>Copy thread ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Copy channel ID</source>
         <translation>Kopírovat ID kanálu</translation>
     </message>

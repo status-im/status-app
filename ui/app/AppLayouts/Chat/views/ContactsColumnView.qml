@@ -115,20 +115,10 @@ Item {
                     }
                 ]
                 sorters: FastExpressionSorter {
-                    expectedRoles: ["itemId", "parentChatId", "isThread", "lastMessageTimestamp", "position"]
+                    expectedRoles: ["sortTimestamp", "isThread", "position"]
                     expression: {
-                        function timestampFor(item) {
-                            if (!item.isThread)
-                                return item.lastMessageTimestamp
-
-                            const parent = JSON.parse(root.chatSectionModule.getItemAsJson(item.parentChatId))
-                            return parent.lastMessageTimestamp
-                        }
-
-                        const leftTimestamp = timestampFor(modelLeft)
-                        const rightTimestamp = timestampFor(modelRight)
-                        if (leftTimestamp !== rightTimestamp)
-                            return rightTimestamp - leftTimestamp
+                        if (modelLeft.sortTimestamp !== modelRight.sortTimestamp)
+                            return modelRight.sortTimestamp - modelLeft.sortTimestamp
 
                         if (modelLeft.isThread !== modelRight.isThread)
                             return modelLeft.isThread ? 1 : -1
@@ -163,7 +153,7 @@ Item {
                     amIChatAdmin = obj.memberRole === Constants.memberRole.owner ||
                             obj.memberRole === Constants.memberRole.admin ||
                             obj.memberRole === Constants.memberRole.tokenMaster
-                    chatId = obj.itemId
+                    chatId = obj.isThread ? obj.parentChatId : obj.itemId
                     chatName = obj.name
                     chatDescription = obj.description
                     chatEmoji = obj.emoji
