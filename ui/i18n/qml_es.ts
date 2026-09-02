@@ -3141,6 +3141,10 @@ Do you wish to override the security check and continue?</source>
         <translation>Acciones de depuración</translation>
     </message>
     <message>
+        <source>Copy thread ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Copy channel ID</source>
         <translation>Copiar ID del canal</translation>
     </message>
@@ -3251,10 +3255,6 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Couldn&apos;t load threads</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Couldn&apos;t load thread messages</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
