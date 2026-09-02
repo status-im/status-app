@@ -17,6 +17,7 @@ type
     Description
     Type
     LastMessageTimestamp
+    SortTimestamp
     LastMessageText
     HasUnreadMessages
     NotificationsCount
@@ -119,6 +120,7 @@ QtObject:
       ModelRole.Description.int:"description",
       ModelRole.Type.int:"type",
       ModelRole.LastMessageTimestamp.int:"lastMessageTimestamp",
+      ModelRole.SortTimestamp.int:"sortTimestamp",
       ModelRole.LastMessageText.int:"lastMessageText",
       ModelRole.HasUnreadMessages.int:"hasUnreadMessages",
       ModelRole.NotificationsCount.int:"notificationsCount",
@@ -179,6 +181,8 @@ QtObject:
       result = newQVariant(item.`type`)
     of ModelRole.LastMessageTimestamp:
       result = newQVariant(item.lastMessageTimestamp)
+    of ModelRole.SortTimestamp:
+      result = newQVariant(item.sortTimestamp)
     of ModelRole.LastMessageText:
       result = newQVariant(item.lastMessageText)
     of ModelRole.HasUnreadMessages:
@@ -548,6 +552,12 @@ QtObject:
     updateItemRolesAndNotify self.getItemIdxById(id):
       updateRole(lastMessageText)
       updateRole(lastMessageTimestamp)
+      updateRoleWithValue(sortTimestamp, lastMessageTimestamp)
+
+    for ind in 0 ..< self.items.len:
+      if self.items[ind].isThread and self.items[ind].parentChatId == id:
+        updateRolesAndNotify:
+          updateRoleWithValue(sortTimestamp, lastMessageTimestamp)
 
   proc reorderChats*(
       self: Model,

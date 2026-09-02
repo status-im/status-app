@@ -319,7 +319,7 @@ Item {
 
                             isCommunityChat = root.communitySectionModule.isCommunity()
                             amIChatAdmin = root.isSectionAdmin
-                            chatId = obj.itemId
+                            chatId = obj.isThread ? obj.parentChatId : obj.itemId
                             chatName = obj.name
                             chatDescription = obj.description
                             chatIcon = obj.icon

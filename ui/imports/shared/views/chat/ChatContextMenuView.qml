@@ -123,7 +123,6 @@ StatusMenu {
         objectName: "chatMarkAsReadMenuItem"
         text: qsTr("Mark as Read")
         icon.name: "checkmark-circle"
-        enabled: !root.isThread
         onTriggered: {
             root.markAllMessagesRead(root.chatId, root.threadId)
         }
@@ -133,7 +132,7 @@ StatusMenu {
         objectName: "editChannelMenuItem"
         text: qsTr("Edit Channel")
         icon.name: "edit"
-        enabled: root.isCommunityChat && root.amIChatAdmin
+        enabled: root.isCommunityChat && root.amIChatAdmin && !root.isThread
         onTriggered: {
             root.displayEditChannelPopup(root.chatId);
         }
@@ -141,12 +140,13 @@ StatusMenu {
 
     StatusMenu {
         title: qsTr("Debug actions")
-        enabled: root.showDebugOptions && !root.isThread
+        enabled: root.showDebugOptions
 
         StatusAction {
-            text: root.isCommunityChat ? qsTr("Copy channel ID") : qsTr("Copy chat ID")
+            text: root.isThread ? qsTr("Copy thread ID") :
+                                  root.isCommunityChat ? qsTr("Copy channel ID") : qsTr("Copy chat ID")
             icon.name: "copy"
-            onTriggered: ClipboardUtils.setText(root.chatId)
+            onTriggered: ClipboardUtils.setText(root.isThread ? root.threadId : root.chatId)
         }
     }
 
