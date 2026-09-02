@@ -244,6 +244,12 @@ proc init*(self: Controller) =
       return
     self.delegate.onThreadCreated(args.parentMessageId, args.threads)
 
+  self.events.on(SIGNAL_THREAD_CREATION_FAILED) do(e: Args):
+    let args = ThreadCreatedArgs(e)
+    if self.chatId != args.chatId or self.threadId.len > 0:
+      return
+    self.delegate.onThreadCreationFailed()
+
   self.events.on(SIGNAL_THREAD_MESSAGES_LOADED) do(e: Args):
     let args = ThreadMessagesLoadedArgs(e)
     if self.chatId != args.chatId:
@@ -252,11 +258,23 @@ proc init*(self: Controller) =
       return
     self.delegate.newMessagesLoaded(args.messages, @[])
 
+  self.events.on(SIGNAL_THREAD_MESSAGES_LOADING_FAILED) do(e: Args):
+    let args = ThreadMessagesLoadedArgs(e)
+    if self.chatId != args.chatId or self.threadId != args.threadId:
+      return
+    self.delegate.onThreadMessagesLoadingFailed()
+
   self.events.on(SIGNAL_CHAT_THREADS_LOADED) do(e: Args):
     let args = ChatThreadsLoadedArgs(e)
     if self.chatId != args.chatId:
       return
     self.delegate.onChatThreadsLoaded(args.threads)
+
+  self.events.on(SIGNAL_CHAT_THREADS_LOADING_FAILED) do(e: Args):
+    let args = ChatThreadsLoadedArgs(e)
+    if self.chatId != args.chatId:
+      return
+    self.delegate.onChatThreadsLoadingFailed()
 
 proc getMySectionId*(self: Controller): string =
   return self.sectionId
@@ -280,9 +298,6 @@ proc loadChatThreadsIfNeeded*(self: Controller) =
 
 proc hasThreadForParentMessage*(self: Controller, parentMessageId: string): bool =
   return self.messageService.chatHasThreadForParentMessage(self.chatId, parentMessageId)
-
-proc closeThread*(self: Controller) =
-  self.threadId = ""
 
 proc getChatDetails*(self: Controller): lent ChatDto =
   return self.chatService.getChatById(self.chatId)
