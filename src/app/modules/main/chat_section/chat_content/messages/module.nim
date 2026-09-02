@@ -5,6 +5,7 @@ import view, controller
 import ../../../../shared_models/[message_model, message_item, contacts_utils]
 import ../../../../shared_models/link_preview_model
 import ../../../../../global/global_singleton
+import ../../../../../global/feature_flags
 import ../../../../../core/eventemitter
 import ../../../../../../app_service/service/contacts/dto/contacts
 import ../../../../../../app_service/service/contacts/service as contact_service
@@ -84,11 +85,12 @@ method isLoaded*(self: Module): bool =
   return self.moduleLoaded
 
 method viewDidLoad*(self: Module) =
-  self.controller.loadChatThreadsIfNeeded()
-  self.view.setThreadId(self.controller.getMyThreadId())
+  if THREADS_ENABLED:
+    self.controller.loadChatThreadsIfNeeded()
+    self.view.setThreadId(self.controller.getMyThreadId())
 
-  if self.controller.getMyThreadId().len > 0:
-    discard self.controller.loadMoreMessages()
+    if self.controller.getMyThreadId().len > 0:
+      discard self.controller.loadMoreMessages()
 
   let chatDto = self.controller.getChatDetails()
   if self.controller.getMyThreadId().len == 0 and chatDto.hasMoreMessagesToRequest():
@@ -282,9 +284,8 @@ method reevaluateViewLoadingState*(self: Module) =
   self.view.setLoading(loading)
 
 method newMessagesLoaded*(self: Module, messages: seq[MessageDto], reactions: seq[ReactionDto]) =
-  var filtered = messages
-  if self.controller.getMyThreadId().len > 0:
-    filtered = messages.filterIt(it.threadId == self.controller.getMyThreadId())
+  let threadId = self.controller.getMyThreadId()
+  let filtered = messages.filterIt(it.threadId == threadId)
 
   if filtered.len > 0:
     var viewItems = self.createMessageItemsFromMessageDtos(filtered, reactions)
@@ -305,9 +306,8 @@ method newMessagesLoaded*(self: Module, messages: seq[MessageDto], reactions: se
   self.reevaluateViewLoadingState()
 
 method messagesAdded*(self: Module, messages: seq[MessageDto]) =
-  var filtered = messages
-  if self.controller.getMyThreadId().len > 0:
-    filtered = messages.filterIt(it.threadId == self.controller.getMyThreadId())
+  let threadId = self.controller.getMyThreadId()
+  let filtered = messages.filterIt(it.threadId == threadId)
 
   if filtered.len == 0:
     return
@@ -448,9 +448,6 @@ method createThread*(self: Module, parentMessageId: string) =
 
   self.controller.createThread(parentMessageId)
 
-method closeThread*(self: Module) =
-  self.setThreadId("")
-
 method onThreadCreated*(self: Module, parentMessageId: string, threads: seq[ThreadDto]) =
   if threads.len == 0:
     return
@@ -468,12 +465,21 @@ method onThreadCreated*(self: Module, parentMessageId: string, threads: seq[Thre
   # Open the freshly created thread as a sub-channel chat
   self.delegate.openThreadAsChat(selectedThread.threadId, selectedThread.name, selectedThread.parentMessageId)
 
+method onChatThreadsLoadingFailed*(self: Module) =
+  self.view.emitChatThreadsLoadingFailedSignal()
+
+method onThreadMessagesLoadingFailed*(self: Module) =
+  self.initialMessagesLoaded = true
+  self.reevaluateViewLoadingState()
+  self.view.emitThreadMessagesLoadingFailedSignal()
+
+method onThreadCreationFailed*(self: Module) =
+  self.view.emitThreadCreationFailedSignal()
+
 method onChatThreadsLoaded*(self: Module, threads: seq[ThreadDto]) =
   for thread in threads:
     if thread.parentMessageId.len > 0:
       self.view.model().setHasThread(thread.parentMessageId, true)
-      # Add the thread to the chat list so it appears as a sub-chat
-      self.delegate.openThreadAsChat(thread.threadId, thread.name, thread.parentMessageId)
 
 method getChatType*(self: Module): int =
   let chatDto = self.controller.getChatDetails()

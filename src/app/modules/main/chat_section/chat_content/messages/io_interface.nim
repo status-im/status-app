@@ -196,13 +196,19 @@ method forceLinkPreviewsLocalData*(self: AccessInterface, messageId: string) {.b
 method createThread*(self: AccessInterface, parentMessageId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method closeThread*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method setThreadId*(self: AccessInterface, threadId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onThreadCreated*(self: AccessInterface, parentMessageId: string, threads: seq[ThreadDto]) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onChatThreadsLoadingFailed*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onThreadMessagesLoadingFailed*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onThreadCreationFailed*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onChatThreadsLoaded*(self: AccessInterface, threads: seq[ThreadDto]) {.base.} =

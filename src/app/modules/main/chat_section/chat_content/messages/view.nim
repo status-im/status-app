@@ -108,17 +108,17 @@ QtObject:
   proc createThread*(self: View, parentMessageId: string) {.slot.} =
     self.delegate.createThread(parentMessageId)
 
-  # QML uses this to enter an existing thread; forward to the module so
-  # controller/view/model state stay in sync.
-  proc setThreadIdFromUI*(self: View, value: string) {.slot.} =
-    self.delegate.setThreadId(value)
+  proc chatThreadsLoadingFailed*(self: View) {.signal.}
+  proc emitChatThreadsLoadingFailedSignal*(self: View) =
+    self.chatThreadsLoadingFailed()
 
-  proc closeThread*(self: View) {.slot.} =
-    self.delegate.closeThread()
+  proc threadMessagesLoadingFailed*(self: View) {.signal.}
+  proc emitThreadMessagesLoadingFailedSignal*(self: View) =
+    self.threadMessagesLoadingFailed()
 
-  proc threadCreated*(self: View, threadId: string, parentMessageId: string) {.signal.}
-  proc emitThreadCreatedSignal*(self: View, threadId: string, parentMessageId: string) =
-    self.threadCreated(threadId, parentMessageId)
+  proc threadCreationFailed*(self: View) {.signal.}
+  proc emitThreadCreationFailedSignal*(self: View) =
+    self.threadCreationFailed()
 
   proc getNumberOfPinnedMessages*(self: View): int {.slot.} =
     return self.delegate.getNumberOfPinnedMessages()
