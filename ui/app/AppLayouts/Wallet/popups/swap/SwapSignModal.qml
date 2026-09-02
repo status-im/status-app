@@ -44,7 +44,7 @@ SignTransactionModalBase {
 
     required property string serviceProviderName
     required property string serviceProviderURL
-    required property string serviceProviderTandCUrl
+    required property string txProviderTool
 
     //: e.g. (swap) 100 DAI to 100 USDT
     subtitle: qsTr("%1 to %2").arg(formatBigNumber(fromTokenAmount, fromTokenSymbol)).arg(formatBigNumber(toTokenAmount, toTokenSymbol))
@@ -62,8 +62,8 @@ SignTransactionModalBase {
         SwapProvidersTermsAndConditionsText {
             Layout.fillWidth: true
             serviceProviderName: root.serviceProviderName
+            txProviderTool: root.txProviderTool
             onLinkClicked: root.requestOpenLink(root.serviceProviderURL)
-            onTermsAndConditionClicked: root.requestOpenLink(root.serviceProviderTandCUrl)
         }
     ]
     infoTagText: qsTr("Review all details before signing")

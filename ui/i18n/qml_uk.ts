@@ -17182,12 +17182,8 @@ to load</source>
         <translation>За підтримки</translation>
     </message>
     <message>
-        <source>View</source>
-        <translation>Переглянути</translation>
-    </message>
-    <message>
-        <source>Terms &amp; Conditions</source>
-        <translation>Умови використання</translation>
+        <source>via %1</source>
+        <translation type="unfinished">через %1</translation>
     </message>
 </context>
 <context>

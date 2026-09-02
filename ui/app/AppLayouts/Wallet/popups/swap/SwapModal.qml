@@ -187,7 +187,6 @@ StatusDialog {
         readonly property bool swapViaLiFi: root.swapAdaptor.swapOutputData.txProviderName === Constants.swap.lifiProcessorName
         readonly property string serviceProviderName: d.swapViaLiFi ? Constants.swap.lifiName : Constants.swap.paraswapName
         readonly property string serviceProviderUrl: d.swapViaLiFi ? Constants.swap.lifiUrl : Constants.swap.paraswapUrl
-        readonly property string serviceProviderTandCUrl: d.swapViaLiFi ? Constants.swap.lifiTermsAndConditionUrl : Constants.swap.paraswapTermsAndConditionUrl
         readonly property string serviceProviderHostname: d.swapViaLiFi ? Constants.swap.lifiHostname : Constants.swap.paraswapHostname
         readonly property string serviceProviderIconName: d.swapViaLiFi ? Constants.swap.lifiIcon : Constants.swap.paraswapIcon
 
@@ -951,7 +950,7 @@ StatusDialog {
 
             serviceProviderName: d.serviceProviderName
             serviceProviderURL: d.serviceProviderUrl // TODO https://github.com/status-im/status-app/issues/15329
-            serviceProviderTandCUrl: d.serviceProviderTandCUrl // TODO https://github.com/status-im/status-app/issues/15329
+            txProviderTool: root.swapAdaptor.swapOutputData.txProviderTool
             serviceProviderIcon: Assets.png("swap/%1".arg(d.serviceProviderIconName)) // FIXME svg
             serviceProviderContractAddress: root.swapAdaptor.swapOutputData.approvalContractAddress
             serviceProviderHostname: d.serviceProviderHostname
@@ -1021,7 +1020,7 @@ StatusDialog {
 
             serviceProviderName: d.serviceProviderName
             serviceProviderURL: d.serviceProviderUrl // TODO https://github.com/status-im/status-app/issues/15329
-            serviceProviderTandCUrl: d.serviceProviderTandCUrl // TODO https://github.com/status-im/status-app/issues/15329
+            txProviderTool: root.swapAdaptor.swapOutputData.txProviderTool
 
             onAccepted: {
                 root.swapAdaptor.sendSwapTx()

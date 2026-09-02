@@ -17020,12 +17020,8 @@ to load</source>
         <translation>제공: </translation>
     </message>
     <message>
-        <source>View</source>
-        <translation>보기</translation>
-    </message>
-    <message>
-        <source>Terms &amp; Conditions</source>
-        <translation>이용 약관</translation>
+        <source>via %1</source>
+        <translation type="unfinished">%1 경유</translation>
     </message>
 </context>
 <context>

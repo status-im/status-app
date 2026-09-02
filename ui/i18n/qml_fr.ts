@@ -17098,12 +17098,8 @@ avec un retour à la ligne</translation>
         <translation>Fonctionne avec</translation>
     </message>
     <message>
-        <source>View</source>
-        <translation>Voir</translation>
-    </message>
-    <message>
-        <source>Terms &amp; Conditions</source>
-        <translation>Conditions générales</translation>
+        <source>via %1</source>
+        <translation type="unfinished">via %1</translation>
     </message>
 </context>
 <context>
