@@ -62,7 +62,11 @@ Control {
 
         Image {
             Layout.alignment: Qt.AlignHCenter
+            // Shrink the image when vertical space is tight
+            Layout.fillHeight: true
+            Layout.minimumHeight: 0
             Layout.preferredHeight: Constants.keycard.shared.imageHeight
+            Layout.maximumHeight: Constants.keycard.shared.imageHeight
             Layout.preferredWidth: Constants.keycard.shared.imageWidth
             source: (root.mode === EnterPinState.Mode.EnterPin && root.wrongPin)
                     || (root.mode === EnterPinState.Mode.RepeatPin && root.pinMismatch)

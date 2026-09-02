@@ -9342,10 +9342,6 @@ Are you sure you want to do this?</source>
         <translation type="unfinished">완료</translation>
     </message>
     <message>
-        <source>I don&apos;t have or don&apos;t know PIN</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Factory reset</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9359,6 +9355,10 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Import a key pair from recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No PIN? Skip</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

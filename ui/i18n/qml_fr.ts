@@ -9381,10 +9381,6 @@ Are you sure you want to do this?</source>
         <translation>Terminé</translation>
     </message>
     <message>
-        <source>I don&apos;t have or don&apos;t know PIN</source>
-        <translation>Je n&apos;ai pas ou je ne connais pas le code PIN</translation>
-    </message>
-    <message>
         <source>Factory reset</source>
         <translation>Réinitialisation d&apos;usine</translation>
     </message>
@@ -9399,6 +9395,10 @@ Are you sure you want to do this?</source>
     <message>
         <source>Import a key pair from recovery phrase</source>
         <translation>Importer une paire de clés à partir d&apos;une phrase de récupération</translation>
+    </message>
+    <message>
+        <source>No PIN? Skip</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Factory reset this Keycard</source>
