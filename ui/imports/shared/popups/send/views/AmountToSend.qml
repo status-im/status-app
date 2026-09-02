@@ -151,6 +151,10 @@ Control {
         textField.forceActiveFocus()
     }
 
+    function setFiatMode(mode) {
+        d.fiatMode = mode
+    }
+
     TapHandler {
         enabled: root.interactive
         onTapped: {
@@ -386,7 +390,7 @@ Control {
             Layout.fillWidth: true
             Item {
                 Layout.fillWidth: true
-                implicitWidth: bottomItem.contentWidth + (swapIcon.visible ? swapIcon.width + Theme.halfPadding : 0)
+                implicitWidth: bottomItem.implicitWidth + swapIcon.width + Theme.halfPadding
                 implicitHeight: Math.max(bottomItem.contentHeight, swapIcon.height)
                 StatusMouseArea {
                     objectName: "amountToSend_mouseArea"
@@ -440,14 +444,12 @@ Control {
                         return d.fiatMode ? root.formatBalance(asNumber)
                                         : root.formatFiat(asNumber)
                     }
-
-                    width: parent.width - swapIcon.width - Theme.halfPadding
+                    
+                    width: Math.min(implicitWidth, parent.width - swapIcon.width - Theme.halfPadding)
                     elide: Text.ElideMiddle
                     font.pixelSize: Theme.additionalTextSize
                     customColor: Theme.palette.directColor5
                     loading: root.bottomTextLoading
-
-                    HoverHandler { id: hoverHandler }
                 }
                 StatusIcon {
                     id: swapIcon
@@ -461,7 +463,7 @@ Control {
                     icon: "swap"
                     rotation: 90
                     color: Theme.palette.directColor5
-                    visible: d.fiatToggleEnabled && (hoverHandler.hovered || SQUtils.Utils.isMobile)
+                    visible: d.fiatToggleEnabled
                 }
             }
             Item { Layout.fillWidth: true }
