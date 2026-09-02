@@ -87,6 +87,7 @@ Control {
 
     /* Right padding for amount input */
     property int amountInputRightPadding: 0
+    property int mainInputHeight: 44
     /* Methods for formatting crypto and fiat value expecting double values,
        e.g. 1.0 for 1 ETH or 1.0 for 1 USD. */
     property var formatFiat: balance =>
@@ -253,8 +254,9 @@ Control {
 
                 objectName: "amountToSend_textField"
 
-                Layout.preferredHeight: 44
+                Layout.preferredHeight: root.mainInputHeight
                 Layout.maximumWidth: root.width - currencyField.width - 2*layout.spacing - root.amountInputRightPadding
+                verticalAlignment: TextInput.AlignVCenter
                 padding: 0
                 leftPadding: 0
                 topPadding: 0
