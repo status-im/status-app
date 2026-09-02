@@ -3127,6 +3127,10 @@ Do you wish to override the security check and continue?</source>
         <translation>디버그 작업</translation>
     </message>
     <message>
+        <source>Copy thread ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Copy channel ID</source>
         <translation>채널 ID 복사</translation>
     </message>

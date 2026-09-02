@@ -537,6 +537,7 @@ method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, t
     canPostReactions = parentItem.canPostReactions,
     isThread = true,
     parentChatId = parentChatId,
+    sortTimestamp = parentItem.lastMessageTimestamp,
   )
 
   self.view.chatsModel().appendItemAfterParent(threadItem, parentIndex)
@@ -545,7 +546,12 @@ method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, t
 
 proc updateActiveChatMembership*(self: Module) =
   let activeChatId = self.controller.getActiveChatId()
-  let chat = self.controller.getChatDetails(activeChatId)
+  let activeChatItem = self.view.chatsModel().getItemById(activeChatId)
+  let membershipChatId = if not activeChatItem.isNil and activeChatItem.isThread:
+      activeChatItem.parentChatId
+    else:
+      activeChatId
+  let chat = self.controller.getChatDetails(membershipChatId)
 
   if chat.chatType == ChatType.PrivateGroupChat:
     let amIMember = any(chat.members, proc (member: ChatMember): bool = member.id == singletonInstance.userProfile.getPubKey())
@@ -1009,7 +1015,7 @@ method onCommunityChannelDeletedOrChatLeft*(self: Module, chatId: string) =
   self.removeSubmodule(chatId)
 
   let activeChatId = self.controller.getActiveChatId()
-  if chatId == activeChatId:
+  if self.view.chatsModel().getItemById(activeChatId).isNil:
     self.setFirstChannelAsActive()
 
   self.updateParentBadgeNotifications()
