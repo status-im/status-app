@@ -440,6 +440,8 @@ StatusDialog {
                             root.swapInputParamsForm.fromTokenAmount = amount
                         }
                     }
+
+                    onFiatModeChanged: receivePanel.setFiatMode(fiatMode)
                 }
 
                 SwapInputPanel {

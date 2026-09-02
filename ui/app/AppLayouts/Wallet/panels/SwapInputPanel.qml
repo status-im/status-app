@@ -123,6 +123,7 @@ Control {
 
     readonly property double maxCryptoBalance: d.maxCryptoBalance
     readonly property double maxSafeCryptoValue: d.maxSafeCryptoValue
+    readonly property alias fiatMode: amountToSendInput.fiatMode
 
     /** `value` is a crypto amount, also while the input displays fiat **/
     function setAmount(value) {
@@ -143,6 +144,10 @@ Control {
     function reset() {
         if (root.tokenSelectorModel)
             root.tokenSelectorModel.search("")
+    }
+
+    function setFiatMode(mode) {
+        amountToSendInput.setFiatMode(mode)
     }
 
     Binding {
@@ -462,7 +467,7 @@ Control {
             multiplierIndex: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.decimals ? d.selectedHolding.item.decimals : 18
             cryptoPrice: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.cryptoPrice ? d.selectedHolding.item.cryptoPrice : 0
             formatFiat: amount => qsTr("≈ %1").arg(root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency))
-            formatBalance: amount => qsTr("≈ %1").arg(root.currencyStore.formatCurrencyAmount(amount, d.inputSymbol, { noSymbol: true, roundingMode: LocaleUtils.RoundingMode.Down }))
+            formatBalance: amount => qsTr("≈ %1").arg(LocaleUtils.currencyAmountToLocaleString(root.currencyStore.getCurrencyAmount(amount, d.selectedHolding.item.key)))
 
             mainInputLoading: root.mainInputLoading
             bottomTextLoading: root.bottomTextLoading
