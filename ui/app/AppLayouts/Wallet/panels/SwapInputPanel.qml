@@ -393,7 +393,7 @@ Control {
     }
 
     contentItem: ColumnLayout {
-        spacing: 0
+        spacing: Theme.halfPadding
 
         RowLayout {
             Layout.fillWidth: true
@@ -469,6 +469,7 @@ Control {
             selectedSymbol: amountToSendInput.fiatMode ? d.inputSymbol : ""
 
             amountInputRightPadding: holdingSelector.width + Theme.padding
+            mainInputHeight: Math.max(44, holdingSelector.height)
 
             bottomRightComponent: RowLayout {
                 objectName: "balanceLine"
@@ -520,8 +521,8 @@ Control {
 
                 anchors.top: parent.top
                 anchors.right: parent.right
-                // centred on the 44px input row; the button itself is a bit taller
-                anchors.topMargin: Math.min(0, (44 - height) / 2)
+                // centred on the input row, which is sized to at least this height
+                anchors.topMargin: (amountToSendInput.mainInputHeight - height) / 2
 
                 showDropdownIndicator: false
 
