@@ -44,9 +44,9 @@ QObject {
     /**
       Expected model structure:
 
-        key                   [int]    - group key
-        symbol                [int]    - symbol of token
-        decimals              [string] - decimals of token
+        key                   [string] - group key
+        symbol                [string] - symbol of token
+        decimals              [int]    - decimals of token
     **/
     required property var tokenGroupsModel
 
@@ -68,14 +68,14 @@ QObject {
     readonly property var selectedNetwork: selectedNetworkEntry.item
     /** output property of the asset (ERC20) selected **/
     readonly property var selectedAsset: selectedAssetEntry.item
-    readonly property var selectedAssetEntry: selectedAssetContractEntry.item
     /** output property of the localised amount to send **/
     readonly property string selectedAmount: {
-        const decimals = !!root.selectedAsset ? root.selectedAsset.decimals: 0
-        const divisor = AmountsArithmetic.fromExponent(decimals)
-        let amount =  AmountsArithmetic.div(
-                AmountsArithmetic.fromString(root.selectedAmountInBaseUnit),
-                divisor).toFixed(decimals)
+        const amountBig = AmountsArithmetic.fromString(root.selectedAmountInBaseUnit || "0")
+        if (typeof amountBig === "number")
+            return "0"
+
+        const decimals = (root.selectedAsset?.decimals | 0) || 0
+        let amount = AmountsArithmetic.div(amountBig, AmountsArithmetic.fromExponent(decimals)).toFixed(decimals)
         // removeDecimalTrailingZeros
         amount = Utils.stripTrailingZeros(amount)
         // localize
