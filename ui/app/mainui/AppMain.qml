@@ -1079,6 +1079,7 @@ Item {
         }
 
         function openSettingsRoot() {
+            mainLayoutItem.openACCenterPanel = false
             profileLoader.settingsSubSubsection = -1
             profileLoader.settingsSubsection = appMain.isPortraitMode ? -1 : Constants.settingsSubsection.profile
             appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.profile)
@@ -1379,8 +1380,7 @@ Item {
         }
 
         function onCloseActivityCenterRequested() {
-            if (mainLayoutItem.isPortraitMode)
-                mainLayoutItem.openACCenterPanel = false
+            mainLayoutItem.openACCenterPanel = false
         }
     }
 
