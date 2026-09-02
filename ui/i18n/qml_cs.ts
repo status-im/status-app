@@ -17035,12 +17035,8 @@ selhalo</translation>
         <translation>Běží na</translation>
     </message>
     <message>
-        <source>View</source>
-        <translation>Zobrazit</translation>
-    </message>
-    <message>
-        <source>Terms &amp; Conditions</source>
-        <translation>Podmínky použití</translation>
+        <source>via %1</source>
+        <translation type="unfinished">přes %1</translation>
     </message>
 </context>
 <context>

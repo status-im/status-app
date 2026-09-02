@@ -16939,11 +16939,7 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>View</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Terms &amp; Conditions</source>
+        <source>via %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
