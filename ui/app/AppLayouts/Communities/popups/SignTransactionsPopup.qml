@@ -1,7 +1,6 @@
 import QtQuick
 import QtQml.Models
 
-import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Popups.Dialog
 
@@ -10,19 +9,19 @@ import utils
 import AppLayouts.Communities.controls
 import AppLayouts.Communities.panels
 
-StatusDialog {
+StatusAdaptiveDialog {
     id: root
 
-    // expected roles:
+    // expected model roles:
     //
     // title (string)
     // feeText (string)
     // error (bool), optional
-    property alias model: feesPanel.model
+    property var model
 
-    property alias errorText: footer.errorText
-    property alias totalFeeText: footer.totalFeeText
-    property alias accountName: footer.accountName
+    property string errorText
+    property string totalFeeText
+    property string accountName
 
     property string keyUid: ""
     property bool migratedToColdWallet: false
@@ -30,45 +29,38 @@ StatusDialog {
     signal signTransactionClicked()
     signal cancelClicked()
 
-    QtObject {
-        id: d
+    maximumWidthOverride: 600 // by design
 
-        property int minTextWidth: 50
-    }
-
-    implicitWidth: 600 // by design
-
-    contentItem: FeesPanel {
-        id: feesPanel
-
+    contentComponent: FeesPanel {
         highlightFees: false
 
+        model: root.model
+
         footer: FeesSummaryFooter {
-            id: footer
+            errorText: root.errorText
+            totalFeeText: root.totalFeeText
+            accountName: root.accountName
         }
     }
 
-    footer: StatusDialogFooter {
-        spacing: Theme.padding
-        rightButtons: ObjectModel {
-            StatusButton {
-                objectName: "cancelButton"
-                text: qsTr("Cancel")
-                type: StatusBaseButton.Type.Danger
-                onClicked: {
-                    root.cancelClicked()
-                    root.close()
-                }
+    footerRightButtons: ObjectModel {
+        StatusButton {
+            objectName: "cancelButton"
+            text: qsTr("Cancel")
+            type: StatusBaseButton.Type.Danger
+            onClicked: {
+                root.cancelClicked()
+                root.close()
             }
-            StatusButton {
-                objectName: "signTransactionButton"
-                enabled: root.errorText === "" && !root.isFeeLoading
-                icon.name: Utils.resolveAuthSignIcon(root.keyUid, root.migratedToColdWallet, Constants.AuthSignPurpose.General)
-                text: qsTr("Sign transaction")
-                onClicked: {
-                    root.signTransactionClicked()
-                    root.close()
-                }
+        }
+        StatusButton {
+            objectName: "signTransactionButton"
+            enabled: root.errorText === ""
+            icon.name: Utils.resolveAuthSignIcon(root.keyUid, root.migratedToColdWallet, Constants.AuthSignPurpose.General)
+            text: qsTr("Sign transaction")
+            onClicked: {
+                root.signTransactionClicked()
+                root.close()
             }
         }
     }
