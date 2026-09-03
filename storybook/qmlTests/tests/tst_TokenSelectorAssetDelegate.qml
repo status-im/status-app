@@ -124,7 +124,23 @@ Item {
             verify(chipText)
             verify(chipText.visible)
 
-            mouseClick(control)
+            // a click beside the chip selects the asset
+            mouseClick(control, 10, 10)
+            compare(control.clickSpy.count, 1)
+
+            // a click on the chip is consumed by it: it requests the contract
+            // link and must not select the asset
+            const chipSpy = createTemporaryQmlObject("import QtTest; SignalSpy {}", root)
+            chipSpy.target = control
+            chipSpy.signalName = "contractAddressClicked"
+
+            const chipArea = findChild(control, "addressChipMouseArea")
+            verify(chipArea)
+            waitForRendering(control)
+            const chipCenter = chipArea.mapToItem(control, chipArea.width / 2, chipArea.height / 2)
+            mouseClick(control, chipCenter.x, chipCenter.y)
+
+            tryCompare(chipSpy, "count", 1)
             compare(control.clickSpy.count, 1)
         }
 
@@ -140,6 +156,58 @@ Item {
             control.networkIconUrl = "network/ethereum"
             compare(control.effectiveNetworkIcon, "network/ethereum")
             compare(control.hasNetworkBadge, true)
+        }
+
+        // a popular asset has token entries but no balances; the catalog's
+        // chain (fallbackChainId) must resolve the address chip then
+        function test_addressChipWithoutBalances() {
+            const tokens = Qt.createQmlObject("import QtQuick; ListModel {}", root)
+            tokens.append({ chainId: 1, key: "1-" + root.tokenAddress })
+            tokens.append({ chainId: 10, key: "10-0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" })
+
+            const control = createTemporaryObject(delegateCmp, root, {
+                tokensModel: tokens
+            })
+
+            // no balances and no catalog chain: nothing to resolve against
+            compare(control.tokenAddress, "")
+            compare(control.hasAddressChip, false)
+
+            // the catalog chain picks the matching per-chain deployment
+            control.fallbackChainId = 10
+            compare(control.tokenAddress, "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+            compare(control.hasAddressChip, true)
+
+            control.fallbackChainId = 1
+            compare(control.tokenAddress, root.tokenAddress)
+            compare(control.hasAddressChip, true)
+
+            // a chain the group has no entry for resolves to no chip
+            control.fallbackChainId = 42161
+            compare(control.tokenAddress, "")
+            compare(control.hasAddressChip, false)
+        }
+
+        // a chain switch rebuilds the tokens submodel in place with an
+        // unchanged row count; the address must follow the new content
+        function test_addressFollowsTokensModelRebuild() {
+            const tokens = Qt.createQmlObject("import QtQuick; ListModel {}", root)
+            tokens.append({ chainId: 1, key: "1-" + root.tokenAddress })
+
+            const control = createTemporaryObject(delegateCmp, root, {
+                tokensModel: tokens,
+                fallbackChainId: 1
+            })
+            compare(control.tokenAddress, root.tokenAddress)
+
+            // the catalog now holds another chain's deployment; same row count
+            control.fallbackChainId = 10
+            compare(control.tokenAddress, "")
+            tokens.setProperty(0, "chainId", 10)
+            tokens.setProperty(0, "key", "10-0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+
+            compare(control.tokenAddress, "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+            compare(control.hasAddressChip, true)
         }
 
         function test_zeroAddressHasNoChip() {
