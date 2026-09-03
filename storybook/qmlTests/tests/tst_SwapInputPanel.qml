@@ -202,6 +202,59 @@ Item {
             tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
         }
 
+        function test_chainFilterBrowsingKeepsTheSelection() {
+            const store = d.adaptor.walletAssetsStore.walletTokensStore
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: sttGroupKey})
+            store.buildGroupsForChain(d.goOptChainId)
+            verify(!!controlUnderTest)
+            tryCompare(controlUnderTest, "selectedHoldingId", sttGroupKey)
+
+            // the user flips the filter to browse mainnet: the settled catalog
+            // holds mainnet's tokens and lacks the selected one
+            const fresh = store.createTokenSelectorModel(3).model
+            verify(!!fresh)
+            controlUnderTest.tokenSelectorModel = fresh
+            controlUnderTest.listChainFilter = 1
+            fresh.sourceData = [{
+                key: ethGroupKey, name: "Ether", symbol: "ETH", logoUri: "", decimals: 18,
+                cryptoPrice: 1, currentBalance: 0, currencyBalance: 0, sectionName: "",
+                balances: [], tokens: [{ key: "1-native", chainId: 1 }]
+            }]
+            wait(50)
+            compare(controlUnderTest.selectedHoldingId, sttGroupKey)
+
+            // back on the side's own catalog its absence is authoritative again
+            controlUnderTest.tokenSelectorLoading = true
+            controlUnderTest.listChainFilter = -1
+            controlUnderTest.tokenSelectorLoading = false
+            tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
+        }
+
+        function test_multiChainTokenRefsStillResolveSelection() {
+            const store = d.adaptor.walletAssetsStore.walletTokensStore
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})
+            verify(!!controlUnderTest)
+
+            const fresh = store.createTokenSelectorModel(3).model
+            verify(!!fresh)
+            controlUnderTest.tokenSelectorModel = fresh
+
+            fresh.sourceData = [{
+                key: ethGroupKey, name: "Ether", symbol: "ETH", logoUri: "", decimals: 18,
+                cryptoPrice: 1, currentBalance: 0, currencyBalance: 0, sectionName: "",
+                balances: [],
+                tokens: [{ key: "1-native", chainId: 1 },
+                         { key: d.goOptChainId + "-native", chainId: d.goOptChainId }]
+            }]
+
+            tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
+            tryCompare(controlUnderTest, "selectedHoldingTokenKey", d.goOptChainId + "-native")
+
+            // a chain change re-resolves the key instead of leaving it stale
+            controlUnderTest.selectedNetworkChainId = 1
+            tryCompare(controlUnderTest, "selectedHoldingTokenKey", "1-native")
+        }
+
         function test_fiatEquivalentAndBalanceLineShareALine() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})
             d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
