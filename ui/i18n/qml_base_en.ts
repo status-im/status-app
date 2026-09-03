@@ -3244,6 +3244,18 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Couldn&apos;t load threads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t load thread messages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t create thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Send Contact Request</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11206,6 +11218,14 @@ to load</source>
     <name>MessageContextMenuView</name>
     <message>
         <source>Reply</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create Thread</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

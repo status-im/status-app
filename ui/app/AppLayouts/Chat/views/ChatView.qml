@@ -110,6 +110,7 @@ Item {
 
     property bool sendViaPersonalChatEnabled
     property bool messageLinkSharingEnabled
+    property bool threadsFeatureEnabled
     property string disabledTooltipText
     property bool paymentRequestFeatureEnabled
 
@@ -496,6 +497,7 @@ Item {
             amIBanned: root.sectionItemModel ? root.sectionItemModel.amIBanned : false
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
             messageLinkSharingEnabled: root.messageLinkSharingEnabled
+            threadsFeatureEnabled: root.threadsFeatureEnabled
             disabledTooltipText: root.disabledTooltipText
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
             extraLeftPadding: root.extraLeftPadding

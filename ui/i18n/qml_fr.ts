@@ -3245,6 +3245,18 @@ Do you wish to override the security check and continue?</source>
         <translation>Veuillez réessayer plus tard</translation>
     </message>
     <message>
+        <source>Couldn&apos;t load threads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t load thread messages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t create thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Send Contact Request</source>
         <translation>Envoyer une demande de contact</translation>
     </message>
@@ -11223,6 +11235,14 @@ chargement</translation>
         <translation type="unfinished">Répondre</translation>
     </message>
     <message>
+        <source>Open Thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create Thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Edit</source>
         <translation type="unfinished">Modifier</translation>
     </message>
@@ -16851,11 +16871,11 @@ avec un retour à la ligne</translation>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished"></translation>
+        <translation>Le plus rapide</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
+        <translation>Frais le plus bas</translation>
     </message>
     <message>
         <source>Swap + Bridge</source>
@@ -16872,11 +16892,11 @@ avec un retour à la ligne</translation>
     <message>
         <source>%1s</source>
         <comment>short for seconds</comment>
-        <translation type="unfinished">%1&#xa0;s</translation>
+        <translation>%1&#xa0;s</translation>
     </message>
     <message>
         <source>Choose route</source>
-        <translation type="unfinished"></translation>
+        <translation>Choisir la route</translation>
     </message>
     <message>
         <source>by %1</source>
@@ -16989,7 +17009,7 @@ avec un retour à la ligne</translation>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Le plus rapide</translation>
     </message>
     <message>
         <source>Shortest execution time</source>
@@ -16997,7 +17017,7 @@ avec un retour à la ligne</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Frais le plus bas</translation>
     </message>
     <message>
         <source>Lowest network cost</source>

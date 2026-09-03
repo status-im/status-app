@@ -1,4 +1,4 @@
-import nimqml, tables, chronicles, json, sequtils, std/strformat, sugar, marshal
+import nimqml, tables, chronicles, json, sequtils, std/strformat, sugar, marshal, std/sets
 from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop, isActive
 
 import io_interface
@@ -56,6 +56,17 @@ type
     # defers the first-activation model build off the tap handler (seaqt
     # QTimer, auto-destroyed via =destroy)
     initialBuildTimer: QTimer
+    # services retained so thread sub-channels can be created on demand
+    events: EventEmitter
+    settingsService: settings_service.Service
+    nodeConfigurationService: node_configuration_service.Service
+    contactService: contact_service.Service
+    chatService: chat_service.Service
+    communityService: community_service.Service
+    messageService: message_service.Service
+    mailserversService: mailservers_service.Service
+    sharedUrlsService: shared_urls_service.Service
+    threadChatIds: HashSet[string]
 
 # Forward declaration
 proc buildChatSectionUI(
@@ -123,6 +134,17 @@ proc newModule*(
   result.viewVariant = newQVariant(result.view)
   result.moduleLoaded = false
   result.chatsLoaded = false
+
+  result.events = events
+  result.settingsService = settingsService
+  result.nodeConfigurationService = nodeConfigurationService
+  result.contactService = contactService
+  result.chatService = chatService
+  result.communityService = communityService
+  result.messageService = messageService
+  result.mailserversService = mailserversService
+  result.sharedUrlsService = sharedUrlsService
+  result.threadChatIds = initHashSet[string]()
 
   result.chatContentModules = initOrderedTable[string, chat_content_module.AccessInterface]()
   if isCommunity:
@@ -446,6 +468,71 @@ method chatContentDidLoad*(self: Module) =
 
 method setActiveItem*(self: Module, itemId: string) =
   self.controller.setActiveItem(itemId)
+
+method isChatThread*(self: Module, chatId: string): bool =
+  return self.threadChatIds.contains(chatId)
+
+method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, threadName: string, parentMessageId: string, setActive: bool = false) =
+  if threadId.len == 0:
+    return
+
+  # If the thread sub-channel already exists, just activate it.
+  if self.chatContentModules.contains(threadId) and setActive:
+    self.setActiveItem(threadId)
+    return
+
+  let parentItem = self.view.chatsModel().getItemById(parentChatId)
+  if parentItem.isNil:
+    error "openThreadAsChat: unknown parent chat", parentChatId, methodName="openThreadAsChat"
+    return
+
+  let parentIndex = self.view.chatsModel().getItemIdxById(parentChatId)
+  if parentIndex == -1:
+    error "openThreadAsChat: unknown parent chat index", parentChatId, methodName="openThreadAsChat"
+    return
+
+  let belongsToCommunity = self.controller.isCommunity()
+  let isUsersListAvailable = parentItem.`type` != ChatType.OneToOne.int
+
+  # The thread content module is keyed in the chat list by the threadId, but it
+  # loads/sends messages against the parent chat id together with the threadId.
+  self.chatContentModules[threadId] = chat_content_module.newModule(
+    self, self.events, self.controller.getMySectionId(), parentChatId,
+    belongsToCommunity, isUsersListAvailable, self.settingsService, self.nodeConfigurationService,
+    self.contactService, self.chatService, self.communityService, self.messageService,
+    self.mailserversService, self.sharedUrlsService, threadId = threadId)
+
+  self.threadChatIds.incl(threadId)
+
+  let threadItem = chat_item.initChatItem(
+    id = threadId,
+    name = "🧵 " & threadName,
+    usesDefaultName = false,
+    icon = parentItem.icon,
+    color = parentItem.color,
+    emoji = parentItem.emoji,
+    description = "",
+    `type` = parentItem.`type`,
+    parentItem.memberRole,
+    lastMessageTimestamp = 0,
+    lastMessageText = "",
+    hasUnreadMessages = false,
+    notificationsCount = 0,
+    muted = false,
+    blocked = false,
+    active = false,
+    position = parentItem.position,
+    categoryId = parentItem.categoryId,
+    categoryPosition = parentItem.categoryPosition,
+    canPost = parentItem.canPost,
+    canView = parentItem.canView,
+    canPostReactions = parentItem.canPostReactions,
+    isThread = true,
+  )
+
+  self.view.chatsModel().appendItemAfterParent(threadItem, parentIndex)
+  if setActive:
+    self.setActiveItem(threadId)
 
 proc updateActiveChatMembership*(self: Module) =
   let activeChatId = self.controller.getActiveChatId()

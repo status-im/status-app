@@ -3260,6 +3260,18 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation type="unfinished">Prosím zkuste znovu později</translation>
     </message>
     <message>
+        <source>Couldn&apos;t load threads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t load thread messages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t create thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Send Contact Request</source>
         <translation>Odeslat žádost o kontakt</translation>
     </message>
@@ -11277,6 +11289,14 @@ selhalo</translation>
     <message>
         <source>Reply</source>
         <translation type="unfinished">Odpovědět</translation>
+    </message>
+    <message>
+        <source>Open Thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create Thread</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Edit</source>

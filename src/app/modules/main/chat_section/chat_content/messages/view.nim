@@ -10,6 +10,7 @@ QtObject:
       delegate: io_interface.AccessInterface
       model: Model
       modelVariant: QVariant
+      threadId: string
       messageSearchOngoing: bool
       amIChatAdmin: bool
       isPinMessageAllowedForMembers: bool
@@ -26,6 +27,7 @@ QtObject:
     result.delegate = delegate
     result.model = newModel()
     result.modelVariant = newQVariant(result.model)
+    result.threadId = ""
     result.messageSearchOngoing = false
     result.amIChatAdmin = false
     result.isPinMessageAllowedForMembers = false
@@ -91,6 +93,32 @@ QtObject:
 
   proc getChatId*(self: View): string {.slot.} =
     return self.delegate.getChatId()
+
+  proc threadIdChanged*(self: View) {.signal.}
+  proc getThreadId*(self: View): string {.slot.} =
+    return self.threadId
+  proc setThreadId*(self: View, value: string) {.slot.} =
+    self.threadId = value
+    self.threadIdChanged()
+
+  QtProperty[string] threadId:
+    read = getThreadId
+    notify = threadIdChanged
+
+  proc createThread*(self: View, parentMessageId: string) {.slot.} =
+    self.delegate.createThread(parentMessageId)
+
+  proc chatThreadsLoadingFailed*(self: View) {.signal.}
+  proc emitChatThreadsLoadingFailedSignal*(self: View) =
+    self.chatThreadsLoadingFailed()
+
+  proc threadMessagesLoadingFailed*(self: View) {.signal.}
+  proc emitThreadMessagesLoadingFailedSignal*(self: View) =
+    self.threadMessagesLoadingFailed()
+
+  proc threadCreationFailed*(self: View) {.signal.}
+  proc emitThreadCreationFailedSignal*(self: View) =
+    self.threadCreationFailed()
 
   proc getNumberOfPinnedMessages*(self: View): int {.slot.} =
     return self.delegate.getNumberOfPinnedMessages()

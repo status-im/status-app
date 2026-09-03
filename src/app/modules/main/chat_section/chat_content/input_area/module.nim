@@ -21,6 +21,7 @@ type
     viewVariant: QVariant
     controller: Controller
     moduleLoaded: bool
+    threadId: string
 
 proc newModule*(
     delegate: delegate_interface.AccessInterface,
@@ -32,7 +33,8 @@ proc newModule*(
     communityService: community_service.Service,
     contactService: contact_service.Service,
     messageService: message_service.Service,
-    settingsService: settings_service.Service
+    settingsService: settings_service.Service,
+    threadId: string = ""
     ):
   Module =
   result = Module()
@@ -41,6 +43,7 @@ proc newModule*(
   result.viewVariant = newQVariant(result.view)
   result.controller = controller.newController(result, events, sectionId, chatId, belongsToCommunity, chatService, communityService, contactService, messageService, settingsService)
   result.moduleLoaded = false
+  result.threadId = threadId
 
 method delete*(self: Module) =
   self.view.delete
@@ -66,8 +69,17 @@ method getModuleAsVariant*(self: Module): QVariant =
 proc getChatId*(self: Module): string =
   return self.controller.getChatId()
 
-method sendImages*(self: Module, imagePathsJson: string, msg: string, replyTo: string, linkPreviews: seq[LinkPreview], paymentRequests: seq[PaymentRequest]) =
-  self.controller.sendImages(imagePathsJson, msg, replyTo, singletonInstance.userProfile.getPreferredName(), linkPreviews, paymentRequests)
+method sendImages*(self: Module, imagePathsJson: string, msg: string, replyTo: string,
+    linkPreviews: seq[LinkPreview], paymentRequests: seq[PaymentRequest]) =
+  self.controller.sendImages(
+    imagePathsJson = imagePathsJson,
+    msg = msg,
+    replyTo = replyTo,
+    preferredUsername = singletonInstance.userProfile.getPreferredName(),
+    linkPreviews = linkPreviews,
+    paymentRequests = paymentRequests,
+    self.threadId,
+  )
 
 method sendChatMessage*(
     self: Module,
@@ -75,9 +87,20 @@ method sendChatMessage*(
     replyTo: string,
     contentType: int,
     linkPreviews: seq[LinkPreview],
-    paymentRequests: seq[PaymentRequest]) =
-  self.controller.sendChatMessage(msg, replyTo, contentType,
-    singletonInstance.userProfile.getPreferredName(), linkPreviews, paymentRequests)
+    paymentRequests: seq[PaymentRequest],
+  ) =
+  self.controller.sendChatMessage(
+    msg = msg,
+    replyTo = replyTo,
+    contentType = contentType,
+    preferredUsername = singletonInstance.userProfile.getPreferredName(),
+    linkPreviews,
+    paymentRequests,
+    self.threadId,
+  )
+
+method getThreadId*(self: Module): string =
+  return self.threadId
 
 method setText*(self: Module, text: string, unfurlNewUrls: bool) =
   self.controller.setText(text, unfurlNewUrls)

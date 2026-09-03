@@ -76,6 +76,7 @@ type
     albumImagesCount: int
     bridgeName: string
     paymentRequestModel: payment_request_model.Model
+    hasThread: bool
 
 proc initMessageItem*(
     id,
@@ -132,6 +133,7 @@ proc initMessageItem*(
     bridgeMessage: BridgeMessage,
     quotedBridgeMessage: BridgeMessage,
     paymentRequests: seq[PaymentRequest],
+    hasThread: bool = false,
     ): Item =
   result = Item()
   result.id = id
@@ -193,6 +195,7 @@ proc initMessageItem*(
   result.albumMessageIds = albumMessageIds
   result.albumImagesCount = albumImagesCount
   result.paymentRequestModel = newPaymentRequestModel(paymentRequests)
+  result.hasThread = hasThread
 
   if quotedMessageContentType == ContentType.DiscordMessage:
     result.quotedMessageAuthorDisplayName = quotedMessageDiscordMessage.author.name
@@ -596,8 +599,15 @@ proc toJsonNode*(self: Item): JsonNode =
     "albumMessageImages": self.albumMessageImages,
     "albumMessageIds": self.albumMessageIds,
     "albumImagesCount": self.albumImagesCount,
-    "bridgeName": self.bridgeName
+    "bridgeName": self.bridgeName,
+    "hasThread": self.hasThread
   }
+
+proc hasThread*(self: Item): bool {.inline.} =
+  self.hasThread
+
+proc `hasThread=`*(self: Item, value: bool) {.inline.} =
+  self.hasThread = value
 
 proc editMode*(self: Item): bool {.inline.} =
   self.editMode

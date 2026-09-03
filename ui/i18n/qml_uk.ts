@@ -3260,6 +3260,18 @@ Do you wish to override the security check and continue?</source>
         <translation>Спробуйте ще раз пізніше</translation>
     </message>
     <message>
+        <source>Couldn&apos;t load threads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t load thread messages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t create thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Send Contact Request</source>
         <translation>Надіслати запит у контакти</translation>
     </message>
@@ -11284,6 +11296,14 @@ to load</source>
     <message>
         <source>Reply</source>
         <translation type="unfinished">Відповісти</translation>
+    </message>
+    <message>
+        <source>Open Thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create Thread</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Edit</source>
