@@ -50,31 +50,34 @@ Control {
 
         Image {
             id: image
+            Layout.fillHeight: true
+            Layout.minimumHeight: 0
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredHeight: Constants.keycard.shared.imageHeight
             Layout.preferredWidth: Constants.keycard.shared.imageWidth
+            Layout.maximumHeight: Constants.keycard.shared.imageHeight
             fillMode: Image.PreserveAspectFit
             mipmap: true
         }
 
-        Row {
+        StatusLoadingIndicator {
             Layout.alignment: Qt.AlignHCenter
-            spacing: Theme.halfPadding
+            Layout.preferredWidth: 30
+            Layout.preferredHeight: 30
+            visible: root.processing
+                     && state !== "waiting-for-reader"
+                     && state !== "waiting-for-card"
+                     && state !== "reading-card"
+        }
 
-            StatusLoadingIndicator {
-                visible: root.processing
-                         && root.state !== "waiting-for-reader"
-                         && root.state !== "waiting-for-card"
-                         && root.state !== "reading-card"
-            }
-
-            StatusBaseText {
-                id: title
-                objectName: "keycardProgressTitle"
-                wrapMode: Text.WordWrap
-                font.weight: Font.Bold
-                font.pixelSize: Theme.fontSize(22)
-            }
+        StatusBaseText {
+            id: title
+            Layout.fillWidth: true
+            objectName: "keycardProgressTitle"
+            wrapMode: Text.WordWrap
+            font.weight: Font.Bold
+            font.pixelSize: Theme.fontSize(22)
+            horizontalAlignment: Text.AlignHCenter
         }
 
         StatusBaseText {
