@@ -4,7 +4,8 @@ import app/modules/main/chat_section/[model, Item]
 
 import app_service/common/types
 
-proc createTestChatItem(id: string, catId: string = "", isCategory: bool = false): ChatItem =
+proc createTestChatItem(id: string, catId: string = "", isCategory: bool = false,
+  categoryOpened: bool = true, isThread: bool = false, parentChatId: string = ""): ChatItem =
   discard
   return initChatItem(
       id = id,
@@ -25,6 +26,9 @@ proc createTestChatItem(id: string, catId: string = "", isCategory: bool = false
       active = false,
       position = 0,
       categoryId = catId,
+      categoryOpened = categoryOpened,
+      isThread = isThread,
+      parentChatId = parentChatId,
     )
 
 let chatA = createTestChatItem("0xa")
@@ -145,6 +149,39 @@ suite "updating chat items":
     check(parent.sortTimestamp == 123)
     check(thread.sortTimestamp == 123)
 
+  test "thread batches follow their parent in source order":
+    let parent = createTestChatItem("0xparent")
+    let otherChat = createTestChatItem("0xother")
+    let firstThread = createTestChatItem("0xthread1", isThread = true, parentChatId = parent.id)
+    let secondThread = createTestChatItem("0xthread2", isThread = true, parentChatId = parent.id)
+    let laterThread = createTestChatItem("0xthread3", isThread = true, parentChatId = parent.id)
+    model.setData(@[parent, otherChat])
+
+    model.appendItemsAfterParent(@[firstThread, secondThread], parent.id)
+    check(model.getItemIdxById(parent.id) == 0)
+    check(model.getItemIdxById(firstThread.id) == 1)
+    check(model.getItemIdxById(secondThread.id) == 2)
+    check(model.getItemIdxById(otherChat.id) == 3)
+
+    model.appendItemsAfterParent(@[laterThread], parent.id)
+    check(model.getItemIdxById(laterThread.id) == 3)
+    check(model.getItemIdxById(otherChat.id) == 4)
+
+  test "thread batches remain with their own parent":
+    let firstParent = createTestChatItem("0xparent1")
+    let secondParent = createTestChatItem("0xparent2")
+    let firstThread = createTestChatItem("0xthread1", isThread = true, parentChatId = firstParent.id)
+    let secondThread = createTestChatItem("0xthread2", isThread = true, parentChatId = secondParent.id)
+    model.setData(@[firstParent, secondParent])
+
+    model.appendItemsAfterParent(@[firstThread], firstParent.id)
+    model.appendItemsAfterParent(@[secondThread], secondParent.id)
+
+    check(model.getItemIdxById(firstParent.id) == 0)
+    check(model.getItemIdxById(firstThread.id) == 1)
+    check(model.getItemIdxById(secondParent.id) == 2)
+    check(model.getItemIdxById(secondThread.id) == 3)
+
 suite "hidden role (chat list virtualization)":
   setup:
     # fresh items per test — ChatItem is a ref, shared globals leak state
@@ -164,6 +201,16 @@ suite "hidden role (chat list virtualization)":
 
     model.changeCategoryOpened("0xcatA", true)
     check(model.getItemById("0xc").hidden == false)
+
+  test "thread inherits collapsed category visibility":
+    let thread = createTestChatItem("0xthread", catId = "0xcatA", categoryOpened = false,
+      isThread = true, parentChatId = "0xc")
+    model.appendItem(thread)
+
+    check(thread.hidden == true)
+
+    model.changeCategoryOpened("0xcatA", true)
+    check(thread.hidden == false)
 
   test "active chat stays visible in a closed category":
     model.setActiveItem("0xc")

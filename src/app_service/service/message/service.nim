@@ -5,6 +5,7 @@ import ../../../app/core/tasks/[qt, threadpool]
 import ../../../app/core/signals/types
 import ../../../app/core/eventemitter
 import ../../../app/global/global_singleton
+import ../../../app/global/feature_flags
 import ../../../backend/accounts as status_accounts
 import ../../../backend/messages as status_go
 import ../contacts/service as contact_service
@@ -43,7 +44,7 @@ const MESSAGES_PER_PAGE_MAX* = 40
 
 # Signals which may be emitted by this service:
 const SIGNAL_MESSAGES_LOADED* = "messagesLoaded"
-const SIGNAL_CHAT_THREADS_LOADED* = "chatThreadsLoaded"
+const SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED* = "chatThreadsForChatsLoaded"
 const SIGNAL_CHAT_THREADS_LOADING_FAILED* = "chatThreadsLoadingFailed"
 const SIGNAL_THREAD_CREATED* = "threadCreated"
 const SIGNAL_THREAD_CREATION_FAILED* = "threadCreationFailed"
@@ -91,8 +92,10 @@ type
     messages*: seq[MessageDto]
     reactions*: seq[ReactionDto]
 
-  ChatThreadsLoadedArgs* = ref object of Args
+  ChatThreadsLoadingFailedArgs* = ref object of Args
     chatId*: string
+
+  ChatThreadsForChatsLoadedArgs* = ref object of Args
     threads*: seq[ThreadDto]
 
   ThreadCreatedArgs* = ref object of Args
@@ -210,6 +213,7 @@ QtObject:
     chatThreadsLoadingChats: HashSet[string]
 
   proc asyncLoadChatThreads*(self: Service, chatId: string)
+  proc asyncLoadChatThreadsForChats*(self: Service, chatIds: seq[string])
 
   proc delete*(self: Service)
   proc newService*(
@@ -258,6 +262,9 @@ QtObject:
     self.chatThreadsLoadingChats.excl(chatId)
 
   proc loadChatThreadsIfNeeded*(self: Service, chatId: string) =
+    if not THREADS_ENABLED:
+      return
+
     if chatId.len == 0:
       return
 
@@ -270,6 +277,26 @@ QtObject:
     self.chatThreadsLoadingChats.incl(chatId)
     self.asyncLoadChatThreads(chatId)
 
+  proc loadChatThreadsForChatsIfNeeded*(self: Service, chatIds: seq[string]) =
+    if not THREADS_ENABLED:
+      return
+
+    var pending: seq[string] = @[]
+    for chatId in chatIds:
+      if chatId.len == 0 or
+         self.chatThreadsLoadedChats.contains(chatId) or
+         self.chatThreadsLoadingChats.contains(chatId):
+        continue
+      pending.add(chatId)
+
+    if pending.len == 0:
+      return
+
+    for chatId in pending:
+      self.chatThreadsLoadingChats.incl(chatId)
+
+    self.asyncLoadChatThreadsForChats(pending)
+
   proc chatHasThreadForParentMessage*(self: Service, chatId: string, parentMessageId: string): bool =
     if chatId.len == 0 or parentMessageId.len == 0:
       return false
@@ -280,18 +307,12 @@ QtObject:
     return self.chatThreadsParentIdsByChat[chatId].contains(parentMessageId)
 
   proc handleThreadsUpdate(self: Service, threads: seq[ThreadDto]) =
-    var threadsByChat = initTable[string, seq[ThreadDto]]()
     for thread in threads:
-      if thread.chatId.len == 0:
-        continue
+      if thread.chatId.len > 0:
+        self.cacheCreatedThreads(thread.chatId, @[thread])
 
-      if not threadsByChat.hasKey(thread.chatId):
-        threadsByChat[thread.chatId] = @[]
-      threadsByChat[thread.chatId].add(thread)
-
-    for chatId, chatThreads in threadsByChat:
-      self.cacheCreatedThreads(chatId, chatThreads)
-      self.events.emit(SIGNAL_CHAT_THREADS_LOADED, ChatThreadsLoadedArgs(chatId: chatId, threads: chatThreads))
+    self.events.emit(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED,
+      ChatThreadsForChatsLoadedArgs(threads: threads))
 
   proc isChatCursorInitialized(self: Service, chatId: string): bool =
     return self.msgCursor.hasKey(chatId)
@@ -393,6 +414,19 @@ QtObject:
       vptr: cast[uint](self.vptr),
       slot: "onAsyncLoadChatThreads",
       chatId: chatId,
+    )
+
+    self.threadpool.start(arg)
+
+  proc asyncLoadChatThreadsForChats*(self: Service, chatIds: seq[string]) =
+    if chatIds.len == 0:
+      return
+
+    let arg = AsyncFetchChatThreadsForChatsTaskArg(
+      tptr: asyncFetchChatThreadsForChatsTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncLoadChatThreadsForChats",
+      chatIds: chatIds,
     )
 
     self.threadpool.start(arg)
@@ -902,12 +936,54 @@ QtObject:
       self.chatThreadsLoadedChats.incl(chatId)
       self.chatThreadsLoadingChats.excl(chatId)
 
-      self.events.emit(SIGNAL_CHAT_THREADS_LOADED, ChatThreadsLoadedArgs(chatId: chatId, threads: threads))
+      self.events.emit(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED,
+        ChatThreadsForChatsLoadedArgs(threads: threads))
     except Exception as e:
       if chatId.len > 0:
         self.chatThreadsLoadingChats.excl(chatId)
-        self.events.emit(SIGNAL_CHAT_THREADS_LOADING_FAILED, ChatThreadsLoadedArgs(chatId: chatId, threads: @[]))
+        self.events.emit(SIGNAL_CHAT_THREADS_LOADING_FAILED, ChatThreadsLoadingFailedArgs(chatId: chatId))
       error "error loading chat threads", msg = e.msg
+
+  proc onAsyncLoadChatThreadsForChats*(self: Service, response: string) {.slot.} =
+    var chatIds: seq[string] = @[]
+    try:
+      let responseObj = response.parseJson
+      if responseObj.kind != JObject:
+        raise newException(CatchableError, "load chat threads response is not a json object")
+
+      var chatIdsArr: JsonNode
+      if responseObj.getProp("chatIds", chatIdsArr):
+        chatIds = map(chatIdsArr.getElems(), proc(x: JsonNode): string = x.getStr())
+
+      let errorString = responseObj{"error"}.getStr()
+      if errorString != "":
+        raise newException(CatchableError, errorString)
+
+      var threads: seq[ThreadDto]
+      var threadsArr: JsonNode
+      if responseObj.getProp("threads", threadsArr):
+        threads = map(threadsArr.getElems(), proc(x: JsonNode): ThreadDto = x.toThreadDto())
+
+      var threadsByChat = initTable[string, seq[ThreadDto]]()
+      for thread in threads:
+        if thread.chatId.len > 0:
+          threadsByChat.mgetOrPut(thread.chatId, @[]).add(thread)
+
+      # Settle every requested chat, including those with no threads, so they leave the
+      # loading set without waiting for a per-chat success event.
+      for chatId in chatIds:
+        let chatThreads = threadsByChat.getOrDefault(chatId, @[])
+        self.replaceChatThreadsCache(chatId, chatThreads)
+        self.chatThreadsLoadedChats.incl(chatId)
+        self.chatThreadsLoadingChats.excl(chatId)
+      self.events.emit(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED,
+        ChatThreadsForChatsLoadedArgs(threads: threads))
+    except Exception as e:
+      for chatId in chatIds:
+        self.chatThreadsLoadingChats.excl(chatId)
+        self.events.emit(SIGNAL_CHAT_THREADS_LOADING_FAILED,
+          ChatThreadsLoadingFailedArgs(chatId: chatId))
+      error "error loading chat threads for chats", msg = e.msg
 
   proc onAsyncLoadMoreMessagesForThread*(self: Service, response: string) {.slot.} =
     var threadId: string = ""

@@ -243,6 +243,48 @@ proc removeSubmodule(self: Module, chatId: string) =
     return
   self.chatContentModules.del(chatId)
 
+proc createThreadItem(self: Module, parentItem: ChatItem, parentChatId: string, threadId: string,
+    threadName: string, hasUnreadMessages: bool, notificationsCount: int): ChatItem =
+  return chat_item.initChatItem(
+    id = threadId,
+    name = "🧵 " & threadName,
+    usesDefaultName = false,
+    icon = parentItem.icon,
+    color = parentItem.color,
+    emoji = parentItem.emoji,
+    description = "",
+    `type` = parentItem.`type`,
+    parentItem.memberRole,
+    lastMessageTimestamp = 0,
+    lastMessageText = "",
+    hasUnreadMessages = hasUnreadMessages,
+    notificationsCount = notificationsCount,
+    muted = false,
+    blocked = false,
+    active = false,
+    position = parentItem.position,
+    categoryId = parentItem.categoryId,
+    categoryPosition = parentItem.categoryPosition,
+    categoryOpened = parentItem.categoryOpened,
+    canPost = parentItem.canPost,
+    canView = parentItem.canView,
+    canPostReactions = parentItem.canPostReactions,
+    isThread = true,
+    parentChatId = parentChatId,
+    sortTimestamp = parentItem.lastMessageTimestamp,
+  )
+
+proc ensureThreadContentModule(self: Module, threadItem: ChatItem) =
+  if not threadItem.isThread or self.chatContentModules.contains(threadItem.id):
+    return
+
+  let isUsersListAvailable = threadItem.`type` != ChatType.OneToOne.int
+  self.chatContentModules[threadItem.id] = chat_content_module.newModule(
+    self, self.events, self.controller.getMySectionId(), threadItem.parentChatId,
+    self.controller.isCommunity(), isUsersListAvailable, self.settingsService, self.nodeConfigurationService,
+    self.contactService, self.chatService, self.communityService, self.messageService,
+    self.mailserversService, self.sharedUrlsService, threadId = threadItem.id)
+
 
 proc addCategoryItem(self: Module, category: Category, memberRole: MemberRole, communityId: string, insertIntoModel: bool = true): ChatItem =
   let hasUnreadMessages = self.controller.categoryHasUnreadMessages(communityId, category.id)
@@ -330,6 +372,7 @@ proc buildChatSectionUI(
 
   self.view.chatsModel.setData(items)
   self.setActiveItem(selectedItemId)
+  self.controller.loadChatThreadsForChats(chats.mapIt(it.id))
 
 proc createItemFromPublicKey(self: Module, publicKey: string): UserItem =
   let contactDetails = self.controller.getContactDetails(publicKey)
@@ -477,10 +520,11 @@ method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, t
   if threadId.len == 0:
     return
 
-  # If the thread sub-channel already exists, just activate it if needed.
-  if self.chatContentModules.contains(threadId):
+  # If the thread row already exists, just update it and activate it if needed.
+  if not self.view.chatsModel().getItemById(threadId).isNil:
     self.view.chatsModel().updateNotificationsForItemById(threadId, hasUnreadMessages, notificationsCount)
-    self.chatContentModules[threadId].onNotificationsUpdated(hasUnreadMessages, notificationsCount)
+    if self.chatContentModules.contains(threadId):
+      self.chatContentModules[threadId].onNotificationsUpdated(hasUnreadMessages, notificationsCount)
     if setActive:
       self.setActiveItem(threadId)
     return
@@ -495,50 +539,47 @@ method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, t
     error "openThreadAsChat: unknown parent chat index", parentChatId, methodName="openThreadAsChat"
     return
 
-  let belongsToCommunity = self.controller.isCommunity()
-  let isUsersListAvailable = parentItem.`type` != ChatType.OneToOne.int
-
-  # The thread content module is keyed in the chat list by the threadId, but it
-  # loads/sends messages against the parent chat id together with the threadId.
-  self.chatContentModules[threadId] = chat_content_module.newModule(
-    self, self.events, self.controller.getMySectionId(), parentChatId,
-    belongsToCommunity, isUsersListAvailable, self.settingsService, self.nodeConfigurationService,
-    self.contactService, self.chatService, self.communityService, self.messageService,
-    self.mailserversService, self.sharedUrlsService, threadId = threadId)
-
-  self.threadChatIds.incl(threadId)
-
-  let threadItem = chat_item.initChatItem(
-    id = threadId,
-    name = "🧵 " & threadName,
-    usesDefaultName = false,
-    icon = parentItem.icon,
-    color = parentItem.color,
-    emoji = parentItem.emoji,
-    description = "",
-    `type` = parentItem.`type`,
-    parentItem.memberRole,
-    lastMessageTimestamp = 0,
-    lastMessageText = "",
-    hasUnreadMessages = hasUnreadMessages,
-    notificationsCount = notificationsCount,
-    muted = false,
-    blocked = false,
-    active = false,
-    position = parentItem.position,
-    categoryId = parentItem.categoryId,
-    categoryPosition = parentItem.categoryPosition,
-    canPost = parentItem.canPost,
-    canView = parentItem.canView,
-    canPostReactions = parentItem.canPostReactions,
-    isThread = true,
-    parentChatId = parentChatId,
-    sortTimestamp = parentItem.lastMessageTimestamp,
-  )
-
+  let threadItem = self.createThreadItem(parentItem, parentChatId, threadId, threadName,
+    hasUnreadMessages, notificationsCount)
   self.view.chatsModel().appendItemAfterParent(threadItem, parentIndex)
+  self.threadChatIds.incl(threadId)
   if setActive:
     self.setActiveItem(threadId)
+
+method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto]) =
+  var threadsByChat = initOrderedTable[string, seq[ThreadDto]]()
+  for thread in threads:
+    if thread.threadId.len == 0 or thread.parentMessageId.len == 0:
+      continue
+    # The signal is global; other sections' chats are none of our business.
+    if not self.doesTopLevelChatExist(thread.chatId):
+      continue
+    threadsByChat.mgetOrPut(thread.chatId, @[]).add(thread)
+
+  for parentChatId, parentThreads in threadsByChat:
+    let parentItem = self.view.chatsModel().getItemById(parentChatId)
+    if parentItem.isNil:
+      continue
+
+    var items: seq[ChatItem] = @[]
+    var pendingThreadIds = initHashSet[string]()
+    for thread in parentThreads:
+      if not self.view.chatsModel().getItemById(thread.threadId).isNil:
+        self.view.chatsModel().updateNotificationsForItemById(thread.threadId,
+          thread.unviewedMessagesCount > 0, thread.unviewedMentionsCount)
+        if self.chatContentModules.contains(thread.threadId):
+          self.chatContentModules[thread.threadId].onNotificationsUpdated(
+            thread.unviewedMessagesCount > 0, thread.unviewedMentionsCount)
+        continue
+      if pendingThreadIds.contains(thread.threadId):
+        continue
+      pendingThreadIds.incl(thread.threadId)
+      items.add(self.createThreadItem(parentItem, parentChatId, thread.threadId, thread.name,
+        thread.unviewedMessagesCount > 0, thread.unviewedMentionsCount))
+
+    self.view.chatsModel().appendItemsAfterParent(items, parentChatId)
+    for item in items:
+      self.threadChatIds.incl(item.id)
 
 proc updateActiveChatMembership*(self: Module) =
   let activeChatId = self.controller.getActiveChatId()
@@ -569,6 +610,11 @@ method activeItemSet*(self: Module, itemId: string) =
   if chat_item.isNil:
     # Should never be here
     error "chat-view unexisting item id: ", itemId, methodName="activeItemSet"
+    return
+
+  self.ensureThreadContentModule(chat_item)
+  if not self.chatContentModules.contains(itemId):
+    error "chat-view missing chat content module", itemId, methodName="activeItemSet"
     return
 
   if not self.chatContentModules[itemId].isLoaded:
@@ -617,6 +663,12 @@ method getModuleAsVariant*(self: Module): QVariant =
   return self.viewVariant
 
 method getChatContentModule*(self: Module, chatId: string): QVariant =
+  let chatItem = self.view.chatsModel().getItemById(chatId)
+  if chatItem.isNil:
+    error "getChatContentModule: unexisting chat key", chatId, methodName="getChatContentModule"
+    return
+
+  self.ensureThreadContentModule(chatItem)
   if(not self.chatContentModules.contains(chatId)):
     error "getChatContentModule: unexisting chat key", chatId, methodName="getChatContentModule"
     return
@@ -1001,7 +1053,7 @@ proc removeThreadsForParent(self: Module, parentChatId: string) =
     self.threadChatIds.excl(threadId)
 
 method onCommunityChannelDeletedOrChatLeft*(self: Module, chatId: string) =
-  if not self.chatContentModules.contains(chatId):
+  if self.view.chatsModel().getItemById(chatId).isNil:
     return
   if self.isChatThread(chatId):
     self.threadChatIds.excl(chatId)
@@ -1789,13 +1841,15 @@ method onCommunityMemberMessagesDeleted*(self: Module, deletedMessages: seq[stri
       self.view.getMemberMessagesModel().removeItem(deletedMessageId)
 
 method communityContainsChat*(self: Module, chatId: string): bool =
-  return self.chatContentModules.hasKey(chatId)
+  return self.view.chatsModel().isItemWithIdAdded(chatId)
 
 method openCommunityChatAndScrollToMessage*(self: Module, chatId: string, messageId: string): bool =
-  if chatId notin self.chatContentModules:
+  if self.view.chatsModel().getItemById(chatId).isNil:
     return false
 
   self.setActiveItem(chatId)
+  if chatId notin self.chatContentModules:
+    return false
   self.chatContentModules[chatId].scrollToMessage(messageId)
   return true
 
