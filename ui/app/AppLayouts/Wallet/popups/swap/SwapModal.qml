@@ -56,8 +56,9 @@ StatusDialog {
     }
 
     implicitWidth: 556
+    fullScreenSheet: true
     padding: Theme.smallPadding
-    topPadding: Theme.bigPadding
+    topPadding: Theme.bigPadding + (bottomSheet ? (parent?.SafeArea.margins.top ?? 0) : 0)
     backgroundColor: Theme.palette.baseColor3
 
     QtObject {
