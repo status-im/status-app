@@ -10,7 +10,6 @@ import StatusQ.Controls
 
 import utils
 import shared
-import shared.stores as SharedStores
 import shared.popups
 import shared.status
 import shared.controls

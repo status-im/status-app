@@ -12,7 +12,6 @@ import StatusQ.Popups.Dialog
 
 import utils
 import shared
-import shared.stores as SharedStores
 import shared.views
 import shared.panels
 import shared.popups
@@ -21,7 +20,6 @@ import shared.controls
 import shared.views.chat
 
 import AppLayouts.Chat.stores
-import AppLayouts.stores as AppLayoutStores
 
 import "../controls"
 import "../panels"
