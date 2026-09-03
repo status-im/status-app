@@ -296,7 +296,9 @@ Loader {
             closeOnPressOutsideRestoreDelay: deferCloseOnPressOutside && delegate?.isMobile ? 1000 : 350,
             // A hover menu must not grab focus, otherwise opening it steals focus from a
             // message whose text is selected and clears that selection just on hover.
-            focus: !closeOnHoverExit
+            // A menu must also not grab focus while the virtual keyboard is open, otherwise
+            // opening it steals focus from the chat input and dismisses the keyboard.
+            focus: !closeOnHoverExit && !d.virtualKeyboardVisible
         }
 
         // Only steal focus (to keep the virtual keyboard closed) for explicitly-invoked
@@ -582,13 +584,19 @@ Loader {
             return (bridgeName === "discord") ? "Discord" : bridgeName
         }
 
+        // Qt.inputMethod.visible is not reliable in some cases, so the android/ios keyboard
+        // visibility is tracked explicitly as a workaround.
+        readonly property bool virtualKeyboardVisible: SystemUtils.androidKeyboardVisible
+                                                       || SystemUtils.iosKeyboardVisible
+                                                       || Qt.inputMethod.visible
+
         // Qt's Popup/Menu stashes the activeFocusItem on open and restores it on close via
         // an internal forceActiveFocus call. It causes that text edit gains focus and opens
         // virtual keyboard even if it was closed before opening popup/menu. To prevent that
         // behavior, if virtual keyboard is not visible focus is changed to message itself.
         // On close focus is restored to message component, without invoking vkbd.
         function preventVirtualKeyboardOpening() {
-            if (!SystemUtils.androidKeyboardVisible && !SystemUtils.iosKeyboardVisible && !Qt.inputMethod.visible) {
+            if (!d.virtualKeyboardVisible) {
                 root.forceActiveFocus()
             }
         }
