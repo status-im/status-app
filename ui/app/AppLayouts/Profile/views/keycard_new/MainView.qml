@@ -17,7 +17,6 @@ ColumnLayout {
         Layout.alignment: Qt.AlignCenter
         Layout.preferredHeight: 240
         Layout.preferredWidth: 350
-        Layout.fillWidth: true
         fillMode: Image.PreserveAspectFit
         antialiasing: true
         source: Assets.png("keycard/card_insert/insert")
@@ -33,12 +32,9 @@ ColumnLayout {
     StatusBaseText {
         objectName: "settings_Keycard_MainView_Description"
         Layout.alignment: Qt.AlignCenter
-        Layout.fillWidth: true
         font.pixelSize: Theme.fontSize(18)
         color: Theme.palette.directColor1
         text: qsTr("Secure your funds. Keep your profile safe.")
-        wrapMode: Text.WordWrap
-        horizontalAlignment: Text.AlignHCenter
     }
 
     Item {
