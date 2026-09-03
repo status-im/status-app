@@ -17,6 +17,7 @@ type
     Description
     Type
     LastMessageTimestamp
+    SortTimestamp
     LastMessageText
     HasUnreadMessages
     NotificationsCount
@@ -45,6 +46,8 @@ type
     PermissionsCheckOngoing
     Hidden # derived: chat hidden by its collapsed category
            # (depends on CategoryOpened, Active, Muted, HasUnreadMessages, NotificationsCount)
+    IsThread
+    ParentChatId
 
 QtObject:
   type
@@ -117,6 +120,7 @@ QtObject:
       ModelRole.Description.int:"description",
       ModelRole.Type.int:"type",
       ModelRole.LastMessageTimestamp.int:"lastMessageTimestamp",
+      ModelRole.SortTimestamp.int:"sortTimestamp",
       ModelRole.LastMessageText.int:"lastMessageText",
       ModelRole.HasUnreadMessages.int:"hasUnreadMessages",
       ModelRole.NotificationsCount.int:"notificationsCount",
@@ -143,6 +147,8 @@ QtObject:
       ModelRole.MissingEncryptionKey.int:"missingEncryptionKey",
       ModelRole.PermissionsCheckOngoing.int:"permissionsCheckOngoing",
       ModelRole.Hidden.int:"hidden",
+      ModelRole.IsThread.int:"isThread",
+      ModelRole.ParentChatId.int:"parentChatId",
 
     }.toTable
 
@@ -175,6 +181,8 @@ QtObject:
       result = newQVariant(item.`type`)
     of ModelRole.LastMessageTimestamp:
       result = newQVariant(item.lastMessageTimestamp)
+    of ModelRole.SortTimestamp:
+      result = newQVariant(item.sortTimestamp)
     of ModelRole.LastMessageText:
       result = newQVariant(item.lastMessageText)
     of ModelRole.HasUnreadMessages:
@@ -227,6 +235,10 @@ QtObject:
       return newQVariant(item.permissionsCheckOngoing)
     of ModelRole.Hidden:
       return newQVariant(item.hidden)
+    of ModelRole.IsThread:
+      return newQVariant(item.isThread)
+    of ModelRole.ParentChatId:
+      return newQVariant(item.parentChatId)
 
   proc getItemIdxById(items: seq[ChatItem], id: string): int =
     var idx = 0
@@ -540,6 +552,12 @@ QtObject:
     updateItemRolesAndNotify self.getItemIdxById(id):
       updateRole(lastMessageText)
       updateRole(lastMessageTimestamp)
+      updateRoleWithValue(sortTimestamp, lastMessageTimestamp)
+
+    for ind in 0 ..< self.items.len:
+      if self.items[ind].isThread and self.items[ind].parentChatId == id:
+        updateRolesAndNotify:
+          updateRoleWithValue(sortTimestamp, lastMessageTimestamp)
 
   proc reorderChats*(
       self: Model,

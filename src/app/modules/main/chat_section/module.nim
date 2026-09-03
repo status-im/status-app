@@ -532,6 +532,8 @@ method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, t
     canView = parentItem.canView,
     canPostReactions = parentItem.canPostReactions,
     isThread = true,
+    parentChatId = parentChatId,
+    sortTimestamp = parentItem.lastMessageTimestamp,
   )
 
   self.view.chatsModel().appendItemAfterParent(threadItem, parentIndex)
@@ -540,7 +542,12 @@ method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, t
 
 proc updateActiveChatMembership*(self: Module) =
   let activeChatId = self.controller.getActiveChatId()
-  let chat = self.controller.getChatDetails(activeChatId)
+  let activeChatItem = self.view.chatsModel().getItemById(activeChatId)
+  let membershipChatId = if not activeChatItem.isNil and activeChatItem.isThread:
+      activeChatItem.parentChatId
+    else:
+      activeChatId
+  let chat = self.controller.getChatDetails(membershipChatId)
 
   if chat.chatType == ChatType.PrivateGroupChat:
     let amIMember = any(chat.members, proc (member: ChatMember): bool = member.id == singletonInstance.userProfile.getPubKey())
@@ -982,14 +989,29 @@ method onReorderCategory*(self: Module, catId: string, position: int) =
 method onCategoryNameChanged*(self: Module, category: Category) =
   self.view.chatsModel().renameCategory(category.id, category.name)
 
+proc removeThreadsForParent(self: Module, parentChatId: string) =
+  var threadIds: seq[string]
+  for item in self.view.chatsModel().items:
+    if item.isThread and item.parentChatId == parentChatId:
+      threadIds.add(item.id)
+
+  for threadId in threadIds:
+    self.view.chatsModel().removeItemById(threadId)
+    self.removeSubmodule(threadId)
+    self.threadChatIds.excl(threadId)
+
 method onCommunityChannelDeletedOrChatLeft*(self: Module, chatId: string) =
   if not self.chatContentModules.contains(chatId):
     return
+  if self.isChatThread(chatId):
+    self.threadChatIds.excl(chatId)
+  else:
+    self.removeThreadsForParent(chatId)
   self.view.chatsModel().removeItemById(chatId)
   self.removeSubmodule(chatId)
 
   let activeChatId = self.controller.getActiveChatId()
-  if chatId == activeChatId:
+  if self.view.chatsModel().getItemById(activeChatId).isNil:
     self.setFirstChannelAsActive()
 
   self.updateParentBadgeNotifications()
@@ -1265,8 +1287,8 @@ method onMarkMessageAsUnread*(self: Module, chat: ChatDto) =
 method onSectionMutedChanged*(self: Module) =
   self.updateParentBadgeNotifications()
 
-method markAllMessagesRead*(self: Module, chatId: string) =
-  self.controller.markAllMessagesRead(chatId)
+method markAllMessagesRead*(self: Module, chatId: string, threadId: string = "") =
+  self.controller.markAllMessagesRead(chatId, threadId)
 
 method clearChatHistory*(self: Module, chatId: string) =
   self.controller.clearChatHistory(chatId)
