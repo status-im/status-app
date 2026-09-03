@@ -173,7 +173,11 @@ SplitView {
         Constants.keycard.flow.setOrChangePuk,
         Constants.keycard.flow.rename,
         Constants.keycard.flow.unblockWithPuk,
-        Constants.keycard.flow.unblockWithRecoveryPhrase
+        Constants.keycard.flow.unblockWithRecoveryPhrase,
+
+        Constants.keycard.flow.onboardingLoginWithKeycard,
+        Constants.keycard.flow.onboardingImportNewKeyPair,
+        Constants.keycard.flow.onboardingImportSeedPhrase
     ]
 
     property string currentFlow: Constants.keycard.flow.readKeycard
@@ -258,13 +262,13 @@ SplitView {
 
     LogsAndControlsPanel {
         id: controls
-        SplitView.preferredWidth: 360
+        SplitView.preferredWidth: 300
         SplitView.fillHeight: true
 
         logsView.logText: logs.logText
 
         ColumnLayout {
-            Layout.fillWidth: true
+            anchors.fill: parent
 
             Label { text: "Flow:" }
             ComboBox {
@@ -355,6 +359,8 @@ SplitView {
                     mockStore.keycardAddKeyPairError(err)
                 }
             }
+
+            Item { Layout.fillHeight: true }
         }
     }
 
