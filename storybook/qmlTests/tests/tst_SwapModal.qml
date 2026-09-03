@@ -180,6 +180,19 @@ Item {
             return pill
         }
 
+        // mirrors the modal-title rule the confirm button follows
+        function expectedConfirmText() {
+            const form = root.swapFormData
+            if (!form.fromGroupKey || !form.toGroupKey)
+                return qsTr("Confirm %1").arg(qsTr("Swap + Bridge"))
+            const isBridge = form.toNetworkChainId !== -1
+                           && form.toNetworkChainId !== form.selectedNetworkChainId
+            if (!isBridge)
+                return qsTr("Confirm %1").arg(qsTr("Swap"))
+            return qsTr("Confirm %1").arg(form.fromGroupKey === form.toGroupKey
+                                          ? qsTr("Bridge") : qsTr("Swap + Bridge"))
+        }
+
         function popupSearchRoot() {
             const overlay = controlUnderTest.Overlay.overlay
             verify(!!overlay)
@@ -628,7 +641,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("An error has occured, please try again"))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -666,7 +679,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Insufficient funds for swap"))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -704,7 +717,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Not enough ETH to pay gas fees"))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -742,7 +755,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Fetching the price took longer than expected. Please, try again later."))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -780,7 +793,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Not enough liquidity. Lower token amount or try again later."))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -824,7 +837,7 @@ Item {
             compare(root.swapAdaptor.swapOutputData.hasError, false)
             verify(!errorTag.visible, "error tag visible with text: " + errorTag.text)
             verify(signButton.enabled)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
 
             // verfy input and output panels
             waitForRendering(receivePanel)
@@ -1621,7 +1634,7 @@ Item {
             verify(!errorTag.visible)
             verify(signButton.interactive)
             verify(!signButton.loadingWithText)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
             tryCompare(strategyFees, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(
                         root.swapAdaptor.swapOutputData.txFeesInFiat,
                         root.swapAdaptor.currencyStore.currentCurrency))
@@ -1635,7 +1648,7 @@ Item {
             verify(!errorTag.visible)
             verify(signButton.enabled)
             verify(!signButton.loadingWithText)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
             tryCompare(strategyFees, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(
                         root.swapAdaptor.swapOutputData.txFeesInFiat,
                         root.swapAdaptor.currencyStore.currentCurrency))
