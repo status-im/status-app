@@ -65,11 +65,16 @@ proc init*(self: Controller) =
     let args = MessagesLoadedArgs(e)
     if self.chatId != args.chatId:
       return
+    if self.threadId != args.threadId:
+      return
+
     self.delegate.newMessagesLoaded(args.messages, args.reactions)
 
   self.events.on(SIGNAL_NEW_MESSAGE_RECEIVED) do(e: Args):
     var args = MessagesArgs(e)
     if self.chatId != args.chatId:
+      return
+    if self.threadId != args.threadId:
       return
     self.delegate.messagesAdded(args.messages)
 
@@ -144,6 +149,8 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_MESSAGES_MARKED_AS_READ) do(e: Args):
     let args = MessagesMarkedAsReadArgs(e)
     if self.chatId != args.chatId:
+      return
+    if self.threadId != args.threadId:
       return
     if args.allMessagesMarked:
       self.delegate.markAllMessagesRead()
@@ -249,20 +256,6 @@ proc init*(self: Controller) =
     if self.chatId != args.chatId or self.threadId.len > 0:
       return
     self.delegate.onThreadCreationFailed()
-
-  self.events.on(SIGNAL_THREAD_MESSAGES_LOADED) do(e: Args):
-    let args = ThreadMessagesLoadedArgs(e)
-    if self.chatId != args.chatId:
-      return
-    if self.threadId != args.threadId:
-      return
-    self.delegate.newMessagesLoaded(args.messages, @[])
-
-  self.events.on(SIGNAL_THREAD_MESSAGES_LOADING_FAILED) do(e: Args):
-    let args = ThreadMessagesLoadedArgs(e)
-    if self.chatId != args.chatId or self.threadId != args.threadId:
-      return
-    self.delegate.onThreadMessagesLoadingFailed()
 
   self.events.on(SIGNAL_CHAT_THREADS_LOADED) do(e: Args):
     let args = ChatThreadsLoadedArgs(e)

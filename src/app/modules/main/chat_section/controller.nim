@@ -105,7 +105,8 @@ proc init*(self: Controller) =
     let args = MessagesArgs(e)
     if (self.sectionId != args.sectionId or args.messages.len == 0):
       return
-    self.delegate.onNewMessagesReceived(args.sectionId, args.chatId, args.chatType, args.lastMessageTimestamp,
+    let displayChatId = if args.threadId.len > 0: args.threadId else: args.chatId
+    self.delegate.onNewMessagesReceived(args.sectionId, args.chatId, displayChatId, args.chatType, args.lastMessageTimestamp,
       args.unviewedMessagesCount, args.unviewedMentionsCount, args.messages[0])
 
   self.events.on(chat_service.SIGNAL_CHAT_MUTED) do(e:Args):
@@ -123,8 +124,9 @@ proc init*(self: Controller) =
     if ((self.isCommunitySection and chat.communityId != self.sectionId) or
         (not self.isCommunitySection and chat.communityId != "")):
       return
-    self.chatService.updateUnreadMessagesAndMentions(args.chatId, args.allMessagesMarked, args.messagesCount, args.messagesWithMentionsCount)
-    self.delegate.onMarkAllMessagesRead(chat)
+    if args.threadId.len == 0:
+      self.chatService.updateUnreadMessagesAndMentions(args.chatId, args.allMessagesMarked, args.messagesCount, args.messagesWithMentionsCount)
+    self.delegate.onMarkAllMessagesRead(chat, args.threadId)
 
   self.events.on(message_service.SIGNAL_MESSAGE_MARKED_AS_UNREAD) do(e:Args):
     let args = message_service.MessageMarkMessageAsUnreadArgs(e)

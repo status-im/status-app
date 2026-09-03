@@ -95,14 +95,14 @@ method addOrUpdateChat*(self: AccessInterface,
   ): ChatItem {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onNewMessagesReceived*(self: AccessInterface, sectionIdMsgBelongsTo: string, chatIdMsgBelongsTo: string,
+method onNewMessagesReceived*(self: AccessInterface, sectionIdMsgBelongsTo: string, chatIdMsgBelongsTo: string, displayChatId: string,
   chatTypeMsgBelongsTo: ChatType, lastMessageTimestamp: int, unviewedMessagesCount: int, unviewedMentionsCount: int, message: MessageDto) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method changeMutedOnChat*(self: AccessInterface, chatId: string, muted: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onMarkAllMessagesRead*(self: AccessInterface, chat: ChatDto) {.base.} =
+method onMarkAllMessagesRead*(self: AccessInterface, chat: ChatDto, threadId: string = "") {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onMarkMessageAsUnread*(self: AccessInterface, chat: ChatDto) {.base.} =
@@ -171,7 +171,8 @@ method viewDidLoad*(self: AccessInterface) {.base.} =
 method setActiveItem*(self: AccessInterface, itemId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method openThreadAsChat*(self: AccessInterface, parentChatId: string, threadId: string, threadName: string, parentMessageId: string, setActive: bool = false) {.base.} =
+method openThreadAsChat*(self: AccessInterface, parentChatId: string, threadId: string, threadName: string, parentMessageId: string,
+    setActive: bool = false, hasUnreadMessages: bool = false, notificationsCount: int = 0) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method isChatThread*(self: AccessInterface, chatId: string): bool {.base.} =

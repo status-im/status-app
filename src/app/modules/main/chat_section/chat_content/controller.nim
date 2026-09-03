@@ -20,6 +20,7 @@ type
     events: UniqueUUIDEventEmitter
     sectionId: string
     chatId: string
+    threadId: string
     belongsToCommunity: bool
     isUsersListAvailable: bool #users list is not available for 1:1 chat
     nodeConfigurationService: node_configuration_service.Service
@@ -37,12 +38,13 @@ proc newController*(delegate: io_interface.AccessInterface, events: EventEmitter
     belongsToCommunity: bool, isUsersListAvailable: bool, settingsService: settings_service.Service,
     nodeConfigurationService: node_configuration_service.Service, contactService: contact_service.Service,
     chatService: chat_service.Service, communityService: community_service.Service,
-    messageService: message_service.Service): Controller =
+  messageService: message_service.Service, threadId: string = ""): Controller =
   result = Controller()
   result.delegate = delegate
   result.events = initUniqueUUIDEventEmitter(events)
   result.sectionId = sectionId
   result.chatId = chatId
+  result.threadId = threadId
   result.belongsToCommunity = belongsToCommunity
   result.isUsersListAvailable = isUsersListAvailable
   result.settingsService = settingsService
@@ -238,7 +240,7 @@ proc unblockChat*(self: Controller) =
   self.contactService.unblockContact(self.chatId)
 
 proc markAllMessagesRead*(self: Controller) =
-  self.messageService.markAllMessagesRead(self.chatId)
+  self.messageService.markAllMessagesRead(self.chatId, self.threadId)
 
 proc markMessageRead*(self: Controller, msgID: string) =
   self.messageService.markCertainMessagesRead(self.chatId, @[msgID])

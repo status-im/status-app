@@ -177,16 +177,6 @@ Item {
                         "")
         }
 
-        function onThreadMessagesLoadingFailed() {
-            Global.displayToastMessage(
-                        qsTr("Couldn't load thread messages"),
-                        qsTr("Please try again later"),
-                        "warning",
-                        false,
-                        Constants.ephemeralNotificationType.danger,
-                        "")
-        }
-
         function onThreadCreationFailed() {
             Global.displayToastMessage(
                         qsTr("Couldn't create thread"),
