@@ -66,6 +66,7 @@ QtObject {
 
     signal setNthEnabledSectionActive(int nthSection)
     signal appSectionBySectionTypeChanged(int sectionType, int subsection, int subSubsection, var data)
+    signal portraitChatSectionChanged(int panel) // StatusSectionLayout.Panels.xxx enum
 
     signal switchToCommunity(string communityId)
     signal switchToCommunitySettings(string communityId)
