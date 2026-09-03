@@ -40,7 +40,7 @@ Control {
         StatusInput {
             id: nameInput
             objectName: "keycardKeyPairNameInput"
-            Layout.preferredWidth: Constants.keycard.general.keycardNameInputWidth
+            Layout.preferredWidth: Math.min(parent.width, Constants.keycard.general.keycardNameInputWidth)
             Layout.alignment: Qt.AlignHCenter
             charLimit: Constants.keypair.nameLengthMax
             validators: Constants.validators.keypairName
