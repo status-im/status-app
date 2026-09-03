@@ -4309,11 +4309,11 @@ Vous resterez connecté et votre phrase de récupération sera entièrement entr
     </message>
     <message>
         <source>Invalid characters (letters and numbers, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Caractères non valides (lettres et chiffres, espaces simples, tirets et tirets bas uniquement)</translation>
     </message>
     <message>
         <source>Name is too cool (use letters and numbers, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Ce nom est trop cool (utilisez uniquement des lettres et des chiffres, des espaces simples, des tirets et des tirets bas)</translation>
     </message>
     <message>
         <source>Whole numbers only</source>
@@ -4588,7 +4588,8 @@ Vous resterez connecté et votre phrase de récupération sera entièrement entr
     <message>
         <source>Your profile data was re-encrypted successfully.
 Log in with your new password.</source>
-        <translation type="unfinished"></translation>
+        <translation>Les données de votre profil ont été rechiffrées avec succès.
+Connectez-vous avec votre nouveau mot de passe.</translation>
     </message>
     <message>
         <source>Re-encryption failed</source>
@@ -4669,15 +4670,15 @@ Log in with your new password.</source>
     <name>CrashedWebPage</name>
     <message>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>Une erreur s’est produite</translation>
     </message>
     <message>
         <source>This page stopped responding and needs to be reloaded.</source>
-        <translation type="unfinished"></translation>
+        <translation>Cette page a cessé de répondre et doit être rechargée.</translation>
     </message>
     <message>
         <source>Reload</source>
-        <translation type="unfinished">Recharger</translation>
+        <translation>Recharger</translation>
     </message>
 </context>
 <context>
@@ -6329,7 +6330,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Invalid characters (use letters and numbers, hyphens, underscores and spaces only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Caractères non valides (utilisez uniquement des lettres et des chiffres, des tirets, des tirets bas et des espaces)</translation>
     </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
@@ -6620,19 +6621,19 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Please name your token name (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Veuillez nommer votre jeton (utilisez uniquement des lettres et des chiffres, des tirets et des tirets bas)</translation>
     </message>
     <message>
         <source>Your token name is too cool (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Le nom de votre jeton est trop cool (utilisez uniquement des lettres et des chiffres, des tirets et des tirets bas)</translation>
     </message>
     <message>
         <source>Your token name contains invalid characters (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Le nom de votre jeton contient des caractères non valides (utilisez uniquement des lettres et des chiffres, des tirets et des tirets bas)</translation>
     </message>
     <message>
         <source>Only letters, numbers, standard punctuation and emojis allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Utilisez uniquement des lettres, des chiffres, des signes de ponctuation standard et des emojis</translation>
     </message>
     <message>
         <source>Symbol</source>
@@ -9546,7 +9547,7 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>No PIN? Skip</source>
-        <translation type="unfinished"></translation>
+        <translation>Pas de PIN&#xa0;? Ignorer</translation>
     </message>
     <message>
         <source>Factory reset this Keycard</source>
@@ -11357,15 +11358,15 @@ chargement</translation>
     </message>
     <message>
         <source>Reply</source>
-        <translation type="unfinished">Répondre</translation>
+        <translation>Répondre</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished">Modifier</translation>
+        <translation>Modifier</translation>
     </message>
     <message>
         <source>Copy selected</source>
-        <translation type="unfinished"></translation>
+        <translation>Copier la sélection</translation>
     </message>
     <message>
         <source>Copy link to message</source>
@@ -11381,7 +11382,7 @@ chargement</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Supprimer</translation>
+        <translation>Supprimer</translation>
     </message>
     <message>
         <source>Mark as unread</source>
@@ -12205,7 +12206,7 @@ chargement</translation>
     </message>
     <message>
         <source>Invalid characters (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Caractères non valides (utilisez uniquement des lettres et des chiffres, des tirets et des tirets bas)</translation>
     </message>
     <message numerus="yes">
         <source>Nicknames must be at least %n character(s) long</source>
@@ -15311,7 +15312,7 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished">Modifier</translation>
+        <translation>Modifier</translation>
     </message>
     <message>
         <source>Send</source>
@@ -15892,7 +15893,7 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <name>SlippageSelector</name>
     <message>
         <source>Custom %</source>
-        <translation type="unfinished"></translation>
+        <translation>% personnalisé</translation>
     </message>
     <message>
         <source>Slippage should be more than 0</source>
@@ -16980,11 +16981,11 @@ avec un retour à la ligne</translation>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished"></translation>
+        <translation>Le plus rapide</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
+        <translation>Frais les plus bas</translation>
     </message>
     <message>
         <source>Swap + Bridge</source>
@@ -17000,20 +17001,20 @@ avec un retour à la ligne</translation>
     </message>
     <message>
         <source>Bridge</source>
-        <translation type="unfinished">Bridge</translation>
+        <translation>Bridge</translation>
     </message>
     <message>
         <source>%1s</source>
         <comment>short for seconds</comment>
-        <translation type="unfinished">%1&#xa0;s</translation>
+        <translation>%1&#xa0;s</translation>
     </message>
     <message>
         <source>Choose route</source>
-        <translation type="unfinished"></translation>
+        <translation>Choisir une route</translation>
     </message>
     <message>
         <source>by %1 via %2</source>
-        <translation type="unfinished"></translation>
+        <translation>par %1 via %2</translation>
     </message>
     <message>
         <source>by %1</source>
@@ -17033,7 +17034,7 @@ avec un retour à la ligne</translation>
     </message>
     <message>
         <source>Confirm %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Confirmer %1</translation>
     </message>
     <message>
         <source>Approving %1 spending cap to Swap</source>
@@ -17099,38 +17100,38 @@ avec un retour à la ligne</translation>
     </message>
     <message>
         <source>via %1</source>
-        <translation type="unfinished">via %1</translation>
+        <translation>via %1</translation>
     </message>
 </context>
 <context>
     <name>SwapRoutePopup</name>
     <message>
         <source>Swap route</source>
-        <translation type="unfinished"></translation>
+        <translation>Route d’échange</translation>
     </message>
     <message>
         <source>Best return</source>
-        <translation type="unfinished">Meilleur rendement</translation>
+        <translation>Meilleur rendement</translation>
     </message>
     <message>
         <source>Best received amount</source>
-        <translation type="unfinished"></translation>
+        <translation>Meilleur montant reçu</translation>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished"></translation>
+        <translation>Le plus rapide</translation>
     </message>
     <message>
         <source>Shortest execution time</source>
-        <translation type="unfinished"></translation>
+        <translation>Temps d’exécution le plus court</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
+        <translation>Frais les plus bas</translation>
     </message>
     <message>
         <source>Lowest network cost</source>
-        <translation type="unfinished"></translation>
+        <translation>Coût de réseau le plus bas</translation>
     </message>
 </context>
 <context>
@@ -17186,11 +17187,11 @@ avec un retour à la ligne</translation>
     <name>SwapSlippagePopup</name>
     <message>
         <source>Set max price slippage</source>
-        <translation type="unfinished"></translation>
+        <translation>Définir le glissement maximal du prix</translation>
     </message>
     <message>
         <source>The swap will revert if the price shifts beyond this percentage.</source>
-        <translation type="unfinished"></translation>
+        <translation>L’échange sera annulé si le prix varie au-delà de ce pourcentage.</translation>
     </message>
 </context>
 <context>
@@ -19130,7 +19131,7 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     </message>
     <message>
         <source>&lt; 1 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 1 min</translation>
     </message>
     <message>
         <source>&lt; 3 minutes</source>
@@ -19138,7 +19139,7 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     </message>
     <message>
         <source>&lt; 3 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 3 min</translation>
     </message>
     <message>
         <source>&lt; 5 minutes</source>
@@ -19146,7 +19147,7 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     </message>
     <message>
         <source>&lt; 5 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 5 min</translation>
     </message>
     <message>
         <source>&gt; 5 minutes</source>
@@ -19154,7 +19155,7 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     </message>
     <message>
         <source>&gt; 5 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&gt; 5 min</translation>
     </message>
     <message>
         <source>Unknown</source>
