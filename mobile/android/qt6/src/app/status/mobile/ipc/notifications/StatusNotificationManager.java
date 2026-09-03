@@ -129,6 +129,12 @@ public final class StatusNotificationManager {
         final String chatIcon = eventWrap.optString("chatIcon", "");
         final boolean isFromMe = eventWrap.optBoolean("isFromMe", false);
 
+        // Older status-go payloads expose the thread only through the embedded message.
+        final JSONObject body = eventWrap.optJSONObject("body");
+        final JSONObject bodyMessage = body != null ? body.optJSONObject("message") : null;
+        final String fallbackThreadId = bodyMessage != null ? bodyMessage.optString("threadId", "") : "";
+        final String threadId = eventWrap.optString("threadId", fallbackThreadId);
+
         String senderIcon = "";
         String senderName = "";
         final JSONObject author = eventWrap.optJSONObject("notificationAuthor");
@@ -157,6 +163,7 @@ public final class StatusNotificationManager {
                 message,
                 deepLink.isEmpty() ? null : deepLink,
                 conversationId.isEmpty() ? null : conversationId,
+                threadId,
                 notificationId.isEmpty() ? null : notificationId,
                 largeIconUri != null && !largeIconUri.isEmpty() ? largeIconUri : null,
                 category,
@@ -171,7 +178,7 @@ public final class StatusNotificationManager {
     // ── Show notification ─────────────────────────────────────────────────────
 
     private void showNotification(Context context, String title, String message,
-            String deepLink, String conversationId, String notificationId,
+            String deepLink, String conversationId, String threadId, String notificationId,
             String largeIconUri, String category, long timestamp,
             String senderName, String personAvatarUri, boolean isOneToOne,
             boolean isFromMe) {
@@ -201,7 +208,8 @@ public final class StatusNotificationManager {
                         largeIcon, conversationId, contactRequestId);
                 return;
             } else if (isMessage) {
-                notifIdInt = conversationId.hashCode() & 0x7fffffff;
+                notifIdInt = NotificationBuilder.conversationKey(conversationId, threadId)
+                        .hashCode() & 0x7fffffff;
                 // Rebuild message history from the currently active notification.
                 List<NotificationBuilder.MessageEntry> messages =
                         getConversationMessagesFromActiveNotification(context, notifIdInt);
@@ -235,7 +243,7 @@ public final class StatusNotificationManager {
                 Bitmap largeIcon = activeVisual != null && activeVisual.largeIcon != null
                         ? activeVisual.largeIcon : largeIconFromEvent;
                 NotificationBuilder.postMessageNotification(
-                        context, notificationTitle, conversationId, notifIdInt,
+                        context, notificationTitle, conversationId, threadId, notifIdInt,
                         deepLink, largeIcon, messages, isOneToOne);
             } else {
                 String idBase = (notificationId != null ? notificationId
@@ -257,12 +265,15 @@ public final class StatusNotificationManager {
 
     // ── Public API for NotificationReplyReceiver ──────────────────────────────
 
-    /** Clears state for a conversation (called when notification dismissed). */
-    public void clearConversation(String conversationId) {
-        if (conversationId == null || conversationId.isEmpty()) return;
+    /**
+     * Clears state for a conversation (called when notification dismissed).
+     * Takes a {@link NotificationBuilder#conversationKey} value, not a bare chat ID.
+     */
+    public void clearConversation(String conversationKey) {
+        if (conversationKey == null || conversationKey.isEmpty()) return;
         Context context = contextRef.get();
         if (context == null) return;
-        NotificationManagerCompat.from(context).cancel(conversationId.hashCode() & 0x7fffffff);
+        NotificationManagerCompat.from(context).cancel(conversationKey.hashCode() & 0x7fffffff);
     }
 
     /**

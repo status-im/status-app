@@ -328,13 +328,15 @@ QtObject:
       chatId: string,
       replyTo: string,
       sticker: StickerDto,
-      preferredUsername: string) =
+      preferredUsername: string,
+      threadId: string = "") =
     let arg = AsyncSendStickerTaskArg(
       tptr: asyncSendStickerTask,
       vptr: cast[uint](self.vptr),
       slot: "onAsyncSendStickerDone",
       chatId: chatId,
       replyTo: replyTo,
+      threadId: threadId,
       stickerHash: sticker.hash,
       stickerPackId: sticker.packId,
       preferredUsername: preferredUsername,
@@ -354,7 +356,8 @@ QtObject:
       discard self.chatService.processMessengerResponse(rpcResponse)
     except Exception as e:
       error "Error sending sticker", msg = e.msg
-      self.events.emit(SIGNAL_SENDING_FAILED, ChatArgs(chatId: rpcResponseObj["chatId"].getStr))
+      self.events.emit(SIGNAL_SENDING_FAILED,
+        MessageSendingFailure(chatId: rpcResponseObj["chatId"].getStr, error: e.msg))
 
   proc removeRecentStickers*(self: Service, packId: string) =
     self.recentStickers.keepItIf(it.packId != packId)
