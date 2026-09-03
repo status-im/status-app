@@ -2,7 +2,10 @@
 
 #include <QDesktopServices>
 #include <QGuiApplication>
+#include <QImage>
+#include <QImageReader>
 #include <QUrl>
+#include <QUuid>
 #include <QMimeDatabase>
 #include <QDir>
 #include <QFile>
@@ -184,6 +187,42 @@ bool SystemUtilsInternal::ensureDirectory(const QString &path) const
     if (dir.exists())
         return true;
     return dir.mkpath(QStringLiteral("."));
+}
+
+QUrl SystemUtilsInternal::normalizeImageOrientation(const QUrl& imageUrl) const
+{
+    if (!imageUrl.isValid() || !imageUrl.isLocalFile())
+        return imageUrl;
+
+    const QString sourcePath = imageUrl.toLocalFile();
+
+    QImageReader reader(sourcePath);
+    reader.setAutoTransform(true);
+
+    // Only JPEG (and TIFF) handlers report a transformation; PNG's eXIf chunk is deliberately
+    // not honoured by Qt, so normalizing PNGs here would introduce the very mismatch we remove.
+    if (reader.transformation() == QImageIOHandler::TransformationNone)
+        return imageUrl;
+
+    const QImage upright = reader.read();
+    if (upright.isNull()) {
+        qWarning() << "SystemUtilsInternal::normalizeImageOrientation: cannot read"
+                   << sourcePath << reader.errorString();
+        return imageUrl;
+    }
+
+    const auto targetPath =
+            QDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation))
+            .filePath(QStringLiteral("statusq_oriented_%1.jpg").arg(
+                          QUuid::createUuid().toString(QUuid::WithoutBraces)));
+
+    if (!upright.save(targetPath, "JPEG", 92)) {
+        qWarning() << "SystemUtilsInternal::normalizeImageOrientation: cannot write"
+                   << targetPath;
+        return imageUrl;
+    }
+
+    return QUrl::fromLocalFile(targetPath);
 }
 
 void SystemUtilsInternal::showInFolder(const QString &path) const
