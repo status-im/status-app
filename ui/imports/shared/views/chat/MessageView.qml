@@ -615,6 +615,31 @@ Loader {
                 d.contextMenu?.close() // will run destruction/cleanup
             }
         }
+
+        // In portrait mode, StatusSectionLayout doesn't unload the left/center/right panels when
+        // swiping between them: it slides all three horizontally inside a shared SwipeView, so
+        // chatLogView (and this delegate) stay alive and "visible" throughout, only their actual
+        // screen position moves. This walks the ancestor chain summing up every "x", to detect
+        // that slide reactively (and only that slide: normal vertical list scrolling only ever
+        // touches "y"). This lets the menu close itself without any app-wide signal.
+        //
+        // Note: this can NOT be written as root.chatLogView.mapToItem(null, 0, 0).x — mapToItem()
+        // computes the position through the private transform node, bypassing the QML property
+        // system, so a binding built on it never re-evaluates even though the returned value does
+        // change from call to call (verified against Qt 6.11). Touching ".x"/".parent" directly at
+        // every level, on the other hand, goes through the meta-object system, so the binding
+        // engine's dependency capture kicks in and the property correctly re-evaluates on every
+        // ancestor's move, however many levels up the chain it happens to be.
+        readonly property real _chatLogViewAncestorXTrace: {
+            let sum = 0
+            let p = root?.chatLogView ?? null
+            while (p) {
+                sum += p.x
+                p = p.parent
+            }
+            return sum
+        }
+        on_ChatLogViewAncestorXTraceChanged: contextMenu?.close() // will run destruction/cleanup
     }
 
     Timer {
