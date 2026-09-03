@@ -17104,8 +17104,8 @@ selhalo</translation>
         <translation>Získávám nabídku...</translation>
     </message>
     <message>
-        <source>Confirm swap + bridge</source>
-        <translation type="unfinished">Potvrdit výměnu + most</translation>
+        <source>Confirm %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Approving %1 spending cap to Swap</source>

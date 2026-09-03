@@ -867,7 +867,7 @@ StatusDialog {
                         }
                         if (swapFooter.loading)
                             return qsTr("Fetching quote...")
-                        return qsTr("Confirm swap + bridge")
+                        return qsTr("Confirm %1").arg(d.modalTitle)
                     }
                     tooltip.text: {
                         if(root.swapAdaptor.validSwapProposalReceived) {

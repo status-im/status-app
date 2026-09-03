@@ -17033,7 +17033,7 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Confirm swap + bridge</source>
+        <source>Confirm %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

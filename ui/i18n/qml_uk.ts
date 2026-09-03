@@ -17116,8 +17116,8 @@ to load</source>
         <translation>Отримання котирування...</translation>
     </message>
     <message>
-        <source>Confirm swap + bridge</source>
-        <translation>Підтвердити обмін + бридж</translation>
+        <source>Confirm %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Approving %1 spending cap to Swap</source>

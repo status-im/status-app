@@ -17032,8 +17032,8 @@ avec un retour à la ligne</translation>
         <translation>Récupération de la citation...</translation>
     </message>
     <message>
-        <source>Confirm swap + bridge</source>
-        <translation>Confirmer l&apos;échange + bridge</translation>
+        <source>Confirm %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Approving %1 spending cap to Swap</source>
