@@ -94,16 +94,7 @@ Item {
                         "communityId":"","type":1,"websiteUrl":"https://www.ethereum.org/",
                         "description":"Ethereum is a decentralized, open-source blockchain platform that enables developers to build and deploy smart contracts and decentralized applications.",
                         "detailsLoading":false,
-                        "marketDetails":{
-                            "change24hour":0.9121310349524345,
-                            "changePct24hour":0.05209315257442912,
-                            "changePctDay":1.19243897022671,"changePctHour":0.3655439934313061,
-                            "currencyPrice":{"amount":2098.790000016801,"displayDecimals":2,"stripTrailingZeroes":false,"symbol":"USD"},
-                            "highDay":{"amount":2090.658790484828,"displayDecimals":2,"stripTrailingZeroes":false,"symbol":"USD"},
-                            "lowDay":{"amount":2059.795033958552,"displayDecimals":2,"stripTrailingZeroes":false,"symbol":"USD"},
-                            "marketCap":{"amount":250980621528.3937,"displayDecimals":2,"stripTrailingZeroes":false,"symbol":"USD"}
-                        },
-                        "marketDetailsLoading":false,
+                        "cryptoPrice":2098.790000016801,
                         "currentBalance":0.1220829289681219,
                         "currencyBalanceAsString":"256,23 USD",
                         "currencyBalance":256.2264304910557,
@@ -136,18 +127,8 @@ Item {
                         "websiteUrl":"https://makerdao.com/",
                         "description":"Dai (DAI) is a decentralized, stablecoin cryptocurrency built on the Ethereum blockchain.",
                         "detailsLoading":false,
-                        "marketDetails":{
-                            "change24hour":0.0004424433543155981,
-                            "changePct24hour":0.04426443627508443,
-                            "changePctDay":0.0008257482387743841,
-                            "changePctHour":0.003162399421324529,
-                            "currencyPrice":{"amount":0.9999000202515163,"displayDecimals":2,"stripTrailingZeroes":false,"symbol":"USD"},
-                            "highDay":{"amount":1.000069852130498,"displayDecimals":2,"stripTrailingZeroes":false,"symbol":"USD"},
-                            "lowDay":{"amount":0.9989457077643417,"displayDecimals":2,"stripTrailingZeroes":false,"symbol":"USD"},
-                            "marketCap":{"amount":3641953745.413845,"displayDecimals":2,"stripTrailingZeroes":false,"symbol":"USD"}
-                        },
-                        "marketDetailsLoading":false
-                        ,"currentBalance":1000,
+                        "cryptoPrice":0.9999000202515163,
+                        "currentBalance":1000,
                         "currencyBalanceAsString":"",
                         "currencyBalance":0,
                         "sectionId":"section_zzz",
@@ -949,6 +930,71 @@ Item {
             compare(controlUnderTest.selectedRawAmount, "1")
 
             sendModalHeader.assetSelected(Constants.ethGroupKey)
+        }
+
+        // The token picker's terminal model carries a flat `cryptoPrice` role and
+        // no `marketDetails` object; reading the missing one zeroed the price and
+        // blanked the fiat line under the amount input.
+        function test_fiatValueShownForSelectedAsset() {
+            verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened)
+
+            waitForRendering(controlUnderTest.contentItem)
+
+            const sendModalHeader = findChild(controlUnderTest, "sendModalHeader")
+            verify(!!sendModalHeader)
+            sendModalHeader.assetSelected(Constants.ethGroupKey)
+
+            const amountToSend = findChild(controlUnderTest, "amountToSend")
+            verify(!!amountToSend)
+
+            const ethPrice = SQUtils.ModelUtils.getByKey(
+                               controlUnderTest.assetsModel, "key",
+                               Constants.ethGroupKey, "cryptoPrice")
+            verify(ethPrice > 0)
+            tryCompare(amountToSend, "cryptoPrice", ethPrice)
+
+            const bottomItemText = findChild(amountToSend, "bottomItemText")
+            verify(!!bottomItemText)
+            verify(bottomItemText.text.length > 0,
+                   "the fiat value must be shown under the amount input")
+        }
+
+        // Nothing selected means the token is unresolved on both lookup paths;
+        // the amount input must still get a defined multiplier rather than keep
+        // whatever the previously selected token had.
+        function test_noSelection_multiplierIndexIsDefined() {
+            verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened)
+
+            const amountToSend = findChild(controlUnderTest, "amountToSend")
+            verify(!!amountToSend)
+
+            compare(controlUnderTest.selectedGroupKey, "")
+            compare(amountToSend.multiplierIndex, 0)
+        }
+
+        // Clearing the selection must clear the symbol shown next to the amount;
+        // an undefined lookup silently leaves the previous token's symbol behind.
+        function test_clearingSelection_resetsSymbol() {
+            verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened)
+
+            waitForRendering(controlUnderTest.contentItem)
+
+            const sendModalHeader = findChild(controlUnderTest, "sendModalHeader")
+            verify(!!sendModalHeader)
+            sendModalHeader.assetSelected(Constants.ethGroupKey)
+
+            const amountToSend = findChild(controlUnderTest, "amountToSend")
+            verify(!!amountToSend)
+            tryCompare(amountToSend, "selectedSymbol", "ETH")
+
+            controlUnderTest.selectedGroupKey = ""
+            tryCompare(amountToSend, "selectedSymbol", "")
         }
 
         function test_marketDataNotAvailable_behavior() {
