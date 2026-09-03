@@ -32,16 +32,26 @@ Item {
     }
 
     function cropImage(imageUrl) {
-        imageCropper.source = imageUrl
+        d.pickedImageUrl = imageUrl
+        // The cropper applies the EXIF orientation tag, the backend that consumes cropRect does
+        // not. Crop an already-upright, untagged copy so both agree on the coordinate space.
+        imageCropper.source = SystemUtils.normalizeImageOrientation(imageUrl)
         imageCropperModal.open()
+    }
+
+    QtObject {
+        id: d
+
+        // Where the image was picked from, as opposed to the normalized copy in the temp dir
+        property url pickedImageUrl
     }
 
     StatusFileDialog {
         id: fileDialog
 
         title: root.imageFileDialogTitle
-        currentFolder: imageCropper.source.toString() !== "" ? imageCropper.source.toString().substr(0, imageCropper.source.toString().lastIndexOf("/"))
-                                                             : fileDialog.picturesShortcut
+        currentFolder: d.pickedImageUrl.toString() !== "" ? d.pickedImageUrl.toString().substr(0, d.pickedImageUrl.toString().lastIndexOf("/"))
+                                                          : fileDialog.picturesShortcut
         usePhotoLibrary: true
         nameFilters: [qsTr("Supported image formats (%1)").arg(UrlUtils.validImageNameFilters)]
         onAccepted: {
