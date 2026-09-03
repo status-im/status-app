@@ -1,32 +1,48 @@
 import QtQuick
 import QtTest
 
-import StatusQ.Core.Theme
-
 import AppLayouts.Wallet.adaptors
 
-import Models
-import utils
+import StatusQ.Core.Theme
 
 Item {
     id: root
-    width: 400
-    height: 400
 
     Component {
-        id: adaptorComp
+        id: testComponent
 
         SignSendAdaptor {
             palette: Theme.palette
-            accountKey: ""
+
+            accountKey: "0x1"
             chainId: 1
-            groupKey: Constants.ethGroupKey
+            groupKey: "eth"
             selectedAmountInBaseUnit: ""
-            selectedRecipientAddress: ""
-            accountsModel: ListModel {}
-            networksModel: ListModel {}
-            tokenGroupsModel: TokenGroupsModel {}
-            recipientModel: ListModel {}
+            selectedRecipientAddress: "0x2"
+
+            accountsModel: ListModel {
+                Component.onCompleted: append([
+                    { address: "0x1", name: "Account 1", emoji: "🚀", colorId: "army" }
+                ])
+            }
+            networksModel: ListModel {
+                Component.onCompleted: append([
+                    { chainId: 1, chainName: "Mainnet", iconUrl: "network/ethereum" }
+                ])
+            }
+            tokenGroupsModel: ListModel {
+                Component.onCompleted: append([
+                    {
+                        key: "eth", symbol: "ETH", decimals: 18,
+                        tokens: [ { chainId: 1, address: "0xeth" } ]
+                    }
+                ])
+            }
+            recipientModel: ListModel {
+                Component.onCompleted: append([
+                    { address: "0x2", name: "Bob", ens: "", emoji: "", color: "", colorId: "" }
+                ])
+            }
         }
     }
 
@@ -34,24 +50,43 @@ Item {
         name: "SignSendAdaptor"
         when: windowShown
 
-        function test_emptyRawAmount_returnsZero() {
-            const adaptor = createTemporaryObject(adaptorComp, root)
-            compare(adaptor.selectedAmount, "0")
-            compare(adaptor.selectedAsset.symbol, Constants.ethToken)
+        property SignSendAdaptor controlUnderTest: null
+
+        function init() {
+            controlUnderTest = createTemporaryObject(testComponent, root)
+            verify(!!controlUnderTest)
+        }
+
+        // The send modal feeds an empty raw amount until the user types one, so
+        // the adaptor is built and rebound in that state on every open.
+        function test_selectedAmount_noAmountEntered() {
+            compare(controlUnderTest.selectedAmount, "0")
+            compare(controlUnderTest.selectedAsset.symbol, "ETH")
         }
 
         function test_missingDecimalsAndInvalidRaw_returnsZero() {
-            const adaptor = createTemporaryObject(adaptorComp, root, {
-                groupKey: "no-decimals",
-                selectedAmountInBaseUnit: "not-a-number",
-                tokenGroupsModel: dummyTokens
-            })
-            compare(adaptor.selectedAmount, "0")
+            controlUnderTest.groupKey = "no-decimals"
+            controlUnderTest.selectedAmountInBaseUnit = "not-a-number"
+            compare(controlUnderTest.selectedAmount, "0")
         }
-    }
 
-    ListModel {
-        id: dummyTokens
-        Component.onCompleted: append([{ key: "no-decimals", symbol: "XYZ", logoUri: "", tokens: [] }])
+        // ModelEntry.item is an always-present (possibly empty) property map, so
+        // the asset's decimals must be read through `available`, not truthiness.
+        function test_selectedAmount_unresolvedAsset() {
+            controlUnderTest.groupKey = "not-in-the-model"
+            controlUnderTest.selectedAmountInBaseUnit = "1500000000000000000"
+            compare(controlUnderTest.selectedAmount, "0")
+        }
+
+        function test_selectedAmount_resolvedAsset() {
+            controlUnderTest.selectedAmountInBaseUnit = "1500000000000000000"
+            compare(controlUnderTest.selectedAmount,
+                    "1" + Qt.locale().decimalPoint + "5")
+        }
+
+        function test_selectedAmount_wholeNumberStripsZeros() {
+            controlUnderTest.selectedAmountInBaseUnit = "2000000000000000000"
+            compare(controlUnderTest.selectedAmount, "2")
+        }
     }
 }
