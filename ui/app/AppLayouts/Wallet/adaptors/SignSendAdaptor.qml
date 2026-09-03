@@ -71,7 +71,10 @@ QObject {
     readonly property var selectedAssetEntry: selectedAssetContractEntry.item
     /** output property of the localised amount to send **/
     readonly property string selectedAmount: {
-        const decimals = !!root.selectedAsset ? root.selectedAsset.decimals: 0
+        if (!root.selectedAmountInBaseUnit || !selectedAssetEntry.available)
+            return ""
+
+        const decimals = root.selectedAsset.decimals
         const divisor = AmountsArithmetic.fromExponent(decimals)
         let amount =  AmountsArithmetic.div(
                 AmountsArithmetic.fromString(root.selectedAmountInBaseUnit),

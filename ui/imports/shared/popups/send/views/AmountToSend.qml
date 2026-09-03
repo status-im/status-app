@@ -92,6 +92,7 @@ Control {
        e.g. 1.0 for 1 ETH or 1.0 for 1 USD. */
     property var formatFiat: balance =>
                              `${balance.toLocaleString(Qt.locale())} FIAT`
+                             
     property var formatBalance: balance =>
                                 `${balance.toLocaleString(Qt.locale())} CRYPTO`
 

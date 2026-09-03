@@ -391,7 +391,7 @@ StatusDialog {
 
         readonly property string selectedCryptoTokenSymbol: {
             if (!d.selectedTokenExistsInAssetsModel) {
-                return d.resolvedSelectedToken.symbol
+                return d.resolvedSelectedToken?.symbol ?? ""
             }
 
             return selectedAssetEntryValid ?
@@ -745,13 +745,16 @@ StatusDialog {
                     selectedSymbol: amountToSend.fiatMode ?
                                         root.currentCurrency:
                                         d.selectedCryptoTokenSymbol
-                    cryptoPrice: !root.interactive || root.marketDataNotAvailable ? 0
-                                                                                  : !!d.selectedAssetEntry.item &&
-                                                                                    !!d.selectedAssetEntry.item.marketDetails &&
-                                                                                    d.selectedAssetEntry.item.marketDetails.currencyPrice.amount
+                    cryptoPrice: {
+                        if (!root.interactive || root.marketDataNotAvailable) {
+                            return 0
+                        }
+                        const item = d.selectedAssetEntry.item
+                        return !!item && !!item.cryptoPrice ? item.cryptoPrice : 0
+                    }
                     multiplierIndex: {
                         if (!d.selectedTokenExistsInAssetsModel) {
-                            return d.resolvedSelectedToken.decimals
+                            return d.resolvedSelectedToken?.decimals ?? 0
                         }
 
                         return !!d.selectedAssetEntryValid &&
