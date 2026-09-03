@@ -1,5 +1,6 @@
 #include "StatusQ/systemutilsinternal.h"
 
+#include <QDateTime>
 #include <QDesktopServices>
 #include <QGuiApplication>
 #include <QImage>
@@ -189,6 +190,28 @@ bool SystemUtilsInternal::ensureDirectory(const QString &path) const
     return dir.mkpath(QStringLiteral("."));
 }
 
+namespace {
+
+constexpr auto normalizedImagePrefix = "statusq_oriented_"_L1;
+
+// A normalized copy outlives the crop dialog - the backend only reads the path once the user
+// saves - so nothing here can know when one is done. Drop leftovers from previous runs instead,
+// sparing recent ones in case a second instance is still holding them.
+void sweepStaleNormalizedImages()
+{
+    const QDir tempDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
+    const auto cutoff = QDateTime::currentDateTime().addDays(-1);
+
+    const auto candidates = tempDir.entryInfoList({QString(normalizedImagePrefix) + u"*.jpg"_s},
+                                                  QDir::Files);
+    for (const auto& candidate : candidates) {
+        if (candidate.lastModified() < cutoff)
+            QFile::remove(candidate.absoluteFilePath());
+    }
+}
+
+} // namespace
+
 QUrl SystemUtilsInternal::normalizeImageOrientation(const QUrl& imageUrl) const
 {
     if (!imageUrl.isValid() || !imageUrl.isLocalFile())
@@ -211,10 +234,13 @@ QUrl SystemUtilsInternal::normalizeImageOrientation(const QUrl& imageUrl) const
         return imageUrl;
     }
 
+    static std::once_flag sweepOnce;
+    std::call_once(sweepOnce, sweepStaleNormalizedImages);
+
     const auto targetPath =
             QDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation))
-            .filePath(QStringLiteral("statusq_oriented_%1.jpg").arg(
-                          QUuid::createUuid().toString(QUuid::WithoutBraces)));
+            .filePath(QString(normalizedImagePrefix)
+                      + QUuid::createUuid().toString(QUuid::WithoutBraces) + u".jpg"_s);
 
     if (!upright.save(targetPath, "JPEG", 92)) {
         qWarning() << "SystemUtilsInternal::normalizeImageOrientation: cannot write"
