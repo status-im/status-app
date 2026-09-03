@@ -51,6 +51,7 @@ Control {
     property string selectedAccountAddress
     onSelectedAccountAddressChanged: reevaluateSelectedId()
     property string nonInteractiveGroupKey
+    property int nonInteractiveChainId: -1
 
     property string groupKey
     onGroupKeyChanged: {
@@ -214,13 +215,17 @@ Control {
                                                 || root.catalogChainId === root.listCatalogChainId)
         onListSettledChanged: if (listSettled) root.reevaluateSelectedId()
 
+        readonly property bool catalogJudgesSelection: root.listCatalogChainId === root.selectedNetworkChainId
+
         function reevaluateSelectedId() {
             if (!d.listSettled)
                 return
-            if (!SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", d.selectedHoldingId)) {
+            if (d.catalogJudgesSelection
+                    && !SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", d.selectedHoldingId)) {
                 // Token doesn't exist in destination chain
                 d.selectedHoldingId = root.defaultGroupKey
             }
+            d.setHoldingToSelector()
         }
 
 
@@ -232,25 +237,38 @@ Control {
             onAvailableChanged: d.setHoldingToSelector()
         }
 
+        readonly property SQUtils.ModelChangeTracker selectedTokensTracker: SQUtils.ModelChangeTracker {
+            model: d.selectedHolding.available && !!d.selectedHolding.item
+                   ? d.selectedHolding.item.tokens : null
+            onRevisionChanged: d.setHoldingToSelector()
+        }
+
         function setHoldingToSelector() {
             if (!root.tokenSelectorModel)
                 return
             if (selectedHolding.available && !!selectedHolding.item) {
-                if (!selectedHolding.item.tokens || selectedHolding.item.tokens.ModelCount.count !== 1) {
+                const tokens = selectedHolding.item.tokens
+                const tokensCount = !!tokens ? tokens.ModelCount.count : 0
+                let tokenKey = ""
+                if (tokensCount === 1)
+                    tokenKey = SQUtils.ModelUtils.get(tokens, 0, "key")
+                else if (tokensCount > 1)
+                    tokenKey = SQUtils.ModelUtils.getByKey(tokens, "chainId", root.selectedNetworkChainId, "key")
+                               ?? SQUtils.ModelUtils.getByKey(tokens, "chainId", root.listCatalogChainId, "key")
+                               ?? SQUtils.ModelUtils.get(tokens, 0, "key")
+                if (!tokenKey) {
                     console.error("token for the selected group cannot be resolved", "group-key", d.selectedHoldingId, "chain", root.selectedNetworkChainId)
                     return
                 }
 
-                d.selectedHoldingTokenKey = SQUtils.ModelUtils.get(selectedHolding.item.tokens, 0, "key")
+                d.selectedHoldingTokenKey = tokenKey
 
                 holdingSelector.setSelection(selectedHolding.item.symbol,
                                              selectedHolding.item.logoUri || Constants.tokenIcon(selectedHolding.item.symbol),
                                              selectedHolding.item.key)
                 return
             }
-            // while unsettled the selected token may legitimately be absent, so keep
-            // the current button rather than resetting it
-            if (d.listSettled)
+            if (d.listSettled && d.catalogJudgesSelection)
                 holdingSelector.reset()
         }
 
@@ -535,7 +553,7 @@ Control {
                 hasMoreItems: !!root.tokenSelectorModel && root.tokenSelectorModel.hasMoreItems
                 isLoadingMore: root.tokenSelectorLoading || (!!root.tokenSelectorModel && root.tokenSelectorModel.isLoadingMore)
                 nonInteractiveKey: root.nonInteractiveGroupKey
-                nonInteractiveChainId: root.selectedNetworkChainId
+                nonInteractiveChainId: root.nonInteractiveChainId
                 formatCurrencyBalance: (amount) => root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency)
 
                 selectedNetworkIcon: !!networkEntry.item && !!networkEntry.item.iconUrl

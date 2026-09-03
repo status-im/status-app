@@ -197,6 +197,19 @@ suite "mergePopularWithOwned — all-tokens / search path":
     check eth.name == "Ethereum"          # popular's metadata wins
     check eth.logoUri == "logo/eth"
 
+  test "owned token refs from other chains are merged into the popular side's":
+    var g = group("ETH", balances = @[bal("0xA", 1, "1000000000000000000"),
+                                      bal("0xA", 10, "1000000000000000000")])
+    g.tokens = @[(key: "eth:1", chainId: 1), (key: "eth:10", chainId: 10)]
+    let owned = buildTokenSelectorItems(@[g], networks, noFilterParams())
+    let merged = mergePopularWithOwned(
+      @[PopularGroup(key: "ETH", name: "Ethereum", symbol: "ETH",
+        tokens: @[(key: "eth:1", chainId: 1)])],
+      owned, showCommunityAssets = false)
+    check merged.findItem("ETH").tokens == @[
+      TokenSelectorTokenRef(key: "eth:1", chainId: 1),
+      TokenSelectorTokenRef(key: "eth:10", chainId: 10)]
+
   test "popular token the user does not own becomes a zero-balance popular item":
     let merged = mergePopularWithOwned(@[popular("DAI", name = "Dai")], @[], showCommunityAssets = false)
     let dai = merged.findItem("DAI")

@@ -348,6 +348,33 @@ Item {
             compare(control.panel.selectedSpy.signalArguments[0][1], 42161)
         }
 
+        function test_nonInteractiveKeyFollowsTheChainFilter() {
+            const networks = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
+            networks.append(networksData)
+
+            const control = createTemporaryObject(panelCmp, root, { networksModel: networks })
+            control.panel.nonInteractiveKey = "stt_key"
+            control.panel.nonInteractiveChainId = 1
+
+            const listView = findChild(control, "assetsListView")
+
+            // scoped to the excluded chain: the same (token, chain) pair
+            control.panel.selectedChainId = 1
+            waitForRendering(listView)
+            const sttExcluded = listView.itemAtIndex(0)
+            verify(sttExcluded)
+            compare(sttExcluded.rowCount, 1)
+            compare(sttExcluded.rowAt(0).enabled, false)
+
+            // scoped to another chain: a legitimate bridge destination
+            control.panel.selectedChainId = 10
+            waitForRendering(listView)
+            const sttBridge = listView.itemAtIndex(0)
+            verify(sttBridge)
+            compare(sttBridge.rowCount, 1)
+            compare(sttBridge.rowAt(0).enabled, true)
+        }
+
         function test_singleRowWhenChainFilterSet() {
             const networks = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
             networks.append(networksData)

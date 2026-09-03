@@ -252,9 +252,11 @@ Control {
                         chainId: rowChainId
                         highlighted: holding.key === root.highlightedKey
                                      && (rowChainId === -1 || rowChainId === root.highlightedChainId)
+                        readonly property int effectiveChainId: rowChainId !== -1 ? rowChainId
+                                                                                  : root.selectedChainId
                         enabled: holding.key !== root.nonInteractiveKey
-                                 || (rowChainId !== -1
-                                     && rowChainId !== root.nonInteractiveChainId)
+                                 || (effectiveChainId !== -1
+                                     && effectiveChainId !== root.nonInteractiveChainId)
                         isAutoHovered: d.validSearchResultExists && holdingRows.index === 0
                                        && index === 0 && !listViewHoverHandler.hovered
 
@@ -266,10 +268,21 @@ Control {
                         iconSource: holding.logoUri || Constants.tokenIcon(holding.symbol)
                         balancesModel: holding.balances
                         tokensModel: holding.tokens
+                        fallbackChainId: root.selectedChainId !== -1 ? root.selectedChainId
+                                                                     : root.highlightedChainId
                         currentBalance: !!modelData ? modelData.balance : (holding.currentBalance ?? 0)
                         defaultNetworkIcon: root.defaultNetworkIcon
 
                         onClicked: root.selected(holding.key, rowChainId)
+
+                        onContractAddressClicked: {
+                            const explorerUrl = ModelUtils.getByKey(root.flatNetworksModel, "chainId", resolvedChainId, "blockExplorerURL")
+                            if (!explorerUrl)
+                                return
+                            Global.requestOpenLink("%1/%2/%3".arg(explorerUrl)
+                                                   .arg(Constants.networkExplorerLinks.addressPath)
+                                                   .arg(tokenAddress))
+                        }
                     }
                 }
 

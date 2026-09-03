@@ -131,6 +131,13 @@ proc mergePopularWithOwned*(popular: seq[PopularGroup],
       item.chips = o.chips
       item.decimals = o.decimals
       item.marketPrice = o.marketPrice
+      # The "All" filter splits a multi-chain holding into one row per chain, so we need to merge the owned refs in
+      # so every per-chain row can resolve its contract address.
+      var chains = item.tokens.mapIt(it.chainId).toHashSet
+      for t in o.tokens:
+        if t.chainId notin chains:
+          item.tokens.add(TokenSelectorTokenRef(key: t.key, chainId: t.chainId))
+          chains.incl(t.chainId)
     result.add(item)
 
 proc buildDisplayItems*(

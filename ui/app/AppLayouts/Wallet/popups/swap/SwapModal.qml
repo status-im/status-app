@@ -159,6 +159,10 @@ StatusDialog {
 
         readonly property string nativeTokenSymbol: Utils.getNativeTokenSymbol(root.swapInputParamsForm.selectedNetworkChainId)
 
+        readonly property int effectiveToChainId: root.swapInputParamsForm.toNetworkChainId !== -1
+                                                  ? root.swapInputParamsForm.toNetworkChainId
+                                                  : root.swapInputParamsForm.selectedNetworkChainId
+
         readonly property bool isSameChainSwap: root.swapInputParamsForm.selectedNetworkChainId === root.swapInputParamsForm.toNetworkChainId
         readonly property bool isBridge: root.swapInputParamsForm.toNetworkChainId !== -1 && !isSameChainSwap
         onIsBridgeChanged: {
@@ -424,7 +428,8 @@ StatusDialog {
                     catalogChainId: d.lastRequestedChainId
 
                     selectedAccountAddress: root.swapInputParamsForm.selectedAccountAddress
-                    nonInteractiveGroupKey: d.isSameChainSwap ? receivePanel.selectedHoldingId : ""
+                    nonInteractiveGroupKey: receivePanel.selectedHoldingId
+                    nonInteractiveChainId: d.effectiveToChainId
 
                     accountName: !!d.selectedAccount ? d.selectedAccount.name : ""
                     accountEmoji: !!d.selectedAccount ? d.selectedAccount.emoji : ""
@@ -496,7 +501,8 @@ StatusDialog {
                     }
 
                     selectedAccountAddress: root.swapInputParamsForm.toAccountAddress || root.swapInputParamsForm.selectedAccountAddress
-                    nonInteractiveGroupKey: d.isSameChainSwap ? payPanel.selectedHoldingId : ""
+                    nonInteractiveGroupKey: payPanel.selectedHoldingId
+                    nonInteractiveChainId: root.swapInputParamsForm.selectedNetworkChainId
 
                     // saved addresses carry no emoji role, hence the extra fallbacks
                     accountName: !!d.toAccount ? d.toAccount.name ?? "" : ""
