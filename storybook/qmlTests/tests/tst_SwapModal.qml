@@ -2031,8 +2031,9 @@ Item {
             verify(!!trigger)
             compare(trigger.text, qsTr("Best return"))
 
-            waitForRendering(trigger)
-            mouseClick(trigger)
+            const triggerArea = findChild(trigger, "routeOrderMouseArea")
+            verify(!!triggerArea)
+            triggerArea.clicked(null)
 
             // the dialog reparents to the overlay, so search from there
             let fastest = null
