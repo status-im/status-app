@@ -1,6 +1,7 @@
 import QtQuick
 
 import StatusQ.Components
+import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
 
@@ -50,7 +51,7 @@ Row {
 
     // Created on first hover only — one of these per message row otherwise.
     StatusLazyToolTip {
-        hoverTarget: root
+        target: root
         tooltipObjectName: "verificationIconsTooltip"
         textProvider: () => {
             if (root.isBlocked)

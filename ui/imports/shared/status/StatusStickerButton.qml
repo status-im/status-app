@@ -151,7 +151,7 @@ StatusButton {
     ]
 
     // Tooltip only in case we are browsing an item to be installed/downloaded/bought
-    tooltip.visible: root.hovered && !!tooltip.text && (root.greyedOut || root.isInstalled)
+    tooltip.enabled: root.greyedOut || root.isInstalled
     tooltip.maxWidth: 300
 
     StatusMouseArea {
