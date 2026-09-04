@@ -179,6 +179,5 @@ Rectangle {
         id: statusToolTip
         target: root
         centerArrowOnTarget: true
-        shown: root.hovered
     } // Tooltip
 } // Rectangle
