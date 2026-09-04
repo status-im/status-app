@@ -9,6 +9,8 @@ import StatusQ.Core.Utils
 import StatusQ.Popups.Dialog
 import StatusQ.Core.Theme
 
+import QtModelsToolkit
+
 import utils
 import shared
 import shared.stores as SharedStores
@@ -273,14 +275,26 @@ Item {
     Component {
         id: termsAndConditions
         EnsTermsAndConditionsView {
-            ensUsernamesStore: ensView.ensUsernamesStore
             username: selectedUsername
-            assetsModel: ensView.walletAssetsStore.groupedAccountAssetsModel
 
-            onBackBtnClicked: back();
+            registrarAddress: ensView.ensUsernamesStore.ensRegisteredAddress
+            ensRegistryAddress: ensView.ensUsernamesStore.getEnsRegistry()
+            etherscanAddressLink: ensView.ensUsernamesStore.getEtherscanAddressLink()
+
+            walletAddress: ensView.ensUsernamesStore.getWalletDefaultAddress()
+            pubkey: ensView.ensUsernamesStore.pubkey
+
+            sntBalance: {
+                const token = statusTokenEntry.item
+                if (!token || !token.decimals)
+                    return 0
+                return sntAggregator.value / (10 ** token.decimals)
+            }
+
+            onBackBtnClicked: back()
 
             onRegisterUsername: {
-                const chainId = root.ensUsernamesStore.getChainForBuyingEnsName()
+                const chainId = ensView.ensUsernamesStore.getChainForBuyingEnsName()
 
                 ensView.registerUsernameRequested(ensView.selectedUsername, chainId)
             }
@@ -293,6 +307,22 @@ Item {
                     }
                     done(ensView.selectedUsername)
                 }
+            }
+
+            ModelEntry {
+                id: statusTokenEntry
+                sourceModel: ensView.walletAssetsStore.groupedAccountAssetsModel
+                key: "key"
+                value: ensView.ensUsernamesStore.getStatusTokenGroupKey()
+            }
+
+            SumAggregator {
+                id: sntAggregator
+                model: {
+                    const token = statusTokenEntry.item
+                    return !!token && !!token.balances ? token.balances : null
+                }
+                roleName: "balance"
             }
         }
     }
@@ -331,26 +361,35 @@ Item {
     Component {
         id: list
         EnsListView {
-            ensUsernamesStore: ensView.ensUsernamesStore
-
             profileContentWidth: ensView.profileContentWidth
+
+            model: ensView.ensUsernamesStore.currentChainEnsUsernamesModel
+            preferredUsername: ensView.ensUsernamesStore.preferredUsername
+            pubkey: ensView.ensUsernamesStore.pubkey
+            icon: ensView.ensUsernamesStore.icon
+            hasConfirmedEnsUsernames: ensView.ensUsernamesStore.ensUsernamesModel.count > 0
+                                      || ensView.ensUsernamesStore.numOfPendingEnsUsernames() > 0
+
             onAddBtnClicked: next("search")
             onSelectEns: (username, chainId) => {
-                ensView.ensUsernamesStore.ensDetails(chainId, username)
+
+
                 selectedUsername = username
                 selectedChainId = chainId
                 next("details")
+
+                ensView.ensUsernamesStore.ensDetails(chainId, username)
             }
+            onPreferredUsernameSelected: (ensUsername) => ensView.ensUsernamesStore.setPrefferedEnsUsername(ensUsername)
         }
     }
 
     Component {
         id: details
         EnsDetailsView {
-            ensUsernamesStore: ensView.ensUsernamesStore
-            username: selectedUsername
-            chainId: selectedChainId
+            id: ensDetailsView
 
+            username: selectedUsername
             onBackBtnClicked: back()
 
             onReleaseUsernameRequested: (senderAddress) => {
@@ -359,16 +398,35 @@ Item {
                     Global.openPopup(noAccountPopupComponent)
                     return
                 }
-                ensView.releaseUsernameRequested(ensView.selectedUsername, senderAddress, ensView.selectedChainId)
+                ensView.releaseUsernameRequested(ensView.selectedUsername, senderAddress,
+                                                 ensView.selectedChainId)
+            }
+
+            onRemoveEnsUsernameRequested: (chainId, username) => {
+                ensView.ensUsernamesStore.removeEnsUsernameRequested(chainId, username)
+                back()
             }
 
             Connections {
                 target: ensView.ensUsernamesStore.ensUsernamesModule
+
                 function onTransactionWasSent(trxType: string, chainId: int, txHash: string, username: string, error: string) {
                     if (!!error || trxType !== d.releaseENS) {
                         return
                     }
                     done(ensView.selectedUsername)
+                }
+
+                function onDetailsObtained(chainId: int, ensName: string, address: string, pubkey: string, isStatus: bool, expirationTime: int) {
+                    if(username !== (isStatus ? ensName + ".stateofus.eth" : ensName))
+                        return
+
+                    ensDetailsView.setDetails(chainId, ensName, address, pubkey, isStatus, expirationTime,
+                                             ensView.ensUsernamesStore.preferredUsername === username)
+                }
+
+                function onLoading(isLoading: bool) {
+                    ensDetailsView.isLoading = isLoading
                 }
             }
         }
@@ -382,6 +440,7 @@ Item {
             StatusBaseText {
                 anchors.fill: parent
                 text: qsTr("The account this username was bought with is no longer among active accounts.\nPlease add it and try again.")
+                wrapMode: Text.Wrap
             }
 
             standardButtons: Dialog.Ok

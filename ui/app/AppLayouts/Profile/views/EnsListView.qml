@@ -13,35 +13,29 @@ import shared.views.chat
 import shared.controls.chat
 import utils
 
-import AppLayouts.Profile.stores
-
-import "../popups"
+import AppLayouts.Profile.popups
 
 Item {
     id: root
 
-    property EnsUsernamesStore ensUsernamesStore
-
     property int profileContentWidth
+
+    // ENS usernames for the current chain; expected roles: ensUsername, isPending, chainId.
+    property var model
+
+    // Profile fields used to preview how the preferred username appears in chats.
+    property string preferredUsername
+    property string pubkey
+    property string icon
+
+    // Whether the user has any confirmed or pending ENS usernames (gates the chat settings section).
+    property bool hasConfirmedEnsUsernames
 
     signal addBtnClicked()
     signal selectEns(string username, int chainId)
 
-    Component.onCompleted: {
-        d.updateNumberOfPendingEnsUsernames()
-    }
-
-    QtObject {
-        id: d
-
-        property int numOfPendingEnsUsernames: 0
-        readonly property bool hasConfirmedEnsUsernames: root.ensUsernamesStore.ensUsernamesModel.count > 0
-                                                         || numOfPendingEnsUsernames > 0
-
-        function updateNumberOfPendingEnsUsernames() {
-            numOfPendingEnsUsernames = root.ensUsernamesStore.numOfPendingEnsUsernames()
-        }
-    }
+    // Emitted when the user confirms a different preferred username in the popup.
+    signal preferredUsernameSelected(string ensUsername)
 
     Item {
         anchors.top: parent.top
@@ -115,7 +109,7 @@ Item {
             StatusListView {
                 id: lvEns
                 anchors.fill: parent
-                model: root.ensUsernamesStore.currentChainEnsUsernamesModel
+                model: root.model
 
                 spacing: 10
                 delegate: StatusListItem {
@@ -158,7 +152,7 @@ Item {
 
         StatusBaseText {
             id: chatSettingsLabel
-            visible: d.hasConfirmedEnsUsernames
+            visible: root.hasConfirmedEnsUsernames
             text: qsTr("Chat settings")
             anchors.left: parent.left
             anchors.top: ensList.bottom
@@ -168,11 +162,11 @@ Item {
         }
 
         Item {
-            width: childrenRect.width
             height: childrenRect.height
 
             id: primaryUsernameItem
             anchors.left: parent.left
+            anchors.right: parent.right
             anchors.top: chatSettingsLabel.bottom
             anchors.topMargin: 24
 
@@ -188,7 +182,7 @@ Item {
             StatusBaseText {
                 id: usernameLabel2
                 visible: chatSettingsLabel.visible
-                text: root.ensUsernamesStore.preferredUsername || qsTr("None selected")
+                text: root.preferredUsername || qsTr("None selected")
                 anchors.left: usernameLabel.right
                 anchors.leftMargin: Theme.padding
                 font.pixelSize: Theme.secondaryTextFontSize
@@ -209,9 +203,11 @@ Item {
 
             anchors.top: !visible ? separator.bottom : primaryUsernameItem.bottom
             anchors.topMargin: Theme.padding * 2
+            anchors.left: parent.left
+            anchors.right: parent.right
 
-            visible: d.hasConfirmedEnsUsernames
-                     && root.ensUsernamesStore.preferredUsername !== ""
+            visible: root.hasConfirmedEnsUsernames
+                     && root.preferredUsername !== ""
 
             timestamp: new Date().getTime()
             disableHover: true
@@ -220,21 +216,25 @@ Item {
             messageDetails: StatusMessageDetails {
                 contentType: StatusMessage.ContentType.Text
                 messageText: qsTr("Hey!")
+                unparsedText: messageText
                 amISender: false
-                sender.displayName: root.ensUsernamesStore.preferredUsername
+                sender.displayName: root.preferredUsername
                 sender.profileImage.assetSettings.isImage: true
-                sender.profileImage.assetSettings.color: Utils.colorForPubkey(root.Theme.palette, root.ensUsernamesStore.pubkey)
-                sender.profileImage.name: root.ensUsernamesStore.icon
+                sender.profileImage.assetSettings.color:
+                    Utils.colorForPubkey(root.Theme.palette, root.pubkey)
+                sender.profileImage.name: root.icon
             }
         }
 
         StatusBaseText {
             anchors.top: messagesShownAs.bottom
             anchors.left: messagesShownAs.left
+            anchors.right: messagesShownAs.right
             anchors.topMargin: Theme.padding
             text: qsTr("You’re displaying your ENS username in chats")
             font.pixelSize: Theme.fontSize(14)
             color: Theme.palette.baseColor1
+            wrapMode: Text.Wrap
         }
     }
 
@@ -242,8 +242,11 @@ Item {
         id: ensPopupComponent
 
         ENSPopup {
-            ensUsernamesStore: root.ensUsernamesStore
+            preferredUsername: root.preferredUsername
+            model: root.model
             destroyOnClose: true
+
+            onPreferredUsernameSelected: (ensUsername) => root.preferredUsernameSelected(ensUsername)
         }
     }
 }

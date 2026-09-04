@@ -7309,58 +7309,61 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
+    <name>EnsTermsAndConditionsPopup</name>
+    <message>
+        <source>Terms of name registration</source>
+        <translation type="unfinished">Conditions d’enregistrement des noms</translation>
+    </message>
+    <message>
+        <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
+        <translation type="unfinished">Les fonds sont déposés pour une durée de 1 an. Vos SNT seront bloqués, mais non dépensés.</translation>
+    </message>
+    <message>
+        <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
+        <translation type="unfinished">Après 1 an, vous pouvez libérer le nom et récupérer votre dépôt, ou ne rien faire pour conserver le nom.</translation>
+    </message>
+    <message>
+        <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
+        <translation type="unfinished">Si les conditions du contrat changent (par exemple, si Status effectue des mises à niveau du contrat), l’utilisateur a le droit de libérer le nom d’utilisateur, quel que soit le temps pendant lequel il l’a conservé.</translation>
+    </message>
+    <message>
+        <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
+        <translation type="unfinished">Le contrôleur du contrat n’a pas accès à vos fonds déposés. Ils ne peuvent être renvoyés qu’à l’adresse qui les a envoyés.</translation>
+    </message>
+    <message>
+        <source>Your address(es) will be publicly associated with your ENS name.</source>
+        <translation type="unfinished">Votre ou vos adresses seront publiquement associées à votre nom ENS.</translation>
+    </message>
+    <message>
+        <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
+        <translation type="unfinished">Les noms d’utilisateur sont créés en tant que nœuds de sous-domaine de stateofus.eth et sont soumis aux conditions du contrat intelligent ENS.</translation>
+    </message>
+    <message>
+        <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
+        <translation type="unfinished">Vous autorisez le contrat à transférer des SNT en votre nom. Cela ne peut se produire que lorsque vous approuvez une transaction pour autoriser le transfert.</translation>
+    </message>
+    <message>
+        <source>These terms are guaranteed by the smart contract logic at addresses:</source>
+        <translation type="unfinished">Ces conditions sont garanties par la logique du contrat intelligent aux adresses suivantes&#xa0;:</translation>
+    </message>
+    <message>
+        <source>%1 (Status UsernameRegistrar).</source>
+        <translation type="unfinished">%1 (Enregistreur de noms d’utilisateur Status).</translation>
+    </message>
+    <message>
+        <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
+        <translation type="unfinished">&lt;a href=&apos;%1/%2&apos;&gt;Rechercher sur Etherscan&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <source>%1 (ENS Registry).</source>
+        <translation type="unfinished">%1 (Registre ENS).</translation>
+    </message>
+</context>
+<context>
     <name>EnsTermsAndConditionsView</name>
     <message>
         <source>ENS usernames</source>
         <translation>Noms d’utilisateur ENS</translation>
-    </message>
-    <message>
-        <source>Terms of name registration</source>
-        <translation>Conditions d’enregistrement des noms</translation>
-    </message>
-    <message>
-        <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
-        <translation>Les fonds sont déposés pour une durée de 1 an. Vos SNT seront bloqués, mais non dépensés.</translation>
-    </message>
-    <message>
-        <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
-        <translation>Après 1 an, vous pouvez libérer le nom et récupérer votre dépôt, ou ne rien faire pour conserver le nom.</translation>
-    </message>
-    <message>
-        <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
-        <translation>Si les conditions du contrat changent (par exemple, si Status effectue des mises à niveau du contrat), l’utilisateur a le droit de libérer le nom d’utilisateur, quel que soit le temps pendant lequel il l’a conservé.</translation>
-    </message>
-    <message>
-        <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
-        <translation>Le contrôleur du contrat n’a pas accès à vos fonds déposés. Ils ne peuvent être renvoyés qu’à l’adresse qui les a envoyés.</translation>
-    </message>
-    <message>
-        <source>Your address(es) will be publicly associated with your ENS name.</source>
-        <translation>Votre ou vos adresses seront publiquement associées à votre nom ENS.</translation>
-    </message>
-    <message>
-        <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
-        <translation>Les noms d’utilisateur sont créés en tant que nœuds de sous-domaine de stateofus.eth et sont soumis aux conditions du contrat intelligent ENS.</translation>
-    </message>
-    <message>
-        <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
-        <translation>Vous autorisez le contrat à transférer des SNT en votre nom. Cela ne peut se produire que lorsque vous approuvez une transaction pour autoriser le transfert.</translation>
-    </message>
-    <message>
-        <source>These terms are guaranteed by the smart contract logic at addresses:</source>
-        <translation>Ces conditions sont garanties par la logique du contrat intelligent aux adresses suivantes&#xa0;:</translation>
-    </message>
-    <message>
-        <source>%1 (Status UsernameRegistrar).</source>
-        <translation>%1 (Enregistreur de noms d’utilisateur Status).</translation>
-    </message>
-    <message>
-        <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
-        <translation>&lt;a href=&apos;%1/%2&apos;&gt;Rechercher sur Etherscan&lt;/a&gt;</translation>
-    </message>
-    <message>
-        <source>%1 (ENS Registry).</source>
-        <translation>%1 (Registre ENS).</translation>
     </message>
     <message>
         <source>Wallet address</source>
