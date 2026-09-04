@@ -324,7 +324,7 @@ AbstractButton {
         tooltipObjectName: "buttonTooltipPopup"
         target: root
         centerArrowOnTarget: true
-        shown: pointerHoverHandler.hovered && !root.pressed
+        enabled: root.hoverEnabled && !root.pressed
     }
 
     Component {

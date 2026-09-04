@@ -39,14 +39,9 @@ StatusBaseText {
     // rows don't pay for it (never on touch devices).
     StatusLazyToolTip {
         target: root
+        enabled: !root.showFullTimestamp
         maxWidth: 350
         tooltipObjectName: "timestampTooltip"
         textProvider: () => root.timestamp ? LocaleUtils.formatDateTime(root.timestamp) : ""
-        shown: hoverHandler.hovered
-    }
-
-    HoverHandler {
-        id: hoverHandler
-        enabled: !root.showFullTimestamp
     }
 }
