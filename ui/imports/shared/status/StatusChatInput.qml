@@ -1175,8 +1175,12 @@ Control {
         sourceComponent: StatusTextEditMenu {
             canCut: !messageInputField.readOnly && !messageInputField.noSelection
             canCopy: !messageInputField.noSelection
-            canPaste: !messageInputField.readOnly && (ClipboardUtils.hasText
-                      || (root.imageFeaturesEnabled && ClipboardUtils.hasImage))
+            // Never probe the clipboard on iOS: any read triggers the
+            // "Allow Paste?" prompt. Keep Paste enabled and let the actual
+            // paste be the only, user-initiated, read.
+            canPaste: !messageInputField.readOnly
+                      && (StatusQUtils.Utils.isIOS || ClipboardUtils.hasText
+                          || (root.imageFeaturesEnabled && ClipboardUtils.hasImage))
             canSelectAll: messageInputField.length > 0
 
             onCutRequested: messageInputField.cutSelection()

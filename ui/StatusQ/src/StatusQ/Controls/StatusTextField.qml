@@ -87,7 +87,11 @@ TextField {
         sourceComponent: StatusTextEditMenu {
             canCut: !root.readOnly && !root.noSelection
             canCopy: !root.noSelection
-            canPaste: !root.readOnly && root.canPaste
+            // Never read TextInput.canPaste on iOS: it reads UIPasteboard and
+            // triggers the "Allow Paste?" prompt. The menu is only built there so
+            // the context-menu event goes unaccepted and UIKit shows its own
+            // callout - this value is never displayed.
+            canPaste: !root.readOnly && (Utils.isIOS || root.canPaste)
             canSelectAll: root.length > 0
 
             onCutRequested: root.cut()
