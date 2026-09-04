@@ -59,6 +59,8 @@ Control {
 
     property alias showDropdownIndicator: button.showDropdownIndicator
 
+    property alias size: button.size
+
     QtObject {
         id: d
         readonly property int windowHeight: !!contentItem.Window.window ? contentItem.Window.window.height: 0

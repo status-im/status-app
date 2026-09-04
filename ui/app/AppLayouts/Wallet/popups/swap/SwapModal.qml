@@ -46,7 +46,7 @@ StatusDialog {
     Component.onDestruction: {
         const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
         const ids = [d.payTokenSelector, d.receiveTokenSelector, d.receiveTokenSelectorTo]
-                        .filter(sel => !!sel).map(sel => sel.id)
+        .filter(sel => !!sel).map(sel => sel.id)
 
         d.payTokenSelector = null
         d.receiveTokenSelector = null
@@ -60,6 +60,7 @@ StatusDialog {
     padding: Theme.smallPadding
     topPadding: Theme.bigPadding + (bottomSheet ? (parent?.SafeArea.margins.top ?? 0) : 0)
     backgroundColor: Theme.palette.baseColor3
+    footer: null
 
     QtObject {
         id: d
@@ -70,8 +71,7 @@ StatusDialog {
 
         // closePolicy only covers Key_Escape (verified on Qt 6.11), so Android's Back would
         // otherwise bubble to AppMain.tryGoBack(), which knows nothing about open popups, and
-        // minimise the app. Attached to both the content and the footer: key events only
-        // travel up from the focused item, and the footer is not inside the scroll view.
+        // minimise the app.
         function handleBackKey(event) {
             if (event.key !== Qt.Key_Back)
                 return
@@ -154,8 +154,8 @@ StatusDialog {
 
         readonly property var selectedAccount: selectedAccountEntry.item
         readonly property var toAccount: toAccountEntry.available ? toAccountEntry.item
-                                       : toSavedAddressEntry.available ? toSavedAddressEntry.item
-                                       : null
+                                                                  : toSavedAddressEntry.available ? toSavedAddressEntry.item
+                                                                                                  : null
 
         readonly property string nativeTokenSymbol: Utils.getNativeTokenSymbol(root.swapInputParamsForm.selectedNetworkChainId)
 
@@ -449,8 +449,8 @@ StatusDialog {
                             const zero = SQUtils.AmountsArithmetic.fromString("0")
                             const bigIntRawValue = SQUtils.AmountsArithmetic.fromString(rawValue)
                             const amount = !tokenAmount && SQUtils.AmountsArithmetic.cmp(bigIntRawValue, zero) === 0 ? "" :
-                                                                         SQUtils.AmountsArithmetic.div(bigIntRawValue,
-                                                                                                       SQUtils.AmountsArithmetic.fromNumber(1, rawValueMultiplierIndex)).toString()
+                                                                                                                       SQUtils.AmountsArithmetic.div(bigIntRawValue,
+                                                                                                                                                     SQUtils.AmountsArithmetic.fromNumber(1, rawValueMultiplierIndex)).toString()
                             root.swapInputParamsForm.fromTokenAmount = amount
                         }
                     }
@@ -514,8 +514,8 @@ StatusDialog {
                     swapExchangeButtonWidth: swapExchangeButton.width
 
                     tokenSelectorLoading: d.isSameChainSwap
-                        ? root.swapAdaptor.walletAssetsStore.walletTokensStore.groupsForChainLoading
-                        : root.swapAdaptor.walletAssetsStore.walletTokensStore.groupsForChainToLoading
+                                          ? root.swapAdaptor.walletAssetsStore.walletTokensStore.groupsForChainLoading
+                                          : root.swapAdaptor.walletAssetsStore.walletTokensStore.groupsForChainToLoading
                     mainInputLoading: root.swapAdaptor.swapProposalLoading
                     bottomTextLoading: root.swapAdaptor.swapProposalLoading
 
@@ -572,337 +572,330 @@ StatusDialog {
                     Global.openBuyCryptoModalRequested(d.buyFormData)
                 }
             }
-        }
-    }
 
-    footer: Control {
-        id: swapFooter
-
-        width: root.width
-        Keys.onPressed: event => d.handleBackKey(event)
-
-        // match the content inset: dialog padding + scroll view padding + card margin
-        horizontalPadding: root.padding + contentScrollView.leftPadding + d.panelMargin
-        topPadding: 0
-        // StatusDialog only insets the safe area when there's no footer; a custom one must
-        // do it itself or the buttons land under the Android navigation bar.
-        bottomPadding: Theme.padding + root.parent.SafeArea.margins.bottom
-
-        readonly property bool hasProposal: root.swapAdaptor.validSwapProposalReceived
-        readonly property bool loading: root.swapAdaptor.swapProposalLoading
-
-        readonly property int refreshSeconds: Math.max(1, Math.round(root.swapInputParamsForm.autoRefreshTime / 1000))
-        property int secondsLeft: refreshSeconds
-        // The router re-emits suggestedRoutesReady for a uuid it has already answered, which
-        // would otherwise restart the window on a quote that hasn't changed.
-        property string countdownUuid: ""
-        onCountdownUuidChanged: secondsLeft = refreshSeconds
-
-        property bool quoteInverted: false
-        readonly property string fromSym: !!root.swapAdaptor.fromToken ? (root.swapAdaptor.fromToken.symbol ?? "") : ""
-        readonly property string toSym: !!root.swapAdaptor.toToken ? (root.swapAdaptor.toToken.symbol ?? "") : ""
-        readonly property double fromAmt: parseFloat(root.swapInputParamsForm.fromTokenAmount) || 0
-        readonly property double toAmt: parseFloat(root.swapAdaptor.swapOutputData.toTokenAmount) || 0
-        readonly property string quoteText: {
-            if (!fromAmt || !toAmt || !fromSym || !toSym)
-                return ""
-            const cs = root.swapAdaptor.currencyStore
-            const rate = quoteInverted ? fromAmt / toAmt : toAmt / fromAmt
-            const baseSym = quoteInverted ? toSym : fromSym
-            const quoteSym = quoteInverted ? fromSym : toSym
-            return "1 %1 ≈ %2".arg(baseSym).arg(cs.formatCurrencyAmount(rate, quoteSym))
-        }
-
-        function refresh() {
-            secondsLeft = refreshSeconds
-            d.fetchSuggestedRoutes()
-        }
-
-        background: Rectangle {
-            color: Theme.palette.baseColor3
-        }
-
-        Timer {
-            interval: 1000
-            repeat: true
-            running: swapFooter.hasProposal && !swapFooter.loading && root.visible
-            onTriggered: {
-                if (swapFooter.secondsLeft <= 1)
-                    swapFooter.refresh()
-                else
-                    swapFooter.secondsLeft--
-            }
-        }
-
-        Connections {
-            target: root.swapAdaptor
-            function onValidSwapProposalReceivedChanged() {
-                if (root.swapAdaptor.validSwapProposalReceived)
-                    swapFooter.countdownUuid = root.swapAdaptor.uuid
-            }
-        }
-
-        contentItem: ColumnLayout {
-            spacing: Theme.padding
-
-            RowLayout {
-                id: quoteRow
+            Control {
+                id: swapFooter
 
                 Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                spacing: Theme.halfPadding
-                visible: swapFooter.hasProposal || swapFooter.loading
+                // align with the panels' edges
+                Layout.leftMargin: d.panelMargin
+                Layout.rightMargin: d.panelMargin
+                padding: 0
+                background: null
 
-                Item {
-                    Layout.preferredWidth: 28
-                    Layout.preferredHeight: 28
-                    visible: !swapFooter.loading // counts against a quote being replaced
+                readonly property bool hasProposal: root.swapAdaptor.validSwapProposalReceived
+                readonly property bool loading: root.swapAdaptor.swapProposalLoading
 
-                    StatusCircularProgressBar {
-                        anchors.fill: parent
-                        size: 28
-                        lineWidth: 2
-                        animationDuration: 0
-                        value: swapFooter.secondsLeft / swapFooter.refreshSeconds
-                    }
-                    StatusBaseText {
-                        anchors.centerIn: parent
-                        text: qsTr("%1s", "short for seconds").arg(swapFooter.secondsLeft)
-                        font.pixelSize: 10
-                        font.weight: Font.Medium
-                        color: Theme.palette.primaryColor1
-                    }
-                }
+                readonly property int refreshSeconds: Math.max(1, Math.round(root.swapInputParamsForm.autoRefreshTime / 1000))
+                property int secondsLeft: refreshSeconds
+                // The router re-emits suggestedRoutesReady for a uuid it has already answered, which
+                // would otherwise restart the window on a quote that hasn't changed.
+                property string countdownUuid: ""
+                onCountdownUuidChanged: secondsLeft = refreshSeconds
 
-                StatusTextWithLoadingState {
-                    objectName: "swapQuoteText"
-                    Layout.fillWidth: true
-                    Layout.maximumWidth: loading ? 120 : implicitWidth
-                    Layout.minimumWidth: 0
-                    elide: Text.ElideRight
-                    text: swapFooter.quoteText
-                    customColor: Theme.palette.directColor1
-                    font.weight: Font.Medium
-                    font.pixelSize: Theme.additionalTextSize
-                    loading: swapFooter.loading
-                }
-
-                StatusFlatRoundButton {
-                    objectName: "invertQuoteButton"
-                    Layout.preferredWidth: 28
-                    Layout.preferredHeight: 28
-                    icon.name: "swap"
-                    icon.width: 20
-                    icon.height: 20
-                    type: StatusFlatRoundButton.Type.Tertiary
-                    visible: !swapFooter.loading && !!swapFooter.quoteText
-                    onClicked: swapFooter.quoteInverted = !swapFooter.quoteInverted
-                }
-
-                Item { Layout.fillWidth: true }
-
-                StatusFlatButton {
-                    id: slippageButton
-                    objectName: "slippageButton"
-                    icon.name: "filter"
-                    size: StatusBaseButton.Size.Small
-                    rightPadding: 0
-                    text: "%1%".arg(LocaleUtils.numberToLocaleString(root.swapInputParamsForm.selectedSlippage))
-                    textColor: Theme.palette.directColor1
-                    hoverColor: StatusColors.transparent
-                    onClicked: swapSlippagePopupComponent.createObject(root).open()
-                }
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Theme.padding
-                visible: swapFooter.hasProposal
-
-                component MetricRow: Row {
-                    spacing: Theme.halfPadding
-                }
-
-                MetricRow {
-                    StatusIcon {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 16; height: 16
-                        icon: "filter"
-                        color: Theme.palette.directColor4
-                    }
-                    StatusBaseText {
-                        objectName: "routeOrderButton"
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: d.routeOrderName
-                        font.weight: Font.Medium
-                        color: Theme.palette.directColor1
-
-                        StatusToolTip {
-                            visible: routeOrderMouseArea.containsMouse
-                            text: qsTr("Choose route")
-                        }
-
-                        StatusMouseArea {
-                            id: routeOrderMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: swapRoutePopupComponent.createObject(root).open()
-                        }
-                    }
-                    StatusFlatRoundButton {
-                        objectName: "routeProviderInfoIcon"
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 20
-                        height: 20
-                        radius: width/2
-                        type: StatusFlatRoundButton.Type.Tertiary
-                        icon.name: "info"
-                        icon.width: 16
-                        icon.height: 16
-                        icon.color: Theme.palette.directColor4
-                        tooltip.text: !!root.swapAdaptor.swapOutputData.txProviderTool
-                                      ? qsTr("by %1 via %2").arg(d.serviceProviderName)
-                                                            .arg(root.swapAdaptor.swapOutputData.txProviderTool)
-                                      : qsTr("by %1").arg(d.serviceProviderName)
-                    }
-                }
-
-                Item { Layout.fillWidth: true }
-
-                MetricRow {
-                    StatusIcon {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 16; height: 16
-                        icon: "gas"
-                        color: Theme.palette.directColor4
-                    }
-                    StatusBaseText {
-                        objectName: "strategyFees"
-                        text: root.swapAdaptor.currencyStore.formatCurrencyAmount(
-                                  root.swapAdaptor.swapOutputData.txFeesInFiat, root.swapAdaptor.currencyStore.currentCurrency)
-                        color: Theme.palette.directColor4
-                    }
-                }
-
-                MetricRow {
-                    StatusIcon {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 16; height: 16
-                        icon: "time"
-                        color: Theme.palette.directColor4
-                    }
-                    StatusBaseText {
-                        objectName: "strategyTime"
-                        text: WalletUtils.getLabelForEstimatedTxTime(root.swapAdaptor.swapOutputData.estimatedTime, true)
-                        color: Theme.palette.directColor4
-                    }
-                }
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                spacing: Theme.padding
-                visible: !!root.swapInputParamsForm.fromGroupKey
-
-                StatusSlider {
-                    id: amountSlider
-                    objectName: "amountSlider"
-                    Layout.fillWidth: true
-                    enabled: payPanel.maxCryptoBalance > 0
-                    from: 0
-                    to: payPanel.maxSafeCryptoValue
-                    stepSize: payPanel.maxSafeCryptoValue > 0
-                              ? Math.pow(10, Math.floor(Math.log10(payPanel.maxSafeCryptoValue)) - 2)
-                              : 1
-                    snapMode: Slider.SnapAlways
-                    onMoved: payPanel.setAmount(value)
-
-                    Binding {
-                        target: amountSlider
-                        property: "value"
-                        value: payPanel.value
-                        when: !amountSlider.pressed
-                        restoreMode: Binding.RestoreBindingOrValue
-                    }
-                }
-
-                StatusBaseText {
-                    objectName: "amountPercent"
-                    Layout.preferredWidth: 44
-                    horizontalAlignment: Text.AlignRight
-                    text: "%1%".arg(LocaleUtils.numberToLocaleString(
-                                        payPanel.maxSafeCryptoValue > 0
-                                        ? Math.round(amountSlider.value / payPanel.maxSafeCryptoValue * 100) : 0, 0))
-                    font.weight: Font.Medium
-                    color: Theme.palette.directColor1
-                }
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                spacing: Theme.halfPadding
-                visible: !!root.swapInputParamsForm.fromTokenAmount
-
-                StatusButton {
-                    id: signButton
-                    objectName: "signButton"
-                    Layout.fillWidth: true
-                    readonly property string fromTokenSymbol: !!root.swapAdaptor.fromToken ? root.swapAdaptor.fromToken.symbol ?? "" : ""
-                    loadingWithText: root.swapAdaptor.approvalPending
-                    icon.name: Utils.resolveAuthSignIcon(!!d.selectedAccount ? d.selectedAccount.keyUid : "",
-                                                         !!d.selectedAccount && d.selectedAccount.migratedToColdWallet,
-                                                         Constants.AuthSignPurpose.General)
-                    text: {
-                        if(root.swapAdaptor.validSwapProposalReceived) {
-                            if(root.swapAdaptor.swapOutputData.approvalNeeded) {
-                                if (root.swapAdaptor.approvalPending) {
-                                    return qsTr("Approving %1").arg(fromTokenSymbol)
-                                } else if(!root.swapAdaptor.approvalSuccessful) {
-                                    return qsTr("Approve %1").arg(fromTokenSymbol)
-                                }
-                            }
-                        }
-                        if (swapFooter.loading)
-                            return qsTr("Fetching quote...")
-                        return qsTr("Confirm %1").arg(d.modalTitle)
-                    }
-                    tooltip.text: {
-                        if(root.swapAdaptor.validSwapProposalReceived) {
-                            if(root.swapAdaptor.swapOutputData.approvalNeeded) {
-                                if (root.swapAdaptor.approvalPending) {
-                                    return qsTr("Approving %1 spending cap to Swap").arg(fromTokenSymbol)
-                                } else if(!root.swapAdaptor.approvalSuccessful) {
-                                    return qsTr("Approve %1 spending cap to Swap").arg(fromTokenSymbol)
-                                }
-                            }
-                        }
+                property bool quoteInverted: false
+                readonly property string fromSym: !!root.swapAdaptor.fromToken ? (root.swapAdaptor.fromToken.symbol ?? "") : ""
+                readonly property string toSym: !!root.swapAdaptor.toToken ? (root.swapAdaptor.toToken.symbol ?? "") : ""
+                readonly property double fromAmt: parseFloat(root.swapInputParamsForm.fromTokenAmount) || 0
+                readonly property double toAmt: parseFloat(root.swapAdaptor.swapOutputData.toTokenAmount) || 0
+                readonly property string quoteText: {
+                    if (!fromAmt || !toAmt || !fromSym || !toSym)
                         return ""
-                    }
-                    disabledColor: Theme.palette.directColor8
-                    interactive: root.swapAdaptor.validSwapProposalReceived &&
-                                 !d.isError &&
-                                 !root.swapAdaptor.approvalPending
-                    onClicked: {
-                        if (root.swapAdaptor.validSwapProposalReceived) {
-                            if (root.swapAdaptor.swapOutputData.approvalNeeded && !root.swapAdaptor.approvalSuccessful)
-                                Global.openPopup(swapApproveModalComponent)
-                            else
-                                Global.openPopup(swapSignModalComponent)
-                        }
+                    const cs = root.swapAdaptor.currencyStore
+                    const rate = quoteInverted ? fromAmt / toAmt : toAmt / fromAmt
+                    const baseSym = quoteInverted ? toSym : fromSym
+                    const quoteSym = quoteInverted ? fromSym : toSym
+                    return "1 %1 ≈ %2".arg(baseSym).arg(cs.formatCurrencyAmount(rate, quoteSym))
+                }
+
+                function refresh() {
+                    secondsLeft = refreshSeconds
+                    d.fetchSuggestedRoutes()
+                }
+
+                Timer {
+                    interval: 1000
+                    repeat: true
+                    running: swapFooter.hasProposal && !swapFooter.loading && root.visible
+                    onTriggered: {
+                        if (swapFooter.secondsLeft <= 1)
+                            swapFooter.refresh()
+                        else
+                            swapFooter.secondsLeft--
                     }
                 }
 
-                StatusButton {
-                    objectName: "refreshQuoteButton"
-                    Layout.preferredWidth: signButton.height
-                    Layout.preferredHeight: signButton.height
-                    icon.name: "refresh"
-                    type: StatusBaseButton.Type.Normal
-                    enabled: swapFooter.hasProposal && !swapFooter.loading
-                    onClicked: swapFooter.refresh()
+                Connections {
+                    target: root.swapAdaptor
+                    function onValidSwapProposalReceivedChanged() {
+                        if (root.swapAdaptor.validSwapProposalReceived)
+                            swapFooter.countdownUuid = root.swapAdaptor.uuid
+                    }
+                }
+
+                contentItem: ColumnLayout {
+                    spacing: Theme.padding
+
+                    RowLayout {
+                        id: quoteRow
+
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        spacing: Theme.halfPadding
+                        visible: swapFooter.hasProposal || swapFooter.loading
+
+                        Item {
+                            Layout.preferredWidth: 28
+                            Layout.preferredHeight: 28
+                            visible: !swapFooter.loading // counts against a quote being replaced
+
+                            StatusCircularProgressBar {
+                                anchors.fill: parent
+                                size: 28
+                                lineWidth: 2
+                                animationDuration: 0
+                                value: swapFooter.secondsLeft / swapFooter.refreshSeconds
+                            }
+                            StatusBaseText {
+                                anchors.centerIn: parent
+                                text: qsTr("%1s", "short for seconds").arg(swapFooter.secondsLeft)
+                                font.pixelSize: 10
+                                font.weight: Font.Medium
+                                color: Theme.palette.primaryColor1
+                            }
+                        }
+
+                        StatusTextWithLoadingState {
+                            objectName: "swapQuoteText"
+                            Layout.fillWidth: true
+                            Layout.maximumWidth: loading ? 120 : implicitWidth
+                            Layout.minimumWidth: 0
+                            elide: Text.ElideRight
+                            text: swapFooter.quoteText
+                            customColor: Theme.palette.directColor1
+                            font.weight: Font.Medium
+                            font.pixelSize: Theme.additionalTextSize
+                            loading: swapFooter.loading
+                        }
+
+                        StatusFlatRoundButton {
+                            objectName: "invertQuoteButton"
+                            Layout.preferredWidth: 28
+                            Layout.preferredHeight: 28
+                            icon.name: "swap"
+                            icon.width: 20
+                            icon.height: 20
+                            type: StatusFlatRoundButton.Type.Tertiary
+                            visible: !swapFooter.loading && !!swapFooter.quoteText
+                            onClicked: swapFooter.quoteInverted = !swapFooter.quoteInverted
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        StatusFlatButton {
+                            id: slippageButton
+                            objectName: "slippageButton"
+                            icon.name: "filter"
+                            size: StatusBaseButton.Size.Small
+                            rightPadding: 0
+                            text: "%1%".arg(LocaleUtils.numberToLocaleString(root.swapInputParamsForm.selectedSlippage))
+                            textColor: Theme.palette.directColor1
+                            hoverColor: StatusColors.transparent
+                            onClicked: swapSlippagePopupComponent.createObject(root).open()
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.padding
+                        visible: swapFooter.hasProposal
+
+                        component MetricRow: Row {
+                            spacing: Theme.halfPadding
+                        }
+
+                        MetricRow {
+                            StatusIcon {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 16; height: 16
+                                icon: "filter"
+                                color: Theme.palette.directColor4
+                            }
+                            StatusBaseText {
+                                objectName: "routeOrderButton"
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: d.routeOrderName
+                                font.weight: Font.Medium
+                                color: Theme.palette.directColor1
+
+                                StatusToolTip {
+                                    visible: routeOrderMouseArea.containsMouse
+                                    text: qsTr("Choose route")
+                                }
+
+                                StatusMouseArea {
+                                    id: routeOrderMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: swapRoutePopupComponent.createObject(root).open()
+                                }
+                            }
+                            StatusFlatRoundButton {
+                                objectName: "routeProviderInfoIcon"
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 20
+                                height: 20
+                                radius: width/2
+                                type: StatusFlatRoundButton.Type.Tertiary
+                                icon.name: "info"
+                                icon.width: 16
+                                icon.height: 16
+                                icon.color: Theme.palette.directColor4
+                                tooltip.text: !!root.swapAdaptor.swapOutputData.txProviderTool
+                                              ? qsTr("by %1 via %2").arg(d.serviceProviderName)
+                                                .arg(root.swapAdaptor.swapOutputData.txProviderTool)
+                                              : qsTr("by %1").arg(d.serviceProviderName)
+                            }
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        MetricRow {
+                            StatusIcon {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 16; height: 16
+                                icon: "gas"
+                                color: Theme.palette.directColor4
+                            }
+                            StatusBaseText {
+                                objectName: "strategyFees"
+                                text: root.swapAdaptor.currencyStore.formatCurrencyAmount(
+                                          root.swapAdaptor.swapOutputData.txFeesInFiat, root.swapAdaptor.currencyStore.currentCurrency)
+                                color: Theme.palette.directColor4
+                            }
+                        }
+
+                        MetricRow {
+                            StatusIcon {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 16; height: 16
+                                icon: "time"
+                                color: Theme.palette.directColor4
+                            }
+                            StatusBaseText {
+                                objectName: "strategyTime"
+                                text: WalletUtils.getLabelForEstimatedTxTime(root.swapAdaptor.swapOutputData.estimatedTime, true)
+                                color: Theme.palette.directColor4
+                            }
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        spacing: Theme.padding
+                        visible: !!root.swapInputParamsForm.fromGroupKey
+
+                        StatusSlider {
+                            id: amountSlider
+                            objectName: "amountSlider"
+                            Layout.fillWidth: true
+                            enabled: payPanel.maxCryptoBalance > 0
+                            from: 0
+                            to: payPanel.maxSafeCryptoValue
+                            stepSize: payPanel.maxSafeCryptoValue > 0
+                                      ? Math.pow(10, Math.floor(Math.log10(payPanel.maxSafeCryptoValue)) - 2)
+                                      : 1
+                            snapMode: Slider.SnapAlways
+                            onMoved: payPanel.setAmount(value)
+
+                            Binding {
+                                target: amountSlider
+                                property: "value"
+                                value: payPanel.value
+                                when: !amountSlider.pressed
+                                restoreMode: Binding.RestoreBindingOrValue
+                            }
+                        }
+
+                        StatusBaseText {
+                            objectName: "amountPercent"
+                            Layout.preferredWidth: 44
+                            horizontalAlignment: Text.AlignRight
+                            text: "%1%".arg(LocaleUtils.numberToLocaleString(
+                                                payPanel.maxSafeCryptoValue > 0
+                                                ? Math.round(amountSlider.value / payPanel.maxSafeCryptoValue * 100) : 0, 0))
+                            font.weight: Font.Medium
+                            color: Theme.palette.directColor1
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        spacing: Theme.halfPadding
+                        visible: !!root.swapInputParamsForm.fromTokenAmount
+
+                        StatusButton {
+                            id: signButton
+                            objectName: "signButton"
+                            Layout.fillWidth: true
+                            readonly property string fromTokenSymbol: !!root.swapAdaptor.fromToken ? root.swapAdaptor.fromToken.symbol ?? "" : ""
+                            loadingWithText: root.swapAdaptor.approvalPending
+                            icon.name: Utils.resolveAuthSignIcon(!!d.selectedAccount ? d.selectedAccount.keyUid : "",
+                                                                 !!d.selectedAccount && d.selectedAccount.migratedToColdWallet,
+                                                                 Constants.AuthSignPurpose.General)
+                            text: {
+                                if(root.swapAdaptor.validSwapProposalReceived) {
+                                    if(root.swapAdaptor.swapOutputData.approvalNeeded) {
+                                        if (root.swapAdaptor.approvalPending) {
+                                            return qsTr("Approving %1").arg(fromTokenSymbol)
+                                        } else if(!root.swapAdaptor.approvalSuccessful) {
+                                            return qsTr("Approve %1").arg(fromTokenSymbol)
+                                        }
+                                    }
+                                }
+                                if (swapFooter.loading)
+                                    return qsTr("Fetching quote...")
+                                return qsTr("Confirm %1").arg(d.modalTitle)
+                            }
+                            tooltip.text: {
+                                if(root.swapAdaptor.validSwapProposalReceived) {
+                                    if(root.swapAdaptor.swapOutputData.approvalNeeded) {
+                                        if (root.swapAdaptor.approvalPending) {
+                                            return qsTr("Approving %1 spending cap to Swap").arg(fromTokenSymbol)
+                                        } else if(!root.swapAdaptor.approvalSuccessful) {
+                                            return qsTr("Approve %1 spending cap to Swap").arg(fromTokenSymbol)
+                                        }
+                                    }
+                                }
+                                return ""
+                            }
+                            disabledColor: Theme.palette.directColor8
+                            interactive: root.swapAdaptor.validSwapProposalReceived &&
+                                         !d.isError &&
+                                         !root.swapAdaptor.approvalPending
+                            onClicked: {
+                                if (root.swapAdaptor.validSwapProposalReceived) {
+                                    if (root.swapAdaptor.swapOutputData.approvalNeeded && !root.swapAdaptor.approvalSuccessful)
+                                        Global.openPopup(swapApproveModalComponent)
+                                    else
+                                        Global.openPopup(swapSignModalComponent)
+                                }
+                            }
+                        }
+
+                        StatusButton {
+                            objectName: "refreshQuoteButton"
+                            Layout.preferredWidth: signButton.height
+                            Layout.preferredHeight: signButton.height
+                            icon.name: "refresh"
+                            type: StatusBaseButton.Type.Normal
+                            enabled: swapFooter.hasProposal && !swapFooter.loading
+                            onClicked: swapFooter.refresh()
+                        }
+                    }
                 }
             }
         }

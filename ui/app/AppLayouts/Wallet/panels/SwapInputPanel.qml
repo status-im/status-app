@@ -542,6 +542,8 @@ Control {
 
                 objectName: "holdingSelector"
 
+                size: TokenSelectorButton.Size.Small
+
                 anchors.top: parent.top
                 anchors.right: parent.right
                 // centred on the input row, which is sized to at least this height
