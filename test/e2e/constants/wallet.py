@@ -53,10 +53,8 @@ private_key_address_pair_1 = PrivateKeyAddressPair(
 
 
 class DerivationPathName(Enum):
-    CUSTOM = 'Custom'
     ETHEREUM = 'Ethereum'
     ETHEREUM_LEDGER = 'Ethereum (Ledger)'
-    ETHEREUM_LEDGER_LIVE = 'Ethereum (Ledger Live/KeepKey)'
 
     @classmethod
     def xpub_derivation_path_names(cls):

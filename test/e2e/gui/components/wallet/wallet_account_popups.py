@@ -157,7 +157,6 @@ class AccountPopup(QObject):
             self._derivation_path_list_item.real_name[
                 'objectName'] = "AddAccountPopup-PreDefinedDerivationPath-" + value
             self._derivation_path_list_item.click()
-            # del self._derivation_path_list_item.real_name['title']
             self._address_combobox_button.click()
             GeneratedAddressesList().select(index)
         else:
@@ -349,3 +348,4 @@ class GeneratedAddressesList(QObject):
                 self.paginator_page.real_name['text'] = selected_page_number
                 self.paginator_page.click()
                 time.sleep(0.5)
+

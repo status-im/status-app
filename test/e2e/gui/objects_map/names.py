@@ -6,8 +6,6 @@ from objectmaphelper import RegularExpression
 statusDesktop_mainWindow = {"name": "mainWindow", "type": "QQuickWindowQmlImpl", "visible": True}
 statusDesktop_mainWindow_overlay = {"container": statusDesktop_mainWindow, "type": "Overlay", "unnamed": 1,
                                     "visible": True}
-statusDesktop_mainWindow_overlay_popup2 = {"container": statusDesktop_mainWindow_overlay, "occurrence": 2,
-                                           "type": "PopupItem", "unnamed": 1, "visible": True}
 statusModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "StatusModal", "type": "PopupItem",
                "visible": True}
 statusStackModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "StatusStackModal",
@@ -644,8 +642,6 @@ addAccountPopup_GeneratedAddress = {"container": statusDesktop_mainWindow_overla
                                     "type": "Rectangle", "visible": True}
 accountAddressSelectionModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "AccountAddressSelection",
                                 "type": "PopupItem", "visible": True}
-address_0x_StatusBaseText = {"container": statusDesktop_mainWindow_overlay_popup2, "text": RegularExpression("0x*"),
-                             "type": "StatusBaseText", "unnamed": 1, "visible": True}
 addAccountPopup_GeneratedAddressesListPageIndicatior_StatusPageIndicator = {
     "container": statusDesktop_mainWindow_overlay, "objectName": "AddAccountPopup-GeneratedAddressesListPageIndicatior",
     "type": "StatusPageIndicator", "visible": True}
