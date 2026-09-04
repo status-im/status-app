@@ -183,6 +183,7 @@ class KeycardDetailsView(QObject):
         self.keycard_view_import_seed_phrase = Button(onboarding_names.onboardingKeycardDetailsImportSeedPhrase)
         self.keycard_view_login_with_this_keycard = Button(
             onboarding_names.onboardingKeycardDetailsLoginWithThisKeycard)
+        self.keycard_view_go_back_to_login = Button(onboarding_names.onboardingKeycardDetailsGoBackToLogin)
 
     @allure.step('Import a new keypair to Keycard and create new profile')
     def import_a_new_keypair(self):
@@ -198,3 +199,7 @@ class KeycardDetailsView(QObject):
     def login_with_this_keycard(self) -> KeycardManagementPopup:
         self.keycard_view_login_with_this_keycard.click()
         return KeycardManagementPopup().wait_until_appears()
+
+    @allure.step('Go back to login screen from Keycard details page')
+    def go_back_to_login(self):
+        self.keycard_view_go_back_to_login.click()

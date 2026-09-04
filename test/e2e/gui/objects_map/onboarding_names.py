@@ -38,10 +38,19 @@ onboardingKeycardDetailsImportSeedPhrase = {"container": mainWindow_keycardDetai
 onboardingKeycardDetailsLoginWithThisKeycard = {"container": mainWindow_keycardDetailsPage,
                                                 "objectName": "keycardDetailsLoginWithThisKeycard",
                                                 "type": "StatusListItem", "visible": True}
+onboardingKeycardDetailsGoBackToLogin = {"container": mainWindow_keycardDetailsPage,
+                                        "objectName": "keycardDetailsGoBackToLogin",
+                                        "type": "StatusListItem", "visible": True}
 
 # Log in view
 loginWithKeycardButton = {"container": statusDesktop_mainWindow, "objectName": "btnWithKeycard", "type": "ListItemButton",
                           "visible": True}
+
+# Keycard lost page
+mainWindow_keycardLostPage = {"container": statusDesktop_mainWindow, "objectName": "keycardLostPage",
+                              "type": "KeycardLostPage", "visible": True}
+keycardLostReadSpareKeycard = {"container": mainWindow_keycardLostPage, "objectName": "keycardLostReadSpareKeycard",
+                               "type": "StatusListItem", "visible": True}
 
 # Log in by syncing dialog
 statusDialog = {"container": statusDesktop_mainWindow_overlay, "objectName": "StatusDialog", "type": "PopupItem", "visible": True}
@@ -188,6 +197,8 @@ loginView_keycardBox = {"container": mainWindow_LoginView, "objectName": "keycar
                         "visible": True}
 loginView_keycardPinInput = {"container": loginView_keycardBox, "objectName": "pinInput", "type": "StatusPinInput",
                              "visible": True}
+lostKeycardButton = {"container": mainWindow_LoginView, "objectName": "lostKeycardButon", "type": "StatusButton",
+                     "visible": True}
 
 # new Login view
 userSelectorButton = {"container": mainWindow_LoginView, "id": "userSelectorButton", "type": "LoginUserSelectorDelegate", "unnamed": 1, "visible": True}
