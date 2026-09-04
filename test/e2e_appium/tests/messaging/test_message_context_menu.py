@@ -78,7 +78,7 @@ class _MessageContextMenuBase:
         # Navigate to messages tab
         self.logger.info("Navigating to Messages tab")
         chat_page.dismiss_backup_prompt(timeout=3)
-        app.click_messages_button()
+        assert app.click_messages_button(), "Failed to navigate to Messages"
         chat_page.dismiss_backup_prompt(timeout=2)
 
         # Allow the UI to settle after navigation (BrowserStack latency)
@@ -103,13 +103,6 @@ class _MessageContextMenuBase:
                 if chat_page.wait_for_message_input(timeout=self.UI_TIMEOUT):
                     self.logger.info("Opened chat with secondary user")
                     return chat_page
-
-        # Fallback: try opening first available chat
-        self.logger.info("Attempting to open first available chat")
-        if chat_page.open_first_chat(timeout=self.UI_TIMEOUT):
-            if chat_page.wait_for_message_input(timeout=self.UI_TIMEOUT):
-                self.logger.info("Opened first chat successfully")
-                return chat_page
 
         raise AssertionError(
             "Could not navigate to a chat with message input. "
@@ -146,7 +139,7 @@ class _MessageContextMenuBase:
         # Navigate to messages
         self.logger.info("Navigating secondary to Messages tab")
         secondary_chat.dismiss_backup_prompt(timeout=3)
-        secondary_app.click_messages_button()
+        assert secondary_app.click_messages_button(), "Failed to navigate to Messages"
         secondary_chat.dismiss_backup_prompt(timeout=2)
 
         # Allow the UI to settle after navigation (BrowserStack latency)
@@ -166,10 +159,6 @@ class _MessageContextMenuBase:
                     self.logger.info("Secondary opened chat with primary")
                     return secondary_chat
 
-        # Fallback: open first chat
-        if secondary_chat.open_first_chat(timeout=self.UI_TIMEOUT):
-            secondary_chat.wait_for_message_input(timeout=self.UI_TIMEOUT)
-
         return secondary_chat
 
 
@@ -186,7 +175,9 @@ class TestMessageContextMenuLocal(_MessageContextMenuBase):
     async def test_context_menu_own_message_actions(self) -> None:
         """Verify context menu shows correct actions for own message.
 
-        Own messages should show: Reply, Edit, Copy, Pin, Mark as unread, Delete
+        The menu opens collapsed: quick reactions plus Reply, Edit, Copy and
+        the expand button. The full action set (including Pin and Delete)
+        exists only after expanding.
         """
         test_message = _unique_message("ctx_menu_test")
         context_menu = MessageContextMenuPage(self.driver)
@@ -200,10 +191,25 @@ class TestMessageContextMenuLocal(_MessageContextMenuBase):
             )
             assert context_menu.is_displayed(), "Context menu not visible"
 
-        async with self.step("Verify own message actions are visible"):
+        async with self.step("Verify collapsed quick actions"):
+            assert not context_menu.is_expanded(), (
+                "Menu should open collapsed on long-press"
+            )
             assert context_menu.is_reply_visible(), "Reply action not visible"
             assert context_menu.is_edit_visible(), "Edit action not visible (own message)"
             assert context_menu.is_copy_visible(), "Copy action not visible"
+
+        async with self.step("Expand the menu"):
+            assert context_menu.tap_expand(), "Failed to expand context menu"
+
+        async with self.step("Verify full own-message action set"):
+            # The compact buttons hide on expansion, so these can only match
+            # the expanded menu's items. Pin appears only here on own messages
+            # (edit takes the compact slot).
+            assert context_menu.is_reply_visible(), "Reply not in expanded menu"
+            assert context_menu.is_edit_visible(), "Edit not in expanded menu"
+            assert context_menu.is_copy_visible(), "Copy not in expanded menu"
+            assert context_menu.is_mark_unread_visible(), "Mark as unread not in expanded menu"
             assert context_menu.is_pin_visible(), "Pin action not visible"
             assert context_menu.is_delete_visible(), "Delete action not visible (own message)"
 
@@ -452,7 +458,18 @@ class TestMessageContextMenuCrossDevice(_MessageContextMenuBase):
             )
             assert context_menu.is_displayed(), "Context menu not visible"
 
+        async with self.step("Expand the menu"):
+            # Expand before asserting: delete is never in the collapsed row,
+            # so without this the assertion passes for any message.
+            assert context_menu.tap_expand(), "Failed to expand context menu"
+
         async with self.step("Verify Delete action is NOT visible"):
+            # The positive sibling keeps the negative honest: if the menu were
+            # dismissed or still collapsed, the pin assert fails instead of the
+            # delete assert passing vacuously.
+            assert context_menu.is_pin_visible(), (
+                "Expanded menu should show Pin for another user's message"
+            )
             assert not context_menu.is_delete_visible(), (
                 "Delete action should NOT be visible for another user's message"
             )

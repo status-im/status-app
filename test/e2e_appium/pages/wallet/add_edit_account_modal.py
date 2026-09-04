@@ -32,11 +32,11 @@ class AddEditAccountModal(BasePage):
         Opens the origin selector, picks watched address, and types the
         Ethereum address into the input field.
         """
-        if not self.safe_click(self.locators.ORIGIN_SELECTOR, timeout=5):
+        if not self.try_click(self.locators.ORIGIN_SELECTOR, timeout=5):
             self.logger.error("Failed to open origin selector")
             return False
 
-        if not self.safe_click(self.locators.ORIGIN_WATCHED_ADDRESS, timeout=5):
+        if not self.try_click(self.locators.ORIGIN_WATCHED_ADDRESS, timeout=5):
             self.logger.error("Failed to select watched address origin")
             return False
 
@@ -54,8 +54,7 @@ class AddEditAccountModal(BasePage):
         return True
 
     def save_changes(self) -> bool:
-        self.safe_click(self.locators.ADD_ACCOUNT_PRIMARY, timeout=10)
-        return True
+        return self.try_click(self.locators.ADD_ACCOUNT_PRIMARY, timeout=10)
 
     def wait_until_hidden(self, timeout: int | None = 10) -> bool:
         return self.wait_for_invisibility(self.locators.ADD_ACCOUNT_MODAL, timeout=timeout)

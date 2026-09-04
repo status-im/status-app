@@ -1,5 +1,5 @@
 from locators.wallet.accounts_locators import WalletAccountsLocators
-from utils.exceptions import ElementInteractionError
+from utils.exceptions import is_session_fatal
 
 from ..base_page import BasePage
 
@@ -59,21 +59,27 @@ class KeycardAuthenticationModal(BasePage):
                 self.dump_page_source("auth_button_not_enabled")
                 return False
 
-            self.safe_click(self.locators.KEYCARD_AUTHENTICATE_BUTTON, timeout=timeout)
+            if not self.try_click(
+                self.locators.KEYCARD_AUTHENTICATE_BUTTON, timeout=timeout,
+                catch_driver_errors=True,
+            ):
+                self.logger.error("Failed to tap Authenticate")
+                self.dump_page_source("auth_button_tap_failed")
+                return False
             if not self.wait_for_invisibility(self.locators.KEYCARD_POPUP, timeout=timeout):
                 self.logger.error("Auth popup did not close after clicking Authenticate")
                 self.dump_page_source("auth_popup_still_visible")
                 return False
             return True
 
-        except ElementInteractionError:
-            raise
         except Exception as exc:
+            if is_session_fatal(exc):
+                raise
             self.logger.error("Auth flow failed: %s", exc, exc_info=True)
             return False
 
     def cancel(self) -> bool:
         if not self.is_displayed(timeout=2):
             return True
-        self.safe_click(self.locators.KEYCARD_CANCEL_BUTTON, timeout=5)
+        self.try_click(self.locators.KEYCARD_CANCEL_BUTTON, timeout=5)
         return self.wait_for_invisibility(self.locators.KEYCARD_POPUP, timeout=5)

@@ -17,6 +17,9 @@ import pytest
 from config import get_config
 from config.logging_config import get_logger
 from core.models import DEFAULT_USER_PASSWORD
+from locators.onboarding.push_notifications_locators import (
+    PushNotificationsLocators,
+)
 from locators.wallet.accounts_locators import WalletAccountsLocators
 from models.user_model import User, UserProfile
 from pages.app import App
@@ -31,6 +34,9 @@ from pages.onboarding import (
 )
 from services.app_initialization_manager import AppInitializationManager
 from utils.generators import generate_seed_phrase
+from utils.screen_identity import dismiss_stacked_overlays, overlay_locator
+
+NAV_EDUCATION_ID = "NavigationEducationDialog"
 
 
 @dataclass
@@ -224,7 +230,9 @@ class OnboardingFlow:
                 "Welcome screen should be displayed"
             )
 
-        self.welcome_page.click_create_profile()
+        assert self.welcome_page.click_create_profile(), (
+            "Failed to tap Create profile on the welcome screen"
+        )
 
         self.step_results["welcome_screen"] = {
             "success": True,
@@ -243,7 +251,9 @@ class OnboardingFlow:
                 "Create profile screen should be displayed before seed phrase import"
             )
 
-        self.create_profile_page.click_use_recovery_phrase()
+        assert self.create_profile_page.click_use_recovery_phrase(), (
+            "Failed to tap Use recovery phrase"
+        )
 
         seed_phrase = self.config.seed_phrase or generate_seed_phrase()
         self.config.seed_phrase = seed_phrase
@@ -275,7 +285,9 @@ class OnboardingFlow:
                 "Create profile screen should be displayed"
             )
 
-        self.create_profile_page.click_lets_go()
+        assert self.create_profile_page.click_lets_go(), (
+            "Failed to tap Let's go on the create-profile screen"
+        )
 
         self.step_results["create_profile_screen"] = {
             "success": True,
@@ -417,52 +429,53 @@ class OnboardingFlow:
         step_start = datetime.now()
 
         actions: list[str] = []
-        success = True
 
-        # 1. Push notifications — primary expected overlay.
-        if self.push_notifications_page.is_screen_displayed(timeout=30):
-            self.logger.info(
-                "Push notifications dialog detected, selecting 'Maybe later'"
-            )
-            if self.push_notifications_page.select_maybe_later():
-                actions.append("push_notifications:dismissed")
-            else:
-                self.logger.error("Failed to dismiss push notifications dialog")
-                actions.append("push_notifications:dismiss_failed")
-                success = False
-        else:
+        from pages.base_page import BasePage as _BasePage
+
+        overlay_page = _BasePage(self.driver)
+        nav_edu_close = (
+            "xpath",
+            f"//*[contains(@resource-id,'{NAV_EDUCATION_ID}')]"
+            "//*[contains(@resource-id,'headerActionsCloseButton')]",
+        )
+
+        if not self.push_notifications_page.is_screen_displayed(timeout=30):
             self.logger.warning(
                 "Push notifications dialog did not appear within 30s — unexpected"
             )
-            actions.append("push_notifications:not_displayed")
 
-        # 2. NavigationEducationDialog — appears after push-notifications is
-        # dismissed (or sometimes alone on RC1+). Tap its close (X) button.
-        nav_edu_locator = (
-            "xpath",
-            "//*[contains(@resource-id,'NavigationEducationDialog')]"
-            "//*[contains(@resource-id,'headerActionsCloseButton')]",
+        overlay_actions, error = dismiss_stacked_overlays(
+            overlay_page,
+            [
+                (
+                    "push_notifications",
+                    PushNotificationsLocators.DIALOG_ID,
+                    self.push_notifications_page.select_maybe_later,
+                ),
+                (
+                    "nav_education",
+                    NAV_EDUCATION_ID,
+                    lambda: (
+                        overlay_page.try_click(nav_edu_close, timeout=5)
+                        and overlay_page.wait_for_invisibility(
+                            overlay_locator(NAV_EDUCATION_ID), timeout=5
+                        )
+                    ),
+                ),
+            ],
         )
-        from pages.base_page import BasePage as _BasePage
-        base_for_edu = _BasePage(self.driver)
-        if base_for_edu.is_element_visible(nav_edu_locator, timeout=10):
-            self.logger.info("NavigationEducationDialog detected, closing")
-            if base_for_edu.safe_click(nav_edu_locator, timeout=5):
-                actions.append("nav_education:dismissed")
-            else:
-                self.logger.warning("NavigationEducationDialog close-tap failed")
-                actions.append("nav_education:dismiss_failed")
-        else:
-            actions.append("nav_education:not_displayed")
-
-        # 3. Push notifications can re-appear after nav-edu close on some flows.
-        if self.push_notifications_page.is_screen_displayed(timeout=5):
-            self.logger.info("Push-notifications popup re-appeared after nav-edu, dismissing again")
-            if self.push_notifications_page.select_maybe_later():
-                actions.append("push_notifications_2:dismissed")
+        actions.extend(overlay_actions or ["no_overlays_displayed"])
+        if error:
+            self.logger.error(error)
+            self.step_results["push_notifications"] = {
+                "success": False,
+                "action": ",".join(actions),
+                "timestamp": datetime.now(),
+            }
+            raise OnboardingFlowError(error)
 
         self.step_results["push_notifications"] = {
-            "success": success,
+            "success": True,
             "action": ",".join(actions),
             "timestamp": datetime.now(),
         }

@@ -17,13 +17,13 @@ class ContactsSettingsPage(BasePage):
     def open_send_contact_request_modal(self):
         from .send_contact_request_modal import SendContactRequestModal
 
-        if not self.safe_click(self.locators.SEND_CONTACT_REQUEST_BUTTON):
+        if not self.try_click(self.locators.SEND_CONTACT_REQUEST_BUTTON):
             return None
         modal = SendContactRequestModal(self.driver)
         return modal if modal.is_displayed(timeout=10) else None
 
     def open_contacts_tab(self, timeout: Optional[int] = None) -> bool:
-        return self.safe_click(self.locators.CONTACTS_TAB, timeout=timeout)
+        return self.try_click(self.locators.CONTACTS_TAB, timeout=timeout)
 
     def wait_for_pending_requests_focusable(self, timeout: Optional[int] = 15) -> bool:
         def _is_focusable() -> bool:
@@ -40,13 +40,13 @@ class ContactsSettingsPage(BasePage):
         return self.wait_for_condition(_is_focusable, timeout=timeout)
 
     def open_pending_requests_tab(self, timeout: Optional[int] = None) -> bool:
-        return self.safe_click(self.locators.PENDING_TAB, timeout=timeout)
+        return self.try_click(self.locators.PENDING_TAB, timeout=timeout)
 
     def open_dismissed_tab(self, timeout: Optional[int] = None) -> bool:
-        return self.safe_click(self.locators.DISMISSED_TAB, timeout=timeout)
+        return self.try_click(self.locators.DISMISSED_TAB, timeout=timeout)
 
     def open_blocked_tab(self, timeout: Optional[int] = None) -> bool:
-        return self.safe_click(self.locators.BLOCKED_TAB, timeout=timeout)
+        return self.try_click(self.locators.BLOCKED_TAB, timeout=timeout)
 
     def pending_request_row_exists(
         self, display_name: Optional[str] = None, timeout: Optional[int] = 10
@@ -58,17 +58,14 @@ class ContactsSettingsPage(BasePage):
         return self.is_element_visible(self.locators.PENDING_REQUEST_ROW, timeout=timeout)
 
     def accept_contact_request(self, display_name: str) -> bool:
-        """Accept a pending contact request.
+        """Accept the pending request that is not the support bot's.
 
-        Primary is ``FIRST_PENDING_ACCEPT_BUTTON`` — the receiver's UI tags
-        the incoming request with an auto-generated identity name (e.g.
-        "Negligible Authorized Chafer"), not ``display_name``, so the
-        filtered xpath never matches in the one-pending-request flow. The
-        filtered xpath remains as a fallback for future multi-request
-        scenarios where the receiver knows the contact.
+        The list names a request with the sender's generated identity name
+        (e.g. "Negligible Authorized Chafer"), not ``display_name``, so the
+        filtered xpath is only a fallback for a receiver that knows the sender.
         """
         try:
-            return self.safe_click(
+            return self.try_click(
                 self.locators.FIRST_PENDING_ACCEPT_BUTTON,
                 fallback_locators=[self.locators.accept_button(display_name)],
                 timeout=6,
@@ -79,16 +76,13 @@ class ContactsSettingsPage(BasePage):
             return False
 
     def open_chat_with(self, display_name: str) -> bool:
-        """Open chat with a specific contact.
+        """Open the chat of the contact that is not the support bot.
 
-        Primary is ``FIRST_CONTACT_CHAT_BUTTON`` — Status's ContactPanel
-        content-desc carries the auto-generated identity name (e.g.
+        The contact panel carries the generated identity name (e.g.
         "Unselfish Free Crocodile"), not the chat-key suffix, so the
-        filtered xpath misses. Mirrors ``accept_contact_request``. The
-        filtered locator stays as fallback for future scenarios where
-        the contact panel does carry the suffix or display_name.
+        filtered xpath is only a fallback. Mirrors ``accept_contact_request``.
         """
-        return self.safe_click(
+        return self.try_click(
             self.locators.FIRST_CONTACT_CHAT_BUTTON,
             fallback_locators=[self.locators.chat_button(display_name)],
             timeout=10,

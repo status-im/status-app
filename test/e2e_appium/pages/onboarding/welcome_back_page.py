@@ -51,7 +51,7 @@ class WelcomeBackPage(BasePage):
                 self.logger.error("Login button never enabled on attempt %s", attempt)
                 return False
 
-            if not self.safe_click(self.locators.LOGIN_BUTTON, timeout=10):
+            if not self.try_click(self.locators.LOGIN_BUTTON, timeout=10):
                 self.logger.error("Login button click failed on attempt %s", attempt)
                 return False
 

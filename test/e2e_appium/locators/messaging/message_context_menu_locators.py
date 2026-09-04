@@ -19,10 +19,21 @@ class MessageContextMenuLocators(BaseLocators):
     # so we use resource_id_contains() instead of id()
     REPLY_TO = BaseLocators.resource_id_contains("messageContextMenu_replyTo")
     EDIT_MESSAGE = BaseLocators.resource_id_contains("messageContextMenu_edit")
-    COPY_MESSAGE = BaseLocators.resource_id_contains("messageContextMenu_copy")
+    # Substring match would also hit messageContextMenu_copySelection/_copyLink,
+    # which sit before plain copy in the expanded menu's tree order.
+    COPY_MESSAGE = BaseLocators.xpath(
+        "//*[contains(@resource-id,'messageContextMenu_copy')"
+        " and not(contains(@resource-id,'messageContextMenu_copySelection'))"
+        " and not(contains(@resource-id,'messageContextMenu_copyLink'))]"
+    )
     PIN_MESSAGE = BaseLocators.resource_id_contains("messageContextMenu_pin")
     MARK_AS_UNREAD = BaseLocators.resource_id_contains("messageContextMenu_markUnread")
     DELETE_MESSAGE = BaseLocators.resource_id_contains("messageContextMenu_delete")
+
+    # Expand ("more") button. Every collapsed-row action sets visible:
+    # !root.expanded in the QML, so this button hides exactly when the menu
+    # is expanded — the single signal is_expanded() reads.
+    EXPAND_BUTTON = BaseLocators.resource_id_contains("messageContextMenu_expand")
 
     # Quick reaction emojis - direct children of MessageContextMenuView ScrollView
     # Accessible.name is set to emojiId (Unicode hex code) in EmojiReaction.qml
