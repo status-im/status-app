@@ -414,6 +414,10 @@ Item {
                 d.requestCenterPanel()
         }
 
+        function onPanelSwitchEnded() {
+            Global.portraitChatSectionChanged(root.sectionLayout.currentIndex)
+        }
+
         function onSwiped(previous, current) {
             // showUsersList is normally cleared by swiping back, but may
             // remain true e.g. by closing app with user list open or in

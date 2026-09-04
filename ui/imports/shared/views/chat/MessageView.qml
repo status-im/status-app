@@ -21,6 +21,7 @@ import StatusQ.Core.Theme
 import StatusQ.Core.Utils as StatusQUtils
 import StatusQ.Controls
 import StatusQ.Components
+import StatusQ.Layout
 
 import AppLayouts.Chat.stores as ChatStores
 import AppLayouts.stores as AppLayoutStores
@@ -637,6 +638,14 @@ Loader {
         target: StatusSharedUpdateTimer
         function onTriggered() {
             d.onTimeChanged()
+        }
+    }
+
+    Connections {
+        target: Global
+        function onPortraitChatSectionChanged(panel: int) {
+            if (panel !== StatusSectionLayout.Panels.CentralPanel)
+                d.contextMenu?.close()
         }
     }
 
