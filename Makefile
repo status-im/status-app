@@ -17,7 +17,6 @@ LINK_PCRE=0 # nimbus-build-system links `pcre` by default which is not needed
 
 .PHONY: \
 	all \
-	nix-shell \
 	bottles \
 	check-qt-dir \
 	check-pkg-target-linux \
@@ -84,10 +83,6 @@ else # "variables.mk" was included. Business as usual until the end of this file
 
 all: nim_status_client
 
-nix-shell: export NIX_USER_CONF_FILES := $(PWD)/nix/nix.conf
-nix-shell:
-	nix-shell
-
 # must be included after the default target
 -include $(BUILD_SYSTEM_DIR)/makefiles/targets.mk
 
@@ -98,17 +93,17 @@ ifneq ($(QMAKE),$(shell which qmake))
  # Add it to PATH for external build tools that use qmake directly
  export PATH := $(patsubst %/,%,$(dir $(QMAKE))):$(PATH)
 endif
-QSPEC:=$(shell $(QMAKE) -query QMAKE_XSPEC)
+QSPEC := $(shell $(QMAKE) -query QMAKE_XSPEC)
 ifeq ($(QSPEC),macx-ios-clang)
-mkspecs:=ios
+mkspecs := ios
 else ifeq ($(QSPEC),macx-clang)
-mkspecs:=macx
+mkspecs := macx
 else ifeq ($(QSPEC),win32-msvc)
-mkspecs:=win32
+mkspecs := win32
 else ifeq ($(QSPEC),linux-g++)
-mkspecs:=linux
+mkspecs := linux
 else ifeq ($(QSPEC),android-clang)
-mkspecs:=android
+mkspecs := android
 endif
 
 host_os:=$(shell uname -s | tr '[:upper:]' '[:lower:]')
@@ -158,6 +153,15 @@ else
  LIB_EXT := so
  PKG_TARGET := pkg-linux
  RUN_TARGET := run-linux
+endif
+
+NIXOS := $(shell test -e /etc/NIXOS && echo 1)
+ifeq ($(host_os),linux)
+	ifndef NIXOS
+		ifdef IN_NIX_SHELL
+			NIXGL_WRAPPER ?= nixGLIntel
+		endif
+	endif
 endif
 
 check-qt-dir:
@@ -441,7 +445,7 @@ statusq-tests:
 run-statusq-tests: export QTWEBENGINE_CHROMIUM_FLAGS := "${QTWEBENGINE_CHROMIUM_FLAGS} --disable-seccomp-filter-sandbox"
 run-statusq-tests: statusq-tests
 	echo -e "\033[92mRunning:\033[39m StatusQ Unit Tests"
-	ctest -V --test-dir $(STATUSQ_BUILD_PATH) ${ARGS}
+	$(NIXGL_WRAPPER) ctest -V --test-dir $(STATUSQ_BUILD_PATH) ${ARGS}
 
 ##
 ##	Storybook
@@ -478,11 +482,11 @@ storybook-build: | storybook-configure
 
 run-storybook: storybook-build
 	echo -e "\033[92mRunning:\033[39m Storybook"
-	$(STORYBOOK_BINARY) ${ARGS}
+	$(NIXGL_WRAPPER) $(STORYBOOK_BINARY) ${ARGS}
 
 run-storybook-tests: storybook-build
 	echo -e "\033[92mRunning:\033[39m Storybook Tests"
-	ctest -V --test-dir $(STORYBOOK_BUILD_PATH) -E PagesValidator
+	$(NIXGL_WRAPPER) ctest -V --test-dir $(STORYBOOK_BUILD_PATH) -E PagesValidator
 
 # repeat because of https://bugreports.qt.io/browse/QTBUG-92236 (Qt < 5.15.4)
 run-storybook-pages-validator: storybook-build
@@ -913,13 +917,17 @@ MACOS_INNER_BUNDLE := $(MACOS_OUTER_BUNDLE)/Contents/Frameworks/QtWebEngineCore.
 
 STATUS_CLIENT_DMG ?= pkg/Status.dmg
 
+$(STATUS_CLIENT_DMG): MACOS_OUTER_BUNDLE := tmp/macos/dist/Status.app
+$(STATUS_CLIENT_DMG): MACOS_INNER_BUNDLE := $(MACOS_OUTER_BUNDLE)/Contents/Frameworks/QtWebEngineCore.framework/Versions/Current/Helpers/QtWebEngineProcess.app
 $(STATUS_CLIENT_DMG): override RESOURCES_LAYOUT := $(PRODUCTION_PARAMETERS)
 $(STATUS_CLIENT_DMG): ENTITLEMENTS ?= resources/Entitlements.plist
 $(STATUS_CLIENT_DMG): nim_status_client
 	rm -rf tmp/macos pkg/*.dmg
-	mkdir -p $(MACOS_OUTER_BUNDLE)/Contents/MacOS
-	mkdir -p $(MACOS_OUTER_BUNDLE)/Contents/Resources
-	cp Info.plist $(MACOS_OUTER_BUNDLE)/Contents/
+	mkdir -p \
+		$(MACOS_OUTER_BUNDLE)/Contents/Resources \
+		$(MACOS_OUTER_BUNDLE)/Contents/MacOS
+	cp -R Info.plist status-macos.svg resources.rcc \
+		$(MACOS_OUTER_BUNDLE)/Contents/
 	cp bin/nim_status_client $(MACOS_OUTER_BUNDLE)/Contents/MacOS/
 	cp status.icns $(MACOS_OUTER_BUNDLE)/Contents/Resources/
 	cp resources/macos/Assets.car $(MACOS_OUTER_BUNDLE)/Contents/Resources/
@@ -932,12 +940,11 @@ ifeq ($(USE_SIMULATED_KEYCARD),true)
 endif
 
 	echo -e $(BUILD_MSG) "app"
-	MAC_QTQMLDIR=$(shell $(QMAKE) -query QT_INSTALL_QML) && \
 	macdeployqt \
 		$(MACOS_OUTER_BUNDLE) \
 		-executable=$(MACOS_OUTER_BUNDLE)/Contents/MacOS/nim_status_client \
 		-qmldir=ui \
-		-qmlimport=$$MAC_QTQMLDIR \
+		-qmlimport=$(QT_QMLDIR)
 	macdeployqt \
 		$(MACOS_INNER_BUNDLE) \
 		-executable=$(MACOS_INNER_BUNDLE)/Contents/MacOS/QtWebEngineProcess
@@ -948,10 +955,11 @@ ifdef MACOS_CODESIGN_IDENT
 	scripts/sign-macos-pkg.sh $(MACOS_OUTER_BUNDLE) $(MACOS_CODESIGN_IDENT) \
 		--entitlements $(ENTITLEMENTS)
 endif
+
 	echo -e $(BUILD_MSG) "dmg"
 	mkdir -p pkg
-	nix shell .#dmgbuild \
-		-c dmgbuild -s scripts/dmg-settings.py -D app=$(MACOS_OUTER_BUNDLE) "Status" pkg/Status.dmg
+	nix run .#dmgbuild -- \
+		-s scripts/dmg-settings.py -D app=$(MACOS_OUTER_BUNDLE) "Status" pkg/Status.dmg
 	mv "`ls pkg/*.dmg`" $(STATUS_CLIENT_DMG)
 
 ifdef MACOS_CODESIGN_IDENT
@@ -1059,7 +1067,7 @@ run: $(RUN_TARGET)
 run-linux: nim_status_client
 	echo -e "\033[92mRunning:\033[39m bin/nim_status_client"
 	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(STATUSKEYCARD_QT_LIBDIR)":"$(STATUSQ_LIB_PATH)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" \
-	./bin/nim_status_client $(ARGS)
+	$(NIXGL_WRAPPER) ./bin/nim_status_client $(ARGS)
 
 run-linux-gdb: nim_status_client
 	echo -e "\033[92mRunning:\033[39m bin/nim_status_client"
