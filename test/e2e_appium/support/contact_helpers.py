@@ -15,8 +15,8 @@ from pages.app import App
 from pages.messaging.chat_page import ChatPage
 from pages.onboarding.welcome_back_page import WelcomeBackPage
 from pages.settings.settings_page import SettingsPage
-from utils.app_lifecycle_manager import AppLifecycleManager
-from utils.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
+from support.app_lifecycle_manager import AppLifecycleManager
+from support.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
 
 logger = get_logger("contact_helpers")
 

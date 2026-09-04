@@ -11,7 +11,7 @@ import time
 from typing import Optional, Tuple
 
 from config.logging_config import get_logger
-from utils.platform import is_ios as _is_ios_driver
+from support.platform import is_ios as _is_ios_driver
 
 
 class AppLifecycleManager:
@@ -125,7 +125,7 @@ class AppLifecycleManager:
 
             # Optional activation tap
             try:
-                from utils.gestures import Gestures
+                from support.gestures import Gestures
 
                 Gestures(self.driver).activation_tap()
             except Exception:

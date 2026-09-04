@@ -1,7 +1,7 @@
 import time
 
 from config.logging_config import get_logger
-from utils.gestures import Gestures
+from support.gestures import Gestures
 
 class KeyboardManager:
 

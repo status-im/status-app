@@ -3,7 +3,7 @@ import time
 from ..base_page import BasePage
 from locators.onboarding.welcome_back_screen_locators import WelcomeBackScreenLocators
 from services.app_initialization_manager import AppInitializationManager
-from utils.element_state_checker import ElementStateChecker
+from support.element_state_checker import ElementStateChecker
 
 
 class WelcomeBackPage(BasePage):

@@ -1,6 +1,6 @@
 from ..base_page import BasePage
 from locators.onboarding.biometrics_locators import BiometricsLocators
-from utils.exceptions import ElementInteractionError
+from support.exceptions import ElementInteractionError
 
 
 class BiometricsPage(BasePage):

@@ -36,13 +36,13 @@ from core.stash_keys import (
     ESTABLISHED_CHAT_BROKEN_KEY,
     ESTABLISHED_CHAT_FAILURE_COUNT_KEY,
 )
-from utils.chat_state import ensure_chat_visible
-from utils.contact_helpers import (
+from support.chat_state import ensure_chat_visible
+from support.contact_helpers import (
     establish_contact,
     establish_contacts_admin_to_many,
 )
-from utils.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
-from utils.generators import generate_account_name
+from support.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
+from support.generators import generate_account_name
 
 logger = get_logger("messaging_conftest")
 
@@ -490,7 +490,7 @@ def chat_ready(established_chat) -> EstablishedChatContext:
     need to know what came before them — and so xdist dispatch order doesn't
     matter.
 
-    Recovery is via ``utils.chat_state.ensure_chat_visible``; see there for
+    Recovery is via ``support.chat_state.ensure_chat_visible``; see there for
     the strategy ladder.
 
     Sync rather than async-with-``asyncio.to_thread``: pytest-asyncio's

@@ -11,9 +11,9 @@ from pages.onboarding import (
     SplashScreen,
 )
 from models.user_model import User, UserProfile
-from utils.gestures import Gestures
-from utils.generators import generate_seed_phrase
-from utils.exceptions import ProfileCreationFlowError
+from support.gestures import Gestures
+from support.generators import generate_seed_phrase
+from support.exceptions import ProfileCreationFlowError
 from core.models import DEFAULT_USER_PASSWORD
 
 

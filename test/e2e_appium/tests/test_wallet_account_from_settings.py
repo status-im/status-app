@@ -12,8 +12,8 @@ from pages.app import App
 from pages.settings.settings_page import SettingsPage
 from pages.wallet.account_details_page import AccountDetailsPage
 from pages.wallet.wallet_left_panel import WalletLeftPanel
-from utils.generators import generate_account_name
-from utils.multi_device_helpers import StepMixin
+from support.generators import generate_account_name
+from support.multi_device_helpers import StepMixin
 
 
 # Expected values matching desktop test constants (test/e2e/constants/wallet.py)

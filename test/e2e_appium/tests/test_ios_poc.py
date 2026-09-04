@@ -24,8 +24,8 @@ Running
 import pytest
 
 from pages.base_page import BasePage
-from utils.multi_device_helpers import StepMixin
-from utils.platform import get_platform
+from support.multi_device_helpers import StepMixin
+from support.platform import get_platform
 
 
 @pytest.mark.ios

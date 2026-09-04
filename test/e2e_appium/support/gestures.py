@@ -16,7 +16,7 @@ from selenium.webdriver.common.actions.interaction import POINTER_TOUCH
 from selenium.webdriver.common.actions.pointer_input import PointerInput
 
 from config.logging_config import get_logger
-from utils.platform import is_ios
+from support.platform import is_ios
 
 
 class Gestures:

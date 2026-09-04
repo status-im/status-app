@@ -8,7 +8,7 @@ from functools import partial
 from typing import Any, Dict, Optional
 
 from config.logging_config import get_logger
-from utils.exceptions import SessionManagementError
+from support.exceptions import SessionManagementError
 from core.providers.browserstack_plan import BrowserStackPlanClient, BrowserStackPlanStatus
 
 _shared_pending_counter = None

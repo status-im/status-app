@@ -13,9 +13,9 @@ from core.multi_device_context import MultiDeviceContext
 from core.session_pool import PoolConfig, SessionPool
 from core.stash_keys import MULTI_DEVICE_MANAGERS_KEY
 from core.models import TestUser
-from utils.exceptions import SessionManagementError
-from utils.generators import generate_account_name
-from utils.multi_device_helpers import async_device_step
+from support.exceptions import SessionManagementError
+from support.generators import generate_account_name
+from support.multi_device_helpers import async_device_step
 
 
 class TestMultiDeviceInfrastructure:

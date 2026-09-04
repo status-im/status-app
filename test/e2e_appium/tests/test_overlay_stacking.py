@@ -12,7 +12,7 @@ import logging
 import pytest
 from selenium.common.exceptions import InvalidSessionIdException
 
-from utils.screen_identity import dismiss_stacked_overlays, topmost_overlay
+from support.screen_identity import dismiss_stacked_overlays, topmost_overlay
 
 pytestmark = [pytest.mark.gate, pytest.mark.component]
 

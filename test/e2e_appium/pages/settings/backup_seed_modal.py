@@ -4,7 +4,7 @@ import re
 
 from ..base_page import BasePage
 from locators.settings.backup_seed_locators import BackupSeedLocators
-from utils.element_state_checker import ElementStateChecker
+from support.element_state_checker import ElementStateChecker
 
 
 class BackupSeedModal(BasePage):

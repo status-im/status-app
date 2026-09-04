@@ -3,8 +3,8 @@ import pytest
 from pages.app import App
 from pages.settings.settings_page import SettingsPage
 from pages.onboarding.welcome_back_page import WelcomeBackPage
-from utils.generators import generate_secure_password
-from utils.multi_device_helpers import StepMixin
+from support.generators import generate_secure_password
+from support.multi_device_helpers import StepMixin
 
 
 class TestSettingsPasswordChange(StepMixin):

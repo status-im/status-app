@@ -2,7 +2,7 @@ import time
 
 import pytest
 
-from utils.timeouts import ONBOARDING_SCREEN_TRANSITION_TIMEOUT_SECONDS
+from support.timeouts import ONBOARDING_SCREEN_TRANSITION_TIMEOUT_SECONDS
 from pages.onboarding import (
     WelcomePage,
     CreateProfilePage,
@@ -16,9 +16,9 @@ from pages.app import App
 from pages.onboarding.push_notifications_page import PushNotificationsPage
 from pages.wallet.wallet_left_panel import WalletLeftPanel
 from locators.onboarding.returning_login_locators import ReturningLoginLocators
-from utils.gestures import Gestures
-from utils.generators import generate_seed_phrase, get_wallet_address_from_mnemonic
-from utils.multi_device_helpers import StepMixin
+from support.gestures import Gestures
+from support.generators import generate_seed_phrase, get_wallet_address_from_mnemonic
+from support.multi_device_helpers import StepMixin
 
 
 @pytest.mark.flaky(reruns=1, reruns_delay=5)

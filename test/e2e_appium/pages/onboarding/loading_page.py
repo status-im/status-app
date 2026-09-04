@@ -16,7 +16,7 @@ from selenium.common.exceptions import (
 from ..base_page import BasePage
 from locators.onboarding.loading_screen_locators import LoadingScreenLocators
 from locators.wallet.accounts_locators import WalletAccountsLocators
-from utils.gestures import Gestures
+from support.gestures import Gestures
 
 
 class SplashScreen(BasePage):

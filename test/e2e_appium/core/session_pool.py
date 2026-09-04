@@ -18,7 +18,7 @@ from config.logging_config import get_logger
 from core.config_manager import ConfigurationManager
 from core.environment import EnvironmentConfig
 from core.session_manager import SessionManager
-from utils.exceptions import SessionManagementError
+from support.exceptions import SessionManagementError
 from core.capacity_reserver import (
     CapacityReserver,
     create_plan_client,
@@ -387,7 +387,7 @@ class SessionPool:
         """Set BrowserStack session name for a device."""
         if not test_nodeid:
             return
-        from utils.test_name_formatter import format_test_name_for_browserstack
+        from support.test_name_formatter import format_test_name_for_browserstack
         test_name = format_test_name_for_browserstack(test_nodeid, device_name)
         session_manager.metadata.test_name = test_name
         try:

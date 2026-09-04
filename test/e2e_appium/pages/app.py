@@ -1,8 +1,8 @@
 import time
 
 from locators.app_locators import AppLocators
-from utils.element_state_checker import ElementStateChecker
-from utils.screenshot import save_page_source
+from support.element_state_checker import ElementStateChecker
+from support.screenshot import save_page_source
 
 from .base_page import BasePage
 
@@ -47,14 +47,14 @@ class App(BasePage):
         if self.active_section() == "messaging":
             self.logger.info("Already in Messages section — skipping nav")
             return True
-        from utils.screen_identity import SCREEN_ANCHORS
+        from support.screen_identity import SCREEN_ANCHORS
         # Landmark early-return: active_section() reads 'unknown' with the
         # drawer closed even when the chat list is on screen. Qt reports
         # covered elements as visible, so only trust the landmark when no
         # drawer is open, and clear the backup sheet like the nav path would.
         if (self.is_element_visible(SCREEN_ANCHORS["messages"], timeout=1)
                 and not self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=1)):
-            from utils.screen_identity import BACKUP_MODAL, dismiss_backup_modal
+            from support.screen_identity import BACKUP_MODAL, dismiss_backup_modal
             dismiss_backup_modal(self)
             # dismiss_backup_modal returns False both when no modal was up and
             # when one would not close, so re-check rather than trust the bool.
@@ -83,7 +83,7 @@ class App(BasePage):
         if self.active_section() == "wallet":
             self.logger.info("Already in Wallet section — skipping nav")
             return True
-        from utils.screen_identity import SCREEN_ANCHORS
+        from support.screen_identity import SCREEN_ANCHORS
         return self._click_drawer_nav_with_verify(
             nav_locator=self.locators.LEFT_NAV_WALLET,
             landmark_locator=SCREEN_ANCHORS["wallet"],
@@ -170,7 +170,7 @@ class App(BasePage):
         if self.is_element_visible(self.locators.PROFILE_NAV_BUTTON, timeout=2):
             return True
 
-        from utils.screen_identity import dismiss_introduce_yourself
+        from support.screen_identity import dismiss_introduce_yourself
 
         # Nav not immediately visible: the introduce-yourself sheet is one
         # cause, and while it is up every a11y lookup below finds nothing.
@@ -290,7 +290,7 @@ class App(BasePage):
 
     def click_settings_button(self) -> bool:
         self.logger.info("Opening Settings from the profile menu")
-        from utils.screen_identity import SCREEN_ANCHORS, dismiss_backup_modal
+        from support.screen_identity import SCREEN_ANCHORS, dismiss_backup_modal
         if self.is_element_visible(SCREEN_ANCHORS["settings"], timeout=1):
             self.logger.info("Already in Settings section — skipping nav")
             return True
@@ -448,7 +448,7 @@ class App(BasePage):
         _shake_app()
         time.sleep(0.6)  # let activate_app foregrounding settle
 
-        from utils.screen_identity import dismiss_backup_modal
+        from support.screen_identity import dismiss_backup_modal
 
         slug = nav_name.lower().replace(" ", "_")
         for attempt in range(1, len(strategies) + 1):

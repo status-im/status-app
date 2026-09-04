@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 
 from ..base_page import BasePage
 from locators.settings.password_change_locators import ChangePasswordModalLocators
-from utils.element_state_checker import ElementStateChecker
+from support.element_state_checker import ElementStateChecker
 
 if TYPE_CHECKING:
     from core.models import TestUser
