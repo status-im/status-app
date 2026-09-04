@@ -14,6 +14,8 @@ import utils
 OnboardingPage {
     id: root
 
+    objectName: "keycardLostPage"
+
     signal readSpareKeycardRequested()
     signal stopUsingKeycardForProfileRequested()
 
@@ -95,6 +97,7 @@ OnboardingPage {
 
                 StatusListItem {
                     Layout.fillWidth: true
+                    objectName: "keycardLostReadSpareKeycard"
                     title: qsTr("Read your spare Keycard")
                     subTitle: qsTr("You may need to factory reset it first and then import key pair")
                     components: [
