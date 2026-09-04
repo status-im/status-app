@@ -508,16 +508,7 @@ StatusListItem {
                         case Constants.TransactionType.Receive:
                             return "+" + root.transactionValue
                         case Constants.TransactionType.Swap:
-                            let outValue = root.outTransactionValue
-                            outValue = outValue.replace('<', '&lt;')
-                            let inValue = root.inTransactionValue
-                            inValue = inValue.replace('<', '&lt;')
-                            return "<font color=\"%1\">-%2</font> <font color=\"%3\">/</font> <font color=\"%4\">+%5</font>"
-                                          .arg(Theme.palette.directColor1)
-                                          .arg(outValue)
-                                          .arg(Theme.palette.baseColor1)
-                                          .arg(Theme.palette.successColor1)
-                                          .arg(inValue)
+                            return "−" + root.outTransactionValue
                         case Constants.TransactionType.Bridge:
                         case Constants.TransactionType.Approve:
                         default:
@@ -533,7 +524,6 @@ StatusListItem {
 
                         switch(d.txType) {
                         case Constants.TransactionType.Receive:
-                        case Constants.TransactionType.Swap:
                             return Theme.palette.successColor1
                         default:
                             return Theme.palette.directColor1
@@ -558,8 +548,7 @@ StatusListItem {
                         case Constants.TransactionType.Receive:
                             return "+" + root.currenciesStore.formatCurrencyAmount(root.fiatValue, root.currentCurrency)
                         case Constants.TransactionType.Swap:
-                            return "-%1 / +%2".arg(root.currenciesStore.formatCurrencyAmount(root.outFiatValue, root.currentCurrency))
-                                              .arg(root.currenciesStore.formatCurrencyAmount(root.inFiatValue, root.currentCurrency))
+                            return "+" + root.inTransactionValue
                         case Constants.TransactionType.Bridge:
                         case Constants.TransactionType.Approve:
                         default:
@@ -567,7 +556,8 @@ StatusListItem {
                         }
                     }
                     font.pixelSize: root.loading ? d.loadingPixelSize : 12
-                    customColor: Theme.palette.baseColor1
+                    customColor: d.txType === Constants.TransactionType.Swap ?
+                                     Theme.palette.successColor1 : Theme.palette.baseColor1
                     loading: root.loading
                 }
             }
