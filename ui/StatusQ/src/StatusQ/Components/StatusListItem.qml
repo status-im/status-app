@@ -309,7 +309,7 @@ Rectangle {
                     id: statusListItemTitleTooltip
                     text: statusListItemTitle.text
                     delay: 0
-                    shown: statusListItemTitle.truncated && statusListItemTitleMouseArea.containsMouse
+                    enabled: statusListItemTitle.truncated
                 }
 
                 StatusMouseArea {

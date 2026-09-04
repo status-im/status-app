@@ -67,11 +67,6 @@ Row {
                 return qsTr("Untrusted")
             return ""
         }
-        shown: hoverHandler.hovered
-    }
-
-    HoverHandler {
-        id: hoverHandler
     }
 
     // blocked
