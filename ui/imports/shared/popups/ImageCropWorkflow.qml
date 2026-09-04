@@ -36,6 +36,14 @@ Item {
         imageCropperModal.open()
     }
 
+    Timer {
+        id: openCropperTimer
+        interval: 1
+        repeat: false
+        property url pendingImage
+        onTriggered: root.cropImage(pendingImage)
+    }
+
     StatusFileDialog {
         id: fileDialog
 
@@ -47,15 +55,16 @@ Item {
         onAccepted: {
             if (fileDialog.selectedFiles.length > 0) {
                 const url = fileDialog.selectedFile
-                if (Utils.isValidDragNDropImage(url))
-                    cropImage(url)
-                else {
+                if (Utils.isValidDragNDropImage(url)) {
+                    openCropperTimer.pendingImage = url
+                    openCropperTimer.restart()
+                } else {
                     errorDialog.fileOpened = url
                     errorDialog.open()
                 }
             }
         }
-    } // FileDialog
+    }
 
     StatusDialog {
         id: errorDialog
@@ -77,7 +86,7 @@ Item {
             }
         }
         standardButtons: Dialog.Ok
-    } // StatusDialog
+    }
 
     StatusModal {
         id: imageCropperModal
@@ -127,5 +136,5 @@ Item {
             }
         ]
         onClosed: root.done()
-    } // StatusModal
-} // Item
+    }
+}

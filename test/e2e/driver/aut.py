@@ -8,7 +8,6 @@ import configs
 import driver
 import shortuuid
 from tests import test_data
-from datetime import datetime
 from configs.system import get_platform
 from driver import context
 from driver.server import SquishServer
@@ -34,7 +33,7 @@ class AUT:
         self.ctx = None
         self.pid = None
         self.port = None
-        self.aut_id = f'AUT_{datetime.now():%H%M%S}'
+        self.aut_id = f'AUT_{shortuuid.ShortUUID().random(length=8)}'
         self.app_data = configs.testpath.STATUS_DATA / f'app_{shortuuid.ShortUUID().random(length=10)}'
         if user_data is not None:
             user_data.copy_to(self.app_data / 'data')
@@ -68,7 +67,7 @@ class AUT:
 
     @allure.step('Attach Squish to Test Application')
     def attach(self):
-        LOG.info('Attaching to AUT: localhost:%d', self.port)
+        LOG.info('Attaching to AUT: 127.0.0.1:%d', self.port)
 
         try:
             SquishServer().add_attachable_aut(self.aut_id, self.port)
@@ -171,9 +170,9 @@ class AUT:
         if retries is None:
             retries = 20 if get_platform() == "Windows" else 10
         
-        LOG.info('Waiting for AUT port localhost:%d... (timeout=%ds, retries=%d)', self.port, timeout, retries)
+        LOG.info('Waiting for AUT port 127.0.0.1:%d... (timeout=%ds, retries=%d)', self.port, timeout, retries)
         try:
-            wait_for_port('localhost', self.port, timeout, retries)
+            wait_for_port('127.0.0.1', self.port, timeout, retries)
         except TimeoutError as err:
             LOG.error('Wait for AUT port timed out: %s', err)
             # Check if process is still running
