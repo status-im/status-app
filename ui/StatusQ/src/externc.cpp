@@ -7,7 +7,6 @@
 #include <QGuiApplication>
 #include <QHash>
 #include <QPointer>
-#include <QScreen>
 #include <QQmlApplicationEngine>
 #include <QQmlIncubator>
 #include <QTimerEvent>
@@ -92,15 +91,6 @@ public:
     BoostedIncubationController(int msPerTick, int gentlePeriodMs, int boostGapMs, QObject* parent)
         : QObject(parent), m_msPerTick(msPerTick), m_gentlePeriodMs(gentlePeriodMs),
           m_boostGapMs(boostGapMs) {
-        // The gentle cadence follows the primary screen's frame period: one
-        // small bite per frame leaves the rest of the frame to the transition
-        // animation, on 60Hz and high-refresh displays alike.
-        const QScreen* screen = QGuiApplication::primaryScreen();
-        const qreal refreshRate = screen && screen->refreshRate() > 0.0
-                                  ? screen->refreshRate() : 60.0;
-        m_gentleIntervalMs = qMax(1, qRound(1000.0 / refreshRate));
-        m_gentleBudgetMs = qMax(1, m_gentleIntervalMs / 4);
-
         // Liveness backstop: the timer never fully stops. Even if a count
         // notification is missed (cancelled/chained incubations), pending
         // incubators are picked up at most one idle tick later — a wedged
@@ -133,7 +123,9 @@ public:
 protected:
     void incubatingObjectCountChanged(int count) override {
         // fast path out of the idle cadence; phase management happens in
-        // timerEvent based on the actual count
+        // timerEvent based on the actual count. A user-initiated open finds the
+        // controller idle, so this wake is dead latency in front of every warm
+        // open - which is why the gentle interval is short.
         if (count > 0 && m_interval == kIdleIntervalMs)
             restart(m_gentleIntervalMs);
     }
@@ -189,12 +181,23 @@ private:
     // idle poll: cheap (one count check), bounds the wedge-recovery latency
     static constexpr int kIdleIntervalMs = 128;
 
+    // Gentle pacing is a duty cycle in absolute time, not a division of the
+    // frame period: the bite bounds how long a posted event waits behind
+    // incubation, the interval bounds how much of the GUI thread incubation
+    // takes. Neither is a property of the refresh rate. Measured: the
+    // frame-derived 4ms-every-16ms cadence spent 76% of every load waiting
+    // for the next tick, and the bite is not the stall floor anyway - a bite
+    // overshoots into the object it is midway through creating, and that
+    // overshoot is what sets the block size.
+    static constexpr int kGentleIntervalMs = 4;
+    static constexpr int kGentleBudgetMs = 2;
+
     QBasicTimer m_timer;
     QElapsedTimer m_burstStart;
     bool m_inBurst = false;
     int m_interval = kIdleIntervalMs;
-    int m_gentleIntervalMs = 12;
-    int m_gentleBudgetMs = 3;
+    int m_gentleIntervalMs = kGentleIntervalMs;
+    int m_gentleBudgetMs = kGentleBudgetMs;
     int m_gentleHints = 0;
     int m_lastPhase = 0;
     const int m_msPerTick;
