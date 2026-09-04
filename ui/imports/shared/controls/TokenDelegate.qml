@@ -56,7 +56,7 @@ StatusListItem {
     asset.isImage: true
     asset.width: 32
     asset.height: 32
-    errorIcon.tooltip.maxWidth: 300
+    errorTooltipMaxWidth: 300
     height: implicitHeight
 
     // Both warning buttons are latched off rather than merely hidden: a button
@@ -91,46 +91,54 @@ StatusListItem {
                     tooltip.maxWidth: 200
                 }
             }
-            StatusTextWithLoadingState   {
-                id: currencyBalance
-
+            // The fiat balance and the 24h change share one guard, so a token
+            // without market details builds neither. That is five items -- two
+            // of them texts with their own loading-state loaders -- per row.
+            Loader {
                 anchors.right: parent.right
-                visible: !d.marketDataErrorVisible && root.marketDetailsAvailable
+                active: !d.marketDataErrorVisible && root.marketDetailsAvailable
 
-                loading: root.marketDetailsLoading || root.balanceLoading
-                text: loading ? Constants.dummyText : root.marketBalance
-            }
-            Row {
-                anchors.right: parent.right
-                spacing: 6
-                visible: !d.marketDataErrorVisible && root.marketDetailsAvailable
+                sourceComponent: Column {
+                    StatusTextWithLoadingState   {
+                        id: currencyBalance
 
-                StatusTextWithLoadingState {
-                    id: change24HourPercentageText
+                        anchors.right: parent.right
 
-                    anchors.verticalCenter: parent.verticalCenter
-                    customColor: d.textColor
-                    font.pixelSize: Theme.additionalTextSize
-                    loading: root.marketDetailsLoading
+                        loading: root.marketDetailsLoading || root.balanceLoading
+                        text: loading ? Constants.dummyText : root.marketBalance
+                    }
+                    Row {
+                        anchors.right: parent.right
+                        spacing: 6
 
-                    text: qsTr("%1 %2%", "[up/down/none character depending on value sign] [localized percentage value]%")
-                    .arg(WalletUtils.getUpDownTriangle(root.marketChangePct24hour))
-                    .arg(LocaleUtils.numberToLocaleString(root.marketChangePct24hour, 2))
-                }
-                Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 1
-                    height: 12
-                    color: Theme.palette.directColor9
-                }
-                StatusTextWithLoadingState {
-                    id: currencyPrice
+                        StatusTextWithLoadingState {
+                            id: change24HourPercentageText
 
-                    anchors.verticalCenter: parent.verticalCenter
-                    customColor: d.textColor
-                    font.pixelSize: Theme.additionalTextSize
-                    loading: root.marketDetailsLoading
-                    text: loading ? Constants.dummyText : root.marketCurrencyPrice
+                            anchors.verticalCenter: parent.verticalCenter
+                            customColor: d.textColor
+                            font.pixelSize: Theme.additionalTextSize
+                            loading: root.marketDetailsLoading
+
+                            text: qsTr("%1 %2%", "[up/down/none character depending on value sign] [localized percentage value]%")
+                            .arg(WalletUtils.getUpDownTriangle(root.marketChangePct24hour))
+                            .arg(LocaleUtils.numberToLocaleString(root.marketChangePct24hour, 2))
+                        }
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 1
+                            height: 12
+                            color: Theme.palette.directColor9
+                        }
+                        StatusTextWithLoadingState {
+                            id: currencyPrice
+
+                            anchors.verticalCenter: parent.verticalCenter
+                            customColor: d.textColor
+                            font.pixelSize: Theme.additionalTextSize
+                            loading: root.marketDetailsLoading
+                            text: loading ? Constants.dummyText : root.marketCurrencyPrice
+                        }
+                    }
                 }
             }
 
