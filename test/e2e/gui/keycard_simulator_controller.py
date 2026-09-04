@@ -41,6 +41,10 @@ class KeycardSimulatorController(Window):
             self._app_window.set_focus()
         return self
 
+    def rebind_app_window(self, app_window: Window) -> 'KeycardSimulatorController':
+        self._app_window = app_window
+        return self
+
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
         driver.waitFor(lambda: self._start_button.exists, timeout_msec)
         return self
