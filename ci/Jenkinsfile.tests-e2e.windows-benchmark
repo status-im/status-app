@@ -1,5 +1,5 @@
 #!/usr/bin/env groovy
-library 'status-jenkins-lib@v1.9.46'
+library 'status-jenkins-lib@v1.9.50'
 
 /* Windows benchmarks for nightly, pull requests, and release candidates.
  *

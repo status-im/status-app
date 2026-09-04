@@ -1,5 +1,5 @@
 #!/usr/bin/env groovy
-library 'status-jenkins-lib@v1.9.46'
+library 'status-jenkins-lib@v1.9.50'
 
 QT_VERSION = "6.11.0"
 
