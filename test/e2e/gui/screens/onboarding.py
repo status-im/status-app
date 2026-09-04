@@ -106,7 +106,7 @@ class OnboardingLogIn(QObject):
     @allure.step('Open login with keycard flow')
     def open_login_with_keycard(self) -> KeycardManagementPopup:
         self.use_keycard_button.click()
-        return KeycardManagementPopup()
+        return KeycardManagementPopup().wait_until_appears()
 
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
         self.enter_recovery_phrase_button.wait_until_appears(timeout_msec)

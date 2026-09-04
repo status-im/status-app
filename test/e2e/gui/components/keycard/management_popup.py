@@ -48,6 +48,12 @@ class KeycardManagementPopup(QObject):
         self.wait_until_hidden(timeout_msec)
         return self
 
+    @allure.step('Enter Keycard PIN {pin} and continue onboarding keycard flow')
+    def enter_keycard_pin_and_continue(self, pin: str, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC):
+        self.pin_input.wait_until_appears(timeout_msec)
+        self.pin_input.object.setPin(pin)
+        return self.continue_after_key_pair_imported(timeout_msec)
+
     @allure.step('Skip PIN and wait until popup closes')
     def skip_pin_and_close(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
         self.unknown_pin_button.wait_until_appears(timeout_msec)
@@ -175,6 +181,8 @@ class KeycardDetailsView(QObject):
         self.keycard_view_title = TextLabel(onboarding_names.keycardDetailsTitle)
         self.keycard_view_import_new_keypair = Button(onboarding_names.onboardingKeycardDetailsImportNewKeypair)
         self.keycard_view_import_seed_phrase = Button(onboarding_names.onboardingKeycardDetailsImportSeedPhrase)
+        self.keycard_view_login_with_this_keycard = Button(
+            onboarding_names.onboardingKeycardDetailsLoginWithThisKeycard)
 
     @allure.step('Import a new keypair to Keycard and create new profile')
     def import_a_new_keypair(self):
@@ -184,4 +192,9 @@ class KeycardDetailsView(QObject):
     @allure.step('Import a key pair from recovery phrase')
     def import_from_recovery_phrase(self):
         self.keycard_view_import_seed_phrase.click()
+        return KeycardManagementPopup().wait_until_appears()
+
+    @allure.step('Login with this Keycard from details page')
+    def login_with_this_keycard(self) -> KeycardManagementPopup:
+        self.keycard_view_login_with_this_keycard.click()
         return KeycardManagementPopup().wait_until_appears()
