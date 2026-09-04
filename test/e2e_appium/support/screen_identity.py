@@ -19,7 +19,7 @@ concrete cause of the nav wedges seen while building this.
 import xml.etree.ElementTree as ET
 
 from locators.base_locators import BaseLocators
-from utils.exceptions import is_session_fatal
+from support.exceptions import is_session_fatal
 from locators.wallet.accounts_locators import WalletAccountsLocators
 from locators.settings.settings_locators import SettingsLocators
 from locators.messaging.chat_locators import ChatLocators

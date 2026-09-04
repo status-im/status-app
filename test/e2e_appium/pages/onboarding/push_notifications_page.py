@@ -1,6 +1,6 @@
 from ..base_page import BasePage
 from locators.onboarding.push_notifications_locators import PushNotificationsLocators
-from utils.exceptions import ElementInteractionError
+from support.exceptions import ElementInteractionError
 
 
 class PushNotificationsPage(BasePage):

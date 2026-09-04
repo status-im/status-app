@@ -10,8 +10,8 @@ surfacing as misleading failures scattered across unrelated suites.
 import pytest
 
 from pages.app import App
-from utils.multi_device_helpers import StepMixin
-from utils.screen_identity import confirm_screen, dismiss_backup_modal
+from support.multi_device_helpers import StepMixin
+from support.screen_identity import confirm_screen, dismiss_backup_modal
 
 
 SECTIONS = ("messages", "wallet", "settings")

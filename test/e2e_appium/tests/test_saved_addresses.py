@@ -1,8 +1,8 @@
 import pytest
 
 from config.logging_config import get_logger
-from utils.generators import generate_ethereum_address, generate_account_name
-from utils.multi_device_helpers import StepMixin
+from support.generators import generate_ethereum_address, generate_account_name
+from support.multi_device_helpers import StepMixin
 from pages.wallet.add_saved_address_modal import AddSavedAddressModal
 from pages.app import App
 from locators.wallet.saved_addresses_locators import SavedAddressesLocators

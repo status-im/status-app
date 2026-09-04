@@ -10,12 +10,12 @@ from appium.webdriver.webdriver import WebDriver
 from core.session_manager import SessionManager
 from pages.onboarding import HomePage
 from pages.app import App
-from utils.exceptions import SessionManagementError
+from support.exceptions import SessionManagementError
 from config import get_config
 from config.logging_config import get_logger
-from utils.gestures import Gestures
-from utils.screenshot import save_screenshot
-from utils.performance_monitor import PerformanceMonitor
+from support.gestures import Gestures
+from support.screenshot import save_screenshot
+from support.performance_monitor import PerformanceMonitor
 from services import UserProfileService, AppStateManager, AppInitializationManager
 
 

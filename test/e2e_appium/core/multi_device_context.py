@@ -5,7 +5,7 @@ from config.logging_config import get_logger
 from core.device_context import DeviceContext
 from fixtures.onboarding_fixture import OnboardingConfig
 from core.models import TestUser
-from utils.exceptions import SessionManagementError
+from support.exceptions import SessionManagementError
 
 
 class MultiDeviceContext:

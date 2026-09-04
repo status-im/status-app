@@ -13,7 +13,7 @@ import pytest
 from config.logging_config import get_logger
 from pages.app import App
 from pages.messaging.chat_page import ChatPage
-from utils.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
+from support.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
 
 
 def _unique_message(prefix: str = "test") -> str:

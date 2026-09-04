@@ -18,7 +18,7 @@ from typing import List, Optional
 
 from locators.messaging.chat_locators import ChatLocators
 from locators.messaging.group_chat_locators import GroupChatLocators
-from utils.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
+from support.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
 
 from ..base_page import BasePage
 from .chat_page import ChatPage

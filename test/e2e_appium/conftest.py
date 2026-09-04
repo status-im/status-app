@@ -10,7 +10,7 @@ import pytest
 
 from .config import get_config, setup_logging, log_test_start, log_test_end
 from .config.logging_config import get_logger, LoggingConfig
-from .utils.screenshot import save_screenshot, save_page_source
+from .support.screenshot import save_screenshot, save_page_source
 from core.stash_keys import MULTI_DEVICE_MANAGERS_KEY
 from core.capacity_reserver import set_shared_pending_counter
 from core.shared_counter import FileBasedCounter, create_shared_counter

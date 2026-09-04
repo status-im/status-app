@@ -1,4 +1,4 @@
-from utils.platform import is_ios as _is_ios_driver
+from support.platform import is_ios as _is_ios_driver
 
 
 def _element_is_ios(element) -> bool:

@@ -13,8 +13,8 @@ from core.device_context import DeviceContext
 from core.multi_device_context import MultiDeviceContext
 from core.session_pool import PoolConfig, SessionPool
 from core.stash_keys import MULTI_DEVICE_MANAGERS_KEY
-from utils.generators import generate_account_name
-from utils.exceptions import SessionManagementError
+from support.generators import generate_account_name
+from support.exceptions import SessionManagementError
 
 
 DEFAULT_DEVICE_COUNT = 1

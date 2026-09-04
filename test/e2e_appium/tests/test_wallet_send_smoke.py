@@ -3,7 +3,7 @@ import time
 
 import pytest
 
-from utils.timeouts import ONBOARDING_SCREEN_TRANSITION_TIMEOUT_SECONDS
+from support.timeouts import ONBOARDING_SCREEN_TRANSITION_TIMEOUT_SECONDS
 from pages.onboarding import (
     WelcomePage,
     CreateProfilePage,
@@ -18,9 +18,9 @@ from pages.app import App
 from pages.base_page import BasePage
 from pages.settings.settings_page import SettingsPage
 from pages.wallet.wallet_left_panel import WalletLeftPanel
-from utils.generators import get_wallet_address_from_mnemonic
-from utils.gestures import Gestures
-from utils.multi_device_helpers import StepMixin
+from support.generators import get_wallet_address_from_mnemonic
+from support.gestures import Gestures
+from support.multi_device_helpers import StepMixin
 
 SEED_ENV_VAR = "WALLET_TEST_USER_SEED"
 FUNDED_WALLET_ADDRESS = "0x44ddd47A0c7681A5b0fa080a56CBB7701db4BB43"

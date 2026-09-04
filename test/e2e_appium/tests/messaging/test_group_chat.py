@@ -37,7 +37,7 @@ from pages.app import App
 from pages.base_page import BasePage
 from pages.messaging.chat_page import ChatPage
 from pages.messaging.group_chat_page import GroupChatPage
-from utils.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
+from support.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
 
 
 def _unique_message(prefix: str = "gc") -> str:

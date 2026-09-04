@@ -3,10 +3,10 @@ from typing import Optional, Dict, Any
 
 from config.logging_config import get_logger
 from core.models import TestUser
-from utils.generators import generate_seed_phrase
-from utils.onboarding_classes import ProfileCreationFlow, ProfileCreationConfig
+from support.generators import generate_seed_phrase
+from support.onboarding_classes import ProfileCreationFlow, ProfileCreationConfig
 from core.environment import ConfigurationError
-from utils.exceptions import (
+from support.exceptions import (
     SessionManagementError,
 )
 

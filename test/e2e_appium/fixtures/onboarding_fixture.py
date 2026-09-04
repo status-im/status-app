@@ -33,8 +33,8 @@ from pages.onboarding import (
     WelcomePage,
 )
 from services.app_initialization_manager import AppInitializationManager
-from utils.generators import generate_seed_phrase
-from utils.screen_identity import dismiss_stacked_overlays, overlay_locator
+from support.generators import generate_seed_phrase
+from support.screen_identity import dismiss_stacked_overlays, overlay_locator
 
 NAV_EDUCATION_ID = "NavigationEducationDialog"
 
@@ -209,7 +209,7 @@ class OnboardingFlow:
         )
 
         try:
-            from utils.gestures import Gestures
+            from support.gestures import Gestures
             Gestures(self.app.driver).activation_tap()
         except Exception:
             self.logger.debug("Initial tap attempt skipped", exc_info=True)

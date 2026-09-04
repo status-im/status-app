@@ -24,7 +24,7 @@ def _app(monkeypatch, menu_outcomes, arrive_after_tap=True):
         return arrive_after_tap and bool(calls["taps"])
 
     monkeypatch.setattr(app_module.time, "sleep", lambda *_: None)
-    monkeypatch.setattr("utils.screen_identity.dismiss_backup_modal", lambda *a, **k: False)
+    monkeypatch.setattr("support.screen_identity.dismiss_backup_modal", lambda *a, **k: False)
     monkeypatch.setattr(app, "is_element_visible", anchor_visible)
     monkeypatch.setattr(app, "_ensure_main_nav_visible", lambda: True)
     monkeypatch.setattr(app, "try_click", lambda *a, **k: True)

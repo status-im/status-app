@@ -6,7 +6,7 @@ from appium.webdriver.webdriver import WebDriver
 from config.logging_config import get_logger
 from core.models import TestUser
 from fixtures.onboarding_fixture import OnboardingConfig, OnboardingFlow, OnboardingFlowError
-from utils.exceptions import SessionManagementError
+from support.exceptions import SessionManagementError
 
 
 class DeviceState:
@@ -181,7 +181,7 @@ class DeviceContext:
         from locators.messaging.chat_locators import ChatLocators
         from locators.settings.profile_locators import ProfileSettingsLocators
         from pages.settings.share_profile_dialog import ShareProfileDialog
-        from utils.gestures import Gestures
+        from support.gestures import Gestures
 
         gestures = Gestures(self.driver)
         app_locators = AppLocators()

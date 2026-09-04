@@ -36,7 +36,7 @@ def test_nav_recovery_probes_a_defined_locator(monkeypatch):
 
     monkeypatch.setattr(app, "is_element_visible", fake_is_element_visible)
     monkeypatch.setattr(
-        "utils.screen_identity.dismiss_introduce_yourself", lambda *a, **k: True
+        "support.screen_identity.dismiss_introduce_yourself", lambda *a, **k: True
     )
 
     assert app._ensure_main_nav_visible() is True

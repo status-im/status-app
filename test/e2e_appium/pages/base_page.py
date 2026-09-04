@@ -21,13 +21,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from config import get_config, log_element_action
 from urllib3.exceptions import HTTPError as _TransportError
 
-from utils.exceptions import is_session_fatal
-from utils.app_lifecycle_manager import AppLifecycleManager
-from utils.element_state_checker import ElementStateChecker
-from utils.exceptions import ElementInteractionError
-from utils.gestures import Gestures
-from utils.keyboard_manager import KeyboardManager
-from utils.screenshot import save_page_source, save_screenshot
+from support.exceptions import is_session_fatal
+from support.app_lifecycle_manager import AppLifecycleManager
+from support.element_state_checker import ElementStateChecker
+from support.exceptions import ElementInteractionError
+from support.gestures import Gestures
+from support.keyboard_manager import KeyboardManager
+from support.screenshot import save_page_source, save_screenshot
 
 
 class BasePage:

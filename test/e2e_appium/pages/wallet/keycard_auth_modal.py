@@ -1,5 +1,5 @@
 from locators.wallet.accounts_locators import WalletAccountsLocators
-from utils.exceptions import is_session_fatal
+from support.exceptions import is_session_fatal
 
 from ..base_page import BasePage
 

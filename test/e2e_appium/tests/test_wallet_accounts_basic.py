@@ -4,8 +4,8 @@ from pages.app import App
 from pages.onboarding.push_notifications_page import PushNotificationsPage
 from pages.onboarding.welcome_back_page import WelcomeBackPage
 from pages.wallet.wallet_left_panel import WalletLeftPanel
-from utils.generators import generate_account_name
-from utils.multi_device_helpers import StepMixin
+from support.generators import generate_account_name
+from support.multi_device_helpers import StepMixin
 
 
 @pytest.mark.flaky(reruns=1, reruns_delay=5)

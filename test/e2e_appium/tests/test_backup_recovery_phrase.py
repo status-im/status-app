@@ -3,8 +3,8 @@ import pytest
 
 from pages.app import App
 from pages.settings.settings_page import SettingsPage
-from utils.multi_device_helpers import StepMixin
-from utils.screenshot import save_page_source
+from support.multi_device_helpers import StepMixin
+from support.screenshot import save_page_source
 
 
 class TestBackupRecoveryPhrase(StepMixin):
