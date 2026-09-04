@@ -8,7 +8,7 @@ import AppLayouts.Chat.stores as ChatStores
 
 /*
  Tapping or dragging the transcript dismisses the on-screen keyboard
- (issue #21743, docs/adr/0011). A desktop test host has no panel for
+ (issue #21743). A desktop test host has no panel for
  Qt.inputMethod.hide() to retract, so what is pinned here is the gesture
  wiring: the tap reaches the handler over the message list and does not
  consume, and the drag gate discriminates a user drag from the programmatic
