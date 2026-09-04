@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Layouts
 import QtTest
 
 import StatusQ.Controls
@@ -12,11 +11,14 @@ import StatusQ.Controls
  Popup subtree for a hover that may never happen.
 
  What has to hold:
- - nothing is built, and no text is produced, until the tooltip is first shown
+ - nothing is built, and no text is produced, until the target is first hovered
+ - a touch never builds one; a tooltip is a pointer affordance
+ - `enabled` is the owner's say, and an owner that is disabled itself has none
+ - `visible` reports whether the tooltip is up
  - once built it carries the same text, parent, placement and timing a plain
    StatusToolTip would have had
  - overrides the owner did not set keep StatusToolTip's own defaults
- - it never takes up room in the positioner or layout it was declared in
+ - it never takes up room in the positioner it was declared in
 */
 Item {
     id: root
@@ -26,10 +28,13 @@ Item {
 
     property int providerCalls: 0
 
+    // Away from the corner the cursor is parked in between tests.
     Component {
         id: plainComp
 
         Rectangle {
+            x: 150
+            y: 150
             width: 120
             height: 40
             color: "lightgray"
@@ -48,6 +53,8 @@ Item {
         id: providedComp
 
         Rectangle {
+            x: 150
+            y: 150
             width: 120
             height: 40
             color: "lightgray"
@@ -70,6 +77,8 @@ Item {
         id: overriddenComp
 
         Rectangle {
+            x: 150
+            y: 150
             width: 120
             height: 40
             color: "lightgray"
@@ -88,6 +97,50 @@ Item {
         }
     }
 
+    // The owner withholding its say, and the owner having none to give.
+    Component {
+        id: gatedComp
+
+        Rectangle {
+            x: 150
+            y: 150
+            width: 120
+            height: 40
+            color: "lightgray"
+
+            property alias tooltipEnabled: tooltip.enabled
+            readonly property alias tooltip: tooltip
+
+            StatusLazyToolTip {
+                id: tooltip
+                tooltipObjectName: "lazyTip"
+                text: "Lazy tip"
+                enabled: false
+            }
+        }
+    }
+
+    Component {
+        id: disabledOwnerComp
+
+        Rectangle {
+            x: 150
+            y: 150
+            width: 120
+            height: 40
+            color: "lightgray"
+            enabled: false
+
+            readonly property alias tooltip: tooltip
+
+            StatusLazyToolTip {
+                id: tooltip
+                tooltipObjectName: "lazyTip"
+                text: "Lazy tip"
+            }
+        }
+    }
+
     // What the lazy tooltip has to stay indistinguishable from.
     Component {
         id: referenceComp
@@ -101,7 +154,6 @@ Item {
         id: buttonComp
 
         StatusFlatRoundButton {
-            // Away from the corner the cursor is parked in between tests.
             x: 150
             y: 150
             width: 44
@@ -114,15 +166,17 @@ Item {
     // A StatusToolTip is a Popup and draws nothing here, so the placeholder
     // must not shift its siblings - not even while the tooltip is up.
     Component {
-        id: layoutComp
+        id: rowComp
 
-        RowLayout {
+        Row {
+            x: 150
+            y: 150
             spacing: 10
 
             readonly property alias tooltip: tooltip
             readonly property alias trailing: trailing
 
-            Rectangle { Layout.preferredWidth: 30; Layout.preferredHeight: 20 }
+            Rectangle { width: 30; height: 20; color: "lightgray" }
 
             StatusLazyToolTip {
                 id: tooltip
@@ -132,8 +186,9 @@ Item {
 
             Rectangle {
                 id: trailing
-                Layout.preferredWidth: 30
-                Layout.preferredHeight: 20
+                width: 30
+                height: 20
+                color: "lightgray"
             }
         }
     }
@@ -147,28 +202,38 @@ Item {
         }
 
         function cleanup() {
-            mouseMove(root, 2, 2) // leave any hovered target
+            leave()
         }
 
-        function test_notBuiltUntilShown() {
+        function hover(item) {
+            mouseMove(item, item.width / 2, item.height / 2)
+        }
+
+        function leave() {
+            mouseMove(root, 2, 2)
+        }
+
+        function test_notBuiltUntilHovered() {
             const target = createTemporaryObject(plainComp, root)
             verify(!!target)
             waitForRendering(target)
 
             verify(!target.tooltip.active, "the tooltip must start unbuilt")
-            compare(target.tooltip.item, null, "no popup before the first show request")
+            compare(target.tooltip.item, null, "no popup before the first hover")
+            compare(target.tooltip.visible, false)
             compare(target.tooltip.opened, false)
             compare(findChild(target, "lazyTip"), null)
         }
 
-        function test_showRequestBuildsTheTooltip() {
+        function test_hoverBuildsTheTooltip() {
             const target = createTemporaryObject(plainComp, root)
             verify(!!target)
             waitForRendering(target)
 
-            target.tooltip.shown = true
+            hover(target)
 
-            verify(!!target.tooltip.item, "the show request must build the popup")
+            verify(target.tooltip.visible, "hover must be reported by the tooltip")
+            verify(!!target.tooltip.item, "hover must build the popup")
             compare(target.tooltip.item.text, "Lazy tip")
             compare(target.tooltip.item.parent, target,
                     "the popup is positioned against the declaring parent")
@@ -182,7 +247,7 @@ Item {
             verify(!!target)
             waitForRendering(target)
 
-            target.tooltip.shown = true
+            hover(target)
 
             const tip = target.tooltip.item
             verify(!!tip)
@@ -197,9 +262,11 @@ Item {
         function test_defaultsSurviveWhenNotOverridden() {
             const target = createTemporaryObject(plainComp, root)
             verify(!!target)
-            target.tooltip.shown = true
+            waitForRendering(target)
+            hover(target)
 
             const tip = target.tooltip.item
+            verify(!!tip)
             const reference = createTemporaryObject(referenceComp, root, { parent: target })
             verify(!!reference)
 
@@ -212,7 +279,8 @@ Item {
         function test_overridesAreForwarded() {
             const target = createTemporaryObject(overriddenComp, root)
             verify(!!target)
-            target.tooltip.shown = true
+            waitForRendering(target)
+            hover(target)
 
             const tip = target.tooltip.item
             verify(!!tip)
@@ -231,39 +299,102 @@ Item {
 
             compare(root.providerCalls, 0, "textProvider must not run at creation")
 
-            target.tooltip.shown = true
+            hover(target)
             compare(root.providerCalls, 1, "the text is pulled when the tooltip is shown")
             compare(target.tooltip.item.text, "provided text")
 
-            target.tooltip.shown = false
+            leave()
+            tryCompare(target.tooltip, "visible", false, 2000)
             target.provided = "second text"
-            target.tooltip.shown = true
+            hover(target)
 
             compare(root.providerCalls, 2, "the text is pulled again on the next show")
             compare(target.tooltip.item.text, "second text")
         }
 
-        function test_emptyTextKeepsThePopupHidden() {
+        // Most controls carry a tooltip they are never given text for, so an
+        // empty one must not cost a Popup even once it is hovered.
+        function test_emptyTextBuildsNothing() {
             const target = createTemporaryObject(providedComp, root)
             verify(!!target)
+            waitForRendering(target)
             target.provided = ""
 
-            target.tooltip.shown = true
+            hover(target)
 
-            verify(!!target.tooltip.item, "the popup is still built")
-            compare(target.tooltip.opened, false)
+            compare(target.tooltip.item, null, "an empty text must not build the popup")
             wait(300) // past StatusToolTip's show delay
             compare(target.tooltip.opened, false, "an empty text must never open the tooltip")
         }
 
-        function test_takesNoRoomInALayout() {
-            const target = createTemporaryObject(layoutComp, root)
+        // Text arriving while the cursor is already resting still shows.
+        function test_textArrivingUnderARestingCursorBuildsTheTooltip() {
+            const target = createTemporaryObject(plainComp, root)
+            verify(!!target)
+            waitForRendering(target)
+            target.tooltip.text = ""
+
+            hover(target)
+            compare(target.tooltip.item, null, "nothing to say, nothing built")
+
+            target.tooltip.text = "Late tip"
+            verify(!!target.tooltip.item, "text arriving under a hover must build the popup")
+            compare(target.tooltip.item.text, "Late tip")
+        }
+
+        // The owner's say: withheld, nothing is watched and nothing is built.
+        function test_disabledNeverBuilds() {
+            const target = createTemporaryObject(gatedComp, root)
+            verify(!!target)
+            waitForRendering(target)
+
+            hover(target)
+
+            compare(target.tooltip.visible, false, "a disabled tooltip must not report hover")
+            compare(target.tooltip.item, null, "a disabled tooltip must not be built")
+
+            target.tooltipEnabled = true
+            tryVerify(() => !!target.tooltip.item, 2000,
+                      "re-enabling under a resting cursor must build the tooltip")
+        }
+
+        // An owner that is itself disabled has no say to give.
+        function test_disabledOwnerNeverBuilds() {
+            const target = createTemporaryObject(disabledOwnerComp, root)
+            verify(!!target)
+            waitForRendering(target)
+
+            hover(target)
+
+            compare(target.tooltip.enabled, false,
+                    "a disabled owner disables the tooltip with it")
+            compare(target.tooltip.item, null, "no popup under a disabled owner")
+        }
+
+        // A tooltip is a pointer affordance: a tap must never raise one.
+        function test_touchNeverBuilds() {
+            const target = createTemporaryObject(plainComp, root)
+            verify(!!target)
+            waitForRendering(target)
+
+            const touch = touchEvent(target)
+            touch.press(0, target, target.width / 2, target.height / 2).commit()
+            compare(target.tooltip.visible, false, "a touch must not report hover")
+            compare(target.tooltip.item, null, "a touch must not build the tooltip")
+
+            touch.release(0, target, target.width / 2, target.height / 2).commit()
+            wait(300) // past StatusToolTip's show delay, with the finger just lifted
+            compare(target.tooltip.item, null, "a lifted touch must not build the tooltip")
+        }
+
+        function test_takesNoRoomInARow() {
+            const target = createTemporaryObject(rowComp, root)
             verify(!!target)
             waitForRendering(target)
 
             const restingX = target.trailing.x
 
-            target.tooltip.shown = true
+            hover(target)
             tryCompare(target.tooltip, "opened", true, 2000)
             waitForRendering(target)
 
@@ -280,7 +411,7 @@ Item {
 
             compare(button.tooltip.item, null, "no popup before the first hover")
 
-            mouseMove(button, button.width / 2, button.height / 2)
+            hover(button)
 
             tryVerify(() => !!button.tooltip.item, 2000, "hover must build the tooltip")
             const tip = button.tooltip.item
@@ -294,7 +425,7 @@ Item {
             fuzzyCompare(tip.x + arrow.x + arrow.width / 2, button.width / 2, 1.0,
                          "the arrow must point at the centre of the button")
 
-            mouseMove(root, 2, 2)
+            leave()
             tryCompare(button.tooltip, "opened", false, 2000,
                        "the tooltip hides when the hover ends")
         }

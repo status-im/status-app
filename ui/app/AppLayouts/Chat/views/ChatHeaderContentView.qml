@@ -131,7 +131,7 @@ RowLayout {
             type: StatusFlatRoundButton.Type.Secondary
 
             // initializing the tooltip
-            tooltip.shown: !!tooltip.text && menuButton.hovered && !(contextMenuLoader.item?.opened ?? false)
+            tooltip.enabled: !(contextMenuLoader.item?.opened ?? false)
             tooltip.text: qsTr("More")
             tooltip.orientation: StatusToolTip.Orientation.Bottom
             tooltip.y: parent.height + 12

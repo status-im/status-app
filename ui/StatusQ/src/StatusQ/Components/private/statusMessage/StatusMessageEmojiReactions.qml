@@ -109,7 +109,6 @@ Flow {
                 tooltipObjectName: "reactionAuthorsTooltip"
                 textProvider: () => d.showReactionAuthors(model.jsonArrayOfUsersReactedWithThisEmoji,
                                                           model.emoji) || ""
-                shown: reactionDelegate.hovered
             }
 
             HoverHandler {
