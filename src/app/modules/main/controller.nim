@@ -300,6 +300,10 @@ proc init*(self: Controller) =
     var args = StatusUrlArgs(e)
     self.delegate.activateStatusDeepLink(args.url)
 
+  self.events.on(SIGNAL_EXTERNAL_URL_INTAKE_BROWSER_TAB) do(e: Args):
+    let args = ExternalUrlIntakeArgs(e)
+    self.delegate.openUrlInNewBrowserTab(args.url)
+
   self.events.on(SIGNAL_OS_NOTIFICATION_CLICKED) do(e: Args):
     var args = ClickedNotificationArgs(e)
     self.delegate.osNotificationClicked(args.details)
