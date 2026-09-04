@@ -735,9 +735,27 @@ class KeycardLoginView(QObject):
     def __init__(self):
         super().__init__(onboarding_names.loginView_keycardBox)
         self.pin_input = QObject(onboarding_names.loginView_keycardPinInput)
+        self._lost_keycard_button = Button(onboarding_names.lostKeycardButton)
+
+    @allure.step('Open Lost Keycard page')
+    def open_lost_keycard_page(self) -> 'KeycardLostView':
+        self._lost_keycard_button.click()
+        return KeycardLostView().wait_until_appears()
 
     @allure.step('Log in with Keycard PIN')
     def log_in_with_pin(self, pin: str, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC):
         self.pin_input.wait_until_appears(timeout_msec)
         self.pin_input.object.setPin(pin)
         return self
+
+
+class KeycardLostView(QObject):
+
+    def __init__(self):
+        super().__init__(onboarding_names.mainWindow_keycardLostPage)
+        self._read_spare_keycard_button = Button(onboarding_names.keycardLostReadSpareKeycard)
+
+    @allure.step('Read spare Keycard')
+    def read_spare_keycard(self) -> KeycardManagementPopup:
+        self._read_spare_keycard_button.click()
+        return KeycardManagementPopup().wait_until_appears()
