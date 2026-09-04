@@ -108,6 +108,8 @@ let
   METRICS_ADDRESS* = desktopConfig.metricsAddress
   WAKU_FLEET* = desktopConfig.wakuFleet
   WAKU_FLEETS_CONFIG* = desktopConfig.wakuFleetsConfig
+  USE_ANVIL* = desktopConfig.useAnvil
+  ANVIL_URL* = desktopConfig.anvilUrl
 
 proc hasLogLevelOption*(): bool =
   for p in cliParams:

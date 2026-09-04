@@ -3,11 +3,13 @@ import wallet_secretes_config
 import wallet_config
 import image_crop_rectangle
 import api_config
+import network
 
 export wallet_secretes_config
 export wallet_config
 export image_crop_rectangle
 export api_config
+export network
 
 type
   CreateAccountRequest* = object
@@ -40,6 +42,7 @@ type
     verifyTransactionChainID*: Option[int64]
     upstreamConfig*: string
     networkID*: Option[uint64]
+    testOverrideNetworks*: seq[Network]
 
     walletSecretsConfig*: WalletSecretsConfig
     walletConfig*: WalletConfig
