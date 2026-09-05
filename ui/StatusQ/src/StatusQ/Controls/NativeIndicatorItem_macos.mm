@@ -5,6 +5,7 @@
 #import <AppKit/AppKit.h>
 
 #include <QBuffer>
+#include <QGuiApplication>
 #include <QImage>
 #include <QPainter>
 #include <QPointer>
@@ -67,7 +68,15 @@ NSView *NativeIndicatorItem_macOS::getNSView() const
 {
     if (!window())
         return nullptr;
-    return reinterpret_cast<NSView *>(window()->winId());
+    if (QGuiApplication::platformName() == QStringLiteral("offscreen"))
+        return nullptr;
+    WId winId = window()->winId();
+    if (!winId)
+        return nullptr;
+    id viewId = reinterpret_cast<id>(winId);
+    if (![viewId isKindOfClass:[NSView class]])
+        return nullptr;
+    return reinterpret_cast<NSView *>(viewId);
 }
 
 void NativeIndicatorItem_macOS::ensureViews()
