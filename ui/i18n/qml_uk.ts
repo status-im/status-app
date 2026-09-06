@@ -17080,7 +17080,7 @@ to load</source>
     </message>
     <message>
         <source>Best return</source>
-        <translation>Найкращий дохід</translation>
+        <translation>Макс дохід</translation>
     </message>
     <message>
         <source>Bridge</source>
@@ -17190,31 +17190,31 @@ to load</source>
     <name>SwapRoutePopup</name>
     <message>
         <source>Swap route</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Маршрут обміну</translation>
     </message>
     <message>
         <source>Best return</source>
-        <translation type="unfinished">Найкращий дохід</translation>
+        <translation type="unfinished">Макс. сума</translation>
     </message>
     <message>
         <source>Best received amount</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Найбільша сума отримання</translation>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Найшвидше</translation>
     </message>
     <message>
         <source>Shortest execution time</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Найкоротший час виконання</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Мін. комісія</translation>
     </message>
     <message>
         <source>Lowest network cost</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Найнижча мережева комісія</translation>
     </message>
 </context>
 <context>
@@ -18082,7 +18082,7 @@ This action cannot be undone.</source>
     <name>TokenSelectorButton</name>
     <message>
         <source>Select token</source>
-        <translation>Вибрати токен</translation>
+        <translation>Tокен</translation>
     </message>
 </context>
 <context>
