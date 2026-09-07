@@ -122,6 +122,8 @@ Control {
                                        (swapSide === SwapInputPanel.SwapSide.Pay ? !amountEnteredGreaterThanBalance : true)
     readonly property bool amountEnteredGreaterThanBalance: amountToSendInput.balanceExceeded
 
+    property bool balanceExceededErrorEnabled: true
+
     readonly property double maxCryptoBalance: d.maxCryptoBalance
     readonly property double maxSafeCryptoValue: d.maxSafeCryptoValue
     readonly property alias fiatMode: amountToSendInput.fiatMode
@@ -480,7 +482,9 @@ Control {
             Layout.fillWidth: true
 
             interactive: root.interactive
-            markAsInvalid: (root.swapSide === SwapInputPanel.SwapSide.Pay && (balanceExceeded || d.maxInputBalance === 0)) || (!!text && !valid)
+            markAsInvalid: (root.swapSide === SwapInputPanel.SwapSide.Pay
+                            && ((balanceExceeded && root.balanceExceededErrorEnabled) || d.maxInputBalance === 0))
+                           || (!!text && !valid)
             fiatInputInteractive: root.fiatInputInteractive
             multiplierIndex: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.decimals ? d.selectedHolding.item.decimals : 18
             cryptoPrice: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.cryptoPrice ? d.selectedHolding.item.cryptoPrice : 0
