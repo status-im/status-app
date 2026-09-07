@@ -255,6 +255,14 @@ USE_SIMULATED_KEYCARD=true make -j12
 
 **CI (nightly):** the nightly job builds a separate Linux and Windows package with `USE_SIMULATED_KEYCARD=true` (not published as the nightly artifacts) and runs `tests-e2e` with `KEYCARD_TESTS=true` (`pytest -m keycard`). Manual run: same two parameters — package with `USE_SIMULATED_KEYCARD`, then e2e with `KEYCARD_TESTS` and `BUILD_SOURCE` pointing at that package. Windows e2e agents need a **JRE ≥ 11** on `PATH`.
 
+**WalletConnect keycard tests** (`test_wallet_connect_personal_sign_keycard.py`) use a Node.js Sign Client dApp. Install dependencies once:
+
+```bash
+cd test/e2e/scripts/wallet_connect_dapp && npm ci
+```
+
+Requires **Node.js 18+** (`NODE_BIN` can point to the binary if it is not on `PATH`), network access to the WalletConnect relay, and the same `WALLET_CONNECT_PROJECT_ID` as the app build (default is bundled in Status).
+
 ---
 
 ## Logs

@@ -1,0 +1,9 @@
+{
+  "name": "status-e2e-wallet-connect-dapp",
+  "private": true,
+  "description": "WalletConnect Sign Client dApp for Status desktop e2e tests",
+  "type": "module",
+  "dependencies": {
+    "@walletconnect/sign-client": "^2.17.0"
+  }
+}

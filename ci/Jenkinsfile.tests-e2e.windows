@@ -143,6 +143,9 @@ pipeline {
             ${VIRTUAL_ENV}\\Scripts\\python.exe -m pip install --upgrade pip
             ${VIRTUAL_ENV}\\Scripts\\python.exe -m pip install -r requirements.txt
           """
+          dir('scripts\\wallet_connect_dapp') {
+            bat 'npm ci --no-audit --no-fund'
+          }
       } } }
     }
 

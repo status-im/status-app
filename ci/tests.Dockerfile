@@ -24,6 +24,12 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor --ba
 
 RUN groupadd -g 999 docker && usermod -aG docker jenkins
 
+# Node.js for the WalletConnect e2e dApp (npm ci + node runtime).
+ENV NODE_VERSION=22.23.2
+RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz" \
+    | tar -xz -C /usr/local --strip-components=1 \
+ && node --version && npm --version
+
 USER jenkins
 
 LABEL maintainer="marko@status.im"
