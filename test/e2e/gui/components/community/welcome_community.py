@@ -2,6 +2,7 @@ import allure
 
 import driver
 from gui.components.authenticate_popup import AuthenticatePopup
+from gui.components.sign_popup import SignPopup
 from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.text_label import TextLabel
@@ -62,11 +63,10 @@ class WelcomeCommunityPopup(QObject):
         self._share_address_button.click()
         self._sign_keypair_button.click()
 
-        pin_input = QObject(names.keycardAuthPinInput).wait_until_appears()
+        sign_popup = SignPopup()
         while True:
-            pin_input.object.setPin(pin)
-            pin_input.wait_until_hidden()
-            if not driver.waitFor(lambda: pin_input.is_visible, 5000):
+            sign_popup.enter_pin(pin)
+            if not driver.waitFor(lambda: sign_popup.is_pin_visible, 5000):
                 break
 
         self._submit_shared_addresses_button.click()
