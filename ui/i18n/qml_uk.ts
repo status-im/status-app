@@ -16983,8 +16983,8 @@ to load</source>
         <translation>Схвалити ліміт витрат %1 для обміну</translation>
     </message>
     <message>
-        <source>Sign Swap</source>
-        <translation>Підписати обмін</translation>
+        <source>Sign %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign</source>
@@ -17080,13 +17080,9 @@ to load</source>
         <translation>%1 на %2</translation>
     </message>
     <message>
-        <source>Swap %1 to %2 in %3 on %4</source>
-        <extracomment>e.g. &quot;Swap 100 DAI to 100 USDT in &lt;account name&gt; on &lt;network chain name&gt;&quot;</extracomment>
-        <translation>Обміняти %1 на %2 у %3 в мережі %4</translation>
-    </message>
-    <message>
-        <source>Review all details before signing</source>
-        <translation>Перевірте всі дані перед підписанням</translation>
+        <source>From %1 %2 on %3 to %4 %5 on %6</source>
+        <extracomment>e.g. &quot;From &lt;account name&gt; 100 DAI on Ethereum to &lt;account name&gt; 100 USDT on Optimism&quot;</extracomment>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -17105,20 +17101,12 @@ to load</source>
         <translation>Отримати</translation>
     </message>
     <message>
-        <source>In account</source>
-        <translation>На рахунку</translation>
+        <source>From account</source>
+        <translation type="unfinished">З рахунку</translation>
     </message>
     <message>
-        <source>Network</source>
-        <translation>Мережа</translation>
-    </message>
-    <message>
-        <source>Fees</source>
-        <translation>Комісії</translation>
-    </message>
-    <message>
-        <source>Max. fees on %1</source>
-        <translation>Макс. комісії в %1</translation>
+        <source>To account</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

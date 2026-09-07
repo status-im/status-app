@@ -16971,8 +16971,8 @@ selhalo</translation>
         <translation>Schválit limit útraty %1 pro Swap</translation>
     </message>
     <message>
-        <source>Sign Swap</source>
-        <translation>Podepsat Swap</translation>
+        <source>Sign %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign</source>
@@ -17080,13 +17080,9 @@ selhalo</translation>
         <translation>%1 na %2</translation>
     </message>
     <message>
-        <source>Swap %1 to %2 in %3 on %4</source>
-        <extracomment>e.g. &quot;Swap 100 DAI to 100 USDT in &lt;account name&gt; on &lt;network chain name&gt;&quot;</extracomment>
-        <translation>Swapovat %1 na %2 v %3 na %4</translation>
-    </message>
-    <message>
-        <source>Review all details before signing</source>
-        <translation>Před podpisem zkontrolujte všechny podrobnosti</translation>
+        <source>From %1 %2 on %3 to %4 %5 on %6</source>
+        <extracomment>e.g. &quot;From &lt;account name&gt; 100 DAI on Ethereum to &lt;account name&gt; 100 USDT on Optimism&quot;</extracomment>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -17105,20 +17101,12 @@ selhalo</translation>
         <translation>Přijmout</translation>
     </message>
     <message>
-        <source>In account</source>
-        <translation>Na účtu</translation>
+        <source>From account</source>
+        <translation type="unfinished">Z účtu</translation>
     </message>
     <message>
-        <source>Network</source>
-        <translation>Síť</translation>
-    </message>
-    <message>
-        <source>Fees</source>
-        <translation>Poplatky</translation>
-    </message>
-    <message>
-        <source>Max. fees on %1</source>
-        <translation>Max. poplatky na %1</translation>
+        <source>To account</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

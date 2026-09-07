@@ -16900,8 +16900,8 @@ al cargar</translation>
         <translation>Aprobar límite de gasto de %1 para Swap</translation>
     </message>
     <message>
-        <source>Sign Swap</source>
-        <translation>Firmar Swap</translation>
+        <source>Sign %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign</source>
@@ -16997,13 +16997,9 @@ al cargar</translation>
         <translation>%1 a %2</translation>
     </message>
     <message>
-        <source>Swap %1 to %2 in %3 on %4</source>
-        <extracomment>e.g. &quot;Swap 100 DAI to 100 USDT in &lt;account name&gt; on &lt;network chain name&gt;&quot;</extracomment>
-        <translation>Swap %1 a %2 en %3 en %4</translation>
-    </message>
-    <message>
-        <source>Review all details before signing</source>
-        <translation>Revisa todos los detalles antes de firmar</translation>
+        <source>From %1 %2 on %3 to %4 %5 on %6</source>
+        <extracomment>e.g. &quot;From &lt;account name&gt; 100 DAI on Ethereum to &lt;account name&gt; 100 USDT on Optimism&quot;</extracomment>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -17022,20 +17018,12 @@ al cargar</translation>
         <translation>Recibir</translation>
     </message>
     <message>
-        <source>In account</source>
-        <translation>En cuenta</translation>
+        <source>From account</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Network</source>
-        <translation>Red</translation>
-    </message>
-    <message>
-        <source>Fees</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Max. fees on %1</source>
-        <translation>Comisiones máx. en %1</translation>
+        <source>To account</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

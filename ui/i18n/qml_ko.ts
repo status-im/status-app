@@ -16809,8 +16809,8 @@ to load</source>
         <translation>교환을 위해 %1 지출 한도를 승인</translation>
     </message>
     <message>
-        <source>Sign Swap</source>
-        <translation>스왑 서명</translation>
+        <source>Sign %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign</source>
@@ -16918,13 +16918,9 @@ to load</source>
         <translation type="unfinished">%1에서 %2로</translation>
     </message>
     <message>
-        <source>Swap %1 to %2 in %3 on %4</source>
-        <extracomment>e.g. &quot;Swap 100 DAI to 100 USDT in &lt;account name&gt; on &lt;network chain name&gt;&quot;</extracomment>
-        <translation type="unfinished">%4에서 %3의 %1을 %2로 스왑</translation>
-    </message>
-    <message>
-        <source>Review all details before signing</source>
-        <translation>서명하기 전에 모든 내용을 확인하세요</translation>
+        <source>From %1 %2 on %3 to %4 %5 on %6</source>
+        <extracomment>e.g. &quot;From &lt;account name&gt; 100 DAI on Ethereum to &lt;account name&gt; 100 USDT on Optimism&quot;</extracomment>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -16943,20 +16939,12 @@ to load</source>
         <translation>받기</translation>
     </message>
     <message>
-        <source>In account</source>
-        <translation>계정 내</translation>
+        <source>From account</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Network</source>
-        <translation>네트워크</translation>
-    </message>
-    <message>
-        <source>Fees</source>
-        <translation>수수료</translation>
-    </message>
-    <message>
-        <source>Max. fees on %1</source>
-        <translation>최대 수수료 한도: %1</translation>
+        <source>To account</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
