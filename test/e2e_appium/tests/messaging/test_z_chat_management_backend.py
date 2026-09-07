@@ -75,7 +75,8 @@ class TestChatManagementBackend(PeerChatBase):
             await asyncio.sleep(NON_PROPAGATION_SETTLE_SECONDS)
 
         async with self.step("Phone still lists the chat"):
-            self.chat_page()
+            # Deliberately not chat_page(): reopening would recreate the row via
+            # the deep link and hide a close that had propagated.
             self.open_chat_list()
             await asyncio.sleep(0.5)
             assert peer_chat_row_visible(self.device, self.peer, timeout=self.UI_TIMEOUT), (

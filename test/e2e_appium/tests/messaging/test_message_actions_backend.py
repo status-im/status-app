@@ -22,7 +22,7 @@ class TestMessageActions(PeerChatBase):
     """The phone's own message actions, with the peer holding the other copy."""
 
     async def test_context_menu_own_message_actions(self) -> None:
-        """Own messages offer Reply, Edit, Copy, Pin and Delete."""
+        """Own messages offer Reply, Edit, Copy, Mark as unread, Pin and Delete."""
         test_message = _unique_message("ctx_menu_test")
         context_menu = MessageContextMenuPage(self.driver)
 
