@@ -11,7 +11,8 @@ import pytest
 from .config import get_config, setup_logging, log_test_start, log_test_end
 from .config.logging_config import get_logger, LoggingConfig
 from .support.screenshot import save_screenshot, save_page_source
-from core.stash_keys import MULTI_DEVICE_MANAGERS_KEY
+from core import peer_containers
+from core.stash_keys import MULTI_DEVICE_MANAGERS_KEY, PEER_REFUSED_KEY
 from core.capacity_reserver import set_shared_pending_counter
 from core.shared_counter import FileBasedCounter, create_shared_counter
 
@@ -277,7 +278,12 @@ def performance_tracker(request):
     return tracker
 
 
+@pytest.hookimpl(tryfirst=True)
 def pytest_runtest_setup(item):
+    refused = item.stash.get(PEER_REFUSED_KEY, None)
+    if refused:
+        pytest.fail(refused, pytrace=False)
+
     test_name = item.name
     test_file = item.location[0] if item.location else "unknown"
 
@@ -288,6 +294,8 @@ def pytest_runtest_setup(item):
     )
 
 
+# trylast so -m deselection has already run.
+@pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(config, items):
     """Automatically add single_device marker to tests with device_count(1)."""
     for item in items:
@@ -302,6 +310,26 @@ def pytest_collection_modifyitems(config, items):
                 count = device_count_marker.kwargs["value"]
             if count == 1:
                 item.add_marker(pytest.mark.single_device)
+
+    unrunnable = peer_containers.unrunnable_peer_items(
+        items, bool(config.option.collectonly)
+    )
+    if not unrunnable:
+        return
+    remaining = [i for i in items if not any(i is u for u in unrunnable)]
+    message = peer_containers.peer_provisioning_error(unrunnable)
+    if not remaining:
+        # Nothing would run at all. Refusing beats a lane that reports green
+        # having executed nothing. The refusal is per item, not a raise here:
+        # under xdist this hook runs on a worker and an exception is INTERNALERROR.
+        for item in unrunnable:
+            item.stash[PEER_REFUSED_KEY] = message
+        return
+    # Selections like -m portrait mix peer and non-peer tests; dropping the
+    # peer half keeps the rest runnable without a peer image.
+    get_logger("conftest").warning("Deselected %d test(s) that need a status-backend peer: %s", len(unrunnable), message)
+    config.hook.pytest_deselected(items=unrunnable)
+    items[:] = remaining
 
 
 def pytest_runtest_teardown(item, nextitem):

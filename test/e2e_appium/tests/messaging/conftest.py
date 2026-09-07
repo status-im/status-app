@@ -122,67 +122,19 @@ _FIXTURE_FAILURES_BEFORE_SENTINEL = 2
 PEER_CHAT_SETUP_TIMEOUT_SECONDS = 900
 
 
-def unrunnable_peer_items(items, collectonly: bool) -> list:
-    """Selected tests that need a peer while none is provisioned."""
-    if collectonly:
-        return []
-    from core import peer_containers
-
-    if peer_containers.enabled():
-        return []
-    return [i for i in items if i.get_closest_marker("backend_peer")]
-
-
-def peer_provisioning_error(unrunnable) -> str:
-    from core import peer_containers
-
-    return (
-        f"{len(unrunnable)} selected test(s) need a status-backend peer, but "
-        f"{peer_containers.IMAGE_ENV} is not set. Build an image from the "
-        "vendored status-go with scripts/peer_image.sh. "
-        f"First: {unrunnable[0].nodeid}"
-    )
-
-
-@pytest.hookimpl(trylast=True)
-def pytest_collection_modifyitems(config, items):
-    # trylast so -m deselection has already run: a lane that selected no peer
-    # tests must not be stopped by a missing peer.
-    unrunnable = unrunnable_peer_items(items, bool(config.option.collectonly))
-    if not unrunnable:
-        return
-
-    remaining = [i for i in items if not any(i is u for u in unrunnable)]
-    if not remaining:
-        # Nothing would run at all. Refusing beats a lane that reports green
-        # having executed nothing.
-        raise pytest.UsageError(peer_provisioning_error(unrunnable))
-
-    # Selections like -m portrait mix peer and non-peer tests; dropping the
-    # peer half keeps the rest runnable without a peer image, and no device
-    # session is bought for the dropped ones.
-    logger.warning(
-        "Deselected %d test(s) that need a status-backend peer: %s",
-        len(unrunnable), peer_provisioning_error(unrunnable),
-    )
-    config.hook.pytest_deselected(items=unrunnable)
-    items[:] = remaining
-
-
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """Track test outcomes for BrowserStack status reporting.
 
-    This hook runs after each test phase (setup, call, teardown) and records
-    outcomes to module-level tracking dicts.
+    Setup failures and skips are recorded because fixture recovery can fail
+    before the call phase.
 
     Note: Page dump capture on failure is handled by the main conftest.py hook.
     """
     outcome = yield
     rep = outcome.get_result()
 
-    # Only track test outcomes from the call phase (actual test execution)
-    if rep.when != "call":
+    if rep.when != "call" and not (rep.when == "setup" and not rep.passed):
         return
 
     module_name = item.module.__name__ if hasattr(item, "module") else "unknown"

@@ -9,6 +9,12 @@ from pytest import StashKey
 MULTI_DEVICE_MANAGERS_KEY: StashKey[List[Tuple[Any, Any, Any]]] = StashKey()
 
 
+# Set on every selected item when the whole selection needs a status-backend
+# peer and none is provisioned. Raising from collection is an INTERNALERROR
+# under xdist; failing each item at setup is loud on every worker.
+PEER_REFUSED_KEY: StashKey[str] = StashKey()
+
+
 # Cache for messaging fixture (``established_chat``) failure across
 # pytest-rerunfailures reruns. The rerun plugin clears pytest's
 # ``cached_result`` on rerun, so without an external sentinel every
@@ -30,4 +36,3 @@ ESTABLISHED_CHAT_FAILURE_COUNT_KEY: StashKey[int] = StashKey()
 # messaging module a full onboarding before it fails.
 PEER_CHAT_BROKEN_KEY: StashKey[BaseException] = StashKey()
 PEER_CHAT_FAILURE_COUNT_KEY: StashKey[int] = StashKey()
-
