@@ -49,10 +49,13 @@ StatusSectionLayout {
 
         // Read-only flag that turns true when the component enters a “compact” layout automatically on resize.
         readonly property bool compactMode: root.width < 600
+
+        // set while the page being loaded is not the one currently on screen
+        property bool pageSwitching: false
     }
 
     onCurrentPageChanged: listView.positionViewAtBeginning()
-    Component.onCompleted: root.fetchMarketTokens(1, root.pageSize)
+    onLoadingChanged: if (!root.loading) d.pageSwitching = false
 
     centerPanel: ColumnLayout {
         anchors.fill: parent
@@ -104,13 +107,16 @@ StatusSectionLayout {
                 pageSize: root.pageSize
                 totalCount: root.totalTokensCount
                 currentPage: root.currentPage
-                onSwitchPage: root.fetchMarketTokens(pageNumber, root.pageSize)
+                onSwitchPage: {
+                    d.pageSwitching = true
+                    root.fetchMarketTokens(pageNumber, root.pageSize)
+                }
                 visible: listView.count > 0 && !root.loading
                 height: visible ? implicitHeight : 0
                 compactMode: d.compactMode
             }
 
-            model: root.loading ? loadingModel: regularModel
+            model: root.loading && (regularModel.count === 0 || d.pageSwitching) ? loadingModel : regularModel
         }
 
         // loading items model

@@ -16,9 +16,46 @@ type
     TotalVolume
     PriceChangePercentage24h
 
+type
+  # Items are refs the service mutates in place, so values are copied, not items
+  SnapshotRow = object
+    key: string
+    name: string
+    symbol: string
+    image: string
+    currentPrice: float64
+    marketCap: float64
+    totalVolume: float64
+    priceChangePercentage24h: float64
+
+proc toSnapshot(items: seq[MarketItem]): seq[SnapshotRow] =
+  result = newSeqOfCap[SnapshotRow](items.len)
+  for item in items:
+    result.add(SnapshotRow(
+      key: item.key,
+      name: item.name,
+      symbol: item.symbol,
+      image: item.image,
+      currentPrice: item.currentPrice,
+      marketCap: item.marketCap,
+      totalVolume: item.totalVolume,
+      priceChangePercentage24h: item.priceChangePercentage24h,
+    ))
+
+proc changedRolesFor(item: MarketItem, prev: SnapshotRow): seq[int] =
+  if item.name != prev.name: result.add(ModelRole.Name.int)
+  if item.symbol != prev.symbol: result.add(ModelRole.Symbol.int)
+  if item.image != prev.image: result.add(ModelRole.Image.int)
+  if item.currentPrice != prev.currentPrice: result.add(ModelRole.CurrentPrice.int)
+  if item.marketCap != prev.marketCap: result.add(ModelRole.MarketCap.int)
+  if item.totalVolume != prev.totalVolume: result.add(ModelRole.TotalVolume.int)
+  if item.priceChangePercentage24h != prev.priceChangePercentage24h:
+    result.add(ModelRole.PriceChangePercentage24h.int)
+
 QtObject:
   type MarketLeaderboardModel* = ref object of QAbstractListModel
     delegate: io_interface.MarketLeaderboardDataSource
+    snapshot: seq[SnapshotRow]
 
   proc setup(self: MarketLeaderboardModel)
   proc delete(self: MarketLeaderboardModel)
@@ -76,9 +113,30 @@ QtObject:
       of ModelRole.PriceChangePercentage24h:
         result = newQVariant(item.priceChangePercentage24h)
 
+  proc sameRowsAsSnapshot(self: MarketLeaderboardModel, items: seq[MarketItem]): bool =
+    if items.len != self.snapshot.len:
+      return false
+    for i in 0 ..< items.len:
+      if items[i].key != self.snapshot[i].key:
+        return false
+    return true
+
   proc modelsUpdated*(self: MarketLeaderboardModel) =
-    self.beginResetModel()
-    self.endResetModel()
+    let items = self.delegate.getMarketLeaderboardList()
+
+    # A reset drops every delegate in the views, so report roles where possible
+    if not self.sameRowsAsSnapshot(items):
+      self.beginResetModel()
+      self.snapshot = toSnapshot(items)
+      self.endResetModel()
+      return
+
+    for i in 0 ..< items.len:
+      let changedRoles = changedRolesFor(items[i], self.snapshot[i])
+      if changedRoles.len > 0:
+        notifyRangeRolesChanged(i, i, changedRoles)
+
+    self.snapshot = toSnapshot(items)
 
   proc pageUpdated*(self: MarketLeaderboardModel, updates: seq[LeaderboardTokenUpdated]) =
     for update in updates:
@@ -90,6 +148,8 @@ QtObject:
 
       if changedRoles.len > 0:
         notifyRangeRolesChanged(update.index, update.index, changedRoles)
+
+    self.snapshot = toSnapshot(self.delegate.getMarketLeaderboardList())
 
   proc setup(self: MarketLeaderboardModel) =
     self.QAbstractListModel.setup
