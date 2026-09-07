@@ -447,8 +447,7 @@ StatusDialog {
                     tokenAmount: root.swapInputParamsForm.fromTokenAmount
 
                     cryptoFeesToReserve: root.swapAdaptor.swapOutputData.maxFeesToReserveRaw
-                    balanceExceededErrorEnabled: !root.swapAdaptor.validSwapProposalReceived
-                                                 && !root.swapAdaptor.swapProposalLoading
+                    balanceInsufficientError: root.swapAdaptor.isBalanceInsufficientForSwap
 
                     selectedNetworkChainId: root.swapInputParamsForm.selectedNetworkChainId
                     onNetworkSelected: function(chainId) {
@@ -533,6 +532,7 @@ StatusDialog {
                     }
 
                     selectedAccountAddress: root.swapInputParamsForm.toAccountAddress || root.swapInputParamsForm.selectedAccountAddress
+                    accountBalanceVisible: toAccountEntry.available
                     nonInteractiveGroupKey: payPanel.selectedHoldingId
                     nonInteractiveChainId: root.swapInputParamsForm.selectedNetworkChainId
 
@@ -580,6 +580,8 @@ StatusDialog {
                         root.swapInputParamsForm.fromTokenAmount = !!root.swapAdaptor.swapOutputData.toTokenAmount ? root.swapAdaptor.swapOutputData.toTokenAmount : root.swapInputParamsForm.toTokenAmount
                         root.swapInputParamsForm.toGroupKey = tempPayToken
                         root.swapInputParamsForm.toTokenAmount = tempPayAmount
+                        payPanel.listChainFilter = -1
+                        receivePanel.listChainFilter = -1
                         payPanel.forceActiveFocus()
                     }
                 }
