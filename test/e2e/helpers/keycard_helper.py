@@ -1,9 +1,16 @@
 import allure
 from web3 import Web3
 
+import configs
 from constants.wallet import WalletNetworkSettings
+from gui.components.sign_popup import SignPopup
 from helpers.settings_helper import open_wallet_settings
 from scripts.utils.generators import get_wallet_address_from_mnemonic
+
+
+@allure.step('Sign with Keycard PIN')
+def sign_with_keycard_pin(pin: str, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+    SignPopup().enter_pin(pin, timeout_msec)
 
 
 @allure.step('Read Keycard in settings and wait for {title}')

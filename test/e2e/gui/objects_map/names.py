@@ -629,6 +629,7 @@ authenticate_keycardPasswordInput = {"container": statusDesktop_mainWindow_overl
 authenticate_StatusButton = {"container": statusDesktop_mainWindow_overlay,
                              "objectName": "keycardPopupBaseSubmitButton", "type": "StatusButton", "visible": True}
 
+signPopup = {"container": statusDesktop_mainWindow_overlay, "type": "SignPopup", "visible": True}
 keycardAuthPinInput = {"container": statusDesktop_mainWindow_overlay,
                        "objectName": "keycardAuthPinInput", "type": "StatusPinInput", "visible": True}
 headerCloseButton_StatusFlatRoundButton = {"container": statusDesktop_mainWindow_overlay,
