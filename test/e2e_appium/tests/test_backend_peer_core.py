@@ -206,7 +206,9 @@ def test_configure_runs_once_per_process(monkeypatch):
             future.result()
 
     assert len(calls) == 1
-    assert config.logs_dir.endswith(os.path.join("logs", "backend_peer"))
+    # Under the run's reports dir, which CI already archives.
+    assert config.logs_dir.endswith("backend_peer")
+    assert "reports" in config.logs_dir
     assert config.status_backend_urls is None
 
 

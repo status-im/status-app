@@ -48,12 +48,17 @@ def scratch_dir() -> str:
         return _scratch
 
 
-def e2e_root() -> str:
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
 def peer_logs_dir() -> str:
-    return os.path.join(e2e_root(), "logs", "backend_peer")
+    """Where the client writes each peer container's log. Under the run's
+    reports directory, which CI archives, rather than a path only this module
+    knows about."""
+    from config import get_config
+
+    try:
+        root = get_config().reports_dir
+    except Exception:
+        root = "reports"
+    return os.path.join(root, "backend_peer")
 
 
 def check_docker_resources(image_ref: str, project: str, docker_client=None) -> None:
