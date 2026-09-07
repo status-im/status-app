@@ -45,6 +45,7 @@ Item {
             }
             currentPage: -1
             onFetchMarketTokens: {
+                d.fetchCount++
                 d.startIndex = ((pageNumber - 1) * pageSize) + 1
                 d.endIndex = Math.min(pageNumber * pageSize, totalTokensCount)
                 currentPage = pageNumber
@@ -56,6 +57,7 @@ Item {
         id: d
         property int startIndex: 0
         property int endIndex: 0
+        property int fetchCount: 0
     }
 
     SignalSpy {
@@ -71,7 +73,10 @@ Item {
         when: windowShown
 
         function init() {
+            d.fetchCount = 0
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
+            // The section loader owns fetching, so the test harness plays that part
+            controlUnderTest.fetchMarketTokens(1, controlUnderTest.pageSize)
             signalSpyLaunchSwap.clear()
         }
 
@@ -199,27 +204,59 @@ Item {
             }
         }
 
-        function test_loadingState() {
-            verify(!!controlUnderTest)
+        function test_doesNotFetchOnItsOwn() {
+            d.fetchCount = 0
+            const control = createTemporaryObject(componentUnderTest, root)
+            verify(!!control)
+            compare(d.fetchCount, 0)
+        }
 
-            verify(!controlUnderTest.loading)
-
-            const regularModel = findChild(controlUnderTest, "regularModel")
-            verify(!!regularModel)
+        function test_showsSkeletonsWhenThereIsNothingToShow() {
             const loadingModel = findChild(controlUnderTest, "loadingModel")
             verify(!!loadingModel)
             const tokensList = findChild(controlUnderTest.centerPanel, "tokensList")
             verify(!!tokensList)
 
-            // Loading true
+            // an out of range page leaves the view without any row to show
+            controlUnderTest.fetchMarketTokens(999, controlUnderTest.pageSize)
+            compare(controlUnderTest.tokensModel.count, 0)
+
             controlUnderTest.loading = true
             compare(tokensList.model, loadingModel)
             compare(tokensList.count, 100)
+        }
 
-            // Loading false
+        function test_keepsRowsWhileRefreshing() {
+            const regularModel = findChild(controlUnderTest, "regularModel")
+            verify(!!regularModel)
+            const tokensList = findChild(controlUnderTest.centerPanel, "tokensList")
+            verify(!!tokensList)
+            verify(tokensList.count > 0)
+
+            controlUnderTest.loading = true
+            compare(tokensList.model, regularModel)
+            compare(tokensList.count, controlUnderTest.tokensModel.count)
+
             controlUnderTest.loading = false
             compare(tokensList.model, regularModel)
             compare(tokensList.count, controlUnderTest.tokensModel.count)
+        }
+
+        function test_showsSkeletonsWhenSwitchingPage() {
+            const loadingModel = findChild(controlUnderTest, "loadingModel")
+            verify(!!loadingModel)
+            const tokensList = findChild(controlUnderTest.centerPanel, "tokensList")
+            verify(!!tokensList)
+            const footer = findChild(tokensList, "marketFooter")
+            verify(!!footer)
+
+            footer.switchPage(2)
+            controlUnderTest.loading = true
+            compare(tokensList.model, loadingModel)
+
+            controlUnderTest.loading = false
+            const regularModel = findChild(controlUnderTest, "regularModel")
+            compare(tokensList.model, regularModel)
         }
     }
 }
