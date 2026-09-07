@@ -891,7 +891,7 @@ Item {
             // fee-reservation interplay: the adaptor derives maxFeesToReserveRaw
             // from the best path's max gas fees (independent of owned balance)
             let bestPath = SQUtils.ModelUtils.get(txRoutes2.suggestedRoutes, 0, "route")
-            const totalMaxFees = Math.ceil(bestPath.gasFees.maxFeePerGasM) * bestPath.gasAmount
+            const totalMaxFees = Math.ceil(bestPath.gasFees.maxFeePerGasM * bestPath.gasAmount)
             const totalMaxFeesInEth = SQUtils.AmountsArithmetic.div(
                                         SQUtils.AmountsArithmetic.fromString(totalMaxFees),
                                         SQUtils.AmountsArithmetic.fromNumber(1, 9))
