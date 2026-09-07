@@ -61,3 +61,6 @@ install -Dm644 status-512.png \
 # Desktop entry (checked-in repo file, staged into this dir by the manifest).
 install -Dm644 app.status.desktop.desktop \
   "$PREFIX/share/applications/app.status.desktop.desktop"
+
+install -Dm644 app.status.desktop.metainfo.xml \
+  "$PREFIX/share/metainfo/app.status.desktop.metainfo.xml"

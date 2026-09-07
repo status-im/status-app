@@ -55,6 +55,6 @@
     <content_attribute id="money-purchasing">intense</content_attribute>
   </content_rating>
   <releases>
-    <release version="2.37.0" date="2025-01-01"/>
+    <release version="@VERSION@" date="@DATE@"/>
   </releases>
 </component>
