@@ -108,6 +108,9 @@ class TestChatManagementBackend(PeerChatBase):
             assert chat_page.message_count() == 0, (
                 "No messages should remain after clearing history"
             )
+            # A propagated clear would arrive after the click returns, so the
+            # absence below only means anything once the window has passed.
+            await asyncio.sleep(NON_PROPAGATION_SETTLE_SECONDS)
             assert marker in self.peer.chat_message_texts(self.phone_key), (
                 "clearing on the phone must not clear the other participant's copy"
             )
@@ -122,8 +125,20 @@ class TestChatManagementBackend(PeerChatBase):
     @pytest.mark.spec("SC-DM-06")
     async def test_close_chat_removes_it_from_the_chat_list(self) -> None:
         """Closing on the phone removes the row."""
-        async with self.step("Ensure the chat is open"):
+        marker = _unique_message("close_chat")
+
+        async with self.step("Confirm the chat is open, listed, and live"):
             chat_page = self.chat_page()
+            # wait_for_peer_chat_row_gone accepts an absent row, so without this
+            # the case would pass on a run where the row was never there.
+            self.open_chat_list()
+            assert peer_chat_row_visible(self.device, self.peer, timeout=self.UI_TIMEOUT), (
+                "The chat row is not listed to begin with, so its later absence "
+                "would say nothing about closing"
+            )
+            chat_page = self.chat_page()
+            self.send_from_peer(marker)
+            await self.await_on_phone(chat_page, marker)
 
         async with self.step("Close the chat"):
             assert chat_page.close_chat(timeout=self.UI_TIMEOUT), "Failed to close chat"
@@ -133,6 +148,9 @@ class TestChatManagementBackend(PeerChatBase):
             assert wait_for_peer_chat_row_gone(self.device, self.peer, timeout=10), (
                 "Chat should not be listed after closing it"
             )
+
+        async with self.step("The other participant still has the chat open"):
+            await asyncio.sleep(NON_PROPAGATION_SETTLE_SECONDS)
             assert self.peer.dm_is_active(self.phone_key), (
                 "closing on the phone must not close the other participant's chat"
             )
