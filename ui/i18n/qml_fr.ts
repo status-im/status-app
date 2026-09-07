@@ -17044,8 +17044,8 @@ avec un retour à la ligne</translation>
         <translation>Approuver le plafond de dépenses de %1 pour Swap</translation>
     </message>
     <message>
-        <source>Sign Swap</source>
-        <translation>Signer l’échange</translation>
+        <source>Sign %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign</source>
@@ -17141,13 +17141,9 @@ avec un retour à la ligne</translation>
         <translation>%1 à %2</translation>
     </message>
     <message>
-        <source>Swap %1 to %2 in %3 on %4</source>
-        <extracomment>e.g. &quot;Swap 100 DAI to 100 USDT in &lt;account name&gt; on &lt;network chain name&gt;&quot;</extracomment>
-        <translation>Échanger %1 contre %2 sur %3 via %4</translation>
-    </message>
-    <message>
-        <source>Review all details before signing</source>
-        <translation>Vérifiez tous les détails avant de signer</translation>
+        <source>From %1 %2 on %3 to %4 %5 on %6</source>
+        <extracomment>e.g. &quot;From &lt;account name&gt; 100 DAI on Ethereum to &lt;account name&gt; 100 USDT on Optimism&quot;</extracomment>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -17166,20 +17162,12 @@ avec un retour à la ligne</translation>
         <translation>Recevoir</translation>
     </message>
     <message>
-        <source>In account</source>
-        <translation>Dans le compte</translation>
+        <source>From account</source>
+        <translation type="unfinished">Compte d&apos;origine</translation>
     </message>
     <message>
-        <source>Network</source>
-        <translation>Réseau</translation>
-    </message>
-    <message>
-        <source>Fees</source>
-        <translation>Frais</translation>
-    </message>
-    <message>
-        <source>Max. fees on %1</source>
-        <translation>Frais max. sur %1</translation>
+        <source>To account</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

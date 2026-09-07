@@ -17016,7 +17016,7 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Sign Swap</source>
+        <source>Sign %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -17125,12 +17125,8 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Swap %1 to %2 in %3 on %4</source>
-        <extracomment>e.g. &quot;Swap 100 DAI to 100 USDT in &lt;account name&gt; on &lt;network chain name&gt;&quot;</extracomment>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Review all details before signing</source>
+        <source>From %1 %2 on %3 to %4 %5 on %6</source>
+        <extracomment>e.g. &quot;From &lt;account name&gt; 100 DAI on Ethereum to &lt;account name&gt; 100 USDT on Optimism&quot;</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -17150,19 +17146,11 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>In account</source>
+        <source>From account</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Network</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Fees</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Max. fees on %1</source>
+        <source>To account</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
