@@ -3,7 +3,6 @@ runtime: org.freedesktop.Platform
 runtime-version: '24.08'
 sdk: org.freedesktop.Sdk
 command: nim_status_client_wrapped
-appstream-compose: false
 
 finish-args:
   # Display
@@ -139,6 +138,10 @@ modules:
       # Desktop entry, installed verbatim by flatpak-copy-to-app.sh
       - type: file
         path: app.status.desktop.desktop
+
+      # AppStream metainfo, version-stamped by bundle-flatpak.sh
+      - type: file
+        path: tmp/linux/flatpak/in/app.status.desktop.metainfo.xml
 
       # Qt location handed in from the host (see bundle-flatpak.sh)
       - type: file

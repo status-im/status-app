@@ -5,6 +5,8 @@
 #   FLATPAK_BUILD_DIR      - working dir for flatpak-builder
 #   FLATPAK_REPO_DIR       - OSTree repo to export into
 #   STATUS_CLIENT_FLATPAK  - path of the .flatpak file to produce
+#   DESKTOP_VERSION        - app version; used as the flatpak ref branch and
+#                            stamped into the AppStream metainfo <release>
 # Optional:
 #   LINUX_GPG_PRIVATE_KEY_FILE - if set, sign the resulting bundle
 set -eo pipefail
@@ -15,6 +17,7 @@ cd "$GIT_ROOT"
 : "${FLATPAK_BUILD_DIR:?FLATPAK_BUILD_DIR must be set}"
 : "${FLATPAK_REPO_DIR:?FLATPAK_REPO_DIR must be set}"
 : "${STATUS_CLIENT_FLATPAK:?STATUS_CLIENT_FLATPAK must be set}"
+: "${DESKTOP_VERSION:?DESKTOP_VERSION must be set}"
 
 FLATPAK_MANIFEST="${FLATPAK_MANIFEST:-app.status.desktop.yml}"
 APP_ID="app.status.desktop"
@@ -38,6 +41,9 @@ QT_DIR="${QT_DIR:-/opt/qt/6.11.0/gcc_64}"
 [[ -d "$QT_DIR" ]] || { echo "ERROR: Qt not found at QT_DIR=$QT_DIR. Set QT_DIR to your Qt 6 gcc_64 dir."; exit 1; }
 printf 'QT_DIR=%q\n' "$QT_DIR" > tmp/linux/flatpak/in/qt.env
 
+sed -e "s|@VERSION@|${DESKTOP_VERSION}|" -e "s|@DATE@|$(date -u +%Y-%m-%d)|" \
+  app.status.desktop.metainfo.xml.in > tmp/linux/flatpak/in/app.status.desktop.metainfo.xml
+
 # flatpak-builder
 #   Reads ${FLATPAK_MANIFEST}, fetches/copies each source, runs each
 #   module's build (libcanberra, pcsc-lite, libusb, ccid, then our
@@ -46,11 +52,13 @@ printf 'QT_DIR=%q\n' "$QT_DIR" > tmp/linux/flatpak/in/qt.env
 #   - --force-clean wipes ${FLATPAK_BUILD_DIR} to guarantee a fresh build
 #   - --disable-rofiles-fuse avoids needing FUSE mounts inside CI
 #   - --disable-cache forces a full rebuild every run (no per-module cache)
+#   - --default-branch exports the app under the version instead of "master"
 echo "Running flatpak-builder..."
 flatpak-builder \
   --force-clean \
   --disable-rofiles-fuse \
   --disable-cache \
+  --default-branch="${DESKTOP_VERSION}" \
   --repo="${FLATPAK_REPO_DIR}" \
   --jobs="$(nproc)" \
   "${FLATPAK_BUILD_DIR}" \
@@ -62,7 +70,7 @@ flatpak-builder \
 #   can install with `flatpak install --user <file>` without needing
 #   our repo configured.
 echo "Exporting bundle to ${STATUS_CLIENT_FLATPAK}..."
-flatpak build-bundle "${FLATPAK_REPO_DIR}" "${STATUS_CLIENT_FLATPAK}" "${APP_ID}"
+flatpak build-bundle "${FLATPAK_REPO_DIR}" "${STATUS_CLIENT_FLATPAK}" "${APP_ID}" "${DESKTOP_VERSION}"
 
 ls -lh "${STATUS_CLIENT_FLATPAK}"
 

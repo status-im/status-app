@@ -886,7 +886,7 @@ export FLATPAK_REPO_DIR      ?= tmp/linux/flatpak/repo
 flatpak: $(STATUS_CLIENT_FLATPAK)
 $(STATUS_CLIENT_FLATPAK): nim_status_client
 	echo -e $(BUILD_MSG) "Flatpak"
-	scripts/bundle-flatpak.sh
+	DESKTOP_VERSION="$(DESKTOP_VERSION)" scripts/bundle-flatpak.sh
 
 flatpak-install: $(STATUS_CLIENT_FLATPAK)
 	flatpak install --user -y --reinstall $(STATUS_CLIENT_FLATPAK)
