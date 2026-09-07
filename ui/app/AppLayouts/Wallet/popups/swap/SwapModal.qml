@@ -142,6 +142,8 @@ StatusDialog {
             Qt.inputMethod.hide()
         }
 
+        property var activeChildPopup: null
+
         readonly property bool isError: root.swapAdaptor.errorMessage !== ""
 
         readonly property BuyCryptoParamsForm buyFormData: BuyCryptoParamsForm {
@@ -292,6 +294,15 @@ StatusDialog {
         sourceModel: root.swapAdaptor.networksStore.activeNetworks
         key: "chainId"
         value: d.effectiveToChainId
+    }
+
+    Connections {
+        target: Global
+        function onLinkOpenedExternally(link) {
+            if (!!d.activeChildPopup)
+                d.activeChildPopup.close()
+            root.close()
+        }
     }
 
     Connections {
@@ -969,6 +980,12 @@ StatusDialog {
         SwapApproveCapModal {
             destroyOnClose: true
 
+            onOpened: d.activeChildPopup = this
+            onClosed: {
+                if (d.activeChildPopup === this)
+                    d.activeChildPopup = null
+            }
+
             formatBigNumber: (number, symbol, noSymbolOption) => root.swapAdaptor.currencyStore.formatBigNumber(number, symbol, noSymbolOption)
 
             keyUid: !!d.selectedAccount ? d.selectedAccount.keyUid : ""
@@ -1020,6 +1037,12 @@ StatusDialog {
         id: swapSignModalComponent
         SwapSignModal {
             destroyOnClose: true
+
+            onOpened: d.activeChildPopup = this
+            onClosed: {
+                if (d.activeChildPopup === this)
+                    d.activeChildPopup = null
+            }
 
             title: root.swapAdaptor.swapOutputData.approvalNeeded && root.swapAdaptor.approvalSuccessful
                    ? d.modalTitle : qsTr("Sign %1").arg(d.modalTitle)
