@@ -447,6 +447,8 @@ StatusDialog {
                     tokenAmount: root.swapInputParamsForm.fromTokenAmount
 
                     cryptoFeesToReserve: root.swapAdaptor.swapOutputData.maxFeesToReserveRaw
+                    balanceExceededErrorEnabled: !root.swapAdaptor.validSwapProposalReceived
+                                                 && !root.swapAdaptor.swapProposalLoading
 
                     selectedNetworkChainId: root.swapInputParamsForm.selectedNetworkChainId
                     onNetworkSelected: function(chainId) {
