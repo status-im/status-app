@@ -151,6 +151,10 @@ QtObject:
 
     self.snapshot = toSnapshot(self.delegate.getMarketLeaderboardList())
 
+  when defined(testing) or defined(QT_MODEL_SPY):
+    proc keysInOrder*(self: MarketLeaderboardModel): seq[string] =
+      for it in self.delegate.getMarketLeaderboardList(): result.add(it.key)
+
   proc setup(self: MarketLeaderboardModel) =
     self.QAbstractListModel.setup
 
