@@ -78,12 +78,21 @@ class MessageContextMenuPage(BasePage):
             self.logger.error(f"Message '{message_content}' not found")
             return False
 
-        if self._wait_until_settled(element) is None:
+        settled = self._wait_until_settled(element)
+        if settled is None:
             # The a11y node was replaced under us; press the live one, not the stale handle.
             element = self._find_message(locators, timeout)
             if not element:
                 self.logger.error(f"Message '{message_content}' disappeared before the press")
                 return False
+            settled = self._wait_until_settled(element)
+        if not settled:
+            # MessageView refuses press-and-hold while the log is moving, so this
+            # press will probably be ignored. Attempted anyway: the menu check
+            # below is the real gate, and the list often settles under the press.
+            self.logger.warning(
+                f"Message '{message_content}' never stopped moving; pressing anyway"
+            )
 
         # Try W3C Actions first, then mobile: longClickGesture as fallback.
         # Different BrowserStack devices respond to different gesture APIs.
