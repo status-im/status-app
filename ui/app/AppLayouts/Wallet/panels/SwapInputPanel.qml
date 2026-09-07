@@ -47,9 +47,13 @@ Control {
     }
 
     property int selectedNetworkChainId: -1
-    onSelectedNetworkChainIdChanged: reevaluateSelectedId()
+    onSelectedNetworkChainIdChanged: {
+        reevaluateSelectedId()
+    }
     property string selectedAccountAddress
-    onSelectedAccountAddressChanged: reevaluateSelectedId()
+    onSelectedAccountAddressChanged: {
+        reevaluateSelectedId()
+    }
     property string nonInteractiveGroupKey
     property int nonInteractiveChainId: -1
 
@@ -122,7 +126,9 @@ Control {
                                        (swapSide === SwapInputPanel.SwapSide.Pay ? !amountEnteredGreaterThanBalance : true)
     readonly property bool amountEnteredGreaterThanBalance: amountToSendInput.balanceExceeded
 
-    property bool balanceExceededErrorEnabled: true
+    property bool balanceInsufficientError: false
+
+    property bool accountBalanceVisible: true
 
     readonly property double maxCryptoBalance: d.maxCryptoBalance
     readonly property double maxSafeCryptoValue: d.maxSafeCryptoValue
@@ -195,7 +201,9 @@ Control {
         property string selectedHoldingId: root.groupKey
         property string selectedHoldingTokenKey: ""
 
-        onSelectedHoldingIdChanged: Qt.callLater(d.clampAmountToBalance)
+        onSelectedHoldingIdChanged: {
+            Qt.callLater(d.clampAmountToBalance)
+        }
 
         function clampAmountToBalance() {
             if (root.swapSide !== SwapInputPanel.SwapSide.Pay)
@@ -275,7 +283,14 @@ Control {
         }
 
         readonly property bool isSelectedHoldingValidAsset: selectedHolding.available && !!selectedHolding.item
+
+        readonly property SQUtils.ModelChangeTracker selectedBalancesTracker: SQUtils.ModelChangeTracker {
+            model: d.selectedHolding.available && !!d.selectedHolding.item
+                   ? d.selectedHolding.item.balances : null
+        }
+
         readonly property double maxCryptoBalance: {
+            selectedBalancesTracker.revision
             if (!isSelectedHoldingValidAsset || !selectedHolding.item.balances)
                 return 0
             const onChain = SQUtils.ModelUtils.getByKey(selectedHolding.item.balances, "chainId",
@@ -465,8 +480,9 @@ Control {
         }
 
         AmountToSend {
-            readonly property bool balanceExceeded:
-                SQUtils.AmountsArithmetic.fromNumber(d.maxSafeCryptoValue, multiplierIndex).cmp(amount) === -1
+            readonly property bool balanceExceeded: SQUtils.AmountsArithmetic.fromNumber(d.maxSafeCryptoValue, multiplierIndex).cmp(amount) === -1
+
+            readonly property bool rawBalanceExceeded: SQUtils.AmountsArithmetic.fromNumber(d.maxCryptoBalance, multiplierIndex).cmp(amount) === -1
 
             // from `amount` rather than the text: that is fiat in fiat mode
             readonly property double asNumber: {
@@ -483,7 +499,7 @@ Control {
 
             interactive: root.interactive
             markAsInvalid: (root.swapSide === SwapInputPanel.SwapSide.Pay
-                            && ((balanceExceeded && root.balanceExceededErrorEnabled) || d.maxInputBalance === 0))
+                            && (rawBalanceExceeded || root.balanceInsufficientError || d.maxInputBalance === 0))
                            || (!!text && !valid)
             fiatInputInteractive: root.fiatInputInteractive
             multiplierIndex: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.decimals ? d.selectedHolding.item.decimals : 18
@@ -501,7 +517,7 @@ Control {
             bottomRightComponent: RowLayout {
                 objectName: "balanceLine"
                 spacing: Theme.halfPadding
-                visible: d.isSelectedHoldingValidAsset
+                visible: d.isSelectedHoldingValidAsset && root.accountBalanceVisible
 
                 StatusIcon {
                     Layout.alignment: Qt.AlignVCenter

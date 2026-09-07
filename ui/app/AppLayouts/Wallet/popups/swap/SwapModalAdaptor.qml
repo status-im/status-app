@@ -45,6 +45,7 @@ QObject {
     readonly property string errorMessage: d.errorMessage
     readonly property bool isEthBalanceInsufficient: d.isEthBalanceInsufficient
     readonly property bool isTokenBalanceInsufficient: d.isTokenBalanceInsufficient
+    readonly property bool isBalanceInsufficientForSwap: d.isBalanceInsufficientForSwap
 
     QtObject {
         id: d
