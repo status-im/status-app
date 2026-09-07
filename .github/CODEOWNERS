@@ -9,30 +9,11 @@ Makefile    @status-im/devops @status-im/desktop
 /nix/       @status-im/devops
 /scripts/   @status-im/devops
 # Default qml/js code reviewers
-*.qml       @micieslak @caybro @alexjba @noeliaSD
-*.js        @micieslak @caybro @alexjba @noeliaSD
-/storybook/ @micieslak @caybro @alexjba @noeliaSD
+*.qml       @status-im/desktop-wallet @status-im/desktop-core
+*.js        @status-im/desktop-wallet @status-im/desktop-core
+/storybook/ @status-im/desktop-wallet @status-im/desktop-core
 # Default squish tests owners
 /test/e2e/  @status-im/desktop-qa
 
-# Wallet - nim
-/src/app/modules/main/wallet_section/           @status-im/desktop-wallet
-/src/app_service/service/wallet_account/        @status-im/desktop-wallet
-/src/app_service/service/wallet_connect/        @status-im/desktop-wallet
-/src/app_service/service/transaction/           @status-im/desktop-wallet
-/src/app_service/service/saved_address/         @status-im/desktop-wallet
-/src/app_service/service/ramp/                  @status-im/desktop-wallet
-/src/app_service/service/network/               @status-im/desktop-wallet
-
-# Wallet - qml
-/ui/app/AppLayouts/Wallet/                      @status-im/desktop-wallet @micieslak
-
-# Messenger - nim
-/src/app/modules/main/chat_section/             @status-im/desktop-core
-/src/app/modules/main/communities/              @status-im/desktop-core
-/src/app_service/service/activity_center/       @status-im/desktop-core
-/src/app_service/service/chat/                  @status-im/desktop-core
-/src/app_service/service/community/             @status-im/desktop-core
-/src/app_service/service/community_tokens/      @status-im/desktop-core
-/src/app_service/service/contacts/              @status-im/desktop-core
-/src/app_service/service/message/               @status-im/desktop-core
+# Nim code reviewers
+/src/       @status-im/desktop-wallet @status-im/desktop-core
