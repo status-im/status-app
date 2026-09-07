@@ -134,6 +134,12 @@ class ChatLocators(BaseLocators):
         "//*[contains(@resource-id, 'StatusChatInputReplyPanel')]"
     )
     REPLY_CLOSE_BUTTON = BaseLocators.resource_id_contains("replyAreaCloseButton")
+    # Edit tag close (StatusChatInput.qml) or the toolbar's cancel
+    # (StatusChatInputToolBar.qml); which one the phone exposes is untested.
+    EDIT_CLOSE_BUTTON = BaseLocators.xpath(
+        "//*[contains(@resource-id,'statusChatInputEditCloseButton') "
+        "or contains(@resource-id,'statusChatInputEditCancelButton')]"
+    )
     REPLY_DETAILS = BaseLocators.tid("StatusMessage_replyDetails")
     REPLY_CORNER = BaseLocators.resource_id_contains("statusMessageReplyCorner")
 
@@ -210,4 +216,13 @@ class ChatLocators(BaseLocators):
             f"[not(ancestor::*[contains(@resource-id,'MessageContextMenuView')])]"
         )
 
-
+    @staticmethod
+    def reaction_on_message_with_text(content: str, emoji_code: str) -> tuple:
+        """The reaction badge on the message carrying ``content``, so a badge an
+        earlier test left on another message cannot satisfy the check."""
+        return BaseLocators.xpath(
+            f"//*[contains(@resource-id,'chatMessageViewDelegate')]"
+            f"[.//*[contains(@content-desc,{xpath_string(content)})]]"
+            f"//*[contains(@resource-id,'messageReaction_{emoji_code}')]"
+            f"[not(ancestor::*[contains(@resource-id,'MessageContextMenuView')])]"
+        )

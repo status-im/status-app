@@ -1,4 +1,6 @@
 
+import time
+
 from selenium.webdriver.common.actions import interaction
 from selenium.webdriver.common.actions.action_builder import ActionBuilder
 from selenium.webdriver.common.actions.pointer_input import PointerInput
@@ -56,16 +58,14 @@ class MessageContextMenuPage(BasePage):
         timeout: int = 10,
         duration_ms: int = 1000,
     ) -> bool:
-        """Long-press on a message to open the context menu.
+        """Long-press a message to open the context menu."""
+        # An open keyboard halves the sheet: actions past the first fold get
+        # clipped behind it and in-menu swipes land on the keys.
+        try:
+            self.hide_keyboard()
+        except Exception:
+            pass
 
-        Args:
-            message_content: The text content of the message to long-press.
-            timeout: Maximum wait time to find the message.
-            duration_ms: Duration of the long-press gesture in milliseconds.
-
-        Returns:
-            bool: True if context menu opened successfully.
-        """
         # Try exact match first, then partial match
         locators = (
             self.chat_locators.message_text_exact(message_content),
@@ -73,15 +73,17 @@ class MessageContextMenuPage(BasePage):
             self.chat_locators.message_content_desc_any(message_content),
         )
 
-        element = None
-        for locator in locators:
-            element = self.find_element_safe(locator, timeout=timeout // 2)
-            if element:
-                break
-
+        element = self._find_message(locators, timeout)
         if not element:
             self.logger.error(f"Message '{message_content}' not found")
             return False
+
+        if self._wait_until_settled(element) is None:
+            # The a11y node was replaced under us; press the live one, not the stale handle.
+            element = self._find_message(locators, timeout)
+            if not element:
+                self.logger.error(f"Message '{message_content}' disappeared before the press")
+                return False
 
         # Try W3C Actions first, then mobile: longClickGesture as fallback.
         # Different BrowserStack devices respond to different gesture APIs.
@@ -112,6 +114,35 @@ class MessageContextMenuPage(BasePage):
             self.logger.debug("Context menu not visible after %s long-press (attempt %d)", strategy, attempt)
 
         self.logger.warning("Context menu did not appear after all long-press strategies")
+        return False
+
+    def _find_message(self, locators, timeout):
+        for locator in locators:
+            element = self.find_element_safe(locator, timeout=timeout // 2)
+            if element:
+                return element
+        return None
+
+    def _wait_until_settled(
+        self, element, timeout: float = 5.0, interval: float = 0.3
+    ) -> bool | None:
+        """Wait for the element to stop moving.
+
+        MessageView.qml ignores a press-and-hold while the chat log is
+        scrolling, and a message that has just arrived is exactly what the
+        log is scrolling to.
+        """
+        deadline = time.monotonic() + timeout
+        last = None
+        while time.monotonic() < deadline:
+            try:
+                rect = element.rect
+            except Exception:
+                return None
+            if rect == last:
+                return True
+            last = rect
+            time.sleep(interval)
         return False
 
     def long_press_message_by_element(

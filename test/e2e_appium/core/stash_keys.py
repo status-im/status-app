@@ -25,3 +25,9 @@ ESTABLISHED_CHAT_BROKEN_KEY: StashKey[BaseException] = StashKey()
 # the rerun re-raises the sentinel before getting a fresh setup attempt.
 ESTABLISHED_CHAT_FAILURE_COUNT_KEY: StashKey[int] = StashKey()
 
+
+# The same pair for ``peer_chat``: a missing peer binary must not cost every
+# messaging module a full onboarding before it fails.
+PEER_CHAT_BROKEN_KEY: StashKey[BaseException] = StashKey()
+PEER_CHAT_FAILURE_COUNT_KEY: StashKey[int] = StashKey()
+

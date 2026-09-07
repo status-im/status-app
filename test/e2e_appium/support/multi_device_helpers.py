@@ -159,6 +159,18 @@ class StepMixin:
         self.device = devices["device_0"]
 
     @property
+    def driver(self):
+        """Driver of the first device.
+
+        conftest's failure hook reads ``item.instance.driver`` to collect the
+        screenshot, page source and logcat. Without this attribute a failing
+        StepMixin test produces no artifacts at all. Multi-device tests get
+        device_0's view; the other devices' state is not captured here.
+        """
+        device = self.device
+        return getattr(device, "driver", None) if device is not None else None
+
+    @property
     def logger(self):
         """Auto-initialize logger on first access."""
         if self._logger is None:
