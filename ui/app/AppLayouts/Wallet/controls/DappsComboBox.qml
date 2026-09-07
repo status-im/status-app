@@ -16,6 +16,8 @@ import StatusQ.Components.private as SQP
 ComboBox {
     id: root
 
+    objectName: "walletDappsComboBox"
+
     signal dappListRequested()
     signal connectDapp()
     signal disconnectDapp(string topic)
