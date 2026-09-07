@@ -1128,10 +1128,12 @@ Item {
                     !d.isBrowserEnabled ||
                     !appMain.rootStore.thirdpartyServicesEnabled) {
                 Qt.openUrlExternally(link)
+                Global.linkOpenedExternally(link)
                 return
             }
             globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.browser)
             Qt.callLater(() => browserLayoutContainer.item.openUrlInNewTab(link))
+            Global.linkOpenedExternally(link)
         }
 
         function tryOpenNavigationEducationPopup() {

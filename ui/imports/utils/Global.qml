@@ -62,6 +62,7 @@ QtObject {
     signal openConfirmHideCollectiblePopup(string collectibleSymbol, string collectibleName, string collectibleImage, bool isCommunityToken)
 
     signal requestOpenLink(string link)
+    signal linkOpenedExternally(string link)
     signal activateDeepLink(string link)
 
     signal setNthEnabledSectionActive(int nthSection)
