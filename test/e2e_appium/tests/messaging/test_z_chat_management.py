@@ -25,6 +25,7 @@ def _unique_message(prefix: str = "test") -> str:
 @pytest.mark.device_count(2)
 @pytest.mark.timeout(1200)
 @pytest.mark.flaky(reruns=1, reruns_delay=5)
+@pytest.mark.two_phone
 class TestChatManagement:
     """Tests for chat-level management actions.
 
