@@ -159,4 +159,53 @@ Item {
             verify(/^<style>(?:\.[a-zA-Z]{[a-zA-Z0-9#:;]+})+<\/style>(?:<span\sclass=["']\w["']>[\/\d'm]+<\/span>)+$/.test(res), `The generated html is valid and optimum (no extra spaces or CSS long names) - "${res}"`)
         }
     }
+
+    Component {
+        id: inputComponent
+        DerivationPathInput {
+            width: 500
+        }
+    }
+
+    TestCase {
+        name: "DerivationPathInputImCommitTests"
+        when: windowShown
+
+        property DerivationPathInput control: null
+
+        function init() {
+            control = createTemporaryObject(inputComponent, root)
+            verify(!!control)
+            verify(control.resetDerivationPath("m/44'/60'/0'/0", "m/44'/60'/0'/0/5"))
+            control.input.edit.forceActiveFocus()
+            tryVerify(() => control.input.edit.activeFocus)
+        }
+
+        // Virtual keyboards commit characters through the input method instead
+        // of key events; edit.insert() takes the same non-Keys path into the
+        // control, making it a faithful stand-in.
+        function test_imCommitAppendsDigit() {
+            compare(control.derivationPath, "m/44'/60'/0'/0/5")
+            control.input.edit.insert(control.input.cursorPosition, "3")
+            compare(control.derivationPath, "m/44'/60'/0'/0/53")
+        }
+
+        // The mobile repro: delete the last index with backspace (delivered as
+        // a key event even by virtual keyboards), then type its replacement
+        // (delivered as an IM commit)
+        function test_imCommitAfterRemovingLastIndex() {
+            keyClick(Qt.Key_Backspace)
+            verify(control.derivationPath !== "m/44'/60'/0'/0/5")
+
+            control.input.edit.insert(control.input.cursorPosition, "7")
+            compare(control.derivationPath, "m/44'/60'/0'/0/7")
+        }
+
+        // Anything but a clean insertion still reverts to the model
+        function test_externalReplacementReverted() {
+            control.input.edit.selectAll()
+            control.input.edit.remove(0, control.input.edit.length)
+            compare(control.derivationPath, "m/44'/60'/0'/0/5")
+        }
+    }
 }
