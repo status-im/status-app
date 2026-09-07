@@ -101,6 +101,17 @@ SplitView {
                     accountEmoji: priv.selectedAccount.emoji
                     accountColor: Utils.getColorForId(Theme.palette, priv.selectedAccount.colorId)
 
+                    toAccountName: priv.selectedAccount.name
+                    toAccountAddress: priv.selectedAccount.address
+                    toAccountEmoji: priv.selectedAccount.emoji
+                    toAccountColor: Utils.getColorForId(Theme.palette, priv.selectedAccount.colorId)
+
+                    toNetworkName: priv.selectedNetwork.chainName
+                    toNetworkShortName: priv.selectedNetwork.shortName
+                    toNetworkIconPath: Assets.svg(priv.selectedNetwork.iconUrl)
+                    toNetworkBlockExplorerUrl: priv.selectedNetwork.blockExplorerURL
+                    toNetworkChainId: priv.selectedNetwork.chainId
+
                     networkShortName: priv.selectedNetwork.shortName
                     networkName: priv.selectedNetwork.chainName
                     networkIconPath: Assets.svg(priv.selectedNetwork.iconUrl)

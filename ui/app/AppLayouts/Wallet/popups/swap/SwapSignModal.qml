@@ -32,6 +32,17 @@ SignTransactionModalBase {
     required property string accountEmoji
     required property color accountColor
 
+    required property string toAccountName
+    required property string toAccountAddress
+    required property string toAccountEmoji
+    required property color toAccountColor
+
+    required property string toNetworkName
+    required property string toNetworkShortName
+    required property string toNetworkIconPath
+    required property string toNetworkBlockExplorerUrl
+    required property int toNetworkChainId
+
     required property string networkShortName // e.g. "oeth"
     required property string networkName // e.g. "Optimism"
     required property string networkIconPath // e.g. `Assets.svg("network/optimism")`
@@ -55,9 +66,14 @@ SignTransactionModalBase {
     fromImageSource: Constants.tokenIcon(root.fromTokenSymbol)
     toImageSource: Constants.tokenIcon(root.toTokenSymbol)
 
-    //: e.g. "Swap 100 DAI to 100 USDT in <account name> on <network chain name>"
-    headerMainText: qsTr("Swap %1 to %2 in %3 on %4").arg(formatBigNumber(root.fromTokenAmount, root.fromTokenSymbol))
-        .arg(formatBigNumber(root.toTokenAmount, root.toTokenSymbol)).arg(root.accountName).arg(root.networkName)
+    //: e.g. "From <account name> 100 DAI on Ethereum to <account name> 100 USDT on Optimism"
+    headerMainText: qsTr("From %1 %2 on %3 to %4 %5 on %6")
+        .arg(root.accountName)
+        .arg(formatBigNumber(root.fromTokenAmount, root.fromTokenSymbol))
+        .arg(root.networkName)
+        .arg(root.toAccountName)
+        .arg(formatBigNumber(root.toTokenAmount, root.toTokenSymbol))
+        .arg(root.toNetworkName)
     headerSubTextLayout: [
         SwapProvidersTermsAndConditionsText {
             Layout.fillWidth: true
@@ -66,7 +82,6 @@ SignTransactionModalBase {
             onLinkClicked: root.requestOpenLink(root.serviceProviderURL)
         }
     ]
-    infoTagText: qsTr("Review all details before signing")
 
     headerIconComponent: StatusSmartIdenticon {
         asset.name: "filled-account"
@@ -156,28 +171,28 @@ SignTransactionModalBase {
         objectName: "receiveBox"
         caption: qsTr("Receive")
         primaryText: formatBigNumber(root.toTokenAmount, root.toTokenSymbol)
-        secondaryText: root.toTokenSymbol !== Utils.getNativeTokenSymbol(root.networkChainId) ? SQUtils.Utils.elideAndFormatWalletAddress(root.toTokenContractAddress) : ""
+        secondaryText: root.toTokenSymbol !== Utils.getNativeTokenSymbol(root.toNetworkChainId) ? SQUtils.Utils.elideAndFormatWalletAddress(root.toTokenContractAddress) : ""
         icon: Constants.tokenIcon(root.toTokenSymbol)
-        badge: root.networkIconPath
+        badge: root.toNetworkIconPath
         components: [
             ContractInfoButtonWithMenu {
-                visible: root.toTokenSymbol !== Utils.getNativeTokenSymbol(root.networkChainId)
+                visible: root.toTokenSymbol !== Utils.getNativeTokenSymbol(root.toNetworkChainId)
                 symbol: root.toTokenSymbol
                 contractAddress: root.toTokenContractAddress
-                networkName: root.networkName
-                networkShortName: root.networkShortName
-                networkBlockExplorerUrl: root.networkBlockExplorerUrl
+                networkName: root.toNetworkName
+                networkShortName: root.toNetworkShortName
+                networkBlockExplorerUrl: root.toNetworkBlockExplorerUrl
                 onOpenLink: (link) => root.requestOpenLink(link)
             }
         ]
     }
 
-    // Account
+    // From account
     SignInfoBox {
         Layout.fillWidth: true
         Layout.bottomMargin: Theme.bigPadding
         objectName: "accountBox"
-        caption: qsTr("In account")
+        caption: qsTr("From account")
         primaryText: root.accountName
         secondaryText: SQUtils.Utils.elideAndFormatWalletAddress(root.accountAddress)
         asset.name: "filled-account"
@@ -186,46 +201,17 @@ SignTransactionModalBase {
         asset.isLetterIdenticon: !!root.accountEmoji
     }
 
-    // Network
+    // To account
     SignInfoBox {
         Layout.fillWidth: true
         Layout.bottomMargin: Theme.bigPadding
-        objectName: "networkBox"
-        caption: qsTr("Network")
-        primaryText: root.networkName
-        icon: root.networkIconPath
-    }
-
-    // Fees
-    SignInfoBox {
-        Layout.fillWidth: true
-        Layout.bottomMargin: Theme.bigPadding
-        objectName: "feesBox"
-        caption: qsTr("Fees")
-        primaryText: qsTr("Max. fees on %1").arg(root.networkName)
-        primaryTextCustomColor: Theme.palette.baseColor1
-        secondaryText: " "
-        components: [
-            ColumnLayout {
-                spacing: 2
-                StatusTextWithLoadingState {
-                    objectName: "fiatFeesText"
-                    Layout.alignment: Qt.AlignRight
-                    text: loading ? Constants.dummyText : root.fiatFees
-                    horizontalAlignment: Text.AlignRight
-                    font.pixelSize: Theme.additionalTextSize
-                    loading: root.feesLoading
-                }
-                StatusTextWithLoadingState {
-                    objectName: "cryptoFeesText"
-                    Layout.alignment: Qt.AlignRight
-                    text: loading ? Constants.dummyText : root.cryptoFees
-                    horizontalAlignment: Text.AlignRight
-                    font.pixelSize: Theme.additionalTextSize
-                    customColor: Theme.palette.baseColor1
-                    loading: root.feesLoading
-                }
-            }
-        ]
+        objectName: "toAccountBox"
+        caption: qsTr("To account")
+        primaryText: root.toAccountName
+        secondaryText: SQUtils.Utils.elideAndFormatWalletAddress(root.toAccountAddress)
+        asset.name: "filled-account"
+        asset.emoji: root.toAccountEmoji
+        asset.color: root.toAccountColor
+        asset.isLetterIdenticon: !!root.toAccountEmoji
     }
 }

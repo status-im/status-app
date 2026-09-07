@@ -287,6 +287,13 @@ StatusDialog {
         value: root.swapInputParamsForm.selectedNetworkChainId
     }
 
+    ModelEntry {
+        id: toNetworkEntry
+        sourceModel: root.swapAdaptor.networksStore.activeNetworks
+        key: "chainId"
+        value: d.effectiveToChainId
+    }
+
     Connections {
         target: root.swapInputParamsForm
         function onFormValuesChanged() {
@@ -1014,8 +1021,10 @@ StatusDialog {
         SwapSignModal {
             destroyOnClose: true
 
-            title: root.swapAdaptor.swapOutputData.approvalNeeded && root.swapAdaptor.approvalSuccessful? qsTr("Swap") : qsTr("Sign Swap")
-            signButtonText: root.swapAdaptor.swapOutputData.approvalNeeded && root.swapAdaptor.approvalSuccessful? qsTr("Swap") : qsTr("Sign")
+            title: root.swapAdaptor.swapOutputData.approvalNeeded && root.swapAdaptor.approvalSuccessful
+                   ? d.modalTitle : qsTr("Sign %1").arg(d.modalTitle)
+            signButtonText: root.swapAdaptor.swapOutputData.approvalNeeded && root.swapAdaptor.approvalSuccessful
+                            ? d.modalTitle : qsTr("Sign")
 
             formatBigNumber: (number, symbol, noSymbolOption) => root.swapAdaptor.currencyStore.formatBigNumber(number, symbol, noSymbolOption)
 
@@ -1042,11 +1051,25 @@ StatusDialog {
             accountEmoji: d.selectedAccount.emoji
             accountColor: Utils.getColorForId(Theme.palette, d.selectedAccount.colorId)
 
+            // a pasted address resolves to no account/saved entry — show it elided
+            toAccountName: !!d.toAccount && !!d.toAccount.name
+                           ? d.toAccount.name
+                           : SQUtils.Utils.elideAndFormatWalletAddress(toAccountAddress)
+            toAccountAddress: root.swapInputParamsForm.toAccountAddress || root.swapInputParamsForm.selectedAccountAddress
+            toAccountEmoji: !!d.toAccount ? d.toAccount.emoji ?? "" : ""
+            toAccountColor: Utils.getColorForId(Theme.palette, !!d.toAccount ? d.toAccount.colorId ?? "" : "")
+
             networkShortName: fromNetworkEntry.item.shortName
             networkName: fromNetworkEntry.item.chainName
             networkIconPath: Assets.svg(fromNetworkEntry.item.iconUrl)
             networkBlockExplorerUrl: fromNetworkEntry.item.blockExplorerURL
             networkChainId: root.swapInputParamsForm.selectedNetworkChainId
+
+            toNetworkName: !!toNetworkEntry.item ? toNetworkEntry.item.chainName : ""
+            toNetworkShortName: !!toNetworkEntry.item ? toNetworkEntry.item.shortName : ""
+            toNetworkIconPath: !!toNetworkEntry.item ? Assets.svg(toNetworkEntry.item.iconUrl) : ""
+            toNetworkBlockExplorerUrl: !!toNetworkEntry.item ? toNetworkEntry.item.blockExplorerURL : ""
+            toNetworkChainId: d.effectiveToChainId
 
             fiatFees: {
                 let fees = root.swapAdaptor.swapOutputData.txFeesInFiat
