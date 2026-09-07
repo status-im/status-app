@@ -649,6 +649,7 @@ StatusDialog {
                     interval: 1000
                     repeat: true
                     running: swapFooter.hasProposal && !swapFooter.loading && root.visible
+                             && !root.swapAdaptor.approvalPending
                     onTriggered: {
                         if (swapFooter.secondsLeft <= 1)
                             swapFooter.refresh()
@@ -925,7 +926,9 @@ StatusDialog {
                             Layout.preferredHeight: signButton.height
                             icon.name: "refresh"
                             type: StatusBaseButton.Type.Normal
-                            enabled: swapFooter.hasProposal && !swapFooter.loading
+                            enabled: (swapFooter.hasProposal || root.swapAdaptor.swapOutputData.hasError)
+                                     && !swapFooter.loading
+                                     && !root.swapAdaptor.approvalPending
                             onClicked: swapFooter.refresh()
                         }
                     }
