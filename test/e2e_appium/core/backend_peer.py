@@ -58,7 +58,11 @@ async def onboarded(display_name: str, fleet: str = "status.prod") -> BackendPee
         )
         await peer.wait_for_peers(min_peers=1, timeout=60)
     except BaseException:
-        await peer.stop()
+        try:
+            await peer.stop()
+        except Exception as cleanup_exc:
+            # Never let a cleanup failure replace the reason onboarding failed.
+            logger.error("peer cleanup after a failed onboard also failed: %r", cleanup_exc)
         raise
     return peer
 

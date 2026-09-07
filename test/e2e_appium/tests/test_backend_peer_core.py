@@ -210,6 +210,26 @@ def test_configure_runs_once_per_process(monkeypatch):
     assert config.status_backend_urls is None
 
 
+@pytest.mark.asyncio
+async def test_a_failed_onboard_reports_its_own_error_not_the_cleanup_error(monkeypatch):
+    """The reason onboarding failed is the useful one; a cleanup failure on top
+    of it must not replace it."""
+    class _Peer:
+        def __init__(self, *_a, **_k):
+            self.fleet = "status.prod"
+            self.node_fleet = ""
+
+        async def onboard(self):
+            raise RuntimeError("login never completed")
+
+        async def stop(self):
+            raise RuntimeError("docker daemon went away")
+
+    monkeypatch.setattr(backend_peer, "BackendPeer", _Peer)
+    with pytest.raises(RuntimeError, match="login never completed"):
+        await backend_peer.onboarded("AnyPeer")
+
+
 def test_configure_reapplies_the_config_when_the_checks_are_cached(monkeypatch):
     """A peer reached over a url leaves status_backend_urls set. The next
     container peer must clear it, or the client never starts a container."""
