@@ -25,6 +25,7 @@ DELIVERY_TIMEOUT = 180
 async def test_two_container_peers_exchange_a_message():
     sender = await onboarded("ContainerPeerSender")
     receiver = None
+    body_passed = False
     try:
         receiver = await onboarded("ContainerPeerReceiver")
 
@@ -44,5 +45,10 @@ async def test_two_container_peers_exchange_a_message():
             sender.public_key, text, timeout=DELIVERY_TIMEOUT,
         )
         assert arrived["from"] == sender.public_key
+        body_passed = True
     finally:
-        await stop_all(sender, receiver)
+        failures = await stop_all(sender, receiver)
+        if body_passed and failures:
+            # A leaked container or websocket thread poisons the next
+            # test on this runner, so it cannot be a silent pass.
+            raise failures[0]

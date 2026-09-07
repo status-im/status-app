@@ -210,6 +210,28 @@ def test_configure_runs_once_per_process(monkeypatch):
     assert config.status_backend_urls is None
 
 
+def test_configure_reapplies_the_config_when_the_checks_are_cached(monkeypatch):
+    """A peer reached over a url leaves status_backend_urls set. The next
+    container peer must clear it, or the client never starts a container."""
+    monkeypatch.setenv(peer_containers.IMAGE_ENV, "statusgo-peer-27bca1fc5ce8")
+    monkeypatch.setenv(peer_containers.PROJECT_ENV, "peer-test")
+    monkeypatch.setattr(peer_containers, "vendored_status_go_sha", lambda _root: VENDORED)
+    monkeypatch.setattr(peer_containers, "check_docker_resources", lambda *_: None)
+    monkeypatch.setattr(peer_containers, "_configured", None)
+
+    class _Cfg:
+        pass
+
+    config = _Cfg()
+    peer_containers.configure(config)
+    config.status_backend_urls = iter(["http://peer:3333"])
+
+    peer_containers.configure(config)
+
+    assert config.status_backend_urls is None
+    assert config.docker_image == "statusgo-peer-27bca1fc5ce8"
+
+
 @pytest.mark.asyncio
 async def test_stop_all_reports_but_does_not_raise_teardown_failures():
     class _GoodPeer:

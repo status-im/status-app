@@ -26,6 +26,7 @@ async def test_five_peer_containers_run_side_by_side():
         return_exceptions=True,
     )
     peers = [r for r in results if isinstance(r, BackendPeer)]
+    body_passed = False
     try:
         failures = [r for r in results if not isinstance(r, BackendPeer)]
         assert not failures, f"{len(failures)} of {SLOTS} peers failed to start: {failures!r}"
@@ -34,5 +35,10 @@ async def test_five_peer_containers_run_side_by_side():
         assert len({peer.chat_key for peer in peers}) == SLOTS, (
             f"expected {SLOTS} distinct peers, got {[p.chat_key for p in peers]!r}"
         )
+        body_passed = True
     finally:
-        await stop_all(*peers)
+        failures = await stop_all(*peers)
+        if body_passed and failures:
+            # A leaked container or websocket thread poisons the next
+            # test on this runner, so it cannot be a silent pass.
+            raise failures[0]

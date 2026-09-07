@@ -123,18 +123,20 @@ def configure(config) -> None:
     with _lock:
         image_ref = image()
         project = os.environ.get(PROJECT_ENV, "").strip()
-        if _configured == (image_ref, project):
-            return
         if not project:
             raise RuntimeError(
                 f"{IMAGE_ENV} is set but {PROJECT_ENV} is not. The client attaches "
                 "every container to <project>_default, so the name has to match the "
                 "network the pipeline created."
             )
-        from core.status_go_tf import repo_root
+        # Only the checks are cached. The Config writes below run every time:
+        # a peer reached over a url leaves status_backend_urls set, and the next
+        # container peer has to clear it or the client stays in url mode.
+        if _configured != (image_ref, project):
+            from core.status_go_tf import repo_root
 
-        check_provenance(image_ref, vendored_status_go_sha(repo_root()))
-        check_docker_resources(image_ref, project)
+            check_provenance(image_ref, vendored_status_go_sha(repo_root()))
+            check_docker_resources(image_ref, project)
 
         config.status_backend_urls = None
         config.docker_project_name = project
