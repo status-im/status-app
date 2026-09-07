@@ -75,11 +75,57 @@ Item {
 
         property bool expectTextUpdate: false
 
-        /// Updates input text with elements content
+        // Updates input text with elements content
         function updateText(elements, cursorOffset = 0) {
             d.cursorPositionToRestore = input.cursorPosition + cursorOffset
             expectTextUpdate = true
             input.text = controller.generateHtmlFromElements(elements)
+        }
+
+        // Plain text corresponding to the current data model
+        function modelText() {
+            return elements.map(e => e.content).join("")
+        }
+
+        // Checks whether input.text was changed by simply inserting characters
+        // into the model's text. Mobile virtual keyboards deliver characters this way,
+        // without ever producing the key events this control is built around.
+        // \return {text, position} describing the inserted characters, or null
+        function externalInsertion() {
+            const modelText = d.modelText()
+            const currentText = input.edit.getText(0, input.text.length)
+            if (currentText.length <= modelText.length)
+                return null
+            var prefix = 0
+            while (prefix < modelText.length && modelText[prefix] === currentText[prefix])
+                prefix++
+            var suffix = 0
+            while (suffix < modelText.length - prefix
+                   && modelText[modelText.length - 1 - suffix] === currentText[currentText.length - 1 - suffix])
+                suffix++
+            if (prefix + suffix !== modelText.length)
+                return null
+            return { text: currentText.slice(prefix, currentText.length - suffix), position: prefix }
+        }
+
+        // Applies characters that arrived as an input-method commit as if they
+        // had been typed one by one: each character goes through the same
+        // controller operations as in Keys.onPressed, so the data model stays
+        // the single source of truth regardless of how the text was entered.
+        // \param insertion the {text, position} object built by externalInsertion()
+        function replayInsertion(insertion) {
+            input.cursorPosition = insertion.position
+            for (const character of insertion.text) {
+                if (character === '/' || character === '\\'
+                        || character === "'" || character === '`') {
+                    const newElementIndex = controller.tryAddAndFixSeparators(d.elements, d.currentIndex, d.elements[d.currentIndex].startIndex === input.cursorPosition)
+                    if (newElementIndex > -1)
+                        d.updateText(d.elements, d.elements[newElementIndex].endIndex - input.cursorPosition)
+                } else if (d.currentIndex >= 0 && d.currentIndex < d.elements.length) {
+                    controller.insertContent(d.elements, d.currentIndex, character, input.cursorPosition)
+                    d.updateText(d.elements, 1)
+                }
+            }
         }
     }
 
@@ -99,6 +145,7 @@ Item {
         anchors.fill: parent
 
         edit.textFormat: TextEdit.RichText
+        edit.inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
 
         topPadding: 11
         bottomPadding: 11
@@ -213,12 +260,14 @@ Item {
         }
 
         onTextChanged: {
-            // Ignore external text update (paste and delete events)
             if(d.expectTextUpdate) {
                 d.expectTextUpdate = false
             } else {
+                const insertion = d.externalInsertion()
                 d.cursorPositionToRestore = prevCursorPosition
                 d.updateText(d.elements)
+                if (insertion)
+                    d.replayInsertion(insertion)
                 return
             }
             const currentText = edit.getText(0, text.length)
