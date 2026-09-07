@@ -25,6 +25,7 @@ ImportKeypairInfo 1.0 ImportKeypairInfo.qml
 InformationTag 1.0 InformationTag.qml
 InformationTile 1.0 InformationTile.qml
 Input 1.0 Input.qml
+LazyTabStack 1.0 LazyTabStack.qml
 LinkPreviewDebugView 1.0 LinkPreviewDebugView.qml
 LoadingTokenDelegate 1.0 LoadingTokenDelegate.qml
 Padding 1.0 Padding.qml

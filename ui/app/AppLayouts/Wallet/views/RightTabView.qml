@@ -327,7 +327,7 @@ RightTabBaseView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.topMargin: Theme.padding
-                active: mainViewLoader.status !== Loader.Ready
+                active: !mainViews.currentReady
                 visible: active
                 sourceComponent: {
                     switch (walletTabBar.currentIndex) {
@@ -438,14 +438,15 @@ RightTabBaseView {
                 }
             }
 
-            Loader {
-                id: mainViewLoader
+            LazyTabStack {
+                id: mainViews
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.topMargin: Theme.padding
                 asynchronous: true
-                visible: status === Loader.Ready
-                sourceComponent: d.walletViewsMap[walletTabBar.currentIndex]
+                visible: currentReady
+                tabComponents: d.walletViewsMap
+                currentIndex: walletTabBar.currentIndex
 
                 Component {
                     id: assetsView
