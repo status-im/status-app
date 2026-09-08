@@ -40,6 +40,7 @@ StatusTextField {
     implicitHeight: 44
 
     echoMode: TextInput.Password
+    inputMethodHints: Qt.ImhSensitiveData | Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText
 
     background: Rectangle {
         color: Theme.palette.baseColor2
