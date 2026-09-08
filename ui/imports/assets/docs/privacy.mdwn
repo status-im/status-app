@@ -1,4 +1,4 @@
-Last update: 2 April 2026
+Last update: 8 September 2026
 
 This Status Software \- Privacy Policy (“**Privacy Policy**”) is intended to inform users of Status’ approach to privacy in respect of Status Software. In this regard, if you are using Status Software, this Privacy Policy applies to you.
 
@@ -52,6 +52,37 @@ Status processes personal data on a limited basis from users of Status Software 
 
    This technical information helps us diagnose and resolve any technical problems efficiently. Such information will be kept for only as long as necessary to fulfil the aforementioned purposes and in any event, no longer than thirty (30) days and it will be deleted thereafter
 
+3. **Status team bot**: As part of your activities on Status Software, you may interact with Status team bot, referred to as “Status bot”. Status bot, operated by the Status development team, is a contact that users can contact and communicate with like any other user on Status. Generally speaking, when you communicate with Status bot, the messages and other information you choose to send are received by that contact through a peer-to-peer, end-to-end encrypted, and secure messaging network as is the case with other Status messages.
+
+    **Contacting Status bot**
+
+    When sending a contact request to Status bot and establishing the contact, certain information, such as your Status profile data (chat key, name, picture, etc.) becomes available to Status bot and is processed by Status. This is just a technical consequence of its use of the peer to peer network over which Status messages are also sent.
+
+    In that regard, the following information is processed and stored by Status when you contact Status bot:
+    - Your public profile chat key (a cryptographically generated identifier that does not contain or directly reveal your real-world identity and is used for communication when you use Status Software). It is also stored on each feedback message received from the user so the bot knows to whom it should send replies from the Status team.
+    - Timestamps of contact requests.
+    - An indication that a user is a new or existing user based on your prefilled Status contact request message so Status bot knows if it needs to send the Welcome and how-to messages to help you ramp up to Status if you are a new user or an introduction one if you are an existing user.
+
+    We process this information on the basis of our legitimate interests to help keep a user of Status Software informed about Status Software features and also helpful tips in its use. You can opt-out of receiving any further messages by deleting Status Bot contact as a contact.
+
+    **Communicating with Status bot**
+
+    You can also share feedback, make feature requests or report issues to Status via Status bot. The messages and any other information you choose to send are received by Status through the same peer-to-peer, end-to-end encrypted, private, and secure messaging as other Status chats.
+
+    Messages and associated information received by Status bot may be accessed by authorised Status team members for the purposes of responding to feedback, feature requests and issue reports. We recommend avoiding sharing any personal information.
+
+    In that regard, Status, as a technical consequence, processes (but does NOT store) the following information as part of your communications with Status bot:
+    - Message content and data
+    - Your Status profile information, except the one listed under the “Contacting Status bot” section above.
+
+    We process this information on the basis of our legitimate interests in improving Status Software and its features. You can stop sending feedback at any time by not using Status bot or by removing Status bot as a contact.
+
+    **Security of processing and retention**
+
+    Status ensures that the information described that it stores from your interactions with Status bot is protected and secure, meaning it is encrypted and further, access is limited to only a small number of authorised individuals at Status.
+
+    In any event, if you choose to delete Status bot as a contact, the data stored by Status bot is automatically deleted by Status bot after 90 days, so you can always choose to “opt-out” in this manner if you wish.
+
 ### 4) Personal data sharing with third party service providers
 
 We share personal data with third party service providers in the context of fulfilling the above purposes in which we collect and process personal data. We have contracted such third party service providers to provide their services and act as data processors on our behalf and they are only permitted to process personal data in accordance with our instructions.
@@ -103,7 +134,7 @@ Within Status Software, you might come across links to third party websites. The
 
 ### 10) The Privacy Policy might change
 
-We may modify or replace any part of this Privacy Policy. Please check on Status Software periodically for any changes. The new Privacy Policy will be effective immediately upon it being placed in Status Software .
+We may modify or replace any part of this Privacy Policy. Please check on Status Software periodically for any changes. The new Privacy Policy will be effective immediately upon it being placed in Status Software.
 
 ### 11) Contact Information
 
