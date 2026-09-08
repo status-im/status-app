@@ -44,7 +44,7 @@ SplitView {
             width: Math.min(parent.width, 596)
 
             contentWidth: width
-            sectionTitle: "Logos Network"
+            sectionTitle: "P2P Network"
 
             peerCount: d.peerCount
             peerCountLoading: d.peerCountLoading

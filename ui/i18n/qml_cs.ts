@@ -10700,16 +10700,16 @@ selhalo</translation>
 <context>
     <name>LogosNetworkView</name>
     <message>
-        <source>Messages are sent via the Logos Messaging Network, a peer-to-peer network powered collectively by users running Status Desktop, making Status decentralized, resilient, and censorship-resistant. %1</source>
-        <translation>Zprávy jsou odesílány prostřednictvím sítě Logos Messaging Network, což je síť typu peer-to-peer, kterou kolektivně provozují uživatelé používající Status Desktop, díky čemuž je Status decentralizovaný, odolný a odolný proti cenzuře. %1</translation>
-    </message>
-    <message>
         <source>Learn more</source>
         <translation>Dozvědět se více</translation>
     </message>
     <message>
-        <source>Connected Logos network peers</source>
-        <translation>Připojené uzly sítě Logos</translation>
+        <source>Messages are sent via a decentralised network, a peer-to-peer (p2p) network built on Logos Messaging technology and powered collectively by users running Status Desktop, making Status decentralised, resilient, and censorship-resistant. %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connected network peers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Peers</source>
@@ -10728,24 +10728,28 @@ selhalo</translation>
         <translation>Připojeno</translation>
     </message>
     <message>
-        <source>Refresh Logos network peers</source>
-        <translation>Obnovit uzly sítě Logos</translation>
+        <source>Refresh network peers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Unable to refresh Logos network peers: %1</source>
-        <translation>Nelze obnovit uzly sítě Logos: %1</translation>
+        <source>Unable to refresh network peers: %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>If Status has no connected Logos peers, check:</source>
-        <translation>Pokud Status nemá žádné připojené uzly sítě Logos, zkontrolujte:</translation>
+        <source>How to fix p2p network connection</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Some networks may block access to the Logos network. %1</source>
-        <translation>Některé sítě mohou blokovat přístup k síti Logos. %1</translation>
+        <source>If Status has no connected network peers, check:</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Try using a VPN</source>
         <translation>Zkuste použít VPN</translation>
+    </message>
+    <message>
+        <source>Some networks may block access to the p2p network. %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Current internet connection may be unstable. %1</source>
@@ -10754,10 +10758,6 @@ selhalo</translation>
     <message>
         <source>Try another network or disconnect your VPN</source>
         <translation>Zkuste jinou síť nebo odpojte VPN</translation>
-    </message>
-    <message>
-        <source>How to fix Logos network connection</source>
-        <translation>Jak opravit připojení k síti Logos</translation>
     </message>
 </context>
 <context>
@@ -13922,10 +13922,6 @@ selhalo</translation>
         <source>Contacts</source>
         <translation>Kontakty</translation>
     </message>
-    <message>
-        <source>Logos Network</source>
-        <translation>Síť Logos</translation>
-    </message>
 </context>
 <context>
     <name>ProfilePerspectiveSelector</name>
@@ -15515,8 +15511,8 @@ selhalo</translation>
         <translation>Mohou nastat problémy s připojením.&lt;br&gt;Pokud k nim dojde, použijte místo toho funkci Zadat obnovovací frázi.</translation>
     </message>
     <message>
-        <source>Logos network</source>
-        <translation>Síť Logos</translation>
+        <source>P2P network</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Messaging</source>
