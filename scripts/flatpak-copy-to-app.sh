@@ -64,3 +64,13 @@ install -Dm644 app.status.desktop.desktop \
 
 install -Dm644 app.status.desktop.metainfo.xml \
   "$PREFIX/share/metainfo/app.status.desktop.metainfo.xml"
+
+appstreamcli compose \
+  --no-net \
+  --prefix=/ \
+  --origin=app.status.desktop \
+  --result-root="$PREFIX" \
+  --data-dir="$PREFIX/share/app-info/xmls" \
+  --icons-dir="$PREFIX/share/app-info/icons/flatpak" \
+  --components=app.status.desktop,app.status.desktop.desktop \
+  "$PREFIX"

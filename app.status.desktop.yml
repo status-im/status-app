@@ -3,6 +3,7 @@ runtime: org.freedesktop.Platform
 runtime-version: '24.08'
 sdk: org.freedesktop.Sdk
 command: nim_status_client_wrapped
+appstream-compose: false
 
 finish-args:
   # Display
