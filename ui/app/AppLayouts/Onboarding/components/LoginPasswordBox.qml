@@ -5,7 +5,7 @@ import QtQml.Models
 
 import StatusQ
 import StatusQ.Core
-import StatusQ.Core.Utils
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Controls
 import StatusQ.Core.Theme
 import StatusQ.Popups.Dialog
@@ -68,6 +68,20 @@ Control {
             onTextEdited: root.passwordEditedManually()
             onBiometricsRequested: root.biometricsRequested()
             onAccepted: root.loginRequested(text)
+
+            // Workaround preventing showing context menu on first tap invoking
+            // virtual keyboard on iOS
+            ContextMenu.onRequested: {
+                if (!SQUtils.Utils.isIOS || InputMethod.visible)
+                    return
+
+                const menu = ContextMenu.menu
+                ContextMenu.menu = null
+
+                Qt.callLater(() => {
+                    ContextMenu.menu = menu
+                })
+            }
         }
         StatusBaseText {
             Layout.fillWidth: true
@@ -133,7 +147,7 @@ Control {
                             let textToCopy = ""
                             for (let i = 0; i < instructionsColumn.children.length; i++) {
                                 if (instructionsColumn.children[i].text)
-                                    textToCopy += StringUtils.plainText(instructionsColumn.children[i].text) + "\n"
+                                    textToCopy += SQUtils.StringUtils.plainText(instructionsColumn.children[i].text) + "\n"
                             }
 
                             ClipboardUtils.setText(textToCopy)
