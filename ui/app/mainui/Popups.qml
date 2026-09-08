@@ -136,31 +136,27 @@ QtObject {
 
     property var activePopupComponents: []
 
-    property var sharedContactModelEntryLoader: Loader {
-        property string publicKey: ""
-
-        active: false
-
-        sourceComponent: ContactModelEntry {
-            publicKey: sharedContactModelEntryLoader.publicKey
-            contactsModel: root.allContactsModel
-            onPopulateContactDetailsRequested: {
-                root.contactsStore.populateContactDetails(sharedContactModelEntryLoader.publicKey)
-            }
-        }
+    readonly property Component contactModelEntryComponent: ContactModelEntry {
+        contactsModel: root.allContactsModel
+        onPopulateContactDetailsRequested: root.contactsStore.populateContactDetails(publicKey)
     }
 
-    function getContactModelEntry(pubkey) {
-        sharedContactModelEntryLoader.active = false
-        sharedContactModelEntryLoader.publicKey = pubkey
-        sharedContactModelEntryLoader.active = true
-        return sharedContactModelEntryLoader.item
+    // Each popup gets its own live ContactModelEntry
+    function openContactPopup(popupComponent, publicKey, params = {}, cb = null) {
+        const contactEntry = contactModelEntryComponent.createObject(root, { publicKey })
+        const popup = openPopup(popupComponent, Object.assign({ publicKey, contactDetails: contactEntry.contactDetails }, params), cb)
+        if (!popup) {
+            contactEntry.destroy()
+            return null
+        }
+        popup.closed.connect(() => contactEntry.destroy())
+        return popup
     }
 
     property var currentPopup
     function openPopup(popupComponent, params = {}, cb = null) {
         if (root.activePopupComponents.includes(popupComponent)) {
-            return
+            return null
         }
 
         root.currentPopup = popupComponent.createObject(popupParent, params)
@@ -176,6 +172,7 @@ QtObject {
                 root.activePopupComponents.splice(removeIndex, 1)
             }
         })
+        return root.currentPopup
     }
 
     function closePopup() {
@@ -202,35 +199,23 @@ QtObject {
     }
 
     function openProfilePopup(publicKey: string, parentPopup, cb) {
-        openPopup(profilePopupComponent, {publicKey: publicKey, parentPopup: parentPopup}, cb)
+        openContactPopup(profilePopupComponent, publicKey, { parentPopup }, cb)
     }
 
     function openNicknamePopup(publicKey: string, cb) {
-        const contactEntry = getContactModelEntry(publicKey)
-        const properties = { publicKey, contactDetails: contactEntry.contactDetails }
-
-        openPopup(nicknamePopupComponent, properties, cb)
+        openContactPopup(nicknamePopupComponent, publicKey, {}, cb)
     }
 
     function openMarkAsUntrustedPopup(publicKey: string) {
-        const contactEntry = getContactModelEntry(publicKey)
-        const properties = { publicKey, contactDetails: contactEntry.contactDetails }
-
-        openPopup(markAsUntrustedComponent, properties)
+        openContactPopup(markAsUntrustedComponent, publicKey, {})
     }
 
     function openBlockContactPopup(publicKey: string) {
-        const contactEntry = getContactModelEntry(publicKey)
-        const properties = { publicKey, contactDetails: contactEntry.contactDetails }
-
-        openPopup(blockContactConfirmationComponent, properties)
+        openContactPopup(blockContactConfirmationComponent, publicKey, {})
     }
 
     function openUnblockContactPopup(publicKey: string) {
-        const contactEntry = getContactModelEntry(publicKey)
-        const properties = { publicKey, contactDetails: contactEntry.contactDetails }
-
-        openPopup(unblockContactConfirmationComponent, properties)
+        openContactPopup(unblockContactConfirmationComponent, publicKey, {})
     }
 
     function openChangeProfilePicPopup(cb) {
@@ -321,17 +306,11 @@ QtObject {
     }
 
     function openMarkAsIDVerifiedPopup(publicKey, cb) {
-        const contactEntry = getContactModelEntry(publicKey)
-        const properties = { publicKey, contactDetails: contactEntry.contactDetails }
-
-        openPopup(markAsIDVerifiedPopupComponent, properties, cb)
+        openContactPopup(markAsIDVerifiedPopupComponent, publicKey, {}, cb)
     }
 
     function openRemoveIDVerificationDialog(publicKey, cb) {
-        const contactEntry = getContactModelEntry(publicKey)
-        const properties = { publicKey, contactDetails: contactEntry.contactDetails }
-
-        openPopup(removeIDVerificationPopupComponent, properties, cb)
+        openContactPopup(removeIDVerificationPopupComponent, publicKey, {}, cb)
     }
 
     function openInviteFriendsToCommunityPopup(community, communitySectionModule, cb) {
@@ -358,14 +337,7 @@ QtObject {
     }
 
     function openContactRequestPopup(publicKey, cb, defaultMessage = "") {
-        const contactEntry = getContactModelEntry(publicKey)
-        const properties = {
-            publicKey,
-            contactDetails: contactEntry.contactDetails,
-            defaultMessage: defaultMessage || ""
-        }
-
-        openPopup(sendContactRequestPopupComponent, properties, cb)
+        openContactPopup(sendContactRequestPopupComponent, publicKey, { defaultMessage: defaultMessage || "" }, cb)
     }
 
     function openReviewContactRequestPopup(publicKey, cb) {
@@ -376,10 +348,7 @@ QtObject {
                 return
             }
 
-            const contactEntry = getContactModelEntry(publicKey)
-            const properties = { publicKey, contactDetails: contactEntry.contactDetails, crDetails }
-
-            openPopup(reviewContactRequestPopupComponent, properties, cb)
+            openContactPopup(reviewContactRequestPopupComponent, publicKey, { crDetails }, cb)
         } catch (e) {
             console.error("Popups.openReviewContactRequestPopup: error getting or parsing contact request data", e)
         }
@@ -443,10 +412,7 @@ QtObject {
     }
 
     function openRemoveContactConfirmationPopup(publicKey) {
-        const contactEntry = getContactModelEntry(publicKey)
-        const properties = { publicKey, contactDetails: contactEntry.contactDetails }
-
-        openPopup(removeContactConfirmationDialog, properties)
+        openContactPopup(removeContactConfirmationDialog, publicKey, {})
     }
 
     function openDeleteMessagePopup(messageId, messageStore) {
@@ -577,13 +543,14 @@ QtObject {
     }
 
     function openShareProfilePopup(publicKey) {
-        const contactEntry = getContactModelEntry(publicKey)
+        const contactEntry = contactModelEntryComponent.createObject(root, { publicKey })
         const contactDetails = contactEntry.contactDetails
         const emojiHash = root.utilsStore.getEmojiHash(publicKey)
         const linkToProfile = root.contactsStore.getLinkToProfile(publicKey)
 
         openPopup(shareProfileCmp, {isCurrentUser: contactDetails.isCurrentUser, publicKey, emojiHash, colorId: contactDetails.colorId,
                       linkToProfile, displayName: contactDetails.displayName, usesDefaultName: contactDetails.usesDefaultName, largeImage: contactDetails.largeImage})
+        contactEntry.destroy()
     }
 
     function openNavigationEducationPopup() {
@@ -851,11 +818,6 @@ QtObject {
 
                 property string publicKey
                 readonly property bool isCurrentUser: contactDetails.isCurrentUser
-
-                contactDetails: {
-                    const contactEntry = getContactModelEntry(profilePopup.publicKey)
-                    return contactEntry.contactDetails
-                }
 
                 profileStore: root.profileStore
                 contactsStore: root.contactsStore

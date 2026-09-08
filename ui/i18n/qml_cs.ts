@@ -6958,12 +6958,16 @@ Keycard bude vyžadována pro podepisování</translation>
 <context>
     <name>EmptyChatPanel</name>
     <message>
+        <source>%1 to connect with or&lt;br&gt;invite your friends to Status.&lt;br&gt;&lt;br&gt;&lt;br&gt;%2&lt;br&gt;for welcome messages, how-to tips, or just to share feedback or issues.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Share your profile</source>
         <translation>Sdílejte svůj profil</translation>
     </message>
     <message>
-        <source>%1 to connect with or&lt;br&gt;invite your friends to Status.</source>
-        <translation>%1 pro spojení s&lt;br&gt;nebo pozvání přátel do Statusu.</translation>
+        <source>Chat with the Status Team peer-to-peer bot</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

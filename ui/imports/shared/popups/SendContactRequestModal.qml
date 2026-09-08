@@ -9,7 +9,6 @@ import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Controls.Validators
 import StatusQ.Popups.Dialog
-import StatusQ.Core.Utils as SQUtils
 
 import AppLayouts.stores as AppLayoutStores
 
@@ -54,9 +53,6 @@ CommonContactDialog {
         function onContactInfoRequestFinished(publicKey, ok) {
             if (publicKey !== root.publicKey) {
                 return
-            }
-            if (ok) {
-                root.contactDetails = SQUtils.ModelUtils.getByKey(root.contactsStore.contactsModel, "pubKey", root.publicKey)
             }
             root.loadingContactDetails = false
         }

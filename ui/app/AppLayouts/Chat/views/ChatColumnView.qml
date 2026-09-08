@@ -101,6 +101,8 @@ Item {
     // Community access related requests:
     signal spectateCommunityRequested(string communityId)
 
+    signal supportBotChatRequested()
+
     // This function is called once `1:1` or `group` chat is created.
     function checkForCreateChatOptions(chatId) {
         if (root.createChatPropertiesStore.createChatStickerHashId !== ""
@@ -439,6 +441,7 @@ Item {
         anchors.fill: parent
         visible: root.activeChatId === "" || root.chatsCount == 0
         onShareChatKeyClicked: Global.shareProfileDialogRequested(userProfile.pubKey)
+        onSupportBotChatRequested: root.supportBotChatRequested()
     }
 
     // This is kind of a solution for applying backend refactored changes with the minimal qml changes.
