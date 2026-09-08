@@ -1,0 +1,19 @@
+# Extra dependencies for the backend-peer lane only.
+#
+# Importing the status-go functional-test client (core/status_go_tf.py) needs
+# these; they stay out of requirements.txt so the ordinary gate install does
+# not grow a matplotlib and docker dependency it never uses. Versions track
+# vendor/status-go's test/functional/requirements.txt except websocket-client:
+# status-go pins ~=1.4.2, while Selenium already installs ~=1.9.0 here.
+#
+#   pip install -r requirements.txt -r requirements-backend-peer.txt
+
+tenacity~=9.0.0
+websockets~=12.0
+matplotlib>=3.5.0
+docker~=7.1.0
+faker~=37.6.0
+base58~=2.1.1
+# Selenium pulls this in today; the client imports it directly and must not
+# depend on that accident.
+websocket-client~=1.9.0

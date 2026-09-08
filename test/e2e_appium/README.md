@@ -20,6 +20,38 @@ Repository administrators need to set:
 2. Run tests using `e2e-appium-android.yml` workflow
 3. Use artifact name: `Status-x86_64`
 
+## A headless status-backend as a chat participant
+
+`core/backend_peer.py` drives a headless `status-backend` through status-go's own
+test client, as a chat participant that is not a phone. It runs as a container
+the client starts and stops, from an image named after the status-go commit this
+checkout vendors; `core/peer_containers.py` refuses an image built from any other
+commit. The tests marked `backend_peer` need only Docker: two peers exchange a
+message on the real fleet, and five peers run side by side.
+
+```bash
+# from the repo root, with docker running
+export STATUS_BACKEND_DOCKER_PROJECT=peer-local
+IMAGE=$(test/e2e_appium/scripts/peer_image.sh "$STATUS_BACKEND_DOCKER_PROJECT")
+
+cd test/e2e_appium
+pip install -r requirements.txt -r requirements-backend-peer.txt
+STATUS_BACKEND_IMAGE="$IMAGE" pytest -m backend_peer tests
+```
+
+The first build takes several minutes; after that the image is already on the
+host and the script only looks it up. Without `STATUS_BACKEND_IMAGE` the tests
+are skipped. On Docker Desktop the script finds the daemon through the docker
+context but the test client reads only `DOCKER_HOST`, so set it first:
+
+```bash
+export DOCKER_HOST=$(docker context inspect -f '{{.Endpoints.docker.Host}}')
+```
+
+Peer container logs are written to `logs/backend_peer/` for CI artifact
+collection. All peers created in one pytest process must use the same fleet
+because the status-go client's `Config` is process-global.
+
 ## Test Selection
 
 **By markers:**
