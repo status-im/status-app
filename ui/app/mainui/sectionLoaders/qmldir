@@ -1,5 +1,6 @@
 singleton QmlCompiler 1.0 QmlCompiler.qml
 
+StatusSectionLoader 1.0 StatusSectionLoader.qml
 AppMainLoader 1.0 AppMainLoader.qml
 BrowserLoader 1.0 BrowserLoader.qml
 ChatLoader 1.0 ChatLoader.qml

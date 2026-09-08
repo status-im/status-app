@@ -6,13 +6,11 @@ import StatusQ.Core.Utils as SQUtils
 import AppLayouts.stores as AppStores
 import AppLayouts.Communities.stores
 
-Loader {
+StatusSectionLoader {
     id: root
 
     required property AppStores.RootStore rootStore
     required property CommunitiesStore communitiesStore
-
-    property real leftPanelWidthOverride: 0
 
     asynchronous: false
 

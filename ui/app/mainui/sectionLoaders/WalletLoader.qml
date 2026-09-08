@@ -18,7 +18,7 @@ import AppLayouts.Wallet.stores as WalletStores
 
 import mainui.sectionLoaders
 
-Loader {
+StatusSectionLoader {
     id: root
 
     // Stores — only what WalletLayout / WalletPrivacyWall consume
@@ -37,7 +37,6 @@ Loader {
     required property Loader emojiPopupLoader
 
     property bool appMainVisible: false
-    property real leftPanelWidthOverride: 0
 
     // Back-navigation contract for AppMain's back chain. The chrome is
     // interactive while the section item still incubates, so the loader must
@@ -72,6 +71,9 @@ Loader {
 
         anchors.fill: parent
         currentIndex: 1
+
+        userUID: root.userUID
+        sectionName: root.sectionName
 
         // The privacy wall is a full-page item rendered by the Loader itself
         visible: d.targetUrl !== d.privacyWallUrl
@@ -139,7 +141,7 @@ Loader {
     // Panel index persistence, kept under the same category/key WalletLayout
     // used when it owned the chrome
     Settings {
-        category: "WalletLocalSettings_%1".arg(userProfile.pubKey)
+        category: "WalletLocalSettings_%1".arg(root.userUID)
         property alias selectedPanelIndex: sectionLayout.currentIndex
     }
 

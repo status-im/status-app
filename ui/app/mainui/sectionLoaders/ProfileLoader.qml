@@ -17,7 +17,7 @@ import AppLayouts.Wallet.stores as WalletStores
 import mainui.adaptors
 import mainui.sectionLoaders
 
-Loader {
+StatusSectionLoader {
     id: root
 
     // Stores
@@ -54,7 +54,6 @@ Loader {
     required property Keychain keychain
 
     // Inputs
-    required property string userUID
     required property bool isProduction
     required property bool isPortraitMode
     required property bool systemTrayIconAvailable
@@ -65,7 +64,6 @@ Loader {
 
     property int settingsSubsection: isPortraitMode ? -1 : Constants.settingsSubsection.profile // load and select Profile on desktop; nothing on mobile, just the left panel list
     property int settingsSubSubsection: -1
-    property real leftPanelWidthOverride: 0
 
     function forceSubsectionNavigation() {
         if (root.item && root.item.forceSubsectionNavigation) {
@@ -94,7 +92,6 @@ Loader {
         setSource(QmlCompiler.profileUrl, {
             visible:                                false,
             isProduction:                           root.isProduction,
-            userUID:                                root.userUID,
             sharedRootStore:                        Qt.binding(() => root.sharedRootStore),
             utilsStore:                             Qt.binding(() => root.utilsStore),
             aboutStore:                             Qt.binding(() => root.aboutStore),
