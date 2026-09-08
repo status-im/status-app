@@ -110,6 +110,17 @@ Control {
         }
     }
 
+    TapHandler {
+        enabled: Qt.inputMethod.visible
+        onTapped: (eventPoint) => {
+            const local = root.mapToItem(searchBox, eventPoint.position.x, eventPoint.position.y)
+            if (local.x >= 0 && local.y >= 0 && local.x < searchBox.width && local.y < searchBox.height)
+                return
+            root.forceActiveFocus()
+            Qt.inputMethod.hide()
+        }
+    }
+
     contentItem: ColumnLayout {
         spacing: 0
 
