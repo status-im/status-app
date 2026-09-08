@@ -32,8 +32,11 @@ QtObject {
     property var tmpActivityController0: walletSection.tmpActivityController0
     readonly property var _tmpActivityController1: walletSection.tmpActivityController1
     readonly property var tempActivityController1Model: _tmpActivityController1.model
+    // proxies must not bind to context properties directly: registered late, they never re-evaluate
+    readonly property var _savedAddressesModel: !!walletSectionSavedAddresses ? walletSectionSavedAddresses.model : null
+
     property var savedAddressesModel: SortFilterProxyModel {
-        sourceModel: walletSectionSavedAddresses.model
+        sourceModel: root._savedAddressesModel
         filters: [
             ValueFilter {
                 roleName: "isTest"

@@ -56,8 +56,11 @@ QtObject {
 
     readonly property bool areTestNetworksEnabled: networksModule.areTestNetworksEnabled
 
+    // proxies must not bind to context properties directly: registered late, they never re-evaluate
+    readonly property var _savedAddressesModel: !!walletSectionSavedAddresses ? walletSectionSavedAddresses.model : null
+
     property var savedAddresses: SortFilterProxyModel {
-        sourceModel: walletSectionSavedAddresses.model
+        sourceModel: root._savedAddressesModel
         filters: [
             ValueFilter {
                 roleName: "isTest"
