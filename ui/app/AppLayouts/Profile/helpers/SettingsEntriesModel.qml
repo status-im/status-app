@@ -102,8 +102,8 @@ SortFilterProxyModel {
         },
         {
             subsection: Constants.settingsSubsection.logosNetworkSettings,
-            text: qsTr("Logos network"),
-            icon: "logos",
+            text: qsTr("P2P network"),
+            icon: "p2p",
             isExperimental: false
         },
         {

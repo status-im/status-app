@@ -653,7 +653,7 @@ StatusSectionLayout {
             id: logosNetworkViewComp
             LogosNetworkView {
                 contentWidth: d.contentWidth
-                sectionTitle: qsTr("Logos Network")
+                sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.logosNetworkSettings)
                 peerCount: root.logosNetworkStore.peerCount
                 peerCountLoading: root.logosNetworkStore.peerCountLoading
                 peerCountError: root.logosNetworkStore.peerCountError
