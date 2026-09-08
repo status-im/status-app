@@ -133,6 +133,7 @@ Control {
     readonly property double maxCryptoBalance: d.maxCryptoBalance
     readonly property double maxSafeCryptoValue: d.maxSafeCryptoValue
     readonly property alias fiatMode: amountToSendInput.fiatMode
+    readonly property Item amountInputItem: amountToSendInput
 
     /** `value` is a crypto amount, also while the input displays fiat **/
     function setAmount(value) {
