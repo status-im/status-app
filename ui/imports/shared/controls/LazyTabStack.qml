@@ -19,10 +19,7 @@ Item {
     QtObject {
         id: d
 
-        readonly property Loader currentLoader: {
-            repeater.count
-            return repeater.itemAt(root.currentIndex) as Loader
-        }
+        property Loader currentLoader: null
     }
 
     Repeater {
@@ -43,8 +40,15 @@ Item {
             visible: loader.current && loader.status === Loader.Ready
             sourceComponent: root.tabComponents[loader.index]
 
-            onCurrentChanged: if (loader.current) loader.activated = true
-            Component.onCompleted: if (loader.current) loader.activated = true
+            function takeOver() {
+                if (!loader.current)
+                    return
+                loader.activated = true
+                d.currentLoader = loader
+            }
+
+            onCurrentChanged: takeOver()
+            Component.onCompleted: takeOver()
         }
     }
 }
