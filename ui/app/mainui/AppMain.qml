@@ -206,6 +206,15 @@ Item {
         maxDepth: 16
     }
 
+    // Dev-only scripted repro (STATUS_AUTO_REPRO env / AUTO_REPRO_SCENARIO define); inert when empty
+    AutoReproDriver {
+        scenario: typeof autoReproScenario !== "undefined" ? autoReproScenario : ""
+        ready: appMain.mainReady
+        walletLoader: walletLoader
+        onWalletRequested: Global.changeAppSectionBySectionType(Constants.appSection.wallet)
+        onSettingsRequested: d.openSettingsRoot()
+    }
+
     // Records the *previous* active section id whenever the active section
     // changes, unless the change came from the back-handler (re-entrancy guard).
     Connections {
@@ -2314,6 +2323,7 @@ Item {
                     }
 
                     WalletLoader {
+                        id: walletLoader
                         active: appView.currentIndex === Constants.appViewStackIndex.wallet
 
                         rootStore: appMain.rootStore

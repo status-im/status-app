@@ -14,6 +14,8 @@ import StatusQ.Core
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Platform
 
+import QtModelsToolkit
+
 Item {
     id: root
 
@@ -30,6 +32,43 @@ Item {
     signal biometricFlowStarted()
     signal skippedBiometricFlow(bool available)
     signal contentLoaded()
+
+    QtObject {
+        id: d
+
+        // Dev-only scripted onboarding, driven by the same scenario string as
+        // AutoReproDriver: STATUS_AUTO_REPRO="<scenario>:password=...,login=<keyUid>"
+        // logs into that profile (default: last selected, then first). With no
+        // profiles on disk (or create=1) it creates a fresh password profile instead.
+        // not named autoReproScenario: a same-named property would shadow the context property in its own binding
+        readonly property string scenarioString: typeof autoReproScenario !== "undefined" ? autoReproScenario : ""
+
+        function scenarioParam(key) {
+            const match = scenarioString.match(new RegExp("[:,]" + key + "=([^,]*)"))
+            return match ? match[1] : ""
+        }
+
+        function maybeAutoLogin() {
+            const password = scenarioParam("password")
+            if (password === "")
+                return
+            const model = onboardingStore.loginAccountsModel
+            const hasProfiles = !!model && model.ModelCount.count > 0
+            if (!hasProfiles || scenarioParam("create") === "1") {
+                console.info("[autoRepro] scripted profile creation")
+                onboardingLayout.finished(Onboarding.OnboardingFlow.CreateProfileWithPassword, {
+                    selectedProfileKeyUid: "", password, keycardPin: "", seedphrase: "",
+                    keyUid: "", backupImportFileUrl: "", enableBiometrics: false,
+                    thirdpartyServicesEnabled: true, keycardPayload: null })
+                return
+            }
+            let keyUid = scenarioParam("login") || root.lastSelectedProfileKeyUid
+            if (keyUid === "")
+                keyUid = SQUtils.ModelUtils.get(model, 0, "keyUid")
+            console.info("[autoRepro] scripted password login for", keyUid)
+            onboardingLayout.loginRequested(keyUid, Onboarding.LoginMethod.Password, { password })
+        }
+    }
 
     Component {
         id: splashScreenV2
@@ -155,6 +194,7 @@ Item {
 
         Component.onCompleted: {
             root.contentLoaded()
+            Qt.callLater(d.maybeAutoLogin)
         }
 
         Component {

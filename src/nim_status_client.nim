@@ -359,6 +359,12 @@ proc mainProc() =
   # Ensure we have the featureFlags instance available from the start
   singletonInstance.engine.setRootContextProperty("featureFlagsRootContextProperty", newQVariant(singletonInstance.featureFlags()))
 
+  # Dev-only in-app repro driver (ui/app/mainui/AutoReproDriver.qml). Runtime env
+  # wins; the compile define is for mobile builds where env vars can't be passed.
+  const AUTO_REPRO_SCENARIO {.strdefine.} = ""
+  singletonInstance.engine.setRootContextProperty("autoReproScenario",
+    newQVariant(getEnv("STATUS_AUTO_REPRO", AUTO_REPRO_SCENARIO)))
+
   when defined(useSimulatedKeycard):
     keycardTestControllerInstance = newKeycardTestController()
     singletonInstance.engine.setRootContextProperty("keycardTestController", newQVariant(keycardTestControllerInstance))

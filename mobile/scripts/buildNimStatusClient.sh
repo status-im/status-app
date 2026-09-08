@@ -66,6 +66,8 @@ APP_CONFIG_DEFINES=(
     -d:STATUSGO_VERSION="$STATUSGO_VERSION"
     -d:GIT_COMMIT="$(git log --pretty=format:'%h' -n 1)"
     -d:PUSH_TOPIC="$BUNDLE_IDENTIFIER"
+    # dev-only scripted repro (ui/app/mainui/AutoReproDriver.qml); unset = inert
+    ${AUTO_REPRO_SCENARIO:+-d:AUTO_REPRO_SCENARIO="$AUTO_REPRO_SCENARIO"}
 )
 
 NIM_FLAGS=(
