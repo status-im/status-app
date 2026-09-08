@@ -10591,15 +10591,15 @@ to load</source>
 <context>
     <name>LogosNetworkView</name>
     <message>
-        <source>Messages are sent via the Logos Messaging Network, a peer-to-peer network powered collectively by users running Status Desktop, making Status decentralized, resilient, and censorship-resistant. %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Learn more</source>
         <translation type="unfinished">더 알아보기</translation>
     </message>
     <message>
-        <source>Connected Logos network peers</source>
+        <source>Messages are sent via a decentralised network, a peer-to-peer (p2p) network built on Logos Messaging technology and powered collectively by users running Status Desktop, making Status decentralised, resilient, and censorship-resistant. %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connected network peers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10619,23 +10619,27 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Refresh Logos network peers</source>
+        <source>Refresh network peers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Unable to refresh Logos network peers: %1</source>
+        <source>Unable to refresh network peers: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>If Status has no connected Logos peers, check:</source>
+        <source>How to fix p2p network connection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Some networks may block access to the Logos network. %1</source>
+        <source>If Status has no connected network peers, check:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Try using a VPN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Some networks may block access to the p2p network. %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10644,10 +10648,6 @@ to load</source>
     </message>
     <message>
         <source>Try another network or disconnect your VPN</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>How to fix Logos network connection</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -13783,10 +13783,6 @@ to load</source>
         <source>Contacts</source>
         <translation>연락처</translation>
     </message>
-    <message>
-        <source>Logos Network</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>ProfilePerspectiveSelector</name>
@@ -15372,7 +15368,7 @@ to load</source>
         <translation>연결 문제가 발생할 수 있습니다.&lt;br&gt;그럴 경우, 대신 복구 구문 입력 기능을 사용해 주세요.</translation>
     </message>
     <message>
-        <source>Logos network</source>
+        <source>P2P network</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

@@ -24,7 +24,7 @@ SettingsContentBase {
         id: d
 
         readonly property string logosMessagingDocsUrl: "https://docs.logos.co/messaging"
-        readonly property int spacing: Theme.bigPadding
+        readonly property int spacing: root.Theme.bigPadding
         readonly property int peerCountRefreshIntervalSeconds: 15
         property int peerCountRefreshSecondsLeft: 0 // To trigger a fetch on start
 
@@ -61,7 +61,7 @@ SettingsContentBase {
             Layout.rightMargin: Theme.padding
             wrapMode: Text.Wrap
             color: Theme.palette.baseColor1
-            text: qsTr("Messages are sent via the Logos Messaging Network, a peer-to-peer network powered collectively by users running Status Desktop, making Status decentralized, resilient, and censorship-resistant. %1")
+            text: qsTr("Messages are sent via a decentralised network, a peer-to-peer (p2p) network built on Logos Messaging technology and powered collectively by users running Status Desktop, making Status decentralised, resilient, and censorship-resistant. %1")
                   .arg(Utils.getStyledLink(qsTr("Learn more"),
                                            d.logosMessagingDocsUrl,
                                            hoveredLink,
@@ -82,7 +82,7 @@ SettingsContentBase {
         StatusBaseText {
             Layout.fillWidth: true
             wrapMode: Text.Wrap
-            text: qsTr("Connected Logos network peers")
+            text: qsTr("Connected network peers")
             color: Theme.palette.baseColor1
         }
 
@@ -154,7 +154,7 @@ SettingsContentBase {
                 radius: 10
                 highlighted: true
                 loading: root.peerCountLoading
-                Accessible.name: qsTr("Refresh Logos network peers")
+                Accessible.name: qsTr("Refresh network peers")
                 onClicked: d.refreshPeerCount()
             }
         }
@@ -166,7 +166,7 @@ SettingsContentBase {
             visible: !!root.peerCountError
             wrapMode: Text.WordWrap
             color: Theme.palette.dangerColor1
-            text: qsTr("Unable to refresh Logos network peers: %1").arg(root.peerCountError)
+            text: qsTr("Unable to refresh network peers: %1").arg(root.peerCountError)
         }
 
         Separator {
@@ -191,7 +191,7 @@ SettingsContentBase {
                 StatusBaseText {
                     Layout.fillWidth: true
                     wrapMode: Text.Wrap
-                    text: qsTr("How to fix Logos network connection")
+                    text: qsTr("How to fix p2p network connection")
                     color: Theme.palette.directColor1
                     font.bold: true
                 }
@@ -199,14 +199,14 @@ SettingsContentBase {
                 StatusBaseText {
                     Layout.fillWidth: true
                     wrapMode: Text.Wrap
-                    text: qsTr("If Status has no connected Logos peers, check:")
+                    text: qsTr("If Status has no connected network peers, check:")
                     color: Theme.palette.baseColor1
                 }
 
                 TroubleshootingRow {
                     Layout.fillWidth: true
                     iconName: "globe"
-                    description: qsTr("Some networks may block access to the Logos network. %1").arg("<b>" + qsTr("Try using a VPN") + "</b>")
+                    description: qsTr("Some networks may block access to the p2p network. %1").arg("<b>" + qsTr("Try using a VPN") + "</b>")
                 }
 
                 TroubleshootingRow {

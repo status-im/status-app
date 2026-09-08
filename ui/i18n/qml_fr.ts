@@ -10640,16 +10640,16 @@ chargement</translation>
 <context>
     <name>LogosNetworkView</name>
     <message>
-        <source>Messages are sent via the Logos Messaging Network, a peer-to-peer network powered collectively by users running Status Desktop, making Status decentralized, resilient, and censorship-resistant. %1</source>
-        <translation>Les messages sont envoyés via le réseau Logos Messaging, un réseau pair à pair alimenté collectivement par les utilisateurs exécutant Status Desktop, ce qui rend Status décentralisé, résilient et résistant à la censure. %1</translation>
-    </message>
-    <message>
         <source>Learn more</source>
         <translation>En savoir plus</translation>
     </message>
     <message>
-        <source>Connected Logos network peers</source>
-        <translation>Pairs du réseau Logos connectés</translation>
+        <source>Messages are sent via a decentralised network, a peer-to-peer (p2p) network built on Logos Messaging technology and powered collectively by users running Status Desktop, making Status decentralised, resilient, and censorship-resistant. %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connected network peers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Peers</source>
@@ -10668,24 +10668,28 @@ chargement</translation>
         <translation>Connecté</translation>
     </message>
     <message>
-        <source>Refresh Logos network peers</source>
-        <translation>Actualiser les pairs du réseau Logos</translation>
+        <source>Refresh network peers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Unable to refresh Logos network peers: %1</source>
-        <translation>Impossible d’actualiser les pairs du réseau Logos&#xa0;: %1</translation>
+        <source>Unable to refresh network peers: %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>If Status has no connected Logos peers, check:</source>
-        <translation>Si Status n’a aucun pair Logos connecté, vérifiez&#xa0;:</translation>
+        <source>How to fix p2p network connection</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Some networks may block access to the Logos network. %1</source>
-        <translation>Certains réseaux peuvent bloquer l’accès au réseau Logos. %1</translation>
+        <source>If Status has no connected network peers, check:</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Try using a VPN</source>
         <translation>Essayez d’utiliser un VPN</translation>
+    </message>
+    <message>
+        <source>Some networks may block access to the p2p network. %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Current internet connection may be unstable. %1</source>
@@ -10694,10 +10698,6 @@ chargement</translation>
     <message>
         <source>Try another network or disconnect your VPN</source>
         <translation>Essayez un autre réseau ou déconnectez votre VPN</translation>
-    </message>
-    <message>
-        <source>How to fix Logos network connection</source>
-        <translation>Comment résoudre les problèmes de connexion au réseau Logos</translation>
     </message>
 </context>
 <context>
@@ -13849,10 +13849,6 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
         <source>Contacts</source>
         <translation>Contacts</translation>
     </message>
-    <message>
-        <source>Logos Network</source>
-        <translation>Réseau Logos</translation>
-    </message>
 </context>
 <context>
     <name>ProfilePerspectiveSelector</name>
@@ -15440,8 +15436,8 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
         <translation>Des problèmes de connexion peuvent survenir.&lt;br&gt;Si c’est le cas, veuillez utiliser la fonction «&#xa0;Saisir une phrase de récupération&#xa0;» à la place.</translation>
     </message>
     <message>
-        <source>Logos network</source>
-        <translation>Réseau Logos</translation>
+        <source>P2P network</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Messaging</source>
