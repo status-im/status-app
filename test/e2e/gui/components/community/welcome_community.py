@@ -1,9 +1,7 @@
 import allure
 
-import configs
 import driver
 from gui.components.authenticate_popup import AuthenticatePopup
-from gui.components.sign_popup import SignPopup
 from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.text_label import TextLabel
@@ -59,26 +57,18 @@ class WelcomeCommunityPopup(QObject):
     def join_with_sharing_all_addresses(self) -> CommunityJoinAuthenticatePopup:
         return self.join()
 
-    @allure.step('Share all addresses and open Sign popup')
-    def share_all_and_sign(self) -> SignPopup:
+    @allure.step('Join community with Keycard PIN')
+    def join_with_keycard(self, pin: str):
         self._share_address_button.click()
-        self._sign_keypair_button.wait_until_appears()
         self._sign_keypair_button.click()
-        return SignPopup().wait_until_appears()
 
-    @allure.step('Sign shared addresses with Keycard PIN')
-    def sign_all_with_pin(self, pin: str):
-        sign_popup = SignPopup()
-        sign_popup.wait_until_appears()
+        pin_input = QObject(names.keycardAuthPinInput).wait_until_appears()
         while True:
-            sign_popup.enter_pin(pin)
-            if not driver.waitFor(lambda: sign_popup.is_pin_visible, 5000):
+            pin_input.object.setPin(pin)
+            pin_input.wait_until_hidden()
+            if not driver.waitFor(lambda: pin_input.is_visible, 5000):
                 break
-        return self
 
-    @allure.step('Submit shared addresses to join')
-    def submit_shared_addresses(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        self._submit_shared_addresses_button.wait_until_appears(timeout_msec)
         self._submit_shared_addresses_button.click()
-        self.wait_until_hidden(timeout_msec)
+        self.wait_until_hidden()
         return self

@@ -15,7 +15,7 @@ from gui.elements.text_edit import TextEdit
 from gui.elements.text_label import TextLabel
 from gui.objects_map import names, onboarding_names
 
-GENERATED_PAGES_LIMIT = 20
+ADD_ACCOUNT_ADDRESSES_PER_PAGE = 5
 
 
 class AccountPopup(QObject):
@@ -143,22 +143,64 @@ class AccountPopup(QObject):
 
     @allure.step('Confirm non-Ethereum derivation path if confirmation is required')
     def _confirm_non_eth_derivation_path_if_needed(self):
-        if driver.waitFor(lambda: self._non_eth_checkbox.is_visible, 3000):
-            self._scroll.vertical_scroll_down(self._non_eth_checkbox, extra_scrolls_after=2)
-            self._non_eth_checkbox.set(True)
+        if driver.waitFor(lambda: self._non_eth_checkbox.is_visible, configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+            self._scroll.vertical_scroll_down(self._non_eth_checkbox, extra_scrolls_after=1)
+            self._non_eth_checkbox.hover().set(True)
+        return self
+
+    def _path_selection_applied(self, path_name: str) -> bool:
+        try:
+            address_selector = driver.waitForObjectExists(
+                self._address_combobox_button.real_name, 200)
+            return (
+                getattr(address_selector, 'enabled', False)
+                and (
+                    path_name != DerivationPathName.ETHEREUM_LEDGER.value
+                    or self._non_eth_checkbox.is_visible
+                )
+            )
+        except (LookupError, RuntimeError):
+            return False
+
+    @allure.step('Select predefined derivation path {1}')
+    def _select_predefined_derivation_path(self, path_name: str):
+        for attempt in range(2):
+            self._derivation_path_combobox_button.hover().click()
+            self._derivation_path_list_item.real_name[
+                'objectName'] = f'AddAccountPopup-PreDefinedDerivationPath-{path_name}'
+            self._derivation_path_list_item.wait_until_appears().hover().click()
+            self._derivation_path_list_item.wait_until_hidden()
+            timeout_msec = (
+                configs.timeouts.COMMUNITY_LOAD_TIMEOUT_MSEC if attempt == 0
+                else configs.timeouts.UI_LOAD_TIMEOUT_MSEC
+            )
+            if driver.waitFor(lambda: self._path_selection_applied(path_name), timeout_msec):
+                return self
+        raise AssertionError(
+            f'Derivation path "{path_name}" was not applied or addresses were not loaded in time',
+        )
+
+    @allure.step('Open generated addresses list')
+    def _open_generated_addresses_list(self) -> 'GeneratedAddressesList':
+        addresses_list = GeneratedAddressesList()
+        self._address_combobox_button.wait_until_enabled()
+        for _ in range(2):
+            self._address_combobox_button.hover().click()
+            try:
+                return addresses_list.wait_until_appears()
+            except LookupError:
+                pass
+        raise LookupError('Generated addresses list did not open')
 
     @allure.step('Set derivation path for account')
     def set_derivation_path(self, value: str, index: int):
+        self._scroll.vertical_scroll_down(self._edit_derivation_path_button)
         self._edit_derivation_path_button.hover().click()
         AuthenticatePopup().assert_does_not_appear()
         self._scroll.vertical_scroll_down(self._derivation_path_text_edit)
-        if value in [_.value for _ in DerivationPathName]:
-            self._derivation_path_combobox_button.click()
-            self._derivation_path_list_item.real_name[
-                'objectName'] = "AddAccountPopup-PreDefinedDerivationPath-" + value
-            self._derivation_path_list_item.click()
-            self._address_combobox_button.click()
-            GeneratedAddressesList().select(index)
+        if value in [path.value for path in DerivationPathName]:
+            self._select_predefined_derivation_path(value)
+            self._open_generated_addresses_list().select(index)
         else:
             self._derivation_path_text_edit.type_text(str(index))
         self._confirm_non_eth_derivation_path_if_needed()
@@ -330,22 +372,29 @@ class GeneratedAddressesList(QObject):
     def __init__(self):
         super().__init__(names.accountAddressSelectionModal)
         self.address_list_item = QObject(names.addAccountPopup_GeneratedAddress)
-        self.paginator_page = QObject(names.page_StatusBaseButton)
+
+    def _select_page(self, page_number: int):
+        locator = dict(names.page_StatusBaseButton)
+        locator['text'] = str(page_number)
+        page = driver.waitForObject(locator)
+        driver.mouseClick(page, page.width / 2, page.height / 2, driver.Qt.LeftButton)
+        time.sleep(0.5)
+
+    def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+        driver.waitForObjectExists(
+            names.addAccountPopup_GeneratedAddressesListPageIndicatior_StatusPageIndicator,
+            timeout_msec,
+        )
+        return self
 
     @allure.step('Select address in list')
     def select(self, index: int):
-        self.address_list_item.real_name['objectName'] = 'AddAccountPopup-GeneratedAddress-' + str(index)
+        target_page = index // ADD_ACCOUNT_ADDRESSES_PER_PAGE + 1
+        self.address_list_item.real_name['objectName'] = f'AddAccountPopup-GeneratedAddress-{index}'
 
-        selected_page_number = 1
-        while selected_page_number != GENERATED_PAGES_LIMIT:
-            if self.address_list_item.is_visible:
-                self.address_list_item.click()
-                self.paginator_page.wait_until_hidden()
-                break
+        for selected_page_number in range(2, target_page + 1):
+            self._select_page(selected_page_number)
 
-            else:
-                selected_page_number += 1
-                self.paginator_page.real_name['text'] = selected_page_number
-                self.paginator_page.click()
-                time.sleep(0.5)
+        self.address_list_item.wait_until_appears(configs.timeouts.LOADING_LIST_TIMEOUT_MSEC).click()
+        self.address_list_item.wait_until_hidden()
 
