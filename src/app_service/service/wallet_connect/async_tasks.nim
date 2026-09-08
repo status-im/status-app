@@ -1,5 +1,10 @@
+import stint
+
 import backend/backend
 import backend/eth
+
+import app_service/service/eth/utils as eth_utils
+import app_service/service/transaction/dto_conversion
 
 type
   AsyncGetEstimatedTimeArgs = ref object of QObjectTaskArg
@@ -21,9 +26,10 @@ proc asyncGetEstimatedTimeTask(argsEncoded: string) {.gcsafe, nimcall.} =
   let result = %*{
     "topic": arg.topic,
     "chainId": arg.chainId,
-    "estimatedTime": EstimatedTime.Unknown,
+    "estimatedTime": EstimatedTime.Unknown.int,
   }
   try:
+    # in gwei, matching the units of suggestedFees below
     var maxFeePerGas: float64
     if arg.maxFeePerGasHex.isEmptyOrWhitespace:
       let chainFeesResult = eth.suggestedFees(arg.chainId).result
@@ -44,8 +50,9 @@ proc asyncGetEstimatedTimeTask(argsEncoded: string) {.gcsafe, nimcall.} =
         error "failed to parse maxFeePerGasHex", msg = arg.maxFeePerGasHex
         arg.finish(result)
 
-    let estimatedTime = backend.getTransactionEstimatedTime(arg.chainId, $(maxFeePerGas)).result.getInt
-    result["estimatedTime"] = %estimatedTime
+    let maxFeePerGasWeiHex = "0x" & eth_utils.stripLeadingZeros(stint.u256(int64(maxFeePerGas * 1e9)).toHex)
+    let seconds = backend.getTransactionEstimatedTimeV2(arg.chainId, "0x0", maxFeePerGasWeiHex, "0x0").result.getInt
+    result["estimatedTime"] = %estimatedTimeFlagFromSeconds(seconds).int
     arg.finish(result)
   except Exception as e:
     error "asyncGetEstimatedTime failed: ", msg=e.msg

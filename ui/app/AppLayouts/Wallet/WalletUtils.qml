@@ -79,10 +79,16 @@ QtObject {
         switch(estimatedFlag) {
         case Constants.TransactionEstimatedTime.Unknown:
             return qsTr("~ Unknown")
+        case Constants.TransactionEstimatedTime.LessThanThirtySecs:
+            return shortForm ? qsTr("< 30 sec") : qsTr("< 30 seconds")
         case Constants.TransactionEstimatedTime.LessThanOneMin :
             return shortForm ? qsTr("< 1 min") : qsTr("< 1 minute")
+        case Constants.TransactionEstimatedTime.LessThanTwoMins:
+            return shortForm ? qsTr("< 2 min") : qsTr("< 2 minutes")
         case Constants.TransactionEstimatedTime.LessThanThreeMins :
             return shortForm ? qsTr("< 3 min") : qsTr("< 3 minutes")
+        case Constants.TransactionEstimatedTime.LessThanFourMins:
+            return shortForm ? qsTr("< 4 min") : qsTr("< 4 minutes")
         case Constants.TransactionEstimatedTime.LessThanFiveMins:
             return shortForm ? qsTr("< 5 min") : qsTr("< 5 minutes")
         default:

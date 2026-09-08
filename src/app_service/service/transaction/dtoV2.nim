@@ -65,6 +65,7 @@ type
     txBonderFees*: UInt256
     txTokenFees*: UInt256
     txEstimatedTime*: int
+    routeExecutionDuration*: int
 
     txFee*: UInt256
     txL1Fee*: UInt256
@@ -145,6 +146,7 @@ proc toTransactionPathDtoV2*(jsonObj: JsonNode): TransactionPathDtoV2 =
   result.txBonderFees = stint.fromHex(UInt256, jsonObj{"TxBonderFees"}.getStr)
   result.txTokenFees = stint.fromHex(UInt256, jsonObj{"TxTokenFees"}.getStr)
   discard jsonObj.getProp("TxEstimatedTime", result.txEstimatedTime)
+  discard jsonObj.getProp("RouteExecutionDuration", result.routeExecutionDuration)
   result.txFee = stint.fromHex(UInt256, jsonObj{"TxFee"}.getStr)
   result.txL1Fee = stint.fromHex(UInt256, jsonObj{"TxL1Fee"}.getStr)
   discard jsonObj.getProp("ApprovalRequired", result.approvalRequired)

@@ -14,6 +14,17 @@ import app/modules/shared_models/currency_amount
 include  app_service/common/json_utils
 
 type
+  EstimatedTime* {.pure.} = enum
+    Unknown = 0
+    LessThanThirtySecs
+    LessThanOneMin
+    LessThanTwoMins
+    LessThanThreeMins
+    LessThanFourMins
+    LessThanFiveMins
+    MoreThanFiveMins
+
+type
   SendType* {.pure.} = enum
     Transfer
     ENSRegister

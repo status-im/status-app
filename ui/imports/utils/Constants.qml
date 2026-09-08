@@ -1486,8 +1486,11 @@ QtObject {
     // Mirrors src/app_service/service/transaction/service.nim -> EstimatedTime
     enum TransactionEstimatedTime {
         Unknown = 0,
+        LessThanThirtySecs,
         LessThanOneMin,
+        LessThanTwoMins,
         LessThanThreeMins,
+        LessThanFourMins,
         LessThanFiveMins,
         MoreThanFiveMins
     }

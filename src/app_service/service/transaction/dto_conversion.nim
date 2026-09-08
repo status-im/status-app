@@ -9,17 +9,23 @@ proc sortAsc[T](t1, t2: T): int =
   elif (t1.fromNetwork.chainId < t2.fromNetwork.chainId): return -1
   else: return 0
 
-proc estimatedTimeFlagFromSeconds(seconds: int): int =
+proc estimatedTimeFlagFromSeconds*(seconds: int): EstimatedTime =
   if seconds <= 0:
-    return 0 # Unknown
+    return EstimatedTime.Unknown
+  elif seconds < 30:
+    return EstimatedTime.LessThanThirtySecs
   elif seconds < 60:
-    return 1 # LessThanOneMin
+    return EstimatedTime.LessThanOneMin
+  elif seconds < 120:
+    return EstimatedTime.LessThanTwoMins
   elif seconds < 180:
-    return 2 # LessThanThreeMins
+    return EstimatedTime.LessThanThreeMins
+  elif seconds < 240:
+    return EstimatedTime.LessThanFourMins
   elif seconds <= 300:
-    return 3 # LessThanFiveMins
+    return EstimatedTime.LessThanFiveMins
   else:
-    return 4 # MoreThanFiveMins
+    return EstimatedTime.MoreThanFiveMins
 
 proc convertToOldRoute*(route: seq[TransactionPathDtoV2]): seq[TransactionPathDto] =
   const
@@ -75,9 +81,11 @@ proc convertToOldRoute*(route: seq[TransactionPathDtoV2]): seq[TransactionPathDt
       trPath.amountInLocked = p.amountInLocked
       trPath.gasAmount = p.txGasAmount
 
-      # The approval and main tx run sequentially, so sum their (seconds) estimates before bucketing.
-      # approvalEstimatedTime is 0 when no approval is needed.
-      trPath.estimatedTime = estimatedTimeFlagFromSeconds(p.txEstimatedTime + p.approvalEstimatedTime)
+      # Approval tx, main tx and the route execution (e.g. bridging) run
+      # sequentially, so sum their (seconds) estimates before bucketing.
+      # approvalEstimatedTime is 0 when no approval is needed and
+      # routeExecutionDuration is 0 when the provider reports none.
+      trPath.estimatedTime = estimatedTimeFlagFromSeconds(p.txEstimatedTime + p.approvalEstimatedTime + p.routeExecutionDuration).int
 
       value = conversion.wei2Eth(p.suggestedLevelsForMaxFeesPerGas.medium,  decimals = ethDecimals)
       trPath.approvalGasFees = parseFloat(value) * float64(p.approvalGasAmount)
