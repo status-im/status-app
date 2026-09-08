@@ -271,7 +271,7 @@ Per-run screenshots and data: `local_run_results/run_<date>/`.
 
 ## Local Waku fleet (optional)
 
-Run against a local **nwaku** stack instead of `status.prod`. Works on **Linux, Windows, and macOS** — same env vars and compose file everywhere.
+Run against a local **logos-delivery** stack instead of `status.prod`. Works on **Linux, Windows, and macOS** — same env vars and compose file everywhere.
 
 **Prerequisites:** Docker installed and running (`docker ps` must work). On Mac/Windows use [Docker Desktop](https://www.docker.com/products/docker-desktop/) and wait until it is fully started before running compose.
 

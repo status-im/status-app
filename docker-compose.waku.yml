@@ -1,12 +1,12 @@
 services:
   boot-1:
-    image: wakuorg/nwaku:v0.38.1
+    image: harbor.status.im/wakuorg/nwaku:v0.39.0-rc.2
     ports:
       - "39001"
       - "8645"
       - "49000/udp"
     entrypoint: [
-      "/usr/bin/wakunode",
+      "/usr/local/bin/logosdeliverynode",
       "--discv5-discovery=true",
       "--discv5-enr-auto-update=True",
       "--discv5-udp-port=49000",
@@ -43,19 +43,21 @@ services:
       retries: 10
 
   store:
-    image: wakuorg/nwaku:v0.38.1
+    image: harbor.status.im/wakuorg/nwaku:v0.39.0-rc.2
     ports:
       - "39002"
       - "8646"
       - "49001/udp"
     entrypoint: [
-      "/usr/bin/wakunode",
+      "/usr/local/bin/logosdeliverynode",
       "--discv5-discovery=true",
       "--discv5-enr-auto-update=True",
       "--discv5-udp-port=49001",
       "--cluster-id=16",
       "--num-shards-in-network=0",
       "--dns-addrs-name-server=127.0.0.11",
+      "--filter=false",
+      "--lightpush=false",
       "--log-level=INFO",
       "--max-connections=18000",
       "--max-msg-size=1024KiB",
@@ -86,19 +88,21 @@ services:
       retries: 10
 
   store-2:
-    image: wakuorg/nwaku:v0.38.1
+    image: harbor.status.im/wakuorg/nwaku:v0.39.0-rc.2
     ports:
       - "39003"
       - "8647"
       - "49002/udp"
     entrypoint: [
-      "/usr/bin/wakunode",
+      "/usr/local/bin/logosdeliverynode",
       "--discv5-discovery=true",
       "--discv5-enr-auto-update=True",
       "--discv5-udp-port=49002",
       "--cluster-id=16",
       "--num-shards-in-network=0",
       "--dns-addrs-name-server=127.0.0.11",
+      "--filter=false",
+      "--lightpush=false",
       "--log-level=INFO",
       "--max-connections=18000",
       "--max-msg-size=1024KiB",
