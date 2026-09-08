@@ -1,19 +1,17 @@
 # See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
-# By default adding the desktop team to review any changes
-*           @status-im/desktop
-Makefile    @status-im/devops @status-im/desktop
+# By default adding the status-devs team to review any changes
+*           @status-im/status-devs
+Makefile    @status-im/devops @status-im/status-devs
 
 # Any change in the ci requires approval from DevOps team
 /ci/        @status-im/devops
 /nix/       @status-im/devops
 /scripts/   @status-im/devops
-# Default qml/js code reviewers
-*.qml       @status-im/desktop-wallet @status-im/desktop-core
-*.js        @status-im/desktop-wallet @status-im/desktop-core
-/storybook/ @status-im/desktop-wallet @status-im/desktop-core
-# Default squish tests owners
-/test/e2e/  @status-im/desktop-qa
+/fastlane/  @status-im/devops
+/fdroid/    @status-im/devops
+/flatpak/   @status-im/devops
 
-# Nim code reviewers
-/src/       @status-im/desktop-wallet @status-im/desktop-core
+# Default squish/appium tests owners
+/test/e2e/         @status-im/desktop-qa
+/test/e2e_appium/  @status-im/desktop-qa
