@@ -14,13 +14,15 @@ import shared.controls.chat
 import shared.stores
 import utils
 
+import AppLayouts.Profile.helpers
+
 StatusDialog {
     id: root
 
     required property UtilsStore utilsStore
 
     required property string publicKey
-    required property var contactDetails
+    required property ContactDetails contactDetails
     property bool loadingContactDetails
 
     default property alias content: contentLayout.children

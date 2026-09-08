@@ -6,12 +6,15 @@ import StatusQ.Popups.Dialog
 import shared.views
 import shared.controls
 
+import AppLayouts.Profile.helpers
+
 StatusDialog {
     id: root
 
     property var parentPopup
 
-    property alias contactDetails: profileView.contactDetails
+    // Not an alias: required-via-alias isn't credited when set through createObject initial properties
+    required property ContactDetails contactDetails
 
     property alias profileStore: profileView.profileStore
     property alias contactsStore: profileView.contactsStore
@@ -62,6 +65,8 @@ StatusDialog {
 
     contentItem: ProfileDialogView {
         id: profileView
+
+        contactDetails: root.contactDetails
 
         onCloseRequested: root.close()
         onNavigationRequested: root.navigationRequested()

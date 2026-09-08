@@ -11,6 +11,7 @@ ColumnLayout {
     id: root
 
     signal shareChatKeyClicked()
+    signal supportBotChatRequested()
 
     spacing: 0
 
@@ -38,8 +39,10 @@ ColumnLayout {
 
         Layout.fillWidth: true
 
-        text: qsTr("%1 to connect with or<br>invite your friends to Status.")
+        text: qsTr("%1 to connect with or<br>invite your friends to Status.<br><br><br>%2<br>for welcome messages, how-to tips, or just to share feedback or issues.")
           .arg(Utils.getStyledLink(qsTr("Share your profile"), "#share", hoveredLink,
+                Theme.palette.primaryColor1, Theme.palette.primaryColor1, false))
+          .arg(Utils.getStyledLink(qsTr("Chat with the Status Team peer-to-peer bot"), "#supportBot", hoveredLink,
                 Theme.palette.primaryColor1, Theme.palette.primaryColor1, false))
 
         horizontalAlignment: Text.AlignHCenter
@@ -54,6 +57,8 @@ ColumnLayout {
         onLinkActivated: link => {
             if (link === "#share")
                 root.shareChatKeyClicked()
+            else if (link === "#supportBot")
+                root.supportBotChatRequested()
         }
 
         HoverHandler {
