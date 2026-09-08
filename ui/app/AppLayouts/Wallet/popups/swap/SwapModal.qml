@@ -395,9 +395,7 @@ StatusDialog {
         TapHandler {
             enabled: Qt.inputMethod.visible
             onTapped: (eventPoint) => {
-                // the panels own their tap-to-focus behaviour; leave them alone
-                if (d.tapLandedOn(payPanel, eventPoint.position)
-                        || d.tapLandedOn(receivePanel, eventPoint.position))
+                if (d.tapLandedOn(payPanel.amountInputItem, eventPoint.position))
                     return
                 d.dismissKeyboard()
             }
