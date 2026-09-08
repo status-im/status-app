@@ -61,8 +61,11 @@ QtObject {
         4. "description" to "communityDescription"
         in communitiesModule.model so that it can be easily
         joined with the Collectibles model */
+    // proxies must not bind to context properties directly: registered late, they never re-evaluate
+    readonly property var _communitiesModel: !!communitiesModule ? communitiesModule.model : null
+
     readonly property var _renamedCommunitiesModel: RolesRenamingModel {
-        sourceModel: communitiesModule.model
+        sourceModel: root._communitiesModel
         mapping: [
             RoleRename {
                 from: "id"
