@@ -126,10 +126,6 @@ rpc(fetchMarketValues, "wallet"):
 rpc(startWallet, "wallet"):
   discard
 
-rpc(getTransactionEstimatedTime, "wallet"):
-  chainId: int
-  maxFeePerGas: string
-
 rpc(getTransactionEstimatedTimeV2, "wallet"):
   chainId: int
   gasPrice: string
