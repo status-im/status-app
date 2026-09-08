@@ -246,6 +246,7 @@ pipeline {
                     GIT_REF:      env.BRANCH_NAME,
                     BUILD_SOURCE: urls['Android/arm64'],
                     PYTEST_ARGS:  '-n=2 -m smoke tests',
+                    BACKEND_PEER: false,
                   ]),
                 )
               } }
