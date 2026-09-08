@@ -6,14 +6,16 @@ import QtQuick
   context property (STATUS_AUTO_REPRO env var on desktop,
   -d:AUTO_REPRO_SCENARIO=... for mobile builds). Empty scenario = inert.
 
-  Scenario "wallet-settings": activate the wallet section, then jump to
-  settings while it is still coming up. Repeats with a growing delay so the
+  Scenario "wallet-switch": activate the wallet section, then jump to another
+  section (`target`) while it is still coming up. "wallet-settings" is an
+  alias for target=settings. Repeats with a growing delay so the
   switch lands at every phase of the wallet incubation. A 1s heartbeat line
   keeps logging while the GUI thread is alive, so a freeze shows up as the
   heartbeat stopping and a crash as the process going away.
 
-    STATUS_AUTO_REPRO="wallet-settings:at=immediate,loops=30,settle=2000"
+    STATUS_AUTO_REPRO="wallet-switch:target=chat,at=immediate,loops=30"
 
+  target  settings | chat | home | communities                 (default settings)
   at      immediate | activate | loading | loaded              (default immediate)
           immediate = switch to settings in the same call stack that activated
           the wallet (no event processing in between); the others arm `delay`
@@ -33,9 +35,9 @@ QtObject {
     required property Loader walletLoader
 
     signal walletRequested()
-    signal settingsRequested()
+    signal sectionRequested(string target)
 
-    readonly property bool enabled: d.name === "wallet-settings"
+    readonly property bool enabled: d.name === "wallet-switch" || d.name === "wallet-settings"
     readonly property string phase: d.phase
 
     function parse(scenario) {
@@ -60,6 +62,7 @@ QtObject {
 
         readonly property var parsed: root.parse(root.scenario)
         readonly property string name: parsed.name ?? ""
+        readonly property string target: parsed.target ?? "settings"
         readonly property string at: parsed.at ?? "immediate"
         readonly property int step: parsed.step ?? 40
         readonly property int loops: parsed.loops ?? 30
@@ -79,8 +82,8 @@ QtObject {
         function start() {
             if (phase !== "idle")
                 return
-            log("start scenario=%1 at=%2 step=%3 loops=%4 settle=%5"
-                .arg(name).arg(at).arg(step).arg(loops).arg(settle))
+            log("start scenario=%1 target=%2 at=%3 step=%4 loops=%5 settle=%6"
+                .arg(name).arg(target).arg(at).arg(step).arg(loops).arg(settle))
             heartbeat.start()
             nextLoop()
         }
@@ -117,14 +120,14 @@ QtObject {
             if (!hit)
                 return
             phase = "armed"
-            log("armed, switching to settings in %1ms".arg(delay))
+            log("armed, switching to %1 in %2ms".arg(target).arg(delay))
             switchTimer.interval = delay
             switchTimer.start()
         }
 
         function doSwitch() {
-            log("switching to settings NOW")
-            root.settingsRequested()
+            log("switching to %1 NOW".arg(target))
+            root.sectionRequested(target)
             phase = "settling"
             log("switched, settling %1ms".arg(settle))
             settleTimer.interval = settle

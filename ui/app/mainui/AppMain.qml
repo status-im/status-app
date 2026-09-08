@@ -212,7 +212,15 @@ Item {
         ready: appMain.mainReady
         walletLoader: walletLoader
         onWalletRequested: Global.changeAppSectionBySectionType(Constants.appSection.wallet)
-        onSettingsRequested: d.openSettingsRoot()
+        onSectionRequested: target => {
+            switch (target) {
+            case "settings": d.openSettingsRoot(); break
+            case "chat": appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.chat); break
+            case "home": appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.homePage); break
+            case "communities": appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.communitiesPortal); break
+            default: console.warn("[autoRepro] unknown target", target)
+            }
+        }
     }
 
     // Records the *previous* active section id whenever the active section
