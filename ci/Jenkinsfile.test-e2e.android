@@ -46,12 +46,12 @@ pipeline {
     booleanParam(
       name: 'BACKEND_PEER',
       description: 'Provide the headless status-backend the messaging tests pair a phone with.',
-      defaultValue: params.BACKEND_PEER ?: false
+      defaultValue: true
     )
     string(
       name: 'PYTEST_ARGS',
-      description: 'Pytest flags. Default runs gate tests for PRs. Use "-n=2 -m smoke tests" for nightly/full runs.',
-      defaultValue: '-n=2 -m gate tests'
+      description: 'Pytest flags. Default runs the PR gate on one phone plus a peer. Use "-n=2 -m smoke tests" for nightly/full runs.',
+      defaultValue: '-n=5 -m "(gate and not two_phone) or backend_peer" tests'
     )
   }
 
@@ -109,6 +109,9 @@ pipeline {
           script: "./test/e2e_appium/scripts/peer_image.sh '${env.STATUS_BACKEND_DOCKER_PROJECT}'",
           returnStdout: true
         ).trim()
+        if (!env.STATUS_BACKEND_IMAGE) {
+          error('Peer image stage produced no image')
+        }
       } } }
     }
 
@@ -165,6 +168,11 @@ pipeline {
 
     stage('Run pytest suite') {
       steps{
+        script {
+          if (params.PYTEST_ARGS?.contains('backend_peer') && !env.STATUS_BACKEND_IMAGE) {
+            error('PYTEST_ARGS selects peer tests but no peer image was built. Set BACKEND_PEER.')
+          }
+        }
         lock(resource: 'e2e-android') {
           script {
             env.E2E_RUN_ID = env.BUILD_TAG
