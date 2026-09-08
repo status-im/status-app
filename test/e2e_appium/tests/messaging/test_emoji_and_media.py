@@ -18,6 +18,7 @@ def _unique_message(prefix: str) -> str:
 @pytest.mark.portrait
 @pytest.mark.smoke
 @pytest.mark.device_count(2)
+@pytest.mark.two_phone
 class TestEmojiAndMedia:
     """Emoji and media coverage for 1:1 chats."""
 
