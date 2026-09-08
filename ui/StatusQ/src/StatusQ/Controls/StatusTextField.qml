@@ -20,7 +20,11 @@ TextField {
     selectByMouse: true
     selectedTextColor: Theme.palette.directColor1
     selectionColor: Theme.palette.primaryColor2
-    placeholderTextColor: Theme.palette.baseColor1
+
+    // The placeholder is rendered by a custom overlay (see below) instead of
+    // the active QtQuick Controls style, so it looks the same on every platform.
+    // Keep the native placeholder invisible so the two don't compete.
+    placeholderTextColor: StatusColors.transparent
     verticalAlignment: Text.AlignVCenter
     opacity: enabled ? 1 : ThemeUtils.disabledOpacity
 
@@ -53,6 +57,31 @@ TextField {
 
     cursorDelegate: StatusCursorDelegate {
         cursorVisible: root.cursorVisible
+    }
+
+    // Style-independent placeholder overlay. Rendering the placeholder ourselves
+    // avoids relying on the active QtQuick Controls style, whose default differs
+    // per platform. Pinpointing to single style is not possible because it
+    // blocks native context menu on iOS.
+    StatusBaseText {
+        id: placeholder
+
+        x: root.leftPadding
+        y: root.topPadding
+        width: root.width - root.leftPadding - root.rightPadding
+        // Constrain to the editable area and clip/elide so long placeholders
+        // never overflow the input's boundaries.
+        height: root.height - root.topPadding - root.bottomPadding
+        clip: true
+
+        visible: root.length === 0 && root.preeditText === ""
+        text: root.placeholderText
+        textFormat: Text.PlainText
+        color: root.enabled ? Theme.palette.baseColor1 : Theme.palette.directColor9
+        font: root.font
+        horizontalAlignment: root.horizontalAlignment
+        verticalAlignment: root.verticalAlignment
+        elide: Text.ElideRight
     }
 
     // selectedText is not notified correctly when selection is cleared on Android.
