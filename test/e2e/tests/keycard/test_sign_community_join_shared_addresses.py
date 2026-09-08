@@ -105,9 +105,7 @@ def test_sign_community_join_shared_addresses_on_keycard(multiple_instances):
             welcome_popup = community_screen.left_panel.open_welcome_community_popup()
             assert community.name in welcome_popup.title
             assert community.introduction == welcome_popup.intro
-            welcome_popup.share_all_and_sign()
-            welcome_popup.sign_all_with_pin(DEFAULT_PIN)
-            welcome_popup.submit_shared_addresses()
+            welcome_popup.join_with_keycard(DEFAULT_PIN)
             assert driver.waitFor(
                 lambda: not community_screen.left_panel.is_join_community_visible,
                 configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
