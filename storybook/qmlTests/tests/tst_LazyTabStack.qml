@@ -46,6 +46,19 @@ Item {
         }
     }
 
+    // the stack itself created asynchronously, as inside the wallet section
+    Component {
+        id: nestedAsyncComponentUnderTest
+        Loader {
+            anchors.fill: parent
+            asynchronous: true
+            sourceComponent: LazyTabStack {
+                asynchronous: true
+                tabComponents: [tabA, tabB, tabC]
+            }
+        }
+    }
+
     TestCase {
         name: "LazyTabStack"
         when: windowShown
@@ -95,6 +108,17 @@ Item {
             controlUnderTest.currentIndex = 0
             verify(controlUnderTest.itemAt(0).parent.visible)
             verify(!controlUnderTest.itemAt(2).parent.visible)
+        }
+
+        function test_becomesReadyWhenCreatedAsynchronouslyItself() {
+            d.createdA = 0
+            const outer = createTemporaryObject(nestedAsyncComponentUnderTest, root)
+            verify(!!outer)
+            tryCompare(outer, "status", Loader.Ready)
+            const control = outer.item
+            verify(!!control)
+            tryVerify(() => control.currentReady)
+            compare(d.createdA, 1)
         }
 
         function test_reportsReadinessWhileLoadingAsynchronously() {
