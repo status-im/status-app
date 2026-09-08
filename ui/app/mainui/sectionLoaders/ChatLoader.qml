@@ -56,6 +56,8 @@ Loader {
     // Bridges the chat profile button to the global app-section navigation.
     signal openAppSearchRequested()
 
+    signal supportBotChatRequested()
+
     // Back-navigation contract for AppMain's back chain. The chrome is
     // interactive while the section item still incubates, so the loader must
     // answer for it during that phase; once loaded, the item leads.
@@ -332,6 +334,9 @@ Loader {
         }
         function onNavToMsgListRequested(navigate) {
             root.rootStore.setNavToMsgListFlag(navigate)
+        }
+        function onSupportBotChatRequested() {
+            root.supportBotChatRequested()
         }
     }
 }

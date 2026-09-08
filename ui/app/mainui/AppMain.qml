@@ -1141,6 +1141,21 @@ Item {
                 Global.openNavigationEducationPopupRequested()
             }
         }
+
+        function goToSupportChatBot() {
+            if (!d.supportBotPublicKey) {
+                console.warn("Unable to resolve the Status support bot chat key")
+                return
+            }
+            if (d.supportBotConversationAvailable) {
+                appMain.contactsStore.joinPrivateChat(d.supportBotPublicKey)
+                return
+            }
+            const introMessage = localAccountSettings.freshProfile
+                ? qsTr("Send a contact request to the Status Team peer-to-peer bot over the decentralised network for welcome messages and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime")
+                : qsTr("Send a contact request to the Status Team peer-to-peer bot over the decentralised network for Status updates and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime")
+            Global.openContactRequestPopupWithDefaultMessage(d.supportBotPublicKey, null, introMessage)
+        }
     }
 
     Settings {
@@ -2305,6 +2320,9 @@ Item {
                         leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
 
                         onOpenAppSearchRequested: appSearch.openSearchPopup()
+                        onSupportBotChatRequested: () => {
+                            d.goToSupportChatBot()
+                        }
                     }
 
                     CommunitiesPortalLoader {
@@ -2495,6 +2513,9 @@ Item {
                             leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
 
                             onOpenAppSearchRequested: appSearch.openSearchPopup()
+                            onSupportBotChatRequested: () => {
+                                d.goToSupportChatBot()
+                            }
                         }
                     }
                 }
@@ -2680,18 +2701,7 @@ Item {
                 onSettingsRequested: d.openSettingsRoot()
 
                 onSupportBotChatRequested: {
-                    if (!d.supportBotPublicKey) {
-                        console.warn("Unable to resolve the Status support bot chat key")
-                        return
-                    }
-                    if (d.supportBotConversationAvailable) {
-                        appMain.contactsStore.joinPrivateChat(d.supportBotPublicKey)
-                        return
-                    }
-                    const introMessage = localAccountSettings.freshProfile
-                        ? qsTr("Send a contact request to the Status Team peer-to-peer bot over the decentralised network for welcome messages and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime")
-                        : qsTr("Send a contact request to the Status Team peer-to-peer bot over the decentralised network for Status updates and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime")
-                    Global.openContactRequestPopupWithDefaultMessage(d.supportBotPublicKey, null, introMessage)
+                    d.goToSupportChatBot()
                 }
 
                 onItemActivated: function(sectionType, sectionId) {

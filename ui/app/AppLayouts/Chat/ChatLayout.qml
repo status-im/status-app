@@ -157,6 +157,7 @@ StackLayout {
     signal showUsersListRequested(bool show)
     signal navToMsgDetailsRequested(bool navigate)
     signal navToMsgListRequested(bool navigate)
+    signal supportBotChatRequested()
 
     /*!
         \qmlproperty int StatusSectionLayoutLandscape::leftPanelWidthOverride
@@ -470,6 +471,9 @@ StackLayout {
 
             onNavToMsgDetailsRequested: navigate => root.navToMsgDetailsRequested(navigate)
             onNavToMsgListRequested: navigate => root.navToMsgListRequested(navigate)
+            onSupportBotChatRequested: () => {
+                root.supportBotChatRequested()
+            }
         }
     }
 

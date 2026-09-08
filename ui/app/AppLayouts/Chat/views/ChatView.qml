@@ -230,6 +230,7 @@ Item {
     signal showUsersListRequested(bool show)
     signal navToMsgDetailsRequested(bool navigate)
     signal navToMsgListRequested(bool navigate)
+    signal supportBotChatRequested()
 
     Connections {
         target: root.rootStore.stickersStore.stickersModule
@@ -538,6 +539,10 @@ Item {
             // Community access related requests:
             onSpectateCommunityRequested: (communityId) => {
                 root.spectateCommunityRequested(communityId)
+            }
+
+            onSupportBotChatRequested: () => {
+                root.supportBotChatRequested()
             }
         }
     }

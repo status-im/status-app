@@ -60,6 +60,7 @@ Loader {
     property real leftPanelWidthOverride: 0
 
     signal openAppSearchRequested()
+    signal supportBotChatRequested()
 
     // Back-navigation contract for AppMain's back chain. The chrome is
     // interactive while the section item still incubates, so the loader must
@@ -420,6 +421,9 @@ Loader {
         }
         function onNavToMsgDetailsRequested(navigate) {
             root.rootStore.setNavToMsgDetailsFlag(navigate)
+        }
+        function onSupportBotChatRequested() {
+            root.supportBotChatRequested()
         }
     }
 }
