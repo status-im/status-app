@@ -2691,7 +2691,7 @@ Item {
                     Global.openContactRequestPopupWithDefaultMessage(
                         d.supportBotPublicKey,
                         null,
-                        qsTr("Send the Status Team bot a contact request to get useful Status tips, important updates, and share your feedback, ideas, or issues directly with the Status team.")
+                        qsTr("Send a contact request to the Status Team peer-to-peer bot over the Logos network for Status updates and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime")
                     )
                 }
 
