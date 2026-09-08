@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 
 import StatusQ.Components
 import StatusQ.Core
@@ -33,8 +32,8 @@ TextField {
     HoverHandler {
         id: hoverHandler
         enabled: root.enabled
-        // Build the edit context menu on first hover (see contextMenuLoader).
-        onHoveredChanged: if (hovered && !Utils.isAndroid) contextMenuLoader.active = true
+        // Build the edit context menu on first hover.
+        onHoveredChanged: if (hovered && !Utils.isMobile) contextMenuLoader.active = true
     }
 
     background: Rectangle {
@@ -73,12 +72,10 @@ TextField {
     // dominant instantiation cost (a full StatusMenu with materialised items),
     // paid even when the field is never interacted with — and on Android it is not
     // even attached (Android uses the OS-native text menu). So build it lazily on
-    // first interaction, never on Android. The menu is null until then; a right-click
-    // cannot happen before the triggering hover/focus, so the menu is always present
-    // by the time it opens.
-    // iOS must keep it: an attached ContextMenu with a null menu eats the event,
-    // and Qt shows the UIKit callout only when that event goes unaccepted.
-    onActiveFocusChanged: if (activeFocus && !Utils.isAndroid) contextMenuLoader.active = true
+    // first interaction, never on Android nor iOS. The menu is null until then;
+    // a right-click cannot happen before the triggering hover/focus, so the menu is
+    // always present by the time it opens.
+    onActiveFocusChanged: if (activeFocus && !Utils.isMobile) contextMenuLoader.active = true
 
     Loader {
         id: contextMenuLoader
@@ -87,19 +84,17 @@ TextField {
         sourceComponent: StatusTextEditMenu {
             canCut: !root.readOnly && !root.noSelection
             canCopy: !root.noSelection
-            // Never read TextInput.canPaste on iOS: it reads UIPasteboard and
-            // triggers the "Allow Paste?" prompt. The menu is only built there so
-            // the context-menu event goes unaccepted and UIKit shows its own
-            // callout - this value is never displayed.
-            canPaste: !root.readOnly && (Utils.isIOS || root.canPaste)
+            canPaste: !root.readOnly && root.canPaste
             canSelectAll: root.length > 0
 
             onCutRequested: root.cut()
             onCopyRequested: root.copy()
             onPasteRequested: root.paste()
             onSelectAllRequested: root.selectAll()
+
+            // Top-level binding ContextMenu.menu: contextMenuLoader.item would
+            // assign null (suppressing native menu) if custom menu is not created.
+            Component.onCompleted: root.ContextMenu.menu = this
         }
     }
-
-    ContextMenu.menu: contextMenuLoader.item
 }
