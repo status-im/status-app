@@ -19085,6 +19085,14 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>&lt; 30 sec</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 30 seconds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&lt; 1 minute</source>
         <translation type="unfinished"></translation>
     </message>
@@ -19093,11 +19101,27 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>&lt; 2 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 2 minutes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&lt; 3 minutes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>&lt; 3 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 4 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 4 minutes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
