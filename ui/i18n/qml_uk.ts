@@ -10552,16 +10552,16 @@ to load</source>
 <context>
     <name>LogosNetworkView</name>
     <message>
-        <source>Messages are sent via the Logos Messaging Network, a peer-to-peer network powered collectively by users running Status Desktop, making Status decentralized, resilient, and censorship-resistant. %1</source>
-        <translation>Повідомлення надсилаються через Logos Messaging Network – однорангову мережу, яку спільно підтримують користувачі Status Desktop. Завдяки цьому Status децентралізований, стійкий до збоїв і захищений від цензури. %1</translation>
-    </message>
-    <message>
         <source>Learn more</source>
         <translation>Докладніше</translation>
     </message>
     <message>
-        <source>Connected Logos network peers</source>
-        <translation>Підключені вузли мережі Logos</translation>
+        <source>Messages are sent via a decentralised network, a peer-to-peer (p2p) network built on Logos Messaging technology and powered collectively by users running Status Desktop, making Status decentralised, resilient, and censorship-resistant. %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connected network peers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Peers</source>
@@ -10580,24 +10580,28 @@ to load</source>
         <translation>Підключено</translation>
     </message>
     <message>
-        <source>Refresh Logos network peers</source>
-        <translation>Оновити вузли мережі Logos</translation>
+        <source>Refresh network peers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Unable to refresh Logos network peers: %1</source>
-        <translation>Не вдалося оновити вузли мережі Logos: %1</translation>
+        <source>Unable to refresh network peers: %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>If Status has no connected Logos peers, check:</source>
-        <translation>Якщо Status не підключено до вузлів Logos, перевірте:</translation>
+        <source>How to fix p2p network connection</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Some networks may block access to the Logos network. %1</source>
-        <translation>Деякі мережі можуть блокувати доступ до мережі Logos. %1</translation>
+        <source>If Status has no connected network peers, check:</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Try using a VPN</source>
         <translation>Спробуйте VPN</translation>
+    </message>
+    <message>
+        <source>Some networks may block access to the p2p network. %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Current internet connection may be unstable. %1</source>
@@ -10606,10 +10610,6 @@ to load</source>
     <message>
         <source>Try another network or disconnect your VPN</source>
         <translation>Спробуйте іншу мережу або відключіть VPN</translation>
-    </message>
-    <message>
-        <source>How to fix Logos network connection</source>
-        <translation>Як виправити підключення до мережі Logos</translation>
     </message>
 </context>
 <context>
@@ -13778,10 +13778,6 @@ to load</source>
         <source>Contacts</source>
         <translation>Контакти</translation>
     </message>
-    <message>
-        <source>Logos Network</source>
-        <translation>Мережа Logos</translation>
-    </message>
 </context>
 <context>
     <name>ProfilePerspectiveSelector</name>
@@ -15371,8 +15367,8 @@ to load</source>
         <translation>Можуть виникнути проблеми з підключенням.&lt;br&gt;У такому разі скористайтеся функцією «Ввести фразу відновлення».</translation>
     </message>
     <message>
-        <source>Logos network</source>
-        <translation>Мережа Logos</translation>
+        <source>P2P network</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Messaging</source>
