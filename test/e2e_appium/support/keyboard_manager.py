@@ -29,24 +29,13 @@ class KeyboardManager:
                     self.logger.debug(f"hide_keyboard() attempt {attempt} failed: {e}")
                 time.sleep(delay)
 
-            try:
-                size = self.driver.get_window_size()
-                center_x = size["width"] // 2
-                start_y = int(size["height"] * 0.4)
-                end_y = int(size["height"] * 0.2)
-
-                self.logger.debug(f"Swiping from ({center_x},{start_y}) to ({center_x},{end_y}) to dismiss keyboard")
-                self.gestures.swipe_down(center_x, start_y, 20, end_y, 0.8)
-                time.sleep(delay)
-                if not self.driver.is_keyboard_shown():
-                    self.logger.info("Keyboard hidden using swipe gesture")
-                    return True
-                else:
-                    self.logger.debug("Swipe executed but keyboard still visible")
-            except Exception as e:
-                self.logger.debug(f"Swipe gesture failed: {e}")
-
-            self.logger.warning("All keyboard hiding strategies failed")
+            # No gesture fallback: is_keyboard_shown() reports true on some devices
+            # with no keyboard on screen, and a swipe fired on that scrolls whatever
+            # is under it, which is the content the caller is about to act on.
+            self.logger.warning(
+                f"Keyboard could not be hidden after {retries} attempts "
+                "(is_keyboard_shown may be a false positive)"
+            )
             return False
 
         except Exception as e:

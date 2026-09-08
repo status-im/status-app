@@ -39,6 +39,24 @@ def enabled() -> bool:
     return bool(image())
 
 
+def unrunnable_peer_items(items, collectonly: bool) -> list:
+    """Selected tests that need a peer while none is provisioned."""
+    if collectonly:
+        return []
+    if enabled():
+        return []
+    return [i for i in items if i.get_closest_marker("backend_peer")]
+
+
+def peer_provisioning_error(unrunnable) -> str:
+    return (
+        f"{len(unrunnable)} selected test(s) need a status-backend peer, but "
+        f"{IMAGE_ENV} is not set. Build an image from the "
+        "vendored status-go with scripts/peer_image.sh. "
+        f"First: {unrunnable[0].nodeid}"
+    )
+
+
 def scratch_dir() -> str:
     """Where the client's bind mounts land; without it they land in the cwd."""
     global _scratch

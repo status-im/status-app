@@ -96,6 +96,10 @@ class ChatPage(BasePage):
             )
         return None
 
+    def listed_chat_names(self) -> list[str]:
+        """Name and label of every listed chat row, for checks that must not infer."""
+        return [f"{name} {label}".strip() for _, name, label in self._chat_rows()]
+
     def wait_for_peer_rows(self, minimum: int, timeout: int = 60) -> bool:
         """Wait until at least ``minimum`` rows other than the support bot's are listed."""
 
@@ -384,6 +388,14 @@ class ChatPage(BasePage):
             return True  # Not in reply mode
         return self.try_click(self.locators.REPLY_CLOSE_BUTTON, timeout=timeout)
 
+    def is_edit_mode_active(self, timeout: int = 5) -> bool:
+        return self.is_element_visible(self.locators.EDIT_CLOSE_BUTTON, timeout=timeout)
+
+    def cancel_edit(self, timeout: int = 5) -> bool:
+        if not self.is_edit_mode_active(timeout=2):
+            return True
+        return self.try_click(self.locators.EDIT_CLOSE_BUTTON, timeout=timeout)
+
     # ===== Message State Verification =====
 
     def message_is_edited(self, content: str, timeout: int = 10) -> bool:
@@ -439,6 +451,11 @@ class ChatPage(BasePage):
         locator = self.locators.reaction_on_message(emoji_code)
         return self.is_element_visible(locator, timeout=timeout)
 
+    def message_has_reaction_on(self, content: str, emoji_code: str, timeout: int = 10) -> bool:
+        """Whether the message carrying ``content`` shows the reaction badge."""
+        locator = self.locators.reaction_on_message_with_text(content, emoji_code)
+        return self.is_element_visible(locator, timeout=timeout)
+
     def message_is_reply(self, content: str, timeout: int = 10) -> bool:
         """Check if a message shows the reply corner indicator.
 
@@ -458,10 +475,7 @@ class ChatPage(BasePage):
             "xpath",
             "//*[contains(@resource-id,'StatusTextMessage_chatText')]",
         )
-        try:
-            return len(self.driver.find_elements(*locator))
-        except Exception:
-            return 0
+        return len(self.driver.find_elements(*locator))
 
     def wait_for_message_count(self, minimum: int, timeout: int = 10) -> bool:
         """Wait until the chat has at least `minimum` messages."""
@@ -575,5 +589,3 @@ class ChatPage(BasePage):
         except Exception as exc:
             self.logger.error("Failed to close chat: %s", exc)
             return False
-
-

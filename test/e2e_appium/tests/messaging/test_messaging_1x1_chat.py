@@ -10,6 +10,7 @@ from pages.settings.settings_page import SettingsPage
 from support.multi_device_helpers import StepMixin
 
 
+@pytest.mark.two_phone
 class TestMessaging1x1Chat(StepMixin):
 
     DM_TIMEOUT = 240

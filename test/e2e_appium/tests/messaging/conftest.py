@@ -22,11 +22,16 @@ from __future__ import annotations
 import asyncio
 import os
 import threading
+import time
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 import pytest
 import pytest_asyncio
+
+if TYPE_CHECKING:
+    from core.backend_peer import BackendPeer
 
 from config.logging_config import get_logger
 from core.device_context import DeviceContext
@@ -35,14 +40,16 @@ from core.session_pool import PoolConfig, SessionPool
 from core.stash_keys import (
     ESTABLISHED_CHAT_BROKEN_KEY,
     ESTABLISHED_CHAT_FAILURE_COUNT_KEY,
+    PEER_CHAT_BROKEN_KEY,
+    PEER_CHAT_FAILURE_COUNT_KEY,
 )
 from support.chat_state import ensure_chat_visible
 from support.contact_helpers import (
     establish_contact,
     establish_contacts_admin_to_many,
 )
-from support.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
 from support.generators import generate_account_name
+from support.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
 
 logger = get_logger("messaging_conftest")
 
@@ -109,22 +116,25 @@ _module_pools = []
 # the sentinel before getting a fresh setup attempt.
 _FIXTURE_FAILURES_BEFORE_SENTINEL = 2
 
+# Comfortably covers peer start, one session, phone onboarding and the contact
+# handshake, and leaves room under pytest.ini's per-item timeout so this fires
+# first and the cleanup below actually runs.
+PEER_CHAT_SETUP_TIMEOUT_SECONDS = 900
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """Track test outcomes for BrowserStack status reporting.
 
-    This hook runs after each test phase (setup, call, teardown) and records
-    outcomes to module-level tracking dicts.
+    Setup failures and skips are recorded because fixture recovery can fail
+    before the call phase.
 
     Note: Page dump capture on failure is handled by the main conftest.py hook.
     """
     outcome = yield
     rep = outcome.get_result()
 
-    # Only track test outcomes from the call phase (actual test execution)
-    if rep.when != "call":
+    if rep.when != "call" and not (rep.when == "setup" and not rep.passed):
         return
 
     module_name = item.module.__name__ if hasattr(item, "module") else "unknown"
@@ -238,7 +248,6 @@ def _report_browserstack_status(pool: SessionPool, status: str, reason: str | No
                 logger.debug("Reported status '%s' for %s via API", status, device_name)
             except Exception as e:
                 logger.warning("Failed to report status for %s: %s", device_name, e)
-
 
 
 async def _setup_established_chat(
@@ -507,6 +516,272 @@ def chat_ready(established_chat) -> EstablishedChatContext:
     ensure_chat_visible(ctx.primary, ctx.secondary_suffix, secondary_display)
     ensure_chat_visible(ctx.secondary, ctx.primary_suffix, primary_display)
     return ctx
+
+
+# ---------------------------------------------------------------------------
+# 1 phone + headless backend peer
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class PeerChatContext:
+    """One real phone in a mutual 1:1 with a headless status-backend."""
+
+    device: DeviceContext
+    peer: "BackendPeer"
+    phone_key: str
+    multi_ctx: MultiDeviceContext
+    _keepalives: list["_SessionKeepAlive"] = field(default_factory=list)
+
+    @property
+    def driver(self):
+        return self.device.driver
+
+
+def _peer_log_dir(worker: str) -> str:
+    from config import get_config
+    try:
+        root = get_config().reports_dir
+    except Exception:
+        root = "reports"
+    return os.path.join(root, "backend_peer", f"peer_chat_{worker}")
+
+
+async def _establish_phone_to_peer_contact(device: DeviceContext, peer) -> str:
+    """Phone sends the contact request, peer accepts it over RPC."""
+    from pages.app import App
+    from pages.settings.settings_page import SettingsPage
+
+    app = App(device.driver)
+    settings_page = SettingsPage(device.driver)
+    assert app.click_settings_button(), "Failed to open settings"
+    assert settings_page.is_loaded(timeout=20), "Settings page did not load"
+    messaging_page = settings_page.open_messaging_settings()
+    assert messaging_page is not None, "Failed to open messaging settings"
+    contacts_page = messaging_page.open_contacts()
+    assert contacts_page is not None, "Failed to open contacts"
+    modal = contacts_page.open_send_contact_request_modal()
+    assert modal is not None, "Failed to open contact request modal"
+    assert modal.enter_chat_key(peer.chat_key), "Failed to enter the peer's chat key"
+    # IME sentence-caps the first letter, so the sentinel starts uppercase.
+    assert modal.enter_message("Hello-from-phone"), "Failed to enter request message"
+    assert modal.send(), "Failed to send the contact request"
+
+    deadline = time.monotonic() + CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
+    phone_key = ""
+    while not phone_key:
+        phone_key = await asyncio.to_thread(peer.pending_inbound_contact_key)
+        if phone_key:
+            break
+        if time.monotonic() >= deadline:
+            raise AssertionError(
+                "Peer never saw the phone's contact request within "
+                f"{CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS}s"
+            )
+        await asyncio.sleep(3)
+
+    await asyncio.to_thread(peer.accept_contact_request_from, phone_key)
+    await peer.await_mutual_contact(phone_key, timeout=60)
+    return phone_key
+
+
+async def _setup_peer_chat(pool: SessionPool, test_nodeid: str, worker: str):
+    from core.backend_peer import BackendPeer
+
+    peer = None
+    keepalives: list[_SessionKeepAlive] = []
+    try:
+        # Every way the peer can fail is an environment fault; starting it
+        # before the session is bought means those cost seconds, not a device.
+        peer = BackendPeer()
+        await peer.onboard()
+        assert peer.node_fleet == peer.fleet, (
+            f"backend peer joined fleet {peer.node_fleet!r}, not {peer.fleet!r}; "
+            "it cannot meet the phone"
+        )
+        await peer.wait_for_peers(min_peers=1, timeout=30)
+
+        drivers = await pool.create_sessions(
+            count=1, test_nodeid=f"{test_nodeid}::peer_setup",
+        )
+        keepalives = [_SessionKeepAlive(d, label=n) for n, d in drivers.items()]
+        for ka in keepalives:
+            ka.start()
+
+        contexts = {
+            name: DeviceContext(driver=driver, device_id=name)
+            for name, driver in drivers.items()
+        }
+        multi_ctx = MultiDeviceContext(contexts)
+        await multi_ctx.onboard_users_parallel(
+            display_names=[generate_account_name(12)], require_all=True,
+        )
+        device = contexts[list(contexts)[0]]
+
+        phone_key = await _establish_phone_to_peer_contact(device, peer)
+
+        ctx = PeerChatContext(
+            device=device, peer=peer, phone_key=phone_key,
+            multi_ctx=multi_ctx, _keepalives=keepalives,
+        )
+        return ctx
+    except BaseException:
+        for ka in keepalives:
+            try:
+                ka.stop()
+            except Exception:
+                pass
+        if peer is not None:
+            # The log lives in the container, so it has to be read before
+            # stopping the peer removes it.
+            try:
+                await asyncio.to_thread(peer.dump_logs, _peer_log_dir(worker))
+            except Exception as exc:
+                logger.warning("Could not dump peer logs after failed setup: %s", exc)
+            try:
+                await peer.stop()
+            except Exception:
+                pass
+        raise
+
+
+@pytest_asyncio.fixture(scope="module")
+async def peer_chat(request, test_environment) -> PeerChatContext:
+    """One phone plus a headless peer, contacts already mutual."""
+    worker = f"{os.getenv('PYTEST_XDIST_WORKER', 'gw0')}_{request.node.name}"
+
+    cached_exc = request.session.stash.get(PEER_CHAT_BROKEN_KEY, None)
+    if cached_exc is not None:
+        logger.info(
+            "peer_chat broken earlier in this session (%s); re-raising the cached "
+            "exception without re-attempting setup",
+            type(cached_exc).__name__,
+        )
+        raise cached_exc
+
+    logger.info("Setting up peer_chat fixture (%s)", worker)
+
+    pool = SessionPool(config=PoolConfig.from_environment(test_environment, parallel=True))
+    try:
+        # pytest-timeout raises in the main thread, outside this coroutine, so
+        # its expiry would skip the cleanup below and leak both the container
+        # and the device session. A bound of our own fails inside the coroutine.
+        ctx = await asyncio.wait_for(
+            _setup_peer_chat(pool, request.node.nodeid, worker),
+            timeout=PEER_CHAT_SETUP_TIMEOUT_SECONDS,
+        )
+    except BaseException as exc:
+        # BaseException, not Exception: a pytest-timeout during setup raises an
+        # OutcomeException, and letting that skip this handler leaks the device
+        # session for the whole idle timeout.
+        stash = request.session.stash
+        failures = stash.get(PEER_CHAT_FAILURE_COUNT_KEY, 0) + 1
+        stash[PEER_CHAT_FAILURE_COUNT_KEY] = failures
+        logger.error(
+            "peer_chat setup failed (attempt %d/%d before sentinel fires): %s",
+            failures, _FIXTURE_FAILURES_BEFORE_SENTINEL, exc,
+        )
+        try:
+            _report_browserstack_status(pool, "failed", f"peer_chat setup failed: {exc}")
+        except Exception:
+            pass
+        try:
+            await pool.cleanup()
+        except Exception as cleanup_err:
+            logger.warning("Cleanup after failed peer_chat setup: %s", cleanup_err)
+        if failures >= _FIXTURE_FAILURES_BEFORE_SENTINEL:
+            stash[PEER_CHAT_BROKEN_KEY] = exc
+        raise
+
+    _module_pools.append(pool)
+    failed = False
+    try:
+        yield ctx
+    except Exception:
+        failed = True
+        raise
+    finally:
+        for ka in ctx._keepalives:
+            try:
+                ka.stop()
+            except Exception:
+                pass
+        module_name = getattr(getattr(request, "module", None), "__name__", "")
+        failed_tests = _module_test_failures.get(module_name, [])
+        died = await _teardown_peer_chat(
+            ctx.peer, failed=failed or bool(failed_tests), log_dir=_peer_log_dir(worker),
+        )
+        skipped_tests = _module_test_skipped.get(module_name, [])
+        passed_tests = _module_test_passed.get(module_name, [])
+        if died is not None:
+            status, reason = "failed", f"peer died: {died}"
+        elif failed or failed_tests:
+            status = "failed"
+            reason = f"{len(failed_tests)} test(s) failed" if failed_tests else "peer_chat fixture failed"
+        elif skipped_tests and not passed_tests:
+            status, reason = "skipped", f"All {len(skipped_tests)} test(s) skipped"
+        else:
+            status, reason = "passed", f"{len(passed_tests)} passed"
+            if skipped_tests:
+                reason += f", {len(skipped_tests)} skipped"
+        _report_browserstack_status(pool, status, reason)
+        logger.info("Reported '%s' to BrowserStack: %s", status, reason)
+        for tracking_dict in (
+            _module_test_failures, _module_test_skipped, _module_test_passed,
+        ):
+            tracking_dict.pop(module_name, None)
+        try:
+            await pool.cleanup()
+        except Exception as exc:
+            logger.warning("Cleanup error (non-fatal): %s", exc)
+        if pool in _module_pools:
+            _module_pools.remove(pool)
+
+
+async def _teardown_peer_chat(peer, *, failed: bool, log_dir: str):
+    """Evidence while the container is still there, then stop it. Returns the
+    exception if the peer had already died, so the module can report it."""
+    from core.backend_peer import PeerDied
+
+    async def _bounded(label, awaitable):
+        try:
+            await asyncio.wait_for(awaitable, timeout=30)
+        except (TimeoutError, asyncio.TimeoutError):
+            logger.warning("peer_chat teardown: %s timed out after 30s", label)
+        except Exception as exc:
+            logger.warning("peer_chat teardown: %s failed: %s", label, exc)
+
+    died = None
+    try:
+        peer.check_alive()
+    except PeerDied as exc:
+        died = exc
+    except Exception as exc:
+        # A docker-side failure is not evidence the peer died, but it must not
+        # skip the stop below and leave the container running.
+        logger.warning("peer_chat teardown: liveness check failed: %s", exc)
+    if failed or died is not None or os.environ.get("STATUS_BACKEND_ALWAYS_CAPTURE"):
+        await _bounded("log capture", asyncio.to_thread(peer.dump_logs, log_dir))
+    # The client removes the container as part of stopping the peer.
+    await _bounded("peer.stop", peer.stop())
+    return died
+
+
+@pytest.fixture
+def peer_chat_ready(request, peer_chat) -> PeerChatContext:
+    """``peer_chat`` with the peer's 1:1 open and the composer visible."""
+    _prepare_peer_chat(getattr(request, "instance", None), peer_chat)
+    return peer_chat
+
+
+def _prepare_peer_chat(instance, ctx: PeerChatContext) -> None:
+    """Hand the device to the failure hook before recovery, so a failure in
+    the recovery itself still produces a screenshot and page source."""
+    from support import peer_chat_state
+
+    if instance is not None:
+        instance.device = ctx.device
+    peer_chat_state.ensure_peer_chat_visible(ctx.device, ctx.peer)
 
 
 # ---------------------------------------------------------------------------
