@@ -255,6 +255,8 @@ StatusDropdown {
                 width: emojiGrid.cellWidth
                 height: emojiGrid.cellHeight
                 padding: d.imageMargin
+                leftPadding: d.imageMargin
+                rightPadding: d.imageMargin
                 highlighted: emojiGrid.activeFocus && index === emojiGrid.currentIndex
                 background: Rectangle {
                     radius: Theme.radius
