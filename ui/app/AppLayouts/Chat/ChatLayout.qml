@@ -258,6 +258,8 @@ StackLayout {
         JoinCommunityView {
             id: joinCommunityView
             readonly property string communityId: sectionItemModel.id
+            userUID: root.sectionLayout.userUID
+            sectionName: root.sectionLayout.sectionName
             name: sectionItemModel.name
             introMessage: sectionItemModel.introMessage
             communityDesc: sectionItemModel.description
@@ -484,6 +486,9 @@ StackLayout {
                 root.isPrivilegedUser &&
                 (root.currentIndex === 1 || !!communitySettingsLoader.item) // lazy load and preserve state after loading
 
+        userUID: root.sectionLayout.userUID
+        sectionName: root.sectionLayout.sectionName
+
         rootStore: root.rootStore
         networksStore: root.networksStore
         tokensStore: root.tokensStore
@@ -505,6 +510,9 @@ StackLayout {
         id: controlNodeOfflineComponent
         ControlNodeOfflineCommunityView {
             id: controlNodeOfflineView
+
+            userUID: root.sectionLayout.userUID
+            sectionName: root.sectionLayout.sectionName
             name: root.sectionItemModel.name
             communityDesc: root.sectionItemModel.description
             color: root.sectionItemModel.color
@@ -522,6 +530,8 @@ StackLayout {
         BannedMemberCommunityView {
             id: communityBanView
             readonly property var communityData: sectionItemModel
+            userUID: root.sectionLayout.userUID
+            sectionName: root.sectionLayout.sectionName
             name: root.sectionItemModel.name
             communityDesc: root.sectionItemModel.description
             color: root.sectionItemModel.color
