@@ -59,15 +59,15 @@ Status processes personal data on a limited basis from users of Status Software 
     When sending a contact request to Status bot and establishing the contact, certain information, such as your Status profile data (chat key, name, picture, etc.) becomes available to Status bot and is processed by Status. This is just a technical consequence of its use of the peer to peer network over which Status messages are also sent.
 
     In that regard, the following information is processed and stored by Status when you contact Status bot:
-    - Your public profile chat key (a cryptographically generated identifier that does not contain or directly reveal your real-world identity and is used for communication when you use Status Software). It is also stored on each feedback message received from the user so the bot knows to whom it should send replies from the Status team.
+    - Your public profile chat key (a cryptographically generated identifier that does not contain or directly reveal your real-world identity and is used for communication when you use Status Software). It is also stored with each feedback message received from the user so the bot knows to whom it should send replies from the Status team.
     - Timestamps of contact requests.
-    - An indication that a user is a new or existing user based on your prefilled Status contact request message so Status bot knows if it needs to send the Welcome and how-to messages to help you ramp up to Status if you are a new user or an introduction one if you are an existing user.
+    - An indication that a user is a new or existing user based on your prefilled Status Software contact request message so Status bot knows if it needs to send the Welcome and how-to messages to help you ramp up to Status Software if you are a new user or an introduction one if you are an existing user.
 
     We process this information on the basis of our legitimate interests to help keep a user of Status Software informed about Status Software features and also helpful tips in its use. You can opt-out of receiving any further messages by deleting Status Bot contact as a contact.
 
     **Communicating with Status bot**
 
-    You can also share feedback, make feature requests or report issues to Status via Status bot. The messages and any other information you choose to send are received by Status through the same peer-to-peer, end-to-end encrypted, private, and secure messaging as other Status chats.
+    You can also share feedback, make feature requests or report issues to Status via Status bot. The messages and any other information you choose to send are received by Status through the same peer-to-peer, end-to-end encrypted, private, and secure messaging as other Status messages.
 
     Messages and associated information received by Status bot may be accessed by authorised Status team members for the purposes of responding to feedback, feature requests and issue reports. We recommend avoiding sharing any personal information.
 
