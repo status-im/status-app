@@ -11,7 +11,7 @@ type
     topic: string
     chainId: int
     maxFeePerGasHex: string
-  
+
   AsyncSuggestedFeesArgs = ref object of QObjectTaskArg
     topic: string
     chainId: int
@@ -29,34 +29,28 @@ proc asyncGetEstimatedTimeTask(argsEncoded: string) {.gcsafe, nimcall.} =
     "estimatedTime": EstimatedTime.Unknown.int,
   }
   try:
-    # in gwei, matching the units of suggestedFees below
-    var maxFeePerGas: float64
+    var maxFeePerGasWeiHex: string
     if arg.maxFeePerGasHex.isEmptyOrWhitespace:
       let chainFeesResult = eth.suggestedFees(arg.chainId).result
       let chainFees = chainFeesResult.toSuggestedFeesDto()
       if chainFees.isNil:
-        arg.finish(result)
+        raise newException(Exception, "chainFees is nil")
 
       # For non-EIP-1559 chains, we use the high fee
-      if chainFees.eip1559Enabled:
-        maxFeePerGas = chainFees.maxFeePerGasM
-      else:
-        maxFeePerGas = chainFees.maxFeePerGasL
+      let maxFeePerGasGwei = if chainFees.eip1559Enabled: chainFees.maxFeePerGasM
+                             else: chainFees.maxFeePerGasL
+      maxFeePerGasWeiHex = eth_utils.gweiToWeiHexValue(maxFeePerGasGwei)
     else:
       try:
-        let maxFeePerGasInt = parseHexInt(arg.maxFeePerGasHex)
-        maxFeePerGas = maxFeePerGasInt.float
+        maxFeePerGasWeiHex = eth_utils.normalizedWeiHexValue(arg.maxFeePerGasHex)
       except ValueError:
-        error "failed to parse maxFeePerGasHex", msg = arg.maxFeePerGasHex
-        arg.finish(result)
+        raise newException(Exception, "failed to parse maxFeePerGasHex " & arg.maxFeePerGasHex)
 
-    let maxFeePerGasWeiHex = "0x" & eth_utils.stripLeadingZeros(stint.u256(int64(maxFeePerGas * 1e9)).toHex)
     let seconds = backend.getTransactionEstimatedTimeV2(arg.chainId, "0x0", maxFeePerGasWeiHex, "0x0").result.getInt
     result["estimatedTime"] = %estimatedTimeFlagFromSeconds(seconds).int
-    arg.finish(result)
   except Exception as e:
     error "asyncGetEstimatedTime failed: ", msg=e.msg
-    arg.finish(result)
+  arg.finish(result)
 
 proc asyncSuggestedFeesTask(argsEncoded: string) {.gcsafe, nimcall.} =
     let arg = decode[AsyncSuggestedFeesArgs](argsEncoded)
