@@ -303,3 +303,70 @@ suite "token_groups_model - tokens submodel lifetime":
     gGroups = @[mkGroup2("a"), mkGroup("b")]  # a's token set changes
     m.modelsUpdated()
     check tokensModelResetCount == before + 1 # exactly the submodel's own reset
+
+suite "token_groups_model - lazy pagination with pinned rows":
+
+  proc newLazyModel(batch = 10, initial = 10): TokenGroupsModel =
+    newTokenGroupsModel(groupsDataSource(), marketValuesDataSource(),
+      modelModes = @[ModelMode.NoMarketDetails, ModelMode.UseLazyLoading],
+      lazyLoadingBatchSize = batch, lazyLoadingInitialCount = initial)
+
+  proc seedSource(count: int) =
+    gGroups = @[]
+    for i in 0 ..< count:
+      gGroups.add(mkGroup("k" & $(100 + i)))  # k100.. keeps keys same-width
+
+  proc paginateToExhaustion(m: TokenGroupsModel): int =
+    ## Fetches until the model reports no more items; returns the number of
+    ## fetch rounds. Bounded and break-on-stall (unittest's `check` records a
+    ## failure but keeps executing, so it must never be the loop's only exit):
+    ## a regression fails the callers' `not hasMoreItemsForSource()` assertion
+    ## promptly instead of hanging the test run.
+    const maxRounds = 20
+    while m.hasMoreItemsForSource() and result < maxRounds:
+      let before = m.getLoadedGroups().len
+      m.fetchMore()
+      result.inc
+      let progressed = m.getLoadedGroups().len > before
+      check progressed                      # a stalled round is a regression
+      if not progressed:
+        break
+    check result < maxRounds                # and so is never finishing
+
+  test "pinning a row beyond page one doesn't skip or duplicate source rows":
+    seedSource(25)
+    let m = newLazyModel()
+    m.modelsUpdated(resetModelSize = true)
+    check m.getLoadedGroups().len == 10
+
+    # pin a row from the third page (ensureKeyLoaded path)
+    check m.ensureKeyLoaded("k122")
+    check m.getLoadedGroups().len == 11
+
+    discard m.paginateToExhaustion()
+
+    let keys = m.getLoadedGroups().mapIt(it.key)
+    check keys.len == 25                       # nothing skipped
+    check keys.deduplicate().len == 25         # nothing inserted twice
+    check not m.hasMoreItemsForSource()        # and it terminates for good
+
+  test "mandatory keys beyond page one paginate to full coverage too":
+    seedSource(25)
+    let m = newLazyModel()
+    m.modelsUpdated(resetModelSize = true, mandatoryKeys = @["k123", "k110"])
+
+    discard m.paginateToExhaustion()
+
+    let keys = m.getLoadedGroups().mapIt(it.key)
+    check keys.len == 25
+    check keys.deduplicate().len == 25
+    check not m.hasMoreItemsForSource()
+
+  test "a pinned last row still lets pagination finish exactly once":
+    seedSource(11)
+    let m = newLazyModel()
+    m.modelsUpdated(resetModelSize = true)
+    check m.ensureKeyLoaded("k110")            # the single row of page two
+    check not m.hasMoreItemsForSource()        # everything is loaded already
+    m.fetchMore()                              # must be a clean no-op
+    check m.getLoadedGroups().len == 11
