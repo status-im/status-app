@@ -1669,6 +1669,7 @@ QtObject {
 
                 onBuildGroupsForChain: {
                     WalletStores.RootStore.tokensStore.buildGroupsForChain(selectedNetworkChainId, "")
+                    WalletStores.RootStore.tokensStore.fetchAllChainsTokenGroups("")
                 }
 
                 onAccepted: {

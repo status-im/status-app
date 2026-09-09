@@ -324,6 +324,74 @@ suite "TokenSelectorModel - producer-driven recompute":
     m.search("")
     check m.keysInOrder() == @["ETH"]
 
+  test "an active chain filter scopes search results to tokens on that chain":
+    let m = newTokenSelectorModel(TokenSelectorMode.AllTokens)
+    var source: TokenSelectorSource
+    source.getSearch = proc(): seq[PopularGroup] =
+      @[PopularGroup(key: "1-0xaehron", name: "Aehron", symbol: "AEHRON",
+                     tokens: @[(key: "1-0xaehron", chainId: 1)]),
+        PopularGroup(key: "bsc-native", name: "BNB", symbol: "BNB",
+                     tokens: @[(key: "56-native", chainId: 56)])]
+    m.setSource(source)
+    m.setOwnedSource(@[], networks)
+    m.search("n")
+    # no filter: the chain-agnostic search shows both
+    check m.keysInOrder() == @["1-0xaehron", "bsc-native"]
+    # BSC filter: the mainnet-only token is not offered
+    m.setEnabledChainId(56)
+    check m.keysInOrder() == @["bsc-native"]
+    m.setEnabledChainId(-1)
+    check m.keysInOrder() == @["1-0xaehron", "bsc-native"]
+
+  test "an active chain filter scopes the popular catalog to tokens on that chain":
+    let m = newTokenSelectorModel(TokenSelectorMode.AllTokens)
+    var source: TokenSelectorSource
+    source.getPopular = proc(): seq[PopularGroup] =
+      @[PopularGroup(key: "1-0xaehron", name: "Aehron", symbol: "AEHRON",
+                     tokens: @[(key: "1-0xaehron", chainId: 1)]),
+        PopularGroup(key: "bsc-native", name: "BNB", symbol: "BNB",
+                     tokens: @[(key: "56-native", chainId: 56)])]
+    m.setSource(source)
+    m.setOwnedSource(@[], networks)
+    m.setEnabledChainId(56)
+    check m.keysInOrder() == @["bsc-native"]
+    m.setEnabledChainId(1)
+    check m.keysInOrder() == @["1-0xaehron"]
+
+  test "\"All\" (no chain filter) draws the cross-chain popular source when wired":
+    let m = newTokenSelectorModel(TokenSelectorMode.AllTokens)
+    var fetchMoreCalls = 0
+    var fetchMoreAllCalls = 0
+    var source: TokenSelectorSource
+    source.getPopular = proc(): seq[PopularGroup] =
+      @[PopularGroup(key: "1-0xchain", name: "ChainScoped", symbol: "CHX",
+                     tokens: @[(key: "1-0xchain", chainId: 1)])]
+    source.getPopularAllChains = proc(): seq[PopularGroup] =
+      @[PopularGroup(key: "1-0xchain", name: "ChainScoped", symbol: "CHX",
+                     tokens: @[(key: "1-0xchain", chainId: 1)]),
+        PopularGroup(key: "bsc-native", name: "BNB", symbol: "BNB",
+                     tokens: @[(key: "56-native", chainId: 56)])]
+    source.hasMore = proc(searching: bool): bool = true
+    source.fetchMore = proc(searching: bool) = fetchMoreCalls.inc
+    source.hasMoreAllChains = proc(): bool = true
+    source.fetchMoreAllChains = proc() = fetchMoreAllCalls.inc
+    m.setSource(source)
+    m.setOwnedSource(@[], networks)
+    # no filter -> the cross-chain source, spanning every chain
+    check m.keysInOrder() == @["1-0xchain", "bsc-native"]
+    # lazy passthrough routes to the cross-chain closures in this scope
+    check m.getHasMoreItems()
+    m.fetchMore()
+    check fetchMoreAllCalls == 1
+    check fetchMoreCalls == 0
+    # a concrete filter -> back to the chain-scoped catalog and its lazy source
+    m.setEnabledChainId(1)
+    check m.keysInOrder() == @["1-0xchain"]
+    check m.getHasMoreItems()
+    m.fetchMore()
+    check fetchMoreCalls == 1
+    check fetchMoreAllCalls == 1
+
   test "tokens submodel exposes per-chain token refs for a row":
     let m = newTokenSelectorModel(TokenSelectorMode.Owned)
     var g = AggTokenGroup(key: "ETH", name: "ETH", symbol: "ETH", decimals: 18,

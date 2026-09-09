@@ -139,8 +139,7 @@ method createModelForKind*(self: Module, kind: int): tuple[id: int, model: Token
   let searchModel = atm.getSearchResultModelObj()
 
   var source: TokenSelectorSource
-  # Search source (send + swap + bridge receive): snapshot the lazy search-result
-  # model. The search catalog is chain-agnostic, shared across the swap sides.
+  # Search source (send + swap + bridge receive): snapshot the lazy search-result model.
   if kind == KIND_SEND or kind == KIND_SWAP or kind == KIND_SWAP_TO:
     source.getSearch = proc(): seq[PopularGroup] = self.toPopularGroups(searchModel.getLoadedGroups())
     source.doSearch = proc(keyword: string) = searchModel.search(keyword)
@@ -155,6 +154,13 @@ method createModelForKind*(self: Module, kind: int): tuple[id: int, model: Token
     let popularModel = if kind == KIND_SWAP_TO: atm.getTokenGroupsForChainToModelObj()
                        else: atm.getTokenGroupsForChainModelObj()
     source.getPopular = proc(): seq[PopularGroup] = self.toPopularGroups(popularModel.getLoadedGroups())
+    let allChainsModel = atm.getTokenGroupsAllChainsModelObj()
+    source.getPopularAllChains = proc(): seq[PopularGroup] = self.toPopularGroups(allChainsModel.getLoadedGroups())
+    source.fetchMoreAllChains = proc() = allChainsModel.fetchMore()
+    source.hasMoreAllChains = proc(): bool = allChainsModel.hasMoreItemsForSource()
+    source.isLoadingMoreAllChains = proc(): bool =
+      allChainsModel.isLoadingMoreForSource() or atm.isAllChainsTokenGroupsLoading()
+    source.pinGroup = proc(key: string): bool = popularModel.ensureKeyLoaded(key)
     source.fetchMore = proc(searching: bool) =
       if searching: searchModel.fetchMore() else: popularModel.fetchMore()
     source.hasMore = proc(searching: bool): bool =
@@ -184,6 +190,8 @@ method createModelForKind*(self: Module, kind: int): tuple[id: int, model: Token
   # Seed with the current owned source so the model is populated immediately.
   let (groups, networks) = self.buildOwnedSource()
   model.setOwnedSource(groups, networks)
+  if kind == KIND_SEND or kind == KIND_SWAP or kind == KIND_SWAP_TO:
+    atm.fetchAllChainsTokenGroupsForKeys(groups.mapIt(it.key))
   return (id, model)
 
 method releaseModel*(self: Module, id: int) =
@@ -205,6 +213,8 @@ method load*(self: Module) =
   self.events.on(SIGNAL_GROUPS_FOR_CHAIN_LOADED) do(e: Args):
     self.refreshModels()
   self.events.on(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED) do(e: Args):
+    self.refreshModels()
+  self.events.on(SIGNAL_ALL_TOKEN_GROUPS_LOADED) do(e: Args):
     self.refreshModels()
 
   self.controller.init()
