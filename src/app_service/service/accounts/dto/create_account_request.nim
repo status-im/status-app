@@ -29,6 +29,7 @@ type
 
     logLevel*: Option[string]
     logFilePath*: string
+    walletConnectProjectID*: string
     logEnabled*: bool
 
     previewPrivacy*: bool
@@ -68,6 +69,7 @@ proc toJson*(self: CreateAccountRequest): JsonNode =
     "wakuV2Fleet": self.wakuV2Fleet,
     "wakuV2LightClient": self.wakuV2LightClient,
     "logFilePath": self.logFilePath,
+    "walletConnectProjectID": self.walletConnectProjectID,
     "logEnabled": self.logEnabled,
     "previewPrivacy": self.previewPrivacy,
     "autoRefreshTokensEnabled": self.autoRefreshTokensEnabled,
