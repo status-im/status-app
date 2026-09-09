@@ -1466,11 +1466,13 @@ Item {
             waitForRendering(payPanel)
             waitForRendering(receivePanel)
 
-            // verify form values
+            // verify form values: tokens swap sides, but the ENTERED amount
+            // stays on the pay side and the receive amount (a quote for the
+            // old direction) is cleared pending a fresh quote
             compare(root.swapFormData.fromGroupKey, expectedToTokenKey)
-            compare(root.swapFormData.fromTokenAmount, data.toTokenAmount)
+            compare(root.swapFormData.fromTokenAmount, data.fromTokenAmount)
             compare(root.swapFormData.toGroupKey, expectedFromTokenKey)
-            compare(root.swapFormData.toTokenAmount, data.fromTokenAmount)
+            compare(root.swapFormData.toTokenAmount, "")
 
             paytokenSelectorContentItemText = findChild(payPanel, "tokenSelectorContentItemText")
             verify(!!paytokenSelectorContentItemText)
@@ -1483,7 +1485,7 @@ Item {
 
             // verify pay values
             compare(payPanel.groupKey, expectedToTokenKey)
-            compare(payPanel.tokenAmount, data.toTokenAmount)
+            compare(payPanel.tokenAmount, data.fromTokenAmount)
             verify(payAmountToSendInput.cursorVisible)
             const swappedFromToken = !!root.swapFormData.fromGroupKey ? SQUtils.ModelUtils.getByKey(payTokenModel, "key", root.swapFormData.fromGroupKey) : null
             const swappedToToken = !!root.swapFormData.toGroupKey ? SQUtils.ModelUtils.getByKey(receiveTokenModel, "key", root.swapFormData.toGroupKey) : null
@@ -1495,7 +1497,7 @@ Item {
 
             // verify receive values
             compare(receivePanel.groupKey, expectedFromTokenKey)
-            compare(receivePanel.tokenAmount, data.fromTokenAmount)
+            compare(receivePanel.tokenAmount, "")
             verify(!receiveAmountToSendInput.cursorVisible)
             compare(receivetokenSelectorContentItemText.text, swappedToToken ? swappedToToken.symbol : qsTr("Select asset"))
             if(!!receivetokenSelectorIcon) {
