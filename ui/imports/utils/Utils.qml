@@ -1208,6 +1208,16 @@ QtObject {
         xhr.send();
     }
 
+    // Only Discord has a dedicated glyph; every other bridge gets the generic
+    // one rather than being mislabelled as Discord.
+    function bridgeBadgeAsset(bridgeName) {
+        return bridgeName === "discord" ? "discord-bridge" : "bridge"
+    }
+
+    function bridgeDisplayName(bridgeName) {
+        return bridgeName === "discord" ? "Discord" : bridgeName
+    }
+
     function getProfileType(isMe, isBridgedAccount, isBlocked) {
         if (isMe)
             return Constants.profileType.self
