@@ -442,31 +442,34 @@ QtObject:
     return false
 
   proc fetchMore*(self: TokenGroupsModel) {.slot.} =
+    if ModelMode.UseLazyLoading notin self.modelModes:
+      return
     if not self.getHasMoreItems() or self.isLoadingMore:
       return
     self.setIsLoadingMore(true)
 
-    let parentModelIndex = newQModelIndex()
-    defer: parentModelIndex.delete
-
     let sourceModel = self.getSourceModel()
-    let first = self.rowCount()
-    let last = min(first + self.lazyLoadingBatchSize - 1, sourceModel.len - 1)
-    self.beginInsertRows(parentModelIndex, first, last)
-    defer:
+    var batch: seq[TokenGroupItem] = @[]
+    for item in sourceModel:
+      if self.loadedKeys.hasKey(item.key):
+        continue
+      batch.add(item)
+      if batch.len >= self.lazyLoadingBatchSize:
+        break
+
+    if batch.len > 0:
+      let parentModelIndex = newQModelIndex()
+      defer: parentModelIndex.delete
+      let first = self.rowCount()
+      self.beginInsertRows(parentModelIndex, first, first + batch.len - 1)
+      for item in batch:
+        self.loadedKeys[item.key] = true
+        self.loadedItems.add(item)
       self.endInsertRows()
-      self.setIsLoadingMore(false)
-      self.hasMoreItemsChanged()
+      self.rebuildMarketDetails(self.getDisplayModel())
 
-    if ModelMode.UseLazyLoading in self.modelModes:
-      for index in countup(first, last):
-        let key = sourceModel[index].key
-        if self.loadedKeys.hasKey(key):
-          continue
-        self.loadedKeys[key] = true
-        self.loadedItems.add(sourceModel[index])
-
-    self.rebuildMarketDetails(self.getDisplayModel())
+    self.setIsLoadingMore(false)
+    self.hasMoreItemsChanged()
 
   proc getSearchRelevance(item: TokenGroupItem, keywordLower: string): int =
     if keywordLower.len == 0:
