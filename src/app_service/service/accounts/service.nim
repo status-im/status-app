@@ -212,6 +212,7 @@ QtObject:
         walletSecretsConfig: buildWalletSecrets(),
         walletConfig: buildWalletConfig(),
         apiConfig: defaultApiConfig(),
+        walletConnectProjectID: main_constants.WALLET_CONNECT_PROJECT_ID,
       )
 
   proc buildCreateAccountRequest(password: string, displayName: string, imagePath: string,
