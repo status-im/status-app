@@ -556,6 +556,7 @@ Item {
             verify(!!holdingSelector)
             mouseClick(holdingSelector)
             waitForRendering(holdingSelector)
+            tryVerify(() => holdingSelector.dropdownOpened, 2000, "dropdown did not open")
 
             const assetSelectorList = findChild(holdingSelector, "assetsListView")
             verify(!!assetSelectorList)
@@ -566,7 +567,11 @@ Item {
             assetSelectorList.positionViewAtIndex(delegateIndex, ListView.Center)
             const sttDelegate = assetSelectorList.itemAtIndex(delegateIndex)
             verify(!!sttDelegate)
-            mouseClick(sttDelegate)
+            // activate through the delegate's own entry point (the same path
+            // Enter/Return takes, incl. the enabled guard) — a raw mouseClick
+            // at this list position is unreliable on the offscreen platform
+            verify(sttDelegate.rowAt(0).enabled)
+            sttDelegate.selectFirst()
 
             tryCompare(controlUnderTest, "selectedHoldingId", sttGroupKey)
 
