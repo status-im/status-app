@@ -5,6 +5,7 @@ import ../../constants
 
 # Local Account Settings keys:
 const LS_KEY_STORE_TO_KEYCHAIN* = "storeToKeychain"
+const LS_KEY_FRESH_PROFILE* = "freshProfile"
 const DEFAULT_STORE_TO_KEYCHAIN = "notNow"
 # Local Account Settings values:
 const LS_VALUE_STORE* = "store"
@@ -17,13 +18,13 @@ QtObject:
     currentFileName: string
     settings: QSettings
 
-  proc setup(self: LocalAccountSettings)
+  proc setup(self: LocalAccountSettings, settingsFileDir: string)
   proc delete*(self: LocalAccountSettings)
 
-  proc newLocalAccountSettings*():
+  proc newLocalAccountSettings*(settingsFileDir = os.joinPath(DATADIR, "qt")):
     LocalAccountSettings =
     new(result, delete)
-    result.setup
+    result.setup(settingsFileDir)
 
   proc setFileName*(self: LocalAccountSettings, fileName: string) =
     let
@@ -64,9 +65,28 @@ QtObject:
     write = setStoreToKeychainValue
     notify = storeToKeychainValueChanged
 
-  proc setup(self: LocalAccountSettings) =
+  proc freshProfileChanged*(self: LocalAccountSettings) {.signal.}
+
+  # A profile created in this install with a generated seed phrase; absent for every other origin.
+  proc isFreshProfile*(self: LocalAccountSettings): bool {.slot.} =
+    if self.settings.isNil:
+      return false
+    self.settings.value(LS_KEY_FRESH_PROFILE, newQVariant(false)).boolVal
+
+  # Nim-only on purpose: the origin is decided once at profile creation, never from the UI.
+  proc markProfileFresh*(self: LocalAccountSettings) =
+    if self.settings.isNil:
+      return
+    self.settings.setValue(LS_KEY_FRESH_PROFILE, newQVariant(true))
+    self.freshProfileChanged()
+
+  QtProperty[bool] freshProfile:
+    read = isFreshProfile
+    notify = freshProfileChanged
+
+  proc setup(self: LocalAccountSettings, settingsFileDir: string) =
     self.QObject.setup
-    self.settingsFileDir = os.joinPath(DATADIR, "qt")
+    self.settingsFileDir = settingsFileDir
 
   proc delete*(self: LocalAccountSettings) =
     self.QObject.delete

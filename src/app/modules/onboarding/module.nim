@@ -106,8 +106,8 @@ method delete*[T](self: Module[T]) =
   self.controller.delete
 
 method onAppLoaded*[T](self: Module[T], keyUid: string) =
-  # Doesn't do anything since we wait for the Main section to be loaded
-  discard
+  if self.onboardingFlow == OnboardingFlow.CreateProfileWithPassword:
+    singletonInstance.localAccountSettings.markProfileFresh()
 
 method onMainLoaded*[T](self: Module[T]) =
   if self.view.isNil:

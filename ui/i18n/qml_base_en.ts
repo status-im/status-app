@@ -1831,6 +1831,14 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Send a contact request to the Status Team peer-to-peer bot over the decentralised network for welcome messages and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Send a contact request to the Status Team peer-to-peer bot over the decentralised network for Status updates and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Invite People</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1995,10 +2003,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>%1 was removed from your trusted sites.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Send a contact request to the Status Team peer-to-peer bot over the Logos network for Status updates and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

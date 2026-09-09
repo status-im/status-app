@@ -2688,11 +2688,10 @@ Item {
                         appMain.contactsStore.joinPrivateChat(d.supportBotPublicKey)
                         return
                     }
-                    Global.openContactRequestPopupWithDefaultMessage(
-                        d.supportBotPublicKey,
-                        null,
-                        qsTr("Send a contact request to the Status Team peer-to-peer bot over the Logos network for Status updates and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime")
-                    )
+                    const introMessage = localAccountSettings.freshProfile
+                        ? qsTr("Send a contact request to the Status Team peer-to-peer bot over the decentralised network for welcome messages and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime")
+                        : qsTr("Send a contact request to the Status Team peer-to-peer bot over the decentralised network for Status updates and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime")
+                    Global.openContactRequestPopupWithDefaultMessage(d.supportBotPublicKey, null, introMessage)
                 }
 
                 onItemActivated: function(sectionType, sectionId) {

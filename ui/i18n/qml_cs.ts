@@ -1843,6 +1843,14 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Tento kanál již neexistuje</translation>
     </message>
     <message>
+        <source>Send a contact request to the Status Team peer-to-peer bot over the decentralised network for welcome messages and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Send a contact request to the Status Team peer-to-peer bot over the decentralised network for Status updates and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Invite People</source>
         <translation>Pozvat lidi</translation>
     </message>
@@ -2009,10 +2017,6 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     <message>
         <source>%1 was removed from your trusted sites.</source>
         <translation>%1 bylo odstraněno z vašich důvěryhodných stránek.</translation>
-    </message>
-    <message>
-        <source>Send a contact request to the Status Team peer-to-peer bot over the Logos network for Status updates and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Where do you want to go?</source>
