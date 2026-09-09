@@ -418,6 +418,29 @@ QtObject:
 
     self.rebuildMarketDetails(self.getDisplayModel())
 
+  proc ensureKeyLoaded*(self: TokenGroupsModel, key: string): bool =
+    if ModelMode.UseLazyLoading notin self.modelModes:
+      for item in self.getDisplayModel():
+        if item.key == key:
+          return true
+      return false
+    if self.loadedKeys.hasKey(key):
+      return true
+    let sourceModel = self.getSourceModel()
+    for item in sourceModel:
+      if item.key == key:
+        let parentModelIndex = newQModelIndex()
+        defer: parentModelIndex.delete
+        let idx = self.loadedItems.len
+        self.beginInsertRows(parentModelIndex, idx, idx)
+        self.loadedKeys[key] = true
+        self.loadedItems.add(item)
+        self.endInsertRows()
+        self.rebuildMarketDetails(self.getDisplayModel())
+        self.hasMoreItemsChanged()
+        return true
+    return false
+
   proc fetchMore*(self: TokenGroupsModel) {.slot.} =
     if not self.getHasMoreItems() or self.isLoadingMore:
       return
@@ -505,6 +528,10 @@ QtObject:
         self.fullSearchResults.add(scoredItem[2])
 
     self.modelsUpdated(resetModelSize = true)
+
+  proc refreshSearch*(self: TokenGroupsModel) =
+    if ModelMode.IsSearchResult in self.modelModes and self.searchKeyword.len > 0:
+      self.search(self.searchKeyword)
 
   proc tokensMarketValuesUpdated*(self: TokenGroupsModel) =
     if ModelMode.NoMarketDetails in self.modelModes:

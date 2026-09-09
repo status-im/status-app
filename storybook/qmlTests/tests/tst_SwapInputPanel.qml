@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtTest
 
 import StatusQ
@@ -110,6 +111,53 @@ Item {
 
             compare(controlUnderTest.listChainFilter, -1)
             compare(controlUnderTest.listCatalogChainId, d.goOptChainId)
+            compare(networkSpy.count, 0)
+        }
+
+        // The chip row is pure browse state: it opens on the panel's selected
+        // chain, the user may wander (another chain, "All"), and closing the
+        // dropdown snaps it back — never touching the selected chain or token.
+        function test_chainFilterFollowsTheSelectedChain() {
+            controlUnderTest = createTemporaryObject(componentUnderTest, root)
+            verify(!!controlUnderTest)
+
+            // closed state: the filter mirrors the selected chain
+            compare(controlUnderTest.listChainFilter, d.goOptChainId)
+
+            // ...and tracks it when the selection moves
+            controlUnderTest.selectedNetworkChainId = 1
+            compare(controlUnderTest.listChainFilter, 1)
+            controlUnderTest.selectedNetworkChainId = d.goOptChainId
+            compare(controlUnderTest.listChainFilter, d.goOptChainId)
+
+            const holdingSelector = findChild(controlUnderTest, "holdingSelector")
+            verify(!!holdingSelector)
+            const button = findChild(controlUnderTest, "tokenSelectorButton")
+            verify(!!button)
+
+            const networkSpy = createTemporaryQmlObject(
+                    "import QtTest; SignalSpy {}", root)
+            networkSpy.target = controlUnderTest
+            networkSpy.signalName = "networkSelected"
+
+            // browsing starts on the selected chain
+            mouseClick(button)
+            tryVerify(() => holdingSelector.dropdownOpened)
+            compare(controlUnderTest.listChainFilter, d.goOptChainId)
+
+            // wander off to "All" — a display choice, not a selection
+            const chainFilter = findChild(controlUnderTest.Overlay.overlay, "chainFilter")
+            verify(!!chainFilter)
+            chainFilter.chainSelected(-1)
+            compare(controlUnderTest.listChainFilter, -1)
+            compare(controlUnderTest.selectedNetworkChainId, d.goOptChainId)
+            compare(networkSpy.count, 0)
+
+            // closing without a pick leaves no trace of the browsing
+            keyClick(Qt.Key_Escape)
+            tryVerify(() => !holdingSelector.dropdownOpened)
+            compare(controlUnderTest.listChainFilter, d.goOptChainId)
+            compare(controlUnderTest.selectedNetworkChainId, d.goOptChainId)
             compare(networkSpy.count, 0)
         }
 

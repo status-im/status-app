@@ -342,6 +342,7 @@ proc buildGroupsForChain*(self: Service, chainId: int) =
   if chainId <= 0:
     warn "invalid chainId", chainId = chainId
     return
+  self.groupsForChainRequestedChainId = chainId
   self.groupsForChainLoading = true
   let arg = AsyncBuildGroupsForChainTaskArg(
     tptr: asyncBuildGroupsForChainTask,
@@ -355,8 +356,10 @@ proc onAsyncBuildGroupsForChainDone(self: Service, response: string) {.slot.} =
   # The worker already decoded + built the name-sorted groups; MOVE them into state
   # (never copy — see applyRefreshTokensResult) with no GUI-thread JSON parse or
   # group build. `res` is nil only if the handoff was drained at shutdown.
-  self.groupsForChainLoading = false
   let res = takeTyped[TokenGroupsApplyResult](response)
+  if not res.isNil and res.chainId != self.groupsForChainRequestedChainId:
+    return
+  self.groupsForChainLoading = false
   if res.isNil:
     self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_LOADED, Args())
     return
@@ -374,6 +377,7 @@ proc buildGroupsForChainTo*(self: Service, chainId: int) =
   if chainId <= 0:
     warn "invalid chainId", chainId = chainId
     return
+  self.groupsForChainToRequestedChainId = chainId
   self.groupsForChainToLoading = true
   let arg = AsyncBuildGroupsForChainTaskArg(
     tptr: asyncBuildGroupsForChainTask,
@@ -386,8 +390,10 @@ proc buildGroupsForChainTo*(self: Service, chainId: int) =
 proc onAsyncBuildGroupsForChainToDone(self: Service, response: string) {.slot.} =
   # Same typed handoff as the source-chain slot: the worker already built the
   # name-sorted groups; MOVE them into state (never copy).
-  self.groupsForChainToLoading = false
   let res = takeTyped[TokenGroupsApplyResult](response)
+  if not res.isNil and res.chainId != self.groupsForChainToRequestedChainId:
+    return
+  self.groupsForChainToLoading = false
   if res.isNil:
     self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED, Args())
     return
@@ -402,6 +408,8 @@ proc getGroupsForChainToLoading*(self: Service): bool =
   return self.groupsForChainToLoading
 
 proc asyncFetchAllTokenGroups*(self: Service) =
+  if self.allTokenGroupsLoading:
+    return
   self.allTokenGroupsLoading = true
   let arg = AsyncFetchAllTokenGroupsTaskArg(
     tptr: asyncFetchAllTokenGroupsTask,
@@ -425,6 +433,9 @@ proc onAsyncFetchAllTokenGroupsDone(self: Service, response: string) {.slot.} =
   self.events.emit(SIGNAL_ALL_TOKEN_GROUPS_LOADED, Args())
 
 proc getAllTokenGroupsForActiveNetworksMode*(self: Service): seq[TokenGroupItem] =
+  return self.allTokenGroupsForActiveNetworks
+
+proc getAllTokenGroups*(self: Service): var seq[TokenGroupItem] =
   return self.allTokenGroupsForActiveNetworks
 
 proc getAllTokenGroupsLoading*(self: Service): bool =

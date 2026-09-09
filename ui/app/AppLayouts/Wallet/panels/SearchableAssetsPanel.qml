@@ -124,14 +124,6 @@ Control {
     contentItem: ColumnLayout {
         spacing: 0
 
-        StatusBaseText {
-            Layout.alignment: Qt.AlignHCenter
-            Layout.bottomMargin: 4
-            text: qsTr("Your assets will appear here")
-            color: Theme.palette.baseColor1
-            visible: !listView.count && !searchBox.text
-        }
-
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.halfPadding
@@ -187,6 +179,16 @@ Control {
         StatusDialogDivider {
             Layout.fillWidth: true
             visible: listView.count
+        }
+
+        StatusBaseText {
+            objectName: "emptyListPlaceholder"
+            Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: Theme.padding
+            Layout.bottomMargin: Theme.padding
+            text: qsTr("Your assets will appear here")
+            color: Theme.palette.baseColor1
+            visible: !listView.count && !root.isLoadingMore
         }
 
         StatusListView {
@@ -283,6 +285,7 @@ Control {
                                                                      : root.highlightedChainId
                         currentBalance: !!modelData ? modelData.balance : (holding.currentBalance ?? 0)
                         defaultNetworkIcon: root.defaultNetworkIcon
+                        flatNetworksModel: root.flatNetworksModel
 
                         onClicked: root.selected(holding.key, rowChainId)
 

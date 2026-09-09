@@ -47,6 +47,7 @@ type
     ## those tasks gate on a plain loading bool, not the refresh coordinator.
     error*: string                                       ## non-empty -> slot skips apply
     groups*: seq[TokenGroupItem]
+    chainId*: int                                        ## chain the groups were built for; 0 for the all-networks fetch. Lets the slot drop completions superseded by a newer request
 
 proc createTokenGroupsFromTokens(tokens: seq[TokenItem], groupsByKey: var Table[string, TokenGroupItem]) =
   # Byte-identical replica of the private helper in service_main.nim (grouping by

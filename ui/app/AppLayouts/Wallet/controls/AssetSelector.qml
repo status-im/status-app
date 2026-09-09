@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 
+import QtModelsToolkit
+
 import StatusQ.Controls
 import StatusQ.Core.Utils
 
@@ -38,6 +40,11 @@ Control {
     property string defaultNetworkIcon
 
     readonly property bool isSelected: button.selected
+
+    readonly property bool dropdownOpened: dropdown.opened
+
+    signal dropdownAboutToOpen()
+    signal dropdownClosed()
 
     signal search(string keyword)
     /** chainId is -1 when the row didn't pin one down; the caller then picks it **/
@@ -127,8 +134,24 @@ Control {
                     return
                 }
 
+                let resolvedChainId = chainId
+                if (resolvedChainId === -1) {
+                    const refs = entry.tokens ?? entry.balances
+                    if (!!refs && refs.ModelCount.count > 0) {
+                        if (root.selectedChainId !== -1 && ModelUtils.contains(refs, "chainId", root.selectedChainId))
+                            resolvedChainId = root.selectedChainId
+                        else {
+                            const firstChain = ModelUtils.get(refs, 0, "chainId")
+                            if (firstChain !== undefined)
+                                resolvedChainId = firstChain
+                        }
+                    } else if (root.selectedChainId !== -1) {
+                        resolvedChainId = root.selectedChainId
+                    }
+                }
+
                 setCurrentAndClose(entry.symbol, entry.logoUri || Constants.tokenIcon(entry.symbol), entry.key)
-                root.selected(entry.key, chainId)
+                root.selected(entry.key, resolvedChainId)
             }
 
             onSearch: function(keyword) {
@@ -136,8 +159,11 @@ Control {
             }
         }
 
+        onAboutToShow: root.dropdownAboutToOpen()
+
         onClosed: {
             searchableAssetsPanel.clearSearch()
+            root.dropdownClosed()
         }
     }
 }

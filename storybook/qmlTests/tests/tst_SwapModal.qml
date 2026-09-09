@@ -1967,8 +1967,8 @@ Item {
 
         // The handler destroys the modal and then resets the form, and the reset
         // clears the source chain before the destination one — a transient bridge
-        // state. Building the destination picker for it (an expensive terminal
-        // model) only to throw it away is pure waste on every plain-swap close.
+        // state. Building any picker for it (an expensive terminal model) only to
+        // throw it away is pure waste on every close.
         function test_noBridgePickerIsBuiltWhileClosing() {
             const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
 
@@ -2085,24 +2085,32 @@ Item {
             closeAndVerfyModal()
         }
 
-        // A destination picker built lazily (the user switches the receive chain
-        // after the modal is open) must be seeded like the ones createPickers
-        // builds, otherwise it starts on whatever the producer's last search was.
-        function test_lazyBridgePickerIsSeeded() {
+        // The receive side always gets its own destination picker on open (so
+        // browsing either side's list can't disturb the other), seeded like the
+        // pay one; switching to a bridge afterwards must not build anything new.
+        function test_receivePickerIsBuiltAndSeededOnOpen() {
             const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+            store.createdKinds = []
 
             launchAndVerfyModal()
 
             const receivePanel = findChild(controlUnderTest, "receivePanel")
             verify(!!receivePanel)
+            tryVerify(() => !!receivePanel.tokenSelectorModel, 2000,
+                      "destination picker built on open")
+            verify(store.createdKinds.indexOf(3) !== -1,
+                   "a kind-3 (destination catalog) picker was created, got kinds: "
+                   + JSON.stringify(store.createdKinds))
+
+            const receiveModel = receivePanel.tokenSelectorModel
+            tryCompare(receiveModel, "searchCallCount", 1) // seeded
 
             store.createdKinds = []
             root.swapFormData.toNetworkChainId = 10 // != source chain => bridge
-
-            compare(store.createdKinds.indexOf(3), 0, "destination picker built")
-            const bridgeModel = receivePanel.tokenSelectorModel
-            verify(!!bridgeModel, "the receive panel is switched to it")
-            compare(bridgeModel.searchCallCount, 1, "and it is seeded")
+            compare(store.createdKinds.length, 0,
+                    "switching to a bridge builds no new picker")
+            compare(receivePanel.tokenSelectorModel, receiveModel,
+                    "the receive panel keeps its picker across the bridge switch")
 
             closeAndVerfyModal()
         }
