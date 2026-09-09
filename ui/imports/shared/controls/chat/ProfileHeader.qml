@@ -45,6 +45,7 @@ Item {
     property bool loading: false
     readonly property bool compact: root.imageSize === ProfileHeader.ImageSize.Compact
     property bool isBridgedAccount: false
+    property string bridgeName: ""
 
     signal clicked()
     signal editClicked()
@@ -127,6 +128,7 @@ Item {
                 loading: root.loading
                 onlineStatus: root.onlineStatus
                 isBridgedAccount: root.isBridgedAccount
+                bridgeBadgeImage: Assets.svg(Utils.bridgeBadgeAsset(root.bridgeName))
             }
 
             StatusRoundButton {
@@ -246,7 +248,13 @@ Item {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
             visible: root.pubkeyVisible
-            text: root.isBridgedAccount ? qsTr("Bridged from Discord") : Utils.getElidedPk(compressedPubKey)
+            text: {
+                if (!root.isBridgedAccount)
+                    return Utils.getElidedPk(compressedPubKey)
+                if (!root.bridgeName)
+                    return qsTr("Bridged account")
+                return qsTr("Bridged from %1").arg(Utils.bridgeDisplayName(root.bridgeName))
+            }
             horizontalAlignment: Text.AlignHCenter
             font.pixelSize: Theme.additionalTextSize
             color: Theme.palette.secondaryText

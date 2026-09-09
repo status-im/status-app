@@ -251,7 +251,10 @@ Loader {
             trustStatus: contactDetails.trustStatus,
             onlineStatus: contactDetails.onlineStatus,
             usesDefaultName: contactDetails.usesDefaultName,
-            hasLocalNickname: !!contactDetails.localNickname
+            hasLocalNickname: !!contactDetails.localNickname,
+            // A quoted message carries no bridge name, so the popup falls back
+            // to a bridge-agnostic label there.
+            bridgeName: isReply ? "" : root.bridgeName
         }
 
         d.preventVirtualKeyboardOpening()
@@ -580,9 +583,6 @@ Loader {
             }
         }
 
-        function correctBridgeNameCapitalization(bridgeName) {
-            return (bridgeName === "discord") ? "Discord" : bridgeName
-        }
 
         // Qt.inputMethod.visible is not reliable in some cases, so the android/ios keyboard
         // visibility is tracked explicitly as a workaround.
@@ -1081,7 +1081,7 @@ Loader {
                         if (isDiscordMessage)  {
                             return qsTr("Imported from discord")
                         } else if (isBridgeMessage) {
-                            return qsTr("Bridged from %1").arg(d.correctBridgeNameCapitalization(root.bridgeName))
+                            return qsTr("Bridged from %1").arg(Utils.bridgeDisplayName(root.bridgeName))
                         }
                         return ""
                     }
@@ -1119,7 +1119,7 @@ Loader {
                         pubkey: root.senderId
                         color: root.Theme.palette.userCustomizationColors[Utils.colorIdForPubkey(root.senderId)]
                     }
-                    sender.badgeImage: Assets.svg("discord-bridge")
+                    sender.badgeImage: Assets.svg(Utils.bridgeBadgeAsset(root.bridgeName))
                 }
 
                 replyDetails: StatusMessageDetails {
