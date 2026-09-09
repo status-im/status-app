@@ -271,11 +271,13 @@ SQUtils.QObject {
         }
     }
 
-    // Timeout for the corner case where the URL was already dismissed and the SDK doesn't respond with an error nor advances with the proposal
+    // Timeout for the corner case where the URL was already dismissed and the SDK doesn't respond with an error nor advances with the proposal.
+    // Covers both the pair RPC and the wait for the dApp's session proposal to
+    // travel through the relay, so it has to tolerate a slow network.
     Timer {
         id: timeoutTimer
 
-        interval: 10000 // (10 seconds)
+        interval: 30000 // (30 seconds)
         running: false
         repeat: false
 
