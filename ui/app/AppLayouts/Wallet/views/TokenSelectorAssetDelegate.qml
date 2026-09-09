@@ -147,7 +147,7 @@ ItemDelegate {
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: Theme.halfPadding
+                spacing: Theme.bigPadding
 
                 StatusBaseText {
                     text: root.symbol
