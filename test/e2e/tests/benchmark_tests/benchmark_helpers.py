@@ -49,3 +49,12 @@ COMMUNITY_MEMBER_BENCHMARK_PARAMS = [
         id='user_data0-user_account0',
     ),
 ]
+
+DATA_USAGE_PARAMS = [
+    pytest.param(None, FRESH_USER_ACCOUNT, id='fresh_user'),
+    pytest.param(
+        configs.testpath.TEST_USER_DATA / 'wallet_load_alex',
+        constants.user.wallet_load_alex,
+        id='wallet_load_alex_user',
+    ),
+]

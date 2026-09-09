@@ -12,6 +12,7 @@ from allure_commons.types import AttachmentType
 from allure_commons._allure import step
 
 from driver.aut import AUT
+from scripts.utils.network_metrics import SettleResult, measure_screen_data_usage
 from scripts.utils.process_metrics import ProcessSampleStats, ProcessMonitor, resolve_monitored_pid
 
 LOG = logging.getLogger(__name__)
@@ -28,6 +29,7 @@ class BenchmarkMetricReport:
     line_subject: str
     unit: str
     values: list[float]
+    durations_sec: list[float] = field(default_factory=list)
 
 
 @dataclass
@@ -42,16 +44,39 @@ class BenchmarkScenarioSamples:
         self.ram_mb.append(stats.avg_ram_mb)
 
 
-def build_metric_report_lines(line_subject: str, unit: str, values: list[float]) -> list[str]:
+def _duration_suffix(durations_sec: list[float] | None, index: int | None = None) -> str:
+    if not durations_sec:
+        return ''
+    if index is None:
+        value = sum(durations_sec) / len(durations_sec)
+    else:
+        if index >= len(durations_sec):
+            return ''
+        value = durations_sec[index]
+    return f' in {value:.1f}s'
+
+
+def build_metric_report_lines(
+    line_subject: str,
+    unit: str,
+    values: list[float],
+    durations_sec: list[float] | None = None,
+) -> list[str]:
     lines = []
     total_runs = len(values)
     for index, value in enumerate(values, start=1):
-        line = f'[{index}/{total_runs}] {line_subject}: {value:.3f} {unit}'
+        line = (
+            f'[{index}/{total_runs}] {line_subject}: {value:.3f} {unit}'
+            f'{_duration_suffix(durations_sec, index - 1)}'
+        )
         lines.append(line)
         LOG.info(line)
 
     average = sum(values) / total_runs if values else 0.0
-    average_line = f'Average {line_subject} over {total_runs} runs: {average:.3f} {unit}'
+    average_line = (
+        f'Average {line_subject} over {total_runs} runs: {average:.3f} {unit}'
+        f'{_duration_suffix(durations_sec)}'
+    )
     LOG.info(average_line)
     lines.append(average_line)
     return lines
@@ -73,7 +98,12 @@ def attach_metric_report(
 def attach_benchmark_metrics(tmp_path: Path, metrics: list[BenchmarkMetricReport]) -> None:
     record_structured_benchmark_metrics(metrics)
     for metric in metrics:
-        report_lines = build_metric_report_lines(metric.line_subject, metric.unit, metric.values)
+        report_lines = build_metric_report_lines(
+            metric.line_subject,
+            metric.unit,
+            metric.values,
+            durations_sec=metric.durations_sec,
+        )
         with step(f'Attach {metric.attachment_prefix} to Allure'):
             attach_metric_report(tmp_path, report_lines, metric.attachment_prefix, metric.filename)
 
@@ -123,11 +153,14 @@ def record_structured_benchmark_metrics(metrics: list[BenchmarkMetricReport]) ->
     result = _load_result(path, nodeid, test_name)
     by_name = {metric['name']: metric for metric in result.get('metrics', [])}
     for metric in metrics:
-        by_name[metric.attachment_prefix] = {
+        payload = {
             'name': metric.attachment_prefix,
             'unit': metric.unit,
             'values': metric.values,
         }
+        if metric.durations_sec:
+            payload['durations_sec'] = metric.durations_sec
+        by_name[metric.attachment_prefix] = payload
     result['metrics'] = list(by_name.values())
     _write_result(path, result)
 
@@ -210,6 +243,15 @@ def attach_scenario_reports(
         ),
         *_resource_metric_reports(subject, slug, samples),
     ])
+
+
+def measured_data_usage_call(
+    aut: AUT,
+    action: Callable[[], T],
+    **settle_kwargs,
+) -> tuple[T, SettleResult]:
+    monitor_pid = resolve_monitored_pid(aut.pid, aut.path, aut.app_data)
+    return measure_screen_data_usage(monitor_pid, action, **settle_kwargs)
 
 
 def monitored_call(aut: AUT, action: Callable[[], T], interval_sec: float = 0.1) -> tuple[T, ProcessSampleStats]:

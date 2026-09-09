@@ -21,6 +21,8 @@ LOG = logging.getLogger(__name__)
 
 # When set (e.g. in CI), startaut adds local Waku flags and passes STATUS_FLEET / STATUS_FLEET_CONFIG_FILE to the AUT.
 _LOCAL_WAKU_ENV_VALUES = ('1', 'true', 'yes')
+_METRICS_ENV_VALUES = ('1', 'true', 'yes')
+_METRICS_PORT_START = 9305
 
 
 class AUT:
@@ -38,7 +40,14 @@ class AUT:
         if user_data is not None:
             user_data.copy_to(self.app_data / 'data')
         self.options = ''
+        self.metrics_url = None
         driver.testSettings.setWrappersForApplication(self.aut_id, ['Qt'])
+
+    def _metrics_requested(self) -> bool:
+        if os.environ.get('E2E_STATUS_METRICS', '').lower() in _METRICS_ENV_VALUES:
+            return True
+        current_test = os.environ.get('PYTEST_CURRENT_TEST', '')
+        return 'test_data_usage_first_open' in current_test
 
     def __str__(self):
         return type(self).__qualname__
@@ -96,6 +105,16 @@ class AUT:
         ]
         child_env = os.environ.copy()
         child_env['STATUS_GO_DISABLE_SUPPORT_BOT_CONTACT_REQUEST'] = '1'
+        if self._metrics_requested():
+            metrics_port = local_system.find_free_port(_METRICS_PORT_START, 1)
+            command.extend(
+                [
+                    '--metrics',
+                    f'--metrics-address=127.0.0.1:{metrics_port}',
+                ]
+            )
+            self.metrics_url = f'http://127.0.0.1:{metrics_port}/metrics'
+            LOG.info('AUT metrics: %s', self.metrics_url)
         use_local_waku = os.environ.get('E2E_LOCAL_WAKU_FLEET', '').lower() in _LOCAL_WAKU_ENV_VALUES
         if use_local_waku:
             repo_root = configs.testpath.ROOT.parent.parent

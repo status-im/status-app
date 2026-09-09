@@ -7,6 +7,8 @@ from objectmaphelper import *
 communityPortal = {"container": statusDesktop_mainWindow, "objectName": "communitiesPortalLayout", "type": "CommunitiesPortalLayout", "visible": True}
 communityPortal_CreateCommunityButton = {"checkable": False, "container": communityPortal, "objectName": "createCommunityButton", "type": "StatusButton", "visible": True}
 communityPortal_JoinCommunityButton = {"checkable": False, "container": communityPortal, "objectName": "joinCommunityButton", "type": "StatusButton", "visible": True}
+communityPortal_searcher = {"container": communityPortal, "id": "searcher", "type": "SearchBox", "visible": True}
+communityPortal_communityCard = {"container": communityPortal, "objectName": RegularExpression("communityCard-*"), "type": "StatusCommunityCard", "visible": True}
 
 # Import Community Popup
 
