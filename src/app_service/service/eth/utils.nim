@@ -128,3 +128,18 @@ proc stripLeadingZeros*(value: string): string =
   while cidx < value.len - 1 and value[cidx] == '0':
     cidx.inc
   value[cidx .. ^1]
+
+proc normalizedWeiHexValue*(weiHex: string): string =
+  if weiHex.len < 3 or weiHex[0] != '0' or weiHex[1] notin {'x', 'X'}:
+    raise newException(ValueError, "expected a 0x-prefixed hex quantity with at least one digit")
+  let digits = weiHex[2 .. ^1]
+  for c in digits:
+    if c notin HexDigits:
+      raise newException(ValueError, "invalid hex digit in quantity")
+  let significant = stripLeadingZeros(digits)
+  if significant.len > 64:  # 64 hex digits == 256 bits
+    raise newException(ValueError, "hex quantity exceeds 256 bits")
+  "0x" & significant.toLowerAscii
+
+proc gweiToWeiHexValue*(gwei: float64): string =
+  "0x" & stripLeadingZeros(stint.u256(int64(gwei * 1e9)).toHex)
