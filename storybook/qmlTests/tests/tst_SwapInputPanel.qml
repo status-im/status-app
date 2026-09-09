@@ -278,6 +278,41 @@ Item {
             tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
         }
 
+        // Symbols are not token identities — an unrelated (or malicious)
+        // contract can share one. When the selected group key is absent from
+        // the settled catalog, the panel must fall back to the configured
+        // default/native GROUP KEY, never to "some group with the same symbol".
+        function test_absentSelectionNeverRemapsToASameSymbolImpostor() {
+            const store = d.adaptor.walletAssetsStore.walletTokensStore
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: sttGroupKey})
+            store.buildGroupsForChain(d.goOptChainId)
+            verify(!!controlUnderTest)
+            tryCompare(controlUnderTest, "selectedHoldingId", sttGroupKey)
+
+            // settle on a catalog that lacks the selected group but offers an
+            // impostor sharing its symbol, plus the configured default
+            const fresh = store.createTokenSelectorModel(3).model
+            verify(!!fresh)
+            controlUnderTest.tokenSelectorLoading = true
+            controlUnderTest.tokenSelectorModel = fresh
+            fresh.sourceData = [{
+                key: "11155420-0xevil", name: "Totally Legit STT", symbol: "STT",
+                logoUri: "", decimals: 18, cryptoPrice: 1, currentBalance: 0,
+                currencyBalance: 0, sectionName: "",
+                balances: [], tokens: [{ key: "11155420-0xevil", chainId: d.goOptChainId }]
+            }, {
+                key: ethGroupKey, name: "Ether", symbol: "ETH", logoUri: "",
+                decimals: 18, cryptoPrice: 1, currentBalance: 0,
+                currencyBalance: 0, sectionName: "",
+                balances: [], tokens: [{ key: "1-native", chainId: d.goOptChainId }]
+            }]
+            controlUnderTest.tokenSelectorLoading = false
+
+            tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
+            verify(controlUnderTest.selectedHoldingId !== "11155420-0xevil",
+                   "a same-symbol group is not the selected token")
+        }
+
         function test_multiChainTokenRefsStillResolveSelection() {
             const store = d.adaptor.walletAssetsStore.walletTokensStore
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})

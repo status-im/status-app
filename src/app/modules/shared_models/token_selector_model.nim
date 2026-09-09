@@ -257,6 +257,7 @@ QtObject:
       self.source.doSearch(self.searchKeyword)
     self.recompute()
     self.hasMoreItemsChanged()
+    self.isLoadingMoreChanged()
 
   # The params are exposed as read+write QtProperties so the QML sites can drive
   # them declaratively (Binding onto the picker model); the write setters guard

@@ -257,14 +257,12 @@ Control {
                     d.setHoldingToSelector()
                     return
                 }
-                const remapped = d.lastShownSymbol
-                               ? SQUtils.ModelUtils.getByKey(root.tokenSelectorModel, "symbol", d.lastShownSymbol, "key")
-                               : undefined
                 const defaultIfPresent = SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", root.defaultGroupKey)
                                        ? root.defaultGroupKey : undefined
-                const nativeFallback = SQUtils.ModelUtils.getByKey(root.tokenSelectorModel, "symbol",
-                                                                   Utils.getNativeTokenSymbol(root.listCatalogChainId), "key")
-                d.selectedHoldingId = remapped ?? defaultIfPresent ?? nativeFallback ?? root.defaultGroupKey
+                const nativeGroupKey = Utils.getNativeTokenGroupKey(root.listCatalogChainId)
+                const nativeIfPresent = SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", nativeGroupKey)
+                                      ? nativeGroupKey : undefined
+                d.selectedHoldingId = defaultIfPresent ?? nativeIfPresent ?? root.defaultGroupKey
             }
             d.setHoldingToSelector()
         }
@@ -283,8 +281,6 @@ Control {
                    ? d.selectedHolding.item.tokens : null
             onRevisionChanged: d.setHoldingToSelector()
         }
-
-        property string lastShownSymbol
 
         function setHoldingToSelector() {
             if (!root.tokenSelectorModel)
@@ -305,7 +301,6 @@ Control {
                 }
 
                 d.selectedHoldingTokenKey = tokenKey
-                d.lastShownSymbol = selectedHolding.item.symbol
 
                 holdingSelector.setSelection(selectedHolding.item.symbol,
                                              selectedHolding.item.logoUri || Constants.tokenIcon(selectedHolding.item.symbol),
