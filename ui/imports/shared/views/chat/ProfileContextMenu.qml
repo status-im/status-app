@@ -20,6 +20,7 @@ StatusMenu {
     property int contactType: Constants.contactType.nonContact
     property int onlineStatus: Constants.onlineStatus.unknown
     property int profileType: Constants.profileType.regular
+    property string bridgeName: ""
     property bool hasLocalNickname: false
     property bool usesDefaultName: false
     property int chatType: Constants.chatType.unknown
@@ -57,6 +58,7 @@ StatusMenu {
         isBlocked: root.profileType === Constants.profileType.blocked
         isCurrentUser: root.profileType === Constants.profileType.self
         isBridgedAccount: root.profileType === Constants.profileType.bridged
+        bridgeName: root.bridgeName
         Binding on onlineStatus {
             value: root.onlineStatus
             when: root.profileType !== Constants.profileType.bridged
