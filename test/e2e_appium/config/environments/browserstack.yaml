@@ -114,10 +114,10 @@ execution:
     enabled: true
     poll_interval: 20
     timeout: 180
-    parallel_buffer: 1
+    parallel_buffer: 0
     queue_buffer: 1
   pytest:
-    addopts: ["-n", "2"]
+    addopts: ["-n", "5"]
 
 logging:
   level: "INFO"
