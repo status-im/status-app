@@ -322,11 +322,7 @@ method onContactDetailsUpdated*(self: Module, contactId: string) =
   let updatedContact = self.controller.getContactDetails(contactId)
   for item in self.view.pinnedModel().modelContactUpdateIterator(contactId):
     if item.senderId == contactId:
-      item.senderDisplayName = updatedContact.defaultDisplayName
-      item.senderOptionalName = updatedContact.optionalName
-      item.senderEnsVerified = updatedContact.dto.ensVerified
-      item.senderIcon = updatedContact.icon
-      item.senderTrustStatus = updatedContact.dto.trustStatus
+      item.updateSenderDetails(updatedContact)
 
     if item.quotedMessageAuthorDetails.dto.id == contactId:
       item.quotedMessageAuthorDetails = updatedContact
