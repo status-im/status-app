@@ -245,7 +245,13 @@ Control {
                 }
 
                 function selectFirst() {
-                    rowsRepeater.itemAt(0).clicked()
+                    for (let i = 0; i < rowsRepeater.count; i++) {
+                        const row = rowsRepeater.itemAt(i)
+                        if (!!row && row.enabled) {
+                            row.clicked()
+                            return
+                        }
+                    }
                 }
 
                 Repeater {
@@ -254,6 +260,8 @@ Control {
                     model: holdingRows.chainRows
 
                     delegate: TokenSelectorAssetDelegate {
+                        id: assetDelegate
+
                         required property var modelData
                         required property int index
 
@@ -267,9 +275,24 @@ Control {
                                      && (rowChainId === -1 || rowChainId === root.highlightedChainId)
                         readonly property int effectiveChainId: rowChainId !== -1 ? rowChainId
                                                                                   : root.selectedChainId
+                        readonly property bool selectableOnAnotherChain: {
+                            assetDelegate.tokensTracker.revision
+                            assetDelegate.balancesTracker.revision
+                            const refs = holding.tokens ?? holding.balances
+                            if (!refs)
+                                return false
+                            const refsCount = refs.ModelCount.count
+                            for (let i = 0; i < refsCount; i++)
+                                if (ModelUtils.get(refs, i, "chainId") !== root.nonInteractiveChainId)
+                                    return true
+                            return false
+                        }
                         enabled: holding.key !== root.nonInteractiveKey
-                                 || (effectiveChainId !== -1
-                                     && effectiveChainId !== root.nonInteractiveChainId)
+                                 || (root.nonInteractiveChainId !== -1
+                                     && ((effectiveChainId !== -1
+                                          && effectiveChainId !== root.nonInteractiveChainId)
+                                         || (effectiveChainId === -1
+                                             && selectableOnAnotherChain)))
                         isAutoHovered: d.validSearchResultExists && holdingRows.index === 0
                                        && index === 0 && !listViewHoverHandler.hovered
 
