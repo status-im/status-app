@@ -20,7 +20,7 @@ QtObject {
     readonly property var _tokenSelectorModule: !!walletSectionTokenSelector ? walletSectionTokenSelector : null
 
     /* Creates a terminal token-selector picker model for the given kind
-       (0=send, 1=swap, 2=buy, 3=swap-to/bridge receive — destination-chain
+       (0=send, 1=swap pay side, 2=buy, 3=swap receive side — destination-chain
        catalog). Returns { model, id }: the producer keeps the
        model updated with the owned source and the caller sets its per-modal
        params; the id must be passed to releaseTokenSelectorModel when the owning
@@ -146,6 +146,10 @@ QtObject {
 
     function buildGroupsForChainTo(chainId, mandatoryKeys) {
         root._allTokensModule.buildGroupsForChainTo(chainId, mandatoryKeys)
+    }
+
+    function fetchAllChainsTokenGroups(mandatoryKeys) {
+        root._allTokensModule.fetchAllChainsTokenGroups(mandatoryKeys)
     }
 
     // Due to performance reasons, use this function as the last option, when you're sure the token is not present in the models.

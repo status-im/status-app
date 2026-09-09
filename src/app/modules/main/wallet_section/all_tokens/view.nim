@@ -16,12 +16,14 @@ QtObject:
       groupsForChainToLoading: bool
       pendingMandatoryGroupKeys: seq[string]
       pendingMandatoryGroupKeysTo: seq[string]
+      pendingMandatoryGroupKeysAllChains: seq[string]
 
       tokenListsModel: TokenListsModel
       tokenGroupsModel: TokenGroupsModel # refers to tokens of interest for active networks mode
       tokenGroupsForChainModel: TokenGroupsModel # all tokens for the source (pay) chain
       tokenGroupsForChainToModel: TokenGroupsModel # all tokens for the destination (receive) chain (swap+bridge)
-      searchResultModel: TokenGroupsModel # refers to tokens that match the search keyword
+      tokenGroupsAllChainsModel: TokenGroupsModel # ALL tokens across the active chains (on-demand fetch), for the "All" chip
+      searchResultModel: TokenGroupsModel # tokens matching the search keyword, scanned over the same cross-chain catalog
 
   ## Forward declaration
   proc modelsUpdated*(self: View)
@@ -49,8 +51,14 @@ QtObject:
       modelModes = @[ModelMode.NoMarketDetails, ModelMode.UseLazyLoading],
       lazyLoadingBatchSize = LAZY_LOADING_BATCH_SIZE,
       lazyLoadingInitialCount = LAZY_LOADING_INITIAL_COUNT)
+    result.tokenGroupsAllChainsModel = newTokenGroupsModel(
+      delegate.getTokenGroupsAllChainsModelDataSource(),
+      delegate.getTokenMarketValuesDataSource(),
+      modelModes = @[ModelMode.NoMarketDetails, ModelMode.UseLazyLoading],
+      lazyLoadingBatchSize = LAZY_LOADING_BATCH_SIZE,
+      lazyLoadingInitialCount = LAZY_LOADING_INITIAL_COUNT)
     result.searchResultModel = newTokenGroupsModel(
-      delegate.getTokenGroupsForChainModelDataSource(),
+      delegate.getTokenGroupsAllChainsModelDataSource(),
       delegate.getTokenMarketValuesDataSource(),
       modelModes = @[ModelMode.NoMarketDetails, ModelMode.UseLazyLoading, ModelMode.IsSearchResult],
       lazyLoadingBatchSize = LAZY_LOADING_BATCH_SIZE,
@@ -180,6 +188,23 @@ QtObject:
     self.tokenGroupsForChainToModel.modelsUpdated(resetModelSize = true, self.pendingMandatoryGroupKeysTo)
     self.tokenGroupsForChainToModelChanged()
 
+  proc fetchAllChainsTokenGroupsForKeys*(self: View, mandatoryGroupKeys: seq[string]) =
+    if mandatoryGroupKeys.len > 0:
+      self.pendingMandatoryGroupKeysAllChains = mandatoryGroupKeys
+    else:
+      self.pendingMandatoryGroupKeysAllChains = self.delegate.getMandatoryTokenGroupKeys()
+    self.delegate.fetchAllChainsTokenGroups()
+
+  proc fetchAllChainsTokenGroups*(self: View, mandatoryGroupKeysString: string) {.slot.} =
+    var keys: seq[string] = @[]
+    if mandatoryGroupKeysString.len > 0:
+      keys = mandatoryGroupKeysString.split("$$")
+    self.fetchAllChainsTokenGroupsForKeys(keys)
+
+  proc onAllChainsGroupsLoaded*(self: View) =
+    self.searchResultModel.refreshSearch()
+    self.tokenGroupsAllChainsModel.modelsUpdated(resetModelSize = true, self.pendingMandatoryGroupKeysAllChains)
+
   proc getTokenByKeyOrGroupKeyFromAllTokens*(self: View, key: string): string {.slot.} =
     let token = self.delegate.getTokenByKeyOrGroupKeyFromAllTokens(key)
     if token.isNil:
@@ -196,6 +221,8 @@ QtObject:
     self.tokenGroupsForChainToModel
   proc getSearchResultModelObj*(self: View): TokenGroupsModel =
     self.searchResultModel
+  proc getTokenGroupsAllChainsModelObj*(self: View): TokenGroupsModel =
+    self.tokenGroupsAllChainsModel
 
   proc modelsUpdated*(self: View) =
     self.tokenGroupsModel.modelsUpdated()

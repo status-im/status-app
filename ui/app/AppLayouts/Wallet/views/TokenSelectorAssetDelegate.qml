@@ -59,10 +59,10 @@ ItemDelegate {
         let chain = root.chainId
         if (chain < 0 && !!balancesModel && balancesModel.ModelCount.count > 0)
             chain = SQUtils.ModelUtils.get(root.balancesModel, 0, "chainId")
-        if (chain < 0)
+        if (chain < 0 && root.fallbackChainId >= 0 && SQUtils.ModelUtils.contains(tokensModel, "chainId", root.fallbackChainId))
             chain = root.fallbackChainId
-        if (chain < 0 && tokensCount === 1)
-            chain = SQUtils.ModelUtils.get(tokensModel, 0, "chainId")
+        if (chain < 0)
+            chain = SQUtils.ModelUtils.get(tokensModel, 0, "chainId") ?? -1
         return chain
     }
 
@@ -74,6 +74,7 @@ ItemDelegate {
         return !!key ? Utils.getChainAndAddressFromTokenKey(key).address : ""
     }
     property string defaultNetworkIcon
+    property var flatNetworksModel
 
     readonly property SQUtils.ModelChangeTracker balancesTracker: SQUtils.ModelChangeTracker {
         model: root.balancesModel
@@ -83,7 +84,17 @@ ItemDelegate {
         model: root.tokensModel
     }
 
-    readonly property string effectiveNetworkIcon: !!networkIconUrl ? networkIconUrl : defaultNetworkIcon
+    readonly property string effectiveNetworkIcon: {
+        if (networkIconUrl)
+            return networkIconUrl
+        if (resolvedChainId >= 0 && !!flatNetworksModel) {
+            const icon = SQUtils.ModelUtils.getByKey(flatNetworksModel, "chainId",
+                                                     resolvedChainId, "iconUrl")
+            if (icon)
+                return icon
+        }
+        return defaultNetworkIcon
+    }
     readonly property bool hasNetworkBadge: !!effectiveNetworkIcon
     readonly property bool hasAddressChip: !!tokenAddress && tokenAddress !== Constants.zeroAddress
 

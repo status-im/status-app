@@ -48,6 +48,7 @@ Control {
 
     property int selectedNetworkChainId: -1
     onSelectedNetworkChainIdChanged: {
+        d.syncChainFilterToSelection()
         reevaluateSelectedId()
     }
     property string selectedAccountAddress
@@ -181,7 +182,10 @@ Control {
             !chainName ? qsTr("Your assets") : qsTr("Your assets on %1").arg(chainName),
             qsTr("Popular assets"))
     }
-    Component.onCompleted: root.updateSectionNames()
+    Component.onCompleted: {
+        d.syncChainFilterToSelection()
+        root.updateSectionNames()
+    }
 
     enum SwapSide {
         Pay = 0,
@@ -201,6 +205,13 @@ Control {
 
         property string selectedHoldingId: root.groupKey
         property string selectedHoldingTokenKey: ""
+
+        function syncChainFilterToSelection() {
+            if (holdingSelector.dropdownOpened)
+                return
+            if (root.selectedNetworkChainId !== -1)
+                root.listChainFilter = root.selectedNetworkChainId
+        }
 
         onSelectedHoldingIdChanged: {
             Qt.callLater(d.clampAmountToBalance)
@@ -227,14 +238,33 @@ Control {
         onListSettledChanged: if (listSettled) root.reevaluateSelectedId()
 
         readonly property bool catalogJudgesSelection: root.listCatalogChainId === root.selectedNetworkChainId
+                                                       && !holdingSelector.dropdownOpened
+
+        function listSettledNow() {
+            return d.listSettled
+                   && !!root.tokenSelectorModel
+                   && root.tokenSelectorModel.searchString === ""
+        }
 
         function reevaluateSelectedId() {
-            if (!d.listSettled)
+            if (!d.listSettledNow())
                 return
             if (d.catalogJudgesSelection
                     && !SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", d.selectedHoldingId)) {
-                // Token doesn't exist in destination chain
-                d.selectedHoldingId = root.defaultGroupKey
+                if (!!d.selectedHoldingId
+                        && !!root.tokenSelectorModel.pinGroup
+                        && root.tokenSelectorModel.pinGroup(d.selectedHoldingId)) {
+                    d.setHoldingToSelector()
+                    return
+                }
+                const remapped = d.lastShownSymbol
+                               ? SQUtils.ModelUtils.getByKey(root.tokenSelectorModel, "symbol", d.lastShownSymbol, "key")
+                               : undefined
+                const defaultIfPresent = SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", root.defaultGroupKey)
+                                       ? root.defaultGroupKey : undefined
+                const nativeFallback = SQUtils.ModelUtils.getByKey(root.tokenSelectorModel, "symbol",
+                                                                   Utils.getNativeTokenSymbol(root.listCatalogChainId), "key")
+                d.selectedHoldingId = remapped ?? defaultIfPresent ?? nativeFallback ?? root.defaultGroupKey
             }
             d.setHoldingToSelector()
         }
@@ -253,6 +283,8 @@ Control {
                    ? d.selectedHolding.item.tokens : null
             onRevisionChanged: d.setHoldingToSelector()
         }
+
+        property string lastShownSymbol
 
         function setHoldingToSelector() {
             if (!root.tokenSelectorModel)
@@ -273,13 +305,14 @@ Control {
                 }
 
                 d.selectedHoldingTokenKey = tokenKey
+                d.lastShownSymbol = selectedHolding.item.symbol
 
                 holdingSelector.setSelection(selectedHolding.item.symbol,
                                              selectedHolding.item.logoUri || Constants.tokenIcon(selectedHolding.item.symbol),
                                              selectedHolding.item.key)
                 return
             }
-            if (d.listSettled && d.catalogJudgesSelection)
+            if (d.listSettledNow() && d.catalogJudgesSelection)
                 holdingSelector.reset()
         }
 
@@ -308,12 +341,18 @@ Control {
 
 
         function adoptChainForToken(key) {
-            const balances = SQUtils.ModelUtils.getByKey(root.tokenSelectorModel, "key", key, "balances")
-            if (!balances)
+            const refs = SQUtils.ModelUtils.getByKey(root.tokenSelectorModel, "key", key, "tokens")
+                         ?? SQUtils.ModelUtils.getByKey(root.tokenSelectorModel, "key", key, "balances")
+            if (root.listChainFilter !== -1
+                    && (!refs || SQUtils.ModelUtils.contains(refs, "chainId", root.listChainFilter))) {
+                root.networkSelected(root.listChainFilter)
                 return
-            if (SQUtils.ModelUtils.contains(balances, "chainId", root.selectedNetworkChainId))
+            }
+            if (!refs)
                 return
-            const firstChain = SQUtils.ModelUtils.get(balances, 0, "chainId")
+            if (SQUtils.ModelUtils.contains(refs, "chainId", root.selectedNetworkChainId))
+                return
+            const firstChain = SQUtils.ModelUtils.get(refs, 0, "chainId")
             if (!!firstChain && firstChain !== root.selectedNetworkChainId)
                 root.networkSelected(firstChain)
         }
@@ -588,6 +627,12 @@ Control {
                 highlightedChainId: root.selectedNetworkChainId
                 onChainSelected: chainId => root.listChainFilter = chainId
 
+                onDropdownAboutToOpen: d.syncChainFilterToSelection()
+                onDropdownClosed: {
+                    d.syncChainFilterToSelection()
+                    root.reevaluateSelectedId()
+                }
+
                 onSearch: function(keyword) {
                     if (root.tokenSelectorModel)
                         root.tokenSelectorModel.search(keyword)
@@ -602,12 +647,12 @@ Control {
                     if (key === "")
                         return
                     d.selectedHoldingId = key
-                    if (chainId !== -1)
+                    if (chainId !== -1) {
+                        root.listChainFilter = chainId
                         root.networkSelected(chainId)
-                    else if (root.listChainFilter !== -1)
-                        root.networkSelected(root.listChainFilter)
-                    else
+                    } else {
                         d.adoptChainForToken(key)
+                    }
                 }
             }
         }

@@ -169,9 +169,10 @@ Item {
                 tokensModel: tokens
             })
 
-            // no balances and no catalog chain: nothing to resolve against
-            compare(control.tokenAddress, "")
-            compare(control.hasAddressChip, false)
+            // no balances and no catalog chain: the token's own first
+            // deployment stands in
+            compare(control.tokenAddress, root.tokenAddress)
+            compare(control.hasAddressChip, true)
 
             // the catalog chain picks the matching per-chain deployment
             control.fallbackChainId = 10
@@ -182,10 +183,12 @@ Item {
             compare(control.tokenAddress, root.tokenAddress)
             compare(control.hasAddressChip, true)
 
-            // a chain the group has no entry for resolves to no chip
+            // a chain the group has no entry for is ignored — the row shows its
+            // own chain's deployment instead (an unscoped "All" list mixes in
+            // tokens from other chains)
             control.fallbackChainId = 42161
-            compare(control.tokenAddress, "")
-            compare(control.hasAddressChip, false)
+            compare(control.tokenAddress, root.tokenAddress)
+            compare(control.hasAddressChip, true)
         }
 
         // a chain switch rebuilds the tokens submodel in place with an
@@ -200,14 +203,43 @@ Item {
             })
             compare(control.tokenAddress, root.tokenAddress)
 
-            // the catalog now holds another chain's deployment; same row count
+            // the catalog now holds another chain's deployment; same row count.
+            // Until the rebuild lands the row keeps showing its own (only)
+            // deployment; afterwards it follows the new content.
             control.fallbackChainId = 10
-            compare(control.tokenAddress, "")
+            compare(control.tokenAddress, root.tokenAddress)
             tokens.setProperty(0, "chainId", 10)
             tokens.setProperty(0, "key", "10-0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 
             compare(control.tokenAddress, "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
             compare(control.hasAddressChip, true)
+        }
+
+        // a row without a per-chain balance badges its RESOLVED chain's icon
+        // (looked up in the networks catalog), not the generic default — on an
+        // unscoped "All" list a BSC-only token must show the BSC badge
+        function test_networkBadgeFollowsTheResolvedChain() {
+            const tokens = Qt.createQmlObject("import QtQuick; ListModel {}", root)
+            tokens.append({ chainId: 56, key: "56-" + root.tokenAddress })
+
+            const networks = Qt.createQmlObject("import QtQuick; ListModel {}", root)
+            networks.append({ chainId: 1, iconUrl: "network/Network=Ethereum" })
+            networks.append({ chainId: 56, iconUrl: "network/Network=BSC" })
+
+            const control = createTemporaryObject(delegateCmp, root, {
+                tokensModel: tokens,
+                flatNetworksModel: networks,
+                defaultNetworkIcon: "network/Network=Ethereum",
+                fallbackChainId: 1 // the panel's chain; the token isn't on it
+            })
+
+            compare(control.resolvedChainId, 56)
+            compare(control.effectiveNetworkIcon, "network/Network=BSC")
+            compare(control.tokenAddress, root.tokenAddress)
+
+            // without the networks catalog the generic default still applies
+            control.flatNetworksModel = null
+            compare(control.effectiveNetworkIcon, "network/Network=Ethereum")
         }
 
         function test_zeroAddressHasNoChip() {

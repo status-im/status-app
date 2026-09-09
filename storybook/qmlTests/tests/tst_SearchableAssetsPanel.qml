@@ -229,6 +229,36 @@ Item {
             }
         }
 
+        // A search with no matches shows the placeholder where the list would
+        // be — below the search box, never above it.
+        function test_emptySearchResultShowsPlaceholderInListArea() {
+            const control = createTemporaryObject(panelCmp, root)
+
+            const listView = findChild(control, "assetsListView")
+            waitForRendering(listView)
+
+            const searchBox = findChild(control, "searchBox")
+            const placeholder = findChild(control, "emptyListPlaceholder")
+            verify(!!placeholder)
+            verify(!placeholder.visible, "placeholder hidden while the list has rows")
+
+            control.searchKeyword = "no-such-token"
+            searchBox.text = "no-such-token"
+            waitForRendering(listView)
+
+            compare(listView.count, 0)
+            verify(placeholder.visible, "placeholder replaces the empty list")
+            verify(searchBox.visible, "the search box stays usable above it")
+            verify(placeholder.mapToItem(control, 0, 0).y >
+                   searchBox.mapToItem(control, 0, 0).y,
+                   "the placeholder sits below the search box, not on top of the panel")
+
+            control.searchKeyword = ""
+            searchBox.text = ""
+            waitForRendering(listView)
+            verify(!placeholder.visible)
+        }
+
         function test_highlightedKey() {
             const control = createTemporaryObject(panelCmp, root)
             control.panel.highlightedKey = "dai_key"

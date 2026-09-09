@@ -140,6 +140,17 @@ proc mergePopularWithOwned*(popular: seq[PopularGroup],
           chains.incl(t.chainId)
     result.add(item)
 
+proc filterToEnabledChains(items: seq[TokenSelectorItem],
+    enabledChainIds: seq[int]): seq[TokenSelectorItem] =
+  if enabledChainIds.len == 0:
+    return items
+  let chainSet = enabledChainIds.toHashSet
+  items.filter(proc(item: TokenSelectorItem): bool =
+    for t in item.tokens:
+      if t.chainId in chainSet:
+        return true
+    false)
+
 proc buildDisplayItems*(
     ownedGroups: seq[AggTokenGroup], networks: seq[NetworkInfo],
     params: TokenSelectorParams, mode: TokenSelectorMode, searchActive: bool,
@@ -155,11 +166,15 @@ proc buildDisplayItems*(
   ##   - Owned (send), no search -> just the owned tokens.
   let owned = buildTokenSelectorItems(ownedGroups, networks, params)
   if searchActive:
-    let merged = mergePopularWithOwned(searchGroups, owned, params.showCommunityAssets)
+    let merged = filterToEnabledChains(
+      mergePopularWithOwned(searchGroups, owned, params.showCommunityAssets),
+      params.enabledChainIds)
     if mode == TokenSelectorMode.Owned:
       let ownedKeys = owned.mapIt(it.key).toHashSet
       return merged.filterIt(it.key in ownedKeys)
     return merged
   if mode == TokenSelectorMode.AllTokens:
-    return mergePopularWithOwned(popularGroups, owned, params.showCommunityAssets)
+    return filterToEnabledChains(
+      mergePopularWithOwned(popularGroups, owned, params.showCommunityAssets),
+      params.enabledChainIds)
   return owned

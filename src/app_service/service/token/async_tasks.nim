@@ -162,6 +162,7 @@ proc asyncBuildGroupsForChainTask*(argEncoded: string) {.gcsafe, nimcall.} =
   finally:
     if res.isNil:
       res = TokenGroupsApplyResult(error: "internal: groups-for-chain result assembly produced no result")
+    res.chainId = arg.chainId
     arg.finishTyped(res)
 
 type

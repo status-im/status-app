@@ -78,6 +78,8 @@ method load*(self: Module) =
     self.view.onGroupsForChainLoaded()
   self.events.on(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED) do(e: Args):
     self.view.onGroupsForChainToLoaded()
+  self.events.on(SIGNAL_ALL_TOKEN_GROUPS_LOADED) do(e: Args):
+    self.view.onAllChainsGroupsLoaded()
 
   self.controller.init()
   self.view.load()
@@ -139,6 +141,19 @@ method getTokenGroupsForChainToModelDataSource*(self: Module): TokenGroupsModelD
     getTokensMarketValuesLoading: proc(): bool = self.controller.getTokensMarketValuesLoading(),
   )
 
+method getTokenGroupsAllChainsModelDataSource*(self: Module): TokenGroupsModelDataSource =
+  return (
+    getAllTokenGroups: proc(): var seq[TokenGroupItem] = self.controller.getAllChainsTokenGroups(),
+    getTokenDetails: proc(tokenKey: string): TokenDetailsItem = self.controller.getTokenDetails(tokenKey),
+    getTokenPreferences: proc(groupKey: string): TokenPreferencesItem = self.controller.getTokenPreferences(groupKey),
+    getCommunityTokenDescription: proc(chainId: int, address: string): string = self.controller.getCommunityTokenDescription(chainId, address),
+    getTokensDetailsLoading: proc(): bool = self.controller.getTokensDetailsLoading(),
+    getTokensMarketValuesLoading: proc(): bool = self.controller.getTokensMarketValuesLoading(),
+  )
+
+method fetchAllChainsTokenGroups*(self: Module) =
+  self.controller.fetchAllChainsTokenGroups()
+
 method getTokenMarketValuesDataSource*(self: Module): TokenMarketValuesDataSource =
   return (
     getMarketValuesForToken: proc(tokenKey: string): TokenMarketValuesItem = self.controller.getMarketValuesForToken(tokenKey),
@@ -163,6 +178,12 @@ proc getTokenGroupsForChainToModelObj*(self: Module): TokenGroupsModel =
   self.view.getTokenGroupsForChainToModelObj()
 proc getSearchResultModelObj*(self: Module): TokenGroupsModel =
   self.view.getSearchResultModelObj()
+proc getTokenGroupsAllChainsModelObj*(self: Module): TokenGroupsModel =
+  self.view.getTokenGroupsAllChainsModelObj()
+proc isAllChainsTokenGroupsLoading*(self: Module): bool =
+  self.controller.getAllChainsTokenGroupsLoading()
+proc fetchAllChainsTokenGroupsForKeys*(self: Module, mandatoryGroupKeys: seq[string]) =
+  self.view.fetchAllChainsTokenGroupsForKeys(mandatoryGroupKeys)
 
 method getTokenByKeyOrGroupKeyFromAllTokens*(self: Module, key: string): TokenItem =
   return self.controller.getTokenByKeyOrGroupKeyFromAllTokens(key)

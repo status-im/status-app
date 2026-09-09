@@ -47,12 +47,17 @@ type
     ## model can (re)read the popular/search rows and drive their lazy loading
     ## without middleware coupling. All optional: send owns no popular list, buy
     ## has no search source. `searching` selects which lazy list to act on.
-    getPopular*: proc(): seq[PopularGroup] {.closure.}          ## loaded popular rows (AllTokens mode)
+    getPopular*: proc(): seq[PopularGroup] {.closure.}          ## loaded popular rows (AllTokens mode), chain-scoped catalog
+    getPopularAllChains*: proc(): seq[PopularGroup] {.closure.} ## cross-chain popular rows, used when no chain filter is set ("All")
+    fetchMoreAllChains*: proc() {.closure.}                     ## lazy passthrough for the cross-chain catalog
+    hasMoreAllChains*: proc(): bool {.closure.}
+    isLoadingMoreAllChains*: proc(): bool {.closure.}
     getSearch*: proc(): seq[PopularGroup] {.closure.}           ## loaded search rows
     doSearch*: proc(keyword: string) {.closure.}               ## trigger a backend search
     fetchMore*: proc(searching: bool) {.closure.}              ## grow the active lazy list
     hasMore*: proc(searching: bool): bool {.closure.}
     isLoadingMore*: proc(searching: bool): bool {.closure.}
+    pinGroup*: proc(key: string): bool {.closure.}             ## pin a group from the full popular source into the lazy window
 
 QtObject:
   type
@@ -215,6 +220,11 @@ QtObject:
   proc hasMoreItemsChanged(self: TokenSelectorModel) {.signal.}
   proc isLoadingMoreChanged(self: TokenSelectorModel) {.signal.}
 
+  proc allChainsScope(self: TokenSelectorModel): bool =
+    self.mode == TokenSelectorMode.AllTokens and
+      self.params.enabledChainIds.len == 0 and
+      self.source.getPopularAllChains != nil
+
   proc recompute(self: TokenSelectorModel) =
     let searching = self.searchKeyword.len > 0
     var popularGroups: seq[PopularGroup] = @[]
@@ -222,8 +232,11 @@ QtObject:
     if searching:
       if self.source.getSearch != nil:
         searchGroups = self.source.getSearch()
-    elif self.mode == TokenSelectorMode.AllTokens and self.source.getPopular != nil:
-      popularGroups = self.source.getPopular()
+    elif self.mode == TokenSelectorMode.AllTokens:
+      if self.allChainsScope():
+        popularGroups = self.source.getPopularAllChains()
+      elif self.source.getPopular != nil:
+        popularGroups = self.source.getPopular()
     self.setSourceItems(buildDisplayItems(
       self.ownedGroups, self.networks, self.params, self.mode, searching,
       popularGroups, searchGroups))
@@ -265,6 +278,8 @@ QtObject:
     if chains == self.params.enabledChainIds: return
     self.params.enabledChainIds = chains
     self.recompute()
+    self.hasMoreItemsChanged()
+    self.isLoadingMoreChanged()
   proc getEnabledChainId(self: TokenSelectorModel): int {.slot.} =
     if self.params.enabledChainIds.len == 0: -1 else: self.params.enabledChainIds[0]
   QtProperty[int] enabledChainId:
@@ -291,11 +306,16 @@ QtObject:
     read = getShowCommunityAssets
     write = setShowCommunityAssets
 
+  proc searchStringChanged*(self: TokenSelectorModel) {.signal.}
+
   proc search*(self: TokenSelectorModel, keyword: string) {.slot.} =
     let kw = keyword.strip()
     if self.source.doSearch != nil:
       self.source.doSearch(kw)
+    let kwChanged = kw != self.searchKeyword
     self.searchKeyword = kw
+    if kwChanged:
+      self.searchStringChanged()
     self.recompute()
     self.hasMoreItemsChanged()
     self.isLoadingMoreChanged()
@@ -304,25 +324,45 @@ QtObject:
     return self.searchKeyword
   QtProperty[string] searchString:
     read = getSearchString
+    notify = searchStringChanged
+
+  proc pinGroup*(self: TokenSelectorModel, key: string): bool {.slot.} =
+    if self.source.pinGroup == nil:
+      return false
+    if not self.source.pinGroup(key):
+      return false
+    self.recompute()
+    self.hasMoreItemsChanged()
+    self.isLoadingMoreChanged()
+    return true
 
   proc fetchMore*(self: TokenSelectorModel) {.slot.} =
     let searching = self.searchKeyword.len > 0
-    if self.source.fetchMore != nil:
+    if not searching and self.allChainsScope():
+      if self.source.fetchMoreAllChains != nil:
+        self.source.fetchMoreAllChains()  # grows the cross-chain lazy window
+    elif self.source.fetchMore != nil:
       self.source.fetchMore(searching)  # grows the underlying lazy list in place
     self.recompute()
     self.hasMoreItemsChanged()
     self.isLoadingMoreChanged()
 
   proc getHasMoreItems*(self: TokenSelectorModel): bool {.slot.} =
+    let searching = self.searchKeyword.len > 0
+    if not searching and self.allChainsScope():
+      return self.source.hasMoreAllChains != nil and self.source.hasMoreAllChains()
     if self.source.hasMore == nil: return false
-    return self.source.hasMore(self.searchKeyword.len > 0)
+    return self.source.hasMore(searching)
   QtProperty[bool] hasMoreItems:
     read = getHasMoreItems
     notify = hasMoreItemsChanged
 
   proc getIsLoadingMore*(self: TokenSelectorModel): bool {.slot.} =
+    let searching = self.searchKeyword.len > 0
+    if not searching and self.allChainsScope():
+      return self.source.isLoadingMoreAllChains != nil and self.source.isLoadingMoreAllChains()
     if self.source.isLoadingMore == nil: return false
-    return self.source.isLoadingMore(self.searchKeyword.len > 0)
+    return self.source.isLoadingMore(searching)
   QtProperty[bool] isLoadingMore:
     read = getIsLoadingMore
     notify = isLoadingMoreChanged

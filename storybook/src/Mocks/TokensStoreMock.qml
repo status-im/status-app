@@ -32,10 +32,12 @@ TokensStore {
 
     function createTokenSelectorModel(kind) {
         root.createdKinds = root.createdKinds.concat([kind])
-        // Mirror the producer's per-kind source: swap (1) uses the source-chain
-        // groups, bridge receive (3) uses the destination-chain groups, send (0) /
-        // buy (2) use the full groups. If a caller pre-seeded tokenSelectorStubData,
-        // use that static set instead.
+        // Mirror the producer's per-kind source: swap pay (1) uses the
+        // source-chain groups, swap receive (3) the destination-chain groups,
+        // send (0) / buy (2) the full groups. (The real producer additionally
+        // swaps in the cross-chain groups while no chain filter is set — the
+        // "All" chip; that path is covered by the Nim model tests.) If a caller
+        // pre-seeded tokenSelectorStubData, use that static set instead.
         let props = {}
         if (!!root.tokenSelectorStubData && root.tokenSelectorStubData.length > 0)
             props = { sourceData: root.tokenSelectorStubData }
@@ -62,16 +64,25 @@ TokensStore {
 
     property var builtChainIds: []
 
+    // Like the real token service, each side's build touches only its own
+    // catalog — the receive panel drives buildGroupsForChainTo itself.
     function buildGroupsForChain(chainId) {
         root.builtChainIds = root.builtChainIds.concat([chainId])
         root._buildGroupsInto(root.tokenGroupsForChainModel, chainId)
-        // keep the destination model in sync so receive-panel tests have data
-        if (root.tokenGroupsForChainToModel)
-            root._buildGroupsInto(root.tokenGroupsForChainToModel, chainId)
     }
 
+    property var builtToChainIds: []
+
     function buildGroupsForChainTo(chainId) {
+        root.builtToChainIds = root.builtToChainIds.concat([chainId])
         root._buildGroupsInto(root.tokenGroupsForChainToModel, chainId)
+    }
+
+    // The real store triggers the on-demand cross-chain catalog fetch here;
+    // in storybook the mock models are static, so this only records the call.
+    property int fetchAllChainsTokenGroupsCallCount: 0
+    function fetchAllChainsTokenGroups(mandatoryKeys) {
+        root.fetchAllChainsTokenGroupsCallCount++
     }
 
     function _buildGroupsInto(targetModel, chainId) {
