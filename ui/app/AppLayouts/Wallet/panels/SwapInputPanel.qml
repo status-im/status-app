@@ -213,18 +213,6 @@ Control {
                 root.listChainFilter = root.selectedNetworkChainId
         }
 
-        onSelectedHoldingIdChanged: {
-            Qt.callLater(d.clampAmountToBalance)
-        }
-
-        function clampAmountToBalance() {
-            if (root.swapSide !== SwapInputPanel.SwapSide.Pay)
-                return
-            if (d.maxSafeCryptoValue <= 0)
-                return
-            if (amountToSendInput.balanceExceeded)
-                root.setAmount(d.maxSafeCryptoValue)
-        }
 
         // Only a settled list answers "is this token available here?": it is empty
         // while the catalog is (re)built, holds search results while searching, and

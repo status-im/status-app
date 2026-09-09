@@ -537,15 +537,13 @@ StatusDialog {
                     enabled: !!root.swapInputParamsForm.fromGroupKey || !!root.swapInputParamsForm.toGroupKey
                     onClicked: {
                         const tempPayToken = root.swapInputParamsForm.fromGroupKey
-                        const tempPayAmount = root.swapInputParamsForm.fromTokenAmount
                         const tempFromChain = root.swapInputParamsForm.selectedNetworkChainId
                         root.swapInputParamsForm.selectedNetworkChainId = d.effectiveToChainId
                         root.swapInputParamsForm.toNetworkChainId = tempFromChain
                         // accounts deliberately stay put — the exchange swaps only chains and tokens
                         root.swapInputParamsForm.fromGroupKey = root.swapInputParamsForm.toGroupKey
-                        root.swapInputParamsForm.fromTokenAmount = !!root.swapAdaptor.swapOutputData.toTokenAmount ? root.swapAdaptor.swapOutputData.toTokenAmount : root.swapInputParamsForm.toTokenAmount
                         root.swapInputParamsForm.toGroupKey = tempPayToken
-                        root.swapInputParamsForm.toTokenAmount = tempPayAmount
+                        root.swapInputParamsForm.toTokenAmount = ""
                         d.rebuildGroupsForChain(payPanel.listCatalogChainId)
                         d.rebuildGroupsForChain(receivePanel.listCatalogChainId, true)
                         payPanel.forceActiveFocus()
