@@ -272,7 +272,6 @@ Control {
 
                 readOnly: !root.interactive
                 activeFocusOnPress: root.interactive
-                enabled: root.interactive
 
                 color: text.length === 0 || (root.valid && !root.markAsInvalid)
                        ? Theme.palette.directColor1
