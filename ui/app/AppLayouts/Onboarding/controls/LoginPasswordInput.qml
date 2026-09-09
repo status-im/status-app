@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import StatusQ.Core
 import StatusQ.Controls
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 
 StatusPasswordInput {
     id: root
@@ -22,6 +23,17 @@ StatusPasswordInput {
     QtObject {
         id: d
         property bool showPassword
+        property bool revealInteraction
+    }
+
+    // workaround to not show ctx menu when switching visibility on iOS
+    ContextMenu.onRequested: {
+        if (!SQUtils.Utils.isIOS || !d.revealInteraction)
+            return
+
+        const menu = root.ContextMenu.menu
+        root.ContextMenu.menu = null
+        Qt.callLater(() => root.ContextMenu.menu = menu)
     }
 
     RowLayout {
@@ -38,13 +50,25 @@ StatusPasswordInput {
             color: hhandler.hovered ? Theme.palette.primaryColor1 : Theme.palette.baseColor1
             HoverHandler {
                 id: hhandler
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
                 cursorShape: hovered ? Qt.PointingHandCursor : undefined
             }
+
             TapHandler {
-                onSingleTapped: d.showPassword = !d.showPassword
+                margin: parent.width * 0.3
+
+                onPressedChanged: {
+                    if (pressed)
+                        d.revealInteraction = true
+                    else
+                        Qt.callLater(() => d.revealInteraction = false)
+                }
+
+                onTapped: d.showPassword = !d.showPassword
+
             }
             StatusToolTip {
-                text: d.showPassword ? qsTr("Hide password") : qsTr("Reveal password")
+                text: hhandler.hovered && d.showPassword ? qsTr("Hide password") : qsTr("Reveal password")
                 visible: hhandler.hovered
             }
         }
