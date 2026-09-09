@@ -199,6 +199,110 @@ Item {
             compare(button.icon, Constants.tokenIcon("DAI"))
         }
 
+        // Clicking the other panel's token from an unscoped list must resolve
+        // to another of its chains — never the blocked chain-address pair.
+        function test_selectionSkipsTheNonInteractiveChain() {
+            // fresh model: the fixture's has no `tokens` role, and a ListModel's
+            // role set is frozen by its first append
+            const data = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
+            data.append({
+                key: "usdc_key", communityId: "", name: "USD Coin",
+                currencyBalance: 0, symbol: "USDC",
+                logoUri: Constants.tokenIcon("USDC"),
+                balances: [],
+                tokens: [ { chainId: 1, key: "1-0xaaa" }, { chainId: 10, key: "10-0xbbb" } ],
+                sectionName: "Popular assets"
+            })
+
+            const selector = createTemporaryObject(selectorCmp, root)
+            selector.model = data
+            selector.nonInteractiveKey = "usdc_key"
+            selector.nonInteractiveChainId = 1
+            waitForRendering(selector)
+
+            mouseClick(selector)
+            const listView = findChild(selector.Overlay.overlay, "assetsListView")
+            verify(listView)
+            waitForRendering(listView)
+
+            const usdc = listView.itemAtIndex(0)
+            verify(usdc)
+            verify(usdc.rowAt(0).enabled)
+
+            usdc.selectFirst()
+            compare(selector.selectedSpy.count, 1)
+            compare(selector.selectedSpy.signalArguments[0][0], "usdc_key")
+            compare(selector.selectedSpy.signalArguments[0][1], 10)
+        }
+
+        // Even if a selection slips past the row's disabled state (keyboard
+        // paths, stale model), the selector must not commit the blocked pair —
+        // nor an unresolved chain that a later adoption could land on it.
+        function test_finalGuardBlocksTheNonInteractivePair() {
+            const data = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
+            data.append({
+                key: "only1_key", communityId: "", name: "OnlyOne",
+                currencyBalance: 0, symbol: "ONE", logoUri: "",
+                balances: [],
+                tokens: [ { chainId: 1, key: "1-0xccc" } ],
+                sectionName: "Popular assets"
+            })
+
+            const selector = createTemporaryObject(selectorCmp, root)
+            selector.model = data
+            selector.nonInteractiveKey = "only1_key"
+            selector.nonInteractiveChainId = 1
+            waitForRendering(selector)
+
+            mouseClick(selector) // open the dropdown
+            const panel = findChild(selector.Overlay.overlay, "searchableAssetsPanel")
+            verify(panel)
+
+            // bypass the delegate and emit straight from the panel: the only
+            // deployment is the blocked chain, so nothing may be committed
+            panel.selected("only1_key", -1)
+            compare(selector.selectedSpy.count, 0)
+            compare(selector.isSelected, false)
+            verify(!!findChild(selector.Overlay.overlay, "searchableAssetsPanel"),
+                   "the dropdown stays open instead of closing on a refused pick")
+
+            panel.selected("only1_key", 1) // the blocked pair, explicitly
+            compare(selector.selectedSpy.count, 0)
+            compare(selector.isSelected, false)
+        }
+
+        // With the -1 wildcard the token is excluded on every chain: even a
+        // selection arriving with a CONCRETE chain must be refused.
+        function test_finalGuardBlocksWildcardExclusionOnAnyChain() {
+            const data = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
+            data.append({
+                key: "usdc_key", communityId: "", name: "USD Coin",
+                currencyBalance: 0, symbol: "USDC",
+                logoUri: Constants.tokenIcon("USDC"),
+                balances: [],
+                tokens: [ { chainId: 1, key: "1-0xaaa" }, { chainId: 10, key: "10-0xbbb" } ],
+                sectionName: "Popular assets"
+            })
+
+            const selector = createTemporaryObject(selectorCmp, root)
+            selector.model = data
+            selector.nonInteractiveKey = "usdc_key"
+            selector.nonInteractiveChainId = -1
+            waitForRendering(selector)
+
+            mouseClick(selector) // open the dropdown
+            const panel = findChild(selector.Overlay.overlay, "searchableAssetsPanel")
+            verify(panel)
+
+            panel.selected("usdc_key", 1)  // concrete chain under the wildcard
+            compare(selector.selectedSpy.count, 0)
+            compare(selector.isSelected, false)
+
+            panel.selected("usdc_key", -1) // unresolved chain
+            compare(selector.selectedSpy.count, 0)
+            compare(selector.isSelected, false)
+        }
+
         function test_searchNotPersistent() {
             const selector = createTemporaryObject(selectorCmp, root)
             const button = selector.contentItem
