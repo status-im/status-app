@@ -343,6 +343,38 @@ suite "TokenSelectorModel - producer-driven recompute":
     m.setEnabledChainId(-1)
     check m.keysInOrder() == @["1-0xaehron", "bsc-native"]
 
+  test "an address-narrowed search row stays scoped to the matched chain":
+    # The backend search narrowed the group to the chain-1 deployment the
+    # searched contract address matched. The user also owns the group on
+    # chain 10 (a DIFFERENT contract) — that must not re-widen the row: under
+    # a chain-10 filter the row is hidden, never resolved to the other
+    # contract.
+    let m = newTokenSelectorModel(TokenSelectorMode.AllTokens)
+    var source: TokenSelectorSource
+    source.getSearch = proc(): seq[PopularGroup] =
+      @[PopularGroup(key: "usd-coin", name: "USD Coin", symbol: "USDC",
+                     tokens: @[(key: "1-0xa0b8", chainId: 1)])]
+    m.setSource(source)
+    m.setOwnedSource(@[
+      AggTokenGroup(key: "usd-coin", name: "USD Coin", symbol: "USDC",
+        decimals: 18,
+        balances: @[AggBalance(account: "0xA", chainId: 1,
+                               balance: parse("1000000000000000000", UInt256)),
+                    AggBalance(account: "0xA", chainId: 10,
+                               balance: parse("2000000000000000000", UInt256))],
+        tokens: @[(key: "1-0xa0b8", chainId: 1), (key: "10-0x0b2c", chainId: 10)])
+    ], networks)
+    m.search("0xa0b8")
+    # "All" (no filter): the row lists ONLY the matched deployment — the owned
+    # balance on the other chain must not expand it back onto chain 10
+    check m.keysInOrder() == @["usd-coin"]
+    check m.balancesModelForKey("usd-coin").chainIdsInOrder() == @[1]
+    check m.tokensModelForKey("usd-coin").rowCount(nil) == 1
+    m.setEnabledChainId(1)   # the matched deployment's chain: shown
+    check m.keysInOrder() == @["usd-coin"]
+    m.setEnabledChainId(10)  # merely owned there: hidden
+    check m.keysInOrder().len == 0
+
   test "an active chain filter scopes the popular catalog to tokens on that chain":
     let m = newTokenSelectorModel(TokenSelectorMode.AllTokens)
     var source: TokenSelectorSource

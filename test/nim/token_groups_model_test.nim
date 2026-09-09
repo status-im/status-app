@@ -5,7 +5,7 @@
 ## insert+remove+reorder; reorder read-back (remove+insert, no moves) + no reset;
 ## stable-set refresh emits no reset / no move / no spurious churn.
 
-import unittest, tables, sequtils
+import unittest, tables, sequtils, strutils
 import nimqml
 
 import app/modules/main/wallet_section/all_tokens/token_groups_model
@@ -370,3 +370,97 @@ suite "token_groups_model - lazy pagination with pinned rows":
     check not m.hasMoreItemsForSource()        # everything is loaded already
     m.fetchMore()                              # must be a clean no-op
     check m.getLoadedGroups().len == 11
+
+suite "token_groups_model - search by contract address":
+
+  # Cross-chain group: the group key ("usd-coin") does NOT embed the contract
+  # address, so these only pass when the search matches the per-token
+  # address fields, not just key/name/symbol.
+  const usdcAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" # mixed case on purpose
+  # the group's chain-10 deployment: a DIFFERENT contract under the same group
+  const usdcOptimismAddress = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85"
+
+  proc mkGroupAt(key, address, name, symbol: string): TokenGroupItem =
+    let tok = createTokenItem(TokenDto(
+      chainId: 1, address: address, crossChainId: key,
+      name: name, symbol: symbol, decimals: 18))
+    TokenGroupItem(key: key, name: name, symbol: symbol,
+      decimals: 18, logoUri: "", tokens: @[tok])
+
+  proc withDeployment(group: TokenGroupItem, chainId: int,
+      address: string): TokenGroupItem =
+    group.tokens.add(createTokenItem(TokenDto(
+      chainId: chainId, address: address, crossChainId: group.key,
+      name: group.name, symbol: group.symbol, decimals: 18)))
+    group
+
+  proc newSearchModel(): TokenGroupsModel =
+    gGroups = @[
+      mkGroupAt("usd-coin", usdcAddress, "USD Coin", "USDC")
+        .withDeployment(10, usdcOptimismAddress),
+      mkGroupAt("dai", "0x6B175474E89094C44Da98b954EedeAC495271d0F", "Dai", "DAI"),
+    ]
+    newTokenGroupsModel(groupsDataSource(), marketValuesDataSource(),
+      modelModes = @[ModelMode.NoMarketDetails, ModelMode.UseLazyLoading, ModelMode.IsSearchResult],
+      lazyLoadingBatchSize = 10, lazyLoadingInitialCount = 10)
+
+  proc resultKeys(m: TokenGroupsModel): seq[string] =
+    m.getLoadedGroups().mapIt(it.key)
+
+  test "a full address matches regardless of case and 0x prefix":
+    let m = newSearchModel()
+    m.search(usdcAddress)                          # as pasted (mixed case)
+    check m.resultKeys() == @["usd-coin"]
+    m.search(usdcAddress.toUpperAscii())           # 0X + uppercase
+    check m.resultKeys() == @["usd-coin"]
+    m.search(usdcAddress[2 .. ^1].toLowerAscii())  # no prefix, lowercase
+    check m.resultKeys() == @["usd-coin"]
+
+  test "a partial address matches, prefixed or bare":
+    let m = newSearchModel()
+    m.search("0xa0b86991")     # address prefix, 0x kept
+    check m.resultKeys() == @["usd-coin"]
+    m.search("eb0ce36")        # a slice from the middle, no 0x
+    check m.resultKeys() == @["usd-coin"]
+    m.search("0xa0b")          # explicit 0x allows even a short needle
+    check m.resultKeys() == @["usd-coin"]
+
+  test "short or non-hex keywords never match through the address":
+    let m = newSearchModel()
+    m.search("a0b")            # 3 bare hex digits: too ambiguous
+    check m.resultKeys().len == 0
+    m.search("0xnothex")
+    check m.resultKeys().len == 0
+
+  test "an address hit doesn't shadow ordinary text matches":
+    let m = newSearchModel()
+    m.search("dai")            # plain symbol/name search still works
+    check m.resultKeys() == @["dai"]
+
+  test "an address match narrows the result to the matched deployment":
+    # the usd-coin group holds DIFFERENT contracts on chain 1 and chain 10 —
+    # a searched address identifies one deployment, not the whole group,
+    # so a chain-scoped consumer can never resolve it to the other contract
+    let m = newSearchModel()
+    m.search(usdcAddress)
+    check m.resultKeys() == @["usd-coin"]
+    var tokens = m.getLoadedGroups()[0].tokens
+    check tokens.len == 1
+    check tokens[0].chainId == 1
+    check tokens[0].address == usdcAddress
+
+    m.search(usdcOptimismAddress)
+    check m.resultKeys() == @["usd-coin"]
+    tokens = m.getLoadedGroups()[0].tokens
+    check tokens.len == 1
+    check tokens[0].chainId == 10
+    check tokens[0].address == usdcOptimismAddress
+
+    # and the narrowing never touches the catalog's own group
+    check gGroups[0].tokens.len == 2
+
+  test "a text match keeps every deployment of the group":
+    let m = newSearchModel()
+    m.search("usd coin")
+    check m.resultKeys() == @["usd-coin"]
+    check m.getLoadedGroups()[0].tokens.len == 2

@@ -134,21 +134,38 @@ Control {
                     return
                 }
 
+                const excludedChainId = entry.key === root.nonInteractiveKey
+                                      ? root.nonInteractiveChainId : -1
+
                 let resolvedChainId = chainId
                 if (resolvedChainId === -1) {
                     const refs = entry.tokens ?? entry.balances
-                    if (!!refs && refs.ModelCount.count > 0) {
-                        if (root.selectedChainId !== -1 && ModelUtils.contains(refs, "chainId", root.selectedChainId))
+                    const refsCount = !!refs ? refs.ModelCount.count : 0
+                    if (refsCount > 0) {
+                        if (root.selectedChainId !== -1
+                                && root.selectedChainId !== excludedChainId
+                                && ModelUtils.contains(refs, "chainId", root.selectedChainId)) {
                             resolvedChainId = root.selectedChainId
-                        else {
-                            const firstChain = ModelUtils.get(refs, 0, "chainId")
-                            if (firstChain !== undefined)
-                                resolvedChainId = firstChain
+                        } else {
+                            for (let i = 0; i < refsCount; i++) {
+                                const refChain = ModelUtils.get(refs, i, "chainId")
+                                if (refChain !== undefined && refChain !== excludedChainId) {
+                                    resolvedChainId = refChain
+                                    break
+                                }
+                            }
                         }
-                    } else if (root.selectedChainId !== -1) {
+                    } else if (root.selectedChainId !== -1
+                               && root.selectedChainId !== excludedChainId) {
                         resolvedChainId = root.selectedChainId
                     }
                 }
+
+                if (entry.key === root.nonInteractiveKey
+                        && (root.nonInteractiveChainId === -1
+                            || resolvedChainId === -1
+                            || resolvedChainId === root.nonInteractiveChainId))
+                    return
 
                 setCurrentAndClose(entry.symbol, entry.logoUri || Constants.tokenIcon(entry.symbol), entry.key)
                 root.selected(entry.key, resolvedChainId)

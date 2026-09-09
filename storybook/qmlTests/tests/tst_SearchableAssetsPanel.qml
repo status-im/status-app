@@ -405,6 +405,120 @@ Item {
             compare(sttBridge.rowAt(0).enabled, true)
         }
 
+        // On "All" (no chain filter) the other side's token collapses into one
+        // aggregate row; it must stay selectable when the token also lives on
+        // other chains — only a token locked to the excluded chain (or excluded
+        // everywhere via -1) is blocked.
+        function test_nonInteractiveAggregateRowSelectableOnAnotherChain() {
+            const networks = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
+            networks.append(networksData)
+
+            // fresh source: the fixture's model has no `tokens` role, and a
+            // ListModel's role set is frozen by its first append
+            const data = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
+            data.append({
+                key: "usdc_key", communityId: "", name: "USD Coin",
+                currencyBalance: 0, symbol: "USDC", logoUri: Constants.tokenIcon("USDC"),
+                balances: [],
+                tokens: [ { chainId: 1, key: "1-0xaaa" }, { chainId: 10, key: "10-0xbbb" } ],
+                sectionName: "Popular assets"
+            })
+            data.append({
+                key: "only1_key", communityId: "", name: "OnlyOne",
+                currencyBalance: 0, symbol: "ONE", logoUri: "",
+                balances: [],
+                tokens: [ { chainId: 1, key: "1-0xccc" } ],
+                sectionName: "Popular assets"
+            })
+
+            const control = createTemporaryObject(panelCmp, root, { networksModel: networks })
+            control.sourceModel = data
+            control.panel.nonInteractiveKey = "usdc_key"
+            control.panel.nonInteractiveChainId = 1
+
+            const listView = findChild(control, "assetsListView")
+            waitForRendering(listView)
+            compare(listView.count, 2)
+
+            const usdc = listView.itemAtIndex(0)
+            verify(usdc)
+            compare(usdc.rowCount, 1)          // no balances -> one aggregate row
+            compare(usdc.rowAt(0).enabled, true)   // chain 10 is a legal pick
+
+            control.panel.nonInteractiveKey = "only1_key"
+            const only1 = listView.itemAtIndex(1)
+            verify(only1)
+            compare(only1.rowAt(0).enabled, false) // no other chain to pick
+            compare(usdc.rowAt(0).enabled, true)   // no longer the excluded key
+
+            // -1 still excludes the holding on every chain
+            control.panel.nonInteractiveKey = "usdc_key"
+            control.panel.nonInteractiveChainId = -1
+            compare(usdc.rowAt(0).enabled, false)
+        }
+
+        // nonInteractiveChainId === -1 excludes the holding on EVERY chain —
+        // the per-chain split rows of a multi-chain holding included.
+        function test_wildcardExclusionDisablesEveryPerChainRow() {
+            const networks = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
+            networks.append(networksData)
+
+            const control = createTemporaryObject(panelCmp, root, { networksModel: networks })
+            control.panel.nonInteractiveKey = "stt_key"
+            control.panel.nonInteractiveChainId = -1
+
+            const listView = findChild(control, "assetsListView")
+            waitForRendering(listView)
+
+            // STT sits on 3 chains -> 3 concrete rows, all of them blocked
+            const stt = listView.itemAtIndex(0)
+            verify(stt)
+            compare(stt.rowCount, 3)
+            for (let i = 0; i < stt.rowCount; i++)
+                compare(stt.rowAt(i).enabled, false)
+
+            mouseClick(stt.rowAt(1))
+            compare(control.panel.selectedSpy.count, 0)
+
+            // other holdings stay unaffected
+            compare(listView.itemAtIndex(1).rowAt(0).enabled, true)
+        }
+
+        // Enter must be as strict as the mouse: a result available only on the
+        // excluded chain is not selectable by keyboard either.
+        function test_keyboardSelectionRespectsDisabledRows() {
+            const data = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
+            data.append({
+                key: "only1_key", communityId: "", name: "OnlyOne",
+                currencyBalance: 0, symbol: "ONE", logoUri: "",
+                balances: [],
+                tokens: [ { chainId: 1, key: "1-0xccc" } ],
+                sectionName: "Popular assets"
+            })
+
+            const control = createTemporaryObject(panelCmp, root)
+            control.sourceModel = data
+            control.panel.nonInteractiveKey = "only1_key"
+            control.panel.nonInteractiveChainId = 1
+
+            const listView = findChild(control, "assetsListView")
+            const searchBox = findChild(control, "searchBox")
+            control.searchKeyword = "one"
+            searchBox.text = "one"
+            waitForRendering(listView)
+            compare(listView.count, 1)
+            verify(!listView.itemAtIndex(0).rowAt(0).enabled)
+
+            // the Enter/Return handlers funnel through selectFirst()
+            listView.itemAtIndex(0).selectFirst()
+            compare(control.panel.selectedSpy.count, 0)
+
+            // once unblocked, the same path selects it
+            control.panel.nonInteractiveKey = ""
+            listView.itemAtIndex(0).selectFirst()
+            compare(control.panel.selectedSpy.count, 1)
+        }
+
         function test_singleRowWhenChainFilterSet() {
             const networks = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
             networks.append(networksData)
