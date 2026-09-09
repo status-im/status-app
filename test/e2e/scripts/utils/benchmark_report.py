@@ -144,6 +144,16 @@ def _write_result(path: Path, result: dict) -> None:
     path.write_text(json.dumps(result, indent=2, sort_keys=True), encoding='utf-8')
 
 
+def record_benchmark_hosts(hosts: dict) -> None:
+    nodeid, test_name = _current_test_identity()
+    path = _result_path(nodeid)
+    if path is None:
+        return
+    result = _load_result(path, nodeid, test_name)
+    result['hosts'] = hosts
+    _write_result(path, result)
+
+
 def record_structured_benchmark_metrics(metrics: list[BenchmarkMetricReport]) -> None:
     """Write versioned raw samples independently of the Allure report."""
     nodeid, test_name = _current_test_identity()
