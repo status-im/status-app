@@ -66,6 +66,12 @@ method getTokenGroupsModelDataSource*(self: AccessInterface): TokenGroupsModelDa
 method getTokenGroupsForChainModelDataSource*(self: AccessInterface): TokenGroupsModelDataSource {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method getTokenGroupsAllChainsModelDataSource*(self: AccessInterface): TokenGroupsModelDataSource {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method fetchAllChainsTokenGroups*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getTokenGroupsForChainToModelDataSource*(self: AccessInterface): TokenGroupsModelDataSource {.base.} =
   raise newException(ValueError, "No implementation available")
 

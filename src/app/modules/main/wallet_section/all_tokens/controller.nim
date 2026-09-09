@@ -85,6 +85,15 @@ proc getGroupsForChain*(self: Controller): var seq[TokenGroupItem] =
 proc getGroupsForChainTo*(self: Controller): var seq[TokenGroupItem] =
   return self.tokenService.getGroupsForChainTo()
 
+proc getAllChainsTokenGroups*(self: Controller): var seq[TokenGroupItem] =
+  return self.tokenService.getAllTokenGroups()
+
+proc fetchAllChainsTokenGroups*(self: Controller) =
+  self.tokenService.asyncFetchAllTokenGroups()
+
+proc getAllChainsTokenGroupsLoading*(self: Controller): bool =
+  return self.tokenService.getAllTokenGroupsLoading()
+
 proc getGroupsOfInterest*(self: Controller): var seq[TokenGroupItem] =
   return self.tokenService.getGroupsOfInterest()
 

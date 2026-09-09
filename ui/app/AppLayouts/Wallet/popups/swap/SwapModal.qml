@@ -45,12 +45,11 @@ StatusDialog {
 
     Component.onDestruction: {
         const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
-        const ids = [d.payTokenSelector, d.receiveTokenSelector, d.receiveTokenSelectorTo]
+        const ids = [d.payTokenSelector, d.receiveTokenSelector]
         .filter(sel => !!sel).map(sel => sel.id)
 
         d.payTokenSelector = null
         d.receiveTokenSelector = null
-        d.receiveTokenSelectorTo = null
 
         ids.forEach(id => store.releaseTokenSelectorModel(id))
     }
@@ -84,37 +83,16 @@ StatusDialog {
 
         property var payTokenSelector: null
         property var receiveTokenSelector: null
-        property var receiveTokenSelectorTo: null
-
-        property bool pickersInitialized: false
 
         function createPickers() {
             const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
             if (!d.payTokenSelector) {
                 d.payTokenSelector = store.createTokenSelectorModel(1)
-                d.receiveTokenSelector = store.createTokenSelectorModel(1)
+                d.receiveTokenSelector = store.createTokenSelectorModel(3)
             }
-            d.pickersInitialized = true
-            if (d.isBridge)
-                d.ensureBridgePicker()
             payPanel.reset()
             receivePanel.reset()
         }
-
-        function ensureBridgePicker() {
-            if (d.receiveTokenSelectorTo)
-                return
-            d.receiveTokenSelectorTo = root.swapAdaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(3)
-            receivePanel.reset()
-        }
-
-        // The chain the destination catalog has to be built for, -1 while there is no
-        // bridge picker to fill. Folding both conditions into the value means a pay-side
-        // change that turns a plain swap into a bridge triggers the build too, which
-        // watching the receive chain alone would miss. rebuildGroupsForChain ignores -1.
-        readonly property int toCatalogChainId: d.isBridge && !!d.receiveTokenSelectorTo
-                                                ? receivePanel.listCatalogChainId : -1
-        onToCatalogChainIdChanged: d.rebuildGroupsForChain(toCatalogChainId, true)
 
         property var debounceFetchSuggestedRoutes: Backpressure.debounce(root, 1000, function() {
             root.swapAdaptor.fetchSuggestedRoutes(payPanel.rawValue)
@@ -179,13 +157,6 @@ StatusDialog {
 
         readonly property bool isSameChainSwap: root.swapInputParamsForm.selectedNetworkChainId === root.swapInputParamsForm.toNetworkChainId
         readonly property bool isBridge: root.swapInputParamsForm.toNetworkChainId !== -1 && !isSameChainSwap
-        onIsBridgeChanged: {
-            // `opened` also excludes teardown: the handler resets the form one
-            // field at a time, which flickers through a bridge state that would
-            // otherwise build a picker for the modal being destroyed.
-            if (isBridge && d.pickersInitialized && root.opened)
-                d.ensureBridgePicker()
-        }
 
         readonly property string modalTitle: {
             const fromKey = root.swapInputParamsForm.fromGroupKey
@@ -311,9 +282,6 @@ StatusDialog {
             d.fetchSuggestedRoutes()
         }
 
-        function onSelectedNetworkChainIdChanged() {
-            d.rebuildGroupsForChain(payPanel.listCatalogChainId)
-        }
 
         function onFromGroupKeyChanged() {
             payPanel.groupKey = root.swapInputParamsForm.fromGroupKey
@@ -331,8 +299,10 @@ StatusDialog {
         value: payPanel.amountEnteredGreaterThanBalance
     }
 
-    // the destination catalog follows d.toCatalogChainId, which is still -1 here
-    Component.onCompleted: d.rebuildGroupsForChain(payPanel.listCatalogChainId)
+    Component.onCompleted: {
+        d.rebuildGroupsForChain(payPanel.listCatalogChainId)
+        d.rebuildGroupsForChain(receivePanel.listCatalogChainId, true)
+    }
 
     onOpened: {
         // Defer the terminal picker model creation + seed off the open critical
@@ -517,35 +487,21 @@ StatusDialog {
 
                     currencyStore: root.swapAdaptor.currencyStore
                     flatNetworksModel: root.swapAdaptor.networksStore.activeNetworks
-                    // plain swap reuses the source-chain picker; only a bridge uses the destination one
-                    // (both null until the deferred createPickers/ensureBridgePicker run post-open)
-                    tokenSelectorModel: {
-                        if (d.isSameChainSwap)
-                            return d.receiveTokenSelector ? d.receiveTokenSelector.model : null
-                        return d.receiveTokenSelectorTo ? d.receiveTokenSelectorTo.model : null
-                    }
+                    tokenSelectorModel: d.receiveTokenSelector ? d.receiveTokenSelector.model : null
 
                     groupKey: root.swapInputParamsForm.toGroupKey
                     defaultGroupKey: root.swapInputParamsForm.defaultToGroupKey
                     oppositeSideGroupKey: root.swapInputParamsForm.fromGroupKey
                     tokenAmount: root.swapAdaptor.validSwapProposalReceived && root.swapAdaptor.toToken ? root.swapAdaptor.swapOutputData.toTokenAmount: root.swapInputParamsForm.toTokenAmount
 
-                    selectedNetworkChainId: root.swapInputParamsForm.toNetworkChainId
+                    selectedNetworkChainId: d.effectiveToChainId
                     onNetworkSelected: function(chainId) {
                         root.swapInputParamsForm.toNetworkChainId = chainId
                         payPanel.forceActiveFocus()
                     }
 
-                    // A plain swap shares the pay side's picker, whose catalog follows
-                    // the PAY chain filter — so it can be scoped to a chain this side
-                    // knows nothing about.
-                    catalogChainId: d.isSameChainSwap ? d.lastRequestedChainId
-                                                      : d.lastRequestedChainIdTo
-
-                    onListChainFilterChanged: {
-                        if (listChainFilter !== -1)
-                            root.swapInputParamsForm.toNetworkChainId = listChainFilter
-                    }
+                    catalogChainId: d.lastRequestedChainIdTo
+                    onListCatalogChainIdChanged: d.rebuildGroupsForChain(listCatalogChainId, true)
 
                     selectedAccountAddress: root.swapInputParamsForm.toAccountAddress || root.swapInputParamsForm.selectedAccountAddress
                     accountBalanceVisible: toAccountEntry.available
@@ -561,9 +517,7 @@ StatusDialog {
                     swapSide: SwapInputPanel.SwapSide.Receive
                     swapExchangeButtonWidth: swapExchangeButton.width
 
-                    tokenSelectorLoading: d.isSameChainSwap
-                                          ? root.swapAdaptor.walletAssetsStore.walletTokensStore.groupsForChainLoading
-                                          : root.swapAdaptor.walletAssetsStore.walletTokensStore.groupsForChainToLoading
+                    tokenSelectorLoading: root.swapAdaptor.walletAssetsStore.walletTokensStore.groupsForChainToLoading
                     mainInputLoading: root.swapAdaptor.swapProposalLoading
                     bottomTextLoading: root.swapAdaptor.swapProposalLoading
 
@@ -585,19 +539,15 @@ StatusDialog {
                         const tempPayToken = root.swapInputParamsForm.fromGroupKey
                         const tempPayAmount = root.swapInputParamsForm.fromTokenAmount
                         const tempFromChain = root.swapInputParamsForm.selectedNetworkChainId
-                        root.swapInputParamsForm.selectedNetworkChainId = root.swapInputParamsForm.toNetworkChainId
+                        root.swapInputParamsForm.selectedNetworkChainId = d.effectiveToChainId
                         root.swapInputParamsForm.toNetworkChainId = tempFromChain
-                        if (!!root.swapInputParamsForm.toAccountAddress && toAccountEntry.available) {
-                            const tempFromAccount = root.swapInputParamsForm.selectedAccountAddress
-                            root.swapInputParamsForm.selectedAccountAddress = root.swapInputParamsForm.toAccountAddress
-                            root.swapInputParamsForm.toAccountAddress = tempFromAccount
-                        }
+                        // accounts deliberately stay put — the exchange swaps only chains and tokens
                         root.swapInputParamsForm.fromGroupKey = root.swapInputParamsForm.toGroupKey
                         root.swapInputParamsForm.fromTokenAmount = !!root.swapAdaptor.swapOutputData.toTokenAmount ? root.swapAdaptor.swapOutputData.toTokenAmount : root.swapInputParamsForm.toTokenAmount
                         root.swapInputParamsForm.toGroupKey = tempPayToken
                         root.swapInputParamsForm.toTokenAmount = tempPayAmount
-                        payPanel.listChainFilter = -1
-                        receivePanel.listChainFilter = -1
+                        d.rebuildGroupsForChain(payPanel.listCatalogChainId)
+                        d.rebuildGroupsForChain(receivePanel.listCatalogChainId, true)
                         payPanel.forceActiveFocus()
                     }
                 }
@@ -886,7 +836,7 @@ StatusDialog {
                     RowLayout {
                         Layout.fillWidth: true
                         Layout.minimumWidth: 0
-                        spacing: Theme.halfPadding
+                        spacing: Theme.bigPadding
                         visible: !!root.swapInputParamsForm.fromTokenAmount
 
                         StatusButton {
