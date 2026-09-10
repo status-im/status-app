@@ -1752,7 +1752,7 @@ Item {
                 active: d.doShowMessagingBanner && d.canShowMessagingBanner
                 delay: false
                 type: ModuleWarning.Warning
-                text: qsTr("Not Connected to Logos network")
+                text: qsTr("Not Connected to P2P network")
                 buttonText: qsTr("How to fix")
                 closeBtnVisible: false
                 Layout.fillWidth: true

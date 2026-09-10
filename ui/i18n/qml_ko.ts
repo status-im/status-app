@@ -1796,6 +1796,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>커뮤니티 &apos;%1&apos; 가져오기가 취소되었습니다</translation>
     </message>
     <message>
+        <source>Not Connected to P2P network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>CoinGecko connection successful</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1928,10 +1932,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>POKT &amp; Infura down for %1. %1 token balances cannot be retrieved.</source>
         <translation>%1에 대해 POKT 및 Infura가 중단됨. %1 토큰 잔액을 가져올 수 없습니다.</translation>
-    </message>
-    <message>
-        <source>Not Connected to Logos network</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>How to fix</source>
