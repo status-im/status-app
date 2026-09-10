@@ -1823,6 +1823,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Import komunity &apos;%1&apos; byl zrušen</translation>
     </message>
     <message>
+        <source>Not Connected to P2P network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>CoinGecko connection successful</source>
         <translation>Připojení ke službě CoinGecko proběhlo úspěšně</translation>
     </message>
@@ -1957,10 +1961,6 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     <message>
         <source>POKT &amp; Infura down for %1. %1 token balances cannot be retrieved.</source>
         <translation>POKT &amp; Infura mimo provoz pro %1. Zůstatky tokenů %1 nelze načíst.</translation>
-    </message>
-    <message>
-        <source>Not Connected to Logos network</source>
-        <translation>Není připojeno k síti Logos</translation>
     </message>
     <message>
         <source>How to fix</source>
