@@ -13616,8 +13616,12 @@ to load</source>
 <context>
     <name>ProfileHeader</name>
     <message>
-        <source>Bridged from Discord</source>
-        <translation>Discord에서 브리지됨</translation>
+        <source>Bridged account</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bridged from %1</source>
+        <translation type="unfinished">%1에서 브리지됨</translation>
     </message>
     <message>
         <source>Select different image</source>
