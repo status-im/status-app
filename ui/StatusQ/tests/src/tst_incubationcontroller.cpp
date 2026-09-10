@@ -22,7 +22,7 @@
 #include <vector>
 
 extern "C" void statusq_installBoostedIncubationController(void* engine, int msPerTick,
-                                                           int gentlePeriodMs);
+                                                           int gentlePeriodMs, int boostGapMs);
 
 namespace {
 
@@ -55,10 +55,14 @@ int minRegisteredTimerIntervalMs(QObject* object)
     return minInterval;
 }
 
-QObject* installController(QQmlEngine& engine, int msPerTick, int gentlePeriodMs)
+QObject* installController(QQmlEngine& engine,
+                           int msPerTick,
+                           int gentlePeriodMs,
+                           int boostGapMs)
 {
     const QObjectList childrenBefore = engine.children();
-    statusq_installBoostedIncubationController(&engine, msPerTick, gentlePeriodMs);
+    statusq_installBoostedIncubationController(
+            &engine, msPerTick, gentlePeriodMs, boostGapMs);
 
     QObject* controller = nullptr;
     for (QObject* child : engine.children()) {
@@ -82,7 +86,7 @@ private slots:
     void boostedPhaseMustNotUseAZeroIntervalTimer()
     {
         QQmlEngine engine;
-        QObject* controller = installController(engine, 1, 0);
+        QObject* controller = installController(engine, 1, 0, 2);
         QVERIFY2(controller, "the installed controller must be a child of the engine");
 
         QQmlComponent component(&engine);
@@ -117,14 +121,14 @@ private slots:
                  "back-to-back for the whole burst");
     }
 
-    // Shipped configuration (20 ms budget, 300 ms gentle window): once a
+    // Shipped configuration (12 ms budget, 300 ms gentle window, 2 ms boost gap): once a
     // burst outlives the gentle window the throttle opens. Chained
     // incubations keep the burst alive past the window, exactly like a
     // stream of async delegates during a section load.
     void shippedConfigMustStayPacedAfterGentleWindow()
     {
         QQmlEngine engine;
-        QObject* controller = installController(engine, 20, 300);
+        QObject* controller = installController(engine, 12, 300, 2);
         QVERIFY2(controller, "the installed controller must be a child of the engine");
 
         QQmlComponent component(&engine);
