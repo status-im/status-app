@@ -106,7 +106,7 @@ method delete*[T](self: Module[T]) =
   self.controller.delete
 
 method onAppLoaded*[T](self: Module[T], keyUid: string) =
-  if self.onboardingFlow == OnboardingFlow.CreateProfileWithPassword:
+  if self.onboardingFlow != OnboardingFlow.Unknown:
     singletonInstance.localAccountSettings.markProfileFresh()
 
 method onMainLoaded*[T](self: Module[T]) =
