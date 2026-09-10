@@ -2,6 +2,7 @@ AlertPopup 1.0 AlertPopup.qml
 BlockContactConfirmationDialog 1.0 BlockContactConfirmationDialog.qml
 BlockchainExplorersMenu 1.0 BlockchainExplorersMenu.qml
 CommonContactDialog 1.0 CommonContactDialog.qml
+CommonContactAdaptiveDialog 1.0 CommonContactAdaptiveDialog.qml
 CommunityAssetsInfoPopup 1.0 CommunityAssetsInfoPopup.qml
 CommunityMembershipSetupDialog 1.0 CommunityMembershipSetupDialog.qml
 ConfirmExternalLinkPopup 1.0 ConfirmExternalLinkPopup.qml
