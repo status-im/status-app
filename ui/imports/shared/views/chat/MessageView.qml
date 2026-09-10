@@ -642,6 +642,13 @@ Loader {
         on_ChatLogViewAncestorXTraceChanged: contextMenu?.close() // will run destruction/cleanup
     }
 
+    Binding {
+        target: root?.emojiPopup ?? null
+        property: "closePolicy"
+        value: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        when: d.emojiPopupOpened
+    }
+
     Timer {
         id: hoverMessageContextMenuCloseTimer
         // Keep the hover menu alive while the pointer moves from the message to the popup.
