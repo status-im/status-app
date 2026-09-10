@@ -341,7 +341,7 @@ QtObject {
                 if (!item)
                     return false
                 const str = item.toString()
-                return str.includes("QQuickPopupItem") && !str.includes("StatusToolTip")
+                return str.includes("QQuickPopupItem") && !str.includes("StatusToolTip") && !str.includes("MessageContextMenuView")
             }).length > 0
     }
 }
