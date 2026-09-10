@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QString>
+#include <QStringView>
+#include <QTextBoundaryFinder>
 #include <QVector>
 
 // A small, GUI-free AST for the simplified, line-oriented markdown dialect used
@@ -72,9 +74,35 @@ QString dump(const Node& node, bool withRanges = true);
 // sequence is treated as one unit. Shared by the live highlighter and the static renderer.
 bool isEmojiCodePoint(char32_t cp);
 
+// True when `text` contains at least one emoji code point (isEmojiCodePoint).
+bool clusterHasEmoji(QStringView text);
+
 // True when `text` consists solely of emoji code points and whitespace (spaces, tabs and line
 // breaks are allowed between/around the emojis), with at least one emoji present. Used by the
 // static renderer to enlarge emoji-only messages. Empty or whitespace-only text returns false.
 bool isOnlyEmoji(const QString& text);
+
+// Walks `text` grapheme cluster by grapheme cluster (the correct Unicode segmentation), invoking
+// `fn(cluster, start, end)` for each — `start`/`end` being indices into `text`. `fn` returns bool:
+// false stops the walk early, true continues. The cluster is a QStringView into `text` (no per-cluster
+// allocation); it is valid only for the duration of the call, so a callback that keeps it beyond that
+// (stores it, hands it to insertText, …) must `.toString()` a copy.
+template<typename Fn>
+void forEachGraphemeCluster(const QString& text, Fn&& fn)
+{
+    QTextBoundaryFinder bf(QTextBoundaryFinder::Grapheme, text);
+    const QStringView view(text);
+    int cs = 0;
+    for (int ce = bf.toNextBoundary(); ce >= 0; ce = bf.toNextBoundary()) {
+        if (ce > cs && !fn(view.mid(cs, ce - cs), cs, ce))
+            return;
+        cs = ce;
+    }
+}
+
+// Maps one emoji grapheme cluster to the bundled Twemoji svg url under `base` (a directory url ending
+// in '/', file:// or qrc:), following twemoji.js' rule. The set of available svg basenames under a
+// base is listed once and cached, and is the source of truth for what renders as an image.
+QString twemojiSvgUrl(const QString& base, QStringView cluster);
 
 } // namespace Markdown

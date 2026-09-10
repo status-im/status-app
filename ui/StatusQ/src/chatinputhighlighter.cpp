@@ -7,18 +7,15 @@
 #include <QClipboard>
 #include <QColor>
 #include <QDataStream>
-#include <QFile>
 #include <QFontDatabase>
 #include <QFontMetricsF>
 #include <QGuiApplication>
 #include <QMimeData>
 #include <QTextBlock>
 #include <QTextBlockFormat>
-#include <QTextBoundaryFinder>
 #include <QTextCharFormat>
 #include <QTextCursor>
 #include <QTextImageFormat>
-#include <QUrl>
 #include <QVariantMap>
 #include <QVector>
 
@@ -82,46 +79,8 @@ char32_t codePointAt(const QString& s, qsizetype i, qsizetype& units)
     return c.unicode();
 }
 
-// Local path a url resolves to for an existence check, covering the two StatusQ deployments:
-// filesystem (file://) and bundled resources (qrc:/).
-QString localPathForUrl(const QString& url)
-{
-    const QUrl u(url);
-    if (u.scheme() == QLatin1String("qrc"))
-        return QLatin1Char(':') + u.path();
-    if (u.isLocalFile())
-        return u.toLocalFile();
-    return url;
-}
-
-// Maps a single emoji (one grapheme cluster) to its bundled Twemoji SVG url under `base`, following
-// twemoji.js' grabTheRightIcon/toCodePoint rule: keep all code points if the run contains U+200D
-// (ZWJ), otherwise strip U+FE0F; join code points as lowercase hex with '-'. Returns "" when no
-// svg exists for it (graceful fallback: the emoji stays as text / font rendering).
-QString twemojiSvgUrl(const QString& base, const QString& emoji)
-{
-    if (base.isEmpty())
-        return {};
-
-    const bool hasZwj = emoji.contains(QChar(0x200D));
-    QString name;
-    for (qsizetype i = 0; i < emoji.size();) {
-        qsizetype units = 1;
-        const char32_t cp = codePointAt(emoji, i, units);
-        i += units;
-        if (!hasZwj && cp == 0xFE0F)
-            continue;
-        if (!name.isEmpty())
-            name += QLatin1Char('-');
-        name += QString::number(cp, 16);
-    }
-    if (name.isEmpty())
-        return {};
-    const QString url = base + name + QStringLiteral(".svg");
-    if (!QFile::exists(localPathForUrl(url)))
-        return {};
-    return url;
-}
+// Cluster → svg url resolution (asset set + presentation guard) lives in Markdown::twemojiSvgUrl,
+// shared with the static renderer.
 
 // True if the block text at [i, ...) starts an emoji code point (never matches the U+FFFC of an
 // existing image/mention object, so conversion is idempotent).
@@ -1174,44 +1133,18 @@ void ChatInputHighlighter::convertEmojisToImages(bool joinUndo)
 
     const int lineHeight = qMax(1, qRound(QFontMetricsF(doc->defaultFont()).height()));
 
-    // Collect every emoji (grapheme cluster) as a document range with its Twemoji url. Emoji runs
-    // are segmented per-cluster so ZWJ sequences map to their combined svg and adjacent distinct
-    // emoji each get their own image. U+FFFC of existing objects never matches (isEmojiCodePoint),
-    // so this is idempotent.
+    // Collect every emoji (grapheme cluster) the app ships an svg for as a document
+    // range with its Twemoji url.
     struct Run { int start; int end; QString text; QString url; };
     QVector<Run> runs;
     for (QTextBlock b = doc->begin(); b != doc->end(); b = b.next()) {
-        const QString t = b.text();
         const int base = b.position();
-        qsizetype i = 0;
-        while (i < t.size()) {
-            qsizetype units = 1;
-            if (!startsEmoji(t, i, units)) {
-                i += units;
-                continue;
-            }
-            const qsizetype runStart = i;
-            i += units;
-            while (i < t.size()) {
-                qsizetype u2 = 1;
-                if (!startsEmoji(t, i, u2))
-                    break;
-                i += u2;
-            }
-            const QString run = t.mid(runStart, i - runStart);
-            QTextBoundaryFinder bf(QTextBoundaryFinder::Grapheme, run);
-            int cs = 0;
-            for (int ce = bf.toNextBoundary(); ce >= 0; ce = bf.toNextBoundary()) {
-                if (ce > cs) {
-                    const QString cluster = run.mid(cs, ce - cs);
-                    const QString url = twemojiSvgUrl(m_twemojiBaseUrl, cluster);
-                    if (!url.isEmpty())
-                        runs.append({ int(base + runStart + cs), int(base + runStart + ce),
-                                      cluster, url });
-                }
-                cs = ce;
-            }
-        }
+        Markdown::forEachGraphemeCluster(b.text(), [&](QStringView cluster, int cs, int ce) {
+            const QString url = Markdown::twemojiSvgUrl(m_twemojiBaseUrl, cluster);
+            if (!url.isEmpty()) // retained past the callback ⇒ materialise an owning copy
+                runs.append({ base + cs, base + ce, cluster.toString(), url });
+            return true;
+        });
     }
     if (runs.isEmpty())
         return;
@@ -1238,7 +1171,7 @@ bool ChatInputHighlighter::insertEmojiObject(QTextCursor& cursor, const QString&
 {
     if (!m_imageEmojis || !document())
         return false;
-    const QString url = twemojiSvgUrl(m_twemojiBaseUrl, emoji);
+    const QString url = Markdown::twemojiSvgUrl(m_twemojiBaseUrl, emoji);
     if (url.isEmpty())
         return false;
     const int lineHeight = qMax(1, qRound(QFontMetricsF(document()->defaultFont()).height()));
@@ -1259,43 +1192,29 @@ void ChatInputHighlighter::insertEmojiAwareText(QTextCursor& cursor, const QStri
     if (cursor.hasSelection())
         cursor.removeSelectedText();
 
-    qsizetype i = 0;
-    while (i < text.size()) {
-        qsizetype units = 1;
-        if (!startsEmoji(text, i, units)) {
-            // Run of non-emoji text — inserted verbatim (preserving any '\n' handling).
-            const qsizetype s = i;
-            i += units;
-            while (i < text.size()) {
-                qsizetype u2 = 1;
-                if (startsEmoji(text, i, u2))
-                    break;
-                i += u2;
-            }
-            cursor.insertText(text.mid(s, i - s));
-            continue;
+    // Segment into grapheme clusters; each cluster the app ships an svg for becomes an inline image,
+    // everything else is buffered and inserted verbatim (one insertText per text span preserves '\n'
+    // handling). Asset existence — not a code-point range — decides what is an emoji, so whole
+    // sequences (subdivision flags, keycaps, ZWJ) resolve to their combined svg.
+    QString pending;
+    const auto flushPending = [&] {
+        if (!pending.isEmpty()) {
+            cursor.insertText(pending);
+            pending.clear();
         }
-        // Run of emoji code points — segment per grapheme cluster; image each (text fallback).
-        const qsizetype runStart = i;
-        i += units;
-        while (i < text.size()) {
-            qsizetype u2 = 1;
-            if (!startsEmoji(text, i, u2))
-                break;
-            i += u2;
+    };
+    Markdown::forEachGraphemeCluster(text, [&](QStringView cluster, int, int) {
+        if (Markdown::twemojiSvgUrl(m_twemojiBaseUrl, cluster).isEmpty()) {
+            pending.append(cluster);
+        } else {
+            flushPending();
+            const QString emoji = cluster.toString(); // needed by insertImage / insertText (own QString)
+            if (!insertEmojiObject(cursor, emoji)) // asset present ⇒ succeeds; defensive fallback
+                cursor.insertText(emoji);
         }
-        const QString run = text.mid(runStart, i - runStart);
-        QTextBoundaryFinder bf(QTextBoundaryFinder::Grapheme, run);
-        int cs = 0;
-        for (int ce = bf.toNextBoundary(); ce >= 0; ce = bf.toNextBoundary()) {
-            if (ce > cs) {
-                const QString cluster = run.mid(cs, ce - cs);
-                if (!insertEmojiObject(cursor, cluster))
-                    cursor.insertText(cluster);
-            }
-            cs = ce;
-        }
-    }
+        return true;
+    });
+    flushPending();
 }
 
 void ChatInputHighlighter::insertTextWithEmojis(int position, const QString& text)
@@ -1682,29 +1601,21 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
         else
             emojiFormat.setProperty(QTextFormat::FontPointSize, base.pointSizeF() * 1.2);
 
-        auto codePointAt = [&](qsizetype k, qsizetype& units) -> char32_t {
-            const QChar c = text[k];
-            if (c.isHighSurrogate() && k + 1 < blockLen && text[k + 1].isLowSurrogate()) {
-                units = 2;
-                return QChar::surrogateToUcs4(c, text[k + 1]);
+        // Enlarge whole grapheme clusters: a cluster is emoji when it holds any emoji code point,
+        // so keycaps (base 0-9 # *) and subdivision flags are sized as one unit rather than split.
+        int runStart = -1; // start of the current run of consecutive emoji clusters, or -1
+        Markdown::forEachGraphemeCluster(text, [&](QStringView cluster, int start, int) {
+            if (Markdown::clusterHasEmoji(cluster)) {
+                if (runStart < 0)
+                    runStart = start;
+            } else if (runStart >= 0) {
+                setFormat(runStart, start - runStart, emojiFormat);
+                runStart = -1;
             }
-            units = 1;
-            return c.unicode();
-        };
-
-        qsizetype k = 0;
-        while (k < blockLen) {
-            qsizetype units = 1;
-            if (Markdown::isEmojiCodePoint(codePointAt(k, units))) {
-                const qsizetype start = k;
-                k += units;
-                while (k < blockLen && Markdown::isEmojiCodePoint(codePointAt(k, units)))
-                    k += units;
-                setFormat(static_cast<int>(start), static_cast<int>(k - start), emojiFormat);
-            } else {
-                k += units;
-            }
-        }
+            return true;
+        });
+        if (runStart >= 0)
+            setFormat(runStart, text.size() - runStart, emojiFormat);
     }
 }
 

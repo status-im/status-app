@@ -1,4 +1,5 @@
 #include <QTest>
+#include <QUrl>
 
 #include <StatusQ/markdownhtml.h>
 #include <StatusQ/markdownparser.h>
@@ -534,6 +535,16 @@ private slots:
         return b[i].toMap()["html"].toString();
     }
 
+    // file:// base url for the real Twemoji svg dir (see TWEMOJI_SVG_DIR compile definition), so
+    // image-mode tests exercise the actual bundled asset set.
+    static QString twemojiBase()
+    {
+        QString base = QUrl::fromLocalFile(QStringLiteral(TWEMOJI_SVG_DIR)).toString();
+        if (!base.endsWith(QLatin1Char('/')))
+            base += QLatin1Char('/');
+        return base;
+    }
+
     // With a positive emojiPx an emoji run in text is wrapped in a font-size span.
     void blocks_emojiWrappedWhenSized()
     {
@@ -549,6 +560,67 @@ private slots:
         const QString two = QString::fromUcs4(U"\U0001F600\U0001F601");
         const QVariantList b = toBlocks(parse(two), {}, 18);
         QCOMPARE(blockHtml(b), "<span style=\"font-size:18px\">" + two + "</span>");
+    }
+
+    // Subdivision flags (England/Scotland/Wales) are a base black flag U+1F3F4 followed by
+    // Unicode tag characters (U+E0020..U+E007F). The whole tag sequence must stay in one emoji
+    // run / one span — otherwise the run stops at the base flag and renders as a black flag.
+    void blocks_emojiFlagTagSequenceGroupedInOneSpan()
+    {
+        const QString england = QString::fromUcs4(
+            U"\U0001F3F4\U000E0067\U000E0062\U000E0065\U000E006E\U000E0067\U000E007F");
+        const QVariantList b = toBlocks(parse(england), {}, 18);
+        QCOMPARE(blockHtml(b), "<span style=\"font-size:18px\">" + england + "</span>");
+    }
+
+    // Keycap emoji (0-9 # *) are base ASCII + U+FE0F + U+20E3; the ASCII base is not an emoji code
+    // point, so a per-code-point scan would split it off. The whole cluster must stay one run.
+    void blocks_emojiKeycapGroupedInOneSpan()
+    {
+        const QString one = QString::fromUcs4(U"\U00000031\U0000FE0F\U000020E3"); // 1️⃣
+        const QVariantList b = toBlocks(parse(one), {}, 18);
+        QCOMPARE(blockHtml(b), "<span style=\"font-size:18px\">" + one + "</span>");
+    }
+
+    // The base url + asset set drives image mode: a real Twemoji svg dir is provided, so the flag
+    // resolves to its combined subdivision-flag svg — never the bare U+1F3F4 black-flag svg.
+    void blocks_emojiFlagImageUsesCombinedAsset()
+    {
+        const QString base = twemojiBase();
+        const QString england = QString::fromUcs4(
+            U"\U0001F3F4\U000E0067\U000E0062\U000E0065\U000E006E\U000E0067\U000E007F");
+        const QString html = blockHtml(toBlocks(parse(england), {}, 18, base));
+        QVERIFY2(html.contains("1f3f4-e0067-e0062-e0065-e006e-e0067-e007f.svg"), qPrintable(html));
+        QVERIFY2(!html.contains("/1f3f4.svg"), qPrintable(html)); // not the bare black flag
+    }
+
+    // Keycap in image mode resolves to its combined "31-20e3" svg, not a chopped base digit.
+    void blocks_emojiKeycapImageUsesCombinedAsset()
+    {
+        const QString base = twemojiBase();
+        const QString one = QString::fromUcs4(U"\U00000031\U0000FE0F\U000020E3"); // 1️⃣
+        const QString html = blockHtml(toBlocks(parse(one), {}, 18, base));
+        QVERIFY2(html.contains("31-20e3.svg"), qPrintable(html));
+    }
+
+    // Presentation guard: © (U+00A9) ships an svg (a9.svg) but defaults to *text* presentation, so a
+    // bare © must stay literal text — not become a colour emoji image — even in image mode.
+    void blocks_emojiBareTextSymbolNotImaged()
+    {
+        const QString base = twemojiBase();
+        const QString copyright = QString::fromUcs4(U"\U000000A9"); // © without VS16
+        const QString html = blockHtml(toBlocks(parse("(c) " + copyright), {}, 18, base));
+        QVERIFY2(!html.contains("a9.svg"), qPrintable(html));
+        QVERIFY2(html.contains(copyright), qPrintable(html)); // preserved as text
+    }
+
+    // ...but the explicit emoji-presentation form ©️ (© + VS16 U+FE0F) does image to a9.svg.
+    void blocks_emojiTextSymbolWithVs16Imaged()
+    {
+        const QString base = twemojiBase();
+        const QString copyrightEmoji = QString::fromUcs4(U"\U000000A9\U0000FE0F"); // ©️
+        const QString html = blockHtml(toBlocks(parse(copyrightEmoji), {}, 18, base));
+        QVERIFY2(html.contains("a9.svg"), qPrintable(html));
     }
 
     // emojiPx == 0 (default) leaves the text untouched.
