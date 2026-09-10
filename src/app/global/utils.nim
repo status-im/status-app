@@ -62,7 +62,7 @@ QtObject:
     let envVarChatKey = getEnv("STATUS_SUPPORT_BOT_CHAT_KEY")
     if envVarChatKey.len > 0:
       return envVarChatKey
-    return "zQ3shX8r9eRDTEQQhks4qciDunphxdY1w1KjvZ32Pn7dGdWTL"
+    return "zQ3shq8rvVR3BVAnW8jZSK1hJaf2izackG827GKFZfeufKj24"
 
   proc collectLogFilesJson*(self: Utils): string {.slot.} =
     ## Return a JSON array of absolute file paths for all "*.log" files under constants.DATADIR (recursive).
