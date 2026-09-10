@@ -68,6 +68,10 @@ StatusDialog {
 
         readonly property int panelMargin: 2 // so the card's shape stroke isn't clipped
 
+        readonly property bool virtualKeyboardVisible: SystemUtils.androidKeyboardVisible
+                                                       || SystemUtils.iosKeyboardVisible
+                                                       || Qt.inputMethod.visible
+
         // closePolicy only covers Key_Escape (verified on Qt 6.11), so Android's Back would
         // otherwise bubble to AppMain.tryGoBack(), which knows nothing about open popups, and
         // minimise the app.
@@ -113,11 +117,18 @@ StatusDialog {
             return local.x >= 0 && local.y >= 0 && local.x < item.width && local.y < item.height
         }
 
-        function dismissKeyboard() {
-            if (!Qt.inputMethod.visible)
+        function dismissKeyboard(force = false, focusTarget = contentScrollView) {
+            if (!force && !d.virtualKeyboardVisible)
                 return
-            contentScrollView.forceActiveFocus()
+            focusTarget.forceActiveFocus()
             Qt.inputMethod.hide()
+        }
+
+        function openTransactionPopup(component) {
+            // Popup restores the previously focused item when it closes. Ensure that
+            // item is not the amount input, otherwise Android can reopen the keyboard.
+            d.dismissKeyboard(true, signButton)
+            Qt.callLater(() => Global.openPopup(component))
         }
 
         property var activeChildPopup: null
@@ -363,7 +374,7 @@ StatusDialog {
         focus: true
 
         TapHandler {
-            enabled: Qt.inputMethod.visible
+            enabled: d.virtualKeyboardVisible
             onTapped: (eventPoint) => {
                 if (d.tapLandedOn(payPanel.amountInputItem, eventPoint.position))
                     return
@@ -879,9 +890,9 @@ StatusDialog {
                             onClicked: {
                                 if (root.swapAdaptor.validSwapProposalReceived) {
                                     if (root.swapAdaptor.swapOutputData.approvalNeeded && !root.swapAdaptor.approvalSuccessful)
-                                        Global.openPopup(swapApproveModalComponent)
+                                        d.openTransactionPopup(swapApproveModalComponent)
                                     else
-                                        Global.openPopup(swapSignModalComponent)
+                                        d.openTransactionPopup(swapSignModalComponent)
                                 }
                             }
                         }
