@@ -12,8 +12,9 @@ import shared.controls
 import shared.controls.chat
 import utils
 
-// Adaptive replacement for CommonContactDialog. TODO: migrate the remaining
-// CommonContactDialog-derived popups to this component and remove the legacy dialog.
+import AppLayouts.Profile.helpers
+
+// Adaptive replacement for the legacy CommonContactDialog used by contact-related popups.
 StatusAdaptiveDialog {
     id: root
 

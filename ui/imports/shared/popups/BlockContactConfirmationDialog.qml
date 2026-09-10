@@ -9,55 +9,70 @@ import StatusQ.Controls
 
 import utils
 
-CommonContactDialog {
+CommonContactAdaptiveDialog {
     id: root
 
-    readonly property bool removeIDVerification: ctrlRemoveIDVerification.checked
-    readonly property bool removeContact: ctrlRemoveContact.checked
+    readonly property bool removeIDVerification: d.removeIDVerification
+    readonly property bool removeContact: d.removeContact
 
     title: qsTr("Block user")
 
-    StatusBaseText {
-        objectName: "youWillNotSeeText"
-        Layout.fillWidth: true
-        wrapMode: Text.WordWrap
-        lineHeight: 22
-        lineHeightMode: Text.FixedHeight
-        text: qsTr("You will not see %1’s messages but %1 can still see your messages in mutual group chats and communities. %1 will be unable to message you.").arg(mainDisplayName)
+    QtObject {
+        id: d
+
+        property bool removeIDVerification
+        property bool removeContact
     }
 
-    StatusWarningBox {
-        objectName: "blockWarningBox"
-        Layout.fillWidth: true
-        Layout.topMargin: Theme.padding
-        icon: "warning"
-        iconColor: Theme.palette.dangerColor1
-        bgColor: Theme.palette.dangerColor1
-        borderColor: Theme.palette.dangerColor2
-        textColor: Theme.palette.directColor1
-        textSize: Theme.secondaryTextFontSize
-        text: qsTr("Blocking a user purges the database of all messages that you’ve previously received from %1 in all contexts. This can take a moment.").arg(mainDisplayName)
+    bodyComponent: ColumnLayout {
+        spacing: Theme.halfPadding
+
+        StatusBaseText {
+            objectName: "youWillNotSeeText"
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            lineHeight: 22
+            lineHeightMode: Text.FixedHeight
+            text: qsTr("You will not see %1’s messages but %1 can still see your messages in mutual group chats and communities. %1 will be unable to message you.").arg(mainDisplayName)
+        }
+
+        StatusWarningBox {
+            objectName: "blockWarningBox"
+            Layout.fillWidth: true
+            Layout.topMargin: Theme.halfPadding
+            icon: "warning"
+            iconColor: Theme.palette.dangerColor1
+            bgColor: Theme.palette.dangerColor1
+            borderColor: Theme.palette.dangerColor2
+            textColor: Theme.palette.directColor1
+            textSize: Theme.secondaryTextFontSize
+            text: qsTr("Blocking a user purges the database of all messages that you’ve previously received from %1 in all contexts. This can take a moment.").arg(mainDisplayName)
+        }
+
+        StatusCheckBox {
+            Layout.topMargin: Theme.halfPadding
+            objectName: "removeContactCheckbox"
+            id: ctrlRemoveContact
+            visible: contactDetails.isContact
+            checked: visible
+            enabled: false
+            text: qsTr("Remove contact")
+            onCheckedChanged: d.removeContact = checked
+            Component.onCompleted: d.removeContact = checked
+        }
+
+        StatusCheckBox {
+            id: ctrlRemoveIDVerification
+            visible: contactDetails.trustStatus === Constants.trustStatus.trusted
+            checked: visible
+            enabled: false
+            text: qsTr("Remove trust mark")
+            onCheckedChanged: d.removeIDVerification = checked
+            Component.onCompleted: d.removeIDVerification = checked
+        }
     }
 
-    StatusCheckBox {
-        Layout.topMargin: Theme.halfPadding
-        objectName: "removeContactCheckbox"
-        id: ctrlRemoveContact
-        visible: contactDetails.isContact
-        checked: visible
-        enabled: false
-        text: qsTr("Remove contact")
-    }
-
-    StatusCheckBox {
-        id: ctrlRemoveIDVerification
-        visible: contactDetails.trustStatus === Constants.trustStatus.trusted
-        checked: visible
-        enabled: false
-        text: qsTr("Remove trust mark")
-    }
-
-    rightButtons: ObjectModel {
+    footerRightButtons: ObjectModel {
         StatusFlatButton {
             objectName: "cancelButton"
             text: qsTr("Cancel")
