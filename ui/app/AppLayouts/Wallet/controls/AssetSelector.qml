@@ -147,11 +147,23 @@ Control {
                                 && ModelUtils.contains(refs, "chainId", root.selectedChainId)) {
                             resolvedChainId = root.selectedChainId
                         } else {
-                            for (let i = 0; i < refsCount; i++) {
-                                const refChain = ModelUtils.get(refs, i, "chainId")
-                                if (refChain !== undefined && refChain !== excludedChainId) {
-                                    resolvedChainId = refChain
+                            const balances = entry.balances
+                            const balancesCount = !!balances ? balances.ModelCount.count : 0
+                            for (let i = 0; i < balancesCount; i++) {
+                                const balChain = ModelUtils.get(balances, i, "chainId")
+                                if (balChain !== undefined && balChain !== excludedChainId
+                                        && ModelUtils.contains(refs, "chainId", balChain)) {
+                                    resolvedChainId = balChain
                                     break
+                                }
+                            }
+                            if (resolvedChainId === -1) {
+                                for (let i = 0; i < refsCount; i++) {
+                                    const refChain = ModelUtils.get(refs, i, "chainId")
+                                    if (refChain !== undefined && refChain !== excludedChainId) {
+                                        resolvedChainId = refChain
+                                        break
+                                    }
                                 }
                             }
                         }
