@@ -8,19 +8,19 @@ import utils
 import StatusQ.Core
 import StatusQ.Controls
 
-CommonContactDialog {
+CommonContactAdaptiveDialog {
     id: root
 
     title: qsTr("Unblock user")
 
-    StatusBaseText {
+    bodyComponent: StatusBaseText {
         objectName: "unblockingText"
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         text: qsTr("Unblocking %1 will allow new messages you receive from %1 to reach you.").arg(mainDisplayName)
     }
 
-    rightButtons: ObjectModel {
+    footerRightButtons: ObjectModel {
         StatusFlatButton {
             objectName: "cancelButton"
             text: qsTr("Cancel")

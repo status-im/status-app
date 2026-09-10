@@ -153,6 +153,13 @@ QtObject {
         return popup
     }
 
+    function openContactAdaptivePopup(popupComponent, publicKey, params = {}, cb = null) {
+        return openContactPopup(popupComponent, publicKey, Object.assign({
+            compressedPublicKey: root.utilsStore.getCompressedPk(publicKey),
+            emojiHash: root.utilsStore.getEmojiHash(publicKey)
+        }, params), cb)
+    }
+
     property var currentPopup
     function openPopup(popupComponent, params = {}, cb = null) {
         if (root.activePopupComponents.includes(popupComponent)) {
@@ -203,19 +210,19 @@ QtObject {
     }
 
     function openNicknamePopup(publicKey: string, cb) {
-        openContactPopup(nicknamePopupComponent, publicKey, {}, cb)
+        openContactAdaptivePopup(nicknamePopupComponent, publicKey, {}, cb)
     }
 
     function openMarkAsUntrustedPopup(publicKey: string) {
-        openContactPopup(markAsUntrustedComponent, publicKey, {})
+        openContactAdaptivePopup(markAsUntrustedComponent, publicKey, {})
     }
 
     function openBlockContactPopup(publicKey: string) {
-        openContactPopup(blockContactConfirmationComponent, publicKey, {})
+        openContactAdaptivePopup(blockContactConfirmationComponent, publicKey, {})
     }
 
     function openUnblockContactPopup(publicKey: string) {
-        openContactPopup(unblockContactConfirmationComponent, publicKey, {})
+        openContactAdaptivePopup(unblockContactConfirmationComponent, publicKey, {})
     }
 
     function openChangeProfilePicPopup(cb) {
@@ -306,11 +313,11 @@ QtObject {
     }
 
     function openMarkAsIDVerifiedPopup(publicKey, cb) {
-        openContactPopup(markAsIDVerifiedPopupComponent, publicKey, {}, cb)
+        openContactAdaptivePopup(markAsIDVerifiedPopupComponent, publicKey, {}, cb)
     }
 
     function openRemoveIDVerificationDialog(publicKey, cb) {
-        openContactPopup(removeIDVerificationPopupComponent, publicKey, {}, cb)
+        openContactAdaptivePopup(removeIDVerificationPopupComponent, publicKey, {}, cb)
     }
 
     function openInviteFriendsToCommunityPopup(community, communitySectionModule, cb) {
@@ -337,9 +344,7 @@ QtObject {
     }
 
     function openContactRequestPopup(publicKey, cb, defaultMessage = "") {
-        openContactPopup(sendContactRequestPopupComponent, publicKey, {
-            compressedPublicKey: root.utilsStore.getCompressedPk(publicKey),
-            emojiHash: root.utilsStore.getEmojiHash(publicKey),
+        openContactAdaptivePopup(sendContactRequestPopupComponent, publicKey, {
             defaultMessage: defaultMessage || ""
         }, cb)
     }
@@ -352,7 +357,7 @@ QtObject {
                 return
             }
 
-            openContactPopup(reviewContactRequestPopupComponent, publicKey, { crDetails }, cb)
+            openContactAdaptivePopup(reviewContactRequestPopupComponent, publicKey, { crDetails }, cb)
         } catch (e) {
             console.error("Popups.openReviewContactRequestPopup: error getting or parsing contact request data", e)
         }
@@ -416,7 +421,7 @@ QtObject {
     }
 
     function openRemoveContactConfirmationPopup(publicKey) {
-        openContactPopup(removeContactConfirmationDialog, publicKey, {})
+        openContactAdaptivePopup(removeContactConfirmationDialog, publicKey, {})
     }
 
     function openDeleteMessagePopup(messageId, messageStore) {
@@ -613,8 +618,6 @@ QtObject {
             id: removeContactConfirmationDialog
 
             RemoveContactPopup {
-                utilsStore: root.utilsStore
-
                 onAccepted: {
                     root.contactsStore.removeContact(publicKey)
                     if (removeIDVerification)
@@ -632,8 +635,6 @@ QtObject {
         Component {
             id: markAsIDVerifiedPopupComponent
             MarkAsIDVerifiedDialog {
-                utilsStore: root.utilsStore
-
                 onAccepted: {
                     root.contactsStore.markAsTrusted(publicKey)
                     Global.displaySuccessToastMessage(qsTr("%1 marked as trusted").arg(mainDisplayName))
@@ -646,8 +647,6 @@ QtObject {
         Component {
             id: removeIDVerificationPopupComponent
             RemoveIDVerificationDialog {
-                utilsStore: root.utilsStore
-
                 onAccepted: {
                     if (markAsUntrusted && removeContact) {
                         root.contactsStore.markUntrustworthy(publicKey)
@@ -691,14 +690,12 @@ QtObject {
         Component {
             id: reviewContactRequestPopupComponent
             ReviewContactRequestPopup {
-                utilsStore: root.utilsStore
-
                 onAccepted: {
                     root.contactsStore.acceptContactRequest(publicKey, contactRequestId)
                     Global.displaySuccessToastMessage(qsTr("Contact request accepted"))
                     close()
                 }
-                onDiscarded: {
+                onRejected: {
                     root.contactsStore.dismissContactRequest(publicKey, contactRequestId)
                     Global.displaySuccessToastMessage(qsTr("Contact request ignored"))
                     close()
@@ -936,8 +933,6 @@ QtObject {
         Component {
             id: markAsUntrustedComponent
             MarkAsUntrustedPopup {
-                utilsStore: root.utilsStore
-
                 onAccepted: {
                     root.contactsStore.markUntrustworthy(publicKey)
                     if (removeContact) {
@@ -955,8 +950,6 @@ QtObject {
         Component {
             id: unblockContactConfirmationComponent
             UnblockContactConfirmationDialog {
-                utilsStore: root.utilsStore
-
                 onAccepted: {
                     root.contactsStore.unblockContact(publicKey)
                     Global.displaySuccessToastMessage(qsTr("%1 unblocked").arg(mainDisplayName))
@@ -969,8 +962,6 @@ QtObject {
         Component {
             id: blockContactConfirmationComponent
             BlockContactConfirmationDialog {
-                utilsStore: root.utilsStore
-
                 onAccepted: {
                     root.contactsStore.blockContact(publicKey)
                     if (removeIDVerification)

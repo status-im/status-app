@@ -67,7 +67,10 @@ SplitView {
             buttonText: buttonInput.text
             defaultMessage: defaultMessageInput.text
 
-            onAccepted: logs.logEvent("SendContactRequestModal::accepted message=" + message)
+            onAccepted: {
+                logs.logEvent("SendContactRequestModal::accepted message=" + message)
+                close()
+            }
             onClosed: logs.logEvent("SendContactRequestModal::closed")
 
             Component.onCompleted: open()

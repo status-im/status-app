@@ -9,20 +9,19 @@ import StatusQ.Core.Theme
 
 import utils
 
-CommonContactDialog {
+CommonContactAdaptiveDialog {
     id: root
 
     // expected roles: id, from, clock, text, contactRequestState
     required property var crDetails
 
-    signal accepted(string contactRequestId)
-    signal discarded(string contactRequestId)
+    readonly property string contactRequestId: crDetails.id ?? ""
 
     title: qsTr("Review contact request")
 
-    Rectangle {
+    bodyComponent: Rectangle {
         Layout.fillWidth: true
-        Layout.preferredHeight: msgColumn.implicitHeight + msgColumn.anchors.topMargin + msgColumn.anchors.bottomMargin
+        implicitHeight: msgColumn.implicitHeight + msgColumn.anchors.topMargin + msgColumn.anchors.bottomMargin
         color: "transparent"
         border.width: 1
         border.color: Theme.palette.baseColor2
@@ -45,17 +44,17 @@ CommonContactDialog {
         }
     }
 
-    rightButtons: ObjectModel {
+    footerRightButtons: ObjectModel {
         StatusFlatButton {
             text: qsTr("Ignore")
             objectName: "ignoreButton"
-            onClicked: root.discarded(crDetails.id ?? "")
+            onClicked: root.rejected()
         }
         StatusButton {
             text: qsTr("Accept")
             type: StatusBaseButton.Type.Success
             objectName: "acceptButton"
-            onClicked: root.accepted(crDetails.id ?? "")
+            onClicked: root.accepted()
         }
     }
 }
