@@ -1812,6 +1812,10 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
         <translation>L’importation de la communauté «&#xa0;%1&#xa0;» a été annulée</translation>
     </message>
     <message>
+        <source>Not Connected to P2P network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>CoinGecko connection successful</source>
         <translation>Connexion à CoinGecko établie</translation>
     </message>
@@ -1945,10 +1949,6 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
     <message>
         <source>POKT &amp; Infura down for %1. %1 token balances cannot be retrieved.</source>
         <translation>POKT et Infura sont hors service pour %1. Impossible de récupérer les soldes des jetons %1.</translation>
-    </message>
-    <message>
-        <source>Not Connected to Logos network</source>
-        <translation>Non connecté au réseau Logos</translation>
     </message>
     <message>
         <source>How to fix</source>

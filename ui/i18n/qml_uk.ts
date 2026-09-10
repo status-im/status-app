@@ -1823,6 +1823,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>Імпорт спільноти «%1» скасовано</translation>
     </message>
     <message>
+        <source>Not Connected to P2P network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>CoinGecko connection successful</source>
         <translation>Підключення до CoinGecko успішне</translation>
     </message>
@@ -1957,10 +1961,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>POKT &amp; Infura down for %1. %1 token balances cannot be retrieved.</source>
         <translation>POKT та Infura недоступні для %1. Не вдалося отримати баланси токенів %1.</translation>
-    </message>
-    <message>
-        <source>Not Connected to Logos network</source>
-        <translation>Немає підключення до мережі Logos</translation>
     </message>
     <message>
         <source>How to fix</source>
