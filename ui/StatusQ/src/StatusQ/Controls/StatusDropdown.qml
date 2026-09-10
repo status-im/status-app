@@ -80,6 +80,10 @@ QC.Popup {
     */
     property bool fillHeightOnBottomSheet: false
 
+    closePolicy: root.bottomSheet ? QC.Popup.CloseOnEscape | QC.Popup.CloseOnPressOutside
+                                  : QC.Popup.CloseOnEscape | QC.Popup.CloseOnPressOutsideParent
+
+
     QtObject {
        id: d
        readonly property var window: root.contentItem.Window.window
@@ -108,7 +112,6 @@ QC.Popup {
             parent: root.directParent
             modal: false
             dim: false
-            closePolicy: QC.Popup.CloseOnEscape | QC.Popup.CloseOnPressOutsideParent
 
             x: root.relativeX
             y: root.relativeY
@@ -124,7 +127,6 @@ QC.Popup {
             parent: root.QC.Overlay.overlay || parent
             modal: true
             dim: true
-            closePolicy: QC.Popup.CloseOnEscape | QC.Popup.CloseOnPressOutside
 
             x: 0
             y: d.windowHeight - height
