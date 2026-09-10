@@ -9,36 +9,51 @@ import StatusQ.Controls
 
 import utils
 
-CommonContactDialog {
+CommonContactAdaptiveDialog {
     id: root
 
-    readonly property bool removeIDVerification: ctrlRemoveIDVerification.checked
-    readonly property bool markAsUntrusted: ctrlMarkAsUntrusted.checked
+    readonly property bool removeIDVerification: d.removeIDVerification
+    readonly property bool markAsUntrusted: d.markAsUntrusted
 
     title: qsTr("Remove contact")
 
-    StatusBaseText {
-        Layout.fillWidth: true
-        Layout.bottomMargin: Theme.halfPadding
-        text: qsTr("You and %1 will no longer be contacts").arg(mainDisplayName)
-        wrapMode: Text.WordWrap
+    QtObject {
+        id: d
+
+        property bool removeIDVerification
+        property bool markAsUntrusted
     }
 
-    StatusCheckBox {
-        id: ctrlRemoveIDVerification
-        visible: contactDetails.trustStatus === Constants.trustStatus.trusted
-        checked: visible
-        enabled: false
-        text: qsTr("Remove trust mark")
+    bodyComponent: ColumnLayout {
+        spacing: Theme.halfPadding
+
+        StatusBaseText {
+            Layout.fillWidth: true
+            Layout.bottomMargin: Theme.halfPadding
+            text: qsTr("You and %1 will no longer be contacts").arg(mainDisplayName)
+            wrapMode: Text.WordWrap
+        }
+
+        StatusCheckBox {
+            id: ctrlRemoveIDVerification
+            visible: contactDetails.trustStatus === Constants.trustStatus.trusted
+            checked: visible
+            enabled: false
+            text: qsTr("Remove trust mark")
+            onCheckedChanged: d.removeIDVerification = checked
+            Component.onCompleted: d.removeIDVerification = checked
+        }
+
+        StatusCheckBox {
+            id: ctrlMarkAsUntrusted
+            visible: contactDetails.trustStatus !== Constants.trustStatus.untrustworthy
+            text: qsTr("Mark %1 as untrusted").arg(mainDisplayName)
+            onCheckedChanged: d.markAsUntrusted = checked
+            Component.onCompleted: d.markAsUntrusted = checked
+        }
     }
 
-    StatusCheckBox {
-        id: ctrlMarkAsUntrusted
-        visible: contactDetails.trustStatus !== Constants.trustStatus.untrustworthy
-        text: qsTr("Mark %1 as untrusted").arg(mainDisplayName)
-    }
-
-    rightButtons: ObjectModel {
+    footerRightButtons: ObjectModel {
         StatusFlatButton {
             text: qsTr("Cancel")
             onClicked: root.close()

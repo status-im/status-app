@@ -5,18 +5,18 @@ import QtQml.Models
 import StatusQ.Core
 import StatusQ.Controls
 
-CommonContactDialog {
+CommonContactAdaptiveDialog {
     id: root
 
     title: qsTr("Mark as trusted")
 
-    StatusBaseText {
+    bodyComponent: StatusBaseText {
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         text: qsTr("Mark users as trusted only if you're 100% sure who they are.")
     }
 
-    rightButtons: ObjectModel {
+    footerRightButtons: ObjectModel {
         StatusFlatButton {
             text: qsTr("Cancel")
             onClicked: root.close()
