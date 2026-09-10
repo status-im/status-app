@@ -9,11 +9,14 @@ import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Controls.Validators
 import StatusQ.Popups.Dialog
+import StatusQ.Core.Utils as SQUtils
 
 import AppLayouts.stores as AppLayoutStores
 
-CommonContactDialog {
+CommonContactAdaptiveDialog {
     id: root
+
+    objectName: "SendContactRequestModal"
 
     property AppLayoutStores.ContactsStore contactsStore
 
@@ -21,15 +24,12 @@ CommonContactDialog {
     property string challengeText: qsTr("Write a short message telling them who you are...")
     property string buttonText: qsTr("Send contact request")
     property string defaultMessage: ""
-
-    signal accepted(string message)
+    property string message: defaultMessage
 
     title: qsTr("Send contact request")
 
     onAboutToShow: {
-        if (root.defaultMessage)
-            messageInput.text = root.defaultMessage
-        messageInput.input.edit.forceActiveFocus()
+        root.message = root.defaultMessage
 
         // (request) update from mailserver
         if (root.contactDetails.displayName === "") {
@@ -44,6 +44,7 @@ CommonContactDialog {
         readonly property int maxMsgLength: 280
         readonly property int minMsgLength: 1
         readonly property int msgHeight: 152
+        property bool messageValid: false
     }
 
     readonly property var _conn: Connections {
@@ -58,35 +59,53 @@ CommonContactDialog {
         }
     }
 
-    StatusInput {
-        id: messageInput
-        input.edit.objectName: "ProfileSendContactRequestModal_sayWhoYouAreInput"
-        Layout.fillWidth: true
-        label: root.labelText
-        charLimit: d.maxMsgLength
-        placeholderText: root.challengeText
-        input.multiline: true
-        minimumHeight: d.msgHeight
-        maximumHeight: d.msgHeight
-        input.verticalAlignment: TextEdit.AlignTop
-        validators: StatusMinLengthValidator {
-            minLength: d.minMsgLength
-            errorMessage: Utils.getErrorMessage(messageInput.errors, qsTr("who are you"))
+    bodyComponent: ColumnLayout {
+        spacing: Theme.halfPadding
+
+        StatusBaseText {
+            Layout.fillWidth: true
+            visible: !!root.labelText
+            text: root.labelText
+            wrapMode: Text.WordWrap
+            color: Theme.palette.directColor1
+        }
+
+        StatusInput {
+            id: messageInput
+            input.edit.objectName: "ProfileSendContactRequestModal_sayWhoYouAreInput"
+            Layout.fillWidth: true
+            charLimit: d.maxMsgLength
+            placeholderText: root.challengeText
+            input.multiline: true
+            minimumHeight: d.msgHeight
+            maximumHeight: d.msgHeight
+            input.verticalAlignment: TextEdit.AlignTop
+            text: root.message
+            validators: StatusMinLengthValidator {
+                minLength: d.minMsgLength
+                errorMessage: Utils.getErrorMessage(messageInput.errors, qsTr("who are you"))
+            }
+
+            onTextChanged: root.message = text
+            onValidChanged: d.messageValid = valid
+            Component.onCompleted: {
+                d.messageValid = valid
+                input.edit.forceActiveFocus()
+            }
         }
     }
 
-    rightButtons: ObjectModel {
+    footerRightButtons: ObjectModel {
         StatusFlatButton {
             text: qsTr("Cancel")
             onClicked: root.close()
         }
         StatusButton {
             objectName: "ProfileSendContactRequestModal_sendContactRequestButton"
-            enabled: messageInput.valid
+            enabled: d.messageValid
             text: root.buttonText
             onClicked: {
-                root.accepted(messageInput.text);
-                root.close();
+                root.accept()
             }
         }
     }
