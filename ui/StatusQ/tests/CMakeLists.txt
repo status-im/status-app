@@ -50,6 +50,9 @@ add_test(NAME MarkdownParserTest COMMAND MarkdownParserTest)
 
 add_executable(MarkdownHtmlTest src/tst_markdownhtml.cpp)
 target_link_libraries(MarkdownHtmlTest PRIVATE Qt::Test StatusQ)
+# Real Twemoji svg assets, so image-mode emoji tests can exercise the actual asset set.
+target_compile_definitions(MarkdownHtmlTest PRIVATE
+    TWEMOJI_SVG_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../src/assets/twemoji/svg/")
 add_test(NAME MarkdownHtmlTest COMMAND MarkdownHtmlTest)
 
 # MarkdownUtils pulls in QFont (QtGui) via its header, so this test also needs Qt::Gui.

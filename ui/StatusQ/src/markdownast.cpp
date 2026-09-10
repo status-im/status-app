@@ -1,5 +1,10 @@
 #include "StatusQ/markdownast.h"
 
+#include <QDir>
+#include <QHash>
+#include <QSet>
+#include <QUrl>
+
 namespace {
 
 QString kindName(Markdown::NodeKind kind)
@@ -63,6 +68,49 @@ void dumpNode(const Markdown::Node& node, int depth, bool withRanges, QString& o
         dumpNode(child, depth + 1, withRanges, out);
 }
 
+// Reads the code point at `i`, advancing `units` over a surrogate pair.
+char32_t codePointAt(QStringView s, int i, int& units)
+{
+    const QChar c = s[i];
+    if (c.isHighSurrogate() && i + 1 < s.size() && s[i + 1].isLowSurrogate()) {
+        units = 2;
+        return QChar::surrogateToUcs4(c, s[i + 1]);
+    }
+    units = 1;
+    return c.unicode();
+}
+
+// Local path the base url (a directory ending in '/') resolves to, covering the two StatusQ
+// deployments: filesystem (file://) and bundled resources (qrc:/).
+QString localDirForUrl(const QString& url)
+{
+    const QUrl u(url);
+    if (u.scheme() == QLatin1String("qrc"))
+        return QLatin1Char(':') + u.path();
+    if (u.isLocalFile())
+        return u.toLocalFile();
+    return url;
+}
+
+// Basenames (without ".svg") of the Twemoji assets bundled under `base`, listed once per base and
+// cached. This asset set is the source of truth for which grapheme clusters render as an emoji
+// image.
+const QSet<QString>& twemojiAssetNames(const QString& base)
+{
+    static QHash<QString, QSet<QString>> cache;
+    const auto it = cache.constFind(base);
+    if (it != cache.constEnd())
+        return it.value();
+
+    QSet<QString> names;
+    const QDir dir(localDirForUrl(base));
+    const auto entries = dir.entryList(QStringList{QStringLiteral("*.svg")}, QDir::Files);
+    names.reserve(entries.size());
+    for (const QString& e : entries)
+        names.insert(e.left(e.size() - 4)); // strip ".svg"
+    return *cache.insert(base, std::move(names));
+}
+
 } // namespace
 
 namespace Markdown {
@@ -91,29 +139,59 @@ bool isEmojiCodePoint(char32_t cp)
         || (cp == 0x200D);                    // zero-width joiner
 }
 
+bool clusterHasEmoji(QStringView text)
+{
+    for (int i = 0; i < text.size();) {
+        int units = 1;
+        if (isEmojiCodePoint(codePointAt(text, i, units)))
+            return true;
+        i += units;
+    }
+    return false;
+}
+
 bool isOnlyEmoji(const QString& text)
 {
+    // Classify per grapheme cluster (not per code point): a keycap (0-9 # *) or subdivision flag
+    // has non-emoji code points inside an otherwise-emoji cluster, so a per-code-point test would
+    // wrongly reject them. Whitespace between/around emojis is allowed.
     bool hasEmoji = false;
-    int i = 0;
-    while (i < text.size()) {
-        const QChar c = text[i];
-        if (c.isSpace()) {
-            ++i;
-            continue;
+    bool onlyEmoji = true;
+    forEachGraphemeCluster(text, [&](QStringView cluster, int, int) {
+        if (cluster.trimmed().isEmpty())
+            return true; // whitespace between/around emojis is allowed
+        if (!clusterHasEmoji(cluster)) {
+            onlyEmoji = false;
+            return false; // a non-emoji cluster settles it — stop early
         }
-        char32_t cp;
-        if (c.isHighSurrogate() && i + 1 < text.size() && text[i + 1].isLowSurrogate()) {
-            cp = QChar::surrogateToUcs4(c, text[i + 1]);
-            i += 2;
-        } else {
-            cp = c.unicode();
-            ++i;
-        }
-        if (!isEmojiCodePoint(cp))
-            return false;
         hasEmoji = true;
+        return true;
+    });
+    return onlyEmoji && hasEmoji;
+}
+
+QString twemojiSvgUrl(const QString& base, QStringView cluster)
+{
+    // Presentation guard: image only clusters carrying an emoji code point, so default-text symbols
+    // that happen to ship an svg (© U+00A9, ® U+00AE, ™ U+2122) stay text unless written with VS16.
+    if (base.isEmpty() || !clusterHasEmoji(cluster))
+        return {};
+
+    const bool hasZwj = cluster.contains(QChar(0x200D));
+    QString name;
+    for (int i = 0; i < cluster.size();) {
+        int units = 1;
+        const char32_t cp = codePointAt(cluster, i, units);
+        i += units;
+        if (!hasZwj && cp == 0xFE0F) // twemoji.js toCodePoint: drop VS16 unless the cluster is a ZWJ seq
+            continue;
+        if (!name.isEmpty())
+            name += QLatin1Char('-');
+        name += QString::number(cp, 16);
     }
-    return hasEmoji;
+    if (name.isEmpty() || !twemojiAssetNames(base).contains(name))
+        return {};
+    return base + name + QStringLiteral(".svg");
 }
 
 } // namespace Markdown
