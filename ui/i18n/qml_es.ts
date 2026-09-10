@@ -13682,8 +13682,12 @@ al cargar</translation>
 <context>
     <name>ProfileHeader</name>
     <message>
-        <source>Bridged from Discord</source>
-        <translation>Conectado desde Discord</translation>
+        <source>Bridged account</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bridged from %1</source>
+        <translation type="unfinished">Conectado desde %1</translation>
     </message>
     <message>
         <source>Select different image</source>

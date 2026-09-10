@@ -13667,7 +13667,11 @@ to load</source>
 <context>
     <name>ProfileHeader</name>
     <message>
-        <source>Bridged from Discord</source>
+        <source>Bridged account</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bridged from %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
