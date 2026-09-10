@@ -45,6 +45,32 @@ Control {
         readonly property bool hasLeftButtons: !!root.leftButtons && root.leftButtons.count > 0
         readonly property bool hasRightButtons: !!root.rightButtons && root.rightButtons.count > 0
         readonly property bool hasStandardButtons: root.standardButtons !== Dialog.NoButton && !hasLeftButtons && !hasRightButtons
+        readonly property int buttonCount: (hasLeftButtons ? root.leftButtons.count : 0)
+                                           + (hasRightButtons ? root.rightButtons.count : 0)
+
+        function buttonMaximumWidth(item) {
+            const availableWidth = Math.max(0, root.availableWidth - root.spacing * buttonCount)
+            const averageWidth = availableWidth / Math.max(1, buttonCount)
+            let fixedWidth = 0
+            let flexibleCount = 0
+
+            for (let i = 0; i < leftButtonsRepeater.count; i++)
+                collectButtonWidth(leftButtonsRepeater.itemAt(i), averageWidth)
+            for (let i = 0; i < rightButtonsRepeater.count; i++)
+                collectButtonWidth(rightButtonsRepeater.itemAt(i), averageWidth)
+
+            if (item.implicitWidth <= averageWidth)
+                return item.implicitWidth
+
+            return Math.max(0, (availableWidth - fixedWidth) / Math.max(1, flexibleCount))
+
+            function collectButtonWidth(button, averageWidth) {
+                if (button.implicitWidth <= averageWidth)
+                    fixedWidth += button.implicitWidth
+                else
+                    flexibleCount++
+            }
+        }
     }
 
     visible: d.hasLeftButtons || d.hasRightButtons || d.hasStandardButtons
@@ -63,7 +89,14 @@ Control {
         spacing: root.spacing
 
         Repeater {
+            id: leftButtonsRepeater
+
             model: root.leftButtons
+
+            onItemAdded: (_, item) => {
+                item.Layout.minimumWidth = 0
+                item.Layout.maximumWidth = Qt.binding(() => d.buttonMaximumWidth(item))
+            }
         }
 
         Item {
@@ -71,7 +104,14 @@ Control {
         }
 
         Repeater {
+            id: rightButtonsRepeater
+
             model: root.rightButtons
+
+            onItemAdded: (_, item) => {
+                item.Layout.minimumWidth = 0
+                item.Layout.maximumWidth = Qt.binding(() => d.buttonMaximumWidth(item))
+            }
         }
 
         Loader {
