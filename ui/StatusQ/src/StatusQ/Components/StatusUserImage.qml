@@ -68,6 +68,9 @@ Loader {
 
         bridgeBadge.visible: root.isBridgedAccount
         bridgeBadge.image.source: root.bridgeBadgeImage
+        // bridge.svg is a transparent landscape glyph; without a fill the
+        // avatar shows through and the icon reads as a stray mark.
+        bridgeBadge.color: Theme.palette.indirectColor1
 
         Loader {
             anchors.fill: parent
