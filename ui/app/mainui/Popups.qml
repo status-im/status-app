@@ -337,7 +337,11 @@ QtObject {
     }
 
     function openContactRequestPopup(publicKey, cb, defaultMessage = "") {
-        openContactPopup(sendContactRequestPopupComponent, publicKey, { defaultMessage: defaultMessage || "" }, cb)
+        openContactPopup(sendContactRequestPopupComponent, publicKey, {
+            compressedPublicKey: root.utilsStore.getCompressedPk(publicKey),
+            emojiHash: root.utilsStore.getEmojiHash(publicKey),
+            defaultMessage: defaultMessage || ""
+        }, cb)
     }
 
     function openReviewContactRequestPopup(publicKey, cb) {
@@ -678,7 +682,6 @@ QtObject {
 
             SendContactRequestModal {
                 contactsStore: root.contactsStore
-                utilsStore: root.utilsStore
 
                 onAccepted: root.contactsStore.sendContactRequest(publicKey, message)
                 onClosed: destroy()
