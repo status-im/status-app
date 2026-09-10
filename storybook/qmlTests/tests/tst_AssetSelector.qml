@@ -199,6 +199,46 @@ Item {
             compare(button.icon, Constants.tokenIcon("DAI"))
         }
 
+        // An owned aggregate row (single balance chain on "All") badges its
+        // balance chain — the selection must land THERE, not on whichever
+        // deployment is listed first in the token refs. Replays the mobile
+        // report: ETH held only on Optimism (10) resolved to Arbitrum (42161)
+        // because 42161 led the refs.
+        function test_aggregateRowResolvesToItsBalanceChain() {
+            const data = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
+            data.append({
+                key: "eth-native", communityId: "", name: "Ether",
+                currencyBalance: 10, symbol: "ETH",
+                logoUri: Constants.tokenIcon("ETH"),
+                balances: [ { chainId: 10, balance: 0.005, iconUrl: "network/optimism" } ],
+                tokens: [ { chainId: 42161, key: "42161-0x0" }, { chainId: 10, key: "10-0x0" },
+                          { chainId: 1, key: "1-0x0" }, { chainId: 8453, key: "8453-0x0" } ],
+                sectionName: "Your assets"
+            })
+
+            const selector = createTemporaryObject(selectorCmp, root)
+            selector.model = data
+            // the receive side holds this token on chain 1 — excluded, but
+            // irrelevant to the balance-chain pick
+            selector.nonInteractiveKey = "eth-native"
+            selector.nonInteractiveChainId = 1
+            waitForRendering(selector)
+
+            mouseClick(selector)
+            const listView = findChild(selector.Overlay.overlay, "assetsListView")
+            verify(listView)
+            waitForRendering(listView)
+
+            const eth = listView.itemAtIndex(0)
+            verify(eth)
+            verify(eth.rowAt(0).enabled)
+            eth.selectFirst()
+
+            compare(selector.selectedSpy.count, 1)
+            compare(selector.selectedSpy.signalArguments[0][0], "eth-native")
+            compare(selector.selectedSpy.signalArguments[0][1], 10) // the balance chain, not refs[0]
+        }
+
         // Clicking the other panel's token from an unscoped list must resolve
         // to another of its chains — never the blocked chain-address pair.
         function test_selectionSkipsTheNonInteractiveChain() {
