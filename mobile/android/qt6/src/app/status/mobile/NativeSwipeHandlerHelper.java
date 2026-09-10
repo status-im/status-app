@@ -32,6 +32,13 @@ public class NativeSwipeHandlerHelper {
     private boolean dismissTapMode = false;
     private float startRawY = 0.0f;
 
+    // Buffered-tap disambiguation: the initial DOWN is not forwarded to the
+    // content immediately. We keep a copy and only replay it once the gesture is known to be a
+    // tap (on release) or a vertical scroll (on first vertical move). A potential drawer swipe
+    // never forwards it, so the content below cannot arm a long-press during the open gesture.
+    private MotionEvent bufferedDown;
+    private boolean passthroughStarted = false;
+
     // Handler rect in parent pixels (contentView coordinates).
     private float handlerX = 0.0f;
     private float handlerY = 0.0f;
@@ -81,6 +88,7 @@ public class NativeSwipeHandlerHelper {
 
                     active = true;
                     swiping = false;
+                    passthroughStarted = false;
                     activePointerId = event.getPointerId(0);
                     startRawX = rawX;
                     startRawY = rawY;
@@ -102,8 +110,14 @@ public class NativeSwipeHandlerHelper {
                         ((ViewGroup) touchOverlayView.getParent()).requestDisallowInterceptTouchEvent(true);
                     }
 
+                    // Buffer the DOWN rather than forwarding it now; it's replayed later only if
+                    // this turns out to be a tap or a scroll (see class-level note, issue #22380).
+                    if (bufferedDown != null) {
+                        bufferedDown.recycle();
+                        bufferedDown = null;
+                    }
                     if (passthroughTarget != null) {
-                        dispatchToTarget(passthroughTarget, event, MotionEvent.ACTION_DOWN);
+                        bufferedDown = MotionEvent.obtain(event);
                     }
                     return true;
                 }
@@ -129,18 +143,27 @@ public class NativeSwipeHandlerHelper {
 
                 if (action == MotionEvent.ACTION_MOVE) {
                     final float dx = rawX - startRawX;
+                    final float dy = rawY - startRawY;
                     lastVx = vx;
-                    if (!swiping && Math.abs(dx) >= touchSlopPx) {
-                        swiping = true;
-                        if (passthroughTarget != null) {
-                            dispatchToTarget(passthroughTarget, event, MotionEvent.ACTION_CANCEL);
-                            passthroughTarget = null;
+                    if (!swiping && !passthroughStarted) {
+                        if (Math.abs(dx) >= touchSlopPx) {
+                            // Horizontal drag -> drawer swipe. The buffered DOWN is discarded
+                            // (never forwarded), so no long-press can fire on the content.
+                            swiping = true;
+                            if (bufferedDown != null) {
+                                bufferedDown.recycle();
+                                bufferedDown = null;
+                            }
+                            nativeOnSwipeBegan(nativePtr, vx);
+                        } else if (Math.abs(dy) >= touchSlopPx && passthroughTarget != null) {
+                            // Vertical drag starting in the edge strip -> let the content scroll:
+                            // replay the buffered DOWN, then forward this move below.
+                            startPassthrough();
                         }
-                        nativeOnSwipeBegan(nativePtr, vx);
                     }
                     if (swiping) {
                         nativeOnSwipeChanged(nativePtr, dx, vx);
-                    } else if (passthroughTarget != null) {
+                    } else if (passthroughStarted && passthroughTarget != null) {
                         dispatchToTarget(passthroughTarget, event, MotionEvent.ACTION_MOVE);
                     }
                     return true;
@@ -159,10 +182,18 @@ public class NativeSwipeHandlerHelper {
                     // Use the last MOVE velocity; UP often has vx≈0 because there's no delta.
                     if (swiping) {
                         nativeOnSwipeEnded(nativePtr, dx, lastVx, action == MotionEvent.ACTION_CANCEL);
+                    } else if (passthroughStarted) {
+                        // Finish the scroll/drag we already forwarded (UP or CANCEL).
+                        if (passthroughTarget != null)
+                            dispatchToTarget(passthroughTarget, event, action);
                     } else if (tapToDismiss) {
                         nativeOnTapToDismiss(nativePtr);
-                    } else if (passthroughTarget != null) {
-                        dispatchToTarget(passthroughTarget, event, action);
+                    } else if (action == MotionEvent.ACTION_UP && tapLike && passthroughTarget != null) {
+                        // Quick tap on the edge strip: replay the buffered DOWN and the UP so the
+                        // content still gets a tap (no long-press was ever armed).
+                        if (bufferedDown != null)
+                            dispatchToTarget(passthroughTarget, bufferedDown, MotionEvent.ACTION_DOWN);
+                        dispatchToTarget(passthroughTarget, event, MotionEvent.ACTION_UP);
                     }
 
                     resetGestureState();
@@ -234,7 +265,9 @@ public class NativeSwipeHandlerHelper {
 
     /** Sends ACTION_CANCEL to in-flight passthrough target and ends any active swipe. UI-thread only. */
     private void cancelActiveGesture() {
-        if (active && passthroughTarget != null) {
+        // Only cancel the content if we actually forwarded a DOWN to it; a buffered-but-never-sent
+        // DOWN needs no cancellation.
+        if (active && passthroughStarted && passthroughTarget != null) {
             long t = SystemClock.uptimeMillis();
             MotionEvent cancel = MotionEvent.obtain(t, t, MotionEvent.ACTION_CANCEL, 0f, 0f, 0);
             dispatchToTarget(passthroughTarget, cancel, MotionEvent.ACTION_CANCEL);
@@ -243,14 +276,31 @@ public class NativeSwipeHandlerHelper {
         if (swiping) nativeOnSwipeEnded(nativePtr, 0f, 0f, true);
     }
 
+    /** Replays the buffered DOWN to the content view, committing to passthrough. UI-thread only. */
+    private void startPassthrough() {
+        if (passthroughStarted || passthroughTarget == null)
+            return;
+        if (bufferedDown != null) {
+            dispatchToTarget(passthroughTarget, bufferedDown, MotionEvent.ACTION_DOWN);
+            bufferedDown.recycle();
+            bufferedDown = null;
+        }
+        passthroughStarted = true;
+    }
+
     /** Releases per-gesture resources and resets flags. UI-thread only. */
     private void resetGestureState() {
         if (velocityTracker != null) {
             velocityTracker.recycle();
             velocityTracker = null;
         }
+        if (bufferedDown != null) {
+            bufferedDown.recycle();
+            bufferedDown = null;
+        }
         active = false;
         swiping = false;
+        passthroughStarted = false;
         activePointerId = -1;
         passthroughTarget = null;
     }
