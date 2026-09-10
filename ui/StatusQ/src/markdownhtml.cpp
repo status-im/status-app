@@ -1,8 +1,6 @@
 #include "StatusQ/markdownhtml.h"
 
-#include <QFile>
-#include <QTextBoundaryFinder>
-#include <QUrl>
+#include <QHash>
 #include <QVariantMap>
 
 namespace {
@@ -37,56 +35,14 @@ QString escapeInline(const QString& s)
 }
 
 // A font-size span for one emoji run (font-based rendering).
-QString emojiFontSpan(const QString& emoji, int emojiPx)
+QString emojiFontSpan(QStringView emoji, int emojiPx)
 {
     return QStringLiteral("<span style=\"font-size:%1px\">%2</span>").arg(emojiPx).arg(emoji);
 }
 
 // ── image-based emoji (Twemoji) — used when an emoji base url is supplied ────────
-
-// Local path a url resolves to for an existence check (filesystem or bundled qrc:).
-QString localPathForUrl(const QString& url)
-{
-    const QUrl u(url);
-    if (u.scheme() == QLatin1String("qrc"))
-        return QLatin1Char(':') + u.path();
-    if (u.isLocalFile())
-        return u.toLocalFile();
-    return url;
-}
-
-// Maps a single emoji (one grapheme cluster) to its Twemoji svg url under `base`, following
-// twemoji.js' rule (drop U+FE0F unless the cluster has a ZWJ; join code points as lowercase hex
-// with '-'). "" when no svg exists. Mirrors chatinputhighlighter.cpp's twemojiSvgUrl.
-QString twemojiSvgUrl(const QString& base, const QString& emoji)
-{
-    if (base.isEmpty())
-        return {};
-    const bool hasZwj = emoji.contains(QChar(0x200D));
-    QString name;
-    for (qsizetype i = 0; i < emoji.size();) {
-        const QChar c = emoji[i];
-        char32_t cp;
-        if (c.isHighSurrogate() && i + 1 < emoji.size() && emoji[i + 1].isLowSurrogate()) {
-            cp = QChar::surrogateToUcs4(c, emoji[i + 1]);
-            i += 2;
-        } else {
-            cp = c.unicode();
-            i += 1;
-        }
-        if (!hasZwj && cp == 0xFE0F)
-            continue;
-        if (!name.isEmpty())
-            name += QLatin1Char('-');
-        name += QString::number(cp, 16);
-    }
-    if (name.isEmpty())
-        return {};
-    const QString url = base + name + QStringLiteral(".svg");
-    if (!QFile::exists(localPathForUrl(url)))
-        return {};
-    return url;
-}
+// Cluster → svg url resolution (asset set + presentation guard) lives in Markdown::twemojiSvgUrl,
+// shared with the live highlighter.
 
 // Renders an emoji run as Twemoji <img> tags: segmented per grapheme cluster so ZWJ sequences map
 // to their combined svg and adjacent emoji each get their own image. Clusters without a Twemoji svg
@@ -94,58 +50,49 @@ QString twemojiSvgUrl(const QString& base, const QString& emoji)
 QString emojiImagesHtml(const QString& run, int emojiPx, const QString& emojiBaseUrl)
 {
     QString out;
-    QTextBoundaryFinder bf(QTextBoundaryFinder::Grapheme, run);
-    int cs = 0;
-    for (int ce = bf.toNextBoundary(); ce >= 0; ce = bf.toNextBoundary()) {
-        if (ce > cs) {
-            const QString cluster = run.mid(cs, ce - cs);
-            const QString url = twemojiSvgUrl(emojiBaseUrl, cluster);
-            if (!url.isEmpty())
-                out += QStringLiteral("<img src=\"%1\" width=\"%2\" height=\"%2\""
-                                      " style=\"vertical-align:bottom\">").arg(url).arg(emojiPx);
-            else
-                out += emojiFontSpan(cluster, emojiPx);
-        }
-        cs = ce;
-    }
+    Markdown::forEachGraphemeCluster(run, [&](QStringView cluster, int, int) {
+        const QString url = Markdown::twemojiSvgUrl(emojiBaseUrl, cluster);
+        if (!url.isEmpty())
+            out += QStringLiteral("<img src=\"%1\" width=\"%2\" height=\"%2\""
+                                  " style=\"vertical-align:bottom\">").arg(url).arg(emojiPx);
+        else
+            out += emojiFontSpan(cluster, emojiPx);
+        return true;
+    });
     return out;
 }
 
-// Renders each run of emoji code points in `s` (already HTML-escaped). `emojiPx <= 0` leaves the
-// string unchanged. When `emojiBaseUrl` is empty, each run is wrapped in a font-size span so the
-// rich-text view enlarges them ~to the line height (font-based). When set, each emoji is emitted as
-// a Twemoji <img>. Safe on escaped text: entities and <br/> are ASCII, never in the emoji ranges.
+// Renders each run of emoji in `s` (already HTML-escaped). `emojiPx <= 0` leaves the string
+// unchanged. When `emojiBaseUrl` is empty, each run is wrapped in a font-size span so the rich-text
+// view enlarges them ~to the line height (font-based). When set, each emoji is emitted as a Twemoji
+// <img>. Safe on escaped text: entities and <br/> are ASCII, never in the emoji ranges.
 QString emojiWrap(const QString& s, int emojiPx, const QString& emojiBaseUrl)
 {
     if (emojiPx <= 0)
         return s;
 
-    const auto codePointAt = [&](int i, int& units) -> char32_t {
-        if (s[i].isHighSurrogate() && i + 1 < s.size() && s[i + 1].isLowSurrogate()) {
-            units = 2;
-            return QChar::surrogateToUcs4(s[i], s[i + 1]);
-        }
-        units = 1;
-        return s[i].unicode();
-    };
-
     QString out;
     out.reserve(s.size());
-    int i = 0;
-    while (i < s.size()) {
-        int units = 1;
-        if (Markdown::isEmojiCodePoint(codePointAt(i, units))) {
-            const int start = i;
-            do { i += units; }
-            while (i < s.size() && Markdown::isEmojiCodePoint(codePointAt(i, units)));
-            const QString run = s.mid(start, i - start);
-            out += emojiBaseUrl.isEmpty() ? emojiFontSpan(run, emojiPx)
-                                          : emojiImagesHtml(run, emojiPx, emojiBaseUrl);
+    int runStart = -1; // start of the current maximal run of consecutive emoji clusters, or -1
+    const auto flushRun = [&](int end) {
+        const QString run = s.mid(runStart, end - runStart);
+        out += emojiBaseUrl.isEmpty() ? emojiFontSpan(run, emojiPx)
+                                      : emojiImagesHtml(run, emojiPx, emojiBaseUrl);
+        runStart = -1;
+    };
+    Markdown::forEachGraphemeCluster(s, [&](QStringView cluster, int start, int /*end*/) {
+        if (Markdown::clusterHasEmoji(cluster)) {
+            if (runStart < 0)
+                runStart = start;
         } else {
-            out += s.mid(i, units);
-            i += units;
+            if (runStart >= 0)
+                flushRun(start);
+            out.append(cluster);
         }
-    }
+        return true;
+    });
+    if (runStart >= 0)
+        flushRun(s.size());
     return out;
 }
 
@@ -157,24 +104,6 @@ QString wrapCodeEmojis(const QString& escaped, int emojiPx, const QString& emoji
     if (emojiBaseUrl.isEmpty() || emojiPx <= 0)
         return escaped;
     return emojiWrap(escaped, emojiPx, emojiBaseUrl); // image mode ⇒ <img> per run, no font-size span
-}
-
-// Whether `s` contains at least one emoji code point.
-bool containsEmoji(const QString& s)
-{
-    for (int i = 0; i < s.size();) {
-        char32_t cp;
-        if (s[i].isHighSurrogate() && i + 1 < s.size() && s[i + 1].isLowSurrogate()) {
-            cp = QChar::surrogateToUcs4(s[i], s[i + 1]);
-            i += 2;
-        } else {
-            cp = s[i].unicode();
-            i += 1;
-        }
-        if (Markdown::isEmojiCodePoint(cp))
-            return true;
-    }
-    return false;
 }
 
 // Concatenates the raw (escaped, newlines preserved) text of every Text descendant,
@@ -522,7 +451,7 @@ void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
             // In image-emoji mode, a block that actually contains an emoji also carries an HTML
             // variant (Twemoji <img> in a <pre> that keeps the monospace + whitespace) so the view
             // can render it as rich text. Plain code blocks omit it and stay PlainText, unchanged.
-            if (!emojiBaseUrl.isEmpty() && containsEmoji(code)) {
+            if (!emojiBaseUrl.isEmpty() && Markdown::clusterHasEmoji(code)) {
                 codeBlock[QStringLiteral("codeHtml")] =
                     QStringLiteral("<pre>%1</pre>").arg(wrapCodeEmojis(escape(code), emojiPx, emojiBaseUrl));
             }
