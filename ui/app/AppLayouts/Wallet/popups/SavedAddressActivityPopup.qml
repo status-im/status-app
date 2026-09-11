@@ -17,6 +17,7 @@ import utils
 
 StatusDialog {
     id: root
+    objectName: "SavedAddressActivityPopup"
 
     property SharedStores.NetworkConnectionStore networkConnectionStore
     required property SharedStores.NetworksStore networksStore

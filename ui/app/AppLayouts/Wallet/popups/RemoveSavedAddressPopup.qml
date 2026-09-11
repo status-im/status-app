@@ -17,6 +17,7 @@ import shared.controls
 
 StatusDialog {
     id: root
+    objectName: "RemoveSavedAddressPopup"
 
     property string name
     property string address
