@@ -102,7 +102,7 @@ pipeline {
     stage('Upload') {
       steps {
         script {
-          env.PKG_URL = s5cmd.upload(env.STATUS_FDROID_APK)
+          env.PKG_URL = s5cmd.upload(retriesCount: 5, env.STATUS_FDROID_APK)
           descLinks['F-Droid APK'] = env.PKG_URL
         }
       }

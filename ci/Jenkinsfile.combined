@@ -268,7 +268,7 @@ pipeline {
         /* Generate sha256 checksums for all artifacts. */
         sha = "./${utils.pkgFilename(ext: 'sha256')}"
         sh "sha256sum * | tee ./${sha}"
-        urls['SHA'] = s5cmd.upload(sha)
+        urls['SHA'] = s5cmd.upload(retriesCount: 5, sha)
         jenkins.setBuildDesc(urls)
       }
       archiveArtifacts('pkg/*')

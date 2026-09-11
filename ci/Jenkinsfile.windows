@@ -156,12 +156,12 @@ pipeline {
       parallel {
         stage('Upload 7Z') {
           steps { script {
-            zip_url = s5cmd.upload(env.STATUS_CLIENT_7Z)
+            zip_url = s5cmd.upload(retriesCount: 5, env.STATUS_CLIENT_7Z)
           } }
         }
         stage('Upload EXE') {
           steps { script {
-            exe_url = s5cmd.upload(env.STATUS_CLIENT_EXE)
+            exe_url = s5cmd.upload(retriesCount: 5, env.STATUS_CLIENT_EXE)
           } }
         }
       }

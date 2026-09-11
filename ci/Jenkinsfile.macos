@@ -196,7 +196,7 @@ pipeline {
           parallel {
             stage('Upload') {
               steps { script {
-                env.PKG_URL = s5cmd.upload(env.STATUS_CLIENT_DMG)
+                env.PKG_URL = s5cmd.upload(retriesCount: 5, env.STATUS_CLIENT_DMG)
                 descLinks.Dmg = env.PKG_URL
               } }
             }
@@ -281,7 +281,7 @@ pipeline {
             }
             stage('Upload to S3') {
               steps { script {
-                env.IPA_URL = s5cmd.upload(env.STATUS_IOS_APP_ARTIFACT)
+                env.IPA_URL = s5cmd.upload(retriesCount: 5, env.STATUS_IOS_APP_ARTIFACT)
               } }
             }
             stage('Archive') {

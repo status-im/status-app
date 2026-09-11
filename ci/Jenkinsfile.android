@@ -150,7 +150,7 @@ pipeline {
         stage('Upload') {
           steps {
             script {
-              env.PKG_URL = s5cmd.upload(env.STATUS_ARTIFACT)
+              env.PKG_URL = s5cmd.upload(retriesCount: 5, env.STATUS_ARTIFACT)
               descLinks.APK = env.PKG_URL
             }
           }
@@ -160,7 +160,7 @@ pipeline {
           when { expression { env.IS_RELEASE_BRANCH == 'true' } }
           steps {
             script {
-              env.AAB_URL = s5cmd.upload(env.STATUS_AAB_ARTIFACT)
+              env.AAB_URL = s5cmd.upload(retriesCount: 5, env.STATUS_AAB_ARTIFACT)
               descLinks.AAB = env.AAB_URL
             }
           }
