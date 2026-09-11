@@ -6,7 +6,6 @@ import QtTest
 import StatusQ
 
 import shared.popups.auth_sign_base 1.0
-
 import utils
 
 Item {
@@ -55,6 +54,76 @@ Item {
                 requestCount++
                 return Keychain.StatusSuccess
             }
+        }
+    }
+
+    TestCase {
+        name: "AuthSignPopupBase_passwordFocus"
+        when: windowShown
+
+        property var popup: null
+        property var mockKeychain: null
+
+        function init() {
+            mockKeychain = createTemporaryObject(mockedKeychainComponent, root)
+            verify(!!mockKeychain)
+        }
+
+        function cleanup() {
+            if (popup) {
+                popup.destroy()
+                popup = null
+            }
+        }
+
+        function createSoftwareWalletPopup(keyUid, performPasswordAction) {
+            popup = createTemporaryObject(componentUnderTest, root, {
+                                              keychain: mockKeychain,
+                                              keyUid: keyUid,
+                                              userProfileKeyUid: keyUid,
+                                              userProfileMigratedToColdWallet: false,
+                                              isKeycardKeyPair: false,
+                                              performPasswordAction: performPasswordAction
+            })
+            verify(!!popup)
+            popup.open()
+            tryCompare(popup, "opened", true)
+        }
+
+        function test_passwordOnlyFocusesInput() {
+            createSoftwareWalletPopup("key-without-biometrics", password => true)
+
+            tryVerify(() => !!findChild(popup, "authenticationPasswordInput"))
+            const passwordInput = findChild(popup, "authenticationPasswordInput")
+            tryCompare(passwordInput, "activeFocus", true)
+        }
+
+        function test_biometricSuccessDoesNotFocusInput() {
+            let providedPassword = ""
+            createSoftwareWalletPopup("key-uid-1", password => {
+                                          providedPassword = password
+                                          return true
+                                      })
+
+            tryCompare(mockKeychain, "requestCount", 1)
+            mockKeychain.getCredentialRequestCompleted(Keychain.StatusSuccess, "secret")
+
+            compare(providedPassword, "secret")
+            tryVerify(() => !!findChild(popup, "authenticationPasswordInput"))
+            const passwordInput = findChild(popup, "authenticationPasswordInput")
+            verify(!!passwordInput)
+            compare(passwordInput.activeFocus, false)
+        }
+
+        function test_biometricCredentialMismatchFocusesInput() {
+            createSoftwareWalletPopup("key-uid-1", password => false)
+
+            tryCompare(mockKeychain, "requestCount", 1)
+            mockKeychain.getCredentialRequestCompleted(Keychain.StatusSuccess, "stale-secret")
+
+            tryVerify(() => !!findChild(popup, "authenticationPasswordInput"))
+            const passwordInput = findChild(popup, "authenticationPasswordInput")
+            tryCompare(passwordInput, "activeFocus", true)
         }
     }
 

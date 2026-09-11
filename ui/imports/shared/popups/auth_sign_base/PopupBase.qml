@@ -192,6 +192,7 @@ StatusDialog {
                 return
             }
             if (status !== Keychain.StatusSuccess || secret.length === 0) {
+                d.autoFocusPasswordInput = true
                 d.biometricsInProgress = false
                 d.showToast(status)
                 return
@@ -219,6 +220,7 @@ StatusDialog {
                                                 && !root.externalAuthorization // the authentication popup runs its own biometrics
                                                 && (!root.isKeycardKeyPair || root.keyUid === root.userProfileKeyUid)
                                                 && keychain.hasCredential(root.useKeyUid) === Keychain.StatusSuccess
+        property bool autoFocusPasswordInput: !d.usingBiometrics
 
         onUsingBiometricsChanged: d.tryAutoStartBiometrics()
 
@@ -278,6 +280,7 @@ StatusDialog {
         ////////////////////////////////////////////////////////////////////////////////
 
         function startBiometrics() {
+            d.autoFocusPasswordInput = false
             d.biometricsInProgress = true
             d.error = ""
             d.credentialCameFromBiometrics = false
@@ -302,6 +305,7 @@ StatusDialog {
                 }
                 if (d.usingBiometrics && d.credentialCameFromBiometrics) {
                     d.credentialMismatchAfterBiometrics = true
+                    d.autoFocusPasswordInput = true
                 }
                 return
             }
@@ -437,6 +441,7 @@ StatusDialog {
     Component {
         id: enterPasswordComponent
         EnterPassword {
+            autoFocusInput: d.autoFocusPasswordInput
             onAccepted: d.performPasswordActionInternal()
         }
     }
