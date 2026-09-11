@@ -4,6 +4,7 @@
 #include "StatusQ/markdownhtml.h"
 #include "StatusQ/markdownparser.h"
 
+#include <QCache>
 #include <QFontMetricsF>
 
 namespace {
@@ -36,6 +37,52 @@ void collectMentionKeys(const Markdown::Node& node, QStringList& out)
         collectMentionKeys(c, out);
 }
 
+// toBlocks is a pure function of its inputs and the pooled message rows re-dress the same
+// content repeatedly, so results are memoized. The cached QVariantList is returned by
+// (implicitly shared) value and consumers must treat it as immutable. GUI-thread only:
+// the QML singleton lives on the engine's (main) thread, so no locking.
+constexpr int kToBlocksCacheCapacity = 500;
+
+struct ToBlocksCache
+{
+    QCache<QString, QVariantList> entries{kToBlocksCacheCapacity};
+    int hits = 0;
+    int misses = 0;
+};
+
+ToBlocksCache& toBlocksCache()
+{
+    static ToBlocksCache cache;
+    return cache;
+}
+
+// Collision-free composite key over the full input tuple: variable-length fields are
+// length-prefixed (self-delimiting), numeric fields are ';'-terminated.
+QString toBlocksCacheKey(const QString& text, const QVariantMap& mentions, const QFont& font,
+                         bool formatUnclosedCodeFence, bool fullLineHeightEmojis,
+                         int emojiSizeOffset, const QString& emojiBaseUrl)
+{
+    QString key;
+    key.reserve(text.size() + 64);
+    const auto add = [&key](const QString& part) {
+        key += QString::number(part.size());
+        key += QLatin1Char(':');
+        key += part;
+    };
+    add(text);
+    add(font.key()); // QFontMetricsF(font).height() feeds the emoji pixel size
+    add(emojiBaseUrl);
+    key += QLatin1Char(formatUnclosedCodeFence ? '1' : '0');
+    key += QLatin1Char(fullLineHeightEmojis ? '1' : '0');
+    key += QString::number(emojiSizeOffset);
+    key += QLatin1Char(';');
+    for (auto it = mentions.cbegin(); it != mentions.cend(); ++it) {
+        add(it.key());
+        add(it.value().toString()); // only the string form is read (collectTextMentions)
+    }
+    return key;
+}
+
 } // namespace
 
 MarkdownUtils::MarkdownUtils(QObject* parent)
@@ -56,6 +103,15 @@ QVariantList MarkdownUtils::toBlocks(const QString& text, const QVariantMap& men
                                      bool fullLineHeightEmojis, int emojiSizeOffset,
                                      const QString& emojiBaseUrl) const
 {
+    auto& cache = toBlocksCache();
+    const QString key = toBlocksCacheKey(text, mentions, font, formatUnclosedCodeFence,
+                                         fullLineHeightEmojis, emojiSizeOffset, emojiBaseUrl);
+    if (const QVariantList* cached = cache.entries.object(key)) {
+        ++cache.hits;
+        return *cached;
+    }
+    ++cache.misses;
+
     Markdown::Options opts;
     opts.formatUnclosedCodeFence = formatUnclosedCodeFence;
     const Markdown::Node root = Markdown::parse(text, opts);
@@ -69,7 +125,25 @@ QVariantList MarkdownUtils::toBlocks(const QString& text, const QVariantMap& men
     // height (only the emoji runs, so blank lines keep their normal height).
     if (emojiSizeOffset > 0 && Markdown::isOnlyEmoji(text))
         emojiPx = qRound(lineHeight) + emojiSizeOffset;
-    return Markdown::toBlocks(root, mentionMap, emojiPx, emojiBaseUrl);
+
+    const QVariantList blocks = Markdown::toBlocks(root, mentionMap, emojiPx, emojiBaseUrl);
+    cache.entries.insert(key, new QVariantList(blocks));
+    return blocks;
+}
+
+MarkdownUtils::CacheStats MarkdownUtils::toBlocksCacheStats()
+{
+    const auto& cache = toBlocksCache();
+    return {cache.hits, cache.misses, static_cast<int>(cache.entries.size()),
+            static_cast<int>(cache.entries.maxCost())};
+}
+
+void MarkdownUtils::clearToBlocksCache()
+{
+    auto& cache = toBlocksCache();
+    cache.entries.clear();
+    cache.hits = 0;
+    cache.misses = 0;
 }
 
 QString MarkdownUtils::singleLineHtml(const QString& text, const QVariantMap& mentions,
