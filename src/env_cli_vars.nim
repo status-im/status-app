@@ -319,6 +319,16 @@ type StatusDesktopConfig = object
     desc: "Sets address for prometheus metrics"
     name: "METRICS_ADDRESS"
     abbr: "metrics-address" .}: string
+  useAnvil* {.
+    defaultValue: false
+    desc: "Use Anvil network"
+    name: "USE_ANVIL"
+    abbr: "use-anvil" .}: bool
+  anvilUrl* {.
+    defaultValue: "http://localhost:8545"
+    desc: "Anvil JSON-RPC URL"
+    name: "ANVIL_URL"
+    abbr: "anvil-url" .}: string
 
 # On macOS the first time when a user gets the "App downloaded from the
 # internet" warning, and clicks the Open button, the OS passes a unique process
