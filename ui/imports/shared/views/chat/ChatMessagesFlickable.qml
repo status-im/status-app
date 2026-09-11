@@ -167,6 +167,21 @@ Flickable {
         return repeater.itemAt(row)
     }
 
+    /*!
+       How deep the viewport top sits inside the top placeholder, in px from
+       the placeholder's bottom edge, clamped to [0, placeholder height]: 0
+       when the viewport is below the placeholder, the full height at its far
+       edge (the oldest loaded row). The owner maps this depth to an estimated
+       history row for the teleport slide and the eager history prefetch.
+    */
+    function viewportDepthIntoTopPlaceholder() {
+        if (!topPlaceholder.visible || topPlaceholder.height <= 0)
+            return 0
+        const bottomEdge = content.y + topPlaceholder.y + topPlaceholder.height
+        return Math.max(0, Math.min(topPlaceholder.height,
+                                    bottomEdge - root.contentY))
+    }
+
     QtObject {
         id: d
 
