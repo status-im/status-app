@@ -279,6 +279,10 @@ StatusDialog {
             }
         }
 
+        readonly property SQUtils.ModelChangeTracker selectedAssetBalancesTracker: SQUtils.ModelChangeTracker {
+            model: !!d.selectedAssetEntry.item ? (d.selectedAssetEntry.item.balances ?? null) : null
+        }
+
         // Holds if the asset entry is valid
         readonly property bool selectedAssetEntryValid: isSelectedAssetAvailableInSelectedNetwork &&
                                                         ((selectedAssetEntry.itemRemovedFromModel || selectedAssetEntry.available) &&
@@ -404,7 +408,7 @@ StatusDialog {
             if (!d.selectedTokenExistsInAssetsModel) {
                 return 0
             }
-            !!d.selectedAssetEntry.item.balances ? d.selectedAssetEntry.item.balances.ModelCount.count : null
+            d.selectedAssetBalancesTracker.revision
             if (selectedCollectibleEntryValid) {
                 // The flat collectibles model is already filtered to the selected
                 // account, so its `balance` role is that account's owned amount
