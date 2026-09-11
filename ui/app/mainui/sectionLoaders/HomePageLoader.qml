@@ -14,7 +14,7 @@ import AppLayouts.Wallet.stores as WalletStores
 
 import mainui.adaptors
 
-Loader {
+StatusSectionLoader {
     id: root
 
     required property AppStores.RootStore rootStore
@@ -28,8 +28,6 @@ Loader {
 
     required property bool browserEnabled
     required property int syncingBadgeCount
-
-    property real leftPanelWidthOverride: 0
 
     // Routes the navigation request that was previously dispatched via globalConns.
     signal appSectionRequested(int sectionType, var subsection, int subSubsection, var data)
@@ -61,7 +59,7 @@ Loader {
 
             searchPhrase: root.item ? root.item.searchPhrase : ""
 
-            profileId: userProfile.pubKey
+            profileId: root.userUID
 
             // no automatic propagation to QtObject, needs to be specified explicitely
             Theme.style: root.Theme.style

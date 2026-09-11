@@ -53,6 +53,9 @@ Item {
             active: false
             asynchronous: false
 
+            userUID: "0xdeadbeef"
+            sectionName: "Chat"
+
             rootStore: appRootStore
             accountSettingsStore: appAccountSettingsStore
             contactsStore: null
@@ -84,6 +87,9 @@ Item {
 
             active: false
             asynchronous: false
+
+            userUID: "0xdeadbeef"
+            sectionName: "community_%1".arg(sectionId)
 
             rootStore: appRootStore
             accountSettingsStore: appAccountSettingsStore

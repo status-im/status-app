@@ -12,7 +12,7 @@ import AppLayouts.Market.stores
 
 import mainui.sectionLoaders
 
-Loader {
+StatusSectionLoader {
     id: root
 
     required property AppStores.RootStore rootStore
@@ -21,8 +21,6 @@ Loader {
     required property MarketStore marketStore
 
     required property HandlersManagerLoader popupHandler
-
-    property real leftPanelWidthOverride: 0
 
     asynchronous: false
 

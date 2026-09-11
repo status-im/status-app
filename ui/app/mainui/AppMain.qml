@@ -2266,6 +2266,8 @@ Item {
                         active: appMain.featureFlagsStore.homePageEnabled
                                 && d.activeSectionType === Constants.appSection.homePage
 
+                        userUID: d.myPublicKey
+                        sectionName: "homePage"
                         rootStore: appMain.rootStore
                         rootChatStore: appMain.rootChatStore
                         profileStore: appMain.profileStore
@@ -2296,6 +2298,8 @@ Item {
                             restoreMode: Binding.RestoreNone
                         }
 
+                        userUID: d.myPublicKey
+                        sectionName: "chat"
                         rootStore: appMain.rootStore
                         contactsStore: appMain.contactsStore
                         accountSettingsStore: appMain.accountSettingsStore
@@ -2328,6 +2332,9 @@ Item {
                     CommunitiesPortalLoader {
                         active: appMain.mainReady
                                 && appView.currentIndex === Constants.appViewStackIndex.communitiesPortal
+
+                        userUID: d.myPublicKey
+                        sectionName: "communitiesPortal"
                         rootStore: appMain.rootStore
                         communitiesStore: appMain.communitiesStore
                         leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
@@ -2336,6 +2343,8 @@ Item {
                     WalletLoader {
                         active: appView.currentIndex === Constants.appViewStackIndex.wallet
 
+                        userUID: d.myPublicKey
+                        sectionName: "wallet"
                         rootStore: appMain.rootStore
                         contactsStore: appMain.contactsStore
                         featureFlagsStore: appMain.featureFlagsStore
@@ -2364,6 +2373,7 @@ Item {
                         }
 
                         userUID: d.myPublicKey
+                        sectionName: "browser"
                         rootStore: appMain.rootStore
                         featureFlagsStore: appMain.featureFlagsStore
                         advancedStore: appMain.advancedStore
@@ -2380,6 +2390,8 @@ Item {
 
                         active: appView.currentIndex === Constants.appViewStackIndex.profile
 
+                        userUID: d.myPublicKey
+                        sectionName: "profile"
                         rootStore: appMain.rootStore
                         contactsStore: appMain.contactsStore
                         featureFlagsStore: appMain.featureFlagsStore
@@ -2412,7 +2424,6 @@ Item {
                         emojiPopupLoader: statusEmojiPopup
                         keychain: appMain.keychain
 
-                        userUID: d.myPublicKey
                         isProduction: appMain.rootStore.isProduction
                         isPortraitMode: appMain.isPortraitMode
                         systemTrayIconAvailable: appMain.systemTrayIconAvailable
@@ -2439,6 +2450,8 @@ Item {
                     MarketLoader {
                         active: appView.currentIndex === Constants.appViewStackIndex.market
 
+                        userUID: d.myPublicKey
+                        sectionName: "market"
                         rootStore: appMain.rootStore
                         featureFlagsStore: appMain.featureFlagsStore
                         currencyStore: appMain.currencyStore
@@ -2483,6 +2496,9 @@ Item {
                                 value: true
                                 restoreMode: Binding.RestoreNone
                             }
+
+                            userUID: d.myPublicKey
+                            sectionName: "community_%1".arg(sectionId)
 
                             sectionId: model.id
                             sectionItemModel: model

@@ -108,6 +108,9 @@ Nemo enim 😋 ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit,
                 anchors.fill: parent
                 anchors.margins: 50
 
+                userUID: "0xdeadbeef"
+                sectionName: "JoinCommunityView"
+
                 // General properties:
                 name: d.name
                 communityDesc: d.communityDesc

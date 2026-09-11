@@ -1,6 +1,8 @@
 import QtQml
 import QtQuick
 
+import mainui.sectionLoaders
+
 import utils
 
 import shared.stores as SharedStores
@@ -11,7 +13,7 @@ import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Wallet.stores as WalletStore
 import AppLayouts.stores.Messaging.Community as CommunityStores
 
-Loader {
+StatusSectionLoader {
     id: root
 
     required property ChatStores.RootStore rootStore
@@ -25,8 +27,6 @@ Loader {
     required property bool isPendingOwnershipRequest
     required property var sectionItemModel
     required property bool communitySettingsDisabled
-
-    property real leftPanelWidthOverride: 0
 
     // Re-emitted because ChatLayout owns its StackLayout's currentIndex.
     signal backToCommunityClicked()

@@ -275,6 +275,9 @@ Item {
         sourceComponent: ChatLoader {
             active: true
 
+            userUID: "0xdeadbeef"
+            sectionName: "Chat"
+
             rootStore: appRootStoreMock
             contactsStore: contactsStoreMock
             accountSettingsStore: accountSettingsStoreMock
