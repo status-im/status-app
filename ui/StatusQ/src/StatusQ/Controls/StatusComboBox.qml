@@ -180,7 +180,6 @@ Item {
                 id: dropdown
 
                 directParent: comboBox
-                closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
                 relativeY: comboBox.height + 4
 
                 implicitWidth: comboBox.width
