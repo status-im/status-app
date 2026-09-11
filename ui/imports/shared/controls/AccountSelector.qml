@@ -29,11 +29,6 @@ import QtModelsToolkit
         stripTrailingZeroes [bool]   - strip trailing zeroes
     walletType              [string] - wallet type e.g. Constants.watchWalletType. See `Constants` for possible values
     migratedToColdWallet       [bool]   - whether account is migrated to keycard
-    accountBalance          [var]    - account balance for a specific network
-        formattedBalance    [string] - formatted balance e.g. "1234.56B"
-        balance             [string] - balance e.g. "123456000000"
-        iconUrl             [string] - icon url e.g. "network/hermez"
-        chainColor          [string] - chain color e.g. "#FF0000"
 **/
 
 StatusComboBox {
@@ -121,7 +116,6 @@ StatusComboBox {
         currencyBalance: model.currencyBalance
         walletType: model.walletType
         migratedToColdWallet: model.migratedToColdWallet ?? false
-        accountBalance: model.accountBalance ?? null
         color: sensor.containsMouse || highlighted ?
                    Theme.palette.baseColor2 :
                    !!currentAccount && currentAccount.name === model.name ? Theme.palette.statusListItem.highlightColor : "transparent"
