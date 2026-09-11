@@ -14,7 +14,7 @@ pytest-timeout==2.2.0
 shortuuid==1.0.12
 pluggy==1.2.0
 beautifulsoup4==4.12.3
-requests==2.31.0
+requests==2.33.0
 mnemonic==0.21
 zpywallet==0.6.2
 web3==7.7.0
