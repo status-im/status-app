@@ -98,6 +98,26 @@ suite "buildTokenSelectorItems — aggregation":
     check it.currentBalance == 0.0
     check not it.hasBalance                # currentBalance 0 -> popular section
 
+  test "same-chain balances from several accounts merge into one chip":
+    # Regression: with no account filter (e.g. the form reset clearing
+    # accountAddress), two accounts holding the token on the same chain used to
+    # produce two chips with the same chainId, tripping the balances submodel's
+    # duplicate-key assert - surfacing as a SIGSEGV through the seaqt exception
+    # boundary when opening/closing the swap modal.
+    let g = group("ETH", balances = @[
+      bal("0xA", 1, "1000000000000000000"),   # 1.0 mainnet
+      bal("0xB", 1, "2000000000000000000"),   # 2.0 mainnet, second account
+      bal("0xA", 10, "500000000000000000"),   # 0.5 optimism
+    ])
+    let it = buildTokenSelectorItems(@[g], networks, noFilterParams()).findItem("ETH")
+    check it.chips.len == 2
+    # sorted by balance descending, so the merged mainnet chip comes first
+    check it.chips[0].chainId == 1
+    check it.chips[0].balance == 3.0
+    check it.chips[0].rawBalance == "3000000000000000000"
+    check it.chips[1].chainId == 10
+    check it.currentBalance == 3.5
+
   test "group with no surviving balances is dropped":
     let g = group("ZERO", balances = @[bal("0xA", 1, "0")])
     let items = buildTokenSelectorItems(@[g], networks, noFilterParams())
