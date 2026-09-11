@@ -351,6 +351,9 @@ method onMyRequestAdded*(self: AccessInterface) {.base.} =
 method activateStatusDeepLink*(self: AccessInterface, statusDeepLink: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method openUrlInNewBrowserTab*(self: AccessInterface, url: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method setCommunityIdToSpectate*(self: AccessInterface, commnityId: string, channelUuid: string = "") {.base.} =
   raise newException(ValueError, "No implementation available")
 
