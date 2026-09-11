@@ -15,7 +15,7 @@ StatusDialog {
     id: root
 
     /** Accounts model (expects roles: name, address, emoji, colorId, currencyBalance,
-        walletType, migratedToColdWallet, accountBalance) **/
+        walletType, migratedToColdWallet) **/
     required property var model
     /** Currently selected account address (highlighted in the list) **/
     property string selectedAddress
@@ -49,7 +49,6 @@ StatusDialog {
                 currencyBalance: model.currencyBalance
                 walletType: model.walletType
                 migratedToColdWallet: model.migratedToColdWallet ?? false
-                accountBalance: model.accountBalance ?? null
                 color: sensor.containsMouse || highlighted ? Theme.palette.baseColor2
                      : root.selectedAddress === model.address ? Theme.palette.statusListItem.highlightColor
                      : "transparent"

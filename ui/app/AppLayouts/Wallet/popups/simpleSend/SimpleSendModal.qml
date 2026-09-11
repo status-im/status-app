@@ -35,7 +35,6 @@ StatusDialog {
     - color: color of the account
     - emoji: emoji selected for the account
     - currencyBalance: total currency balance in CurrencyAmount
-    - accountBalance: balance of selected token + selected chain
     **/
     required property var accountsModel
     /**
