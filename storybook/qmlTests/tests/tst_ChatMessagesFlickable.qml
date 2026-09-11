@@ -80,7 +80,8 @@ Item {
 
             anchors.fill: parent
 
-            placeholderHeight: 100
+            topPlaceholderHeight: 100
+            bottomPlaceholderHeight: 100
 
             moreUpAvailable: window.end < history.count - 1
             moreDownAvailable: window.start > 0
@@ -104,7 +105,7 @@ Item {
 
                 readonly property string rowText: model.text
 
-                Layout.row: flick.rowCount - index
+                Layout.row: flick.rowCount - index + 1
                 Layout.column: 0
                 Layout.fillWidth: true
                 Layout.preferredHeight: 20
@@ -512,7 +513,8 @@ Item {
 
             id: emptyFlick
 
-            placeholderHeight: 100
+            topPlaceholderHeight: 100
+            bottomPlaceholderHeight: 100
             moreUpAvailable: true
 
             placeholder: Rectangle { color: "transparent" }
@@ -520,7 +522,7 @@ Item {
             model: emptyHistory
             delegate: Rectangle {
                 objectName: "row"
-                Layout.row: emptyFlick.rowCount - index
+                Layout.row: emptyFlick.rowCount - index + 1
                 Layout.column: 0
                 Layout.fillWidth: true
                 Layout.preferredHeight: 20

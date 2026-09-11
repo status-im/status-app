@@ -1,6 +1,8 @@
 import QtQuick
 import QtTest
 
+import StatusQ 0.1
+import SortFilterProxyModel 0.2
 import utils
 
 import AppLayouts.Chat.views
@@ -76,6 +78,73 @@ Item {
         }
     }
 
+    // The messages view on its own, so a test can hand its store a model.
+    Component {
+        id: bareViewComp
+
+        ChatMessagesView {
+            width: 800
+            height: 600
+
+            rootStore: rootStoreMock
+            chatContentModule: contentModuleMock
+            messageStore: ChatStores.MessageStore {
+                messageModule: contentModuleMock.messagesModule
+            }
+            chatId: "chat-1"
+            usersModel: ListModel {}
+            joined: true
+        }
+    }
+
+    // A source that can reset without the view's store handing it a
+    // different model: the production messages model resets in place.
+    ListModel { id: resetSourceA }
+    ListModel { id: resetSourceB }
+    SortFilterProxyModel { id: resettableMessages; sourceModel: resetSourceA }
+
+    // The chat as production mounts it: inside a subtree that is itself still
+    // incubating asynchronously (section loaders on a slow device). While the
+    // ancestor incubation is alive, every Repeater delegate resolves
+    // AsynchronousIfNested to asynchronous — shells are NOT created inside
+    // the window mutation. The heavy tail keeps that ancestor incubation
+    // alive long enough for the test to act within it.
+    property Item earlyChatView: null
+
+    Component {
+        id: incubatingHostComp
+
+        Loader {
+            asynchronous: true
+            sourceComponent: Item {
+                width: 800
+                height: 600
+
+                ChatContentView {
+                    id: hostedChatView
+
+                    width: 800
+                    height: 600
+
+                    rootStore: rootStoreMock
+                    chatContentModule: contentModuleMock
+                    chatId: "chat-1"
+                    chatType: Constants.chatType.oneToOne
+                    usersModel: ListModel {}
+                    joined: true
+
+                    Component.onCompleted: root.earlyChatView = hostedChatView
+                }
+
+                Repeater {
+                    model: 50000
+
+                    delegate: Item {}
+                }
+            }
+        }
+    }
+
     TestCase {
         name: "ChatContentView"
         when: windowShown
@@ -86,6 +155,9 @@ Item {
             contentModuleMock.markAllMessagesReadCalls = 0
             contentModuleMock.chatDetails.hasUnreadMessages = false
             messagesModel.clear()
+            resetSourceA.clear()
+            resetSourceB.clear()
+            resettableMessages.sourceModel = resetSourceA
         }
 
         // chatDetails.active is set by the backend (onMadeActive) before the
@@ -333,7 +405,8 @@ Item {
                       "the view must page the backend while older messages can be requested")
         }
 
-        // A sent message slides the window to the recent end; it must not
+        // A sent message lands the view on the newest message; with the
+        // window already at the recent end (the common case) it must not
         // rebuild it — the teardown flashed the paging skeleton over the
         // user's own messages on every send.
         function test_sentMessageDoesNotRebuildTheWindow() {
@@ -349,14 +422,11 @@ Item {
             tryVerify(() => listView.count >= 20, 5000)
             tryVerify(() => listView.atNewest, 5000)
 
-            // slide the window into history through the test seam
+            // window grown at the recent end through the test seam
             const internal = findChild(view, "chatMessagesViewInternal")
             verify(!!internal)
-            internal.windowStart = 30
-            internal.windowStartGoal = 30
             internal.windowEnd = 60
-            internal.windowEndGoal = 60
-            tryVerify(() => listView.count > 0, 5000)
+            tryVerify(() => listView.count === 61, 5000)
 
             const preSendCount = listView.count
             let minCount = preSendCount
@@ -371,6 +441,46 @@ Item {
             verify(minCount >= preSendCount,
                    "the window must not be torn down on send: count dropped to " + minCount
                    + " from " + preSendCount)
+        }
+
+        // The recent-messages button from deep in history is a JUMP: the
+        // window collapses to a recent-end screenful — it must not readmit
+        // and unroll every row between the window and the newest message.
+        function test_recentButtonJumpsFromDeepHistory() {
+            for (let i = 0; i < 500; ++i)
+                appendMessage(i)
+
+            const view = createTemporaryObject(contentViewComp, root)
+            verify(!!view)
+            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 10000)
+
+            const listView = findChild(view, "chatLogView")
+            verify(!!listView)
+            const internal = findChild(view, "chatMessagesViewInternal")
+            verify(!!internal)
+            tryVerify(() => listView.count >= 20, 5000)
+
+            // reading deep in history
+            internal.windowStart = 60
+            internal.windowEnd = 120
+            tryVerify(() => listView.count === 61, 5000)
+
+            let maxCount = 0
+            listView.countChanged.connect(() => {
+                maxCount = Math.max(maxCount, listView.count)
+            })
+
+            internal.scrollToBottom()
+
+            tryVerify(() => internal.windowStart === 0, 5000)
+            verify(internal.windowEnd < 60,
+                   "the window must collapse to a recent-end screenful, "
+                   + "ends at " + internal.windowEnd)
+            verify(maxCount <= 61,
+                   "the jump must not readmit the rows in between, "
+                   + "count peaked at " + maxCount)
+            tryVerify(() => listView.atNewest, 10000,
+                      "the jump must land on the newest message")
         }
 
         // A jump to a message deep in history collapses the window around the
@@ -410,10 +520,10 @@ Item {
                    "the view must not stick to the newest after a jump into history")
         }
 
-        // The window must grow towards its initial size in bounded steps —
-        // building the whole initial window in one synchronous batch is what
-        // froze the app on window moves.
-        function test_windowGrowsInBoundedSteps() {
+        // The initial fill builds its heavy rows asynchronously (the shells
+        // are cheap): the window may snap to its full initial size in one
+        // step, and the view must settle anchored on the newest message.
+        function test_initialFillSettlesAtNewest() {
             for (let i = 0; i < 500; ++i)
                 appendMessage(i)
 
@@ -424,23 +534,7 @@ Item {
             const listView = findChild(view, "chatLogView")
             verify(!!listView)
 
-            // watch the window bound itself: every growth step must stay
-            // within the driver's per-frame budget, no matter when the test
-            // process gets to observe the item count
-            const internal = findChild(view, "chatMessagesViewInternal")
-            verify(!!internal)
-            let maxJump = 0
-            let prev = internal.windowEnd
-            internal.windowEndChanged.connect(() => {
-                maxJump = Math.max(maxJump, internal.windowEnd - prev)
-                prev = internal.windowEnd
-            })
-
-            // the window reaches its initial size, anchored on the newest
-            // message, having grown only in budgeted steps
             tryVerify(() => listView.count >= 20, 5000)
-            verify(maxJump <= internal.moveBudget,
-                   "window bound may only move moveBudget rows at a time, jumped " + maxJump)
             const deadline = Date.now() + 5000
             while (Date.now() < deadline && !listView.atNewest)
                 wait(50)
@@ -502,21 +596,15 @@ Item {
             fail(message())
         }
 
-        // The window walks towards its goals a few rows per frame and the
-        // paging timer may slide it further; a measurement is only meaningful
-        // once it stands still — which takes both bounds at their goal and no
-        // paging request for longer than the paging interval.
+        // Staged batches reveal asynchronously and the paging timer may slide
+        // the window further; a measurement is only meaningful once nothing
+        // is staged and the bounds stand still.
         function waitForQuietWindow(chat) {
             const internal = chat.internal
             const where = () => internal.windowStart + ".." + internal.windowEnd
-                                + " goals " + internal.windowStartGoal + ".."
-                                + internal.windowEndGoal
-            // opening pages the window a chunk at a time while the content is
-            // still shorter than the viewport, so the goals may run ahead of
-            // the bounds before everything settles
-            tryVerify(() => internal.windowStart === internal.windowStartGoal
-                            && internal.windowEnd === internal.windowEndGoal,
-                      30000, "the window must reach its goals, at " + where())
+                                + " staged " + internal.stagedCount
+            tryVerify(() => internal.stagedCount === 0,
+                      30000, "staged rows must all reveal, at " + where())
 
             let last = ""
             let stable = 0
@@ -557,7 +645,6 @@ Item {
         // seam: paging there row by row would take the whole test.
         function growToCap(chat) {
             chat.internal.windowEnd = chat.internal.maxWindowSize - 1
-            chat.internal.windowEndGoal = chat.internal.windowEnd
             tryCompare(chat.listView, "count", chat.internal.maxWindowSize, 30000)
             waitForQuietWindow(chat)
         }
@@ -569,7 +656,7 @@ Item {
                 let item = null
                 for (let k = 0; k < listView.count && !item; ++k) {
                     const candidate = listView.itemAtRow(k)
-                    if (!candidate)
+                    if (!candidate || !candidate.visible)
                         continue
                     const y = candidate.mapToItem(listView, 0, 0).y
                     if (y >= 100 && y <= listView.height - 100)
@@ -584,6 +671,163 @@ Item {
                     return { item: item, messageId: item.messageId, y: after }
             }
             fail("the tracked row never stopped moving")
+        }
+
+        // Counts window rows that actually hold visual space — a row still
+        // being built must never be one of them.
+        function visibleRowCount(listView) {
+            let n = 0
+            for (let k = 0; k < listView.count; ++k) {
+                const item = listView.itemAtRow(k)
+                if (item && item.visible && item.height > 0)
+                    ++n
+            }
+            return n
+        }
+
+        // Review feedback on the window PR: rows built freely on the fly while
+        // paging made the view flicker between skeleton and half-built rows.
+        // A slide must be all-or-nothing: the placeholder keeps covering the
+        // incoming chunk until every row is ready, then the whole chunk
+        // appears at once.
+        function test_pagingRevealsChunkAtomically() {
+            const chat = openAtNewest(300)
+            const listView = chat.listView
+
+            const pre = visibleRowCount(listView)
+            chat.internal.slideWindowToHistory()
+
+            // sample the visible-row count through the whole slide: it may
+            // only ever read as "before" or "after", never in between
+            const seen = new Set()
+            let last = -1
+            let stable = 0
+            // stability only counts once the reveal happened — building and
+            // settling the batch legitimately takes a while
+            for (let i = 0; i < 1000 && !(last > pre && stable >= 40); ++i) {
+                wait(8)
+                const now = visibleRowCount(listView)
+                seen.add(now)
+                stable = (now === last) ? stable + 1 : 0
+                last = now
+            }
+            verify(last > pre, "the slide must eventually show more rows, still at " + last)
+            const inBetween = [...seen].filter(n => n !== pre && n !== last)
+            compare(inBetween.join(","), "",
+                    "rows became visible mid-build, visible counts seen: "
+                    + [...seen].join(","))
+        }
+
+        // Paging must not move what the user is reading: the chunk reveals
+        // above the viewport and the anchored row stays put on screen.
+        function test_pagingKeepsViewportAnchored() {
+            const chat = openAtNewest(300)
+            const listView = chat.listView
+
+            listView.contentY = listView.contentHeight - listView.height - 150
+            verify(!listView.stickingToNewest)
+            waitForRendering(listView)
+
+            const tracked = trackVisibleRow(listView)
+            const pre = listView.count
+
+            chat.internal.slideWindowToHistory()
+            tryVerify(() => visibleRowCount(listView) > pre, 20000,
+                      "the slide must show its rows")
+            waitForSettledLayout(listView)
+
+            compare(tracked.item.messageId, tracked.messageId)
+            fuzzyCompare(tracked.item.mapToItem(listView, 0, 0).y, tracked.y, 2)
+        }
+
+        // Scrolling must hold a gentle incubation hint, so staged rows build
+        // in small paced bites while the user interacts instead of stealing
+        // whole frames on low-end devices.
+        function test_scrollingHoldsGentleIncubationHint() {
+            const chat = openAtNewest(200)
+            const listView = chat.listView
+
+            compare(IncubationHints.gentleActive, false)
+
+            listView.flick(0, 1500)
+            tryVerify(() => listView.moving, 1000)
+            verify(IncubationHints.gentleActive,
+                   "a gentle hint must be held while the view is moving")
+
+            tryVerify(() => !listView.moving, 10000)
+            tryVerify(() => !IncubationHints.gentleActive, 1000,
+                      "the hint must be released when scrolling stops")
+        }
+
+        // First shell of the current staged batch, i.e. an admitted row that
+        // holds no visual space yet.
+        function stagedShellAt(listView) {
+            for (let k = 0; k < listView.count; ++k) {
+                const item = listView.itemAtRow(k)
+                if (item && !item.visible)
+                    return item
+            }
+            return null
+        }
+
+        // A pathological row must never wedge paging: the safety timeout
+        // reveals whatever the batch managed to build.
+        function test_revealTimeoutUnblocksBatch() {
+            const chat = openAtNewest(300)
+            const listView = chat.listView
+            const internal = chat.internal
+
+            const timeout = findChild(chat.view, "batchRevealTimeout")
+            verify(!!timeout)
+            timeout.interval = 300
+
+            const pre = visibleRowCount(listView)
+            internal.slideWindowToHistory()
+            verify(internal.stagedCount > 0, "the slide must stage its rows")
+
+            // hold the batch open: one row never finishes building
+            const held = stagedShellAt(listView)
+            verify(!!held)
+            held.active = false
+
+            tryVerify(() => internal.stagedCount === 0, 5000,
+                      "the timeout must flush the held batch")
+            tryVerify(() => visibleRowCount(listView) > pre, 5000,
+                      "the built rows must show after the timeout")
+        }
+
+        // A message arriving mid-slide enters outside the staged batch and
+        // must show as soon as it is built — never wait for the batch.
+        function test_liveMessageBypassesStaging() {
+            const chat = openAtNewest(300)
+            const listView = chat.listView
+            const internal = chat.internal
+
+            // keep the safety timeout out of the picture
+            const timeout = findChild(chat.view, "batchRevealTimeout")
+            verify(!!timeout)
+            timeout.interval = 60000
+
+            internal.slideWindowToHistory()
+            verify(internal.stagedCount > 0, "the slide must stage its rows")
+
+            // hold the batch open so the live message demonstrably overtakes it
+            const held = stagedShellAt(listView)
+            verify(!!held)
+            held.active = false
+
+            insertNewest(7)
+
+            tryVerify(() => {
+                const newest = listView.itemAtRow(0)
+                return !!newest && newest.visible && newest.height > 0
+                        && internal.stagedCount > 0
+            }, 5000, "the live message must show while the batch is still staged")
+
+            // release the batch
+            held.active = true
+            tryVerify(() => internal.stagedCount === 0, 10000,
+                      "the released batch must reveal")
         }
 
         // A message arriving while the user reads back in history must not
@@ -633,9 +877,7 @@ Item {
             // built: a window emptied in between would leave the view with
             // nothing to hold on to
             internal.windowStart = 30
-            internal.windowStartGoal = 30
             internal.windowEnd = 30 + internal.maxWindowSize - 1
-            internal.windowEndGoal = internal.windowEnd
             tryCompare(listView, "count", internal.maxWindowSize, 10000)
             waitForQuietWindow(chat)
             compare(internal.windowStart, 30)
@@ -681,6 +923,307 @@ Item {
             fuzzyCompare(tracked.item.mapToItem(listView, 0, 0).y, tracked.y, 1)
             compare(internal.windowStart, 0)
             verify(!listView.stickingToNewest)
+        }
+
+        // Device livelock repro: with the chat inside a still-incubating
+        // ancestor, delegate shells are created asynchronously — AFTER the
+        // admit mutator returned. Staging keyed on creation timing never
+        // engages, so nothing throttles the paging timer: the window
+        // ping-pongs at timer rate, evicting rows faster than the starved
+        // incubator can build them, and the user watches the skeleton
+        // indefinitely. Staging must engage regardless of when the shells
+        // are created.
+        function test_slideStagesRowsWhileAncestorIncubationIsLive() {
+            // Outside a gentle phase the incubation controller drains its
+            // whole queue in one blocking burst, so the test would only run
+            // once the ancestor had finished. A section transition holds the
+            // gentle hint on device; hold it here to keep the ancestor alive.
+            IncubationHints.pushGentle()
+            try {
+                slideStagesRowsWhileAncestorIncubationIsLive()
+            } finally {
+                IncubationHints.popGentle()
+            }
+        }
+
+        function slideStagesRowsWhileAncestorIncubationIsLive() {
+            for (let i = 0; i < 300; ++i)
+                appendMessage(i)
+
+            root.earlyChatView = null
+            const host = createTemporaryObject(incubatingHostComp, root)
+            verify(!!host)
+
+            tryVerify(() => root.earlyChatView !== null, 20000,
+                      "the hosted chat must complete inside the ancestor incubation")
+            const view = root.earlyChatView
+            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 20000)
+
+            const listView = findChild(view, "chatLogView")
+            verify(!!listView)
+            const internal = findChild(view, "chatMessagesViewInternal")
+            verify(!!internal)
+            tryVerify(() => listView.count > 0, 20000)
+
+            // the paging timer must not slide on its own mid-measurement
+            listView.moreUpAvailable = false
+            listView.moreDownAvailable = false
+
+            verify(host.status === Loader.Loading,
+                   "precondition lost: the ancestor incubation finished before the "
+                   + "slide — grow the incubation tail")
+
+            const endBefore = internal.windowEnd
+            internal.slideWindowToHistory()
+            compare(internal.windowEnd, endBefore + internal.windowChunkSize)
+            verify(internal.stagedCount > 0,
+                   "the slide must stage its rows even when the shells are "
+                   + "created asynchronously")
+
+            // and the staged batch must keep throttling: a second slide right
+            // behind the first must not move the window
+            internal.slideWindowToHistory()
+            compare(internal.windowEnd, endBefore + internal.windowChunkSize)
+
+            // the batch eventually builds and reveals even under the ancestor
+            // incubation
+            tryVerify(() => internal.stagedCount === 0, 60000,
+                      "the staged batch must reveal once its rows are built")
+        }
+
+        // ---- the bare messages view ----
+
+        function openBare() {
+            const view = createTemporaryObject(bareViewComp, root)
+            verify(!!view)
+            const listView = findChild(view, "chatLogView")
+            verify(!!listView)
+            const internal = findChild(view, "chatMessagesViewInternal")
+            verify(!!internal)
+            tryVerify(() => listView.count > 0, 20000)
+            return { view: view, listView: listView, internal: internal }
+        }
+
+        function fillModel(model, count) {
+            for (let i = 0; i < count; ++i)
+                model.append(messageRoles("msg-" + i, i, Date.now() - i * 60000))
+        }
+
+        // Attaching a source schedules the open-at-newest for after the proxy
+        // churn; a jump issued in the same turn must win, not be yanked back
+        // to the bottom when the deferred reposition lands.
+        function test_jumpInTheAttachTurnIsNotYankedToNewest() {
+            for (let i = 0; i < 300; ++i)
+                appendMessage(i)
+            fillModel(resetSourceA, 300)
+
+            const chat = openBare()
+            waitForQuietWindow(chat)
+
+            chat.view.messageStore.messagesModel = resettableMessages
+            chat.internal.goToMessage(150)
+
+            tryVerify(() => chat.internal.windowStart > 0, 5000,
+                      "the window must move to the jump target")
+            let minStart = chat.internal.windowStart
+            for (let i = 0; i < 10; ++i) {
+                wait(30)
+                minStart = Math.min(minStart, chat.internal.windowStart)
+            }
+            verify(minStart > 0, "the jump was undone, windowStart fell to " + minStart)
+            verify(!chat.listView.stickingToNewest,
+                   "the deferred open-at-newest must not re-stick the view")
+        }
+
+        // A reset removes every row without per-row signals: a batch staged
+        // across it would wait on rows that no longer exist and wedge paging
+        // until the stall timeout.
+        // The batch is still a set of captured ids when its shells are
+        // created asynchronously (see the ancestor-incubation test below), and
+        // those ids never see a shell's destruction.
+        function test_sourceResetReleasesAStagedBatch() {
+            IncubationHints.pushGentle()
+            try {
+                sourceResetReleasesAStagedBatch()
+            } finally {
+                IncubationHints.popGentle()
+            }
+        }
+
+        function sourceResetReleasesAStagedBatch() {
+            fillModel(resetSourceA, 300)
+            fillModel(resetSourceB, 300)
+
+            root.earlyChatView = null
+            const host = createTemporaryObject(incubatingHostComp, root)
+            verify(!!host)
+            tryVerify(() => root.earlyChatView !== null, 20000)
+            const view = root.earlyChatView
+            view.messageStore.messagesModel = resettableMessages
+            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 20000)
+
+            const listView = findChild(view, "chatLogView")
+            verify(!!listView)
+            const internal = findChild(view, "chatMessagesViewInternal")
+            verify(!!internal)
+            tryVerify(() => listView.count > 0, 20000)
+            listView.moreUpAvailable = false
+            listView.moreDownAvailable = false
+            tryVerify(() => internal.stagedCount === 0, 20000)
+
+            verify(host.status === Loader.Loading,
+                   "precondition lost: the ancestor incubation finished before the slide")
+            internal.slideWindowToHistory()
+            verify(internal.stagedCount > 0, "the slide must stage its rows")
+
+            resettableMessages.sourceModel = resetSourceB
+            compare(internal.stagedCount, 0,
+                    "a reset must release the batch staged over the old rows")
+        }
+
+        // ---- per-side placeholders ----
+
+        // A slide towards history moves only the history end of the window;
+        // the placeholder standing for the recent rows below it must not
+        // resize with it, or it pops into the viewport and the window
+        // ping-pongs.
+        function test_historySlideLeavesTheRecentPlaceholderAlone() {
+            const chat = openAtNewest(200)
+            const internal = chat.internal
+            establishRowHeight(internal)
+
+            internal.windowStart = 60
+            internal.windowEnd = 120
+            tryVerify(() => chat.listView.count === 61, 10000)
+            waitForQuietWindow(chat)
+
+            const bottomBefore = chat.listView.bottomPlaceholderHeight
+            const topBefore = chat.listView.topPlaceholderHeight
+            internal.slideWindowToHistory()
+            waitForQuietWindow(chat)
+
+            verify(chat.listView.topPlaceholderHeight < topBefore,
+                   "the history placeholder must shrink by the rows the slide admitted")
+            compare(chat.listView.bottomPlaceholderHeight, bottomBefore,
+                    "the recent placeholder must not follow a history slide")
+        }
+
+        // ---- paging waits for rest ----
+
+        // A slide mid-fling changes geometry under the physics, and the
+        // position correction that follows cancels the flick.
+        function test_pagingWaitsForTheViewToComeToRest() {
+            const chat = openAtNewest(300)
+            const listView = chat.listView
+            const internal = chat.internal
+            listView.moreUpAvailable = true
+
+            let slidMidMotion = false
+            const onEnd = () => { if (listView.moving) slidMidMotion = true }
+            internal.windowEndChanged.connect(onEnd)
+
+            listView.flick(0, 4000)
+            tryVerify(() => listView.moving, 1000)
+            tryVerify(() => !listView.moving, 20000)
+            internal.windowEndChanged.disconnect(onEnd)
+
+            verify(!slidMidMotion, "the window slid while the view was moving")
+        }
+
+        // ---- the row-height estimate settles ----
+
+        // Tops the sample up to where the estimate may hold, without moving
+        // it: every row fed here is exactly the estimated height.
+        function establishRowHeight(internal) {
+            verify(internal.rowHeightSampleCount > 0,
+                   "the reveals that already happened must have fed the sample")
+            for (let i = 0; i < 200
+                 && internal.rowHeightSampleCount < internal.rowHeightSettleCount; ++i)
+                internal.observeRowHeights(internal.avgRowHeight * 8, 8)
+            verify(internal.rowHeightSampleCount >= internal.rowHeightSettleCount,
+                   "the sample must reach the settle count")
+        }
+
+        // Batch means wander either side of the truth, and the placeholders
+        // multiply the estimate by up to 300 rows: an estimate that followed
+        // each batch resized them by thousands of pixels on every reveal.
+        function test_rowHeightEstimateHoldsUnderVaryingBatches() {
+            const chat = openAtNewest(1000)
+            const internal = chat.internal
+            establishRowHeight(internal)
+
+            const base = internal.avgRowHeight
+            verify(base > 0)
+            const basePlaceholder = chat.listView.topPlaceholderHeight
+            verify(basePlaceholder > 5000,
+                   "the placeholder must stand for hundreds of rows, is " + basePlaceholder)
+
+            const wobble = [0.85, 1.14, 0.9, 1.12, 0.88, 1.15, 0.93, 1.08,
+                            0.86, 1.11, 0.95, 1.05, 0.87, 1.13, 0.91, 1.09]
+            let worstEstimate = 0
+            let worstGeometry = 0
+            for (let i = 0; i < wobble.length; ++i) {
+                internal.observeRowHeights(base * wobble[i] * 20, 20)
+                worstEstimate = Math.max(worstEstimate,
+                                         Math.abs(internal.avgRowHeight - base) / base)
+                worstGeometry = Math.max(worstGeometry,
+                                         Math.abs(chat.listView.topPlaceholderHeight
+                                                  - basePlaceholder))
+            }
+            verify(worstEstimate < 0.02, "the estimate drifted "
+                   + (worstEstimate * 100).toFixed(1) + "% across wobbling batches")
+            verify(worstGeometry < 1, "the placeholder moved "
+                   + worstGeometry.toFixed(0) + "px across wobbling batches")
+        }
+
+        // An estimate that could never move would be a constant: sustained
+        // evidence of a different row shape re-estimates, then holds again.
+        function test_rowHeightEstimateRelatchesOnADifferentShape() {
+            const chat = openAtNewest(300)
+            const internal = chat.internal
+            establishRowHeight(internal)
+
+            const base = internal.avgRowHeight
+            const tall = base * 3
+
+            let rows = 0
+            for (let i = 0; i < 60 && internal.avgRowHeight < base * 1.5; ++i) {
+                internal.observeRowHeights(tall * 20, 20)
+                rows += 20
+            }
+            verify(internal.avgRowHeight >= base * 1.5,
+                   "a sustained different shape must re-estimate, still at "
+                   + internal.avgRowHeight + " from " + base)
+            verify(rows <= 400, "and within a few batches, took " + rows + " rows")
+
+            for (let i = 0; i < 300 && internal.avgRowHeight < tall * 0.9; ++i)
+                internal.observeRowHeights(tall * 20, 20)
+            verify(internal.avgRowHeight >= tall * 0.9,
+                   "the estimate must converge on the evidence, reached "
+                   + internal.avgRowHeight + " of " + tall)
+
+            const settled = internal.avgRowHeight
+            for (let i = 0; i < 20; ++i)
+                internal.observeRowHeights(tall * 20, 20)
+            fuzzyCompare(internal.avgRowHeight, settled, 0.001)
+        }
+
+        // A different chat is a different row shape: its first batch must
+        // establish the estimate, not argue with the last chat's.
+        function test_rowHeightEstimateIsForgottenPerChat() {
+            const chat = openAtNewest(300)
+            const internal = chat.internal
+            establishRowHeight(internal)
+            const base = internal.avgRowHeight
+
+            chat.view.chatId = "chat-2"
+            compare(internal.rowHeightSampleCount, 0,
+                    "a chat switch must drop the previous chat's evidence")
+
+            internal.observeRowHeights(base * 3 * 8, 8)
+            verify(internal.avgRowHeight >= base * 2.5,
+                   "the new chat's first batch must establish the estimate, at "
+                   + internal.avgRowHeight + " from " + base)
         }
     }
 }

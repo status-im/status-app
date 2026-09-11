@@ -25,7 +25,11 @@ Flickable {
     /*!
        Instantiated once per model row, roles and \c index available as in a
        ListView delegate. The delegate must reverse the order itself with
-       \c {Layout.row: view.rowCount - index} so row 0 lands at the bottom.
+       \c {Layout.row: view.rowCount - index + 1} so row 0 lands at the
+       bottom. Grid row 0 is reserved as an empty spawn cell: a freshly
+       created delegate is added to the layout before its \c Layout.row
+       binding applies and lands in the default cell (0,0) — reserving it
+       keeps that landing free instead of fighting the placeholder's cell.
     */
     property Component delegate
 
@@ -36,10 +40,20 @@ Flickable {
     property Component placeholder
 
     /*!
-       Height given to the placeholder. It doubles as the depth of the region
-       in which scrolling asks for more rows, so it must stay well above zero.
+       Heights given to the placeholders, one per side: each side stands in
+       for its own out-of-window span, so a window slide resizes only the end
+       it moved. A height doubles as the depth of the region in which
+       scrolling asks for more rows, so it must stay well above zero.
     */
-    property real placeholderHeight: root.height
+    property real topPlaceholderHeight: root.height
+    property real bottomPlaceholderHeight: root.height
+
+    /*!
+       Distance beyond the viewport within which a placeholder already asks
+       for more rows, so the next batch is usually ready before the user
+       scrolls the placeholder itself into view.
+    */
+    property real prefetchMargin: 0
 
     /*!
        Content pinned below the newest message (\c ListView.header equivalent
@@ -149,9 +163,11 @@ Flickable {
         property int pendingRow: -1
 
         readonly property bool placeholderUpVisible:
-            topPlaceholder.active && content.y + topPlaceholder.y + topPlaceholder.height > root.contentY
+            topPlaceholder.active && content.y + topPlaceholder.y + topPlaceholder.height
+                                     > root.contentY - root.prefetchMargin
         readonly property bool placeholderDownVisible:
-            bottomPlaceholder.active && content.y + bottomPlaceholder.y < root.contentY + root.height
+            bottomPlaceholder.active && content.y + bottomPlaceholder.y
+                                        < root.contentY + root.height + root.prefetchMargin
 
         // From live values, not the bottomContentY binding: inside an
         // onHeightChanged handler the binding still holds the pre-change value.
@@ -206,7 +222,9 @@ Flickable {
             let fallback = null
             for (let i = 0; i < repeater.count; ++i) {
                 const item = repeater.itemAt(i)
-                if (!item || item === excluded)
+                // an invisible row (still being staged by the owner) holds no
+                // screen position to anchor on
+                if (!item || item === excluded || !item.visible)
                     continue
                 // an unpolished row still sits at y 0 — a position no laid-out
                 // delegate can hold while the top placeholder occupies it —
@@ -255,9 +273,9 @@ Flickable {
             }
             if (d.pendingRow >= 0) {
                 const target = repeater.itemAt(d.pendingRow)
-                // height > 0 keeps a pre-polish item from being positioned on
-                // stale geometry
-                if (target && target.height > 0) {
+                // visible + height > 0 keeps a staged or pre-polish item from
+                // being positioned on stale geometry
+                if (target && target.visible && target.height > 0) {
                     d.apply(d.clampContentY(
                                 content.y + target.y + target.height / 2 - root.height / 2))
                     // hand over to the anchor: later content changes hold this
@@ -318,12 +336,15 @@ Flickable {
 
     // Level-triggered while a placeholder is in the viewport: one request per
     // tick until the window covers it or the owner reports nothing more to
-    // show. The owner is expected to guard backend fetches.
+    // show. The owner is expected to guard backend fetches. Only at rest: a
+    // slide mid-fling mutates geometry under the physics, and the contentY
+    // correction that follows cancels the flick.
     Timer {
         interval: 150
         repeat: true
-        running: (root.moreUpAvailable && d.placeholderUpVisible)
-                 || (root.moreDownAvailable && d.placeholderDownVisible)
+        running: !root.moving
+                 && ((root.moreUpAvailable && d.placeholderUpVisible)
+                     || (root.moreDownAvailable && d.placeholderDownVisible))
         triggeredOnStart: true
 
         onTriggered: {
@@ -378,10 +399,11 @@ Flickable {
         Loader {
             id: topPlaceholder
 
-            Layout.row: 0
+            // row 0 is the reserved spawn cell (see the delegate contract)
+            Layout.row: 1
             Layout.column: 0
             Layout.fillWidth: true
-            Layout.preferredHeight: active ? root.placeholderHeight : 0
+            Layout.preferredHeight: active ? root.topPlaceholderHeight : 0
 
             active: root.moreUpAvailable
             visible: active
@@ -408,10 +430,10 @@ Flickable {
         Loader {
             id: bottomPlaceholder
 
-            Layout.row: repeater.count + 1
+            Layout.row: repeater.count + 2
             Layout.column: 0
             Layout.fillWidth: true
-            Layout.preferredHeight: active ? root.placeholderHeight : 0
+            Layout.preferredHeight: active ? root.bottomPlaceholderHeight : 0
 
             active: root.moreDownAvailable
             visible: active
@@ -419,7 +441,7 @@ Flickable {
         }
 
         Loader {
-            Layout.row: repeater.count + 2
+            Layout.row: repeater.count + 3
             Layout.column: 0
             Layout.fillWidth: true
 
@@ -429,7 +451,7 @@ Flickable {
         }
 
         Item {
-            Layout.row: repeater.count + 3
+            Layout.row: repeater.count + 4
             Layout.column: 0
             Layout.fillWidth: true
             Layout.preferredHeight: root.contentBottomPadding
