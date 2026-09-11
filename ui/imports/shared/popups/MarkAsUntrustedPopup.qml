@@ -9,36 +9,51 @@ import StatusQ.Controls
 
 import utils
 
-CommonContactDialog {
+CommonContactAdaptiveDialog {
     id: root
 
-    readonly property bool removeIDVerification: ctrlRemoveIDVerification.checked
-    readonly property bool removeContact: ctrlRemoveContact.checked
+    readonly property bool removeIDVerification: d.removeIDVerification
+    readonly property bool removeContact: d.removeContact
 
     title: qsTr("Mark as untrusted")
 
-    StatusBaseText {
-        Layout.fillWidth: true
-        Layout.bottomMargin: Theme.halfPadding
-        text: qsTr("%1 will be marked as untrusted. This mark will only be visible to you.").arg(mainDisplayName)
-        wrapMode: Text.WordWrap
+    QtObject {
+        id: d
+
+        property bool removeIDVerification
+        property bool removeContact
     }
 
-    StatusCheckBox {
-        id: ctrlRemoveIDVerification
-        visible: contactDetails.trustStatus === Constants.trustStatus.trusted
-        checked: visible
-        enabled: false
-        text: qsTr("Remove trust mark")
+    bodyComponent: ColumnLayout {
+        spacing: Theme.halfPadding
+
+        StatusBaseText {
+            Layout.fillWidth: true
+            Layout.bottomMargin: Theme.halfPadding
+            text: qsTr("%1 will be marked as untrusted. This mark will only be visible to you.").arg(mainDisplayName)
+            wrapMode: Text.WordWrap
+        }
+
+        StatusCheckBox {
+            id: ctrlRemoveIDVerification
+            visible: contactDetails.trustStatus === Constants.trustStatus.trusted
+            checked: visible
+            enabled: false
+            text: qsTr("Remove trust mark")
+            onCheckedChanged: d.removeIDVerification = checked
+            Component.onCompleted: d.removeIDVerification = checked
+        }
+
+        StatusCheckBox {
+            id: ctrlRemoveContact
+            visible: contactDetails.isContact
+            text: qsTr("Remove contact")
+            onCheckedChanged: d.removeContact = checked
+            Component.onCompleted: d.removeContact = checked
+        }
     }
 
-    StatusCheckBox {
-        id: ctrlRemoveContact
-        visible: contactDetails.isContact
-        text: qsTr("Remove contact")
-    }
-
-    rightButtons: ObjectModel {
+    footerRightButtons: ObjectModel {
         StatusFlatButton {
             text: qsTr("Cancel")
             onClicked: root.close()

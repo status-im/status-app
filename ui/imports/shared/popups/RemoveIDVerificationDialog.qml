@@ -8,32 +8,47 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
 
-CommonContactDialog {
+CommonContactAdaptiveDialog {
     id: root
 
-    readonly property bool markAsUntrusted: ctrlMarkAsUntrusted.checked
-    readonly property bool removeContact: ctrlRemoveContact.checked
+    readonly property bool markAsUntrusted: d.markAsUntrusted
+    readonly property bool removeContact: d.removeContact
 
     title: qsTr("Remove trust mark")
 
-    StatusBaseText {
-        Layout.fillWidth: true
-        Layout.bottomMargin: Theme.halfPadding
-        wrapMode: Text.WordWrap
-        text: qsTr("%1 will no longer be marked as trusted. This is only visible to you.").arg(mainDisplayName)
+    QtObject {
+        id: d
+
+        property bool markAsUntrusted
+        property bool removeContact
     }
 
-    StatusCheckBox {
-        id: ctrlMarkAsUntrusted
-        text: qsTr("Mark %1 as untrusted").arg(mainDisplayName)
+    bodyComponent: ColumnLayout {
+        spacing: Theme.halfPadding
+
+        StatusBaseText {
+            Layout.fillWidth: true
+            Layout.bottomMargin: Theme.halfPadding
+            wrapMode: Text.WordWrap
+            text: qsTr("%1 will no longer be marked as trusted. This is only visible to you.").arg(mainDisplayName)
+        }
+
+        StatusCheckBox {
+            id: ctrlMarkAsUntrusted
+            text: qsTr("Mark %1 as untrusted").arg(mainDisplayName)
+            onCheckedChanged: d.markAsUntrusted = checked
+            Component.onCompleted: d.markAsUntrusted = checked
+        }
+
+        StatusCheckBox {
+            id: ctrlRemoveContact
+            text: qsTr("Remove contact")
+            onCheckedChanged: d.removeContact = checked
+            Component.onCompleted: d.removeContact = checked
+        }
     }
 
-    StatusCheckBox {
-        id: ctrlRemoveContact
-        text: qsTr("Remove contact")
-    }
-
-    rightButtons: ObjectModel {
+    footerRightButtons: ObjectModel {
         StatusFlatButton {
             text: qsTr("Cancel")
             onClicked: root.close()

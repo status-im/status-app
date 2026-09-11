@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQml.Models
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -11,40 +10,43 @@ import StatusQ.Core.Utils as StatusQUtils
 
 import shared.controls
 import shared.controls.chat
-import shared.stores
 import utils
 
 import AppLayouts.Profile.helpers
 
-StatusDialog {
+// Adaptive replacement for the legacy CommonContactDialog used by contact-related popups.
+StatusAdaptiveDialog {
     id: root
 
-    required property UtilsStore utilsStore
-
+    // Raw contact public key used to resolve the contact identity.
     required property string publicKey
-    required property ContactDetails contactDetails
+    // Display-ready compressed public key. Resolve it outside this component.
+    required property string compressedPublicKey
+    // Display-ready emoji hash in form of an array of emojis. Resolve it outside this component.
+    required property var emojiHash
+    // Contact profile details used by the header area.
+    required property var contactDetails
+    // Whether the contact profile details are currently being refreshed.
     property bool loadingContactDetails
 
-    default property alias content: contentLayout.children
+    // Body content rendered below the contact header.
+    property Component bodyComponent
 
-    property ObjectModel rightButtons
-
+    // Primary display name resolved from the contact details.
     readonly property string mainDisplayName: StatusQUtils.Emoji.parse(
                                                   ProfileUtils.displayName(contactDetails.localNickname, contactDetails.name,
                                                                            contactDetails.displayName, contactDetails.alias))
+    // Secondary display name shown when a local nickname is present.
     readonly property string optionalDisplayName: StatusQUtils.Emoji.parse(
                                                       ProfileUtils.displayName("", contactDetails.name, contactDetails.displayName, contactDetails.alias))
 
-    width: Math.max(implicitWidth, 480)
-    horizontalPadding: 0
-    topPadding: 20
-    bottomPadding: 0
+    contentComponent: ColumnLayout {
+        id: contentLayout
 
-    contentItem: ColumnLayout {
+        spacing: Theme.padding
+
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: Theme.padding
-            Layout.rightMargin: Theme.padding
             spacing: Theme.padding
 
             StatusUserImage {
@@ -68,6 +70,7 @@ StatusDialog {
                     id: contactRow
                     Layout.fillWidth: true
                     Layout.preferredHeight: childrenRect.height
+
                     StatusBaseText {
                         id: contactName
                         anchors.left: parent.left
@@ -77,6 +80,7 @@ StatusDialog {
                         elide: Text.ElideRight
                         text: root.mainDisplayName
                     }
+
                     StatusContactVerificationIcons {
                         id: verificationIcons
                         anchors.left: contactName.right
@@ -88,8 +92,10 @@ StatusDialog {
                         tiny: false
                     }
                 }
+
                 RowLayout {
                     spacing: Theme.halfPadding
+
                     StatusBaseText {
                         id: contactSecondaryName
                         color: Theme.palette.baseColor1
@@ -97,6 +103,7 @@ StatusDialog {
                         text: root.optionalDisplayName
                         visible: !!contactDetails.localNickname
                     }
+
                     Rectangle {
                         Layout.preferredWidth: 4
                         Layout.preferredHeight: 4
@@ -104,22 +111,26 @@ StatusDialog {
                         color: Theme.palette.baseColor1
                         visible: contactSecondaryName.visible
                     }
+
                     StatusBaseText {
                         color: Theme.palette.baseColor1
                         font.pixelSize: Theme.additionalTextSize
                         text: Utils.getElidedCompressedPk(root.publicKey)
+
                         HoverHandler {
                             id: keyHoverHandler
                         }
+
                         StatusToolTip {
-                            text: root.utilsStore.getCompressedPk(root.publicKey)
+                            text: root.compressedPublicKey
                             visible: keyHoverHandler.hovered
                         }
                     }
                 }
+
                 EmojiHash {
                     Layout.topMargin: 4
-                    emojiHash: root.utilsStore.getEmojiHash(root.publicKey)
+                    emojiHash: root.emojiHash
                     oneRow: true
                 }
             }
@@ -127,26 +138,11 @@ StatusDialog {
 
         StatusDialogDivider {
             Layout.fillWidth: true
-            Layout.topMargin: Theme.padding
-            Layout.leftMargin: Theme.padding
-            Layout.rightMargin: Theme.padding
         }
 
-        StatusScrollView {
+        Loader {
             Layout.fillWidth: true
-            Layout.fillHeight: true
-            contentWidth: availableWidth
-            id: scrollView
-
-            ColumnLayout {
-                width: scrollView.availableWidth
-                id: contentLayout
-            }
+            sourceComponent: root.bodyComponent
         }
-    }
-
-    footer: StatusDialogFooter {
-        bottomPadding: Theme.padding + root.parent.SafeArea.margins.bottom
-        rightButtons: root.rightButtons
     }
 }
