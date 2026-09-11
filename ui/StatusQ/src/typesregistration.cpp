@@ -18,6 +18,7 @@
 #include "StatusQ/oneoffilter.h"
 #include "StatusQ/permissionutilsinternal.h"
 #include "StatusQ/rendersizedimage.h"
+#include "StatusQ/delegatepool.h"
 #include "StatusQ/rowbinder.h"
 #include "StatusQ/rxvalidator.h"
 #include "StatusQ/shareutils.h"
@@ -81,6 +82,8 @@ void registerStatusQTypes() {
                 QStringLiteral("InputMethodEvent is created by InputMethodEventFilter"));
     qmlRegisterType<RXValidator>("StatusQ", 0, 1, "RXValidator");
     qmlRegisterType<RowBinder>("StatusQ", 0, 1, "RowBinder");
+    qmlRegisterType<DelegatePool>("StatusQ", 0, 1, "DelegatePool");
+    qmlRegisterType<DelegatePoolKind>("StatusQ", 0, 1, "DelegatePoolKind");
 
     qmlRegisterUncreatableType<QValidator>(
                 "StatusQ", 0, 1,
