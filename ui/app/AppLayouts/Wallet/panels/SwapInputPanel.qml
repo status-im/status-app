@@ -47,10 +47,16 @@ Control {
     }
 
     property int selectedNetworkChainId: -1
-    onSelectedNetworkChainIdChanged: reevaluateSelectedId()
+    onSelectedNetworkChainIdChanged: {
+        d.syncChainFilterToSelection()
+        reevaluateSelectedId()
+    }
     property string selectedAccountAddress
-    onSelectedAccountAddressChanged: reevaluateSelectedId()
+    onSelectedAccountAddressChanged: {
+        reevaluateSelectedId()
+    }
     property string nonInteractiveGroupKey
+    property int nonInteractiveChainId: -1
 
     property string groupKey
     onGroupKeyChanged: {
@@ -121,9 +127,14 @@ Control {
                                        (swapSide === SwapInputPanel.SwapSide.Pay ? !amountEnteredGreaterThanBalance : true)
     readonly property bool amountEnteredGreaterThanBalance: amountToSendInput.balanceExceeded
 
+    property bool balanceInsufficientError: false
+
+    property bool accountBalanceVisible: true
+
     readonly property double maxCryptoBalance: d.maxCryptoBalance
     readonly property double maxSafeCryptoValue: d.maxSafeCryptoValue
     readonly property alias fiatMode: amountToSendInput.fiatMode
+    readonly property Item amountInputItem: amountToSendInput
 
     /** `value` is a crypto amount, also while the input displays fiat **/
     function setAmount(value) {
@@ -171,7 +182,10 @@ Control {
             !chainName ? qsTr("Your assets") : qsTr("Your assets on %1").arg(chainName),
             qsTr("Popular assets"))
     }
-    Component.onCompleted: root.updateSectionNames()
+    Component.onCompleted: {
+        d.syncChainFilterToSelection()
+        root.updateSectionNames()
+    }
 
     enum SwapSide {
         Pay = 0,
@@ -192,16 +206,13 @@ Control {
         property string selectedHoldingId: root.groupKey
         property string selectedHoldingTokenKey: ""
 
-        onSelectedHoldingIdChanged: Qt.callLater(d.clampAmountToBalance)
-
-        function clampAmountToBalance() {
-            if (root.swapSide !== SwapInputPanel.SwapSide.Pay)
+        function syncChainFilterToSelection() {
+            if (holdingSelector.dropdownOpened)
                 return
-            if (d.maxSafeCryptoValue <= 0)
-                return
-            if (amountToSendInput.balanceExceeded)
-                root.setAmount(d.maxSafeCryptoValue)
+            if (root.selectedNetworkChainId !== -1)
+                root.listChainFilter = root.selectedNetworkChainId
         }
+
 
         // Only a settled list answers "is this token available here?": it is empty
         // while the catalog is (re)built, holds search results while searching, and
@@ -214,13 +225,34 @@ Control {
                                                 || root.catalogChainId === root.listCatalogChainId)
         onListSettledChanged: if (listSettled) root.reevaluateSelectedId()
 
+        readonly property bool catalogJudgesSelection: root.listCatalogChainId === root.selectedNetworkChainId
+                                                       && !holdingSelector.dropdownOpened
+
+        function listSettledNow() {
+            return d.listSettled
+                   && !!root.tokenSelectorModel
+                   && root.tokenSelectorModel.searchString === ""
+        }
+
         function reevaluateSelectedId() {
-            if (!d.listSettled)
+            if (!d.listSettledNow())
                 return
-            if (!SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", d.selectedHoldingId)) {
-                // Token doesn't exist in destination chain
-                d.selectedHoldingId = root.defaultGroupKey
+            if (d.catalogJudgesSelection
+                    && !SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", d.selectedHoldingId)) {
+                if (!!d.selectedHoldingId
+                        && !!root.tokenSelectorModel.pinGroup
+                        && root.tokenSelectorModel.pinGroup(d.selectedHoldingId)) {
+                    d.setHoldingToSelector()
+                    return
+                }
+                const defaultIfPresent = SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", root.defaultGroupKey)
+                                       ? root.defaultGroupKey : undefined
+                const nativeGroupKey = Utils.getNativeTokenGroupKey(root.listCatalogChainId)
+                const nativeIfPresent = SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", nativeGroupKey)
+                                      ? nativeGroupKey : undefined
+                d.selectedHoldingId = defaultIfPresent ?? nativeIfPresent ?? root.defaultGroupKey
             }
+            d.setHoldingToSelector()
         }
 
 
@@ -232,30 +264,50 @@ Control {
             onAvailableChanged: d.setHoldingToSelector()
         }
 
+        readonly property SQUtils.ModelChangeTracker selectedTokensTracker: SQUtils.ModelChangeTracker {
+            model: d.selectedHolding.available && !!d.selectedHolding.item
+                   ? d.selectedHolding.item.tokens : null
+            onRevisionChanged: d.setHoldingToSelector()
+        }
+
         function setHoldingToSelector() {
             if (!root.tokenSelectorModel)
                 return
             if (selectedHolding.available && !!selectedHolding.item) {
-                if (!selectedHolding.item.tokens || selectedHolding.item.tokens.ModelCount.count !== 1) {
+                const tokens = selectedHolding.item.tokens
+                const tokensCount = !!tokens ? tokens.ModelCount.count : 0
+                let tokenKey = ""
+                if (tokensCount === 1)
+                    tokenKey = SQUtils.ModelUtils.get(tokens, 0, "key")
+                else if (tokensCount > 1)
+                    tokenKey = SQUtils.ModelUtils.getByKey(tokens, "chainId", root.selectedNetworkChainId, "key")
+                               ?? SQUtils.ModelUtils.getByKey(tokens, "chainId", root.listCatalogChainId, "key")
+                               ?? SQUtils.ModelUtils.get(tokens, 0, "key")
+                if (!tokenKey) {
                     console.error("token for the selected group cannot be resolved", "group-key", d.selectedHoldingId, "chain", root.selectedNetworkChainId)
                     return
                 }
 
-                d.selectedHoldingTokenKey = SQUtils.ModelUtils.get(selectedHolding.item.tokens, 0, "key")
+                d.selectedHoldingTokenKey = tokenKey
 
                 holdingSelector.setSelection(selectedHolding.item.symbol,
                                              selectedHolding.item.logoUri || Constants.tokenIcon(selectedHolding.item.symbol),
                                              selectedHolding.item.key)
                 return
             }
-            // while unsettled the selected token may legitimately be absent, so keep
-            // the current button rather than resetting it
-            if (d.listSettled)
+            if (d.listSettledNow() && d.catalogJudgesSelection)
                 holdingSelector.reset()
         }
 
         readonly property bool isSelectedHoldingValidAsset: selectedHolding.available && !!selectedHolding.item
+
+        readonly property SQUtils.ModelChangeTracker selectedBalancesTracker: SQUtils.ModelChangeTracker {
+            model: d.selectedHolding.available && !!d.selectedHolding.item
+                   ? d.selectedHolding.item.balances : null
+        }
+
         readonly property double maxCryptoBalance: {
+            selectedBalancesTracker.revision
             if (!isSelectedHoldingValidAsset || !selectedHolding.item.balances)
                 return 0
             const onChain = SQUtils.ModelUtils.getByKey(selectedHolding.item.balances, "chainId",
@@ -272,12 +324,18 @@ Control {
 
 
         function adoptChainForToken(key) {
-            const balances = SQUtils.ModelUtils.getByKey(root.tokenSelectorModel, "key", key, "balances")
-            if (!balances)
+            const refs = SQUtils.ModelUtils.getByKey(root.tokenSelectorModel, "key", key, "tokens")
+                         ?? SQUtils.ModelUtils.getByKey(root.tokenSelectorModel, "key", key, "balances")
+            if (root.listChainFilter !== -1
+                    && (!refs || SQUtils.ModelUtils.contains(refs, "chainId", root.listChainFilter))) {
+                root.networkSelected(root.listChainFilter)
                 return
-            if (SQUtils.ModelUtils.contains(balances, "chainId", root.selectedNetworkChainId))
+            }
+            if (!refs)
                 return
-            const firstChain = SQUtils.ModelUtils.get(balances, 0, "chainId")
+            if (SQUtils.ModelUtils.contains(refs, "chainId", root.selectedNetworkChainId))
+                return
+            const firstChain = SQUtils.ModelUtils.get(refs, 0, "chainId")
             if (!!firstChain && firstChain !== root.selectedNetworkChainId)
                 root.networkSelected(firstChain)
         }
@@ -445,8 +503,9 @@ Control {
         }
 
         AmountToSend {
-            readonly property bool balanceExceeded:
-                SQUtils.AmountsArithmetic.fromNumber(d.maxSafeCryptoValue, multiplierIndex).cmp(amount) === -1
+            readonly property bool balanceExceeded: SQUtils.AmountsArithmetic.fromNumber(d.maxSafeCryptoValue, multiplierIndex).cmp(amount) === -1
+
+            readonly property bool rawBalanceExceeded: SQUtils.AmountsArithmetic.fromNumber(d.maxCryptoBalance, multiplierIndex).cmp(amount) === -1
 
             // from `amount` rather than the text: that is fiat in fiat mode
             readonly property double asNumber: {
@@ -462,7 +521,9 @@ Control {
             Layout.fillWidth: true
 
             interactive: root.interactive
-            markAsInvalid: (root.swapSide === SwapInputPanel.SwapSide.Pay && (balanceExceeded || d.maxInputBalance === 0)) || (!!text && !valid)
+            markAsInvalid: (root.swapSide === SwapInputPanel.SwapSide.Pay
+                            && (rawBalanceExceeded || root.balanceInsufficientError || d.maxInputBalance === 0))
+                           || (!!text && !valid)
             fiatInputInteractive: root.fiatInputInteractive
             multiplierIndex: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.decimals ? d.selectedHolding.item.decimals : 18
             cryptoPrice: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.cryptoPrice ? d.selectedHolding.item.cryptoPrice : 0
@@ -479,7 +540,7 @@ Control {
             bottomRightComponent: RowLayout {
                 objectName: "balanceLine"
                 spacing: Theme.halfPadding
-                visible: d.isSelectedHoldingValidAsset
+                visible: d.isSelectedHoldingValidAsset && root.accountBalanceVisible
 
                 StatusIcon {
                     Layout.alignment: Qt.AlignVCenter
@@ -524,6 +585,8 @@ Control {
 
                 objectName: "holdingSelector"
 
+                size: TokenSelectorButton.Size.Small
+
                 anchors.top: parent.top
                 anchors.right: parent.right
                 // centred on the input row, which is sized to at least this height
@@ -535,7 +598,7 @@ Control {
                 hasMoreItems: !!root.tokenSelectorModel && root.tokenSelectorModel.hasMoreItems
                 isLoadingMore: root.tokenSelectorLoading || (!!root.tokenSelectorModel && root.tokenSelectorModel.isLoadingMore)
                 nonInteractiveKey: root.nonInteractiveGroupKey
-                nonInteractiveChainId: root.selectedNetworkChainId
+                nonInteractiveChainId: root.nonInteractiveChainId
                 formatCurrencyBalance: (amount) => root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency)
 
                 selectedNetworkIcon: !!networkEntry.item && !!networkEntry.item.iconUrl
@@ -546,6 +609,12 @@ Control {
                 selectedChainId: root.listChainFilter
                 highlightedChainId: root.selectedNetworkChainId
                 onChainSelected: chainId => root.listChainFilter = chainId
+
+                onDropdownAboutToOpen: d.syncChainFilterToSelection()
+                onDropdownClosed: {
+                    d.syncChainFilterToSelection()
+                    root.reevaluateSelectedId()
+                }
 
                 onSearch: function(keyword) {
                     if (root.tokenSelectorModel)
@@ -561,12 +630,12 @@ Control {
                     if (key === "")
                         return
                     d.selectedHoldingId = key
-                    if (chainId !== -1)
+                    if (chainId !== -1) {
+                        root.listChainFilter = chainId
                         root.networkSelected(chainId)
-                    else if (root.listChainFilter !== -1)
-                        root.networkSelected(root.listChainFilter)
-                    else
+                    } else {
                         d.adoptChainForToken(key)
+                    }
                 }
             }
         }

@@ -70,12 +70,19 @@ QObject {
     readonly property var selectedAsset: selectedAssetEntry.item
     /** output property of the localised amount to send **/
     readonly property string selectedAmount: {
+        if (!root.selectedAmountInBaseUnit || !selectedAssetEntry.available)
+            return "0"
+
         const amountBig = AmountsArithmetic.fromString(root.selectedAmountInBaseUnit || "0")
         if (typeof amountBig === "number")
             return "0"
 
         const decimals = (root.selectedAsset?.decimals | 0) || 0
-        let amount = AmountsArithmetic.div(amountBig, AmountsArithmetic.fromExponent(decimals)).toFixed(decimals)
+        const divisor = AmountsArithmetic.fromExponent(decimals)
+        let amount =  AmountsArithmetic.div(
+                AmountsArithmetic.fromString(root.selectedAmountInBaseUnit),
+                divisor).toFixed(decimals)
+
         // removeDecimalTrailingZeros
         amount = Utils.stripTrailingZeros(amount)
         // localize

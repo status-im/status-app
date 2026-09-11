@@ -42,7 +42,13 @@ AbstractButton {
 
         StatusSmartIdenticon {
             objectName: "accountPillIdenticon"
-            asset.emoji: !!root.emoji ? root.emoji : "👛"
+            // wallet accounts carry an emoji; a saved address has none and shows a one/two letter acronym of its name instead
+            name: root.name
+            asset.emoji: !!root.emoji ? root.emoji : (!!root.name ? "" : "👛")
+            asset.charactersLen: 2
+            asset.useAcronymForLetterIdenticon: true
+            asset.letterIdenticonBgWithAlpha: false
+            asset.letterSize: 10
             asset.color: d.pillColor
             asset.width: 24
             asset.height: asset.width

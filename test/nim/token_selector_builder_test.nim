@@ -197,6 +197,19 @@ suite "mergePopularWithOwned — all-tokens / search path":
     check eth.name == "Ethereum"          # popular's metadata wins
     check eth.logoUri == "logo/eth"
 
+  test "owned token refs from other chains are merged into the popular side's":
+    var g = group("ETH", balances = @[bal("0xA", 1, "1000000000000000000"),
+                                      bal("0xA", 10, "1000000000000000000")])
+    g.tokens = @[(key: "eth:1", chainId: 1), (key: "eth:10", chainId: 10)]
+    let owned = buildTokenSelectorItems(@[g], networks, noFilterParams())
+    let merged = mergePopularWithOwned(
+      @[PopularGroup(key: "ETH", name: "Ethereum", symbol: "ETH",
+        tokens: @[(key: "eth:1", chainId: 1)])],
+      owned, showCommunityAssets = false)
+    check merged.findItem("ETH").tokens == @[
+      TokenSelectorTokenRef(key: "eth:1", chainId: 1),
+      TokenSelectorTokenRef(key: "eth:10", chainId: 10)]
+
   test "popular token the user does not own becomes a zero-balance popular item":
     let merged = mergePopularWithOwned(@[popular("DAI", name = "Dai")], @[], showCommunityAssets = false)
     let dai = merged.findItem("DAI")
@@ -278,6 +291,28 @@ suite "buildDisplayItems — path selection":
       TokenSelectorMode.Owned, searchActive = true, popularGroups = @[],
       searchGroups = @[popular("SNT"), popular("DAI")])
     check searched.mapIt(it.key) == @["SNT"]        # still visible; DAI unowned -> dropped
+
+  test "Owned mode + address-narrowed search requires deployment-level ownership":
+    # The account owns the group ONLY on chain 10; the searched contract
+    # address matched the chain-1 deployment (the search narrowed the row's
+    # refs to it). Group-level ownership must not resurrect the row — send
+    # would offer a deployment the account doesn't own.
+    let ownedOn10 = @[group("USDC", price = 1.0,
+      balances = @[bal("0xA", 10, "1000000000000000000")])]
+    var narrowed = popular("USDC")
+    narrowed.tokens = @[(key: "1-0xaaa", chainId: 1)]
+    let items = buildDisplayItems(ownedOn10, networks, noFilterParams(),
+      TokenSelectorMode.Owned, searchActive = true, popularGroups = @[],
+      searchGroups = @[narrowed])
+    check items.len == 0
+
+    # the un-narrowed row (full refs incl. chain 10) is owned there -> kept
+    var full = popular("USDC")
+    full.tokens = @[(key: "1-0xaaa", chainId: 1), (key: "10-0xbbb", chainId: 10)]
+    let items2 = buildDisplayItems(ownedOn10, networks, noFilterParams(),
+      TokenSelectorMode.Owned, searchActive = true, popularGroups = @[],
+      searchGroups = @[full])
+    check items2.mapIt(it.key) == @["USDC"]
 
   test "AllTokens mode + search: results shown even when not owned":
     let items = buildDisplayItems(ownedGroups, networks, noFilterParams(),

@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import QtModelsToolkit
+
 import StatusQ.Core
 import StatusQ.Components
 import StatusQ.Core.Theme
@@ -31,7 +33,7 @@ ItemDelegate {
 
     property string networkIconUrl: {
         root.balancesTracker.revision
-        if (!root.balancesModel || !root.balancesModel.count)
+        if (!root.balancesModel || !root.balancesModel.ModelCount.count)
             return ""
         if (root.chainId >= 0)
             return SQUtils.ModelUtils.getByKey(root.balancesModel, "chainId", root.chainId, "iconUrl") ?? ""
@@ -43,26 +45,56 @@ ItemDelegate {
         : ""
     property var tokensModel
 
-    property string tokenAddress: {
+    property int fallbackChainId: -1
+
+    signal contractAddressClicked()
+
+    readonly property int resolvedChainId: {
         root.balancesTracker.revision
-        if (!tokensModel || !tokensModel.count)
-            return ""
+        // only its revision re-triggers this lookup
+        root.tokensTracker.revision
+        const tokensCount = !!tokensModel ? tokensModel.ModelCount.count : 0
+        if (!tokensCount)
+            return -1
         let chain = root.chainId
-        if (chain < 0) {
-            if (!balancesModel || !balancesModel.count)
-                return ""
+        if (chain < 0 && !!balancesModel && balancesModel.ModelCount.count > 0)
             chain = SQUtils.ModelUtils.get(root.balancesModel, 0, "chainId")
-        }
-        const key = SQUtils.ModelUtils.getByKey(tokensModel, "chainId", chain, "key")
+        if (chain < 0 && root.fallbackChainId >= 0 && SQUtils.ModelUtils.contains(tokensModel, "chainId", root.fallbackChainId))
+            chain = root.fallbackChainId
+        if (chain < 0)
+            chain = SQUtils.ModelUtils.get(tokensModel, 0, "chainId") ?? -1
+        return chain
+    }
+
+    property string tokenAddress: {
+        root.tokensTracker.revision
+        if (root.resolvedChainId < 0 || !tokensModel || !tokensModel.ModelCount.count)
+            return ""
+        const key = SQUtils.ModelUtils.getByKey(tokensModel, "chainId", root.resolvedChainId, "key")
         return !!key ? Utils.getChainAndAddressFromTokenKey(key).address : ""
     }
     property string defaultNetworkIcon
+    property var flatNetworksModel
 
     readonly property SQUtils.ModelChangeTracker balancesTracker: SQUtils.ModelChangeTracker {
         model: root.balancesModel
     }
 
-    readonly property string effectiveNetworkIcon: !!networkIconUrl ? networkIconUrl : defaultNetworkIcon
+    readonly property SQUtils.ModelChangeTracker tokensTracker: SQUtils.ModelChangeTracker {
+        model: root.tokensModel
+    }
+
+    readonly property string effectiveNetworkIcon: {
+        if (networkIconUrl)
+            return networkIconUrl
+        if (resolvedChainId >= 0 && !!flatNetworksModel) {
+            const icon = SQUtils.ModelUtils.getByKey(flatNetworksModel, "chainId",
+                                                     resolvedChainId, "iconUrl")
+            if (icon)
+                return icon
+        }
+        return defaultNetworkIcon
+    }
     readonly property bool hasNetworkBadge: !!effectiveNetworkIcon
     readonly property bool hasAddressChip: !!tokenAddress && tokenAddress !== Constants.zeroAddress
 
@@ -115,7 +147,7 @@ ItemDelegate {
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: Theme.halfPadding
+                spacing: Theme.bigPadding
 
                 StatusBaseText {
                     text: root.symbol
@@ -146,6 +178,13 @@ ItemDelegate {
                             icon: "external"
                             color: Theme.palette.baseColor1
                         }
+                    }
+
+                    MouseArea {
+                        objectName: "addressChipMouseArea"
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.contractAddressClicked()
                     }
                 }
 

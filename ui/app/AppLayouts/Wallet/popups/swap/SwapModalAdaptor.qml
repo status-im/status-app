@@ -45,6 +45,7 @@ QObject {
     readonly property string errorMessage: d.errorMessage
     readonly property bool isEthBalanceInsufficient: d.isEthBalanceInsufficient
     readonly property bool isTokenBalanceInsufficient: d.isTokenBalanceInsufficient
+    readonly property bool isBalanceInsufficientForSwap: d.isBalanceInsufficientForSwap
 
     QtObject {
         id: d
@@ -61,9 +62,13 @@ QObject {
 
         readonly property bool isRouteTokenBalanceInsufficient: root.validSwapProposalReceived && root.swapOutputData.errCode === Constants.routerErrorCodes.router.errNotEnoughTokenBalance
 
+        readonly property bool amountExceedsSafeBalance: !root.validSwapProposalReceived
+                                                         && !root.swapProposalLoading
+                                                         && root.amountEnteredGreaterThanBalance
+
         readonly property bool isTokenBalanceInsufficient: {
             if (!!root.fromToken && !!root.fromToken.symbol) {
-                return (root.amountEnteredGreaterThanBalance || isRouteTokenBalanceInsufficient) &&
+                return (amountExceedsSafeBalance || isRouteTokenBalanceInsufficient) &&
                         root.fromToken.symbol !== nativeTokenSymbol
             }
             return false
@@ -71,7 +76,7 @@ QObject {
 
         readonly property bool isEthBalanceInsufficient: {
             if (!!root.fromToken && !!root.fromToken.symbol) {
-                return (root.amountEnteredGreaterThanBalance && root.fromToken.symbol === nativeTokenSymbol) ||
+                return (amountExceedsSafeBalance && root.fromToken.symbol === nativeTokenSymbol) ||
                         isRouteEthBalanceInsufficient
             }
             return false
@@ -79,7 +84,7 @@ QObject {
 
         readonly property bool isBalanceInsufficientForSwap: {
             if (!!root.fromToken && !!root.fromToken.symbol) {
-                return (root.amountEnteredGreaterThanBalance && root.fromToken.symbol === nativeTokenSymbol) ||
+                return (amountExceedsSafeBalance && root.fromToken.symbol === nativeTokenSymbol) ||
                         (isTokenBalanceInsufficient && root.fromToken.symbol !== nativeTokenSymbol)
             }
             return false
@@ -164,7 +169,7 @@ QObject {
                 const txApprovalFeesNative = Utils.nativeTokenRawToDecimal(root.swapFormData.selectedNetworkChainId, root.swapOutputData.approvalTxFeesWei)
                 root.swapOutputData.approvalTxFeesFiat = root.currencyStore.getFiatValue(txApprovalFeesNative, d.nativeTokenKey)
 
-                const totalMaxFeesInGasUnit = Math.ceil(bestPath.gasFees.maxFeePerGasM) * bestPath.gasAmount
+                const totalMaxFeesInGasUnit = Math.ceil(bestPath.gasFees.maxFeePerGasM * bestPath.gasAmount)
                 root.swapOutputData.maxFeesToReserveRaw = Utils.nativeTokenGasToRaw(root.swapFormData.selectedNetworkChainId, totalMaxFeesInGasUnit).toString()
 
                 root.swapOutputData.approvalNeeded = !!bestPath ? bestPath.approvalRequired: false

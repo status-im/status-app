@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 
+import QtModelsToolkit
+
 import StatusQ.Controls
 import StatusQ.Core.Utils
 
@@ -39,6 +41,11 @@ Control {
 
     readonly property bool isSelected: button.selected
 
+    readonly property bool dropdownOpened: dropdown.opened
+
+    signal dropdownAboutToOpen()
+    signal dropdownClosed()
+
     signal search(string keyword)
     /** chainId is -1 when the row didn't pin one down; the caller then picks it **/
     signal selected(string groupKey, int chainId)
@@ -58,6 +65,8 @@ Control {
     }
 
     property alias showDropdownIndicator: button.showDropdownIndicator
+
+    property alias size: button.size
 
     QtObject {
         id: d
@@ -125,8 +134,41 @@ Control {
                     return
                 }
 
+                const excludedChainId = entry.key === root.nonInteractiveKey
+                                      ? root.nonInteractiveChainId : -1
+
+                let resolvedChainId = chainId
+                if (resolvedChainId === -1) {
+                    const refs = entry.tokens ?? entry.balances
+                    const refsCount = !!refs ? refs.ModelCount.count : 0
+                    if (refsCount > 0) {
+                        if (root.selectedChainId !== -1
+                                && root.selectedChainId !== excludedChainId
+                                && ModelUtils.contains(refs, "chainId", root.selectedChainId)) {
+                            resolvedChainId = root.selectedChainId
+                        } else {
+                            for (let i = 0; i < refsCount; i++) {
+                                const refChain = ModelUtils.get(refs, i, "chainId")
+                                if (refChain !== undefined && refChain !== excludedChainId) {
+                                    resolvedChainId = refChain
+                                    break
+                                }
+                            }
+                        }
+                    } else if (root.selectedChainId !== -1
+                               && root.selectedChainId !== excludedChainId) {
+                        resolvedChainId = root.selectedChainId
+                    }
+                }
+
+                if (entry.key === root.nonInteractiveKey
+                        && (root.nonInteractiveChainId === -1
+                            || resolvedChainId === -1
+                            || resolvedChainId === root.nonInteractiveChainId))
+                    return
+
                 setCurrentAndClose(entry.symbol, entry.logoUri || Constants.tokenIcon(entry.symbol), entry.key)
-                root.selected(entry.key, chainId)
+                root.selected(entry.key, resolvedChainId)
             }
 
             onSearch: function(keyword) {
@@ -134,8 +176,11 @@ Control {
             }
         }
 
+        onAboutToShow: root.dropdownAboutToOpen()
+
         onClosed: {
             searchableAssetsPanel.clearSearch()
+            root.dropdownClosed()
         }
     }
 }

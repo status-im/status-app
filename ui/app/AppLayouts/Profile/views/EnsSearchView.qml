@@ -61,7 +61,7 @@ Item {
     Item {
         id: ensContainer
         anchors.top: parent.top
-        width: profileContentWidth
+        width: Math.min(profileContentWidth, parent.width)
         anchors.horizontalCenter: parent.horizontalCenter
 
         Rectangle {
@@ -176,52 +176,71 @@ Item {
 
         Rectangle {
             id: ensTypeRect
-            anchors.top: ensUsername.bottom
-            anchors.topMargin: Theme.bigPadding
+
+            anchors.top: ensTypeRow.top
+            anchors.bottom: ensTypeRow.bottom
+            anchors.margins: -Theme.smallPadding / 2
+
+            width: ensTypeLbl.contentWidth + ensTypeDesc.contentWidth + Theme.smallPadding*3
+
             border.width: 1
             border.color: Theme.palette.border
             color: Theme.palette.background
             radius: 50
             height: 30
-            width: ensTypeRow.width + Theme.halfPadding*2
+        }
 
-            Row {
-                id: ensTypeRow
-                anchors.top: parent.top
-                anchors.topMargin: Theme.halfPadding
-                leftPadding: Theme.padding
-                spacing: Theme.smallPadding
-                height: 20
+        RowLayout {
+            id: ensTypeRow
 
-                StatusBaseText {
-                    text: !isStatus ?
-                        qsTr("Custom domain")
-                        :
-                        ".stateofus.eth"
-                    font.weight: Font.Bold
-                    font.pixelSize: Theme.tertiaryTextFontSize
-                    color: Theme.palette.directColor1
-                }
+            anchors.top: ensUsername.bottom
+            anchors.margins: Theme.smallPadding
+            anchors.topMargin: Theme.bigPadding
+            anchors.left: parent.left
+            anchors.right: parent.right
 
-                StatusBaseText {
-                    text: !isStatus ?
-                        qsTr("I want a stateofus.eth domain")
-                        :
-                        qsTr("I own a name on another domain")
-                    font.pixelSize: Theme.tertiaryTextFontSize
-                    color: Theme.palette.primaryColor1
+            spacing: Theme.smallPadding
 
-                    StatusMouseArea {
-                        cursorShape: Qt.PointingHandCursor
-                        anchors.fill: parent
-                        onClicked : {
-                            isStatus = !isStatus;
-                            let ensUser = ensUsername.text;
-                            if(validate(ensUser))
-                                validateENS(ensUser, isStatus)
-                        }
+            StatusBaseText {
+                id: ensTypeLbl
+                Layout.alignment: Qt.AlignVCenter
+
+                text: !isStatus ?
+                    qsTr("Custom domain")
+                    :
+                    ".stateofus.eth"
+                font.weight: Font.Bold
+                font.pixelSize: Theme.tertiaryTextFontSize
+                color: Theme.palette.directColor1
+            }
+
+            StatusBaseText {
+                id: ensTypeDesc
+
+                Layout.fillWidth: true
+
+                text: !isStatus ?
+                    qsTr("I want a stateofus.eth domain")
+                    :
+                    qsTr("I own a name on another domain")
+                font.pixelSize: Theme.tertiaryTextFontSize
+                color: Theme.palette.primaryColor1
+                wrapMode: Text.Wrap
+
+                StatusMouseArea {
+                    cursorShape: Qt.PointingHandCursor
+                    anchors.fill: parent
+                    onClicked : {
+                        isStatus = !isStatus;
+                        let ensUser = ensUsername.text;
+                        if(validate(ensUser))
+                            validateENS(ensUser, isStatus)
                     }
                 }
+            }
+
+            Item {
+                Layout.fillWidth: true
             }
         }
 

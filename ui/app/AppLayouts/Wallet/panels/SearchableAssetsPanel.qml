@@ -110,16 +110,19 @@ Control {
         }
     }
 
+    TapHandler {
+        enabled: Qt.inputMethod.visible
+        onTapped: (eventPoint) => {
+            const local = root.mapToItem(searchBox, eventPoint.position.x, eventPoint.position.y)
+            if (local.x >= 0 && local.y >= 0 && local.x < searchBox.width && local.y < searchBox.height)
+                return
+            root.forceActiveFocus()
+            Qt.inputMethod.hide()
+        }
+    }
+
     contentItem: ColumnLayout {
         spacing: 0
-
-        StatusBaseText {
-            Layout.alignment: Qt.AlignHCenter
-            Layout.bottomMargin: 4
-            text: qsTr("Your assets will appear here")
-            color: Theme.palette.baseColor1
-            visible: !listView.count && !searchBox.text
-        }
 
         RowLayout {
             Layout.fillWidth: true
@@ -178,6 +181,16 @@ Control {
             visible: listView.count
         }
 
+        StatusBaseText {
+            objectName: "emptyListPlaceholder"
+            Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: Theme.padding
+            Layout.bottomMargin: Theme.padding
+            text: qsTr("Your assets will appear here")
+            color: Theme.palette.baseColor1
+            visible: !listView.count && !root.isLoadingMore
+        }
+
         StatusListView {
             id: listView
 
@@ -232,7 +245,13 @@ Control {
                 }
 
                 function selectFirst() {
-                    rowsRepeater.itemAt(0).clicked()
+                    for (let i = 0; i < rowsRepeater.count; i++) {
+                        const row = rowsRepeater.itemAt(i)
+                        if (!!row && row.enabled) {
+                            row.clicked()
+                            return
+                        }
+                    }
                 }
 
                 Repeater {
@@ -241,6 +260,8 @@ Control {
                     model: holdingRows.chainRows
 
                     delegate: TokenSelectorAssetDelegate {
+                        id: assetDelegate
+
                         required property var modelData
                         required property int index
 
@@ -252,9 +273,26 @@ Control {
                         chainId: rowChainId
                         highlighted: holding.key === root.highlightedKey
                                      && (rowChainId === -1 || rowChainId === root.highlightedChainId)
+                        readonly property int effectiveChainId: rowChainId !== -1 ? rowChainId
+                                                                                  : root.selectedChainId
+                        readonly property bool selectableOnAnotherChain: {
+                            assetDelegate.tokensTracker.revision
+                            assetDelegate.balancesTracker.revision
+                            const refs = holding.tokens ?? holding.balances
+                            if (!refs)
+                                return false
+                            const refsCount = refs.ModelCount.count
+                            for (let i = 0; i < refsCount; i++)
+                                if (ModelUtils.get(refs, i, "chainId") !== root.nonInteractiveChainId)
+                                    return true
+                            return false
+                        }
                         enabled: holding.key !== root.nonInteractiveKey
-                                 || (rowChainId !== -1
-                                     && rowChainId !== root.nonInteractiveChainId)
+                                 || (root.nonInteractiveChainId !== -1
+                                     && ((effectiveChainId !== -1
+                                          && effectiveChainId !== root.nonInteractiveChainId)
+                                         || (effectiveChainId === -1
+                                             && selectableOnAnotherChain)))
                         isAutoHovered: d.validSearchResultExists && holdingRows.index === 0
                                        && index === 0 && !listViewHoverHandler.hovered
 
@@ -266,10 +304,22 @@ Control {
                         iconSource: holding.logoUri || Constants.tokenIcon(holding.symbol)
                         balancesModel: holding.balances
                         tokensModel: holding.tokens
+                        fallbackChainId: root.selectedChainId !== -1 ? root.selectedChainId
+                                                                     : root.highlightedChainId
                         currentBalance: !!modelData ? modelData.balance : (holding.currentBalance ?? 0)
                         defaultNetworkIcon: root.defaultNetworkIcon
+                        flatNetworksModel: root.flatNetworksModel
 
                         onClicked: root.selected(holding.key, rowChainId)
+
+                        onContractAddressClicked: {
+                            const explorerUrl = ModelUtils.getByKey(root.flatNetworksModel, "chainId", resolvedChainId, "blockExplorerURL")
+                            if (!explorerUrl)
+                                return
+                            Global.requestOpenLink("%1/%2/%3".arg(explorerUrl)
+                                                   .arg(Constants.networkExplorerLinks.addressPath)
+                                                   .arg(tokenAddress))
+                        }
                     }
                 }
 

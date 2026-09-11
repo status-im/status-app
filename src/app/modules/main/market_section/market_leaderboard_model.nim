@@ -1,5 +1,6 @@
 import app/modules/shared_models/model_utils
-import nimqml, tables, options
+import app/modules/shared/model_sync
+import nimqml, tables
 
 import app_service/service/market/service as market_service
 
@@ -16,9 +17,49 @@ type
     TotalVolume
     PriceChangePercentage24h
 
+type
+  # The service mutates its MarketItem refs in place, so the model keeps its own
+  # value copies: that is what a diff against the previous state runs on.
+  LeaderboardRow = object
+    key: string
+    name: string
+    symbol: string
+    image: string
+    currentPrice: float64
+    marketCap: float64
+    totalVolume: float64
+    priceChangePercentage24h: float64
+
+proc toRows(items: seq[MarketItem]): seq[LeaderboardRow] =
+  result = newSeqOfCap[LeaderboardRow](items.len)
+  for item in items:
+    result.add(LeaderboardRow(
+      key: item.key,
+      name: item.name,
+      symbol: item.symbol,
+      image: item.image,
+      currentPrice: item.currentPrice,
+      marketCap: item.marketCap,
+      totalVolume: item.totalVolume,
+      priceChangePercentage24h: item.priceChangePercentage24h,
+    ))
+
+proc syncKey(it: LeaderboardRow): string = it.key
+proc syncRoles(o, n: LeaderboardRow): seq[int] =
+  result = @[]
+  if o.name != n.name: result.add(ModelRole.Name.int)
+  if o.symbol != n.symbol: result.add(ModelRole.Symbol.int)
+  if o.image != n.image: result.add(ModelRole.Image.int)
+  if o.currentPrice != n.currentPrice: result.add(ModelRole.CurrentPrice.int)
+  if o.marketCap != n.marketCap: result.add(ModelRole.MarketCap.int)
+  if o.totalVolume != n.totalVolume: result.add(ModelRole.TotalVolume.int)
+  if o.priceChangePercentage24h != n.priceChangePercentage24h:
+    result.add(ModelRole.PriceChangePercentage24h.int)
+
 QtObject:
   type MarketLeaderboardModel* = ref object of QAbstractListModel
     delegate: io_interface.MarketLeaderboardDataSource
+    items: seq[LeaderboardRow]
 
   proc setup(self: MarketLeaderboardModel)
   proc delete(self: MarketLeaderboardModel)
@@ -30,7 +71,7 @@ QtObject:
     result.delegate = delegate
 
   method rowCount(self: MarketLeaderboardModel, index: QModelIndex = nil): int =
-    return self.delegate.getMarketLeaderboardList().len
+    return self.items.len
 
   method roleNames(self: MarketLeaderboardModel): Table[int, string] =
     {
@@ -44,18 +85,10 @@ QtObject:
       ModelRole.PriceChangePercentage24h.int:"priceChangePercentage24h",
     }.toTable
 
-  proc getRoleFromName(self: MarketLeaderboardModel, roleName: string): Option[int] =
-    for roleInt, name in self.roleNames():
-      if name == roleName:
-        return some(roleInt)
-    return none(int)
-
   method data(self: MarketLeaderboardModel, index: QModelIndex, role: int): QVariant =
     guardModelData(index, self.rowCount(), role, ModelRole)
 
-    # the only way to read items from service is by this single method getMarketLeaderboardList
-
-    let item = self.delegate.getMarketLeaderboardList()[index.row]
+    let item = self.items[index.row]
 
     let enumRole = role.ModelRole
     case enumRole:
@@ -76,20 +109,18 @@ QtObject:
       of ModelRole.PriceChangePercentage24h:
         result = newQVariant(item.priceChangePercentage24h)
 
+  # Both entry points read the service's current page and diff it against the
+  # rows on display: granular insert/remove for a page change, dataChanged with
+  # the touched roles for a price tick, nothing for an unchanged page.
   proc modelsUpdated*(self: MarketLeaderboardModel) =
-    self.beginResetModel()
-    self.endResetModel()
+    self.modelSync(self.items, toRows(self.delegate.getMarketLeaderboardList()))
 
   proc pageUpdated*(self: MarketLeaderboardModel, updates: seq[LeaderboardTokenUpdated]) =
-    for update in updates:
-      var changedRoles: seq[int] = @[]
-      for field in update.changedFields:
-        let roleOpt = self.getRoleFromName(field)
-        if roleOpt.isSome:
-          changedRoles.add(roleOpt.get())
+    self.modelsUpdated()
 
-      if changedRoles.len > 0:
-        notifyRangeRolesChanged(update.index, update.index, changedRoles)
+  when defined(testing) or defined(QT_MODEL_SPY):
+    proc keysInOrder*(self: MarketLeaderboardModel): seq[string] =
+      for it in self.items: result.add(it.key)
 
   proc setup(self: MarketLeaderboardModel) =
     self.QAbstractListModel.setup

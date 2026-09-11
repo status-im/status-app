@@ -48,6 +48,8 @@ SplitView {
                 return LocaleUtils.currencyAmountToLocaleString(abc, options)
             }
             currentPage: -1
+            // the section loader does this in the app
+            Component.onCompleted: fetchMarketTokens(1, pageSize)
             onRequestLaunchSwap: console.warn("Request Launch Swap")
             onFetchMarketTokens: (pageNumber, pageSize) => {
                 console.warn("Fetch Market Tokens with PageSize: %1 and PageNumber:%2".arg(pageSize).arg(pageNumber))

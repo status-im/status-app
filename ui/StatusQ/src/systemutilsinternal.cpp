@@ -1,8 +1,12 @@
 #include "StatusQ/systemutilsinternal.h"
 
+#include <QDateTime>
 #include <QDesktopServices>
 #include <QGuiApplication>
+#include <QImage>
+#include <QImageReader>
 #include <QUrl>
+#include <QUuid>
 #include <QMimeDatabase>
 #include <QDir>
 #include <QFile>
@@ -184,6 +188,67 @@ bool SystemUtilsInternal::ensureDirectory(const QString &path) const
     if (dir.exists())
         return true;
     return dir.mkpath(QStringLiteral("."));
+}
+
+namespace {
+
+constexpr auto normalizedImagePrefix = "statusq_oriented_"_L1;
+
+// A normalized copy outlives the crop dialog - the backend only reads the path once the user
+// saves - so nothing here can know when one is done. Drop leftovers from previous runs instead,
+// sparing recent ones in case a second instance is still holding them.
+void sweepStaleNormalizedImages()
+{
+    const QDir tempDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
+    const auto cutoff = QDateTime::currentDateTime().addDays(-1);
+
+    const auto candidates = tempDir.entryInfoList({QString(normalizedImagePrefix) + u"*.jpg"_s},
+                                                  QDir::Files);
+    for (const auto& candidate : candidates) {
+        if (candidate.lastModified() < cutoff)
+            QFile::remove(candidate.absoluteFilePath());
+    }
+}
+
+} // namespace
+
+QUrl SystemUtilsInternal::normalizeImageOrientation(const QUrl& imageUrl) const
+{
+    if (!imageUrl.isValid() || !imageUrl.isLocalFile())
+        return imageUrl;
+
+    const QString sourcePath = imageUrl.toLocalFile();
+
+    QImageReader reader(sourcePath);
+    reader.setAutoTransform(true);
+
+    // Only JPEG (and TIFF) handlers report a transformation; PNG's eXIf chunk is deliberately
+    // not honoured by Qt, so normalizing PNGs here would introduce the very mismatch we remove.
+    if (reader.transformation() == QImageIOHandler::TransformationNone)
+        return imageUrl;
+
+    const QImage upright = reader.read();
+    if (upright.isNull()) {
+        qWarning() << "SystemUtilsInternal::normalizeImageOrientation: cannot read"
+                   << sourcePath << reader.errorString();
+        return imageUrl;
+    }
+
+    static std::once_flag sweepOnce;
+    std::call_once(sweepOnce, sweepStaleNormalizedImages);
+
+    const auto targetPath =
+            QDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation))
+            .filePath(QString(normalizedImagePrefix)
+                      + QUuid::createUuid().toString(QUuid::WithoutBraces) + u".jpg"_s);
+
+    if (!upright.save(targetPath, "JPEG", 92)) {
+        qWarning() << "SystemUtilsInternal::normalizeImageOrientation: cannot write"
+                   << targetPath;
+        return imageUrl;
+    }
+
+    return QUrl::fromLocalFile(targetPath);
 }
 
 void SystemUtilsInternal::showInFolder(const QString &path) const

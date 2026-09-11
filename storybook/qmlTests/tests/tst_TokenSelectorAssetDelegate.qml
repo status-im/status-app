@@ -124,7 +124,23 @@ Item {
             verify(chipText)
             verify(chipText.visible)
 
-            mouseClick(control)
+            // a click beside the chip selects the asset
+            mouseClick(control, 10, 10)
+            compare(control.clickSpy.count, 1)
+
+            // a click on the chip is consumed by it: it requests the contract
+            // link and must not select the asset
+            const chipSpy = createTemporaryQmlObject("import QtTest; SignalSpy {}", root)
+            chipSpy.target = control
+            chipSpy.signalName = "contractAddressClicked"
+
+            const chipArea = findChild(control, "addressChipMouseArea")
+            verify(chipArea)
+            waitForRendering(control)
+            const chipCenter = chipArea.mapToItem(control, chipArea.width / 2, chipArea.height / 2)
+            mouseClick(control, chipCenter.x, chipCenter.y)
+
+            tryCompare(chipSpy, "count", 1)
             compare(control.clickSpy.count, 1)
         }
 
@@ -140,6 +156,90 @@ Item {
             control.networkIconUrl = "network/ethereum"
             compare(control.effectiveNetworkIcon, "network/ethereum")
             compare(control.hasNetworkBadge, true)
+        }
+
+        // a popular asset has token entries but no balances; the catalog's
+        // chain (fallbackChainId) must resolve the address chip then
+        function test_addressChipWithoutBalances() {
+            const tokens = Qt.createQmlObject("import QtQuick; ListModel {}", root)
+            tokens.append({ chainId: 1, key: "1-" + root.tokenAddress })
+            tokens.append({ chainId: 10, key: "10-0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" })
+
+            const control = createTemporaryObject(delegateCmp, root, {
+                tokensModel: tokens
+            })
+
+            // no balances and no catalog chain: the token's own first
+            // deployment stands in
+            compare(control.tokenAddress, root.tokenAddress)
+            compare(control.hasAddressChip, true)
+
+            // the catalog chain picks the matching per-chain deployment
+            control.fallbackChainId = 10
+            compare(control.tokenAddress, "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+            compare(control.hasAddressChip, true)
+
+            control.fallbackChainId = 1
+            compare(control.tokenAddress, root.tokenAddress)
+            compare(control.hasAddressChip, true)
+
+            // a chain the group has no entry for is ignored — the row shows its
+            // own chain's deployment instead (an unscoped "All" list mixes in
+            // tokens from other chains)
+            control.fallbackChainId = 42161
+            compare(control.tokenAddress, root.tokenAddress)
+            compare(control.hasAddressChip, true)
+        }
+
+        // a chain switch rebuilds the tokens submodel in place with an
+        // unchanged row count; the address must follow the new content
+        function test_addressFollowsTokensModelRebuild() {
+            const tokens = Qt.createQmlObject("import QtQuick; ListModel {}", root)
+            tokens.append({ chainId: 1, key: "1-" + root.tokenAddress })
+
+            const control = createTemporaryObject(delegateCmp, root, {
+                tokensModel: tokens,
+                fallbackChainId: 1
+            })
+            compare(control.tokenAddress, root.tokenAddress)
+
+            // the catalog now holds another chain's deployment; same row count.
+            // Until the rebuild lands the row keeps showing its own (only)
+            // deployment; afterwards it follows the new content.
+            control.fallbackChainId = 10
+            compare(control.tokenAddress, root.tokenAddress)
+            tokens.setProperty(0, "chainId", 10)
+            tokens.setProperty(0, "key", "10-0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+
+            compare(control.tokenAddress, "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+            compare(control.hasAddressChip, true)
+        }
+
+        // a row without a per-chain balance badges its RESOLVED chain's icon
+        // (looked up in the networks catalog), not the generic default — on an
+        // unscoped "All" list a BSC-only token must show the BSC badge
+        function test_networkBadgeFollowsTheResolvedChain() {
+            const tokens = Qt.createQmlObject("import QtQuick; ListModel {}", root)
+            tokens.append({ chainId: 56, key: "56-" + root.tokenAddress })
+
+            const networks = Qt.createQmlObject("import QtQuick; ListModel {}", root)
+            networks.append({ chainId: 1, iconUrl: "network/Network=Ethereum" })
+            networks.append({ chainId: 56, iconUrl: "network/Network=BSC" })
+
+            const control = createTemporaryObject(delegateCmp, root, {
+                tokensModel: tokens,
+                flatNetworksModel: networks,
+                defaultNetworkIcon: "network/Network=Ethereum",
+                fallbackChainId: 1 // the panel's chain; the token isn't on it
+            })
+
+            compare(control.resolvedChainId, 56)
+            compare(control.effectiveNetworkIcon, "network/Network=BSC")
+            compare(control.tokenAddress, root.tokenAddress)
+
+            // without the networks catalog the generic default still applies
+            control.flatNetworksModel = null
+            compare(control.effectiveNetworkIcon, "network/Network=Ethereum")
         }
 
         function test_zeroAddressHasNoChip() {

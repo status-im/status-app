@@ -30,6 +30,11 @@ public:
     // iOS: no-op (Show in folder is hidden).
     Q_INVOKABLE void showInFolder(const QString &path) const;
 
+    // Returns an upright copy of the image, carrying no EXIF orientation tag, so that crop
+    // coordinates produced by Qt (which applies the tag) address the same pixels the backend
+    // decodes (which does not). Images with no rotation tag are returned untouched.
+    Q_INVOKABLE QUrl normalizeImageOrientation(const QUrl& imageUrl) const;
+
     Q_INVOKABLE void downloadImageByUrl(const QUrl& url, const QString& path);
     Q_INVOKABLE void synthetizeRightClick(QQuickItem* item, qreal x, qreal y, Qt::KeyboardModifiers modifiers) const;
     Q_INVOKABLE Qt::KeyboardModifiers queryKeyboardModifiers();

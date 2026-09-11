@@ -65,14 +65,6 @@ proc toTokenTransferMetadata*(jsonObj: JsonNode): TokenTransferMetadata =
   discard jsonObj.getProp("isOwnerToken", result.isOwnerToken)
 
 type
-  EstimatedTime* {.pure.} = enum
-    Unknown = 0
-    LessThanOneMin
-    LessThanThreeMins
-    LessThanFiveMins
-    MoreThanFiveMins
-
-type
   TransactionMinedArgs* = ref object of Args
     data*: string
     transactionHash*: string
@@ -502,14 +494,6 @@ QtObject:
     except CatchableError as e:
       error "setCustomTxDetails", exception=e.msg
       return e.msg
-
-  proc getEstimatedTime*(self: Service, chainId: int, maxFeePerGas: string): EstimatedTime =
-    try:
-      let response = backend.getTransactionEstimatedTime(chainId, maxFeePerGas).result.getInt
-      return EstimatedTime(response)
-    except Exception as e:
-      error "Error estimating transaction time", message = e.msg
-      return EstimatedTime.Unknown
 
   proc getEstimatedTimeV2*(self: Service, chainId: int, gasPrice: string, maxFeePerGas: string, priorityFee: string): int =
     try:

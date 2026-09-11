@@ -1079,6 +1079,7 @@ Item {
         }
 
         function openSettingsRoot() {
+            mainLayoutItem.openACCenterPanel = false
             profileLoader.settingsSubSubsection = -1
             profileLoader.settingsSubsection = appMain.isPortraitMode ? -1 : Constants.settingsSubsection.profile
             appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.profile)
@@ -1127,10 +1128,12 @@ Item {
                     !d.isBrowserEnabled ||
                     !appMain.rootStore.thirdpartyServicesEnabled) {
                 Qt.openUrlExternally(link)
+                Global.linkOpenedExternally(link)
                 return
             }
             globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.browser)
             Qt.callLater(() => browserLayoutContainer.item.openUrlInNewTab(link))
+            Global.linkOpenedExternally(link)
         }
 
         function tryOpenNavigationEducationPopup() {
@@ -1379,8 +1382,7 @@ Item {
         }
 
         function onCloseActivityCenterRequested() {
-            if (mainLayoutItem.isPortraitMode)
-                mainLayoutItem.openACCenterPanel = false
+            mainLayoutItem.openACCenterPanel = false
         }
     }
 
@@ -2896,7 +2898,7 @@ Item {
         anchors.rightMargin: 8
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 60
-        width: 374
+        width: Math.min(parent.width - anchors.rightMargin*2, 374)
         height: Math.min(parent.height - 120, toastArea.contentHeight)
         spacing: 8
         verticalLayoutDirection: ListView.BottomToTop

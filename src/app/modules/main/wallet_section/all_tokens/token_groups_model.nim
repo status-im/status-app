@@ -418,34 +418,72 @@ QtObject:
 
     self.rebuildMarketDetails(self.getDisplayModel())
 
+  proc ensureKeyLoaded*(self: TokenGroupsModel, key: string): bool =
+    if ModelMode.UseLazyLoading notin self.modelModes:
+      for item in self.getDisplayModel():
+        if item.key == key:
+          return true
+      return false
+    if self.loadedKeys.hasKey(key):
+      return true
+    let sourceModel = self.getSourceModel()
+    for item in sourceModel:
+      if item.key == key:
+        let parentModelIndex = newQModelIndex()
+        defer: parentModelIndex.delete
+        let idx = self.loadedItems.len
+        self.beginInsertRows(parentModelIndex, idx, idx)
+        self.loadedKeys[key] = true
+        self.loadedItems.add(item)
+        self.endInsertRows()
+        self.rebuildMarketDetails(self.getDisplayModel())
+        self.hasMoreItemsChanged()
+        return true
+    return false
+
   proc fetchMore*(self: TokenGroupsModel) {.slot.} =
+    if ModelMode.UseLazyLoading notin self.modelModes:
+      return
     if not self.getHasMoreItems() or self.isLoadingMore:
       return
     self.setIsLoadingMore(true)
 
-    let parentModelIndex = newQModelIndex()
-    defer: parentModelIndex.delete
-
     let sourceModel = self.getSourceModel()
-    let first = self.rowCount()
-    let last = min(first + self.lazyLoadingBatchSize - 1, sourceModel.len - 1)
-    self.beginInsertRows(parentModelIndex, first, last)
-    defer:
+    var batch: seq[TokenGroupItem] = @[]
+    for item in sourceModel:
+      if self.loadedKeys.hasKey(item.key):
+        continue
+      batch.add(item)
+      if batch.len >= self.lazyLoadingBatchSize:
+        break
+
+    if batch.len > 0:
+      let parentModelIndex = newQModelIndex()
+      defer: parentModelIndex.delete
+      let first = self.rowCount()
+      self.beginInsertRows(parentModelIndex, first, first + batch.len - 1)
+      for item in batch:
+        self.loadedKeys[item.key] = true
+        self.loadedItems.add(item)
       self.endInsertRows()
-      self.setIsLoadingMore(false)
-      self.hasMoreItemsChanged()
+      self.rebuildMarketDetails(self.getDisplayModel())
 
-    if ModelMode.UseLazyLoading in self.modelModes:
-      for index in countup(first, last):
-        let key = sourceModel[index].key
-        if self.loadedKeys.hasKey(key):
-          continue
-        self.loadedKeys[key] = true
-        self.loadedItems.add(sourceModel[index])
+    self.setIsLoadingMore(false)
+    self.hasMoreItemsChanged()
 
-    self.rebuildMarketDetails(self.getDisplayModel())
+  proc addressSearchNeedle(keywordLower: string): string =
+    var needle = keywordLower
+    let prefixed = needle.startsWith("0x")
+    if prefixed:
+      needle = needle[2 .. ^1]
+    if needle.len == 0 or (not prefixed and needle.len < 4): # at least 4 characters are required for a valid address
+      return ""
+    for c in needle:
+      if c notin HexDigits:
+        return ""
+    needle
 
-  proc getSearchRelevance(item: TokenGroupItem, keywordLower: string): int =
+  proc getTextSearchRelevance(item: TokenGroupItem, keywordLower: string): int =
     if keywordLower.len == 0:
       return 0
 
@@ -478,16 +516,44 @@ QtObject:
 
     return -1
 
+  proc addressSearchMatch(item: TokenGroupItem,
+      addrNeedle: string): tuple[relevance: int, tokens: seq[TokenItem]] =
+    result.relevance = -1
+    if addrNeedle.len == 0:
+      return
+    for token in item.tokens:
+      var address = token.address.toLowerAscii()
+      if address.startsWith("0x"):
+        address = address[2 .. ^1]
+      var score = -1
+      if address == addrNeedle:
+        score = 100  # a full address is an exact identity
+      elif address.startsWith(addrNeedle):
+        score = 80
+      elif address.find(addrNeedle) > 0:
+        score = 55
+      if score >= 0:
+        result.tokens.add(token)
+        result.relevance = max(result.relevance, score)
+
   proc search*(self: TokenGroupsModel, keyword: string) {.slot.} =
     self.searchKeyword = keyword.strip()
     self.fullSearchResults = @[]
     if self.searchKeyword.len > 0:
       let keywordLower = self.searchKeyword.toLowerAscii()
+      let addrNeedle = addressSearchNeedle(keywordLower)
       var scoredResults: seq[(int, int, TokenGroupItem)] = @[]
       for index, item in self.delegate.getAllTokenGroups():
-        let relevance = getSearchRelevance(item, keywordLower)
-        if relevance >= 0:
-          scoredResults.add((relevance, index, item))
+        let textRelevance = getTextSearchRelevance(item, keywordLower)
+        let (addrRelevance, addrTokens) = addressSearchMatch(item, addrNeedle)
+        let relevance = max(textRelevance, addrRelevance)
+        if relevance < 0:
+          continue
+        var resultItem = item
+        if textRelevance < 0 and addrTokens.len < item.tokens.len:
+          resultItem = TokenGroupItem(key: item.key, name: item.name, symbol: item.symbol, decimals: item.decimals,
+            logoUri: item.logoUri, tokens: addrTokens)
+        scoredResults.add((relevance, index, resultItem))
 
       scoredResults.sort(proc(a, b: (int, int, TokenGroupItem)): int =
         if a[0] > b[0]:
@@ -505,6 +571,10 @@ QtObject:
         self.fullSearchResults.add(scoredItem[2])
 
     self.modelsUpdated(resetModelSize = true)
+
+  proc refreshSearch*(self: TokenGroupsModel) =
+    if ModelMode.IsSearchResult in self.modelModes and self.searchKeyword.len > 0:
+      self.search(self.searchKeyword)
 
   proc tokensMarketValuesUpdated*(self: TokenGroupsModel) =
     if ModelMode.NoMarketDetails in self.modelModes:

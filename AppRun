@@ -17,9 +17,11 @@ export PCSC_DRIVERS_DIR="${APPDIR}/usr/lib/pcsc/drivers"
 export PCSCLITE_CONFIG_DIR="${APPDIR}/etc/reader.conf.d"
 
 # Start pcscd
-# warning: needs to be same as ipcdir in ci/Dockerfile
+# warning: needs to be same as ipcdir/usbdropdir in ci/Dockerfile
 # https://salsa.debian.org/rousseau/PCSC/-/blob/master/meson.options?ref_type=heads#L36
 PCSCD_RUN_DIR="/tmp/pcscd/run"
+PCSCD_DRIVERS_DIR="/tmp/pcscd/drivers"
+PCSCD_SOCKET="${PCSCD_RUN_DIR}/pcscd.comm"
 PCSCD_PIDFILE="/tmp/pcscd/pcscd.pid"
 
 mkdir -p "$(dirname "$PCSCD_PIDFILE")"
@@ -39,8 +41,13 @@ fi
 pkill -9 pcscd 2>/dev/null || true
 sleep 0.1
 
-rm -rf "${PCSCD_RUN_DIR}"
-mkdir -p "${PCSCD_RUN_DIR}"
+rm -rf "${PCSCD_RUN_DIR}" "${PCSCD_DRIVERS_DIR}"
+mkdir -p "${PCSCD_RUN_DIR}" "${PCSCD_DRIVERS_DIR}"
+
+# pcscd usbdropdir is compile-time /tmp/pcscd/drivers; the AppImage mount path is random.
+if [ -d "${APPDIR}/usr/lib/pcsc/drivers" ]; then
+  cp -a "${APPDIR}/usr/lib/pcsc/drivers/." "${PCSCD_DRIVERS_DIR}/"
+fi
 
 cleanup_pcscd() {
   if [ -n "$PCSCD_PID" ] && kill -0 "$PCSCD_PID" 2>/dev/null; then
@@ -53,10 +60,30 @@ cleanup_pcscd() {
 
 trap cleanup_pcscd EXIT TERM INT
 
+# Poll until the predicate succeeds or the timeout elapses; poll interval =
+# timeout/20. Timeout is non-fatal (callers tolerate it), hence WARN.
+# $1=desc $2=timeout-secs $3...=command.
+wait_for() {
+  local desc="$1" timeout="$2"; shift 2
+  local deadline=$(( SECONDS + timeout ))
+  local ms=$(( timeout * 1000 / 20 )) interval
+  printf -v interval '%d.%03d' $(( ms / 1000 )) $(( ms % 1000 ))
+  while ! "$@"; do
+    if (( SECONDS >= deadline )); then
+      echo "WARN: timed out after ${timeout}s waiting for ${desc}" >&2
+      return 1
+    fi
+    sleep "$interval"
+  done
+}
+
 echo "starting pcscd with ${APPDIR}/usr/bin/pcscd --foreground --auto-exit &"
 "${APPDIR}/usr/bin/pcscd" --foreground --auto-exit &
 PCSCD_PID=$!
 echo "$PCSCD_PID" >"$PCSCD_PIDFILE"
+
+wait_for "pcscd socket ${PCSCD_SOCKET}" 5 \
+  bash -c "[[ -S '${PCSCD_SOCKET}' ]]" || true
 
 DEFAULT_LANG=en_US.UTF-8
 if [[ "$LANG" == "C.UTF-8" ]]; then

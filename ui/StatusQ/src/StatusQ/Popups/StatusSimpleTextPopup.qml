@@ -8,7 +8,7 @@ StatusDialog {
     id: root
 
     width: 600
-    padding: 0
+    horizontalPadding: 0
     standardButtons: Dialog.Ok
 
     property alias content: contentText

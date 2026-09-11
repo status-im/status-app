@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtTest
 
 import StatusQ
@@ -113,6 +114,53 @@ Item {
             compare(networkSpy.count, 0)
         }
 
+        // The chip row is pure browse state: it opens on the panel's selected
+        // chain, the user may wander (another chain, "All"), and closing the
+        // dropdown snaps it back — never touching the selected chain or token.
+        function test_chainFilterFollowsTheSelectedChain() {
+            controlUnderTest = createTemporaryObject(componentUnderTest, root)
+            verify(!!controlUnderTest)
+
+            // closed state: the filter mirrors the selected chain
+            compare(controlUnderTest.listChainFilter, d.goOptChainId)
+
+            // ...and tracks it when the selection moves
+            controlUnderTest.selectedNetworkChainId = 1
+            compare(controlUnderTest.listChainFilter, 1)
+            controlUnderTest.selectedNetworkChainId = d.goOptChainId
+            compare(controlUnderTest.listChainFilter, d.goOptChainId)
+
+            const holdingSelector = findChild(controlUnderTest, "holdingSelector")
+            verify(!!holdingSelector)
+            const button = findChild(controlUnderTest, "tokenSelectorButton")
+            verify(!!button)
+
+            const networkSpy = createTemporaryQmlObject(
+                    "import QtTest; SignalSpy {}", root)
+            networkSpy.target = controlUnderTest
+            networkSpy.signalName = "networkSelected"
+
+            // browsing starts on the selected chain
+            mouseClick(button)
+            tryVerify(() => holdingSelector.dropdownOpened)
+            compare(controlUnderTest.listChainFilter, d.goOptChainId)
+
+            // wander off to "All" — a display choice, not a selection
+            const chainFilter = findChild(controlUnderTest.Overlay.overlay, "chainFilter")
+            verify(!!chainFilter)
+            chainFilter.chainSelected(-1)
+            compare(controlUnderTest.listChainFilter, -1)
+            compare(controlUnderTest.selectedNetworkChainId, d.goOptChainId)
+            compare(networkSpy.count, 0)
+
+            // closing without a pick leaves no trace of the browsing
+            keyClick(Qt.Key_Escape)
+            tryVerify(() => !holdingSelector.dropdownOpened)
+            compare(controlUnderTest.listChainFilter, d.goOptChainId)
+            compare(controlUnderTest.selectedNetworkChainId, d.goOptChainId)
+            compare(networkSpy.count, 0)
+        }
+
         function test_popularRowBadgeFollowsTheListChain() {
             const activeNetworks = d.adaptor.networksStore.activeNetworks
             verify(activeNetworks.count > 1)
@@ -200,6 +248,94 @@ Item {
             // once it settles the token really is absent, so the default takes over
             controlUnderTest.tokenSelectorLoading = false
             tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
+        }
+
+        function test_chainFilterBrowsingKeepsTheSelection() {
+            const store = d.adaptor.walletAssetsStore.walletTokensStore
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: sttGroupKey})
+            store.buildGroupsForChain(d.goOptChainId)
+            verify(!!controlUnderTest)
+            tryCompare(controlUnderTest, "selectedHoldingId", sttGroupKey)
+
+            // the user flips the filter to browse mainnet: the settled catalog
+            // holds mainnet's tokens and lacks the selected one
+            const fresh = store.createTokenSelectorModel(3).model
+            verify(!!fresh)
+            controlUnderTest.tokenSelectorModel = fresh
+            controlUnderTest.listChainFilter = 1
+            fresh.sourceData = [{
+                key: ethGroupKey, name: "Ether", symbol: "ETH", logoUri: "", decimals: 18,
+                cryptoPrice: 1, currentBalance: 0, currencyBalance: 0, sectionName: "",
+                balances: [], tokens: [{ key: "1-native", chainId: 1 }]
+            }]
+            wait(50)
+            compare(controlUnderTest.selectedHoldingId, sttGroupKey)
+
+            // back on the side's own catalog its absence is authoritative again
+            controlUnderTest.tokenSelectorLoading = true
+            controlUnderTest.listChainFilter = -1
+            controlUnderTest.tokenSelectorLoading = false
+            tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
+        }
+
+        // Symbols are not token identities — an unrelated (or malicious)
+        // contract can share one. When the selected group key is absent from
+        // the settled catalog, the panel must fall back to the configured
+        // default/native GROUP KEY, never to "some group with the same symbol".
+        function test_absentSelectionNeverRemapsToASameSymbolImpostor() {
+            const store = d.adaptor.walletAssetsStore.walletTokensStore
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: sttGroupKey})
+            store.buildGroupsForChain(d.goOptChainId)
+            verify(!!controlUnderTest)
+            tryCompare(controlUnderTest, "selectedHoldingId", sttGroupKey)
+
+            // settle on a catalog that lacks the selected group but offers an
+            // impostor sharing its symbol, plus the configured default
+            const fresh = store.createTokenSelectorModel(3).model
+            verify(!!fresh)
+            controlUnderTest.tokenSelectorLoading = true
+            controlUnderTest.tokenSelectorModel = fresh
+            fresh.sourceData = [{
+                key: "11155420-0xevil", name: "Totally Legit STT", symbol: "STT",
+                logoUri: "", decimals: 18, cryptoPrice: 1, currentBalance: 0,
+                currencyBalance: 0, sectionName: "",
+                balances: [], tokens: [{ key: "11155420-0xevil", chainId: d.goOptChainId }]
+            }, {
+                key: ethGroupKey, name: "Ether", symbol: "ETH", logoUri: "",
+                decimals: 18, cryptoPrice: 1, currentBalance: 0,
+                currencyBalance: 0, sectionName: "",
+                balances: [], tokens: [{ key: "1-native", chainId: d.goOptChainId }]
+            }]
+            controlUnderTest.tokenSelectorLoading = false
+
+            tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
+            verify(controlUnderTest.selectedHoldingId !== "11155420-0xevil",
+                   "a same-symbol group is not the selected token")
+        }
+
+        function test_multiChainTokenRefsStillResolveSelection() {
+            const store = d.adaptor.walletAssetsStore.walletTokensStore
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})
+            verify(!!controlUnderTest)
+
+            const fresh = store.createTokenSelectorModel(3).model
+            verify(!!fresh)
+            controlUnderTest.tokenSelectorModel = fresh
+
+            fresh.sourceData = [{
+                key: ethGroupKey, name: "Ether", symbol: "ETH", logoUri: "", decimals: 18,
+                cryptoPrice: 1, currentBalance: 0, currencyBalance: 0, sectionName: "",
+                balances: [],
+                tokens: [{ key: "1-native", chainId: 1 },
+                         { key: d.goOptChainId + "-native", chainId: d.goOptChainId }]
+            }]
+
+            tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
+            tryCompare(controlUnderTest, "selectedHoldingTokenKey", d.goOptChainId + "-native")
+
+            // a chain change re-resolves the key instead of leaving it stale
+            controlUnderTest.selectedNetworkChainId = 1
+            tryCompare(controlUnderTest, "selectedHoldingTokenKey", "1-native")
         }
 
         function test_fiatEquivalentAndBalanceLineShareALine() {
@@ -420,6 +556,7 @@ Item {
             verify(!!holdingSelector)
             mouseClick(holdingSelector)
             waitForRendering(holdingSelector)
+            tryVerify(() => holdingSelector.dropdownOpened, 2000, "dropdown did not open")
 
             const assetSelectorList = findChild(holdingSelector, "assetsListView")
             verify(!!assetSelectorList)
@@ -430,7 +567,11 @@ Item {
             assetSelectorList.positionViewAtIndex(delegateIndex, ListView.Center)
             const sttDelegate = assetSelectorList.itemAtIndex(delegateIndex)
             verify(!!sttDelegate)
-            mouseClick(sttDelegate)
+            // activate through the delegate's own entry point (the same path
+            // Enter/Return takes, incl. the enabled guard) — a raw mouseClick
+            // at this list position is unreliable on the offscreen platform
+            verify(sttDelegate.rowAt(0).enabled)
+            sttDelegate.selectFirst()
 
             tryCompare(controlUnderTest, "selectedHoldingId", sttGroupKey)
 

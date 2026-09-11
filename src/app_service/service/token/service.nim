@@ -64,6 +64,8 @@ QtObject:
     tokenListsLoading: bool
     groupsForChainLoading: bool
     groupsForChainToLoading: bool
+    groupsForChainRequestedChainId: int
+    groupsForChainToRequestedChainId: int
     tokenDetailsTable: Table[string, TokenDetailsItem] # [tokenKey, TokenDetailsItem]
     tokenMarketValuesTable: Table[string, TokenMarketValuesItem] # [tokenKey, TokenMarketValuesItem]
     tokenPriceTable: Table[string, float64] # [tokenKey, price]

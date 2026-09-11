@@ -103,7 +103,8 @@ type
     AllTokens  ## swap/buy: base list = the popular list merged with owned balances
 
 proc mergePopularWithOwned*(popular: seq[PopularGroup],
-    owned: seq[TokenSelectorItem], showCommunityAssets: bool): seq[TokenSelectorItem] =
+    owned: seq[TokenSelectorItem], showCommunityAssets: bool,
+    widenTokenRefsFromOwned = true): seq[TokenSelectorItem] =
   ## The all-tokens / search path (showAllTokens): the row set follows the
   ## popular list (all-tokens page or backend search result); a popular token the
   ## user owns is enriched with its owned balance data (chips / currentBalance /
@@ -131,7 +132,35 @@ proc mergePopularWithOwned*(popular: seq[PopularGroup],
       item.chips = o.chips
       item.decimals = o.decimals
       item.marketPrice = o.marketPrice
+      # The "All" filter splits a multi-chain holding into one row per chain, so we need to merge the owned refs in
+      if widenTokenRefsFromOwned:
+        var chains = item.tokens.mapIt(it.chainId).toHashSet
+        for t in o.tokens:
+          if t.chainId notin chains:
+            item.tokens.add(TokenSelectorTokenRef(key: t.key, chainId: t.chainId))
+            chains.incl(t.chainId)
+      elif item.tokens.len > 0:
+        let refChains = item.tokens.mapIt(it.chainId).toHashSet
+        if item.chips.anyIt(it.chainId notin refChains):
+          item.chips = item.chips.filterIt(it.chainId in refChains)
+          var total = 0.0
+          for chip in item.chips:
+            total += chip.balance
+          item.currentBalance = total
+          item.currencyBalance = total * item.marketPrice
+          item.hasBalance = total != 0.0
     result.add(item)
+
+proc filterToEnabledChains(items: seq[TokenSelectorItem],
+    enabledChainIds: seq[int]): seq[TokenSelectorItem] =
+  if enabledChainIds.len == 0:
+    return items
+  let chainSet = enabledChainIds.toHashSet
+  items.filter(proc(item: TokenSelectorItem): bool =
+    for t in item.tokens:
+      if t.chainId in chainSet:
+        return true
+    false)
 
 proc buildDisplayItems*(
     ownedGroups: seq[AggTokenGroup], networks: seq[NetworkInfo],
@@ -148,11 +177,16 @@ proc buildDisplayItems*(
   ##   - Owned (send), no search -> just the owned tokens.
   let owned = buildTokenSelectorItems(ownedGroups, networks, params)
   if searchActive:
-    let merged = mergePopularWithOwned(searchGroups, owned, params.showCommunityAssets)
+    let merged = filterToEnabledChains(
+      mergePopularWithOwned(searchGroups, owned, params.showCommunityAssets, widenTokenRefsFromOwned = false),
+      params.enabledChainIds
+    )
     if mode == TokenSelectorMode.Owned:
       let ownedKeys = owned.mapIt(it.key).toHashSet
-      return merged.filterIt(it.key in ownedKeys)
+      return merged.filterIt(it.key in ownedKeys and it.chips.len > 0)
     return merged
   if mode == TokenSelectorMode.AllTokens:
-    return mergePopularWithOwned(popularGroups, owned, params.showCommunityAssets)
+    return filterToEnabledChains(
+      mergePopularWithOwned(popularGroups, owned, params.showCommunityAssets),
+      params.enabledChainIds)
   return owned

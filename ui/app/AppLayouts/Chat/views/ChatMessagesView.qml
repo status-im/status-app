@@ -12,7 +12,6 @@ import StatusQ.Popups.Dialog
 
 import utils
 import shared
-import shared.stores as SharedStores
 import shared.views
 import shared.panels
 import shared.popups
@@ -21,7 +20,6 @@ import shared.controls
 import shared.views.chat
 
 import AppLayouts.Chat.stores
-import AppLayouts.stores as AppLayoutStores
 
 import "../controls"
 import "../panels"
@@ -129,6 +127,17 @@ Item {
             chatLogView.positionViewAtBeginning()
             d.isAtBottom = true
             markAllMessagesReadIfMostRecentMessageIsInViewport()
+        }
+
+        // Skipped when focus is already inside the transcript: a tap on an inline
+        // message editor raises the panel on press, and hiding it on release
+        // would open and close the keyboard under a single tap.
+        function dismissKeyboard() {
+            for (let item = root.Window.activeFocusItem; item; item = item.parent) {
+                if (item === chatLogView)
+                    return
+            }
+            Qt.inputMethod.hide()
         }
 
         onIsMostRecentMessageInViewportChanged: markAllMessagesReadIfMostRecentMessageIsInViewport()
@@ -274,10 +283,39 @@ Item {
 
         model: messageStore.messagesModel
 
+        // Practically every row accepts the press (selectable text, avatars,
+        // media, the header's own handler) and delivery stops at the topmost
+        // acceptor, so the dismisser has to sit above the rows rather than on
+        // the list or an ancestor. PointHandler takes only a passive grab and
+        // never accepts, so the same press still reaches the row beneath it.
+        // Explicitly parented to the list so it covers the viewport instead of
+        // being reparented into the scrolling contentItem.
+        Item {
+            parent: chatLogView
+            anchors.fill: parent
+            z: 1
+
+            PointHandler {
+                objectName: "dismissKeyboardHandler"
+                onActiveChanged: {
+                    if (active)
+                        d.dismissKeyboard()
+                }
+            }
+        }
+
         onContentYChanged: d.loadMoreMessagesIfScrollBelowThreshold()
 
         onMovementEnded: {
             d.isAtBottom = d.isMostRecentMessageInViewport
+        }
+
+        // `dragging`, not `moving`/`flicking`: those are also true for the
+        // programmatic scrolls this view performs, and an incoming message must
+        // never close the keyboard of someone mid-sentence.
+        onDraggingChanged: {
+            if (dragging)
+                d.dismissKeyboard()
         }
 
         onCountChanged: {

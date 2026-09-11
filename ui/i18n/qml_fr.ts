@@ -4313,11 +4313,11 @@ Vous resterez connecté et votre phrase de récupération sera entièrement entr
     </message>
     <message>
         <source>Invalid characters (letters and numbers, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Caractères non valides (lettres et chiffres, espaces simples, tirets et tirets bas uniquement)</translation>
     </message>
     <message>
         <source>Name is too cool (use letters and numbers, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Ce nom est trop cool (utilisez uniquement des lettres et des chiffres, des espaces simples, des tirets et des tirets bas)</translation>
     </message>
     <message>
         <source>Whole numbers only</source>
@@ -4592,7 +4592,8 @@ Vous resterez connecté et votre phrase de récupération sera entièrement entr
     <message>
         <source>Your profile data was re-encrypted successfully.
 Log in with your new password.</source>
-        <translation type="unfinished"></translation>
+        <translation>Les données de votre profil ont été rechiffrées avec succès.
+Connectez-vous avec votre nouveau mot de passe.</translation>
     </message>
     <message>
         <source>Re-encryption failed</source>
@@ -4673,15 +4674,15 @@ Log in with your new password.</source>
     <name>CrashedWebPage</name>
     <message>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>Une erreur s’est produite</translation>
     </message>
     <message>
         <source>This page stopped responding and needs to be reloaded.</source>
-        <translation type="unfinished"></translation>
+        <translation>Cette page a cessé de répondre et doit être rechargée.</translation>
     </message>
     <message>
         <source>Reload</source>
-        <translation type="unfinished">Recharger</translation>
+        <translation>Recharger</translation>
     </message>
 </context>
 <context>
@@ -6181,7 +6182,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Invalid characters (use letters and numbers, hyphens, underscores and spaces only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Caractères non valides (utilisez uniquement des lettres et des chiffres, des tirets, des tirets bas et des espaces)</translation>
     </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
@@ -6472,19 +6473,19 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Please name your token name (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Veuillez nommer votre jeton (utilisez uniquement des lettres et des chiffres, des tirets et des tirets bas)</translation>
     </message>
     <message>
         <source>Your token name is too cool (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Le nom de votre jeton est trop cool (utilisez uniquement des lettres et des chiffres, des tirets et des tirets bas)</translation>
     </message>
     <message>
         <source>Your token name contains invalid characters (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Le nom de votre jeton contient des caractères non valides (utilisez uniquement des lettres et des chiffres, des tirets et des tirets bas)</translation>
     </message>
     <message>
         <source>Only letters, numbers, standard punctuation and emojis allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Utilisez uniquement des lettres, des chiffres, des signes de ponctuation standard et des emojis</translation>
     </message>
     <message>
         <source>Symbol</source>
@@ -7160,58 +7161,61 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
+    <name>EnsTermsAndConditionsPopup</name>
+    <message>
+        <source>Terms of name registration</source>
+        <translation type="unfinished">Conditions d’enregistrement des noms</translation>
+    </message>
+    <message>
+        <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
+        <translation type="unfinished">Les fonds sont déposés pour une durée de 1 an. Vos SNT seront bloqués, mais non dépensés.</translation>
+    </message>
+    <message>
+        <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
+        <translation type="unfinished">Après 1 an, vous pouvez libérer le nom et récupérer votre dépôt, ou ne rien faire pour conserver le nom.</translation>
+    </message>
+    <message>
+        <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
+        <translation type="unfinished">Si les conditions du contrat changent (par exemple, si Status effectue des mises à niveau du contrat), l’utilisateur a le droit de libérer le nom d’utilisateur, quel que soit le temps pendant lequel il l’a conservé.</translation>
+    </message>
+    <message>
+        <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
+        <translation type="unfinished">Le contrôleur du contrat n’a pas accès à vos fonds déposés. Ils ne peuvent être renvoyés qu’à l’adresse qui les a envoyés.</translation>
+    </message>
+    <message>
+        <source>Your address(es) will be publicly associated with your ENS name.</source>
+        <translation type="unfinished">Votre ou vos adresses seront publiquement associées à votre nom ENS.</translation>
+    </message>
+    <message>
+        <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
+        <translation type="unfinished">Les noms d’utilisateur sont créés en tant que nœuds de sous-domaine de stateofus.eth et sont soumis aux conditions du contrat intelligent ENS.</translation>
+    </message>
+    <message>
+        <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
+        <translation type="unfinished">Vous autorisez le contrat à transférer des SNT en votre nom. Cela ne peut se produire que lorsque vous approuvez une transaction pour autoriser le transfert.</translation>
+    </message>
+    <message>
+        <source>These terms are guaranteed by the smart contract logic at addresses:</source>
+        <translation type="unfinished">Ces conditions sont garanties par la logique du contrat intelligent aux adresses suivantes&#xa0;:</translation>
+    </message>
+    <message>
+        <source>%1 (Status UsernameRegistrar).</source>
+        <translation type="unfinished">%1 (Enregistreur de noms d’utilisateur Status).</translation>
+    </message>
+    <message>
+        <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
+        <translation type="unfinished">&lt;a href=&apos;%1/%2&apos;&gt;Rechercher sur Etherscan&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <source>%1 (ENS Registry).</source>
+        <translation type="unfinished">%1 (Registre ENS).</translation>
+    </message>
+</context>
+<context>
     <name>EnsTermsAndConditionsView</name>
     <message>
         <source>ENS usernames</source>
         <translation>Noms d’utilisateur ENS</translation>
-    </message>
-    <message>
-        <source>Terms of name registration</source>
-        <translation>Conditions d’enregistrement des noms</translation>
-    </message>
-    <message>
-        <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
-        <translation>Les fonds sont déposés pour une durée de 1 an. Vos SNT seront bloqués, mais non dépensés.</translation>
-    </message>
-    <message>
-        <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
-        <translation>Après 1 an, vous pouvez libérer le nom et récupérer votre dépôt, ou ne rien faire pour conserver le nom.</translation>
-    </message>
-    <message>
-        <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
-        <translation>Si les conditions du contrat changent (par exemple, si Status effectue des mises à niveau du contrat), l’utilisateur a le droit de libérer le nom d’utilisateur, quel que soit le temps pendant lequel il l’a conservé.</translation>
-    </message>
-    <message>
-        <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
-        <translation>Le contrôleur du contrat n’a pas accès à vos fonds déposés. Ils ne peuvent être renvoyés qu’à l’adresse qui les a envoyés.</translation>
-    </message>
-    <message>
-        <source>Your address(es) will be publicly associated with your ENS name.</source>
-        <translation>Votre ou vos adresses seront publiquement associées à votre nom ENS.</translation>
-    </message>
-    <message>
-        <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
-        <translation>Les noms d’utilisateur sont créés en tant que nœuds de sous-domaine de stateofus.eth et sont soumis aux conditions du contrat intelligent ENS.</translation>
-    </message>
-    <message>
-        <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
-        <translation>Vous autorisez le contrat à transférer des SNT en votre nom. Cela ne peut se produire que lorsque vous approuvez une transaction pour autoriser le transfert.</translation>
-    </message>
-    <message>
-        <source>These terms are guaranteed by the smart contract logic at addresses:</source>
-        <translation>Ces conditions sont garanties par la logique du contrat intelligent aux adresses suivantes&#xa0;:</translation>
-    </message>
-    <message>
-        <source>%1 (Status UsernameRegistrar).</source>
-        <translation>%1 (Enregistreur de noms d’utilisateur Status).</translation>
-    </message>
-    <message>
-        <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
-        <translation>&lt;a href=&apos;%1/%2&apos;&gt;Rechercher sur Etherscan&lt;/a&gt;</translation>
-    </message>
-    <message>
-        <source>%1 (ENS Registry).</source>
-        <translation>%1 (Registre ENS).</translation>
     </message>
     <message>
         <source>Wallet address</source>
@@ -9398,7 +9402,7 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>No PIN? Skip</source>
-        <translation type="unfinished"></translation>
+        <translation>Pas de PIN&#xa0;? Ignorer</translation>
     </message>
     <message>
         <source>Factory reset this Keycard</source>
@@ -10491,16 +10495,16 @@ chargement</translation>
 <context>
     <name>LogosNetworkView</name>
     <message>
-        <source>Messages are sent via the Logos Messaging Network, a peer-to-peer network powered collectively by users running Status Desktop, making Status decentralized, resilient, and censorship-resistant. %1</source>
-        <translation>Les messages sont envoyés via le réseau Logos Messaging, un réseau pair à pair alimenté collectivement par les utilisateurs exécutant Status Desktop, ce qui rend Status décentralisé, résilient et résistant à la censure. %1</translation>
-    </message>
-    <message>
         <source>Learn more</source>
         <translation>En savoir plus</translation>
     </message>
     <message>
-        <source>Connected Logos network peers</source>
-        <translation>Pairs du réseau Logos connectés</translation>
+        <source>Messages are sent via a decentralised network, a peer-to-peer (p2p) network built on Logos Messaging technology and powered collectively by users running Status Desktop, making Status decentralised, resilient, and censorship-resistant. %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connected network peers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Peers</source>
@@ -10519,24 +10523,28 @@ chargement</translation>
         <translation>Connecté</translation>
     </message>
     <message>
-        <source>Refresh Logos network peers</source>
-        <translation>Actualiser les pairs du réseau Logos</translation>
+        <source>Refresh network peers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Unable to refresh Logos network peers: %1</source>
-        <translation>Impossible d’actualiser les pairs du réseau Logos&#xa0;: %1</translation>
+        <source>Unable to refresh network peers: %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>If Status has no connected Logos peers, check:</source>
-        <translation>Si Status n’a aucun pair Logos connecté, vérifiez&#xa0;:</translation>
+        <source>How to fix p2p network connection</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Some networks may block access to the Logos network. %1</source>
-        <translation>Certains réseaux peuvent bloquer l’accès au réseau Logos. %1</translation>
+        <source>If Status has no connected network peers, check:</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Try using a VPN</source>
         <translation>Essayez d’utiliser un VPN</translation>
+    </message>
+    <message>
+        <source>Some networks may block access to the p2p network. %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Current internet connection may be unstable. %1</source>
@@ -10545,10 +10553,6 @@ chargement</translation>
     <message>
         <source>Try another network or disconnect your VPN</source>
         <translation>Essayez un autre réseau ou déconnectez votre VPN</translation>
-    </message>
-    <message>
-        <source>How to fix Logos network connection</source>
-        <translation>Comment résoudre les problèmes de connexion au réseau Logos</translation>
     </message>
 </context>
 <context>
@@ -11209,15 +11213,15 @@ chargement</translation>
     </message>
     <message>
         <source>Reply</source>
-        <translation type="unfinished">Répondre</translation>
+        <translation>Répondre</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished">Modifier</translation>
+        <translation>Modifier</translation>
     </message>
     <message>
         <source>Copy selected</source>
-        <translation type="unfinished"></translation>
+        <translation>Copier la sélection</translation>
     </message>
     <message>
         <source>Copy link to message</source>
@@ -11233,7 +11237,7 @@ chargement</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Supprimer</translation>
+        <translation>Supprimer</translation>
     </message>
     <message>
         <source>Mark as unread</source>
@@ -12057,7 +12061,7 @@ chargement</translation>
     </message>
     <message>
         <source>Invalid characters (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Caractères non valides (utilisez uniquement des lettres et des chiffres, des tirets et des tirets bas)</translation>
     </message>
     <message numerus="yes">
         <source>Nicknames must be at least %n character(s) long</source>
@@ -13708,10 +13712,6 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
         <source>Contacts</source>
         <translation>Contacts</translation>
     </message>
-    <message>
-        <source>Logos Network</source>
-        <translation>Réseau Logos</translation>
-    </message>
 </context>
 <context>
     <name>ProfilePerspectiveSelector</name>
@@ -15171,7 +15171,7 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished">Modifier</translation>
+        <translation>Modifier</translation>
     </message>
     <message>
         <source>Send</source>
@@ -15299,8 +15299,8 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
         <translation>Des problèmes de connexion peuvent survenir.&lt;br&gt;Si c’est le cas, veuillez utiliser la fonction «&#xa0;Saisir une phrase de récupération&#xa0;» à la place.</translation>
     </message>
     <message>
-        <source>Logos network</source>
-        <translation>Réseau Logos</translation>
+        <source>P2P network</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Messaging</source>
@@ -15752,7 +15752,7 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <name>SlippageSelector</name>
     <message>
         <source>Custom %</source>
-        <translation type="unfinished"></translation>
+        <translation>% personnalisé</translation>
     </message>
     <message>
         <source>Slippage should be more than 0</source>
@@ -16840,11 +16840,11 @@ avec un retour à la ligne</translation>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished"></translation>
+        <translation>Le plus rapide</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
+        <translation>Frais les plus bas</translation>
     </message>
     <message>
         <source>Swap + Bridge</source>
@@ -16860,20 +16860,20 @@ avec un retour à la ligne</translation>
     </message>
     <message>
         <source>Bridge</source>
-        <translation type="unfinished">Bridge</translation>
+        <translation>Bridge</translation>
     </message>
     <message>
         <source>%1s</source>
         <comment>short for seconds</comment>
-        <translation type="unfinished">%1&#xa0;s</translation>
+        <translation>%1&#xa0;s</translation>
     </message>
     <message>
         <source>Choose route</source>
-        <translation type="unfinished"></translation>
+        <translation>Choisir une route</translation>
     </message>
     <message>
         <source>by %1 via %2</source>
-        <translation type="unfinished"></translation>
+        <translation>par %1 via %2</translation>
     </message>
     <message>
         <source>by %1</source>
@@ -16892,8 +16892,8 @@ avec un retour à la ligne</translation>
         <translation>Récupération de la citation...</translation>
     </message>
     <message>
-        <source>Confirm swap + bridge</source>
-        <translation>Confirmer l&apos;échange + bridge</translation>
+        <source>Confirm %1</source>
+        <translation>Confirmer %1</translation>
     </message>
     <message>
         <source>Approving %1 spending cap to Swap</source>
@@ -16904,8 +16904,8 @@ avec un retour à la ligne</translation>
         <translation>Approuver le plafond de dépenses de %1 pour Swap</translation>
     </message>
     <message>
-        <source>Sign Swap</source>
-        <translation>Signer l’échange</translation>
+        <source>Sign %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign</source>
@@ -16958,43 +16958,39 @@ avec un retour à la ligne</translation>
         <translation>Fonctionne avec</translation>
     </message>
     <message>
-        <source>View</source>
-        <translation>Voir</translation>
-    </message>
-    <message>
-        <source>Terms &amp; Conditions</source>
-        <translation>Conditions générales</translation>
+        <source>via %1</source>
+        <translation>via %1</translation>
     </message>
 </context>
 <context>
     <name>SwapRoutePopup</name>
     <message>
         <source>Swap route</source>
-        <translation type="unfinished"></translation>
+        <translation>Route d’échange</translation>
     </message>
     <message>
         <source>Best return</source>
-        <translation type="unfinished">Meilleur rendement</translation>
+        <translation>Meilleur rendement</translation>
     </message>
     <message>
         <source>Best received amount</source>
-        <translation type="unfinished"></translation>
+        <translation>Meilleur montant reçu</translation>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished"></translation>
+        <translation>Le plus rapide</translation>
     </message>
     <message>
         <source>Shortest execution time</source>
-        <translation type="unfinished"></translation>
+        <translation>Temps d’exécution le plus court</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
+        <translation>Frais les plus bas</translation>
     </message>
     <message>
         <source>Lowest network cost</source>
-        <translation type="unfinished"></translation>
+        <translation>Coût de réseau le plus bas</translation>
     </message>
 </context>
 <context>
@@ -17005,13 +17001,9 @@ avec un retour à la ligne</translation>
         <translation>%1 à %2</translation>
     </message>
     <message>
-        <source>Swap %1 to %2 in %3 on %4</source>
-        <extracomment>e.g. &quot;Swap 100 DAI to 100 USDT in &lt;account name&gt; on &lt;network chain name&gt;&quot;</extracomment>
-        <translation>Échanger %1 contre %2 sur %3 via %4</translation>
-    </message>
-    <message>
-        <source>Review all details before signing</source>
-        <translation>Vérifiez tous les détails avant de signer</translation>
+        <source>From %1 %2 on %3 to %4 %5 on %6</source>
+        <extracomment>e.g. &quot;From &lt;account name&gt; 100 DAI on Ethereum to &lt;account name&gt; 100 USDT on Optimism&quot;</extracomment>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -17030,31 +17022,23 @@ avec un retour à la ligne</translation>
         <translation>Recevoir</translation>
     </message>
     <message>
-        <source>In account</source>
-        <translation>Dans le compte</translation>
+        <source>From account</source>
+        <translation type="unfinished">Compte d&apos;origine</translation>
     </message>
     <message>
-        <source>Network</source>
-        <translation>Réseau</translation>
-    </message>
-    <message>
-        <source>Fees</source>
-        <translation>Frais</translation>
-    </message>
-    <message>
-        <source>Max. fees on %1</source>
-        <translation>Frais max. sur %1</translation>
+        <source>To account</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>SwapSlippagePopup</name>
     <message>
         <source>Set max price slippage</source>
-        <translation type="unfinished"></translation>
+        <translation>Définir le glissement maximal du prix</translation>
     </message>
     <message>
         <source>The swap will revert if the price shifts beyond this percentage.</source>
-        <translation type="unfinished"></translation>
+        <translation>L’échange sera annulé si le prix varie au-delà de ce pourcentage.</translation>
     </message>
 </context>
 <context>
@@ -18989,11 +18973,27 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
         <translation>~ Inconnu</translation>
     </message>
     <message>
+        <source>&lt; 30 sec</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 30 seconds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&lt; 1 minute</source>
         <translation>&lt; 1 minute</translation>
     </message>
     <message>
         <source>&lt; 1 min</source>
+        <translation>&lt; 1 min</translation>
+    </message>
+    <message>
+        <source>&lt; 2 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 2 minutes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -19002,6 +19002,14 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     </message>
     <message>
         <source>&lt; 3 min</source>
+        <translation>&lt; 3 min</translation>
+    </message>
+    <message>
+        <source>&lt; 4 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 4 minutes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -19010,7 +19018,7 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     </message>
     <message>
         <source>&lt; 5 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 5 min</translation>
     </message>
     <message>
         <source>&gt; 5 minutes</source>
@@ -19018,7 +19026,7 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     </message>
     <message>
         <source>&gt; 5 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&gt; 5 min</translation>
     </message>
     <message>
         <source>Unknown</source>

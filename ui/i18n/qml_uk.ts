@@ -7191,58 +7191,61 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
+    <name>EnsTermsAndConditionsPopup</name>
+    <message>
+        <source>Terms of name registration</source>
+        <translation type="unfinished">Умови реєстрації імені</translation>
+    </message>
+    <message>
+        <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
+        <translation type="unfinished">Кошти вносяться на депозит на 1 рік. Ваші SNT буде заблоковано, але не витрачено.</translation>
+    </message>
+    <message>
+        <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
+        <translation type="unfinished">Через 1 рік ви можете звільнити ім’я та повернути депозит або нічого не робити й зберегти ім’я.</translation>
+    </message>
+    <message>
+        <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
+        <translation type="unfinished">Якщо умови контракту зміняться, наприклад Status оновить контракт, користувач має право звільнити ім’я незалежно від терміну володіння.</translation>
+    </message>
+    <message>
+        <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
+        <translation type="unfinished">Контролер контракту не має доступу до внесених вами коштів. Їх можна повернути лише на адресу, з якої їх надіслано.</translation>
+    </message>
+    <message>
+        <source>Your address(es) will be publicly associated with your ENS name.</source>
+        <translation type="unfinished">Ваші адреси буде публічно пов’язано з вашим іменем ENS.</translation>
+    </message>
+    <message>
+        <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
+        <translation type="unfinished">Імена користувачів створюються як вузли субдомену stateofus.eth і підпорядковуються умовам смартконтракту ENS.</translation>
+    </message>
+    <message>
+        <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
+        <translation type="unfinished">Ви дозволяєте контракту переказувати SNT від вашого імені. Це можливо лише після схвалення транзакції, яка дозволяє переказ.</translation>
+    </message>
+    <message>
+        <source>These terms are guaranteed by the smart contract logic at addresses:</source>
+        <translation type="unfinished">Ці умови гарантовано логікою смартконтрактів за адресами:</translation>
+    </message>
+    <message>
+        <source>%1 (Status UsernameRegistrar).</source>
+        <translation type="unfinished">%1 (Status UsernameRegistrar).</translation>
+    </message>
+    <message>
+        <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
+        <translation type="unfinished">&lt;a href=&apos;%1/%2&apos;&gt;Переглянути на Etherscan&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <source>%1 (ENS Registry).</source>
+        <translation type="unfinished">%1 (реєстр ENS).</translation>
+    </message>
+</context>
+<context>
     <name>EnsTermsAndConditionsView</name>
     <message>
         <source>ENS usernames</source>
         <translation>ENS-імена</translation>
-    </message>
-    <message>
-        <source>Terms of name registration</source>
-        <translation>Умови реєстрації імені</translation>
-    </message>
-    <message>
-        <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
-        <translation>Кошти вносяться на депозит на 1 рік. Ваші SNT буде заблоковано, але не витрачено.</translation>
-    </message>
-    <message>
-        <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
-        <translation>Через 1 рік ви можете звільнити ім’я та повернути депозит або нічого не робити й зберегти ім’я.</translation>
-    </message>
-    <message>
-        <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
-        <translation>Якщо умови контракту зміняться, наприклад Status оновить контракт, користувач має право звільнити ім’я незалежно від терміну володіння.</translation>
-    </message>
-    <message>
-        <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
-        <translation>Контролер контракту не має доступу до внесених вами коштів. Їх можна повернути лише на адресу, з якої їх надіслано.</translation>
-    </message>
-    <message>
-        <source>Your address(es) will be publicly associated with your ENS name.</source>
-        <translation>Ваші адреси буде публічно пов’язано з вашим іменем ENS.</translation>
-    </message>
-    <message>
-        <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
-        <translation>Імена користувачів створюються як вузли субдомену stateofus.eth і підпорядковуються умовам смартконтракту ENS.</translation>
-    </message>
-    <message>
-        <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
-        <translation>Ви дозволяєте контракту переказувати SNT від вашого імені. Це можливо лише після схвалення транзакції, яка дозволяє переказ.</translation>
-    </message>
-    <message>
-        <source>These terms are guaranteed by the smart contract logic at addresses:</source>
-        <translation>Ці умови гарантовано логікою смартконтрактів за адресами:</translation>
-    </message>
-    <message>
-        <source>%1 (Status UsernameRegistrar).</source>
-        <translation>%1 (Status UsernameRegistrar).</translation>
-    </message>
-    <message>
-        <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
-        <translation>&lt;a href=&apos;%1/%2&apos;&gt;Переглянути на Etherscan&lt;/a&gt;</translation>
-    </message>
-    <message>
-        <source>%1 (ENS Registry).</source>
-        <translation>%1 (реєстр ENS).</translation>
     </message>
     <message>
         <source>Wallet address</source>
@@ -10549,16 +10552,16 @@ to load</source>
 <context>
     <name>LogosNetworkView</name>
     <message>
-        <source>Messages are sent via the Logos Messaging Network, a peer-to-peer network powered collectively by users running Status Desktop, making Status decentralized, resilient, and censorship-resistant. %1</source>
-        <translation>Повідомлення надсилаються через Logos Messaging Network – однорангову мережу, яку спільно підтримують користувачі Status Desktop. Завдяки цьому Status децентралізований, стійкий до збоїв і захищений від цензури. %1</translation>
-    </message>
-    <message>
         <source>Learn more</source>
         <translation>Докладніше</translation>
     </message>
     <message>
-        <source>Connected Logos network peers</source>
-        <translation>Підключені вузли мережі Logos</translation>
+        <source>Messages are sent via a decentralised network, a peer-to-peer (p2p) network built on Logos Messaging technology and powered collectively by users running Status Desktop, making Status decentralised, resilient, and censorship-resistant. %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connected network peers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Peers</source>
@@ -10577,24 +10580,28 @@ to load</source>
         <translation>Підключено</translation>
     </message>
     <message>
-        <source>Refresh Logos network peers</source>
-        <translation>Оновити вузли мережі Logos</translation>
+        <source>Refresh network peers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Unable to refresh Logos network peers: %1</source>
-        <translation>Не вдалося оновити вузли мережі Logos: %1</translation>
+        <source>Unable to refresh network peers: %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>If Status has no connected Logos peers, check:</source>
-        <translation>Якщо Status не підключено до вузлів Logos, перевірте:</translation>
+        <source>How to fix p2p network connection</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Some networks may block access to the Logos network. %1</source>
-        <translation>Деякі мережі можуть блокувати доступ до мережі Logos. %1</translation>
+        <source>If Status has no connected network peers, check:</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Try using a VPN</source>
         <translation>Спробуйте VPN</translation>
+    </message>
+    <message>
+        <source>Some networks may block access to the p2p network. %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Current internet connection may be unstable. %1</source>
@@ -10603,10 +10610,6 @@ to load</source>
     <message>
         <source>Try another network or disconnect your VPN</source>
         <translation>Спробуйте іншу мережу або відключіть VPN</translation>
-    </message>
-    <message>
-        <source>How to fix Logos network connection</source>
-        <translation>Як виправити підключення до мережі Logos</translation>
     </message>
 </context>
 <context>
@@ -13779,10 +13782,6 @@ to load</source>
         <source>Contacts</source>
         <translation>Контакти</translation>
     </message>
-    <message>
-        <source>Logos Network</source>
-        <translation>Мережа Logos</translation>
-    </message>
 </context>
 <context>
     <name>ProfilePerspectiveSelector</name>
@@ -15372,8 +15371,8 @@ to load</source>
         <translation>Можуть виникнути проблеми з підключенням.&lt;br&gt;У такому разі скористайтеся функцією «Ввести фразу відновлення».</translation>
     </message>
     <message>
-        <source>Logos network</source>
-        <translation>Мережа Logos</translation>
+        <source>P2P network</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Messaging</source>
@@ -16976,8 +16975,8 @@ to load</source>
         <translation>Отримання котирування...</translation>
     </message>
     <message>
-        <source>Confirm swap + bridge</source>
-        <translation>Підтвердити обмін + бридж</translation>
+        <source>Confirm %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Approving %1 spending cap to Swap</source>
@@ -16988,8 +16987,8 @@ to load</source>
         <translation>Схвалити ліміт витрат %1 для обміну</translation>
     </message>
     <message>
-        <source>Sign Swap</source>
-        <translation>Підписати обмін</translation>
+        <source>Sign %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Sign</source>
@@ -17042,12 +17041,8 @@ to load</source>
         <translation>За підтримки</translation>
     </message>
     <message>
-        <source>View</source>
-        <translation>Переглянути</translation>
-    </message>
-    <message>
-        <source>Terms &amp; Conditions</source>
-        <translation>Умови використання</translation>
+        <source>via %1</source>
+        <translation type="unfinished">через %1</translation>
     </message>
 </context>
 <context>
@@ -17089,13 +17084,9 @@ to load</source>
         <translation>%1 на %2</translation>
     </message>
     <message>
-        <source>Swap %1 to %2 in %3 on %4</source>
-        <extracomment>e.g. &quot;Swap 100 DAI to 100 USDT in &lt;account name&gt; on &lt;network chain name&gt;&quot;</extracomment>
-        <translation>Обміняти %1 на %2 у %3 в мережі %4</translation>
-    </message>
-    <message>
-        <source>Review all details before signing</source>
-        <translation>Перевірте всі дані перед підписанням</translation>
+        <source>From %1 %2 on %3 to %4 %5 on %6</source>
+        <extracomment>e.g. &quot;From &lt;account name&gt; 100 DAI on Ethereum to &lt;account name&gt; 100 USDT on Optimism&quot;</extracomment>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -17114,20 +17105,12 @@ to load</source>
         <translation>Отримати</translation>
     </message>
     <message>
-        <source>In account</source>
-        <translation>На рахунку</translation>
+        <source>From account</source>
+        <translation type="unfinished">З рахунку</translation>
     </message>
     <message>
-        <source>Network</source>
-        <translation>Мережа</translation>
-    </message>
-    <message>
-        <source>Fees</source>
-        <translation>Комісії</translation>
-    </message>
-    <message>
-        <source>Max. fees on %1</source>
-        <translation>Макс. комісії в %1</translation>
+        <source>To account</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19080,6 +19063,14 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation>~ Невідомо</translation>
     </message>
     <message>
+        <source>&lt; 30 sec</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 30 seconds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&lt; 1 minute</source>
         <translation>&lt; 1 хвилини</translation>
     </message>
@@ -19088,11 +19079,27 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>&lt; 2 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 2 minutes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&lt; 3 minutes</source>
         <translation>&lt; 3 хвилин</translation>
     </message>
     <message>
         <source>&lt; 3 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 4 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 4 minutes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

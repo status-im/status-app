@@ -1,5 +1,5 @@
 #!/usr/bin/env groovy
-library 'status-jenkins-lib@v1.9.48'
+library 'status-jenkins-lib@v1.9.50'
 
 QT_VERSION = "6.11.0"
 
@@ -14,7 +14,7 @@ pipeline {
     /* Image with Ubuntu 22.04 and QT ${QT_VERSION} */
     docker {
       label 'linuxcontainer'
-      image "harbor.status.im/status-im/status-desktop-build:20260901-qt${QT_VERSION}"
+      image "harbor.status.im/status-im/status-desktop-build:20260902-qt${QT_VERSION}"
       /* allows jenkins use cat and mounts '/dev/fuse' for linuxdeployqt */
       args '--entrypoint="" ' +
            '--cap-add=SYS_ADMIN ' +

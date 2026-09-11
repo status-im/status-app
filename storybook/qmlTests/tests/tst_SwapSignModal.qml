@@ -37,6 +37,17 @@ Item {
             accountEmoji: "🚗"
             accountColor: Utils.getColorForId(Theme.palette, Constants.walletAccountColors.primary)
 
+            toAccountName: "Cold wallet"
+            toAccountAddress: "0x1A47C2e98a4BBf5487E6fb082eC2D9Ab0E6d1234"
+            toAccountEmoji: "🧊"
+            toAccountColor: Utils.getColorForId(Theme.palette, Constants.walletAccountColors.army)
+
+            toNetworkName: "Optimism"
+            toNetworkShortName: Constants.networkShortChainNames.optimism
+            toNetworkIconPath: Assets.svg("network/optimism")
+            toNetworkBlockExplorerUrl: "https://optimistic.etherscan.io/"
+            toNetworkChainId: 10
+
             networkShortName: Constants.networkShortChainNames.mainnet
             networkName: "Mainnet"
             networkIconPath: Assets.svg("network/ethereum")
@@ -45,7 +56,7 @@ Item {
 
             serviceProviderName: Constants.swap.paraswapName
             serviceProviderURL: Constants.swap.paraswapUrl
-            serviceProviderTandCUrl: Constants.swap.paraswapTermsAndConditionUrl
+            txProviderTool: "sushiswap"
 
             fiatFees: "1.54 EUR"
             cryptoFees: "0.001 ETH"
@@ -118,7 +129,10 @@ Item {
             // info box
             const headerText = findChild(controlUnderTest.contentItem, "headerText")
             verify(!!headerText)
-            compare(headerText.text, qsTr("Swap 1,000.12 SNT to 1.42 %3 in %1 on %2").arg(controlUnderTest.accountName).arg(controlUnderTest.networkName).arg(data.toTokenSymbol))
+            compare(headerText.text, qsTr("From %1 1,000.12 SNT on %2 to %3 1.42 %4 on %5")
+                    .arg(controlUnderTest.accountName).arg(controlUnderTest.networkName)
+                    .arg(controlUnderTest.toAccountName).arg(data.toTokenSymbol)
+                    .arg(controlUnderTest.toNetworkName))
             const fromImage = findChild(controlUnderTest.contentItem, "fromImageIdenticon")
             verify(!!fromImage)
             compare(fromImage.asset.name, Constants.tokenIcon(controlUnderTest.fromTokenSymbol))
@@ -141,6 +155,10 @@ Item {
             compare(receiveBox.secondaryText,
                     data.toTokenSymbol === "ETH" ? ""
                                                  : SQUtils.Utils.elideAndFormatWalletAddress(controlUnderTest.toTokenContractAddress))
+
+            // each side badges its own network — they differ when bridging
+            compare(payBox.badge, controlUnderTest.networkIconPath)
+            compare(receiveBox.badge, controlUnderTest.toNetworkIconPath)
         }
 
         function test_accountInfo() {
@@ -150,42 +168,29 @@ Item {
             const accountBox = findChild(controlUnderTest.contentItem, "accountBox")
             verify(!!accountBox)
 
-            compare(accountBox.caption, qsTr("In account"))
+            compare(accountBox.caption, qsTr("From account"))
             compare(accountBox.primaryText, controlUnderTest.accountName)
             compare(accountBox.secondaryText, SQUtils.Utils.elideAndFormatWalletAddress(controlUnderTest.accountAddress))
             compare(accountBox.asset.emoji, controlUnderTest.accountEmoji)
             compare(accountBox.asset.color, controlUnderTest.accountColor)
+
+            // to-account box
+            const toAccountBox = findChild(controlUnderTest.contentItem, "toAccountBox")
+            verify(!!toAccountBox)
+
+            compare(toAccountBox.caption, qsTr("To account"))
+            compare(toAccountBox.primaryText, controlUnderTest.toAccountName)
+            compare(toAccountBox.secondaryText, SQUtils.Utils.elideAndFormatWalletAddress(controlUnderTest.toAccountAddress))
+            compare(toAccountBox.asset.emoji, controlUnderTest.toAccountEmoji)
+            compare(toAccountBox.asset.color, controlUnderTest.toAccountColor)
         }
 
-        function test_networkInfo() {
+        function test_removedRepeatedBoxes() {
             verify(!!controlUnderTest)
 
-            // network box
-            const networkBox = findChild(controlUnderTest.contentItem, "networkBox")
-            verify(!!networkBox)
-
-            compare(networkBox.caption, qsTr("Network"))
-            compare(networkBox.primaryText, controlUnderTest.networkName)
-            compare(networkBox.icon, controlUnderTest.networkIconPath)
-        }
-
-        function test_feesInfo() {
-            verify(!!controlUnderTest)
-
-            // fees box
-            const feesBox = findChild(controlUnderTest.contentItem, "feesBox")
-            verify(!!feesBox)
-
-            compare(feesBox.caption, qsTr("Fees"))
-            compare(feesBox.primaryText, qsTr("Max. fees on %1").arg(controlUnderTest.networkName))
-
-            const fiatFeesText = findChild(feesBox, "fiatFeesText")
-            verify(!!fiatFeesText)
-            compare(fiatFeesText.text, controlUnderTest.fiatFees)
-
-            const cryptoFeesText = findChild(feesBox, "cryptoFeesText")
-            verify(!!cryptoFeesText)
-            compare(cryptoFeesText.text, controlUnderTest.cryptoFees)
+            // network and fees info moved to the footer/route views — no boxes here
+            verify(!findChild(controlUnderTest.contentItem, "networkBox"))
+            verify(!findChild(controlUnderTest.contentItem, "feesBox"))
         }
 
         function test_loginType_data() {
@@ -220,20 +225,10 @@ Item {
             verify(!!footerFiatFeesText)
             compare(footerFiatFeesText.loading, false)
 
-            const fiatFeesText = findChild(controlUnderTest.contentItem, "fiatFeesText")
-            verify(!!fiatFeesText)
-            compare(fiatFeesText.loading, false)
-
-            const cryptoFeesText = findChild(controlUnderTest.contentItem, "cryptoFeesText")
-            verify(!!cryptoFeesText)
-            compare(cryptoFeesText.loading, false)
-
             controlUnderTest.feesLoading = true
 
             compare(signButton.interactive, false)
             compare(footerFiatFeesText.loading, true)
-            compare(fiatFeesText.loading, true)
-            compare(cryptoFeesText.loading, true)
         }
 
         function test_footerInfo() {

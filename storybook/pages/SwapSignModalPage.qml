@@ -101,6 +101,17 @@ SplitView {
                     accountEmoji: priv.selectedAccount.emoji
                     accountColor: Utils.getColorForId(Theme.palette, priv.selectedAccount.colorId)
 
+                    toAccountName: priv.selectedAccount.name
+                    toAccountAddress: priv.selectedAccount.address
+                    toAccountEmoji: priv.selectedAccount.emoji
+                    toAccountColor: Utils.getColorForId(Theme.palette, priv.selectedAccount.colorId)
+
+                    toNetworkName: priv.selectedNetwork.chainName
+                    toNetworkShortName: priv.selectedNetwork.shortName
+                    toNetworkIconPath: Assets.svg(priv.selectedNetwork.iconUrl)
+                    toNetworkBlockExplorerUrl: priv.selectedNetwork.blockExplorerURL
+                    toNetworkChainId: priv.selectedNetwork.chainId
+
                     networkShortName: priv.selectedNetwork.shortName
                     networkName: priv.selectedNetwork.chainName
                     networkIconPath: Assets.svg(priv.selectedNetwork.iconUrl)
@@ -111,7 +122,7 @@ SplitView {
                                          ? '<font color="#27ae60" size="6"><b>Paraswap</b></font>'
                                          : Constants.swap.paraswapName
                     serviceProviderURL: Constants.swap.paraswapUrl
-                    serviceProviderTandCUrl: Constants.swap.paraswapTermsAndConditionUrl
+                    txProviderTool: "sushiswap"
 
                     fiatFees: formatBigNumber(42.542567, "EUR")
                     cryptoFees: formatBigNumber(0.06, "ETH")

@@ -109,13 +109,25 @@ Control {
     QtObject {
         id: d
 
-        // Whether to send message using Ctrl+Return or just Enter; based on
-        // OSK (virtual keyboard presence)
         // Qt.inputMethod.visible is not reliable in some cases, as a workaround android and ios keyboards
         // are checked directly as well.
-        readonly property int kbdModifierToSendMessage:
-            (SystemUtils.androidKeyboardVisible || SystemUtils.iosKeyboardVisible || Qt.inputMethod.visible)
-                ? Qt.ControlModifier : Qt.NoModifier
+        readonly property bool oskVisible: SystemUtils.androidKeyboardVisible
+                                           || SystemUtils.iosKeyboardVisible
+                                           || Qt.inputMethod.visible
+
+        // Whether to send message using Ctrl+Return or just Enter; based on
+        // OSK (virtual keyboard presence)
+        readonly property int kbdModifierToSendMessage: oskVisible ? Qt.ControlModifier : Qt.NoModifier
+
+        // The suggestion box is caret-driven and cannot dismiss itself, so it leaves
+        // with the keyboard however that went: transcript gesture, back button, chat
+        // switch. The emoji/GIF/sticker popups are deliberate and self-dismissing, and
+        // opening one can itself retract the OSK - closing them here would risk
+        // closing the popup that was just opened.
+        onOskVisibleChanged: {
+            if (!oskVisible)
+                suggestionsBox.shouldHide = true
+        }
 
         property bool emojiPopupOpened: false
         property bool stickersPopupOpened: false
@@ -938,8 +950,15 @@ Control {
                         }
 
                         StatusChatInputSelectionMarker {
+                            id: selectionMarker
+
                             anchors.fill: parent
                             clip: true
+
+                            // The handles are a keyboard affordance and go with it;
+                            // the selection itself survives.
+                            visible: d.oskVisible && selectionMarker.selectionStartRect
+                                     !== selectionMarker.selectionEndRect
 
                             selectionStartRect: {
                                 messageInputField.text
@@ -1175,8 +1194,12 @@ Control {
         sourceComponent: StatusTextEditMenu {
             canCut: !messageInputField.readOnly && !messageInputField.noSelection
             canCopy: !messageInputField.noSelection
-            canPaste: !messageInputField.readOnly && (ClipboardUtils.hasText
-                      || (root.imageFeaturesEnabled && ClipboardUtils.hasImage))
+            // Never probe the clipboard on iOS: any read triggers the
+            // "Allow Paste?" prompt. Keep Paste enabled and let the actual
+            // paste be the only, user-initiated, read.
+            canPaste: !messageInputField.readOnly
+                      && (StatusQUtils.Utils.isIOS || ClipboardUtils.hasText
+                          || (root.imageFeaturesEnabled && ClipboardUtils.hasImage))
             canSelectAll: messageInputField.length > 0
 
             onCutRequested: messageInputField.cutSelection()

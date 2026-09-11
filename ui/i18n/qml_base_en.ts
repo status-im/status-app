@@ -7151,11 +7151,7 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
-    <name>EnsTermsAndConditionsView</name>
-    <message>
-        <source>ENS usernames</source>
-        <translation type="unfinished"></translation>
-    </message>
+    <name>EnsTermsAndConditionsPopup</name>
     <message>
         <source>Terms of name registration</source>
         <translation type="unfinished"></translation>
@@ -7202,6 +7198,13 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>%1 (ENS Registry).</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>EnsTermsAndConditionsView</name>
+    <message>
+        <source>ENS usernames</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10481,15 +10484,15 @@ to load</source>
 <context>
     <name>LogosNetworkView</name>
     <message>
-        <source>Messages are sent via the Logos Messaging Network, a peer-to-peer network powered collectively by users running Status Desktop, making Status decentralized, resilient, and censorship-resistant. %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Learn more</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Connected Logos network peers</source>
+        <source>Messages are sent via a decentralised network, a peer-to-peer (p2p) network built on Logos Messaging technology and powered collectively by users running Status Desktop, making Status decentralised, resilient, and censorship-resistant. %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connected network peers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10509,23 +10512,27 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Refresh Logos network peers</source>
+        <source>Refresh network peers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Unable to refresh Logos network peers: %1</source>
+        <source>Unable to refresh network peers: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>If Status has no connected Logos peers, check:</source>
+        <source>How to fix p2p network connection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Some networks may block access to the Logos network. %1</source>
+        <source>If Status has no connected network peers, check:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Try using a VPN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Some networks may block access to the p2p network. %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10534,10 +10541,6 @@ to load</source>
     </message>
     <message>
         <source>Try another network or disconnect your VPN</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>How to fix Logos network connection</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -13694,10 +13697,6 @@ to load</source>
         <source>Contacts</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Logos Network</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>ProfilePerspectiveSelector</name>
@@ -15285,7 +15284,7 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Logos network</source>
+        <source>P2P network</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16865,7 +16864,7 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Confirm swap + bridge</source>
+        <source>Confirm %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16877,7 +16876,7 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Sign Swap</source>
+        <source>Sign %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16943,11 +16942,7 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>View</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Terms &amp; Conditions</source>
+        <source>via %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -16990,12 +16985,8 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Swap %1 to %2 in %3 on %4</source>
-        <extracomment>e.g. &quot;Swap 100 DAI to 100 USDT in &lt;account name&gt; on &lt;network chain name&gt;&quot;</extracomment>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Review all details before signing</source>
+        <source>From %1 %2 on %3 to %4 %5 on %6</source>
+        <extracomment>e.g. &quot;From &lt;account name&gt; 100 DAI on Ethereum to &lt;account name&gt; 100 USDT on Optimism&quot;</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -17015,19 +17006,11 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>In account</source>
+        <source>From account</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Network</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Fees</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Max. fees on %1</source>
+        <source>To account</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -18962,6 +18945,14 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>&lt; 30 sec</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 30 seconds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&lt; 1 minute</source>
         <translation type="unfinished"></translation>
     </message>
@@ -18970,11 +18961,27 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>&lt; 2 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 2 minutes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&lt; 3 minutes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>&lt; 3 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 4 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt; 4 minutes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

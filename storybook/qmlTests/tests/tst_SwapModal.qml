@@ -180,6 +180,19 @@ Item {
             return pill
         }
 
+        // mirrors the modal-title rule the confirm button follows
+        function expectedConfirmText() {
+            const form = root.swapFormData
+            if (!form.fromGroupKey || !form.toGroupKey)
+                return qsTr("Confirm %1").arg(qsTr("Swap + Bridge"))
+            const isBridge = form.toNetworkChainId !== -1
+                           && form.toNetworkChainId !== form.selectedNetworkChainId
+            if (!isBridge)
+                return qsTr("Confirm %1").arg(qsTr("Swap"))
+            return qsTr("Confirm %1").arg(form.fromGroupKey === form.toGroupKey
+                                          ? qsTr("Bridge") : qsTr("Swap + Bridge"))
+        }
+
         function popupSearchRoot() {
             const overlay = controlUnderTest.Overlay.overlay
             verify(!!overlay)
@@ -628,7 +641,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("An error has occured, please try again"))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -666,7 +679,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Insufficient funds for swap"))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -704,7 +717,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Not enough ETH to pay gas fees"))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -742,7 +755,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Fetching the price took longer than expected. Please, try again later."))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -780,7 +793,7 @@ Item {
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Not enough liquidity. Lower token amount or try again later."))
             verify(!signButton.interactive)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
 
             // verfy input and output panels
             verify(!payPanel.mainInputLoading)
@@ -824,7 +837,7 @@ Item {
             compare(root.swapAdaptor.swapOutputData.hasError, false)
             verify(!errorTag.visible, "error tag visible with text: " + errorTag.text)
             verify(signButton.enabled)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
 
             // verfy input and output panels
             waitForRendering(receivePanel)
@@ -878,7 +891,7 @@ Item {
             // fee-reservation interplay: the adaptor derives maxFeesToReserveRaw
             // from the best path's max gas fees (independent of owned balance)
             let bestPath = SQUtils.ModelUtils.get(txRoutes2.suggestedRoutes, 0, "route")
-            const totalMaxFees = Math.ceil(bestPath.gasFees.maxFeePerGasM) * bestPath.gasAmount
+            const totalMaxFees = Math.ceil(bestPath.gasFees.maxFeePerGasM * bestPath.gasAmount)
             const totalMaxFeesInEth = SQUtils.AmountsArithmetic.div(
                                         SQUtils.AmountsArithmetic.fromString(totalMaxFees),
                                         SQUtils.AmountsArithmetic.fromNumber(1, 9))
@@ -1453,11 +1466,13 @@ Item {
             waitForRendering(payPanel)
             waitForRendering(receivePanel)
 
-            // verify form values
+            // verify form values: tokens swap sides, but the ENTERED amount
+            // stays on the pay side and the receive amount (a quote for the
+            // old direction) is cleared pending a fresh quote
             compare(root.swapFormData.fromGroupKey, expectedToTokenKey)
-            compare(root.swapFormData.fromTokenAmount, data.toTokenAmount)
+            compare(root.swapFormData.fromTokenAmount, data.fromTokenAmount)
             compare(root.swapFormData.toGroupKey, expectedFromTokenKey)
-            compare(root.swapFormData.toTokenAmount, data.fromTokenAmount)
+            compare(root.swapFormData.toTokenAmount, "")
 
             paytokenSelectorContentItemText = findChild(payPanel, "tokenSelectorContentItemText")
             verify(!!paytokenSelectorContentItemText)
@@ -1470,7 +1485,7 @@ Item {
 
             // verify pay values
             compare(payPanel.groupKey, expectedToTokenKey)
-            compare(payPanel.tokenAmount, data.toTokenAmount)
+            compare(payPanel.tokenAmount, data.fromTokenAmount)
             verify(payAmountToSendInput.cursorVisible)
             const swappedFromToken = !!root.swapFormData.fromGroupKey ? SQUtils.ModelUtils.getByKey(payTokenModel, "key", root.swapFormData.fromGroupKey) : null
             const swappedToToken = !!root.swapFormData.toGroupKey ? SQUtils.ModelUtils.getByKey(receiveTokenModel, "key", root.swapFormData.toGroupKey) : null
@@ -1482,7 +1497,7 @@ Item {
 
             // verify receive values
             compare(receivePanel.groupKey, expectedFromTokenKey)
-            compare(receivePanel.tokenAmount, data.fromTokenAmount)
+            compare(receivePanel.tokenAmount, "")
             verify(!receiveAmountToSendInput.cursorVisible)
             compare(receivetokenSelectorContentItemText.text, swappedToToken ? swappedToToken.symbol : qsTr("Select asset"))
             if(!!receivetokenSelectorIcon) {
@@ -1621,7 +1636,7 @@ Item {
             verify(!errorTag.visible)
             verify(signButton.interactive)
             verify(!signButton.loadingWithText)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
             tryCompare(strategyFees, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(
                         root.swapAdaptor.swapOutputData.txFeesInFiat,
                         root.swapAdaptor.currencyStore.currentCurrency))
@@ -1635,7 +1650,7 @@ Item {
             verify(!errorTag.visible)
             verify(signButton.enabled)
             verify(!signButton.loadingWithText)
-            compare(signButton.text, qsTr("Confirm swap + bridge"))
+            compare(signButton.text, expectedConfirmText())
             tryCompare(strategyFees, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(
                         root.swapAdaptor.swapOutputData.txFeesInFiat,
                         root.swapAdaptor.currencyStore.currentCurrency))
@@ -1954,8 +1969,8 @@ Item {
 
         // The handler destroys the modal and then resets the form, and the reset
         // clears the source chain before the destination one — a transient bridge
-        // state. Building the destination picker for it (an expensive terminal
-        // model) only to throw it away is pure waste on every plain-swap close.
+        // state. Building any picker for it (an expensive terminal model) only to
+        // throw it away is pure waste on every close.
         function test_noBridgePickerIsBuiltWhileClosing() {
             const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
 
@@ -2018,8 +2033,9 @@ Item {
             verify(!!trigger)
             compare(trigger.text, qsTr("Best return"))
 
-            waitForRendering(trigger)
-            mouseClick(trigger)
+            const triggerArea = findChild(trigger, "routeOrderMouseArea")
+            verify(!!triggerArea)
+            triggerArea.clicked(null)
 
             // the dialog reparents to the overlay, so search from there
             let fastest = null
@@ -2071,24 +2087,32 @@ Item {
             closeAndVerfyModal()
         }
 
-        // A destination picker built lazily (the user switches the receive chain
-        // after the modal is open) must be seeded like the ones createPickers
-        // builds, otherwise it starts on whatever the producer's last search was.
-        function test_lazyBridgePickerIsSeeded() {
+        // The receive side always gets its own destination picker on open (so
+        // browsing either side's list can't disturb the other), seeded like the
+        // pay one; switching to a bridge afterwards must not build anything new.
+        function test_receivePickerIsBuiltAndSeededOnOpen() {
             const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+            store.createdKinds = []
 
             launchAndVerfyModal()
 
             const receivePanel = findChild(controlUnderTest, "receivePanel")
             verify(!!receivePanel)
+            tryVerify(() => !!receivePanel.tokenSelectorModel, 2000,
+                      "destination picker built on open")
+            verify(store.createdKinds.indexOf(3) !== -1,
+                   "a kind-3 (destination catalog) picker was created, got kinds: "
+                   + JSON.stringify(store.createdKinds))
+
+            const receiveModel = receivePanel.tokenSelectorModel
+            tryCompare(receiveModel, "searchCallCount", 1) // seeded
 
             store.createdKinds = []
             root.swapFormData.toNetworkChainId = 10 // != source chain => bridge
-
-            compare(store.createdKinds.indexOf(3), 0, "destination picker built")
-            const bridgeModel = receivePanel.tokenSelectorModel
-            verify(!!bridgeModel, "the receive panel is switched to it")
-            compare(bridgeModel.searchCallCount, 1, "and it is seeded")
+            compare(store.createdKinds.length, 0,
+                    "switching to a bridge builds no new picker")
+            compare(receivePanel.tokenSelectorModel, receiveModel,
+                    "the receive panel keeps its picker across the bridge switch")
 
             closeAndVerfyModal()
         }
