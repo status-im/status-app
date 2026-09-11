@@ -17,6 +17,9 @@ Loader {
     property bool disabled: false
     property bool loading: false
     property bool isBridgedAccount: false
+    // Badge shown when isBridgedAccount. Defaults to a bridge-agnostic glyph:
+    // the message may come from any bridge, not only Discord.
+    property url bridgeBadgeImage: Assets.svg("bridge")
     // TODO replace this with booleans since we do not have access to Constants
     property int onlineStatus: -1
 
@@ -64,7 +67,10 @@ Loader {
         }
 
         bridgeBadge.visible: root.isBridgedAccount
-        bridgeBadge.image.source: Assets.svg("discord-bridge")
+        bridgeBadge.image.source: root.bridgeBadgeImage
+        // bridge.svg is a transparent landscape glyph; without a fill the
+        // avatar shows through and the icon reads as a stray mark.
+        bridgeBadge.color: Theme.palette.indirectColor1
 
         Loader {
             anchors.fill: parent

@@ -10,7 +10,7 @@ import ./link_preview_model as link_preview_model
 import ./payment_request_model as payment_request_model
 
 export types.ContentType
-import message_reaction_model, message_transaction_parameters_item
+import message_reaction_model, message_transaction_parameters_item, contacts_utils
 
 type
   Item* = ref object
@@ -217,6 +217,8 @@ proc initMessageItem*(
     result.senderId = discordMessage.author.id
     result.senderDisplayName = discordMessage.author.name
     result.senderIcon = discordMessage.author.localUrl
+    result.senderOptionalName = ""
+    result.senderUsesDefaultName = false
     result.timestamp = parseInt(discordMessage.timestamp)*1000
 
     if result.senderIcon == "":
@@ -234,6 +236,8 @@ proc initMessageItem*(
     result.unparsedText = bridgeMessage.content
     result.senderDisplayName = bridgeMessage.userName
     result.senderIcon = bridgeMessage.userAvatar
+    result.senderOptionalName = ""
+    result.senderUsesDefaultName = false
     result.bridgeName = bridgeMessage.bridgeName
 
   if senderId == "":
@@ -401,6 +405,24 @@ proc senderEnsVerified*(self: Item): bool {.inline.} =
 
 proc `senderEnsVerified=`*(self: Item, value: bool) {.inline.} =
   self.senderEnsVerified = value
+
+proc isBridged*(self: Item): bool {.inline.} =
+  self.contentType == ContentType.BridgeMessage or self.contentType == ContentType.DiscordMessage
+
+# Applies a contact update to the message sender. A bridged message was authored
+# outside Status, so the identity its header renders -- display name, secondary
+# name and avatar -- is the external author's and survives the update. The
+# remaining fields describe the Status account that relayed the message and are
+# kept in sync.
+proc updateSenderDetails*(self: Item, contact: ContactDetails) =
+  if not self.isBridged:
+    self.senderDisplayName = contact.defaultDisplayName
+    self.senderOptionalName = contact.optionalName
+    self.senderUsesDefaultName = resolveUsesDefaultName(contact.dto.localNickname, contact.dto.name, contact.dto.displayName)
+    self.senderIcon = contact.icon
+  self.senderIsAdded = contact.dto.added
+  self.senderTrustStatus = contact.dto.trustStatus
+  self.senderEnsVerified = contact.dto.ensVerified
 
 proc outgoingStatus*(self: Item): string {.inline.} =
   self.outgoingStatus

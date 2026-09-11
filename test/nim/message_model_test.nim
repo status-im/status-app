@@ -452,3 +452,124 @@ suite "media server port refresh":
     model.updateMediaServerPort(40000)
 
     check(model.items[0].messageImage == newBase & "/messages/images?messageId=0x1")
+
+# A bridged message (contentType 18) is authored outside Status: the name and
+# the avatar on it belong to the external author, not to the Status account
+# that relayed it. A contact update for that account refreshes the account's
+# own attributes but must leave the presented identity alone, otherwise every
+# bridged message in the chat is renamed to the relaying account (#22355).
+suite "contact updates on bridged messages":
+  const bridgeAuthorName = "thedatabro"
+  const bridgeAuthorAvatar = "https://cdn.example.com/thedatabro.png"
+
+  let relayingAccount = ContactDetails(
+    defaultDisplayName: "Sam Hyde",
+    optionalName: "samhyde.eth",
+    icon: "https://localhost:34567/contactImages?publicKey=0xsender",
+    dto: ContactsDto(
+      id: "0xsender",
+      displayName: "Sam Hyde",
+      localNickname: "Sam",
+      added: true,
+      trustStatus: TrustStatus.Trusted,
+      ensVerified: true,
+    ),
+  )
+
+  proc createItem(contentType: ContentType, sender: ContactDetails): Item =
+    return message_model.createMessageItemFromDtos(
+      message = MessageDto(
+        id: "0x1",
+        clock: 1,
+        contentType: contentType,
+        bridgeMessage: BridgeMessage(
+          bridgeName: "discord",
+          userName: bridgeAuthorName,
+          userAvatar: bridgeAuthorAvatar,
+          content: "gm",
+        ),
+        discordMessage: DiscordMessage(
+          timestamp: "1700000000",
+          content: "gm",
+          author: DiscordMessageAuthor(
+            id: "42",
+            name: bridgeAuthorName,
+            avatarUrl: bridgeAuthorAvatar,
+          ),
+        ),
+      ),
+      communityId = "",
+      sender = sender,
+      isCurrentUser = false,
+      renderedMessageText = "",
+      clearText = "",
+    )
+
+  test "a bridge message keeps the bridge author's name and avatar":
+    let item = createItem(ContentType.BridgeMessage, ContactDetails())
+    require(item.senderDisplayName == bridgeAuthorName)
+
+    item.updateSenderDetails(relayingAccount)
+
+    check(item.senderDisplayName == bridgeAuthorName)
+    check(item.senderIcon == bridgeAuthorAvatar)
+
+  test "a discord message keeps the discord author's name and avatar":
+    let item = createItem(ContentType.DiscordMessage, ContactDetails())
+    require(item.senderDisplayName == bridgeAuthorName)
+
+    item.updateSenderDetails(relayingAccount)
+
+    check(item.senderDisplayName == bridgeAuthorName)
+    check(item.senderIcon == bridgeAuthorAvatar)
+
+  test "a bridge message keeps the bridge author's secondary name":
+    # senderOptionalName renders in parentheses right next to the display name,
+    # so the relaying account's nickname would read as the bridge author's.
+    # usesDefaultName picks the generic contact glyph over initials, and a
+    # bridge author always has a real name, so it stays false.
+    let item = createItem(ContentType.BridgeMessage, ContactDetails())
+
+    item.updateSenderDetails(relayingAccount)
+
+    check(item.senderOptionalName == "")
+    check(item.senderUsesDefaultName == false)
+
+  test "a bridged message is built without the relaying account's secondary name":
+    # The relaying account is already known when the item is built, so its
+    # nickname has to be kept out at construction too, not only on updates.
+    for contentType in [ContentType.BridgeMessage, ContentType.DiscordMessage]:
+      let item = createItem(contentType, relayingAccount)
+
+      check(item.senderDisplayName == bridgeAuthorName)
+      check(item.senderIcon == bridgeAuthorAvatar)
+      check(item.senderOptionalName == "")
+      check(item.senderUsesDefaultName == false)
+
+  test "an ordinary message is built with the contact's secondary name":
+    let item = createItem(ContentType.Message, relayingAccount)
+
+    check(item.senderOptionalName == relayingAccount.optionalName)
+
+  test "a bridge message still tracks the relaying account's attributes":
+    let item = createItem(ContentType.BridgeMessage, ContactDetails())
+
+    item.updateSenderDetails(relayingAccount)
+
+    check(item.senderIsAdded)
+    check(item.senderTrustStatus == TrustStatus.Trusted)
+    check(item.senderEnsVerified)
+
+  test "an ordinary message takes the contact's name and avatar":
+    let item = createItem(ContentType.Message, ContactDetails())
+    require(item.senderDisplayName == "")
+
+    item.updateSenderDetails(relayingAccount)
+
+    check(item.senderDisplayName == relayingAccount.defaultDisplayName)
+    check(item.senderIcon == relayingAccount.icon)
+    check(item.senderOptionalName == relayingAccount.optionalName)
+    check(item.senderUsesDefaultName == false)
+    check(item.senderIsAdded)
+    check(item.senderTrustStatus == TrustStatus.Trusted)
+    check(item.senderEnsVerified)

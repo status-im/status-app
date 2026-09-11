@@ -251,6 +251,7 @@ Control {
                     imageWidth: root.messageDetails.sender.profileImage.assetSettings.width
                     imageHeight: root.messageDetails.sender.profileImage.assetSettings.height
                     isBridgedAccount: root.messageDetails.contentType === StatusMessage.ContentType.BridgeMessage
+                    bridgeBadgeImage: root.messageDetails.sender.badgeImage || Assets.svg("bridge")
                     onClicked: (mouse) => root.profilePictureClicked(this, mouse)
 
                     LoadingSkeletonTile {
